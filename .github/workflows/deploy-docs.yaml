@@ -70,4 +70,4 @@ jobs:
 
     # using relative path doesn't work for some reason (aka ./_build/html)
     - name: Upload docs to public gcp bucket
-      run: gsutil rsync -R /home/runner/work/cloudlets/cloudlets/docs/_build/html gs://robusta-public/${{ env.DOCS_VERSION }}/
+      run: gsutil rsync -R /home/runner/work/robusta/robusta/docs/_build/html gs://robusta-public/${{ env.DOCS_VERSION }}/
