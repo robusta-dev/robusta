@@ -1,0 +1,8 @@
+global_config:
+  slack_channel: "<DEFAULT_SLACK_CHANNEL>"
+
+active_playbooks:
+  - name: "restart_loop_reporter"
+    action_params:
+      restart_reason: "CrashLoopBackOff"
+  - name: "python_profiler"

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: robusta-forwarder
+spec:
+  selector:
+    matchLabels:
+      app: robusta-forwarder
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: robusta-forwarder
+    spec:
+      serviceAccountName: robusta
+      containers:
+      - name: fluentd
+        # if you need to customize this image (e.g. to add plugins) see https://github.com/fluent/fluentd-docker-image/blob/master/Dockerfile.sample
+        # if you want to monitor node-level stuff (e.g. pod logs) then we should use the fluentd daemonset: https://github.com/fluent/fluentd-kubernetes-daemonset
+        image: fluent/fluentd:v1.12.1-1.0
+        imagePullPolicy: Always
+        volumeMounts:
+          - mountPath: /fluentd/etc
+            name: robusta-fluentd-config
+      - name: kubewatch
+        # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
+        image: us-central1-docker.pkg.dev/arabica-300319/devel/kubewatch:v1.8
+        imagePullPolicy: Always
+        env:
+          - name: KW_CONFIG
+            value: /config
+        volumeMounts:
+          - name: robusta-kubewatch-config
+            mountPath: /config
+      volumes:
+        - name:  robusta-fluentd-config
+          configMap:
+            name: robusta-fluentd-config
+        - name:  robusta-kubewatch-config
+          configMap:
+            name: robusta-kubewatch-config
+        
+# if using the official image then we need this - see https://github.com/bitnami/bitnami-docker-kubewatch/blob/82c54aeb2a764d7b74ad20d8d74493235ef30fc6/0/debian-10/Dockerfile
+#COPY kubewatch.yaml /opt/bitnami/kubewatch/.kubewatch.yaml
+# for our image
+#COPY kubewatch.yaml /root/.kubewatch.yaml

@@ -1,0 +1,7 @@
+cairosvg
+flask
+kubernetes
+prometheus-api-client
+pygal
+tinycss
+cssselect

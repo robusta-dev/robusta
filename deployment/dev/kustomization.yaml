@@ -1,0 +1,5 @@
+bases:
+- ../base
+
+patchesStrategicMerge:
+  - set_slack_api_key.yaml

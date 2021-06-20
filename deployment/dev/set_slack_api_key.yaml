@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: robusta-runner
+spec:
+  template:
+    spec:
+      containers:
+      - name: runner
+        env:
+          - name: SLACK_TOKEN
+            value: "PUT YOUR SLACK TOKEN HERE SO THAT SLACK WORKS WHEN YOU DEVELOP AND USE SKAFFOLD RUN"

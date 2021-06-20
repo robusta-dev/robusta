@@ -1,0 +1,116 @@
+Playbook configuration
+################################
+
+Playbooks are loaded from playbook directories. Every playbook directory must have an ``active_playbooks.yaml`` file,
+one or more Python scripts, and a requirements.txt file defining extra Python requirements for your playbooks.
+
+Here is the layout of an example playbook directory:
+
+.. code-block:: yaml
+
+    example_playbooks/
+        - active_playbooks.yaml
+        - some_playbook.py
+        - other_playbook.py
+        - requirements.txt
+
+This set of playbooks would be loaded into Robusta with the command ``robusta deploy example_playbooks/``
+
+At the moment, only one playbook directory can be loaded at a time. Loading another playbook directory will replace the previous one.
+
+Enabling playbooks
+^^^^^^^^^^^^^^^^^^
+To activate a playbook, the playbook name must be listed in active_playbooks.yaml and the playbook directory must then be loaded.
+
+Here is a sample ``active_playbooks.yaml`` which enables two playbooks:
+
+.. code-block:: yaml
+
+    active_playbooks
+     - name: "python_profiler"
+     - name: "restart_loop_reporter"
+
+
+Playbook parameters
+^^^^^^^^^^^^^^^^^^^
+Many playbooks expose variables which can be set in ``active_playbooks.yaml``. Here is an example of how you can configure the :ref:`restart_loop_reporter` playbook.
+This is a playbook which adds annotations to grafana every time that a deployment's version changes. (The version is calculated according to docker image tags.)
+
+.. code-block:: yaml
+
+   active_playbooks
+     - name: "add_deployment_lines_to_grafana"
+       action_params:
+         grafana_dashboard_uid: "uid_from_url"
+         grafana_api_key: "grafana_api_key_with_editor_role"
+         grafana_service_name: "grafana.namespace.svc.cluster.local:3000"
+
+The above enables the playbook and customizes it with three variables that the playbook requires. You can find a list of playbook variables in the documentation of each playbook.
+
+Trigger Params
+^^^^^^^^^^^^^^^^
+Playbooks can be customized so that they only run when certain conditions apply.
+Here we further customize the playbook from the previous example so that it only runs for deployments whose name starts with "MyApp":
+
+.. code-block:: yaml
+
+   active_playbooks
+     - name: "add_deployment_lines_to_grafana"
+       action_params:
+         grafana_dashboard_uid: "uid_from_url"
+         grafana_api_key: "grafana_api_key_with_editor_role"
+         grafana_service_name: "grafana.namespace.svc.cluster.local:3000"
+       trigger_params:
+         name_prefix: "MyApp"
+
+Currently all playbooks for Kubernetes changes accept the trigger_params ``name_prefix`` and ``namespace_prefix``.
+All playbooks for Prometheus alerts accept the trigger_params ``pod_name_prefix`` and ``instance_name_prefix``.
+If you need support for additional trigger_params, please contact us and we will be happy to add additional trigger_params for your use case.
+
+Enabling a playbook multiple times
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You can enable a playbook multiple times with different configurations. For example:
+
+.. code-block:: yaml
+
+   active_playbooks
+     - name: "add_deployment_lines_to_grafana"
+       action_params:
+         grafana_dashboard_uid: "dashboard1"
+         grafana_api_key: "grafana_api_key_with_editor_role"
+         grafana_service_name: "grafana.namespace.svc.cluster.local:3000"
+       trigger_params:
+         name_prefix: "App1"
+
+     - name: "add_deployment_lines_to_grafana"
+       action_params:
+         grafana_dashboard_uid: "dashboard2"
+         grafana_api_key: "grafana_api_key_with_editor_role"
+         grafana_service_name: "grafana.namespace.svc.cluster.local:3000"
+       trigger_params:
+         name_prefix: "App2"
+
+Global playbook parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+In the previous example the playbook variables ``grafana_api_key`` and ``grafana_service_name`` were defined multiple times with the same value.
+To avoid repeating yourself you can define trigger_params and parameters globally for all playbooks. They will be applied to any playbook where they are valid:
+
+.. code-block:: yaml
+
+   global_config:
+     grafana_api_key: "grafana_api_key_with_editor_role"
+     grafana_service_name: "grafana.namespace.svc.cluster.local:3000"
+
+   active_playbooks
+     - name: "add_deployment_lines_to_grafana"
+       action_params:
+         grafana_dashboard_uid: "dashboard1"
+       trigger_params:
+         name_prefix: "App1"
+
+     - name: "add_deployment_lines_to_grafana"
+       action_params:
+         grafana_dashboard_uid: "dashboard2"
+       trigger_params:
+         name_prefix: "App2"
+

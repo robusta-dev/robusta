@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: robusta-runner
+  labels:
+    app: robusta-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: robusta-runner
+  template:
+    metadata:
+      labels:
+        app: robusta-runner
+    spec:
+      serviceAccountName: robusta-runner
+      containers:
+      - name: runner
+        image: us-central1-docker.pkg.dev/arabica-300319/devel/robusta-runner
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        env:
+          - name: CUSTOM_PLAYBOOKS_ROOT
+            value: /etc/robusta/config
+          - name: ENABLE_MANHOLE
+            value: "true"
+          - name: ENABLE_COLORED_LOGS
+            value: "true"
+          - name: LOG_LEVEL
+            value: INFO
+          - name: SLACK_TOKEN # The token received upon app workspace installation
+            value: "<SLACK_API_KEY>"
+          - name: SLACK_WEBSOCKET_RELAY_ADDRESS
+            value: "wss://relay.robusta.dev"
+        volumeMounts:
+          - name: playbooks-config
+            mountPath: /etc/robusta/config
+        lifecycle:
+          preStop:
+            exec:
+              command: ["bash", "-c", "kill -SIGINT 1"]
+      volumes:
+        - name: playbooks-config
+          configMap:
+            name: robusta-config
+            optional: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: robusta-runner
+spec:
+  selector:
+    app: robusta-runner
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000

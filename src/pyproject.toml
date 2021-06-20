@@ -1,0 +1,44 @@
+[tool.poetry]
+name = "robusta-cli"
+version = "0.0.0"
+description = ""
+authors = ["Natan Yellin <aantn@users.noreply.github.com>"]
+packages = [
+    { include = "robusta"},
+]
+
+[tool.poetry.scripts]
+robusta = "robusta.cli.main:app"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+typer = "^0.3.2"
+Flask = "^1.1.2"
+colorlog = "^5.0.1"
+pydantic = "^1.8.1"
+kubernetes = "^12.0.1"
+grafana-api = "^1.0.3"
+slack-bolt = "^1.5.0"
+inflection = "^0.5.1"
+manhole = "^1.8.0"
+PyYAML = "^5.4.1"
+watchdog = "^2.1.0"
+dulwich = "^0.20.23"
+better-exceptions = "^0.3.3"
+CairoSVG = "^2.5.2"
+tabulate = "^0.8.9"
+
+[tool.poetry.dev-dependencies]
+dunamai = "^1.5.5"
+hikaru = {git = "https://github.com/aantn/hikaru.git", rev = "fix_datetimes"}
+
+[build-system]
+#requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# https://github.com/mtkennerly/poetry-dynamic-versioning
+# we can use this in github actions by running `poetry run poetry-dynamic-versioning`
+#[tool.poetry-dynamic-versioning]
+#vcs = "git"
+#pattern = "^(?P<base>\\d+\\.\\d+\\.\\d+)"

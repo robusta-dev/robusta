@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - namespace.yaml
+  - runner-service-account.yaml
+  - forwarder-service-account.yaml
+  - runner.yaml
+  - forwarder.yaml
+
+configMapGenerator:
+  - name: robusta-fluentd-config
+    files:
+      - config/fluent.conf
+  - name: robusta-kubewatch-config
+    files:
+      - config/.kubewatch.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+namespace: robusta
