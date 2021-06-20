@@ -1,0 +1,95 @@
+name: Release Robusta
+
+on:
+  release:
+    types: [published]
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+# ` ``  GKE_ZONE: us-central1-c   # TODO: update to cluster zone
+  RELEASE_VER : ${{ github.event.release.tag_name }}
+jobs:
+
+  setup-build-publish-deploy:
+    name: Build images
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Get release version
+      run: echo "$RELEASE_VER"
+
+    - uses: google-github-actions/setup-gcloud@v0.2.0
+      with:
+        service_account_key: ${{ secrets.GKE_SA_KEY }}
+        project_id: ${{ secrets.GKE_PROJECT }}
+        export_default_credentials: true
+
+    # Configure Docker to use the gcloud command-line tool as a credential helper for authentication
+    - run: |-
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+
+    - run: |-
+        gcloud config get-value project
+
+    - run: |-
+        curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
+        chmod a+x skaffold
+
+    - name: Update package version
+      run: |
+        sed -i 's/0.0.0/${{env.RELEASE_VER}}/g' src/robusta/_version.py src/pyproject.toml
+
+    # see https://github.com/GoogleContainerTools/skaffold/issues/4842
+    - name: Cache skaffold image builds & config
+      uses: actions/cache@v2
+      with:
+        path: ~/.skaffold/
+        key: fixed-${{ github.sha }}
+        restore-keys: |
+          fixed-${{ github.sha }}
+          fixed-
+    - name: Build with skaffold
+      run: ./skaffold build -p prod --file-output=container-ids.json
+
+    # we disable the run-id so that if we do two identical builds then they will output the same YAML
+    # otherwise skaffold creates a different yaml because the run id changes
+    - name: Render yaml file
+      run: ./skaffold render -p prod --offline=true -l skaffold.dev/run-id=LEAVE_UNCHANGED > robusta.yaml
+
+    # upload robusta.yaml to gist
+    - name: Deploy gist
+      uses: arikalon1/actions-deploy-gist@v1
+      with:
+        token: ${{ secrets.GIST_TOKEN }}
+        gist_id: 1196dd6496707d42d85d96f7e6b5d000
+        gist_file_name: robusta-${{ env.RELEASE_VER }}.yaml
+        file_path: ./robusta.yaml
+
+    - name: Create robusta examples
+      run: |-
+        zip -r ./example-playbooks.zip ./playbooks
+
+    - name: Upload examples playbook to public gcp bucket
+      run: gsutil cp ./example-playbooks.zip  gs://robusta-public/${{ env.RELEASE_VER }}/example-playbooks.zip
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install twine
+
+    - name: Prepare pypi dist
+      run: |
+        cd src
+        pip3 install poetry==1.1.6
+        poetry config virtualenvs.create false
+        bash -c "pip3 install --requirement <(poetry export --dev --format requirements.txt --without-hashes)"
+        poetry publish --build -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_PASS }}
+        cd ../

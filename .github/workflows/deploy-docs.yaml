@@ -1,0 +1,73 @@
+name: Build & Deploy Robusta Docs
+
+on:
+  release:
+    types: [published]
+  push:
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Docs release version'
+        required: true
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  RELEASE_VER : ${{ github.event.release.tag_name }}
+jobs:
+
+  setup-build-publish-deploy:
+    name: Deploy docs
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - uses: google-github-actions/setup-gcloud@v0.2.0
+      with:
+        service_account_key: ${{ secrets.GKE_SA_KEY }}
+        project_id: ${{ secrets.GKE_PROJECT }}
+        export_default_credentials: true
+
+    # Configure Docker to use the gcloud command-line tool as a credential helper for authentication
+    - run: |-
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r docs/requirements.txt
+
+    - name: Set environmental variables
+      run: |
+        if [ ! -z "${{ env.RELEASE_VER }}" ]; then
+          echo release
+          echo "DOCS_VERSION=${{ env.RELEASE_VER }}" >> $GITHUB_ENV
+        elif [ ! -z "${{ github.event.inputs.version }}" ];  then
+          echo manual
+          echo "DOCS_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+        else
+          echo default
+          echo "DOCS_VERSION=master" >> $GITHUB_ENV
+        fi
+
+    - name: Update docs version ${{ env.DOCS_VERSION }}
+      run: |
+        sed -i 's/DOCS_VERSION_PLACEHOLDER/${{ env.DOCS_VERSION }}/g' docs/conf.py
+        sed -i 's/DOCS_RELEASE_PLACEHOLDER/${{ env.DOCS_VERSION }}/g' docs/conf.py
+
+    - name: Build the docs
+      run: |
+        cd docs
+        make html
+
+    # using relative path doesn't work for some reason (aka ./_build/html)
+    - name: Upload docs to public gcp bucket
+      run: gsutil rsync -R /home/runner/work/cloudlets/cloudlets/docs/_build/html gs://robusta-public/${{ env.DOCS_VERSION }}/

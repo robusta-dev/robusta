@@ -1,0 +1,10 @@
+.idea/
+.vscode/
+src/build/
+src/dist/
+*.egg/
+*.egg-info/
+*.pyc
+venv/
+docs/_build
+.DS_Store
