@@ -12,7 +12,7 @@ If you want to use the Slack integration, get a slack token from https://robusta
 and add it to `deployment/dev/set_slack_api_key.yaml` before running skaffold.
 
 # Running Robusta runner locally as a developer
-If you want to run the robusta runner on your own computer (e.g. with telepresence):
+If you want to run the Robusta runner on your own computer (e.g. with telepresence):
 
 1. `git clone` the source code
 2. `cd src`
