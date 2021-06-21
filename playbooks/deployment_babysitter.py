@@ -10,13 +10,14 @@ from robusta.api import *
 
 
 class DeploymentBabysitterConfig(BaseModel):
-    slack_channel: str
+    slack_channel: str = ""
     fields_to_monitor: Tuple[str] = (
         "status.readyReplicas",
         "message",
         "reason",
         "spec"
     )
+    sinks: List[SinkConfigBase] = None
 
 
 # TODO: filter out all the managed fields crap
@@ -40,6 +41,7 @@ def babysitter_get_blocks(diffs: List[DiffDetail]):
 @on_deployment_all_changes
 def deployment_babysitter(event: DeploymentEvent, config: DeploymentBabysitterConfig):
     """Track changes to a deployment and send the changes in slack."""
+    filtered_diffs = None
     if event.operation == K8sOperationType.UPDATE:
         all_diffs = event.obj.diff(event.old_obj)
         filtered_diffs = list(filter(lambda x: babysitter_should_include_diff(x, config), all_diffs))
@@ -48,5 +50,22 @@ def deployment_babysitter(event: DeploymentEvent, config: DeploymentBabysitterCo
         event.report_attachment_blocks.extend(babysitter_get_blocks(filtered_diffs))
 
     event.report_title = f"Deployment {event.obj.metadata.name} {event.operation.value}d in namespace {event.obj.metadata.namespace}"
-    event.slack_channel = config.slack_channel
-    send_to_slack(event)
+    if config.slack_channel:
+        event.slack_channel = config.slack_channel
+        send_to_slack(event)
+
+    if config.sinks:
+        data = {
+            "deployment": event.obj.metadata.name,
+            "deployment_namespace": event.obj.metadata.namespace,
+            "message": "Deployment properties change",
+            "changed_properties": [{
+                "property": ".".join(diff.path),
+                "old": diff.other_value,
+                "new": diff.value
+            } for diff in filtered_diffs]
+        }
+        for sink_config in config.sinks:
+            SinkFactory.get_sink(sink_config).write(data)
+
+
