@@ -11,7 +11,7 @@ packages = [
 robusta = "robusta.cli.main:app"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.6.1"
 typer = "^0.3.2"
 Flask = "^1.1.2"
 colorlog = "^5.0.1"
@@ -29,7 +29,6 @@ CairoSVG = "^2.5.2"
 tabulate = "^0.8.9"
 
 [tool.poetry.dev-dependencies]
-dunamai = "^1.5.5"
 hikaru = {git = "https://github.com/aantn/hikaru.git", rev = "fix_datetimes"}
 
 [build-system]
