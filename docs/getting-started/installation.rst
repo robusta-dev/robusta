@@ -58,7 +58,7 @@ Lets try out a default playbook which sends a Slack notification whenever pods c
 
 .. code-block:: python
 
-   kubectl apply -f https://gist.githubusercontent.com/arikalon1/4fad3cee4c6921679c513a953cd615ce/raw/crashpod.yaml
+   kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml
 
 Lets verify we have a crashing pod:
 

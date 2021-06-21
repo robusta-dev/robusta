@@ -17,8 +17,8 @@ app = typer.Typer()
 
 SLACK_INTEGRATION_SERVICE_ADDRESS = os.environ.get('SLACK_INTEGRATION_SERVICE_ADDRESS', "https://robusta.dev/integrations/slack/get-token")
 EXAMPLES_BUCKET_URL = f"https://storage.googleapis.com/robusta-public/{__version__}"
-DOWNLOAD_URL = f"https://gist.githubusercontent.com/arikalon1/1196dd6496707d42d85d96f7e6b5d000/raw/robusta-{__version__}.yaml"
-CRASHPOD_YAML = "https://gist.githubusercontent.com/arikalon1/4fad3cee4c6921679c513a953cd615ce/raw/crashpod.yaml"
+DOWNLOAD_URL = f"https://gist.githubusercontent.com/robusta-lab/6b809d508dfc3d8d92afc92c7bbbe88e/raw/robusta-{__version__}.yaml"
+CRASHPOD_YAML = "https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml"
 
 def exec_in_robusta_runner(cmd, tries=1, time_between_attempts=10, error_msg="error running cmd"):
     cmd = ["kubectl", "exec", "-n", "robusta", "-it", "deploy/robusta-runner", "--", "bash", "-c", cmd]

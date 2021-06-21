@@ -64,7 +64,7 @@ jobs:
       uses: arikalon1/actions-deploy-gist@v1
       with:
         token: ${{ secrets.GIST_TOKEN }}
-        gist_id: 1196dd6496707d42d85d96f7e6b5d000
+        gist_id: 6b809d508dfc3d8d92afc92c7bbbe88e
         gist_file_name: robusta-${{ env.RELEASE_VER }}.yaml
         file_path: ./robusta.yaml
 
