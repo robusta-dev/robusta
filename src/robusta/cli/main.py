@@ -3,7 +3,7 @@ import subprocess
 import time
 import uuid
 from contextlib import contextmanager
-from importlib.metadata import version as get_module_version
+# from importlib.metadata import version as get_module_version
 from typing import List, Optional
 from zipfile import ZipFile
 
@@ -151,7 +151,8 @@ def playground():
 @app.command()
 def version():
     """show the version of the local robusta-cli"""
-    typer.echo(get_module_version("robusta-cli"))
+    pass
+    # typer.echo(get_module_version("robusta-cli"))
 
 
 @app.command()
