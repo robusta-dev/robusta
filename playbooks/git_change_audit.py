@@ -29,17 +29,18 @@ def git_change_audit(event : KubernetesAnyEvent, action_params: GitAuditParams):
 
     git_repo = GitRepoManager.get_git_repo(action_params.git_https_url, action_params.git_user, action_params.git_password)
     name = f"{git_safe_name(event.obj.metadata.name)}.yaml"
-    path = f"{git_safe_name(action_params.cluster_name)}/{git_safe_name(event.obj.metadata.namespace)}"
+    namespace = event.obj.metadata.namespace or "None"
+    path = f"{git_safe_name(action_params.cluster_name)}/{git_safe_name(namespace)}"
 
     if event.operation == K8sOperationType.DELETE:
         git_repo.delete_push(path, name)
     elif event.operation == K8sOperationType.CREATE:
         obj_yaml = hikaru.get_yaml(event.obj.spec)
-        git_repo.commit_push(obj_yaml, path, name, f"Create {event.obj.kind} named {event.obj.metadata.name} on namespace {event.obj.metadata.namespace}")
+        git_repo.commit_push(obj_yaml, path, name, f"Create {event.obj.kind} named {event.obj.metadata.name} on namespace {namespace}")
     else: # update
         obj_yaml = hikaru.get_yaml(event.obj.spec)
         old_obj_yaml = ""
         if event.old_obj is not None:
             old_obj_yaml = hikaru.get_yaml(event.old_obj.spec)
         if obj_yaml != old_obj_yaml: # we have a change in the spec
-            git_repo.commit_push(obj_yaml, path, name, f"Update {event.obj.kind} named {event.obj.metadata.name} on namespace {event.obj.metadata.namespace}")
+            git_repo.commit_push(obj_yaml, path, name, f"Update {event.obj.kind} named {event.obj.metadata.name} on namespace {namespace}")

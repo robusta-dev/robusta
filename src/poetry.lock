@@ -2,7 +2,7 @@
 name = "appdirs"
 version = "1.4.4"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -10,7 +10,7 @@ python-versions = "*"
 name = "autopep8"
 version = "1.5.7"
 description = "A tool that automatically formats Python code to conform to the PEP 8 style guide"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -33,7 +33,7 @@ colorama = {version = "*", markers = "sys_platform == \"win32\""}
 name = "black"
 version = "20.8b1"
 description = "The uncompromising code formatter."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -220,7 +220,7 @@ dotenv = ["python-dotenv"]
 
 [[package]]
 name = "google-auth"
-version = "1.31.0"
+version = "1.32.0"
 description = "Google Authentication Library"
 category = "main"
 optional = false
@@ -253,24 +253,17 @@ test = ["codecov (>=2.1.0)", "coverage (>=5.2.0)", "unittest-xml-reporting (>=3.
 
 [[package]]
 name = "hikaru"
-version = "0.4b0"
+version = "0.5.1b0"
 description = "Hikaru allows you to smoothly move between Kubernetes YAML, Python objects, and Python source, in any direction"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
-develop = false
 
 [package.dependencies]
 autopep8 = ">=1.5.5"
-black = ">=20.8b1"
+black = ">=20.8b1,<=21.5b2"
 kubernetes = "12.0.1"
 "ruamel.yaml" = ">=0.16.12"
-
-[package.source]
-type = "git"
-url = "https://github.com/aantn/hikaru.git"
-reference = "fix_datetimes"
-resolved_reference = "00caa9075a9915b44b04695bc5b9ff78b9caf6e8"
 
 [[package]]
 name = "idna"
@@ -363,7 +356,7 @@ python-versions = ">=3.6"
 name = "mypy-extensions"
 version = "0.4.3"
 description = "Experimental type system extensions for programs checked with the mypy typechecker."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -384,7 +377,7 @@ signedtoken = ["cryptography (>=3.0.0,<4)", "pyjwt (>=2.0.0,<3)"]
 name = "pathspec"
 version = "0.8.1"
 description = "Utility library for gitignore style pattern matching of file paths."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -419,7 +412,7 @@ pyasn1 = ">=0.4.6,<0.5.0"
 name = "pycodestyle"
 version = "2.7.0"
 description = "Python style guide checker"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -470,7 +463,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 name = "regex"
 version = "2021.4.4"
 description = "Alternative regular expression module, to replace re."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -522,7 +515,7 @@ pyasn1 = ">=0.1.3"
 name = "ruamel.yaml"
 version = "0.17.9"
 description = "ruamel.yaml is a YAML parser/emitter that supports roundtrip preservation of comments, seq/map flow style, and map key order"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3"
 
@@ -537,7 +530,7 @@ jinja2 = ["ruamel.yaml.jinja2 (>=0.2)"]
 name = "ruamel.yaml.clib"
 version = "0.2.2"
 description = "C version of reader, parser and emitter for ruamel.yaml derived from libyaml"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -607,7 +600,7 @@ test = ["pytest", "pytest-cov", "pytest-flake8", "pytest-isort", "coverage"]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
@@ -615,7 +608,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 name = "typed-ast"
 version = "1.4.3"
 description = "a fork of Python 2 and 3 ast modules with type comment support"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -699,7 +692,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "3174b7f91ff015fb668cc902d63c7111feac0056cfb21980c2795c7fa0b00c43"
+content-hash = "6d57f6f1668ec2f4195c02c9759b22e6d5222589ff34dcc515e0790afa776a13"
 
 [metadata.files]
 appdirs = [
@@ -836,14 +829,16 @@ flask = [
     {file = "Flask-1.1.4.tar.gz", hash = "sha256:0fbeb6180d383a9186d0d6ed954e0042ad9f18e0e8de088b2b419d526927d196"},
 ]
 google-auth = [
-    {file = "google-auth-1.31.0.tar.gz", hash = "sha256:154f7889c5d679a6f626f36adb12afbd4dbb0a9a04ec575d989d6ba79c4fd65e"},
-    {file = "google_auth-1.31.0-py2.py3-none-any.whl", hash = "sha256:6d47c79b5d09fbc7e8355fd9594cc4cf65fdde5d401c63951eaac4baa1ba2ae1"},
+    {file = "google-auth-1.32.0.tar.gz", hash = "sha256:e34e5f5de5610b202f9b40ebd9f8b27571d5c5537db9afed3a72b2db5a345039"},
+    {file = "google_auth-1.32.0-py2.py3-none-any.whl", hash = "sha256:b3a67fa9ba5b768861dacf374c2135eb09fa14a0e40c851c3b8ea7abe6fc8fef"},
 ]
 grafana-api = [
     {file = "grafana_api-1.0.3-py2.py3-none-any.whl", hash = "sha256:30caef227025ecdb5662b242aaae921b89b58959566d83a5948523c8138e98ce"},
     {file = "grafana_api-1.0.3.tar.gz", hash = "sha256:d541ea1a5b7efafa56c5f04053ed42b2d972a6aa313bc4881dd192aeb0706e2e"},
 ]
-hikaru = []
+hikaru = [
+    {file = "hikaru-0.5.1b0-py3-none-any.whl", hash = "sha256:364743d4aab63f53153cc51bd2f91e32a01c8cb665481028f289d5021f0f86a6"},
+]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
     {file = "idna-2.10.tar.gz", hash = "sha256:b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"},

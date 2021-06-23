@@ -12,6 +12,7 @@ from hikaru.model.rel_1_16.v1 import Service as v1Service
 from hikaru.model.rel_1_16.v1 import ConfigMap as v1ConfigMap    
 from hikaru.model.rel_1_16.v1 import Event as v1Event    
 from hikaru.model.rel_1_16.v1 import HorizontalPodAutoscaler as v1HorizontalPodAutoscaler    
+from hikaru.model.rel_1_16.v1 import Node as v1Node    
 from hikaru.model.rel_1_16.v2beta1 import Pod as v2beta1Pod    
 from hikaru.model.rel_1_16.v2beta1 import ReplicaSet as v2beta1ReplicaSet    
 from hikaru.model.rel_1_16.v2beta1 import DaemonSet as v2beta1DaemonSet    
@@ -20,6 +21,7 @@ from hikaru.model.rel_1_16.v2beta1 import Service as v2beta1Service
 from hikaru.model.rel_1_16.v2beta1 import ConfigMap as v2beta1ConfigMap    
 from hikaru.model.rel_1_16.v2beta1 import Event as v2beta1Event    
 from hikaru.model.rel_1_16.v2beta1 import HorizontalPodAutoscaler as v2beta1HorizontalPodAutoscaler    
+from hikaru.model.rel_1_16.v2beta1 import Node as v2beta1Node    
 from hikaru.model.rel_1_16.v2beta2 import Pod as v2beta2Pod    
 from hikaru.model.rel_1_16.v2beta2 import ReplicaSet as v2beta2ReplicaSet    
 from hikaru.model.rel_1_16.v2beta2 import DaemonSet as v2beta2DaemonSet    
@@ -28,6 +30,7 @@ from hikaru.model.rel_1_16.v2beta2 import Service as v2beta2Service
 from hikaru.model.rel_1_16.v2beta2 import ConfigMap as v2beta2ConfigMap    
 from hikaru.model.rel_1_16.v2beta2 import Event as v2beta2Event    
 from hikaru.model.rel_1_16.v2beta2 import HorizontalPodAutoscaler as v2beta2HorizontalPodAutoscaler    
+from hikaru.model.rel_1_16.v2beta2 import Node as v2beta2Node    
 
 @dataclass
 class PodEvent (K8sBaseEvent):
@@ -78,9 +81,15 @@ class HorizontalPodAutoscalerEvent (K8sBaseEvent):
 
 
 @dataclass
+class NodeEvent (K8sBaseEvent):
+    obj: Union[v1Node,v2beta1Node,v2beta2Node]
+    old_obj: Union[v1Node,v2beta1Node,v2beta2Node]
+
+
+@dataclass
 class KubernetesAnyEvent (K8sBaseEvent):
-    obj: Union[v1ConfigMap,v1ReplicaSet,v2beta1ReplicaSet,RobustaPod,v1DaemonSet,v2beta2Service,v1Service,v2beta2ConfigMap,v2beta1ConfigMap,v2beta2Event,v2beta1HorizontalPodAutoscaler,RobustaDeployment,v1HorizontalPodAutoscaler,v2beta1DaemonSet,v1Event,v2beta2ReplicaSet,v2beta2HorizontalPodAutoscaler,v2beta2DaemonSet,v2beta1Service,v2beta1Event]
-    old_obj: Union[v1ConfigMap,v1ReplicaSet,v2beta1ReplicaSet,RobustaPod,v1DaemonSet,v2beta2Service,v1Service,v2beta2ConfigMap,v2beta1ConfigMap,v2beta2Event,v2beta1HorizontalPodAutoscaler,RobustaDeployment,v1HorizontalPodAutoscaler,v2beta1DaemonSet,v1Event,v2beta2ReplicaSet,v2beta2HorizontalPodAutoscaler,v2beta2DaemonSet,v2beta1Service,v2beta1Event]
+    obj: Union[v2beta1HorizontalPodAutoscaler,v1Service,v2beta1Event,v1DaemonSet,v2beta2Service,RobustaPod,v2beta1Node,v2beta1DaemonSet,v2beta1ConfigMap,v1Node,v1Event,v2beta2ReplicaSet,v2beta2DaemonSet,v2beta2Event,v2beta2ConfigMap,v2beta1ReplicaSet,v1ConfigMap,v2beta1Service,RobustaDeployment,v2beta2Node,v1HorizontalPodAutoscaler,v2beta2HorizontalPodAutoscaler,v1ReplicaSet]
+    old_obj: Union[v2beta1HorizontalPodAutoscaler,v1Service,v2beta1Event,v1DaemonSet,v2beta2Service,RobustaPod,v2beta1Node,v2beta1DaemonSet,v2beta1ConfigMap,v1Node,v1Event,v2beta2ReplicaSet,v2beta2DaemonSet,v2beta2Event,v2beta2ConfigMap,v2beta1ReplicaSet,v1ConfigMap,v2beta1Service,RobustaDeployment,v2beta2Node,v1HorizontalPodAutoscaler,v2beta2HorizontalPodAutoscaler,v1ReplicaSet]
 
 
 KIND_TO_EVENT_CLASS = {
@@ -91,5 +100,6 @@ KIND_TO_EVENT_CLASS = {
     'Service': ServiceEvent,
     'ConfigMap': ConfigMapEvent,
     'Event': EventEvent,
-    'HorizontalPodAutoscaler': HorizontalPodAutoscalerEvent
+    'HorizontalPodAutoscaler': HorizontalPodAutoscalerEvent,
+    'Node': NodeEvent
 }

@@ -12,5 +12,6 @@ KIND_TO_MODEL_CLASS = {
     'Service': Service,
     'ConfigMap': ConfigMap,
     'Event': Event,
-    'HorizontalPodAutoscaler': HorizontalPodAutoscaler
+    'HorizontalPodAutoscaler': HorizontalPodAutoscaler,
+    'Node': Node
 }

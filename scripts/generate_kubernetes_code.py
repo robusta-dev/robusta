@@ -5,7 +5,7 @@ import inflection
 from typing import TextIO
 
 KUBERNETES_VERSIONS = ["v1", "v2beta1", "v2beta2"]
-KUBERNETES_RESOURCES = ["Pod", "ReplicaSet", "DaemonSet", "Deployment", "Service", "ConfigMap", "Event", "HorizontalPodAutoscaler"]
+KUBERNETES_RESOURCES = ["Pod", "ReplicaSet", "DaemonSet", "Deployment", "Service", "ConfigMap", "Event", "HorizontalPodAutoscaler", "Node"]
 TRIGGER_TYPES = {
     "create": "K8sOperationType.CREATE",
     "update": "K8sOperationType.UPDATE",

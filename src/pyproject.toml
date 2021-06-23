@@ -28,9 +28,9 @@ better-exceptions = "^0.3.3"
 CairoSVG = "^2.5.2"
 tabulate = "^0.8.9"
 kafka-python = "^2.0.2"
+hikaru = "^0.5.1-beta.0"
 
 [tool.poetry.dev-dependencies]
-hikaru = {git = "https://github.com/aantn/hikaru.git", rev = "fix_datetimes"}
 
 [build-system]
 #requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
