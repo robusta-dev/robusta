@@ -36,8 +36,9 @@ def get_action_block_for_choices(choices: Dict[str, Callable] = None, context=""
             raise Exception(
                 f"The callback for choice {text} is None. Did you accidentally pass `foo()` as a callback and not `foo`?")
         if not callback_registry.is_callback_in_registry(callback):
-            raise Exception(f"{callback} is not a function that was decorated with @slack_callback or it somehow has the"
-                            "wrong version (e.g. multiple functions with the same name were decorated with @slack_callback)")
+            raise Exception(f"{callback} is not a function that was decorated with @on_report_callback or it somehow"
+                            f" has the wrong version (e.g. multiple functions with the same name were decorated "
+                            f"with @on_report_callback)")
         buttons.append({
             "type": "button",
             "text": {
@@ -144,9 +145,12 @@ def send_to_slack(event: BaseEvent):
                   f"attachment_blocks: {event.report_attachment_blocks}\n"
                   f"message:{message}")
 
-    if attachment_blocks:
-        slack_app.client.chat_postMessage(channel=event.slack_channel, text=message, blocks=output_blocks,
-                                          display_as_bot=True, attachments=[{"blocks": attachment_blocks}])
-    else:
-        slack_app.client.chat_postMessage(channel=event.slack_channel, text=message, blocks=output_blocks,
-                                          display_as_bot=True)
+    try:
+        if attachment_blocks:
+            slack_app.client.chat_postMessage(channel=event.slack_channel, text=message, blocks=output_blocks,
+                                              display_as_bot=True, attachments=[{"blocks": attachment_blocks}])
+        else:
+            slack_app.client.chat_postMessage(channel=event.slack_channel, text=message, blocks=output_blocks,
+                                              display_as_bot=True)
+    except Exception as e:
+        logging.error(f"error sending message to slack\ne={e}\ntext={message}\nblocks={output_blocks}\nattachment_blocks={attachment_blocks}")
