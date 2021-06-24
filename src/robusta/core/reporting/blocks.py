@@ -58,7 +58,7 @@ class TableBlock (BaseBlock):
         super().__init__(rows=rows, headers=headers)
 
     def to_markdown(self) -> MarkdownBlock:
-        table = tabulate(self.rows, headers=self.headers, tablefmt="fancy_grid")
+        table = tabulate(self.rows, headers=self.headers, tablefmt="presto")
         return MarkdownBlock(f"```\n{table}\n```")
 
 

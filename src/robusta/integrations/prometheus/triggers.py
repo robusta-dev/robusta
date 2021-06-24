@@ -59,32 +59,27 @@ def deploy_on_pod_prometheus_alert(func, trigger_params: TriggerParams, action_p
                 pod_name = alert.labels.get('pod', None)
                 node_name = alert.labels.get('instance', None)
                 deployment_name = alert.labels.get('deployment', None)
+                job_name = alert.labels.get('job_name', None)
+                namespace = alert.labels.get('namespace', 'default')
                 try:
-                    if pod_name is not None:  # pod alert
-                        pod_namespace = alert.labels.get('namespace', 'default')
-                        kubernetes_obj = RobustaPod.read(pod_name, pod_namespace)
-                        if kubernetes_obj is None:
-                            logging.info(f'pod {pod_name} namespace {pod_namespace} not found. Skipping alert {alert_name}')
-                            continue
+                    if pod_name:  # pod alert
+                        kubernetes_obj = RobustaPod.read(pod_name, namespace)
                     elif deployment_name:
-                        namespace = alert.labels.get('namespace', 'default')
                         kubernetes_obj = RobustaDeployment.readNamespacedDeployment(deployment_name, namespace).obj
-                        if kubernetes_obj is None:
-                            logging.info(f'deployment {deployment_name} namespace {namespace} not found. Skipping alert {alert_name}')
-                            continue
-                    elif alert.labels.get('job_name', None):  # jobs alert not implemented yet
-                        continue
-                    elif node_name is not None: # node alert
+                    elif job_name:
+                        kubernetes_obj = Job.readNamespacedJob(deployment_name, namespace).obj
+                    elif node_name: # node alert
                         # sometimes we get an IP:PORT instead of the node name. handle that case
                         if ":" in node_name:
                             kubernetes_obj = find_node_by_ip(node_name.split(":")[0])
                         else:
                             kubernetes_obj = Node.readNode(node_name).obj
-                        if kubernetes_obj is None:
-                            logging.info(f'node {node_name} not found. Skipping alert {alert_name}')
-                            continue
                     else: # other alert, not implemented yet
                         logging.warning(f'alert {alert_name} does not contain pod/instance identifier. Not loading kubernetes object')
+
+                    if kubernetes_obj is None:
+                        logging.debug(f'Alert obj not loaded. alertName {alert_name} labels {alert.labels}')
+
                 except Exception as e:
                     logging.info(f"Error loading alert kubernetes object {alert}. error: {e}")
 
