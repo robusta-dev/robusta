@@ -9,7 +9,6 @@ You're on your way to automating your Kubernetes devops!
 
 .. image:: images/arch.png
    :width: 650
-   :height: 432
 
 Robusta makes cloud operations and maintenance more reliable with maintenance as code. Common use cases are:
 
