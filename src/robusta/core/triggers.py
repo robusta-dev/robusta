@@ -26,7 +26,8 @@ class DeployCommand:
 
 def deploy_playbook_config(runner_config: RunnerConfig):
     deploy_commands = []
-    for playbook_config in runner_config.active_playbooks:
+    active_playbooks = runner_config.active_playbooks or []
+    for playbook_config in active_playbooks:
         playbook_definition = get_playbook_inventory().get(playbook_config.name)
         if playbook_definition is None:
             logging.error(
