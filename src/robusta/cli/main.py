@@ -3,7 +3,6 @@ import subprocess
 import time
 import uuid
 from contextlib import contextmanager
-# from importlib.metadata import version as get_module_version
 from typing import List, Optional
 from zipfile import ZipFile
 
@@ -151,8 +150,10 @@ def playground():
 @app.command()
 def version():
     """show the version of the local robusta-cli"""
-    pass
-    # typer.echo(get_module_version("robusta-cli"))
+    if __version__ == "0.0.0":
+        typer.echo("running with development version from git")
+    else:
+        typer.echo(f"version {__version__}")
 
 
 @app.command()
