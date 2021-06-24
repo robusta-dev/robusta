@@ -107,6 +107,15 @@ def alerts_integration(alert: PrometheusKubernetesAlert, config: AlertsIntegrati
 
     alert.slack_channel = config.slack_channel
     alert_name = alert.alert.labels.get("alertname")
+
+    # filter out the dummy watchdog alert that prometheus constantly sends so that you know it is alive
+    if alert_name == "Watchdog" and alert.alert.labels.get("severity") == "none":
+        logging.debug(f"skipping watchdog alert {alert}")
+        return
+
+    logging.info(
+        f'running alerts_integration alert - alert: {alert.alert} pod: {alert.obj.metadata.name if alert.obj is not None else "None!"}')
+
     alert_configs = [alert_config for alert_config in config.alerts_config if alert_config.alert_name == alert_name]
     if not alert_configs:
         alert_configs = [default_alert_config(alert_name, config)]
