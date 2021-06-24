@@ -36,7 +36,7 @@ def start_slack_receiver():
         return
 
     if SLACK_WEBSOCKET_RELAY_ADDRESS == "":
-        logging.warn("Slack relay adress empty. Not initializing slack relay")
+        logging.warning("Slack relay adress empty. Not initializing slack relay")
         return
 
     websocket.enableTrace(SLACK_ENABLE_WEBSOCKET_TRACING)
