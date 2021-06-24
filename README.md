@@ -8,8 +8,10 @@ If you want to develop features for Robusta itself you'll need to install Robust
 2. Install skaffold and kustomize.
 3. Run `skaffold run --tail`
 
-If you want to use the Slack integration, get a slack token from https://robusta.dev/integrations/slack/?id=xyz 
-and add it to `deployment/dev/set_slack_api_key.yaml` before running skaffold.
+If you want to use the Slack integration:
+1. Get a slack token from https://robusta.dev/integrations/slack/?id=xyz
+2. Add it to `deployment/dev/set_slack_api_key.yaml` before running skaffold
+3. Optional: reduce the chance you'll accidentally commit your Slack key to git by running `git update-index --skip-worktree deployment/dev/set_slack_api_key.yaml` (see [here](https://stackoverflow.com/a/40272289/495995) for details)
 
 # Running Robusta runner locally as a developer
 If you want to run the Robusta runner on your own computer (e.g. with telepresence):

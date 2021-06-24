@@ -84,7 +84,7 @@ def deploy_on_pod_prometheus_alert(func, trigger_params: TriggerParams, action_p
                             logging.info(f'node {node_name} not found. Skipping alert {alert_name}')
                             continue
                     else: # other alert, not implemented yet
-                        logging.warn(f'alert {alert_name} does not contain pod/instance identifier. Not loading kubernetes object')
+                        logging.warning(f'alert {alert_name} does not contain pod/instance identifier. Not loading kubernetes object')
                 except Exception as e:
                     logging.info(f"Error loading alert kubernetes object {alert}. error: {e}")
 
