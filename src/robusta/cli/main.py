@@ -18,6 +18,7 @@ SLACK_INTEGRATION_SERVICE_ADDRESS = os.environ.get('SLACK_INTEGRATION_SERVICE_AD
 EXAMPLES_BUCKET_URL = f"https://storage.googleapis.com/robusta-public/{__version__}"
 DOWNLOAD_URL = f"https://gist.githubusercontent.com/robusta-lab/6b809d508dfc3d8d92afc92c7bbbe88e/raw/robusta-{__version__}.yaml"
 CRASHPOD_YAML = "https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml"
+PLAYBOOKS_DIR = "playbooks/"
 
 def exec_in_robusta_runner(cmd, tries=1, time_between_attempts=10, error_msg="error running cmd"):
     cmd = ["kubectl", "exec", "-n", "robusta", "-it", "deploy/robusta-runner", "--", "bash", "-c", cmd]
@@ -37,9 +38,9 @@ def download_file(url, local_path):
         f.write(response.content)
 
 
-def log_title(title):
+def log_title(title, color=None):
     typer.echo("="*70)
-    typer.echo(title)
+    typer.secho(title, fg=color)
     typer.echo("=" * 70)
 
 
@@ -77,7 +78,7 @@ def wait_for_slack_api_key(id: str) -> str:
 
 
 @app.command()
-def install(slack_api_key: str = None):
+def install(slack_api_key: str = None, upgrade: bool = typer.Option(False, help="Only upgrade Robusta's pods, without deploying the default playbooks")):
     """install robusta into your cluster"""
     filename = "robusta.yaml"
     download_file(DOWNLOAD_URL, filename)
@@ -90,6 +91,9 @@ def install(slack_api_key: str = None):
     if slack_api_key is not None:
         replace_in_file(filename, "<SLACK_API_KEY>", slack_api_key.strip())
 
+    if not upgrade: # download and deploy playbooks
+        examples()
+
     with fetch_runner_logs(all_logs=True):
         log_title("Installing")
         subprocess.check_call(["kubectl", "apply", "-f", filename])
@@ -100,7 +104,11 @@ def install(slack_api_key: str = None):
         # logs from the wrong pod...
         time.sleep(5) # wait an extra second for logs to be written
 
-    log_title("Done")
+    if not upgrade: # download and deploy playbooks
+        deploy(PLAYBOOKS_DIR)
+
+    log_title("Installation Done!")
+    log_title("In order to see Robusta in action run 'robusta demo'", color=typer.colors.BLUE)
 
 
 @app.command()
@@ -111,7 +119,7 @@ def deploy(playbooks_directory: str):
         subprocess.check_call(f'kubectl create configmap -n robusta robusta-config --from-file {playbooks_directory} -o yaml --dry-run | kubectl apply -f -', shell=True)
         subprocess.check_call(f'kubectl annotate pods -n robusta --all --overwrite "playbooks-last-modified={time.time()}"', shell=True)
         time.sleep(5) # wait five seconds for the runner to actually reload the playbooks
-    log_title("Done!")
+    log_title("Deployed playbooks!")
 
 
 @app.command()
@@ -138,7 +146,7 @@ def examples():
     slack_channel = typer.prompt("which slack channel should I send notifications to?")
     replace_in_file("playbooks/active_playbooks.yaml", "<DEFAULT_SLACK_CHANNEL>", slack_channel)
 
-    typer.echo("examples downloaded into the playbooks/ directory")
+    typer.echo(f"examples downloaded into the {PLAYBOOKS_DIR} directory")
 
 
 @app.command()
@@ -160,10 +168,10 @@ def version():
 def demo():
     """deliberately deploy a crashing pod to kubernetes so you can test robusta's response"""
     log_title("Deploying a crashing pod to kubernetes...")
-    with fetch_runner_logs():
-        subprocess.check_call(f'kubectl apply -f {CRASHPOD_YAML}', shell=True)
-        time.sleep(10)
-        subprocess.check_call(f'kubectl delete -n robusta deployment crashpod', shell=True)
+    subprocess.check_call(f'kubectl apply -f {CRASHPOD_YAML}', shell=True)
+    log_title("In ~30 seconds you should receive a slack notification on a crashing pod")
+    time.sleep(40)
+    subprocess.check_call(f'kubectl delete -n robusta deployment crashpod', shell=True)
     log_title("Done!")
 
 

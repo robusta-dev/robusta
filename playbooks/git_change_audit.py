@@ -8,6 +8,7 @@ class GitAuditParams(BaseModel):
     git_https_url: str
     git_user: str
     git_password: str
+    ignored_changes: List[str] = []
 
     def __str__(self):
         return f"cluster_name={self.cluster_name} git_https_url={self.git_https_url} git_user=***** git_password=*****"
@@ -17,6 +18,17 @@ def git_safe_name(name):
     return re.sub("[^0-9a-zA-Z\\-]+", "-", name)
 
 skipped_kinds = ["Event"]
+
+
+def obj_diff(spec: HikaruBase, old_spec: HikaruBase, ignored_changes: List[str]) -> bool:
+    if old_spec is None:
+        return True
+
+    all_diffs = spec.diff(old_spec)
+    formatted_diffs = [diff.formatted_path[diff.formatted_path.index(".") + 1:] for diff in all_diffs if diff.formatted_path]
+    filtered_diffs = [diff for diff in formatted_diffs if diff not in ignored_changes]
+    return len(filtered_diffs) > 0
+
 
 @on_kubernetes_any_all_changes
 def git_change_audit(event : KubernetesAnyEvent, action_params: GitAuditParams):
@@ -38,9 +50,7 @@ def git_change_audit(event : KubernetesAnyEvent, action_params: GitAuditParams):
         obj_yaml = hikaru.get_yaml(event.obj.spec)
         git_repo.commit_push(obj_yaml, path, name, f"Create {event.obj.kind} named {event.obj.metadata.name} on namespace {namespace}")
     else: # update
-        obj_yaml = hikaru.get_yaml(event.obj.spec)
-        old_obj_yaml = ""
-        if event.old_obj is not None:
-            old_obj_yaml = hikaru.get_yaml(event.old_obj.spec)
-        if obj_yaml != old_obj_yaml: # we have a change in the spec
-            git_repo.commit_push(obj_yaml, path, name, f"Update {event.obj.kind} named {event.obj.metadata.name} on namespace {namespace}")
+        old_spec = event.old_obj.spec if event.old_obj else None
+        if obj_diff(event.obj.spec, old_spec, action_params.ignored_changes): # we have a change in the spec
+            git_repo.commit_push(hikaru.get_yaml(event.obj.spec), path, name,
+                                 f"Update {event.obj.kind} named {event.obj.metadata.name} on namespace {namespace}")
