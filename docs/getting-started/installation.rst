@@ -64,7 +64,7 @@ Lets verify we have a crashing pod:
 
 .. code-block:: bash
 
-   $ kubectl get pods
+   $ kubectl get pods -A
    NAME                            READY   STATUS             RESTARTS   AGE
    crashpod-64d8fbfd-s2dvn         0/1     CrashLoopBackOff   1          7s
 

@@ -21,6 +21,8 @@ If you want to run the Robusta runner on your own computer (e.g. with telepresen
 3. `poetry install`
 4. `poetry run python3 -m robusta.runner.main`
 
+If you're on Mac OS and receive errors about `Pillow` or `libjpeg` when running `poetry install` then run `brew install libjpeg` first.
+
 # Running Robusta cli locally as a developer
 This is only necessary if you are developing features for the cli itself.
 If you just want to develop robusta-runner and install it from your local version,
