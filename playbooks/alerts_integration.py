@@ -1,6 +1,14 @@
+import requests
+import textwrap
+from datetime import datetime, timedelta
+from urllib.parse import urlparse, unquote_plus
+
+import pygal
+from pygal.style import DarkStyle as ChosenStyle
+from prometheus_api_client import PrometheusConnect
+
 from robusta.api import *
 from node_cpu_analysis import do_node_cpu_analysis
-
 
 class GenParams(BaseModel):
     name: str
@@ -61,20 +69,80 @@ class DefaultEnricher (Enricher):
         labels = alert.alert.labels
         annotations = alert.alert.annotations
 
-        if "summary" in annotations:
+        if annotations.get("summary"):
             alert.report_title = f'{alert_name}: {annotations["summary"]}'
         else:
             alert.report_title = alert_name
 
         alert.report_attachment_blocks.append(TableBlock(labels.items(), ["label", "value"]))
-        if "description" in annotations:
-            alert.report_attachment_blocks.append(MarkdownBlock(annotations["description"]))
+        if annotations.get("description"):
+            # remove "LABELS = map[...]" from the description as we already add a TableBlock with labels
+            clean_description = re.sub(r"LABELS = map\[.*\]$", "", annotations["description"])
+            alert.report_attachment_blocks.append(MarkdownBlock(clean_description))
+
+
+class GraphEnricher(Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        url = urlparse(alert.alert.generatorURL)
+        prom = PrometheusConnect(url=f"{url.scheme}://{url.netloc}", disable_ssl=True)
+
+        promql_query = re.match(r'g0.expr=(.*)&g0.tab=1', unquote_plus(url.query)).group(1)
+
+        end_time = datetime.now(tz=alert.alert.startsAt.tzinfo)
+        alert_duration = end_time - alert.alert.startsAt
+        graph_duration = max(alert_duration, timedelta(minutes=60))
+        start_time = end_time - graph_duration
+        increment = graph_duration.total_seconds() / 60
+        result = prom.custom_query_range(promql_query, start_time, end_time, increment)
+
+        chart = pygal.XY(interpolate="cubic", show_dots=True, style=ChosenStyle)
+        chart.x_label_rotation = 35
+        chart.truncate_label = -1
+        chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime('%I:%M:%S %p on %d, %b')
+        chart.title = promql_query
+        for series in result:
+            label = "\n".join([f"{k}={v}" for (k, v) in series['metric'].items()])
+            values = [(timestamp, float(val)) for (timestamp, val) in series['values']]
+            chart.add(label, values)
+        alert.report_blocks.append(FileBlock(f"{promql_query}.svg", chart.render()))
 
 
 class NodeCPUEnricher (Enricher):
 
     def enrich(self, alert: PrometheusKubernetesAlert):
         alert.report_blocks.extend(do_node_cpu_analysis(alert.obj.metadata.name))
+        alert.report_title = f"{alert.alert.labels.get('alertname')} Node CPU Analysis"
+
+
+@on_report_callback
+def show_stackoverflow_search(event: ReportCallbackEvent):
+    # TODO: handle context loading + itsdangerous security at the framework level
+    context = json.loads(event.source_context)
+    alert_name = context["alert_name"]
+
+    url = f"https://api.stackexchange.com/2.2/search/advanced?order=desc&sort=relevance&q={alert_name}&site=stackoverflow"
+    result = requests.get(url).json()
+    logging.info(f"asking on stackoverflow: url={url}")
+    answers = [f"<{a['link']}|{a['title']}>" for a in result["items"]]
+    if answers:
+        event.report_blocks.append(ListBlock(answers))
+    else:
+        event.report_blocks.append(MarkdownBlock(f"Sorry, StackOverflow doesn't know anything about \"{alert_name}\""))
+    event.report_title = f"{alert_name} StackOverflow Results"
+    event.slack_channel = event.source_channel_name
+    send_to_slack(event)
+
+
+class StackOverflowEnricher (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        alert_name = alert.alert.labels.get("alertname", "")
+        if not alert_name:
+            return
+        alert.report_blocks.append(CallbackBlock({f'Search StackOverflow for "{alert_name}"': show_stackoverflow_search},
+                                                 {"alert_name": alert_name}))
+
 
 DEFAULT_ENRICHER = "AlertDefaults"
 
@@ -83,6 +151,8 @@ silencers["NodeRestartSilencer"] = NodeRestartSilencer
 
 enrichers = {}
 enrichers[DEFAULT_ENRICHER] = DefaultEnricher
+enrichers["GraphEnricher"] = GraphEnricher
+enrichers["StackOverflowEnricher"] = StackOverflowEnricher
 enrichers["NodeCPUAnalysis"] = NodeCPUEnricher
 
 
@@ -94,19 +164,28 @@ class AlertConfig(BaseModel):
 
 class AlertsIntegrationParams(BaseModel):
     slack_channel: str
-    default_enricher: str = DEFAULT_ENRICHER
+    default_enrichers: List[GenParams] = [GenParams(name=DEFAULT_ENRICHER)]
     alerts_config: List[AlertConfig]
 
 
 def default_alert_config(alert_name, config: AlertsIntegrationParams) -> AlertConfig:
-    return AlertConfig(alert_name=alert_name, silencers=[], enrichers=[GenParams(name=config.default_enricher)])
+    return AlertConfig(alert_name=alert_name, silencers=[], enrichers=config.default_enrichers)
+
 
 @on_pod_prometheus_alert(status="firing")
 def alerts_integration(alert: PrometheusKubernetesAlert, config: AlertsIntegrationParams):
-    logging.info(f'running alerts_integration alert - alert: {alert.alert} pod: {alert.obj.metadata.name if alert.obj is not None else "None!"}')
-
     alert.slack_channel = config.slack_channel
     alert_name = alert.alert.labels.get("alertname")
+
+    # filter out the dummy watchdog alert that prometheus constantly sends so that you know it is alive
+    if alert_name == "Watchdog" and alert.alert.labels.get("severity") == "none":
+        logging.debug(f"skipping watchdog alert {alert}")
+        return
+
+    logging.info(
+        f'running alerts_integration alert - alert: {alert.alert} pod: {alert.obj.metadata.name if alert.obj is not None else "None!"}')
+
+    # TODO: should we really handle this as a list as opposed to looking for the first one that matches?
     alert_configs = [alert_config for alert_config in config.alerts_config if alert_config.alert_name == alert_name]
     if not alert_configs:
         alert_configs = [default_alert_config(alert_name, config)]

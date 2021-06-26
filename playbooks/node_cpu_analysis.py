@@ -142,9 +142,8 @@ def do_node_cpu_analysis(node: str, prometheus_url: str = None) -> List[BaseBloc
                                         *Non-container CPU usage on node:* {int(non_container_cpu_usage * 100)}%
                                         """)),
         DividerBlock(),
-        MarkdownBlock(f"*Per Pod Usage* (pods with under {threshold * 100:0.1f}% CPU usage aren't shown):"),
+        MarkdownBlock(f"*Pods with CPU > {threshold * 100:0.1f}* (all numbers between 0-100% regardless of CPU count)"),
         ListBlock([f"{k}: *{v * 100:0.1f}%*" for (k, v) in per_pod_usage_normalized.items() if v >= threshold]),
-        MarkdownBlock("All percentages are between 0% and 100% regardless of the number of CPUs."),
         FileBlock("treemap.svg", treemap.render()),
         FileBlock("usage_vs_requested.svg", bar_chart.render()),
     ]

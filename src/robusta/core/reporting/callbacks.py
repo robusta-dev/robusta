@@ -29,15 +29,17 @@ class CallbackRegistry:
 
     def register_callback(self, func: Callable):
         key = self._get_callback_key_for_func(func)
+        logging.info(f"inserting callback with key={key}")
         if key in self.callbacks:
-            logging.warning(f"overriding existing callback in registry; func={func}")
+            logging.warning(f"overriding existing callback in registry; new func={func}")
         self.callbacks[key] = func
 
     def is_callback_in_registry(self, func: Callable):
         key = self._get_callback_key_for_func(func)
-        return key in self.callbacks and self.callbacks[key] == func
+        return key in self.callbacks
 
     def lookup_callback(self, callback_request: PlaybookCallbackRequest):
+        logging.debug(f"looking up callback with func_name={callback_request.func_name} and func_file={callback_request.func_file}")
         key = (callback_request.func_name, callback_request.func_file)
         if key not in self.callbacks:
             return None

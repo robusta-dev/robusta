@@ -16,18 +16,21 @@ TARGET_ID = str(uuid.uuid4())
 
 
 def run_report_callback(action, body):
-    callback_request = PlaybookCallbackRequest.parse_raw(action['value'])
-    func = callback_registry.lookup_callback(callback_request)
-    event = ReportCallbackEvent(source_channel_id=body['channel']['id'],
-                                source_channel_name=body['channel']['name'],
-                                source_user_id=body['user']['id'],
-                                source_message=body['message']['text'],
-                                source_context=callback_request.context)
-    logging.info(f"got callback `{func}`")
-    if func is None:
-        logging.error(f"no callback found for action_id={action['action_id']} with value={action['value']}")
-        return
-    func(event)
+    try:
+        callback_request = PlaybookCallbackRequest.parse_raw(action['value'])
+        func = callback_registry.lookup_callback(callback_request)
+        event = ReportCallbackEvent(source_channel_id=body['channel']['id'],
+                                    source_channel_name=body['channel']['name'],
+                                    source_user_id=body['user']['id'],
+                                    source_message=body['message']['text'],
+                                    source_context=callback_request.context)
+        logging.info(f"got callback `{func}`")
+        if func is None:
+            logging.error(f"no callback found for action_id={action['action_id']} with value={action['value']}")
+            return
+        func(event)
+    except Exception as e:
+        logging.error(f"Error running callback; action={action}; e={e}")
 
 
 def start_slack_receiver():
