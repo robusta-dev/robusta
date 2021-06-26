@@ -41,6 +41,12 @@ git_change_audit
       git_https_url: "https://github.com/robusta/robusta-audit.git"
       git_user: "robusta-audit-git-user"
       git_password: "robusta-audit-git-password"
+      ignored_changes:
+      - "replicas"
+
+| **Note:** The ``ignored_changes`` is an optional parameter, used to filter out irrelevant changes.
+| (In the example above, we filter out ``spec.replicas`` changes, so that HPA changes won't appear as spec changes)
+| In order to filter out ``spec.field_name`` add ``field_name`` to the ``ignored_changes`` array
 
 | **The results:**
 
