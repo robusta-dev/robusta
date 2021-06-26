@@ -117,19 +117,18 @@ class NodeCPUEnricher (Enricher):
 
 @on_report_callback
 def show_stackoverflow_search(event: ReportCallbackEvent):
-    # TODO: handle context loading + itsdangerous security at the framework level
     context = json.loads(event.source_context)
-    alert_name = context["alert_name"]
+    search_term = context["search_term"]
 
-    url = f"https://api.stackexchange.com/2.2/search/advanced?order=desc&sort=relevance&q={alert_name}&site=stackoverflow"
+    url = f"https://api.stackexchange.com/2.2/search/advanced?order=desc&sort=relevance&q={search_term}&site=stackoverflow"
     result = requests.get(url).json()
     logging.info(f"asking on stackoverflow: url={url}")
     answers = [f"<{a['link']}|{a['title']}>" for a in result["items"]]
     if answers:
         event.report_blocks.append(ListBlock(answers))
     else:
-        event.report_blocks.append(MarkdownBlock(f"Sorry, StackOverflow doesn't know anything about \"{alert_name}\""))
-    event.report_title = f"{alert_name} StackOverflow Results"
+        event.report_blocks.append(MarkdownBlock(f"Sorry, StackOverflow doesn't know anything about \"{search_term}\""))
+    event.report_title = f"{search_term} StackOverflow Results"
     event.slack_channel = event.source_channel_name
     send_to_slack(event)
 
@@ -141,7 +140,7 @@ class StackOverflowEnricher (Enricher):
         if not alert_name:
             return
         alert.report_blocks.append(CallbackBlock({f'Search StackOverflow for "{alert_name}"': show_stackoverflow_search},
-                                                 {"alert_name": alert_name}))
+                                                 {"search_term": alert_name}))
 
 
 DEFAULT_ENRICHER = "AlertDefaults"
