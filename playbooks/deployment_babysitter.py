@@ -29,12 +29,10 @@ def babysitter_get_blocks(diffs: List[DiffDetail]):
     num_additions = len([d for d in diffs if d.diff_type == DiffType.ADDED])
     num_subtractions = len([d for d in diffs if d.diff_type == DiffType.REMOVED])
     num_modifications = len(diffs) - num_additions - num_subtractions
-    blocks = [
-        MarkdownBlock(f"{num_additions} fields added. {num_subtractions} fields removed. {num_modifications} fields changed")
-    ]
-    for d in diffs:
-        blocks.extend([DividerBlock(),
-                       MarkdownBlock(f"*{d.formatted_path}*: {d.other_value} :arrow_right: {d.value}")])
+    blocks = [MarkdownBlock(
+        f"{num_additions} fields added. {num_subtractions} fields removed. {num_modifications} fields changed"),
+              ListBlock([f"*{d.formatted_path}*: {d.other_value} :arrow_right: {d.value}" for d in diffs])]
+
     return blocks
 
 
