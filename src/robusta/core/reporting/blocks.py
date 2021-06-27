@@ -8,6 +8,7 @@ from typing import List, Callable, Dict, Any, Iterable
 from pydantic import BaseModel
 from tabulate import tabulate
 
+BLOCK_SIZE_LIMIT = 2997 # due to slack block size limit of 3000
 
 class BaseBlock (BaseModel):
     hidden: bool = False
@@ -17,6 +18,8 @@ class MarkdownBlock (BaseBlock):
     text: str
 
     def __init__(self, text: str):
+        if len(text) >= BLOCK_SIZE_LIMIT:
+            text = text[:BLOCK_SIZE_LIMIT] + "..."
         super().__init__(text=text)
 
 
