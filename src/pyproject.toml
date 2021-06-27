@@ -29,6 +29,7 @@ CairoSVG = "^2.5.2"
 tabulate = "^0.8.9"
 kafka-python = "^2.0.2"
 hikaru = "^0.5.1-beta.0"
+prometheus-api-client = "^0.4.2"
 
 [tool.poetry.dev-dependencies]
 

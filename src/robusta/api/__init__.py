@@ -18,6 +18,7 @@ from ..integrations.sinks.sink_base import *
 from ..integrations.sinks.sink_config import *
 from ..integrations.sinks.sink_factory import *
 from ..integrations.sinks.kafka import *
+from ..integrations.resource_analysis.kubernetes_node_analyzer import NodeAnalyzer
 from ..core.persistency.in_memory import get_persistent_data
-from  ..utils.rate_limiter import RateLimiter
+from ..utils.rate_limiter import RateLimiter
 from ..runner.object_updater import *
