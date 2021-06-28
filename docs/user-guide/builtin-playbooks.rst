@@ -46,9 +46,10 @@ git_change_audit
       ignored_changes:
       - "replicas"
 
-| **cluster_name** should be different, for different Kubernetes clusters
-| github integration use deployment keys for authentication. `Generate <https://docs.github.com/en/developers/overview/managing-deploy-keys#setup-2>`_ your private/public keys pair.
-| Store the public key as github deployment key on the audit repository, with **Allow write access**, and the private key data in the playbook configuration.
+| **cluster_name:** Used as the root directory in the repo. should be different, for different Kubernetes clusters
+| **git_url:** url to a github repository
+| **git_key:** github deployment key on the audit repository, with **Allow write access**. To set this up `Generate <https://docs.github.com/en/developers/overview/managing-deploy-keys#setup-2>`_ your private/public keys pair.
+| Store the public key as github deployment key on the audit repository, and the private key data in the playbook configuration.
 
 | **Note:** The ``ignored_changes`` is an optional parameter, used to filter out irrelevant changes.
 | In the example above, we filter out ``spec.replicas`` changes, so that HPA changes won't appear as spec changes
