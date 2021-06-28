@@ -34,5 +34,5 @@ class PrometheusEvent(BaseModel):
 
 @dataclass
 class PrometheusKubernetesAlert (BaseEvent):
-    alert: PrometheusAlert = None
+    alert: Optional[PrometheusAlert] = None
     obj: Union[RobustaPod, Node, RobustaDeployment, None] = None

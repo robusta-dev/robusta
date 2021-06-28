@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List
+from typing import List, Optional
 from threading import Lock
 
 import kubernetes
@@ -44,7 +44,7 @@ def save_scheduled_job_state(job_state : JobState):
     finally:
         mutex.release()
 
-def get_scheduled_job_state(playbook_id : str) -> JobState:
+def get_scheduled_job_state(playbook_id : str) -> Optional[JobState]:
     state_data = load_config_map().data.get(playbook_id)
     return JobState(**json.loads(state_data)) if state_data is not None else None
 
