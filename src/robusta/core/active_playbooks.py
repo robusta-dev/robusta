@@ -3,7 +3,7 @@ import logging
 from collections import defaultdict, Callable
 from sys import exc_info
 
-import better_exceptions
+import better_exceptions  # type: ignore
 from ..core.model.cloud_event import CloudEvent
 
 

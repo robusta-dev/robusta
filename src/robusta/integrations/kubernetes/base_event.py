@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 from dataclasses import dataclass
 from hikaru.meta import HikaruDocumentBase
@@ -15,6 +16,6 @@ class K8sOperationType (Enum):
 @dataclass
 class K8sBaseEvent (BaseEvent):
     description: str = ""
-    operation: K8sOperationType = None  # because this dataclass needs to have defaults :(
-    obj: HikaruDocumentBase = None      # marked as optional because this dataclass needs to have defaults :(
-    old_obj: HikaruDocumentBase = None  # same above
+    operation: Optional[K8sOperationType] = None  # because this dataclass needs to have defaults :(
+    obj: Optional[HikaruDocumentBase] = None      # marked as optional because this dataclass needs to have defaults :(
+    old_obj: Optional[HikaruDocumentBase] = None  # same above

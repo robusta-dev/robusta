@@ -3,7 +3,7 @@
 # 1. We use pydantic and not dataclasses so that field types are validated
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
-from typing import List, Callable, Dict, Any, Iterable
+from typing import List, Callable, Dict, Any, Iterable, Sequence
 
 from pydantic import BaseModel
 from tabulate import tabulate
@@ -55,9 +55,9 @@ class ListBlock (BaseBlock):
 
 class TableBlock (BaseBlock):
     rows: Iterable[Iterable[str]]
-    headers: Iterable[str] = ()
+    headers: Sequence[str] = ()
 
-    def __init__(self, rows: Iterable[Iterable[str]], headers: Iterable[str] = ()):
+    def __init__(self, rows: Iterable[Iterable[str]], headers: Sequence[str] = ()):
         super().__init__(rows=rows, headers=headers)
 
     def to_markdown(self) -> MarkdownBlock:

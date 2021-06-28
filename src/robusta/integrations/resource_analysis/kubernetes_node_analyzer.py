@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from hikaru.model import *
+from hikaru.model import Node
 from prometheus_api_client import PrometheusConnect
 from ..prometheus.utils import find_prometheus_url
 
