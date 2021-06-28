@@ -119,7 +119,7 @@ def prepare_pod_command(cmd) -> List[str]:
         return cmd
 
 
-def exec_commands(name, exec_command: [], namespace="default", container=""):
+def exec_commands(name, exec_command, namespace="default", container=""):
     logging.debug(
         f'Executing command name: {name} command: {exec_command} namespace: {namespace} container: {container}')
     resp = None

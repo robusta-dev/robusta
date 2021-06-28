@@ -1,5 +1,7 @@
+from typing import List
+
 from .blocks import *
-import cairosvg
+import cairosvg  # type: ignore
 
 def add_pngs_for_all_svgs(blocks: List[FileBlock]):
     new_blocks = blocks.copy()
