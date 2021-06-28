@@ -10,7 +10,7 @@ class NodeCPUAnalysisParams(BaseModel):
     slack_channel: str = ""
 
 
-def do_node_cpu_analysis(node: str, prometheus_url: str = None) -> List[BaseBlock]:
+def do_node_cpu_analysis(node: Node, prometheus_url: str = None) -> List[BaseBlock]:
     analyzer = NodeAnalyzer(node, prometheus_url)
 
     threshold = 0.005
@@ -23,7 +23,7 @@ def do_node_cpu_analysis(node: str, prometheus_url: str = None) -> List[BaseBloc
     all_pod_names = list(set(per_pod_usage_unbounded.keys()).union(per_pod_request.keys()))
 
     treemap = pygal.Treemap(style=ChosenStyle)
-    treemap.title = f'CPU Usage on Node {node}'
+    treemap.title = f'CPU Usage on Node {node.metadata.name}'
     treemap.value_formatter = lambda x: f"{int(x * 100)}%"
     treemap.add("Non-container usage", [non_container_cpu_usage])
     treemap.add("Free CPU", [1 - total_cpu_usage])
@@ -32,7 +32,7 @@ def do_node_cpu_analysis(node: str, prometheus_url: str = None) -> List[BaseBloc
 
     MISSING_VALUE = -0.001
     bar_chart = pygal.Bar(x_label_rotation=-40, style=ChosenStyle)
-    bar_chart.title = f'Actual Vs Requested vCPUs on Node {node}'
+    bar_chart.title = f'Actual Vs Requested vCPUs on Node {node.metadata.name}'
     bar_chart.x_labels = all_pod_names
     bar_chart.value_formatter = lambda x: f"{x:.2f} vCPU" if x != MISSING_VALUE else "no data"
     bar_chart.add('Actual CPU Usage',
@@ -61,7 +61,9 @@ def do_node_cpu_analysis(node: str, prometheus_url: str = None) -> List[BaseBloc
 @on_manual_trigger
 def node_cpu_analysis(event: ManualTriggerEvent):
     params = NodeCPUAnalysisParams(**event.data)
+    node = Node().read(name=params.node)
+
     event.report_title = f"Node CPU Usage Report for {params.node}"
     event.slack_channel = params.slack_channel
-    event.report_blocks = do_node_cpu_analysis(params.node, params.prometheus_url)
+    event.report_blocks = do_node_cpu_analysis(node, params.prometheus_url)
     send_to_slack(event)
