@@ -8,10 +8,9 @@ class NodeAnalyzer:
 
     # TODO: perhaps we should handle this more elegantly by first loading all the data into a pandas dataframe
     # and then slicing it different ways
-    def __init__(self, node_name: str, prometheus_url: str, range_size="5m"):
-        self.node_name = node_name
+    def __init__(self, node: Node, prometheus_url: str, range_size="5m"):
+        self.node = node
         self.range_size = range_size
-        self.node: Node = Node.readNode(node_name).obj
         self.internal_ip = next(addr.address for addr in self.node.status.addresses if addr.type == "InternalIP")
         if prometheus_url is None:
             prometheus_url = find_prometheus_url()
@@ -24,8 +23,8 @@ class NodeAnalyzer:
         """
         if other_method:
             return self._query(
-                f'rate(container_cpu_usage_seconds_total{{node="{self.node_name}",pod="",id="/"}}[{self.range_size}]) '
-                f'/ scalar(sum (machine_cpu_cores{{node="{self.node_name}"}}))')
+                f'rate(container_cpu_usage_seconds_total{{node="{self.node.metadata.name}",pod="",id="/"}}[{self.range_size}]) '
+                f'/ scalar(sum (machine_cpu_cores{{node="{self.node.metadata.name}"}}))')
 
         # the instance here refers to the node as identified by it's internal IP
         # we average by the instance to account for multiple cpus and still return a number between 0-1
@@ -58,7 +57,7 @@ class NodeAnalyzer:
         return pod_to_cpu
 
     def get_per_pod_cpu_request(self):
-        query = f'sum by (pod)(kube_pod_container_resource_requests_cpu_cores{{node="{self.node_name}"}})'
+        query = f'sum by (pod)(kube_pod_container_resource_requests_cpu_cores{{node="{self.node.metadata.name}"}})'
         result = self.prom.custom_query(query)
         return dict((r["metric"]["pod"], float(r["value"][1])) for r in result)
 
@@ -78,12 +77,12 @@ class NodeAnalyzer:
 
         if normalized_by_cpu_count:
             # we divide by the number of machine_cpu_cores to return a result in th 0-1 range regardless of cpu count
-            normalization = f'/ scalar(sum (machine_cpu_cores{{node="{self.node_name}"}}))'
+            normalization = f'/ scalar(sum (machine_cpu_cores{{node="{self.node.metadata.name}"}}))'
         else:
             normalization = ''
 
         # note: it is important to set either image!="" or image="" because otherwise we count everything twice -
         # once for the whole pod (image="") and once for each container (image!="")
         return f'sum(rate(' \
-               f'           container_cpu_usage_seconds_total{{node="{self.node_name}",pod!="",image!=""}}[{self.range_size}]' \
+               f'           container_cpu_usage_seconds_total{{node="{self.node.metadata.name}",pod!="",image!=""}}[{self.range_size}]' \
                f')) {grouping} {normalization}'

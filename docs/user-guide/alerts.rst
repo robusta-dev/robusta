@@ -146,6 +146,8 @@ Available enrichers
 
 **NodeCPUAnalysis:** provide deep analysis of node cpu usage
 
+**OOMKillerEnricher:** shows which pods were recently OOM Killed on a node
+
 **GraphEnricher:** display a graph of the Prometheus query which triggered the alert
 
 **StackOverflowEnricher:** add a button in Slack to search for the alert name on StackOverflow

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from hikaru.model import Node
 
 from ...core.model.events import BaseEvent
-from ..kubernetes.custom_models import RobustaPod, RobustaDeployment
+from ..kubernetes.custom_models import RobustaPod, RobustaDeployment, RobustaJob
 
 
 # for parsing incoming data
@@ -34,7 +34,14 @@ class PrometheusEvent(BaseModel):
     status: str
 
 
+# everything here needs to be optional due to annoying subtleties regarding dataclass inheritance
+# see explanation in the code for BaseEvent
 @dataclass
 class PrometheusKubernetesAlert (BaseEvent):
     alert: Optional[PrometheusAlert] = None
-    obj: Union[RobustaPod, Node, RobustaDeployment, None] = None
+    alert_name: Optional[str] = None
+    alert_severity: Optional[str] = None
+    node: Optional[Node] = None
+    pod: Optional[RobustaPod] = None
+    deployment: Optional[RobustaDeployment] = None
+    job: Optional[RobustaJob] = None

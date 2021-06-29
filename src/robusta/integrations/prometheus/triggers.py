@@ -1,9 +1,11 @@
 import logging
 from functools import wraps
+from typing import NamedTuple, Union
 from hikaru.model.rel_1_16 import *
 
-from .models import PrometheusEvent, PrometheusKubernetesAlert
-from ..kubernetes.custom_models import RobustaPod, traceback, RobustaDeployment
+from .models import PrometheusEvent, PrometheusKubernetesAlert, PrometheusAlert
+from ..kubernetes.custom_models import RobustaPod, traceback, RobustaDeployment, RobustaJob
+
 from ...core.model.playbook_hash import playbook_hash
 from ...integrations.kubernetes.base_triggers import prefix_match
 from ...core.active_playbooks import register_playbook, activate_playbook
@@ -35,6 +37,76 @@ def on_pod_prometheus_alert(func, alert_name="", pod_name_prefix="", namespace_p
     return func
 
 
+def does_alert_match_trigger(alert: PrometheusAlert, trigger_params: TriggerParams) -> bool:
+    if trigger_params.alert_name and trigger_params.alert_name != alert.labels['alertname']:
+        return False
+    if trigger_params.status != "" and trigger_params.status != alert.status:
+        return False
+    if not prefix_match(trigger_params.pod_name_prefix, alert.labels.get('pod')):
+        return False
+    if not prefix_match(trigger_params.namespace_prefix, alert.labels.get('namespace')):
+        return False
+    if not prefix_match(trigger_params.instance_name_prefix, alert.labels.get('instance')):
+        return False
+    return True
+
+
+class ResourceMapping (NamedTuple):
+    hikaru_class: Union[RobustaPod, RobustaDeployment, Job]
+    attribute_name: str
+    prometheus_label: str
+
+MAPPINGS = [ResourceMapping(RobustaPod, "pod", "pod"),
+            ResourceMapping(RobustaDeployment, "deployment", "deployment"),
+            ResourceMapping(RobustaJob, "job", "job_name")]
+
+def build_prometheus_event(alert: PrometheusAlert) -> PrometheusKubernetesAlert:
+    event = PrometheusKubernetesAlert(alert=alert,
+                                      alert_name=alert.labels['alertname'],
+                                      alert_severity=alert.labels.get("severity"))
+
+    namespace = alert.labels.get('namespace', 'default')
+
+    for mapping in MAPPINGS:
+        try:
+            resource_name = alert.labels.get(mapping.prometheus_label, None)
+            if not resource_name:
+                continue
+            resource = mapping.hikaru_class().read(name=resource_name, namespace=namespace)
+            setattr(event, mapping.attribute_name, resource)
+            logging.info(f"Successfully loaded Kubernetes resource {resource_name} for alert {event.alert_name}")
+        except Exception as e:
+            logging.info(f"Error loading {type(mapping.hikaru_class)} kubernetes object {event.alert}. error: {e}")
+
+    # we handle nodes differently than other resources
+    node_name = event.alert.labels.get('instance', None)
+    job_name = event.alert.labels.get('job', None)  # a prometheus "job" not a kubernetes "job" resource
+    # when the job_name is kube-state-metrics "instance" refers to the IP of kube-state-metrics not the node
+    if node_name and job_name != "kube-state-metrics":
+        try:
+            # sometimes we get an IP:PORT instead of the node name. handle that case
+            if ":" in node_name:
+                event.node = find_node_by_ip(node_name.split(":")[0])
+            else:
+                event.node = Node().read(name=node_name)
+        except Exception as e:
+            logging.info(f"Error loading Node kubernetes object {alert}. error: {e}")
+
+    return event
+
+
+def handle_single_alert(alert: PrometheusAlert, trigger_params: TriggerParams, func, action_params=None):
+    if not does_alert_match_trigger(alert, trigger_params):
+        return
+
+    event = build_prometheus_event(alert)
+    logging.info(f"running prometheus playbook {func.__name__}; action_params={action_params}")
+    if action_params is None:
+        return func(event)
+    else:
+        return func(event, action_params)
+
+
 def deploy_on_pod_prometheus_alert(func, trigger_params: TriggerParams, action_params=None):
     @wraps(func)
     def wrapper(cloud_event: CloudEvent):
@@ -43,58 +115,12 @@ def deploy_on_pod_prometheus_alert(func, trigger_params: TriggerParams, action_p
         results = []
         for alert in prometheus_event.alerts:
             try:
-                alert_name = alert.labels['alertname']
-                if trigger_params.alert_name and alert_name != trigger_params.alert_name:
-                    continue
-                if trigger_params.status != "" and trigger_params.status != alert.status:
-                    continue
-                if not prefix_match(trigger_params.pod_name_prefix, alert.labels.get('pod')):
-                    continue
-                if not prefix_match(trigger_params.namespace_prefix, alert.labels.get('namespace')):
-                    continue
-                if not prefix_match(trigger_params.instance_name_prefix, alert.labels.get('instance')):
-                    continue
-
-                kubernetes_obj = None
-                pod_name = alert.labels.get('pod', None)
-                node_name = alert.labels.get('instance', None)
-                deployment_name = alert.labels.get('deployment', None)
-                job_name = alert.labels.get('job_name', None)
-                namespace = alert.labels.get('namespace', 'default')
-                try:
-                    if pod_name:  # pod alert
-                        kubernetes_obj = RobustaPod.read(pod_name, namespace)
-                    elif deployment_name:
-                        kubernetes_obj = RobustaDeployment.readNamespacedDeployment(deployment_name, namespace).obj
-                    elif job_name:
-                        kubernetes_obj = Job.readNamespacedJob(deployment_name, namespace).obj
-                    elif node_name: # node alert
-                        # sometimes we get an IP:PORT instead of the node name. handle that case
-                        if ":" in node_name:
-                            kubernetes_obj = find_node_by_ip(node_name.split(":")[0])
-                        else:
-                            kubernetes_obj = Node.readNode(node_name).obj
-                    else: # other alert, not implemented yet
-                        logging.warning(f'alert {alert_name} does not contain pod/instance identifier. Not loading kubernetes object')
-
-                    if kubernetes_obj is None:
-                        logging.debug(f'Alert obj not loaded. alertName {alert_name} labels {alert.labels}')
-
-                except Exception as e:
-                    logging.info(f"Error loading alert kubernetes object {alert}. error: {e}")
-
-                kubernetes_alert = PrometheusKubernetesAlert(alert=alert, obj=kubernetes_obj)
-
-                logging.info(f"running prometheus playbook {func.__name__}; action_params={action_params}")
-                if action_params is None:
-                    result = func(kubernetes_alert)
-                else:
-                    result = func(kubernetes_alert, action_params)
-
-                if result is not None:
-                    results = results.append(result)
+                result = handle_single_alert(alert, trigger_params, func, action_params)
+                if result:
+                    results.append(result)
             except Exception:
                 logging.error(f"Failed to process alert {alert} {traceback.format_exc()}")
+
         return ",".join(results)
 
     playbook_id = playbook_hash(func, trigger_params, action_params)

@@ -9,10 +9,13 @@ from prometheus_api_client import PrometheusConnect
 
 from robusta.api import *
 from node_cpu_analysis import do_node_cpu_analysis
+from oom_killer import do_show_recent_oom_kills
+
 
 class GenParams(BaseModel):
     name: str
     params: Dict[Any,Any] = None
+
 
 class Silencer:
     params: Dict[Any,Any]
@@ -34,18 +37,20 @@ class NodeRestartSilencer(Silencer):
             self.post_restart_silence = self.params.get("post_restart_silence")
 
     def silence(self, alert: PrometheusKubernetesAlert) -> bool:
-        if not alert.obj or not alert.obj.kind == "Pod":
+        if not alert.pod:
             return False # Silencing only pod alerts on NodeRestartSilencer
 
-        node: Node = Node.readNode(alert.obj.spec.nodeName).obj
+        # TODO: do we already have alert.Node here?
+        node: Node = Node.readNode(alert.pod.spec.nodeName).obj
         if not node:
-            logging.warning(f"Node {alert.obj.spec.nodeName} not found for NodeRestartSilencer for {alert}")
+            logging.warning(f"Node {alert.pod.spec.nodeName} not found for NodeRestartSilencer for {alert}")
             return False
 
-        last_transition_times = [condition.lastTransitionTime for condition in node.status.conditions if condition.type == "Ready"]
+        last_transition_times = [condition.lastTransitionTime for condition in node.status.conditions
+                                 if condition.type == "Ready"]
         if last_transition_times and last_transition_times[0]:
             node_start_time_str =  last_transition_times[0]
-        else: # if no ready time, take creation time
+        else:  # if no ready time, take creation time
             node_start_time_str = node.metadata.creationTimestamp
 
         node_start_time = datetime.strptime(node_start_time_str, '%Y-%m-%dT%H:%M:%SZ')
@@ -55,7 +60,7 @@ class NodeRestartSilencer(Silencer):
 class Enricher:
     params: Dict[Any, Any] = None
 
-    def __init__(self, params: Dict[Any,Any]):
+    def __init__(self, params: Dict[Any, Any]):
         self.params = params
 
     def enrich(self, alert: PrometheusKubernetesAlert):
@@ -111,7 +116,11 @@ class GraphEnricher(Enricher):
 class NodeCPUEnricher (Enricher):
 
     def enrich(self, alert: PrometheusKubernetesAlert):
-        alert.report_blocks.extend(do_node_cpu_analysis(alert.obj.metadata.name))
+        if not alert.node:
+            logging.error(f"NodeCPUEnricher was called on alert without node metadata: {alert.alert}")
+            return
+
+        alert.report_blocks.extend(do_node_cpu_analysis(alert.node))
         alert.report_title = f"{alert.alert.labels.get('alertname')} Node CPU Analysis"
 
 
@@ -143,6 +152,15 @@ class StackOverflowEnricher (Enricher):
                                                  {"search_term": alert_name}))
 
 
+class OOMKillerEnricher (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.node:
+            logging.error(f"cannot run OOMKillerEnricher on alert with no node object: {alert}")
+            return
+        alert.report_blocks.extend(do_show_recent_oom_kills(alert.node))
+
+
 DEFAULT_ENRICHER = "AlertDefaults"
 
 silencers = {}
@@ -153,6 +171,7 @@ enrichers[DEFAULT_ENRICHER] = DefaultEnricher
 enrichers["GraphEnricher"] = GraphEnricher
 enrichers["StackOverflowEnricher"] = StackOverflowEnricher
 enrichers["NodeCPUAnalysis"] = NodeCPUEnricher
+enrichers["OOMKillerEnricher"] = OOMKillerEnricher
 
 
 class AlertConfig(BaseModel):
@@ -177,12 +196,11 @@ def alerts_integration(alert: PrometheusKubernetesAlert, config: AlertsIntegrati
     alert_name = alert.alert.labels.get("alertname")
 
     # filter out the dummy watchdog alert that prometheus constantly sends so that you know it is alive
-    if alert_name == "Watchdog" and alert.alert.labels.get("severity") == "none":
+    if alert_name == "Watchdog" and alert.alert_severity == "none":
         logging.debug(f"skipping watchdog alert {alert}")
         return
 
-    logging.info(
-        f'running alerts_integration alert - alert: {alert.alert} pod: {alert.obj.metadata.name if alert.obj is not None else "None!"}')
+    logging.info(f'running alerts_integration alert - alert: {alert.alert}')
 
     # TODO: should we really handle this as a list as opposed to looking for the first one that matches?
     alert_configs = [alert_config for alert_config in config.alerts_config if alert_config.alert_name == alert_name]
@@ -206,4 +224,6 @@ def alerts_integration(alert: PrometheusKubernetesAlert, config: AlertsIntegrati
             enricher_class(enricher_config.params).enrich(alert)
 
     if alert.report_blocks or alert.report_title or alert.report_attachment_blocks:
+        if not alert.report_title:
+            alert.report_title = alert_name
         send_to_slack(alert)

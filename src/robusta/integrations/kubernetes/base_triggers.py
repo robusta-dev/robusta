@@ -2,6 +2,7 @@ import logging
 from functools import wraps
 
 import hikaru
+from hikaru.model import *
 from ...core.model.cloud_event import *
 from ...core.model.playbook_hash import playbook_hash
 from ...core.model.runner_config import *
