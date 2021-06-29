@@ -3,9 +3,10 @@ from datetime import datetime, timezone
 from collections import namedtuple
 import humanize
 
+
 class OOMKillerParams (BaseModel):
     node_name: str = None
-    slack_channel: str = "test10"
+    slack_channel: str
 
 
 def is_oom_status(status: ContainerStatus):
