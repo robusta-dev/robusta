@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import re
@@ -157,3 +158,6 @@ def to_kubernetes_name(name, prefix=""):
     unique_id = str(time.time()).replace('.', '-')
     safe_name = re.sub("[^0-9a-zA-Z\\-]+", "-", name)
     return f"{prefix}{safe_name}-{unique_id}"[:63]
+
+def parse_kubernetes_datetime(k8s_datetime: str) -> datetime.datetime:
+    return datetime.datetime.strptime(k8s_datetime, "%Y-%m-%dT%H:%M:%S%z")

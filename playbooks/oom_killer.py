@@ -1,4 +1,5 @@
 from robusta.api import *
+from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime
 from datetime import datetime, timezone
 from collections import namedtuple
 import humanize
@@ -27,7 +28,7 @@ def do_show_recent_oom_kills(node: Node) -> List[BaseBlock]:
     for pod in results.items:
         oom_statuses = filter(is_oom_status, pod.status.containerStatuses)
         for status in oom_statuses:
-            dt = datetime.fromisoformat(status.lastState.terminated.finishedAt.replace("Z", "+00:00"))
+            dt = parse_kubernetes_datetime(status.lastState.terminated.finishedAt)
             time_ago = humanize.naturaltime(datetime.now(timezone.utc)-dt)
             msg = f"*{time_ago}*: pod={pod.metadata.name}; container={status.name}; image={status.image}"
             oom_kills.append(OOMKill(dt, msg))
