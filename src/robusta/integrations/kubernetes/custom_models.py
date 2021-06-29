@@ -4,7 +4,7 @@ from typing import Type, TypeVar, List, Dict
 import hikaru
 import json
 import yaml
-from hikaru.model import Pod, PodList, Container, PodSpec, ObjectMeta, SecurityContext, Capabilities, Deployment, JobSpec, PodTemplateSpec
+from hikaru.model import *  # *-import is necessary for hikaru subclasses to work
 from pydantic import BaseModel
 
 from .api_client_utils import *
