@@ -4,7 +4,8 @@ from typing import NamedTuple, Union
 from hikaru.model.rel_1_16 import *
 
 from .models import PrometheusEvent, PrometheusKubernetesAlert, PrometheusAlert
-from ..kubernetes.custom_models import RobustaPod, Node, traceback, RobustaDeployment, RobustaJob
+from ..kubernetes.custom_models import RobustaPod, traceback, RobustaDeployment, RobustaJob
+
 from ...core.model.playbook_hash import playbook_hash
 from ...integrations.kubernetes.base_triggers import prefix_match
 from ...core.active_playbooks import register_playbook, activate_playbook

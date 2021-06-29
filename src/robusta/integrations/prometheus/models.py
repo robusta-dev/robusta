@@ -3,8 +3,10 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel
 
+from hikaru.model import Node
+
 from ...core.model.events import BaseEvent
-from ..kubernetes.custom_models import RobustaPod, Node, RobustaDeployment, RobustaJob
+from ..kubernetes.custom_models import RobustaPod, RobustaDeployment, RobustaJob
 
 
 # for parsing incoming data

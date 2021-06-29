@@ -7,6 +7,7 @@ import sys
 
 import yaml
 
+from ..integrations.git.git_repo import GitRepoManager
 from ..core.active_playbooks import clear_playbook_inventory, get_playbook_inventory
 from ..core.triggers import deploy_playbook_config, RunnerConfig
 from ..utils.directory_watcher import DirWatcher
@@ -76,6 +77,9 @@ def reload_deploy_config(path):
         runner_config = RunnerConfig(**yaml_content)
 
     deploy_playbook_config(runner_config)
+
+    # clear git repos, so it would be re-initialized
+    GitRepoManager.clear_git_repos()
 
 
 def install_requirements(requirements_file_name):

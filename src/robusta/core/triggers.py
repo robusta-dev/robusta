@@ -20,7 +20,7 @@ class DeployCommand:
         self.trigger_params = trigger_params
         self.action_params = action_params
         self.playbook_id = playbook_hash(func, trigger_params, action_params)
-        if getattr(action_params, "pre_deploy_func", None) is not None:
+        if action_params is not None and getattr(action_params, "pre_deploy_func", None) is not None:
             action_params.pre_deploy_func(trigger_params)
 
 

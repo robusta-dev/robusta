@@ -4,7 +4,7 @@ from typing import Type, TypeVar, List, Dict
 import hikaru
 import json
 import yaml
-from hikaru.model import *
+from hikaru.model import Pod, PodList, Container, PodSpec, ObjectMeta, SecurityContext, Capabilities, Deployment, JobSpec, PodTemplateSpec
 from pydantic import BaseModel
 
 from .api_client_utils import *
@@ -105,6 +105,7 @@ class RobustaPod(Pod):
                 return hikaru.from_dict(pod.to_dict(), cls=RobustaPod)
         raise Exception(f"No pod exists in namespace '{namespace}' with name prefix '{name_prefix}'")
 
+    # TODO: replace with Hikaru Pod().read()
     @staticmethod
     def read(name: str, namespace: str) -> 'RobustaPod':
         """Read pod definition from the API server"""

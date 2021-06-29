@@ -32,6 +32,7 @@ def add_deployment_lines_to_grafana(event: DeploymentEvent, action_params: Param
 class ImageChangesParams(BaseModel):
     sinks: List[SinkConfigBase]
 
+
 @on_deployment_update
 def report_image_changes(event: DeploymentEvent, action_params: ImageChangesParams):
     """
@@ -65,18 +66,3 @@ def report_image_changes(event: DeploymentEvent, action_params: ImageChangesPara
     for sink_config in action_params.sinks:
         SinkFactory.get_sink(sink_config).write(data)
 
-
-@on_pod_create
-def test_pod_orm(event : PodEvent):
-    logging.info('running test_pod_orm')
-    pod = event.obj
-
-    images = [container.image for container in event.obj.spec.containers]
-    logging.info(f'pod images are {images}')
-
-    exec_resp = pod.exec("ls -l /")
-    logging.info(f'pod ls / command: {exec_resp}')
-
-    logging.info(f'deleting pod {pod.metadata.name}')
-    RobustaPod.deleteNamespacedPod(pod.metadata.name, pod.metadata.namespace)
-    logging.info(f'pod deleted')

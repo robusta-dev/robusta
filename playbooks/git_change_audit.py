@@ -5,13 +5,12 @@ from pydantic.main import BaseModel
 
 class GitAuditParams(BaseModel):
     cluster_name: str
-    git_https_url: str
-    git_user: str
-    git_password: str
+    git_url: str
+    git_key: str
     ignored_changes: List[str] = []
 
     def __str__(self):
-        return f"cluster_name={self.cluster_name} git_https_url={self.git_https_url} git_user=***** git_password=*****"
+        return f"cluster_name={self.cluster_name} git_url={self.git_url} git_key=*****"
 
 
 def git_safe_name(name):
@@ -39,7 +38,7 @@ def git_change_audit(event : KubernetesAnyEvent, action_params: GitAuditParams):
     if len(event.obj.metadata.ownerReferences) != 0:
         return # not handling runtime objects
 
-    git_repo = GitRepoManager.get_git_repo(action_params.git_https_url, action_params.git_user, action_params.git_password)
+    git_repo = GitRepoManager.get_git_repo(action_params.git_url, action_params.git_key)
     name = f"{git_safe_name(event.obj.metadata.name)}.yaml"
     namespace = event.obj.metadata.namespace or "None"
     path = f"{git_safe_name(action_params.cluster_name)}/{git_safe_name(namespace)}"

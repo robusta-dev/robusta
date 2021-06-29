@@ -13,7 +13,7 @@ from ..integrations.slack.sender import *
 from ..integrations.grafana import *
 from ..integrations.manual.triggers import *
 from ..integrations.scheduled.triggers import *
-from ..integrations.git.git_repo_manager import *
+from ..integrations.git.git_repo import *
 from ..integrations.sinks.sink_base import *
 from ..integrations.sinks.sink_config import *
 from ..integrations.sinks.sink_factory import *

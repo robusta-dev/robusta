@@ -3,14 +3,14 @@ import os
 import re
 import time
 import traceback
-from typing import List
+from typing import List, Optional
 
 from kubernetes import config
 from kubernetes.client.api import core_v1_api
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
 
-from hikaru.model import *
+from hikaru.model import Job
 
 RUNNING_STATE = "Running"
 
@@ -107,7 +107,7 @@ def get_pod_logs(name, namespace="default", container="", previous=None, tail_li
     return resp
 
 
-def prepare_pod_command(cmd) -> List[str]:
+def prepare_pod_command(cmd) -> Optional[List[str]]:
     if type(cmd) == list:
         return cmd
     elif type(cmd) == str:
@@ -119,7 +119,7 @@ def prepare_pod_command(cmd) -> List[str]:
         return cmd
 
 
-def exec_commands(name, exec_command: [], namespace="default", container=""):
+def exec_commands(name, exec_command, namespace="default", container=""):
     logging.debug(
         f'Executing command name: {name} command: {exec_command} namespace: {namespace} container: {container}')
     resp = None

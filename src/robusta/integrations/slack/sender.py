@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import tempfile
+from typing import Dict, Callable, Any, List
 
 import slack_bolt
 
@@ -117,6 +118,9 @@ def prepare_slack_text(message: str, mentions: List[str] = [], files: List[FileB
 
         file_references = "\n".join(uploaded_files)
         message = f"{message}\n{file_references}"
+
+    if len(message) == 0:
+        return "empty-message"  # blank messages aren't allowed
 
     if len(message) <= max_message_length:
         return message
