@@ -14,12 +14,6 @@ active_playbooks:
         - name: "AlertDefaults"
         - name: "NodeAllocatableResourcesEnricher"
         - name: "NodeRunningPodsEnricher"
-      - alert_name: "CPUThrottlingHigh"
-        enrichers:
-        - name: "AlertDefaults"
-        - name: "PodBashEnricher"
-          params:
-            bash_command: "ps"
       - alert_name: "KubernetesDaemonsetMisscheduled"
         enrichers:
         - name: "AlertDefaults"
