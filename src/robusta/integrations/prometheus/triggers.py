@@ -58,7 +58,8 @@ class ResourceMapping (NamedTuple):
 
 MAPPINGS = [ResourceMapping(RobustaPod, "pod", "pod"),
             ResourceMapping(RobustaDeployment, "deployment", "deployment"),
-            ResourceMapping(RobustaJob, "job", "job_name")]
+            ResourceMapping(RobustaJob, "job", "job_name"),
+            ResourceMapping(DaemonSet, "daemonset", "daemonset")]
 
 
 def load_node(alert: PrometheusAlert, node_name: str) -> Node:

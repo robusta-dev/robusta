@@ -40,6 +40,14 @@ def get_images(containers: List[Container]) -> Dict[str, str]:
     return name_to_version
 
 
+def does_daemonset_have_toleration(ds: DaemonSet, toleration_key: str) -> bool:
+    return any(t.key == toleration_key for t in ds.spec.template.spec.tolerations)
+
+
+def does_node_have_taint(node: Node, taint_key: str) -> bool:
+    return any(t.key == taint_key for t in node.spec.taints)
+
+
 class RobustaPod(Pod):
 
     def exec(self, shell_command: str) -> str:
@@ -95,6 +103,17 @@ class RobustaPod(Pod):
 
     def get_images(self) -> Dict[str, str]:
         return get_images(self.spec.containers)
+
+    def has_owner(self, owner_uid) -> bool:
+        for owner in self.metadata.ownerReferences:
+            if owner.uid == owner_uid:
+                return True
+        return False
+
+    @staticmethod
+    def find_pods_with_owner(namespace: str, owner_uid: str) -> List['RobustaPod']:
+        all_pods: List['RobustaPod'] = PodList.listNamespacedPod(namespace).obj.items
+        return list(filter(lambda p: p.has_owner(owner_uid), all_pods))
 
     @staticmethod
     def find_pod(name_prefix, namespace) -> 'RobustaPod':

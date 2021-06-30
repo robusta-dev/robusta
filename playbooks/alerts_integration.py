@@ -12,6 +12,7 @@ from aa_base_params import GenParams
 from node_cpu_analysis import do_node_cpu_analysis
 from oom_killer import do_show_recent_oom_kills
 from node_enrichments import node_running_pods, node_allocatable_resources
+from daemonsets import do_daemonset_mismatch_analysis, do_daemonset_enricher, check_for_known_mismatch_false_alarm
 from bash_enrichments import pod_bash_enrichment
 
 
@@ -53,6 +54,14 @@ class NodeRestartSilencer(Silencer):
 
         node_start_time = datetime.strptime(node_start_time_str, '%Y-%m-%dT%H:%M:%SZ')
         return datetime.utcnow().timestamp() < (node_start_time.timestamp() + self.post_restart_silence)
+
+
+class DaemonsetMisscheduledSmartSilencer(Silencer):
+
+    def silence(self, alert: PrometheusKubernetesAlert) -> bool:
+        if not alert.daemonset:
+            return False
+        return check_for_known_mismatch_false_alarm(alert.daemonset)
 
 
 class Enricher:
@@ -179,6 +188,23 @@ class OOMKillerEnricher (Enricher):
         alert.report_blocks.extend(do_show_recent_oom_kills(alert.node))
 
 
+class DaemonsetMisscheduledAnalysis (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.daemonset:
+            logging.error(f"cannot run DaemonsetMisscheduledAnalysis on alert with no daemonset object: {alert}")
+            return
+        alert.report_blocks.extend(do_daemonset_mismatch_analysis(alert.daemonset))
+
+
+class DaemonsetEnricher (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.daemonset:
+            logging.error(f"cannot run DaemonsetEnricher on alert with no daemonset object: {alert}")
+            return
+        alert.report_blocks.extend(do_daemonset_enricher(alert.daemonset))
+
 class PodBashEnricher (Enricher):
 
     def enrich(self, alert: PrometheusKubernetesAlert):
@@ -192,6 +218,7 @@ DEFAULT_ENRICHER = "AlertDefaults"
 
 silencers = {}
 silencers["NodeRestartSilencer"] = NodeRestartSilencer
+silencers["DaemonsetMisscheduledSmartSilencer"] = DaemonsetMisscheduledSmartSilencer
 
 enrichers = {}
 enrichers[DEFAULT_ENRICHER] = DefaultEnricher
@@ -199,6 +226,8 @@ enrichers["GraphEnricher"] = GraphEnricher
 enrichers["StackOverflowEnricher"] = StackOverflowEnricher
 enrichers["NodeCPUAnalysis"] = NodeCPUEnricher
 enrichers["OOMKillerEnricher"] = OOMKillerEnricher
+enrichers["DaemonsetEnricher"] = DaemonsetEnricher
+enrichers["DaemonsetMisscheduledAnalysis"] = DaemonsetMisscheduledAnalysis
 enrichers["NodeRunningPodsEnricher"] = NodeRunningPodsEnricher
 enrichers["NodeAllocatableResourcesEnricher"] = NodeAllocatableResourcesEnricher
 enrichers["PodBashEnricher"] = PodBashEnricher

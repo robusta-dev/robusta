@@ -5,6 +5,7 @@
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 from typing import List, Callable, Dict, Any, Iterable, Sequence
 
+from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
 from tabulate import tabulate
 
@@ -63,6 +64,22 @@ class TableBlock (BaseBlock):
     def to_markdown(self) -> MarkdownBlock:
         table = tabulate(self.rows, headers=self.headers, tablefmt="presto")
         return MarkdownBlock(f"```\n{table}\n```")
+
+
+class KubernetesFieldsBlock (TableBlock):
+
+    def __init__(self, k8s_obj: HikaruDocumentBase, fields: List[str], explanations: Dict[str, str]={}):
+        """
+        :param k8s_obj: a kubernetes object
+        :param fields: a list of fields to display. for example ["metadata.name", "metadata.namespace"]
+        :param explanations: an explanation for each field. for example {"metdata.name": "the pods name"}
+        """
+        if explanations:
+            rows = [(f, k8s_obj.object_at_path(f.split(".")), explanations.get(f, "")) for f in fields]
+            super().__init__(rows=rows, headers=["field", "value", "explanation"])
+        else:
+            rows = [(f, k8s_obj.object_at_path(f.split(".") )) for f in fields]
+            super().__init__(rows=rows, headers=["field", "value"])
 
 
 class CallbackBlock (BaseBlock):

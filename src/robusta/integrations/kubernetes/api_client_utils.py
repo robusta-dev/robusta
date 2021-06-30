@@ -126,7 +126,7 @@ def exec_commands(name, exec_command, namespace="default", container=""):
     resp = None
 
     # verify pod state before connecting
-    pod_status = wait_for_pod_status(name, namespace, RUNNING_STATE, 30, 0.2)  # TODO config
+    pod_status = wait_for_pod_status(name, namespace, RUNNING_STATE, 90, 0.2)  # TODO config
     if pod_status != RUNNING_STATE:
         msg = f'Not running exec commands. Pod {name} {namespace} is not in running state'
         logging.error(msg)
