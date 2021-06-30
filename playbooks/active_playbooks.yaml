@@ -8,6 +8,9 @@ active_playbooks:
   - name: "python_profiler"
   - name: "alerts_integration"
     action_params:
+      default_enrichers:
+      - name: "AlertDefaults"
+      - name: "GraphEnricher"
       alerts_config:
       - alert_name: "KubeNodeNotReady"
         enrichers:
