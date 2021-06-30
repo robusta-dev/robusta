@@ -178,9 +178,9 @@ positive.
 
 **PodBashEnricher:** runs the specified bash command, on the alert pod
 
-| **Note:** The command application must be installed on the target pod
+| **Note:** The bash command must be installed on the target pod
 
-| **Enabling it:**
+| **Example Usage:**
 
 .. code-block:: yaml
 
