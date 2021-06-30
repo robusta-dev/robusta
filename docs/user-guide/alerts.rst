@@ -152,6 +152,18 @@ Available enrichers
 
 **StackOverflowEnricher:** add a button in Slack to search for the alert name on StackOverflow
 
+**NodeRunningPodsEnricher:** add a list of the pods running on the node, with the pod Ready status
+
+.. image:: /images/node-running-pods.png
+  :width: 80 %
+  :align: center
+
+**NodeAllocatableResourcesEnricher:** add the allocatable resources available on the node
+
+.. image:: /images/node-allocatable-resources.png
+  :width: 80 %
+  :align: center
+
 Available Silencers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

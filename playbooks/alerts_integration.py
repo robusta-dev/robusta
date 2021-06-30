@@ -8,14 +8,11 @@ from pygal.style import DarkStyle as ChosenStyle
 from prometheus_api_client import PrometheusConnect
 
 from robusta.api import *
+from base_params import GenParams
 from node_cpu_analysis import do_node_cpu_analysis
 from oom_killer import do_show_recent_oom_kills
+from node_enrichments import node_running_pods, node_allocatable_resources
 from daemonsets import do_daemonset_mismatch_analysis, do_daemonset_enricher, check_for_known_mismatch_false_alarm
-
-
-class GenParams(BaseModel):
-    name: str
-    params: Dict[Any,Any] = None
 
 
 class Silencer:
@@ -133,6 +130,26 @@ class NodeCPUEnricher (Enricher):
         alert.report_title = f"{alert.alert.labels.get('alertname')} Node CPU Analysis"
 
 
+class NodeRunningPodsEnricher (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.node:
+            logging.error(f"NodeRunningPodsEnricher was called on alert without node metadata: {alert.alert}")
+            return
+
+        alert.report_blocks.extend(node_running_pods(alert.node.metadata.name))
+
+
+class NodeAllocatableResourcesEnricher (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.node:
+            logging.error(f"NodeAllocatableResourcesEnricher was called on alert without node metadata: {alert.alert}")
+            return
+
+        alert.report_blocks.extend(node_allocatable_resources(alert.node.metadata.name))
+
+
 @on_report_callback
 def show_stackoverflow_search(event: ReportCallbackEvent):
     context = json.loads(event.source_context)
@@ -202,6 +219,9 @@ enrichers["NodeCPUAnalysis"] = NodeCPUEnricher
 enrichers["OOMKillerEnricher"] = OOMKillerEnricher
 enrichers["DaemonsetEnricher"] = DaemonsetEnricher
 enrichers["DaemonsetMisscheduledAnalysis"] = DaemonsetMisscheduledAnalysis
+enrichers["NodeRunningPodsEnricher"] = NodeRunningPodsEnricher
+enrichers["NodeAllocatableResourcesEnricher"] = NodeAllocatableResourcesEnricher
+
 
 class AlertConfig(BaseModel):
     alert_name: str

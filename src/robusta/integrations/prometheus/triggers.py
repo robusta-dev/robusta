@@ -61,6 +61,21 @@ MAPPINGS = [ResourceMapping(RobustaPod, "pod", "pod"),
             ResourceMapping(RobustaJob, "job", "job_name"),
             ResourceMapping(DaemonSet, "daemonset", "daemonset")]
 
+
+def load_node(alert: PrometheusAlert, node_name: str) -> Node:
+    node = None
+    try:
+        # sometimes we get an IP:PORT instead of the node name. handle that case
+        if ":" in node_name:
+            node = find_node_by_ip(node_name.split(":")[0])
+        else:
+            node = Node().read(name=node_name)
+    except Exception as e:
+        logging.info(f"Error loading Node kubernetes object {alert}. error: {e}")
+
+    return node
+
+
 def build_prometheus_event(alert: PrometheusAlert) -> PrometheusKubernetesAlert:
     event = PrometheusKubernetesAlert(alert=alert,
                                       alert_name=alert.labels['alertname'],
@@ -79,19 +94,16 @@ def build_prometheus_event(alert: PrometheusAlert) -> PrometheusKubernetesAlert:
         except Exception as e:
             logging.info(f"Error loading {type(mapping.hikaru_class)} kubernetes object {event.alert}. error: {e}")
 
+    node_name = alert.labels.get('node')
+    if node_name:
+        event.node = load_node(alert, node_name)
+
     # we handle nodes differently than other resources
     node_name = event.alert.labels.get('instance', None)
     job_name = event.alert.labels.get('job', None)  # a prometheus "job" not a kubernetes "job" resource
     # when the job_name is kube-state-metrics "instance" refers to the IP of kube-state-metrics not the node
-    if node_name and job_name != "kube-state-metrics":
-        try:
-            # sometimes we get an IP:PORT instead of the node name. handle that case
-            if ":" in node_name:
-                event.node = find_node_by_ip(node_name.split(":")[0])
-            else:
-                event.node = Node().read(name=node_name)
-        except Exception as e:
-            logging.info(f"Error loading Node kubernetes object {alert}. error: {e}")
+    if not event.node and node_name and job_name != "kube-state-metrics":
+        event.node = load_node(alert, node_name)
 
     return event
 
