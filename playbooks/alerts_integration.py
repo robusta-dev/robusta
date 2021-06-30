@@ -273,6 +273,7 @@ def alerts_integration(alert: PrometheusKubernetesAlert, config: AlertsIntegrati
                 logging.error(f"Silencer {silencer_config.name} for alert {alert_name} does not exist. Silence not enforced")
                 continue
             if silencer_class(silencer_config.params).silence(alert):
+                logging.info(f"Silencing alert {alert_name} due to silencer {silencer_config.name}")
                 return
 
         for enricher_config in alert_config.enrichers:
