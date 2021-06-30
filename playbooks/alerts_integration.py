@@ -10,6 +10,7 @@ from prometheus_api_client import PrometheusConnect
 from robusta.api import *
 from node_cpu_analysis import do_node_cpu_analysis
 from oom_killer import do_show_recent_oom_kills
+from daemonsets import do_daemonset_mismatch_analysis, do_daemonset_enricher, check_for_known_mismatch_false_alarm
 
 
 class GenParams(BaseModel):
@@ -55,6 +56,14 @@ class NodeRestartSilencer(Silencer):
 
         node_start_time = datetime.strptime(node_start_time_str, '%Y-%m-%dT%H:%M:%SZ')
         return datetime.utcnow().timestamp() < (node_start_time.timestamp() + self.post_restart_silence)
+
+
+class DaemonsetMisscheduledSmartSilencer(Silencer):
+
+    def silence(self, alert: PrometheusKubernetesAlert) -> bool:
+        if not alert.daemonset:
+            return False
+        return check_for_known_mismatch_false_alarm(alert.daemonset)
 
 
 class Enricher:
@@ -161,10 +170,29 @@ class OOMKillerEnricher (Enricher):
         alert.report_blocks.extend(do_show_recent_oom_kills(alert.node))
 
 
+class DaemonsetMisscheduledAnalysis (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.daemonset:
+            logging.error(f"cannot run DaemonsetMisscheduledAnalysis on alert with no daemonset object: {alert}")
+            return
+        alert.report_blocks.extend(do_daemonset_mismatch_analysis(alert.daemonset))
+
+
+class DaemonsetEnricher (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.daemonset:
+            logging.error(f"cannot run DaemonsetEnricher on alert with no daemonset object: {alert}")
+            return
+        alert.report_blocks.extend(do_daemonset_enricher(alert.daemonset))
+
+
 DEFAULT_ENRICHER = "AlertDefaults"
 
 silencers = {}
 silencers["NodeRestartSilencer"] = NodeRestartSilencer
+silencers["DaemonsetMisscheduledSmartSilencer"] = DaemonsetMisscheduledSmartSilencer
 
 enrichers = {}
 enrichers[DEFAULT_ENRICHER] = DefaultEnricher
@@ -172,7 +200,8 @@ enrichers["GraphEnricher"] = GraphEnricher
 enrichers["StackOverflowEnricher"] = StackOverflowEnricher
 enrichers["NodeCPUAnalysis"] = NodeCPUEnricher
 enrichers["OOMKillerEnricher"] = OOMKillerEnricher
-
+enrichers["DaemonsetEnricher"] = DaemonsetEnricher
+enrichers["DaemonsetMisscheduledAnalysis"] = DaemonsetMisscheduledAnalysis
 
 class AlertConfig(BaseModel):
     alert_name: str
