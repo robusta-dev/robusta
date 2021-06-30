@@ -1,5 +1,5 @@
 global_config:
-  slack_channel: "test1"
+  slack_channel: "<DEFAULT_SLACK_CHANNEL>"
 
 active_playbooks:
   - name: "restart_loop_reporter"
