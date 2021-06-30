@@ -92,7 +92,7 @@ def build_prometheus_event(alert: PrometheusAlert) -> PrometheusKubernetesAlert:
             setattr(event, mapping.attribute_name, resource)
             logging.info(f"Successfully loaded Kubernetes resource {resource_name} for alert {event.alert_name}")
         except Exception as e:
-            logging.info(f"Error loading {type(mapping.hikaru_class)} kubernetes object {event.alert}. error: {e}")
+            logging.info(f"Error loading {mapping.hikaru_class} kubernetes object {event.alert}. error: {e}")
 
     node_name = alert.labels.get('node')
     if node_name:
