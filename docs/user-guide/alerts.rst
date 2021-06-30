@@ -164,10 +164,27 @@ Available enrichers
   :width: 80 %
   :align: center
 
+**DaemonsetEnricher:** for daemonset related alerts, adds details about the daemonset status
+
+.. image:: /images/daemonset-enricher.png
+  :width: 80 %
+  :align: center
+
+**DaemonsetMisscheduledAnalysis:** analyze the known Prometheus alert ``KubernetesDaemonsetMisscheduled`` and provide
+actionable advice on how to fix it. This enricher **only** displays output when it can verify that the alert is a false
+positive.
+
+.. image:: /images/daemonset-misscheduled.png
+  :width: 80 %
+  :align: center
+
 Available Silencers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **NodeRestartSilencer:** After a node is restarted, silence alerts for pods running on it.
-
 | params: post_restart_silence, (seconds), default to 300
+
+
+**DaemonsetMisscheduledSmartSilencer:** Silence the Prometheus alert ``KubernetesDaemonsetMisscheduled`` under
+conditions matching a known false alarm
 
