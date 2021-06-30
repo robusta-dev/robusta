@@ -60,6 +60,8 @@ def get_action_block_for_choices(choices: Dict[str, Callable] = None, context=""
 SlackBlock = Dict[str, Any]
 def to_slack(block: BaseBlock) -> List[SlackBlock]:
     if isinstance(block, MarkdownBlock):
+        if not block.text:
+            return []
         return [{
             "type": "section",
             "text": {
@@ -135,7 +137,7 @@ def send_to_slack(event: BaseEvent):
     message = prepare_slack_text(event.report_title, event.slack_mentions, file_blocks)
 
     output_blocks = []
-    if not event.report_title_hidden:
+    if not event.report_title_hidden and event.report_title:
         output_blocks.extend(to_slack(HeaderBlock(event.report_title)))
     for block in other_blocks:
         output_blocks.extend(to_slack(block))
@@ -152,9 +154,12 @@ def send_to_slack(event: BaseEvent):
     try:
         if attachment_blocks:
             slack_app.client.chat_postMessage(channel=event.slack_channel, text=message, blocks=output_blocks,
-                                              display_as_bot=True, attachments=[{"blocks": attachment_blocks}])
+                                              display_as_bot=True, attachments=[{"blocks": attachment_blocks}],
+                                              unfurl_links=event.slack_allow_unfurl,
+                                              unfurl_media=event.slack_allow_unfurl)
         else:
             slack_app.client.chat_postMessage(channel=event.slack_channel, text=message, blocks=output_blocks,
-                                              display_as_bot=True)
+                                              display_as_bot=True, unfurl_links=event.slack_allow_unfurl,
+                                              unfurl_media=event.slack_allow_unfurl)
     except Exception as e:
         logging.error(f"error sending message to slack\ne={e}\ntext={message}\nblocks={output_blocks}\nattachment_blocks={attachment_blocks}")

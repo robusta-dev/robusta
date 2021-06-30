@@ -26,3 +26,4 @@ class BaseEvent:
     report_title_hidden: bool = False
     slack_channel: Optional[str] = None
     slack_mentions: List[str] = field(default_factory=list)  # TODO: expand this to a broader concept of all humans related to this event
+    slack_allow_unfurl: bool = True
