@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel
 
-from hikaru.model import Node
+from hikaru.model import Node, DaemonSet
 
 from ...core.model.events import BaseEvent
 from ..kubernetes.custom_models import RobustaPod, RobustaDeployment, RobustaJob
@@ -45,3 +45,4 @@ class PrometheusKubernetesAlert (BaseEvent):
     pod: Optional[RobustaPod] = None
     deployment: Optional[RobustaDeployment] = None
     job: Optional[RobustaJob] = None
+    daemonset: Optional[DaemonSet] = None

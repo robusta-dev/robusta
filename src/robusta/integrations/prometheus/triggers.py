@@ -58,7 +58,8 @@ class ResourceMapping (NamedTuple):
 
 MAPPINGS = [ResourceMapping(RobustaPod, "pod", "pod"),
             ResourceMapping(RobustaDeployment, "deployment", "deployment"),
-            ResourceMapping(RobustaJob, "job", "job_name")]
+            ResourceMapping(RobustaJob, "job", "job_name"),
+            ResourceMapping(DaemonSet, "daemonset", "daemonset")]
 
 def build_prometheus_event(alert: PrometheusAlert) -> PrometheusKubernetesAlert:
     event = PrometheusKubernetesAlert(alert=alert,
