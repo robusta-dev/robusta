@@ -1,5 +1,5 @@
 global_config:
-  slack_channel: "<DEFAULT_SLACK_CHANNEL>"
+  slack_channel: "test1"
 
 active_playbooks:
   - name: "restart_loop_reporter"
@@ -8,9 +8,6 @@ active_playbooks:
   - name: "python_profiler"
   - name: "alerts_integration"
     action_params:
-      default_enrichers:
-      - name: "AlertDefaults"
-      - name: "GraphEnricher"
       alerts_config:
       - alert_name: "KubeNodeNotReady"
         enrichers:
