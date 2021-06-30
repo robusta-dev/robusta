@@ -19,11 +19,13 @@ def run_report_callback(action, body):
     try:
         callback_request = PlaybookCallbackRequest.parse_raw(action['value'])
         func = callback_registry.lookup_callback(callback_request)
+        channel = body['channel']['name']
         event = ReportCallbackEvent(source_channel_id=body['channel']['id'],
-                                    source_channel_name=body['channel']['name'],
+                                    source_channel_name=channel,
                                     source_user_id=body['user']['id'],
                                     source_message=body['message']['text'],
-                                    source_context=callback_request.context)
+                                    source_context=callback_request.context,
+                                    slack_channel=channel)
         logging.info(f"got callback `{func}`")
         if func is None:
             logging.error(f"no callback found for action_id={action['action_id']} with value={action['value']}")
