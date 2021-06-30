@@ -8,11 +8,12 @@ from pygal.style import DarkStyle as ChosenStyle
 from prometheus_api_client import PrometheusConnect
 
 from robusta.api import *
-from base_params import GenParams
+from aa_base_params import GenParams
 from node_cpu_analysis import do_node_cpu_analysis
 from oom_killer import do_show_recent_oom_kills
 from node_enrichments import node_running_pods, node_allocatable_resources
 from daemonsets import do_daemonset_mismatch_analysis, do_daemonset_enricher, check_for_known_mismatch_false_alarm
+from bash_enrichments import pod_bash_enrichment
 
 
 class Silencer:
@@ -204,6 +205,14 @@ class DaemonsetEnricher (Enricher):
             return
         alert.report_blocks.extend(do_daemonset_enricher(alert.daemonset))
 
+class PodBashEnricher (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.pod:
+            logging.error(f"cannot run PodBashEnricher on alert with no pod object: {alert}")
+            return
+        alert.report_blocks.extend(pod_bash_enrichment(alert.pod.metadata.name, alert.pod.metadata.namespace, self.params.get("bash_command")))
+
 
 DEFAULT_ENRICHER = "AlertDefaults"
 
@@ -221,6 +230,7 @@ enrichers["DaemonsetEnricher"] = DaemonsetEnricher
 enrichers["DaemonsetMisscheduledAnalysis"] = DaemonsetMisscheduledAnalysis
 enrichers["NodeRunningPodsEnricher"] = NodeRunningPodsEnricher
 enrichers["NodeAllocatableResourcesEnricher"] = NodeAllocatableResourcesEnricher
+enrichers["PodBashEnricher"] = PodBashEnricher
 
 
 class AlertConfig(BaseModel):
