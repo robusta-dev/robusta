@@ -1,5 +1,5 @@
 from robusta.api import *
-from base_params import NodeNameParams
+from aa_base_params import NodeNameParams
 
 
 def pod_row(pod: Pod) -> [str]:

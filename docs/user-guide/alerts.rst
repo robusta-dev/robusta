@@ -164,6 +164,28 @@ Available enrichers
   :width: 80 %
   :align: center
 
+**PodBashEnricher:** runs the specified bash command, on the alert pod
+
+| **Note:** The command application must be installed on the target pod
+
+| **Enabling it:**
+
+.. code-block:: yaml
+
+   active_playbooks:
+   (...)
+      - alert_name: "ContainerVolumeUsage"
+        enrichers:
+        - name: "PodBashEnricher"
+          params:
+            bash_command: "df -h"
+
+| **The results:**
+
+.. image:: /images/disk-usage.png
+  :width: 80 %
+  :align: center
+
 Available Silencers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
