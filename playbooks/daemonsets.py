@@ -44,7 +44,7 @@ def daemonset_silence_false_alarm(event: ReportCallbackEvent):
 
 def do_daemonset_enricher(ds: DaemonSet) -> List[BaseBlock]:
     return [
-        MarkdownBlock("*Daemonset Stats*"),
+        MarkdownBlock(f"*Daemonset Stats for {ds.metadata.name}*"),
         KubernetesFieldsBlock(ds,
                               ["status.desiredNumberScheduled",
                                "status.currentNumberScheduled",
