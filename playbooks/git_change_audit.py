@@ -29,7 +29,7 @@ def obj_diff(spec: HikaruBase, old_spec: HikaruBase, ignored_changes: List[str])
     return len(filtered_diffs) > 0
 
 
-@on_kubernetes_any_all_changes
+@on_kubernetes_any_resource_all_changes
 def git_change_audit(event : KubernetesAnyEvent, action_params: GitAuditParams):
     """Save a configuration copy to git"""
     if event.obj.kind in skipped_kinds:

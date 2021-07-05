@@ -88,8 +88,8 @@ class NodeEvent (K8sBaseEvent):
 
 @dataclass
 class KubernetesAnyEvent (K8sBaseEvent):
-    obj: Union[v2beta1HorizontalPodAutoscaler,v1Service,v2beta1Event,v1DaemonSet,v2beta2Service,RobustaPod,v2beta1Node,v2beta1DaemonSet,v2beta1ConfigMap,v1Node,v1Event,v2beta2ReplicaSet,v2beta2DaemonSet,v2beta2Event,v2beta2ConfigMap,v2beta1ReplicaSet,v1ConfigMap,v2beta1Service,RobustaDeployment,v2beta2Node,v1HorizontalPodAutoscaler,v2beta2HorizontalPodAutoscaler,v1ReplicaSet]
-    old_obj: Union[v2beta1HorizontalPodAutoscaler,v1Service,v2beta1Event,v1DaemonSet,v2beta2Service,RobustaPod,v2beta1Node,v2beta1DaemonSet,v2beta1ConfigMap,v1Node,v1Event,v2beta2ReplicaSet,v2beta2DaemonSet,v2beta2Event,v2beta2ConfigMap,v2beta1ReplicaSet,v1ConfigMap,v2beta1Service,RobustaDeployment,v2beta2Node,v1HorizontalPodAutoscaler,v2beta2HorizontalPodAutoscaler,v1ReplicaSet]
+    obj: Union[v2beta1ReplicaSet,v2beta1DaemonSet,v2beta2DaemonSet,v1HorizontalPodAutoscaler,v1Node,v2beta1Service,v2beta2HorizontalPodAutoscaler,v2beta1ConfigMap,v2beta2Node,v2beta1HorizontalPodAutoscaler,RobustaPod,v2beta2ReplicaSet,v2beta2ConfigMap,v2beta1Event,v1Event,v2beta1Node,v2beta2Service,RobustaDeployment,v1ConfigMap,v1DaemonSet,v2beta2Event,v1Service,v1ReplicaSet]
+    old_obj: Union[v2beta1ReplicaSet,v2beta1DaemonSet,v2beta2DaemonSet,v1HorizontalPodAutoscaler,v1Node,v2beta1Service,v2beta2HorizontalPodAutoscaler,v2beta1ConfigMap,v2beta2Node,v2beta1HorizontalPodAutoscaler,RobustaPod,v2beta2ReplicaSet,v2beta2ConfigMap,v2beta1Event,v1Event,v2beta1Node,v2beta2Service,RobustaDeployment,v1ConfigMap,v1DaemonSet,v2beta2Event,v1Service,v1ReplicaSet]
 
 
 KIND_TO_EVENT_CLASS = {

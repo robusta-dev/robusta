@@ -196,22 +196,22 @@ def on_node_all_changes(func, name_prefix='', namespace_prefix=''):
 
 # Kubernetes Any Triggers
 @doublewrap
-def on_kubernetes_any_create(func, name_prefix='', namespace_prefix=''):
+def on_kubernetes_any_resource_create(func, name_prefix='', namespace_prefix=''):
     return register_k8s_any_playbook(func, K8sOperationType.CREATE, name_prefix=name_prefix, namespace_prefix=namespace_prefix)
 
 
 @doublewrap
-def on_kubernetes_any_update(func, name_prefix='', namespace_prefix=''):
+def on_kubernetes_any_resource_update(func, name_prefix='', namespace_prefix=''):
     return register_k8s_any_playbook(func, K8sOperationType.UPDATE, name_prefix=name_prefix, namespace_prefix=namespace_prefix)
 
 
 @doublewrap
-def on_kubernetes_any_delete(func, name_prefix='', namespace_prefix=''):
+def on_kubernetes_any_resource_delete(func, name_prefix='', namespace_prefix=''):
     return register_k8s_any_playbook(func, K8sOperationType.DELETE, name_prefix=name_prefix, namespace_prefix=namespace_prefix)
 
 
 @doublewrap
-def on_kubernetes_any_all_changes(func, name_prefix='', namespace_prefix=''):
+def on_kubernetes_any_resource_all_changes(func, name_prefix='', namespace_prefix=''):
     return register_k8s_any_playbook(func, None, name_prefix=name_prefix, namespace_prefix=namespace_prefix)
 
 
