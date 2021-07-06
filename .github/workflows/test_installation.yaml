@@ -25,6 +25,6 @@ jobs:
       - name: Test robusta cli
         run: |
           # change the directory away from the project so we can be sure we're not dependent on certain paths etc
-          mkdir /testing
-          cd /testing
+          mkdir testing
+          cd testing
           robusta version
