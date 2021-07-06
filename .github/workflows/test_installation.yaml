@@ -18,6 +18,7 @@ jobs:
       - name: Build and install package
         run: |
           curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+          source $HOME/.poetry/env
           cd src/
           poetry build
           pip3 install ./dist/robusta_cli-0.0.0-py3-none-any.whl
