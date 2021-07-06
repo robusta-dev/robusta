@@ -3,28 +3,46 @@ name: Test robusta-cli installation package
 on: [push]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+    build_package:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v2
+        - name: Set up Python
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.9
+        - name: Build and install package
+          run: |
+            curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+            source $HOME/.poetry/env
+            cd src/
+            poetry build
+            pip3 install ./dist/robusta_cli-0.0.0-py3-none-any.whl
+        - name: Test robusta cli
+          run: |
+            # change the directory away from the project so we can be sure we're not dependent on certain paths etc
+            mkdir testing
+            cd testing
+            robusta version
 
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Build and install package
-        run: |
-          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-          source $HOME/.poetry/env
-          cd src/
-          poetry build
-          pip3 install ./dist/robusta_cli-0.0.0-py3-none-any.whl
-      - name: Test robusta cli
-        run: |
-          # change the directory away from the project so we can be sure we're not dependent on certain paths etc
-          mkdir testing
-          cd testing
-          robusta version
+    # we use a totally separate job for testing the package because we want an environment which is free of all the
+    # dependencies that poetry itself requires
+    test_package:
+      needs: build_package
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+
+      steps:
+        - name: Set up Python ${{ matrix.python-version }}
+          uses: actions/setup-python@v2
+          with:
+            python-version: ${{ matrix.python-version }}
+        - name: Build and install package
+          run: |
+            ls
+            pwd
+            poetry build
+            pip3 install ./dist/robusta_cli-0.0.0-py3-none-any.whl
+            robusta version
