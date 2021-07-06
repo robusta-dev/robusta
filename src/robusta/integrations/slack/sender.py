@@ -57,6 +57,13 @@ def get_action_block_for_choices(choices: Dict[str, Callable] = None, context=""
     }]
 
 
+def apply_length_limit(msg: str, max_length: int = 3000):
+    if len(msg) <= max_length:
+        return msg
+    truncator = "..."
+    return msg[:max_length - len(truncator)] + truncator
+
+
 SlackBlock = Dict[str, Any]
 def to_slack(block: BaseBlock) -> List[SlackBlock]:
     if isinstance(block, MarkdownBlock):
@@ -66,7 +73,7 @@ def to_slack(block: BaseBlock) -> List[SlackBlock]:
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": block.text
+                "text": apply_length_limit(block.text),
             }
         }]
     elif isinstance(block, DividerBlock):
@@ -78,7 +85,7 @@ def to_slack(block: BaseBlock) -> List[SlackBlock]:
             "type": "header",
             "text": {
                 "type": "plain_text",
-                "text": block.text,
+                "text": apply_length_limit(block.text, 150),
             },
         }]
     elif isinstance(block, ListBlock) or isinstance(block, TableBlock):
@@ -103,8 +110,6 @@ def upload_file_to_slack(block: FileBlock) -> str:
 
 def prepare_slack_text(message: str, mentions: List[str] = [], files: List[FileBlock] = []):
     """Adds mentions and truncates text if it is too long."""
-    max_message_length = 3000
-    truncator = "..."
     mention_prefix = " ".join([f"<@{user_id}>" for user_id in mentions])
     if mention_prefix != "":
         message = f"{mention_prefix} {message}"
@@ -124,10 +129,7 @@ def prepare_slack_text(message: str, mentions: List[str] = [], files: List[FileB
     if len(message) == 0:
         return "empty-message"  # blank messages aren't allowed
 
-    if len(message) <= max_message_length:
-        return message
-
-    return message[:max_message_length - len(truncator)] + truncator
+    return apply_length_limit(message)
 
 
 def send_to_slack(event: BaseEvent):
