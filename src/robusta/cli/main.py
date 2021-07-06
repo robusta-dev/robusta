@@ -5,6 +5,7 @@ import uuid
 from contextlib import contextmanager
 from typing import List, Optional
 from zipfile import ZipFile
+import foobar
 
 import typer
 import requests
