@@ -1,3 +1,5 @@
+import logging
+
 from robusta.api import *
 
 
@@ -60,24 +62,31 @@ def do_daemonset_enricher(ds: DaemonSet) -> List[BaseBlock]:
 # checks if the issue issue described here: https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/
 # we check for it in the simplest way possible to avoid re-implementing k8s' scheduling logic for taints ourselves
 def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
-    nodes_by_name = {n.metadata.name: n for n in NodeList.listNode().obj.items}
-    ds_pods = RobustaPod.find_pods_with_owner(ds.metadata.namespace, ds.metadata.uid)
-
     # if the daemonset was configured with an appropriate toleration, this false alarm isn't possible
     if does_daemonset_have_toleration(ds, "ToBeDeletedByClusterAutoscaler"):
+        logging.info(f"daemonset is configured properly, so we don't have the known mismatch false alarm")
         return False
+
+    nodes_by_name = {n.metadata.name: n for n in NodeList.listNode().obj.items}
+    ds_pods = RobustaPod.find_pods_with_direct_owner(ds.metadata.namespace, ds.metadata.uid)
 
     # look for at least one node where the false alarm is present
     for pod in ds_pods:
+        if pod.spec.nodeName not in nodes_by_name:
+            # we probably have a node that was created between the time we fetched the nodes and the time we fetched
+            # the pods
+            logging.warning(f"we have a pod not running on a known node. pod={pod}")
+            continue
+
         relevant_node: Node = nodes_by_name[pod.spec.nodeName]
         if does_node_have_taint(relevant_node, "ToBeDeletedByClusterAutoscaler"):
+            logging.info(f"we found a cluster being deleted by the autoscaler - we have the known mismatch false alert")
             return True
 
     return False
 
 
 def do_daemonset_mismatch_analysis(ds: DaemonSet) -> List[BaseBlock]:
-    # TODO: there is a race condition here between getting the list of daemonsets and the list of nodes
     if not check_for_known_mismatch_false_alarm(ds):
         return []
 
