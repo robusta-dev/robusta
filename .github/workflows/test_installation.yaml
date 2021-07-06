@@ -19,10 +19,10 @@ jobs:
             poetry build
             pip3 install ./dist/robusta_cli-0.0.0-py3-none-any.whl
         - name: Upload robusta package artifact
-            uses: actions/upload-artifact@v2
-            with:
-              name: robusta-pkg
-              path: src/dist/robusta_cli-0.0.0-py3-none-any.whl
+          uses: actions/upload-artifact@v2
+          with:
+            name: robusta-pkg
+            path: src/dist/robusta_cli-0.0.0-py3-none-any.whl
 
 
   # we use a totally separate job for testing the package because we want an environment which is free of all the
@@ -40,9 +40,9 @@ jobs:
           with:
             python-version: ${{ matrix.python-version }}
         - name: Download robusta-pkg
-            uses: actions/download-artifact@v2
-            with:
-              name: robusta-pkg
+          uses: actions/download-artifact@v2
+          with:
+            name: robusta-pkg
         - name: Build and install package
           run: |
             ls
