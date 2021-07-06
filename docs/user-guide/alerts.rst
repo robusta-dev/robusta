@@ -176,7 +176,7 @@ positive.
 
 .. image:: /images/daemonset-misscheduled.png
 
-**PodBashEnricher:** runs the specified bash command, on the alert **pod**
+**PodBashEnricher:** runs the specified bash command, on the **pod** associated with the alert
 
 | **Note:** The bash command must be installed on the target pod
 
@@ -198,7 +198,7 @@ positive.
   :width: 80 %
   :align: center
 
-**NodeBashEnricher:** runs the specified bash command, on the alert **node**
+**NodeBashEnricher:** runs the specified bash command, on the **node** associated with the alert
 
 | **Example Usage:**
 
