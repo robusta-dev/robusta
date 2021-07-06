@@ -20,7 +20,7 @@ def python_profiler(event: ManualTriggerEvent):
     pod = RobustaPod.find_pod(action_params.pod_name, action_params.namespace)
     processes = pod.get_processes()
 
-    debugger = pod.create_debugger_pod()
+    debugger = RobustaPod.create_debugger_pod(pod.metadata.name, pod.spec.nodeName)
 
     try:
         for proc in processes:

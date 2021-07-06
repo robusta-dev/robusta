@@ -13,7 +13,7 @@ from node_cpu_analysis import do_node_cpu_analysis
 from oom_killer import do_show_recent_oom_kills
 from node_enrichments import node_running_pods, node_allocatable_resources
 from daemonsets import do_daemonset_mismatch_analysis, do_daemonset_enricher, check_for_known_mismatch_false_alarm
-from bash_enrichments import pod_bash_enrichment
+from bash_enrichments import pod_bash_enrichment, node_bash_enrichment
 
 
 class Silencer:
@@ -214,6 +214,15 @@ class PodBashEnricher (Enricher):
         alert.report_blocks.extend(pod_bash_enrichment(alert.pod.metadata.name, alert.pod.metadata.namespace, self.params.get("bash_command")))
 
 
+class NodeBashEnricher (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.node:
+            logging.error(f"cannot run NodeBashEnricher on alert with no node object: {alert}")
+            return
+        alert.report_blocks.extend(node_bash_enrichment(alert.node.metadata.name, self.params.get("bash_command")))
+
+
 DEFAULT_ENRICHER = "AlertDefaults"
 
 silencers = {}
@@ -231,6 +240,7 @@ enrichers["DaemonsetMisscheduledAnalysis"] = DaemonsetMisscheduledAnalysis
 enrichers["NodeRunningPodsEnricher"] = NodeRunningPodsEnricher
 enrichers["NodeAllocatableResourcesEnricher"] = NodeAllocatableResourcesEnricher
 enrichers["PodBashEnricher"] = PodBashEnricher
+enrichers["NodeBashEnricher"] = NodeBashEnricher
 
 
 class AlertConfig(BaseModel):

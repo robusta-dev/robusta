@@ -176,7 +176,7 @@ positive.
 
 .. image:: /images/daemonset-misscheduled.png
 
-**PodBashEnricher:** runs the specified bash command, on the alert pod
+**PodBashEnricher:** runs the specified bash command, on the alert **pod**
 
 | **Note:** The bash command must be installed on the target pod
 
@@ -197,6 +197,20 @@ positive.
 .. image:: /images/disk-usage.png
   :width: 80 %
   :align: center
+
+**NodeBashEnricher:** runs the specified bash command, on the alert **node**
+
+| **Example Usage:**
+
+.. code-block:: yaml
+
+   active_playbooks:
+   (...)
+      - alert_name: "HostOutOfDiskSpace"
+        enrichers:
+        - name: "NodeBashEnricher"
+          params:
+            bash_command: "df -h"
 
 Available Silencers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
