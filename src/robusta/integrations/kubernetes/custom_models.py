@@ -62,15 +62,16 @@ class RobustaPod(Pod):
             container_name = self.spec.containers[0].name
         return get_pod_logs(self.metadata.name, self.metadata.namespace, container_name, previous, tail_lines)
 
-    def create_debugger_pod(self, debug_image=PYTHON_DEBUGGER_IMAGE, debug_cmd=None) -> 'RobustaPod':
+    @staticmethod
+    def create_debugger_pod(pod_name: str, node_name: str, debug_image=PYTHON_DEBUGGER_IMAGE, debug_cmd=None) -> 'RobustaPod':
         """
         Creates a debugging pod with high privileges
         """
         debugger = RobustaPod(apiVersion="v1", kind="Pod",
-                              metadata=ObjectMeta(name=to_kubernetes_name(self.metadata.name, "debug-"),
+                              metadata=ObjectMeta(name=to_kubernetes_name(pod_name, "debug-"),
                                                   namespace="robusta"),
                               spec=PodSpec(hostPID=True,
-                                           nodeName=self.spec.nodeName,
+                                           nodeName=node_name,
                                            containers=[Container(name="debugger",
                                                                  image=debug_image,
                                                                  imagePullPolicy="Always",
@@ -85,15 +86,16 @@ class RobustaPod(Pod):
         debugger = debugger.createNamespacedPod(debugger.metadata.namespace).obj
         return debugger
 
-    def exec_in_debugger_pod(self, cmd, debug_image=PYTHON_DEBUGGER_IMAGE) -> str:
-        debugger = self.create_debugger_pod(debug_image)
+    @staticmethod
+    def exec_in_debugger_pod(pod_name: str, node_name: str, cmd, debug_image=PYTHON_DEBUGGER_IMAGE) -> str:
+        debugger = RobustaPod.create_debugger_pod(pod_name, node_name, debug_image)
         try:
             return debugger.exec(cmd)
         finally:
             RobustaPod.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)
 
     def get_processes(self) -> List[Process]:
-        output = self.exec_in_debugger_pod(f"/lookup_pid.py {self.metadata.uid}")
+        output = RobustaPod.exec_in_debugger_pod(self.metadata.name, self.spec.nodeName, f"/lookup_pid.py {self.metadata.uid}")
         # somehow when doing the exec command the quotes in the json output are converted from " to '
         # we fix this so that we can deserialize the json properly...
         # we should eventually figure out why this is happening
