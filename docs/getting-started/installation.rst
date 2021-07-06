@@ -38,19 +38,7 @@ and therefore Robusta can be removed at any time by deleting that namespace.
 
 If you would like to try out the Slack integration but don't use Slack or can't add the app to your workspace, we have demo Slack workspaces available for testing. Please contact us for details.
 
-Deploy Robusta playbooks
------------------------------
-
-Robusta is now installed but it still doesn't have any playbooks. Playbooks contain logic, whereas Robusta itself handles event plumbing.
-
-Lets download some sample playbooks and deploy them:
-
-.. code-block:: python
-
-   robusta examples
-   robusta deploy playbooks/
-
-Congrats! Robusta is now configured. You can stop here or you can read on for a short demo of what Robusta can do.
+Robusta is now installed with some default playbooks. These playbooks contain logic telling the Robusta engine what to do and when.
 
 Seeing Robusta in Action
 ------------------------------

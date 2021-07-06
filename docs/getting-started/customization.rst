@@ -1,33 +1,40 @@
-Enabling built-in playbooks
-###########################
+Customizing built-in playbooks
+##############################
 
-By itself, Robusta does nothing. It needs playbooks which define automated maintenance operations.
+By itself, Robusta does nothing. All of it's power comes from playbooks. Lets customize that set of playbooks.
 
-Lets customize Robusta and enable another playbook:
-
-Editing Robusta's config
-------------------------
-
-While :ref:`Installing Robusta` you downloaded an example playbooks directory. Edit the ``active_playbooks.yaml`` in that directory:
+Downloading Playbooks
+-------------------------------------------------------------
+First, download the base set of playbooks:
 
 .. code-block:: python
 
-   global_config:
-     slack_channel: "general"
+   robusta examples
+
+We now a have `./playbooks` directory that we can customize and upload back to Robusta.
+
+Lets take a closer look at that directory.
+
+`./playbooks` contains several python scripts and one file named `active_playbooks.yaml`. The python scripts define the *available* playbooks
+and the yaml file defines which playbooks are actually in use and how they are configured.
+
+Enabling a new playbook
+------------------------
+
+Lets edit ``active_playbooks.yaml`` and add the following:
+
+.. code-block:: yaml
+
+   (...)
    active_playbooks:
+     (...)
      - name: "deployment_babysitter"
        action_params:
          fields_to_monitor: ["spec.replicas"]
 
-     - name: "restart_loop_reporter"
-       action_params:
-         restart_count_trigger: 2
-         restart_reason: "CrashLoopBackOff"
 
-The configuration above defines two playbooks:
-
-* Deployment babysitter - a playbook that monitors changes to deployments
-* Crash loop reporter - the playbook you saw during installation
+This will add an additional playbook named **Deployment babysitter** - a playbook that monitors changes to deployments.
+Don't remove the other playbooks in ``active_playbooks.yaml``. We want to add a new playbook, not remove the old ones.
 
 Deploy your new config
 ------------------------
@@ -39,7 +46,7 @@ From the playbooks directory run:
 
    robusta deploy .
 
-The two playbooks you configured are now running. You will get a notification in Slack every time a pod enters a CrashLoopBackOff and every time a deployment's number of replicas changes.
+The new playbook you configured is now running. You will get a notification in Slack every time a deployment's number of replicas changes.
 
 Seeing your new config in action
 ----------------------------------
