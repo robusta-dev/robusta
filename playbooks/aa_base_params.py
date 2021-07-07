@@ -19,6 +19,6 @@ class PodParams (SlackParams):
     pod_name: str = None
     pod_namespace: str = None
 
-class NamespacedKindParams(SlackParams):
+class NamespacedKubernetesObjectParams(SlackParams):
     name: str = None
     namespace: str = None
