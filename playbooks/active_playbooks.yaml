@@ -27,3 +27,8 @@ active_playbooks:
         enrichers:
         - name: "OOMKillerEnricher"
         - name: "GraphEnricher"
+      - alert_name: "CPUThrottlingHigh"
+        enrichers:
+        - name: "GraphEnricher"
+        - name: "AlertDefaults"
+        - name: "CPUThrottlingAnalysis"
