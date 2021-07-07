@@ -126,7 +126,7 @@ class RobustaPod(Pod):
                 return hikaru.from_dict(pod.to_dict(), cls=RobustaPod)
         raise Exception(f"No pod exists in namespace '{namespace}' with name prefix '{name_prefix}'")
 
-    # TODO: replace with Hikaru Pod().read()
+    # TODO: replace with Hikaru Pod().read() but note that usage is slightly different as this is a staticmethod
     @staticmethod
     def read(name: str, namespace: str) -> 'RobustaPod':
         """Read pod definition from the API server"""

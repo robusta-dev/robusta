@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.50
+**New Features**:
+- New enrichers: NodeBashEnricher, CPUThrottlingAnalysis, and DeploymentStatusEnricher
+- Add a log line when an alert is silenced. The format is `Silencing alert {alert_name} due to silencer {silencer_name}`
+
+**Bug Fixes**:
+- Fix handling of Slack messages with very long titles or contents. This bug caused certain alerts to be dropped and not forwarded to Slack.
+
+**Other Changes**:
+- Minor formatting and styling changes to Slack messages
+- Documentation improvements
+
 ## v0.4.46
 **Breaking Changes:**
 - The json format for deployment_babysitter events sent to Kafka was updated.

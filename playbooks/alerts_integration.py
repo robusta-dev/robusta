@@ -15,6 +15,7 @@ from node_enrichments import node_running_pods, node_allocatable_resources
 from daemonsets import do_daemonset_mismatch_analysis, do_daemonset_enricher, check_for_known_mismatch_false_alarm
 from bash_enrichments import pod_bash_enrichment, node_bash_enrichment
 from deployment_enrichments import deployment_status_enrichment
+from cpu_throttling import do_cpu_throttling_analysis
 
 
 class Silencer:
@@ -198,6 +199,15 @@ class DaemonsetMisscheduledAnalysis (Enricher):
         alert.report_blocks.extend(do_daemonset_mismatch_analysis(alert.daemonset))
 
 
+class CPUThrottlingAnalysis (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.pod:
+            logging.error(f"cannot run CPUThrottlingAnalysis on alert with no pod object: {alert}")
+            return
+        alert.report_blocks.extend(do_cpu_throttling_analysis(alert.pod))
+
+
 class DaemonsetEnricher (Enricher):
 
     def enrich(self, alert: PrometheusKubernetesAlert):
@@ -205,6 +215,7 @@ class DaemonsetEnricher (Enricher):
             logging.error(f"cannot run DaemonsetEnricher on alert with no daemonset object: {alert}")
             return
         alert.report_blocks.extend(do_daemonset_enricher(alert.daemonset))
+
 
 class PodBashEnricher (Enricher):
 
@@ -251,6 +262,7 @@ enrichers["NodeAllocatableResourcesEnricher"] = NodeAllocatableResourcesEnricher
 enrichers["PodBashEnricher"] = PodBashEnricher
 enrichers["NodeBashEnricher"] = NodeBashEnricher
 enrichers["DeploymentStatusEnricher"] = DeploymentStatusEnricher
+enrichers["CPUThrottlingAnalysis"] = CPUThrottlingAnalysis
 
 
 class AlertConfig(BaseModel):
