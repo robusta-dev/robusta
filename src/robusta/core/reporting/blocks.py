@@ -3,6 +3,7 @@
 # 1. We use pydantic and not dataclasses so that field types are validated
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
+import textwrap
 from typing import List, Callable, Dict, Any, Iterable, Sequence
 
 from hikaru.model import HikaruDocumentBase
@@ -18,7 +19,11 @@ class BaseBlock (BaseModel):
 class MarkdownBlock (BaseBlock):
     text: str
 
-    def __init__(self, text: str):
+    def __init__(self, text: str, single_paragraph: bool = False):
+        if single_paragraph:
+            text = textwrap.dedent(text)
+            text = text.replace("\n", "")
+
         if len(text) >= BLOCK_SIZE_LIMIT:
             text = text[:BLOCK_SIZE_LIMIT] + "..."
         super().__init__(text=text)
