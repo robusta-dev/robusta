@@ -212,6 +212,24 @@ positive.
           params:
             bash_command: "df -h"
 
+**DeploymentStatusEnricher:** adds deployment condition statuses
+
+| **Example Usage:**
+
+.. code-block:: yaml
+
+   active_playbooks:
+   (...)
+      - alert_name: "KubernetesDeploymentReplicasMismatch"
+        enrichers:
+        - name: "DeploymentStatusEnricher"
+
+| **The results:**
+
+.. image:: /images/deployment-status-details.png
+  :width: 100 %
+  :align: center
+
 Available Silencers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

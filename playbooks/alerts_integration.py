@@ -14,6 +14,7 @@ from oom_killer import do_show_recent_oom_kills
 from node_enrichments import node_running_pods, node_allocatable_resources
 from daemonsets import do_daemonset_mismatch_analysis, do_daemonset_enricher, check_for_known_mismatch_false_alarm
 from bash_enrichments import pod_bash_enrichment, node_bash_enrichment
+from deployment_enrichments import deployment_status_enrichment
 
 
 class Silencer:
@@ -223,6 +224,14 @@ class NodeBashEnricher (Enricher):
         alert.report_blocks.extend(node_bash_enrichment(alert.node.metadata.name, self.params.get("bash_command")))
 
 
+class DeploymentStatusEnricher (Enricher):
+
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.deployment:
+            logging.error(f"cannot run DeploymentStatusEnricher on alert with no deployment object: {alert}")
+            return
+        alert.report_blocks.extend(deployment_status_enrichment(alert.deployment))
+
 DEFAULT_ENRICHER = "AlertDefaults"
 
 silencers = {}
@@ -241,6 +250,7 @@ enrichers["NodeRunningPodsEnricher"] = NodeRunningPodsEnricher
 enrichers["NodeAllocatableResourcesEnricher"] = NodeAllocatableResourcesEnricher
 enrichers["PodBashEnricher"] = PodBashEnricher
 enrichers["NodeBashEnricher"] = NodeBashEnricher
+enrichers["DeploymentStatusEnricher"] = DeploymentStatusEnricher
 
 
 class AlertConfig(BaseModel):
@@ -269,7 +279,7 @@ def alerts_integration(alert: PrometheusKubernetesAlert, config: AlertsIntegrati
         logging.debug(f"skipping watchdog alert {alert}")
         return
 
-    logging.info(f'running alerts_integration alert - alert: {alert.alert}')
+    logging.debug(f'running alerts_integration alert - alert: {alert.alert}')
 
     # TODO: should we really handle this as a list as opposed to looking for the first one that matches?
     alert_configs = [alert_config for alert_config in config.alerts_config if alert_config.alert_name == alert_name]
