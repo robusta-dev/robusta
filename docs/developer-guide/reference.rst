@@ -80,3 +80,12 @@ If the playbook has parameters, the parameters values can be passed in as follow
 
     robusta trigger some_playbook some_param=some_value other_param=other_value
 
+Recurring Triggers
+------------------
+Robusta can schedule and run playbooks periodically. For example:
+
+.. code-block:: python
+
+    @on_recurring_trigger(seconds_delay=10, repeat=3)
+    def my_scheduled_playbook(event: RecurringTriggerEvent):
+        logging.info(f"My scheduled playbook is running for the {event.recurrence} time")

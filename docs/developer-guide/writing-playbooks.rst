@@ -19,7 +19,7 @@ Now lets install some extra Python packages so that we have autocompletion in ou
 
 .. code-block:: bash
 
-    pip3 install robusta-cli git+https://github.com/aantn/k8s git+https://github.com/aantn/hikaru.git@main
+    pip3 install robusta-cli git+https://github.com/aantn/hikaru.git@main
 
 Now open the example playbooks in your favorite IDE and start modifying them!
 
