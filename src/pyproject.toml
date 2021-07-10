@@ -32,6 +32,7 @@ hikaru = "^0.5.1-beta.0"
 prometheus-api-client = "^0.4.2"
 
 [tool.poetry.dev-dependencies]
+pre-commit = "^2.13.0"
 
 [build-system]
 #requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
