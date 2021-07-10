@@ -37,3 +37,9 @@ Now deploy the newly created playbook:
 That's it!
 
 Now, every time a Kubernetes pod is created in the cluster, the above log line will be printed to the robusta-runner logs.
+
+Go ahead and try it, create a deployment (and a pod..):
+
+.. code-block:: bash
+
+    kubectl create deployment first-playbook-test-deployment --image=busybox -- echo "Hello World - Robusta"

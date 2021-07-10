@@ -82,7 +82,13 @@ If the playbook has parameters, the parameters values can be passed in as follow
 
 Recurring Triggers
 ------------------
-Robusta can schedule and run playbooks periodically. For example:
+Robusta can schedule and run playbooks periodically.
+
+This trigger will fire every ``seconds_delay`` seconds for ``repeat`` times
+
+**Note:** In order to run a playbook indefinitely, specify ``repeat=-1``
+
+For example:
 
 .. code-block:: python
 
