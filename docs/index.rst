@@ -52,4 +52,6 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
 
    developer-guide/general-guidelines
    developer-guide/writing-playbooks
+   developer-guide/hello-world-playbook
+   developer-guide/scheduled-playbooks
    developer-guide/reference
