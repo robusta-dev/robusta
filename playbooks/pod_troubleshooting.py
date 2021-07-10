@@ -26,14 +26,20 @@ def python_profiler(event: ManualTriggerEvent):
         for proc in processes:
             cmd = " ".join(proc.cmdline)
             if action_params.process_name not in cmd:
-                logging.info(f"skipping process because it doesn't match process_name. {cmd}")
+                logging.info(
+                    f"skipping process because it doesn't match process_name. {cmd}"
+                )
                 continue
             elif "python" not in proc.exe:
-                logging.info(f"skipping process because it doesn't look like a python process. {cmd}")
+                logging.info(
+                    f"skipping process because it doesn't look like a python process. {cmd}"
+                )
                 continue
 
             filename = "/profile.svg"
-            pyspy_output = debugger.exec(f"py-spy record --duration={action_params.seconds} --pid={proc.pid} --rate 30 --nonblocking -o {filename}")
+            pyspy_output = debugger.exec(
+                f"py-spy record --duration={action_params.seconds} --pid={proc.pid} --rate 30 --nonblocking -o {filename}"
+            )
             if "Error:" in pyspy_output:
                 continue
 
@@ -44,7 +50,9 @@ def python_profiler(event: ManualTriggerEvent):
         event.report_title = f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:"
         send_to_slack(event)
     finally:
-        debugger.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)
+        debugger.deleteNamespacedPod(
+            debugger.metadata.name, debugger.metadata.namespace
+        )
 
 
 class PodInfoParams(BaseModel):
@@ -57,7 +65,9 @@ def pod_ps(event: ManualTriggerEvent):
     action_params = PodInfoParams(**event.data)
     logging.info(f"getting info for: {action_params}")
 
-    pod: RobustaPod = RobustaPod.find_pod(action_params.pod_name, action_params.namespace)
+    pod: RobustaPod = RobustaPod.find_pod(
+        action_params.pod_name, action_params.namespace
+    )
     for proc in pod.get_processes():
         print(f"{proc.pid}\t{proc.exe}\t{proc.cmdline}")
 
@@ -67,4 +77,3 @@ class PythonStackDumpParams(BaseModel):
     process_name: str = ""
     slack_channel: str
     pod_name: str
-

@@ -1,7 +1,9 @@
 import textwrap
 
+
 def get_deployment_yaml(name, image="busybox"):
-    return textwrap.dedent(f"""\
+    return textwrap.dedent(
+        f"""\
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -23,4 +25,5 @@ def get_deployment_yaml(name, image="busybox"):
         - name: runner
           image: {image}
           imagePullPolicy: Always
-  """)
+  """
+    )

@@ -21,6 +21,7 @@ class IncomingK8sEventPayload(BaseModel):
     """
     The format of incoming CloudEvent payloads containing kubernetes events. This is mostly used for deserialization.
     """
+
     operation: str
     kind: str
     apiVersion: str = ""
@@ -33,7 +34,7 @@ class IncomingK8sEventPayload(BaseModel):
 def parse_kubernetes_objs(k8s_payload: IncomingK8sEventPayload):
     model_class = get_api_version(k8s_payload.apiVersion).get(k8s_payload.kind)
     if model_class is None:
-        msg = f'classes for kind {k8s_payload.kind} cannot be found. skipping. description {k8s_payload.description}'
+        msg = f"classes for kind {k8s_payload.kind} cannot be found. skipping. description {k8s_payload.description}"
         logging.error(msg)
         raise ModelNotFoundException(msg)
 
@@ -44,49 +45,91 @@ def parse_kubernetes_objs(k8s_payload: IncomingK8sEventPayload):
     return (obj, old_obj)
 
 
-def parse_incoming_kubernetes_event(k8s_payload: IncomingK8sEventPayload) -> Optional[K8sBaseEvent]:
+def parse_incoming_kubernetes_event(
+    k8s_payload: IncomingK8sEventPayload,
+) -> Optional[K8sBaseEvent]:
     (obj, old_obj) = parse_kubernetes_objs(k8s_payload)
     event_class = KIND_TO_EVENT_CLASS.get(k8s_payload.kind)
     if event_class is None:
         logging.error(
-            f'classes for kind {k8s_payload.kind} cannot be found. skipping. description {k8s_payload.description}')
+            f"classes for kind {k8s_payload.kind} cannot be found. skipping. description {k8s_payload.description}"
+        )
         return None
     operation_type = K8sOperationType(k8s_payload.operation)
-    return event_class(operation=operation_type, description=k8s_payload.description.replace("\n", ""), obj=obj, old_obj=old_obj)
+    return event_class(
+        operation=operation_type,
+        description=k8s_payload.description.replace("\n", ""),
+        obj=obj,
+        old_obj=old_obj,
+    )
 
 
-def parse_incoming_kubernetes_any_event(k8s_payload: IncomingK8sEventPayload) -> Optional[K8sBaseEvent]:
+def parse_incoming_kubernetes_any_event(
+    k8s_payload: IncomingK8sEventPayload,
+) -> Optional[K8sBaseEvent]:
     (obj, old_obj) = parse_kubernetes_objs(k8s_payload)
     operation_type = K8sOperationType(k8s_payload.operation)
-    return KubernetesAnyEvent(operation=operation_type, description=k8s_payload.description.replace("\n", ""), obj=obj, old_obj=old_obj)
+    return KubernetesAnyEvent(
+        operation=operation_type,
+        description=k8s_payload.description.replace("\n", ""),
+        obj=obj,
+        old_obj=old_obj,
+    )
 
-def register_k8s_playbook(func, kind, operation: Optional[K8sOperationType], name_prefix="", namespace_prefix=""):
-    register_playbook(func, deploy_on_k8s_topology, TriggerParams(
-        name_prefix=name_prefix,
-        namespace_prefix=namespace_prefix,
-        kind=kind,
-        operation=operation))
+
+def register_k8s_playbook(
+    func,
+    kind,
+    operation: Optional[K8sOperationType],
+    name_prefix="",
+    namespace_prefix="",
+):
+    register_playbook(
+        func,
+        deploy_on_k8s_topology,
+        TriggerParams(
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            kind=kind,
+            operation=operation,
+        ),
+    )
     return func
 
 
-def register_k8s_any_playbook(func, operation: Optional[K8sOperationType], name_prefix="", namespace_prefix=""):
-    register_playbook(func, deploy_on_any_k8s_topology, TriggerParams(
-        name_prefix=name_prefix,
-        namespace_prefix=namespace_prefix,
-        operation=operation))
+def register_k8s_any_playbook(
+    func, operation: Optional[K8sOperationType], name_prefix="", namespace_prefix=""
+):
+    register_playbook(
+        func,
+        deploy_on_any_k8s_topology,
+        TriggerParams(
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            operation=operation,
+        ),
+    )
     return func
 
 
 def prefix_match(prefix, field_value) -> bool:
     if prefix == "":
         return True
-    if field_value is None:  # we have a prefix requirement, but field doesn't exist. no match
+    if (
+        field_value is None
+    ):  # we have a prefix requirement, but field doesn't exist. no match
         return False
     return field_value.startswith(prefix)
 
 
-def k8s_topology_handler(cloud_event: CloudEvent, event_parser, func, trigger_params: TriggerParams, action_params=None):
-    logging.debug(f'checking if we should run {func} on k8s event')
+def k8s_topology_handler(
+    cloud_event: CloudEvent,
+    event_parser,
+    func,
+    trigger_params: TriggerParams,
+    action_params=None,
+):
+    logging.debug(f"checking if we should run {func} on k8s event")
     k8s_payload = IncomingK8sEventPayload(**cloud_event.data)
 
     if not k8s_topology_event_matched(k8s_payload, trigger_params):
@@ -98,7 +141,8 @@ def k8s_topology_handler(cloud_event: CloudEvent, event_parser, func, trigger_pa
         return "SKIP"
 
     logging.info(
-        f"running kubernetes playbook {func.__name__}; action_params={action_params}; event={concrete_event.description}")
+        f"running kubernetes playbook {func.__name__}; action_params={action_params}; event={concrete_event.description}"
+    )
     if action_params is None:
         result = func(concrete_event)
     else:
@@ -112,7 +156,13 @@ def k8s_topology_handler(cloud_event: CloudEvent, event_parser, func, trigger_pa
 def deploy_on_k8s_topology(func, trigger_params: TriggerParams, action_params=None):
     @wraps(func)
     def wrapper(cloud_event: CloudEvent):
-        return k8s_topology_handler(cloud_event, parse_incoming_kubernetes_event, func, trigger_params, action_params)
+        return k8s_topology_handler(
+            cloud_event,
+            parse_incoming_kubernetes_event,
+            func,
+            trigger_params,
+            action_params,
+        )
 
     playbook_id = playbook_hash(func, trigger_params, action_params)
     activate_playbook(EventType.KUBERNETES_TOPOLOGY_CHANGE, wrapper, func, playbook_id)
@@ -122,15 +172,26 @@ def deploy_on_k8s_topology(func, trigger_params: TriggerParams, action_params=No
 def deploy_on_any_k8s_topology(func, trigger_params: TriggerParams, action_params=None):
     @wraps(func)
     def wrapper(cloud_event: CloudEvent):
-        return k8s_topology_handler(cloud_event, parse_incoming_kubernetes_any_event, func, trigger_params, action_params)
+        return k8s_topology_handler(
+            cloud_event,
+            parse_incoming_kubernetes_any_event,
+            func,
+            trigger_params,
+            action_params,
+        )
 
     playbook_id = playbook_hash(func, trigger_params, action_params)
     activate_playbook(EventType.KUBERNETES_TOPOLOGY_CHANGE, wrapper, func, playbook_id)
     return wrapper
 
 
-def k8s_topology_event_matched(event: IncomingK8sEventPayload, trigger_params: TriggerParams):
-    if trigger_params.operation is not None and trigger_params.operation.value != event.operation:
+def k8s_topology_event_matched(
+    event: IncomingK8sEventPayload, trigger_params: TriggerParams
+):
+    if (
+        trigger_params.operation is not None
+        and trigger_params.operation.value != event.operation
+    ):
         logging.debug(f"operation {event.operation} != {trigger_params.operation}")
         return False
 
@@ -138,15 +199,15 @@ def k8s_topology_event_matched(event: IncomingK8sEventPayload, trigger_params: T
         logging.debug(f"kind {event.kind} != {trigger_params.kind}")
         return False
 
-    metadata = event.obj.get('metadata', {})
+    metadata = event.obj.get("metadata", {})
     if trigger_params.name_prefix != "":
-        obj_name = metadata.get('name', '')
+        obj_name = metadata.get("name", "")
         if not obj_name.startswith(trigger_params.name_prefix):
             logging.debug("name doesn't match")
             return False
 
     if trigger_params.namespace_prefix != "":
-        obj_namespace = metadata.get('namespace', '')
+        obj_namespace = metadata.get("namespace", "")
         if not obj_namespace.startswith(trigger_params.namespace_prefix):
             logging.debug("namespace doesn't match")
             return False

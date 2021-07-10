@@ -13,27 +13,36 @@ from ...core.active_playbooks import register_playbook, activate_playbook
 
 
 @dataclass
-class RecurringTriggerEvent (BaseEvent):
+class RecurringTriggerEvent(BaseEvent):
     recurrence: int = 0
 
 
 @doublewrap
 def on_recurring_trigger(func, repeat=1, seconds_delay=None):
-    register_playbook(func, deploy_on_scheduler_event, TriggerParams(repeat=repeat, seconds_delay=seconds_delay))
+    register_playbook(
+        func,
+        deploy_on_scheduler_event,
+        TriggerParams(repeat=repeat, seconds_delay=seconds_delay),
+    )
     return func
 
 
 def deploy_on_scheduler_event(func, trigger_params: TriggerParams, action_params=None):
     playbook_id = playbook_hash(func, trigger_params, action_params)
+
     @wraps(func)
     def wrapper(cloud_event: CloudEvent):
 
-        logging.debug(f'checking if we should run {func} on scheduler event {playbook_id}')
+        logging.debug(
+            f"checking if we should run {func} on scheduler event {playbook_id}"
+        )
         scheduler_event = SchedulerEvent(**cloud_event.data)
 
         if scheduler_event.playbook_id == playbook_id:
             trigger_event = RecurringTriggerEvent(recurrence=scheduler_event.recurrence)
-            logging.info(f"running scheduled playbook {func.__name__}; action_params={action_params}")
+            logging.info(
+                f"running scheduled playbook {func.__name__}; action_params={action_params}"
+            )
             if action_params is None:
                 result = func(trigger_event)
             else:

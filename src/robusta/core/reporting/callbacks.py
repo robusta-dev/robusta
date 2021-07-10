@@ -11,7 +11,8 @@ from ..model.events import BaseEvent
 from ...utils.function_hashes import get_function_hash
 from ...utils.decorators import doublewrap
 
-class PlaybookCallbackRequest (BaseModel):
+
+class PlaybookCallbackRequest(BaseModel):
     func_name: str
     func_file: str
     func_hash: str
@@ -19,11 +20,15 @@ class PlaybookCallbackRequest (BaseModel):
 
     @classmethod
     def create_for_func(cls, func: Callable, context: Any):
-        return cls(func_name=func.__name__, func_file=inspect.getsourcefile(func), func_hash=get_function_hash(func), context=context)
+        return cls(
+            func_name=func.__name__,
+            func_file=inspect.getsourcefile(func),
+            func_hash=get_function_hash(func),
+            context=context,
+        )
 
 
 class CallbackRegistry:
-
     def __init__(self):
         self.callbacks = {}
 
@@ -31,7 +36,9 @@ class CallbackRegistry:
         key = self._get_callback_key_for_func(func)
         logging.info(f"inserting callback with key={key}")
         if key in self.callbacks:
-            logging.warning(f"overriding existing callback in registry; new func={func}")
+            logging.warning(
+                f"overriding existing callback in registry; new func={func}"
+            )
         self.callbacks[key] = func
 
     def is_callback_in_registry(self, func: Callable):
@@ -39,14 +46,18 @@ class CallbackRegistry:
         return key in self.callbacks
 
     def lookup_callback(self, callback_request: PlaybookCallbackRequest):
-        logging.debug(f"looking up callback with func_name={callback_request.func_name} and func_file={callback_request.func_file}")
+        logging.debug(
+            f"looking up callback with func_name={callback_request.func_name} and func_file={callback_request.func_file}"
+        )
         key = (callback_request.func_name, callback_request.func_file)
         if key not in self.callbacks:
             return None
 
         func = self.callbacks[key]
         if callback_request.func_hash != get_function_hash(func):
-            logging.warning("callback hash doesn't match! calling a different version of the function than the original one!")
+            logging.warning(
+                "callback hash doesn't match! calling a different version of the function than the original one!"
+            )
         return func
 
     @staticmethod
