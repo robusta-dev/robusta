@@ -37,7 +37,7 @@ class PrometheusEvent(BaseModel):
 # everything here needs to be optional due to annoying subtleties regarding dataclass inheritance
 # see explanation in the code for BaseEvent
 @dataclass
-class PrometheusKubernetesAlert (BaseEvent):
+class PrometheusKubernetesAlert(BaseEvent):
     alert: Optional[PrometheusAlert] = None
     alert_name: Optional[str] = None
     alert_severity: Optional[str] = None

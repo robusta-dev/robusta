@@ -1,6 +1,7 @@
 from robusta.api import *
 from aa_base_params import NamespacedKubernetesObjectParams
 
+
 def deployment_status_enrichment(deployment: Deployment) -> List[BaseBlock]:
     block_list: List[BaseBlock] = []
     block_list.append(MarkdownBlock("*Deployment status details:*"))
@@ -12,7 +13,9 @@ def deployment_status_enrichment(deployment: Deployment) -> List[BaseBlock]:
 @on_manual_trigger
 def show_deployment_status_enrichment(event: ManualTriggerEvent):
     params = NamespacedKubernetesObjectParams(**event.data)
-    deployment: Deployment = Deployment.readNamespacedDeployment(params.name, params.namespace).obj
+    deployment: Deployment = Deployment.readNamespacedDeployment(
+        params.name, params.namespace
+    ).obj
     blocks = deployment_status_enrichment(deployment)
     if blocks:
         event.report_blocks.extend(blocks)

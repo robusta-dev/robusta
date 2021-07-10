@@ -10,13 +10,14 @@ from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
 from tabulate import tabulate
 
-BLOCK_SIZE_LIMIT = 2997 # due to slack block size limit of 3000
+BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
-class BaseBlock (BaseModel):
+
+class BaseBlock(BaseModel):
     hidden: bool = False
 
 
-class MarkdownBlock (BaseBlock):
+class MarkdownBlock(BaseBlock):
     text: str
 
     def __init__(self, text: str, single_paragraph: bool = False):
@@ -29,11 +30,11 @@ class MarkdownBlock (BaseBlock):
         super().__init__(text=text)
 
 
-class DividerBlock (BaseBlock):
+class DividerBlock(BaseBlock):
     pass
 
 
-class FileBlock (BaseBlock):
+class FileBlock(BaseBlock):
     filename: str
     contents: bytes
 
@@ -41,14 +42,14 @@ class FileBlock (BaseBlock):
         super().__init__(filename=filename, contents=contents)
 
 
-class HeaderBlock (BaseBlock):
+class HeaderBlock(BaseBlock):
     text: str
 
     def __init__(self, text: str):
         super().__init__(text=text)
 
 
-class ListBlock (BaseBlock):
+class ListBlock(BaseBlock):
     items: List[str]
 
     def __init__(self, items: List[str]):
@@ -59,7 +60,7 @@ class ListBlock (BaseBlock):
         return MarkdownBlock("\n".join(mrkdwn))
 
 
-class TableBlock (BaseBlock):
+class TableBlock(BaseBlock):
     rows: Iterable[Iterable[str]]
     headers: Sequence[str] = ()
 
@@ -71,26 +72,32 @@ class TableBlock (BaseBlock):
         return MarkdownBlock(f"```\n{table}\n```")
 
 
-class KubernetesFieldsBlock (TableBlock):
-
-    def __init__(self, k8s_obj: HikaruDocumentBase, fields: List[str], explanations: Dict[str, str]={}):
+class KubernetesFieldsBlock(TableBlock):
+    def __init__(
+        self,
+        k8s_obj: HikaruDocumentBase,
+        fields: List[str],
+        explanations: Dict[str, str] = {},
+    ):
         """
         :param k8s_obj: a kubernetes object
         :param fields: a list of fields to display. for example ["metadata.name", "metadata.namespace"]
         :param explanations: an explanation for each field. for example {"metdata.name": "the pods name"}
         """
         if explanations:
-            rows = [(f, k8s_obj.object_at_path(f.split(".")), explanations.get(f, "")) for f in fields]
+            rows = [
+                (f, k8s_obj.object_at_path(f.split(".")), explanations.get(f, ""))
+                for f in fields
+            ]
             super().__init__(rows=rows, headers=["field", "value", "explanation"])
         else:
-            rows = [(f, k8s_obj.object_at_path(f.split(".") )) for f in fields]
+            rows = [(f, k8s_obj.object_at_path(f.split("."))) for f in fields]
             super().__init__(rows=rows, headers=["field", "value"])
 
 
-class CallbackBlock (BaseBlock):
+class CallbackBlock(BaseBlock):
     choices: Dict[str, Callable]
     context: Dict[str, Any] = {}
 
     def __init__(self, choices: Dict[str, Callable], context: Dict[str, Any]):
         super().__init__(choices=choices, context=context)
-

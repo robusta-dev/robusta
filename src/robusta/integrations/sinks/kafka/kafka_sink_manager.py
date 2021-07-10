@@ -13,7 +13,7 @@ class KafkaSinkManager:
     producers_map = defaultdict(None)
 
     @staticmethod
-    def get_kafka_sink(kafka_url : str, topic: str) -> SinkBase:
+    def get_kafka_sink(kafka_url: str, topic: str) -> SinkBase:
         with KafkaSinkManager.manager_lock:
             producer = KafkaSinkManager.producers_map.get(kafka_url)
             if producer is not None:

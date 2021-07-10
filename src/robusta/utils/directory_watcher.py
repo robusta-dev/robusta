@@ -7,13 +7,13 @@ from watchdog.observers import Observer
 
 WAIT_SEC = 2
 
+
 class FsChangeHandler(FileSystemEventHandler):
     """reload playbooks on change."""
 
     def __init__(self, mark_change):
         super().__init__()
         self.mark_change = mark_change
-
 
     def on_moved(self, event):
         self.mark_change()
@@ -29,7 +29,6 @@ class FsChangeHandler(FileSystemEventHandler):
 
 
 class DirWatcher:
-
     def __init__(self, path_to_watch, reload_configuration):
         self.active = True
         self.change_detected = False
@@ -39,7 +38,7 @@ class DirWatcher:
         self.watch_thread = threading.Thread(target=self.watch, name="config-watcher")
         self.watch_thread.start()
 
-        logging.info(f'watching dir {path_to_watch} for custom playbooks changes')
+        logging.info(f"watching dir {path_to_watch} for custom playbooks changes")
 
     def watch(self):
         observer = Observer()
@@ -53,11 +52,13 @@ class DirWatcher:
                 time.sleep(WAIT_SEC)
 
                 if self.change_detected:
-                    time.sleep(WAIT_SEC) # once we detected a change, we wait a safety period to make sure all the changes under this 'bulk' are finished
+                    time.sleep(
+                        WAIT_SEC
+                    )  # once we detected a change, we wait a safety period to make sure all the changes under this 'bulk' are finished
                     self.change_detected = False
                     try:
                         self.reload_configuration(self.path_to_watch)
-                    except Exception as e: # in case we have an error while trying to reload, we want the watch thread to stay alive
+                    except Exception as e:  # in case we have an error while trying to reload, we want the watch thread to stay alive
                         logging.exception("failed to reload configuration")
         finally:
             observer.stop()

@@ -8,13 +8,16 @@ class JobStatus(Enum):
     RUNNING = 2
     DONE = 3
 
+
 class SchedulingType(Enum):
     FIXED_DELAY_REPEAT = 1
+
 
 class SchedulingParams(BaseModel):
     playbook_id: str = None
     repeat: int = None
     seconds_delay: int = None
+
 
 class JobState(BaseModel):
     exec_count: int = 0

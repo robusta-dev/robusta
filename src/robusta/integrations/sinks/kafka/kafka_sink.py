@@ -5,7 +5,6 @@ from kafka import KafkaProducer
 
 
 class KafkaSink(SinkBase):
-
     def __init__(self, producer: KafkaProducer, topic: str):
         self.producer = producer
         self.topic = topic

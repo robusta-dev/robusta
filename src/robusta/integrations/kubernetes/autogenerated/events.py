@@ -3,103 +3,166 @@
 from dataclasses import dataclass
 from typing import Union
 from ..base_event import K8sBaseEvent
-from ..custom_models import RobustaPod,RobustaDeployment
-from hikaru.model.rel_1_16.v1 import Pod as v1Pod    
-from hikaru.model.rel_1_16.v1 import ReplicaSet as v1ReplicaSet    
-from hikaru.model.rel_1_16.v1 import DaemonSet as v1DaemonSet    
-from hikaru.model.rel_1_16.v1 import Deployment as v1Deployment    
-from hikaru.model.rel_1_16.v1 import Service as v1Service    
-from hikaru.model.rel_1_16.v1 import ConfigMap as v1ConfigMap    
-from hikaru.model.rel_1_16.v1 import Event as v1Event    
-from hikaru.model.rel_1_16.v1 import HorizontalPodAutoscaler as v1HorizontalPodAutoscaler    
-from hikaru.model.rel_1_16.v1 import Node as v1Node    
-from hikaru.model.rel_1_16.v2beta1 import Pod as v2beta1Pod    
-from hikaru.model.rel_1_16.v2beta1 import ReplicaSet as v2beta1ReplicaSet    
-from hikaru.model.rel_1_16.v2beta1 import DaemonSet as v2beta1DaemonSet    
-from hikaru.model.rel_1_16.v2beta1 import Deployment as v2beta1Deployment    
-from hikaru.model.rel_1_16.v2beta1 import Service as v2beta1Service    
-from hikaru.model.rel_1_16.v2beta1 import ConfigMap as v2beta1ConfigMap    
-from hikaru.model.rel_1_16.v2beta1 import Event as v2beta1Event    
-from hikaru.model.rel_1_16.v2beta1 import HorizontalPodAutoscaler as v2beta1HorizontalPodAutoscaler    
-from hikaru.model.rel_1_16.v2beta1 import Node as v2beta1Node    
-from hikaru.model.rel_1_16.v2beta2 import Pod as v2beta2Pod    
-from hikaru.model.rel_1_16.v2beta2 import ReplicaSet as v2beta2ReplicaSet    
-from hikaru.model.rel_1_16.v2beta2 import DaemonSet as v2beta2DaemonSet    
-from hikaru.model.rel_1_16.v2beta2 import Deployment as v2beta2Deployment    
-from hikaru.model.rel_1_16.v2beta2 import Service as v2beta2Service    
-from hikaru.model.rel_1_16.v2beta2 import ConfigMap as v2beta2ConfigMap    
-from hikaru.model.rel_1_16.v2beta2 import Event as v2beta2Event    
-from hikaru.model.rel_1_16.v2beta2 import HorizontalPodAutoscaler as v2beta2HorizontalPodAutoscaler    
-from hikaru.model.rel_1_16.v2beta2 import Node as v2beta2Node    
+from ..custom_models import RobustaPod, RobustaDeployment
+from hikaru.model.rel_1_16.v1 import Pod as v1Pod
+from hikaru.model.rel_1_16.v1 import ReplicaSet as v1ReplicaSet
+from hikaru.model.rel_1_16.v1 import DaemonSet as v1DaemonSet
+from hikaru.model.rel_1_16.v1 import Deployment as v1Deployment
+from hikaru.model.rel_1_16.v1 import Service as v1Service
+from hikaru.model.rel_1_16.v1 import ConfigMap as v1ConfigMap
+from hikaru.model.rel_1_16.v1 import Event as v1Event
+from hikaru.model.rel_1_16.v1 import (
+    HorizontalPodAutoscaler as v1HorizontalPodAutoscaler,
+)
+from hikaru.model.rel_1_16.v1 import Node as v1Node
+from hikaru.model.rel_1_16.v2beta1 import Pod as v2beta1Pod
+from hikaru.model.rel_1_16.v2beta1 import ReplicaSet as v2beta1ReplicaSet
+from hikaru.model.rel_1_16.v2beta1 import DaemonSet as v2beta1DaemonSet
+from hikaru.model.rel_1_16.v2beta1 import Deployment as v2beta1Deployment
+from hikaru.model.rel_1_16.v2beta1 import Service as v2beta1Service
+from hikaru.model.rel_1_16.v2beta1 import ConfigMap as v2beta1ConfigMap
+from hikaru.model.rel_1_16.v2beta1 import Event as v2beta1Event
+from hikaru.model.rel_1_16.v2beta1 import (
+    HorizontalPodAutoscaler as v2beta1HorizontalPodAutoscaler,
+)
+from hikaru.model.rel_1_16.v2beta1 import Node as v2beta1Node
+from hikaru.model.rel_1_16.v2beta2 import Pod as v2beta2Pod
+from hikaru.model.rel_1_16.v2beta2 import ReplicaSet as v2beta2ReplicaSet
+from hikaru.model.rel_1_16.v2beta2 import DaemonSet as v2beta2DaemonSet
+from hikaru.model.rel_1_16.v2beta2 import Deployment as v2beta2Deployment
+from hikaru.model.rel_1_16.v2beta2 import Service as v2beta2Service
+from hikaru.model.rel_1_16.v2beta2 import ConfigMap as v2beta2ConfigMap
+from hikaru.model.rel_1_16.v2beta2 import Event as v2beta2Event
+from hikaru.model.rel_1_16.v2beta2 import (
+    HorizontalPodAutoscaler as v2beta2HorizontalPodAutoscaler,
+)
+from hikaru.model.rel_1_16.v2beta2 import Node as v2beta2Node
+
 
 @dataclass
-class PodEvent (K8sBaseEvent):
+class PodEvent(K8sBaseEvent):
     obj: RobustaPod
     old_obj: RobustaPod
 
 
 @dataclass
-class ReplicaSetEvent (K8sBaseEvent):
-    obj: Union[v1ReplicaSet,v2beta1ReplicaSet,v2beta2ReplicaSet]
-    old_obj: Union[v1ReplicaSet,v2beta1ReplicaSet,v2beta2ReplicaSet]
+class ReplicaSetEvent(K8sBaseEvent):
+    obj: Union[v1ReplicaSet, v2beta1ReplicaSet, v2beta2ReplicaSet]
+    old_obj: Union[v1ReplicaSet, v2beta1ReplicaSet, v2beta2ReplicaSet]
 
 
 @dataclass
-class DaemonSetEvent (K8sBaseEvent):
-    obj: Union[v1DaemonSet,v2beta1DaemonSet,v2beta2DaemonSet]
-    old_obj: Union[v1DaemonSet,v2beta1DaemonSet,v2beta2DaemonSet]
+class DaemonSetEvent(K8sBaseEvent):
+    obj: Union[v1DaemonSet, v2beta1DaemonSet, v2beta2DaemonSet]
+    old_obj: Union[v1DaemonSet, v2beta1DaemonSet, v2beta2DaemonSet]
 
 
 @dataclass
-class DeploymentEvent (K8sBaseEvent):
+class DeploymentEvent(K8sBaseEvent):
     obj: RobustaDeployment
     old_obj: RobustaDeployment
 
 
 @dataclass
-class ServiceEvent (K8sBaseEvent):
-    obj: Union[v1Service,v2beta1Service,v2beta2Service]
-    old_obj: Union[v1Service,v2beta1Service,v2beta2Service]
+class ServiceEvent(K8sBaseEvent):
+    obj: Union[v1Service, v2beta1Service, v2beta2Service]
+    old_obj: Union[v1Service, v2beta1Service, v2beta2Service]
 
 
 @dataclass
-class ConfigMapEvent (K8sBaseEvent):
-    obj: Union[v1ConfigMap,v2beta1ConfigMap,v2beta2ConfigMap]
-    old_obj: Union[v1ConfigMap,v2beta1ConfigMap,v2beta2ConfigMap]
+class ConfigMapEvent(K8sBaseEvent):
+    obj: Union[v1ConfigMap, v2beta1ConfigMap, v2beta2ConfigMap]
+    old_obj: Union[v1ConfigMap, v2beta1ConfigMap, v2beta2ConfigMap]
 
 
 @dataclass
-class EventEvent (K8sBaseEvent):
-    obj: Union[v1Event,v2beta1Event,v2beta2Event]
-    old_obj: Union[v1Event,v2beta1Event,v2beta2Event]
+class EventEvent(K8sBaseEvent):
+    obj: Union[v1Event, v2beta1Event, v2beta2Event]
+    old_obj: Union[v1Event, v2beta1Event, v2beta2Event]
 
 
 @dataclass
-class HorizontalPodAutoscalerEvent (K8sBaseEvent):
-    obj: Union[v1HorizontalPodAutoscaler,v2beta1HorizontalPodAutoscaler,v2beta2HorizontalPodAutoscaler]
-    old_obj: Union[v1HorizontalPodAutoscaler,v2beta1HorizontalPodAutoscaler,v2beta2HorizontalPodAutoscaler]
+class HorizontalPodAutoscalerEvent(K8sBaseEvent):
+    obj: Union[
+        v1HorizontalPodAutoscaler,
+        v2beta1HorizontalPodAutoscaler,
+        v2beta2HorizontalPodAutoscaler,
+    ]
+    old_obj: Union[
+        v1HorizontalPodAutoscaler,
+        v2beta1HorizontalPodAutoscaler,
+        v2beta2HorizontalPodAutoscaler,
+    ]
 
 
 @dataclass
-class NodeEvent (K8sBaseEvent):
-    obj: Union[v1Node,v2beta1Node,v2beta2Node]
-    old_obj: Union[v1Node,v2beta1Node,v2beta2Node]
+class NodeEvent(K8sBaseEvent):
+    obj: Union[v1Node, v2beta1Node, v2beta2Node]
+    old_obj: Union[v1Node, v2beta1Node, v2beta2Node]
 
 
 @dataclass
-class KubernetesAnyEvent (K8sBaseEvent):
-    obj: Union[v2beta1ReplicaSet,v2beta1DaemonSet,v2beta2DaemonSet,v1HorizontalPodAutoscaler,v1Node,v2beta1Service,v2beta2HorizontalPodAutoscaler,v2beta1ConfigMap,v2beta2Node,v2beta1HorizontalPodAutoscaler,RobustaPod,v2beta2ReplicaSet,v2beta2ConfigMap,v2beta1Event,v1Event,v2beta1Node,v2beta2Service,RobustaDeployment,v1ConfigMap,v1DaemonSet,v2beta2Event,v1Service,v1ReplicaSet]
-    old_obj: Union[v2beta1ReplicaSet,v2beta1DaemonSet,v2beta2DaemonSet,v1HorizontalPodAutoscaler,v1Node,v2beta1Service,v2beta2HorizontalPodAutoscaler,v2beta1ConfigMap,v2beta2Node,v2beta1HorizontalPodAutoscaler,RobustaPod,v2beta2ReplicaSet,v2beta2ConfigMap,v2beta1Event,v1Event,v2beta1Node,v2beta2Service,RobustaDeployment,v1ConfigMap,v1DaemonSet,v2beta2Event,v1Service,v1ReplicaSet]
+class KubernetesAnyEvent(K8sBaseEvent):
+    obj: Union[
+        v2beta1ReplicaSet,
+        v2beta1DaemonSet,
+        v2beta2DaemonSet,
+        v1HorizontalPodAutoscaler,
+        v1Node,
+        v2beta1Service,
+        v2beta2HorizontalPodAutoscaler,
+        v2beta1ConfigMap,
+        v2beta2Node,
+        v2beta1HorizontalPodAutoscaler,
+        RobustaPod,
+        v2beta2ReplicaSet,
+        v2beta2ConfigMap,
+        v2beta1Event,
+        v1Event,
+        v2beta1Node,
+        v2beta2Service,
+        RobustaDeployment,
+        v1ConfigMap,
+        v1DaemonSet,
+        v2beta2Event,
+        v1Service,
+        v1ReplicaSet,
+    ]
+    old_obj: Union[
+        v2beta1ReplicaSet,
+        v2beta1DaemonSet,
+        v2beta2DaemonSet,
+        v1HorizontalPodAutoscaler,
+        v1Node,
+        v2beta1Service,
+        v2beta2HorizontalPodAutoscaler,
+        v2beta1ConfigMap,
+        v2beta2Node,
+        v2beta1HorizontalPodAutoscaler,
+        RobustaPod,
+        v2beta2ReplicaSet,
+        v2beta2ConfigMap,
+        v2beta1Event,
+        v1Event,
+        v2beta1Node,
+        v2beta2Service,
+        RobustaDeployment,
+        v1ConfigMap,
+        v1DaemonSet,
+        v2beta2Event,
+        v1Service,
+        v1ReplicaSet,
+    ]
 
 
 KIND_TO_EVENT_CLASS = {
-    'Pod': PodEvent,
-    'ReplicaSet': ReplicaSetEvent,
-    'DaemonSet': DaemonSetEvent,
-    'Deployment': DeploymentEvent,
-    'Service': ServiceEvent,
-    'ConfigMap': ConfigMapEvent,
-    'Event': EventEvent,
-    'HorizontalPodAutoscaler': HorizontalPodAutoscalerEvent,
-    'Node': NodeEvent
+    "Pod": PodEvent,
+    "ReplicaSet": ReplicaSetEvent,
+    "DaemonSet": DaemonSetEvent,
+    "Deployment": DeploymentEvent,
+    "Service": ServiceEvent,
+    "ConfigMap": ConfigMapEvent,
+    "Event": EventEvent,
+    "HorizontalPodAutoscaler": HorizontalPodAutoscalerEvent,
+    "Node": NodeEvent,
 }

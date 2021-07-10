@@ -4,20 +4,21 @@ from robusta.api import *
 
 class GenParams(BaseModel):
     name: str
-    params: Dict[Any,Any] = None
+    params: Dict[Any, Any] = None
 
 
 class SlackParams(BaseModel):
     slack_channel: str
 
 
-class NodeNameParams (SlackParams):
+class NodeNameParams(SlackParams):
     node_name: str = None
 
 
-class PodParams (SlackParams):
+class PodParams(SlackParams):
     pod_name: str = None
     pod_namespace: str = None
+
 
 class NamespacedKubernetesObjectParams(SlackParams):
     name: str = None

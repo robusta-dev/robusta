@@ -18,12 +18,16 @@ class RateLimiter:
             if last_run:
                 if curr_seconds - last_run > period_seconds:
                     RateLimiter.limiter_map[limiter_key] = curr_seconds
-                    logging.info(f"rate limited operation is allowed because enough time has passed: {operation}")
+                    logging.info(
+                        f"rate limited operation is allowed because enough time has passed: {operation}"
+                    )
                     return True
                 else:
                     logging.info(f"rate limited operation is NOT allowed: {operation}")
                     return False
             else:
-                logging.info(f"rate limited operation is allowed because it is the first time: {operation}")
+                logging.info(
+                    f"rate limited operation is allowed because it is the first time: {operation}"
+                )
                 RateLimiter.limiter_map[limiter_key] = curr_seconds
                 return True

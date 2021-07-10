@@ -17,14 +17,17 @@ class ABTestingParams(BaseModel):
     namespace: str = "default"
     configuration_sets: List[ConfigurationSet]
 
-    def pre_deploy_func(self, trigger_params : TriggerParams):
+    def pre_deploy_func(self, trigger_params: TriggerParams):
         trigger_params.repeat = len(self.configuration_sets)
+
 
 @on_recurring_trigger(seconds_delay=None)
 def config_ab_testing(event: RecurringTriggerEvent, action_params: ABTestingParams):
     """Change configuration according to pre-defined configuration sets."""
     if len(action_params.configuration_sets) < event.recurrence:
-        logging.error(f"No matching configuration set for recurrence {event.recurrence}")
+        logging.error(
+            f"No matching configuration set for recurrence {event.recurrence}"
+        )
         return
 
     next_config_set = action_params.configuration_sets[event.recurrence]
@@ -47,4 +50,6 @@ def config_ab_testing(event: RecurringTriggerEvent, action_params: ABTestingPara
         grafana_message += f"{attribute_name} : {attribute_value}<br>"
     grafana_message += "</pre>"
     grafana = Grafana(action_params.grafana_api_key, action_params.grafana_url)
-    grafana.add_line_to_dashboard(action_params.grafana_dashboard_uid, grafana_message, tags=["AB Testing"])
+    grafana.add_line_to_dashboard(
+        action_params.grafana_dashboard_uid, grafana_message, tags=["AB Testing"]
+    )

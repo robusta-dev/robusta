@@ -12,28 +12,35 @@ from ...core.model.events import EventType, BaseEvent
 
 
 @dataclass
-class ManualTriggerEvent (BaseEvent):
+class ManualTriggerEvent(BaseEvent):
     trigger_name: str = ""
     data: dict = field(default_factory=dict)
 
 
 @doublewrap
 def on_manual_trigger(func):
-    return register_playbook(func, deploy_manual_trigger, TriggerParams(trigger_name=func.__name__))
+    return register_playbook(
+        func, deploy_manual_trigger, TriggerParams(trigger_name=func.__name__)
+    )
 
 
 def deploy_manual_trigger(func, trigger_params: TriggerParams, action_params=None):
     @wraps(func)
     def wrapper(cloud_event: CloudEvent):
-        trigger_event = ManualTriggerEvent(trigger_name=cloud_event.subject, data=cloud_event.data)
+        trigger_event = ManualTriggerEvent(
+            trigger_name=cloud_event.subject, data=cloud_event.data
+        )
         logging.debug(
-            f'checking if we should run manually triggered playbook {func}. trigger_name in request is {trigger_event.trigger_name} and playbook trigger_name is {trigger_params.trigger_name}')
+            f"checking if we should run manually triggered playbook {func}. trigger_name in request is {trigger_event.trigger_name} and playbook trigger_name is {trigger_params.trigger_name}"
+        )
 
         if trigger_event.trigger_name != trigger_params.trigger_name:
             logging.debug("not running")
             return
 
-        logging.info(f"running manual playbook {func.__name__}; action_params={action_params}")
+        logging.info(
+            f"running manual playbook {func.__name__}; action_params={action_params}"
+        )
         try:
             if action_params is None:
                 func(trigger_event)

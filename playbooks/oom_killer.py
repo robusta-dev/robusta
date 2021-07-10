@@ -5,7 +5,7 @@ from collections import namedtuple
 import humanize
 
 
-class OOMKillerParams (BaseModel):
+class OOMKillerParams(BaseModel):
     node_name: str = None
     slack_channel: str
 
@@ -18,18 +18,20 @@ def is_oom_status(status: ContainerStatus):
     return status.lastState.terminated.reason == "OOMKilled"
 
 
-OOMKill = namedtuple('OOMKill', ['datetime', 'message'])
+OOMKill = namedtuple("OOMKill", ["datetime", "message"])
 
 
 def do_show_recent_oom_kills(node: Node) -> List[BaseBlock]:
-    results: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
+    results: PodList = Pod.listPodForAllNamespaces(
+        field_selector=f"spec.nodeName={node.metadata.name}"
+    ).obj
 
     oom_kills: List[OOMKill] = []
     for pod in results.items:
         oom_statuses = filter(is_oom_status, pod.status.containerStatuses)
         for status in oom_statuses:
             dt = parse_kubernetes_datetime(status.lastState.terminated.finishedAt)
-            time_ago = humanize.naturaltime(datetime.now(timezone.utc)-dt)
+            time_ago = humanize.naturaltime(datetime.now(timezone.utc) - dt)
             msg = f"*{time_ago}*: pod={pod.metadata.name}; container={status.name}; image={status.image}"
             oom_kills.append(OOMKill(dt, msg))
 
@@ -53,5 +55,3 @@ def show_recent_oom_kills(event: ManualTriggerEvent):
         event.slack_channel = params.slack_channel
         event.report_title = f"Latest OOM Kills on {params.node_name}"
         send_to_slack(event)
-
-

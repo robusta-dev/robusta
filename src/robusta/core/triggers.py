@@ -9,6 +9,7 @@ from ..core.model.runner_config import RunnerConfig
 from ..core.schedule.scheduler import unschedule_deleted_playbooks
 from ..integrations.prometheus.incoming_handler import *
 
+
 def clear_active_playbooks():
     get_active_playbooks().clear()
 
@@ -20,7 +21,10 @@ class DeployCommand:
         self.trigger_params = trigger_params
         self.action_params = action_params
         self.playbook_id = playbook_hash(func, trigger_params, action_params)
-        if action_params is not None and getattr(action_params, "pre_deploy_func", None) is not None:
+        if (
+            action_params is not None
+            and getattr(action_params, "pre_deploy_func", None) is not None
+        ):
             action_params.pre_deploy_func(trigger_params)
 
 
@@ -31,24 +35,47 @@ def deploy_playbook_config(runner_config: RunnerConfig):
         playbook_definition = get_playbook_inventory().get(playbook_config.name)
         if playbook_definition is None:
             logging.error(
-                f'playbook definition not found. skipping. {playbook_config.name}')  # TODO - should we continue, or not run at all??
+                f"playbook definition not found. skipping. {playbook_config.name}"
+            )  # TODO - should we continue, or not run at all??
             continue
 
-        runtime_trigger_params = copy.deepcopy(playbook_definition['default_trigger_params'])
+        runtime_trigger_params = copy.deepcopy(
+            playbook_definition["default_trigger_params"]
+        )
         # first override defaults with global config
-        runtime_trigger_params = get_merged_global_config(runner_config.global_config, runtime_trigger_params)
+        runtime_trigger_params = get_merged_global_config(
+            runner_config.global_config, runtime_trigger_params
+        )
         # then override the result with trigger_params specific config
-        runtime_trigger_params = get_merged_config(playbook_config.trigger_params, runtime_trigger_params)
-        deploy_func = playbook_definition['deploy_func']
-        if playbook_definition['action_params'] is None:
-            deploy_commands.append(DeployCommand(deploy_func, playbook_definition['func'], runtime_trigger_params))
+        runtime_trigger_params = get_merged_config(
+            playbook_config.trigger_params, runtime_trigger_params
+        )
+        deploy_func = playbook_definition["deploy_func"]
+        if playbook_definition["action_params"] is None:
+            deploy_commands.append(
+                DeployCommand(
+                    deploy_func, playbook_definition["func"], runtime_trigger_params
+                )
+            )
         else:
             # in case we have params, we have to apply the global config on it as well
-            playbook_config.action_params = merge_global_params(runner_config.global_config, playbook_config.action_params)
-            deploy_commands.append(DeployCommand(deploy_func, playbook_definition['func'], runtime_trigger_params,
-                                                 playbook_definition['action_params'](**playbook_config.action_params)))
+            playbook_config.action_params = merge_global_params(
+                runner_config.global_config, playbook_config.action_params
+            )
+            deploy_commands.append(
+                DeployCommand(
+                    deploy_func,
+                    playbook_definition["func"],
+                    runtime_trigger_params,
+                    playbook_definition["action_params"](
+                        **playbook_config.action_params
+                    ),
+                )
+            )
 
-    new_playbook_ids = set([deploy_command.playbook_id for deploy_command in deploy_commands])
+    new_playbook_ids = set(
+        [deploy_command.playbook_id for deploy_command in deploy_commands]
+    )
     clear_active_playbooks()
 
     # unschedule playbooks that doesn't exist any more
@@ -56,9 +83,15 @@ def deploy_playbook_config(runner_config: RunnerConfig):
 
     for deploy_command in deploy_commands:
         if deploy_command.action_params is None:
-            deploy_command.deploy_func(deploy_command.func, deploy_command.trigger_params)
+            deploy_command.deploy_func(
+                deploy_command.func, deploy_command.trigger_params
+            )
         else:
-            deploy_command.deploy_func(deploy_command.func, deploy_command.trigger_params, deploy_command.action_params)
+            deploy_command.deploy_func(
+                deploy_command.func,
+                deploy_command.trigger_params,
+                deploy_command.action_params,
+            )
 
 
 def merge_global_params(global_config: dict, config_params: dict) -> dict:
@@ -67,15 +100,21 @@ def merge_global_params(global_config: dict, config_params: dict) -> dict:
     return merged
 
 
-def get_merged_global_config(global_config: dict, config_defaults: TriggerParams) -> TriggerParams:
+def get_merged_global_config(
+    global_config: dict, config_defaults: TriggerParams
+) -> TriggerParams:
     config_defaults_fields = config_defaults.__fields_set__
     for attribute in global_config.keys():
-        if global_config.get(attribute) is not None and hasattr(config_defaults_fields, attribute):
+        if global_config.get(attribute) is not None and hasattr(
+            config_defaults_fields, attribute
+        ):
             setattr(config_defaults, attribute, getattr(global_config, attribute))
     return config_defaults
 
 
-def get_merged_config(config_overrides: TriggerParams, config_defaults: TriggerParams) -> TriggerParams:
+def get_merged_config(
+    config_overrides: TriggerParams, config_defaults: TriggerParams
+) -> TriggerParams:
     for attribute in config_overrides.__fields_set__:
         if getattr(config_overrides, attribute) is not None:
             setattr(config_defaults, attribute, getattr(config_overrides, attribute))
