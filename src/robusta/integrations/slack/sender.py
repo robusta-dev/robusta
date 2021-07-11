@@ -13,27 +13,37 @@ from ...core.reporting.utils import add_pngs_for_all_svgs
 from ...core.reporting.callbacks import PlaybookCallbackRequest, callback_registry
 from .receiver import TARGET_ID
 
-SLACK_TOKEN = os.getenv("SLACK_TOKEN")
+# TODO: allow setting Slack token, e.g. for tests
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 
 # TODO: we need to make this modular so you can plug n' play different report receivers (slack, msteams, etc)
 # a first step in that direction would be to move all the functions here to a class like SlackReceiver
 # which inherits from an abstract base class ReportReceiver
 
-slack_client = WebClient(token=SLACK_TOKEN)
+slack_client: Optional[WebClient] = None
 
 
-def start_slack_sender() -> bool:
+def start_slack_sender(token=None) -> bool:
     """
     Connect to Slack and verify that the Slack token is valid.
     Return True on success, False on failure
     """
+    if token is None:
+        token = os.getenv("SLACK_TOKEN")
+
+    global slack_client
+    slack_client = WebClient(token=token)
+
     try:
         slack_client.auth_test()
         return True
     except SlackApiError as e:
         logging.error(f"Cannot connect to Slack API: {e}")
         return False
+
+
+def get_slack_client() -> WebClient:
+    return slack_client
 
 
 def get_action_block_for_choices(choices: Dict[str, Callable] = None, context=""):
