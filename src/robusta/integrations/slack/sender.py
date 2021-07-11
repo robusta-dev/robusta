@@ -23,8 +23,8 @@ ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 slack_client = WebClient(token=SLACK_TOKEN)
 
 
-def start_slack_sender()    -> bool:
-    """"
+def start_slack_sender() -> bool:
+    """
     Connect to Slack and verify that the Slack token is valid.
     Return True on success, False on failure
     """
