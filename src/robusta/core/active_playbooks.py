@@ -1,6 +1,7 @@
 import inspect
 import logging
-from collections import defaultdict, Callable
+from typing import Callable
+from collections import defaultdict
 from sys import exc_info
 
 import better_exceptions  # type: ignore
