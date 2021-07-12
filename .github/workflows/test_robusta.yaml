@@ -3,7 +3,7 @@ name: Test robusta with pytest
 on: [push]
 
 jobs:
-    build_package:
+    run_tests:
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v2
@@ -21,4 +21,4 @@ jobs:
           env:
             PYTEST_SLACK_TOKEN: ${{ secrets.PYTEST_SLACK_TOKEN }}
           run: |
-            pytest .
+            python -m pytest .
