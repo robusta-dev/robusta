@@ -15,10 +15,14 @@ from hikaru.model import Job
 
 RUNNING_STATE = "Running"
 
-if os.getenv("KUBERNETES_SERVICE_HOST"):
-    config.load_incluster_config()
-else:
-    config.load_kube_config()
+try:
+    if os.getenv("KUBERNETES_SERVICE_HOST"):
+        config.load_incluster_config()
+    else:
+        config.load_kube_config()
+except config.config_exception.ConfigException as e:
+    logging.warning(f"Running without kube-config! e={e}")
+
 
 core_v1 = core_v1_api.CoreV1Api()
 
