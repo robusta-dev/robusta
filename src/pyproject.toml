@@ -30,6 +30,7 @@ kafka-python = "^2.0.2"
 hikaru = "^0.5.1-beta.0"
 prometheus-api-client = "^0.4.2"
 slack-sdk = "^3.7.0"
+python-dotenv = "^0.18.0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
