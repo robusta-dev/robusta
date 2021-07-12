@@ -25,7 +25,7 @@ jobs:
             path: src/dist/robusta_cli-0.0.0-py3-none-any.whl
 
 
-  # we use a totally separate job for testing the package because we want an environment which is free of all the
+    # we use a totally separate job for testing the package because we want an environment which is free of all the
     # dependencies that poetry itself requires
     test_package:
       needs: build_package
@@ -43,7 +43,7 @@ jobs:
           uses: actions/download-artifact@v2
           with:
             name: robusta-pkg
-        - name: Build and install package
+        - name: Install and test robusta cli
           run: |
             ls
             pip3 install robusta_cli-0.0.0-py3-none-any.whl
