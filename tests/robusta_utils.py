@@ -17,7 +17,14 @@ from robusta.api import start_slack_sender
 def run_robusta_cli(kind_cluster: KindCluster, cmd):
     env = os.environ.copy()
     env["KUBECONFIG"] = str(kind_cluster.kubeconfig_path)
-    return subprocess.check_output(cmd, env=env)
+    result = subprocess.run(
+        cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if result.returncode:
+        print(f"result failed with returncode={result.returncode}")
+        print(f"stdout={result.stdout}")
+        print(f"stderr={result.stderr}")
+        raise Exception(f"Error running robusta cli command: {cmd}")
 
 
 def install_robusta(kind_cluster: KindCluster, installation_url: str):
