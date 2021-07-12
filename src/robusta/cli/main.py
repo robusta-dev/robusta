@@ -154,16 +154,24 @@ def install(
         log_title("Installing")
         subprocess.check_call(["kubectl", "apply", "-f", filename])
         log_title("Waiting for resources to be ready")
-        subprocess.check_call(
+        ret = subprocess.call(
             [
                 "kubectl",
                 "rollout",
                 "-n",
                 "robusta",
                 "status",
+                "--timeout=2m",
                 "deployments/robusta-runner",
             ]
         )
+        if ret:
+            output = subprocess.check_output(
+                ["kubectl", "describe", "-n robusta", "deployments/robusta-runner"]
+            )
+            print("output is", output)
+            raise Exception(f"Could not deploy robusta. details={output}")
+
         # subprocess.run(["kubectl", "wait", "-n", "robusta", "pods", "--all", "--for", "condition=available"])
         # TODO: if this is an upgrade there can still be pods in the old terminating status and then we will bring
         # logs from the wrong pod...
