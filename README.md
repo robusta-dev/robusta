@@ -44,5 +44,5 @@ This method installs robusta into your global python environment
 
 # Running Tests
 1. Set a Slack token in `tests/config.env`
-2. `cd src && python -m pytest ..` (add `-s` to print all pytest output) 
+2. `cd src && python -m pytest ..` (add `-s` to print all pytest output and `--keep-cluster` to keep the test KIND cluster alive after tests finish) 
 3. Optional: reduce the chance you'll accidentally commit your Slack key to git by running `git update-index --skip-worktree tests/config.env`
