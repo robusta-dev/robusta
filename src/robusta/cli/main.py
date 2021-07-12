@@ -166,11 +166,43 @@ def install(
             ]
         )
         if ret:
-            output = subprocess.check_output(
-                ["kubectl", "describe", "-n", "robusta", "deployments/robusta-runner"]
+            print(
+                "Deployment Description:",
+                subprocess.check_output(
+                    [
+                        "kubectl",
+                        "describe",
+                        "-n",
+                        "robusta",
+                        "deployments/robusta-runner",
+                    ]
+                ),
             )
-            print("output is", output)
-            raise Exception(f"Could not deploy robusta. details={output}")
+            print(
+                "Replicaset Description:",
+                subprocess.check_output(
+                    [
+                        "kubectl",
+                        "describe",
+                        "-n",
+                        "robusta",
+                        "replicaset",
+                    ]
+                ),
+            )
+            print(
+                "Pod Description:",
+                subprocess.check_output(
+                    [
+                        "kubectl",
+                        "describe",
+                        "-n",
+                        "robusta",
+                        "pod",
+                    ]
+                ),
+            )
+            raise Exception(f"Could not deploy robusta")
 
         # subprocess.run(["kubectl", "wait", "-n", "robusta", "pods", "--all", "--for", "condition=available"])
         # TODO: if this is an upgrade there can still be pods in the old terminating status and then we will bring
