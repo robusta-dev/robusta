@@ -202,6 +202,16 @@ def install(
                     ]
                 ),
             )
+            print(
+                "Node Description:",
+                subprocess.check_output(
+                    [
+                        "kubectl",
+                        "describe",
+                        "node",
+                    ]
+                ),
+            )
             raise Exception(f"Could not deploy robusta")
 
         # subprocess.run(["kubectl", "wait", "-n", "robusta", "pods", "--all", "--for", "condition=available"])
