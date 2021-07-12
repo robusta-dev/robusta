@@ -21,4 +21,5 @@ jobs:
           env:
             PYTEST_SLACK_TOKEN: ${{ secrets.PYTEST_SLACK_TOKEN }}
           run: |
-            python -m pytest .
+            cd src/
+            poetry run pytest ..
