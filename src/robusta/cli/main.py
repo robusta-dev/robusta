@@ -167,7 +167,7 @@ def install(
         )
         if ret:
             output = subprocess.check_output(
-                ["kubectl", "describe", "-n robusta", "deployments/robusta-runner"]
+                ["kubectl", "describe", "-n", "robusta", "deployments/robusta-runner"]
             )
             print("output is", output)
             raise Exception(f"Could not deploy robusta. details={output}")
