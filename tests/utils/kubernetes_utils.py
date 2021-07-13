@@ -1,34 +1,30 @@
-import textwrap
 import uuid
-from hikaru.model import Deployment
+from hikaru.model import *
 
 
 def get_crashing_deployment() -> Deployment:
-    random_id = str(uuid.uuid4())
-    yaml = textwrap.dedent(
-        f"""\
-        apiVersion: apps/v1
-        kind: Deployment
-        metadata:
-          name: {random_id}
-          namespace: robusta
-        spec:
-          replicas:
-          selector:
-            matchLabels:
-              app: crashpod
-          template:
-            metadata:
-              labels:
-                app: crashpod
-            spec:
-              containers:
-              - image: busybox
-                command: ["/bin/sh"]
-                args: ["-c", "echo 'going to crash. This is the crash log'; exit 125"]
-                imagePullPolicy: IfNotPresent
-                name: crashpod
-              restartPolicy: Always
-            """
+    return Deployment(
+        metadata=ObjectMeta(name=str(uuid.uuid4()), namespace="robusta"),
+        spec=DeploymentSpec(
+            selector=LabelSelector(matchLabels={"app": "crashpod"}),
+            template=PodTemplateSpec(
+                metadata=ObjectMeta(labels={"app": "crashpod"}),
+                spec=PodSpec(
+                    containers=[
+                        Container(
+                            name="crashpod",
+                            image="busybox",
+                            imagePullPolicy="IfNotPresent",
+                            args=[
+                                "-c",
+                                "echo going to crash.This is the crash log"
+                                "; exit 125",
+                            ],
+                            command=["/bin/sh"],
+                        )
+                    ],
+                    restartPolicy="Always",
+                ),
+            ),
+        ),
     )
-    return Deployment.from_yaml(yaml)
