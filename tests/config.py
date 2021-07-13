@@ -8,6 +8,7 @@ from pydantic import BaseSettings
 # 3. environment variables (highest precedence)
 class TestConfig(BaseSettings):
     PYTEST_SLACK_CHANNEL: str = "robusta-pytest"
+    PYTEST_SLACK_DELETE_CHANNEL_AFTER_TEST: bool = False
 
     # this is used for unit tests and has high permissions
     PYTEST_SLACK_TOKEN: str
