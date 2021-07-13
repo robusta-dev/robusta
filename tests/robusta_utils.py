@@ -25,6 +25,7 @@ def run_robusta_cli(kind_cluster: KindCluster, cmd):
         print(f"stdout={result.stdout}")
         print(f"stderr={result.stderr}")
         raise Exception(f"Error running robusta cli command: {cmd}")
+    return result.stdout
 
 
 def install_robusta(kind_cluster: KindCluster, installation_url: str):
