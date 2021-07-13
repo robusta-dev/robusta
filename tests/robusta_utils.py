@@ -105,7 +105,8 @@ def run_example_playbook(kind_cluster: KindCluster):
     time.sleep(60)  # TODO: remove this
     channel_id = create_or_join_channel(CONFIG.PYTEST_SLACK_CHANNEL)
     msg = get_latest_message(channel_id)
-    assert f"Crashing pod {uuid}" in msg, msg
+    expected = f"Crashing pod {random_id}"
+    assert expected in msg, f"cannot find expected='{expected} in msg='{msg}'"
 
 
 def delete_old_robusta(kind_cluster: KindCluster):
