@@ -105,7 +105,7 @@ def run_example_playbook(kind_cluster: KindCluster):
     time.sleep(60)  # TODO: remove this
     channel_id = create_or_join_channel(CONFIG.PYTEST_SLACK_CHANNEL)
     msg = get_latest_message(channel_id)
-    assert f"Crashing pod {uuid}" in msg
+    assert f"Crashing pod {uuid}" in msg, msg
 
 
 def delete_old_robusta(kind_cluster: KindCluster):
