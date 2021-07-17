@@ -10,9 +10,11 @@ from flask import Flask, request
 from .. import api as robusta_api
 from ..core.triggers import CloudEvent
 from ..core.active_playbooks import run_playbooks
+from ..core.persistency.scheduled_jobs_states_dal import init_scheduler_dal
 from ..integrations.prometheus.incoming_handler import parse_incoming_prometheus_alerts
 from ..integrations.manual.incoming_handler import parse_incoming_manual_trigger
 from ..integrations.slack.receiver import start_slack_receiver
+from ..integrations.slack.sender import start_slack_sender
 from .config_handler import ConfigHandler
 
 app = Flask(__name__)
@@ -42,7 +44,9 @@ def main():
     config_handler = ConfigHandler()
     if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
         manhole.install(locals=dict(getmembers(robusta_api)))
+    start_slack_sender()
     start_slack_receiver()
+    init_scheduler_dal()
     app.run(host="0.0.0.0", use_reloader=False)
     config_handler.close()
 

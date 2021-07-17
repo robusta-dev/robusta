@@ -11,14 +11,13 @@ packages = [
 robusta = "robusta.cli.main:app"
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = "^3.7.0"
 typer = "^0.3.2"
 Flask = "^1.1.2"
 colorlog = "^5.0.1"
 pydantic = "^1.8.1"
 kubernetes = "^12.0.1"
 grafana-api = "^1.0.3"
-slack-bolt = "^1.5.0"
 inflection = "^0.5.1"
 manhole = "^1.8.0"
 PyYAML = "^5.4.1"
@@ -30,12 +29,15 @@ tabulate = "^0.8.9"
 kafka-python = "^2.0.2"
 hikaru = "^0.5.1-beta.0"
 prometheus-api-client = "^0.4.2"
+slack-sdk = "^3.7.0"
+python-dotenv = "^0.18.0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
+pytest = "^6.2.4"
+pytest-kind = {git = "https://github.com/aantn/pytest-kind", rev = "main"}
 
 [build-system]
-#requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 

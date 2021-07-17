@@ -37,15 +37,6 @@ def slack_confirmation_on_cpu(event: PrometheusKubernetesAlert, config: HighCpuC
     send_to_slack(event)
 
 
-# temporarily abusing playbooks to test robusta - eventually will be moved to a proper testing framework
-@on_manual_trigger
-def test_long_slack_messages(event: ManualTriggerEvent):
-    event.report_title = f"A" * 151
-    event.slack_channel = "test10"
-    event.report_blocks.extend([MarkdownBlock("H" * 3001)])
-    send_to_slack(event)
-
-
 @on_pod_create
 def test_pod_orm(event: PodEvent):
     logging.info("running test_pod_orm")

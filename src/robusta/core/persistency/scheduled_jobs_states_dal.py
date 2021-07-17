@@ -40,9 +40,6 @@ def init_scheduler_dal():
             mutex.release()
 
 
-init_scheduler_dal()
-
-
 def save_scheduled_job_state(job_state: JobState):
     mutex.acquire()
     try:

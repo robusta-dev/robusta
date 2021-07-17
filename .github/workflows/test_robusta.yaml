@@ -1,0 +1,27 @@
+name: Test robusta with pytest
+
+on: [push]
+
+jobs:
+    run_tests:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v2
+        - name: Set up Python
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.9
+        - name: Install Robusta
+          run: |
+            curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+            source $HOME/.poetry/env
+            cd src/
+            poetry install
+        - name: Test Robusta
+          env:
+            PYTEST_SLACK_TOKEN: ${{ secrets.PYTEST_SLACK_TOKEN }}
+            PYTEST_IN_CLUSTER_SLACK_TOKEN: ${{ secrets.PYTEST_IN_CLUSTER_SLACK_TOKEN }}
+          run: |
+            source $HOME/.poetry/env
+            cd src/
+            poetry run pytest ../tests -s --kind-version=v0.11.1

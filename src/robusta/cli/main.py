@@ -18,8 +18,20 @@ SLACK_INTEGRATION_SERVICE_ADDRESS = os.environ.get(
     "SLACK_INTEGRATION_SERVICE_ADDRESS",
     "https://robusta.dev/integrations/slack/get-token",
 )
-EXAMPLES_BUCKET_URL = f"https://storage.googleapis.com/robusta-public/{__version__}"
-DOWNLOAD_URL = f"https://gist.githubusercontent.com/robusta-lab/6b809d508dfc3d8d92afc92c7bbbe88e/raw/robusta-{__version__}.yaml"
+
+
+def get_examples_url(examples_version=None):
+    if examples_version is None:
+        examples_version = __version__
+    return f"https://storage.googleapis.com/robusta-public/{examples_version}/example-playbooks.zip"
+
+
+def get_runner_url(runner_version=None):
+    if runner_version is None:
+        runner_version = __version__
+    return f"https://gist.githubusercontent.com/robusta-lab/6b809d508dfc3d8d92afc92c7bbbe88e/raw/robusta-{runner_version}.yaml"
+
+
 CRASHPOD_YAML = "https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml"
 PLAYBOOKS_DIR = "playbooks/"
 
@@ -111,10 +123,17 @@ def install(
         False,
         help="Only upgrade Robusta's pods, without deploying the default playbooks",
     ),
+    url: str = typer.Option(
+        None,
+        help="Deploy Robusta from a given YAML file/url instead of using the latest version",
+    ),
 ):
     """install robusta into your cluster"""
     filename = "robusta.yaml"
-    download_file(DOWNLOAD_URL, filename)
+    if url is not None:
+        download_file(url, filename)
+    else:
+        download_file(get_runner_url(), filename)
 
     if slack_api_key is None and typer.confirm(
         "do you want to configure slack integration? this is HIGHLY recommended.",
@@ -127,6 +146,7 @@ def install(
     if slack_api_key is not None:
         replace_in_file(filename, "<SLACK_API_KEY>", slack_api_key.strip())
 
+    print("upgrade is ", upgrade)
     if not upgrade:  # download and deploy playbooks
         examples()
 
@@ -134,16 +154,66 @@ def install(
         log_title("Installing")
         subprocess.check_call(["kubectl", "apply", "-f", filename])
         log_title("Waiting for resources to be ready")
-        subprocess.check_call(
+        ret = subprocess.call(
             [
                 "kubectl",
                 "rollout",
                 "-n",
                 "robusta",
                 "status",
+                "--timeout=2m",
                 "deployments/robusta-runner",
             ]
         )
+        if ret:
+            print(
+                "Deployment Description:",
+                subprocess.check_output(
+                    [
+                        "kubectl",
+                        "describe",
+                        "-n",
+                        "robusta",
+                        "deployments/robusta-runner",
+                    ]
+                ),
+            )
+            print(
+                "Replicaset Description:",
+                subprocess.check_output(
+                    [
+                        "kubectl",
+                        "describe",
+                        "-n",
+                        "robusta",
+                        "replicaset",
+                    ]
+                ),
+            )
+            print(
+                "Pod Description:",
+                subprocess.check_output(
+                    [
+                        "kubectl",
+                        "describe",
+                        "-n",
+                        "robusta",
+                        "pod",
+                    ]
+                ),
+            )
+            print(
+                "Node Description:",
+                subprocess.check_output(
+                    [
+                        "kubectl",
+                        "describe",
+                        "node",
+                    ]
+                ),
+            )
+            raise Exception(f"Could not deploy robusta")
+
         # subprocess.run(["kubectl", "wait", "-n", "robusta", "pods", "--all", "--for", "condition=available"])
         # TODO: if this is an upgrade there can still be pods in the old terminating status and then we will bring
         # logs from the wrong pod...
@@ -201,14 +271,31 @@ def trigger(
 
 
 @app.command()
-def examples():
+def examples(
+    slack_channel: str = typer.Option(
+        None,
+        help="Default Slack channel for Robusta",
+    ),
+    url: str = typer.Option(
+        None,
+        help="Deploy Robusta playbooks from a given url instead of using the latest version",
+    ),
+):
     """download example playbooks"""
     filename = "example-playbooks.zip"
-    download_file(f"{EXAMPLES_BUCKET_URL}/{filename}", filename)
+    if url:
+        download_file(url, filename)
+    else:
+        download_file(get_examples_url(), filename)
+
     with ZipFile(filename, "r") as zip_file:
         zip_file.extractall()
 
-    slack_channel = typer.prompt("which slack channel should I send notifications to?")
+    if slack_channel is None:
+        slack_channel = typer.prompt(
+            "which slack channel should I send notifications to?"
+        )
+
     replace_in_file(
         "playbooks/active_playbooks.yaml", "<DEFAULT_SLACK_CHANNEL>", slack_channel
     )

@@ -68,6 +68,10 @@ class TableBlock(BaseBlock):
         super().__init__(rows=rows, headers=headers)
 
     def to_markdown(self) -> MarkdownBlock:
+        # TODO: when the next version of tabulate is released, use maxcolwidths to wrap lines that are too long
+        # this is currently implemented on tabulate's git master but isn't yet in the pypi package
+        # unfortunately, we can't take a dependency on the tabulate git version as that breaks our package with pypi
+        # see https://github.com/python-poetry/poetry/issues/2828
         table = tabulate(self.rows, headers=self.headers, tablefmt="presto")
         return MarkdownBlock(f"```\n{table}\n```")
 
