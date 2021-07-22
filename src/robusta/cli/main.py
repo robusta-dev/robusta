@@ -289,6 +289,10 @@ def examples(
         False,
         help="Enable Robusta sink?",
     ),
+    skip_new: bool = typer.Option(
+        False,
+        help="Skip new config replacements?",
+    ),
     account_id: str = typer.Option(
         None,
         help="Robusta UI account id",
@@ -332,12 +336,16 @@ def examples(
             "Please specify a unique name for your cluster or press ENTER to use the default",
             default=default_name,
         )
-    if cluster_name is not None:
+    # skip_new is used here, temporary, since we don't have the new fields in the released active_playbooks.yaml yet
+    # TODO remove on next release
+    if not skip_new and cluster_name is not None:
         replace_in_file(
             "playbooks/active_playbooks.yaml", "<CLUSTER_NAME>", cluster_name.strip()
         )
 
-    if use_robusta_ui or typer.confirm("Would you like to use Robusta UI?"):
+    if not skip_new and (
+        use_robusta_ui or typer.confirm("Would you like to use Robusta UI?")
+    ):
         if account_id is None:
             account_id = typer.prompt(
                 "Please specify your robusta account id",

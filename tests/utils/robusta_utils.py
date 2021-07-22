@@ -47,6 +47,7 @@ class RobustaController:
                 "--api-key",
                 "test-key",
                 "--skip-robusta-sink",
+                "--skip-new",
             ],
         )
         assert b"examples downloaded into the playbooks/ directory" in logs
