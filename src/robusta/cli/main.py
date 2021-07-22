@@ -281,20 +281,36 @@ def examples(
         None,
         help="Unique name for this cluster",
     ),
+    use_robusta_ui: bool = typer.Option(
+        False,
+        help="Use Robusta's ui?",
+    ),
+    skip_robusta_sink: bool = typer.Option(
+        False,
+        help="Enable Robusta sink?",
+    ),
+    account_id: str = typer.Option(
+        None,
+        help="Robusta UI account id",
+    ),
+    api_key: str = typer.Option(
+        None,
+        help="Robusta UI api key",
+    ),
     url: str = typer.Option(
         None,
         help="Deploy Robusta playbooks from a given url instead of using the latest version",
     ),
 ):
     """download example playbooks"""
-    # filename = "example-playbooks.zip"
-    # if url:
-    #     download_file(url, filename)
-    # else:
-    #     download_file(get_examples_url(), filename)
-    #
-    # with ZipFile(filename, "r") as zip_file:
-    #     zip_file.extractall()
+    filename = "example-playbooks.zip"
+    if url:
+        download_file(url, filename)
+    else:
+        download_file(get_examples_url(), filename)
+
+    with ZipFile(filename, "r") as zip_file:
+        zip_file.extractall()
 
     if slack_channel is None:
         slack_channel = typer.prompt(
@@ -312,20 +328,21 @@ def examples(
             if (current_context and current_context.get("name"))
             else ""
         )
-        cluster = typer.prompt(
-            "Please specify a unique name for your cluster",
+        cluster_name = typer.prompt(
+            "Please specify a unique name for your cluster or press ENTER to use the default",
             default=default_name,
         )
-        if cluster is not None:
-            replace_in_file(
-                "playbooks/active_playbooks.yaml", "<CLUSTER_NAME>", cluster.strip()
-            )
-
-    if typer.confirm("Would you like to use Robusta UI?"):
-        account_id = typer.prompt(
-            "Please specify your robusta account id",
-            default=None,
+    if cluster_name is not None:
+        replace_in_file(
+            "playbooks/active_playbooks.yaml", "<CLUSTER_NAME>", cluster_name.strip()
         )
+
+    if use_robusta_ui or typer.confirm("Would you like to use Robusta UI?"):
+        if account_id is None:
+            account_id = typer.prompt(
+                "Please specify your robusta account id",
+                default=None,
+            )
         if account_id is not None:
             replace_in_file(
                 "playbooks/active_playbooks.yaml",
@@ -333,22 +350,23 @@ def examples(
                 account_id.strip(),
             )
 
-        robusta_api_key = typer.prompt(
-            "Please specify your robusta api key",
-            default=None,
-        )
-        if account_id is not None:
+        if api_key is None:
+            api_key = typer.prompt(
+                "Please specify your robusta api key",
+                default=None,
+            )
+        if api_key is not None:
             replace_in_file(
                 "playbooks/active_playbooks.yaml",
                 "<ROBUSTA_API_KEY>",
-                robusta_api_key.strip(),
+                api_key.strip(),
             )
-
-        replace_in_file(
-            "playbooks/active_playbooks.yaml",
-            "#<ENABLE_ROBUSTA_SINK>",
-            ' - "robusta platform"',
-        )
+        if not skip_robusta_sink:
+            replace_in_file(
+                "playbooks/active_playbooks.yaml",
+                "#<ENABLE_ROBUSTA_SINK>",
+                '  - "robusta platform"',
+            )
 
     typer.echo(f"examples downloaded into the {PLAYBOOKS_DIR} directory")
 

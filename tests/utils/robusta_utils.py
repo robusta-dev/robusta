@@ -39,6 +39,14 @@ class RobustaController:
                 playbooks_url,
                 "--slack-channel",
                 slack_channel,
+                "--use-robusta-ui",
+                "--cluster-name",
+                "test-cluster",
+                "--account-id",
+                "test-account",
+                "--api-key",
+                "test-key",
+                "--skip-robusta-sink",
             ],
         )
         assert b"examples downloaded into the playbooks/ directory" in logs

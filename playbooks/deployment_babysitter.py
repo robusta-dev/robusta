@@ -52,9 +52,3 @@ def deployment_babysitter(event: DeploymentEvent, config: BabysitterConfig):
 def pod_babysitter(event: DeploymentEvent, config: BabysitterConfig):
     """Track changes to a pod and send the changes in slack."""
     do_babysitter(event, config, SUBJECT_TYPE_POD)
-
-
-@on_pod_prometheus_alert(alert_name="HighCpuAlert")
-def handle_high_cpu(event: PrometheusKubernetesAlert):
-    event.deployment.metadata.name
-    send_to_slack()
