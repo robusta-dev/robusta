@@ -8,7 +8,6 @@ class StartProfilingParams(BaseModel):
     namespace: str = "default"
     seconds: int = 2
     process_name: str = ""
-    slack_channel: str
     pod_name: str
 
 
@@ -23,6 +22,15 @@ def python_profiler(event: ManualTriggerEvent):
     debugger = RobustaPod.create_debugger_pod(pod.metadata.name, pod.spec.nodeName)
 
     try:
+        event.processing_context.create_finding(
+            title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
+            source=SOURCE_MANUAL,
+            type=TYPE_ENRICHMENT_PROFILING,
+            subject=FindingSubject(
+                pod.metadata.name, SUBJECT_TYPE_POD, pod.spec.nodeName
+            ),
+        )
+
         for proc in processes:
             cmd = " ".join(proc.cmdline)
             if action_params.process_name not in cmd:
@@ -44,11 +52,10 @@ def python_profiler(event: ManualTriggerEvent):
                 continue
 
             svg = debugger.exec(f"cat {filename}")
-            event.report_blocks.append(FileBlock(f"{cmd}.svg", svg))
+            event.processing_context.finding.add_enrichment(
+                [FileBlock(f"{cmd}.svg", svg)]
+            )
 
-        event.slack_channel = action_params.slack_channel
-        event.report_title = f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:"
-        send_to_slack(event)
     finally:
         debugger.deleteNamespacedPod(
             debugger.metadata.name, debugger.metadata.namespace
@@ -70,10 +77,3 @@ def pod_ps(event: ManualTriggerEvent):
     )
     for proc in pod.get_processes():
         print(f"{proc.pid}\t{proc.exe}\t{proc.cmdline}")
-
-
-class PythonStackDumpParams(BaseModel):
-    namespace: str = "default"
-    process_name: str = ""
-    slack_channel: str
-    pod_name: str

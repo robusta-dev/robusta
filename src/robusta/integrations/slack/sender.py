@@ -6,12 +6,13 @@ from typing import Dict, Callable, Any, List
 
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+from hikaru import DiffType
 
 from ...core.model.events import *
 from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
 from ...core.reporting.callbacks import PlaybookCallbackRequest, callback_registry
-from .receiver import TARGET_ID
+from ...core.consts.consts import TARGET_ID
 
 # TODO: allow setting Slack token, e.g. for tests
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
@@ -52,16 +53,6 @@ def get_action_block_for_choices(choices: Dict[str, Callable] = None, context=""
 
     buttons = []
     for (i, (text, callback)) in enumerate(choices.items()):
-        if callback is None:
-            raise Exception(
-                f"The callback for choice {text} is None. Did you accidentally pass `foo()` as a callback and not `foo`?"
-            )
-        if not callback_registry.is_callback_in_registry(callback):
-            raise Exception(
-                f"{callback} is not a function that was decorated with @on_report_callback or it somehow"
-                f" has the wrong version (e.g. multiple functions with the same name were decorated "
-                f"with @on_report_callback)"
-            )
         buttons.append(
             {
                 "type": "button",
@@ -72,7 +63,7 @@ def get_action_block_for_choices(choices: Dict[str, Callable] = None, context=""
                 "style": "primary",
                 "action_id": f"{ACTION_TRIGGER_PLAYBOOK}_{i}",
                 "value": PlaybookCallbackRequest.create_for_func(
-                    callback, context
+                    callback, context, text
                 ).json(),
             }
         )
@@ -90,7 +81,35 @@ def apply_length_limit(msg: str, max_length: int = 3000):
 SlackBlock = Dict[str, Any]
 
 
-def to_slack(block: BaseBlock) -> List[SlackBlock]:
+def to_slack_diff(block: DiffsBlock, sink_name: str) -> List[SlackBlock]:
+    num_additions = len([d for d in block.diffs if d.diff_type == DiffType.ADDED])
+    num_subtractions = len([d for d in block.diffs if d.diff_type == DiffType.REMOVED])
+    num_modifications = len(block.diffs) - num_additions - num_subtractions
+    slack_blocks = []
+    slack_blocks.extend(
+        to_slack(
+            MarkdownBlock(
+                f"{num_additions} fields added. {num_subtractions} fields removed. {num_modifications} fields changed"
+            ),
+            sink_name,
+        )
+    )
+    slack_blocks.extend(
+        to_slack(
+            ListBlock(
+                [
+                    f"*{d.formatted_path}*: {d.other_value} :arrow_right: {d.value}"
+                    for d in block.diffs
+                ]
+            ),
+            sink_name,
+        )
+    )
+
+    return slack_blocks
+
+
+def to_slack(block: BaseBlock, sink_name: str) -> List[SlackBlock]:
     if isinstance(block, MarkdownBlock):
         if not block.text:
             return []
@@ -118,13 +137,18 @@ def to_slack(block: BaseBlock) -> List[SlackBlock]:
             }
         ]
     elif isinstance(block, ListBlock) or isinstance(block, TableBlock):
-        return to_slack(block.to_markdown())
+        return to_slack(block.to_markdown(), sink_name)
+    elif isinstance(block, DiffsBlock):
+        return to_slack_diff(block, sink_name)
     elif isinstance(block, CallbackBlock):
         context = block.context.copy()
         context["target_id"] = TARGET_ID
+        context["sink_name"] = sink_name
         return get_action_block_for_choices(block.choices, json.dumps(context))
     else:
-        logging.error(f"cannot convert block of type {type(block)} to slack format")
+        logging.error(
+            f"cannot convert block of type {type(block)} to slack format block: {block}"
+        )
         return []  # no reason to crash the entire report
 
 
@@ -139,13 +163,7 @@ def upload_file_to_slack(block: FileBlock) -> str:
         return result["file"]["permalink"]
 
 
-def prepare_slack_text(
-    message: str, mentions: List[str] = [], files: List[FileBlock] = []
-):
-    """Adds mentions and truncates text if it is too long."""
-    mention_prefix = " ".join([f"<@{user_id}>" for user_id in mentions])
-    if mention_prefix != "":
-        message = f"{mention_prefix} {message}"
+def prepare_slack_text(message: str, files: List[FileBlock] = []):
     if files:
         # it's a little annoying but it seems like files need to be referenced in `title` and not just `blocks`
         # in order to be actually shared. well, I'm actually not sure about that, but when I tried adding the files
@@ -165,52 +183,91 @@ def prepare_slack_text(
     return apply_length_limit(message)
 
 
-def send_to_slack(event: BaseEvent):
-    file_blocks = add_pngs_for_all_svgs(
-        [b for b in event.report_blocks if isinstance(b, FileBlock)]
+def send_to_slack(event: BaseEvent, slack_channel: str):
+    send_blocks_to_slack(
+        event.report_blocks,
+        event.report_attachment_blocks,
+        event.report_title,
+        slack_channel,
+        True,
+        "",
     )
-    other_blocks = [b for b in event.report_blocks if not isinstance(b, FileBlock)]
 
-    message = prepare_slack_text(event.report_title, event.slack_mentions, file_blocks)
+
+def send_blocks_to_slack(
+    report_blocks: List[BaseBlock],
+    report_attachment_blocks: List[BaseBlock],
+    title: str,
+    slack_channel: str,
+    unfurl: bool,
+    sink_name: str,
+):
+    file_blocks = add_pngs_for_all_svgs(
+        [b for b in report_blocks if isinstance(b, FileBlock)]
+    )
+    other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
+
+    message = prepare_slack_text(title, file_blocks)
 
     output_blocks = []
-    if not event.report_title_hidden and event.report_title:
-        output_blocks.extend(to_slack(HeaderBlock(event.report_title)))
+    if title:
+        output_blocks.extend(to_slack(HeaderBlock(title), sink_name))
     for block in other_blocks:
-        output_blocks.extend(to_slack(block))
+        output_blocks.extend(to_slack(block, sink_name))
     attachment_blocks = []
-    for block in event.report_attachment_blocks:
-        attachment_blocks.extend(to_slack(block))
+    for block in report_attachment_blocks:
+        attachment_blocks.extend(to_slack(block, sink_name))
 
     logging.debug(
         f"--sending to slack--\n"
-        f"title:{event.report_title}\n"
+        f"title:{title}\n"
         f"blocks: {output_blocks}\n"
-        f"attachment_blocks: {event.report_attachment_blocks}\n"
+        f"attachment_blocks: {report_attachment_blocks}\n"
         f"message:{message}"
     )
 
     try:
         if attachment_blocks:
             slack_client.chat_postMessage(
-                channel=event.slack_channel,
+                channel=slack_channel,
                 text=message,
                 blocks=output_blocks,
                 display_as_bot=True,
                 attachments=[{"blocks": attachment_blocks}],
-                unfurl_links=event.slack_allow_unfurl,
-                unfurl_media=event.slack_allow_unfurl,
+                unfurl_links=unfurl,
+                unfurl_media=unfurl,
             )
         else:
             slack_client.chat_postMessage(
-                channel=event.slack_channel,
+                channel=slack_channel,
                 text=message,
                 blocks=output_blocks,
                 display_as_bot=True,
-                unfurl_links=event.slack_allow_unfurl,
-                unfurl_media=event.slack_allow_unfurl,
+                unfurl_links=unfurl,
+                unfurl_media=unfurl,
             )
     except Exception as e:
         logging.error(
             f"error sending message to slack\ne={e}\ntext={message}\nblocks={output_blocks}\nattachment_blocks={attachment_blocks}"
         )
+
+
+def send_finding_to_slack(finding: Finding, slack_channel: str, sink_name: str):
+    blocks: List[BaseBlock] = []
+    attachment_blocks: List[BaseBlock] = []
+    # first add finding description block
+    if finding.description:
+        blocks.append(MarkdownBlock(finding.description))
+
+    unfurl = False
+    for enrichment in finding.enrichments:
+        # if one of the enrichment specified unfurl=True, this slack message will contain unfurl
+        unfurl |= enrichment.annotations.get("unfurl") == "True"
+        if enrichment.annotations.get("attachment") == "True":
+            attachment_blocks.extend(enrichment.blocks)
+        else:
+            blocks.extend(enrichment.blocks)
+
+    send_blocks_to_slack(
+        blocks, attachment_blocks, finding.title, slack_channel, unfurl, sink_name
+    )

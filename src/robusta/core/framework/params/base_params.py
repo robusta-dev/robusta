@@ -1,5 +1,5 @@
-## this file is named aa_base_params, because we want to loads that file first (becuase of import order)
-from robusta.api import *
+from pydantic import BaseModel
+from typing import Dict, Any, List
 
 
 class GenParams(BaseModel):
@@ -11,15 +11,15 @@ class SlackParams(BaseModel):
     slack_channel: str
 
 
-class NodeNameParams(SlackParams):
+class NodeNameParams(BaseModel):
     node_name: str = None
 
 
-class PodParams(SlackParams):
+class PodParams(BaseModel):
     pod_name: str = None
     pod_namespace: str = None
 
 
-class NamespacedKubernetesObjectParams(SlackParams):
+class NamespacedKubernetesObjectParams(BaseModel):
     name: str = None
     namespace: str = None

@@ -1,6 +1,7 @@
 .idea/
 .vscode/
 src/build/
+playground/
 src/dist/
 *.egg/
 *.egg-info/

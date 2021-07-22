@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Any, Optional
 from dataclasses import dataclass, field
 
-from ..reporting.blocks import BaseBlock
+from ..reporting.blocks import BaseBlock, ProcessingContext
 
 
 class EventType(Enum):
@@ -23,9 +23,6 @@ class BaseEvent:
     # some chat APIs allow attachment blocks which are formatted differently
     report_attachment_blocks: List[BaseBlock] = field(default_factory=list)
     report_title: str = ""
-    report_title_hidden: bool = False
-    slack_channel: Optional[str] = None
-    slack_mentions: List[str] = field(
-        default_factory=list
-    )  # TODO: expand this to a broader concept of all humans related to this event
-    slack_allow_unfurl: bool = True
+    prometheus_url: Optional[str] = None
+
+    processing_context: ProcessingContext = field(default_factory=ProcessingContext)

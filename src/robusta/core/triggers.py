@@ -1,13 +1,14 @@
 import copy
 import logging
 
+from .framework.discovery.service_discovery import ServiceDiscovery
+from .framework.sinks.sink_factory import SinkFactory
 from .model.trigger_params import TriggerParams
 from .model.playbook_hash import playbook_hash
 
 from ..core.active_playbooks import get_active_playbooks, get_playbook_inventory
 from ..core.model.runner_config import RunnerConfig
 from ..core.schedule.scheduler import unschedule_deleted_playbooks
-from ..integrations.prometheus.incoming_handler import *
 
 
 def clear_active_playbooks():
@@ -15,10 +16,11 @@ def clear_active_playbooks():
 
 
 class DeployCommand:
-    def __init__(self, deploy_func, func, trigger_params, action_params=None):
+    def __init__(self, deploy_func, func, trigger_params, sinks, action_params=None):
         self.deploy_func = deploy_func
         self.func = func
         self.trigger_params = trigger_params
+        self.sinks = sinks
         self.action_params = action_params
         self.playbook_id = playbook_hash(func, trigger_params, action_params)
         if (
@@ -29,6 +31,16 @@ class DeployCommand:
 
 
 def deploy_playbook_config(runner_config: RunnerConfig):
+    cluster_name = runner_config.global_config.get("cluster_name")
+    SinkFactory.update_sinks_config(runner_config.sinks_config, cluster_name)
+    ServiceDiscovery.init(SinkFactory.get_robusta_sinks_names())
+
+    default_sinks = runner_config.global_config.get("sinks", [])
+    if not default_sinks:
+        logging.warning(
+            f"No default sinks defined. By default, actions results are ignored."
+        )
+
     deploy_commands = []
     active_playbooks = runner_config.active_playbooks or []
     for playbook_config in active_playbooks:
@@ -50,11 +62,19 @@ def deploy_playbook_config(runner_config: RunnerConfig):
         runtime_trigger_params = get_merged_config(
             playbook_config.trigger_params, runtime_trigger_params
         )
+        playbooks_sinks = (
+            playbook_config.sinks
+            if playbook_config.sinks is not None
+            else default_sinks
+        )
         deploy_func = playbook_definition["deploy_func"]
         if playbook_definition["action_params"] is None:
             deploy_commands.append(
                 DeployCommand(
-                    deploy_func, playbook_definition["func"], runtime_trigger_params
+                    deploy_func,
+                    playbook_definition["func"],
+                    runtime_trigger_params,
+                    playbooks_sinks,
                 )
             )
         else:
@@ -67,6 +87,7 @@ def deploy_playbook_config(runner_config: RunnerConfig):
                     deploy_func,
                     playbook_definition["func"],
                     runtime_trigger_params,
+                    playbooks_sinks,
                     playbook_definition["action_params"](
                         **playbook_config.action_params
                     ),
@@ -84,12 +105,13 @@ def deploy_playbook_config(runner_config: RunnerConfig):
     for deploy_command in deploy_commands:
         if deploy_command.action_params is None:
             deploy_command.deploy_func(
-                deploy_command.func, deploy_command.trigger_params
+                deploy_command.func, deploy_command.trigger_params, deploy_command.sinks
             )
         else:
             deploy_command.deploy_func(
                 deploy_command.func,
                 deploy_command.trigger_params,
+                deploy_command.sinks,
                 deploy_command.action_params,
             )
 

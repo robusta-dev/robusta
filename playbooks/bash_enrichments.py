@@ -1,7 +1,5 @@
 from robusta.api import *
 
-from aa_base_params import PodParams, NodeNameParams
-
 
 def pod_bash_enrichment(
     pod_name: str, pod_namespace: str, bash_command: str
@@ -29,10 +27,15 @@ def show_pod_bash_enrichment(event: ManualTriggerEvent):
         params.pod_name, params.pod_namespace, params.bash_command
     )
     if blocks:
-        event.report_blocks.extend(blocks)
-        event.slack_channel = params.slack_channel
-        event.report_title = f"Pod bash command - {params.pod_name}"
-        send_to_slack(event)
+        event.processing_context.create_finding(
+            title=f"Pod bash command - {params.pod_name}",
+            source=SOURCE_MANUAL,
+            type=TYPE_POD_BASH,
+            subject=FindingSubject(
+                params.pod_name, SUBJECT_TYPE_POD, params.pod_namespace
+            ),
+        )
+        event.processing_context.finding.add_enrichment(blocks)
 
 
 def node_bash_enrichment(node_name: str, bash_command: str) -> List[BaseBlock]:
@@ -59,7 +62,10 @@ def show_node_bash_enrichment(event: ManualTriggerEvent):
     params = NodeBashParams(**event.data)
     blocks = node_bash_enrichment(params.node_name, params.bash_command)
     if blocks:
-        event.report_blocks.extend(blocks)
-        event.slack_channel = params.slack_channel
-        event.report_title = f"Node bash command - {params.node_name}"
-        send_to_slack(event)
+        event.processing_context.create_finding(
+            title=f"Node bash command - {params.node_name}",
+            source=SOURCE_MANUAL,
+            type=TYPE_NODE_BASH,
+            subject=FindingSubject(name=params.node_name, type=SUBJECT_TYPE_NODE),
+        )
+        event.processing_context.finding.add_enrichment(blocks)

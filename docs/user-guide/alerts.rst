@@ -35,8 +35,6 @@ Lets look at the simplest possible ``active_playbooks.yaml`` which instructs Rob
 
    active_playbooks:
   - name: "alerts_integration"
-    action_params:
-      slack_channel: "robusta-alerts"
 
 The above configuration isn't very useful because we haven't enriched any alerts yet.
 However, we do get a minor aesthetic benefit because Robusta adds pretty formatting to alerts as you can see below:
@@ -56,7 +54,6 @@ Now lets add an enricher to ``active_playbooks.yaml`` which enriches the ``HostH
    active_playbooks:
   - name: "alerts_integration"
     action_params:
-      slack_channel: "robusta-alerts"
       alerts_config:
       - alert_name: "HostHighCpuLoad"
         enrichers:
@@ -90,7 +87,6 @@ You can change the default enricher(s) for all alerts using the ``default_enrich
    active_playbooks:
   - name: "alerts_integration"
     action_params:
-      slack_channel: "robusta-alerts"
       default_enrichers:
         - name: "AlertDefaults"
 
@@ -105,7 +101,6 @@ Now lets look at an example ``active_playbooks.yaml`` which silences KubePodCras
    active_playbooks:
   - name: "alerts_integration"
     action_params:
-      slack_channel: "robusta-alerts"
       alerts_config:
       - alert_name: "KubePodCrashLooping"
         silencers:
@@ -122,7 +117,6 @@ Here is an example which shows all the features discussed above working together
    active_playbooks:
   - name: "alerts_integration"
     action_params:
-      slack_channel: "robusta-alerts"
       default_enrichers:
         - name: "AlertDefaults"
       alerts_config:
@@ -145,10 +139,14 @@ Available enrichers
 **AlertDefaults:** send the alert message and labels to Slack
 
 **NodeCPUAnalysis:** provide deep analysis of node cpu usage
+This enricher use ``prometheus``. The ``prometheus`` url can be overriden in the ``global_config`` section.
+(For example - ``prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"``)
 
 **OOMKillerEnricher:** shows which pods were recently OOM Killed on a node
 
 **GraphEnricher:** display a graph of the Prometheus query which triggered the alert
+This enricher use ``prometheus``. The ``prometheus`` url can be overriden in the ``global_config`` section.
+(For example - ``prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"``)
 
 **StackOverflowEnricher:** add a button in Slack to search for the alert name on StackOverflow
 

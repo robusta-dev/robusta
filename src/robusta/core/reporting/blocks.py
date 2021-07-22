@@ -4,11 +4,16 @@
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
+import uuid
 from typing import List, Callable, Dict, Any, Iterable, Sequence
 
+from hikaru import DiffDetail
 from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
 from tabulate import tabulate
+from enum import Enum
+
+from ..framework.discovery.top_service_resolver import TopServiceResolver
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
@@ -60,6 +65,20 @@ class ListBlock(BaseBlock):
         return MarkdownBlock("\n".join(mrkdwn))
 
 
+class DiffsBlock(BaseBlock):
+    diffs: List[DiffDetail]
+
+    def __init__(self, diffs: List[DiffDetail]):
+        super().__init__(diffs=diffs)
+
+
+class JsonBlock(BaseBlock):
+    json_str: str
+
+    def __init__(self, json_str: str):
+        super().__init__(json_str=json_str)
+
+
 class TableBlock(BaseBlock):
     rows: Iterable[Iterable[str]]
     headers: Sequence[str] = ()
@@ -105,3 +124,93 @@ class CallbackBlock(BaseBlock):
 
     def __init__(self, choices: Dict[str, Callable], context: Dict[str, Any]):
         super().__init__(choices=choices, context=context)
+
+
+class FindingSeverity(Enum):
+    INFO = 1
+    LOW = 2
+    MEDIUM = 3
+    HIGH = 4
+
+
+class Enrichment:
+    # These is the actual enrichment data
+    blocks: List[BaseBlock] = []
+    # General purpose rendering flags, that can be used by specific sinks
+    annotations: Dict[str, str] = {}
+
+    def __init__(self, blocks: List[BaseBlock], annotations=None):
+        if annotations is None:
+            annotations = {}
+        self.blocks = blocks
+        self.annotations = annotations
+
+    def __str__(self):
+        return f"annotations: {self.annotations} Enrichment: {self.blocks} "
+
+
+def get_top_service_key(name: str, namespace: str) -> str:
+    return TopServiceResolver.guess_service_key(name, namespace)
+
+
+class FindingSubject:
+    def __init__(self, name: str = "NA", type: str = "NA", namespace: str = ""):
+        self.name = name
+        self.type = type
+        self.namespace = namespace
+        self.service_key = get_top_service_key(name, namespace)
+
+
+class Finding:
+    def __init__(
+        self,
+        title: str,
+        severity: FindingSeverity,
+        source: str,
+        type: str,
+        description: str = "",
+        subject: FindingSubject = FindingSubject(),
+    ) -> None:
+        self.id: uuid = uuid.uuid4()
+        self.title = title
+        self.description = description
+        self.source = source
+        self.type = type
+        self.severity = severity
+        self.category = "None"  # TODO fill real category
+        self.subject_type = subject.type
+        self.subject_name = subject.name
+        self.subject_namespace = subject.namespace
+        self.service_key = subject.service_key
+        self.enrichments: List[Enrichment] = []
+
+    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
+        if annotations is None:
+            annotations = {}
+        self.enrichments.append(Enrichment(enrichment_blocks, annotations))
+
+    def __str__(self):
+        return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject_name} sub-type:{self.subject_type} enrich: {self.enrichments}"
+
+
+# Contains data of the current event processing context.
+class ProcessingContext:
+    finding: Finding = None
+    # Finding created as a result of this event.
+    def create_finding(
+        self,
+        title: str,
+        severity: FindingSeverity = FindingSeverity.INFO,
+        description: str = "",
+        source: str = "",
+        type: str = "",
+        subject: FindingSubject = FindingSubject(),
+    ):
+        self.finding = Finding(
+            title=title,
+            severity=severity,
+            description=description,
+            source=source,
+            type=type,
+            subject=subject,
+        )

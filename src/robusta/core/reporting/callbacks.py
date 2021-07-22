@@ -19,7 +19,18 @@ class PlaybookCallbackRequest(BaseModel):
     context: str
 
     @classmethod
-    def create_for_func(cls, func: Callable, context: Any):
+    def create_for_func(cls, func: Callable, context: Any, text: str):
+        if func is None:
+            raise Exception(
+                f"The callback for choice {text} is None. Did you accidentally pass `foo()` as a callback and not `foo`?"
+            )
+        if not callback_registry.is_callback_in_registry(func):
+            raise Exception(
+                f"{func} is not a function that was decorated with @on_report_callback or it somehow"
+                f" has the wrong version (e.g. multiple functions with the same name were decorated "
+                f"with @on_report_callback)"
+            )
+
         return cls(
             func_name=func.__name__,
             func_file=inspect.getsourcefile(func),

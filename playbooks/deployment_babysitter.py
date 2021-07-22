@@ -10,9 +10,7 @@ from robusta.api import *
 
 
 class BabysitterConfig(BaseModel):
-    slack_channel: str = ""
     fields_to_monitor: List[str] = ["status.readyReplicas", "message", "reason", "spec"]
-    sinks: List[SinkConfigBase] = None
 
 
 # TODO: filter out all the managed fields crap
@@ -23,26 +21,7 @@ def babysitter_should_include_diff(diff_detail: DiffDetail, config: BabysitterCo
     )
 
 
-def babysitter_get_blocks(diffs: List[DiffDetail]):
-    num_additions = len([d for d in diffs if d.diff_type == DiffType.ADDED])
-    num_subtractions = len([d for d in diffs if d.diff_type == DiffType.REMOVED])
-    num_modifications = len(diffs) - num_additions - num_subtractions
-    blocks = [
-        MarkdownBlock(
-            f"{num_additions} fields added. {num_subtractions} fields removed. {num_modifications} fields changed"
-        ),
-        ListBlock(
-            [
-                f"*{d.formatted_path}*: {d.other_value} :arrow_right: {d.value}"
-                for d in diffs
-            ]
-        ),
-    ]
-
-    return blocks
-
-
-def do_babysitter(event: K8sBaseEvent, config: BabysitterConfig):
+def do_babysitter(event: K8sBaseEvent, config: BabysitterConfig, resource_type: str):
     filtered_diffs = None
     if event.operation == K8sOperationType.UPDATE:
         all_diffs = event.obj.diff(event.old_obj)
@@ -51,40 +30,31 @@ def do_babysitter(event: K8sBaseEvent, config: BabysitterConfig):
         )
         if len(filtered_diffs) == 0:
             return
-        event.report_attachment_blocks.extend(babysitter_get_blocks(filtered_diffs))
 
-    resource_type = event.obj.kind
-    event.report_title = f"{resource_type} {event.obj.metadata.name} {event.operation.value}d in namespace {event.obj.metadata.namespace}"
-    if config.slack_channel:
-        event.slack_channel = config.slack_channel
-        send_to_slack(event)
-
-    if config.sinks:
-        data = {
-            "resource_name": event.obj.metadata.name,
-            "resource_namespace": event.obj.metadata.namespace,
-            "resource_type": resource_type,
-            "message": f"{resource_type} properties change",
-            "changed_properties": [
-                {
-                    "property": ".".join(diff.path),
-                    "old": diff.other_value,
-                    "new": diff.value,
-                }
-                for diff in filtered_diffs
-            ],
-        }
-        for sink_config in config.sinks:
-            SinkFactory.get_sink(sink_config).write(data)
+    event.processing_context.create_finding(
+        title=f"{resource_type} {event.obj.metadata.name} {event.operation.value}d in namespace {event.obj.metadata.namespace}",
+        source=SOURCE_KUBERNETES_API_SEVER,
+        type=TYPE_DEPLOYMENT_UPDATE,
+        subject=FindingSubject(
+            event.obj.metadata.name, resource_type, event.obj.metadata.namespace
+        ),
+    )
+    event.processing_context.finding.add_enrichment([DiffsBlock(filtered_diffs)])
 
 
 @on_deployment_all_changes
 def deployment_babysitter(event: DeploymentEvent, config: BabysitterConfig):
     """Track changes to a deployment and send the changes in slack."""
-    do_babysitter(event, config)
+    do_babysitter(event, config, SUBJECT_TYPE_DEPLOYMENT)
 
 
 @on_pod_all_changes
 def pod_babysitter(event: DeploymentEvent, config: BabysitterConfig):
     """Track changes to a pod and send the changes in slack."""
-    do_babysitter(event, config)
+    do_babysitter(event, config, SUBJECT_TYPE_POD)
+
+
+@on_pod_prometheus_alert(alert_name="HighCpuAlert")
+def handle_high_cpu(event: PrometheusKubernetesAlert):
+    event.deployment.metadata.name
+    send_to_slack()

@@ -36,10 +36,10 @@ class NodeAnalyzer:
         return self._query(
             f"1"
             f"- avg by(instance)(rate("
-            f'   node_cpu_seconds_total{{mode=~"idle", instance=~"{self.internal_ip}:.*"}}[{self.range_size}]'
+            f'   node_cpu_seconds_total{{mode=~"idle", instance=~"{self.node.metadata.name}|{self.internal_ip}:.*"}}[{self.range_size}]'
             f"))"
             f"- avg by(instance)(rate("
-            f'   node_cpu_seconds_total{{mode=~"iowait", instance=~"{self.internal_ip}:.*"}}[{self.range_size}]'
+            f'   node_cpu_seconds_total{{mode=~"iowait", instance=~"{self.node.metadata.name}|{self.internal_ip}:.*"}}[{self.range_size}]'
             f"))"
         )
 

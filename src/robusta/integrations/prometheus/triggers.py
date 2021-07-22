@@ -1,9 +1,10 @@
 import logging
 from functools import wraps
-from typing import NamedTuple, Union
+from typing import NamedTuple, Union, List
 from hikaru.model.rel_1_16 import *
 
 from .models import PrometheusEvent, PrometheusKubernetesAlert, PrometheusAlert
+from ..base_handler import handle_event
 from ..kubernetes.custom_models import (
     RobustaPod,
     traceback,
@@ -145,23 +146,22 @@ def build_prometheus_event(alert: PrometheusAlert) -> PrometheusKubernetesAlert:
 
 
 def handle_single_alert(
-    alert: PrometheusAlert, trigger_params: TriggerParams, func, action_params=None
+    alert: PrometheusAlert,
+    trigger_params: TriggerParams,
+    named_sinks: List[str],
+    func,
+    action_params=None,
 ):
     if not does_alert_match_trigger(alert, trigger_params):
         return
 
     event = build_prometheus_event(alert)
-    logging.info(
-        f"running prometheus playbook {func.__name__}; action_params={action_params}"
-    )
-    if action_params is None:
-        return func(event)
-    else:
-        return func(event, action_params)
+
+    return handle_event(func, event, action_params, "prometheus", named_sinks)
 
 
 def deploy_on_pod_prometheus_alert(
-    func, trigger_params: TriggerParams, action_params=None
+    func, trigger_params: TriggerParams, named_sinks: List[str], action_params=None
 ):
     @wraps(func)
     def wrapper(cloud_event: CloudEvent):
@@ -172,7 +172,9 @@ def deploy_on_pod_prometheus_alert(
         results = []
         for alert in prometheus_event.alerts:
             try:
-                result = handle_single_alert(alert, trigger_params, func, action_params)
+                result = handle_single_alert(
+                    alert, trigger_params, named_sinks, func, action_params
+                )
                 if result:
                     results.append(result)
             except Exception:

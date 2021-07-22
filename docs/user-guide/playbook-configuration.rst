@@ -30,6 +30,63 @@ Here is a sample ``active_playbooks.yaml`` which enables two playbooks:
      - name: "python_profiler"
      - name: "restart_loop_reporter"
 
+Playbooks sinks
+^^^^^^^^^^^^^^^^^^
+| With Robusta, playbooks results can be send to one or more sinks.
+| Currently 3 sink types are supported:
+* *slack:* - Send playbooks results to Slack channel
+* *robusta:* - Send playbooks results Robusta's dedicated UI
+* *kafka:* - Send playbooks results Robusta's dedicated UI
+
+| To use sinks, first define the available named sinks.
+| For example: (in the ``active_playbooks.yaml`` file)
+
+.. code-block:: yaml
+
+    sinks_config:
+    - sink_name: "robusta ui"
+      sink_type: "robusta"
+      params:
+        account_id: "MY ROBUSTA ACCOUNT ID"
+        store_url: "MY ROBUSTA STORE URL"
+        api_key: "MY ROBUSTA ACCOUNT API KEY"
+    - sink_name: "alerts slack"
+      sink_type: "slack"
+      params:
+        slack_channel: "robusta alerts channel"
+    - sink_name: "my kafka sink"
+      sink_type: "kafka"
+      params:
+        kafka_url: "localhost:9092"
+        topic: "robusta-playbooks"
+
+
+| **Note:** Create your Robusta account, to get the parameters for the Robusta sink `here <https://robusta.dev>`_ .
+
+| By default, all playbooks will forward the results to the default sinks.
+| The default sinks are defined in the ``global_config`` section.
+| For example:
+
+.. code-block:: yaml
+
+   global_config:
+    sinks:
+    - "robusta ui"
+    - "alerts slack"
+
+| The default sinks list can be overridden, per playbook:
+
+.. code-block:: yaml
+
+   active_playbooks
+     - name: "add_deployment_lines_to_grafana"
+       sinks:
+       - "my kafka sink"
+       action_params:
+         grafana_dashboard_uid: "uid_from_url"
+         grafana_api_key: "grafana_api_key_with_editor_role"
+         grafana_service_name: "grafana.namespace.svc.cluster.local:3000"
+
 
 Playbook parameters
 ^^^^^^^^^^^^^^^^^^^
@@ -98,6 +155,7 @@ To avoid repeating yourself you can define trigger_params and parameters globall
 .. code-block:: yaml
 
    global_config:
+     cluster_name: "my-staging-cluster"
      grafana_api_key: "grafana_api_key_with_editor_role"
      grafana_service_name: "grafana.namespace.svc.cluster.local:3000"
 
@@ -114,3 +172,4 @@ To avoid repeating yourself you can define trigger_params and parameters globall
        trigger_params:
          name_prefix: "App2"
 
+| **Note:** The ``cluster_name`` is a required parameter, since it's used for sinks as the cluster identifier. (``cluster_name`` should be unique among different clusters)

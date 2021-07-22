@@ -6,6 +6,7 @@ import logging
 import time
 from threading import Thread
 
+from ...core.consts.consts import TARGET_ID
 from ...core.reporting.callbacks import *
 
 SLACK_WEBSOCKET_RELAY_ADDRESS = os.environ.get("SLACK_WEBSOCKET_RELAY_ADDRESS", "")
@@ -14,7 +15,6 @@ SLACK_ENABLE_WEBSOCKET_TRACING = os.environ.get("SLACK_ENABLE_WEBSOCKET_TRACING"
 SLACK_WEBSOCKET_RECONNECT_DELAY_SEC = os.environ.get(
     "SLACK_WEBSOCKET_RECONNECT_DELAY_SEC", 3
 )
-TARGET_ID = str(uuid.uuid4())
 
 
 def run_report_callback(action, body):
@@ -28,7 +28,6 @@ def run_report_callback(action, body):
             source_user_id=body["user"]["id"],
             source_message=body["message"]["text"],
             source_context=callback_request.context,
-            slack_channel=channel,
         )
         logging.info(f"got callback `{func}`")
         if func is None:
@@ -37,6 +36,14 @@ def run_report_callback(action, body):
             )
             return
         func(event)
+        context = json.loads(callback_request.context)
+        sink_name = context["sink_name"]
+        # TODO Can we solve this cyclic import better?
+        from ...core.framework.sinks.sink_factory import SinkFactory
+
+        SinkFactory.get_sink_by_name(sink_name).write_finding(
+            event.processing_context.finding
+        )
     except Exception as e:
         logging.error(f"Error running callback; action={action}; e={e}")
 
