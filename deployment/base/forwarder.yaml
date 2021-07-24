@@ -24,14 +24,19 @@ spec:
             name: robusta-fluentd-config
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
-        image: us-central1-docker.pkg.dev/arabica-300319/devel/kubewatch:v1.8
+        image: us-central1-docker.pkg.dev/arabica-300319/devel/kubewatch:v1.9
         imagePullPolicy: Always
         env:
           - name: KW_CONFIG
             value: /config
+          - name: ENABLE_PPROF
+            value: "True"
         volumeMounts:
           - name: robusta-kubewatch-config
             mountPath: /config
+        resources:
+          limits:
+            memory: "1024Mi"
       volumes:
         - name:  robusta-fluentd-config
           configMap:
