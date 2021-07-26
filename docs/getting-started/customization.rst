@@ -1,7 +1,8 @@
 Customizing built-in playbooks
 ##############################
 
-By itself, Robusta does nothing. All of it's power comes from playbooks. Lets customize that set of playbooks.
+Robusta is a powerful `rules engine` for devops, but it needs rules or "playbooks" to tell it what to do.
+Lets see how we can customize the broad collection of builtin playbooks.
 
 Downloading Playbooks
 -------------------------------------------------------------
@@ -16,7 +17,7 @@ We now a have `./playbooks` directory that we can customize and upload back to R
 Lets take a closer look at that directory.
 
 `./playbooks` contains several python scripts and one file named `active_playbooks.yaml`. The python scripts define the *available* playbooks
-and the yaml file defines which playbooks are actually in use and how they are configured.
+and the yaml file configures which playbooks are actually in use.
 
 Enabling a new playbook
 ------------------------
