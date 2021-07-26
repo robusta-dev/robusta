@@ -1,5 +1,7 @@
-Coding Conventions and General Developer Guidelines
+Developer Guidelines
 ###################################################
+
+The following guidelines apply to code contributions to the Robusta engine itself.
 
 Formatting and coding conventions
 ------------------------------------
