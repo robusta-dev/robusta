@@ -45,9 +45,28 @@ From the playbooks directory run:
 
 .. code-block:: python
 
-   robusta deploy .
+   robusta playbooks deploy .
 
 The new playbook you configured is now running. You will get a notification in Slack every time a deployment's number of replicas changes.
+
+Viewing cluster deployed active playbooks
+------------------------------------------
+In order to view the list of active playbooks, that are currently enabled on your cluster run:
+
+.. code-block:: python
+
+   robusta playbooks list
+
+
+Pulling cluster playbooks locally
+------------------------------------------
+In order to get a copy of the cluster playbooks, both the code and enabled playbooks configuration run:
+
+.. code-block:: python
+
+   robusta playbooks pull
+
+| **params:** ``--playbooks-directory TARGET_LOCAL_DIRECTORY``, default to current directory
 
 Seeing your new config in action
 ----------------------------------
