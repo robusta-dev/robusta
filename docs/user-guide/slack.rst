@@ -3,24 +3,21 @@ Slack Integration
 
 There are two ways you can setup Slack integration for Robusta.
 
-Recommended method
-------------------
-Using Robusta's official Slack app
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Use the `robusta install` command and when asked configure Slack via the on-screen instructions.
-Done!
+Recommended: Using Robusta's official Slack app
+------------------------------------------------
+Robusta is an approved app in the Slack App Directory. For details on Robusta's permissions,
+`see the Robusta page in the Slack App Directory <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_
+
+To install the official Robusta app, use the ``robusta install`` command and follow the prompts.
 
 This method is recommended as it supports multiple Kubernetes clusters and are easy to setup.
 Please note that incoming Slack messages are routed through the official Robusta
 servers, however outgoing messages are sent directly to Slack. (Incoming messages need to be routed via
 Robusta's servers due to `limitations of how the Slack API handles incoming messages <https://stackoverflow.com/questions/66940400/communicating-with-the-slack-api-in-multitenant-applications>`_)
 
-Fallback method
----------------
-Creating your own Slack app to use with Robusta
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The above method is recommended for most users. However, if you cannot route incoming messages via
-Robusta's servers, you can still use Slack with Robusta by creating your own Slack app as follows:
+Not Recommended: Creating your own Slack app to use with Robusta
+-------------------------------------------------------------------
+If you cannot route incoming messages via Robusta's servers, you can still use Slack with Robusta by creating your own Slack app as follows:
 
 1. `Create a new Slack app. <https://api.slack.com/apps?new_app=1>`_
 2. Enable Socket mode in your Slack App and copy the websocket token into the Robusta deployment yaml.

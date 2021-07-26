@@ -36,9 +36,8 @@ This will deploy Robusta to your Kubernetes cluster and optionally setup Slack i
 For details on what this command installs, see :ref:`Robusta Architecture`. Everything is installed in the `robusta` namespace
 and therefore Robusta can be removed at any time by deleting that namespace.
 
-If you would like to try out the Slack integration but don't use Slack or can't add the app to your workspace, we have demo Slack workspaces available for testing. Please contact us for details.
-
-Robusta is now installed with some default playbooks. These playbooks contain logic telling the Robusta engine what to do and when.
+For details on the Slack Integration,
+`see our app in the Slack App Directory <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_
 
 Seeing Robusta in Action
 ------------------------------
