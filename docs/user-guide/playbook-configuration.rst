@@ -14,7 +14,7 @@ Here is the layout of an example playbook directory:
         - other_playbook.py
         - requirements.txt
 
-This set of playbooks would be loaded into Robusta with the command ``robusta deploy example_playbooks/``
+This set of playbooks would be loaded into Robusta with the command ``robusta playbooks deploy example_playbooks/``
 
 At the moment, only one playbook directory can be loaded at a time. Loading another playbook directory will replace the previous one.
 

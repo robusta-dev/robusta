@@ -72,13 +72,13 @@ To trigger this playbook run the following command from within your Kubernetes c
 
 .. code-block:: bash
 
-    robusta trigger some_playbook
+    robusta playbooks trigger some_playbook
 
 If the playbook has parameters, the parameters values can be passed in as follows:
 
 .. code-block:: bash
 
-    robusta trigger some_playbook some_param=some_value other_param=other_value
+    robusta playbooks trigger some_playbook some_param=some_value other_param=other_value
 
 Recurring Triggers
 ------------------

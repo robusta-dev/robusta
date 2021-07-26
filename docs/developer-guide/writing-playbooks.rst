@@ -48,7 +48,7 @@ Finally, deploy the newly created playbook:
 
 .. code-block:: bash
 
-    robusta deploy playbooks
+    robusta playbooks deploy ./playbooks
 
 That's it! Every time a Kubernetes pod is created in the cluster, the above log line will be printed to the robusta-runner logs.
 

@@ -90,7 +90,7 @@ python_profiler
 
 .. code-block:: bash
 
-   robusta trigger python_profiler pod_name=your-pod namespace=you-ns process_name=your-process slack_channel=general seconds=5
+   robusta playbooks trigger python_profiler pod_name=your-pod namespace=you-ns process_name=your-process slack_channel=general seconds=5
 
 | **Parameters:** see below. All parameters are optional except for ``pod_name`` and ``namespace``. ``pod_name`` can be the prefix of the pod name and doesn't need to be a full match.
 
@@ -127,7 +127,7 @@ http_stress_test
 
 .. code-block:: bash
 
-   robusta trigger http_stress_test url=http://grafana.default.svc:3000 slack_channel=test1 n=1000
+   robusta playbooks trigger http_stress_test url=http://grafana.default.svc:3000 slack_channel=test1 n=1000
 
 | **Enabling it:** add to active_playbooks.yaml before manually trigger using the Robusta CLI (as described above):
 
@@ -153,7 +153,7 @@ incluster_ping
 
 .. code-block:: bash
 
-   robusta trigger incluster_ping hostname=grafana.default.svc
+   robusta playbooks trigger incluster_ping hostname=grafana.default.svc
 
 | **Enabling it:** add to active_playbooks.yaml before manually trigger using the Robusta CLI (as described above):
 
@@ -234,7 +234,7 @@ disk_benchmark
 
 .. code-block:: bash
 
-   robusta trigger disk_benchmark storage_class_name=fast disk_size=200Gi test_seconds=60
+   robusta playbooks trigger disk_benchmark storage_class_name=fast disk_size=200Gi test_seconds=60
 
 | **Enabling it:** add to active_playbooks.yaml before manually trigger using the Robusta CLI (as described above):
 
