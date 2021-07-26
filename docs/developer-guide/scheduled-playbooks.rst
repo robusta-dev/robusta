@@ -51,7 +51,7 @@ Scheduled Playbook Example
         action_params:
           some_string_param: "Scheduled Playbook - Hello World"
 
-| Lastly, deploy the playbook: ``robusta playbooks deploy playbooks``
+| Lastly, deploy the playbook: ``robusta playbooks deploy ./playbooks``
 | That's it!
 | Now, this playbook will run every ``20`` seconds for ``10`` times.
 | In the robusta-runner logs, you'll be able to see the log line printed on each execution.
