@@ -11,8 +11,8 @@ class HPALimitParams(BaseModel):
     increase_pct: int = 20
 
 
-@on_report_callback
-def scale_hpa_callback(event: ReportCallbackEvent):
+@on_sink_callback
+def scale_hpa_callback(event: SinkCallbackEvent):
     context = json.loads(event.source_context)
     hpa_name = context[HPA_NAME]
     hpa_ns = context[NAMESPACE]
@@ -24,11 +24,11 @@ def scale_hpa_callback(event: ReportCallbackEvent):
     new_max_replicas = int(context[MAX_REPLICAS])
     hpa.spec.maxReplicas = new_max_replicas
     hpa.replaceNamespacedHorizontalPodAutoscaler(hpa_name, hpa_ns)
-    event.processing_context.create_finding(
+    event.finding = Finding(
         title=f"Max replicas for HPA *{hpa_name}* in namespace *{hpa_ns}* updated to: *{new_max_replicas}*",
         severity=FindingSeverity.INFO,
-        source=SOURCE_PROMETHEUS,
-        type=TYPE_PROMETHEUS_ALERT,
+        source=FindingSource.SOURCE_PROMETHEUS,
+        finding_type=FindingType.TYPE_PROMETHEUS_ALERT,
     )
 
 
@@ -63,14 +63,14 @@ def alert_on_hpa_reached_limit(
         MAX_REPLICAS: new_max_replicas_suggestion,
     }
 
-    event.processing_context.create_finding(
+    event.finding = Finding(
         title=f"HPA *{event.obj.metadata.name}* in namespace *{event.obj.metadata.namespace}* reached max replicas: *{hpa.spec.maxReplicas}*",
         severity=FindingSeverity.LOW,
-        source=SOURCE_KUBERNETES_API_SEVER,
-        type=TYPE_PROMETHEUS_ALERT,
+        source=FindingSource.SOURCE_KUBERNETES_API_SERVER,
+        finding_type=FindingType.TYPE_PROMETHEUS_ALERT,
     )
 
-    event.processing_context.finding.add_enrichment(
+    event.finding.add_enrichment(
         [
             MarkdownBlock(
                 f"Current avg cpu utilization: *{avg_cpu} %*        -- (usage vs requested)"

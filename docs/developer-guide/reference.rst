@@ -72,13 +72,13 @@ To trigger this playbook run the following command from within your Kubernetes c
 
 .. code-block:: bash
 
-    robusta trigger some_playbook
+    robusta playbooks trigger some_playbook
 
 If the playbook has parameters, the parameters values can be passed in as follows:
 
 .. code-block:: bash
 
-    robusta trigger some_playbook some_param=some_value other_param=other_value
+    robusta playbooks trigger some_playbook some_param=some_value other_param=other_value
 
 Recurring Triggers
 ------------------
@@ -100,18 +100,20 @@ Sinks
 -------------
 | Playbooks results can be forwarded to one or more sinks. See :ref:`Playbooks sinks` for details.
 | For that to happen, we have to create ``Finding`` and ``Enrichments`` during the playbooks processing.
-| The Robusta platform will automatically forward it to the configured sinks
+| The Robusta platform will automatically forward findings and enrichments  to the configured sinks
 
 Finding
 ^^^^^^^^^^^^^^^^^
-| The ``Finding`` contains the base information of the playbooks result.
+| A ``Finding`` describes an event that occured in your cloud like a pod restart or a prometheus alert.
+| Every playbook that wants to show the user information should create a finding that encapsulates that information.
+
 | Creating a ``Finding`` is easy:
 
 .. code-block:: python
 
     @on_recurring_trigger(seconds_delay=10, repeat=3)
     def my_scheduled_playbook(event: RecurringTriggerEvent):
-        event.processing_context.create_finding(
+        event.finding = Finding(
             title=f"My scheduled playbook is running for the {event.recurrence} time",
             severity=FindingSeverity.INFO
     )
@@ -120,6 +122,7 @@ Enrichments
 ^^^^^^^^^^^^^^^^^
 | Each ``Finding`` can contain any number of ``Enrichments``.
 | Each ``Enrichment`` has a list of ``blocks`` describing it:
+
 * **MarkdownBlock:** - A text block
 * **DividerBlock:** - Dividing section between ``Enrichment`` parts. (If the sink supports that)
 * **HeaderBlock:** - A header block
@@ -131,11 +134,11 @@ Enrichments
 * **FileBlock:** - A block containing any file with the file data
 * **CallbackBlock:** - A block containing callback information, that can be invoked back from the sink. (a Slack button for example, running some command)
 
-| **Note:** - Not all block types supported by all sinks. If an unsupported block arrives to a sink, it will be ignored
+| **Note:** - Not all block types are supported by all sinks. If an unsupported block arrives at a sink, it will be ignored
 
 | Adding an ``Enrichment``:
 
 .. code-block:: python
 
     my_log_file_data = "..."
-    event.processing_context.finding.add_enrichment([FileBlock("log.txt", my_log_file_data)])
+    event.finding.add_enrichment([FileBlock("log.txt", my_log_file_data)])

@@ -85,32 +85,12 @@ class Enricher:
         pass
 
 
-def get_alert_title(alert: PrometheusKubernetesAlert) -> str:
-    annotations = alert.alert.annotations
-    alert_name = alert.alert.labels.get("alertname", "")
-    if annotations.get("summary"):
-        return f'{alert_name}: {annotations["summary"]}'
-    else:
-        return alert_name
-
-
-def get_alert_description(alert: PrometheusKubernetesAlert) -> str:
-    annotations = alert.alert.annotations
-    clean_description = ""
-    if annotations.get("description"):
-        # remove "LABELS = map[...]" from the description as we already add a TableBlock with labels
-        clean_description = re.sub(
-            r"LABELS = map\[.*\]$", "", annotations["description"]
-        )
-    return clean_description
-
-
 class DefaultEnricher(Enricher):
     def enrich(self, alert: PrometheusKubernetesAlert):
         labels = alert.alert.labels
-        alert.processing_context.finding.add_enrichment(
+        alert.finding.add_enrichment(
             [TableBlock(labels.items(), ["label", "value"])],
-            annotations={"attachment": "True"},
+            annotations={SlackAnnotations.ATTACHMENT: True},
         )
 
 
@@ -145,9 +125,7 @@ class GraphEnricher(Enricher):
             label = "\n".join([f"{k}={v}" for (k, v) in series["metric"].items()])
             values = [(timestamp, float(val)) for (timestamp, val) in series["values"]]
             chart.add(label, values)
-        alert.processing_context.finding.add_enrichment(
-            [FileBlock(f"{promql_query}.svg", chart.render())]
-        )
+        alert.finding.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
 
 
 class NodeCPUEnricher(Enricher):
@@ -157,7 +135,7 @@ class NodeCPUEnricher(Enricher):
                 f"NodeCPUEnricher was called on alert without node metadata: {alert.alert}"
             )
             return
-        alert.processing_context.finding.add_enrichment(
+        alert.finding.add_enrichment(
             do_node_cpu_analysis(alert.node, alert.prometheus_url)
         )
 
@@ -170,9 +148,7 @@ class NodeRunningPodsEnricher(Enricher):
             )
             return
 
-        alert.processing_context.finding.add_enrichment(
-            node_running_pods(alert.node.metadata.name)
-        )
+        alert.finding.add_enrichment(node_running_pods(alert.node.metadata.name))
 
 
 class NodeAllocatableResourcesEnricher(Enricher):
@@ -183,13 +159,13 @@ class NodeAllocatableResourcesEnricher(Enricher):
             )
             return
 
-        alert.processing_context.finding.add_enrichment(
+        alert.finding.add_enrichment(
             node_allocatable_resources(alert.node.metadata.name)
         )
 
 
-@on_report_callback
-def show_stackoverflow_search(event: ReportCallbackEvent):
+@on_sink_callback
+def show_stackoverflow_search(event: SinkCallbackEvent):
     context = json.loads(event.source_context)
     search_term = context["search_term"]
 
@@ -197,15 +173,15 @@ def show_stackoverflow_search(event: ReportCallbackEvent):
     result = requests.get(url).json()
     logging.info(f"asking on stackoverflow: url={url}")
     answers = [f"<{a['link']}|{a['title']}>" for a in result["items"]]
-    event.processing_context.create_finding(
+    event.finding = Finding(
         title=f"{search_term} StackOverflow Results",
-        source=SOURCE_PROMETHEUS,
-        type=TYPE_PROMETHEUS_CALLBACK,
+        source=FindingSource.SOURCE_PROMETHEUS,
+        finding_type=FindingType.TYPE_PROMETHEUS_CALLBACK,
     )
     if answers:
-        event.processing_context.finding.add_enrichment([ListBlock(answers)])
+        event.finding.add_enrichment([ListBlock(answers)])
     else:
-        event.processing_context.finding.add_enrichment(
+        event.finding.add_enrichment(
             [
                 MarkdownBlock(
                     f'Sorry, StackOverflow doesn\'t know anything about "{search_term}"'
@@ -219,7 +195,7 @@ class StackOverflowEnricher(Enricher):
         alert_name = alert.alert.labels.get("alertname", "")
         if not alert_name:
             return
-        alert.processing_context.finding.add_enrichment(
+        alert.finding.add_enrichment(
             [
                 CallbackBlock(
                     {
@@ -238,9 +214,7 @@ class OOMKillerEnricher(Enricher):
                 f"cannot run OOMKillerEnricher on alert with no node object: {alert}"
             )
             return
-        alert.processing_context.finding.add_enrichment(
-            do_show_recent_oom_kills(alert.node)
-        )
+        alert.finding.add_enrichment(do_show_recent_oom_kills(alert.node))
 
 
 class DaemonsetMisscheduledAnalysis(Enricher):
@@ -250,9 +224,7 @@ class DaemonsetMisscheduledAnalysis(Enricher):
                 f"cannot run DaemonsetMisscheduledAnalysis on alert with no daemonset object: {alert}"
             )
             return
-        alert.processing_context.finding.add_enrichment(
-            do_daemonset_mismatch_analysis(alert.daemonset)
-        )
+        alert.finding.add_enrichment(do_daemonset_mismatch_analysis(alert.daemonset))
 
 
 class CPUThrottlingAnalysis(Enricher):
@@ -262,9 +234,7 @@ class CPUThrottlingAnalysis(Enricher):
                 f"cannot run CPUThrottlingAnalysis on alert with no pod object: {alert}"
             )
             return
-        alert.processing_context.finding.add_enrichment(
-            do_cpu_throttling_analysis(alert.pod)
-        )
+        alert.finding.add_enrichment(do_cpu_throttling_analysis(alert.pod))
 
 
 class DaemonsetEnricher(Enricher):
@@ -274,9 +244,7 @@ class DaemonsetEnricher(Enricher):
                 f"cannot run DaemonsetEnricher on alert with no daemonset object: {alert}"
             )
             return
-        alert.processing_context.finding.add_enrichment(
-            do_daemonset_enricher(alert.daemonset)
-        )
+        alert.finding.add_enrichment(do_daemonset_enricher(alert.daemonset))
 
 
 class PodBashEnricher(Enricher):
@@ -286,7 +254,7 @@ class PodBashEnricher(Enricher):
                 f"cannot run PodBashEnricher on alert with no pod object: {alert}"
             )
             return
-        alert.processing_context.finding.add_enrichment(
+        alert.finding.add_enrichment(
             pod_bash_enrichment(
                 alert.pod.metadata.name,
                 alert.pod.metadata.namespace,
@@ -302,7 +270,7 @@ class NodeBashEnricher(Enricher):
                 f"cannot run NodeBashEnricher on alert with no node object: {alert}"
             )
             return
-        alert.processing_context.finding.add_enrichment(
+        alert.finding.add_enrichment(
             node_bash_enrichment(
                 alert.node.metadata.name, self.params.get("bash_command")
             )
@@ -316,9 +284,7 @@ class DeploymentStatusEnricher(Enricher):
                 f"cannot run DeploymentStatusEnricher on alert with no deployment object: {alert}"
             )
             return
-        alert.processing_context.finding.add_enrichment(
-            deployment_status_enrichment(alert.deployment)
-        )
+        alert.finding.add_enrichment(deployment_status_enrichment(alert.deployment))
 
 
 DEFAULT_ENRICHER = "AlertDefaults"
@@ -362,31 +328,31 @@ def default_alert_config(alert_name, config: AlertsIntegrationParams) -> AlertCo
 
 
 def get_alert_subject(alert: PrometheusKubernetesAlert) -> FindingSubject:
-    type: str = "NA"
+    subject_type: FindingSubjectType = FindingSubjectType.SUBJECT_TYPE_NONE
     name: str = "NA"
     namespace: str = ""
 
     if alert.pod:
-        type = "pod"
+        subject_type = FindingSubjectType.SUBJECT_TYPE_POD
         name = alert.pod.metadata.name
         namespace = alert.pod.metadata.namespace
     elif alert.job:
-        type = "job"
+        subject_type = FindingSubjectType.SUBJECT_TYPE_JOB
         name = alert.job.metadata.name
         namespace = alert.job.metadata.namespace
     elif alert.deployment:
-        type = "deployment"
+        subject_type = FindingSubjectType.SUBJECT_TYPE_DEPLOYMENT
         name = alert.deployment.metadata.name
         namespace = alert.deployment.metadata.namespace
     elif alert.daemonset:
-        type = "daemonset"
+        subject_type = FindingSubjectType.SUBJECT_TYPE_DAEMONSET
         name = alert.daemonset.metadata.name
         namespace = alert.daemonset.metadata.namespace
     elif alert.node:
-        type = "node"
+        subject_type = FindingSubjectType.SUBJECT_TYPE_NODE
         name = alert.node.metadata.name
 
-    return FindingSubject(name, type, namespace)
+    return FindingSubject(name, subject_type, namespace)
 
 
 SEVERITY_MAP = {
@@ -399,11 +365,11 @@ SEVERITY_MAP = {
 
 def create_alert_finding(alert: PrometheusKubernetesAlert):
     alert_subject = get_alert_subject(alert)
-    alert.processing_context.create_finding(
-        title=get_alert_title(alert),
-        description=get_alert_description(alert),
-        source=SOURCE_PROMETHEUS,
-        type=TYPE_PROMETHEUS_ALERT,
+    alert.finding = Finding(
+        title=alert.get_title(),
+        description=alert.get_description(),
+        source=FindingSource.SOURCE_PROMETHEUS,
+        finding_type=FindingType.TYPE_PROMETHEUS_ALERT,
         severity=SEVERITY_MAP.get(alert.alert.labels.get("severity"), "NA"),
         subject=alert_subject,
     )

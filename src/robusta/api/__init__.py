@@ -3,14 +3,13 @@ from pydantic import BaseModel
 # TODO: this should not be part of the Robusta API
 # the only usage from a playbook is in event_publisher.py
 from ..core.active_playbooks import run_playbooks
-from ..core.framework.params.base_params import *
-from ..core.framework.sinks import *
-from ..core.framework.sinks.sink_base import *
-from ..core.framework.sinks.sink_config import *
-from ..core.framework.sinks.sink_factory import *
-from ..core.framework.sinks.kafka import *
-from ..core.framework.discovery.service_discovery import *
-from ..core.consts.consts import *
+from ..core.model.base_params import *
+from ..core.sinks import *
+from ..core.sinks.sink_base import *
+from ..core.sinks.sink_config import *
+from ..core.sinks.sink_manager import *
+from ..core.sinks.kafka import *
+from ..core.reporting.consts import *
 from ..core.reporting.callbacks import *
 
 from ..core.reporting import *

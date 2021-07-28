@@ -46,10 +46,10 @@ def show_node_enrichments(event: ManualTriggerEvent):
     blocks = node_allocatable_resources(params.node_name)
     blocks.extend(node_running_pods(params.node_name))
     if blocks:
-        event.processing_context.create_finding(
+        event.finding = Finding(
             title=f"Node not ready - {params.node_name}",
             subject=FindingSubject(name=params.node_name),
-            source=SOURCE_MANUAL,
-            type=TYPE_MANUAL_ENRICHMENT,
+            source=FindingSource.SOURCE_MANUAL,
+            finding_type=FindingType.TYPE_MANUAL_ENRICHMENT,
         )
-        event.processing_context.finding.add_enrichment(blocks)
+        event.finding.add_enrichment(blocks)

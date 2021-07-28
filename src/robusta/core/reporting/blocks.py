@@ -13,7 +13,8 @@ from pydantic import BaseModel
 from tabulate import tabulate
 from enum import Enum
 
-from ..framework.discovery.top_service_resolver import TopServiceResolver
+from ..discovery.top_service_resolver import TopServiceResolver
+from ..reporting.consts import FindingSource, FindingType, FindingSubjectType
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
@@ -149,25 +150,26 @@ class Enrichment:
         return f"annotations: {self.annotations} Enrichment: {self.blocks} "
 
 
-def get_top_service_key(name: str, namespace: str) -> str:
-    return TopServiceResolver.guess_service_key(name, namespace)
-
-
 class FindingSubject:
-    def __init__(self, name: str = "NA", type: str = "NA", namespace: str = ""):
+    def __init__(
+        self,
+        name: str = "NA",
+        subject_type: FindingSubjectType = FindingSubjectType.SUBJECT_TYPE_NONE,
+        namespace: str = "",
+    ):
         self.name = name
-        self.type = type
+        self.subject_type = subject_type
         self.namespace = namespace
-        self.service_key = get_top_service_key(name, namespace)
+        self.service_key = TopServiceResolver.guess_service_key(name, namespace)
 
 
 class Finding:
     def __init__(
         self,
         title: str,
-        severity: FindingSeverity,
-        source: str,
-        type: str,
+        severity: FindingSeverity = FindingSeverity.INFO,
+        source: FindingSource = FindingSource.SOURCE_NONE,
+        finding_type: FindingType = FindingType.TYPE_NONE,
         description: str = "",
         subject: FindingSubject = FindingSubject(),
     ) -> None:
@@ -175,12 +177,10 @@ class Finding:
         self.title = title
         self.description = description
         self.source = source
-        self.type = type
+        self.finding_type = finding_type
         self.severity = severity
         self.category = "None"  # TODO fill real category
-        self.subject_type = subject.type
-        self.subject_name = subject.name
-        self.subject_namespace = subject.namespace
+        self.subject = subject
         self.service_key = subject.service_key
         self.enrichments: List[Enrichment] = []
 
@@ -190,7 +190,7 @@ class Finding:
         self.enrichments.append(Enrichment(enrichment_blocks, annotations))
 
     def __str__(self):
-        return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject_name} sub-type:{self.subject_type} enrich: {self.enrichments}"
+        return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
 
 
 # Contains data of the current event processing context.
@@ -202,8 +202,8 @@ class ProcessingContext:
         title: str,
         severity: FindingSeverity = FindingSeverity.INFO,
         description: str = "",
-        source: str = "",
-        type: str = "",
+        source: FindingSource = FindingSource.SOURCE_NONE,
+        finding_type: FindingType = FindingType.TYPE_NONE,
         subject: FindingSubject = FindingSubject(),
     ):
         self.finding = Finding(
@@ -211,6 +211,6 @@ class ProcessingContext:
             severity=severity,
             description=description,
             source=source,
-            type=type,
+            finding_type=finding_type,
             subject=subject,
         )

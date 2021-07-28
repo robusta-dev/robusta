@@ -92,12 +92,10 @@ def node_cpu_analysis(event: ManualTriggerEvent):
     params = NodeCPUAnalysisParams(**event.data)
     node = Node().read(name=params.node)
 
-    event.processing_context.create_finding(
+    event.finding = Finding(
         title=f"Node CPU Usage Report for {params.node}",
         subject=FindingSubject(name=params.node),
-        source=SOURCE_MANUAL,
-        type=TYPE_MANUAL_ENRICHMENT,
+        source=FindingSource.SOURCE_MANUAL,
+        finding_type=FindingType.TYPE_MANUAL_ENRICHMENT,
     )
-    event.processing_context.finding.add_enrichment(
-        do_node_cpu_analysis(node, params.prometheus_url)
-    )
+    event.finding.add_enrichment(do_node_cpu_analysis(node, params.prometheus_url))

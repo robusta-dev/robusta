@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Any, Optional
 from dataclasses import dataclass, field
 
-from ..reporting.blocks import BaseBlock, ProcessingContext
+from ..reporting.blocks import BaseBlock, Finding
 
 
 class EventType(Enum):
@@ -25,4 +25,4 @@ class BaseEvent:
     report_title: str = ""
     prometheus_url: Optional[str] = None
 
-    processing_context: ProcessingContext = field(default_factory=ProcessingContext)
+    finding: Finding = None

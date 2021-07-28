@@ -78,7 +78,7 @@ class CallbackRegistry:
 
 # TODO: make this something more generic which isn't slack specific
 @dataclass
-class ReportCallbackEvent(BaseEvent):
+class SinkCallbackEvent(BaseEvent):
     source_channel_name: str = ""
     source_channel_id: str = ""
     source_user_id: str = ""
@@ -90,6 +90,6 @@ callback_registry = CallbackRegistry()
 
 
 @doublewrap
-def on_report_callback(func):
+def on_sink_callback(func):
     callback_registry.register_callback(func)
     return func

@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 
 
-def get_service_key(name: str, type: str, namespace: str) -> str:
-    return f"{namespace}/{type}/{name}"
+def get_service_key(name: str, service_type: str, namespace: str) -> str:
+    return f"{namespace}/{service_type}/{name}"
 
 
 class ServiceInfo(BaseModel):
     name: str
-    type: str
+    service_type: str
     namespace: str
     classification: str = "None"
     deleted: bool = False
@@ -18,7 +18,8 @@ class ServiceInfo(BaseModel):
 
         return (
             self.name == other.name
-            and self.type == other.type
+            and self.service_type == other.service_type
             and self.namespace == other.namespace
             and self.classification == other.classification
+            and self.deleted == other.deleted
         )

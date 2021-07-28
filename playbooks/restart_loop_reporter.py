@@ -37,11 +37,13 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
     ):
         return
 
-    event.processing_context.create_finding(
+    event.finding = Finding(
         title=f"Crashing pod {pod.metadata.name} in namespace {pod.metadata.namespace}",
-        source=SOURCE_KUBERNETES_API_SEVER,
-        type=TYPE_KUBERNETES_CRASH,
-        subject=FindingSubject(pod_name, SUBJECT_TYPE_POD, pod.metadata.namespace),
+        source=FindingSource.SOURCE_KUBERNETES_API_SERVER,
+        finding_type=FindingType.TYPE_KUBERNETES_CRASH,
+        subject=FindingSubject(
+            pod_name, FindingSubjectType.SUBJECT_TYPE_POD, pod.metadata.namespace
+        ),
     )
     blocks: List[BaseBlock] = []
     for container_status in crashed_container_statuses:
@@ -81,4 +83,4 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
                 f"could not fetch logs from container: {container_status.name}. logs were {container_log}"
             )
 
-    event.processing_context.finding.add_enrichment(blocks)
+    event.finding.add_enrichment(blocks)

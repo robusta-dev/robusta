@@ -5,8 +5,8 @@ import uuid
 
 from typing import List, Dict, Any
 
-from .....model.data_types import ServiceInfo, get_service_key
-from .....reporting.blocks import (
+from ....model.services import ServiceInfo, get_service_key
+from ....reporting.blocks import (
     Finding,
     Enrichment,
     MarkdownBlock,
@@ -17,8 +17,8 @@ from .....reporting.blocks import (
     ListBlock,
     TableBlock,
 )
-from ......core.consts.consts import TARGET_ID
-from ......core.reporting.callbacks import PlaybookCallbackRequest
+from ....model.env_vars import TARGET_ID
+from ....reporting.callbacks import PlaybookCallbackRequest
 from supabase_py import create_client
 
 
@@ -38,13 +38,13 @@ class SupabaseDal:
         return {
             "id": str(finding.id),
             "description": finding.description,
-            "source": finding.source,
-            "type": finding.type,
+            "source": finding.source.value,
+            "type": finding.finding_type.value,
             "category": finding.category,
             "priority": finding.severity.name,
-            "subject_type": finding.subject_type,
-            "subject_name": finding.subject_name,
-            "subject_namespace": finding.subject_namespace,
+            "subject_type": finding.subject.subject_type.value,
+            "subject_name": finding.subject.name,
+            "subject_namespace": finding.subject.namespace,
             "service_key": finding.service_key,
             "cluster": self.cluster,
             "account_id": self.account_id,
@@ -60,9 +60,10 @@ class SupabaseDal:
             elif isinstance(block, DividerBlock):
                 structured_data.append({"type": "divider"})
             elif isinstance(block, FileBlock):
+                last_dot_idx = block.filename.rindex(".")
                 structured_data.append(
                     {
-                        "type": block.filename.split(".")[1],
+                        "type": block.filename[last_dot_idx + 1 :],
                         "data": str(base64.b64encode(block.contents)),
                     }
                 )
@@ -130,14 +131,14 @@ class SupabaseDal:
     def to_service(self, service: ServiceInfo) -> Dict[Any, Any]:
         return {
             "name": service.name,
-            "type": service.type,
+            "type": service.service_type,
             "namespace": service.namespace,
             "classification": service.classification,
             "cluster": self.cluster,
             "account_id": self.account_id,
             "deleted": service.deleted,
             "service_key": get_service_key(
-                service.name, service.type, service.namespace
+                service.name, service.service_type, service.namespace
             ),
             "update_time": "now()",
         }
@@ -153,7 +154,7 @@ class SupabaseDal:
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
             self.client.table("Services_")
-            .select("name", "type", "namespace", "classification", "deleted")
+            .select("name", "type", "namespace", "classification")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -164,4 +165,12 @@ class SupabaseDal:
             logging.error(msg)
             raise Exception(msg)
 
-        return [ServiceInfo(**service) for service in res.get("data")]
+        return [
+            ServiceInfo(
+                name=service["name"],
+                service_type=service["type"],
+                namespace=service["namespace"],
+                classification=service["classification"],
+            )
+            for service in res.get("data")
+        ]

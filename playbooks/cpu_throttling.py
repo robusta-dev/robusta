@@ -24,9 +24,10 @@ def do_cpu_throttling_analysis(pod: Pod) -> List[BaseBlock]:
 @on_manual_trigger
 def cpu_throttling_analysis(event: ManualTriggerEvent):
     pod = RobustaPod.read("metrics-server-v0.3.6-7b5cdbcbb8-wddbk", "kube-system")
-    event.processing_context.create_finding(
+    event.finding = Finding(
         title="Throttling report",
     )
-    event.processing_context.finding.add_enrichment(
-        blocks=do_cpu_throttling_analysis(pod), annotations={"unfurl": "False"}
+    event.finding.add_enrichment(
+        enrichment_blocks=do_cpu_throttling_analysis(pod),
+        annotations={SlackAnnotations.UNFURL: False},
     )

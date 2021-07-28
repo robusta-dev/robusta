@@ -10,7 +10,6 @@ class DeploymentChangeCounter(BaseModel):
 PERSISTENT_DATA_NAME = "test_persistency"
 
 
-# Can we remove this??
 @on_deployment_update
 def count_pod_creations(event: DeploymentEvent):
     logging.info("we got an event... sending it to slack")
@@ -19,5 +18,6 @@ def count_pod_creations(event: DeploymentEvent):
         value = data.changes_per_deployment.get(name, 0)
         data.changes_per_deployment[name] = value + 1
 
-    event.report_title = f"DeploymentChangeCounter: {data.changes_per_deployment}"
-    send_to_slack(event, "general")
+    event.finding = Finding(
+        title=f"DeploymentChangeCounter: {data.changes_per_deployment}"
+    )

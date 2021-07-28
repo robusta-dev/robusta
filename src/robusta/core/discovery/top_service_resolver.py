@@ -1,6 +1,6 @@
 from typing import List
 
-from ....core.model.data_types import ServiceInfo, get_service_key
+from ..model.services import ServiceInfo, get_service_key
 
 
 class TopServiceResolver:
@@ -16,6 +16,8 @@ class TopServiceResolver:
                 cached_service.name
             ):
                 return get_service_key(
-                    cached_service.name, cached_service.type, cached_service.namespace
+                    cached_service.name,
+                    cached_service.service_type,
+                    cached_service.namespace,
                 )
         return ""

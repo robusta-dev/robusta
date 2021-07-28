@@ -140,13 +140,13 @@ Available enrichers
 
 **NodeCPUAnalysis:** provide deep analysis of node cpu usage
 This enricher use ``prometheus``. The ``prometheus`` url can be overriden in the ``global_config`` section.
-(For example - ``prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"``)
+For example - ``prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"``
 
 **OOMKillerEnricher:** shows which pods were recently OOM Killed on a node
 
 **GraphEnricher:** display a graph of the Prometheus query which triggered the alert
 This enricher use ``prometheus``. The ``prometheus`` url can be overriden in the ``global_config`` section.
-(For example - ``prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"``)
+For example - ``prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"``
 
 **StackOverflowEnricher:** add a button in Slack to search for the alert name on StackOverflow
 

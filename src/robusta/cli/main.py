@@ -1,4 +1,5 @@
 import os
+import random
 import subprocess
 import time
 import uuid
@@ -147,7 +148,6 @@ def install(
     if slack_api_key is not None:
         replace_in_file(filename, "<SLACK_API_KEY>", slack_api_key.strip())
 
-    print("upgrade is ", upgrade)
     if not upgrade:  # download and deploy playbooks
         examples()
 
@@ -330,7 +330,7 @@ def examples(
         default_name = (
             current_context.get("name")
             if (current_context and current_context.get("name"))
-            else ""
+            else f"cluster_{random.randint(0, 1000000)}"
         )
         cluster_name = typer.prompt(
             "Please specify a unique name for your cluster or press ENTER to use the default",

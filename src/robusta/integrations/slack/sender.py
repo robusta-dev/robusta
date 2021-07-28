@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import tempfile
-from typing import Dict, Callable, Any, List
 
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -11,16 +10,12 @@ from hikaru import DiffType
 from ...core.model.events import *
 from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
-from ...core.reporting.callbacks import PlaybookCallbackRequest, callback_registry
-from ...core.consts.consts import TARGET_ID
+from ...core.reporting.callbacks import PlaybookCallbackRequest
+from ...core.reporting.consts import SlackAnnotations
+from ...core.model.env_vars import TARGET_ID
 
-# TODO: allow setting Slack token, e.g. for tests
+
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
-
-# TODO: we need to make this modular so you can plug n' play different report receivers (slack, msteams, etc)
-# a first step in that direction would be to move all the functions here to a class like SlackReceiver
-# which inherits from an abstract base class ReportReceiver
-
 slack_client: Optional[WebClient] = None
 
 
@@ -183,18 +178,7 @@ def prepare_slack_text(message: str, files: List[FileBlock] = []):
     return apply_length_limit(message)
 
 
-def send_to_slack(event: BaseEvent, slack_channel: str):
-    send_blocks_to_slack(
-        event.report_blocks,
-        event.report_attachment_blocks,
-        event.report_title,
-        slack_channel,
-        True,
-        "",
-    )
-
-
-def send_blocks_to_slack(
+def __send_blocks_to_slack(
     report_blocks: List[BaseBlock],
     report_attachment_blocks: List[BaseBlock],
     title: str,
@@ -259,15 +243,15 @@ def send_finding_to_slack(finding: Finding, slack_channel: str, sink_name: str):
     if finding.description:
         blocks.append(MarkdownBlock(finding.description))
 
-    unfurl = False
+    unfurl = True
     for enrichment in finding.enrichments:
-        # if one of the enrichment specified unfurl=True, this slack message will contain unfurl
-        unfurl |= enrichment.annotations.get("unfurl") == "True"
-        if enrichment.annotations.get("attachment") == "True":
+        # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
+        unfurl = unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True)
+        if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
             attachment_blocks.extend(enrichment.blocks)
         else:
             blocks.extend(enrichment.blocks)
 
-    send_blocks_to_slack(
+    __send_blocks_to_slack(
         blocks, attachment_blocks, finding.title, slack_channel, unfurl, sink_name
     )

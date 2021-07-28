@@ -29,17 +29,39 @@ Here is a sample ``active_playbooks.yaml`` which enables two playbooks:
     active_playbooks
      - name: "python_profiler"
      - name: "restart_loop_reporter"
+     - name: "deployment_babysitter"
 
 Playbooks sinks
 ^^^^^^^^^^^^^^^^^^
-| With Robusta, playbooks results can be send to one or more sinks.
+| With Robusta, playbooks results can be sent to one or more sinks.
+| The ``deployment_babysitter`` playbook's data will appear as follows on the different sinks:
+
+* **robusta ui:**
+
+.. image:: /images/deployment-babysitter-ui.png
+  :width: 1000
+  :align: center
+
+* **slack:**
+
+.. image:: /images/deployment-babysitter-slack.png
+  :width: 600
+  :align: center
+
+* **kafka:**
+
+.. image:: /images/deployment-babysitter-kafka.png
+  :width: 400
+  :align: center
+
 | Currently 3 sink types are supported:
+
 * *slack:* - Send playbooks results to Slack channel
 * *robusta:* - Send playbooks results Robusta's dedicated UI
-* *kafka:* - Send playbooks results Robusta's dedicated UI
+* *kafka:* - Send playbooks results to a kafka topic
 
 | To use sinks, first define the available named sinks.
-| For example: (in the ``active_playbooks.yaml`` file)
+| For example: in the ``active_playbooks.yaml`` file
 
 .. code-block:: yaml
 
@@ -172,4 +194,4 @@ To avoid repeating yourself you can define trigger_params and parameters globall
        trigger_params:
          name_prefix: "App2"
 
-| **Note:** The ``cluster_name`` is a required parameter, since it's used for sinks as the cluster identifier. (``cluster_name`` should be unique among different clusters)
+| **Note:** The ``cluster_name`` is a required parameter, since it's used for sinks as the cluster identifier. ``cluster_name`` should be unique among different clusters

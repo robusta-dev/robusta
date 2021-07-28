@@ -22,12 +22,14 @@ def python_profiler(event: ManualTriggerEvent):
     debugger = RobustaPod.create_debugger_pod(pod.metadata.name, pod.spec.nodeName)
 
     try:
-        event.processing_context.create_finding(
+        event.finding = Finding(
             title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
-            source=SOURCE_MANUAL,
-            type=TYPE_ENRICHMENT_PROFILING,
+            source=FindingSource.SOURCE_MANUAL,
+            finding_type=FindingType.TYPE_ENRICHMENT_PROFILING,
             subject=FindingSubject(
-                pod.metadata.name, SUBJECT_TYPE_POD, pod.spec.nodeName
+                pod.metadata.name,
+                FindingSubjectType.SUBJECT_TYPE_POD,
+                pod.spec.nodeName,
             ),
         )
 
@@ -52,9 +54,7 @@ def python_profiler(event: ManualTriggerEvent):
                 continue
 
             svg = debugger.exec(f"cat {filename}")
-            event.processing_context.finding.add_enrichment(
-                [FileBlock(f"{cmd}.svg", svg)]
-            )
+            event.finding.add_enrichment([FileBlock(f"{cmd}.svg", svg)])
 
     finally:
         debugger.deleteNamespacedPod(

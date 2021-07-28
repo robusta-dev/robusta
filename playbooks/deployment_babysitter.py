@@ -6,6 +6,7 @@
 # * https://github.com/GerHobbelt/google-diff-match-patch
 from typing import Tuple
 from hikaru.meta import DiffDetail, DiffType
+
 from robusta.api import *
 
 
@@ -21,7 +22,9 @@ def babysitter_should_include_diff(diff_detail: DiffDetail, config: BabysitterCo
     )
 
 
-def do_babysitter(event: K8sBaseEvent, config: BabysitterConfig, resource_type: str):
+def do_babysitter(
+    event: K8sBaseEvent, config: BabysitterConfig, resource_type: FindingSubjectType
+):
     filtered_diffs = None
     if event.operation == K8sOperationType.UPDATE:
         all_diffs = event.obj.diff(event.old_obj)
@@ -31,24 +34,24 @@ def do_babysitter(event: K8sBaseEvent, config: BabysitterConfig, resource_type: 
         if len(filtered_diffs) == 0:
             return
 
-    event.processing_context.create_finding(
-        title=f"{resource_type} {event.obj.metadata.name} {event.operation.value}d in namespace {event.obj.metadata.namespace}",
-        source=SOURCE_KUBERNETES_API_SEVER,
-        type=TYPE_DEPLOYMENT_UPDATE,
+    event.finding = Finding(
+        title=f"{resource_type.value} {event.obj.metadata.name} {event.operation.value}d in namespace {event.obj.metadata.namespace}",
+        source=FindingSource.SOURCE_KUBERNETES_API_SERVER,
+        finding_type=FindingType.TYPE_DEPLOYMENT_UPDATE,
         subject=FindingSubject(
             event.obj.metadata.name, resource_type, event.obj.metadata.namespace
         ),
     )
-    event.processing_context.finding.add_enrichment([DiffsBlock(filtered_diffs)])
+    event.finding.add_enrichment([DiffsBlock(filtered_diffs)])
 
 
 @on_deployment_all_changes
 def deployment_babysitter(event: DeploymentEvent, config: BabysitterConfig):
     """Track changes to a deployment and send the changes in slack."""
-    do_babysitter(event, config, SUBJECT_TYPE_DEPLOYMENT)
+    do_babysitter(event, config, FindingSubjectType.SUBJECT_TYPE_DEPLOYMENT)
 
 
 @on_pod_all_changes
 def pod_babysitter(event: DeploymentEvent, config: BabysitterConfig):
     """Track changes to a pod and send the changes in slack."""
-    do_babysitter(event, config, SUBJECT_TYPE_POD)
+    do_babysitter(event, config, FindingSubjectType.SUBJECT_TYPE_POD)

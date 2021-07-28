@@ -1,8 +1,7 @@
 import copy
 import logging
 
-from .framework.discovery.service_discovery import ServiceDiscovery
-from .framework.sinks.sink_factory import SinkFactory
+from ..core.sinks.sink_manager import SinkManager
 from .model.trigger_params import TriggerParams
 from .model.playbook_hash import playbook_hash
 
@@ -32,8 +31,7 @@ class DeployCommand:
 
 def deploy_playbook_config(runner_config: RunnerConfig):
     cluster_name = runner_config.global_config.get("cluster_name")
-    SinkFactory.update_sinks_config(runner_config.sinks_config, cluster_name)
-    ServiceDiscovery.init(SinkFactory.get_robusta_sinks_names())
+    SinkManager.update_sinks_config(runner_config.sinks_config, cluster_name)
 
     default_sinks = runner_config.global_config.get("sinks", [])
     if not default_sinks:

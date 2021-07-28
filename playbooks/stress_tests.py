@@ -13,9 +13,9 @@ def http_stress_test(event: ManualTriggerEvent):
     output = RobustaJob.run_simple_job(
         "williamyeh/hey", f"/hey -n {action_params.n} {action_params.url}", 120
     )
-    event.processing_context.create_finding(
+    event.finding = Finding(
         title=f"Done running stress test with {action_params.n} http requests for url {action_params.url}",
-        source=SOURCE_MANUAL,
-        type=TYPE_CHAOS_STRESS,
+        source=FindingSource.SOURCE_MANUAL,
+        finding_type=FindingType.TYPE_CHAOS_STRESS,
     )
-    event.processing_context.finding.add_enrichment([FileBlock("result.txt", output)])
+    event.finding.add_enrichment([FileBlock("result.txt", output)])

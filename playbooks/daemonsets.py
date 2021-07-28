@@ -3,12 +3,14 @@ import logging
 from robusta.api import *
 
 
-@on_report_callback
-def daemonset_fix_config(event: ReportCallbackEvent):
-    event.processing_context.create_finding(
-        title="Proposed fix", source=SOURCE_CALLBACK, type=TYPE_PROMETHEUS_CALLBACK
+@on_sink_callback
+def daemonset_fix_config(event: SinkCallbackEvent):
+    event.finding = Finding(
+        title="Proposed fix",
+        source=FindingSource.SOURCE_CALLBACK.value,
+        finding_type=FindingType.TYPE_PROMETHEUS_CALLBACK,
     )
-    event.processing_context.finding.add_enrichment(
+    event.finding.add_enrichment(
         [
             MarkdownBlock(
                 textwrap.dedent(
@@ -25,7 +27,7 @@ def daemonset_fix_config(event: ReportCallbackEvent):
         ]
     )
 
-    event.processing_context.finding.add_enrichment(
+    event.finding.add_enrichment(
         [
             MarkdownBlock(
                 "This will tell Kubernetes that it is OK if daemonsets keep running while a node shuts down. "
@@ -37,12 +39,14 @@ def daemonset_fix_config(event: ReportCallbackEvent):
     )
 
 
-@on_report_callback
-def daemonset_silence_false_alarm(event: ReportCallbackEvent):
-    event.processing_context.create_finding(
-        title="Silence the alert", source=SOURCE_CALLBACK, type=TYPE_PROMETHEUS_CALLBACK
+@on_sink_callback
+def daemonset_silence_false_alarm(event: SinkCallbackEvent):
+    event.finding = Finding(
+        title="Silence the alert",
+        source=FindingSource.SOURCE_CALLBACK,
+        finding_type=FindingType.TYPE_PROMETHEUS_CALLBACK,
     )
-    event.processing_context.finding.add_enrichment(
+    event.finding.add_enrichment(
         [
             MarkdownBlock(
                 textwrap.dedent(
@@ -63,7 +67,7 @@ def daemonset_silence_false_alarm(event: ReportCallbackEvent):
         ]
     )
 
-    event.processing_context.finding.add_enrichment(
+    event.finding.add_enrichment(
         [
             MarkdownBlock(
                 "This will silence the KubernetesDaemonsetMisscheduled alert when the known false alarm occurs but not under "
@@ -170,14 +174,12 @@ class DaemonsetAnalysisParams(SlackParams):
 def daemonset_mismatch_analysis(event: ManualTriggerEvent):
     params = DaemonsetAnalysisParams(**event.data)
     ds = DaemonSet().read(name=params.daemonset_name, namespace=params.namespace)
-    event.processing_context.create_finding(
+    event.finding = Finding(
         title="Daemonset Mismatch Analysis",
-        source=SOURCE_MANUAL,
-        type=TYPE_DEPLOYMENT_MISMATCH,
+        source=FindingSource.SOURCE_MANUAL,
+        finding_type=FindingType.TYPE_DEPLOYMENT_MISMATCH,
     )
-    event.processing_context.finding.add_enrichment(
-        [do_daemonset_enricher(ds)], annotations={"unfurl": "False"}
+    event.finding.add_enrichment(
+        do_daemonset_enricher(ds), annotations={SlackAnnotations.UNFURL: False}
     )
-    event.processing_context.finding.add_enrichment(
-        [do_daemonset_mismatch_analysis(ds)]
-    )
+    event.finding.add_enrichment(do_daemonset_mismatch_analysis(ds))

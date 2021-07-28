@@ -4,7 +4,7 @@ import traceback
 
 from typing import List
 
-from ..core.framework.sinks.sink_factory import SinkFactory
+from ..core.sinks.sink_manager import SinkManager
 from ..core.model.events import BaseEvent
 
 
@@ -21,17 +21,17 @@ def handle_event(
     else:
         result = func(event, action_params)
 
-    if event.processing_context.finding:
+    if event.finding:
         for sink_name in named_sinks:
             try:
-                sink = SinkFactory.get_sink_by_name(sink_name)
+                sink = SinkManager.get_sink_by_name(sink_name)
                 if not sink:
                     logging.error(
-                        f"sink {sink_name} not found. Skipping event finding {event.processing_context.finding}"
+                        f"sink {sink_name} not found. Skipping event finding {event.finding}"
                     )
                     continue
                 # create deep copy, so that iterating on one sink won't affect the others
-                finding_copy = copy.deepcopy(event.processing_context.finding)
+                finding_copy = copy.deepcopy(event.finding)
                 sink.write_finding(finding_copy)
             except Exception:  # Faliure to send to one sink shouldn't fail all
                 logging.error(

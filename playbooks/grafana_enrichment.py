@@ -59,13 +59,13 @@ def report_image_changes(event: DeploymentEvent):
                     }
                 )
 
-    event.processing_context.create_finding(
-        title=f"{SUBJECT_TYPE_DEPLOYMENT} {event.obj.metadata.name} updated in namespace {event.obj.metadata.namespace}",
-        source=SOURCE_KUBERNETES_API_SEVER,
-        type=TYPE_DEPLOYMENT_UPDATE,
+    event.finding = Finding(
+        title=f"{FindingSubjectType.SUBJECT_TYPE_DEPLOYMENT.value} {event.obj.metadata.name} updated in namespace {event.obj.metadata.namespace}",
+        source=FindingSource.SOURCE_KUBERNETES_API_SERVER,
+        finding_type=FindingType.TYPE_DEPLOYMENT_UPDATE,
         subject=FindingSubject(
             event.obj.metadata.name,
-            SUBJECT_TYPE_DEPLOYMENT,
+            FindingSubjectType.SUBJECT_TYPE_DEPLOYMENT,
             event.obj.metadata.namespace,
         ),
     )
@@ -77,4 +77,4 @@ def report_image_changes(event: DeploymentEvent):
             "changed_properties": changed_properties,
         }
     )
-    event.processing_context.finding.add_enrichment([JsonBlock(json_str)])
+    event.finding.add_enrichment([JsonBlock(json_str)])

@@ -73,7 +73,6 @@ class NodeAnalyzer:
         """
         Runs a simple query returning a single metric and returns that metric
         """
-        print(f"running query: {query}")
         result = self.prom.custom_query(query)
         return float(result[0]["value"][1])
 

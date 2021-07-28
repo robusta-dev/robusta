@@ -27,15 +27,17 @@ def show_pod_bash_enrichment(event: ManualTriggerEvent):
         params.pod_name, params.pod_namespace, params.bash_command
     )
     if blocks:
-        event.processing_context.create_finding(
+        event.finding = Finding(
             title=f"Pod bash command - {params.pod_name}",
-            source=SOURCE_MANUAL,
-            type=TYPE_POD_BASH,
+            source=FindingSource.SOURCE_MANUAL,
+            finding_type=FindingType.TYPE_POD_BASH,
             subject=FindingSubject(
-                params.pod_name, SUBJECT_TYPE_POD, params.pod_namespace
+                params.pod_name,
+                FindingSubjectType.SUBJECT_TYPE_POD,
+                params.pod_namespace,
             ),
         )
-        event.processing_context.finding.add_enrichment(blocks)
+        event.finding.add_enrichment(blocks)
 
 
 def node_bash_enrichment(node_name: str, bash_command: str) -> List[BaseBlock]:
@@ -62,10 +64,12 @@ def show_node_bash_enrichment(event: ManualTriggerEvent):
     params = NodeBashParams(**event.data)
     blocks = node_bash_enrichment(params.node_name, params.bash_command)
     if blocks:
-        event.processing_context.create_finding(
+        event.finding = Finding(
             title=f"Node bash command - {params.node_name}",
-            source=SOURCE_MANUAL,
-            type=TYPE_NODE_BASH,
-            subject=FindingSubject(name=params.node_name, type=SUBJECT_TYPE_NODE),
+            source=FindingSource.SOURCE_MANUAL,
+            finding_type=FindingType.TYPE_NODE_BASH,
+            subject=FindingSubject(
+                name=params.node_name, subject_type=FindingSubjectType.SUBJECT_TYPE_NODE
+            ),
         )
-        event.processing_context.finding.add_enrichment(blocks)
+        event.finding.add_enrichment(blocks)

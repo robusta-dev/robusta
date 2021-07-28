@@ -2,11 +2,10 @@ import json
 import logging
 
 from pydantic import BaseModel
-import threading
-from collections import defaultdict
 from kafka import KafkaProducer
 
-from ....reporting.blocks import Finding, Enrichment, DiffsBlock, JsonBlock
+from ..sink_config import SinkConfigBase
+from ...reporting.blocks import Finding, Enrichment, DiffsBlock, JsonBlock
 from ..sink_base import SinkBase
 
 
@@ -16,21 +15,19 @@ class KafkaSinkConfig(BaseModel):
 
 
 class KafkaSink(SinkBase):
-    def __init__(self, producer: KafkaProducer, topic: str, sink_name: str):
-        super().__init__(sink_name)
-        self.producer = producer
-        self.topic = topic
-
-    def write(self, data: dict):
-        self.producer.send(self.topic, value=json.dumps(data).encode("utf-8"))
+    def __init__(self, sink_config: SinkConfigBase):
+        super().__init__(sink_config)
+        config = KafkaSinkConfig(**sink_config.params)
+        self.producer = KafkaProducer(bootstrap_servers=config.kafka_url)
+        self.topic = config.topic
 
     def write_finding(self, finding: Finding):
         for enrichment in finding.enrichments:
             self.send_enrichment(
                 enrichment,
-                finding.subject_name,
-                finding.subject_type,
-                finding.subject_namespace,
+                finding.subject.name,
+                finding.subject.subject_type.value,
+                finding.subject.namespace,
             )
 
     def send_enrichment(
@@ -74,19 +71,3 @@ class KafkaSink(SinkBase):
                 message_payload = block.json_str.encode("utf-8")
 
             self.producer.send(self.topic, value=message_payload)
-
-
-class KafkaSinkManager:
-
-    manager_lock = threading.Lock()
-    producers_map = defaultdict(None)
-
-    @staticmethod
-    def get_kafka_sink(sink_name: str, sink_config: KafkaSinkConfig) -> SinkBase:
-        with KafkaSinkManager.manager_lock:
-            producer = KafkaSinkManager.producers_map.get(sink_config.kafka_url)
-            if producer is not None:
-                return KafkaSink(producer, sink_config.topic, sink_name)
-            producer = KafkaProducer(bootstrap_servers=sink_config.kafka_url)
-            KafkaSinkManager.producers_map[sink_config.kafka_url] = producer
-            return KafkaSink(producer, sink_config.topic, sink_name)
