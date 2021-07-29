@@ -95,3 +95,50 @@ For example:
     @on_recurring_trigger(seconds_delay=10, repeat=3)
     def my_scheduled_playbook(event: RecurringTriggerEvent):
         logging.info(f"My scheduled playbook is running for the {event.recurrence} time")
+
+Sinks
+-------------
+| Playbooks results can be forwarded to one or more sinks. See :ref:`Playbooks sinks` for details.
+| For that to happen, we have to create ``Finding`` and ``Enrichments`` during the playbooks processing.
+| The Robusta platform will automatically forward findings and enrichments  to the configured sinks
+
+Finding
+^^^^^^^^^^^^^^^^^
+| A ``Finding`` describes an event that occured in your cloud like a pod restart or a prometheus alert.
+| Every playbook that wants to show the user information should create a finding that encapsulates that information.
+
+| Creating a ``Finding`` is easy:
+
+.. code-block:: python
+
+    @on_recurring_trigger(seconds_delay=10, repeat=3)
+    def my_scheduled_playbook(event: RecurringTriggerEvent):
+        event.finding = Finding(
+            title=f"My scheduled playbook is running for the {event.recurrence} time",
+            severity=FindingSeverity.INFO
+    )
+
+Enrichments
+^^^^^^^^^^^^^^^^^
+| Each ``Finding`` can contain any number of ``Enrichments``.
+| Each ``Enrichment`` has a list of ``blocks`` describing it:
+
+* **MarkdownBlock:** - A text block
+* **DividerBlock:** - Dividing section between ``Enrichment`` parts. (If the sink supports that)
+* **HeaderBlock:** - A header block
+* **ListBlock:** - A block containing list of items
+* **TableBlock:** - A block containing table of items
+* **KubernetesFieldsBlock:** - A block containing information describing kubernetes fields
+* **DiffsBlock:** - A block containing information describing yaml diff attributes
+* **JsonBlock:** - A block containing any json data
+* **FileBlock:** - A block containing any file with the file data
+* **CallbackBlock:** - A block containing callback information, that can be invoked back from the sink. (a Slack button for example, running some command)
+
+| **Note:** - Not all block types are supported by all sinks. If an unsupported block arrives at a sink, it will be ignored
+
+| Adding an ``Enrichment``:
+
+.. code-block:: python
+
+    my_log_file_data = "..."
+    event.finding.add_enrichment([FileBlock("log.txt", my_log_file_data)])

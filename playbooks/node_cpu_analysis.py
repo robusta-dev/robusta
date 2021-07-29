@@ -8,7 +8,6 @@ from robusta.api import *
 class NodeCPUAnalysisParams(BaseModel):
     prometheus_url: str = None
     node: str = ""
-    slack_channel: str = ""
 
 
 def do_node_cpu_analysis(node: Node, prometheus_url: str = None) -> List[BaseBlock]:
@@ -55,6 +54,7 @@ def do_node_cpu_analysis(node: Node, prometheus_url: str = None) -> List[BaseBlo
     )
 
     return [
+        HeaderBlock("Node CPU Analysis"),
         MarkdownBlock(
             f"_*Quick explanation:* High CPU typically occurs if you define pod CPU "
             f"requests incorrectly and Kubernetes schedules too many pods on one node. "
@@ -92,7 +92,10 @@ def node_cpu_analysis(event: ManualTriggerEvent):
     params = NodeCPUAnalysisParams(**event.data)
     node = Node().read(name=params.node)
 
-    event.report_title = f"Node CPU Usage Report for {params.node}"
-    event.slack_channel = params.slack_channel
-    event.report_blocks = do_node_cpu_analysis(node, params.prometheus_url)
-    send_to_slack(event)
+    event.finding = Finding(
+        title=f"Node CPU Usage Report for {params.node}",
+        subject=FindingSubject(name=params.node),
+        source=FindingSource.MANUAL,
+        finding_type=FindingType.MANUAL_ENRICHMENT,
+    )
+    event.finding.add_enrichment(do_node_cpu_analysis(node, params.prometheus_url))

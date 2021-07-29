@@ -1,5 +1,4 @@
 from robusta.api import *
-from aa_base_params import NodeNameParams
 
 
 def pod_row(pod: Pod) -> List[str]:
@@ -47,7 +46,10 @@ def show_node_enrichments(event: ManualTriggerEvent):
     blocks = node_allocatable_resources(params.node_name)
     blocks.extend(node_running_pods(params.node_name))
     if blocks:
-        event.report_blocks.extend(blocks)
-        event.slack_channel = params.slack_channel
-        event.report_title = f"Node not ready - {params.node_name}"
-        send_to_slack(event)
+        event.finding = Finding(
+            title=f"Node not ready - {params.node_name}",
+            subject=FindingSubject(name=params.node_name),
+            source=FindingSource.MANUAL,
+            finding_type=FindingType.MANUAL_ENRICHMENT,
+        )
+        event.finding.add_enrichment(blocks)

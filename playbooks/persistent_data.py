@@ -18,6 +18,6 @@ def count_pod_creations(event: DeploymentEvent):
         value = data.changes_per_deployment.get(name, 0)
         data.changes_per_deployment[name] = value + 1
 
-    event.report_title = f"DeploymentChangeCounter: {data.changes_per_deployment}"
-    event.slack_channel = "general"
-    send_to_slack(event)
+    event.finding = Finding(
+        title=f"DeploymentChangeCounter: {data.changes_per_deployment}"
+    )

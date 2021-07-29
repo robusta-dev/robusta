@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
@@ -46,3 +47,21 @@ class PrometheusKubernetesAlert(BaseEvent):
     deployment: Optional[RobustaDeployment] = None
     job: Optional[RobustaJob] = None
     daemonset: Optional[DaemonSet] = None
+
+    def get_title(self) -> str:
+        annotations = self.alert.annotations
+        alert_name = self.alert.labels.get("alertname", "")
+        if annotations.get("summary"):
+            return f'{alert_name}: {annotations["summary"]}'
+        else:
+            return alert_name
+
+    def get_description(self) -> str:
+        annotations = self.alert.annotations
+        clean_description = ""
+        if annotations.get("description"):
+            # remove "LABELS = map[...]" from the description as we already add a TableBlock with labels
+            clean_description = re.sub(
+                r"LABELS = map\[.*\]$", "", annotations["description"]
+            )
+        return clean_description

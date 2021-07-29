@@ -2,6 +2,7 @@ import logging
 from functools import wraps
 from dataclasses import dataclass
 
+from ..base_handler import handle_event
 from ...core.model.cloud_event import *
 from ...core.model.events import *
 from ...core.model.trigger_params import TriggerParams
@@ -27,7 +28,9 @@ def on_recurring_trigger(func, repeat=1, seconds_delay=None):
     return func
 
 
-def deploy_on_scheduler_event(func, trigger_params: TriggerParams, action_params=None):
+def deploy_on_scheduler_event(
+    func, trigger_params: TriggerParams, named_sinks: List[str], action_params=None
+):
     playbook_id = playbook_hash(func, trigger_params, action_params)
 
     @wraps(func)
@@ -40,17 +43,10 @@ def deploy_on_scheduler_event(func, trigger_params: TriggerParams, action_params
 
         if scheduler_event.playbook_id == playbook_id:
             trigger_event = RecurringTriggerEvent(recurrence=scheduler_event.recurrence)
-            logging.info(
-                f"running scheduled playbook {func.__name__}; action_params={action_params}"
-            )
-            if action_params is None:
-                result = func(trigger_event)
-            else:
-                result = func(trigger_event, action_params)
 
-            if result is not None:
-                return result
-            return "OK"
+            return handle_event(
+                func, trigger_event, action_params, "scheduler", named_sinks
+            )
 
     activate_playbook(EventType.SCHEDULED_TRIGGER, wrapper, func, playbook_id)
     schedule_trigger(playbook_id, trigger_params)

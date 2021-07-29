@@ -1,8 +1,10 @@
 import os
+import random
 import subprocess
 import time
 import uuid
 from zipfile import ZipFile
+from kubernetes import config
 
 from kubernetes import config
 
@@ -192,7 +194,7 @@ def examples_download(
         default_name = (
             current_context.get("name")
             if (current_context and current_context.get("name"))
-            else ""
+            else f"cluster_{random.randint(0, 1000000)}"
         )
         cluster_name = typer.prompt(
             "Please specify a unique name for your cluster or press ENTER to use the default",
@@ -206,7 +208,7 @@ def examples_download(
         )
 
     if not skip_new and (
-            use_robusta_ui or typer.confirm("Would you like to use Robusta UI?")
+        use_robusta_ui or typer.confirm("Would you like to use Robusta UI?")
     ):
         if account_id is None:
             account_id = typer.prompt(

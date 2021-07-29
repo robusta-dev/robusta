@@ -5,11 +5,6 @@ from collections import namedtuple
 import humanize
 
 
-class OOMKillerParams(BaseModel):
-    node_name: str = None
-    slack_channel: str
-
-
 def is_oom_status(status: ContainerStatus):
     if not status.lastState:
         return False
@@ -47,11 +42,14 @@ def do_show_recent_oom_kills(node: Node) -> List[BaseBlock]:
 
 @on_manual_trigger
 def show_recent_oom_kills(event: ManualTriggerEvent):
-    params = OOMKillerParams(**event.data)
+    params = NodeNameParams(**event.data)
     node = Node().read(name=params.node_name)
     blocks = do_show_recent_oom_kills(node)
     if blocks:
-        event.report_blocks.extend(blocks)
-        event.slack_channel = params.slack_channel
-        event.report_title = f"Latest OOM Kills on {params.node_name}"
-        send_to_slack(event)
+        event.finding = Finding(
+            title=f"Latest OOM Kills on {params.node_name}",
+            subject=FindingSubject(name=params.node_name),
+            source=FindingSource.MANUAL,
+            finding_type=FindingType.MANUAL_ENRICHMENT,
+        )
+        event.finding.add_enrichment(blocks)

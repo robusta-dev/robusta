@@ -2,7 +2,9 @@ import logging
 from functools import wraps
 from dataclasses import dataclass, field
 import pydantic
+from typing import List
 
+from ..base_handler import handle_event
 from ...core.active_playbooks import activate_playbook, register_playbook
 from ...core.model.playbook_hash import playbook_hash
 from ...utils.decorators import doublewrap
@@ -24,7 +26,9 @@ def on_manual_trigger(func):
     )
 
 
-def deploy_manual_trigger(func, trigger_params: TriggerParams, action_params=None):
+def deploy_manual_trigger(
+    func, trigger_params: TriggerParams, named_sinks: List[str], action_params=None
+):
     @wraps(func)
     def wrapper(cloud_event: CloudEvent):
         trigger_event = ManualTriggerEvent(
@@ -38,14 +42,10 @@ def deploy_manual_trigger(func, trigger_params: TriggerParams, action_params=Non
             logging.debug("not running")
             return
 
-        logging.info(
-            f"running manual playbook {func.__name__}; action_params={action_params}"
-        )
         try:
-            if action_params is None:
-                func(trigger_event)
-            else:
-                func(trigger_event, action_params)
+            return handle_event(
+                func, trigger_event, action_params, "manual", named_sinks
+            )
         except pydantic.error_wrappers.ValidationError as e:
             logging.error(f"{e}")
 

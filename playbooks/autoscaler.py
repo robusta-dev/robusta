@@ -5,16 +5,14 @@ from robusta.api import *
 HPA_NAME = "hpa_name"
 NAMESPACE = "namespace"
 MAX_REPLICAS = "max_replicas"
-SLACK_CHANNEL = "slack_channel"
 
 
 class HPALimitParams(BaseModel):
     increase_pct: int = 20
-    slack_channel: str
 
 
-@on_report_callback
-def scale_hpa_callback(event: ReportCallbackEvent):
+@on_sink_callback
+def scale_hpa_callback(event: SinkCallbackEvent):
     context = json.loads(event.source_context)
     hpa_name = context[HPA_NAME]
     hpa_ns = context[NAMESPACE]
@@ -26,9 +24,12 @@ def scale_hpa_callback(event: ReportCallbackEvent):
     new_max_replicas = int(context[MAX_REPLICAS])
     hpa.spec.maxReplicas = new_max_replicas
     hpa.replaceNamespacedHorizontalPodAutoscaler(hpa_name, hpa_ns)
-    event.report_title = f"Max replicas for HPA *{hpa_name}* in namespace *{hpa_ns}* updated to: *{new_max_replicas}*"
-    event.slack_channel = context[SLACK_CHANNEL]
-    send_to_slack(event)
+    event.finding = Finding(
+        title=f"Max replicas for HPA *{hpa_name}* in namespace *{hpa_ns}* updated to: *{new_max_replicas}*",
+        severity=FindingSeverity.INFO,
+        source=FindingSource.PROMETHEUS,
+        finding_type=FindingType.PROMETHEUS_ALERT,
+    )
 
 
 @on_horizontalpodautoscaler_update
@@ -60,12 +61,16 @@ def alert_on_hpa_reached_limit(
         HPA_NAME: hpa.metadata.name,
         NAMESPACE: hpa.metadata.namespace,
         MAX_REPLICAS: new_max_replicas_suggestion,
-        SLACK_CHANNEL: action_params.slack_channel,
     }
 
-    event.report_title = f"HPA *{event.obj.metadata.name}* in namespace *{event.obj.metadata.namespace}* reached max replicas: *{hpa.spec.maxReplicas}*"
-    event.slack_channel = action_params.slack_channel
-    event.report_blocks.extend(
+    event.finding = Finding(
+        title=f"HPA *{event.obj.metadata.name}* in namespace *{event.obj.metadata.namespace}* reached max replicas: *{hpa.spec.maxReplicas}*",
+        severity=FindingSeverity.LOW,
+        source=FindingSource.KUBERNETES_API_SERVER,
+        finding_type=FindingType.PROMETHEUS_ALERT,
+    )
+
+    event.finding.add_enrichment(
         [
             MarkdownBlock(
                 f"Current avg cpu utilization: *{avg_cpu} %*        -- (usage vs requested)"
@@ -73,4 +78,3 @@ def alert_on_hpa_reached_limit(
             CallbackBlock(choices, context),
         ]
     )
-    send_to_slack(event)

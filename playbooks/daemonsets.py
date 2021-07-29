@@ -3,12 +3,18 @@ import logging
 from robusta.api import *
 
 
-@on_report_callback
-def daemonset_fix_config(event: ReportCallbackEvent):
-    event.report_blocks.append(
-        MarkdownBlock(
-            textwrap.dedent(
-                """\
+@on_sink_callback
+def daemonset_fix_config(event: SinkCallbackEvent):
+    event.finding = Finding(
+        title="Proposed fix",
+        source=FindingSource.CALLBACK.value,
+        finding_type=FindingType.PROMETHEUS_CALLBACK,
+    )
+    event.finding.add_enrichment(
+        [
+            MarkdownBlock(
+                textwrap.dedent(
+                    """\
         Add the following to your daemonset pod-template:
         ```
         tolerations:
@@ -16,28 +22,35 @@ def daemonset_fix_config(event: ReportCallbackEvent):
           key: ToBeDeletedByClusterAutoscaler
           operator: Exists
         ```"""
+                )
             )
-        )
+        ]
     )
 
-    event.report_blocks.append(
-        MarkdownBlock(
-            "This will tell Kubernetes that it is OK if daemonsets keep running while a node shuts down. "
-            "This is desirable for daemonsets like elasticsearch which should keep gathering logs while the "
-            "node shuts down."
-            ""
-        )
+    event.finding.add_enrichment(
+        [
+            MarkdownBlock(
+                "This will tell Kubernetes that it is OK if daemonsets keep running while a node shuts down. "
+                "This is desirable for daemonsets like elasticsearch which should keep gathering logs while the "
+                "node shuts down."
+                ""
+            )
+        ]
     )
 
-    send_to_slack(event)
 
-
-@on_report_callback
-def daemonset_silence_false_alarm(event: ReportCallbackEvent):
-    event.report_blocks.append(
-        MarkdownBlock(
-            textwrap.dedent(
-                """\
+@on_sink_callback
+def daemonset_silence_false_alarm(event: SinkCallbackEvent):
+    event.finding = Finding(
+        title="Silence the alert",
+        source=FindingSource.CALLBACK,
+        finding_type=FindingType.PROMETHEUS_CALLBACK,
+    )
+    event.finding.add_enrichment(
+        [
+            MarkdownBlock(
+                textwrap.dedent(
+                    """\
         Add the following to your `active_playbooks.yaml`:
         ```
           - name: "alerts_integration"
@@ -49,21 +62,20 @@ def daemonset_silence_false_alarm(event: ReportCallbackEvent):
                   silencers:
                     - name: "DaemonsetMisscheduledSmartSilencer"
         ```"""
+                )
             )
-        )
+        ]
     )
 
-    event.report_blocks.append(
-        (
+    event.finding.add_enrichment(
+        [
             MarkdownBlock(
                 "This will silence the KubernetesDaemonsetMisscheduled alert when the known false alarm occurs but not under "
                 "other conditions."
                 ""
             )
-        )
+        ]
     )
-
-    send_to_slack(event)
 
 
 def do_daemonset_enricher(ds: DaemonSet) -> List[BaseBlock]:
@@ -153,18 +165,21 @@ def do_daemonset_mismatch_analysis(ds: DaemonSet) -> List[BaseBlock]:
     ]
 
 
-class DaemonsetAnalysisParams(BaseModel):
+class DaemonsetAnalysisParams(SlackParams):
     daemonset_name: str
     namespace: str
-    slack_channel: str
 
 
 @on_manual_trigger
 def daemonset_mismatch_analysis(event: ManualTriggerEvent):
     params = DaemonsetAnalysisParams(**event.data)
     ds = DaemonSet().read(name=params.daemonset_name, namespace=params.namespace)
-    event.report_blocks.extend(do_daemonset_enricher(ds))
-    event.report_blocks.extend(do_daemonset_mismatch_analysis(ds))
-    event.slack_channel = params.slack_channel
-    event.slack_allow_unfurl = False
-    send_to_slack(event)
+    event.finding = Finding(
+        title="Daemonset Mismatch Analysis",
+        source=FindingSource.MANUAL,
+        finding_type=FindingType.DEPLOYMENT_MISMATCH,
+    )
+    event.finding.add_enrichment(
+        do_daemonset_enricher(ds), annotations={SlackAnnotations.UNFURL: False}
+    )
+    event.finding.add_enrichment(do_daemonset_mismatch_analysis(ds))

@@ -31,12 +31,8 @@ def add_deployment_lines_to_grafana(event: DeploymentEvent, action_params: Param
     )
 
 
-class ImageChangesParams(BaseModel):
-    sinks: List[SinkConfigBase]
-
-
 @on_deployment_update
-def report_image_changes(event: DeploymentEvent, action_params: ImageChangesParams):
+def report_image_changes(event: DeploymentEvent):
     """
     Report image changed whenever a new application version is deployed so that you can easily see changes.
     """
@@ -63,11 +59,22 @@ def report_image_changes(event: DeploymentEvent, action_params: ImageChangesPara
                     }
                 )
 
-    data = {
-        "deployment": event.obj.metadata.name,
-        "deployment_namespace": event.obj.metadata.namespace,
-        "message": msg,
-        "changed_properties": changed_properties,
-    }
-    for sink_config in action_params.sinks:
-        SinkFactory.get_sink(sink_config).write(data)
+    event.finding = Finding(
+        title=f"{FindingSubjectType.TYPE_DEPLOYMENT.value} {event.obj.metadata.name} updated in namespace {event.obj.metadata.namespace}",
+        source=FindingSource.KUBERNETES_API_SERVER,
+        finding_type=FindingType.DEPLOYMENT_UPDATE,
+        subject=FindingSubject(
+            event.obj.metadata.name,
+            FindingSubjectType.TYPE_DEPLOYMENT,
+            event.obj.metadata.namespace,
+        ),
+    )
+    json_str = json.dumps(
+        {
+            "deployment": event.obj.metadata.name,
+            "deployment_namespace": event.obj.metadata.namespace,
+            "message": msg,
+            "changed_properties": changed_properties,
+        }
+    )
+    event.finding.add_enrichment([JsonBlock(json_str)])

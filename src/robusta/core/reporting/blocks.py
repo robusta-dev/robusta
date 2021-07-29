@@ -4,11 +4,17 @@
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
+import uuid
 from typing import List, Callable, Dict, Any, Iterable, Sequence
 
+from hikaru import DiffDetail
 from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
 from tabulate import tabulate
+from enum import Enum
+
+from ..discovery.top_service_resolver import TopServiceResolver
+from ..reporting.consts import FindingSource, FindingType, FindingSubjectType
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
@@ -60,6 +66,20 @@ class ListBlock(BaseBlock):
         return MarkdownBlock("\n".join(mrkdwn))
 
 
+class DiffsBlock(BaseBlock):
+    diffs: List[DiffDetail]
+
+    def __init__(self, diffs: List[DiffDetail]):
+        super().__init__(diffs=diffs)
+
+
+class JsonBlock(BaseBlock):
+    json_str: str
+
+    def __init__(self, json_str: str):
+        super().__init__(json_str=json_str)
+
+
 class TableBlock(BaseBlock):
     rows: Iterable[Iterable[str]]
     headers: Sequence[str] = ()
@@ -105,3 +125,92 @@ class CallbackBlock(BaseBlock):
 
     def __init__(self, choices: Dict[str, Callable], context: Dict[str, Any]):
         super().__init__(choices=choices, context=context)
+
+
+class FindingSeverity(Enum):
+    INFO = 1
+    LOW = 2
+    MEDIUM = 3
+    HIGH = 4
+
+
+class Enrichment:
+    # These is the actual enrichment data
+    blocks: List[BaseBlock] = []
+    # General purpose rendering flags, that can be used by specific sinks
+    annotations: Dict[str, str] = {}
+
+    def __init__(self, blocks: List[BaseBlock], annotations=None):
+        if annotations is None:
+            annotations = {}
+        self.blocks = blocks
+        self.annotations = annotations
+
+    def __str__(self):
+        return f"annotations: {self.annotations} Enrichment: {self.blocks} "
+
+
+class FindingSubject:
+    def __init__(
+        self,
+        name: str = "NA",
+        subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
+        namespace: str = "",
+    ):
+        self.name = name
+        self.subject_type = subject_type
+        self.namespace = namespace
+        self.service_key = TopServiceResolver.guess_service_key(name, namespace)
+
+
+class Finding:
+    def __init__(
+        self,
+        title: str,
+        severity: FindingSeverity = FindingSeverity.INFO,
+        source: FindingSource = FindingSource.NONE,
+        finding_type: FindingType = FindingType.NONE,
+        description: str = "",
+        subject: FindingSubject = FindingSubject(),
+    ) -> None:
+        self.id: uuid = uuid.uuid4()
+        self.title = title
+        self.description = description
+        self.source = source
+        self.finding_type = finding_type
+        self.severity = severity
+        self.category = "None"  # TODO fill real category
+        self.subject = subject
+        self.service_key = subject.service_key
+        self.enrichments: List[Enrichment] = []
+
+    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
+        if annotations is None:
+            annotations = {}
+        self.enrichments.append(Enrichment(enrichment_blocks, annotations))
+
+    def __str__(self):
+        return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
+
+
+# Contains data of the current event processing context.
+class ProcessingContext:
+    finding: Finding = None
+    # Finding created as a result of this event.
+    def create_finding(
+        self,
+        title: str,
+        severity: FindingSeverity = FindingSeverity.INFO,
+        description: str = "",
+        source: FindingSource = FindingSource.NONE,
+        finding_type: FindingType = FindingType.NONE,
+        subject: FindingSubject = FindingSubject(),
+    ):
+        self.finding = Finding(
+            title=title,
+            severity=severity,
+            description=description,
+            source=source,
+            finding_type=finding_type,
+            subject=subject,
+        )

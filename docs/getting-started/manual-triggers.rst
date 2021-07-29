@@ -25,4 +25,4 @@ Manually triggering the python_profiler playbook
 
 .. code-block:: bash
 
-    robusta playbooks trigger python_profiler pod_name=<POD_NAME> namespace=<NAMESPACE> slack_channel=<SLACK_CHANNEL>
+    robusta playbooks trigger python_profiler pod_name=<POD_NAME> namespace=<NAMESPACE>

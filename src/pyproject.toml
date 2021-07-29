@@ -11,7 +11,7 @@ packages = [
 robusta = "robusta.cli.main:app"
 
 [tool.poetry.dependencies]
-python = "^3.7.0"
+python = "^3.7.1"
 typer = "^0.3.2"
 Flask = "^1.1.2"
 colorlog = "^5.0.1"
@@ -31,6 +31,7 @@ hikaru = "^0.5.1-beta.0"
 prometheus-api-client = "^0.4.2"
 slack-sdk = "^3.7.0"
 python-dotenv = "^0.18.0"
+supabase-py = "^0.0.2"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"

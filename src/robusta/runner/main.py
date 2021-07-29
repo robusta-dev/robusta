@@ -7,8 +7,8 @@ import colorlog
 import manhole
 from flask import Flask, request
 
+from ..core.model.cloud_event import CloudEvent
 from .. import api as robusta_api
-from ..core.triggers import CloudEvent
 from ..core.active_playbooks import run_playbooks
 from ..core.persistency.scheduled_jobs_states_dal import init_scheduler_dal
 from ..integrations.prometheus.incoming_handler import parse_incoming_prometheus_alerts

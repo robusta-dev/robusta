@@ -1,5 +1,4 @@
 from robusta.api import *
-from aa_base_params import NamespacedKubernetesObjectParams
 
 
 def deployment_status_enrichment(deployment: Deployment) -> List[BaseBlock]:
@@ -18,7 +17,9 @@ def show_deployment_status_enrichment(event: ManualTriggerEvent):
     ).obj
     blocks = deployment_status_enrichment(deployment)
     if blocks:
-        event.report_blocks.extend(blocks)
-        event.slack_channel = params.slack_channel
-        event.report_title = f"Deployment status - {params.namespace}/{params.name}"
-        send_to_slack(event)
+        event.finding = Finding(
+            title=f"Deployment status - {params.namespace}/{params.name}",
+            source=FindingSource.MANUAL,
+            finding_type=FindingType.MANUAL_ENRICHMENT,
+        )
+        event.finding.add_enrichment(blocks)
