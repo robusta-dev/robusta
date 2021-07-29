@@ -25,4 +25,4 @@ Manually triggering the python_profiler playbook
 
 .. code-block:: bash
 
-    robusta trigger python_profiler pod_name=<POD_NAME> namespace=<NAMESPACE>
+    robusta playbooks trigger python_profiler pod_name=<POD_NAME> namespace=<NAMESPACE>

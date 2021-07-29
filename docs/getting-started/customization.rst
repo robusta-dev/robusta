@@ -1,7 +1,8 @@
 Customizing built-in playbooks
 ##############################
 
-By itself, Robusta does nothing. All of it's power comes from playbooks. Lets customize that set of playbooks.
+Robusta is a powerful `rules engine` for devops, but it needs rules or "playbooks" to tell it what to do.
+Lets see how we can customize the broad collection of builtin playbooks.
 
 Downloading Playbooks
 -------------------------------------------------------------
@@ -16,7 +17,7 @@ We now a have `./playbooks` directory that we can customize and upload back to R
 Lets take a closer look at that directory.
 
 `./playbooks` contains several python scripts and one file named `active_playbooks.yaml`. The python scripts define the *available* playbooks
-and the yaml file defines which playbooks are actually in use and how they are configured.
+and the yaml file configures which playbooks are actually in use.
 
 Enabling a new playbook
 ------------------------
@@ -44,9 +45,28 @@ From the playbooks directory run:
 
 .. code-block:: python
 
-   robusta deploy .
+   robusta playbooks deploy .
 
 The new playbook you configured is now running. You will get a notification in Slack every time a deployment's number of replicas changes.
+
+Viewing cluster deployed active playbooks
+------------------------------------------
+In order to view the list of active playbooks, that are currently enabled on your cluster run:
+
+.. code-block:: python
+
+   robusta playbooks list
+
+
+Pulling cluster playbooks locally
+------------------------------------------
+In order to get a copy of the cluster playbooks, both the code and enabled playbooks configuration run:
+
+.. code-block:: python
+
+   robusta playbooks pull
+
+| **params:** ``--playbooks-directory TARGET_LOCAL_DIRECTORY``, default to current directory
 
 Seeing your new config in action
 ----------------------------------

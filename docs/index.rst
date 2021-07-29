@@ -30,6 +30,7 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
 
 
    getting-started/installation
+   getting-started/uninstallation
    getting-started/customization
    getting-started/manual-triggers
 
@@ -50,8 +51,7 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    :caption: Developer Guide
    :hidden:
 
-   developer-guide/general-guidelines
    developer-guide/writing-playbooks
-   developer-guide/hello-world-playbook
+   developer-guide/general-guidelines
    developer-guide/scheduled-playbooks
    developer-guide/reference
