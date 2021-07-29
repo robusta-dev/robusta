@@ -25,4 +25,4 @@ class BaseEvent:
     report_title: str = ""
     prometheus_url: Optional[str] = None
 
-    finding: Finding = None
+    finding: Optional[Finding] = None

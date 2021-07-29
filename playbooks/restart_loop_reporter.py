@@ -39,10 +39,10 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
 
     event.finding = Finding(
         title=f"Crashing pod {pod.metadata.name} in namespace {pod.metadata.namespace}",
-        source=FindingSource.SOURCE_KUBERNETES_API_SERVER,
-        finding_type=FindingType.TYPE_KUBERNETES_CRASH,
+        source=FindingSource.KUBERNETES_API_SERVER,
+        finding_type=FindingType.KUBERNETES_CRASH,
         subject=FindingSubject(
-            pod_name, FindingSubjectType.SUBJECT_TYPE_POD, pod.metadata.namespace
+            pod_name, FindingSubjectType.TYPE_POD, pod.metadata.namespace
         ),
     )
     blocks: List[BaseBlock] = []

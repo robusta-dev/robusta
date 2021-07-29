@@ -6,7 +6,7 @@ from .robusta.robusta_sink import RobustaSink
 from .slack.slack_sink import SlackSink
 from .sink_config import SinkConfigBase
 from .sink_base import SinkBase
-from ..reporting.consts import SINK_TYPES
+from ..reporting.consts import SinkType
 
 
 class SinkManager:
@@ -19,13 +19,13 @@ class SinkManager:
 
     @staticmethod
     def __add_sink(sink_config):
-        if sink_config.sink_type == SINK_TYPES.kafka.name:
+        if sink_config.sink_type == SinkType.KAFKA.value:
             SinkManager.sinks[sink_config.sink_name] = KafkaSink(sink_config)
-        elif sink_config.sink_type == SINK_TYPES.robusta.name:
+        elif sink_config.sink_type == SinkType.ROBUSTA.value:
             SinkManager.sinks[sink_config.sink_name] = RobustaSink(
                 sink_config, SinkManager.cluster_name
             )
-        elif sink_config.sink_type == SINK_TYPES.slack.name:
+        elif sink_config.sink_type == SinkType.SLACK.value:
             SinkManager.sinks[sink_config.sink_name] = SlackSink(sink_config)
         else:
             raise Exception(f"Sink not supported {sink_config.sink_type}")

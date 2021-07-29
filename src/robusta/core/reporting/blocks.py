@@ -154,7 +154,7 @@ class FindingSubject:
     def __init__(
         self,
         name: str = "NA",
-        subject_type: FindingSubjectType = FindingSubjectType.SUBJECT_TYPE_NONE,
+        subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
         namespace: str = "",
     ):
         self.name = name
@@ -168,8 +168,8 @@ class Finding:
         self,
         title: str,
         severity: FindingSeverity = FindingSeverity.INFO,
-        source: FindingSource = FindingSource.SOURCE_NONE,
-        finding_type: FindingType = FindingType.TYPE_NONE,
+        source: FindingSource = FindingSource.NONE,
+        finding_type: FindingType = FindingType.NONE,
         description: str = "",
         subject: FindingSubject = FindingSubject(),
     ) -> None:
@@ -202,8 +202,8 @@ class ProcessingContext:
         title: str,
         severity: FindingSeverity = FindingSeverity.INFO,
         description: str = "",
-        source: FindingSource = FindingSource.SOURCE_NONE,
-        finding_type: FindingType = FindingType.TYPE_NONE,
+        source: FindingSource = FindingSource.NONE,
+        finding_type: FindingType = FindingType.NONE,
         subject: FindingSubject = FindingSubject(),
     ):
         self.finding = Finding(

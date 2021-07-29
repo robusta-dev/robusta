@@ -36,8 +36,8 @@ def do_babysitter(
 
     event.finding = Finding(
         title=f"{resource_type.value} {event.obj.metadata.name} {event.operation.value}d in namespace {event.obj.metadata.namespace}",
-        source=FindingSource.SOURCE_KUBERNETES_API_SERVER,
-        finding_type=FindingType.TYPE_DEPLOYMENT_UPDATE,
+        source=FindingSource.KUBERNETES_API_SERVER,
+        finding_type=FindingType.DEPLOYMENT_UPDATE,
         subject=FindingSubject(
             event.obj.metadata.name, resource_type, event.obj.metadata.namespace
         ),
@@ -48,10 +48,10 @@ def do_babysitter(
 @on_deployment_all_changes
 def deployment_babysitter(event: DeploymentEvent, config: BabysitterConfig):
     """Track changes to a deployment and send the changes in slack."""
-    do_babysitter(event, config, FindingSubjectType.SUBJECT_TYPE_DEPLOYMENT)
+    do_babysitter(event, config, FindingSubjectType.TYPE_DEPLOYMENT)
 
 
 @on_pod_all_changes
 def pod_babysitter(event: DeploymentEvent, config: BabysitterConfig):
     """Track changes to a pod and send the changes in slack."""
-    do_babysitter(event, config, FindingSubjectType.SUBJECT_TYPE_POD)
+    do_babysitter(event, config, FindingSubjectType.TYPE_POD)

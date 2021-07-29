@@ -76,7 +76,6 @@ class CallbackRegistry:
         return func.__name__, inspect.getsourcefile(func)
 
 
-# TODO: make this something more generic which isn't slack specific
 @dataclass
 class SinkCallbackEvent(BaseEvent):
     source_channel_name: str = ""

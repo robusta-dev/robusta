@@ -24,11 +24,11 @@ def python_profiler(event: ManualTriggerEvent):
     try:
         event.finding = Finding(
             title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
-            source=FindingSource.SOURCE_MANUAL,
-            finding_type=FindingType.TYPE_ENRICHMENT_PROFILING,
+            source=FindingSource.MANUAL,
+            finding_type=FindingType.ENRICHMENT_PROFILING,
             subject=FindingSubject(
                 pod.metadata.name,
-                FindingSubjectType.SUBJECT_TYPE_POD,
+                FindingSubjectType.TYPE_POD,
                 pod.spec.nodeName,
             ),
         )

@@ -60,12 +60,12 @@ def report_image_changes(event: DeploymentEvent):
                 )
 
     event.finding = Finding(
-        title=f"{FindingSubjectType.SUBJECT_TYPE_DEPLOYMENT.value} {event.obj.metadata.name} updated in namespace {event.obj.metadata.namespace}",
-        source=FindingSource.SOURCE_KUBERNETES_API_SERVER,
-        finding_type=FindingType.TYPE_DEPLOYMENT_UPDATE,
+        title=f"{FindingSubjectType.TYPE_DEPLOYMENT.value} {event.obj.metadata.name} updated in namespace {event.obj.metadata.namespace}",
+        source=FindingSource.KUBERNETES_API_SERVER,
+        finding_type=FindingType.DEPLOYMENT_UPDATE,
         subject=FindingSubject(
             event.obj.metadata.name,
-            FindingSubjectType.SUBJECT_TYPE_DEPLOYMENT,
+            FindingSubjectType.TYPE_DEPLOYMENT,
             event.obj.metadata.namespace,
         ),
     )

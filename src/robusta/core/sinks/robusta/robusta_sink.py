@@ -50,9 +50,6 @@ class RobustaSink(SinkBase):
     def write_finding(self, finding: Finding):
         self.dal.persist_finding(finding)
 
-    def __write_service(self, service: ServiceInfo):
-        self.dal.persist_service(service)
-
     # service discovery impl
     @staticmethod
     def __cache_key(name: str, namespace: str, type: str) -> str:
@@ -60,7 +57,7 @@ class RobustaSink(SinkBase):
 
     def __publish_service(self, serviceInfo: ServiceInfo):
         logging.debug(f"publishing to {self.sink_name} service {serviceInfo} ")
-        self.__write_service(serviceInfo)
+        self.dal.persist_service(serviceInfo)
 
     def __is_cached(self, service_info: ServiceInfo):
         cache_key = self.__cache_key(

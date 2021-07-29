@@ -19,7 +19,7 @@ def show_deployment_status_enrichment(event: ManualTriggerEvent):
     if blocks:
         event.finding = Finding(
             title=f"Deployment status - {params.namespace}/{params.name}",
-            source=FindingSource.SOURCE_MANUAL,
-            finding_type=FindingType.TYPE_MANUAL_ENRICHMENT,
+            source=FindingSource.MANUAL,
+            finding_type=FindingType.MANUAL_ENRICHMENT,
         )
         event.finding.add_enrichment(blocks)

@@ -7,8 +7,8 @@ from robusta.api import *
 def daemonset_fix_config(event: SinkCallbackEvent):
     event.finding = Finding(
         title="Proposed fix",
-        source=FindingSource.SOURCE_CALLBACK.value,
-        finding_type=FindingType.TYPE_PROMETHEUS_CALLBACK,
+        source=FindingSource.CALLBACK.value,
+        finding_type=FindingType.PROMETHEUS_CALLBACK,
     )
     event.finding.add_enrichment(
         [
@@ -43,8 +43,8 @@ def daemonset_fix_config(event: SinkCallbackEvent):
 def daemonset_silence_false_alarm(event: SinkCallbackEvent):
     event.finding = Finding(
         title="Silence the alert",
-        source=FindingSource.SOURCE_CALLBACK,
-        finding_type=FindingType.TYPE_PROMETHEUS_CALLBACK,
+        source=FindingSource.CALLBACK,
+        finding_type=FindingType.PROMETHEUS_CALLBACK,
     )
     event.finding.add_enrichment(
         [
@@ -176,8 +176,8 @@ def daemonset_mismatch_analysis(event: ManualTriggerEvent):
     ds = DaemonSet().read(name=params.daemonset_name, namespace=params.namespace)
     event.finding = Finding(
         title="Daemonset Mismatch Analysis",
-        source=FindingSource.SOURCE_MANUAL,
-        finding_type=FindingType.TYPE_DEPLOYMENT_MISMATCH,
+        source=FindingSource.MANUAL,
+        finding_type=FindingType.DEPLOYMENT_MISMATCH,
     )
     event.finding.add_enrichment(
         do_daemonset_enricher(ds), annotations={SlackAnnotations.UNFURL: False}

@@ -29,11 +29,11 @@ def show_pod_bash_enrichment(event: ManualTriggerEvent):
     if blocks:
         event.finding = Finding(
             title=f"Pod bash command - {params.pod_name}",
-            source=FindingSource.SOURCE_MANUAL,
-            finding_type=FindingType.TYPE_POD_BASH,
+            source=FindingSource.MANUAL,
+            finding_type=FindingType.POD_BASH,
             subject=FindingSubject(
                 params.pod_name,
-                FindingSubjectType.SUBJECT_TYPE_POD,
+                FindingSubjectType.TYPE_POD,
                 params.pod_namespace,
             ),
         )
@@ -66,10 +66,10 @@ def show_node_bash_enrichment(event: ManualTriggerEvent):
     if blocks:
         event.finding = Finding(
             title=f"Node bash command - {params.node_name}",
-            source=FindingSource.SOURCE_MANUAL,
-            finding_type=FindingType.TYPE_NODE_BASH,
+            source=FindingSource.MANUAL,
+            finding_type=FindingType.NODE_BASH,
             subject=FindingSubject(
-                name=params.node_name, subject_type=FindingSubjectType.SUBJECT_TYPE_NODE
+                name=params.node_name, subject_type=FindingSubjectType.TYPE_NODE
             ),
         )
         event.finding.add_enrichment(blocks)

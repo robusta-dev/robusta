@@ -175,8 +175,8 @@ def show_stackoverflow_search(event: SinkCallbackEvent):
     answers = [f"<{a['link']}|{a['title']}>" for a in result["items"]]
     event.finding = Finding(
         title=f"{search_term} StackOverflow Results",
-        source=FindingSource.SOURCE_PROMETHEUS,
-        finding_type=FindingType.TYPE_PROMETHEUS_CALLBACK,
+        source=FindingSource.PROMETHEUS,
+        finding_type=FindingType.PROMETHEUS_CALLBACK,
     )
     if answers:
         event.finding.add_enrichment([ListBlock(answers)])
@@ -328,28 +328,28 @@ def default_alert_config(alert_name, config: AlertsIntegrationParams) -> AlertCo
 
 
 def get_alert_subject(alert: PrometheusKubernetesAlert) -> FindingSubject:
-    subject_type: FindingSubjectType = FindingSubjectType.SUBJECT_TYPE_NONE
+    subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE
     name: str = "NA"
     namespace: str = ""
 
     if alert.pod:
-        subject_type = FindingSubjectType.SUBJECT_TYPE_POD
+        subject_type = FindingSubjectType.TYPE_POD
         name = alert.pod.metadata.name
         namespace = alert.pod.metadata.namespace
     elif alert.job:
-        subject_type = FindingSubjectType.SUBJECT_TYPE_JOB
+        subject_type = FindingSubjectType.TYPE_JOB
         name = alert.job.metadata.name
         namespace = alert.job.metadata.namespace
     elif alert.deployment:
-        subject_type = FindingSubjectType.SUBJECT_TYPE_DEPLOYMENT
+        subject_type = FindingSubjectType.TYPE_DEPLOYMENT
         name = alert.deployment.metadata.name
         namespace = alert.deployment.metadata.namespace
     elif alert.daemonset:
-        subject_type = FindingSubjectType.SUBJECT_TYPE_DAEMONSET
+        subject_type = FindingSubjectType.TYPE_DAEMONSET
         name = alert.daemonset.metadata.name
         namespace = alert.daemonset.metadata.namespace
     elif alert.node:
-        subject_type = FindingSubjectType.SUBJECT_TYPE_NODE
+        subject_type = FindingSubjectType.TYPE_NODE
         name = alert.node.metadata.name
 
     return FindingSubject(name, subject_type, namespace)
@@ -368,8 +368,8 @@ def create_alert_finding(alert: PrometheusKubernetesAlert):
     alert.finding = Finding(
         title=alert.get_title(),
         description=alert.get_description(),
-        source=FindingSource.SOURCE_PROMETHEUS,
-        finding_type=FindingType.TYPE_PROMETHEUS_ALERT,
+        source=FindingSource.PROMETHEUS,
+        finding_type=FindingType.PROMETHEUS_ALERT,
         severity=SEVERITY_MAP.get(alert.alert.labels.get("severity"), "NA"),
         subject=alert_subject,
     )
