@@ -47,6 +47,7 @@ class RobustaController:
         logs = self._run_cli_cmd(
             [
                 "robusta",
+                "playbooks",
                 "deploy",
                 "playbooks/",
             ],
