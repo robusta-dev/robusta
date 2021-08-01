@@ -44,8 +44,6 @@ class RobustaController:
                 "test-cluster",
                 "--robusta-ui-token",
                 "test-token",
-                "--api-key",
-                "test-key",
                 "--skip-robusta-sink",
                 "--skip-new",
             ],
