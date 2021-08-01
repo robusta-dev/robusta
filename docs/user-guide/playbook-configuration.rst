@@ -54,11 +54,18 @@ Playbooks sinks
   :width: 400
   :align: center
 
-| Currently 3 sink types are supported:
+* **datadog:**
+
+.. image:: /images/deployment-babysitter-datadog.png
+  :width: 1000
+  :align: center
+
+| Currently 4 sink types are supported:
 
 * *slack:* - Send playbooks results to Slack channel
 * *robusta:* - Send playbooks results Robusta's dedicated UI
 * *kafka:* - Send playbooks results to a kafka topic
+* *datadog:* - Send playbooks results to a DataDog events api
 
 | To use sinks, first define the available named sinks.
 | For example: in the ``active_playbooks.yaml`` file
@@ -79,6 +86,10 @@ Playbooks sinks
       params:
         kafka_url: "localhost:9092"
         topic: "robusta-playbooks"
+    - sink_name: "datadog events"
+      sink_type: "datadog"
+      params:
+        api_key: "MY DATADOG ACCOUNT API KEY"
 
 
 | **Note:** Create your Robusta account, to get the ``token`` for the Robusta sink `here <https://robusta.dev>`_ .

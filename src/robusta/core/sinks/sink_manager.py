@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, List, Optional
 
+from .datadog.datadog_sink import DataDogSink
 from .kafka.kafka_sink import KafkaSink
 from .robusta.robusta_sink import RobustaSink
 from .slack.slack_sink import SlackSink
@@ -23,6 +24,10 @@ class SinkManager:
             SinkManager.sinks[sink_config.sink_name] = KafkaSink(sink_config)
         elif sink_config.sink_type == SinkType.ROBUSTA.value:
             SinkManager.sinks[sink_config.sink_name] = RobustaSink(
+                sink_config, SinkManager.cluster_name
+            )
+        elif sink_config.sink_type == SinkType.DATADOG.value:
+            SinkManager.sinks[sink_config.sink_name] = DataDogSink(
                 sink_config, SinkManager.cluster_name
             )
         elif sink_config.sink_type == SinkType.SLACK.value:
