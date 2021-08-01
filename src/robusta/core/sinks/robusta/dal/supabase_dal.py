@@ -28,6 +28,8 @@ from supabase_py import Client
 class RobustaAuthClient(SupabaseAuthClient):
     def _set_timeout(*args, **kwargs):
         """Set timer task"""
+        # _set_timeout isn't implemented in gotrue client. it's required for the jwt refresh token timer task
+        # https://github.com/supabase/gotrue-py/blob/49c092e3a4a6d7bb5e1c08067a4c42cc2f74b5cc/gotrue/client.py#L242
         # callback, timeout_ms
         threading.Timer(args[2] / 1000, args[1]).start()
 
