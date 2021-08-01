@@ -16,6 +16,6 @@ def http_stress_test(event: ManualTriggerEvent):
     event.finding = Finding(
         title=f"Done running stress test with {action_params.n} http requests for url {action_params.url}",
         source=FindingSource.MANUAL,
-        finding_type=FindingType.CHAOS_STRESS,
+        finding_type="http_stress_test",
     )
     event.finding.add_enrichment([FileBlock("result.txt", output)])

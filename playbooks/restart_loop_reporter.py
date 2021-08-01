@@ -40,7 +40,7 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
     event.finding = Finding(
         title=f"Crashing pod {pod.metadata.name} in namespace {pod.metadata.namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
-        finding_type=FindingType.KUBERNETES_CRASH,
+        finding_type="restart_loop_reporter",
         subject=FindingSubject(
             pod_name, FindingSubjectType.TYPE_POD, pod.metadata.namespace
         ),

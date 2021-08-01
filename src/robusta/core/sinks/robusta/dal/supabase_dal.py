@@ -93,7 +93,7 @@ class SupabaseDal:
             "id": str(finding.id),
             "description": finding.description,
             "source": finding.source.value,
-            "type": finding.finding_type.value,
+            "type": finding.finding_type,
             "category": finding.category,
             "priority": finding.severity.name,
             "subject_type": finding.subject.subject_type.value,

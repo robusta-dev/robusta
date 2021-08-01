@@ -96,6 +96,6 @@ def node_cpu_analysis(event: ManualTriggerEvent):
         title=f"Node CPU Usage Report for {params.node}",
         subject=FindingSubject(name=params.node),
         source=FindingSource.MANUAL,
-        finding_type=FindingType.MANUAL_ENRICHMENT,
+        finding_type="node_cpu_analysis",
     )
     event.finding.add_enrichment(do_node_cpu_analysis(node, params.prometheus_url))
