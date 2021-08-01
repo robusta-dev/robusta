@@ -17,21 +17,6 @@ class FindingSource(Enum):
     CALLBACK = "callback"
 
 
-# Finding types
-class FindingType(Enum):
-    NONE = "none"  # empty default
-    PROMETHEUS_ALERT = "prometheus/alert"
-    PROMETHEUS_CALLBACK = "prometheus/callback"
-    DEPLOYMENT_UPDATE = "deployment/update"
-    NODE_BASH = "node/bash"
-    POD_BASH = "pod/bash"
-    DEPLOYMENT_MISMATCH = "deployment/mismatch_analysis"
-    MANUAL_ENRICHMENT = "manual/enrichment"
-    ENRICHMENT_PROFILING = "enrichment/profiling"
-    KUBERNETES_CRASH = "kubernetes/crash"
-    CHAOS_STRESS = "chaos/stress"
-
-
 # Finding subject types
 class FindingSubjectType(Enum):
     TYPE_NONE = "none"

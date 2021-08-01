@@ -14,7 +14,7 @@ from tabulate import tabulate
 from enum import Enum
 
 from ..discovery.top_service_resolver import TopServiceResolver
-from ..reporting.consts import FindingSource, FindingType, FindingSubjectType
+from ..reporting.consts import FindingSource, FindingSubjectType
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
@@ -169,7 +169,7 @@ class Finding:
         title: str,
         severity: FindingSeverity = FindingSeverity.INFO,
         source: FindingSource = FindingSource.NONE,
-        finding_type: FindingType = FindingType.NONE,
+        finding_type: str = "none",
         description: str = "",
         subject: FindingSubject = FindingSubject(),
     ) -> None:
@@ -203,7 +203,7 @@ class ProcessingContext:
         severity: FindingSeverity = FindingSeverity.INFO,
         description: str = "",
         source: FindingSource = FindingSource.NONE,
-        finding_type: FindingType = FindingType.NONE,
+        finding_type: str = "none",
         subject: FindingSubject = FindingSubject(),
     ):
         self.finding = Finding(

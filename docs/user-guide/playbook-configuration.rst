@@ -69,9 +69,7 @@ Playbooks sinks
     - sink_name: "robusta ui"
       sink_type: "robusta"
       params:
-        account_id: "MY ROBUSTA ACCOUNT ID"
-        store_url: "MY ROBUSTA STORE URL"
-        api_key: "MY ROBUSTA ACCOUNT API KEY"
+        token: "MY ROBUSTA ACCOUNT TOKEN"
     - sink_name: "alerts slack"
       sink_type: "slack"
       params:
@@ -83,7 +81,7 @@ Playbooks sinks
         topic: "robusta-playbooks"
 
 
-| **Note:** Create your Robusta account, to get the parameters for the Robusta sink `here <https://robusta.dev>`_ .
+| **Note:** Create your Robusta account, to get the ``token`` for the Robusta sink `here <https://robusta.dev>`_ .
 
 | By default, all playbooks will forward the results to the default sinks.
 | The default sinks are defined in the ``global_config`` section.

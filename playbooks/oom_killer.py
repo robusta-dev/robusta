@@ -50,6 +50,6 @@ def show_recent_oom_kills(event: ManualTriggerEvent):
             title=f"Latest OOM Kills on {params.node_name}",
             subject=FindingSubject(name=params.node_name),
             source=FindingSource.MANUAL,
-            finding_type=FindingType.MANUAL_ENRICHMENT,
+            finding_type="show_recent_oom_kills",
         )
         event.finding.add_enrichment(blocks)

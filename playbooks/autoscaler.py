@@ -28,7 +28,7 @@ def scale_hpa_callback(event: SinkCallbackEvent):
         title=f"Max replicas for HPA *{hpa_name}* in namespace *{hpa_ns}* updated to: *{new_max_replicas}*",
         severity=FindingSeverity.INFO,
         source=FindingSource.PROMETHEUS,
-        finding_type=FindingType.PROMETHEUS_ALERT,
+        finding_type="scale_hpa_callback",
     )
 
 
@@ -67,7 +67,7 @@ def alert_on_hpa_reached_limit(
         title=f"HPA *{event.obj.metadata.name}* in namespace *{event.obj.metadata.namespace}* reached max replicas: *{hpa.spec.maxReplicas}*",
         severity=FindingSeverity.LOW,
         source=FindingSource.KUBERNETES_API_SERVER,
-        finding_type=FindingType.PROMETHEUS_ALERT,
+        finding_type="alert_on_hpa_reached_limit",
     )
 
     event.finding.add_enrichment(

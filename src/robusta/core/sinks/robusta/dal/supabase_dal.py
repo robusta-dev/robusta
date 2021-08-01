@@ -1,9 +1,12 @@
 import base64
 import json
 import logging
+import threading
 import uuid
 
 from typing import List, Dict, Any
+
+from supabase_py.lib.auth_client import SupabaseAuthClient
 
 from ....model.services import ServiceInfo, get_service_key
 from ....reporting.blocks import (
@@ -19,18 +22,69 @@ from ....reporting.blocks import (
 )
 from ....model.env_vars import TARGET_ID
 from ....reporting.callbacks import PlaybookCallbackRequest
-from supabase_py import create_client
+from supabase_py import Client
+
+
+class RobustaAuthClient(SupabaseAuthClient):
+    def _set_timeout(*args, **kwargs):
+        """Set timer task"""
+        # callback, timeout_ms
+        threading.Timer(args[2] / 1000, args[1]).start()
+
+
+class RobustaClient(Client):
+    def _get_auth_headers(self) -> Dict[str, str]:
+        auth = getattr(self, "auth", None)
+        session = auth.current_session if auth else None
+        if session and session["access_token"]:
+            access_token = auth.session()["access_token"]
+        else:
+            access_token = self.supabase_key
+
+        headers: Dict[str, str] = {
+            "apiKey": self.supabase_key,
+            "Authorization": f"Bearer {access_token}",
+        }
+        return headers
+
+    @staticmethod
+    def _init_supabase_auth_client(
+        auth_url: str,
+        supabase_key: str,
+        detect_session_in_url: bool,
+        auto_refresh_token: bool,
+        persist_session: bool,
+        local_storage: Dict[str, Any],
+        headers: Dict[str, str],
+    ) -> RobustaAuthClient:
+        """Creates a wrapped instance of the GoTrue Client."""
+        return RobustaAuthClient(
+            url=auth_url,
+            auto_refresh_token=auto_refresh_token,
+            detect_session_in_url=detect_session_in_url,
+            persist_session=persist_session,
+            local_storage=local_storage,
+            headers=headers,
+        )
 
 
 class SupabaseDal:
     def __init__(
-        self, url: str, key: str, account_id: str, sink_name: str, cluster_name: str
+        self,
+        url: str,
+        key: str,
+        account_id: str,
+        email: str,
+        password: str,
+        sink_name: str,
+        cluster_name: str,
     ):
         self.url = url
         self.key = key
         self.account_id = account_id
         self.cluster = cluster_name
-        self.client = create_client(url, key)
+        self.client = RobustaClient(url, key)
+        self.client.auth.sign_in(email=email, password=password)
         self.target_id = TARGET_ID
         self.sink_name = sink_name
 
@@ -39,7 +93,7 @@ class SupabaseDal:
             "id": str(finding.id),
             "description": finding.description,
             "source": finding.source.value,
-            "type": finding.finding_type.value,
+            "type": finding.finding_type,
             "category": finding.category,
             "priority": finding.severity.name,
             "subject_type": finding.subject.subject_type.value,
