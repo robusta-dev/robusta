@@ -11,8 +11,15 @@ from kubernetes import config
 import typer
 import requests
 
-from ..cli.utils import log_title, download_file, replace_in_file, fetch_runner_logs, exec_in_robusta_runner, \
-    get_examples_url, PLAYBOOKS_DIR
+from ..cli.utils import (
+    log_title,
+    download_file,
+    replace_in_file,
+    fetch_runner_logs,
+    exec_in_robusta_runner,
+    get_examples_url,
+    PLAYBOOKS_DIR,
+)
 from ..cli.playbooks_cmd import app as playbooks_commands, deploy
 
 from robusta._version import __version__
@@ -161,14 +168,13 @@ def install(
 
 
 def examples_download(
-        slack_channel: str = None,
-        cluster_name: str = None,
-        use_robusta_ui: bool = False,
-        skip_robusta_sink: bool = False,
-        skip_new: bool = True,
-        account_id: str = None,
-        api_key: str = None,
-        url: str = None,
+    slack_channel: str = None,
+    cluster_name: str = None,
+    use_robusta_ui: bool = False,
+    skip_robusta_sink: bool = False,
+    skip_new: bool = True,
+    robusta_ui_token: str = None,
+    url: str = None,
 ):
     """download example playbooks"""
     filename = "example-playbooks.zip"
@@ -210,29 +216,18 @@ def examples_download(
     if not skip_new and (
         use_robusta_ui or typer.confirm("Would you like to use Robusta UI?")
     ):
-        if account_id is None:
-            account_id = typer.prompt(
-                "Please specify your robusta account id",
+        if robusta_ui_token is None:
+            robusta_ui_token = typer.prompt(
+                "Please insert your Robusta account token",
                 default=None,
             )
-        if account_id is not None:
+        if robusta_ui_token is not None:
             replace_in_file(
                 "playbooks/active_playbooks.yaml",
-                "<ROBUSTA_ACCOUNT_ID>",
-                account_id.strip(),
+                "<ROBUSTA_ACCOUNT_TOKEN>",
+                robusta_ui_token.strip(),
             )
 
-        if api_key is None:
-            api_key = typer.prompt(
-                "Please specify your robusta api key",
-                default=None,
-            )
-        if api_key is not None:
-            replace_in_file(
-                "playbooks/active_playbooks.yaml",
-                "<ROBUSTA_API_KEY>",
-                api_key.strip(),
-            )
         if not skip_robusta_sink:
             replace_in_file(
                 "playbooks/active_playbooks.yaml",
@@ -265,13 +260,9 @@ def examples(
         True,
         help="Skip new config replacements?",
     ),
-    account_id: str = typer.Option(
+    robusta_ui_token: str = typer.Option(
         None,
-        help="Robusta UI account id",
-    ),
-    api_key: str = typer.Option(
-        None,
-        help="Robusta UI api key",
+        help="Robusta UI account token",
     ),
     url: str = typer.Option(
         None,
@@ -284,9 +275,8 @@ def examples(
         use_robusta_ui,
         skip_robusta_sink,
         skip_new,
-        account_id,
-        api_key,
-        url
+        robusta_ui_token,
+        url,
     )
 
 

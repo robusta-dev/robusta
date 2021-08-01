@@ -1,3 +1,5 @@
+import base64
+import json
 import logging
 import time
 import traceback
@@ -17,9 +19,15 @@ from ..sink_base import SinkBase
 
 
 class RobustaSinkConfig(BaseModel):
+    token: str
+
+
+class RobustaToken(BaseModel):
     store_url: str
     api_key: str
     account_id: str
+    email: str
+    password: str
 
 
 class RobustaSink(SinkBase):
@@ -30,10 +38,13 @@ class RobustaSink(SinkBase):
     ):
         super().__init__(sink_config)
         config = RobustaSinkConfig(**sink_config.params)
+        robusta_token = RobustaToken(**json.loads(base64.b64decode(config.token)))
         self.dal = SupabaseDal(
-            config.store_url,
-            config.api_key,
-            config.account_id,
+            robusta_token.store_url,
+            robusta_token.api_key,
+            robusta_token.account_id,
+            robusta_token.email,
+            robusta_token.password,
             sink_config.sink_name,
             cluster_name,
         )

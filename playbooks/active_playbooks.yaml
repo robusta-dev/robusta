@@ -2,9 +2,7 @@ sinks_config:
 - sink_name: "robusta platform"
   sink_type: "robusta"
   params:
-    account_id: "<ROBUSTA_ACCOUNT_ID>"
-    store_url: "https://xvyhpoxfmtpuqqeyqkso.supabase.co"
-    api_key: "<ROBUSTA_API_KEY>"
+    token: "<ROBUSTA_ACCOUNT_TOKEN>"
 - sink_name: "alerts slack"
   sink_type: "slack"
   params:
