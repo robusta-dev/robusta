@@ -6,6 +6,7 @@ class SinkType(Enum):
     ROBUSTA = "robusta"
     SLACK = "slack"
     KAFKA = "kafka"
+    DATADOG = "datadog"
 
 
 # Finding sources
