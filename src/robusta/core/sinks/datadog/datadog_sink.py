@@ -56,7 +56,7 @@ class DataDogSink(SinkBase):
             if isinstance(block, MarkdownBlock):
                 if not block.text:
                     continue
-                lines.append(block.text)
+                lines.append(f"%%%\n{block.text}\n%%%")
             elif isinstance(block, DividerBlock):
                 lines.append("-------------------")
             elif isinstance(block, JsonBlock):
