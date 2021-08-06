@@ -2,7 +2,7 @@
 
 ## v0.4.51
 **New Features**:
-- Sinks: From now on, no need to explicitly publish playbook results to a specific target. 
+- Sinks - **Breaking Changes**: From now on, no need to explicitly publish playbook results to a specific target. 
   
   Within the playbook's code we only need to create a ``Finding`` object. It will be published to the configured ``sinks``
   

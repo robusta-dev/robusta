@@ -63,6 +63,7 @@ class SlackSender:
         truncator = "..."
         return msg[: max_length - len(truncator)] + truncator
 
+    @staticmethod
     def __to_slack_diff(block: DiffsBlock, sink_name: str) -> List[SlackBlock]:
         num_additions = len([d for d in block.diffs if d.diff_type == DiffType.ADDED])
         num_subtractions = len(
@@ -92,6 +93,7 @@ class SlackSender:
 
         return slack_blocks
 
+    @staticmethod
     def __to_slack(block: BaseBlock, sink_name: str) -> List[SlackBlock]:
         if isinstance(block, MarkdownBlock):
             if not block.text:

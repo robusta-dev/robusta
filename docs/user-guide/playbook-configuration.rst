@@ -94,7 +94,7 @@ Playbooks sinks
 
 
 | **Note:** Create your Robusta account, to get the ``token`` for the Robusta sink `here <https://robusta.dev>`_ .
-| **Note:** Slack sink ``api_key`` is added during the installation process.
+| **Note:** The Slack sink ``api_key`` is added during the installation process.
 | In order to get a new key run: ``robusta integrations get-integration-key --integration-type slack``.
 
 | By default, all playbooks will forward the results to the default sinks.
