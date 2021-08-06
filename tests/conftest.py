@@ -23,6 +23,8 @@ def robusta(slack_channel: SlackChannel, kind_cluster: KindCluster):
     robusta = RobustaController(str(kind_cluster.kubeconfig_path))
     robusta.delete()
     robusta.cli_install(INSTALL_URL, CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN)
-    robusta.cli_examples(EXAMPLES_URL, slack_channel.channel_name)
+    robusta.cli_examples(
+        EXAMPLES_URL, slack_channel.channel_name, CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN
+    )
     robusta.cli_deploy()
     yield robusta
