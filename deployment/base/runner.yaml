@@ -30,8 +30,6 @@ spec:
             value: "true"
           - name: LOG_LEVEL
             value: INFO
-          - name: SLACK_TOKEN # The token received upon app workspace installation
-            value: "<SLACK_API_KEY>"
           - name: SLACK_WEBSOCKET_RELAY_ADDRESS
             value: "wss://relay.robusta.dev"
         volumeMounts:

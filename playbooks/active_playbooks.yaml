@@ -6,6 +6,7 @@ sinks_config:
 - sink_name: "alerts slack"
   sink_type: "slack"
   params:
+    api_key: "<SLACK_API_KEY>"
     slack_channel: "<DEFAULT_SLACK_CHANNEL>"
 global_config:
   cluster_name: "<CLUSTER_NAME>"
