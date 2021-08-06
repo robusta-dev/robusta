@@ -167,6 +167,7 @@ def examples_download(
     skip_new: bool = True,
     robusta_ui_token: str = None,
     url: str = None,
+    skip_integrations: bool = False,
 ):
     """download example playbooks"""
     filename = "example-playbooks.zip"
@@ -178,7 +179,10 @@ def examples_download(
     with ZipFile(filename, "r") as zip_file:
         zip_file.extractall()
 
-    slack_integration(slack_api_key, "playbooks/active_playbooks.yaml", slack_channel)
+    if not skip_integrations:
+        slack_integration(
+            slack_api_key, "playbooks/active_playbooks.yaml", slack_channel
+        )
 
     if cluster_name is None:
         (all_contexts, current_context) = config.list_kube_config_contexts()
@@ -257,6 +261,10 @@ def examples(
         None,
         help="Deploy Robusta playbooks from a given url instead of using the latest version",
     ),
+    skip_integrations: bool = typer.Option(
+        False,
+        help="Skip integrations configuration",
+    ),
 ):
     examples_download(
         slack_api_key,
@@ -267,6 +275,7 @@ def examples(
         skip_new,
         robusta_ui_token,
         url,
+        skip_integrations,
     )
 
 
