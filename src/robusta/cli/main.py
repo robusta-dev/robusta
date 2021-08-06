@@ -1,15 +1,11 @@
-import os
 import random
 import subprocess
 import time
-import uuid
 from zipfile import ZipFile
 from kubernetes import config
 
-from kubernetes import config
 
 import typer
-import requests
 
 from ..cli.utils import (
     log_title,
@@ -21,16 +17,15 @@ from ..cli.utils import (
     PLAYBOOKS_DIR,
 )
 from ..cli.playbooks_cmd import app as playbooks_commands, deploy
+from ..cli.integrations_cmd import app as integrations_commands, get_slack_key
 
 from robusta._version import __version__
 
 
 app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
-
-SLACK_INTEGRATION_SERVICE_ADDRESS = os.environ.get(
-    "SLACK_INTEGRATION_SERVICE_ADDRESS",
-    "https://robusta.dev/integrations/slack/get-token",
+app.add_typer(
+    integrations_commands, name="integrations", help="Integrations commands menu"
 )
 
 
@@ -43,17 +38,24 @@ def get_runner_url(runner_version=None):
 CRASHPOD_YAML = "https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml"
 
 
-def wait_for_slack_api_key(id: str) -> str:
-    while True:
-        try:
-            response_json = requests.get(
-                f"{SLACK_INTEGRATION_SERVICE_ADDRESS}?id={id}"
-            ).json()
-            if response_json["token"]:
-                return str(response_json["token"])
-            time.sleep(0.5)
-        except Exception as e:
-            log_title(f"Error getting slack token {e}")
+def slack_integration(
+    slack_api_key: str, slack_param_file_name: str, slack_channel: str = None
+):
+    if slack_api_key is None and typer.confirm(
+        "do you want to configure slack integration? this is HIGHLY recommended.",
+        default=True,
+    ):
+        slack_api_key = get_slack_key()
+
+        slack_channel = typer.prompt(
+            "which slack channel should I send notifications to?"
+        )
+
+    if slack_api_key is not None:
+        replace_in_file(slack_param_file_name, "<SLACK_API_KEY>", slack_api_key.strip())
+
+    if slack_channel is not None:
+        replace_in_file(slack_param_file_name, "<DEFAULT_SLACK_CHANNEL>", slack_channel)
 
 
 @app.command()
@@ -75,19 +77,8 @@ def install(
     else:
         download_file(get_runner_url(), filename)
 
-    if slack_api_key is None and typer.confirm(
-        "do you want to configure slack integration? this is HIGHLY recommended.",
-        default=True,
-    ):
-        id = str(uuid.uuid4())
-        typer.launch(f"https://robusta.dev/integrations/slack?id={id}")
-        slack_api_key = wait_for_slack_api_key(id)
-
-    if slack_api_key is not None:
-        replace_in_file(filename, "<SLACK_API_KEY>", slack_api_key.strip())
-
     if not upgrade:  # download and deploy playbooks
-        examples_download()
+        examples_download(slack_api_key=slack_api_key)
 
     with fetch_runner_logs(all_logs=True):
         log_title("Installing")
@@ -168,6 +159,7 @@ def install(
 
 
 def examples_download(
+    slack_api_key: str = None,
     slack_channel: str = None,
     cluster_name: str = None,
     use_robusta_ui: bool = False,
@@ -175,6 +167,7 @@ def examples_download(
     skip_new: bool = True,
     robusta_ui_token: str = None,
     url: str = None,
+    skip_integrations: bool = False,
 ):
     """download example playbooks"""
     filename = "example-playbooks.zip"
@@ -186,14 +179,10 @@ def examples_download(
     with ZipFile(filename, "r") as zip_file:
         zip_file.extractall()
 
-    if slack_channel is None:
-        slack_channel = typer.prompt(
-            "which slack channel should I send notifications to?"
+    if not skip_integrations:
+        slack_integration(
+            slack_api_key, "playbooks/active_playbooks.yaml", slack_channel
         )
-
-    replace_in_file(
-        "playbooks/active_playbooks.yaml", "<DEFAULT_SLACK_CHANNEL>", slack_channel
-    )
 
     if cluster_name is None:
         (all_contexts, current_context) = config.list_kube_config_contexts()
@@ -240,6 +229,10 @@ def examples_download(
 
 @app.command()
 def examples(
+    slack_api_key: str = typer.Option(
+        None,
+        help="Slack api key for Robusta",
+    ),
     slack_channel: str = typer.Option(
         None,
         help="Default Slack channel for Robusta",
@@ -268,8 +261,13 @@ def examples(
         None,
         help="Deploy Robusta playbooks from a given url instead of using the latest version",
     ),
+    skip_integrations: bool = typer.Option(
+        False,
+        help="Skip integrations configuration",
+    ),
 ):
     examples_download(
+        slack_api_key,
         slack_channel,
         cluster_name,
         use_robusta_ui,
@@ -277,6 +275,7 @@ def examples(
         skip_new,
         robusta_ui_token,
         url,
+        skip_integrations,
     )
 
 

@@ -11,8 +11,11 @@ def test_robusta_install(robusta: RobustaController, slack_channel: SlackChannel
     crashing_deployment = get_crashing_deployment()
     crashing_deployment.client = robusta.get_client()
     crashing_deployment.create()
-    # TODO: add a SlackChannel function to wait for a message to arrive instead of sleeping for 90 seconds
-    time.sleep(90)
-    msg = slack_channel.get_latest_messages()
+    msg = ""
     expected = f"Crashing pod {crashing_deployment.metadata.name}"
+    for _ in range(10):
+        time.sleep(10)
+        msg = slack_channel.get_latest_messages()
+        if expected in msg:
+            break
     assert expected in msg, f"cannot find expected='{expected} in msg='{msg}'"

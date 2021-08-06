@@ -30,11 +30,13 @@ class RobustaController:
         )
         assert b"Installation Done" in logs
 
-    def cli_examples(self, playbooks_url: str, slack_channel: str):
+    def cli_examples(self, playbooks_url: str, slack_channel: str, slack_api_key: str):
         logs = self._run_cli_cmd(
             [
                 "robusta",
                 "examples",
+                "--slack-api-key",
+                slack_api_key,
                 "--url",
                 playbooks_url,
                 "--slack-channel",
