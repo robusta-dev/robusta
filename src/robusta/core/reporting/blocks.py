@@ -14,7 +14,7 @@ from tabulate import tabulate
 from enum import Enum
 
 from ..discovery.top_service_resolver import TopServiceResolver
-from ..reporting.consts import FindingSource, FindingSubjectType
+from ..reporting.consts import FindingSource, FindingSubjectType, FindingType
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
@@ -153,9 +153,9 @@ class Enrichment:
 class FindingSubject:
     def __init__(
         self,
-        name: str = "NA",
+        name: str = None,
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
-        namespace: str = "",
+        namespace: str = None,
     ):
         self.name = name
         self.subject_type = subject_type
@@ -169,17 +169,21 @@ class Finding:
         title: str,
         severity: FindingSeverity = FindingSeverity.INFO,
         source: FindingSource = FindingSource.NONE,
-        finding_type: str = "none",
-        description: str = "",
+        aggregation_key: str = None,
+        description: str = None,
         subject: FindingSubject = FindingSubject(),
+        finding_type: FindingType = FindingType.ISSUE,
+        failure: bool = True,
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
+        self.finding_type = finding_type
+        self.failure = failure
         self.description = description
         self.source = source
-        self.finding_type = finding_type
+        self.aggregation_key = aggregation_key
         self.severity = severity
-        self.category = "None"  # TODO fill real category
+        self.category = None  # TODO fill real category
         self.subject = subject
         self.service_key = subject.service_key
         self.enrichments: List[Enrichment] = []
@@ -191,26 +195,3 @@ class Finding:
 
     def __str__(self):
         return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
-
-
-# Contains data of the current event processing context.
-class ProcessingContext:
-    finding: Finding = None
-    # Finding created as a result of this event.
-    def create_finding(
-        self,
-        title: str,
-        severity: FindingSeverity = FindingSeverity.INFO,
-        description: str = "",
-        source: FindingSource = FindingSource.NONE,
-        finding_type: str = "none",
-        subject: FindingSubject = FindingSubject(),
-    ):
-        self.finding = Finding(
-            title=title,
-            severity=severity,
-            description=description,
-            source=source,
-            finding_type=finding_type,
-            subject=subject,
-        )

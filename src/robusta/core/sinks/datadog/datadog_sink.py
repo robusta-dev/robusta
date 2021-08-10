@@ -101,7 +101,7 @@ class DataDogSink(SinkBase):
     def write_finding(self, finding: Finding):
         resource = finding.subject
         body = EventCreateRequest(
-            aggregation_key=finding.finding_type,
+            aggregation_key=finding.aggregation_key,
             alert_type=DataDogSink.__to_datadog_event_type(finding.severity),
             date_happened=int(time.time()),
             source_type_name="Robusta",

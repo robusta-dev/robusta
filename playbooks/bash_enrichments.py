@@ -30,7 +30,7 @@ def show_pod_bash_enrichment(event: ManualTriggerEvent):
         event.finding = Finding(
             title=f"Pod bash command - {params.pod_name}",
             source=FindingSource.MANUAL,
-            finding_type="show_pod_bash_enrichment",
+            aggregation_key="show_pod_bash_enrichment",
             subject=FindingSubject(
                 params.pod_name,
                 FindingSubjectType.TYPE_POD,
@@ -67,7 +67,7 @@ def show_node_bash_enrichment(event: ManualTriggerEvent):
         event.finding = Finding(
             title=f"Node bash command - {params.node_name}",
             source=FindingSource.MANUAL,
-            finding_type="show_node_bash_enrichment",
+            aggregation_key="show_node_bash_enrichment",
             subject=FindingSubject(
                 name=params.node_name, subject_type=FindingSubjectType.TYPE_NODE
             ),

@@ -8,7 +8,7 @@ def daemonset_fix_config(event: SinkCallbackEvent):
     event.finding = Finding(
         title="Proposed fix",
         source=FindingSource.CALLBACK.value,
-        finding_type="daemonset_fix_config",
+        aggregation_key="daemonset_fix_config",
     )
     event.finding.add_enrichment(
         [
@@ -44,7 +44,7 @@ def daemonset_silence_false_alarm(event: SinkCallbackEvent):
     event.finding = Finding(
         title="Silence the alert",
         source=FindingSource.CALLBACK,
-        finding_type="daemonset_silence_false_alarm",
+        aggregation_key="daemonset_silence_false_alarm",
     )
     event.finding.add_enrichment(
         [
@@ -177,7 +177,7 @@ def daemonset_mismatch_analysis(event: ManualTriggerEvent):
     event.finding = Finding(
         title="Daemonset Mismatch Analysis",
         source=FindingSource.MANUAL,
-        finding_type="daemonset_mismatch_analysis",
+        aggregation_key="daemonset_mismatch_analysis",
     )
     event.finding.add_enrichment(
         do_daemonset_enricher(ds), annotations={SlackAnnotations.UNFURL: False}

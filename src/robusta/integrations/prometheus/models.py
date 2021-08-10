@@ -50,11 +50,10 @@ class PrometheusKubernetesAlert(BaseEvent):
 
     def get_title(self) -> str:
         annotations = self.alert.annotations
-        alert_name = self.alert.labels.get("alertname", "")
         if annotations.get("summary"):
-            return f'{alert_name}: {annotations["summary"]}'
+            return f'{annotations["summary"]}'
         else:
-            return alert_name
+            return self.alert.labels.get("alertname", "")
 
     def get_description(self) -> str:
         annotations = self.alert.annotations

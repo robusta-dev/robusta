@@ -93,9 +93,12 @@ class SupabaseDal:
     def to_issue(self, finding: Finding):
         return {
             "id": str(finding.id),
+            "title": finding.title,
             "description": finding.description,
             "source": finding.source.value,
-            "type": finding.finding_type,
+            "aggregation_key": finding.aggregation_key,
+            "failure": finding.failure,
+            "finding_type": finding.finding_type.value,
             "category": finding.category,
             "priority": finding.severity.name,
             "subject_type": finding.subject.subject_type.value,

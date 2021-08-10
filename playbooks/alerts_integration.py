@@ -176,7 +176,7 @@ def show_stackoverflow_search(event: SinkCallbackEvent):
     event.finding = Finding(
         title=f"{search_term} StackOverflow Results",
         source=FindingSource.PROMETHEUS,
-        finding_type="show_stackoverflow_search",
+        aggregation_key="show_stackoverflow_search",
     )
     if answers:
         event.finding.add_enrichment([ListBlock(answers)])
@@ -329,8 +329,8 @@ def default_alert_config(alert_name, config: AlertsIntegrationParams) -> AlertCo
 
 def get_alert_subject(alert: PrometheusKubernetesAlert) -> FindingSubject:
     subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE
-    name: str = "NA"
-    namespace: str = ""
+    name: Optional[str] = None
+    namespace: Optional[str] = None
 
     if alert.pod:
         subject_type = FindingSubjectType.TYPE_POD
@@ -369,7 +369,7 @@ def create_alert_finding(alert: PrometheusKubernetesAlert):
         title=alert.get_title(),
         description=alert.get_description(),
         source=FindingSource.PROMETHEUS,
-        finding_type=alert.alert_name,
+        aggregation_key=alert.alert_name,
         severity=SEVERITY_MAP.get(alert.alert.labels.get("severity"), "NA"),
         subject=alert_subject,
     )

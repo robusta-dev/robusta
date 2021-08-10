@@ -50,6 +50,6 @@ def show_node_enrichments(event: ManualTriggerEvent):
             title=f"Node not ready - {params.node_name}",
             subject=FindingSubject(name=params.node_name),
             source=FindingSource.MANUAL,
-            finding_type="show_node_enrichments",
+            aggregation_key="show_node_enrichments",
         )
         event.finding.add_enrichment(blocks)

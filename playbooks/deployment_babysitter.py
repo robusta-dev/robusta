@@ -37,7 +37,7 @@ def do_babysitter(
     event.finding = Finding(
         title=f"{resource_type.value} {event.obj.metadata.name} {event.operation.value}d in namespace {event.obj.metadata.namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
-        finding_type="do_babysitter",
+        aggregation_key="do_babysitter",
         subject=FindingSubject(
             event.obj.metadata.name, resource_type, event.obj.metadata.namespace
         ),
