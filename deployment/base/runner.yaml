@@ -17,7 +17,7 @@ spec:
       serviceAccountName: robusta-runner
       containers:
       - name: runner
-        image: us-central1-docker.pkg.dev/arabica-300319/devel/robusta-runner
+        image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
         imagePullPolicy: Always
         securityContext:
           privileged: true

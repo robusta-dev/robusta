@@ -4,7 +4,7 @@ metadata:
   name: robusta
 build:
   artifacts:
-  - image: us-central1-docker.pkg.dev/arabica-300319/devel/robusta-runner
+  - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
     context: src
     docker:
       dockerfile: Dockerfile
@@ -31,7 +31,7 @@ profiles:
 - name: apple-m1-dev
   build:
     artifacts:
-      - image: us-central1-docker.pkg.dev/arabica-300319/devel/robusta-runner
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
         context: src
         custom:
           buildCommand: ./build_on_apple_m1.sh
