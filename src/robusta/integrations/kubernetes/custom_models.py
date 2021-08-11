@@ -13,7 +13,7 @@ from .templates import get_deployment_yaml
 S = TypeVar("S")
 T = TypeVar("T")
 PYTHON_DEBUGGER_IMAGE = (
-    "us-central1-docker.pkg.dev/arabica-300319/devel/python-tools:latest"
+    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/python-tools:latest"
 )
 
 

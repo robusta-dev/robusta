@@ -32,7 +32,7 @@ def disk_benchmark(event: ManualTriggerEvent):
     try:
         pvc.createNamespacedPersistentVolumeClaim(action_params.namespace)
         pv_name = "robusta-benchmark-pv"
-        image = "us-central1-docker.pkg.dev/arabica-300319/devel/robusta-fio-benchmark"
+        image = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-fio-benchmark"
         name = "robusta-fio-disk-benchmark"
         mount_path = "/robusta/data"
         spec = PodSpec(
