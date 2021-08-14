@@ -7,7 +7,7 @@ def do_cpu_throttling_analysis(pod: Pod) -> List[BaseBlock]:
         MarkdownBlock(
             "*Alert Explanation:* This pod is throttled. It wanted to use the CPU and was blocked due to "
             "it's CPU limit (<https://github.com/robusta-dev/alert-explanations/wiki/CPUThrottlingHigh-"
-            "(Prometheus-Alert)|learn more)>"
+            "(Prometheus-Alert)|learn more>)"
         ),
         MarkdownBlock(
             "_Tip: <https://github.com/robusta-dev/alert-explanations/wiki/CPUThrottlingHigh-(Prometheus-"

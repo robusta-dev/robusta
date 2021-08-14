@@ -2,12 +2,15 @@ import base64
 import json
 import logging
 import threading
+import time
+import traceback
 import uuid
 
 from typing import List, Dict, Any
 
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
+from ...transformer import Transformer
 from ....model.services import ServiceInfo, get_service_key
 from ....reporting.blocks import (
     Finding,
@@ -20,7 +23,7 @@ from ....reporting.blocks import (
     ListBlock,
     TableBlock,
 )
-from ....model.env_vars import TARGET_ID
+from ....model.env_vars import TARGET_ID, SUPABASE_LOGIN_RATE_LIMIT_SEC
 from ....reporting.callbacks import PlaybookCallbackRequest
 from supabase_py import Client
 
@@ -86,7 +89,10 @@ class SupabaseDal:
         self.account_id = account_id
         self.cluster = cluster_name
         self.client = RobustaClient(url, key)
-        self.client.auth.sign_in(email=email, password=password)
+        self.email = email
+        self.password = password
+        self.sign_in_time = 0
+        self.sign_in()
         self.target_id = TARGET_ID
         self.sink_name = sink_name
 
@@ -115,7 +121,12 @@ class SupabaseDal:
             if isinstance(block, MarkdownBlock):
                 if not block.text:
                     continue
-                structured_data.append({"type": "markdown", "data": block.text})
+                structured_data.append(
+                    {
+                        "type": "markdown",
+                        "data": Transformer.to_github_markdown(block.text),
+                    }
+                )
             elif isinstance(block, DividerBlock):
                 structured_data.append({"type": "divider"})
             elif isinstance(block, FileBlock):
@@ -186,6 +197,7 @@ class SupabaseDal:
             logging.error(
                 f"Failed to persist finding {finding.id} error: {res.get('data')}"
             )
+            self.handle_supabase_error()
 
     def to_service(self, service: ServiceInfo) -> Dict[Any, Any]:
         return {
@@ -209,6 +221,7 @@ class SupabaseDal:
             logging.error(
                 f"Failed to persist service {service} error: {res.get('data')}"
             )
+            self.handle_supabase_error()
 
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
@@ -222,6 +235,7 @@ class SupabaseDal:
         if res.get("status_code") not in [200]:
             msg = f"Failed to get existing services (supabase) error: {res.get('data')}"
             logging.error(msg)
+            self.handle_supabase_error()
             raise Exception(msg)
 
         return [
@@ -233,3 +247,20 @@ class SupabaseDal:
             )
             for service in res.get("data")
         ]
+
+    def sign_in(self):
+        if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
+            logging.info("Supabase dal login")
+            self.sign_in_time = time.time()
+            self.client.auth.sign_in(email=self.email, password=self.password)
+
+    def handle_supabase_error(self):
+        """Workaround for Gotrue bug in refresh token."""
+        # If there's an error during refresh token, no new refresh timer task is created, and the client remains not authenticated for good
+        # When there's an error connecting to supabase server, we will re-login, to re-authenticate the session.
+        # Adding rate-limiting mechanism, not to login too much because of other errors
+        # https://github.com/supabase/gotrue-py/issues/9
+        try:
+            self.sign_in()
+        except Exception as e:
+            logging.error("Failed to signin on error", traceback.print_exc())
