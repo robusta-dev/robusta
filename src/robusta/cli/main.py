@@ -7,7 +7,7 @@ from kubernetes import config
 
 import typer
 
-from ..cli.utils import (
+from .utils import (
     log_title,
     download_file,
     replace_in_file,
@@ -16,8 +16,8 @@ from ..cli.utils import (
     get_examples_url,
     PLAYBOOKS_DIR,
 )
-from ..cli.playbooks_cmd import app as playbooks_commands, deploy
-from ..cli.integrations_cmd import app as integrations_commands, get_slack_key
+from .playbooks_cmd import app as playbooks_commands, deploy
+from .integrations_cmd import app as integrations_commands, get_slack_key
 
 from robusta._version import __version__
 

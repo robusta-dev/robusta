@@ -1,9 +1,11 @@
+import base64
 import os
 import time
 import uuid
 
 import requests
 import typer
+from pydantic import BaseModel
 
 from .utils import log_title
 
@@ -36,18 +38,10 @@ def get_slack_key():
 
 
 @app.command()
-def get_integration_key(
-    integration_type: str = typer.Option(
-        "slack",
-        help="Tyoe of Robusta integration",
-    ),
-):
-    """generate integration api key"""
-    if integration_type == "slack":
-        key = get_slack_key()
-        log_title(f"your slack key is:\n{key}\nAdd it to the slack sink configuration")
-    else:
-        log_title(f"integration type {integration_type} is not supported")
+def slack():
+    """generate slack api key"""
+    key = get_slack_key()
+    log_title(f"your slack key is:\n{key}\nAdd it to the slack sink configuration")
 
 
 if __name__ == "__main__":
