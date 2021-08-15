@@ -64,7 +64,7 @@ class SlackSender:
         return msg[: max_length - len(truncator)] + truncator
 
     @staticmethod
-    def __to_slack_diff(block: DiffsBlock, sink_name: str) -> List[SlackBlock]:
+    def __to_slack_diff(block: KubernetesDiffBlock, sink_name: str) -> List[SlackBlock]:
         num_additions = len([d for d in block.diffs if d.diff_type == DiffType.ADDED])
         num_subtractions = len(
             [d for d in block.diffs if d.diff_type == DiffType.REMOVED]
@@ -123,7 +123,7 @@ class SlackSender:
             ]
         elif isinstance(block, ListBlock) or isinstance(block, TableBlock):
             return SlackSender.__to_slack(block.to_markdown(), sink_name)
-        elif isinstance(block, DiffsBlock):
+        elif isinstance(block, KubernetesDiffBlock):
             return SlackSender.__to_slack_diff(block, sink_name)
         elif isinstance(block, CallbackBlock):
             context = block.context.copy()

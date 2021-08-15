@@ -7,6 +7,7 @@ import textwrap
 import uuid
 from typing import List, Callable, Dict, Any, Iterable, Sequence
 
+import hikaru
 from hikaru import DiffDetail
 from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
@@ -66,11 +67,22 @@ class ListBlock(BaseBlock):
         return MarkdownBlock("\n".join(mrkdwn))
 
 
-class DiffsBlock(BaseBlock):
+# TODO: we should add a generalization of this which isn't K8s specific
+class KubernetesDiffBlock(BaseBlock):
     diffs: List[DiffDetail]
+    old: str
+    new: str
 
-    def __init__(self, diffs: List[DiffDetail]):
-        super().__init__(diffs=diffs)
+    # note that interesting_diffs might be a subset of the full diff between old and new
+    def __init__(
+        self,
+        interesting_diffs: List[DiffDetail],
+        old: HikaruDocumentBase,
+        new: HikaruDocumentBase,
+    ):
+        super().__init__(
+            diffs=interesting_diffs, old=hikaru.get_yaml(old), new=hikaru.get_yaml(new)
+        )
 
 
 class JsonBlock(BaseBlock):
