@@ -27,6 +27,10 @@ from ....model.env_vars import TARGET_ID, SUPABASE_LOGIN_RATE_LIMIT_SEC
 from ....reporting.callbacks import PlaybookCallbackRequest
 from supabase_py import Client
 
+SERVICES_TABLE = "Services"
+EVIDENCE_TABLE = "Evidence"
+ISSUES_TABLE = "Issues"
+
 
 class RobustaAuthClient(SupabaseAuthClient):
     def _set_timeout(*args, **kwargs):
@@ -183,7 +187,7 @@ class SupabaseDal:
     def persist_finding(self, finding: Finding):
         for enrichment in finding.enrichments:
             res = (
-                self.client.table("Evidence_")
+                self.client.table(EVIDENCE_TABLE)
                 .insert(self.to_evidence(finding.id, enrichment))
                 .execute()
             )
@@ -192,7 +196,7 @@ class SupabaseDal:
                     f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"
                 )
 
-        res = self.client.table("Issues_").insert(self.to_issue(finding)).execute()
+        res = self.client.table(ISSUES_TABLE).insert(self.to_issue(finding)).execute()
         if res.get("status_code") != 201:
             logging.error(
                 f"Failed to persist finding {finding.id} error: {res.get('data')}"
@@ -216,7 +220,9 @@ class SupabaseDal:
 
     def persist_service(self, service: ServiceInfo):
         db_service = self.to_service(service)
-        res = self.client.table("Services_").insert(db_service, upsert=True).execute()
+        res = (
+            self.client.table(SERVICES_TABLE).insert(db_service, upsert=True).execute()
+        )
         if res.get("status_code") not in [200, 201]:
             logging.error(
                 f"Failed to persist service {service} error: {res.get('data')}"
@@ -225,7 +231,7 @@ class SupabaseDal:
 
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
-            self.client.table("Services_")
+            self.client.table(SERVICES_TABLE)
             .select("name", "type", "namespace", "classification")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
