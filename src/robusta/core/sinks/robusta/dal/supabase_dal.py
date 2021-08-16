@@ -16,6 +16,7 @@ from ....reporting.blocks import (
     Finding,
     Enrichment,
     MarkdownBlock,
+    KubernetesDiffBlock,
     DividerBlock,
     FileBlock,
     HeaderBlock,
@@ -152,6 +153,16 @@ class SupabaseDal:
                         "data": {
                             "headers": block.headers,
                             "rows": [row for row in block.rows],
+                        },
+                    }
+                )
+            elif isinstance(block, KubernetesDiffBlock):
+                structured_data.append(
+                    {
+                        "type": "diff",
+                        "data": {
+                            "old": block.old,
+                            "new": block.new,
                         },
                     }
                 )

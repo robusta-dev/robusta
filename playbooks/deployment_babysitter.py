@@ -11,7 +11,7 @@ from robusta.api import *
 
 
 class BabysitterConfig(BaseModel):
-    fields_to_monitor: List[str] = ["status.readyReplicas", "message", "reason", "spec"]
+    fields_to_monitor: List[str] = ["spec"]
 
 
 # TODO: filter out all the managed fields crap
@@ -34,15 +34,21 @@ def do_babysitter(
         if len(filtered_diffs) == 0:
             return
 
+    desc = f"{resource_type.value} {event.obj.metadata.name} {event.operation.value}d in namespace {event.obj.metadata.namespace}"
     event.finding = Finding(
-        title=f"{resource_type.value} {event.obj.metadata.name} {event.operation.value}d in namespace {event.obj.metadata.namespace}",
+        title=desc,
+        description=desc,
         source=FindingSource.KUBERNETES_API_SERVER,
-        aggregation_key="do_babysitter",
+        finding_type=FindingType.CONF_CHANGE,
+        failure=False,
+        aggregation_key=f"ConfigurationChange/KubernetesResource/{event.operation.value}",
         subject=FindingSubject(
             event.obj.metadata.name, resource_type, event.obj.metadata.namespace
         ),
     )
-    event.finding.add_enrichment([DiffsBlock(filtered_diffs)])
+    event.finding.add_enrichment(
+        [KubernetesDiffBlock(filtered_diffs, event.old_obj, event.obj)]
+    )
 
 
 @on_deployment_all_changes

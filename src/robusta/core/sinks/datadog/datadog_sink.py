@@ -14,7 +14,7 @@ from ..sink_config import SinkConfigBase
 from ...reporting.blocks import (
     Finding,
     Enrichment,
-    DiffsBlock,
+    KubernetesDiffBlock,
     JsonBlock,
     FindingSeverity,
     MarkdownBlock,
@@ -61,7 +61,7 @@ class DataDogSink(SinkBase):
                 lines.append("-------------------")
             elif isinstance(block, JsonBlock):
                 lines.append(block.json_str)
-            elif isinstance(block, DiffsBlock):
+            elif isinstance(block, KubernetesDiffBlock):
                 for diff in block.diffs:
                     lines.append(
                         f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}"

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from kafka import KafkaProducer
 
 from ..sink_config import SinkConfigBase
-from ...reporting.blocks import Finding, Enrichment, DiffsBlock, JsonBlock
+from ...reporting.blocks import Finding, Enrichment, KubernetesDiffBlock, JsonBlock
 from ..sink_base import SinkBase
 
 
@@ -40,7 +40,7 @@ class KafkaSink(SinkBase):
         kafka_blocks = [
             block
             for block in enrichment.blocks
-            if (isinstance(block, DiffsBlock) or isinstance(block, JsonBlock))
+            if (isinstance(block, KubernetesDiffBlock) or isinstance(block, JsonBlock))
         ]
         if not kafka_blocks:  # currently supporting sending kafka sink only diffs
             if len(enrichment.blocks) > 0:
@@ -51,7 +51,7 @@ class KafkaSink(SinkBase):
 
         message_payload = ""
         for block in kafka_blocks:
-            if isinstance(block, DiffsBlock):
+            if isinstance(block, KubernetesDiffBlock):
                 data = {
                     "resource_name": resource_name,
                     "resource_namespace": resource_namespace,
