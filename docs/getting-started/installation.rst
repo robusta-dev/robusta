@@ -8,7 +8,7 @@ The recommend way to install Robusta is to first install the client-side CLI com
 
 .. code-block:: python
 
-   pip3 install -U robusta-cli --force-reinstall --no-cache
+   pip3 install -U robusta-cli --no-cache
 
 If you encounter a permissions error, you can either re-run the above command as root or append ``--user`` to the command.
 
