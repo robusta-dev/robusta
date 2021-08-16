@@ -81,10 +81,26 @@ def print_yaml_if_not_none(key: str, json_dict: dict):
 @app.command("list")
 def list_():  # not named list as that would shadow the builtin list function
     """list current active playbooks"""
-    typer.echo("fetching playbooks config from cluster...")
+    typer.echo(f"Getting deployed playbooks list...")
+
+    playbooks_config = get_runner_configmap()
+
+    active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
+    active_playbooks_yaml = yaml.safe_load(active_playbooks_file)
+    for playbook in active_playbooks_yaml["active_playbooks"]:
+        log_title(f"Playbook: {playbook['name']}")
+        print_yaml_if_not_none("name", playbook)
+        print_yaml_if_not_none("sinks", playbook)
+        print_yaml_if_not_none("trigger_params", playbook)
+        print_yaml_if_not_none("action_params", playbook)
+
+
+@app.command()
+def show_config():
+    """fetch and show active_playbooks.yaml from cluster"""
     playbooks_config = get_runner_configmap()
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
-    log_title("active_playbooks.yaml")
+    log_title("Contents of active_playbooks.yaml:")
     typer.echo(active_playbooks_file)
 
 
