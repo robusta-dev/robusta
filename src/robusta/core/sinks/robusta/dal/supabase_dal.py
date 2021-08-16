@@ -159,7 +159,6 @@ class SupabaseDal:
             elif isinstance(block, KubernetesDiffBlock):
                 structured_data.append(
                     {
-                        # TODO: add the highlighted diffs that we care about from block.diffs?
                         "type": "diff",
                         "data": {
                             "old": block.old,
