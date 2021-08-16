@@ -12,36 +12,23 @@ The recommend way to install Robusta is to first install the client-side CLI com
 
 If you encounter a permissions error, you can either re-run the above command as root or append ``--user`` to the command.
 
-Congrats, you're halfway done installing robusta.
-
 Try running ``robusta --help`` to see what the robusta cli can do.
 
 Installing Robusta in a Kubernetes cluster.
 -----------------------------------------------------
-First, make sure you select the right Kubernetes context:
+.. note:: ``robusta`` commands use your current kubectl context. Use ``kubectl config use-context`` to change it.
 
-.. code-block:: bash
-
-    kubectl config use-context <CLUSTER-TO-INSTALL-ON>
-
-
-Then run:
+To deploy Robusta to your cluster run:
 
 .. code-block:: bash
 
    robusta install
 
-This will deploy Robusta to your Kubernetes cluster and optionally setup Slack integration.
-
-For details on what this command installs, see :ref:`Robusta Architecture`. Everything is installed in the `robusta` namespace
-and therefore Robusta can be removed at any time by deleting that namespace.
-
-For details on the Slack Integration,
-`see our app in the Slack App Directory <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_
+This will install two deployments in the ``robusta`` namespace. Robusta can be removed at any time by deleting that namespace. :ref:`Learn more about Robusta's architecture<Robusta Architecture>`.
 
 Seeing Robusta in Action
 ------------------------------
-Lets try out a default playbook which sends a Slack notification whenever pods crash. First, run the following command to create a crashing pod:
+Lets try out a default playbook which sends Slack notifications whenever pods crash. Run the following command to create a crashing pod:
 
 .. code-block:: python
 

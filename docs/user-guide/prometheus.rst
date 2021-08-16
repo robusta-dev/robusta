@@ -30,4 +30,5 @@ You can now write and use a playbook like the following:
 
 Make sure you replace "SomeAlert" with the name of your own alert.
 
-Note that ``alert.obj`` is a Kubernetes pod object and has all fields available that a Kubernetes pod has.
+.. tip::
+    ``alert.obj`` is a Kubernetes pod object. It has the same fields as a pod's yaml. For example, ``alert.obj.metadata.name`` maps to ``metadata.name`` in the yaml.

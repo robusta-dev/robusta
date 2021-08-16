@@ -2,7 +2,7 @@ Manually triggering a playbook
 ##############################
 
 All the playbooks we have seen so far respond to events in your cluster.
-It is also useful to run playbooks on demand.
+You can also run playbooks on demand.
 
 In this example we'll manually trigger a playbook which profiles a Python application in your cluster. No prior setup for the Python application is necessary!
 
