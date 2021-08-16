@@ -20,20 +20,25 @@ class SinkManager:
 
     @staticmethod
     def __add_sink(sink_config):
-        if sink_config.sink_type == SinkType.KAFKA.value:
-            SinkManager.sinks[sink_config.sink_name] = KafkaSink(sink_config)
-        elif sink_config.sink_type == SinkType.ROBUSTA.value:
-            SinkManager.sinks[sink_config.sink_name] = RobustaSink(
-                sink_config, SinkManager.cluster_name
+        try:
+            if sink_config.sink_type == SinkType.KAFKA.value:
+                SinkManager.sinks[sink_config.sink_name] = KafkaSink(sink_config)
+            elif sink_config.sink_type == SinkType.ROBUSTA.value:
+                SinkManager.sinks[sink_config.sink_name] = RobustaSink(
+                    sink_config, SinkManager.cluster_name
+                )
+            elif sink_config.sink_type == SinkType.DATADOG.value:
+                SinkManager.sinks[sink_config.sink_name] = DataDogSink(
+                    sink_config, SinkManager.cluster_name
+                )
+            elif sink_config.sink_type == SinkType.SLACK.value:
+                SinkManager.sinks[sink_config.sink_name] = SlackSink(sink_config)
+            else:
+                raise Exception(f"Sink not supported {sink_config.sink_type}")
+        except Exception as e:
+            logging.error(
+                f"Error configuring sink {sink_config.sink_name} of type {sink_config.sink_type}: {e}"
             )
-        elif sink_config.sink_type == SinkType.DATADOG.value:
-            SinkManager.sinks[sink_config.sink_name] = DataDogSink(
-                sink_config, SinkManager.cluster_name
-            )
-        elif sink_config.sink_type == SinkType.SLACK.value:
-            SinkManager.sinks[sink_config.sink_name] = SlackSink(sink_config)
-        else:
-            raise Exception(f"Sink not supported {sink_config.sink_type}")
 
     @staticmethod
     def update_sinks_config(sinks_config: List[SinkConfigBase], cluster_name: str):
@@ -53,6 +58,13 @@ class SinkManager:
 
         # create new sinks, or update existing if changed
         for sink_config in sinks_config:
+            # temporary workaround to skip the default and unconfigured robusta token
+            if (
+                sink_config.sink_type == "robusta"
+                and sink_config.params.get("token") == "<ROBUSTA_ACCOUNT_TOKEN>"
+            ):
+                continue
+
             if sink_config.sink_name not in SinkManager.sinks.keys():
                 logging.info(
                     f"Adding {sink_config.sink_type} sink named {sink_config.sink_name}"
