@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from hikaru.model import Node
 from prometheus_api_client import PrometheusConnect
-from ..prometheus.utils import find_prometheus_url
+from ..prometheus.utils import PrometheusDiscovery
 
 
 class NodeAnalyzer:
@@ -17,7 +17,8 @@ class NodeAnalyzer:
             if addr.type == "InternalIP"
         )
         if prometheus_url is None:
-            prometheus_url = find_prometheus_url()
+            prometheus_url = PrometheusDiscovery.find_prometheus_url()
+
         self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
 
     def get_total_cpu_usage(self, other_method=False):

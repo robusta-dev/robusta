@@ -47,7 +47,6 @@ class RobustaController:
                 "--robusta-ui-token",
                 "test-token",
                 "--skip-robusta-sink",
-                "--skip-new",
             ],
         )
         assert b"examples downloaded into the playbooks/ directory" in logs

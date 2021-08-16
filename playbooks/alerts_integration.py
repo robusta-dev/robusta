@@ -97,10 +97,10 @@ class DefaultEnricher(Enricher):
 class GraphEnricher(Enricher):
     def enrich(self, alert: PrometheusKubernetesAlert):
         url = urlparse(alert.alert.generatorURL)
-        prometheus_base_url = f"{url.scheme}://{url.netloc}"
         if alert.prometheus_url:
             prometheus_base_url = alert.prometheus_url
-
+        else:
+            prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
         prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
 
         promql_query = re.match(
