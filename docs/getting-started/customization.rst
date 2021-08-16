@@ -12,12 +12,10 @@ First, download the base set of playbooks:
 
    robusta examples
 
-We now a have `./playbooks` directory that we can customize and upload back to Robusta.
+We now a have ``./playbooks`` directory that we can customize and install into the cluster.
 
-Lets take a closer look at that directory.
-
-`./playbooks` contains several python scripts and one file named `active_playbooks.yaml`. The python scripts define the *available* playbooks
-and the yaml file configures which playbooks are actually in use.
+The playbooks directory contains several python scripts and one file named ``active_playbooks.yaml``. The python defines the *available* playbooks
+and the yaml activates them.
 
 Enabling a new playbook
 ------------------------
@@ -34,12 +32,12 @@ Lets edit ``active_playbooks.yaml`` and add the following:
          fields_to_monitor: ["spec.replicas"]
 
 
-This will add an additional playbook named **Deployment babysitter** - a playbook that monitors changes to deployments.
+This will add an additional playbook named **deployment_babysitter** - a playbook that monitors changes to deployments.
 Don't remove the other playbooks in ``active_playbooks.yaml``. We want to add a new playbook, not remove the old ones.
 
 Deploy your new config
 ------------------------
-We've edited the configuration file locally, but the brain of Robusta runs inside your Kubernetes cluster. Lets deploy our new configuration to Kubernetes:
+So far we have edited the configuration file locally. Now lets deploy it to Robusta inside your Kubernetes cluster.
 
 From the playbooks directory run:
 
@@ -47,26 +45,7 @@ From the playbooks directory run:
 
    robusta playbooks deploy .
 
-The new playbook you configured is now running. You will get a notification in Slack every time a deployment's number of replicas changes.
-
-Viewing cluster deployed active playbooks
-------------------------------------------
-In order to view the list of active playbooks, that are currently enabled on your cluster run:
-
-.. code-block:: python
-
-   robusta playbooks list
-
-
-Pulling cluster playbooks locally
-------------------------------------------
-In order to get a copy of the cluster playbooks, both the code and enabled playbooks configuration run:
-
-.. code-block:: python
-
-   robusta playbooks pull
-
-| **params:** ``--playbooks-directory TARGET_LOCAL_DIRECTORY``, default to current directory
+The **deployment_babysitter** playbook is now running. You will get a notification in Slack every time a deployment's number of replicas changes.
 
 Seeing your new config in action
 ----------------------------------

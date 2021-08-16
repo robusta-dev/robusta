@@ -30,9 +30,10 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
 
 
    getting-started/installation
-   getting-started/uninstallation
    getting-started/customization
    getting-started/manual-triggers
+   getting-started/more-commands
+   getting-started/uninstallation
 
 .. toctree::
    :maxdepth: 4
