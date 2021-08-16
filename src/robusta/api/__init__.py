@@ -27,6 +27,7 @@ from ..integrations.manual.triggers import *
 from ..integrations.scheduled.triggers import *
 from ..integrations.git.git_repo import *
 from ..integrations.resource_analysis.kubernetes_node_analyzer import NodeAnalyzer
+from ..integrations.prometheus.utils import PrometheusDiscovery
 from ..core.persistency.in_memory import get_persistent_data
 from ..utils.rate_limiter import RateLimiter
 from ..runner.object_updater import *

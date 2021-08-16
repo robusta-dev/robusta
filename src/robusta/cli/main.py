@@ -164,7 +164,6 @@ def examples_download(
     cluster_name: str = None,
     use_robusta_ui: bool = False,
     skip_robusta_sink: bool = False,
-    skip_new: bool = True,
     robusta_ui_token: str = None,
     url: str = None,
     skip_integrations: bool = False,
@@ -195,14 +194,12 @@ def examples_download(
             "Please specify a unique name for your cluster or press ENTER to use the default",
             default=default_name,
         )
-    # skip_new is used here, temporary, since we don't have the new fields in the released active_playbooks.yaml yet
-    # TODO remove on next release
-    if not skip_new and cluster_name is not None:
+    if cluster_name is not None:
         replace_in_file(
             "playbooks/active_playbooks.yaml", "<CLUSTER_NAME>", cluster_name.strip()
         )
 
-    if not skip_new and (
+    if not skip_robusta_sink and (
         use_robusta_ui or typer.confirm("Would you like to use Robusta UI?")
     ):
         if robusta_ui_token is None:
@@ -249,10 +246,6 @@ def examples(
         False,
         help="Enable Robusta sink?",
     ),
-    skip_new: bool = typer.Option(
-        True,
-        help="Skip new config replacements?",
-    ),
     robusta_ui_token: str = typer.Option(
         None,
         help="Robusta UI account token",
@@ -266,13 +259,13 @@ def examples(
         help="Skip integrations configuration",
     ),
 ):
+    """Download playbooks code and configuration defaults"""
     examples_download(
         slack_api_key,
         slack_channel,
         cluster_name,
         use_robusta_ui,
         skip_robusta_sink,
-        skip_new,
         robusta_ui_token,
         url,
         skip_integrations,
