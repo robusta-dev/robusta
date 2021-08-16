@@ -8,10 +8,16 @@ import yaml
 
 import typer
 
-from ..cli.utils import log_title, fetch_runner_logs, exec_in_robusta_runner, PLAYBOOKS_DIR
+from ..cli.utils import (
+    log_title,
+    fetch_runner_logs,
+    exec_in_robusta_runner,
+    PLAYBOOKS_DIR,
+)
 
 
 app = typer.Typer()
+
 
 @app.command()
 def deploy(playbooks_directory: str):
@@ -42,12 +48,12 @@ def get_runner_configmap():
 
 @app.command()
 def pull(
-        playbooks_directory: str = typer.Option(
-            None,
-            help="Local target directory",
-        )
-    ):
-    """pull cluster deployed playbooks """
+    playbooks_directory: str = typer.Option(
+        None,
+        help="Local target directory",
+    )
+):
+    """pull cluster deployed playbooks"""
     if not playbooks_directory:
         playbooks_directory = os.path.join(os.getcwd(), PLAYBOOKS_DIR)
 
@@ -71,22 +77,15 @@ def print_yaml_if_not_none(key: str, json_dict: dict):
         json[key] = json_dict.get(key)
         typer.echo(f"{yaml.dump(json)}")
 
-@app.command()
-def list():
-    """list current active playbooks """
 
-    log_title(f"Getting deployed playbooks list ...")
-
+@app.command("list")
+def list_():  # not named list as that would shadow the builtin list function
+    """list current active playbooks"""
+    typer.echo("fetching playbooks config from cluster...")
     playbooks_config = get_runner_configmap()
-
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
-    active_playbooks_yaml = yaml.safe_load(active_playbooks_file)
-    for playbook in active_playbooks_yaml["active_playbooks"]:
-        print_yaml_if_not_none("name", playbook)
-        print_yaml_if_not_none("sinks", playbook)
-        print_yaml_if_not_none("trigger_params", playbook)
-        print_yaml_if_not_none("action_params", playbook)
-        typer.echo("----------------------")
+    log_title("active_playbooks.yaml")
+    typer.echo(active_playbooks_file)
 
 
 @app.command()
