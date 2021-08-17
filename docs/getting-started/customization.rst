@@ -4,17 +4,18 @@ Customizing built-in playbooks
 Robusta is a powerful `rules engine` for devops, but it needs rules or "playbooks" to tell it what to do.
 Lets see how we can customize the broad collection of builtin playbooks.
 
-Downloading Playbooks
+Setting up a playbooks directory
 -------------------------------------------------------------
-First, download the base set of playbooks:
+You will need a `playbooks` directory with default files before continuing. There are three ways to set one up:
 
-.. code-block:: python
+1. If you installed Robusta using ``robusta install``, you already have a `playbooks` directory in the working directory.
+2. You can download your `playbooks` directory from your cluster by running ``robusta playbooks pull``
+3. You can setup a new playbooks directory by running ``robusta examples``
 
-   robusta examples
+.. warning::
+    If you use ``robusta examples`` then `playbooks/active_playbooks.yaml` wont contain your API keys. Make sure to copy them over using ``robusta playbooks show-config``
 
-We now a have ``./playbooks`` directory that we can customize and install into the cluster.
-
-The playbooks directory contains several python scripts and one file named ``active_playbooks.yaml``. The python defines the *available* playbooks
+A playbooks directory contains python scripts and one file named ``active_playbooks.yaml``. The python defines the *available* playbooks
 and the yaml activates them.
 
 Enabling a new playbook
