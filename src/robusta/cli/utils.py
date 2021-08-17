@@ -36,7 +36,6 @@ def exec_in_robusta_runner(
 
 
 def download_file(url, local_path):
-    typer.echo(f"downloading {url}")
     with click_spinner.spinner():
         response = requests.get(url)
         response.raise_for_status()
