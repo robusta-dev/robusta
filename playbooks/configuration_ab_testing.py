@@ -10,7 +10,6 @@ class ABTestingParams(BaseModel):
     grafana_url: str = "http://kube-prometheus-stack-1616314181-grafana.default.svc"
     grafana_api_key: str
     grafana_dashboard_uid: str
-    slack_channel: str
     api_version: str = "v1"
     kind: str
     name: str

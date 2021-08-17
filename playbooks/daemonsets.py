@@ -165,7 +165,7 @@ def do_daemonset_mismatch_analysis(ds: DaemonSet) -> List[BaseBlock]:
     ]
 
 
-class DaemonsetAnalysisParams(SlackParams):
+class DaemonsetAnalysisParams(BaseModel):
     daemonset_name: str
     namespace: str
 
