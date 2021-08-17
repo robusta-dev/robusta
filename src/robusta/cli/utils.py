@@ -2,12 +2,14 @@ import subprocess
 import time
 from contextlib import contextmanager
 
+import click_spinner
 import typer
 import requests
 
 from robusta._version import __version__
 
 PLAYBOOKS_DIR = "playbooks/"
+
 
 def exec_in_robusta_runner(
     cmd, tries=1, time_between_attempts=10, error_msg="error running cmd"
@@ -34,8 +36,10 @@ def exec_in_robusta_runner(
 
 
 def download_file(url, local_path):
-    response = requests.get(url)
-    response.raise_for_status()
+    typer.echo(f"downloading {url}")
+    with click_spinner.spinner():
+        response = requests.get(url)
+        response.raise_for_status()
     with open(local_path, "wb") as f:
         f.write(response.content)
 
@@ -80,5 +84,3 @@ def get_examples_url(examples_version=None):
     if examples_version is None:
         examples_version = __version__
     return f"https://storage.googleapis.com/robusta-public/{examples_version}/example-playbooks.zip"
-
-
