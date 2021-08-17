@@ -70,8 +70,8 @@ class ListBlock(BaseBlock):
 # TODO: we should add a generalization of this which isn't K8s specific
 class KubernetesDiffBlock(BaseBlock):
     diffs: List[DiffDetail]
-    old: str
-    new: str
+    old: Optional[str]
+    new: Optional[str]
 
     # note that interesting_diffs might be a subset of the full diff between old and new
     def __init__(
@@ -91,7 +91,7 @@ class KubernetesDiffBlock(BaseBlock):
         if obj is None:
             return ""
         else:
-            return hikaru.get_yaml(old)
+            return hikaru.get_yaml(obj)
 
 
 class JsonBlock(BaseBlock):

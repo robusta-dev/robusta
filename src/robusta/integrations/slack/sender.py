@@ -65,6 +65,10 @@ class SlackSender:
 
     @staticmethod
     def __to_slack_diff(block: KubernetesDiffBlock, sink_name: str) -> List[SlackBlock]:
+        # this can happen when a block.old=None or block.new=None - e.g. the resource was added or deleted
+        if not block.diffs:
+            return []
+
         num_additions = len([d for d in block.diffs if d.diff_type == DiffType.ADDED])
         num_subtractions = len(
             [d for d in block.diffs if d.diff_type == DiffType.REMOVED]

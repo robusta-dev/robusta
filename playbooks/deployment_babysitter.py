@@ -25,7 +25,7 @@ def babysitter_should_include_diff(diff_detail: DiffDetail, config: BabysitterCo
 def do_babysitter(
     event: K8sBaseEvent, config: BabysitterConfig, resource_type: FindingSubjectType
 ):
-    filtered_diffs = None
+    filtered_diffs = []
     if event.operation == K8sOperationType.UPDATE:
         all_diffs = event.obj.diff(event.old_obj)
         filtered_diffs = list(
