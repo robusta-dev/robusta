@@ -8,7 +8,6 @@ from typing import Tuple
 from hikaru.meta import DiffDetail, DiffType
 
 from robusta.api import *
-from typing import Optional
 
 
 class BabysitterConfig(BaseModel):

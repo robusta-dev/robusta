@@ -5,7 +5,7 @@
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
 import uuid
-from typing import List, Callable, Dict, Any, Iterable, Sequence
+from typing import List, Callable, Dict, Any, Iterable, Sequence, Optional
 
 import hikaru
 from hikaru import DiffDetail
