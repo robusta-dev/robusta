@@ -276,7 +276,10 @@ def examples(
 @app.command()
 def playground():
     """open a python playground - useful when writing playbooks"""
-    exec_in_robusta_runner("socat readline unix-connect:/tmp/manhole-1")
+    typer.echo(
+        "this command is temporarily disabled due to recent changes to python:3.8-slim"
+    )
+    # exec_in_robusta_runner("socat readline unix-connect:/tmp/manhole-1")
 
 
 @app.command()
