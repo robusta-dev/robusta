@@ -299,7 +299,7 @@ def demo():
     log_title(
         "In ~30 seconds you should receive a slack notification on a crashing pod"
     )
-    time.sleep(40)
+    time.sleep(60)
     subprocess.check_call(f"kubectl delete -n robusta deployment crashpod", shell=True)
     log_title("Done!")
 
