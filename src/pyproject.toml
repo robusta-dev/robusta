@@ -33,6 +33,7 @@ slack-sdk = "^3.7.0"
 python-dotenv = "^0.18.0"
 supabase-py = "^0.0.2"
 datadog-api-client = "^1.2.0"
+click-spinner = "^0.1.10"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"

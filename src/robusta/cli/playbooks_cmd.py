@@ -2,6 +2,7 @@ import os
 import subprocess
 import time
 import traceback
+import click_spinner
 from typing import List, Optional
 
 import yaml
@@ -82,8 +83,8 @@ def print_yaml_if_not_none(key: str, json_dict: dict):
 def list_():  # not named list as that would shadow the builtin list function
     """list current active playbooks"""
     typer.echo(f"Getting deployed playbooks list...")
-
-    playbooks_config = get_runner_configmap()
+    with click_spinner.spinner():
+        playbooks_config = get_runner_configmap()
 
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
     active_playbooks_yaml = yaml.safe_load(active_playbooks_file)
@@ -98,7 +99,9 @@ def list_():  # not named list as that would shadow the builtin list function
 @app.command()
 def show_config():
     """fetch and show active_playbooks.yaml from cluster"""
-    playbooks_config = get_runner_configmap()
+    typer.echo("connecting to cluster...")
+    with click_spinner.spinner():
+        playbooks_config = get_runner_configmap()
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
     log_title("Contents of active_playbooks.yaml:")
     typer.echo(active_playbooks_file)

@@ -1,6 +1,7 @@
 import random
 import subprocess
 import time
+import click_spinner
 from zipfile import ZipFile
 from kubernetes import config
 
@@ -80,7 +81,7 @@ def install(
     if not upgrade:  # download and deploy playbooks
         examples_download(slack_api_key=slack_api_key)
 
-    with fetch_runner_logs(all_logs=True):
+    with fetch_runner_logs(all_logs=True), click_spinner.spinner():
         log_title("Installing")
         subprocess.check_call(["kubectl", "apply", "-f", filename])
         log_title("Waiting for resources to be ready")
