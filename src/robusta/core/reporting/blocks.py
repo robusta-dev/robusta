@@ -77,12 +77,21 @@ class KubernetesDiffBlock(BaseBlock):
     def __init__(
         self,
         interesting_diffs: List[DiffDetail],
-        old: HikaruDocumentBase,
-        new: HikaruDocumentBase,
+        old: Optional[HikaruDocumentBase],
+        new: Optional[HikaruDocumentBase],
     ):
         super().__init__(
-            diffs=interesting_diffs, old=hikaru.get_yaml(old), new=hikaru.get_yaml(new)
+            diffs=interesting_diffs,
+            old=self._obj_to_text(old),
+            new=self._obj_to_text(new),
         )
+
+    @staticmethod
+    def _obj_to_text(obj: Optional[HikaruDocumentBase]):
+        if obj is None:
+            return ""
+        else:
+            return hikaru.get_yaml(old)
 
 
 class JsonBlock(BaseBlock):
