@@ -29,7 +29,7 @@ def python_profiler(event: ManualTriggerEvent):
             subject=FindingSubject(
                 pod.metadata.name,
                 FindingSubjectType.TYPE_POD,
-                pod.spec.nodeName,
+                pod.metadata.namespace,
             ),
         )
 
