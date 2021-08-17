@@ -234,7 +234,10 @@ class CPUThrottlingAnalysis(Enricher):
                 f"cannot run CPUThrottlingAnalysis on alert with no pod object: {alert}"
             )
             return
-        alert.finding.add_enrichment(do_cpu_throttling_analysis(alert.pod))
+        alert.finding.add_enrichment(
+            do_cpu_throttling_analysis(alert.pod),
+            annotations={SlackAnnotations.UNFURL: False},
+        )
 
 
 class DaemonsetEnricher(Enricher):
