@@ -127,7 +127,7 @@ Here are all the above features working together:
           params:
             post_restart_silence: 600 # seconds
 
-Available enrichers
+Available Enrichers
 -----------------------
 
 AlertDefaults
@@ -148,6 +148,12 @@ GraphEnricher
 Display a graph of the Prometheus query which triggered the alert.
 
 `See note above regarding the prometheus_url parameter.`
+
+.. admonition:: Example
+
+    .. image:: /images/graph-enricher.png
+      :width: 50 %
+      :align: center
 
 OOMKillerEnricher
 ^^^^^^^^^^^^^^^^^^^^^
