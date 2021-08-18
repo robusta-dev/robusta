@@ -70,11 +70,12 @@ def fetch_runner_logs(all_logs=False):
         log_title("Fetching logs...")
         if all_logs:
             subprocess.check_call(
-                f"kubectl logs -n robusta deployment/robusta-runner", shell=True
+                f"kubectl logs -n robusta deployment/robusta-runner -c runner",
+                shell=True,
             )
         else:
             subprocess.check_call(
-                f"kubectl logs -n robusta deployment/robusta-runner --since={int(time.time() - start + 1)}s",
+                f"kubectl logs -n robusta deployment/robusta-runner -c runner --since={int(time.time() - start + 1)}s",
                 shell=True,
             )
 

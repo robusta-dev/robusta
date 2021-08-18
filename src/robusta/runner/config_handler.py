@@ -8,7 +8,7 @@ import sys
 import yaml
 
 from ..integrations.git.git_repo import GitRepoManager
-from ..core.active_playbooks import clear_playbook_inventory, get_playbook_inventory
+from ..core.active_playbooks import clear_playbook_inventory
 from ..core.triggers import deploy_playbook_config, RunnerConfig
 from ..utils.directory_watcher import DirWatcher
 

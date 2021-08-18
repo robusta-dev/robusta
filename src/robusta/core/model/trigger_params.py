@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from typing import List
+
 from ...integrations.kubernetes.base_event import K8sOperationType
 
 
@@ -14,3 +16,4 @@ class TriggerParams(BaseModel):
     operation: K8sOperationType = None
     repeat: int = None
     seconds_delay: int = None
+    delays: List[int] = None

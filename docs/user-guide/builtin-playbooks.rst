@@ -180,6 +180,41 @@ Enabling it:
   :width: 600
   :align: center
 
+deployment_status_report
+^^^^^^^^^^^^^^^^^^^^^^^^^
+| **What it does:** sends a list of grafana panels
+| **When it runs:** After a deployment is updated, on configured time intervals
+
+Enabling it:
+
+.. code-block:: yaml
+
+   active_playbooks:
+     - name: "deployment_status_report"
+       trigger_params:
+         name_prefix: "MY_MONITORED_DEPLOYMENT"
+       action_params:
+         report_name: "MY REPORT NAME"
+         on_image_change_only: true  # Default is true, can be omitted.
+         delays:
+         - 60       # 60 seconds after a deployment change
+         - 600      # 10 minutes after the previous run, i.e. 11 minutes after the deployment change
+         - 1200     # 31 minutes after the deployment change
+         reports_panel_urls:
+         - "http://MY_GRAFANA/d-solo/200ac8fdbfbb74b39aff88118e4d1c2c/kubernetes-compute-resources-node-pods?orgId=1&from=now-1h&to=now&panelId=3"
+         - "http://MY_GRAFANA/d-solo/SOME_OTHER_DASHBOARD/.../?orgId=1&from=now-1h&to=now&panelId=3"
+         - "http://MY_GRAFANA/d-solo/SOME_OTHER_DASHBOARD/.../?orgId=1&from=now-1h&to=now&panelId=3"
+
+| Notes:
+* It's highly recommended to put relative time arguments, rather then absolute. i.e. from=now-1h&to=now
+* Configuring no ``name_prefix`` or ``on_image_change_only: false``, may result in too noisy channel
+
+| **The results:**
+
+.. image:: /images/deployment-change-report.png
+  :width: 1000
+  :align: center
+
 Kubernetes Optimization
 -----------------------
 

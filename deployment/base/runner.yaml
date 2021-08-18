@@ -39,6 +39,18 @@ spec:
           preStop:
             exec:
               command: ["bash", "-c", "kill -SIGINT 1"]
+      - name: grafana-renderer
+        image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:4
+        imagePullPolicy: Always
+        securityContext:
+          privileged: false
+        lifecycle:
+          preStop:
+            exec:
+              command: ["bash", "-c", "kill -SIGINT 1"]
+        resources:
+          limits:
+            memory: "512Mi"
       volumes:
         - name: playbooks-config
           configMap:
