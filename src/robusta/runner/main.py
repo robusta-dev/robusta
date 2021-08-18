@@ -15,6 +15,8 @@ from ..integrations.prometheus.incoming_handler import parse_incoming_prometheus
 from ..integrations.manual.incoming_handler import parse_incoming_manual_trigger
 from ..integrations.slack.receiver import start_slack_receiver
 from .config_handler import ConfigHandler
+from ..integrations.scheduled.triggers import init_scheduler
+
 
 app = Flask(__name__)
 
@@ -45,6 +47,7 @@ def main():
         manhole.install(locals=dict(getmembers(robusta_api)))
     start_slack_receiver()
     init_scheduler_dal()
+    init_scheduler()
     app.run(host="0.0.0.0", use_reloader=False)
     config_handler.close()
 

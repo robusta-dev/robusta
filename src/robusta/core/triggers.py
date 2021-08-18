@@ -21,12 +21,12 @@ class DeployCommand:
         self.trigger_params = trigger_params
         self.sinks = sinks
         self.action_params = action_params
-        self.playbook_id = playbook_hash(func, trigger_params, action_params)
         if (
             action_params is not None
             and getattr(action_params, "pre_deploy_func", None) is not None
         ):
             action_params.pre_deploy_func(trigger_params)
+        self.playbook_id = playbook_hash(func, trigger_params, action_params)
 
 
 def deploy_playbook_config(runner_config: RunnerConfig):

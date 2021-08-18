@@ -49,6 +49,15 @@ def clear_playbook_inventory():
     playbook_inventory.clear()
 
 
+def is_playbook_active(trigger_type, playbook_id) -> bool:
+    active_wrappers = [
+        wrapper
+        for wrapper in active_playbooks[trigger_type.name]
+        if wrapper.playbook_id == playbook_id
+    ]
+    return len(active_wrappers) > 0
+
+
 def activate_playbook(trigger_type, wrapper, func, playbook_id):
     logging.info(f"adding handler {func} playbook_id {playbook_id}")
     active_playbooks[trigger_type.name].append(PlaybookWrapper(wrapper, playbook_id))

@@ -16,6 +16,7 @@ def handle_event(
     logging.info(
         f"running {event_source} playbook {func.__name__}; action_params={action_params}; sinks={named_sinks}; {description}"
     )
+    event.named_sinks = named_sinks
     if action_params is None:
         result = func(event)
     else:

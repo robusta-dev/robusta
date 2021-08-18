@@ -26,3 +26,5 @@ class BaseEvent:
     prometheus_url: Optional[str] = None
 
     finding: Optional[Finding] = None
+
+    named_sinks: Optional[List[str]] = None
