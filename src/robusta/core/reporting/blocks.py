@@ -5,7 +5,7 @@
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
 import uuid
-from typing import List, Callable, Dict, Any, Iterable, Sequence
+from typing import List, Callable, Dict, Any, Iterable, Sequence, Optional
 
 import hikaru
 from hikaru import DiffDetail
@@ -70,19 +70,28 @@ class ListBlock(BaseBlock):
 # TODO: we should add a generalization of this which isn't K8s specific
 class KubernetesDiffBlock(BaseBlock):
     diffs: List[DiffDetail]
-    old: str
-    new: str
+    old: Optional[str]
+    new: Optional[str]
 
     # note that interesting_diffs might be a subset of the full diff between old and new
     def __init__(
         self,
         interesting_diffs: List[DiffDetail],
-        old: HikaruDocumentBase,
-        new: HikaruDocumentBase,
+        old: Optional[HikaruDocumentBase],
+        new: Optional[HikaruDocumentBase],
     ):
         super().__init__(
-            diffs=interesting_diffs, old=hikaru.get_yaml(old), new=hikaru.get_yaml(new)
+            diffs=interesting_diffs,
+            old=self._obj_to_text(old),
+            new=self._obj_to_text(new),
         )
+
+    @staticmethod
+    def _obj_to_text(obj: Optional[HikaruDocumentBase]):
+        if obj is None:
+            return ""
+        else:
+            return hikaru.get_yaml(obj)
 
 
 class JsonBlock(BaseBlock):

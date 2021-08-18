@@ -25,7 +25,39 @@ add_deployment_lines_to_grafana
   :width: 400
   :align: center
 
-| Note: The ``grafana_url`` parameter can usually be left blank for a Grafana running in the same cluster which will be automatically detected.
+.. tip::
+    The ``grafana_url`` parameter can usually be left blank for a Grafana running in the same cluster which will be automatically detected.
+
+add_alert_lines_to_grafana
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+| **What it does:** add annotations to grafana showing Prometheus alerts
+| **When it runs:** when a relevant Prometheus alert is triggered
+| **Enabling it:**
+
+.. code-block:: yaml
+
+    active_playbooks:
+      - name: "add_alert_lines_to_grafana"
+        action_params:
+          grafana_api_key: "grafana_api_key_with_editor_role"
+          grafana_url: "http://grafana-service-name.namespace.svc"
+          annotations:
+            - alert_name: "CPUThrottlingHigh"
+              dashboard_uid: "09ec8aa1e996d6ffcd6817bbaff4db1b" # copy this from the dashboard's URL
+            - alert_name: "TargetDown"
+              dashboard_uid: "other_uid_goes_here"
+              dashboard_panel: "ErrorBudget"                    # only add annotations to one panel on the dashboard
+
+| **The resuls:**
+
+.. image:: /images/add-alert-lines-to-grafana.png
+  :width: 400
+  :align: center
+
+.. tip::
+    The ``grafana_url`` parameter can usually be left blank for a Grafana running in the same cluster which will be automatically detected.
+
+    The ``dashboard_panel`` is an optional parameter. When present, annotations will be added only to panels containing that text in their title.
 
 git_change_audit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
