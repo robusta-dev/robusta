@@ -155,6 +155,28 @@ Display a graph of the Prometheus query which triggered the alert.
       :width: 50 %
       :align: center
 
+TemplateEnricher
+^^^^^^^^^^^^^^^^^^^^^
+Add a paragraph to the alert's description containing templated markdown. You can inject any of the alert's Prometheus labels into the markdown.
+
+A variable like ``$foo`` will be replaced by the value of the Prometheus label ``foo``. If a label isn't present then the text "<missing>" will be used instead.
+
+Common variables to use are ``$alertname``, ``$deployment``, ``$namespace``, and ``$node``
+
+.. admonition:: Example
+
+    .. code-block:: yaml
+
+       active_playbooks:
+       (...)
+          - alert_name: "ContainerVolumeUsage"
+            enrichers:
+            - name: "TemplateEnricher"
+              params:
+                template: "The alertname is $alertname and the pod is $pod"
+
+
+
 OOMKillerEnricher
 ^^^^^^^^^^^^^^^^^^^^^
 Shows which pods were recently OOM Killed on a node

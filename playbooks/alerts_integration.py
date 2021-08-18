@@ -1,7 +1,8 @@
 import requests
-import textwrap
+from string import Template
 from datetime import datetime, timedelta
 from urllib.parse import urlparse, unquote_plus
+from collections import defaultdict
 
 import pygal
 from pygal.style import DarkStyle as ChosenStyle
@@ -164,6 +165,16 @@ class NodeAllocatableResourcesEnricher(Enricher):
         )
 
 
+class TemplateEnricher(Enricher):
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        labels = defaultdict(lambda: "<missing>")
+        labels.update(alert.alert.labels)
+        template = Template(self.params.get("template", ""))
+        alert.finding.add_enrichment(
+            [MarkdownBlock(template.safe_substitute(labels))],
+        )
+
+
 @on_sink_callback
 def show_stackoverflow_search(event: SinkCallbackEvent):
     context = json.loads(event.source_context)
@@ -310,6 +321,7 @@ enrichers["PodBashEnricher"] = PodBashEnricher
 enrichers["NodeBashEnricher"] = NodeBashEnricher
 enrichers["DeploymentStatusEnricher"] = DeploymentStatusEnricher
 enrichers["CPUThrottlingAnalysis"] = CPUThrottlingAnalysis
+enrichers["TemplateEnricher"] = TemplateEnricher
 
 
 class AlertConfig(BaseModel):
