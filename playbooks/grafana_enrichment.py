@@ -31,6 +31,40 @@ def add_deployment_lines_to_grafana(event: DeploymentEvent, action_params: Param
     )
 
 
+class AnnotationConfig(BaseModel):
+    alert_name: str
+    dashboard_uid: str
+    dashboard_panel: Optional[str]
+
+
+class AlertLineParams(BaseModel):
+    grafana_url: str = None
+    grafana_api_key: str
+    annotations: List[AnnotationConfig]
+
+
+# TODO: should we use filter_params and configure multiple instances of add_alert_lines_to_grafana instead of one master instance?
+@on_pod_prometheus_alert
+def add_alert_lines_to_grafana(
+    event: PrometheusKubernetesAlert, params: AlertLineParams
+):
+    grafana = Grafana(params.grafana_api_key, params.grafana_url)
+    for annotation_config in params.annotations:
+        if annotation_config.alert_name != event.alert_name:
+            continue
+
+        if event.get_description():
+            description = f"<pre>{event.get_description()}</pre>"
+        else:
+            description = ""
+        grafana.add_line_to_dashboard(
+            annotation_config.dashboard_uid,
+            f'<h2>{event.get_title()}</h2><a href="{event.alert.generatorURL}">Open in AlertManager</a>{description}',
+            tags=[f"{k}={v}" for k, v in event.alert.labels.items()],
+            panel_substring=annotation_config.dashboard_panel,
+        )
+
+
 @on_deployment_update
 def report_image_changes(event: DeploymentEvent):
     """
