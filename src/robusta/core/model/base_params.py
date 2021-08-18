@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 
 class GenParams(BaseModel):
     name: str
-    params: Dict[Any, Any] = None
+    params: Dict[Any, Any] = {}
 
 
 class SlackParams(BaseModel):

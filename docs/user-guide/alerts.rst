@@ -177,6 +177,14 @@ The template can include all markdown directives supported by Slack. Note that S
               params:
                 template: "The alertname is $alertname and the pod is $pod"
 
+LogsEnricher
+^^^^^^^^^^^^^^^^^^^^^
+Fetch logs related to the alert and attach them to the alert as a file.
+
+The pod to fetch logs for is determined by the alert's ``pod`` label from Prometheus.
+
+By default, if the alert has no label named ``pod`` then this enricher will silently do nothing. To show an explicit error, set the ``warn_on_missing_label`` parameter to ``true``
+
 OOMKillerEnricher
 ^^^^^^^^^^^^^^^^^^^^^
 Shows which pods were recently OOM Killed on a node
