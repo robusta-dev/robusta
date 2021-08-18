@@ -163,6 +163,8 @@ A variable like ``$foo`` will be replaced by the value of the Prometheus label `
 
 Common variables to use are ``$alertname``, ``$deployment``, ``$namespace``, and ``$node``
 
+The template can include all markdown directives supported by Slack. Note that Slack markdown links use a different format than GitHub.
+
 .. admonition:: Example
 
     .. code-block:: yaml
@@ -174,8 +176,6 @@ Common variables to use are ``$alertname``, ``$deployment``, ``$namespace``, and
             - name: "TemplateEnricher"
               params:
                 template: "The alertname is $alertname and the pod is $pod"
-
-
 
 OOMKillerEnricher
 ^^^^^^^^^^^^^^^^^^^^^
