@@ -32,7 +32,11 @@ def wait_for_slack_api_key(id: str) -> str:
 
 def get_slack_key():
     id = str(uuid.uuid4())
-    typer.launch(f"https://robusta.dev/integrations/slack?id={id}")
+    url = f"https://robusta.dev/integrations/slack?id={id}"
+    typer.secho(
+        f"If your browser does not automatically launch, open the below url:\n{url}"
+    )
+    typer.launch(url)
     slack_api_key = wait_for_slack_api_key(id)
     return slack_api_key
 
