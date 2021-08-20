@@ -8,9 +8,6 @@ resources:
   - forwarder.yaml
 
 configMapGenerator:
-  - name: robusta-fluentd-config
-    files:
-      - config/fluent.conf
   - name: robusta-kubewatch-config
     files:
       - config/.kubewatch.yaml

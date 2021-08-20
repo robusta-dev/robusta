@@ -14,14 +14,6 @@ spec:
     spec:
       serviceAccountName: robusta
       containers:
-      - name: fluentd
-        # if you need to customize this image (e.g. to add plugins) see https://github.com/fluent/fluentd-docker-image/blob/master/Dockerfile.sample
-        # if you want to monitor node-level stuff (e.g. pod logs) then we should use the fluentd daemonset: https://github.com/fluent/fluentd-kubernetes-daemonset
-        image: fluent/fluentd:v1.12.1-1.0
-        imagePullPolicy: Always
-        volumeMounts:
-          - mountPath: /fluentd/etc
-            name: robusta-fluentd-config
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
         image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.9
@@ -38,9 +30,6 @@ spec:
           limits:
             memory: "1024Mi"
       volumes:
-        - name:  robusta-fluentd-config
-          configMap:
-            name: robusta-fluentd-config
         - name:  robusta-kubewatch-config
           configMap:
             name: robusta-kubewatch-config
