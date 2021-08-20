@@ -1,7 +1,8 @@
 import requests
-import textwrap
+from string import Template
 from datetime import datetime, timedelta
 from urllib.parse import urlparse, unquote_plus
+from collections import defaultdict
 
 import pygal
 from pygal.style import DarkStyle as ChosenStyle
@@ -22,7 +23,7 @@ from cpu_throttling import do_cpu_throttling_analysis
 
 
 class Silencer:
-    params: Dict[Any, Any]
+    params: Dict[Any, Any] = {}
 
     def __init__(self, params: Dict[Any, Any]):
         self.params = params
@@ -76,7 +77,7 @@ class DaemonsetMisscheduledSmartSilencer(Silencer):
 
 
 class Enricher:
-    params: Dict[Any, Any] = None
+    params: Dict[Any, Any] = {}
 
     def __init__(self, params: Dict[Any, Any]):
         self.params = params
@@ -161,6 +162,38 @@ class NodeAllocatableResourcesEnricher(Enricher):
 
         alert.finding.add_enrichment(
             node_allocatable_resources(alert.node.metadata.name)
+        )
+
+
+class TemplateEnricher(Enricher):
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        labels = defaultdict(lambda: "<missing>")
+        labels.update(alert.alert.labels)
+        template = Template(self.params.get("template", ""))
+        alert.finding.add_enrichment(
+            [MarkdownBlock(template.safe_substitute(labels))],
+        )
+
+
+class LogsEnricher(Enricher):
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if alert.pod is None:
+            if self.params.get("warn_on_missing_label", "").lower() == "true":
+                alert.finding.add_enrichment(
+                    [
+                        MarkdownBlock(
+                            "Cannot fetch logs because the pod is unknown. The alert has no `pod` label"
+                        )
+                    ],
+                )
+            return
+
+        alert.finding.add_enrichment(
+            [
+                FileBlock(
+                    f"{alert.pod.metadata.name}.log", alert.pod.get_logs().encode()
+                )
+            ],
         )
 
 
@@ -310,6 +343,8 @@ enrichers["PodBashEnricher"] = PodBashEnricher
 enrichers["NodeBashEnricher"] = NodeBashEnricher
 enrichers["DeploymentStatusEnricher"] = DeploymentStatusEnricher
 enrichers["CPUThrottlingAnalysis"] = CPUThrottlingAnalysis
+enrichers["TemplateEnricher"] = TemplateEnricher
+enrichers["LogsEnricher"] = LogsEnricher
 
 
 class AlertConfig(BaseModel):
