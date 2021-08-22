@@ -1,9 +1,11 @@
+from pydantic import SecretStr
+
 from robusta.api import *
 
 
 class Params(BaseModel):
     grafana_url: str = None
-    grafana_api_key: str
+    grafana_api_key: SecretStr
     grafana_dashboard_uid: str
 
 
@@ -25,7 +27,9 @@ def add_deployment_lines_to_grafana(event: DeploymentEvent, action_params: Param
             if new_images[name] != old_images[name]:
                 msg += f"image name:<pre>{name}</pre>new tag:<pre>{new_images[name]}</pre>old tag<pre>{old_images[name]}</pre><hr class='solid'>"
 
-    grafana = Grafana(action_params.grafana_api_key, action_params.grafana_url)
+    grafana = Grafana(
+        action_params.grafana_api_key.get_secret_value(), action_params.grafana_url
+    )
     grafana.add_line_to_dashboard(
         action_params.grafana_dashboard_uid, msg, tags=[event.obj.metadata.name]
     )
@@ -39,7 +43,7 @@ class AnnotationConfig(BaseModel):
 
 class AlertLineParams(BaseModel):
     grafana_url: str = None
-    grafana_api_key: str
+    grafana_api_key: SecretStr
     annotations: List[AnnotationConfig]
 
 
@@ -48,7 +52,7 @@ class AlertLineParams(BaseModel):
 def add_alert_lines_to_grafana(
     event: PrometheusKubernetesAlert, params: AlertLineParams
 ):
-    grafana = Grafana(params.grafana_api_key, params.grafana_url)
+    grafana = Grafana(params.grafana_api_key.get_secret_value(), params.grafana_url)
     for annotation_config in params.annotations:
         if annotation_config.alert_name != event.alert_name:
             continue
