@@ -41,11 +41,11 @@ logging.info(f"logger initialized using {LOGGING_LEVEL} log level")
 
 
 def main():
+    Scheduler.init_scheduler()
     config_handler = ConfigHandler()
     if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
         manhole.install(locals=dict(getmembers(robusta_api)))
     start_slack_receiver()
-    Scheduler.init_scheduler()
     app.run(host="0.0.0.0", use_reloader=False)
     config_handler.close()
 
