@@ -7,7 +7,7 @@ from threading import Thread
 from ...core.model.env_vars import TARGET_ID
 from ...core.reporting.callbacks import *
 
-SLACK_WEBSOCKET_RELAY_ADDRESS = os.environ.get("SLACK_WEBSOCKET_RELAY_ADDRESS", "")
+SLACK_WEBSOCKET_RELAY_ADDRESS = os.environ.get("SLACK_WEBSOCKET_RELAY_ADDRESS", "wss://relay.robusta.dev")
 SLACK_RECEIVER_ENABLED = os.environ.get("SLACK_RECEIVER_ENABLED", "True")
 SLACK_ENABLE_WEBSOCKET_TRACING = os.environ.get("SLACK_ENABLE_WEBSOCKET_TRACING", False)
 SLACK_WEBSOCKET_RECONNECT_DELAY_SEC = os.environ.get(
