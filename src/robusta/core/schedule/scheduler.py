@@ -19,7 +19,7 @@ INITIAL_SCHEDULE_DELAY_SEC = os.environ.get("INITIAL_SCHEDULE_DELAY_SEC", 5)
 class Scheduler:
     scheduled_jobs = defaultdict(None)
     registered_runnables = {}
-    dal = SchedulerDal()
+    dal = None
 
     @classmethod
     def register_task(cls, runnable_name: str, func):
@@ -27,6 +27,7 @@ class Scheduler:
 
     @classmethod
     def init_scheduler(cls):
+        cls.dal = SchedulerDal()
         # schedule standalone tasks
         for job in cls.__get_standalone_jobs():
             logging.info(f"Scheduling standalone task {job.job_id}")
