@@ -19,22 +19,20 @@ class SchedulerDal:
     def __init__(self):
         self.__init_scheduler_dal()
 
-    @classmethod
-    def __load_config_map(cls) -> ConfigMap:
+    def __load_config_map(self) -> ConfigMap:
         return ConfigMap.readNamespacedConfigMap(
             JOBS_CONFIGMAP_NAME, CONFIGMAP_NAMESPACE
         ).obj
 
-    @classmethod
-    def __init_scheduler_dal(cls):
+    def __init_scheduler_dal(self):
         try:
-            cls.__load_config_map()
+            self.__load_config_map()
         except kubernetes.client.exceptions.ApiException as e:
             # we only want to catch exceptions because the config map doesn't exist
             if e.reason != "Not Found":
                 raise
             # job states configmap doesn't exists, create it
-            cls.mutex.acquire()
+            self.mutex.acquire()
             try:
                 conf_map = ConfigMap(
                     metadata=ObjectMeta(
@@ -46,43 +44,39 @@ class SchedulerDal:
                     f"created jobs states configmap {JOBS_CONFIGMAP_NAME} {CONFIGMAP_NAMESPACE}"
                 )
             finally:
-                cls.mutex.release()
+                self.mutex.release()
 
-    @classmethod
-    def save_scheduled_job(cls, job: ScheduledJob):
-        cls.mutex.acquire()
+    def save_scheduled_job(self, job: ScheduledJob):
+        self.mutex.acquire()
         try:
-            confMap = cls.__load_config_map()
+            confMap = self.__load_config_map()
             confMap.data[job.job_id] = job.json()
             confMap.replaceNamespacedConfigMap(
                 confMap.metadata.name, confMap.metadata.namespace
             )
         finally:
-            cls.mutex.release()
+            self.mutex.release()
 
-    @classmethod
-    def get_scheduled_job(cls, job_id: str) -> Optional[ScheduledJob]:
-        state_data = cls.__load_config_map().data.get(job_id)
+    def get_scheduled_job(self, job_id: str) -> Optional[ScheduledJob]:
+        state_data = self.__load_config_map().data.get(job_id)
         return (
             ScheduledJob(**json.loads(state_data)) if state_data is not None else None
         )
 
-    @classmethod
-    def del_scheduled_job(cls, job_id: str):
-        cls.mutex.acquire()
+    def del_scheduled_job(self, job_id: str):
+        self.mutex.acquire()
         try:
-            confMap = cls.__load_config_map()
+            confMap = self.__load_config_map()
             if confMap.data.get(job_id) is not None:
                 del confMap.data[job_id]
                 confMap.replaceNamespacedConfigMap(
                     confMap.metadata.name, confMap.metadata.namespace
                 )
         finally:
-            cls.mutex.release()
+            self.mutex.release()
 
-    @classmethod
-    def list_scheduled_jobs(cls) -> List[ScheduledJob]:
+    def list_scheduled_jobs(self) -> List[ScheduledJob]:
         return [
-            cls.get_scheduled_job(job_id)
-            for job_id in cls.__load_config_map().data.keys()
+            self.get_scheduled_job(job_id)
+            for job_id in self.__load_config_map().data.keys()
         ]
