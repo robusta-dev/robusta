@@ -46,9 +46,15 @@ def do_babysitter(
             event.obj.metadata.name, resource_type, event.obj.metadata.namespace
         ),
     )
-    event.finding.add_enrichment(
-        [KubernetesDiffBlock(filtered_diffs, event.old_obj, event.obj)]
-    )
+    old_obj = event.old_obj
+    obj = event.obj
+    if (
+        event.operation == K8sOperationType.DELETE
+    ):  # On delete, the current obj should be None, and not the actual object, as recieved
+        obj = None
+        old_obj = event.obj
+
+    event.finding.add_enrichment([KubernetesDiffBlock(filtered_diffs, old_obj, obj)])
 
 
 @on_deployment_all_changes
