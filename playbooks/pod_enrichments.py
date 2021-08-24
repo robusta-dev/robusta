@@ -1,15 +1,17 @@
 from robusta.api import *
 
 
-def pod_events_enrichment(name: str, namespace: str) -> List[BaseBlock]:
+def pod_events_enrichment(pod: Pod) -> List[BaseBlock]:
     block_list: List[BaseBlock] = []
-    block_list.append(MarkdownBlock("*Pod events:*"))
-    headers = ["time", "message"]
     event_list: EventList = EventList.listNamespacedEvent(
-        namespace=namespace, field_selector=f"involvedObject.name={name}"
+        namespace=pod.metadata.namespace,
+        field_selector=f"involvedObject.name={pod.metadata.name}",
     ).obj
-    rows = [[event.lastTimestamp, event.message] for event in event_list.items]
-    block_list.append(TableBlock(rows=rows, headers=headers))
+    if event_list.items:  # add enrichment only if we got events
+        block_list.append(MarkdownBlock("*Pod events:*"))
+        headers = ["time", "message"]
+        rows = [[event.lastTimestamp, event.message] for event in event_list.items]
+        block_list.append(TableBlock(rows=rows, headers=headers))
     return block_list
 
 
@@ -17,8 +19,8 @@ def pod_events_enrichment(name: str, namespace: str) -> List[BaseBlock]:
 def pod_events(event: ManualTriggerEvent):
     action_params = PodParams(**event.data)
     logging.info(f"getting info for: {action_params}")
-
-    blocks = pod_events_enrichment(action_params.pod_name, action_params.pod_namespace)
+    pod = RobustaPod.read(action_params.pod_name, action_params.pod_namespace)
+    blocks = pod_events_enrichment(pod)
     for block in blocks:
         if isinstance(block, TableBlock):
             for row in block.rows:

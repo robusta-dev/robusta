@@ -18,4 +18,5 @@ def http_stress_test(event: ManualTriggerEvent):
         source=FindingSource.MANUAL,
         aggregation_key="http_stress_test",
     )
-    event.finding.add_enrichment([FileBlock("result.txt", output)])
+    if output:
+        event.finding.add_enrichment([FileBlock("result.txt", output)])

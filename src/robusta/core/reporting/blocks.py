@@ -210,6 +210,8 @@ class Finding:
         self.enrichments: List[Enrichment] = []
 
     def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
+        if not enrichment_blocks:
+            return
         if annotations is None:
             annotations = {}
         self.enrichments.append(Enrichment(enrichment_blocks, annotations))

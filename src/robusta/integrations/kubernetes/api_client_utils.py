@@ -123,7 +123,7 @@ def get_pod_logs(
     except ApiException as e:
         if e.status != 404:
             logging.exception(f"failed to get pod logs {name} {namespace} {container}")
-            resp = "error getting logs"
+            resp = ""
 
     logging.debug(f"get logs {resp}")
     return resp

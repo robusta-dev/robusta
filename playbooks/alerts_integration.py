@@ -12,6 +12,7 @@ from robusta.api import *
 from node_cpu_analysis import do_node_cpu_analysis
 from oom_killer import do_show_recent_oom_kills
 from node_enrichments import node_running_pods, node_allocatable_resources
+from pod_enrichments import pod_events_enrichment
 from daemonsets import (
     do_daemonset_mismatch_analysis,
     do_daemonset_enricher,
@@ -115,7 +116,7 @@ class GraphEnricher(Enricher):
         increment = graph_duration.total_seconds() / 60
         result = prom.custom_query_range(promql_query, start_time, end_time, increment)
 
-        chart = pygal.XY(show_dots=True, style=ChosenStyle)
+        chart = pygal.XY(show_dots=True, style=ChosenStyle, truncate_legend=-1)
         chart.x_label_rotation = 35
         chart.truncate_label = -1
         chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(
@@ -123,7 +124,7 @@ class GraphEnricher(Enricher):
         ).strftime("%I:%M:%S %p on %d, %b")
         chart.title = promql_query
         for series in result:
-            label = "\n".join([f"{k}={v}" for (k, v) in series["metric"].items()])
+            label = "\n".join([v for v in series["metric"].values()])
             values = [(timestamp, float(val)) for (timestamp, val) in series["values"]]
             chart.add(label, values)
         alert.finding.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
@@ -187,14 +188,11 @@ class LogsEnricher(Enricher):
                     ],
                 )
             return
-
-        alert.finding.add_enrichment(
-            [
-                FileBlock(
-                    f"{alert.pod.metadata.name}.log", alert.pod.get_logs().encode()
-                )
-            ],
-        )
+        log_data = alert.pod.get_logs()
+        if log_data:
+            alert.finding.add_enrichment(
+                [FileBlock(f"{alert.pod.metadata.name}.log", log_data.encode())],
+            )
 
 
 @on_sink_callback
@@ -323,6 +321,16 @@ class DeploymentStatusEnricher(Enricher):
         alert.finding.add_enrichment(deployment_status_enrichment(alert.deployment))
 
 
+class PodEventsEnricher(Enricher):
+    def enrich(self, alert: PrometheusKubernetesAlert):
+        if not alert.pod:
+            logging.error(
+                f"cannot run PodEventsEnricher on alert with no pod object: {alert}"
+            )
+            return
+        alert.finding.add_enrichment(pod_events_enrichment(alert.pod))
+
+
 DEFAULT_ENRICHER = "AlertDefaults"
 
 silencers = {}
@@ -345,6 +353,7 @@ enrichers["DeploymentStatusEnricher"] = DeploymentStatusEnricher
 enrichers["CPUThrottlingAnalysis"] = CPUThrottlingAnalysis
 enrichers["TemplateEnricher"] = TemplateEnricher
 enrichers["LogsEnricher"] = LogsEnricher
+enrichers["PodEventsEnricher"] = PodEventsEnricher
 
 
 class AlertConfig(BaseModel):
