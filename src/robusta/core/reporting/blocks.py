@@ -14,7 +14,6 @@ from pydantic import BaseModel
 from tabulate import tabulate
 from enum import Enum
 
-from ..discovery.top_service_resolver import TopServiceResolver
 from ..reporting.consts import FindingSource, FindingSubjectType, FindingType
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
@@ -181,7 +180,6 @@ class FindingSubject:
         self.name = name
         self.subject_type = subject_type
         self.namespace = namespace
-        self.service_key = TopServiceResolver.guess_service_key(name, namespace)
 
 
 class Finding:
@@ -206,7 +204,6 @@ class Finding:
         self.severity = severity
         self.category = None  # TODO fill real category
         self.subject = subject
-        self.service_key = subject.service_key
         self.enrichments: List[Enrichment] = []
 
     def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):

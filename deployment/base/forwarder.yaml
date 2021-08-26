@@ -16,7 +16,7 @@ spec:
       containers:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
-        image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.9
+        image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.10
         imagePullPolicy: Always
         env:
           - name: KW_CONFIG

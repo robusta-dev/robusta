@@ -181,6 +181,51 @@ def on_deployment_all_changes(func, name_prefix="", namespace_prefix=""):
     )
 
 
+# StatefulSet Triggers
+@doublewrap
+def on_statefulset_create(func, name_prefix="", namespace_prefix=""):
+    return register_k8s_playbook(
+        func,
+        "StatefulSet",
+        K8sOperationType.CREATE,
+        name_prefix=name_prefix,
+        namespace_prefix=namespace_prefix,
+    )
+
+
+@doublewrap
+def on_statefulset_update(func, name_prefix="", namespace_prefix=""):
+    return register_k8s_playbook(
+        func,
+        "StatefulSet",
+        K8sOperationType.UPDATE,
+        name_prefix=name_prefix,
+        namespace_prefix=namespace_prefix,
+    )
+
+
+@doublewrap
+def on_statefulset_delete(func, name_prefix="", namespace_prefix=""):
+    return register_k8s_playbook(
+        func,
+        "StatefulSet",
+        K8sOperationType.DELETE,
+        name_prefix=name_prefix,
+        namespace_prefix=namespace_prefix,
+    )
+
+
+@doublewrap
+def on_statefulset_all_changes(func, name_prefix="", namespace_prefix=""):
+    return register_k8s_playbook(
+        func,
+        "StatefulSet",
+        None,
+        name_prefix=name_prefix,
+        namespace_prefix=namespace_prefix,
+    )
+
+
 # Service Triggers
 @doublewrap
 def on_service_create(func, name_prefix="", namespace_prefix=""):

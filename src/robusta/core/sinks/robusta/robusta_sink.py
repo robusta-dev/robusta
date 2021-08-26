@@ -10,12 +10,12 @@ from pydantic import BaseModel
 import threading
 
 from ..sink_config import SinkConfigBase
-from ...discovery.top_service_resolver import TopServiceResolver
 from ...model.env_vars import DISCOVERY_PERIOD_SEC
 from ...model.services import ServiceInfo
 from ...reporting.blocks import Finding
 from .dal.supabase_dal import SupabaseDal
 from ..sink_base import SinkBase
+from ...discovery.top_service_resolver import TopServiceResolver
 
 
 class RobustaSinkConfig(BaseModel):
@@ -62,18 +62,12 @@ class RobustaSink(SinkBase):
         self.dal.persist_finding(finding)
 
     # service discovery impl
-    @staticmethod
-    def __cache_key(name: str, namespace: str, type: str) -> str:
-        return f"{name}_{namespace}_{type}"
-
     def __publish_service(self, serviceInfo: ServiceInfo):
         logging.debug(f"publishing to {self.sink_name} service {serviceInfo} ")
         self.dal.persist_service(serviceInfo)
 
     def __is_cached(self, service_info: ServiceInfo):
-        cache_key = self.__cache_key(
-            service_info.name, service_info.namespace, service_info.service_type
-        )
+        cache_key = service_info.get_service_key()
         return self.__services_cache.get(cache_key) is not None
 
     def __publish_new_services(self, active_services: List):
@@ -84,9 +78,7 @@ class RobustaSink(SinkBase):
                 namespace=service.metadata.namespace,
                 service_type=service.kind,
             )
-            cache_key = self.__cache_key(
-                service_info.name, service_info.namespace, service_info.service_type
-            )
+            cache_key = service_info.get_service_key()
             active_services_keys.add(cache_key)
             cached_service = self.__services_cache.get(cache_key)
             if not cached_service or cached_service != service_info:
@@ -109,7 +101,7 @@ class RobustaSink(SinkBase):
             self.__publish_service(deleted_service)
 
         # save the cached services in the resolver.
-        TopServiceResolver.cached_services = list(self.__services_cache.values())
+        TopServiceResolver.store_cached_services(list(self.__services_cache.values()))
 
     def __discover_services(self):
         while self.__active:

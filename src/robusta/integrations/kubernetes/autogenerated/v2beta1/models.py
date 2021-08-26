@@ -9,6 +9,7 @@ KIND_TO_MODEL_CLASS = {
     "ReplicaSet": ReplicaSet,
     "DaemonSet": DaemonSet,
     "Deployment": RobustaDeployment,
+    "StatefulSet": StatefulSet,
     "Service": Service,
     "ConfigMap": ConfigMap,
     "Event": Event,
