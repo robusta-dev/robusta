@@ -43,6 +43,7 @@ def deploy_playbook_config(runner_config: RunnerConfig):
     deploy_commands = []
     # TODO we will replace it with a more generic mechanism, as part of the triggers separation task
     # First, we load the internal playbooks, then add the user activated playbooks
+    # Order matters. Internal playbooks, should be added first, and run first
     active_playbooks = [PlaybookDeployConfig(name="cluster_discovery_updates")]
     active_playbooks.extend(runner_config.active_playbooks)
     for playbook_config in active_playbooks:
