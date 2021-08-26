@@ -32,5 +32,5 @@ from ..integrations.resource_analysis.kubernetes_node_analyzer import NodeAnalyz
 from ..integrations.prometheus.utils import PrometheusDiscovery
 from ..core.persistency.in_memory import get_persistent_data
 from ..utils.rate_limiter import RateLimiter
-from ..utils.common import mask_secret
+from ..utils.common import is_relevant_diff
 from ..runner.object_updater import *

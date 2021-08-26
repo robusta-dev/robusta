@@ -14,14 +14,6 @@ class BabysitterConfig(BaseModel):
     fields_to_monitor: List[str] = ["spec"]
 
 
-# TODO: filter out all the managed fields crap
-def babysitter_should_include_diff(diff_detail: DiffDetail, config: BabysitterConfig):
-    return any(
-        substring in diff_detail.formatted_path
-        for substring in config.fields_to_monitor
-    )
-
-
 def do_babysitter(
     event: K8sBaseEvent, config: BabysitterConfig, resource_type: FindingSubjectType
 ):
@@ -29,7 +21,7 @@ def do_babysitter(
     if event.operation == K8sOperationType.UPDATE:
         all_diffs = event.obj.diff(event.old_obj)
         filtered_diffs = list(
-            filter(lambda x: babysitter_should_include_diff(x, config), all_diffs)
+            filter(lambda x: is_relevant_diff(x, config.fields_to_monitor), all_diffs)
         )
         if len(filtered_diffs) == 0:
             return

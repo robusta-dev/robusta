@@ -1,172 +1,172 @@
 import os
 import threading
 import time, logging
-import uuid
 from collections import defaultdict
-from datetime import datetime
 
-from ...core.active_playbooks import run_playbooks
-from ...core.model.cloud_event import CloudEvent
-from ...core.model.events import EventType
-from ...core.persistency.scheduled_jobs_states_dal import (
-    save_scheduled_job_state,
-    del_scheduled_job_state,
-    get_scheduled_job_state,
-    list_scheduled_jobs_states,
-)
+from typing import List
+
+from ...core.persistency.scheduled_jobs_states_dal import SchedulerDal
 from ...core.schedule.model import (
-    JobState,
     JobStatus,
-    SchedulingType,
-    SchedulingParams,
-    SchedulingConfig,
+    ScheduledJob,
+    DynamicDelayRepeat,
+    SchedulingInfo,
 )
-from ...core.model.trigger_params import TriggerParams
-from ...integrations.scheduled.models import SchedulerEvent
 
 INITIAL_SCHEDULE_DELAY_SEC = os.environ.get("INITIAL_SCHEDULE_DELAY_SEC", 5)
 
 
-scheduled_jobs = defaultdict(None)
+class Scheduler:
+    scheduled_jobs = defaultdict(None)
+    registered_runnables = {}
+    dal = None
 
+    @classmethod
+    def register_task(cls, runnable_name: str, func):
+        cls.registered_runnables[runnable_name] = func
 
-def is_scheduled(playbook_id):
-    return scheduled_jobs.get(playbook_id) is not None
+    @classmethod
+    def init_scheduler(cls):
+        cls.dal = SchedulerDal()
+        # schedule standalone tasks
+        for job in cls.__get_standalone_jobs():
+            logging.info(f"Scheduling standalone task {job.job_id}")
+            cls.schedule_job(job)
 
-
-def schedule_job(delay, playbook_id, func, kwargs):
-    job = threading.Timer(delay, func, kwargs=kwargs)
-    scheduled_jobs[playbook_id] = job
-    job.start()
-
-
-def is_job_done(job_state: JobState, params: SchedulingParams) -> bool:
-    if job_state.sched_type == SchedulingType.DELAY_PERIODS:
-        return job_state.exec_count == len(params.delay_periods)
-    else:  # default, FIXED_DELAY_REPEAT
-        return job_state.exec_count == params.repeat
-
-
-def recurrence_job(job_state: JobState):
-    logging.info(f"running recurrence job playbook_id {job_state.params.playbook_id}")
-    params = job_state.params
-
-    if job_state.job_status == JobStatus.NEW:
-        job_state.job_status = JobStatus.RUNNING
-    job_state.last_exec_time_sec = round(time.time())
-
-    cloud_event = CloudEvent(
-        specversion="1.0",
-        type=EventType.SCHEDULED_TRIGGER.name,
-        source=EventType.SCHEDULED_TRIGGER.name,
-        subject="scheduled trigger",
-        id=str(uuid.uuid4()),
-        time=datetime.now(),
-        datacontenttype="application/json",
-        data=SchedulerEvent(
-            **{
-                "description": f"scheduled recurrence playbook event {params.playbook_id}",
-                "playbook_id": params.playbook_id,
-                "recurrence": job_state.exec_count,
-            }
-        ),
-    )
-    try:
-        run_playbooks(cloud_event)
-    except:
-        logging.exception(
-            f"failed to execute recurring job. playbook_id {params.playbook_id} exec_count {job_state.exec_count}"
-        )
-
-    job_state.exec_count += 1
-    if is_job_done(job_state, params):
-        job_state.job_status = JobStatus.DONE
-        # need to persist jobs state before unscheduling the job. (to avoid race condition, on configuration reload)
-        if job_state.params.config.standalone_task:
-            del_scheduled_job_state(job_state.params.playbook_id)
+    @classmethod
+    def schedule_job(cls, job: ScheduledJob):
+        if job.replace_existing:
+            cls.__remove_scheduler_job(job.job_id)
+            saved_job = None  # Don't load the existing state. Will be overridden with a new state
         else:
-            save_scheduled_job_state(job_state)
-        del scheduled_jobs[params.playbook_id]
-        logging.info(
-            f"Scheduled recurrence job done. playbook_id {params.playbook_id} recurrence {job_state.exec_count}"
-        )
-    else:
-        save_scheduled_job_state(job_state)
-        next_delay = calc_job_delay_for_next_run(job_state)
-        schedule_job(
-            next_delay,
-            params.playbook_id,
-            recurrence_job,
-            {"job_state": job_state},
-        )
+            if cls.__is_scheduled(job.job_id):
+                logging.info(f"job {job.job_id} already scheduled")
+                return  # job is already scheduled, no need to re-schedule. (this is a reload playbooks scenario)
+            saved_job = cls.dal.get_scheduled_job(job.job_id)
 
-
-def schedule_trigger(playbook_id: str, scheduling_params: SchedulingParams):
-    if scheduling_params.config.replace_existing:
-        remove_scheduler_job(playbook_id)
-        job_state = (
-            None  # Don't load the existing state. Will be overridden with a new state
-        )
-    else:
-        if is_scheduled(playbook_id):
-            logging.info(f"playbook {playbook_id} already scheduled")
-            return  # playbook is already scheduled, no need to re-schedule. (this is a reload playbooks scenario)
-        job_state = get_scheduled_job_state(playbook_id)
-
-    if job_state is None:  # create new job state and save it
-        job_state = JobState(
-            params=scheduling_params, sched_type=scheduling_params.config.sched_type
-        )
-        save_scheduled_job_state(job_state)
-    elif job_state.job_status == JobStatus.DONE:
-        logging.info(
-            f"Scheduled recurring already job done. Skipping scheduling. playbook {playbook_id}"
-        )
-        return
-
-    next_delay = calc_job_delay_for_next_run(job_state)
-    logging.info(
-        f"scheduling recurring trigger for playbook {playbook_id} repeat {scheduling_params.repeat} delay {scheduling_params.seconds_delay} will run in {next_delay}"
-    )
-    schedule_job(next_delay, playbook_id, recurrence_job, {"job_state": job_state})
-
-
-def remove_scheduler_job(playbook_id):
-    job = scheduled_jobs.get(playbook_id)
-    if job is not None:
-        job.cancel()
-        del scheduled_jobs[playbook_id]
-
-
-def unschedule_trigger(playbook_id):
-    remove_scheduler_job(playbook_id)
-    del_scheduled_job_state(playbook_id)
-
-
-def unschedule_deleted_playbooks(active_playbook_ids: set):
-    for job_state in list_scheduled_jobs_states():
-        if job_state.params.config.standalone_task:
-            continue  # standalone tasks shouldn't be removed on reload
-        if job_state.params.playbook_id not in active_playbook_ids:
+        if saved_job is None:  # save new job
+            cls.dal.save_scheduled_job(job)
+            saved_job = job
+        elif saved_job.state.job_status == JobStatus.DONE:
             logging.info(
-                f"unscheduling deleted playbook {job_state.params.playbook_id}"
+                f"Scheduled job already done. Skipping scheduling. job {saved_job.job_id}"
             )
-            unschedule_trigger(job_state.params.playbook_id)
+            return
 
+        next_delay = cls.__calc_job_delay_for_next_run(saved_job)
+        logging.info(
+            f"scheduling job {saved_job.job_id} params {saved_job.scheduling_params} will run in {next_delay}"
+        )
+        cls.__schedule_job_internal(
+            next_delay, saved_job.job_id, cls.__on_task_execution, {"job": saved_job}
+        )
 
-def calc_job_delay_for_next_run(job_state):
-    if job_state.job_status == JobStatus.NEW:
-        if job_state.sched_type == SchedulingType.DELAY_PERIODS:
-            return job_state.params.delay_periods[0]
+    @classmethod
+    def unschedule_deleted_playbooks(cls, active_playbook_ids: set):
+        for job in cls.dal.list_scheduled_jobs():
+            if job.standalone_task:
+                continue  # standalone tasks shouldn't be removed on reload
+            if job.job_id not in active_playbook_ids:
+                logging.info(f"unscheduling deleted playbook {job.job_id}")
+                cls.__unschedule_job(job.job_id)
+
+    @classmethod
+    def __on_task_execution(cls, job: ScheduledJob):
+        logging.info(f"running scheduled job {job.job_id}")
+
+        if job.state.job_status == JobStatus.NEW:
+            job.state.job_status = JobStatus.RUNNING
+        job.state.last_exec_time_sec = round(time.time())
+
+        func = cls.registered_runnables.get(job.runnable_name)
+        if not func:
+            logging.error(f"Scheduled runnable name not registered {job.runnable_name}")
+            cls.__on_job_done(job)
+            return
+
+        try:
+            func(
+                runnable_params=job.runnable_params,
+                schedule_info=SchedulingInfo(execution_count=job.state.exec_count),
+            )
+        except Exception:
+            logging.exception(
+                f"failed to execute runnable {job.runnable_name}. job_id {job.job_id} exec_count {job.state.exec_count}"
+            )
+
+        job.state.exec_count += 1
+        if cls.__is_job_done(job):
+            cls.__on_job_done(job)
         else:
-            return INITIAL_SCHEDULE_DELAY_SEC
+            cls.dal.save_scheduled_job(job)
+            next_delay = cls.__calc_job_delay_for_next_run(job)
+            cls.__schedule_job_internal(
+                next_delay,
+                job.job_id,
+                cls.__on_task_execution,
+                {"job": job},
+            )
 
-    if job_state.sched_type == SchedulingType.DELAY_PERIODS:
-        next_delay = job_state.params.delay_periods[job_state.exec_count]
-    else:  # FIXED_DELAY_REPEAT type
-        next_delay = job_state.params.seconds_delay
+    @classmethod
+    def __get_standalone_jobs(cls) -> List[ScheduledJob]:
+        return [job for job in cls.dal.list_scheduled_jobs() if job.standalone_task]
 
-    return max(
-        job_state.last_exec_time_sec + next_delay - round(time.time()),
-        INITIAL_SCHEDULE_DELAY_SEC,
-    )
+    @classmethod
+    def __on_job_done(cls, job: ScheduledJob):
+        job.state.job_status = JobStatus.DONE
+        # need to persist jobs state before unscheduling the job. (to avoid race condition, on configuration reload)
+        if job.standalone_task:
+            cls.dal.del_scheduled_job(job.job_id)
+        else:
+            cls.dal.save_scheduled_job(job)
+        del cls.scheduled_jobs[job.job_id]
+        logging.info(
+            f"Scheduled job done. job_id {job.job_id} executions {job.state.exec_count}"
+        )
+
+    @classmethod
+    def __schedule_job_internal(cls, delay, job_id, func, kwargs):
+        job = threading.Timer(delay, func, kwargs=kwargs)
+        cls.scheduled_jobs[job_id] = job
+        job.start()
+
+    @classmethod
+    def __remove_scheduler_job(cls, job_id):
+        job = cls.scheduled_jobs.get(job_id)
+        if job is not None:
+            job.cancel()
+            del cls.scheduled_jobs[job_id]
+
+    @classmethod
+    def __unschedule_job(cls, job_id):
+        cls.__remove_scheduler_job(job_id)
+        cls.dal.del_scheduled_job(job_id)
+
+    @classmethod
+    def __is_scheduled(cls, job_id):
+        return cls.scheduled_jobs.get(job_id) is not None
+
+    @classmethod
+    def __is_job_done(cls, job: ScheduledJob) -> bool:
+        if isinstance(job.scheduling_params, DynamicDelayRepeat):
+            return job.state.exec_count == len(job.scheduling_params.delay_periods)
+        else:  # default, FIXED_DELAY_REPEAT
+            return job.state.exec_count == job.scheduling_params.repeat
+
+    @classmethod
+    def __calc_job_delay_for_next_run(cls, job: ScheduledJob):
+        if job.state.job_status == JobStatus.NEW:
+            if isinstance(job.scheduling_params, DynamicDelayRepeat):
+                return job.scheduling_params.delay_periods[0]
+            else:
+                return INITIAL_SCHEDULE_DELAY_SEC
+
+        if isinstance(job.scheduling_params, DynamicDelayRepeat):
+            next_delay = job.scheduling_params.delay_periods[job.state.exec_count]
+        else:  # FIXED_DELAY_REPEAT type
+            next_delay = job.scheduling_params.seconds_delay
+
+        return max(
+            job.state.last_exec_time_sec + next_delay - round(time.time()),
+            INITIAL_SCHEDULE_DELAY_SEC,
+        )

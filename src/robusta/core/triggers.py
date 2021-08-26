@@ -7,7 +7,7 @@ from .model.playbook_hash import playbook_hash
 
 from ..core.active_playbooks import get_active_playbooks, get_playbook_inventory
 from ..core.model.runner_config import RunnerConfig
-from ..core.schedule.scheduler import unschedule_deleted_playbooks
+from ..core.schedule.scheduler import Scheduler
 
 
 def clear_active_playbooks():
@@ -98,7 +98,7 @@ def deploy_playbook_config(runner_config: RunnerConfig):
     clear_active_playbooks()
 
     # unschedule playbooks that doesn't exist any more
-    unschedule_deleted_playbooks(new_playbook_ids)
+    Scheduler.unschedule_deleted_playbooks(new_playbook_ids)
 
     for deploy_command in deploy_commands:
         if deploy_command.action_params is None:

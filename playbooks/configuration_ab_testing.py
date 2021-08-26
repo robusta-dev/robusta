@@ -1,3 +1,5 @@
+from pydantic import SecretStr
+
 from robusta.api import *
 
 
@@ -8,7 +10,7 @@ class ConfigurationSet(BaseModel):
 
 class ABTestingParams(BaseModel):
     grafana_url: str = "http://kube-prometheus-stack-1616314181-grafana.default.svc"
-    grafana_api_key: str
+    grafana_api_key: SecretStr
     grafana_dashboard_uid: str
     api_version: str = "v1"
     kind: str
@@ -48,7 +50,9 @@ def config_ab_testing(event: RecurringTriggerEvent, action_params: ABTestingPara
     for attribute_name, attribute_value in next_config_set.config_items.items():
         grafana_message += f"{attribute_name} : {attribute_value}<br>"
     grafana_message += "</pre>"
-    grafana = Grafana(action_params.grafana_api_key, action_params.grafana_url)
+    grafana = Grafana(
+        action_params.grafana_api_key.get_secret_value(), action_params.grafana_url
+    )
     grafana.add_line_to_dashboard(
         action_params.grafana_dashboard_uid, grafana_message, tags=["AB Testing"]
     )

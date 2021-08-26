@@ -237,9 +237,9 @@ Enabling it:
          - "http://MY_GRAFANA/d-solo/SOME_OTHER_DASHBOARD/.../?orgId=1&from=now-1h&to=now&panelId=3"
          - "http://MY_GRAFANA/d-solo/SOME_OTHER_DASHBOARD/.../?orgId=1&from=now-1h&to=now&panelId=3"
 
-| Notes:
-* It's highly recommended to put relative time arguments, rather then absolute. i.e. from=now-1h&to=now
-* Configuring no ``name_prefix`` or ``on_image_change_only: false``, may result in too noisy channel
+.. note::
+    * It's highly recommended to put relative time arguments, rather then absolute. i.e. from=now-1h&to=now
+    * Configuring no ``name_prefix`` or ``on_image_change_only: false``, may result in too noisy channel
 
 | **The results:**
 
