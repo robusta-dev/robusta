@@ -7,6 +7,7 @@ import sys
 
 import yaml
 
+from ..core.model.env_vars import INTERNAL_PLAYBOOKS_ROOT
 from ..integrations.git.git_repo import GitRepoManager
 from ..core.active_playbooks import clear_playbook_inventory
 from ..core.triggers import deploy_playbook_config, RunnerConfig
@@ -43,7 +44,9 @@ def reload_runner_configuration(custom_playbooks_root):
 def reload_scripts(path):
     install_requirements(os.path.join(path, "requirements.txt"))
 
-    python_files = glob.glob(f"{path}/*.py")
+    logging.info(f"Internal playbooks location {INTERNAL_PLAYBOOKS_ROOT}")
+    python_files = glob.glob(f"{INTERNAL_PLAYBOOKS_ROOT}/*.py")
+    python_files.extend(glob.glob(f"{path}/*.py"))
     clear_playbook_inventory()
 
     if len(python_files) == 0:

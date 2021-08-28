@@ -1,6 +1,7 @@
 import copy
 import logging
 
+from .model.playbook_deploy_config import PlaybookDeployConfig
 from ..core.sinks.sink_manager import SinkManager
 from .model.trigger_params import TriggerParams
 from .model.playbook_hash import playbook_hash
@@ -40,7 +41,11 @@ def deploy_playbook_config(runner_config: RunnerConfig):
         )
 
     deploy_commands = []
-    active_playbooks = runner_config.active_playbooks or []
+    # TODO we will replace it with a more generic mechanism, as part of the triggers separation task
+    # First, we load the internal playbooks, then add the user activated playbooks
+    # Order matters. Internal playbooks, should be added first, and run first
+    active_playbooks = [PlaybookDeployConfig(name="cluster_discovery_updates")]
+    active_playbooks.extend(runner_config.active_playbooks)
     for playbook_config in active_playbooks:
         playbook_definition = get_playbook_inventory().get(playbook_config.name)
         if playbook_definition is None:

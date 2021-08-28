@@ -11,7 +11,8 @@ from typing import List, Dict, Any
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
 from ...transformer import Transformer
-from ....model.services import ServiceInfo, get_service_key
+from ....discovery.top_service_resolver import TopServiceResolver
+from ....model.services import ServiceInfo
 from ....reporting.blocks import (
     Finding,
     Enrichment,
@@ -115,7 +116,9 @@ class SupabaseDal:
             "subject_type": finding.subject.subject_type.value,
             "subject_name": finding.subject.name,
             "subject_namespace": finding.subject.namespace,
-            "service_key": finding.service_key,
+            "service_key": TopServiceResolver.guess_service_key(
+                finding.subject.name, finding.subject.namespace
+            ),
             "cluster": self.cluster,
             "account_id": self.account_id,
         }
@@ -223,9 +226,7 @@ class SupabaseDal:
             "cluster": self.cluster,
             "account_id": self.account_id,
             "deleted": service.deleted,
-            "service_key": get_service_key(
-                service.name, service.service_type, service.namespace
-            ),
+            "service_key": service.get_service_key(),
             "update_time": "now()",
         }
 
