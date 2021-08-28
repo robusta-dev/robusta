@@ -26,6 +26,9 @@ class TopServiceResolver:
         for service in services:
             new_store[service.namespace].append(service)
 
+        # The services are stored periodically, after reading it from the API server. If, between reads
+        # new services are added, they will be missing from the cache. So, in addition to the periodic read, we
+        # update the cache from listening to add/update API server events.
         # append recent updates, to avoid race conditions between events and api server read
         with cls.__cached_updates_lock:
             recent_updates_keys = list(cls.__recent_service_updates.keys())
