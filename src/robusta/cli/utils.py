@@ -21,6 +21,8 @@ def exec_in_robusta_runner(
         "robusta",
         "-it",
         "deploy/robusta-runner",
+        "-c",
+        "runner",
         "--",
         "bash",
         "-c",

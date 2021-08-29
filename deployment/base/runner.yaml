@@ -20,7 +20,7 @@ spec:
         image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
         imagePullPolicy: Always
         securityContext:
-          privileged: true
+          privileged: false
         env:
           - name: CUSTOM_PLAYBOOKS_ROOT
             value: /etc/robusta/config
