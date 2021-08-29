@@ -10,8 +10,17 @@ def pod_events_enrichment(pod: Pod) -> List[BaseBlock]:
     if event_list.items:  # add enrichment only if we got events
         block_list.append(MarkdownBlock("*Pod events:*"))
         headers = ["time", "message"]
-        rows = [[event.lastTimestamp, event.message] for event in event_list.items]
-        block_list.append(TableBlock(rows=rows, headers=headers))
+        rows = [
+            [parse_kubernetes_datetime_to_ms(event.lastTimestamp), event.message]
+            for event in event_list.items
+        ]
+        block_list.append(
+            TableBlock(
+                rows=rows,
+                headers=headers,
+                column_renderers={"time": RendererType.DATETIME},
+            )
+        )
     return block_list
 
 

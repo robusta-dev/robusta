@@ -91,7 +91,7 @@ class DefaultEnricher(Enricher):
     def enrich(self, alert: PrometheusKubernetesAlert):
         labels = alert.alert.labels
         alert.finding.add_enrichment(
-            [TableBlock(labels.items(), ["label", "value"])],
+            [TableBlock([[k, v] for (k, v) in labels.items()], ["label", "value"])],
             annotations={SlackAnnotations.ATTACHMENT: True},
         )
 
