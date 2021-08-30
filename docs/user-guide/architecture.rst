@@ -17,6 +17,7 @@ Robusta Kubernetes Deployments
 
 
 All of Robusta's Kubernetes resources are installed in the ``robusta`` namespace.
+You can install robusta on a custom namespace, by using the ``namespace`` parameter on the ``robusta install`` command.
 
 Robusta has two in-cluster Kubernetes deployments which trigger and execute playbooks.
 The first deployment, ``robusta-forwarder`` connects to the Kubernete's API server and monitors changes to the Kubernetes

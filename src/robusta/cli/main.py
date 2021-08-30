@@ -70,6 +70,10 @@ def install(
         None,
         help="Deploy Robusta from a given YAML file/url instead of using the latest version",
     ),
+    namespace: str = typer.Option(
+        "robusta",
+        help="Install Robusta on the specified namespace",
+    ),
 ):
     """install robusta into your cluster"""
     filename = "robusta.yaml"
@@ -81,7 +85,7 @@ def install(
     if not upgrade:  # download and deploy playbooks
         examples_download(slack_api_key=slack_api_key)
 
-    with fetch_runner_logs(all_logs=True), click_spinner.spinner():
+    with fetch_runner_logs(all_logs=True, namespace=namespace), click_spinner.spinner():
         log_title("Installing")
         subprocess.check_call(["kubectl", "apply", "-f", filename])
         log_title("Waiting for resources to be ready")
@@ -90,7 +94,7 @@ def install(
                 "kubectl",
                 "rollout",
                 "-n",
-                "robusta",
+                namespace,
                 "status",
                 "--timeout=2m",
                 "deployments/robusta-runner",
@@ -104,7 +108,7 @@ def install(
                         "kubectl",
                         "describe",
                         "-n",
-                        "robusta",
+                        namespace,
                         "deployments/robusta-runner",
                     ]
                 ),
@@ -116,7 +120,7 @@ def install(
                         "kubectl",
                         "describe",
                         "-n",
-                        "robusta",
+                        namespace,
                         "replicaset",
                     ]
                 ),
@@ -128,7 +132,7 @@ def install(
                         "kubectl",
                         "describe",
                         "-n",
-                        "robusta",
+                        namespace,
                         "pod",
                     ]
                 ),
@@ -145,7 +149,7 @@ def install(
             )
             raise Exception(f"Could not deploy robusta")
 
-        # subprocess.run(["kubectl", "wait", "-n", "robusta", "pods", "--all", "--for", "condition=available"])
+        # subprocess.run(["kubectl", "wait", "-n", INSTALLATION_NAMESPACE, "pods", "--all", "--for", "condition=available"])
         # TODO: if this is an upgrade there can still be pods in the old terminating status and then we will bring
         # logs from the wrong pod...
         time.sleep(5)  # wait an extra second for logs to be written
@@ -292,7 +296,12 @@ def version():
 
 
 @app.command()
-def demo():
+def demo(
+    namespace: str = typer.Option(
+        "robusta",
+        help="Demo Robusta on the specified custom namespace",
+    ),
+):
     """deliberately deploy a crashing pod to kubernetes so you can test robusta's response"""
     log_title("Deploying a crashing pod to kubernetes...")
     subprocess.check_call(f"kubectl apply -f {CRASHPOD_YAML}", shell=True)
@@ -300,7 +309,9 @@ def demo():
         "In ~30 seconds you should receive a slack notification on a crashing pod"
     )
     time.sleep(60)
-    subprocess.check_call(f"kubectl delete -n robusta deployment crashpod", shell=True)
+    subprocess.check_call(
+        f"kubectl delete -n {namespace} deployment crashpod", shell=True
+    )
     log_title("Done!")
 
 

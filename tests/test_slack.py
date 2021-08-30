@@ -27,8 +27,8 @@ def test_long_table_columns(slack_channel: SlackChannel):
         [
             TableBlock(
                 [
-                    ("A" * 120, "123" * 120),
-                    ("EFG", "456"),
+                    ["A" * 120, "123" * 120],
+                    ["EFG", "456"],
                 ],
                 ["A", "B"],
             ),

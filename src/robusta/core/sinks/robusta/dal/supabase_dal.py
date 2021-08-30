@@ -156,6 +156,7 @@ class SupabaseDal:
                         "data": {
                             "headers": block.headers,
                             "rows": [row for row in block.rows],
+                            "column_renderers": block.column_renderers,
                         },
                     }
                 )

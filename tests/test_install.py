@@ -8,7 +8,7 @@ from tests.utils.kubernetes_utils import get_crashing_deployment
 
 
 def test_robusta_install(robusta: RobustaController, slack_channel: SlackChannel):
-    crashing_deployment = get_crashing_deployment()
+    crashing_deployment = get_crashing_deployment(robusta.namespace)
     crashing_deployment.client = robusta.get_client()
     crashing_deployment.create()
     msg = ""

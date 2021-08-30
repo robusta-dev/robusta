@@ -25,6 +25,7 @@ To deploy Robusta to your cluster run:
    robusta install
 
 This will install two deployments in the ``robusta`` namespace. Robusta can be removed at any time by deleting that namespace. :ref:`Learn more about Robusta's architecture<Robusta Architecture>`.
+You can install Robusta on a custom namespace by using ``robusta install --namespace my-custom-namespace``
 
 Seeing Robusta in Action
 ------------------------------
