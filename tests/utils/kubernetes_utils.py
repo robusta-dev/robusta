@@ -1,12 +1,10 @@
 import uuid
 from hikaru.model import *
 
-from core.model.env_vars import INSTALLATION_NAMESPACE
 
-
-def get_crashing_deployment() -> Deployment:
+def get_crashing_deployment(namespace: str) -> Deployment:
     return Deployment(
-        metadata=ObjectMeta(name=str(uuid.uuid4()), namespace=INSTALLATION_NAMESPACE),
+        metadata=ObjectMeta(name=str(uuid.uuid4()), namespace=namespace),
         spec=DeploymentSpec(
             selector=LabelSelector(matchLabels={"app": "crashpod"}),
             template=PodTemplateSpec(
