@@ -1,5 +1,7 @@
 import textwrap
 
+from ...core.model.env_vars import INSTALLATION_NAMESPACE
+
 
 def get_deployment_yaml(name, image="busybox"):
     return textwrap.dedent(
@@ -8,7 +10,7 @@ def get_deployment_yaml(name, image="busybox"):
   kind: Deployment
   metadata:
     name: {name}
-    namespace: robusta
+    namespace: {INSTALLATION_NAMESPACE}
     labels:
       app: {name}
   spec:

@@ -12,13 +12,17 @@ PLAYBOOKS_DIR = "playbooks/"
 
 
 def exec_in_robusta_runner(
-    cmd, tries=1, time_between_attempts=10, error_msg="error running cmd"
+    cmd,
+    namespace: str,
+    tries=1,
+    time_between_attempts=10,
+    error_msg="error running cmd",
 ):
     cmd = [
         "kubectl",
         "exec",
         "-n",
-        "robusta",
+        namespace,
         "-it",
         "deploy/robusta-runner",
         "-c",
@@ -64,7 +68,7 @@ def replace_in_file(path, original, replacement):
 
 
 @contextmanager
-def fetch_runner_logs(all_logs=False):
+def fetch_runner_logs(namespace: str, all_logs=False):
     start = time.time()
     try:
         yield
@@ -72,12 +76,12 @@ def fetch_runner_logs(all_logs=False):
         log_title("Fetching logs...")
         if all_logs:
             subprocess.check_call(
-                f"kubectl logs -n robusta deployment/robusta-runner -c runner",
+                f"kubectl logs -n {namespace} deployment/robusta-runner -c runner",
                 shell=True,
             )
         else:
             subprocess.check_call(
-                f"kubectl logs -n robusta deployment/robusta-runner -c runner --since={int(time.time() - start + 1)}s",
+                f"kubectl logs -n {namespace} deployment/robusta-runner -c runner --since={int(time.time() - start + 1)}s",
                 shell=True,
             )
 

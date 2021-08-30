@@ -21,16 +21,22 @@ app = typer.Typer()
 
 
 @app.command()
-def deploy(playbooks_directory: str):
+def deploy(
+    playbooks_directory: str,
+    namespace: str = typer.Option(
+        "robusta",
+        help="Deploy Robusta on the specified custom namespace",
+    ),
+):
     """deploy playbooks"""
     log_title("Updating playbooks...")
-    with fetch_runner_logs():
+    with fetch_runner_logs(namespace=namespace):
         subprocess.check_call(
-            f"kubectl create configmap -n robusta robusta-config --from-file {playbooks_directory} -o yaml --dry-run | kubectl apply -f -",
+            f"kubectl create configmap -n {namespace} robusta-config --from-file {playbooks_directory} -o yaml --dry-run | kubectl apply -f -",
             shell=True,
         )
         subprocess.check_call(
-            f'kubectl annotate pods -n robusta --all --overwrite "playbooks-last-modified={time.time()}"',
+            f'kubectl annotate pods -n {namespace} --all --overwrite "playbooks-last-modified={time.time()}"',
             shell=True,
         )
         time.sleep(
@@ -39,9 +45,9 @@ def deploy(playbooks_directory: str):
     log_title("Deployed playbooks!")
 
 
-def get_runner_configmap():
+def get_runner_configmap(namespace: str):
     configmap_content = subprocess.check_output(
-        f"kubectl get configmap -n robusta robusta-config -o yaml",
+        f"kubectl get configmap -n {namespace} robusta-config -o yaml",
         shell=True,
     )
     return yaml.safe_load(configmap_content)
@@ -52,7 +58,11 @@ def pull(
     playbooks_directory: str = typer.Option(
         None,
         help="Local target directory",
-    )
+    ),
+    namespace: str = typer.Option(
+        "robusta",
+        help="Pull Robusta playbooks from the specified custom namespace",
+    ),
 ):
     """pull cluster deployed playbooks"""
     if not playbooks_directory:
@@ -61,7 +71,7 @@ def pull(
     log_title(f"Pulling playbooks into {playbooks_directory} ")
 
     try:
-        playbooks_config = get_runner_configmap()
+        playbooks_config = get_runner_configmap(namespace=namespace)
 
         for file_name in playbooks_config["data"].keys():
             playbook_file = os.path.join(playbooks_directory, file_name)
@@ -80,11 +90,16 @@ def print_yaml_if_not_none(key: str, json_dict: dict):
 
 
 @app.command("list")
-def list_():  # not named list as that would shadow the builtin list function
+def list_(
+    namespace: str = typer.Option(
+        "robusta",
+        help="List Robusta playbooks on the specified custom namespace",
+    ),
+):  # not named list as that would shadow the builtin list function
     """list current active playbooks"""
     typer.echo(f"Getting deployed playbooks list...")
     with click_spinner.spinner():
-        playbooks_config = get_runner_configmap()
+        playbooks_config = get_runner_configmap(namespace=namespace)
 
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
     active_playbooks_yaml = yaml.safe_load(active_playbooks_file)
@@ -97,11 +112,16 @@ def list_():  # not named list as that would shadow the builtin list function
 
 
 @app.command()
-def show_config():
+def show_config(
+    namespace: str = typer.Option(
+        "robusta",
+        help="Show Robusta configuration, from the custom namespace",
+    ),
+):
     """fetch and show active_playbooks.yaml from cluster"""
     typer.echo("connecting to cluster...")
     with click_spinner.spinner():
-        playbooks_config = get_runner_configmap()
+        playbooks_config = get_runner_configmap(namespace=namespace)
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
     log_title("Contents of active_playbooks.yaml:")
     typer.echo(active_playbooks_file)
@@ -115,14 +135,19 @@ def trigger(
         help="data to send to playbook (can be used multiple times)",
         metavar="key=value",
     ),
+    namespace: str = typer.Option(
+        "robusta",
+        help="Install Robusta on the specified custom namespace",
+    ),
 ):
     """trigger a manually run playbook"""
     log_title("Triggering playbook...")
     trigger_params = " ".join([f"-F '{p}'" for p in param])
-    with fetch_runner_logs():
+    with fetch_runner_logs(namespace=namespace):
         cmd = f"curl -X POST -F 'trigger_name={trigger_name}' {trigger_params} http://localhost:5000/api/trigger"
         exec_in_robusta_runner(
             cmd,
+            namespace=namespace,
             tries=3,
             error_msg="Cannot trigger playbook - usually this means Robusta just started. Will try again",
         )
