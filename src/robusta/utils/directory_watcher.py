@@ -43,7 +43,7 @@ class DirWatcher:
     def watch(self):
         observer = Observer()
         fs_change_handler = FsChangeHandler(self.mark_change)
-        observer.schedule(fs_change_handler, self.path_to_watch)
+        observer.schedule(fs_change_handler, self.path_to_watch, recursive=True)
         observer.start()
         try:
             while True:

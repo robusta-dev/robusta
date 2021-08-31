@@ -22,8 +22,10 @@ spec:
         securityContext:
           privileged: true
         env:
-          - name: CUSTOM_PLAYBOOKS_ROOT
-            value: /etc/robusta/config
+          - name: PLAYBOOKS_ROOT
+            value: /etc/robusta/playbooks/
+          - name: CONFIG_PATH
+            value: /etc/robusta/config/active_playbooks.yaml
           - name: ENABLE_MANHOLE
             value: "true"
           - name: ENABLE_COLORED_LOGS
@@ -31,6 +33,8 @@ spec:
           - name: LOG_LEVEL
             value: INFO
         volumeMounts:
+          - name: custom-playbooks
+            mountPath: /etc/robusta/playbooks/custom
           - name: playbooks-config
             mountPath: /etc/robusta/config
         lifecycle:
@@ -50,6 +54,10 @@ spec:
           limits:
             memory: "512Mi"
       volumes:
+        - name: custom-playbooks
+          configMap:
+            name: robusta-custom-playbooks
+            optional: true
         - name: playbooks-config
           configMap:
             name: robusta-config

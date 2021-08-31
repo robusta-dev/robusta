@@ -13,7 +13,7 @@ from ..core.active_playbooks import run_playbooks
 from ..integrations.prometheus.incoming_handler import parse_incoming_prometheus_alerts
 from ..integrations.manual.incoming_handler import parse_incoming_manual_trigger
 from ..integrations.slack.receiver import start_slack_receiver
-from .config_handler import ConfigHandler
+from .config_loader import ConfigLoader
 from ..core.schedule.scheduler import Scheduler
 
 
@@ -42,12 +42,16 @@ logging.info(f"logger initialized using {LOGGING_LEVEL} log level")
 
 def main():
     Scheduler.init_scheduler()
-    config_handler = ConfigHandler()
+    playbooks_path = os.environ.get("PLAYBOOKS_ROOT")
+    config_path = os.environ.get("CONFIG_PATH")
+    loader = ConfigLoader(config_path, playbooks_path)
+
     if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
         manhole.install(locals=dict(getmembers(robusta_api)))
+
     start_slack_receiver()
     app.run(host="0.0.0.0", use_reloader=False)
-    config_handler.close()
+    loader.close()
 
 
 # TODO: in each of the below handlers we block until the playbook finishes running
