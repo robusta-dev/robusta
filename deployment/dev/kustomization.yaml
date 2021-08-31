@@ -1,5 +1,8 @@
 bases:
 - ../base
 
-patchesStrategicMerge:
-  - set_slack_api_key.yaml
+configMapGenerator:
+  - name: robusta-config
+    behavior: replace
+    files:
+      - active_playbooks.yaml

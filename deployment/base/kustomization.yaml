@@ -11,7 +11,9 @@ configMapGenerator:
   - name: robusta-kubewatch-config
     files:
       - config/.kubewatch.yaml
-
+  - name: robusta-config
+    files:
+      - config/active_playbooks.yaml
 generatorOptions:
   disableNameSuffixHash: true
 
