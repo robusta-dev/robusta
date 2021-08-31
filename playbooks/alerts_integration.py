@@ -116,7 +116,7 @@ class GraphEnricher(Enricher):
         increment = graph_duration.total_seconds() / 60
         result = prom.custom_query_range(promql_query, start_time, end_time, increment)
 
-        chart = pygal.XY(show_dots=True, style=ChosenStyle, truncate_legend=-1)
+        chart = pygal.XY(show_dots=True, style=ChosenStyle, truncate_legend=15)
         chart.x_label_rotation = 35
         chart.truncate_label = -1
         chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(

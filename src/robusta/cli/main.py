@@ -155,7 +155,7 @@ def install(
         time.sleep(5)  # wait an extra second for logs to be written
 
     if not upgrade:  # download and deploy playbooks
-        deploy(PLAYBOOKS_DIR)
+        deploy(PLAYBOOKS_DIR, namespace=namespace)
 
     log_title("Installation Done!")
     log_title(

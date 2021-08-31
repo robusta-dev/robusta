@@ -4,6 +4,7 @@
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
+import threading
 import uuid
 from typing import List, Callable, Dict, Any, Iterable, Sequence, Optional
 
@@ -18,6 +19,7 @@ from .custom_rendering import render_value
 from ..reporting.consts import FindingSource, FindingSubjectType, FindingType
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
+render_lock = threading.Lock()
 
 
 class BaseBlock(BaseModel):
@@ -105,6 +107,7 @@ class TableBlock(BaseBlock):
     rows: List[List]
     headers: Sequence[str] = ()
     column_renderers: Dict = {}
+    rendered: bool = False
 
     def __init__(
         self, rows: List[List], headers: Sequence[str] = (), column_renderers: Dict = {}
@@ -120,6 +123,10 @@ class TableBlock(BaseBlock):
         return MarkdownBlock(f"```\n{table}\n```")
 
     def pre_render_rows(self):
+        with render_lock:
+            if self.rendered:
+                return
+            self.rendered = True
         if self.column_renderers is not None:
             for (column_name, renderer_type) in self.column_renderers.items():
                 column_idx = self.headers.index(column_name)
