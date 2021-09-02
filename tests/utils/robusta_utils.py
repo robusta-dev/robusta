@@ -37,6 +37,7 @@ class RobustaController:
                 "robusta/robusta",
             ],
         )
+        time.sleep(10)
         assert b"STATUS: deployed" in logs
 
     def cli_examples(self, playbooks_url: str, slack_channel: str, slack_api_key: str):
