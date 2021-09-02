@@ -27,6 +27,16 @@ class RobustaController:
             ],
         )
         assert b"created" in logs
+        logs = self._run_cli_cmd(
+            [
+                "kubectl",
+                "config",
+                "set-context",
+                "--current",
+                "--namespace",
+                self.namespace,
+            ],
+        )
 
     def helm_install(self):
         logs = self._run_cli_cmd(
