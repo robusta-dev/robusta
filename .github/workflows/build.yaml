@@ -52,21 +52,7 @@ jobs:
           fixed-${{ github.sha }}
           fixed-
     - name: Build with skaffold
-      run: ./skaffold build -p prod --file-output=container-ids.json
-
-    # we disable the run-id so that if we do two identical builds then they will output the same YAML
-    # otherwise skaffold creates a different yaml because the run id changes
-    - name: Render yaml file
-      run: ./skaffold render -p prod --offline=true -l skaffold.dev/run-id=LEAVE_UNCHANGED > robusta.yaml
-
-    # upload robusta.yaml to gist
-    - name: Deploy gist
-      uses: arikalon1/actions-deploy-gist@v1
-      with:
-        token: ${{ secrets.GIST_TOKEN }}
-        gist_id: 6b809d508dfc3d8d92afc92c7bbbe88e
-        gist_file_name: robusta-${{ env.RELEASE_VER }}.yaml
-        file_path: ./robusta.yaml
+      run: ./skaffold build --file-output=container-ids.json
 
     - name: Create robusta examples
       run: |-

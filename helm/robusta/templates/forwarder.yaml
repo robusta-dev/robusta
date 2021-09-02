@@ -1,40 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: robusta-forwarder
+  name: {{ .Release.Name }}-forwarder
 spec:
   selector:
     matchLabels:
-      app: robusta-forwarder
+      app: {{ .Release.Name }}-forwarder
   replicas: 1
   template:
     metadata:
       labels:
-        app: robusta-forwarder
+        app: {{ .Release.Name }}-forwarder
     spec:
-      serviceAccountName: robusta
+      serviceAccountName: {{ .Release.Name }}-forwarder-service-account
       containers:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
-        image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.10
+        image: {{ .Values.kubewatch.image }}
         imagePullPolicy: Always
         env:
           - name: KW_CONFIG
             value: /config
           - name: ENABLE_PPROF
-            value: "True"
+            value: {{ .Values.kubewatch.pprof | quote }}
         volumeMounts:
           - name: robusta-kubewatch-config
             mountPath: /config
         resources:
           limits:
-            memory: "1024Mi"
+            memory: {{ .Values.kubewatch.limits.memory | quote }}
       volumes:
         - name:  robusta-kubewatch-config
           configMap:
-            name: robusta-kubewatch-config
-
-# if using the official image then we need this - see https://github.com/bitnami/bitnami-docker-kubewatch/blob/82c54aeb2a764d7b74ad20d8d74493235ef30fc6/0/debian-10/Dockerfile
-#COPY kubewatch.yaml /opt/bitnami/kubewatch/.kubewatch.yaml
-# for our image
-#COPY kubewatch.yaml /root/.kubewatch.yaml
+            name: {{ .Release.Name }}-kubewatch-config

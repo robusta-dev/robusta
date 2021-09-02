@@ -43,9 +43,8 @@ logging.info(f"logger initialized using {LOGGING_LEVEL} log level")
 def main():
     Scheduler.init_scheduler()
     playbooks_path = os.environ.get("PLAYBOOKS_ROOT")
-    config_path = os.environ.get("CONFIG_PATH")
-    loader = ConfigLoader(config_path, playbooks_path)
-
+    config_file_path = os.environ.get("PLAYBOOKS_CONFIG_FILE_PATH")
+    loader = ConfigLoader(config_file_path, playbooks_path)
     if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
         manhole.install(locals=dict(getmembers(robusta_api)))
 

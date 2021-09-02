@@ -4,6 +4,7 @@ import logging
 import os
 import subprocess
 import sys
+import threading
 from typing import Optional
 
 import yaml
@@ -25,60 +26,68 @@ class ConfigLoader:
     #    |--- requirements.txt
     # |- playbook_dir2
     #    |--- ...
-    def __init__(self, config_path: str, root_playbook_path: str):
-        self.config_path = config_path
+    def __init__(self, config_file_path: str, root_playbook_path: str):
+        self.config_file_path = config_file_path
         self.root_playbook_path = root_playbook_path
-        self.watcher = DirWatcher(self.root_playbook_path, self.__reload())
-        self.__reload()
+        self.reload_lock = threading.Lock()
+        self.watcher = DirWatcher(self.root_playbook_path, self.__reload)
+        self.conf_watcher = DirWatcher(
+            os.path.dirname(self.config_file_path), self.__reload
+        )
+        self.__reload("initialization")
 
     def close(self):
         self.watcher.stop_watcher()
+        self.conf_watcher.stop_watcher()
 
-    def __reload(self):
-        try:
-            # TODO: there is a race condition here where we can lose events if they arrive while we are reloading
-            # even if the playbook that should handle those events was active in both versions
-            # We should ultimately fix this by replacing clear_playbook_inventory() with an atomic call to
-            # set_playbook_inventory(playbooks) - but to do so we first have to change the way playbook registration
-            # works. In the new design, playbooks should be found instead of registering themselves.
-            runner_config = self.__load_config(self.config_path)
-            if runner_config is None:
-                return
+    def __reload(self, changed_location):
+        logging.info(f"Reloading configuration due to change on {changed_location}")
+        with self.reload_lock:
+            try:
+                # TODO: there is a race condition here where we can lose events if they arrive while we are reloading
+                # even if the playbook that should handle those events was active in both versions
+                # We should ultimately fix this by replacing clear_playbook_inventory() with an atomic call to
+                # set_playbook_inventory(playbooks) - but to do so we first have to change the way playbook registration
+                # works. In the new design, playbooks should be found instead of registering themselves.
+                runner_config = self.__load_config(self.config_file_path)
+                if runner_config is None:
+                    return
 
-            playbook_directories = [
-                os.path.join(self.root_playbook_path, path)
-                for path in runner_config.playbook_sets
-            ]
+                playbook_directories = [
+                    os.path.join(self.root_playbook_path, path)
+                    for path in runner_config.playbook_sets
+                ]
 
-            clear_playbook_inventory()
-            self.__load_playbook_directory(INTERNAL_PLAYBOOKS_ROOT)
-            for playbook_dir in playbook_directories:
-                self.__load_playbook_directory(playbook_dir)
+                clear_playbook_inventory()
+                self.__load_playbook_directory(INTERNAL_PLAYBOOKS_ROOT)
+                for playbook_dir in playbook_directories:
+                    self.__load_playbook_directory(playbook_dir)
 
-            deploy_playbook_config(runner_config)
-            # clear git repos, so it would be re-initialized
-            GitRepoManager.clear_git_repos()
+                deploy_playbook_config(runner_config)
+                # clear git repos, so it would be re-initialized
+                GitRepoManager.clear_git_repos()
 
-        except Exception as e:
-            logging.exception(
-                f"unknown error reloading playbooks. will try again when they next change. exception={e}"
-            )
+            except Exception as e:
+                logging.exception(
+                    f"unknown error reloading playbooks. will try again when they next change. exception={e}"
+                )
 
     @classmethod
-    def __load_config(cls, config_path) -> Optional[RunnerConfig]:
-        if not os.path.exists(config_path):
+    def __load_config(cls, config_file_path) -> Optional[RunnerConfig]:
+        if not os.path.exists(config_file_path):
             logging.warning(
-                f"config file not found at {config_path} - not configuring any playbooks."
+                f"config file not found at {config_file_path} - not configuring any playbooks."
             )
             return None
 
-        logging.info(f"loading config {config_path}")
-        with open(config_path) as file:
+        logging.info(f"loading config {config_file_path}")
+        with open(config_file_path) as file:
             yaml_content = yaml.safe_load(file)
             return RunnerConfig(**yaml_content)
 
     @classmethod
     def __load_playbook_directory(cls, playbook_dir):
+        logging.info(f"Loading playbooks sources from {playbook_dir}")
         if not os.path.exists(playbook_dir):
             logging.error(f"playbooks directory not found: {playbook_dir}")
             return

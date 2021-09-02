@@ -1,8 +1,10 @@
+import os
 import random
 import subprocess
 import time
 import click_spinner
 from zipfile import ZipFile
+import yaml
 from kubernetes import config
 
 
@@ -17,8 +19,9 @@ from .utils import (
     get_examples_url,
     PLAYBOOKS_DIR,
 )
-from .playbooks_cmd import app as playbooks_commands, deploy
+from .playbooks_cmd import app as playbooks_commands
 from .integrations_cmd import app as integrations_commands, get_slack_key
+
 
 from robusta._version import __version__
 
@@ -37,6 +40,15 @@ def get_runner_url(runner_version=None):
 
 
 CRASHPOD_YAML = "https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml"
+SINK_NAME = "sink_name"
+SINK_TYPE = "sink_type"
+PARAMS = "params"
+SINKS = "sinks"
+SINKS_CONFIG = "sinks_config"
+GLOBAL_CONFIG = "global_config"
+CLUSTER_NAME = "cluster_name"
+SLACK = "slack"
+ROBUSTA = "robusta"
 
 
 def slack_integration(
@@ -59,104 +71,88 @@ def slack_integration(
         replace_in_file(slack_param_file_name, "<DEFAULT_SLACK_CHANNEL>", slack_channel)
 
 
+def add_sink(
+    global_config: dict, sinks_config: [], sink_name: str, sink_type: str, params: dict
+):
+    sinks_config.append({SINK_NAME: sink_name, SINK_TYPE: sink_type, PARAMS: params})
+    if sink_name not in global_config[SINKS]:
+        global_config[SINKS].append(sink_name)
+
+
 @app.command()
-def install(
-    slack_api_key: str = None,
-    upgrade: bool = typer.Option(
-        False,
-        help="Only upgrade Robusta's pods, without deploying the default playbooks",
-    ),
-    url: str = typer.Option(
-        None,
-        help="Deploy Robusta from a given YAML file/url instead of using the latest version",
+def gen_config(
+    base_config_file: str = typer.Option(
+        "./active_playbooks.yaml",
+        help="Base configuration file. Can be found with Robusta's helm chart",
     ),
 ):
-    """install robusta into your cluster"""
-    filename = "robusta.yaml"
-    if url is not None:
-        download_file(url, filename)
-    else:
-        download_file(get_runner_url(), filename)
-
-    if not upgrade:  # download and deploy playbooks
-        examples_download(slack_api_key=slack_api_key)
-
-    with fetch_runner_logs(all_logs=True), click_spinner.spinner():
-        log_title("Installing")
-        subprocess.check_call(["kubectl", "apply", "-f", filename])
-        log_title("Waiting for resources to be ready")
-        ret = subprocess.call(
-            [
-                "kubectl",
-                "rollout",
-                "-n",
-                "robusta",
-                "status",
-                "--timeout=2m",
-                "deployments/robusta-runner",
-            ]
+    """Create runtime configuration file"""
+    if not os.path.exists(base_config_file):
+        typer.secho(
+            f"Base configuration file cannot be found {base_config_file}", fg="red"
         )
-        if ret:
-            print(
-                "Deployment Description:",
-                subprocess.check_output(
-                    [
-                        "kubectl",
-                        "describe",
-                        "-n",
-                        "robusta",
-                        "deployments/robusta-runner",
-                    ]
-                ),
-            )
-            print(
-                "Replicaset Description:",
-                subprocess.check_output(
-                    [
-                        "kubectl",
-                        "describe",
-                        "-n",
-                        "robusta",
-                        "replicaset",
-                    ]
-                ),
-            )
-            print(
-                "Pod Description:",
-                subprocess.check_output(
-                    [
-                        "kubectl",
-                        "describe",
-                        "-n",
-                        "robusta",
-                        "pod",
-                    ]
-                ),
-            )
-            print(
-                "Node Description:",
-                subprocess.check_output(
-                    [
-                        "kubectl",
-                        "describe",
-                        "node",
-                    ]
-                ),
-            )
-            raise Exception(f"Could not deploy robusta")
+        return
+    with open(base_config_file, "r") as base:
+        yaml_content = yaml.safe_load(base)
 
-        # subprocess.run(["kubectl", "wait", "-n", "robusta", "pods", "--all", "--for", "condition=available"])
-        # TODO: if this is an upgrade there can still be pods in the old terminating status and then we will bring
-        # logs from the wrong pod...
-        time.sleep(5)  # wait an extra second for logs to be written
+        global_config = yaml_content[GLOBAL_CONFIG]
 
-    if not upgrade:  # download and deploy playbooks
-        deploy(PLAYBOOKS_DIR)
+        cluster_name = global_config.get(CLUSTER_NAME)
+        if cluster_name is None:
+            (all_contexts, current_context) = config.list_kube_config_contexts()
+            default_name = (
+                current_context.get("name")
+                if (current_context and current_context.get("name"))
+                else f"cluster_{random.randint(0, 1000000)}"
+            )
+            cluster_name = typer.prompt(
+                "Please specify a unique name for your cluster or press ENTER to use the default",
+                default=default_name,
+            )
+            global_config[CLUSTER_NAME] = cluster_name
 
-    log_title("Installation Done!")
-    log_title(
-        "In order to see Robusta in action run 'robusta demo'", color=typer.colors.BLUE
-    )
+        sinks_config = yaml_content[SINKS_CONFIG]
+
+        # Handle slack sink configuration
+        slack_sinks = [sink for sink in sinks_config if sink[SINK_TYPE] == SLACK]
+        if slack_sinks:
+            typer.secho(f"Found slack integration, skipping", fg="green")
+        else:
+            if typer.confirm(
+                "do you want to configure slack integration? this is HIGHLY recommended.",
+                default=True,
+            ):
+                slack_api_key = get_slack_key()
+
+                slack_channel = typer.prompt(
+                    "which slack channel should I send notifications to?"
+                )
+                if slack_api_key:
+                    params = {"api_key": slack_api_key, "slack_channel": slack_channel}
+                    add_sink(global_config, sinks_config, "slack sink", SLACK, params)
+
+        # Handle robusta sink configuration
+        robusta_sinks = [sink for sink in sinks_config if sink[SINK_TYPE] == ROBUSTA]
+        if robusta_sinks:
+            typer.secho(f"Found robusta integration, skipping", fg="green")
+        else:
+            if typer.confirm("Would you like to use Robusta UI?"):
+                robusta_ui_token = typer.prompt(
+                    "Please insert your Robusta account token",
+                    default=None,
+                )
+                if robusta_ui_token:
+                    params = {
+                        "token": robusta_ui_token,
+                    }
+                    add_sink(
+                        global_config, sinks_config, "robusta ui sink", ROBUSTA, params
+                    )
+
+    generated_file = "./active_playbooks_generated.yaml"
+    with open(generated_file, "w") as generated:
+        yaml.safe_dump(yaml_content, generated, sort_keys=False)
+        print(f"Saved configuration to {generated_file}")
 
 
 def examples_download(

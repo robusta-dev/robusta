@@ -7,7 +7,7 @@ from ..sinks.sink_config import SinkConfigBase
 
 
 class RunnerConfig(BaseModel):
-    playbook_sets: List[str] = ["defaults"]
+    playbook_sets: List[str] = ["defaults", "custom"]
     sinks_config: Optional[List[SinkConfigBase]] = []
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDeployConfig]] = []

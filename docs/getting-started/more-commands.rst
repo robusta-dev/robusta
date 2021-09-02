@@ -3,6 +3,15 @@ More Robusta CLI Commands
 
 The ``robusta`` cli has additional commands for managing playbooks in your cluster.
 
+Initial configuration
+------------------------------------------
+To initially configure your ``active_playbooks.yaml`` file run
+
+.. code-block:: python
+
+   robusta gen-config --base-config-file robusta/active_playbooks.yaml
+
+
 Viewing active playbooks
 ------------------------------------------
 To view the currently active playbooks in your cluster run:

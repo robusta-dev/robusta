@@ -31,7 +31,7 @@ class DeployCommand:
 
 
 def deploy_playbook_config(runner_config: RunnerConfig):
-    cluster_name = runner_config.global_config.get("cluster_name")
+    cluster_name = runner_config.global_config.get("cluster_name", "")
     SinkManager.update_sinks_config(runner_config.sinks_config, cluster_name)
 
     default_sinks = runner_config.global_config.get("sinks", [])

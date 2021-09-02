@@ -1,48 +1,52 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: robusta-runner
+  name: {{ .Release.Name }}-runner
   labels:
-    app: robusta-runner
+    app: {{ .Release.Name }}-runner
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: robusta-runner
+      app: {{ .Release.Name }}-runner
   template:
     metadata:
       labels:
-        app: robusta-runner
+        app: {{ .Release.Name }}-runner
     spec:
-      serviceAccountName: robusta-runner
+      serviceAccountName: {{ .Release.Name }}-runner-service-account
       containers:
       - name: runner
-        image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        image: {{ .Values.runner.image }}
         imagePullPolicy: Always
         securityContext:
-          privileged: true
+          privileged: false
         env:
           - name: PLAYBOOKS_ROOT
             value: /etc/robusta/playbooks/
-          - name: CONFIG_PATH
+          - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml
           - name: ENABLE_MANHOLE
             value: "true"
           - name: ENABLE_COLORED_LOGS
             value: "true"
           - name: LOG_LEVEL
-            value: INFO
+            value: {{ .Values.runner.log_level }}
+          - name: INSTALLATION_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
         volumeMounts:
-          - name: custom-playbooks
-            mountPath: /etc/robusta/playbooks/custom
           - name: playbooks-config
             mountPath: /etc/robusta/config
+          - name: custom-playbooks
+            mountPath: /etc/robusta/playbooks/custom
         lifecycle:
           preStop:
             exec:
               command: ["bash", "-c", "kill -SIGINT 1"]
       - name: grafana-renderer
-        image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:4
+        image: {{ .Values.grafana_renderer.image }}
         imagePullPolicy: Always
         securityContext:
           privileged: false
@@ -52,24 +56,25 @@ spec:
               command: ["bash", "-c", "kill -SIGINT 1"]
         resources:
           limits:
-            memory: "512Mi"
+            memory: {{ .Values.grafana_renderer.limits.memory | quote }}
       volumes:
+        - name: playbooks-config
+          configMap:
+            name: robusta-playbooks-config
+            optional: true
         - name: custom-playbooks
           configMap:
             name: robusta-custom-playbooks
             optional: true
-        - name: playbooks-config
-          configMap:
-            name: robusta-config
-            optional: true
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: robusta-runner
+  name: {{ .Release.Name }}-runner
 spec:
   selector:
-    app: robusta-runner
+    app: {{ .Release.Name }}-runner
   ports:
     - name: http
       protocol: TCP

@@ -1,4 +1,4 @@
 Uninstalling Robusta
 #####################
 
-Everything Robusta installs is placed in the ``robusta`` namespace. To delete Robusta, just delete that namespace.
+Robusta is installed using ``helm``. Running ``helm uninstall robusta`` remove all the installed components.

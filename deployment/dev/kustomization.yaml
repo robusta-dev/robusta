@@ -1,8 +1,0 @@
-bases:
-- ../base
-
-configMapGenerator:
-  - name: robusta-config
-    behavior: replace
-    files:
-      - active_playbooks.yaml

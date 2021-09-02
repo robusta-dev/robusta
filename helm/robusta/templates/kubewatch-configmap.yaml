@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-kubewatch-config
+data:
+  .kubewatch.yaml: |-
+{{ .Files.Get "kubewatch.yaml" | indent 4}}

@@ -16,20 +16,6 @@ class RobustaController:
     def get_client(self) -> kubernetes.client.ApiClient:
         return self.client
 
-    def cli_install(self, installation_url: str, slack_token: str):
-        logs = self._run_cli_cmd(
-            [
-                "robusta",
-                "install",
-                "--url",
-                installation_url,
-                "--slack-api-key",
-                slack_token,
-                "--upgrade",  # pass the upgrade flag to avoid installing playbooks
-            ],
-        )
-        assert b"Installation Done" in logs
-
     def cli_examples(self, playbooks_url: str, slack_channel: str, slack_api_key: str):
         logs = self._run_cli_cmd(
             [
@@ -56,7 +42,7 @@ class RobustaController:
             [
                 "robusta",
                 "playbooks",
-                "deploy",
+                "configure",
                 "playbooks/",
             ],
         )
