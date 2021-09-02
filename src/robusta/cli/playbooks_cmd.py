@@ -61,7 +61,7 @@ def configure(
 ):
     """deploy playbooks configuration"""
     log_title("Configuring playbooks...")
-    with fetch_runner_logs():
+    with fetch_runner_logs(namespace):
         subprocess.check_call(
             f"kubectl create configmap -n {namespace} robusta-playbooks-config --from-file {config_file} -o yaml --dry-run | kubectl apply -f -",
             shell=True,
