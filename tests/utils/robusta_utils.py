@@ -17,6 +17,17 @@ class RobustaController:
     def get_client(self) -> kubernetes.client.ApiClient:
         return self.client
 
+    def create_namespace(self):
+        logs = self._run_cli_cmd(
+            [
+                "kubectl",
+                "create",
+                "namespace",
+                self.namespace,
+            ],
+        )
+        assert b"created" in logs
+
     def helm_install(self):
         logs = self._run_cli_cmd(
             [
