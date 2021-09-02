@@ -16,6 +16,17 @@ class RobustaController:
     def get_client(self) -> kubernetes.client.ApiClient:
         return self.client
 
+    def helm_install(self):
+        logs = self._run_cli_cmd(
+            [
+                "helm",
+                "install",
+                "robusta",
+                "robusta/robusta",
+            ],
+        )
+        assert b"STATUS: deployed" in logs
+
     def cli_examples(self, playbooks_url: str, slack_channel: str, slack_api_key: str):
         logs = self._run_cli_cmd(
             [
