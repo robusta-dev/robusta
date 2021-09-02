@@ -4,7 +4,7 @@ from robusta.api import *
 class DiskBenchmarkParams(BaseModel):
     pvc_name: str = "robusta-disk-benchmark"
     test_seconds: int = 20
-    namespace: str = "robusta"
+    namespace: str = INSTALLATION_NAMESPACE
     disk_size: str = "10Gi"
     storage_class_name: str
 

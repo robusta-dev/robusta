@@ -4,6 +4,7 @@
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
+import threading
 import uuid
 from typing import List, Callable, Dict, Any, Iterable, Sequence, Optional
 
@@ -14,9 +15,11 @@ from pydantic import BaseModel
 from tabulate import tabulate
 from enum import Enum
 
+from .custom_rendering import render_value
 from ..reporting.consts import FindingSource, FindingSubjectType, FindingType
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
+render_lock = threading.Lock()
 
 
 class BaseBlock(BaseModel):
@@ -101,11 +104,15 @@ class JsonBlock(BaseBlock):
 
 
 class TableBlock(BaseBlock):
-    rows: Iterable[Iterable[str]]
+    rows: List[List]
     headers: Sequence[str] = ()
+    column_renderers: Dict = {}
+    rendered: bool = False
 
-    def __init__(self, rows: Iterable[Iterable[str]], headers: Sequence[str] = ()):
-        super().__init__(rows=rows, headers=headers)
+    def __init__(
+        self, rows: List[List], headers: Sequence[str] = (), column_renderers: Dict = {}
+    ):
+        super().__init__(rows=rows, headers=headers, column_renderers=column_renderers)
 
     def to_markdown(self) -> MarkdownBlock:
         # TODO: when the next version of tabulate is released, use maxcolwidths to wrap lines that are too long
@@ -114,6 +121,17 @@ class TableBlock(BaseBlock):
         # see https://github.com/python-poetry/poetry/issues/2828
         table = tabulate(self.rows, headers=self.headers, tablefmt="presto")
         return MarkdownBlock(f"```\n{table}\n```")
+
+    def pre_render_rows(self):
+        with render_lock:
+            if self.rendered:
+                return
+            self.rendered = True
+        if self.column_renderers is not None:
+            for (column_name, renderer_type) in self.column_renderers.items():
+                column_idx = self.headers.index(column_name)
+                for row in self.rows:
+                    row[column_idx] = render_value(renderer_type, row[column_idx])
 
 
 class KubernetesFieldsBlock(TableBlock):
@@ -130,12 +148,12 @@ class KubernetesFieldsBlock(TableBlock):
         """
         if explanations:
             rows = [
-                (f, k8s_obj.object_at_path(f.split(".")), explanations.get(f, ""))
+                [f, k8s_obj.object_at_path(f.split(".")), explanations.get(f, "")]
                 for f in fields
             ]
             super().__init__(rows=rows, headers=["field", "value", "explanation"])
         else:
-            rows = [(f, k8s_obj.object_at_path(f.split("."))) for f in fields]
+            rows = [[f, k8s_obj.object_at_path(f.split("."))] for f in fields]
             super().__init__(rows=rows, headers=["field", "value"])
 
 

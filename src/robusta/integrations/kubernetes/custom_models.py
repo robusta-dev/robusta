@@ -7,6 +7,7 @@ import yaml
 from hikaru.model import *  # *-import is necessary for hikaru subclasses to work
 from pydantic import BaseModel
 
+from ...core.model.env_vars import INSTALLATION_NAMESPACE
 from .api_client_utils import *
 from .templates import get_deployment_yaml
 
@@ -82,7 +83,8 @@ class RobustaPod(Pod):
             apiVersion="v1",
             kind="Pod",
             metadata=ObjectMeta(
-                name=to_kubernetes_name(pod_name, "debug-"), namespace="robusta"
+                name=to_kubernetes_name(pod_name, "debug-"),
+                namespace=INSTALLATION_NAMESPACE,
             ),
             spec=PodSpec(
                 hostPID=True,
@@ -200,7 +202,9 @@ class RobustaJob(Job):
     @classmethod
     def run_simple_job_spec(cls, spec, name, timeout) -> str:
         job = RobustaJob(
-            metadata=ObjectMeta(namespace="robusta", name=to_kubernetes_name(name)),
+            metadata=ObjectMeta(
+                namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name)
+            ),
             spec=JobSpec(
                 backoffLimit=0,
                 template=PodTemplateSpec(

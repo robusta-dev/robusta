@@ -35,7 +35,10 @@ def node_allocatable_resources(node_name: str) -> List[BaseBlock]:
             )
         )
         block_list.append(
-            TableBlock(node.status.allocatable.items(), ["resource", "value"])
+            TableBlock(
+                [[k, v] for (k, v) in node.status.allocatable.items()],
+                ["resource", "value"],
+            )
         )
     return block_list
 

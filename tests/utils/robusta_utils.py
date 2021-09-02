@@ -7,11 +7,12 @@ from hikaru.model import Namespace
 
 
 class RobustaController:
-    def __init__(self, kubeconfig_path):
+    def __init__(self, kubeconfig_path, namespace: str):
         self.kubeconfig_path = kubeconfig_path
         # we create our own kubernetes client to avoid modifying the global client
         # make sure you pass this to all hikaru methods
         self.client = kubernetes.config.new_client_from_config(self.kubeconfig_path)
+        self.namespace = namespace
 
     def get_client(self) -> kubernetes.client.ApiClient:
         return self.client
@@ -61,15 +62,15 @@ class RobustaController:
 
     def delete(self):
         try:
-            Namespace().read("robusta", client=self.client).delete(
+            Namespace().read(self.namespace, client=self.client).delete(
                 propagation_policy="Foreground", client=self.client
             )
             for _ in range(30):
                 # wait until this is fully deleted and we throw anApiException
-                Namespace().read("robusta", client=self.client)
-                print("Waiting for Robusta namespace to be deleted")
+                Namespace().read(self.namespace, client=self.client)
+                print(f"Waiting for {self.namespace} namespace to be deleted")
                 time.sleep(5)
-            raise Exception("Robusta namespace could not be deleted properly")
+            raise Exception(f"{self.namespace} namespace could not be deleted properly")
         except kubernetes.client.exceptions.ApiException as e:
             assert e.reason == "Not Found"
 

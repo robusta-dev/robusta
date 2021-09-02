@@ -288,7 +288,12 @@ def version():
 
 
 @app.command()
-def demo():
+def demo(
+    namespace: str = typer.Option(
+        "robusta",
+        help="Demo Robusta on the specified custom namespace",
+    ),
+):
     """deliberately deploy a crashing pod to kubernetes so you can test robusta's response"""
     log_title("Deploying a crashing pod to kubernetes...")
     subprocess.check_call(f"kubectl apply -f {CRASHPOD_YAML}", shell=True)
@@ -296,7 +301,9 @@ def demo():
         "In ~30 seconds you should receive a slack notification on a crashing pod"
     )
     time.sleep(60)
-    subprocess.check_call(f"kubectl delete -n robusta deployment crashpod", shell=True)
+    subprocess.check_call(
+        f"kubectl delete -n {namespace} deployment crashpod", shell=True
+    )
     log_title("Done!")
 
 

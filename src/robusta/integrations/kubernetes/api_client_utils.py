@@ -192,3 +192,7 @@ def to_kubernetes_name(name, prefix=""):
 
 def parse_kubernetes_datetime(k8s_datetime: str) -> datetime.datetime:
     return datetime.datetime.strptime(k8s_datetime, "%Y-%m-%dT%H:%M:%S%z")
+
+
+def parse_kubernetes_datetime_to_ms(k8s_datetime: str) -> float:
+    return parse_kubernetes_datetime(k8s_datetime).timestamp() * 1000

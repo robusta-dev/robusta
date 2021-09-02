@@ -20,7 +20,7 @@ def robusta(slack_channel: SlackChannel, kind_cluster: KindCluster):
         "https://storage.googleapis.com/robusta-public/test-version/test-robusta.yaml"
     )
     EXAMPLES_URL = "https://storage.googleapis.com/robusta-public/test-version/example-playbooks.zip"
-    robusta = RobustaController(str(kind_cluster.kubeconfig_path))
+    robusta = RobustaController(str(kind_cluster.kubeconfig_path), namespace="robusta")
     robusta.helm_install()
     robusta.cli_examples(
         EXAMPLES_URL, slack_channel.channel_name, CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN

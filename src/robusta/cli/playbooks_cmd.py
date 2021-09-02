@@ -174,14 +174,19 @@ def trigger(
         help="data to send to playbook (can be used multiple times)",
         metavar="key=value",
     ),
+    namespace: str = typer.Option(
+        "robusta",
+        help="Install Robusta on the specified custom namespace",
+    ),
 ):
     """trigger a manually run playbook"""
     log_title("Triggering playbook...")
     trigger_params = " ".join([f"-F '{p}'" for p in param])
-    with fetch_runner_logs():
+    with fetch_runner_logs(namespace=namespace):
         cmd = f"curl -X POST -F 'trigger_name={trigger_name}' {trigger_params} http://localhost:5000/api/trigger"
         exec_in_robusta_runner(
             cmd,
+            namespace=namespace,
             tries=3,
             error_msg="Cannot trigger playbook - usually this means Robusta just started. Will try again",
         )

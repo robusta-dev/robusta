@@ -5,4 +5,3 @@ prometheus-api-client
 pygal
 tinycss
 cssselect
-humanize
