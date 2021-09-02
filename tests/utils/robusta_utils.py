@@ -43,7 +43,7 @@ class RobustaController:
                 "robusta",
                 "playbooks",
                 "configure",
-                "playbooks/",
+                "playbooks/active_playbooks.yaml",
             ],
         )
         assert b"Deployed playbooks" in logs
