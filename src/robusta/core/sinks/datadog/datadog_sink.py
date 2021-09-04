@@ -80,9 +80,9 @@ class DataDogSink(SinkBase):
             elif isinstance(block, ListBlock):
                 lines.extend(block.items)
             elif isinstance(block, TableBlock):
-                block.pre_render_rows()
+                rendered_rows = block.render_rows()
                 lines.append(
-                    tabulate(block.rows, headers=block.headers, tablefmt="presto")
+                    tabulate(rendered_rows, headers=block.headers, tablefmt="presto")
                 )
         return "\n".join(lines)
 

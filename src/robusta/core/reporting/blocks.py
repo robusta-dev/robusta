@@ -4,8 +4,8 @@
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
-import threading
 import uuid
+from copy import deepcopy
 from typing import List, Callable, Dict, Any, Iterable, Sequence, Optional
 
 import hikaru
@@ -19,7 +19,6 @@ from .custom_rendering import render_value
 from ..reporting.consts import FindingSource, FindingSubjectType, FindingType
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
-render_lock = threading.Lock()
 
 
 class BaseBlock(BaseModel):
@@ -107,7 +106,6 @@ class TableBlock(BaseBlock):
     rows: List[List]
     headers: Sequence[str] = ()
     column_renderers: Dict = {}
-    rendered: bool = False
 
     def __init__(
         self, rows: List[List], headers: Sequence[str] = (), column_renderers: Dict = {}
@@ -119,19 +117,18 @@ class TableBlock(BaseBlock):
         # this is currently implemented on tabulate's git master but isn't yet in the pypi package
         # unfortunately, we can't take a dependency on the tabulate git version as that breaks our package with pypi
         # see https://github.com/python-poetry/poetry/issues/2828
-        table = tabulate(self.rows, headers=self.headers, tablefmt="presto")
+        table = tabulate(self.render_rows(), headers=self.headers, tablefmt="presto")
         return MarkdownBlock(f"```\n{table}\n```")
 
-    def pre_render_rows(self):
-        with render_lock:
-            if self.rendered:
-                return
-            self.rendered = True
-        if self.column_renderers is not None:
-            for (column_name, renderer_type) in self.column_renderers.items():
-                column_idx = self.headers.index(column_name)
-                for row in self.rows:
-                    row[column_idx] = render_value(renderer_type, row[column_idx])
+    def render_rows(self) -> List[List]:
+        if self.column_renderers is None:
+            return self.rows
+        new_rows = deepcopy(self.rows)
+        for (column_name, renderer_type) in self.column_renderers.items():
+            column_idx = self.headers.index(column_name)
+            for row in new_rows:
+                row[column_idx] = render_value(renderer_type, row[column_idx])
+        return new_rows
 
 
 class KubernetesFieldsBlock(TableBlock):

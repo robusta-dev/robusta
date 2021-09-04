@@ -126,7 +126,6 @@ class SlackSender:
                 }
             ]
         elif isinstance(block, ListBlock) or isinstance(block, TableBlock):
-            block.pre_render_rows()
             return SlackSender.__to_slack(block.to_markdown(), sink_name)
         elif isinstance(block, KubernetesDiffBlock):
             return SlackSender.__to_slack_diff(block, sink_name)
