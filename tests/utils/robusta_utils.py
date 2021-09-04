@@ -50,6 +50,20 @@ class RobustaController:
         time.sleep(10)
         assert b"STATUS: deployed" in logs
 
+        # wait until robusta runner is created, takes some time to pull the 2 container images
+        for _ in range(30):
+            logs = self._run_cli_cmd(
+                [
+                    "kubectl",
+                    "get",
+                    "events",
+                ],
+            )
+            if b"Created pod: robusta-runner" in logs:
+                print("Robusta runner created")
+                break
+            time.sleep(10)
+
     def cli_examples(self, playbooks_url: str, slack_channel: str, slack_api_key: str):
         logs = self._run_cli_cmd(
             [

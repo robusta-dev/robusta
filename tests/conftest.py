@@ -24,5 +24,4 @@ def robusta(slack_channel: SlackChannel, kind_cluster: KindCluster):
         EXAMPLES_URL, slack_channel.channel_name, CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN
     )
     robusta.cli_deploy()
-    robusta.delete()
     yield robusta
