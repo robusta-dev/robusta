@@ -1,7 +1,6 @@
 import argparse
 import os
 import textwrap
-import inflection
 from typing import TextIO
 
 KUBERNETES_VERSIONS = ["v1", "v2beta1", "v2beta2"]
