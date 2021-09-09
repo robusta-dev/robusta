@@ -33,7 +33,7 @@ def push(
 ):
     """Load custom playbooks code"""
     log_title("Uploading playbooks code...")
-    with fetch_runner_logs():
+    with fetch_runner_logs(namespace):
         subprocess.check_call(
             f"kubectl create configmap -n {namespace} robusta-custom-playbooks --from-file {playbooks_directory} -o yaml --dry-run | kubectl apply -f -",
             shell=True,
