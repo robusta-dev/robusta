@@ -21,18 +21,49 @@ app = typer.Typer()
 
 
 @app.command()
-def deploy(
-    playbooks_directory: str,
+def push(
+    playbooks_directory: str = typer.Argument(
+        ...,
+        help="Local playbooks code directory",
+    ),
     namespace: str = typer.Option(
         "robusta",
-        help="Deploy Robusta on the specified custom namespace",
+        help="Robusta installation namespace",
     ),
 ):
-    """deploy playbooks"""
-    log_title("Updating playbooks...")
-    with fetch_runner_logs(namespace=namespace):
+    """Load custom playbooks code"""
+    log_title("Uploading playbooks code...")
+    with fetch_runner_logs(namespace):
         subprocess.check_call(
-            f"kubectl create configmap -n {namespace} robusta-config --from-file {playbooks_directory} -o yaml --dry-run | kubectl apply -f -",
+            f"kubectl create configmap -n {namespace} robusta-custom-playbooks --from-file {playbooks_directory} -o yaml --dry-run | kubectl apply -f -",
+            shell=True,
+        )
+        subprocess.check_call(
+            f'kubectl annotate pods -n {namespace} --all --overwrite "playbooks-last-modified={time.time()}"',
+            shell=True,
+        )
+        time.sleep(
+            5
+        )  # wait five seconds for the runner to actually reload the playbooks
+    log_title("Loaded custom playbooks code!")
+
+
+@app.command()
+def configure(
+    config_file: str = typer.Argument(
+        ...,
+        help="Playbooks configuration file",
+    ),
+    namespace: str = typer.Option(
+        "robusta",
+        help="Robusta installation namespace",
+    ),
+):
+    """deploy playbooks configuration"""
+    log_title("Configuring playbooks...")
+    with fetch_runner_logs(namespace):
+        subprocess.check_call(
+            f"kubectl create configmap -n {namespace} robusta-playbooks-config --from-file {config_file} -o yaml --dry-run | kubectl apply -f -",
             shell=True,
         )
         subprocess.check_call(
@@ -45,9 +76,17 @@ def deploy(
     log_title("Deployed playbooks!")
 
 
-def get_runner_configmap(namespace: str):
+def get_playbooks_config(namespace: str):
     configmap_content = subprocess.check_output(
-        f"kubectl get configmap -n {namespace} robusta-config -o yaml",
+        f"kubectl get configmap -n {namespace} robusta-playbooks-config -o yaml",
+        shell=True,
+    )
+    return yaml.safe_load(configmap_content)
+
+
+def get_custom_playbooks(namespace: str):
+    configmap_content = subprocess.check_output(
+        f"kubectl get configmap -n {namespace} robusta-custom-playbooks -o yaml",
         shell=True,
     )
     return yaml.safe_load(configmap_content)
@@ -55,13 +94,13 @@ def get_runner_configmap(namespace: str):
 
 @app.command()
 def pull(
-    playbooks_directory: str = typer.Option(
-        None,
+    playbooks_directory: str = typer.Argument(
+        ...,
         help="Local target directory",
     ),
     namespace: str = typer.Option(
         "robusta",
-        help="Pull Robusta playbooks from the specified custom namespace",
+        help="Installation namespace",
     ),
 ):
     """pull cluster deployed playbooks"""
@@ -71,7 +110,7 @@ def pull(
     log_title(f"Pulling playbooks into {playbooks_directory} ")
 
     try:
-        playbooks_config = get_runner_configmap(namespace=namespace)
+        playbooks_config = get_custom_playbooks(namespace)
 
         for file_name in playbooks_config["data"].keys():
             playbook_file = os.path.join(playbooks_directory, file_name)
@@ -93,13 +132,13 @@ def print_yaml_if_not_none(key: str, json_dict: dict):
 def list_(
     namespace: str = typer.Option(
         "robusta",
-        help="List Robusta playbooks on the specified custom namespace",
+        help="Installation namespace",
     ),
 ):  # not named list as that would shadow the builtin list function
     """list current active playbooks"""
     typer.echo(f"Getting deployed playbooks list...")
     with click_spinner.spinner():
-        playbooks_config = get_runner_configmap(namespace=namespace)
+        playbooks_config = get_playbooks_config(namespace)
 
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
     active_playbooks_yaml = yaml.safe_load(active_playbooks_file)
@@ -115,13 +154,13 @@ def list_(
 def show_config(
     namespace: str = typer.Option(
         "robusta",
-        help="Show Robusta configuration, from the custom namespace",
+        help="Installation namespace",
     ),
 ):
     """fetch and show active_playbooks.yaml from cluster"""
     typer.echo("connecting to cluster...")
     with click_spinner.spinner():
-        playbooks_config = get_runner_configmap(namespace=namespace)
+        playbooks_config = get_playbooks_config(namespace)
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
     log_title("Contents of active_playbooks.yaml:")
     typer.echo(active_playbooks_file)

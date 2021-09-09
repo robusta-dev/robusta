@@ -6,17 +6,19 @@ Lets see how we can customize the broad collection of builtin playbooks.
 
 Setting up a playbooks directory
 -------------------------------------------------------------
-You will need a `playbooks` directory with default files before continuing. There are three ways to set one up:
+Robusta comes with builtin `playbooks`
+Each ``playbook`` is a python script. Once loaded, it can be activated by including it in the ``active_playbooks.yaml`` file.
+The python defines the *available* playbooks and the yaml activates them.
 
-1. If you installed Robusta using ``robusta install``, you already have a `playbooks` directory in the working directory.
-2. You can download your `playbooks` directory from your cluster by running ``robusta playbooks pull``
-3. You can setup a new playbooks directory by running ``robusta examples``
+| To load a ``playbook`` script use ``robusta playbooks load my-custom-playbooks-dir``
+| To activate a ``playbook``, add it to your ``active_playbooks.yaml`` file, and run ``robusta playbooks configure active_playbooks.yaml``
+
+| You can download the builtin ``playbooks`` by running ``robusta examples``
+| To get the custom `playbooks` loaded to the cluster run ``robusta playbooks pull``
 
 .. warning::
     If you use ``robusta examples`` then `playbooks/active_playbooks.yaml` wont contain your API keys. Make sure to copy them over using ``robusta playbooks show-config``
 
-A playbooks directory contains python scripts and one file named ``active_playbooks.yaml``. The python defines the *available* playbooks
-and the yaml activates them.
 
 Enabling a new playbook
 ------------------------
@@ -44,7 +46,7 @@ From the playbooks directory run:
 
 .. code-block:: python
 
-   robusta playbooks deploy .
+   robusta playbooks configure active_playbooks.yaml
 
 The **deployment_babysitter** playbook is now running. You will get a notification in Slack every time a deployment's number of replicas changes.
 

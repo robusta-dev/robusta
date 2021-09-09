@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import List
 
-from ...integrations.kubernetes.base_event import K8sOperationType
+from ..model.k8s_operation_type import K8sOperationType
 
 
 class TriggerParams(BaseModel):

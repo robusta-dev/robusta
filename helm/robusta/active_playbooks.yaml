@@ -1,18 +1,6 @@
-sinks_config:
-- sink_name: "robusta platform"
-  sink_type: "robusta"
-  params:
-    token: "<ROBUSTA_ACCOUNT_TOKEN>"
-- sink_name: "alerts slack"
-  sink_type: "slack"
-  params:
-    api_key: "<SLACK_API_KEY>"
-    slack_channel: "<DEFAULT_SLACK_CHANNEL>"
+sinks_config: []
 global_config:
-  cluster_name: "<CLUSTER_NAME>"
-  sinks: # These are the default sinks. The named sinks list can be overridden, per playbook
-  - "alerts slack"
-#<ENABLE_ROBUSTA_SINK>
+  sinks: []
 active_playbooks:
   - name: "restart_loop_reporter"
     action_params:

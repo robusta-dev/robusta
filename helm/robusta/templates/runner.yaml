@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-runner
+  labels:
+    app: {{ .Release.Name }}-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-runner
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-runner
+    spec:
+      serviceAccountName: {{ .Release.Name }}-runner-service-account
+      containers:
+      - name: runner
+        image: {{ .Values.runner.image }}
+        imagePullPolicy: Always
+        securityContext:
+          privileged: false
+        env:
+          - name: PLAYBOOKS_ROOT
+            value: /etc/robusta/playbooks/
+          - name: PLAYBOOKS_CONFIG_FILE_PATH
+            value: /etc/robusta/config/active_playbooks.yaml
+          - name: ENABLE_MANHOLE
+            value: "true"
+          - name: ENABLE_COLORED_LOGS
+            value: "true"
+          - name: LOG_LEVEL
+            value: {{ .Values.runner.log_level }}
+          - name: INSTALLATION_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        volumeMounts:
+          - name: playbooks-config
+            mountPath: /etc/robusta/config
+          - name: custom-playbooks
+            mountPath: /etc/robusta/playbooks/custom
+        lifecycle:
+          preStop:
+            exec:
+              command: ["bash", "-c", "kill -SIGINT 1"]
+      - name: grafana-renderer
+        image: {{ .Values.grafana_renderer.image }}
+        imagePullPolicy: Always
+        securityContext:
+          privileged: false
+        lifecycle:
+          preStop:
+            exec:
+              command: ["bash", "-c", "kill -SIGINT 1"]
+        resources:
+          limits:
+            memory: {{ .Values.grafana_renderer.limits.memory | quote }}
+      volumes:
+        - name: playbooks-config
+          configMap:
+            name: robusta-playbooks-config
+            optional: true
+        - name: custom-playbooks
+          configMap:
+            name: robusta-custom-playbooks
+            optional: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-runner
+spec:
+  selector:
+    app: {{ .Release.Name }}-runner
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000

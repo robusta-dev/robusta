@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: robusta-playbooks-config
+data:
+  active_playbooks.yaml: |-
+{{ .Files.Get .Values.playbooks_file | indent 4}}

@@ -1,19 +1,23 @@
-apiVersion: skaffold/v2beta1
+apiVersion: skaffold/v2beta6
 kind: Config
 metadata:
   name: robusta
 build:
   artifacts:
   - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-    context: src
+    context: .
     docker:
       dockerfile: Dockerfile
   local:
     push: true
     concurrency: 0
 deploy:
-  kustomize:
-    paths: ["./deployment/dev"]
+  helm:
+    releases:
+      - name: robusta
+        chartPath: helm/robusta
+        artifactOverrides:
+          runner.image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
 
 portForward:
 - resourceType: deployment
@@ -23,16 +27,11 @@ portForward:
 
 
 profiles:
-- name: prod
-  deploy:
-    kustomize:
-      paths: [ "./deployment/prod" ]
-
 - name: apple-m1-dev
   build:
     artifacts:
       - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-        context: src
+        context: .
         custom:
           buildCommand: ./build_on_apple_m1.sh
     local:

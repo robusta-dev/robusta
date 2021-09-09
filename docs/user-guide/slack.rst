@@ -8,7 +8,7 @@ Recommended: Using Robusta's official Slack app
 Robusta is an approved app in the Slack App Directory. For details on Robusta's permissions,
 `see the Robusta page in the Slack App Directory <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_
 
-To install the official Robusta app, use the ``robusta install`` command and follow the prompts.
+To install the official Robusta app, use the ``robusta gen-config`` command and follow the prompts.
 
 This method is recommended as it supports multiple Kubernetes clusters and are easy to setup.
 Please note that incoming Slack messages are routed through the official Robusta

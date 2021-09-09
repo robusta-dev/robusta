@@ -160,7 +160,7 @@ def autogenerate_triggers(f: TextIO):
             """\
         from ....utils.decorators import doublewrap
         from ..base_triggers import register_k8s_playbook, register_k8s_any_playbook
-        from ..base_event import K8sOperationType
+        from ....core.model.k8s_operation_type import K8sOperationType
         
         
         """
