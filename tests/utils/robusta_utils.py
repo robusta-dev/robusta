@@ -17,19 +17,52 @@ class RobustaController:
     def get_client(self) -> kubernetes.client.ApiClient:
         return self.client
 
-    def cli_install(self, installation_url: str, slack_token: str):
+    def create_namespace(self):
         logs = self._run_cli_cmd(
             [
-                "robusta",
-                "install",
-                "--url",
-                installation_url,
-                "--slack-api-key",
-                slack_token,
-                "--upgrade",  # pass the upgrade flag to avoid installing playbooks
+                "kubectl",
+                "create",
+                "namespace",
+                self.namespace,
             ],
         )
-        assert b"Installation Done" in logs
+        assert b"created" in logs
+        logs = self._run_cli_cmd(
+            [
+                "kubectl",
+                "config",
+                "set-context",
+                "--current",
+                "--namespace",
+                self.namespace,
+            ],
+        )
+
+    def helm_install(self):
+        logs = self._run_cli_cmd(
+            [
+                "helm",
+                "install",
+                "robusta",
+                "robusta/robusta",
+            ],
+        )
+        time.sleep(10)
+        assert b"STATUS: deployed" in logs
+
+        # wait until robusta runner is created, takes some time to pull the 2 container images
+        for _ in range(30):
+            logs = self._run_cli_cmd(
+                [
+                    "kubectl",
+                    "get",
+                    "events",
+                ],
+            )
+            if b"Created pod: robusta-runner" in logs:
+                print("Robusta runner created")
+                break
+            time.sleep(10)
 
     def cli_examples(self, playbooks_url: str, slack_channel: str, slack_api_key: str):
         logs = self._run_cli_cmd(
@@ -57,8 +90,8 @@ class RobustaController:
             [
                 "robusta",
                 "playbooks",
-                "deploy",
-                "playbooks/",
+                "configure",
+                "playbooks/active_playbooks.yaml",
             ],
         )
         assert b"Deployed playbooks" in logs

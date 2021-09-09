@@ -4,13 +4,8 @@ from typing import Optional
 from dataclasses import dataclass
 from hikaru.meta import HikaruDocumentBase
 
-from ...core.model.events import BaseEvent, EventType
-
-
-class K8sOperationType(Enum):
-    CREATE = "create"
-    UPDATE = "update"
-    DELETE = "delete"
+from ...core.model.k8s_operation_type import K8sOperationType
+from ...core.model.events import BaseEvent
 
 
 @dataclass

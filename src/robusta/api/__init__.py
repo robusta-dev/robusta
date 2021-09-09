@@ -14,6 +14,7 @@ from ..core.reporting.callbacks import *
 from ..core.reporting.custom_rendering import *
 from ..core.schedule.model import *
 from ..core.model.env_vars import *
+from ..core.model.k8s_operation_type import *
 
 from ..core.reporting import *
 from ..integrations.kubernetes.custom_models import *

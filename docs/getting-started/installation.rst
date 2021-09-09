@@ -16,16 +16,32 @@ Try running ``robusta --help`` to see what the robusta cli can do.
 
 Installing Robusta in a Kubernetes cluster.
 -----------------------------------------------------
-.. note:: ``robusta`` commands use your current kubectl context. Use ``kubectl config use-context`` to change it.
+.. note:: ``robusta`` and ``helm`` commands use your current kubectl context. Use ``kubectl config use-context`` to change it.
 
-To deploy Robusta to your cluster run:
+Robusta is installed using ``helm``.
+
+First, get a copy of Robusta's ``helm`` chart
 
 .. code-block:: bash
 
-   robusta install
+    helm repo add robusta https://robusta-charts.storage.googleapis.com
+    helm pull robusta/robusta --untar
 
-This will install two deployments in the ``robusta`` namespace. Robusta can be removed at any time by deleting that namespace. :ref:`Learn more about Robusta's architecture<Robusta Architecture>`.
-You can install Robusta on a custom namespace by using ``robusta install --namespace my-custom-namespace``
+Now, use the Robusta cli generate the initial configuration
+
+.. code-block:: bash
+
+    robusta gen-config --base-config-file robusta/active_playbooks.yaml
+
+Lastly, use that configuration to install robusta
+
+.. code-block:: bash
+
+    cp active_playbooks_generated.yaml robusta/active_playbooks.yaml
+    helm install robusta ./robusta
+
+This will install two deployments in the ``robusta`` namespace.
+Robusta can be removed at any time by running ``helm uninstall robusta``. :ref:`Learn more about Robusta's architecture<Robusta Architecture>`.
 
 Seeing Robusta in Action
 ------------------------------

@@ -1,0 +1,17 @@
+
+kubewatch:
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.10
+  pprof: True
+  limits:
+    memory: 512Mi
+
+grafana_renderer:
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:4
+  limits:
+    memory: 512Mi
+
+runner:
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+  log_level: INFO
+
+playbooks_file: active_playbooks.yaml

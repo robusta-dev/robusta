@@ -39,6 +39,7 @@ Scheduled Playbook Example
         logging.info(f"My scheduled playbook running {action_params.some_string_param}")
 
 
+| Load the ``playbook`` code using ``robusta playbooks load ./playbooks``
 | Now, configure the playbook in the ``active_playbooks.yaml`` :
 
 .. code-block:: yaml
@@ -51,7 +52,7 @@ Scheduled Playbook Example
         action_params:
           some_string_param: "Scheduled Playbook - Hello World"
 
-| Lastly, deploy the playbook: ``robusta playbooks deploy ./playbooks``
+| Lastly, activate the playbook: ``robusta playbooks configure ./playbooks/active_playbooks.yaml``
 | That's it!
 | Now, this playbook will run every ``20`` seconds for ``10`` times.
 | In the robusta-runner logs, you'll be able to see the log line printed on each execution.
