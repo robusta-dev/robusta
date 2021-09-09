@@ -6,7 +6,7 @@ Lets see how we can customize the broad collection of builtin playbooks.
 
 Setting up a playbooks directory
 -------------------------------------------------------------
-Robusta come with builtin `playbooks`
+Robusta comes with builtin `playbooks`
 Each ``playbook`` is a python script. Once loaded, it can be activated by including it in the ``active_playbooks.yaml`` file.
 The python defines the *available* playbooks and the yaml activates them.
 

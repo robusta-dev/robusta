@@ -7,7 +7,7 @@ Robusta CLI
 -----------
 
 The robusta cli is installed via ``pip install robusta-cli`` and contains wrappers around kubectl to simplify
-robusta operations. For example, ``robusta playbooks configure`` load the ``active_playbooks.yaml`` configuration into the cluster.
+robusta operations. For example, ``robusta playbooks configure`` loads the ``active_playbooks.yaml`` configuration into the cluster by creating a config-map.
 
 Robusta Kubernetes Deployments
 ------------------------------

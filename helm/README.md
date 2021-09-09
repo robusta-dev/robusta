@@ -1,5 +1,5 @@
 # Robusta helm chart
-Robusta helm chart is served from our gcp bucket
+Robusta's helm chart is served from our gcp bucket
 
 # Upload a new chart version
 If you want to upload a new chart version, follow these steps:

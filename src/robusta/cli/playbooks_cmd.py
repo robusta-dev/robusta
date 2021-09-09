@@ -21,14 +21,14 @@ app = typer.Typer()
 
 
 @app.command()
-def load(
+def push(
     playbooks_directory: str = typer.Argument(
         ...,
         help="Local playbooks code directory",
     ),
     namespace: str = typer.Option(
         "robusta",
-        help="Robusra installation namespace",
+        help="Robusta installation namespace",
     ),
 ):
     """Load custom playbooks code"""
@@ -56,7 +56,7 @@ def configure(
     ),
     namespace: str = typer.Option(
         "robusta",
-        help="Robusra installation namespace",
+        help="Robusta installation namespace",
     ),
 ):
     """deploy playbooks configuration"""
