@@ -73,6 +73,7 @@ class KubernetesDiffBlock(BaseBlock):
     diffs: List[DiffDetail]
     old: Optional[str]
     new: Optional[str]
+    resource_name: Optional[str]
 
     # note that interesting_diffs might be a subset of the full diff between old and new
     def __init__(
@@ -83,16 +84,25 @@ class KubernetesDiffBlock(BaseBlock):
     ):
         super().__init__(
             diffs=interesting_diffs,
-            old=self._obj_to_text(old),
-            new=self._obj_to_text(new),
+            old=self._obj_to_content(old),
+            new=self._obj_to_content(new),
+            resource_name=self._obj_to_name(old) or self._obj_to_name(new),
         )
 
     @staticmethod
-    def _obj_to_text(obj: Optional[HikaruDocumentBase]):
+    def _obj_to_content(obj: Optional[HikaruDocumentBase]):
         if obj is None:
             return ""
         else:
             return hikaru.get_yaml(obj)
+
+    @staticmethod
+    def _obj_to_name(obj: Optional[HikaruDocumentBase]):
+        if obj is None:
+            return ""
+        if not hasattr(obj, "metadata"):
+            return ""
+        return getattr(obj.metadata, "name", "")
 
 
 class JsonBlock(BaseBlock):

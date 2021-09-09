@@ -167,6 +167,7 @@ class SupabaseDal:
                         "data": {
                             "old": block.old,
                             "new": block.new,
+                            "resource_name": block.resource_name,
                         },
                     }
                 )
