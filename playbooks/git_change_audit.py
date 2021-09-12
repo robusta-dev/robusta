@@ -27,12 +27,9 @@ def obj_diff(
         return True
 
     all_diffs = spec.diff(old_spec)
-    formatted_diffs = [
-        diff.formatted_path[diff.formatted_path.index(".") + 1 :]
-        for diff in all_diffs
-        if diff.formatted_path
-    ]
-    filtered_diffs = [diff for diff in formatted_diffs if diff not in ignored_changes]
+    filtered_diffs = list(
+        filter(lambda x: not is_matching_diff(x, ignored_changes), all_diffs)
+    )
     return len(filtered_diffs) > 0
 
 
