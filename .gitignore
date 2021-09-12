@@ -2,6 +2,7 @@
 .vscode/
 src/build/
 playground/
+deployment/
 src/dist/
 *.egg/
 *.egg-info/

@@ -31,7 +31,7 @@ def report_rendering_task(event: RecurringTriggerEvent, action_params: ReportPar
 def has_matching_diff(event: DeploymentEvent, fields_to_monitor: List[str]) -> bool:
     all_diffs = event.obj.diff(event.old_obj)
     for diff in all_diffs:
-        if is_relevant_diff(diff, fields_to_monitor):
+        if is_matching_diff(diff, fields_to_monitor):
             return True
     return False
 

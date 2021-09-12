@@ -21,7 +21,7 @@ def do_babysitter(
     if event.operation == K8sOperationType.UPDATE:
         all_diffs = event.obj.diff(event.old_obj)
         filtered_diffs = list(
-            filter(lambda x: is_relevant_diff(x, config.fields_to_monitor), all_diffs)
+            filter(lambda x: is_matching_diff(x, config.fields_to_monitor), all_diffs)
         )
         if len(filtered_diffs) == 0:
             return
