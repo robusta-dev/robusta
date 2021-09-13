@@ -9,7 +9,7 @@ To initially configure your ``active_playbooks.yaml`` file run
 
 .. code-block:: python
 
-   robusta gen-config --base-config-file robusta/active_playbooks.yaml
+   robusta gen-config
 
 
 Viewing active playbooks

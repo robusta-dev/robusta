@@ -25,20 +25,20 @@ First, get a copy of Robusta's ``helm`` chart
 .. code-block:: bash
 
     helm repo add robusta https://robusta-charts.storage.googleapis.com
-    helm pull robusta/robusta --untar
 
 Now, use the Robusta cli generate the initial configuration
 
 .. code-block:: bash
 
-    robusta gen-config --base-config-file robusta/active_playbooks.yaml
+    robusta gen-config
+
+This will generate a configuration file named ``active_playbooks_generated.yaml``
 
 Lastly, use that configuration to install robusta
 
 .. code-block:: bash
 
-    cp active_playbooks_generated.yaml robusta/active_playbooks.yaml
-    helm install robusta ./robusta
+    helm install robusta robusta/robusta --set-file playbooks_file=./active_playbooks_generated.yaml
 
 This will install two deployments in the ``robusta`` namespace.
 Robusta can be removed at any time by running ``helm uninstall robusta``. :ref:`Learn more about Robusta's architecture<Robusta Architecture>`.

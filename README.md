@@ -11,8 +11,8 @@ If you want to develop features for Robusta itself you'll need to install Robust
 If you want to use the Slack integration:
 1. Get a slack token from https://robusta.dev/integrations/slack/?id=xyz
 2. Create your private `active_playbooks.yaml` file. 
-You can use `robusta gen-config --base-config-file helm/robusta/active_playbooks.yaml` to do that.
-3. Add the generated file content to `helm/robusta/active_playbooks.yaml` before running skaffold
+You can use `robusta gen-config` to do that.
+3. Move the generated file `active_playbooks_generated.yaml` to the `deployment` directory before running skaffold
 4. Optional: reduce the chance you'll accidentally commit your Slack key to git by running `git update-index --skip-worktree helm/robusta/active_playbooks.yaml` (see [here](https://stackoverflow.com/a/40272289/495995) for details)
 
 # Running Robusta runner locally as a developer
