@@ -9,7 +9,7 @@ from copy import deepcopy
 from typing import List, Callable, Dict, Any, Iterable, Sequence, Optional
 
 import hikaru
-from hikaru import DiffDetail
+from hikaru import DiffDetail, DiffType
 from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
 from tabulate import tabulate
@@ -74,6 +74,9 @@ class KubernetesDiffBlock(BaseBlock):
     old: Optional[str]
     new: Optional[str]
     resource_name: Optional[str]
+    num_additions: Optional[int]
+    num_deletions: Optional[int]
+    num_modifications: Optional[int]
 
     # note that interesting_diffs might be a subset of the full diff between old and new
     def __init__(
@@ -82,11 +85,22 @@ class KubernetesDiffBlock(BaseBlock):
         old: Optional[HikaruDocumentBase],
         new: Optional[HikaruDocumentBase],
     ):
+        num_additions = len(
+            [d for d in interesting_diffs if d.diff_type == DiffType.ADDED]
+        )
+        num_deletions = len(
+            [d for d in interesting_diffs if d.diff_type == DiffType.REMOVED]
+        )
+        num_modifications = len(interesting_diffs) - num_additions - num_deletions
+
         super().__init__(
             diffs=interesting_diffs,
             old=self._obj_to_content(old),
             new=self._obj_to_content(new),
             resource_name=self._obj_to_name(old) or self._obj_to_name(new),
+            num_additions=num_additions,
+            num_deletions=num_deletions,
+            num_modifications=num_modifications,
         )
 
     @staticmethod
@@ -102,7 +116,11 @@ class KubernetesDiffBlock(BaseBlock):
             return ""
         if not hasattr(obj, "metadata"):
             return ""
-        return getattr(obj.metadata, "name", "")
+
+        name = getattr(obj.metadata, "name", "")
+        namespace = getattr(obj.metadata, "namespace", "")
+        kind = getattr(obj, "kind", "").lower()
+        return f"{kind}/{namespace}/{name}.yaml"
 
 
 class JsonBlock(BaseBlock):

@@ -168,6 +168,10 @@ class SupabaseDal:
                             "old": block.old,
                             "new": block.new,
                             "resource_name": block.resource_name,
+                            "num_additions": block.num_additions,
+                            "num_deletions": block.num_deletions,
+                            "num_modifications": block.num_modifications,
+                            "updated_paths": [d.formatted_path for d in block.diffs],
                         },
                     }
                 )

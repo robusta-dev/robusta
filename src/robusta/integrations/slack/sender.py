@@ -69,20 +69,7 @@ class SlackSender:
         if not block.diffs:
             return []
 
-        num_additions = len([d for d in block.diffs if d.diff_type == DiffType.ADDED])
-        num_subtractions = len(
-            [d for d in block.diffs if d.diff_type == DiffType.REMOVED]
-        )
-        num_modifications = len(block.diffs) - num_additions - num_subtractions
         slack_blocks = []
-        slack_blocks.extend(
-            SlackSender.__to_slack(
-                MarkdownBlock(
-                    f"{num_additions} fields added. {num_subtractions} fields removed. {num_modifications} fields changed"
-                ),
-                sink_name,
-            )
-        )
         slack_blocks.extend(
             SlackSender.__to_slack(
                 ListBlock(
