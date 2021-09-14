@@ -27,8 +27,11 @@ spec:
           - name: robusta-kubewatch-config
             mountPath: /config
         resources:
+          requests:
+            memory: {{ .Values.kubewatch.resources.requests.memory | quote }}
           limits:
-            memory: {{ .Values.kubewatch.limits.memory | quote }}
+            memory: {{ .Values.kubewatch.resources.requests.memory | quote }}
+            {{ if .Values.kubewatch.resources.limits.cpu }}cpu: {{ .Values.kubewatch.resources.limits.cpu | quote }}{{ end }}
       volumes:
         - name:  robusta-kubewatch-config
           configMap:

@@ -2,17 +2,29 @@
 kubewatch:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.10
   pprof: True
-  limits:
-    memory: 512Mi
+  resources:
+    requests:
+      memory: 512Mi
+    limits:
+      cpu: ~
 
 grafana_renderer:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:4
-  limits:
-    memory: 512Mi
+  resources:
+    requests:
+      memory: 512Mi
+    limits:
+      cpu: ~
 
 runner:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
   log_level: INFO
+  resources:
+    requests:
+      memory: 1024Mi
+    limits:
+      cpu: ~
+
 
 playbooks_file: |-
   sinks_config: []
