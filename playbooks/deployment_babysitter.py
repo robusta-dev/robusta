@@ -26,18 +26,6 @@ def do_babysitter(
         if len(filtered_diffs) == 0:
             return
 
-    desc = f"{resource_type.value} {event.obj.metadata.name} {event.operation.value}d in namespace {event.obj.metadata.namespace}"
-    event.finding = Finding(
-        title=desc,
-        description=desc,
-        source=FindingSource.KUBERNETES_API_SERVER,
-        finding_type=FindingType.CONF_CHANGE,
-        failure=False,
-        aggregation_key=f"ConfigurationChange/KubernetesResource/{event.operation.value}",
-        subject=FindingSubject(
-            event.obj.metadata.name, resource_type, event.obj.metadata.namespace
-        ),
-    )
     old_obj = event.old_obj
     obj = event.obj
     if (
@@ -46,6 +34,18 @@ def do_babysitter(
         obj = None
         old_obj = event.obj
 
+    diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj)
+    event.finding = Finding(
+        title=f"{diff_block.resource_name} {event.operation.value}d",
+        description=f"Updates to significant fields: {diff_block.num_additions} additions, {diff_block.num_deletions} deletions, {diff_block.num_modifications} changes.",
+        source=FindingSource.KUBERNETES_API_SERVER,
+        finding_type=FindingType.CONF_CHANGE,
+        failure=False,
+        aggregation_key=f"ConfigurationChange/KubernetesResource/{event.operation.value}",
+        subject=FindingSubject(
+            event.obj.metadata.name, resource_type, event.obj.metadata.namespace
+        ),
+    )
     event.finding.add_enrichment([KubernetesDiffBlock(filtered_diffs, old_obj, obj)])
 
 
