@@ -37,7 +37,7 @@ def do_babysitter(
     diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj)
     event.finding = Finding(
         title=f"{diff_block.resource_name} {event.operation.value}d",
-        description=f"{diff_block.num_additions} fields added. {diff_block.num_deletions} fields removed. {diff_block.num_modifications} fields changed",
+        description=f"Updates to significant fields: {diff_block.num_additions} additions, {diff_block.num_deletions} deletions, {diff_block.num_modifications} changes.",
         source=FindingSource.KUBERNETES_API_SERVER,
         finding_type=FindingType.CONF_CHANGE,
         failure=False,
