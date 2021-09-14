@@ -63,7 +63,7 @@ def configure(
     log_title("Configuring playbooks...")
     with fetch_runner_logs(namespace):
         subprocess.check_call(
-            f"kubectl create configmap -n {namespace} robusta-playbooks-config --from-file {config_file} -o yaml --dry-run | kubectl apply -f -",
+            f"kubectl create configmap -n {namespace} robusta-playbooks-config --from-file active_playbooks.yaml={config_file} -o yaml --dry-run | kubectl apply -f -",
             shell=True,
         )
         subprocess.check_call(

@@ -2,6 +2,11 @@ import os
 import random
 import subprocess
 import time
+from distutils.version import StrictVersion
+from typing import Optional
+import urllib.request
+import tarfile
+
 import click_spinner
 from zipfile import ZipFile
 import yaml
@@ -79,75 +84,137 @@ def add_sink(
         global_config[SINKS].append(sink_name)
 
 
+def get_latest_chart_url(chart_entries: list) -> Optional[str]:
+    latest_version = StrictVersion("0.0.0")
+    latest_version_url = None
+    for chart_def in chart_entries:
+        chart_version = StrictVersion(chart_def["version"])
+        if chart_version > latest_version:
+            latest_version = chart_version
+            latest_version_url = chart_def["urls"][0]
+    return latest_version_url
+
+
+def get_versioned_chart_url(chart_entries: list, version: str) -> Optional[str]:
+    chart_urls = [
+        chart["urls"][0] for chart in chart_entries if chart["version"] == version
+    ]
+    if chart_urls:
+        return chart_urls[0]
+    return None
+
+
+def get_chart_url(chart_ver: str = None) -> Optional[str]:
+    repo_url = "https://robusta-charts.storage.googleapis.com"
+    index_file = urllib.request.urlopen(repo_url + "/index.yaml").read()
+    yaml_content = yaml.safe_load(index_file)
+    chart_versions = yaml_content.get("entries", {}).get("robusta")
+    if chart_ver is not None:
+        return get_versioned_chart_url(chart_versions, chart_ver)
+    else:
+        return get_latest_chart_url(chart_versions)
+
+
+def get_active_playbooks_yaml(chart_version: str = None):
+    chart_url = get_chart_url(chart_version)
+    if chart_url is None:
+        return None
+    local_file_name = "./" + os.path.basename(chart_url)
+    try:
+        urllib.request.urlretrieve(chart_url, local_file_name)
+        with tarfile.open(name=local_file_name, mode="r:gz") as chart_tar_file:
+            f = chart_tar_file.extractfile(
+                chart_tar_file.getmember("robusta/active_playbooks.yaml")
+            )
+            if f is not None:
+                return yaml.safe_load(f.read())
+    finally:
+        try:
+            os.remove(local_file_name)
+        except Exception:
+            typer.echo("Failed to delete downloaded chart file", color="red")
+    return None
+
+
 @app.command()
 def gen_config(
     base_config_file: str = typer.Option(
-        "./active_playbooks.yaml",
-        help="Base configuration file. Can be found with Robusta's helm chart",
+        None,
+        help="Optional base configuration file. Can be found in Robusta's helm chart. If omitted, the base configuration will be downloaded",
+    ),
+    use_chart_version: str = typer.Option(
+        None,
+        help="Optional. Download base configuration from a specific chart version. If omitted, latest chart version will be used",
     ),
 ):
     """Create runtime configuration file"""
-    if not os.path.exists(base_config_file):
-        typer.secho(
-            f"Base configuration file cannot be found {base_config_file}", fg="red"
+    if base_config_file is None:
+        yaml_content = get_active_playbooks_yaml(use_chart_version)
+        if yaml_content is None:
+            typer.echo(f"Could not find base configuration file", color="red")
+            return
+    else:
+        if not os.path.exists(base_config_file):
+            typer.secho(
+                f"Base configuration file cannot be found {base_config_file}", fg="red"
+            )
+            return
+        with open(base_config_file, "r") as base:
+            yaml_content = yaml.safe_load(base)
+
+    global_config = yaml_content[GLOBAL_CONFIG]
+
+    cluster_name = global_config.get(CLUSTER_NAME)
+    if cluster_name is None:
+        (all_contexts, current_context) = config.list_kube_config_contexts()
+        default_name = (
+            current_context.get("name")
+            if (current_context and current_context.get("name"))
+            else f"cluster_{random.randint(0, 1000000)}"
         )
-        return
-    with open(base_config_file, "r") as base:
-        yaml_content = yaml.safe_load(base)
+        cluster_name = typer.prompt(
+            "Please specify a unique name for your cluster or press ENTER to use the default",
+            default=default_name,
+        )
+        global_config[CLUSTER_NAME] = cluster_name
 
-        global_config = yaml_content[GLOBAL_CONFIG]
+    sinks_config = yaml_content[SINKS_CONFIG]
 
-        cluster_name = global_config.get(CLUSTER_NAME)
-        if cluster_name is None:
-            (all_contexts, current_context) = config.list_kube_config_contexts()
-            default_name = (
-                current_context.get("name")
-                if (current_context and current_context.get("name"))
-                else f"cluster_{random.randint(0, 1000000)}"
+    # Handle slack sink configuration
+    slack_sinks = [sink for sink in sinks_config if sink[SINK_TYPE] == SLACK]
+    if slack_sinks:
+        typer.secho(f"Found slack integration, skipping", fg="green")
+    else:
+        if typer.confirm(
+            "do you want to configure slack integration? this is HIGHLY recommended.",
+            default=True,
+        ):
+            slack_api_key = get_slack_key()
+
+            slack_channel = typer.prompt(
+                "which slack channel should I send notifications to?"
             )
-            cluster_name = typer.prompt(
-                "Please specify a unique name for your cluster or press ENTER to use the default",
-                default=default_name,
+            if slack_api_key:
+                params = {"api_key": slack_api_key, "slack_channel": slack_channel}
+                add_sink(global_config, sinks_config, "slack sink", SLACK, params)
+
+    # Handle robusta sink configuration
+    robusta_sinks = [sink for sink in sinks_config if sink[SINK_TYPE] == ROBUSTA]
+    if robusta_sinks:
+        typer.secho(f"Found robusta integration, skipping", fg="green")
+    else:
+        if typer.confirm("Would you like to use Robusta UI?"):
+            robusta_ui_token = typer.prompt(
+                "Please insert your Robusta account token",
+                default=None,
             )
-            global_config[CLUSTER_NAME] = cluster_name
-
-        sinks_config = yaml_content[SINKS_CONFIG]
-
-        # Handle slack sink configuration
-        slack_sinks = [sink for sink in sinks_config if sink[SINK_TYPE] == SLACK]
-        if slack_sinks:
-            typer.secho(f"Found slack integration, skipping", fg="green")
-        else:
-            if typer.confirm(
-                "do you want to configure slack integration? this is HIGHLY recommended.",
-                default=True,
-            ):
-                slack_api_key = get_slack_key()
-
-                slack_channel = typer.prompt(
-                    "which slack channel should I send notifications to?"
+            if robusta_ui_token:
+                params = {
+                    "token": robusta_ui_token,
+                }
+                add_sink(
+                    global_config, sinks_config, "robusta ui sink", ROBUSTA, params
                 )
-                if slack_api_key:
-                    params = {"api_key": slack_api_key, "slack_channel": slack_channel}
-                    add_sink(global_config, sinks_config, "slack sink", SLACK, params)
-
-        # Handle robusta sink configuration
-        robusta_sinks = [sink for sink in sinks_config if sink[SINK_TYPE] == ROBUSTA]
-        if robusta_sinks:
-            typer.secho(f"Found robusta integration, skipping", fg="green")
-        else:
-            if typer.confirm("Would you like to use Robusta UI?"):
-                robusta_ui_token = typer.prompt(
-                    "Please insert your Robusta account token",
-                    default=None,
-                )
-                if robusta_ui_token:
-                    params = {
-                        "token": robusta_ui_token,
-                    }
-                    add_sink(
-                        global_config, sinks_config, "robusta ui sink", ROBUSTA, params
-                    )
 
     generated_file = "./active_playbooks_generated.yaml"
     with open(generated_file, "w") as generated:
