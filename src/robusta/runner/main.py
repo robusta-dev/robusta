@@ -5,7 +5,7 @@ from inspect import getmembers
 
 import colorlog
 import manhole
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 from ..core.model.env_vars import NUM_EVENT_THREADS
 from ..utils.task_queue import TaskQueue
@@ -62,21 +62,21 @@ def main():
 def handle_alert_event():
     cloud_event = parse_incoming_prometheus_alerts(request)
     task_queue.add_task(run_playbooks, cloud_event)
-    return "OK"
+    return jsonify(success=True)
 
 
 @app.route("/api/handle", methods=["POST"])
 def handle_cloud_event():
     cloud_event = CloudEvent(**request.get_json())
     task_queue.add_task(run_playbooks, cloud_event)
-    return "OK"
+    return jsonify(success=True)
 
 
 @app.route("/api/trigger", methods=["POST"])
 def handle_manual_trigger():
     cloud_event = parse_incoming_manual_trigger(request)
     run_playbooks(cloud_event)
-    return "OK"
+    return jsonify(success=True)
 
 
 if __name__ == "__main__":
