@@ -119,7 +119,7 @@ class RobustaController:
             cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if result.returncode:
-            print(f"result failed with returncode={result.returncode}")
+            print(f"running command {cmd} failed with returncode={result.returncode}")
             print(f"stdout={result.stdout}")
             print(f"stderr={result.stderr}")
             raise Exception(f"Error running robusta cli command: {cmd}")
