@@ -9,7 +9,7 @@ kubewatch:
       cpu: ~
 
 grafana_renderer:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:4
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:5
   resources:
     requests:
       memory: 512Mi
