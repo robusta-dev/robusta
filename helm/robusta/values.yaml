@@ -1,6 +1,6 @@
 
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.10
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.11
   pprof: True
   resources:
     requests:
