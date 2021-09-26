@@ -11,7 +11,7 @@ from typing import List, Callable, Dict, Any, Iterable, Sequence, Optional
 import hikaru
 from hikaru import DiffDetail, DiffType
 from hikaru.model import HikaruDocumentBase
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from tabulate import tabulate
 from enum import Enum
 
@@ -197,64 +197,37 @@ class FindingSeverity(Enum):
     HIGH = 4
 
 
-class Enrichment:
+class Enrichment(BaseModel):
     # These is the actual enrichment data
     blocks: List[BaseBlock] = []
     # General purpose rendering flags, that can be used by specific sinks
     annotations: Dict[str, str] = {}
 
-    def __init__(self, blocks: List[BaseBlock], annotations=None):
-        if annotations is None:
-            annotations = {}
-        self.blocks = blocks
-        self.annotations = annotations
 
-    def __str__(self):
-        return f"annotations: {self.annotations} Enrichment: {self.blocks} "
+class FindingSubject(BaseModel):
+    name: Optional[str] = (None,)
+    namespace: Optional[str] = None
+    subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE
 
 
-class FindingSubject:
-    def __init__(
-        self,
-        name: str = None,
-        subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
-        namespace: str = None,
-    ):
-        self.name = name
-        self.subject_type = subject_type
-        self.namespace = namespace
+class Finding(BaseModel):
 
-
-class Finding:
-    def __init__(
-        self,
-        title: str,
-        severity: FindingSeverity = FindingSeverity.INFO,
-        source: FindingSource = FindingSource.NONE,
-        aggregation_key: str = None,
-        description: str = None,
-        subject: FindingSubject = FindingSubject(),
-        finding_type: FindingType = FindingType.ISSUE,
-        failure: bool = True,
-    ) -> None:
-        self.id: uuid = uuid.uuid4()
-        self.title = title
-        self.finding_type = finding_type
-        self.failure = failure
-        self.description = description
-        self.source = source
-        self.aggregation_key = aggregation_key
-        self.severity = severity
-        self.category = None  # TODO fill real category
-        self.subject = subject
-        self.enrichments: List[Enrichment] = []
+    title: str
+    id: str = Field(default_factory=uuid.uuid4)  # TODO: to string?
+    severity: FindingSeverity = FindingSeverity.INFO
+    source: FindingSource = FindingSource.NONE
+    aggregation_key: Optional[str] = None
+    description: Optional[str] = None
+    subject: FindingSubject = FindingSubject()
+    finding_type: FindingType = FindingType.ISSUE
+    failure: bool = True
+    enrichments: List[Enrichment] = []
 
     def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
         if not enrichment_blocks:
             return
         if annotations is None:
             annotations = {}
-        self.enrichments.append(Enrichment(enrichment_blocks, annotations))
-
-    def __str__(self):
-        return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
+        self.enrichments.append(
+            Enrichment(blocks=enrichment_blocks, annotations=annotations)
+        )

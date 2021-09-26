@@ -43,7 +43,9 @@ def do_babysitter(
         failure=False,
         aggregation_key=f"ConfigurationChange/KubernetesResource/{event.operation.value}",
         subject=FindingSubject(
-            event.obj.metadata.name, resource_type, event.obj.metadata.namespace
+            name=event.obj.metadata.name,
+            namespace=event.obj.metadata.namespace,
+            finding_type=resource_type,
         ),
     )
     event.finding.add_enrichment([KubernetesDiffBlock(filtered_diffs, old_obj, obj)])

@@ -111,7 +111,7 @@ class SupabaseDal:
             "aggregation_key": finding.aggregation_key,
             "failure": finding.failure,
             "finding_type": finding.finding_type.value,
-            "category": finding.category,
+            "category": None,
             "priority": finding.severity.name,
             "subject_type": finding.subject.subject_type.value,
             "subject_name": finding.subject.name,

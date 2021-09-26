@@ -27,9 +27,9 @@ def python_profiler(event: ManualTriggerEvent):
             source=FindingSource.MANUAL,
             aggregation_key="python_profiler",
             subject=FindingSubject(
-                pod.metadata.name,
-                FindingSubjectType.TYPE_POD,
-                pod.metadata.namespace,
+                name=pod.metadata.name,
+                namepsace=pod.metadata.namespace,
+                subject_type=FindingSubjectType.TYPE_POD,
             ),
         )
 

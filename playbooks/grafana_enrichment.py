@@ -102,9 +102,9 @@ def report_image_changes(event: DeploymentEvent):
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="report_image_changes",
         subject=FindingSubject(
-            event.obj.metadata.name,
-            FindingSubjectType.TYPE_DEPLOYMENT,
-            event.obj.metadata.namespace,
+            name=event.obj.metadata.name,
+            namespace=event.obj.metadata.namespace,
+            finding_type=FindingSubjectType.TYPE_DEPLOYMENT,
         ),
     )
     json_str = json.dumps(

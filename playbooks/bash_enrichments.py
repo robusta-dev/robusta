@@ -32,9 +32,9 @@ def show_pod_bash_enrichment(event: ManualTriggerEvent):
             source=FindingSource.MANUAL,
             aggregation_key="show_pod_bash_enrichment",
             subject=FindingSubject(
-                params.pod_name,
-                FindingSubjectType.TYPE_POD,
-                params.pod_namespace,
+                name=params.pod_name,
+                namespace=params.pod_namespace,
+                subject_type=FindingSubjectType.TYPE_POD,
             ),
         )
         event.finding.add_enrichment(blocks)

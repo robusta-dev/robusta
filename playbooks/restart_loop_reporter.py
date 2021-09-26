@@ -42,7 +42,9 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="restart_loop_reporter",
         subject=FindingSubject(
-            pod_name, FindingSubjectType.TYPE_POD, pod.metadata.namespace
+            name=pod_name,
+            subject_type=FindingSubjectType.TYPE_POD,
+            namespace=pod.metadata.namespace,
         ),
     )
     blocks: List[BaseBlock] = []

@@ -399,7 +399,7 @@ def get_alert_subject(alert: PrometheusKubernetesAlert) -> FindingSubject:
         subject_type = FindingSubjectType.TYPE_NODE
         name = alert.node.metadata.name
 
-    return FindingSubject(name, subject_type, namespace)
+    return FindingSubject(name=name, namespace=namespace, subject_type=subject_type)
 
 
 SEVERITY_MAP = {
