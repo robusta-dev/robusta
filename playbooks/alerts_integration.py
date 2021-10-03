@@ -1,8 +1,7 @@
 import requests
 from string import Template
-from datetime import datetime, timedelta
+from datetime import timedelta
 from urllib.parse import urlparse, unquote_plus
-from collections import defaultdict
 
 import pygal
 from pygal.style import DarkStyle as ChosenStyle
@@ -413,6 +412,7 @@ SEVERITY_MAP = {
 def create_alert_finding(alert: PrometheusKubernetesAlert):
     alert_subject = get_alert_subject(alert)
     alert.finding = Finding(
+        fingerprint=f"{alert.alert.fingerprint}_{alert.alert.startsAt.timestamp()}",
         title=alert.get_title(),
         description=alert.get_description(),
         source=FindingSource.PROMETHEUS,

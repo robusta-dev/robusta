@@ -4,7 +4,6 @@
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
-import uuid
 from copy import deepcopy
 from typing import List, Callable, Dict, Any, Iterable, Sequence, Optional
 
@@ -213,7 +212,7 @@ class FindingSubject(BaseModel):
 class Finding(BaseModel):
 
     title: str
-    id: str = Field(default_factory=uuid.uuid4)  # TODO: to string?
+    fingerprint: Optional[str] = None
     severity: FindingSeverity = FindingSeverity.INFO
     source: FindingSource = FindingSource.NONE
     aggregation_key: Optional[str] = None

@@ -5,6 +5,8 @@ import threading
 import time
 import traceback
 import uuid
+import requests
+import datetime
 
 from typing import List, Dict, Any
 
@@ -78,6 +80,21 @@ class RobustaClient(Client):
             headers=headers,
         )
 
+    def rpc(self, fn, params):
+        """Similar to _execute_monkey_patch in supabase-py - we make the async rpc call sync"""
+        path = f"rpc/{fn}"
+        url: str = str(self.postgrest.session.base_url).rstrip("/")
+        query: str = str(self.postgrest.session.params)
+        response = requests.post(
+            f"{url}/{path}?{query}",
+            headers=dict(self.postgrest.session.headers) | self._get_auth_headers(),
+            json=params,
+        )
+        return {
+            "data": response.json(),
+            "status_code": response.status_code,
+        }
+
 
 class SupabaseDal:
     def __init__(
@@ -104,23 +121,24 @@ class SupabaseDal:
 
     def to_issue(self, finding: Finding):
         return {
-            "id": str(finding.id),
-            "title": finding.title,
-            "description": finding.description,
-            "source": finding.source.value,
-            "aggregation_key": finding.aggregation_key,
-            "failure": finding.failure,
-            "finding_type": finding.finding_type.value,
-            "category": None,
+            "name": finding.aggregation_key,
+            "account_id": self.account_id,
             "priority": finding.severity.name,
-            "subject_type": finding.subject.subject_type.value,
-            "subject_name": finding.subject.name,
-            "subject_namespace": finding.subject.namespace,
             "service_key": TopServiceResolver.guess_service_key(
                 finding.subject.name, finding.subject.namespace
             ),
-            "cluster": self.cluster,
-            "account_id": self.account_id,
+            "source": finding.source.value,
+            "category": finding.finding_type.value,
+            "fingerprint": finding.fingerprint,
+            "title": finding.title,
+            "start_date": datetime.datetime.utcnow().isoformat(),
+            "end_date": None,
+            "description": finding.description,
+            "is_failure": finding.failure,
+            "subject_type": finding.subject.subject_type.value,
+            "subject_name": finding.subject.name,
+            "subject_namespace": finding.subject.namespace,
+            "subject_cluster": self.cluster,
         }
 
     def to_evidence(self, finding_id: uuid, enrichment: Enrichment) -> Dict[Any, Any]:
@@ -205,23 +223,30 @@ class SupabaseDal:
         }
 
     def persist_finding(self, finding: Finding):
+        res = self.client.rpc("insert_finding_v1", self.to_issue(finding))
+        if res.get("status_code") not in [201, 200]:
+            logging.error(
+                f"Failed to persist finding={finding} error: {res.get('data')}. Dropping Finding"
+            )
+            self.handle_supabase_error()
+            return
+        res_data = res.get("data")[0]
+        finding_id = res_data.get("id")
+        new_finding = res_data.get("inserted")
+        if not new_finding:
+            logging.info(
+                f"this finding already exists in supabase; updating existing; finding={finding}"
+            )
         for enrichment in finding.enrichments:
             res = (
                 self.client.table(EVIDENCE_TABLE)
-                .insert(self.to_evidence(finding.id, enrichment))
+                .insert(self.to_evidence(finding_id, enrichment))
                 .execute()
             )
             if res.get("status_code") != 201:
                 logging.error(
-                    f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"
+                    f"Failed to persist enrichment; finding={finding} enrichment={enrichment} error: {res.get('data')}. Dropping enrichment"
                 )
-
-        res = self.client.table(ISSUES_TABLE).insert(self.to_issue(finding)).execute()
-        if res.get("status_code") != 201:
-            logging.error(
-                f"Failed to persist finding {finding.id} error: {res.get('data')}"
-            )
-            self.handle_supabase_error()
 
     def to_service(self, service: ServiceInfo) -> Dict[Any, Any]:
         return {
