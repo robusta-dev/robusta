@@ -19,7 +19,7 @@ A *playbook_directory* is a directory of Python files:
     mkdir example_playbooks
     touch example_playbooks/hello.py
 
-Edit ``hello.py``:
+Edit ``example_playbooks.hello.py``:
 
 .. code-block:: python
 
@@ -27,19 +27,27 @@ Edit ``hello.py``:
 
     @on_pod_create()
     def hello_world_playbook(event: PodEvent):
-        logging.info(f"Pod {event.obj.metadata.name} created on namespace {event.obj.metadata.namespace}")
+        logging.info(f"Hello world! Pod {event.obj.metadata.name} created on namespace {event.obj.metadata.namespace}")
 
 
 Load the **playbook_directory** into Robusta:
 
 .. code-block:: bash
 
-    robusta playbooks load my-custom-playbooks-dir
+    robusta playbooks push example_playbooks
 
 Configuring your playbook
 -------------------------------------------------------------
 Once the **playbook_directory** has been loaded, you can configure your playbook the same way as built-in playbooks.
-Add ``hello_world_playbook`` to your ``active_playbooks.yaml`` and deploy the new ``active_playbooks.yaml`` to the cluster:
+Add ``hello_world_playbook`` to your ``active_playbooks.yaml``:
+
+.. code-block:: yaml
+   :emphasize-lines: 2
+
+    active_playbooks:
+    - name: "hello_world_playbook"
+
+Write your ``active_playbooks.yaml`` to the cluster in the usual way:
 
 .. code-block:: bash
 
@@ -53,6 +61,11 @@ Go ahead and try it. Create a deployment (and therefore a pod):
 
     kubectl create deployment first-playbook-test-deployment --image=busybox -- echo "Hello World - Robusta"
 
+Check that "Hello World" appears in the Robusta logs:
+
+.. code-block:: bash
+
+    kubectl logs deployment/robusta-runner runner | grep "Hello world"
 
 Robusta Playground
 ---------------------------
