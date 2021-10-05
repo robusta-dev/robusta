@@ -14,12 +14,12 @@ ENV ENV_TYPE=DEV
 # we install the project requirements and install the app in separate stages to optimize docker layer caching
 RUN mkdir /app
 RUN pip3 install --upgrade pip
-RUN pip3 install poetry==1.1.6
-RUN poetry config virtualenvs.create false
+RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
+RUN /root/.local/bin/poetry config virtualenvs.create false
 COPY src/pyproject.toml /app
 COPY src/poetry.lock /app
 WORKDIR /app
-RUN bash -c "pip3 install --requirement <(poetry export --dev --format requirements.txt --without-hashes)"
+RUN /root/.local/bin/poetry install --no-root --extras "all"
 
 ADD src/ /app
 
