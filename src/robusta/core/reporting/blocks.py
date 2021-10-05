@@ -196,11 +196,19 @@ class FindingSeverity(Enum):
     HIGH = 4
 
 
+class EnrichmentCategory(Enum):
+    CPU_PROFILE = "CPU Profile"
+    LOGS = "Logs"
+    CRASH_ANALYSIS = "Crash Analysis"
+    COLLECTION_ERROR = "Collection Errors"
+
+
 class Enrichment(BaseModel):
     # These is the actual enrichment data
     blocks: List[BaseBlock] = []
     # General purpose rendering flags, that can be used by specific sinks
     annotations: Dict[str, str] = {}
+    category: Optional[EnrichmentCategory] = None
 
 
 class FindingSubject(BaseModel):
@@ -210,7 +218,6 @@ class FindingSubject(BaseModel):
 
 
 class Finding(BaseModel):
-
     title: str
     fingerprint: Optional[str] = None
     severity: FindingSeverity = FindingSeverity.INFO
@@ -222,11 +229,18 @@ class Finding(BaseModel):
     failure: bool = True
     enrichments: List[Enrichment] = []
 
-    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
+    def add_enrichment(
+        self,
+        enrichment_blocks: List[BaseBlock],
+        annotations=None,
+        category: Optional[EnrichmentCategory] = None,
+    ):
         if not enrichment_blocks:
             return
         if annotations is None:
             annotations = {}
         self.enrichments.append(
-            Enrichment(blocks=enrichment_blocks, annotations=annotations)
+            Enrichment(
+                blocks=enrichment_blocks, annotations=annotations, category=category
+            )
         )

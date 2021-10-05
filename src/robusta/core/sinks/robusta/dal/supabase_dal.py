@@ -216,15 +216,15 @@ class SupabaseDal:
                 continue  # no reason to crash the entire report
 
         return {
-            "issue_id": str(finding_id),
-            "file_type": "structured_data",
+            "finding_id": str(finding_id),
             "data": json.dumps(structured_data),
             "account_id": self.account_id,
+            "category": enrichment.category and enrichment.category.value,
         }
 
     def persist_finding(self, finding: Finding):
         res = self.client.rpc("insert_finding_v1", self.to_issue(finding))
-        if res.get("status_code") not in [201, 200]:
+        if res.get("status_code") not in [200, 201]:
             logging.error(
                 f"Failed to persist finding={finding} error: {res.get('data')}. Dropping Finding"
             )
@@ -237,13 +237,12 @@ class SupabaseDal:
             logging.info(
                 f"this finding already exists in supabase; updating existing; finding={finding}"
             )
+
         for enrichment in finding.enrichments:
-            res = (
-                self.client.table(EVIDENCE_TABLE)
-                .insert(self.to_evidence(finding_id, enrichment))
-                .execute()
+            res = self.client.rpc(
+                "insert_enrichment_v1", self.to_evidence(finding_id, enrichment)
             )
-            if res.get("status_code") != 201:
+            if res.get("status_code") not in [200, 201]:
                 logging.error(
                     f"Failed to persist enrichment; finding={finding} enrichment={enrichment} error: {res.get('data')}. Dropping enrichment"
                 )
