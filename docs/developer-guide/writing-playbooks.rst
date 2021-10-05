@@ -7,26 +7,19 @@ We recommend sharing your playbook back with the community and adding it to the 
 
 If you are interested in creating playbooks without writing code, contact us!
 
-Downloading the built-in playbooks
------------------------------------
+Setting up a playbooks directory
+-------------------------------------------------------------
+Before a custom playbook can be configured in ``active_playbooks.yaml`` it must first be loaded into Robusta as part of a *playbook_directory*.
+(For Robusta's built-in playbooks you skip this step.)
 
-Lets get started by downloading the example playbooks. You can also view them on `GitHub <https://github.com/robusta-dev/robusta/tree/master/playbooks>`_.
-
-.. code-block:: bash
-
-    robusta examples
-
-Now lets install some extra Python packages so that we have autocompletion in our IDE:
+A *playbook_directory* is a directory of Python files:
 
 .. code-block:: bash
 
-    pip3 install robusta-cli
+    mkdir example_playbooks
+    touch example_playbooks/hello.py
 
-You can now open the python files in the ``playbooks/`` directory in your favorite IDE and start modifying them!
-
-Adding your own Hello World playbook
--------------------------------------
-Create a new file in the playbooks directory named ``hello-world-playbook.py`` with the following contents:
+Edit ``hello.py``:
 
 .. code-block:: python
 
@@ -37,18 +30,20 @@ Create a new file in the playbooks directory named ``hello-world-playbook.py`` w
         logging.info(f"Pod {event.obj.metadata.name} created on namespace {event.obj.metadata.namespace}")
 
 
-Activate the playbook in ``active_playbooks.yaml``:
-
-.. code-block:: yaml
-
-    active_playbooks:
-    - name: "hello_world_playbook"
-
-Finally, deploy the newly created playbook:
+Load the **playbook_directory** into Robusta:
 
 .. code-block:: bash
 
-    robusta playbooks deploy ./playbooks
+    robusta playbooks load my-custom-playbooks-dir
+
+Configuring your playbook
+-------------------------------------------------------------
+Once the **playbook_directory** has been loaded, you can configure your playbook the same way as built-in playbooks.
+Add ``hello_world_playbook`` to your ``active_playbooks.yaml`` and deploy the new ``active_playbooks.yaml`` to the cluster:
+
+.. code-block:: bash
+
+    robusta playbooks configure active_playbooks.yaml
 
 That's it! Every time a Kubernetes pod is created in the cluster, the above log line will be printed to the robusta-runner logs.
 
@@ -57,6 +52,7 @@ Go ahead and try it. Create a deployment (and therefore a pod):
 .. code-block:: bash
 
     kubectl create deployment first-playbook-test-deployment --image=busybox -- echo "Hello World - Robusta"
+
 
 Robusta Playground
 ---------------------------
