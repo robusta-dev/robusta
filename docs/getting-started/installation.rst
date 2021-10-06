@@ -22,7 +22,7 @@ Install Robusta using `helm <https://helm.sh/>`_ and the values file you just ge
 
 .. code-block:: bash
 
-    helm repo add robusta https://robusta-charts.storage.googleapis.com
+    helm repo add robusta https://robusta-charts.storage.googleapis.com && help repo update
     helm install robusta robusta/robusta -f ./generated_values.yaml
 
 This will install two deployments in the current namespace.
