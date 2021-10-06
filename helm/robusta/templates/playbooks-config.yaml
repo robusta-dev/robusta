@@ -4,4 +4,4 @@ metadata:
   name: robusta-playbooks-config
 data:
   active_playbooks.yaml: |-
-{{ .Values.playbooks_file | indent 4}}
+{{ include "robusta.configfile" . | indent 4 }}

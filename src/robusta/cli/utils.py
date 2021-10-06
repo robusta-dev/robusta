@@ -6,7 +6,6 @@ import click_spinner
 import typer
 import requests
 
-from robusta._version import __version__
 
 PLAYBOOKS_DIR = "playbooks/"
 
@@ -84,9 +83,3 @@ def fetch_runner_logs(namespace: str, all_logs=False):
                 f"kubectl logs -n {namespace} deployment/robusta-runner -c runner --since={int(time.time() - start + 1)}s",
                 shell=True,
             )
-
-
-def get_examples_url(examples_version=None):
-    if examples_version is None:
-        examples_version = __version__
-    return f"https://storage.googleapis.com/robusta-public/{examples_version}/example-playbooks.zip"
