@@ -52,7 +52,7 @@ spec:
             memory: {{ .Values.runner.resources.requests.memory | quote }}
             {{ if .Values.runner.resources.limits.cpu }}cpu: {{ .Values.runner.resources.limits.cpu | quote }}{{ end }}
       - name: grafana-renderer
-        image: {{ .Values.grafana_renderer.image }}
+        image: {{ .Values.grafanaRenderer.image }}
         imagePullPolicy: Always
         securityContext:
           privileged: false
@@ -62,10 +62,10 @@ spec:
               command: ["bash", "-c", "kill -SIGINT 1"]
         resources:
           requests:
-            memory: {{ .Values.grafana_renderer.resources.requests.memory | quote }}
+            memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}
           limits:
-            memory: {{ .Values.grafana_renderer.resources.requests.memory | quote }}
-            {{ if .Values.grafana_renderer.resources.limits.cpu }}cpu: {{ .Values.grafana_renderer.resources.limits.cpu | quote }}{{ end }}
+            memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}
+            {{ if .Values.grafanaRenderer.resources.limits.cpu }}cpu: {{ .Values.grafanaRenderer.resources.limits.cpu | quote }}{{ end }}
       volumes:
         - name: playbooks-config
           configMap:
