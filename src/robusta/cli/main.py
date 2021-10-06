@@ -111,7 +111,7 @@ def gen_config():
             fg="green",
         )
         typer.secho(
-            f"helm install robusta robusta/robusta -f ./{generated_file}", fg="blue"
+            f"helm install robusta robusta/robusta -f {generated_file}", fg="blue"
         )
 
 
