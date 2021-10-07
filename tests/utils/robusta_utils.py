@@ -68,7 +68,9 @@ class RobustaController:
             print(f"running command {cmd} failed with returncode={result.returncode}")
             print(f"stdout={result.stdout}")
             print(f"stderr={result.stderr}")
-            raise Exception(f"Error running robusta cli command: {cmd}")
+            raise Exception(
+                f"Error running robusta cli command: {cmd}; result={result}"
+            )
 
         return result.stdout
 
