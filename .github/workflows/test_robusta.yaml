@@ -17,10 +17,6 @@ jobs:
             source $HOME/.poetry/env
             cd src/
             poetry install --extras "all"
-        - name: Install Helm
-          run: |
-            curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-            helm repo add robusta https://robusta-charts.storage.googleapis.com
         - name: Test Robusta
           env:
             PYTEST_SLACK_TOKEN: ${{ secrets.PYTEST_SLACK_TOKEN }}
@@ -28,4 +24,4 @@ jobs:
           run: |
             source $HOME/.poetry/env
             cd src/
-            poetry run pytest ../tests -s --kind-version=v0.11.1
+            python -m pytest .. -s --kind-version=v0.11.1
