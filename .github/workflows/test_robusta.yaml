@@ -16,6 +16,7 @@ jobs:
             curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
             source $HOME/.poetry/env
             cd src/
+            poetry config virtualenvs.create false
             poetry install --extras "all"
         - name: Test Robusta
           env:
