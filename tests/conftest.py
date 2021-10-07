@@ -16,12 +16,13 @@ def robusta(slack_channel: SlackChannel, kind_cluster: KindCluster):
     print(
         f"Debugging tip: to run kubectl commands on the KIND cluster use: KUBECONFIG={kind_cluster.kubeconfig_path} kubectl config get-contexts"
     )
-    EXAMPLES_URL = "https://storage.googleapis.com/robusta-public/test-version/example-playbooks.zip"
-    robusta = RobustaController(str(kind_cluster.kubeconfig_path), namespace="robusta")
-    robusta.create_namespace()
-    robusta.helm_install()
-    robusta.cli_examples(
-        EXAMPLES_URL, slack_channel.channel_name, CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN
+    robusta = RobustaController(str(kind_cluster.kubeconfig_path))
+    values_path = "./gen_values.yaml"
+    robusta.gen_config(
+        slack_api_key=CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN,
+        slack_channel=CONFIG.PYTEST_SLACK_CHANNEL,
+        output_path=values_path,
     )
-    robusta.cli_deploy()
+    robusta.helm_install(values_path)
     yield robusta
+    # no need to cleanup as the entire KIND cluster will be torn down

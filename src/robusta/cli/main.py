@@ -75,44 +75,67 @@ def guess_cluster_name():
 
 
 @app.command()
-def gen_config():
+def gen_config(
+    cluster_name: str = typer.Option(
+        None,
+        help="Cluster Name",
+    ),
+    slack_api_key: str = typer.Option(
+        "",
+        help="Slack API Key",
+    ),
+    slack_channel: str = typer.Option(
+        "",
+        help="Slack Channel",
+    ),
+    robusta_api_key: str = typer.Option(None),
+    output_path: str = typer.Option(
+        "./generated_values.yaml", help="Output path of generated Helm values"
+    ),
+):
     """Create runtime configuration file"""
-    cluster_name = typer.prompt(
-        "Please specify a unique name for your cluster or press ENTER to use the default",
-        default=guess_cluster_name(),
-    )
+    if cluster_name is None:
+        cluster_name = typer.prompt(
+            "Please specify a unique name for your cluster or press ENTER to use the default",
+            default=guess_cluster_name(),
+        )
 
-    values = HelmValues(clusterName=cluster_name)
-    if typer.confirm(
-        "do you want to configure slack integration? this is HIGHLY recommended.",
+    if not slack_api_key and typer.confirm(
+        "Do you want to configure slack integration? this is HIGHLY recommended.",
         default=True,
     ):
         slack_api_key = get_slack_key()
+
+    if slack_api_key and not slack_channel:
         slack_channel = typer.prompt(
-            "which slack channel should I send notifications to?"
+            "Which slack channel should I send notifications to?"
         )
-        if slack_api_key:
-            values.slackApiKey = slack_api_key
-            values.slackChannel = slack_channel
 
-    if typer.confirm("Would you like to use Robusta UI?"):
-        robusta_ui_token = typer.prompt(
-            "Please insert your Robusta account token",
-            default=None,
-        )
-        if robusta_ui_token:
-            values.robustaApiKey = robusta_ui_token
+    # we have a slightly different flow here than the other options so that pytest can pass robusta_api_key="" to skip
+    # asking the question
+    if robusta_api_key is None:
+        if typer.confirm("Would you like to use Robusta UI?"):
+            robusta_api_key = typer.prompt(
+                "Please insert your Robusta account token",
+                default=None,
+            )
+        else:
+            robusta_api_key = ""
 
-    generated_file = "./generated_values.yaml"
-    with open(generated_file, "w") as generated:
-        yaml.safe_dump(values.dict(), generated, sort_keys=False)
+    values = HelmValues(
+        clusterName=cluster_name,
+        slackApiKey=slack_api_key,
+        slackChannel=slack_channel,
+        robustaApiKey=robusta_api_key,
+    )
+
+    with open(output_path, "w") as output_file:
+        yaml.safe_dump(values.dict(), output_file, sort_keys=False)
         typer.secho(
-            f"Saved configuration to {generated_file}. To finish the installation, run:",
+            f"Saved configuration to {output_path}. To finish the installation, run:",
             fg="green",
         )
-        typer.secho(
-            f"helm install robusta robusta/robusta -f {generated_file}", fg="blue"
-        )
+        typer.secho(f"helm install robusta robusta/robusta -f {output_path}", fg="blue")
 
 
 @app.command()
