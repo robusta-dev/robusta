@@ -54,7 +54,7 @@ class RobustaController:
                 "--robusta-api-key=''",
             ],
         )
-        assert b"Saved configuration" in logs
+        assert b"Saved configuration" in logs, logs
 
     def _run_cmd(self, cmd) -> bytes:
         env = os.environ.copy()
