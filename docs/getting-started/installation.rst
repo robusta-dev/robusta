@@ -34,7 +34,7 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash. Run th
 
 .. code-block:: python
 
-   kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml
+   kubectl apply -f https://gist.githubusercontent.com/aantn/cdaf6a1a401b521918207710e37f7b85/raw/25f0dfd6ac1c532257c26ad171c37aa7daf17bd2/crashpod.yaml
 
 Verify that the pod is actually crashing:
 
@@ -53,5 +53,5 @@ Don't forget to clean up the crashing pod:
 
 .. code-block:: python
 
-   kubectl delete deployment -n robusta crashpod
+   kubectl delete deployment crashpod
 
