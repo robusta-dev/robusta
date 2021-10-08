@@ -54,13 +54,6 @@ jobs:
     - name: Build with skaffold
       run: ./skaffold build --file-output=container-ids.json
 
-    - name: Create robusta examples
-      run: |-
-        zip -r ./example-playbooks.zip ./playbooks
-
-    - name: Upload examples playbook to public gcp bucket
-      run: gsutil cp ./example-playbooks.zip  gs://robusta-public/${{ env.RELEASE_VER }}/example-playbooks.zip
-
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
