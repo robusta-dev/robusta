@@ -29,15 +29,16 @@ class RobustaController:
                 [
                     "kubectl",
                     "get",
-                    "events",
+                    "pods",
                 ],
             )
-            if b"Created pod: robusta-runner" in logs:
+            # wait until we have exactly two pods running - the runner and the forwarder
+            if str(logs).count("Running") == 2:
                 print("Robusta runner created")
-                break
-            time.sleep(10)
-        # wait another few seconds until container actually starts
-        time.sleep(10)
+                # wait another few seconds for robusta to finish starting up
+                time.sleep(10)
+                return
+        raise Exception(f"robusta runner did not start. logs={logs}")
 
     def gen_config(self, slack_channel: str, slack_api_key: str, output_path: str):
         logs = self._run_robusta_cli_cmd(
@@ -51,7 +52,7 @@ class RobustaController:
                 slack_channel,
                 "--output-path",
                 output_path,
-                "--robusta-api-key=''",
+                "--robusta-api-key=none",
             ],
         )
         assert b"Saved configuration" in logs, logs

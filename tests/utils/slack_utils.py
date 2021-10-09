@@ -8,7 +8,7 @@ class SlackChannel:
         self.channel_id = self._create_or_join_channel(self.client, channel_name)
 
     def was_message_sent_recently(self, expected) -> bool:
-        results = self.client.conversations_history(channel=self.channel_id)
+        results = self.client.conversations_history(channel=self.channel_id, limit=4)
         messages = results["messages"]
         for msg in messages:
             if expected in msg["text"]:
