@@ -16,8 +16,8 @@ deploy:
     releases:
       - name: robusta
         chartPath: helm/robusta
-        setFiles:
-          playbooks_file: deployment/active_playbooks_generated.yaml
+        valuesFiles:
+          - deployment/generated_values.yaml
         artifactOverrides:
           runner.image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
 

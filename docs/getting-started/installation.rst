@@ -22,7 +22,7 @@ Install Robusta using `helm <https://helm.sh/>`_ and the values file you just ge
 
 .. code-block:: bash
 
-    helm repo add robusta https://robusta-charts.storage.googleapis.com
+    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
     helm install robusta robusta/robusta -f ./generated_values.yaml
 
 This will install two deployments in the current namespace.
@@ -34,7 +34,7 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash. Run th
 
 .. code-block:: python
 
-   kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml
+   kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw
 
 Verify that the pod is actually crashing:
 
@@ -53,5 +53,5 @@ Don't forget to clean up the crashing pod:
 
 .. code-block:: python
 
-   kubectl delete deployment -n robusta crashpod
+   kubectl delete deployment crashpod
 
