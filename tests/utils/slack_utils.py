@@ -7,7 +7,15 @@ class SlackChannel:
         self.channel_name = channel_name
         self.channel_id = self._create_or_join_channel(self.client, channel_name)
 
-    def get_latest_messages(self):
+    def was_message_sent_recently(self, expected) -> bool:
+        results = self.client.conversations_history(channel=self.channel_id)
+        messages = results["messages"]
+        for msg in messages:
+            if expected in msg["text"]:
+                return True
+        return False
+
+    def get_latest_message(self):
         results = self.client.conversations_history(channel=self.channel_id)
         messages = results["messages"]
         return messages[0]["text"]

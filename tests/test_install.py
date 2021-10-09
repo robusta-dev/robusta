@@ -10,7 +10,6 @@ def test_robusta_install(robusta: RobustaController, slack_channel: SlackChannel
     expected = f"Crashing pod {crashing_deployment.metadata.name}"
     for _ in range(50):
         time.sleep(10)
-        msg = slack_channel.get_latest_messages()
-        if expected in msg:
-            break
-    assert expected in msg, f"cannot find expected='{expected} in msg='{msg}'"
+        if slack_channel.was_message_sent_recently(expected):
+            return
+    assert False, f"cannot find expected='{expected} msg in slack"

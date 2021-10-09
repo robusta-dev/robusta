@@ -9,7 +9,7 @@ def test_send_to_slack(slack_channel: SlackChannel):
     finding = Finding(title=msg)
     finding.add_enrichment([MarkdownBlock("testing")])
     slack_sender.send_finding_to_slack(finding, slack_channel.channel_name, "")
-    assert slack_channel.get_latest_messages() == msg
+    assert slack_channel.get_latest_message() == msg
 
 
 def test_long_slack_messages(slack_channel: SlackChannel):
