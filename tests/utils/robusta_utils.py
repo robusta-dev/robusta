@@ -1,6 +1,7 @@
 import os
 import subprocess
 import time
+import logging
 
 import kubernetes
 from hikaru.model import Namespace
@@ -40,7 +41,8 @@ class RobustaController:
                 return
             time.sleep(5)
         details = self._run_cmd(["kubectl", "describe", "pods"])
-        raise Exception(f"robusta runner did not start. logs={logs}; details={details}")
+        logging.error(f"robusta runner did not start. logs={logs}; details={details}")
+        raise Exception(f"robusta runner did not start")
 
     def gen_config(self, slack_channel: str, slack_api_key: str, output_path: str):
         logs = self._run_robusta_cli_cmd(
@@ -68,12 +70,13 @@ class RobustaController:
             cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if result.returncode:
-            print(f"running command {cmd} failed with returncode={result.returncode}")
-            print(f"stdout={result.stdout}")
-            print(f"stderr={result.stderr}")
-            raise Exception(
-                f"Error running robusta cli command: {cmd}; result={result}"
+            logging.error(
+                f"running command {cmd} failed with returncode={result.returncode}"
             )
+            logging.error(f"stdout={result.stdout}")
+            logging.error(f"stderr={result.stderr}")
+            logging.error(f"total result={result}")
+            raise Exception(f"Error running robusta cli command: {cmd}")
 
         return result.stdout
 
