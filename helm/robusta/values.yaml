@@ -51,7 +51,7 @@ kubewatch:
   pprof: True
   resources:
     requests:
-      memory: 512Mi
+      memory: 256Mi
     limits:
       cpu: ~
 
@@ -60,7 +60,7 @@ grafanaRenderer:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:5
   resources:
     requests:
-      memory: 512Mi
+      memory: 256Mi
     limits:
       cpu: ~
 
@@ -70,6 +70,6 @@ runner:
   log_level: INFO
   resources:
     requests:
-      memory: 1024Mi
+      memory: 512Mi
     limits:
       cpu: ~
