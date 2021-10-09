@@ -62,7 +62,7 @@ class RobustaController:
             env["KUBECONFIG"] = self.kubeconfig_path
 
         result = subprocess.run(
-            cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+            cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         if result.returncode:
             print(f"running command {cmd} failed with returncode={result.returncode}")
