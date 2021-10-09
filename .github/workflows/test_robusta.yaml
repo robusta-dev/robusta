@@ -25,4 +25,4 @@ jobs:
           run: |
             source $HOME/.poetry/env
             cd src/
-            pytest .. -s
+            pytest .. -s --kind-version=v0.11.1 # use a kind version that works on github (older versions don't)
