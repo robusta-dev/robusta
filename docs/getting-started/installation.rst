@@ -34,7 +34,7 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash. Run th
 
 .. code-block:: python
 
-   kubectl apply -f https://gist.githubusercontent.com/aantn/cdaf6a1a401b521918207710e37f7b85/raw
+   kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw
 
 Verify that the pod is actually crashing:
 
