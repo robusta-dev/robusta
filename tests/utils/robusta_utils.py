@@ -38,7 +38,8 @@ class RobustaController:
                 # wait another few seconds for robusta to finish starting up
                 time.sleep(10)
                 return
-        raise Exception(f"robusta runner did not start. logs={logs}")
+        details = self._run_cmd(["kubectl", "describe", "pods"])
+        raise Exception(f"robusta runner did not start. logs={logs}; details={details}")
 
     def gen_config(self, slack_channel: str, slack_api_key: str, output_path: str):
         logs = self._run_robusta_cli_cmd(
