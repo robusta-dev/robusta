@@ -38,6 +38,7 @@ class RobustaController:
                 # wait another few seconds for robusta to finish starting up
                 time.sleep(10)
                 return
+            time.sleep(5)
         details = self._run_cmd(["kubectl", "describe", "pods"])
         raise Exception(f"robusta runner did not start. logs={logs}; details={details}")
 
