@@ -19,13 +19,25 @@ class RobustaController:
 
     def helm_install(self, values_file):
         logs = self._run_cmd(
-            ["helm", "install", "robusta", "../helm/robusta/", "-f", values_file],
+            [
+                "helm",
+                "install",
+                "robusta",
+                "../helm/robusta/",
+                "-f",
+                values_file,
+                "--set",
+                "kubewatch.resources.requests.memory=64Mi",
+                "--set",
+                "grafanaRenderer.resources.requests.memory=64Mi",
+                "--set",
+                "runner.resources.requests.memory=512Mi",
+            ],
         )
-        time.sleep(10)
-        assert b"STATUS: deployed" in logs
+        assert "STATUS: deployed" in logs
 
         # wait until robusta runner is created, takes some time to pull the 2 container images
-        for _ in range(30):
+        for _ in range(60):
             logs = self._run_cmd(
                 [
                     "kubectl",
@@ -59,26 +71,30 @@ class RobustaController:
                 "--robusta-api-key=none",
             ],
         )
-        assert b"Saved configuration" in logs, logs
+        assert "Saved configuration" in logs, logs
 
-    def _run_cmd(self, cmd) -> bytes:
+    def _run_cmd(self, cmd) -> str:
         env = os.environ.copy()
         if self.kubeconfig_path:
             env["KUBECONFIG"] = self.kubeconfig_path
 
+        # in windows we need to set shell=True or else PATH is ignored and subprocess.run can't find poetry
+        shell = False
+        if os.name == "nt":
+            shell = True
+
         result = subprocess.run(
-            cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell
         )
         if result.returncode:
             logging.error(
                 f"running command {cmd} failed with returncode={result.returncode}"
             )
-            logging.error(f"stdout={result.stdout}")
-            logging.error(f"stderr={result.stderr}")
-            logging.error(f"total result={result}")
+            logging.error(f"stdout={result.stdout.decode()}")
+            logging.error(f"stderr={result.stderr.decode()}")
             raise Exception(f"Error running robusta cli command: {cmd}")
 
-        return result.stdout
+        return result.stdout.decode()
 
-    def _run_robusta_cli_cmd(self, cmd) -> bytes:
+    def _run_robusta_cli_cmd(self, cmd) -> str:
         return self._run_cmd(["poetry", "run", "robusta"] + cmd)

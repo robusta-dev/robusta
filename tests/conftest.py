@@ -1,5 +1,6 @@
 import pytest
 from pytest_kind import KindCluster
+from pathlib import Path
 from .config import CONFIG
 from tests.utils.robusta_utils import RobustaController
 from tests.utils.slack_utils import SlackChannel
@@ -12,12 +13,12 @@ def slack_channel() -> SlackChannel:
 
 # TODO: do this all in a temporary directory?
 @pytest.fixture
-def robusta(slack_channel: SlackChannel, kind_cluster: KindCluster):
+def robusta(slack_channel: SlackChannel, kind_cluster: KindCluster, tmp_path):
     print(
         f"Debugging tip: to run kubectl commands on the KIND cluster use: KUBECONFIG={kind_cluster.kubeconfig_path} kubectl config get-contexts"
     )
     robusta = RobustaController(str(kind_cluster.kubeconfig_path))
-    values_path = "./gen_values.yaml"
+    values_path = tmp_path / Path("./gen_values.yaml")
     robusta.gen_config(
         slack_api_key=CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN,
         slack_channel=CONFIG.PYTEST_SLACK_CHANNEL,
