@@ -6,12 +6,12 @@ Robusta is a powerful rules engine for devops, but it needs rules to tell it wha
 Enabling a new playbook
 ------------------------
 
-Lets edit ``active_playbooks.yaml`` and add the following:
+Lets edit Robusta's ``values.yaml`` and add the following:
 
 .. code-block:: yaml
 
    (...)
-   active_playbooks:
+   playbooks:
      (...)
      - name: "deployment_babysitter"
        action_params:
@@ -22,18 +22,7 @@ This will add an additional playbook named ``deployment_babysitter`` - a playboo
 
 How did we know which parameters we could use with the ``deployment_babysitter`` playbook? It's simple. We read it's documentation in the :ref:`list of builtin playbooks <deployment_babysitter>`.
 
-Deploy your new config
-------------------------
-So far we have edited the configuration file locally. Lets deploy it to Robusta inside your Kubernetes cluster.
-
-From the playbooks directory run:
-
-.. code-block:: python
-
-   robusta playbooks configure active_playbooks.yaml
-
-
-Alternatively, you can create a new Helm release using your updated ``active_playbooks.yaml`` file.
+.. note:: Make sure you apply the change to ``values.yaml`` with Helm so that it takes effect.
 
 Seeing your new config in action
 ----------------------------------
