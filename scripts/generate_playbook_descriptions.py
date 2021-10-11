@@ -6,9 +6,8 @@ import glob
 
 from pydantic import BaseModel
 
-from src.robusta import get_function_params_class
-from src.robusta import TriggerParams
-from src.robusta.runner import install_requirements
+from src.robusta.api import get_function_params_class
+from src.robusta.api import TriggerParams
 
 
 class PlaybookDescription(BaseModel):
@@ -28,19 +27,23 @@ def get_params_schema(func):
 
 
 def load_scripts(scripts_root):
-    install_requirements(os.path.join(scripts_root, 'requirements.txt'))
+    # install_requirements(os.path.join(scripts_root, 'requirements.txt'))
 
-    python_files = glob.glob(f'{scripts_root}/*.py')
+    python_files = glob.glob(f"{scripts_root}/*.py")
 
     for script in python_files:
-        print(f'loading playbooks {script}')
+        print(f"loading playbooks {script}")
         filename = os.path.basename(script)
         (module_name, ext) = os.path.splitext(filename)
         spec = importlib.util.spec_from_file_location(module_name, script)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
-        playbooks = inspect.getmembers(module, lambda f: inspect.isfunction(f) and getattr(f, "__playbook", None) is not None)
+        playbooks = inspect.getmembers(
+            module,
+            lambda f: inspect.isfunction(f)
+            and getattr(f, "__playbook", None) is not None,
+        )
         for _, func in playbooks:
             description = PlaybookDescription(
                 function_name=func.__name__,
@@ -54,8 +57,10 @@ def load_scripts(scripts_root):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate playbook descriptions')
-    parser.add_argument('directory', type=str, help='directory containing the playbooks')
+    parser = argparse.ArgumentParser(description="Generate playbook descriptions")
+    parser.add_argument(
+        "directory", type=str, help="directory containing the playbooks"
+    )
     args = parser.parse_args()
     load_scripts(args.directory)
 

@@ -1,4 +1,51 @@
+# global parameters
+clusterName: ""
 
+# slack integration params
+slackApiKey: ""
+slackChannel: ""
+
+# robusta ui integration params
+robustaApiKey: ""
+
+# playbook configuration
+playbooks:
+- name: restart_loop_reporter
+  action_params:
+    restart_reason: CrashLoopBackOff
+- name: python_profiler
+- name: alerts_integration
+  action_params:
+    alerts_config:
+    - alert_name: KubeNodeNotReady
+      enrichers:
+      - name: AlertDefaults
+      - name: NodeAllocatableResourcesEnricher
+      - name: NodeRunningPodsEnricher
+    - alert_name: KubernetesDaemonsetMisscheduled
+      enrichers:
+      - name: AlertDefaults
+      - name: DaemonsetEnricher
+      - name: DaemonsetMisscheduledAnalysis
+    - alert_name: HostHighCpuLoad
+      enrichers:
+      - name: NodeCPUAnalysis
+      - name: GraphEnricher
+    - alert_name: HostOomKillDetected
+      enrichers:
+      - name: OOMKillerEnricher
+      - name: GraphEnricher
+    - alert_name: CPUThrottlingHigh
+      enrichers:
+      - name: GraphEnricher
+      - name: AlertDefaults
+      - name: CPUThrottlingAnalysis
+    - alert_name: KubernetesDeploymentReplicasMismatch
+      enrichers:
+      - name: DeploymentStatusEnricher
+      - name: AlertDefaults
+
+# parameters for the robusta forwarder deployment
 kubewatch:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.11
   pprof: True
@@ -8,7 +55,8 @@ kubewatch:
     limits:
       cpu: ~
 
-grafana_renderer:
+# parameters for the renderer service used in robusta runner to render grafana graphs
+grafanaRenderer:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:5
   resources:
     requests:
@@ -16,52 +64,12 @@ grafana_renderer:
     limits:
       cpu: ~
 
+# parameters for the robusta runner
 runner:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.6.8-dirty
   log_level: INFO
   resources:
     requests:
       memory: 1024Mi
     limits:
       cpu: ~
-
-
-playbooks_file: |-
-  sinks_config: []
-  global_config:
-    sinks: []
-  active_playbooks:
-  - name: restart_loop_reporter
-    action_params:
-      restart_reason: CrashLoopBackOff
-  - name: python_profiler
-  - name: alerts_integration
-    action_params:
-      alerts_config:
-      - alert_name: KubeNodeNotReady
-        enrichers:
-        - name: AlertDefaults
-        - name: NodeAllocatableResourcesEnricher
-        - name: NodeRunningPodsEnricher
-      - alert_name: KubernetesDaemonsetMisscheduled
-        enrichers:
-        - name: AlertDefaults
-        - name: DaemonsetEnricher
-        - name: DaemonsetMisscheduledAnalysis
-      - alert_name: HostHighCpuLoad
-        enrichers:
-        - name: NodeCPUAnalysis
-        - name: GraphEnricher
-      - alert_name: HostOomKillDetected
-        enrichers:
-        - name: OOMKillerEnricher
-        - name: GraphEnricher
-      - alert_name: CPUThrottlingHigh
-        enrichers:
-        - name: GraphEnricher
-        - name: AlertDefaults
-        - name: CPUThrottlingAnalysis
-      - alert_name: KubernetesDeploymentReplicasMismatch
-        enrichers:
-        - name: DeploymentStatusEnricher
-        - name: AlertDefaults

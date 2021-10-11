@@ -5,21 +5,22 @@
 
 Welcome to Robusta!
 ~~~~~~~~~~~~~~~~~~~
-You're on your way to automating your Kubernetes devops!
+You're on your way to automating your devops!
 
 .. image:: images/arch.png
    :width: 650
 
 Robusta makes cloud operations and maintenance more reliable with maintenance as code. Common use cases are:
 
+* Running Python scripts on Prometheus alerts
+* Remediating known issues automatically or via manual triggers
 * Forwarding important Kubernetes events to Slack with context
-* Gathering troubleshooting data when Prometheus alerts fire
-* Applying remediations when known issues occur
-* Tracking changes to Kubernetes objects
+* Tracking changes to Kubernetes objects and correlating them with your alerts
+* Maintenance as code - encode SRE workflows as code, not wiki pages
 
-Robusta turns all the above maintenance operations into re-usable maintanance-as-code playbooks. See the :ref:`list of builtin playbooks <List of built-in playbooks>` or write your own.
+Robusta turns all the above maintenance operations into re-usable playbooks. See the :ref:`list of builtin playbooks <List of built-in playbooks>` or write your own.
 
-:ref:`Ready to install Robusta? Get started! <Installing Robusta>`
+:ref:`Ready to install Robusta? Get started! <Installation Guide>`
 
 Still not convinced? See `the demos on our website <http://startup.natanyellin.com/>`_.
 

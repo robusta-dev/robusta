@@ -1,10 +1,11 @@
 import uuid
 from hikaru.model import *
+from kubernetes.client import ApiClient
 
 
-def get_crashing_deployment(namespace: str) -> Deployment:
-    return Deployment(
-        metadata=ObjectMeta(name=str(uuid.uuid4()), namespace=namespace),
+def create_crashing_deployment(api_client: ApiClient) -> Deployment:
+    obj = Deployment(
+        metadata=ObjectMeta(name=str(uuid.uuid4()), namespace="default"),
         spec=DeploymentSpec(
             selector=LabelSelector(matchLabels={"app": "crashpod"}),
             template=PodTemplateSpec(
@@ -28,3 +29,6 @@ def get_crashing_deployment(namespace: str) -> Deployment:
             ),
         ),
     )
+    obj.client = api_client
+    obj.create()
+    return obj

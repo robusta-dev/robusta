@@ -10,13 +10,15 @@ Robusta playbooks can run in response to any Prometheus alert. To set this up, f
     receivers:
       - name: 'webhook'
         webhook_configs:
-          - url: 'http://robusta-runner.robusta.svc.cluster.local/api/alerts'
+          - url: 'http://robusta-runner.default.svc.cluster.local/api/alerts'
+            send_resolved: true
 
-If you use Prometheus Operator, you should instead add an AlertmanagerConfig resource with the following webhook URL
+If you use Prometheus Operator, configure AlertManager using a `manually managed secret <https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md#manually-managed-secret>`_ and **not** an AlertmanagerConfig.
+`Otherwise you can only monitor alerts in the same namespace as the AlertManagerConfig <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_ for details.
 
 .. code-block:: python
 
-    http://robusta-runner.robusta.svc.cluster.local/api/alerts
+    http://robusta-runner.default.svc.cluster.local/api/alerts
 
 Trying it out
 ^^^^^^^^^^^^^
