@@ -190,7 +190,6 @@ The default sinks list can be overridden, per playbook:
 
 .. code-block:: yaml
 
-   active_playbooks:
      - name: "add_deployment_lines_to_grafana"
        sinks:
        - "my kafka sink"
