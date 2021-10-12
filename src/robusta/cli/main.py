@@ -1,5 +1,4 @@
 import random
-import random
 import subprocess
 import time
 import urllib.request
@@ -38,9 +37,6 @@ class HelmValues(BaseModel):
     slackApiKey: str = ""
     slackChannel: str = ""
     robustaApiKey: str = ""
-
-
-CRASHPOD_YAML = "https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml"
 
 
 def slack_integration(
@@ -157,22 +153,16 @@ def version():
 
 
 @app.command()
-def demo(
-    namespace: str = typer.Option(
-        "robusta",
-        help="Demo Robusta on the specified custom namespace",
-    ),
-):
+def demo():
     """deliberately deploy a crashing pod to kubernetes so you can test robusta's response"""
+    CRASHPOD_YAML = "https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml"
     log_title("Deploying a crashing pod to kubernetes...")
     subprocess.check_call(f"kubectl apply -f {CRASHPOD_YAML}", shell=True)
     log_title(
         "In ~30 seconds you should receive a slack notification on a crashing pod"
     )
     time.sleep(60)
-    subprocess.check_call(
-        f"kubectl delete -n {namespace} deployment crashpod", shell=True
-    )
+    subprocess.check_call(f"kubectl delete deployment crashpod", shell=True)
     log_title("Done!")
 
 
