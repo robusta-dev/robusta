@@ -1,30 +1,40 @@
 More Robusta CLI Commands
 ##############################
 
-The ``robusta`` cli has additional commands for managing playbooks in your cluster.
+The ``robusta`` cli has commands for managing playbooks in your cluster:
 
-Initial configuration
+Generate Helm configuration
 ------------------------------------------
-To initially configure your ``active_playbooks.yaml`` file run
+To generate a Helm ``values.yaml`` file for Robusta:
 
-.. code-block:: python
+.. code-block:: bash
 
    robusta gen-config
 
+Edit Robusta's internal configuration
+--------------------------------------
 
-Viewing active playbooks
+To bypass Helm and update Robusta's configuration directly:
+
+.. code-block:: bash
+
+   robusta edit-config
+
+.. warning:: These changes will be overridden by Helm next time it updates your cluster. Furthermore, the internal Robusta configuration file has a slightly different format than the Helm values.
+
+View active playbooks
 ------------------------------------------
 To view the currently active playbooks in your cluster run:
 
-.. code-block:: python
+.. code-block:: bash
 
    robusta playbooks list
 
 Pulling cluster playbooks locally
 ------------------------------------------
-You can download your cluster's playbook directory at any time. This will fetch both the code and yaml files:
+To download your cluster's playbook directory at any time:
 
-.. code-block:: python
+.. code-block:: bash
 
    robusta playbooks pull
 
