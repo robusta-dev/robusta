@@ -14,7 +14,7 @@ When trying out these features, you can leave your existing alerting Slack chann
 This will let you compare Robusta's alerting with Prometheus' builtin alerting.
 
 These features are still in beta and therefore have been implemented differently than regular playbooks. To enable this mode
-of operation, you configure a root ``alerts_integration`` playbook in ``active_playbooks.yaml`` and then add special enrichment
+of operation, you configure a root ``alerts_integration`` playbook in ``values.yaml`` and then add special enrichment
 and silencer playbooks underneath that playbook. In the future, this functionality will likely be merged into regular playbooks.
 
 Configure Robusta
@@ -27,11 +27,11 @@ Configure Robusta
     See :ref:`Setting up the webhook` for details.
 
 
-Lets look at the simplest possible ``active_playbooks.yaml`` which instructs Robusta to forward Prometheus alerts to Slack without any enrichment:
+Lets look at the simplest possible configuration in ``values.yaml`` which instructs Robusta to forward Prometheus alerts to Slack without any enrichment:
 
 .. code-block:: yaml
 
-   active_playbooks:
+  playbooks:
   - name: "alerts_integration"
 
 The above configuration isn't very useful because we haven't enriched any alerts yet.
@@ -43,11 +43,11 @@ However, Robusta still sends default information for every alert as you can see 
 
 Adding an Enricher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Now lets add an enricher to ``active_playbooks.yaml`` which enriches the ``HostHighCPULoad`` alert:
+Now lets add an enricher to ``values.yaml`` which enriches the ``HostHighCPULoad`` alert:
 
 .. code-block:: yaml
 
-   active_playbooks:
+  playbooks:
   - name: "alerts_integration"
     action_params:
       alerts_config:
@@ -80,7 +80,7 @@ You can change the default enricher(s) for all alerts using the ``default_enrich
 
 .. code-block:: yaml
 
-   active_playbooks:
+  playbooks:
   - name: "alerts_integration"
     action_params:
       default_enrichers:
@@ -92,7 +92,7 @@ Lets silence `KubePodCrashLooping` alerts in the first ten minutes after a node 
 
 .. code-block:: yaml
 
-   active_playbooks:
+  playbooks:
   - name: "alerts_integration"
     action_params:
       alerts_config:
@@ -108,7 +108,7 @@ Here are all the above features working together:
 
 .. code-block:: yaml
 
-   active_playbooks:
+  playbooks:
   - name: "alerts_integration"
     action_params:
       default_enrichers:
@@ -169,7 +169,7 @@ The template can include all markdown directives supported by Slack. Note that S
 
     .. code-block:: yaml
 
-       active_playbooks:
+       playbooks:
        (...)
           - alert_name: "ContainerVolumeUsage"
             enrichers:
@@ -240,7 +240,7 @@ Runs the specified bash command, on the **pod** associated with the alert. The b
 
     .. code-block:: yaml
 
-       active_playbooks:
+       playbooks:
        (...)
           - alert_name: "ContainerVolumeUsage"
             enrichers:
@@ -260,7 +260,7 @@ Runs the specified bash command, on the **node** associated with the alert
 
     .. code-block:: yaml
 
-       active_playbooks:
+       playbooks:
        (...)
           - alert_name: "HostOutOfDiskSpace"
             enrichers:
@@ -277,7 +277,7 @@ Adds deployment condition statuses
 
     .. code-block:: yaml
 
-       active_playbooks:
+       playbooks:
        (...)
           - alert_name: "KubernetesDeploymentReplicasMismatch"
             enrichers:

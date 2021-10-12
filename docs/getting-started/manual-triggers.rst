@@ -13,11 +13,11 @@ First we need a Python application to profile.
 Enable the python_profiler playbook
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The :ref:`python_profiler` playbook is enabled by default. If you changed the default configuration, make sure you have the following in your active_playbooks.yaml
+The :ref:`python_profiler` playbook is enabled by default. If you changed the default configuration, make sure you have the following in your values.yaml
 
 .. code-block:: bash
 
-    active_playbooks:
+    playbooks:
       - name: "python_profiler"
 
 Manually triggering the python_profiler playbook

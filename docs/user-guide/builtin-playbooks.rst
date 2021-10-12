@@ -12,7 +12,7 @@ add_deployment_lines_to_grafana
 
 .. code-block:: yaml
 
-   active_playbooks
+   playbooks:
      - name: "add_deployment_lines_to_grafana"
        action_params:
          grafana_dashboard_uid: "uid_from_url"
@@ -36,7 +36,7 @@ add_alert_lines_to_grafana
 
 .. code-block:: yaml
 
-    active_playbooks:
+    playbooks:
       - name: "add_alert_lines_to_grafana"
         action_params:
           grafana_api_key: "grafana_api_key_with_editor_role"
@@ -67,16 +67,17 @@ git_change_audit
 
 .. code-block:: yaml
 
-  - name: "git_change_audit"
-    action_params:
-      cluster_name: "robusta-demo"
-      git_url: "git@github.com/robusta/robusta-audit.git"
-      git_key: |
-        -----BEGIN OPENSSH PRIVATE KEY-----
-        YOUR PRIVATE KEY DATA
-        -----END OPENSSH PRIVATE KEY-----
-      ignored_changes:
-      - "replicas"
+  playbooks:
+    - name: "git_change_audit"
+      action_params:
+        cluster_name: "robusta-demo"
+        git_url: "git@github.com/robusta/robusta-audit.git"
+        git_key: |
+          -----BEGIN OPENSSH PRIVATE KEY-----
+          YOUR PRIVATE KEY DATA
+          -----END OPENSSH PRIVATE KEY-----
+        ignored_changes:
+          - "replicas"
 
 | **cluster_name:** Used as the root directory in the repo. should be different, for different Kubernetes clusters
 | **git_url:** url to a github repository
@@ -101,7 +102,7 @@ restart_loop_reporter
 
 .. code-block:: yaml
 
-   active_playbooks:
+   playbooks:
      - name: "restart_loop_reporter"
        action_params:
          rate_limit: 7200 # seconds
@@ -130,7 +131,7 @@ python_profiler
 
 .. code-block:: yaml
 
-   active_playbooks:
+   playbooks:
      - name: "python_profiler"
 
 | **The results:**
@@ -165,7 +166,7 @@ http_stress_test
 
 .. code-block:: yaml
 
-   active_playbooks:
+   playbooks:
      - name: "http_stress_test"
 
 | **The results:**
@@ -191,7 +192,7 @@ incluster_ping
 
 .. code-block:: yaml
 
-   active_playbooks:
+   playbooks:
      - name: "incluster_ping"
 
 deployment_babysitter
@@ -203,7 +204,7 @@ Enabling it:
 
 .. code-block:: yaml
 
-   active_playbooks:
+   playbooks:
      - name: "deployment_babysitter"
        action_params:
          fields_to_monitor: ["spec.replicas"]
@@ -221,7 +222,7 @@ Enabling it:
 
 .. code-block:: yaml
 
-   active_playbooks:
+   playbooks:
      - name: "deployment_status_report"
        trigger_params:
          name_prefix: "MY_MONITORED_DEPLOYMENT"
@@ -267,7 +268,7 @@ Enabling it:
 
 .. code-block:: yaml
 
-   active_playbooks
+   playbooks:
      - name: "config_ab_testing"
        trigger_params:
          seconds_delay: 1200 # 20 min
@@ -307,7 +308,7 @@ disk_benchmark
 
 .. code-block:: yaml
 
-   active_playbooks:
+   playbooks:
      - name: "disk_benchmark"
 
 
@@ -333,7 +334,7 @@ Enabling it:
 
 .. code-block:: yaml
 
-   active_playbooks
+   playbooks
    - name: "alert_on_hpa_reached_limit"
      action_params:
        increase_pct: 20   # Increase factor (%)
