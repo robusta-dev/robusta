@@ -4,6 +4,9 @@ import os
 import re
 import time
 import traceback
+import io
+import tempfile
+import tarfile
 from typing import List, Optional
 
 from kubernetes import config
@@ -22,7 +25,6 @@ try:
         config.load_kube_config()
 except config.config_exception.ConfigException as e:
     logging.warning(f"Running without kube-config! e={e}")
-
 
 core_v1 = core_v1_api.CoreV1Api()
 
@@ -99,6 +101,43 @@ def exec_shell_command(name, shell_command: str, namespace="default", container=
     commands = default_exec_command.copy()
     commands.append(shell_command)
     return exec_commands(name, commands, namespace, container)
+
+
+def upload_file(
+    name: str, destination: str, contents: bytes, namespace="default", container=None
+):
+    resp = stream(
+        core_v1.connect_get_namespaced_pod_exec,
+        name,
+        namespace,
+        container=container,
+        command=["tar", "xvf", "-", "-C", "/"],
+        stderr=True,
+        stdin=True,
+        stdout=True,
+        tty=False,
+        _preload_content=False,
+    )
+
+    with tempfile.TemporaryFile() as tar_file_on_disk:
+        with tarfile.open(fileobj=tar_file_on_disk, mode="w") as tar:
+            tarinfo = tarfile.TarInfo(destination)
+            tarinfo.size = len(contents)
+            tar.addfile(tarinfo, fileobj=io.BytesIO(contents))
+
+        tar_file_on_disk.seek(0)
+        resp.write_stdin(tar_file_on_disk.read())
+
+        while resp.is_open():
+            resp.update(timeout=1)
+            if resp.peek_stdout():
+                print("STDOUT: %s" % resp.read_stdout())
+            if resp.peek_stderr():
+                print("STDERR: %s" % resp.read_stderr())
+            else:
+                print("BREAKING")
+                break
+        resp.close()
 
 
 def get_pod_logs(

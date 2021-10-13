@@ -141,6 +141,20 @@ class RobustaPod(Pod):
                 return True
         return False
 
+    def upload_file(self, path: str, contents: bytes, container: Optional[str] = None):
+        if container is None:
+            container = self.spec.containers[0].name
+            logging.info(
+                f"no container name given when uploading file, so choosing first container: {container}"
+            )
+        upload_file(
+            self.metadata.name,
+            path,
+            contents,
+            namespace=self.metadata.namespace,
+            container=container,
+        )
+
     @staticmethod
     def find_pods_with_direct_owner(
         namespace: str, owner_uid: str
