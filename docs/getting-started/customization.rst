@@ -42,4 +42,4 @@ In the playbooks configuration, we asked to get notified every time the ``'spec.
 
 Scaling the deployment triggered a notification.
 
-Try changing the configuration in ``active_playbooks.yaml`` so that Robusta monitors changes to a deployment's image tag too.
+Try changing the configuration in ``values.yaml`` so that Robusta monitors changes to a deployment's image tag too.
