@@ -13,6 +13,7 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-runner
+        robustaComponent: "runner"
     spec:
       serviceAccountName: {{ .Release.Name }}-runner-service-account
       containers:
