@@ -1,6 +1,7 @@
 import subprocess
 import time
 from contextlib import contextmanager
+from typing import Optional
 
 import click_spinner
 import typer
@@ -10,32 +11,40 @@ import requests
 PLAYBOOKS_DIR = "playbooks/"
 
 
+def namespace_to_kubectl(namespace: Optional[str]):
+    if namespace is None:
+        return ""
+    else:
+        return f"-n {namespace}"
+
+
 def exec_in_robusta_runner(
     cmd,
-    namespace: str,
+    namespace: Optional[str],
     tries=1,
     time_between_attempts=10,
     error_msg="error running cmd",
 ):
-    cmd = [
+    exec_cmd = [
         "kubectl",
         "exec",
-        "-n",
-        namespace,
         "-it",
-        "deploy/robusta-runner",
+        "deployment/robusta-runner",
         "-c",
         "runner",
-        "--",
-        "bash",
-        "-c",
-        cmd,
     ]
+    if namespace is not None:
+        exec_cmd += ["-n", namespace]
+
+    exec_cmd += ["--", "bash", "-c", cmd]
+
+    typer.echo(f"running cmd: {cmd}")
+
     for _ in range(tries - 1):
         try:
-            return subprocess.check_call(cmd)
+            return subprocess.check_call(exec_cmd)
         except Exception as e:
-            typer.echo(f"{error_msg}")
+            typer.secho(f"error: {error_msg}", fg="red")
             time.sleep(time_between_attempts)
     return subprocess.check_call(cmd)
 
@@ -67,7 +76,7 @@ def replace_in_file(path, original, replacement):
 
 
 @contextmanager
-def fetch_runner_logs(namespace: str, all_logs=False):
+def fetch_runner_logs(namespace: Optional[str], all_logs=False):
     start = time.time()
     try:
         yield
@@ -75,11 +84,11 @@ def fetch_runner_logs(namespace: str, all_logs=False):
         log_title("Fetching logs...")
         if all_logs:
             subprocess.check_call(
-                f"kubectl logs -n {namespace} deployment/robusta-runner -c runner",
+                f"kubectl logs {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner",
                 shell=True,
             )
         else:
             subprocess.check_call(
-                f"kubectl logs -n {namespace} deployment/robusta-runner -c runner --since={int(time.time() - start + 1)}s",
+                f"kubectl logs {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner --since={int(time.time() - start + 1)}s",
                 shell=True,
             )
