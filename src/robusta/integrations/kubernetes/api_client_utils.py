@@ -97,7 +97,7 @@ def wait_for_pod_status(
     return "FAIL"
 
 
-def exec_shell_command(name, shell_command: str, namespace="default", container=""):
+def exec_shell_command(name, shell_command: str, namespace="default", container=None):
     commands = default_exec_command.copy()
     commands.append(shell_command)
     return exec_commands(name, commands, namespace, container)
@@ -180,11 +180,11 @@ def prepare_pod_command(cmd) -> Optional[List[str]]:
         return cmd
 
 
-def exec_commands(name, exec_command, namespace="default", container=""):
+def exec_commands(name, exec_command, namespace="default", container=None):
     logging.debug(
         f"Executing command name: {name} command: {exec_command} namespace: {namespace} container: {container}"
     )
-    resp = None
+    response_stdout = None
 
     # verify pod state before connecting
     pod_status = wait_for_pod_status(
@@ -198,7 +198,7 @@ def exec_commands(name, exec_command, namespace="default", container=""):
         return msg
 
     try:
-        resp = stream(
+        wsclient_obj = stream(
             core_v1.connect_get_namespaced_pod_exec,
             name,
             namespace,
@@ -208,15 +208,24 @@ def exec_commands(name, exec_command, namespace="default", container=""):
             stdin=False,
             stdout=True,
             tty=False,
+            _preload_content=False,  # fix https://github.com/kubernetes-client/python/issues/811
         )
+        wsclient_obj.run_forever()
+        response = wsclient_obj.read_all()
+        logging.debug(f"exec command response {response}")
+        # response_stdout = wsclient_obj.read_stdout()
+        # response_stderr = wsclient_obj.read_stderr()
+        # if response_stderr:
+        #    logging.warning(f"exec command {exec_command} has stderr: {response_stderr}")
 
     except ApiException as e:
-        if e.status != 404:
-            logging.exception(f"exec command {exec_command} resulted with error")
-            resp = "error executing commands"
+        if e.status == 404:
+            logging.exception(f"exec command {exec_command} resulted with 404: {e}")
+        else:
+            logging.exception(f"exec command {exec_command} resulted with error: {e}")
+        response = f"error executing commands: {e}"
 
-    logging.debug(f"exec command response {resp}")
-    return resp
+    return response
 
 
 def to_kubernetes_name(name, prefix=""):
