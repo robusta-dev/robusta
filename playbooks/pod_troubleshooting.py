@@ -1,6 +1,4 @@
 # playbooks for peeking inside running pods
-from cairosvg import svg2png
-
 import textwrap
 import humanize
 from robusta.api import *
