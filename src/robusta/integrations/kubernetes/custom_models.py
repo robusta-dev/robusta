@@ -14,11 +14,11 @@ from .templates import get_deployment_yaml
 S = TypeVar("S")
 T = TypeVar("T")
 PYTHON_DEBUGGER_IMAGE = (
-    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/python-tools:latest"
+    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/python-tools:v2"
 )
 
 
-# TODO: import these from the lookup_pid project
+# TODO: import these from the python-tools project
 class Process(BaseModel):
     pid: int
     exe: str
@@ -52,22 +52,25 @@ def does_node_have_taint(node: Node, taint_key: str) -> bool:
 
 
 class RobustaPod(Pod):
-    def exec(self, shell_command: str) -> str:
+    def exec(self, shell_command: str, container: str = None) -> str:
         """Execute a command inside the pod"""
+        if container is None:
+            container = self.spec.containers[0].name
+
         return exec_shell_command(
-            self.metadata.name, shell_command, self.metadata.namespace
+            self.metadata.name, shell_command, self.metadata.namespace, container
         )
 
-    def get_logs(self, container_name=None, previous=None, tail_lines=None) -> str:
+    def get_logs(self, container=None, previous=None, tail_lines=None) -> str:
         """
         Fetch pod logs
         """
-        if container_name is None:
-            container_name = self.spec.containers[0].name
+        if container is None:
+            container = self.spec.containers[0].name
         return get_pod_logs(
             self.metadata.name,
             self.metadata.namespace,
-            container_name,
+            container,
             previous,
             tail_lines,
         )
@@ -123,7 +126,7 @@ class RobustaPod(Pod):
         output = RobustaPod.exec_in_debugger_pod(
             self.metadata.name,
             self.spec.nodeName,
-            f"/lookup_pid.py {self.metadata.uid}",
+            f"debug-toolkit pod-ps {self.metadata.uid}",
         )
         # somehow when doing the exec command the quotes in the json output are converted from " to '
         # we fix this so that we can deserialize the json properly...
@@ -140,6 +143,20 @@ class RobustaPod(Pod):
             if owner.uid == owner_uid:
                 return True
         return False
+
+    def upload_file(self, path: str, contents: bytes, container: Optional[str] = None):
+        if container is None:
+            container = self.spec.containers[0].name
+            logging.info(
+                f"no container name given when uploading file, so choosing first container: {container}"
+            )
+        upload_file(
+            self.metadata.name,
+            path,
+            contents,
+            namespace=self.metadata.namespace,
+            container=container,
+        )
 
     @staticmethod
     def find_pods_with_direct_owner(

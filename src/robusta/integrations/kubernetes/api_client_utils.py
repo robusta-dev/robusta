@@ -4,6 +4,9 @@ import os
 import re
 import time
 import traceback
+import io
+import tempfile
+import tarfile
 from typing import List, Optional
 
 from kubernetes import config
@@ -22,7 +25,6 @@ try:
         config.load_kube_config()
 except config.config_exception.ConfigException as e:
     logging.warning(f"Running without kube-config! e={e}")
-
 
 core_v1 = core_v1_api.CoreV1Api()
 
@@ -95,10 +97,47 @@ def wait_for_pod_status(
     return "FAIL"
 
 
-def exec_shell_command(name, shell_command: str, namespace="default", container=""):
+def exec_shell_command(name, shell_command: str, namespace="default", container=None):
     commands = default_exec_command.copy()
     commands.append(shell_command)
     return exec_commands(name, commands, namespace, container)
+
+
+def upload_file(
+    name: str, destination: str, contents: bytes, namespace="default", container=None
+):
+    resp = stream(
+        core_v1.connect_get_namespaced_pod_exec,
+        name,
+        namespace,
+        container=container,
+        command=["tar", "xvf", "-", "-C", "/"],
+        stderr=True,
+        stdin=True,
+        stdout=True,
+        tty=False,
+        _preload_content=False,
+    )
+
+    with tempfile.TemporaryFile() as tar_file_on_disk:
+        with tarfile.open(fileobj=tar_file_on_disk, mode="w") as tar:
+            tarinfo = tarfile.TarInfo(destination)
+            tarinfo.size = len(contents)
+            tar.addfile(tarinfo, fileobj=io.BytesIO(contents))
+
+        tar_file_on_disk.seek(0)
+        resp.write_stdin(tar_file_on_disk.read())
+
+        while resp.is_open():
+            resp.update(timeout=1)
+            if resp.peek_stdout():
+                print("STDOUT: %s" % resp.read_stdout())
+            if resp.peek_stderr():
+                print("STDERR: %s" % resp.read_stderr())
+            else:
+                print("BREAKING")
+                break
+        resp.close()
 
 
 def get_pod_logs(
@@ -141,11 +180,11 @@ def prepare_pod_command(cmd) -> Optional[List[str]]:
         return cmd
 
 
-def exec_commands(name, exec_command, namespace="default", container=""):
+def exec_commands(name, exec_command, namespace="default", container=None):
     logging.debug(
         f"Executing command name: {name} command: {exec_command} namespace: {namespace} container: {container}"
     )
-    resp = None
+    response_stdout = None
 
     # verify pod state before connecting
     pod_status = wait_for_pod_status(
@@ -159,7 +198,7 @@ def exec_commands(name, exec_command, namespace="default", container=""):
         return msg
 
     try:
-        resp = stream(
+        wsclient_obj = stream(
             core_v1.connect_get_namespaced_pod_exec,
             name,
             namespace,
@@ -169,15 +208,24 @@ def exec_commands(name, exec_command, namespace="default", container=""):
             stdin=False,
             stdout=True,
             tty=False,
+            _preload_content=False,  # fix https://github.com/kubernetes-client/python/issues/811
         )
+        wsclient_obj.run_forever()
+        response = wsclient_obj.read_all()
+        logging.debug(f"exec command response {response}")
+        # response_stdout = wsclient_obj.read_stdout()
+        # response_stderr = wsclient_obj.read_stderr()
+        # if response_stderr:
+        #    logging.warning(f"exec command {exec_command} has stderr: {response_stderr}")
 
     except ApiException as e:
-        if e.status != 404:
-            logging.exception(f"exec command {exec_command} resulted with error")
-            resp = "error executing commands"
+        if e.status == 404:
+            logging.exception(f"exec command {exec_command} resulted with 404: {e}")
+        else:
+            logging.exception(f"exec command {exec_command} resulted with error: {e}")
+        response = f"error executing commands: {e}"
 
-    logging.debug(f"exec command response {resp}")
-    return resp
+    return response
 
 
 def to_kubernetes_name(name, prefix=""):

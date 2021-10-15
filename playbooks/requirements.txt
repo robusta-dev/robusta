@@ -1,3 +1,4 @@
+humanize
 cairosvg
 flask
 prometheus-api-client
