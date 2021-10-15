@@ -2,8 +2,8 @@ from robusta.api import *
 import time
 
 
-@on_manual_trigger
-def generate_high_cpu(event: ManualTriggerEvent):
+@action
+def generate_high_cpu(event: ExecutionBaseEvent):
     logging.info("starting high cpu")
     dep = RobustaDeployment.from_image(
         "stress-test", "jfusterm/stress", "stress --cpu 100"

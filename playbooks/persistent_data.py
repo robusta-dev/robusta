@@ -10,7 +10,7 @@ class DeploymentChangeCounter(BaseModel):
 PERSISTENT_DATA_NAME = "test_persistency"
 
 
-@on_deployment_update
+@action
 def count_pod_creations(event: DeploymentEvent):
     logging.info("we got an event... sending it to slack")
     with get_persistent_data(PERSISTENT_DATA_NAME, DeploymentChangeCounter) as data:
@@ -18,6 +18,8 @@ def count_pod_creations(event: DeploymentEvent):
         value = data.changes_per_deployment.get(name, 0)
         data.changes_per_deployment[name] = value + 1
 
-    event.finding = Finding(
-        title=f"DeploymentChangeCounter: {data.changes_per_deployment}"
+    finding = Finding(
+        title=f"DeploymentChangeCounter: {data.changes_per_deployment}",
+        aggregation_key="count_pod_creations",
     )
+    event.add_finding(finding)

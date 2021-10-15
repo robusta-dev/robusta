@@ -3,23 +3,32 @@ import json
 import logging
 import time
 import traceback
-
+import threading
 from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetList
 from typing import List, Dict
 from pydantic import BaseModel
-import threading
 
-from ..sink_config import SinkConfigBase
+from ..sink_config import SinkBaseParams, SinkConfigBase
 from ...model.env_vars import DISCOVERY_PERIOD_SEC
 from ...model.services import ServiceInfo
-from ...reporting.blocks import Finding
+from ...reporting.base import Finding
 from .dal.supabase_dal import SupabaseDal
 from ..sink_base import SinkBase
 from ...discovery.top_service_resolver import TopServiceResolver
 
 
-class RobustaSinkConfig(BaseModel):
+class RobustaSinkParams(SinkBaseParams):
     token: str
+
+
+class RobustaSinkConfig(SinkConfigBase):
+    robusta_sink: RobustaSinkParams
+
+    def get_name(self) -> str:
+        return self.robusta_sink.name
+
+    def get_params(self) -> SinkBaseParams:
+        return self.robusta_sink
 
 
 class RobustaToken(BaseModel):
@@ -33,20 +42,21 @@ class RobustaToken(BaseModel):
 class RobustaSink(SinkBase):
     def __init__(
         self,
-        sink_config: SinkConfigBase,
+        sink_config: RobustaSinkConfig,
         cluster_name: str,
     ):
-        super().__init__(sink_config)
-        config = RobustaSinkConfig(**sink_config.params)
-        robusta_token = RobustaToken(**json.loads(base64.b64decode(config.token)))
+        super().__init__(sink_config.robusta_sink)
+        self.token = sink_config.robusta_sink.token
+        self.cluster_name = cluster_name
+        robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         self.dal = SupabaseDal(
             robusta_token.store_url,
             robusta_token.api_key,
             robusta_token.account_id,
             robusta_token.email,
             robusta_token.password,
-            sink_config.sink_name,
-            cluster_name,
+            sink_config.robusta_sink.name,
+            self.cluster_name,
         )
         # start service discovery
         self.__active = True
@@ -54,6 +64,14 @@ class RobustaSink(SinkBase):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__thread = threading.Thread(target=self.__discover_services)
         self.__thread.start()
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, RobustaSink)
+            and other.sink_name == self.sink_name
+            and other.cluster_name == self.cluster_name
+            and other.token == self.token
+        )
 
     def stop(self):
         self.__active = False

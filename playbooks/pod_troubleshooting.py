@@ -12,18 +12,17 @@ class StartProfilingParams(BaseModel):
     pod_name: str
 
 
-@on_manual_trigger
-def python_profiler(event: ManualTriggerEvent):
+@action
+def python_profiler(event: ExecutionBaseEvent, action_params: StartProfilingParams):
     # This should use ephemeral containers, but they aren't in GA yet. To enable them on GCP for example,
     # you need to create a brand new cluster. Therefore we're sticking with regular containers for now
-    action_params = StartProfilingParams(**event.data)
     pod = RobustaPod.find_pod(action_params.pod_name, action_params.namespace)
     processes = pod.get_processes()
 
     debugger = RobustaPod.create_debugger_pod(pod.metadata.name, pod.spec.nodeName)
 
     try:
-        event.finding = Finding(
+        finding = Finding(
             title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
             source=FindingSource.MANUAL,
             aggregation_key="python_profiler",
@@ -55,7 +54,8 @@ def python_profiler(event: ManualTriggerEvent):
                 continue
 
             svg = debugger.exec(f"cat {filename}")
-            event.finding.add_enrichment([FileBlock(f"{cmd}.svg", svg)])
+            finding.add_enrichment([FileBlock(f"{cmd}.svg", svg)])
+        event.add_finding(finding)
 
     finally:
         debugger.deleteNamespacedPod(
@@ -68,16 +68,15 @@ class PodInfoParams(BaseModel):
     namespace: str = "default"
 
 
-@on_manual_trigger
-def pod_ps(event: ManualTriggerEvent):
-    action_params = PodInfoParams(**event.data)
+@action
+def pod_ps(event: ExecutionBaseEvent, action_params: PodInfoParams):
     logging.info(f"getting info for: {action_params}")
 
     pod: RobustaPod = RobustaPod.find_pod(
         action_params.pod_name, action_params.namespace
     )
     processes = pod.get_processes()
-    event.finding = Finding(
+    finding = Finding(
         title=f"Processes in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="pod_processes",
@@ -87,7 +86,7 @@ def pod_ps(event: ManualTriggerEvent):
             pod.metadata.namespace,
         ),
     )
-    event.finding.add_enrichment(
+    finding.add_enrichment(
         [
             TableBlock(
                 [[proc.pid, proc.exe, proc.cmdline] for proc in processes],
@@ -95,6 +94,7 @@ def pod_ps(event: ManualTriggerEvent):
             )
         ]
     )
+    event.add_finding(finding)
 
 
 class MemoryTraceParams(PodParams):
@@ -123,16 +123,15 @@ class PythonMemorySnapshot(BaseModel):
     overhead: int
 
 
-@on_manual_trigger
-def python_memory(event: ManualTriggerEvent):
-    params = MemoryTraceParams(**event.data)
+@action
+def python_memory(event: ExecutionBaseEvent, params: MemoryTraceParams):
     pod: RobustaPod = RobustaPod.find_pod(params.pod_name, params.pod_namespace)
     find_pid_cmd = f"debug-toolkit find-pid '{pod.metadata.uid}' '{params.process_substring}' python"
     cmd = f"debug-toolkit memory --seconds={params.seconds} `{find_pid_cmd}`"
     output = RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd)
     snapshot = PythonMemorySnapshot(**json.loads(output))
 
-    event.finding = Finding(
+    finding = Finding(
         title=f"Memory allocations for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_memory_allocations",
@@ -158,6 +157,5 @@ def python_memory(event: ManualTriggerEvent):
     blocks.append(
         MarkdownBlock(f"*Other unfreed memory:* {snapshot.other_data.to_markdown()}")
     )
-    event.finding.add_enrichment(
-        blocks, annotations={SlackAnnotations.ATTACHMENT: True}
-    )
+    finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
+    event.add_finding(finding)

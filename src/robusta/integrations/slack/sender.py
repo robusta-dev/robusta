@@ -1,15 +1,14 @@
 import json
 import logging
 import tempfile
-
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from hikaru import DiffType
 
 from ...core.model.events import *
 from ...core.reporting.blocks import *
+from ...core.reporting.base import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
-from ...core.reporting.callbacks import PlaybookCallbackRequest
+from ...core.reporting.callbacks import PlaybookCallbackRequest, IncomingActionRequest
 from ...core.reporting.consts import SlackAnnotations
 from ...core.model.env_vars import TARGET_ID
 
@@ -33,12 +32,14 @@ class SlackSender:
             raise e
 
     @staticmethod
-    def __get_action_block_for_choices(choices: Dict[str, Callable] = None, context=""):
+    def __get_action_block_for_choices(
+        choices: Dict[str, CallbackChoice] = None, context=""
+    ):
         if choices is None:
             return []
 
         buttons = []
-        for (i, (text, callback)) in enumerate(choices.items()):
+        for (i, (text, callback_choice)) in enumerate(choices.items()):
             buttons.append(
                 {
                     "type": "button",
@@ -48,8 +49,10 @@ class SlackSender:
                     },
                     "style": "primary",
                     "action_id": f"{ACTION_TRIGGER_PLAYBOOK}_{i}",
-                    "value": PlaybookCallbackRequest.create_for_func(
-                        callback, context, text
+                    "value": IncomingActionRequest(
+                        action_request=PlaybookCallbackRequest.create_for_func(
+                            callback_choice, context, text
+                        )
                     ).json(),
                 }
             )

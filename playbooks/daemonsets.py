@@ -3,14 +3,14 @@ import logging
 from robusta.api import *
 
 
-@on_sink_callback
-def daemonset_fix_config(event: SinkCallbackEvent):
-    event.finding = Finding(
+@action
+def daemonset_fix_config(event: ExecutionBaseEvent):
+    finding = Finding(
         title="Proposed fix",
         source=FindingSource.CALLBACK.value,
         aggregation_key="daemonset_fix_config",
     )
-    event.finding.add_enrichment(
+    finding.add_enrichment(
         [
             MarkdownBlock(
                 textwrap.dedent(
@@ -27,7 +27,7 @@ def daemonset_fix_config(event: SinkCallbackEvent):
         ]
     )
 
-    event.finding.add_enrichment(
+    finding.add_enrichment(
         [
             MarkdownBlock(
                 "This will tell Kubernetes that it is OK if daemonsets keep running while a node shuts down. "
@@ -37,16 +37,17 @@ def daemonset_fix_config(event: SinkCallbackEvent):
             )
         ]
     )
+    event.add_finding(finding)
 
 
-@on_sink_callback
-def daemonset_silence_false_alarm(event: SinkCallbackEvent):
-    event.finding = Finding(
+@action
+def daemonset_silence_false_alarm(event: ExecutionBaseEvent):
+    finding = Finding(
         title="Silence the alert",
         source=FindingSource.CALLBACK,
         aggregation_key="daemonset_silence_false_alarm",
     )
-    event.finding.add_enrichment(
+    finding.add_enrichment(
         [
             MarkdownBlock(
                 textwrap.dedent(
@@ -67,7 +68,7 @@ def daemonset_silence_false_alarm(event: SinkCallbackEvent):
         ]
     )
 
-    event.finding.add_enrichment(
+    finding.add_enrichment(
         [
             MarkdownBlock(
                 "This will silence the KubernetesDaemonsetMisscheduled alert when the known false alarm occurs but not under "
@@ -76,6 +77,7 @@ def daemonset_silence_false_alarm(event: SinkCallbackEvent):
             )
         ]
     )
+    event.add_finding(finding)
 
 
 def do_daemonset_enricher(ds: DaemonSet) -> List[BaseBlock]:
@@ -157,8 +159,10 @@ def do_daemonset_mismatch_analysis(ds: DaemonSet) -> List[BaseBlock]:
         ),
         CallbackBlock(
             choices={
-                "Fix the Configuration": daemonset_fix_config,
-                "Silence the false alarm": daemonset_silence_false_alarm,
+                "Fix the Configuration": CallbackChoice(action=daemonset_fix_config),
+                "Silence the false alarm": CallbackChoice(
+                    action=daemonset_silence_false_alarm
+                ),
             },
             context={},
         ),
@@ -170,16 +174,18 @@ class DaemonsetAnalysisParams(BaseModel):
     namespace: str
 
 
-@on_manual_trigger
-def daemonset_mismatch_analysis(event: ManualTriggerEvent):
-    params = DaemonsetAnalysisParams(**event.data)
+@action
+def daemonset_mismatch_analysis(
+    event: ExecutionBaseEvent, params: DaemonsetAnalysisParams
+):
     ds = DaemonSet().read(name=params.daemonset_name, namespace=params.namespace)
-    event.finding = Finding(
+    finding = Finding(
         title="Daemonset Mismatch Analysis",
         source=FindingSource.MANUAL,
         aggregation_key="daemonset_mismatch_analysis",
     )
-    event.finding.add_enrichment(
+    finding.add_enrichment(
         do_daemonset_enricher(ds), annotations={SlackAnnotations.UNFURL: False}
     )
-    event.finding.add_enrichment(do_daemonset_mismatch_analysis(ds))
+    finding.add_enrichment(do_daemonset_mismatch_analysis(ds))
+    event.add_finding(finding)

@@ -1,8 +1,13 @@
 import logging
-from dataclasses import dataclass
-from typing import Union
+from typing import Union, cast, List
+from pydantic import BaseModel
 
-from ..base_handler import handle_event
+from .playbook_scheduler_manager import PlaybooksSchedulerManager
+from .trigger import ScheduledTrigger
+from ...model.playbook_definition import PlaybookDefinition
+from ...model.playbook_action import PlaybookAction
+from .event import ScheduledExecutionEvent
+from ...core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ...core.schedule.model import (
     SchedulingInfo,
     ScheduledJob,
@@ -10,45 +15,9 @@ from ...core.schedule.model import (
     DynamicDelayRepeat,
     JobState,
 )
-from ...core.model.cloud_event import *
-from ...core.model.events import *
-from ...core.model.trigger_params import TriggerParams
-from ...core.model.playbook_hash import playbook_hash
 from ...core.schedule.scheduler import Scheduler
-from ...utils.decorators import doublewrap
-from ...core.active_playbooks import register_playbook, get_function_params_class
 
-SCHEDULED_INTERGATION_TASK = "scheduled_integration_task"
-scheduled_callables = {}
-
-
-@dataclass
-class RecurringTriggerEvent(BaseEvent):
-    recurrence: int = 0
-
-
-def __add_callable(func):
-    scheduled_callables[func.__name__] = {
-        "func": func,
-        "action_params": get_function_params_class(func),
-    }
-
-
-@doublewrap
-def on_recurring_trigger(func, repeat=1, seconds_delay=None):
-    __add_callable(func)
-    register_playbook(
-        func,
-        deploy_on_scheduler_event,
-        TriggerParams(repeat=repeat, seconds_delay=seconds_delay),
-    )
-    return func
-
-
-@doublewrap
-def scheduled_callable(func):
-    __add_callable(func)
-    return func
+SCHEDULED_INTEGRATION_TASK = "scheduled_integration_task"
 
 
 class ScheduledIntegrationParams(BaseModel):
@@ -57,77 +26,86 @@ class ScheduledIntegrationParams(BaseModel):
     named_sinks: List[str] = []
 
 
-def run_scheduled_task(runnable_params: dict, schedule_info: SchedulingInfo):
-    scheduled_params = ScheduledIntegrationParams(**runnable_params)
-
-    func_definition = scheduled_callables.get(scheduled_params.action_func_name)
-    if not func_definition:
-        logging.error(
-            f"Scheduled callable cannot be found: {scheduled_params.action_func_name}. Skipping"
+class PlaybooksSchedulerManagerImpl(PlaybooksSchedulerManager):
+    def __init__(self, event_handler: PlaybooksEventHandler):
+        self.event_handler = event_handler
+        self.scheduler = Scheduler()
+        self.scheduler.register_task(
+            SCHEDULED_INTEGRATION_TASK, self.__run_scheduled_task
         )
-        return
+        self.scheduler.init_scheduler()
 
-    action_params = None
-    if func_definition["action_params"]:
-        action_params = func_definition["action_params"](
-            **scheduled_params.action_params
+    def schedule_playbook(
+        self,
+        action_name: str,
+        playbook_id: str,
+        scheduling_params: Union[FixedDelayRepeat, DynamicDelayRepeat],
+        named_sinks: List[str],
+        action_params=None,
+        job_state: JobState = JobState(),
+        replace_existing: bool = False,
+        standalone_task: bool = False,
+    ):
+        integration_params = ScheduledIntegrationParams(
+            action_func_name=action_name,
+            action_params=action_params,
+            named_sinks=named_sinks,
         )
-
-    trigger_event = RecurringTriggerEvent(recurrence=schedule_info.execution_count)
-
-    return handle_event(
-        func_definition["func"],
-        trigger_event,
-        action_params,
-        "scheduler",
-        scheduled_params.named_sinks,
-    )
-
-
-Scheduler.register_task(SCHEDULED_INTERGATION_TASK, run_scheduled_task)
-
-
-def schedule_trigger(
-    func,
-    playbook_id: str,
-    scheduling_params: Union[FixedDelayRepeat, DynamicDelayRepeat],
-    named_sinks: List[str],
-    action_params=None,
-    job_state: JobState = JobState(),
-    replace_existing: bool = False,
-    standalone_task: bool = False,
-):
-    integration_params = ScheduledIntegrationParams(
-        action_func_name=func.__name__,
-        action_params=action_params,
-        named_sinks=named_sinks,
-    )
-    job = ScheduledJob(
-        job_id=playbook_id,
-        runnable_name=SCHEDULED_INTERGATION_TASK,
-        runnable_params=integration_params.dict(),
-        state=job_state,
-        scheduling_params=scheduling_params,
-        replace_existing=replace_existing,
-        standalone_task=standalone_task,
-    )
-    Scheduler.schedule_job(job)
-
-
-def deploy_on_scheduler_event(
-    func, trigger_params: TriggerParams, named_sinks: List[str], action_params=None
-):
-    if trigger_params.seconds_delay:
-        schedule_params = FixedDelayRepeat(
-            repeat=trigger_params.repeat, seconds_delay=trigger_params.seconds_delay
+        job = ScheduledJob(
+            job_id=playbook_id,
+            runnable_name=SCHEDULED_INTEGRATION_TASK,
+            runnable_params=integration_params.dict(),
+            state=job_state,
+            scheduling_params=scheduling_params,
+            replace_existing=replace_existing,
+            standalone_task=standalone_task,
         )
-    else:
-        schedule_params = DynamicDelayRepeat(delay_periods=trigger_params.delays)
+        self.scheduler.schedule_job(job)
 
-    schedule_trigger(
-        func=func,
-        playbook_id=playbook_hash(func, trigger_params, action_params),
-        scheduling_params=schedule_params,
-        named_sinks=named_sinks,
-        action_params=action_params,
-    )
+    def update(self, playbooks: List[PlaybookDefinition]):
+        playbook_ids = set(playbook.get_id() for playbook in playbooks)
+        self.__unschedule_deleted_playbooks(playbook_ids)
+
+        for playbook in playbooks:
+            if not self.scheduler.is_scheduled(playbook.get_id()):
+
+                # For scheduling simplicity, support only a single trigger and a single action
+                if len(playbook.triggers) != 1 or len(playbook.get_actions()) != 1:
+                    msg = "Illegal scheduled playbook. Must be a single trigger and a single action"
+                    logging.error(msg)
+                    raise Exception(msg)
+
+                playbook_trigger: ScheduledTrigger = cast(
+                    ScheduledTrigger, playbook.triggers[0].get()
+                )
+                playbook_action: PlaybookAction = playbook.get_actions()[0]
+                self.schedule_playbook(
+                    action_name=playbook_action.action_name,
+                    playbook_id=playbook.get_id(),
+                    scheduling_params=playbook_trigger.get_params(),
+                    named_sinks=playbook.sinks,
+                    action_params=playbook_action.action_params,
+                )
+
+    def __run_scheduled_task(
+        self, runnable_params: dict, schedule_info: SchedulingInfo
+    ):
+        scheduled_params = ScheduledIntegrationParams(**runnable_params)
+
+        action = PlaybookAction(
+            action_name=scheduled_params.action_func_name,
+            action_params=scheduled_params.action_params,
+        )
+        execution_event = ScheduledExecutionEvent(
+            recurrence=schedule_info.execution_count,
+            named_sinks=scheduled_params.named_sinks,
+        )
+        self.event_handler.run_actions(execution_event, [action])
+
+    def __unschedule_deleted_playbooks(self, active_playbook_ids: set):
+        for job in self.scheduler.list_scheduled_jobs():
+            if job.standalone_task:
+                continue  # standalone tasks shouldn't be removed on reload
+            if job.job_id not in active_playbook_ids:
+                logging.info(f"unscheduling deleted playbook {job.job_id}")
+                self.scheduler.unschedule_job(job.job_id)

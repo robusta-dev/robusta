@@ -20,6 +20,14 @@ class PodParams(BaseModel):
     pod_namespace: str = None
 
 
+class BashParams(BaseModel):
+    bash_command: str
+
+
 class NamespacedKubernetesObjectParams(BaseModel):
     name: str = None
     namespace: str = None
+
+
+class PrometheusParams(BaseModel):
+    prometheus_url: str = None

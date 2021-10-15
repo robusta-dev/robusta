@@ -5,15 +5,25 @@ import os
 import subprocess
 import sys
 import threading
-from typing import Optional
-
 import yaml
+from typing import Optional
+from inspect import getmembers
 
-from ..core.model.env_vars import INTERNAL_PLAYBOOKS_ROOT
+from ..integrations.scheduled.trigger import ScheduledTriggerEvent
+from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
+from ..core.model.runner_config import RunnerConfig
+from ..core.sinks.sinks_registry import SinksConfigurationBuilder
+from ..core.playbooks.actions_registry import ActionsRegistry
+from ..core.model.env_vars import (
+    INTERNAL_PLAYBOOKS_ROOT,
+    PLAYBOOKS_CONFIG_FILE_PATH,
+    PLAYBOOKS_ROOT,
+)
 from ..integrations.git.git_repo import GitRepoManager
-from ..core.active_playbooks import clear_playbook_inventory
-from ..core.triggers import deploy_playbook_config, RunnerConfig
-from ..utils.directory_watcher import DirWatcher
+from ..utils.file_system_watcher import FileSystemWatcher
+from ..model.playbook_definition import PlaybookDefinition
+from ..model.config import Registry, SinksRegistry, PlaybooksRegistry
+from ..integrations.scheduled.triggers import PlaybooksSchedulerManagerImpl
 
 
 class ConfigLoader:
@@ -26,30 +36,41 @@ class ConfigLoader:
     #    |--- requirements.txt
     # |- playbook_dir2
     #    |--- ...
-    def __init__(self, config_file_path: str, root_playbook_path: str):
-        self.config_file_path = config_file_path
-        self.root_playbook_path = root_playbook_path
-        self.reload_lock = threading.Lock()
-        self.watcher = DirWatcher(self.root_playbook_path, self.__reload)
-        self.conf_watcher = DirWatcher(
-            os.path.dirname(self.config_file_path), self.__reload
+    def __init__(
+        self,
+        registry: Registry,
+        event_handler: PlaybooksEventHandler,
+    ):
+        self.config_file_path = PLAYBOOKS_CONFIG_FILE_PATH
+        self.registry = registry
+        self.event_handler = event_handler
+        self.root_playbook_path = PLAYBOOKS_ROOT
+        self.reload_lock = threading.RLock()
+        self.watcher = FileSystemWatcher(
+            self.root_playbook_path, self.__reload_playbook_packages
         )
-        self.__reload("initialization")
+        self.conf_watcher = FileSystemWatcher(
+            self.config_file_path, self.__reload_playbook_packages
+        )
+        self.__reload_playbook_packages("initialization")
 
     def close(self):
         self.watcher.stop_watcher()
         self.conf_watcher.stop_watcher()
 
-    def __reload(self, changed_location):
-        logging.info(f"Reloading configuration due to change on {changed_location}")
+    def __reload_scheduler(self, playbooks_registry: PlaybooksRegistry):
+        scheduler = self.registry.get_scheduler()
+        if not scheduler:  # no scheduler yet, initialization
+            scheduler = PlaybooksSchedulerManagerImpl(event_handler=self.event_handler)
+            self.registry.set_scheduler(scheduler)
+
+        scheduler.update(playbooks_registry.get_playbooks(ScheduledTriggerEvent()))
+
+    def __reload_playbook_packages(self, change_name):
+        logging.info(f"Reloading playbook packages due to change on {change_name}")
         with self.reload_lock:
             try:
-                # TODO: there is a race condition here where we can lose events if they arrive while we are reloading
-                # even if the playbook that should handle those events was active in both versions
-                # We should ultimately fix this by replacing clear_playbook_inventory() with an atomic call to
-                # set_playbook_inventory(playbooks) - but to do so we first have to change the way playbook registration
-                # works. In the new design, playbooks should be found instead of registering themselves.
-                runner_config = self.__load_config(self.config_file_path)
+                runner_config = self.__load_runner_config(self.config_file_path)
                 if runner_config is None:
                     return
 
@@ -58,22 +79,63 @@ class ConfigLoader:
                     for path in runner_config.playbook_sets
                 ]
 
-                clear_playbook_inventory()
-                self.__load_playbook_directory(INTERNAL_PLAYBOOKS_ROOT)
+                action_registry = ActionsRegistry()
+                self.__load_playbook_directory(INTERNAL_PLAYBOOKS_ROOT, action_registry)
                 for playbook_dir in playbook_directories:
-                    self.__load_playbook_directory(playbook_dir)
+                    self.__load_playbook_directory(playbook_dir, action_registry)
 
-                deploy_playbook_config(runner_config)
+                (sinks_registry, playbooks_registry) = self.__prepare_runtime_config(
+                    runner_config, self.registry.get_sinks(), action_registry
+                )
                 # clear git repos, so it would be re-initialized
                 GitRepoManager.clear_git_repos()
 
+                self.__reload_scheduler(playbooks_registry)
+
+                self.registry.set_actions(action_registry)
+                self.registry.set_playbooks(playbooks_registry)
+                self.registry.set_sinks(sinks_registry)
             except Exception as e:
                 logging.exception(
                     f"unknown error reloading playbooks. will try again when they next change. exception={e}"
                 )
 
     @classmethod
-    def __load_config(cls, config_file_path) -> Optional[RunnerConfig]:
+    def __prepare_runtime_config(
+        cls,
+        runner_config: RunnerConfig,
+        sinks_registry: SinksRegistry,
+        actions_registry: ActionsRegistry,
+    ) -> (SinksRegistry, PlaybooksRegistry):
+        cluster_name = runner_config.global_config.get("cluster_name", "")
+        existing_sinks = sinks_registry.get_all() if sinks_registry else {}
+        new_sinks = SinksConfigurationBuilder.construct_new_sinks(
+            runner_config.sinks_config, existing_sinks, cluster_name
+        )
+        sinks_registry = SinksRegistry(new_sinks)
+
+        # TODO we will replace it with a more generic mechanism, as part of the triggers separation task
+        # First, we load the internal playbooks, then add the user activated playbooks
+        # Order matters. Internal playbooks, should be added first, and run first
+        active_playbooks = [
+            PlaybookDefinition(
+                triggers=[{"on_kubernetes_any_resource_all_changes": {}}],
+                actions=[{"cluster_discovery_updates": {}}],
+            )
+        ]
+        active_playbooks.extend(runner_config.active_playbooks)
+
+        playbooks_registry = PlaybooksRegistry(
+            active_playbooks,
+            actions_registry,
+            runner_config.global_config,
+            sinks_registry.default_sinks,
+        )
+
+        return sinks_registry, playbooks_registry
+
+    @classmethod
+    def __load_runner_config(cls, config_file_path) -> Optional[RunnerConfig]:
         if not os.path.exists(config_file_path):
             logging.warning(
                 f"config file not found at {config_file_path} - not configuring any playbooks."
@@ -85,8 +147,9 @@ class ConfigLoader:
             yaml_content = yaml.safe_load(file)
             return RunnerConfig(**yaml_content)
 
-    @classmethod
-    def __load_playbook_directory(cls, playbook_dir):
+    def __load_playbook_directory(
+        self, playbook_dir: str, action_registry: ActionsRegistry
+    ):
         logging.info(f"Loading playbooks sources from {playbook_dir}")
         if not os.path.exists(playbook_dir):
             logging.error(f"playbooks directory not found: {playbook_dir}")
@@ -97,7 +160,7 @@ class ConfigLoader:
         if playbook_dir not in sys.path:
             sys.path.append(playbook_dir)
 
-        cls.__install_requirements(os.path.join(playbook_dir, "requirements.txt"))
+        self.__install_requirements(os.path.join(playbook_dir, "requirements.txt"))
         python_files = glob.glob(f"{playbook_dir}/*.py")
         if len(python_files) == 0:
             logging.warning(f"no playbook scripts to load in directory {playbook_dir}")
@@ -111,11 +174,15 @@ class ConfigLoader:
                 spec = importlib.util.spec_from_file_location(module_name, script)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
+                playbook_actions = getmembers(
+                    module, ActionsRegistry.is_playbook_action
+                )
+                for (action_name, action_func) in playbook_actions:
+                    action_registry.add_action(action_name, action_func)
             except Exception as e:
                 logging.error(
                     f"error loading playbooks from file {script}. exception={e}"
                 )
-
         logging.info(f"{len(python_files)} playbooks loaded from {playbook_dir}")
 
     @classmethod

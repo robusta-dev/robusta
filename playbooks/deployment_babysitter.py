@@ -35,7 +35,7 @@ def do_babysitter(
         old_obj = event.obj
 
     diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj)
-    event.finding = Finding(
+    finding = Finding(
         title=f"{diff_block.resource_name} {event.operation.value}d",
         description=f"Updates to significant fields: {diff_block.num_additions} additions, {diff_block.num_deletions} deletions, {diff_block.num_modifications} changes.",
         source=FindingSource.KUBERNETES_API_SERVER,
@@ -46,16 +46,17 @@ def do_babysitter(
             event.obj.metadata.name, resource_type, event.obj.metadata.namespace
         ),
     )
-    event.finding.add_enrichment([KubernetesDiffBlock(filtered_diffs, old_obj, obj)])
+    finding.add_enrichment([KubernetesDiffBlock(filtered_diffs, old_obj, obj)])
+    event.add_finding(finding)
 
 
-@on_deployment_all_changes
+@action
 def deployment_babysitter(event: DeploymentEvent, config: BabysitterConfig):
     """Track changes to a deployment and send the changes in slack."""
     do_babysitter(event, config, FindingSubjectType.TYPE_DEPLOYMENT)
 
 
-@on_pod_all_changes
-def pod_babysitter(event: DeploymentEvent, config: BabysitterConfig):
+@action
+def pod_babysitter(event: PodEvent, config: BabysitterConfig):
     """Track changes to a pod and send the changes in slack."""
     do_babysitter(event, config, FindingSubjectType.TYPE_POD)

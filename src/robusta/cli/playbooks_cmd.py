@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import tempfile
@@ -184,10 +185,10 @@ def edit_config(
 
 @app.command()
 def trigger(
-    trigger_name: str,
+    action_name: str,
     param: Optional[List[str]] = typer.Argument(
         None,
-        help="data to send to playbook (can be used multiple times)",
+        help="data to send to action (can be used multiple times)",
         metavar="key=value",
     ),
     namespace: str = typer.Option(
@@ -196,15 +197,26 @@ def trigger(
     ),
 ):
     """trigger a manually run playbook"""
-    log_title("Triggering playbook...")
-    trigger_params = " ".join([f"-F '{p}'" for p in param])
+    log_title("Triggering action...")
+    action_params = {}
+    for p in param:
+        (key, val) = p.split("=")
+        action_params[key] = val
+    # action_params = " ".join([f"-F '{p}'" for p in param])
+    req_body = {"action_name": action_name, "action_params": action_params}
+
     with fetch_runner_logs(namespace=namespace):
-        cmd = f"curl -X POST -F 'trigger_name={trigger_name}' {trigger_params} http://localhost:5000/api/trigger"
+        # cmd = f"curl -X POST -F 'trigger_name={trigger_name}' {action_params} http://localhost:5000/api/trigger"
+        cmd = (
+            f"curl -X POST http://localhost:5000/api/trigger "
+            f"-H 'Content-Type: application/json' "
+            f"-d '{json.dumps(req_body)}'"
+        )
         exec_in_robusta_runner(
             cmd,
             namespace=namespace,
             tries=3,
-            error_msg="Cannot trigger playbook - usually this means Robusta just started. Will try again",
+            error_msg="Cannot trigger action - usually this means Robusta just started. Will try again",
         )
         typer.echo("\n")
     log_title("Done!")

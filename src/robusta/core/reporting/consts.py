@@ -1,4 +1,3 @@
-# Relay target id
 from enum import Enum
 
 # sink types

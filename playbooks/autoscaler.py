@@ -2,37 +2,37 @@ from math import ceil
 
 from robusta.api import *
 
-HPA_NAME = "hpa_name"
-NAMESPACE = "namespace"
-MAX_REPLICAS = "max_replicas"
+
+class ScaleHPAParams(BaseModel):
+    hpa_name: str
+    hpa_namespace: str
+    max_replicas: int
+
+
+@action
+def scale_hpa_callback(event: ExecutionBaseEvent, params: ScaleHPAParams):
+    hpa: HorizontalPodAutoscaler = (
+        HorizontalPodAutoscaler.readNamespacedHorizontalPodAutoscaler(
+            params.hpa_name, params.hpa_namespace
+        ).obj
+    )
+    hpa.spec.maxReplicas = params.max_replicas
+    hpa.replaceNamespacedHorizontalPodAutoscaler(params.hpa_name, params.hpa_namespace)
+    finding = Finding(
+        title=f"Max replicas for HPA *{params.hpa_name}* "
+        f"in namespace *{params.hpa_namespace}* updated to: *{params.max_replicas}*",
+        severity=FindingSeverity.INFO,
+        source=FindingSource.PROMETHEUS,
+        aggregation_key="scale_hpa_callback",
+    )
+    event.add_finding(finding)
 
 
 class HPALimitParams(BaseModel):
     increase_pct: int = 20
 
 
-@on_sink_callback
-def scale_hpa_callback(event: SinkCallbackEvent):
-    context = json.loads(event.source_context)
-    hpa_name = context[HPA_NAME]
-    hpa_ns = context[NAMESPACE]
-    hpa: HorizontalPodAutoscaler = (
-        HorizontalPodAutoscaler.readNamespacedHorizontalPodAutoscaler(
-            hpa_name, hpa_ns
-        ).obj
-    )
-    new_max_replicas = int(context[MAX_REPLICAS])
-    hpa.spec.maxReplicas = new_max_replicas
-    hpa.replaceNamespacedHorizontalPodAutoscaler(hpa_name, hpa_ns)
-    event.finding = Finding(
-        title=f"Max replicas for HPA *{hpa_name}* in namespace *{hpa_ns}* updated to: *{new_max_replicas}*",
-        severity=FindingSeverity.INFO,
-        source=FindingSource.PROMETHEUS,
-        aggregation_key="scale_hpa_callback",
-    )
-
-
-@on_horizontalpodautoscaler_update
+@action
 def alert_on_hpa_reached_limit(
     event: HorizontalPodAutoscalerEvent, action_params: HPALimitParams
 ):
@@ -55,26 +55,28 @@ def alert_on_hpa_reached_limit(
         (action_params.increase_pct + 100) * hpa.spec.maxReplicas / 100
     )
     choices = {
-        f"Update HPA max replicas to: {new_max_replicas_suggestion}": scale_hpa_callback,
+        f"Update HPA max replicas to: {new_max_replicas_suggestion}": CallbackChoice(
+            action=scale_hpa_callback,
+            action_params=ScaleHPAParams(
+                hpa_name=hpa.metadata.name,
+                hpa_namespace=hpa.metadata.namespace,
+                max_replicas=new_max_replicas_suggestion,
+            ),
+        )
     }
-    context = {
-        HPA_NAME: hpa.metadata.name,
-        NAMESPACE: hpa.metadata.namespace,
-        MAX_REPLICAS: new_max_replicas_suggestion,
-    }
-
-    event.finding = Finding(
+    finding = Finding(
         title=f"HPA *{event.obj.metadata.name}* in namespace *{event.obj.metadata.namespace}* reached max replicas: *{hpa.spec.maxReplicas}*",
         severity=FindingSeverity.LOW,
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="alert_on_hpa_reached_limit",
     )
 
-    event.finding.add_enrichment(
+    finding.add_enrichment(
         [
             MarkdownBlock(
                 f"Current avg cpu utilization: *{avg_cpu} %*        -- (usage vs requested)"
             ),
-            CallbackBlock(choices, context),
+            CallbackBlock(choices, {}),
         ]
     )
+    event.add_finding(finding)

@@ -17,7 +17,7 @@ def git_safe_name(name):
     return re.sub("[^0-9a-zA-Z\\-]+", "-", name)
 
 
-skipped_kinds = ["Event"]
+skipped_kinds = ["Event", "ClusterRole"]
 
 
 def obj_diff(
@@ -33,7 +33,7 @@ def obj_diff(
     return len(filtered_diffs) > 0
 
 
-@on_kubernetes_any_resource_all_changes
+@action
 def git_change_audit(event: KubernetesAnyEvent, action_params: GitAuditParams):
     """Save a configuration copy to git"""
     if event.obj.kind in skipped_kinds:

@@ -13,10 +13,8 @@ def format_float_per2(f_param):
     return "{:.2f}".format(f_param)
 
 
-@on_manual_trigger
-def disk_benchmark(event: ManualTriggerEvent):
-
-    action_params = DiskBenchmarkParams(**event.data)
+@action
+def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams):
     pvc = PersistentVolumeClaim(
         metadata=ObjectMeta(
             name=action_params.pvc_name, namespace=action_params.namespace
