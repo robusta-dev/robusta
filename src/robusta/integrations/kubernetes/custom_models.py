@@ -128,10 +128,6 @@ class RobustaPod(Pod):
             self.spec.nodeName,
             f"debug-toolkit pod-ps {self.metadata.uid}",
         )
-        # somehow when doing the exec command the quotes in the json output are converted from " to '
-        # we fix this so that we can deserialize the json properly...
-        # we should eventually figure out why this is happening
-        output = output.replace("'", '"')
         processes = ProcessList(**json.loads(output))
         return processes.processes
 
