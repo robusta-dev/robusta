@@ -1,26 +1,21 @@
 import uuid
-from hikaru.model import *
+from hikaru.model.rel_1_16 import *
 from kubernetes.client import ApiClient
 
 
-def create_crashing_deployment(api_client: ApiClient) -> Deployment:
+def get_simple_deployment_obj(title: str, api_client: ApiClient = None) -> Deployment:
     obj = Deployment(
         metadata=ObjectMeta(name=str(uuid.uuid4()), namespace="default"),
         spec=DeploymentSpec(
-            selector=LabelSelector(matchLabels={"app": "crashpod"}),
+            selector=LabelSelector(matchLabels={"app": title}),
             template=PodTemplateSpec(
-                metadata=ObjectMeta(labels={"app": "crashpod"}),
+                metadata=ObjectMeta(labels={"app": title}),
                 spec=PodSpec(
                     containers=[
                         Container(
-                            name="crashpod",
+                            name=title,
                             image="busybox",
                             imagePullPolicy="IfNotPresent",
-                            args=[
-                                "-c",
-                                "echo going to crash.This is the crash log"
-                                "; exit 125",
-                            ],
                             command=["/bin/sh"],
                         )
                     ],
@@ -29,6 +24,23 @@ def create_crashing_deployment(api_client: ApiClient) -> Deployment:
             ),
         ),
     )
-    obj.client = api_client
+    if api_client is not None:
+        obj.client = api_client
+    return obj
+
+
+def create_crashing_deployment(api_client: ApiClient = None) -> Deployment:
+    obj = get_simple_deployment_obj("crashpod", api_client)
+    obj.spec.template.spec.containers[0].args = [
+        "-c",
+        "echo going to crash.This is the crash log" "; exit 125",
+    ]
+    obj.create()
+    return obj
+
+
+def create_sleeping_deployment(api_client: ApiClient = None) -> Deployment:
+    obj = get_simple_deployment_obj("sleepypod", api_client)
+    obj.spec.template.spec.containers[0].args = ["-c", "sleep 1000"]
     obj.create()
     return obj
