@@ -26,7 +26,6 @@ try:
 except config.config_exception.ConfigException as e:
     logging.warning(f"Running without kube-config! e={e}")
 
-core_v1 = core_v1_api.CoreV1Api()
 
 default_exec_command = ["/bin/sh", "-c"]
 
@@ -80,6 +79,7 @@ def wait_for_pod_status(
     start_time_sec = time.time()
     while start_time_sec + timeout_sec > time.time():
         try:
+            core_v1 = core_v1_api.CoreV1Api()
             resp = core_v1.read_namespaced_pod_status(name, namespace)
 
             if resp.status.phase == status:
@@ -106,6 +106,7 @@ def exec_shell_command(name, shell_command: str, namespace="default", container=
 def upload_file(
     name: str, destination: str, contents: bytes, namespace="default", container=None
 ):
+    core_v1 = core_v1_api.CoreV1Api()
     resp = stream(
         core_v1.connect_get_namespaced_pod_exec,
         name,
@@ -150,6 +151,7 @@ def get_pod_logs(
 ):
     resp = None
     try:
+        core_v1 = core_v1_api.CoreV1Api()
         resp = core_v1.read_namespaced_pod_log(
             name,
             namespace,
@@ -199,6 +201,7 @@ def exec_commands(name, exec_command, namespace="default", container=None):
 
     wsclient = None
     try:
+        core_v1 = core_v1_api.CoreV1Api()
         wsclient = stream(
             core_v1.connect_get_namespaced_pod_exec,
             name,
