@@ -161,3 +161,30 @@ def python_memory(event: ManualTriggerEvent):
     event.finding.add_enrichment(
         blocks, annotations={SlackAnnotations.ATTACHMENT: True}
     )
+
+
+class PythonLoggingLevelParams(PodParams):
+    process_substring: str
+    logging_level: str
+
+
+@on_manual_trigger
+def python_set_logging_level(event: ManualTriggerEvent):
+    params = PythonLoggingLevelParams(**event.data)
+    pod: RobustaPod = RobustaPod.find_pod(params.pod_name, params.pod_namespace)
+    find_pid_cmd = f"debug-toolkit find-pid '{pod.metadata.uid}' '{params.process_substring}' python"
+    cmd = f"debug-toolkit set-logging-level `{find_pid_cmd}` {params.logging_level}"
+    output = RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd)
+
+    event.finding = Finding(
+        title=f"Changed logging level for {pod.metadata.name} in namespace {pod.metadata.namespace} to {params.logging_level.upper()}",
+        source=FindingSource.MANUAL,
+        aggregation_key="python_set_logging_level",
+        subject=FindingSubject(
+            pod.metadata.name,
+            FindingSubjectType.TYPE_POD,
+            pod.metadata.namespace,
+        ),
+    )
+    if output.strip():
+        event.finding.add_enrichment([MarkdownBlock(f"Output:\n```\n{output}```")])
