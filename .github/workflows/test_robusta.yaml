@@ -11,6 +11,8 @@ jobs:
           uses: actions/setup-python@v2
           with:
             python-version: 3.9
+        - name: Create k8s Kind Cluster
+          uses: helm/kind-action@v1.2.0
         - name: Install Robusta
           run: |
             curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
@@ -25,4 +27,4 @@ jobs:
           run: |
             source $HOME/.poetry/env
             cd src/
-            pytest .. -s --kind-version=v0.11.1 # use a kind version that works on github (older versions don't)
+            pytest .. -s
