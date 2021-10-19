@@ -4,19 +4,11 @@ import time
 import logging
 
 import kubernetes
+from pathlib import Path
 from hikaru.model import Namespace
 
 
 class RobustaController:
-    def __init__(self, kubeconfig_path):
-        self.kubeconfig_path = kubeconfig_path
-        # we create our own kubernetes client to avoid modifying the global client
-        # make sure you pass this to all hikaru methods
-        self.client = kubernetes.config.new_client_from_config(self.kubeconfig_path)
-
-    def get_client(self) -> kubernetes.client.ApiClient:
-        return self.client
-
     def helm_install(self, values_file):
         logs = self._run_cmd(
             [
@@ -73,10 +65,9 @@ class RobustaController:
         )
         assert "Saved configuration" in logs, logs
 
-    def _run_cmd(self, cmd) -> str:
+    @staticmethod
+    def _run_cmd(cmd) -> str:
         env = os.environ.copy()
-        if self.kubeconfig_path:
-            env["KUBECONFIG"] = self.kubeconfig_path
 
         # in windows we need to set shell=True or else PATH is ignored and subprocess.run can't find poetry
         shell = False

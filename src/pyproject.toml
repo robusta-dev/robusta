@@ -36,7 +36,6 @@ datadog-api-client = { version = "^1.2.0", optional = true }
 pre-commit = "^2.13.0"
 pytest = "^6.2.4"
 python-dotenv = "^0.18.0"
-pytest-kind = {git = "https://github.com/aantn/pytest-kind", rev = "main"}
 
 [tool.poetry.extras]
 all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "slack-sdk", "supabase-py", "datadog-api-client"]

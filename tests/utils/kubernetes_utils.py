@@ -3,7 +3,7 @@ from hikaru.model import *
 from kubernetes.client import ApiClient
 
 
-def create_crashing_deployment(api_client: ApiClient) -> Deployment:
+def create_crashing_deployment() -> Deployment:
     obj = Deployment(
         metadata=ObjectMeta(name=str(uuid.uuid4()), namespace="default"),
         spec=DeploymentSpec(
@@ -29,6 +29,5 @@ def create_crashing_deployment(api_client: ApiClient) -> Deployment:
             ),
         ),
     )
-    obj.client = api_client
     obj.create()
     return obj
