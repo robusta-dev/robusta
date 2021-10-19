@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import time
 import logging
@@ -38,7 +39,7 @@ class RobustaController:
                 ],
             )
             # wait until we have exactly two pods running - the runner and the forwarder
-            if str(logs).count("Running") == 2:
+            if len(re.findall("robusta-.*Running.*", logs)) == 2:
                 print("Robusta runner created")
                 # wait another few seconds for robusta to finish starting up
                 time.sleep(10)
