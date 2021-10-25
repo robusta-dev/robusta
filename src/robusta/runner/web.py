@@ -12,7 +12,7 @@ from ..integrations.kubernetes.base_triggers import (
     K8sTriggerEvent,
 )
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
-from ..integrations.prometheus.models import PrometheusEvent
+from ..integrations.prometheus.models import AlertManagerEvent, PrometheusAlert
 from ..core.model.env_vars import NUM_EVENT_THREADS
 from ..utils.task_queue import TaskQueue
 
@@ -39,8 +39,8 @@ class Web:
     @staticmethod
     @app.route("/api/alerts", methods=["POST"])
     def handle_alert_event():
-        prometheus_event = PrometheusEvent(**request.get_json())
-        for alert in prometheus_event.alerts:
+        alert_manager_event = AlertManagerEvent(**request.get_json())
+        for alert in alert_manager_event.alerts:
             Web.__exec_async(PrometheusTriggerEvent(alert=alert))
         return jsonify(success=True)
 

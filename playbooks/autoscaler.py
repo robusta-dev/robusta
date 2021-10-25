@@ -76,7 +76,7 @@ def alert_on_hpa_reached_limit(
             MarkdownBlock(
                 f"Current avg cpu utilization: *{avg_cpu} %*        -- (usage vs requested)"
             ),
-            CallbackBlock(choices, {}),
+            CallbackBlock(choices),
         ]
     )
     event.add_finding(finding)

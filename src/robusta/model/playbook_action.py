@@ -1,5 +1,5 @@
 from pydantic import BaseModel, PrivateAttr
-from typing import List, Dict, Any, Optional
+from typing import Optional
 
 
 class PlaybookAction(BaseModel):
@@ -12,23 +12,3 @@ class PlaybookAction(BaseModel):
 
     def as_str(self):
         return self._func_hash + self.json()
-
-
-class PlaybookActions(BaseModel):
-    actions: List[Dict[str, Any]]
-    _actions: List[PlaybookAction] = PrivateAttr()
-
-    def __init__(self, **data: Any):
-        super().__init__(**data)
-        self._actions = []
-        for action in self.actions:
-            if len(action.keys()) != 1:
-                raise Exception("Action must have a single name")
-
-            (action_name, action_params) = next(iter(action.items()))
-            self._actions.append(
-                PlaybookAction(action_name=action_name, action_params=action_params)
-            )
-
-    def get_actions(self) -> List[PlaybookAction]:
-        return self._actions

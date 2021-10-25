@@ -20,7 +20,7 @@ class K8sBaseEvent(ExecutionBaseEvent):
     old_obj: Optional[HikaruDocumentBase] = None  # same above
 
     def create_default_finding(self) -> Finding:
-        title = f"Default Kubernetes change: operation: {self.operation}"
+        title = f"Kubernetes change: operation: {self.operation}"
         return Finding(
             title=title,
             aggregation_key=title,

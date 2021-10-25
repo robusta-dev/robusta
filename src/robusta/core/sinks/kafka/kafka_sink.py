@@ -3,7 +3,8 @@ import logging
 
 from kafka import KafkaProducer
 
-from ..sink_config import SinkBaseParams, SinkConfigBase
+from ..sink_base_params import SinkBaseParams
+from ..sink_config import SinkConfigBase
 from ...reporting.blocks import KubernetesDiffBlock, JsonBlock
 from ...reporting.base import Finding, Enrichment
 from ..sink_base import SinkBase
@@ -14,7 +15,7 @@ class KafkaSinkParams(SinkBaseParams):
     topic: str
 
 
-class KafkaSinkConfig(SinkConfigBase):
+class KafkaSinkConfigWrapper(SinkConfigBase):
     kafka_sink: KafkaSinkParams
 
     def get_name(self) -> str:
@@ -23,9 +24,12 @@ class KafkaSinkConfig(SinkConfigBase):
     def get_params(self) -> SinkBaseParams:
         return self.kafka_sink
 
+    def create_sink(self, cluster_name: str) -> SinkBase:
+        return KafkaSink(self)
+
 
 class KafkaSink(SinkBase):
-    def __init__(self, sink_config: KafkaSinkConfig):
+    def __init__(self, sink_config: KafkaSinkConfigWrapper):
         super().__init__(sink_config.kafka_sink)
         self.producer = KafkaProducer(
             bootstrap_servers=sink_config.kafka_sink.kafka_url

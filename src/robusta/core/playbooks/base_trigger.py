@@ -14,11 +14,6 @@ class TriggerEvent(BaseModel):
         return ""
 
 
-class K8sTriggerEvent(BaseModel):
-    kind: str
-    operation: K8sOperationType
-
-
 class BaseTrigger(BaseModel):
     def get_trigger_event(self) -> str:
         pass

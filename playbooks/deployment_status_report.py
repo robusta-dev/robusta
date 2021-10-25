@@ -51,16 +51,9 @@ def deployment_status_report(event: DeploymentEvent, action_params: ReportParams
     logging.info(
         f"Scheduling rendering report. deployment: {event.obj.metadata.name} delays: {action_params.delays}"
     )
-    playbook_id = action_hash(
-        report_rendering_task,
-        action_params,
-        {
-            "key": f"deployment_status_report_{event.obj.metadata.name}_{event.obj.metadata.namespace}"
-        },
-    )
-    event.get_scheduler().schedule_playbook(
-        action_name=report_rendering_task.__name__,
-        playbook_id=playbook_id,
+    event.get_scheduler().schedule_action(
+        action_func=report_rendering_task,
+        task_id=f"deployment_status_report_{event.obj.metadata.name}_{event.obj.metadata.namespace}",
         scheduling_params=DynamicDelayRepeat(delay_periods=action_params.delays),
         named_sinks=event.named_sinks,
         action_params=action_params,

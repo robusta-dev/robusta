@@ -15,10 +15,10 @@ def get_function_hash(func):
     return hashlib.sha256(plaintext).hexdigest()
 
 
-def action_hash(func, action_params: BaseModel, additional_date: dict) -> str:
+def action_hash(func, action_params: BaseModel, additional_data: dict) -> str:
     hash_input = (
         f"{get_function_hash(func)}"
-        + ("None" if additional_date is None else json.dumps(additional_date))
+        + ("None" if additional_data is None else json.dumps(additional_data))
         + ("None" if action_params is None else action_params.json())
     )
     return hashlib.md5(hash_input.encode()).hexdigest()

@@ -1,4 +1,4 @@
-from .sink_config import SinkBaseParams
+from .sink_base_params import SinkBaseParams
 from ...core.reporting.base import Finding
 
 

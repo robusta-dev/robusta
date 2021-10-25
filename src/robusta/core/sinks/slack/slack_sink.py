@@ -1,4 +1,5 @@
-from ..sink_config import SinkBaseParams, SinkConfigBase
+from ..sink_config import SinkConfigBase
+from ..sink_base_params import SinkBaseParams
 from ....integrations.slack import SlackSender
 from ...reporting.base import Finding
 from ..sink_base import SinkBase
@@ -9,7 +10,7 @@ class SlackSinkParams(SinkBaseParams):
     api_key: str
 
 
-class SlackSinkConfig(SinkConfigBase):
+class SlackSinkConfigWrapper(SinkConfigBase):
     slack_sink: SlackSinkParams
 
     def get_name(self) -> str:
@@ -18,9 +19,12 @@ class SlackSinkConfig(SinkConfigBase):
     def get_params(self) -> SinkBaseParams:
         return self.slack_sink
 
+    def create_sink(self, cluster_name: str) -> SinkBase:
+        return SlackSink(self)
+
 
 class SlackSink(SinkBase):
-    def __init__(self, sink_config: SlackSinkConfig):
+    def __init__(self, sink_config: SlackSinkConfigWrapper):
         super().__init__(sink_config.slack_sink)
         self.slack_channel = sink_config.slack_sink.slack_channel
         self.api_key = sink_config.slack_sink.api_key

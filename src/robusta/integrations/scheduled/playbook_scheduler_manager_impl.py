@@ -1,7 +1,8 @@
 import logging
-from typing import Union, cast, List
+from typing import Union, cast, List, Callable
 from pydantic import BaseModel
 
+from ...utils.function_hashes import action_hash
 from .playbook_scheduler_manager import PlaybooksSchedulerManager
 from .trigger import ScheduledTrigger
 from ...model.playbook_definition import PlaybookDefinition
@@ -61,6 +62,32 @@ class PlaybooksSchedulerManagerImpl(PlaybooksSchedulerManager):
             standalone_task=standalone_task,
         )
         self.scheduler.schedule_job(job)
+
+    def schedule_action(
+        self,
+        action_func: Callable,
+        task_id: str,
+        scheduling_params: Union[FixedDelayRepeat, DynamicDelayRepeat],
+        named_sinks: List[str],
+        action_params=None,
+        job_state: JobState = JobState(),
+        replace_existing: bool = False,
+        standalone_task: bool = False,
+    ):
+        playbook_id = action_hash(
+            action_func,
+            action_params,
+            {"key": task_id},
+        )
+        self.schedule_playbook(
+            action_func.__name__,
+            playbook_id=playbook_id,
+            scheduling_params=scheduling_params,
+            named_sinks=named_sinks,
+            action_params=action_params,
+            replace_existing=replace_existing,
+            standalone_task=standalone_task,
+        )
 
     def update(self, playbooks: List[PlaybookDefinition]):
         playbook_ids = set(playbook.get_id() for playbook in playbooks)

@@ -12,7 +12,6 @@ from inspect import getmembers
 from ..integrations.scheduled.trigger import ScheduledTriggerEvent
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..core.model.runner_config import RunnerConfig
-from ..core.sinks.sinks_registry import SinksConfigurationBuilder
 from ..core.playbooks.actions_registry import ActionsRegistry
 from ..core.model.env_vars import (
     INTERNAL_PLAYBOOKS_ROOT,
@@ -23,7 +22,9 @@ from ..integrations.git.git_repo import GitRepoManager
 from ..utils.file_system_watcher import FileSystemWatcher
 from ..model.playbook_definition import PlaybookDefinition
 from ..model.config import Registry, SinksRegistry, PlaybooksRegistry
-from ..integrations.scheduled.triggers import PlaybooksSchedulerManagerImpl
+from ..integrations.scheduled.playbook_scheduler_manager_impl import (
+    PlaybooksSchedulerManagerImpl,
+)
 
 
 class ConfigLoader:
@@ -109,7 +110,7 @@ class ConfigLoader:
     ) -> (SinksRegistry, PlaybooksRegistry):
         cluster_name = runner_config.global_config.get("cluster_name", "")
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
-        new_sinks = SinksConfigurationBuilder.construct_new_sinks(
+        new_sinks = SinksRegistry.construct_new_sinks(
             runner_config.sinks_config, existing_sinks, cluster_name
         )
         sinks_registry = SinksRegistry(new_sinks)

@@ -6,7 +6,6 @@ from ..core.model.base_params import *
 from ..core.sinks import *
 from ..core.sinks.sink_base import *
 from ..core.sinks.sink_config import *
-from ..core.sinks.sink_manager import *
 from ..core.sinks.kafka import *
 from ..core.reporting.consts import *
 from ..core.reporting.callbacks import *
@@ -23,7 +22,7 @@ from ..integrations.prometheus.models import *
 from ..integrations.prometheus.utils import *
 from ..integrations.slack.sender import *
 from ..integrations.grafana import *
-from ..integrations.scheduled.triggers import *
+from ..integrations.scheduled.playbook_scheduler_manager_impl import *
 from ..integrations.git.git_repo import *
 from ..integrations.resource_analysis.kubernetes_node_analyzer import NodeAnalyzer
 from ..integrations.prometheus.utils import PrometheusDiscovery

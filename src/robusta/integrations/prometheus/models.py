@@ -36,7 +36,7 @@ class PrometheusAlert(BaseModel):
 
 
 # for parsing incoming data
-class PrometheusEvent(BaseModel):
+class AlertManagerEvent(BaseModel):
     alerts: List[PrometheusAlert] = []
     externalURL: str
     groupKey: str

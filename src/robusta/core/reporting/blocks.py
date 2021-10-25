@@ -183,7 +183,6 @@ class CallbackChoice(BaseModel):
 
 class CallbackBlock(BaseBlock):
     choices: Dict[str, CallbackChoice]
-    context: Dict[str, Any] = {}
 
-    def __init__(self, choices: Dict[str, CallbackChoice], context: Dict[str, Any]):
-        super().__init__(choices=choices, context=context)
+    def __init__(self, choices: Dict[str, CallbackChoice]):
+        super().__init__(choices=choices)

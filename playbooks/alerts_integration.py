@@ -226,7 +226,6 @@ def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
                         action_params=SearchTermParams(search_term=alert_name),
                     )
                 },
-                {},
             )
         ]
     )

@@ -8,7 +8,7 @@ from ...core.model.events import *
 from ...core.reporting.blocks import *
 from ...core.reporting.base import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
-from ...core.reporting.callbacks import PlaybookCallbackRequest, IncomingActionRequest
+from ...core.reporting.callbacks import IncomingRequest, ExternalActionRequest
 from ...core.reporting.consts import SlackAnnotations
 from ...core.model.env_vars import TARGET_ID
 
@@ -33,7 +33,7 @@ class SlackSender:
 
     @staticmethod
     def __get_action_block_for_choices(
-        choices: Dict[str, CallbackChoice] = None, context=""
+        target_id: str, sink: str, choices: Dict[str, CallbackChoice] = None
     ):
         if choices is None:
             return []
@@ -49,9 +49,9 @@ class SlackSender:
                     },
                     "style": "primary",
                     "action_id": f"{ACTION_TRIGGER_PLAYBOOK}_{i}",
-                    "value": IncomingActionRequest(
-                        action_request=PlaybookCallbackRequest.create_for_func(
-                            callback_choice, context, text
+                    "value": IncomingRequest(
+                        incoming_request=ExternalActionRequest.create_for_func(
+                            callback_choice, sink, target_id, text
                         )
                     ).json(),
                 }
@@ -120,11 +120,10 @@ class SlackSender:
         elif isinstance(block, KubernetesDiffBlock):
             return SlackSender.__to_slack_diff(block, sink_name)
         elif isinstance(block, CallbackBlock):
-            context = block.context.copy()
-            context["target_id"] = TARGET_ID
-            context["sink_name"] = sink_name
             return SlackSender.__get_action_block_for_choices(
-                block.choices, json.dumps(context)
+                TARGET_ID,
+                sink_name,
+                block.choices,
             )
         else:
             logging.error(

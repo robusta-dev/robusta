@@ -8,7 +8,8 @@ from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetL
 from typing import List, Dict
 from pydantic import BaseModel
 
-from ..sink_config import SinkBaseParams, SinkConfigBase
+from ..sink_config import SinkConfigBase
+from ..sink_base_params import SinkBaseParams
 from ...model.env_vars import DISCOVERY_PERIOD_SEC
 from ...model.services import ServiceInfo
 from ...reporting.base import Finding
@@ -21,7 +22,7 @@ class RobustaSinkParams(SinkBaseParams):
     token: str
 
 
-class RobustaSinkConfig(SinkConfigBase):
+class RobustaSinkConfigWrapper(SinkConfigBase):
     robusta_sink: RobustaSinkParams
 
     def get_name(self) -> str:
@@ -29,6 +30,9 @@ class RobustaSinkConfig(SinkConfigBase):
 
     def get_params(self) -> SinkBaseParams:
         return self.robusta_sink
+
+    def create_sink(self, cluster_name: str) -> SinkBase:
+        return RobustaSink(self, cluster_name)
 
 
 class RobustaToken(BaseModel):
@@ -42,7 +46,7 @@ class RobustaToken(BaseModel):
 class RobustaSink(SinkBase):
     def __init__(
         self,
-        sink_config: RobustaSinkConfig,
+        sink_config: RobustaSinkConfigWrapper,
         cluster_name: str,
     ):
         super().__init__(sink_config.robusta_sink)

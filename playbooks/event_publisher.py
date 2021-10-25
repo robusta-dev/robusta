@@ -18,7 +18,7 @@ class PrometehusAlertParams(BaseModel):
 def prometheus_alert(
     event: ExecutionBaseEvent, prometheus_event_data: PrometehusAlertParams
 ):
-    prometheus_event = PrometheusEvent(
+    prometheus_event = AlertManagerEvent(
         **{
             "status": prometheus_event_data.status,
             "description": prometheus_event_data.description,

@@ -164,7 +164,6 @@ def do_daemonset_mismatch_analysis(ds: DaemonSet) -> List[BaseBlock]:
                     action=daemonset_silence_false_alarm
                 ),
             },
-            context={},
         ),
     ]
 

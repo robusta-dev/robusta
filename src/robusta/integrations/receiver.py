@@ -15,11 +15,11 @@ WEBSOCKET_RELAY_ADDRESS = os.environ.get(
     "WEBSOCKET_RELAY_ADDRESS", "wss://relay.robusta.dev"
 )
 INCOMING_RECEIVER_ENABLED = os.environ.get("INCOMING_RECEIVER_ENABLED", "True")
-RECEIVER_ENABLE_WEBSOCKET_TRACING = os.environ.get(
-    "RECEIVER_ENABLE_WEBSOCKET_TRACING", False
+RECEIVER_ENABLE_WEBSOCKET_TRACING = "True" == os.environ.get(
+    "RECEIVER_ENABLE_WEBSOCKET_TRACING"
 )
-INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = os.environ.get(
-    "INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC", 3
+INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = int(
+    os.environ.get("INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC", 3)
 )
 
 
@@ -31,41 +31,30 @@ class ActionRequestReceiver:
 
     def run_report_callback(self, action, body):
         try:
-            incoming_request = IncomingActionRequest.parse_raw(action["value"])
-            if isinstance(incoming_request.action_request, PlaybookCallbackRequest):
-                self.__run_playbook_callback(incoming_request.action_request, body)
-            elif isinstance(incoming_request.action_request, ManualActionRequest):
-                self.__run_manual_action(incoming_request.action_request)
+            incoming_request = IncomingRequest.parse_raw(action["value"])
+            if isinstance(incoming_request.incoming_request, ExternalActionRequest):
+                self.__run_external_action_request(
+                    incoming_request.incoming_request, body
+                )
             else:
                 logging.error(
-                    f"Unknown incoming request type {incoming_request.action_request}"
+                    f"Unknown incoming request type {incoming_request.incoming_request}"
                 )
         except Exception as e:
             logging.error(f"Error running callback; action={action}; e={e}")
 
-    def __run_manual_action(self, request: ManualActionRequest):
-        self.event_handler.run_actions(
-            ExecutionBaseEvent(named_sinks=request.sinks),
-            [
-                PlaybookAction(
-                    action_name=request.action_name, action_params=request.action_params
-                )
-            ],
-        )
-
-    def __run_playbook_callback(self, callback_request: PlaybookCallbackRequest, body):
-        context = json.loads(callback_request.context)
-        action_params = (
-            json.loads(callback_request.action_params)
-            if callback_request.action_params
-            else None
-        )
+    def __run_external_action_request(
+        self, callback_request: ExternalActionRequest, body
+    ):
         execution_event = ExecutionBaseEvent(
-            named_sinks=[context["sink_name"]],
+            named_sinks=callback_request.sinks,
         )
-        logging.info(f"got callback `{callback_request.func_name}` {action_params}")
+        logging.info(
+            f"got callback `{callback_request.action_name}` {callback_request.action_params}"
+        )
         action = PlaybookAction(
-            action_name=callback_request.func_name, action_params=action_params
+            action_name=callback_request.action_name,
+            action_params=callback_request.action_params,
         )
         self.event_handler.run_actions(execution_event, [action])
 

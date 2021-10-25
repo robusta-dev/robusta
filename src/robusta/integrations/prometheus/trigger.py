@@ -1,5 +1,5 @@
 import logging
-from typing import NamedTuple, Union, Dict, Optional
+from typing import NamedTuple, Union, Dict, Optional, Type
 from pydantic.main import BaseModel
 from hikaru.model.rel_1_16 import *
 
@@ -19,7 +19,9 @@ class PrometheusTriggerEvent(TriggerEvent):
 
 
 class ResourceMapping(NamedTuple):
-    hikaru_class: Union[RobustaPod, RobustaDeployment, Job]
+    hikaru_class: Union[
+        Type[RobustaPod], Type[RobustaDeployment], Type[Job], Type[DaemonSet]
+    ]
     attribute_name: str
     prometheus_label: str
 
@@ -46,13 +48,11 @@ class PrometheusAlertTrigger(BaseTrigger):
         if not isinstance(event, PrometheusTriggerEvent):
             return False
 
-        alert_trigger_event = PrometheusTriggerEvent(**event.dict())
-
-        labels = alert_trigger_event.alert.labels
+        labels = event.alert.labels
         if not exact_match(self.alert_name, labels["alertname"]):
             return False
 
-        if not exact_match(self.status, alert_trigger_event.alert.status):
+        if not exact_match(self.status, event.alert.status):
             return False
 
         if not prefix_match(self.pod_name_prefix, labels.get("pod")):

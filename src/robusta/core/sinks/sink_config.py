@@ -1,10 +1,8 @@
 import abc
 from pydantic import BaseModel
 
-
-class SinkBaseParams(BaseModel):
-    name: str
-    default: bool = True
+from .sink_base import SinkBase
+from .sink_base_params import SinkBaseParams
 
 
 class SinkConfigBase(BaseModel):
@@ -15,3 +13,6 @@ class SinkConfigBase(BaseModel):
     @abc.abstractmethod
     def get_params(self) -> SinkBaseParams:
         """get sink params"""
+
+    def create_sink(self, cluster_name: str) -> SinkBase:
+        raise Exception(f"Sink not supported {type(self)}")

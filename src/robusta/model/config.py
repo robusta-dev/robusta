@@ -3,6 +3,8 @@ from collections import defaultdict
 from pydantic.main import BaseModel
 from typing import List, Dict, Optional
 
+from ..core.sinks.robusta.robusta_sink import RobustaSinkConfigWrapper
+from ..core.sinks.sink_config import SinkConfigBase
 from ..integrations.scheduled.playbook_scheduler_manager import (
     PlaybooksSchedulerManager,
 )
@@ -12,15 +14,6 @@ from ..core.playbooks.playbook_utils import merge_global_params
 from ..core.sinks.sink_base import SinkBase
 from ..core.playbooks.base_trigger import TriggerEvent
 from ..core.playbooks.actions_registry import ActionsRegistry
-
-
-class ActivePlaybooks(BaseModel):
-    active_playbooks: List[PlaybookDefinition]
-
-
-class RuntimeAction(BaseModel):
-    action_name: str
-    action_params: Dict
 
 
 class SinksRegistry:
@@ -42,6 +35,59 @@ class SinksRegistry:
     def get_all(self) -> Dict[str, SinkBase]:
         return self.sinks
 
+    @classmethod
+    def construct_new_sinks(
+        cls,
+        new_sinks_config: List[SinkConfigBase],
+        existing_sinks: Dict[str, SinkBase],
+        cluster_name: str,
+    ) -> Dict[str, SinkBase]:
+        new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
+        # remove deleted sinks
+        deleted_sink_names = [
+            sink_name
+            for sink_name in existing_sinks.keys()
+            if sink_name not in new_sink_names
+        ]
+        for deleted_sink in deleted_sink_names:
+            logging.info(f"Deleting sink {deleted_sink}")
+            existing_sinks[deleted_sink].stop()
+            del existing_sinks[deleted_sink]
+
+        new_sinks = existing_sinks.copy()
+        # create new sinks, or update existing if changed
+        for sink_config in new_sinks_config:
+            try:
+                # temporary workaround to skip the default and unconfigured robusta token
+                if (
+                    isinstance(sink_config, RobustaSinkConfigWrapper)
+                    and sink_config.robusta_sink.token == "<ROBUSTA_ACCOUNT_TOKEN>"
+                ):
+                    continue
+                if sink_config.get_name() not in new_sinks.keys():
+                    logging.info(
+                        f"Adding {type(sink_config)} sink named {sink_config.get_name()}"
+                    )
+                    new_sinks[sink_config.get_name()] = sink_config.create_sink(
+                        cluster_name
+                    )
+                elif (
+                    sink_config.get_params() != new_sinks[sink_config.get_name()].params
+                ):
+                    logging.info(
+                        f"Updating {type(sink_config)} sink named {sink_config.get_name()}"
+                    )
+                    new_sinks[sink_config.get_name()].stop()
+                    new_sinks[sink_config.get_name()] = sink_config.create_sink(
+                        cluster_name
+                    )
+            except Exception as e:
+                logging.error(
+                    f"Error configuring sink {sink_config.get_name()} of type {type(sink_config)}: {e}"
+                )
+
+        return new_sinks
+
 
 class PlaybooksRegistry:
     def __init__(
@@ -52,7 +98,7 @@ class PlaybooksRegistry:
         default_sinks: List[str],
     ):
         self.default_sinks = default_sinks
-        self.playbooks = defaultdict(list)
+        self.triggers_to_playbooks = defaultdict(list)
         self.global_config = global_config
         for playbook_def in active_playbooks:
             # Merge playbooks params with global params and default sinks
@@ -95,10 +141,10 @@ class PlaybooksRegistry:
                 ]
             )
             for event in playbooks_trigger_events:
-                self.playbooks[event].append(playbook_def)
+                self.triggers_to_playbooks[event].append(playbook_def)
 
     def get_playbooks(self, trigger_event: TriggerEvent) -> List[PlaybookDefinition]:
-        return self.playbooks.get(trigger_event.get_event_name(), [])
+        return self.triggers_to_playbooks.get(trigger_event.get_event_name(), [])
 
     def get_default_sinks(self):
         return self.default_sinks

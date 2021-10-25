@@ -10,7 +10,8 @@ from datadog_api_client.v1.models import *
 from typing import List
 from tabulate import tabulate
 
-from ..sink_config import SinkBaseParams, SinkConfigBase
+from ..sink_config import SinkConfigBase
+from ..sink_base_params import SinkBaseParams
 from ...reporting.blocks import (
     KubernetesDiffBlock,
     JsonBlock,
@@ -33,7 +34,7 @@ class DataDogSinkParams(SinkBaseParams):
     api_key: str
 
 
-class DataDogSinkConfig(SinkConfigBase):
+class DataDogSinkConfigWrapper(SinkConfigBase):
     datadog_sink: DataDogSinkParams
 
     def get_name(self) -> str:
@@ -42,9 +43,12 @@ class DataDogSinkConfig(SinkConfigBase):
     def get_params(self) -> SinkBaseParams:
         return self.datadog_sink
 
+    def create_sink(self, cluster_name: str) -> SinkBase:
+        return DataDogSink(self, cluster_name)
+
 
 class DataDogSink(SinkBase):
-    def __init__(self, sink_config: DataDogSinkConfig, cluster_name: str):
+    def __init__(self, sink_config: DataDogSinkConfigWrapper, cluster_name: str):
         super().__init__(sink_config.datadog_sink)
         self.cluster_name = cluster_name
         self.api_key = sink_config.datadog_sink.api_key
