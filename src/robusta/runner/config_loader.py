@@ -19,6 +19,7 @@ from ..core.model.env_vars import (
     PLAYBOOKS_ROOT,
 )
 from ..integrations.git.git_repo import GitRepoManager
+from ..integrations.vector.vector_configmap_manager import VectorConfigMapManager
 from ..utils.file_system_watcher import FileSystemWatcher
 from ..model.playbook_definition import PlaybookDefinition
 from ..model.config import Registry, SinksRegistry, PlaybooksRegistry
@@ -27,6 +28,8 @@ from ..integrations.scheduled.playbook_scheduler_manager_impl import (
 )
 
 
+# TODO: should we move some of the reloading logic out of here and into Registry
+# e.g. stuff related to GitRepo, scheduler, and
 class ConfigLoader:
 
     # the structure on disk is:
@@ -90,6 +93,10 @@ class ConfigLoader:
                 )
                 # clear git repos, so it would be re-initialized
                 GitRepoManager.clear_git_repos()
+                vector_config = VectorConfigMapManager()
+                vector_config.on_playbooks_update(
+                    playbooks_registry.get_all_playbooks()
+                )
 
                 self.__reload_scheduler(playbooks_registry)
 
@@ -100,6 +107,7 @@ class ConfigLoader:
                 logging.exception(
                     f"unknown error reloading playbooks. will try again when they next change. exception={e}"
                 )
+        logging.info(f"DONE RELOADING")
 
     @classmethod
     def __prepare_runtime_config(
@@ -115,9 +123,6 @@ class ConfigLoader:
         )
         sinks_registry = SinksRegistry(new_sinks)
 
-        # TODO we will replace it with a more generic mechanism, as part of the triggers separation task
-        # First, we load the internal playbooks, then add the user activated playbooks
-        # Order matters. Internal playbooks, should be added first, and run first
         active_playbooks = [
             PlaybookDefinition(
                 triggers=[{"on_kubernetes_any_resource_all_changes": {}}],

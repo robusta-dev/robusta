@@ -1,0 +1,188 @@
+setting up colored logging
+[32m2021-10-25 22:06:04.367 INFO     logger initialized using INFO log level[0m
+[32m2021-10-25 22:06:04.482 INFO     watching dir /etc/robusta/playbooks/ for custom playbooks changes[0m
+[32m2021-10-25 22:06:04.484 INFO     watching dir /etc/robusta/config for custom playbooks changes[0m
+[32m2021-10-25 22:06:04.485 INFO     Reloading playbook packages due to change on initialization[0m
+[32m2021-10-25 22:06:04.485 INFO     loading config /etc/robusta/config/active_playbooks.yaml[0m
+[32m2021-10-25 22:06:04.505 INFO     Loading playbooks sources from /app/robusta/core/playbooks/internal[0m
+[32m2021-10-25 22:06:04.506 INFO     not installing requirements as file /app/robusta/core/playbooks/internal/requirements.txt doesn't exist[0m
+[32m2021-10-25 22:06:04.506 INFO     loading playbooks from file /app/robusta/core/playbooks/internal/discovery_events.py[0m
+[32m2021-10-25 22:06:04.509 INFO     1 playbooks loaded from /app/robusta/core/playbooks/internal[0m
+[32m2021-10-25 22:06:04.510 INFO     Loading playbooks sources from /etc/robusta/playbooks/defaults[0m
+[32m2021-10-25 22:06:04.510 INFO     not installing requirements as file /etc/robusta/playbooks/defaults/requirements.txt doesn't exist[0m
+[32m2021-10-25 22:06:04.511 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/pod_enrichments.py[0m
+[32m2021-10-25 22:06:04.515 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/simple_examples.py[0m
+[32m2021-10-25 22:06:04.521 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/deployment_babysitter.py[0m
+[32m2021-10-25 22:06:04.525 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/event_publisher.py[0m
+[32m2021-10-25 22:06:04.531 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/chaos_engineering.py[0m
+[32m2021-10-25 22:06:04.534 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/autoscaler.py[0m
+[32m2021-10-25 22:06:04.540 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/node_enrichments.py[0m
+[32m2021-10-25 22:06:04.544 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/persistent_data.py[0m
+[32m2021-10-25 22:06:04.549 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/networking.py[0m
+[32m2021-10-25 22:06:04.553 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/pod_troubleshooting.py[0m
+[32m2021-10-25 22:06:04.579 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/alerts_integration.py[0m
+[32m2021-10-25 22:06:04.759 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/restart_loop_reporter.py[0m
+[32m2021-10-25 22:06:04.767 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/daemonsets.py[0m
+[32m2021-10-25 22:06:04.770 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/git_change_audit.py[0m
+[32m2021-10-25 22:06:04.776 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/oom_killer.py[0m
+[32m2021-10-25 22:06:04.778 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/deployment_status_report.py[0m
+[32m2021-10-25 22:06:04.784 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/bash_enrichments.py[0m
+[32m2021-10-25 22:06:04.788 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/configuration_ab_testing.py[0m
+[32m2021-10-25 22:06:04.794 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/cpu_throttling.py[0m
+[32m2021-10-25 22:06:04.796 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/deployment_enrichments.py[0m
+[32m2021-10-25 22:06:04.798 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/stress_tests.py[0m
+[32m2021-10-25 22:06:04.803 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/node_cpu_analysis.py[0m
+[32m2021-10-25 22:06:04.805 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/disk_benchmark.py[0m
+[32m2021-10-25 22:06:04.811 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/grafana_enrichment.py[0m
+[32m2021-10-25 22:06:04.818 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/log_examples.py[0m
+[32m2021-10-25 22:06:04.821 INFO     25 playbooks loaded from /etc/robusta/playbooks/defaults[0m
+[32m2021-10-25 22:06:04.822 INFO     Loading playbooks sources from /etc/robusta/playbooks/custom[0m
+[32m2021-10-25 22:06:04.822 INFO     not installing requirements as file /etc/robusta/playbooks/custom/requirements.txt doesn't exist[0m
+[33m2021-10-25 22:06:04.822 WARNING  no playbook scripts to load in directory /etc/robusta/playbooks/custom[0m
+[32m2021-10-25 22:06:04.822 INFO     Adding <class 'robusta.core.sinks.slack.slack_sink.SlackSinkConfigWrapper'> sink named slack sink[0m
+[32m2021-10-25 22:06:05.098 INFO     Adding <class 'robusta.core.sinks.robusta.robusta_sink.RobustaSinkConfigWrapper'> sink named robusta_ui_sink[0m
+[32m2021-10-25 22:06:05.110 INFO     Supabase dal login[0m
+[33m2021-10-25 22:06:05.460 WARNING  checking trigger kind='Any' operation=None name_prefix=None namespace_prefix=None, type is <class 'robusta.integrations.kubernetes.autogenerated.triggers.KubernetesAnyAllChangesTrigger'>[0m
+[33m2021-10-25 22:06:05.460 WARNING  checking trigger alert_name='Watchdog' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:05.460 WARNING  checking trigger kind='Pod' operation=<K8sOperationType.UPDATE: 'update'> name_prefix=None namespace_prefix=None, type is <class 'robusta.integrations.kubernetes.autogenerated.triggers.PodUpdateTrigger'>[0m
+[33m2021-10-25 22:06:05.467 WARNING  checking trigger alert_name='KubeNodeNotReady' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:05.467 WARNING  checking trigger alert_name='KubernetesDaemonsetMisscheduled' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:05.467 WARNING  checking trigger alert_name='HostHighCpuLoad' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:05.467 WARNING  checking trigger alert_name='HostOomKillDetected' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:05.467 WARNING  checking trigger alert_name='CPUThrottlingHigh' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:05.467 WARNING  checking trigger alert_name='KubernetesDeploymentReplicasMismatch' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:05.467 WARNING  checking trigger alert_name=None status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:05.468 WARNING  checking trigger substring='unary' pod_name_prefix=None namespace_prefix=None, type is <class 'robusta.integrations.vector.models.OnPogLogConfig'>[0m
+[33m2021-10-25 22:06:05.468 WARNING  YES[0m
+[32m2021-10-25 22:06:05.486 INFO     updating vector config wth: sources:
+  kubernetes_logs:
+    type: kubernetes_logs
+transforms:
+  # we forbid analyzing robusta's logs to avoid infinite logging loops where we pickup the text
+  # we want to search for in robusta's log and send it for processing infinitely
+  # TODO: best to do this with a kubernetes label, as the image name could change more easily
+  kubernetes_logs_without_robusta:
+    type: filter
+    inputs: [ "kubernetes_logs" ]
+    condition: "!contains!(.kubernetes.container_image, \"robusta-runner\")"
+  
+  filter1:
+    type: filter
+    inputs: [ "kubernetes_logs_without_robusta" ]
+    condition: contains!(.message, "unary") # TODO: fix escaping
+  
+
+sinks:
+  robusta_sink:
+    type: http
+    inputs: [  "filter1",  ]
+    uri: http://robusta-runner.default.svc.cluster.local/api/vector
+    encoding:
+      codec: "json"[0m
+[32m2021-10-25 22:06:05.599 INFO     got configMap: ConfigMap(apiVersion='v1', kind='ConfigMap', metadata=ObjectMeta(clusterName=None, creationTimestamp='2021-10-25T18:39:53Z', deletionGracePeriodSeconds=None, deletionTimestamp=None, generateName=None, generation=None, name='robusta-vector', namespace='default', resourceVersion='130265047', selfLink=None, uid='d7ed5d0d-44b6-45c4-a99e-5bf47bd708aa', annotations={'meta.helm.sh/release-name': 'robusta', 'meta.helm.sh/release-namespace': 'default'}, finalizers=[], labels={'app.kubernetes.io/instance': 'robusta', 'app.kubernetes.io/managed-by': 'Helm', 'app.kubernetes.io/name': 'vector', 'app.kubernetes.io/part-of': 'vector', 'app.kubernetes.io/version': '0.16.1', 'helm.sh/chart': 'vector-0.17.0', 'robustaComponent': 'vector', 'skaffold.dev/run-id': 'd48d4f7d-fad6-4c43-94c6-ea4c7a83944a'}, managedFields=[ManagedFieldsEntry(apiVersion='v1', fieldsType='FieldsV1', manager='helm', operation='Update', time='2021-10-25T22:03:52Z', fieldsV1={'f:data': {}}), ManagedFieldsEntry(apiVersion='v1', fieldsType='FieldsV1', manager='skaffold', operation='Update', time='2021-10-25T22:04:02Z', fieldsV1={'f:metadata': {'f:labels': {}}}), ManagedFieldsEntry(apiVersion='v1', fieldsType='FieldsV1', manager='OpenAPI-Generator', operation='Update', time='2021-10-25T22:04:58Z', fieldsV1={'f:data': {'f:vector.yaml': {}}})], ownerReferences=[]), binaryData={}, data={'vector.yaml': 'sources:\n  kubernetes_logs:\n    type: kubernetes_logs\ntransforms:\n  # we forbid analyzing robusta\'s logs to avoid infinite logging loops where we pickup the text\n  # we want to search for in robusta\'s log and send it for processing infinitely\n  # TODO: best to do this with a kubernetes label, as the image name could change more easily\n  kubernetes_logs_without_robusta:\n    type: filter\n    inputs: [ "kubernetes_logs" ]\n    condition: "!contains!(.kubernetes.container_image, \\"robusta-runner\\")"\n  \n  filter1:\n    type: filter\n    inputs: [ "kubernetes_logs_without_robusta" ]\n    condition: contains!(.message, "unary") # TODO: fix escaping\n  \n\nsinks:\n  robusta_sink:\n    type: http\n    inputs: [  "filter1",  ]\n    uri: http://robusta-runner.default.svc.cluster.local/api/vector\n    encoding:\n      codec: "json"'})[0m
+[32m2021-10-25 22:06:08.603 INFO     Reloading playbook packages due to change on /etc/robusta/playbooks/[0m
+[32m2021-10-25 22:06:09.171 INFO     DONE RELOADING[0m
+[32m2021-10-25 22:06:09.184 INFO     loading config /etc/robusta/config/active_playbooks.yaml[0m
+Manhole[1:1635199569.2000]: Patched <built-in function fork> and <built-in function forkpty>.
+Manhole[1:1635199569.2218]: Manhole UDS path: /tmp/manhole-1
+Manhole[1:1635199569.2219]: Waiting for new connection (in pid:1) ...
+[32m2021-10-25 22:06:09.239 INFO     starting relay receiver[0m
+[32m2021-10-25 22:06:09.241 INFO     Initialized task queue: 20 workers[0m
+[32m2021-10-25 22:06:09.290 INFO     Loading playbooks sources from /app/robusta/core/playbooks/internal[0m
+[32m2021-10-25 22:06:09.302 INFO     not installing requirements as file /app/robusta/core/playbooks/internal/requirements.txt doesn't exist[0m
+[32m2021-10-25 22:06:09.302 INFO     loading playbooks from file /app/robusta/core/playbooks/internal/discovery_events.py[0m
+[32m2021-10-25 22:06:09.325 INFO     1 playbooks loaded from /app/robusta/core/playbooks/internal[0m
+[32m2021-10-25 22:06:09.325 INFO     Loading playbooks sources from /etc/robusta/playbooks/defaults[0m
+[32m2021-10-25 22:06:09.325 INFO     not installing requirements as file /etc/robusta/playbooks/defaults/requirements.txt doesn't exist[0m
+[32m2021-10-25 22:06:09.327 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/pod_enrichments.py[0m
+[32m2021-10-25 22:06:09.330 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/simple_examples.py[0m
+[32m2021-10-25 22:06:09.334 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/deployment_babysitter.py[0m
+[32m2021-10-25 22:06:09.337 INFO     connecting to server as 70cd3982-02cb-4211-a8aa-14f127b3642e[0m
+[32m2021-10-25 22:06:09.353 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/event_publisher.py[0m
+[32m2021-10-25 22:06:09.388 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/chaos_engineering.py[0m
+[32m2021-10-25 22:06:09.391 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/autoscaler.py[0m
+[32m2021-10-25 22:06:09.411 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/node_enrichments.py[0m
+[32m2021-10-25 22:06:09.417 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/persistent_data.py[0m
+[32m2021-10-25 22:06:09.423 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/networking.py[0m
+[32m2021-10-25 22:06:09.429 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/pod_troubleshooting.py[0m
+[32m2021-10-25 22:06:09.446 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/alerts_integration.py[0m
+[32m2021-10-25 22:06:09.461 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/restart_loop_reporter.py[0m
+[32m2021-10-25 22:06:09.474 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/daemonsets.py[0m
+[32m2021-10-25 22:06:09.518 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/git_change_audit.py[0m
+ * Serving Flask app "robusta.runner.web" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+[32m2021-10-25 22:06:09.574 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/oom_killer.py[0m
+[32m2021-10-25 22:06:09.577 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/deployment_status_report.py[0m
+[32m2021-10-25 22:06:09.581 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/bash_enrichments.py[0m
+[32m2021-10-25 22:06:09.596 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/configuration_ab_testing.py[0m
+[32m2021-10-25 22:06:09.610 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/cpu_throttling.py[0m
+[32m2021-10-25 22:06:09.619 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/deployment_enrichments.py[0m
+[32m2021-10-25 22:06:09.627 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/stress_tests.py[0m
+[32m2021-10-25 22:06:09.631 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/node_cpu_analysis.py[0m
+[32m2021-10-25 22:06:09.663 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/disk_benchmark.py[0m
+[32m2021-10-25 22:06:09.668 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/grafana_enrichment.py[0m
+[32m2021-10-25 22:06:09.691 INFO     loading playbooks from file /etc/robusta/playbooks/defaults/log_examples.py[0m
+[32m2021-10-25 22:06:09.694 INFO     25 playbooks loaded from /etc/robusta/playbooks/defaults[0m
+[32m2021-10-25 22:06:09.694 INFO     Loading playbooks sources from /etc/robusta/playbooks/custom[0m
+[32m2021-10-25 22:06:09.694 INFO     not installing requirements as file /etc/robusta/playbooks/custom/requirements.txt doesn't exist[0m
+[33m2021-10-25 22:06:09.694 WARNING  no playbook scripts to load in directory /etc/robusta/playbooks/custom[0m
+[33m2021-10-25 22:06:09.700 WARNING  checking trigger kind='Any' operation=None name_prefix=None namespace_prefix=None, type is <class 'robusta.integrations.kubernetes.autogenerated.triggers.KubernetesAnyAllChangesTrigger'>[0m
+[33m2021-10-25 22:06:09.708 WARNING  checking trigger alert_name='Watchdog' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:09.708 WARNING  checking trigger kind='Pod' operation=<K8sOperationType.UPDATE: 'update'> name_prefix=None namespace_prefix=None, type is <class 'robusta.integrations.kubernetes.autogenerated.triggers.PodUpdateTrigger'>[0m
+[33m2021-10-25 22:06:09.708 WARNING  checking trigger alert_name='KubeNodeNotReady' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:09.709 WARNING  checking trigger alert_name='KubernetesDaemonsetMisscheduled' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:09.709 WARNING  checking trigger alert_name='HostHighCpuLoad' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:09.709 WARNING  checking trigger alert_name='HostOomKillDetected' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:09.710 WARNING  checking trigger alert_name='CPUThrottlingHigh' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:09.710 WARNING  checking trigger alert_name='KubernetesDeploymentReplicasMismatch' status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:09.710 WARNING  checking trigger alert_name=None status=None pod_name_prefix=None namespace_prefix=None instance_name_prefix=None, type is <class 'robusta.integrations.prometheus.trigger.PrometheusAlertTrigger'>[0m
+[33m2021-10-25 22:06:09.710 WARNING  checking trigger substring='unary' pod_name_prefix=None namespace_prefix=None, type is <class 'robusta.integrations.vector.models.OnPogLogConfig'>[0m
+[33m2021-10-25 22:06:09.710 WARNING  YES[0m
+[32m2021-10-25 22:06:09.715 INFO     updating vector config wth: sources:
+  kubernetes_logs:
+    type: kubernetes_logs
+transforms:
+  # we forbid analyzing robusta's logs to avoid infinite logging loops where we pickup the text
+  # we want to search for in robusta's log and send it for processing infinitely
+  # TODO: best to do this with a kubernetes label, as the image name could change more easily
+  kubernetes_logs_without_robusta:
+    type: filter
+    inputs: [ "kubernetes_logs" ]
+    condition: "!contains!(.kubernetes.container_image, \"robusta-runner\")"
+  
+  filter1:
+    type: filter
+    inputs: [ "kubernetes_logs_without_robusta" ]
+    condition: contains!(.message, "unary") # TODO: fix escaping
+  
+
+sinks:
+  robusta_sink:
+    type: http
+    inputs: [  "filter1",  ]
+    uri: http://robusta-runner.default.svc.cluster.local/api/vector
+    encoding:
+      codec: "json"[0m
+[32m2021-10-25 22:06:09.780 INFO     got configMap: ConfigMap(apiVersion='v1', kind='ConfigMap', metadata=ObjectMeta(clusterName=None, creationTimestamp='2021-10-25T18:39:53Z', deletionGracePeriodSeconds=None, deletionTimestamp=None, generateName=None, generation=None, name='robusta-vector', namespace='default', resourceVersion='130265424', selfLink=None, uid='d7ed5d0d-44b6-45c4-a99e-5bf47bd708aa', annotations={'meta.helm.sh/release-name': 'robusta', 'meta.helm.sh/release-namespace': 'default'}, finalizers=[], labels={'app.kubernetes.io/instance': 'robusta', 'app.kubernetes.io/managed-by': 'Helm', 'app.kubernetes.io/name': 'vector', 'app.kubernetes.io/part-of': 'vector', 'app.kubernetes.io/version': '0.16.1', 'helm.sh/chart': 'vector-0.17.0', 'robustaComponent': 'vector', 'skaffold.dev/run-id': 'd48d4f7d-fad6-4c43-94c6-ea4c7a83944a'}, managedFields=[ManagedFieldsEntry(apiVersion='v1', fieldsType='FieldsV1', manager='skaffold', operation='Update', time='2021-10-25T22:04:02Z', fieldsV1={'f:metadata': {}}), ManagedFieldsEntry(apiVersion='v1', fieldsType='FieldsV1', manager='OpenAPI-Generator', operation='Update', time='2021-10-25T22:04:58Z', fieldsV1={'f:data': {}})], ownerReferences=[]), binaryData={}, data={'vector.yaml': 'sources:\n  kubernetes_logs:\n    type: kubernetes_logs\ntransforms:\n  # we forbid analyzing robusta\'s logs to avoid infinite logging loops where we pickup the text\n  # we want to search for in robusta\'s log and send it for processing infinitely\n  # TODO: best to do this with a kubernetes label, as the image name could change more easily\n  kubernetes_logs_without_robusta:\n    type: filter\n    inputs: [ "kubernetes_logs" ]\n    condition: "!contains!(.kubernetes.container_image, \\"robusta-runner\\")"\n  \n  filter1:\n    type: filter\n    inputs: [ "kubernetes_logs_without_robusta" ]\n    condition: contains!(.message, "unary") # TODO: fix escaping\n  \n\nsinks:\n  robusta_sink:\n    type: http\n    inputs: [  "filter1",  ]\n    uri: http://robusta-runner.default.svc.cluster.local/api/vector\n    encoding:\n      codec: "json"'})[0m
+[31m2021-10-25 22:06:10.240 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:06:10.645 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[32m2021-10-25 22:06:14.606 INFO     DONE RELOADING[0m
+[31m2021-10-25 22:06:14.849 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:06:17.776 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:06:23.860 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:06:27.850 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:06:33.011 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:06:37.457 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:06:43.577 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:06:47.697 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:06:52.986 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:06:59.133 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:07:02.837 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:07:02.848 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:07:08.047 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[32m2021-10-25 22:07:12.725 INFO     rate limited operation is allowed because it is the first time: restart_loop_reporter[0m
+[31m2021-10-25 22:07:14.274 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m
+[31m2021-10-25 22:07:18.247 ERROR    got pod log event from /var/log/pods/argocd_argocd-repo-server-bf76c969b-c5qpt_13d90895-2046-416e-9a49-778d0475ab51/argocd-repo-server/0.log on LogStream.STDERR[0m

@@ -93,11 +93,12 @@ runner:
 vector:
   commonLabels:
     robustaComponent: vector
-  nameOverride: "robusta-vector"
+  fullnameOverride: "robusta-vector"
   podRollmeAnnotation: true
   # Set this to non-empty value to use existing `ConfigMap` for `vector`, instead
   # of using a generated one.
   existingConfigMap: ""
+  args: ["--watch-config", "/etc/vector/vector.yaml"] # watch the config file for changes
   customConfig:
     sources:
       kubernetes_logs:

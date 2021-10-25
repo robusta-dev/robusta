@@ -100,6 +100,8 @@ class PlaybooksRegistry:
         self.default_sinks = default_sinks
         self.triggers_to_playbooks = defaultdict(list)
         self.global_config = global_config
+        self.active_playbooks = active_playbooks
+
         for playbook_def in active_playbooks:
             # Merge playbooks params with global params and default sinks
             if not playbook_def.sinks:
@@ -145,6 +147,9 @@ class PlaybooksRegistry:
 
     def get_playbooks(self, trigger_event: TriggerEvent) -> List[PlaybookDefinition]:
         return self.triggers_to_playbooks.get(trigger_event.get_event_name(), [])
+
+    def get_all_playbooks(self) -> List[PlaybookDefinition]:
+        return self.active_playbooks
 
     def get_default_sinks(self):
         return self.default_sinks

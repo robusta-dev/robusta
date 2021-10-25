@@ -45,6 +45,8 @@ def push(
             f"kubectl create configmap {namespace_to_kubectl(namespace)} robusta-custom-playbooks --from-file {playbooks_directory} -o yaml --dry-run | kubectl apply -f -",
             shell=True,
         )
+        # annotate the pods to trigger a configmap refresh:
+        # https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically
         subprocess.check_call(
             f'kubectl annotate pods {namespace_to_kubectl(namespace)} --all --overwrite "playbooks-last-modified={time.time()}"',
             shell=True,

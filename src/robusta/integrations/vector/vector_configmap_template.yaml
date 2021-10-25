@@ -1,0 +1,25 @@
+sources:
+  kubernetes_logs:
+    type: kubernetes_logs
+transforms:
+  # we forbid analyzing robusta's logs to avoid infinite logging loops where we pickup the text
+  # we want to search for in robusta's log and send it for processing infinitely
+  # TODO: best to do this with a kubernetes label, as the image name could change more easily
+  kubernetes_logs_without_robusta:
+    type: filter
+    inputs: [ "kubernetes_logs" ]
+    condition: "!contains!(.kubernetes.container_image, \"robusta-runner\")"
+  {% for trigger in log_triggers %}
+  filter{{loop.index}}:
+    type: filter
+    inputs: [ "kubernetes_logs_without_robusta" ]
+    condition: contains!(.message, "{{trigger.substring}}") # TODO: fix escaping
+  {% endfor %}
+
+sinks:
+  robusta_sink:
+    type: http
+    inputs: [ {% for trigger in log_triggers %} "filter{{loop.index}}", {%endfor%} ]
+    uri: http://robusta-runner.default.svc.cluster.local/api/vector
+    encoding:
+      codec: "json"
