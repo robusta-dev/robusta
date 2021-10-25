@@ -88,3 +88,44 @@ runner:
       memory: 1024Mi
     limits:
       cpu: ~
+
+# parameters for the vector installation we use for log-triggers
+vector:
+  commonLabels:
+    robustaComponent: vector
+  nameOverride: "robusta-vector"
+  podRollmeAnnotation: true
+  # Set this to non-empty value to use existing `ConfigMap` for `vector`, instead
+  # of using a generated one.
+  existingConfigMap: ""
+  customConfig:
+    sources:
+      kubernetes_logs:
+        type: kubernetes_logs
+    transforms:
+      # we forbid analyzing robusta's logs to avoid infinite logging loops where we pickup the text
+      # we want to search for in robusta's log and send it for processing infinitely
+      # TODO: best to do this with a kubernetes label, as the image name could change more easily
+      kubernetes_logs_without_robusta:
+        type: filter
+        inputs: [ "kubernetes_logs" ]
+        condition: "!contains!(.kubernetes.container_image, \"robusta-runner\")"
+
+      filter1:
+        type: filter
+        inputs: [ "kubernetes_logs_without_robusta" ]
+        condition: contains!(.message, "unary")
+
+    sinks:
+      console_sink:
+        type: console
+        inputs: [ "filter1" ]
+        target: "stdout"
+        encoding:
+          codec: "json"
+      my_sink_id:
+        type: http
+        inputs: [ "filter1" ]
+        uri: http://robusta-runner.default.svc.cluster.local/api/vector
+        encoding:
+          codec: "json"

@@ -20,6 +20,10 @@ class FindingSource(Enum):
     NONE = None  # empty default
     KUBERNETES_API_SERVER = "kubernetes_api_server"
     PROMETHEUS = "prometheus"
+    # note: LOGS is different than the others in that we're describing the logical source but not the actual
+    # component that it originated in. this is because our use of vector is an internal implementation detail
+    # on how we implement the on_log_trigger and the user doesn't need to be familiar with it
+    LOGS = "logs"
     MANUAL = "manual"
     CALLBACK = "callback"
 

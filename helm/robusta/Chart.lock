@@ -1,0 +1,6 @@
+dependencies:
+- name: vector-agent
+  repository: https://helm.vector.dev
+  version: 0.17.0
+digest: sha256:3ae1339b0ef49afd6a51037e5da0c637a1f702468a9c3c4f475445d37bb2f658
+generated: "2021-10-24T23:24:52.313697+03:00"

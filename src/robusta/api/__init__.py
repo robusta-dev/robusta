@@ -1,7 +1,5 @@
 from pydantic import BaseModel
 
-# TODO: this should not be part of the Robusta API
-# the only usage from a playbook is in event_publisher.py
 from ..core.model.base_params import *
 from ..core.sinks import *
 from ..core.sinks.sink_base import *
@@ -37,3 +35,4 @@ from ..integrations.scheduled.trigger import (
     DynamicDelayRepeatTrigger,
     FixedDelayRepeatTrigger,
 )
+from ..integrations.vector.models import *

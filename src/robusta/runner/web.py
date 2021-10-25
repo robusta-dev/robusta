@@ -1,7 +1,8 @@
 import json
 import logging
-
+from typing import List
 from flask import Flask, request, jsonify
+from pydantic import parse_obj_as
 
 from ..core.model.events import ExecutionBaseEvent
 from ..model.playbook_action import PlaybookAction
@@ -11,6 +12,7 @@ from ..integrations.kubernetes.base_triggers import (
     IncomingK8sEventPayload,
     K8sTriggerEvent,
 )
+from ..integrations.vector.models import IncomingVectorPayload
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..integrations.prometheus.models import AlertManagerEvent, PrometheusAlert
 from ..core.model.env_vars import NUM_EVENT_THREADS
@@ -42,6 +44,16 @@ class Web:
         alert_manager_event = AlertManagerEvent(**request.get_json())
         for alert in alert_manager_event.alerts:
             Web.__exec_async(PrometheusTriggerEvent(alert=alert))
+        return jsonify(success=True)
+
+    @staticmethod
+    @app.route("/api/vector", methods=["POST"])
+    def handle_vector_log_event():
+        matching_log_payloads = parse_obj_as(
+            List[IncomingVectorPayload], request.get_json()
+        )
+        for payload in matching_log_payloads:
+            Web.__exec_async(payload)
         return jsonify(success=True)
 
     @staticmethod

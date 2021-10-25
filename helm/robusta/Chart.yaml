@@ -2,6 +2,12 @@ apiVersion: v2
 name: robusta
 description: Robusta Helm chart for Kubernetes
 
+dependencies:
+  - name: vector-agent
+    version: 0.17.0
+    repository: https://helm.vector.dev
+    alias: vector
+
 type: application
 version: 0.3.0
 appVersion: "0.6.8"
