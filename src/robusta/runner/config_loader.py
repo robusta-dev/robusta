@@ -54,7 +54,7 @@ class ConfigLoader:
             self.root_playbook_path, self.__reload_playbook_packages
         )
         self.conf_watcher = FileSystemWatcher(
-            self.config_file_path, self.__reload_playbook_packages
+            os.path.dirname(self.config_file_path), self.__reload_playbook_packages
         )
         self.__reload_playbook_packages("initialization")
 
