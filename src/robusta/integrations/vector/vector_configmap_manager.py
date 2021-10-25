@@ -27,7 +27,6 @@ class VectorConfigMapManager:
         config_map: ConfigMap = ConfigMap.readNamespacedConfigMap(
             "robusta-vector", INSTALLATION_NAMESPACE
         ).obj
-        logging.info(f"got configMap: {config_map}")
         config_map.data["vector.yaml"] = rendered_template
         config_map.update()
 
