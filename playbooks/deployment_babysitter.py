@@ -56,6 +56,6 @@ def deployment_babysitter(event: DeploymentEvent, config: BabysitterConfig):
 
 
 @on_pod_all_changes
-def pod_babysitter(event: DeploymentEvent, config: BabysitterConfig):
+def pod_babysitter(event: PodEvent, config: BabysitterConfig):
     """Track changes to a pod and send the changes in slack."""
     do_babysitter(event, config, FindingSubjectType.TYPE_POD)

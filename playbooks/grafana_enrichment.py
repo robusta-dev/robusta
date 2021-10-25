@@ -7,6 +7,7 @@ class Params(BaseModel):
     grafana_url: str = None
     grafana_api_key: SecretStr
     grafana_dashboard_uid: str
+    cluster_name: str
 
 
 @on_deployment_update
@@ -31,7 +32,8 @@ def add_deployment_lines_to_grafana(event: DeploymentEvent, action_params: Param
         action_params.grafana_api_key.get_secret_value(), action_params.grafana_url
     )
     grafana.add_line_to_dashboard(
-        action_params.grafana_dashboard_uid, msg, tags=[event.obj.metadata.name]
+        action_params.grafana_dashboard_uid, msg,
+        tags=[event.obj.metadata.name, event.obj.metadata.namespace, action_params.cluster_name]
     )
 
 
