@@ -11,23 +11,25 @@ RUN apt-get update \
 #RUN dpkg -i socat_1.7.3.2-2ubuntu2ionelmc2~ppa1_amd64.deb
 ENV ENV_TYPE=DEV
 
-# we install the project requirements and install the app in separate stages to optimize docker layer caching
 RUN mkdir /app
+WORKDIR /app
+
+# we install the project requirements and install the app in separate stages to optimize docker layer caching
 RUN pip3 install --upgrade pip
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
 RUN /root/.local/bin/poetry config virtualenvs.create false
 COPY src/pyproject.toml /app
 COPY src/poetry.lock /app
-WORKDIR /app
 RUN /root/.local/bin/poetry install --no-root --extras "all"
+COPY playbooks/requirements.txt playbooks_requirements.txt
+RUN pip3 install -r playbooks_requirements.txt
+RUN rm playbooks_requirements.txt
 
 ADD src/ /app
-
 RUN pip3 install --use-feature=in-tree-build .
-
 COPY playbooks/ /etc/robusta/playbooks/defaults
-RUN pip3 install -r /etc/robusta/playbooks/defaults/requirements.txt
 # remove the requirements so that we don't reinstall them at runtime
 RUN rm /etc/robusta/playbooks/defaults/requirements.txt
+
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
 CMD [ "python3", "-u", "-m", "robusta.runner.main"]
