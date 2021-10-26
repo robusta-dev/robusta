@@ -91,6 +91,9 @@ runner:
 
 # parameters for the vector installation we use for log-triggers
 vector:
+  dataVolume:
+    hostPath:
+      path: /var/lib/robusta_vector/
   commonLabels:
     robustaComponent: vector
   fullnameOverride: "robusta-vector"
@@ -100,6 +103,8 @@ vector:
   existingConfigMap: ""
   args: ["--watch-config", "/etc/vector/vector.yaml"] # watch the config file for changes
   customConfig:
+    # we set a custom data dir to avoid conflicts with a non-robusta vector running on the same node
+    data_dir: "/var/lib/robusta_vector"
     sources:
       kubernetes_logs:
         type: kubernetes_logs
@@ -118,12 +123,13 @@ vector:
         condition: contains!(.message, "unary")
 
     sinks:
-      console_sink:
-        type: console
-        inputs: [ "filter1" ]
-        target: "stdout"
-        encoding:
-          codec: "json"
+      # uncomment for debugging
+      #console_sink:
+      #  type: console
+      #  inputs: [ "filter1" ]
+      #  target: "stdout"
+      #  encoding:
+      #    codec: "json"
       my_sink_id:
         type: http
         inputs: [ "filter1" ]
