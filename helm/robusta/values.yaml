@@ -1,6 +1,15 @@
+# playbooks sets
+playbook_sets: []
+
 # global parameters
 clusterName: ""
 clusterZone: ""
+
+grafanaUrl: ""
+grafanaApiKey: ""
+grafanaDashboardUid: ""
+prometheusUrl: ""
+
 
 # slack integration params
 slackApiKey: ""
@@ -8,6 +17,7 @@ slackChannel: ""
 
 # robusta ui integration params
 robustaApiKey: ""
+
 
 # playbook configuration
 playbooks:
