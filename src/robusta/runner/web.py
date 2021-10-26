@@ -52,8 +52,13 @@ class Web:
         matching_log_payloads = parse_obj_as(
             List[IncomingVectorPayload], request.get_json()
         )
+        logging.debug(
+            f"starting to run events for {len(matching_log_payloads)} log lines with files: "
+            f"{set(x.file for x in matching_log_payloads)}"
+        )
         for payload in matching_log_payloads:
             Web.__exec_async(payload)
+        logging.debug(f"done running events for {len(matching_log_payloads)} log lines")
         return jsonify(success=True)
 
     @staticmethod
