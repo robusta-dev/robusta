@@ -26,6 +26,9 @@ global_config:
   {{- end }}
 {{- end }}
   cluster_name: {{ required "A valid .Values.clusterName entry is required!" .Values.clusterName }}
+  {{- if .Values.clusterZone }}
+  cluster_zone: {{ .Values.clusterZone }}
+  {{- end }}
 active_playbooks:
 {{ toYaml .Values.playbooks | indent 2 }}
 {{ end }}
