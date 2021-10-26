@@ -21,7 +21,12 @@ from ..core.model.env_vars import (
 from ..integrations.git.git_repo import GitRepoManager
 from ..utils.file_system_watcher import FileSystemWatcher
 from ..model.playbook_definition import PlaybookDefinition
-from ..model.config import Registry, SinksRegistry, PlaybooksRegistry
+from ..model.config import (
+    Registry,
+    SinksRegistry,
+    PlaybooksRegistryImpl,
+    PlaybooksRegistry,
+)
 from ..integrations.scheduled.playbook_scheduler_manager_impl import (
     PlaybooksSchedulerManagerImpl,
 )
@@ -126,7 +131,7 @@ class ConfigLoader:
         ]
         active_playbooks.extend(runner_config.active_playbooks)
 
-        playbooks_registry = PlaybooksRegistry(
+        playbooks_registry = PlaybooksRegistryImpl(
             active_playbooks,
             actions_registry,
             runner_config.global_config,

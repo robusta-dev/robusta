@@ -90,6 +90,14 @@ class SinksRegistry:
 
 
 class PlaybooksRegistry:
+    def get_playbooks(self, trigger_event: TriggerEvent) -> List[PlaybookDefinition]:
+        return []
+
+    def get_default_sinks(self):
+        return []
+
+
+class PlaybooksRegistryImpl(PlaybooksRegistry):
     def __init__(
         self,
         active_playbooks: List[PlaybookDefinition],
@@ -146,16 +154,13 @@ class PlaybooksRegistry:
     def get_playbooks(self, trigger_event: TriggerEvent) -> List[PlaybookDefinition]:
         return self.triggers_to_playbooks.get(trigger_event.get_event_name(), [])
 
-    def get_default_sinks(self):
+    def get_default_sinks(self) -> List[str]:
         return self.default_sinks
-
-    def get_global_config(self) -> dict:
-        return self.global_config
 
 
 class Registry:
-    _actions: ActionsRegistry
-    _playbooks: PlaybooksRegistry
+    _actions: ActionsRegistry = ActionsRegistry()
+    _playbooks: PlaybooksRegistry = PlaybooksRegistry()
     _sinks: SinksRegistry = None
     _scheduler = None
 
