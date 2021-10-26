@@ -20,6 +20,12 @@ transforms:
   {% endfor %}
 
 sinks:
+  #console_sink:
+  #  type: console
+  #  inputs: [ {% for trigger in log_triggers %} "filter{{loop.index}}", {%endfor%} ]
+  #  target: "stdout"
+  #  encoding:
+  #    codec: "json"
   robusta_sink:
     type: http
     inputs: [ {% for trigger in log_triggers %} "filter{{loop.index}}", {%endfor%} ]
