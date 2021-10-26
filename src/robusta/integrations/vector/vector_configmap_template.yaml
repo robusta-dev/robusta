@@ -2,9 +2,12 @@ sources:
   kubernetes_logs:
     type: kubernetes_logs
 transforms:
-  # we forbid analyzing robusta's logs to avoid infinite logging loops where we pickup the text
-  # we want to search for in robusta's log and send it for processing infinitely
-  # TODO: best to do this with a kubernetes label, as the image name could change more easily
+  # we don't analyze robusta's logs to avoid infinite logging loops where we pickup the text
+  # we want to search for in robusta's log and send it for processing back to robusta where it appears in the log again
+  # TODO: it would be cleaner to do this with:
+  # https://vector.dev/docs/reference/configuration/sources/kubernetes_logs/#extra_label_selector
+  # don't use the "vector.dev/exclude" annotation because if someone is running their own vector in-cluster
+  # then we don't want it to ignore the robusta logs
   kubernetes_logs_without_robusta:
     type: filter
     inputs: [ "kubernetes_logs" ]
