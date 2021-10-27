@@ -15,4 +15,6 @@ KIND_TO_MODEL_CLASS = {
     "Event": Event,
     "HorizontalPodAutoscaler": HorizontalPodAutoscaler,
     "Node": Node,
+    "ClusterRole": ClusterRole,
+    "Job": Job,
 }

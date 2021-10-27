@@ -5,17 +5,13 @@ import threading
 import time
 import traceback
 import uuid
-
 from typing import List, Dict, Any
-
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
 from ...transformer import Transformer
 from ....discovery.top_service_resolver import TopServiceResolver
 from ....model.services import ServiceInfo
 from ....reporting.blocks import (
-    Finding,
-    Enrichment,
     MarkdownBlock,
     KubernetesDiffBlock,
     DividerBlock,
@@ -25,8 +21,12 @@ from ....reporting.blocks import (
     ListBlock,
     TableBlock,
 )
+from ....reporting.base import (
+    Finding,
+    Enrichment,
+)
 from ....model.env_vars import TARGET_ID, SUPABASE_LOGIN_RATE_LIMIT_SEC
-from ....reporting.callbacks import PlaybookCallbackRequest
+from ....reporting.callbacks import IncomingRequest, ExternalActionRequest
 from supabase_py import Client
 
 SERVICES_TABLE = "Services"
@@ -176,16 +176,15 @@ class SupabaseDal:
                     }
                 )
             elif isinstance(block, CallbackBlock):
-                context = block.context.copy()
-                context["target_id"] = self.target_id
-                context["sink_name"] = self.sink_name
                 callbacks = []
                 for (text, callback) in block.choices.items():
                     callbacks.append(
                         {
                             "text": text,
-                            "callback": PlaybookCallbackRequest.create_for_func(
-                                callback, json.dumps(context), text
+                            "callback": IncomingRequest(
+                                incoming_request=ExternalActionRequest.create_for_func(
+                                    callback, self.sink_name, self.target_id, text
+                                )
                             ).json(),
                         }
                     )

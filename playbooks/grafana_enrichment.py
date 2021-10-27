@@ -12,7 +12,7 @@ class GrafanaAnnotationsParams(BaseModel):
     custom_tags: List[str] = None
 
 
-@on_deployment_update
+@action
 def add_deployment_lines_to_grafana(event: DeploymentEvent, action_params: GrafanaAnnotationsParams):
     """
     Add annotations to grafana whenever a new application version is deployed so that you can easily see changes in performance.
@@ -58,7 +58,7 @@ class AlertLineParams(BaseModel):
 
 
 # TODO: should we use filter_params and configure multiple instances of add_alert_lines_to_grafana instead of one master instance?
-@on_pod_prometheus_alert
+@action
 def add_alert_lines_to_grafana(
     event: PrometheusKubernetesAlert, params: AlertLineParams
 ):
@@ -79,7 +79,7 @@ def add_alert_lines_to_grafana(
         )
 
 
-@on_deployment_update
+@action
 def report_image_changes(event: DeploymentEvent):
     """
     Report image changed whenever a new application version is deployed so that you can easily see changes.
@@ -107,7 +107,7 @@ def report_image_changes(event: DeploymentEvent):
                     }
                 )
 
-    event.finding = Finding(
+    finding = Finding(
         title=f"{FindingSubjectType.TYPE_DEPLOYMENT.value} {event.obj.metadata.name} updated in namespace {event.obj.metadata.namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="report_image_changes",
@@ -125,4 +125,5 @@ def report_image_changes(event: DeploymentEvent):
             "changed_properties": changed_properties,
         }
     )
-    event.finding.add_enrichment([JsonBlock(json_str)])
+    finding.add_enrichment([JsonBlock(json_str)])
+    event.add_finding(finding)

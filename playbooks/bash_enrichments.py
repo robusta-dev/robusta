@@ -16,18 +16,17 @@ def pod_bash_enrichment(
     return block_list
 
 
-class PodBashParams(PodParams):
-    bash_command: str
+class PodBashParams(PodParams, BashParams):
+    pass
 
 
-@on_manual_trigger
-def show_pod_bash_enrichment(event: ManualTriggerEvent):
-    params = PodBashParams(**event.data)
+@action
+def show_pod_bash_enrichment(event: ExecutionBaseEvent, params: PodBashParams):
     blocks = pod_bash_enrichment(
         params.pod_name, params.pod_namespace, params.bash_command
     )
     if blocks:
-        event.finding = Finding(
+        finding = Finding(
             title=f"Pod bash command - {params.pod_name}",
             source=FindingSource.MANUAL,
             aggregation_key="show_pod_bash_enrichment",
@@ -37,7 +36,8 @@ def show_pod_bash_enrichment(event: ManualTriggerEvent):
                 params.pod_namespace,
             ),
         )
-        event.finding.add_enrichment(blocks)
+        finding.add_enrichment(blocks)
+        event.add_finding(finding)
 
 
 def node_bash_enrichment(node_name: str, bash_command: str) -> List[BaseBlock]:
@@ -59,12 +59,11 @@ class NodeBashParams(NodeNameParams):
     bash_command: str
 
 
-@on_manual_trigger
-def show_node_bash_enrichment(event: ManualTriggerEvent):
-    params = NodeBashParams(**event.data)
+@action
+def show_node_bash_enrichment(event: ExecutionBaseEvent, params: NodeBashParams):
     blocks = node_bash_enrichment(params.node_name, params.bash_command)
     if blocks:
-        event.finding = Finding(
+        finding = Finding(
             title=f"Node bash command - {params.node_name}",
             source=FindingSource.MANUAL,
             aggregation_key="show_node_bash_enrichment",
@@ -72,4 +71,5 @@ def show_node_bash_enrichment(event: ManualTriggerEvent):
                 name=params.node_name, subject_type=FindingSubjectType.TYPE_NODE
             ),
         )
-        event.finding.add_enrichment(blocks)
+        finding.add_enrichment(blocks)
+        event.add_finding(finding)

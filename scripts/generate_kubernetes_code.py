@@ -15,6 +15,8 @@ KUBERNETES_RESOURCES = [
     "Event",
     "HorizontalPodAutoscaler",
     "Node",
+    "ClusterRole",
+    "Job",
 ]
 TRIGGER_TYPES = {
     "create": "K8sOperationType.CREATE",
@@ -41,12 +43,24 @@ def autogenerate_events(f: TextIO):
         textwrap.dedent(
             f"""\
         from dataclasses import dataclass
-        from typing import Union
+        from typing import Union, Optional
         from ..base_event import K8sBaseEvent
         from ..custom_models import {CUSTOM_SUBCLASSES_NAMES_STR}
         """
         )
     )
+
+    all_versioned_resources = set()
+    for resource in KUBERNETES_RESOURCES:
+        if resource in CUSTOM_SUBCLASSES:
+            all_versioned_resources.add(get_model_class(resource))
+        else:
+            version_resources = [
+                f"{version}{resource}" for version in KUBERNETES_VERSIONS
+            ]
+            all_versioned_resources = all_versioned_resources.union(
+                set(version_resources)
+            )
 
     for version in KUBERNETES_VERSIONS:
         for resource in KUBERNETES_RESOURCES:
@@ -58,47 +72,42 @@ def autogenerate_events(f: TextIO):
                 )
             )
 
-    all_versioned_resources = set()
-    for resource in KUBERNETES_RESOURCES:
-        if resource in CUSTOM_SUBCLASSES:
-            model_class_str = get_model_class(resource)
-            all_versioned_resources.add(model_class_str)
-        else:
-            version_resources = [
-                f"{version}{resource}" for version in KUBERNETES_VERSIONS
-            ]
-            model_class_str = f"Union[{','.join(version_resources)}]"
-            all_versioned_resources = all_versioned_resources.union(
-                set(version_resources)
-            )
-
-        f.write(
-            textwrap.dedent(
-                f"""\
-        
-            @dataclass
-            class {resource}Event (K8sBaseEvent):
-                obj: {model_class_str}
-                old_obj: {model_class_str}
-            
-            """
-            )
-        )
-
     # add the KubernetesAnyEvent
     f.write(
         textwrap.dedent(
             f"""\
 
+
         @dataclass
         class KubernetesAnyEvent (K8sBaseEvent):
-            obj: {f"Union[{','.join(all_versioned_resources)}]"}
-            old_obj: {f"Union[{','.join(all_versioned_resources)}]"}
+            obj: Optional[{f"Union[{','.join(all_versioned_resources)}]"}] = None
+            old_obj: Optional[{f"Union[{','.join(all_versioned_resources)}]"}] = None
+
 
         """
         )
     )
+    for resource in KUBERNETES_RESOURCES:
+        if resource in CUSTOM_SUBCLASSES:
+            model_class_str = get_model_class(resource)
+        else:
+            version_resources = [
+                f"{version}{resource}" for version in KUBERNETES_VERSIONS
+            ]
+            model_class_str = f"Union[{','.join(version_resources)}]"
 
+        f.write(
+            textwrap.dedent(
+                f"""\
+            @dataclass
+            class {resource}Event (KubernetesAnyEvent):
+                obj: Optional[{model_class_str}] = None
+                old_obj: Optional[{model_class_str}] = None
+
+
+            """
+            )
+        )
     mappers = [f"'{r}': {r}Event" for r in KUBERNETES_RESOURCES]
     mappers_str = ",\n    ".join(mappers)
     f.write(f"\nKIND_TO_EVENT_CLASS = {{\n    {mappers_str}\n}}\n")
@@ -152,33 +161,58 @@ def autogenerate_versioned_models(f: TextIO):
     )
 
 
+def get_trigger_class_name(trigger_name: str) -> str:
+    if trigger_name == "all_changes":
+        return "AllChanges"
+    return trigger_name.capitalize()
+
+
 def autogenerate_triggers(f: TextIO):
     f.write(COMMON_PREFIX)
     f.write(
         textwrap.dedent(
             """\
-        from ....utils.decorators import doublewrap
-        from ..base_triggers import register_k8s_playbook, register_k8s_any_playbook
+        from typing import Optional, Dict
+        from pydantic import BaseModel
+        from ..base_triggers import K8sBaseTrigger
         from ....core.model.k8s_operation_type import K8sOperationType
-        
-        
+        from .events import *
+
+
         """
         )
     )
 
+    triggers = []
     for resource in KUBERNETES_RESOURCES:
         f.write(f"# {resource} Triggers\n")
         for trigger_name, operation_type in TRIGGER_TYPES.items():
             f.write(
                 textwrap.dedent(
                     f"""\
-            @doublewrap
-            def on_{resource.lower()}_{trigger_name}(func, name_prefix='', namespace_prefix=''):
-                return register_k8s_playbook(func, '{resource}', {operation_type}, name_prefix=name_prefix, namespace_prefix=namespace_prefix)
-            
-            
+            class {resource}{get_trigger_class_name(trigger_name)}Trigger(K8sBaseTrigger):
+
+                def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+                    super().__init__(
+                        kind=\"{resource}\", 
+                        operation={operation_type}, 
+                        name_prefix=name_prefix, 
+                        namespace_prefix=namespace_prefix
+                    )
+
+                @staticmethod
+                def get_execution_event_type() -> type:
+                    return {resource}Event
+
+
             """
                 )
+            )
+            triggers.append(
+                [
+                    f"on_{resource.lower()}_{trigger_name}",
+                    f"{resource}{get_trigger_class_name(trigger_name)}Trigger",
+                ]
             )
 
     f.write(f"# Kubernetes Any Triggers\n")
@@ -186,13 +220,44 @@ def autogenerate_triggers(f: TextIO):
         f.write(
             textwrap.dedent(
                 f"""\
-        @doublewrap
-        def on_kubernetes_any_resource_{trigger_name}(func, name_prefix='', namespace_prefix=''):
-            return register_k8s_any_playbook(func, {operation_type}, name_prefix=name_prefix, namespace_prefix=namespace_prefix)
+        class KubernetesAny{get_trigger_class_name(trigger_name)}Trigger(K8sBaseTrigger):
+
+            def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+                super().__init__(
+                    kind=\"Any\", 
+                    operation={operation_type}, 
+                    name_prefix=name_prefix, 
+                    namespace_prefix=namespace_prefix
+                )
+
+            @staticmethod
+            def get_execution_event_type() -> type:
+                return KubernetesAnyEvent
 
 
         """
             )
+        )
+        triggers.append(
+            [
+                f"on_kubernetes_any_resource_{trigger_name}",
+                f"KubernetesAny{get_trigger_class_name(trigger_name)}Trigger",
+            ]
+        )
+
+    f.write(
+        textwrap.dedent(
+            """\
+            # K8s Trigger class
+            class K8sTriggers(BaseModel):
+
+        """
+        )
+    )
+
+    for trigger in triggers:
+        f.write(
+            textwrap.indent(f"{trigger[0]}: Optional[{trigger[1]}]\n", prefix="    ")
         )
 
 

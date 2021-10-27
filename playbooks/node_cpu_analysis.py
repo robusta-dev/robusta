@@ -5,9 +5,8 @@ from pygal.style import DarkStyle as ChosenStyle
 from robusta.api import *
 
 
-class NodeCPUAnalysisParams(BaseModel):
+class NodeCPUAnalysisParams(NodeNameParams):
     prometheus_url: str = None
-    node: str = ""
 
 
 def do_node_cpu_analysis(node: Node, prometheus_url: str = None) -> List[BaseBlock]:
@@ -87,15 +86,15 @@ def do_node_cpu_analysis(node: Node, prometheus_url: str = None) -> List[BaseBlo
     ]
 
 
-@on_manual_trigger
-def node_cpu_analysis(event: ManualTriggerEvent):
-    params = NodeCPUAnalysisParams(**event.data)
-    node = Node().read(name=params.node)
+@action
+def node_cpu_analysis(event: ExecutionBaseEvent, params: NodeCPUAnalysisParams):
+    node = Node().read(name=params.node_name)
 
-    event.finding = Finding(
-        title=f"Node CPU Usage Report for {params.node}",
-        subject=FindingSubject(name=params.node),
+    finding = Finding(
+        title=f"Node CPU Usage Report for {params.node_name}",
+        subject=FindingSubject(name=params.node_name),
         source=FindingSource.MANUAL,
         aggregation_key="node_cpu_analysis",
     )
-    event.finding.add_enrichment(do_node_cpu_analysis(node, params.prometheus_url))
+    finding.add_enrichment(do_node_cpu_analysis(node, params.prometheus_url))
+    event.add_finding(finding)

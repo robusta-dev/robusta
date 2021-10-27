@@ -18,6 +18,7 @@ pydantic = "^1.8.1"
 kubernetes = "^12.0.1"
 hikaru = "^0.5.1-beta.0"
 click-spinner = "^0.1.10"
+pymsteams = "^0.1.16"
 Flask = { version = "^1.1.2", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
 manhole =  { version = "^1.8.0", optional = true }

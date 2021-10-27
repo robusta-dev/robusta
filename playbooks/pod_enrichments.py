@@ -24,9 +24,8 @@ def pod_events_enrichment(pod: Pod) -> List[BaseBlock]:
     return block_list
 
 
-@on_manual_trigger
-def pod_events(event: ManualTriggerEvent):
-    action_params = PodParams(**event.data)
+@action
+def pod_events(event: ExecutionBaseEvent, action_params: PodParams):
     logging.info(f"getting info for: {action_params}")
     pod = RobustaPod.read(action_params.pod_name, action_params.pod_namespace)
     blocks = pod_events_enrichment(pod)

@@ -21,40 +21,55 @@ robustaApiKey: ""
 
 # playbook configuration
 playbooks:
-- name: restart_loop_reporter
-  action_params:
-    restart_reason: CrashLoopBackOff
-- name: python_profiler
-- name: alerts_integration
-  action_params:
-    alerts_config:
-    - alert_name: KubeNodeNotReady
-      enrichers:
-      - name: AlertDefaults
-      - name: NodeAllocatableResourcesEnricher
-      - name: NodeRunningPodsEnricher
-    - alert_name: KubernetesDaemonsetMisscheduled
-      enrichers:
-      - name: AlertDefaults
-      - name: DaemonsetEnricher
-      - name: DaemonsetMisscheduledAnalysis
-    - alert_name: HostHighCpuLoad
-      enrichers:
-      - name: NodeCPUAnalysis
-      - name: GraphEnricher
-    - alert_name: HostOomKillDetected
-      enrichers:
-      - name: OOMKillerEnricher
-      - name: GraphEnricher
-    - alert_name: CPUThrottlingHigh
-      enrichers:
-      - name: GraphEnricher
-      - name: AlertDefaults
-      - name: CPUThrottlingAnalysis
-    - alert_name: KubernetesDeploymentReplicasMismatch
-      enrichers:
-      - name: DeploymentStatusEnricher
-      - name: AlertDefaults
+- triggers:
+  - on_prometheus_alert:
+      alert_name: Watchdog
+  actions:
+  - severity_silencer: {}
+- triggers:
+  - on_pod_update: {}
+  actions:
+  - restart_loop_reporter:
+      restart_reason: CrashLoopBackOff
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeNodeNotReady
+  actions:
+  - node_allocatable_resources_enricher: {}
+  - node_running_pods_enricher: {}
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubernetesDaemonsetMisscheduled
+  actions:
+  - daemonset_enricher: {}
+  - daemonset_misscheduled_analysis_enricher: {}
+- triggers:
+  - on_prometheus_alert:
+      alert_name: HostHighCpuLoad
+  actions:
+  - node_cpu_enricher: {}
+  - graph_enricher: {}
+- triggers:
+  - on_prometheus_alert:
+      alert_name: HostOomKillDetected
+  actions:
+  - oom_killer_enricher: {}
+  - graph_enricher: {}
+- triggers:
+  - on_prometheus_alert:
+      alert_name: CPUThrottlingHigh
+  actions:
+  - cpu_throttling_analysis_enricher: {}
+  - graph_enricher: {}
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubernetesDeploymentReplicasMismatch
+  actions:
+  - deployment_status_enricher: {}
+- triggers:
+  - on_prometheus_alert: {}
+  actions:
+  - default_enricher: {}
 
 # parameters for the robusta forwarder deployment
 kubewatch:

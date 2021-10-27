@@ -1,25 +1,48 @@
 import json
 import logging
 
-from pydantic import BaseModel
 from kafka import KafkaProducer
 
+from ..sink_base_params import SinkBaseParams
 from ..sink_config import SinkConfigBase
-from ...reporting.blocks import Finding, Enrichment, KubernetesDiffBlock, JsonBlock
+from ...reporting.blocks import KubernetesDiffBlock, JsonBlock
+from ...reporting.base import Finding, Enrichment
 from ..sink_base import SinkBase
 
 
-class KafkaSinkConfig(BaseModel):
+class KafkaSinkParams(SinkBaseParams):
     kafka_url: str
     topic: str
 
 
+class KafkaSinkConfigWrapper(SinkConfigBase):
+    kafka_sink: KafkaSinkParams
+
+    def get_name(self) -> str:
+        return self.kafka_sink.name
+
+    def get_params(self) -> SinkBaseParams:
+        return self.kafka_sink
+
+    def create_sink(self, cluster_name: str) -> SinkBase:
+        return KafkaSink(self)
+
+
 class KafkaSink(SinkBase):
-    def __init__(self, sink_config: SinkConfigBase):
-        super().__init__(sink_config)
-        config = KafkaSinkConfig(**sink_config.params)
-        self.producer = KafkaProducer(bootstrap_servers=config.kafka_url)
-        self.topic = config.topic
+    def __init__(self, sink_config: KafkaSinkConfigWrapper):
+        super().__init__(sink_config.kafka_sink)
+        self.producer = KafkaProducer(
+            bootstrap_servers=sink_config.kafka_sink.kafka_url
+        )
+        self.topic = sink_config.kafka_sink.topic
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, KafkaSink)
+            and other.sink_name == self.sink_name
+            and other.producer == self.producer
+            and other.topic == self.topic
+        )
 
     def write_finding(self, finding: Finding):
         for enrichment in finding.enrichments:

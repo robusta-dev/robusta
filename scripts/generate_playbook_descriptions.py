@@ -3,20 +3,25 @@ import importlib
 import inspect
 import os
 import glob
-
+from typing import Callable
 from pydantic import BaseModel
-
-from src.robusta.api import get_function_params_class
-from src.robusta.api import TriggerParams
 
 
 class PlaybookDescription(BaseModel):
     function_name: str
-    builtin_trigger_params: TriggerParams
     docs: str = None
     src: str
     src_file: str
     action_params: dict = None
+
+
+def get_function_params_class(func: Callable):
+    """Inspects a playbook function's signature and returns the type of the param class if it exists"""
+    func_signature = inspect.signature(func)
+    if len(func_signature.parameters) == 1:
+        return None
+    parameter_name = list(func_signature.parameters)[1]
+    return func_signature.parameters[parameter_name].annotation
 
 
 def get_params_schema(func):
@@ -57,6 +62,7 @@ def load_scripts(scripts_root):
 
 
 def main():
+    # TODO Arik - Need to be fixed in order to expose actions schema
     parser = argparse.ArgumentParser(description="Generate playbook descriptions")
     parser.add_argument(
         "directory", type=str, help="directory containing the playbooks"
