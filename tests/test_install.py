@@ -5,7 +5,7 @@ from tests.utils.kubernetes_utils import create_crashing_deployment
 
 
 def test_robusta_install(robusta: RobustaController, slack_channel: SlackChannel):
-    crashing_deployment = create_crashing_deployment(robusta.client)
+    crashing_deployment = create_crashing_deployment()
     msg = ""
     expected = f"Crashing pod {crashing_deployment.metadata.name}"
     for _ in range(50):

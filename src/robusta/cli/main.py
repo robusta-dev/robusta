@@ -128,10 +128,9 @@ def gen_config(
     with open(output_path, "w") as output_file:
         yaml.safe_dump(values.dict(), output_file, sort_keys=False)
         typer.secho(
-            f"Saved configuration to {output_path}. To finish the installation, run:",
+            f"Saved configuration to {output_path}",
             fg="green",
         )
-        typer.secho(f"helm install robusta robusta/robusta -f {output_path}", fg="blue")
 
 
 @app.command()

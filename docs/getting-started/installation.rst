@@ -9,12 +9,15 @@ You can handwrite the values.yaml file, but it is easier to autogenerate it:
 
 .. code-block:: bash
 
-   pip3 install -U robusta-cli --no-cache
+   python3 -m pip install -U robusta-cli --no-cache
    robusta gen-config
 
 You now have a Helm values file named ``generated_values.yaml``
 
 .. note:: If pip fails due to a permissions error, either run the command as root or append ``--user`` to the command.
+
+    If you're on Windows, you may need to add `Python's script directory to PATH <https://www.makeuseof.com/python-windows-path/>`_
+    before you can run ``robusta gen-config``
 
 Installing Robusta with Helm
 -----------------------------------------------------

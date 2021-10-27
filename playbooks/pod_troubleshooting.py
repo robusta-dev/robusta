@@ -150,8 +150,8 @@ def python_memory(event: ExecutionBaseEvent, params: MemoryTraceParams):
         MarkdownBlock(
             f"*Additional overhead from tracing: {humanize.naturalsize(snapshot.overhead)}*"
         ),
-        HeaderBlock("Largest unfreed allocations"),
         DividerBlock(),
+        HeaderBlock("Largest unfreed allocations"),
     ]
     blocks.extend([MarkdownBlock(stat.to_markdown()) for stat in snapshot.data])
     blocks.append(
