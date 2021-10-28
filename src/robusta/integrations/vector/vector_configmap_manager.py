@@ -28,7 +28,13 @@ class VectorConfigMapManager:
             "robusta-vector", INSTALLATION_NAMESPACE
         ).obj
         config_map.data["vector.yaml"] = rendered_template
+        # TODO: sometimes this fails when the helm chart is still being rolled out and the resource is changed
+        # TODO: possibly using replace instead of update would fix this, though we might mess up certain labels
+        # it might be best to just have vector load an external config which we provide...
         config_map.update()
+
+        # give nodes time to sync the configmap - this is bad as it pauses the entire runner for 5 seconds
+        time.sleep(5)
 
         # cause robusta-vector to reload. see:
         # https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#mounted-configmaps-are-updated-automatically
