@@ -44,16 +44,16 @@ def do_show_recent_oom_kills(node: Node) -> List[BaseBlock]:
         return []
 
 
-@on_manual_trigger
-def show_recent_oom_kills(event: ManualTriggerEvent):
-    params = NodeNameParams(**event.data)
+@action
+def show_recent_oom_kills(event: ExecutionBaseEvent, params: NodeNameParams):
     node = Node().read(name=params.node_name)
     blocks = do_show_recent_oom_kills(node)
     if blocks:
-        event.finding = Finding(
+        finding = Finding(
             title=f"Latest OOM Kills on {params.node_name}",
             subject=FindingSubject(name=params.node_name),
             source=FindingSource.MANUAL,
             aggregation_key="show_recent_oom_kills",
         )
-        event.finding.add_enrichment(blocks)
+        finding.add_enrichment(blocks)
+        event.add_finding(finding)

@@ -1,11 +1,15 @@
-from .sink_config import SinkConfigBase
-from ...core.reporting.blocks import Finding
+from .sink_base_params import SinkBaseParams
+from ...core.reporting.base import Finding
 
 
 class SinkBase:
-    def __init__(self, sink_config: SinkConfigBase):
-        self.sink_name = sink_config.sink_name
-        self.params = sink_config.params
+    def __init__(self, sink_params: SinkBaseParams):
+        self.sink_name = sink_params.name
+        self.params = sink_params
+        self.default = sink_params.default
+
+    def __eq__(self, other):
+        raise Exception("Sink must implement __eq__")
 
     def stop(self):
         pass

@@ -12,10 +12,11 @@ class ReportParams(BaseModel):
     reports_panel_urls: List[str]
 
 
-@scheduled_callable
-def report_rendering_task(event: RecurringTriggerEvent, action_params: ReportParams):
-    event.finding = Finding(
+@action
+def report_rendering_task(event: ScheduledExecutionEvent, action_params: ReportParams):
+    finding = Finding(
         title=action_params.report_name,
+        aggregation_key="report_rendering_task",
     )
     for panel_url in action_params.reports_panel_urls:
         image: requests.models.Response = requests.post(
@@ -25,7 +26,8 @@ def report_rendering_task(event: RecurringTriggerEvent, action_params: ReportPar
                 "panelUrl": panel_url,
             },
         )
-        event.finding.add_enrichment([FileBlock("panel.png", image.content)])
+        finding.add_enrichment([FileBlock("panel.png", image.content)])
+    event.add_finding(finding)
 
 
 def has_matching_diff(event: DeploymentEvent, fields_to_monitor: List[str]) -> bool:
@@ -36,7 +38,7 @@ def has_matching_diff(event: DeploymentEvent, fields_to_monitor: List[str]) -> b
     return False
 
 
-@on_deployment_all_changes
+@action
 def deployment_status_report(event: DeploymentEvent, action_params: ReportParams):
     """Export configured reports, every pre-defined period"""
     if event.operation == K8sOperationType.DELETE:
@@ -49,13 +51,9 @@ def deployment_status_report(event: DeploymentEvent, action_params: ReportParams
     logging.info(
         f"Scheduling rendering report. deployment: {event.obj.metadata.name} delays: {action_params.delays}"
     )
-    trigger_params = TriggerParams(
-        trigger_name=f"deployment_status_report_{event.obj.metadata.name}_{event.obj.metadata.namespace}",
-    )
-    playbook_id = playbook_hash(report_rendering_task, trigger_params, action_params)
-    schedule_trigger(
-        func=report_rendering_task,
-        playbook_id=playbook_id,
+    event.get_scheduler().schedule_action(
+        action_func=report_rendering_task,
+        task_id=f"deployment_status_report_{event.obj.metadata.name}_{event.obj.metadata.namespace}",
         scheduling_params=DynamicDelayRepeat(delay_periods=action_params.delays),
         named_sinks=event.named_sinks,
         action_params=action_params,

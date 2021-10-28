@@ -21,31 +21,28 @@ class Scheduler:
     registered_runnables = {}
     dal = None
 
-    @classmethod
-    def register_task(cls, runnable_name: str, func):
-        cls.registered_runnables[runnable_name] = func
+    def register_task(self, runnable_name: str, func):
+        self.registered_runnables[runnable_name] = func
 
-    @classmethod
-    def init_scheduler(cls):
-        cls.dal = SchedulerDal()
+    def init_scheduler(self):
+        self.dal = SchedulerDal()
         # schedule standalone tasks
-        for job in cls.__get_standalone_jobs():
+        for job in self.__get_standalone_jobs():
             logging.info(f"Scheduling standalone task {job.job_id}")
-            cls.schedule_job(job)
+            self.schedule_job(job)
 
-    @classmethod
-    def schedule_job(cls, job: ScheduledJob):
+    def schedule_job(self, job: ScheduledJob):
         if job.replace_existing:
-            cls.__remove_scheduler_job(job.job_id)
+            self.__remove_scheduler_job(job.job_id)
             saved_job = None  # Don't load the existing state. Will be overridden with a new state
         else:
-            if cls.__is_scheduled(job.job_id):
+            if self.is_scheduled(job.job_id):
                 logging.info(f"job {job.job_id} already scheduled")
                 return  # job is already scheduled, no need to re-schedule. (this is a reload playbooks scenario)
-            saved_job = cls.dal.get_scheduled_job(job.job_id)
+            saved_job = self.dal.get_scheduled_job(job.job_id)
 
         if saved_job is None:  # save new job
-            cls.dal.save_scheduled_job(job)
+            self.dal.save_scheduled_job(job)
             saved_job = job
         elif saved_job.state.job_status == JobStatus.DONE:
             logging.info(
@@ -53,35 +50,35 @@ class Scheduler:
             )
             return
 
-        next_delay = cls.__calc_job_delay_for_next_run(saved_job)
+        next_delay = self.__calc_job_delay_for_next_run(saved_job)
         logging.info(
             f"scheduling job {saved_job.job_id} params {saved_job.scheduling_params} will run in {next_delay}"
         )
-        cls.__schedule_job_internal(
-            next_delay, saved_job.job_id, cls.__on_task_execution, {"job": saved_job}
+        self.__schedule_job_internal(
+            next_delay, saved_job.job_id, self.__on_task_execution, {"job": saved_job}
         )
 
-    @classmethod
-    def unschedule_deleted_playbooks(cls, active_playbook_ids: set):
-        for job in cls.dal.list_scheduled_jobs():
-            if job.standalone_task:
-                continue  # standalone tasks shouldn't be removed on reload
-            if job.job_id not in active_playbook_ids:
-                logging.info(f"unscheduling deleted playbook {job.job_id}")
-                cls.__unschedule_job(job.job_id)
+    def list_scheduled_jobs(self) -> List[ScheduledJob]:
+        return self.dal.list_scheduled_jobs()
 
-    @classmethod
-    def __on_task_execution(cls, job: ScheduledJob):
+    def unschedule_job(self, job_id):
+        self.__remove_scheduler_job(job_id)
+        self.dal.del_scheduled_job(job_id)
+
+    def is_scheduled(self, job_id):
+        return self.scheduled_jobs.get(job_id) is not None
+
+    def __on_task_execution(self, job: ScheduledJob):
         logging.info(f"running scheduled job {job.job_id}")
 
         if job.state.job_status == JobStatus.NEW:
             job.state.job_status = JobStatus.RUNNING
         job.state.last_exec_time_sec = round(time.time())
 
-        func = cls.registered_runnables.get(job.runnable_name)
+        func = self.registered_runnables.get(job.runnable_name)
         if not func:
             logging.error(f"Scheduled runnable name not registered {job.runnable_name}")
-            cls.__on_job_done(job)
+            self.__on_job_done(job)
             return
 
         try:
@@ -95,66 +92,51 @@ class Scheduler:
             )
 
         job.state.exec_count += 1
-        if cls.__is_job_done(job):
-            cls.__on_job_done(job)
+        if self.__is_job_done(job):
+            self.__on_job_done(job)
         else:
-            cls.dal.save_scheduled_job(job)
-            next_delay = cls.__calc_job_delay_for_next_run(job)
-            cls.__schedule_job_internal(
+            self.dal.save_scheduled_job(job)
+            next_delay = self.__calc_job_delay_for_next_run(job)
+            self.__schedule_job_internal(
                 next_delay,
                 job.job_id,
-                cls.__on_task_execution,
+                self.__on_task_execution,
                 {"job": job},
             )
 
-    @classmethod
-    def __get_standalone_jobs(cls) -> List[ScheduledJob]:
-        return [job for job in cls.dal.list_scheduled_jobs() if job.standalone_task]
+    def __get_standalone_jobs(self) -> List[ScheduledJob]:
+        return [job for job in self.dal.list_scheduled_jobs() if job.standalone_task]
 
-    @classmethod
-    def __on_job_done(cls, job: ScheduledJob):
+    def __on_job_done(self, job: ScheduledJob):
         job.state.job_status = JobStatus.DONE
         # need to persist jobs state before unscheduling the job. (to avoid race condition, on configuration reload)
         if job.standalone_task:
-            cls.dal.del_scheduled_job(job.job_id)
+            self.dal.del_scheduled_job(job.job_id)
         else:
-            cls.dal.save_scheduled_job(job)
-        del cls.scheduled_jobs[job.job_id]
+            self.dal.save_scheduled_job(job)
+        del self.scheduled_jobs[job.job_id]
         logging.info(
             f"Scheduled job done. job_id {job.job_id} executions {job.state.exec_count}"
         )
 
-    @classmethod
-    def __schedule_job_internal(cls, delay, job_id, func, kwargs):
+    def __schedule_job_internal(self, delay, job_id, func, kwargs):
         job = threading.Timer(delay, func, kwargs=kwargs)
-        cls.scheduled_jobs[job_id] = job
+        self.scheduled_jobs[job_id] = job
         job.start()
 
-    @classmethod
-    def __remove_scheduler_job(cls, job_id):
-        job = cls.scheduled_jobs.get(job_id)
+    def __remove_scheduler_job(self, job_id):
+        job = self.scheduled_jobs.get(job_id)
         if job is not None:
             job.cancel()
-            del cls.scheduled_jobs[job_id]
+            del self.scheduled_jobs[job_id]
 
-    @classmethod
-    def __unschedule_job(cls, job_id):
-        cls.__remove_scheduler_job(job_id)
-        cls.dal.del_scheduled_job(job_id)
-
-    @classmethod
-    def __is_scheduled(cls, job_id):
-        return cls.scheduled_jobs.get(job_id) is not None
-
-    @classmethod
-    def __is_job_done(cls, job: ScheduledJob) -> bool:
+    def __is_job_done(self, job: ScheduledJob) -> bool:
         if isinstance(job.scheduling_params, DynamicDelayRepeat):
             return job.state.exec_count == len(job.scheduling_params.delay_periods)
         else:  # default, FIXED_DELAY_REPEAT
             return job.state.exec_count == job.scheduling_params.repeat
 
-    @classmethod
-    def __calc_job_delay_for_next_run(cls, job: ScheduledJob):
+    def __calc_job_delay_for_next_run(self, job: ScheduledJob):
         if job.state.job_status == JobStatus.NEW:
             if isinstance(job.scheduling_params, DynamicDelayRepeat):
                 return job.scheduling_params.delay_periods[0]

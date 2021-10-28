@@ -6,17 +6,17 @@ class StressTestParams(BaseModel):
     url: str
 
 
-@on_manual_trigger
-def http_stress_test(event: ManualTriggerEvent):
-    action_params = StressTestParams(**event.data)
+@action
+def http_stress_test(event: ExecutionBaseEvent, action_params: StressTestParams):
     # TODO: remove timeout?
     output = RobustaJob.run_simple_job(
         "williamyeh/hey", f"/hey -n {action_params.n} {action_params.url}", 120
     )
-    event.finding = Finding(
+    finding = Finding(
         title=f"Done running stress test with {action_params.n} http requests for url {action_params.url}",
         source=FindingSource.MANUAL,
         aggregation_key="http_stress_test",
     )
     if output:
-        event.finding.add_enrichment([FileBlock("result.txt", output)])
+        finding.add_enrichment([FileBlock("result.txt", output)])
+    event.add_finding(finding)

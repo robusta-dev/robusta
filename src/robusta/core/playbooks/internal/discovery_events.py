@@ -3,7 +3,7 @@ from robusta.core.model.services import ServiceInfo
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 
 
-@on_kubernetes_any_resource_all_changes
+@action
 def cluster_discovery_updates(event: KubernetesAnyEvent):
     if (
         event.operation in [K8sOperationType.CREATE, K8sOperationType.UPDATE]

@@ -18,12 +18,14 @@ class ABTestingParams(BaseModel):
     namespace: str = "default"
     configuration_sets: List[ConfigurationSet]
 
-    def pre_deploy_func(self, trigger_params: TriggerParams):
-        trigger_params.repeat = len(self.configuration_sets)
+    def pre_deploy_func(self, trigger: BaseTrigger):
+        if not isinstance(trigger, FixedDelayRepeatTrigger):
+            return
+        trigger.fixed_delay_repeat.repeat = len(self.configuration_sets)
 
 
-@on_recurring_trigger(seconds_delay=None)
-def config_ab_testing(event: RecurringTriggerEvent, action_params: ABTestingParams):
+@action
+def config_ab_testing(event: ScheduledExecutionEvent, action_params: ABTestingParams):
     """Change configuration according to pre-defined configuration sets."""
     if len(action_params.configuration_sets) < event.recurrence:
         logging.error(

@@ -2,6 +2,9 @@ import os
 import uuid
 import pytz
 
+PLAYBOOKS_ROOT = os.environ.get("PLAYBOOKS_ROOT")
+PLAYBOOKS_CONFIG_FILE_PATH = os.environ.get("PLAYBOOKS_CONFIG_FILE_PATH")
+
 INSTALLATION_NAMESPACE = os.environ.get("INSTALLATION_NAMESPACE", "robusta")
 TARGET_ID = os.environ.get("RELAY_TARGET_ID", str(uuid.uuid4()))
 DISCOVERY_PERIOD_SEC = int(os.environ.get("DISCOVERY_PERIOD_SEC", 90))

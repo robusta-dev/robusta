@@ -43,16 +43,16 @@ def node_allocatable_resources(node_name: str) -> List[BaseBlock]:
     return block_list
 
 
-@on_manual_trigger
-def show_node_enrichments(event: ManualTriggerEvent):
-    params = NodeNameParams(**event.data)
+@action
+def show_node_enrichments(event: ExecutionBaseEvent, params: NodeNameParams):
     blocks = node_allocatable_resources(params.node_name)
     blocks.extend(node_running_pods(params.node_name))
     if blocks:
-        event.finding = Finding(
+        finding = Finding(
             title=f"Node not ready - {params.node_name}",
             subject=FindingSubject(name=params.node_name),
             source=FindingSource.MANUAL,
             aggregation_key="show_node_enrichments",
         )
-        event.finding.add_enrichment(blocks)
+        finding.add_enrichment(blocks)
+        event.add_finding(finding)

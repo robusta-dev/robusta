@@ -9,17 +9,19 @@ def deployment_status_enrichment(deployment: Deployment) -> List[BaseBlock]:
     return block_list
 
 
-@on_manual_trigger
-def show_deployment_status_enrichment(event: ManualTriggerEvent):
-    params = NamespacedKubernetesObjectParams(**event.data)
+@action
+def show_deployment_status_enrichment(
+    event: ExecutionBaseEvent, params: NamespacedKubernetesObjectParams
+):
     deployment: Deployment = Deployment.readNamespacedDeployment(
         params.name, params.namespace
     ).obj
     blocks = deployment_status_enrichment(deployment)
     if blocks:
-        event.finding = Finding(
+        finding = Finding(
             title=f"Deployment status - {params.namespace}/{params.name}",
             source=FindingSource.MANUAL,
             aggregation_key="show_deployment_status_enrichment",
         )
-        event.finding.add_enrichment(blocks)
+        finding.add_enrichment(blocks)
+        event.add_finding(finding)

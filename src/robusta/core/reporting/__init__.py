@@ -1,5 +1,5 @@
+from .base import *
 from .blocks import *
-from .callbacks import SinkCallbackEvent, on_sink_callback
 
 __all__ = [
     "BaseBlock",
@@ -11,6 +11,4 @@ __all__ = [
     "TableBlock",
     "KubernetesFieldsBlock",
     "CallbackBlock",
-    "SinkCallbackEvent",
-    "on_sink_callback",
 ]

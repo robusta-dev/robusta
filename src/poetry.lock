@@ -779,6 +779,17 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
+name = "pymsteams"
+version = "0.1.16"
+description = "Format messages and post to Microsoft Teams."
+category = "main"
+optional = false
+python-versions = ">=2.7"
+
+[package.dependencies]
+requests = ">=2.20.0"
+
+[[package]]
 name = "pyparsing"
 version = "3.0.3"
 description = "Python parsing module"
@@ -1200,7 +1211,7 @@ all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-excepti
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "16c02da0ea949ba348aff3a9ef293b4ca66595bd56af9bc84150193d71eb6866"
+content-hash = "a322601bddff3af8eb1516fd083fdba1c299c8f1d556724c998197656be4eb61"
 
 [metadata.files]
 appdirs = [
@@ -1695,6 +1706,9 @@ pydantic = [
     {file = "pydantic-1.8.2-cp39-cp39-win_amd64.whl", hash = "sha256:4be75bebf676a5f0f87937c6ddb061fa39cbea067240d98e298508c1bda6f3f3"},
     {file = "pydantic-1.8.2-py3-none-any.whl", hash = "sha256:fec866a0b59f372b7e776f2d7308511784dace622e0992a0b59ea3ccee0ae833"},
     {file = "pydantic-1.8.2.tar.gz", hash = "sha256:26464e57ccaafe72b7ad156fdaa4e9b9ef051f69e175dbbb463283000c05ab7b"},
+]
+pymsteams = [
+    {file = "pymsteams-0.1.16.tar.gz", hash = "sha256:721399d96f9b79c1adb8f4c78512fba9fd73578399a2b13e51684c35a162bd06"},
 ]
 pyparsing = [
     {file = "pyparsing-3.0.3-py3-none-any.whl", hash = "sha256:f8d3fe9fc404576c5164f0f0c4e382c96b85265e023c409c43d48f65da9d60d0"},

@@ -1,4 +1,3 @@
-# Relay target id
 from enum import Enum
 
 # sink types
@@ -33,6 +32,20 @@ class FindingSubjectType(Enum):
     TYPE_POD = "pod"
     TYPE_JOB = "job"
     TYPE_DAEMONSET = "daemonset"
+
+    @staticmethod
+    def from_kind(kind: str):
+        if kind == "deployment":
+            return FindingSubjectType.TYPE_DEPLOYMENT
+        elif kind == "node":
+            return FindingSubjectType.TYPE_NODE
+        elif kind == "pod":
+            return FindingSubjectType.TYPE_POD
+        elif kind == "job":
+            return FindingSubjectType.TYPE_JOB
+        elif kind == "daemonset":
+            return FindingSubjectType.TYPE_DAEMONSET
+        return FindingSubjectType.TYPE_NONE
 
 
 # Annotations

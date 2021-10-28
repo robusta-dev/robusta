@@ -11,7 +11,7 @@ class JobStatus(Enum):
 
 
 class FixedDelayRepeat(BaseModel):
-    repeat: int
+    repeat: int = -1  # default to run forever
     seconds_delay: int
 
 

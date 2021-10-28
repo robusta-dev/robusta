@@ -4,7 +4,6 @@
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
-import uuid
 from copy import deepcopy
 from typing import List, Callable, Dict, Any, Iterable, Sequence, Optional
 
@@ -13,16 +12,11 @@ from hikaru import DiffDetail, DiffType
 from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
 from tabulate import tabulate
-from enum import Enum
 
 from .custom_rendering import render_value
-from ..reporting.consts import FindingSource, FindingSubjectType, FindingType
+from .base import BaseBlock
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
-
-
-class BaseBlock(BaseModel):
-    hidden: bool = False
 
 
 class MarkdownBlock(BaseBlock):
@@ -182,79 +176,13 @@ class KubernetesFieldsBlock(TableBlock):
             super().__init__(rows=rows, headers=["field", "value"])
 
 
+class CallbackChoice(BaseModel):
+    action: Callable
+    action_params: Optional[BaseModel]
+
+
 class CallbackBlock(BaseBlock):
-    choices: Dict[str, Callable]
-    context: Dict[str, Any] = {}
+    choices: Dict[str, CallbackChoice]
 
-    def __init__(self, choices: Dict[str, Callable], context: Dict[str, Any]):
-        super().__init__(choices=choices, context=context)
-
-
-class FindingSeverity(Enum):
-    INFO = 1
-    LOW = 2
-    MEDIUM = 3
-    HIGH = 4
-
-
-class Enrichment:
-    # These is the actual enrichment data
-    blocks: List[BaseBlock] = []
-    # General purpose rendering flags, that can be used by specific sinks
-    annotations: Dict[str, str] = {}
-
-    def __init__(self, blocks: List[BaseBlock], annotations=None):
-        if annotations is None:
-            annotations = {}
-        self.blocks = blocks
-        self.annotations = annotations
-
-    def __str__(self):
-        return f"annotations: {self.annotations} Enrichment: {self.blocks} "
-
-
-class FindingSubject:
-    def __init__(
-        self,
-        name: str = None,
-        subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
-        namespace: str = None,
-    ):
-        self.name = name
-        self.subject_type = subject_type
-        self.namespace = namespace
-
-
-class Finding:
-    def __init__(
-        self,
-        title: str,
-        severity: FindingSeverity = FindingSeverity.INFO,
-        source: FindingSource = FindingSource.NONE,
-        aggregation_key: str = None,
-        description: str = None,
-        subject: FindingSubject = FindingSubject(),
-        finding_type: FindingType = FindingType.ISSUE,
-        failure: bool = True,
-    ) -> None:
-        self.id: uuid = uuid.uuid4()
-        self.title = title
-        self.finding_type = finding_type
-        self.failure = failure
-        self.description = description
-        self.source = source
-        self.aggregation_key = aggregation_key
-        self.severity = severity
-        self.category = None  # TODO fill real category
-        self.subject = subject
-        self.enrichments: List[Enrichment] = []
-
-    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
-        if not enrichment_blocks:
-            return
-        if annotations is None:
-            annotations = {}
-        self.enrichments.append(Enrichment(enrichment_blocks, annotations))
-
-    def __str__(self):
-        return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
+    def __init__(self, choices: Dict[str, CallbackChoice]):
+        super().__init__(choices=choices)

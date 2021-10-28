@@ -1,7 +1,7 @@
 from robusta.api import *
 
 
-@on_pod_create
+@action
 def test_pod_orm(event: PodEvent):
     logging.info("running test_pod_orm")
     pod = event.obj

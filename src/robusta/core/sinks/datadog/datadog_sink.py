@@ -11,12 +11,10 @@ from typing import List
 from tabulate import tabulate
 
 from ..sink_config import SinkConfigBase
+from ..sink_base_params import SinkBaseParams
 from ...reporting.blocks import (
-    Finding,
-    Enrichment,
     KubernetesDiffBlock,
     JsonBlock,
-    FindingSeverity,
     MarkdownBlock,
     FileBlock,
     HeaderBlock,
@@ -24,20 +22,47 @@ from ...reporting.blocks import (
     TableBlock,
     DividerBlock,
 )
+from ...reporting.base import (
+    Finding,
+    Enrichment,
+    FindingSeverity,
+)
 from ..sink_base import SinkBase
 
 
-class DataDogSinkConfig(BaseModel):
+class DataDogSinkParams(SinkBaseParams):
     api_key: str
 
 
+class DataDogSinkConfigWrapper(SinkConfigBase):
+    datadog_sink: DataDogSinkParams
+
+    def get_name(self) -> str:
+        return self.datadog_sink.name
+
+    def get_params(self) -> SinkBaseParams:
+        return self.datadog_sink
+
+    def create_sink(self, cluster_name: str) -> SinkBase:
+        return DataDogSink(self, cluster_name)
+
+
 class DataDogSink(SinkBase):
-    def __init__(self, sink_config: SinkConfigBase, cluster_name: str):
-        super().__init__(sink_config)
+    def __init__(self, sink_config: DataDogSinkConfigWrapper, cluster_name: str):
+        super().__init__(sink_config.datadog_sink)
         self.cluster_name = cluster_name
+        self.api_key = sink_config.datadog_sink.api_key
         config = Configuration()
-        config.api_key["apiKeyAuth"] = DataDogSinkConfig(**sink_config.params).api_key
+        config.api_key["apiKeyAuth"] = self.api_key
         self.api_instance = events_api.EventsApi(ApiClient(config))
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, DataDogSink)
+            and other.sink_name == self.sink_name
+            and other.cluster_name == self.cluster_name
+            and other.api_key == self.api_key
+        )
 
     @staticmethod
     def __to_datadog_event_type(severity: FindingSeverity):

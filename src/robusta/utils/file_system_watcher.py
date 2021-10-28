@@ -28,7 +28,7 @@ class FsChangeHandler(FileSystemEventHandler):
         self.mark_change()
 
 
-class DirWatcher:
+class FileSystemWatcher:
     def __init__(self, path_to_watch, reload_configuration):
         self.active = True
         self.change_detected = False
