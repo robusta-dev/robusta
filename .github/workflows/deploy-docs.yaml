@@ -41,12 +41,9 @@ jobs:
         pip install -r docs/requirements.txt
 
     # see https://stackoverflow.com/a/58034787/495995 for an explanation on ${GITHUB_REF##*/}
-    - name: Determine DOCS_VERSION
+    - name: Update docs version
       run: |
-        echo test
-
-    - name: Update docs version ${GITHUB_REF##*/}
-      run: |
+        echo "Setting DOCS_VERSION_PLACEHOLDER to ${GITHUB_REF##*/}"
         sed -i "s/DOCS_VERSION_PLACEHOLDER/${GITHUB_REF##*/}/g" docs/conf.py
 
     - name: Build the docs
@@ -55,4 +52,4 @@ jobs:
         make html
 
     - name: Upload docs to public gcp bucket
-      run: gsutil rsync -R ./docs/_build/html gs://robusta-public/${GITHUB_REF##*/}/
+      run: gsutil rsync -R ./docs/_build/html "gs://robusta-public/${GITHUB_REF##*/}/"
