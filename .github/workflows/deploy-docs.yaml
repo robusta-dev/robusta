@@ -43,11 +43,7 @@ jobs:
     # see https://stackoverflow.com/a/58034787/495995 for an explanation on ${GITHUB_REF##*/}
     - name: Determine DOCS_VERSION
       run: |
-        echo ${GITHUB_REF##*/}
-        echo "${GITHUB_REF##*/}"
-        echo "${{GITHUB_REF##*/}}"
-        echo '${GITHUB_REF##*/}'
-        echo '${{GITHUB_REF##*/}}'
+        echo test
 
     - name: Update docs version ${GITHUB_REF##*/}
       run: |
