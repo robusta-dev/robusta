@@ -1,4 +1,5 @@
 import logging
+import threading
 import time
 from threading import Thread
 from queue import Queue, Full
@@ -27,6 +28,7 @@ class TaskQueue(Queue):
         self.metrics_thread = Thread(target=self.__report_metrics)
         self.metrics_thread.daemon = True
         self.metrics_thread.start()
+        self.metrics_lock = threading.Lock()
 
     def __report_metrics(self):
         while True:
@@ -47,10 +49,12 @@ class TaskQueue(Queue):
         try:
             self.put((task, args, kwargs), block=False)
         except Full:
-            self.metrics.rejected += 1
+            with self.metrics_lock:
+                self.metrics.rejected += 1
             return
 
-        self.metrics.queued += 1
+        with self.metrics_lock:
+            self.metrics.queued += 1
 
     def __start_workers(self):
         for i in range(self.num_workers):
@@ -61,8 +65,10 @@ class TaskQueue(Queue):
     def worker(self):
         while True:
             item, args, kwargs = self.get()
-            self.metrics.processed += 1
+            with self.metrics_lock:
+                self.metrics.processed += 1
             start_time = time.time()
             item(*args, **kwargs)
-            self.metrics.total_process_time += (time.time() - start_time)
+            with self.metrics_lock:
+                self.metrics.total_process_time += (time.time() - start_time)
             self.task_done()
