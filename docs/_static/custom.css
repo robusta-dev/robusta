@@ -1,3 +1,7 @@
-.wy-nav-content {
+/*.wy-nav-content {
     max-width: 1000px !important;
+}*/
+
+.sidebar-search-container {
+    width: 90%;
 }
