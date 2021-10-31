@@ -20,3 +20,7 @@ INTERNAL_PLAYBOOKS_ROOT = os.environ.get(
 )
 DEFAULT_TIMEZONE = pytz.timezone(os.environ.get("DEFAULT_TIMEZONE", "UTC"))
 NUM_EVENT_THREADS = int(os.environ.get("NUM_EVENT_THREADS", 20))
+
+INCOMING_REQUEST_TIME_WINDOW_SECONDS = int(
+    os.environ.get("INCOMING_REQUEST_TIME_WINDOW_SECONDS", 3600)
+)

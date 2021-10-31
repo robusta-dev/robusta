@@ -22,3 +22,10 @@ class PlaybooksEventHandler(Protocol):
     ) -> Optional[Dict[str, Any]]:
         """Run list of actions using the provided execution event"""
         pass
+
+    @abstractmethod
+    def get_global_config(
+        self,
+    ) -> dict:
+        """Return runner global config"""
+        pass

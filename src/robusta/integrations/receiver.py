@@ -1,4 +1,8 @@
+import hashlib
+import hmac
 import logging
+import traceback
+
 import websocket
 import json
 import os
@@ -8,7 +12,7 @@ from threading import Thread
 from ..core.model.events import ExecutionBaseEvent
 from ..model.playbook_action import PlaybookAction
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
-from ..core.model.env_vars import TARGET_ID
+from ..core.model.env_vars import TARGET_ID, INCOMING_REQUEST_TIME_WINDOW_SECONDS
 from ..core.reporting.callbacks import *
 
 WEBSOCKET_RELAY_ADDRESS = os.environ.get(
@@ -23,29 +27,28 @@ INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = int(
 )
 
 
+class ActionRequestBody(BaseModel):
+    account_id: str
+    cluster_name: str
+    action_name: str
+    timestamp: int
+    action_params: dict = None
+    sinks: Optional[List[str]] = None
+    origin: str = None
+
+
+class ActionRequest(BaseModel):
+    signature: str
+    body: ActionRequestBody
+
+
 class ActionRequestReceiver:
     def __init__(self, event_handler: PlaybooksEventHandler):
         self.event_handler = event_handler
         self.active = True
         self.start_incoming_receiver()
 
-    def run_report_callback(self, action, body):
-        try:
-            incoming_request = IncomingRequest.parse_raw(action["value"])
-            if isinstance(incoming_request.incoming_request, ExternalActionRequest):
-                self.__run_external_action_request(
-                    incoming_request.incoming_request, body
-                )
-            else:
-                logging.error(
-                    f"Unknown incoming request type {incoming_request.incoming_request}"
-                )
-        except Exception as e:
-            logging.error(f"Error running callback; action={action}; e={e}")
-
-    def __run_external_action_request(
-        self, callback_request: ExternalActionRequest, body
-    ):
+    def __run_external_action_request(self, callback_request: ExternalActionRequest):
         execution_event = ExecutionBaseEvent(
             named_sinks=callback_request.sinks,
         )
@@ -94,15 +97,72 @@ class ActionRequestReceiver:
         # TODO: use typed pydantic classes here?
         logging.debug(f"received incoming message {message}")
         incoming_event = json.loads(message)
-        actions = incoming_event["actions"]
-        for action in actions:
-            self.run_report_callback(action, incoming_event)
+        actions = incoming_event.get("actions", None)
+        if actions:  # this is slack callback format
+            for action in actions:
+                try:
+                    incoming_request = IncomingRequest.parse_raw(action["value"])
+                    self.__run_external_action_request(
+                        incoming_request.incoming_request
+                    )
+                except Exception:
+                    logging.error(
+                        f"Failed to run incoming event {incoming_event}",
+                        traceback.print_exc(),
+                    )
+        else:  # assume it's ActionRequest format
+            try:
+                action_request = ActionRequest(**incoming_event)
+                if not self.__validate_request(action_request):
+                    logging.error(f"Failed to validate action request {action_request}")
+                    return
+
+                incoming_request = ExternalActionRequest(
+                    target_id="",
+                    action_name=action_request.body.action_name,
+                    action_params=action_request.body.action_params,
+                    sinks=action_request.body.sinks,
+                    origin=action_request.body.origin,
+                )
+                self.__run_external_action_request(incoming_request)
+            except Exception:
+                logging.error(
+                    f"Failed to run incoming event {incoming_event}",
+                    traceback.print_exc(),
+                )
 
     def on_error(self, ws, error):
         logging.info(f"Relay websocket error: {error}")
 
     def on_open(self, ws):
         logging.info(f"connecting to server as {TARGET_ID}")
-        ws.send(
-            json.dumps({"action": "auth", "key": "dummy key", "target_id": TARGET_ID})
-        )
+        account_id = self.event_handler.get_global_config().get("account_id")
+        cluster_name = self.event_handler.get_global_config().get("cluster_name")
+        open_payload = {"action": "auth", "key": "dummy key", "target_id": TARGET_ID}
+        if account_id and cluster_name:
+            open_payload["account_id"] = account_id
+            open_payload["cluster_name"] = cluster_name
+        ws.send(json.dumps(open_payload))
+
+    def __validate_request(self, action_request: ActionRequest) -> bool:
+        format_req = str.encode(f"v0:{action_request.body.json(exclude_none=True)}")
+        signing_key = self.event_handler.get_global_config().get("signing_key")
+        if not signing_key:
+            logging.error(
+                f"Signing key not available. Cannot verify request {action_request}"
+            )
+            return False
+
+        if (
+            time.time() - action_request.body.timestamp
+            > INCOMING_REQUEST_TIME_WINDOW_SECONDS
+        ):
+            logging.error(
+                f"Rejecting incoming request because it's too old. Cannot verify request {action_request}"
+            )
+            return False
+
+        encoded_secret = str.encode(signing_key)
+        request_hash = hmac.new(encoded_secret, format_req, hashlib.sha256).hexdigest()
+        generated_signature = f"v0={request_hash}"
+        return hmac.compare_digest(generated_signature, action_request.signature)
