@@ -43,13 +43,19 @@ def do_node_cpu_analysis(node: Node, prometheus_url: str = None) -> List[BaseBlo
     bar_chart.add(
         "Actual CPU Usage",
         [
-            per_pod_usage_unbounded.get(pod_name, MISSING_VALUE)
+            round(
+                per_pod_usage_unbounded.get(pod_name, MISSING_VALUE),
+                FLOAT_PRECISION_LIMIT,
+            )
             for pod_name in all_pod_names
         ],
     )
     bar_chart.add(
         "CPU Request",
-        [per_pod_request.get(pod_name, MISSING_VALUE) for pod_name in all_pod_names],
+        [
+            round(per_pod_request.get(pod_name, MISSING_VALUE), FLOAT_PRECISION_LIMIT)
+            for pod_name in all_pod_names
+        ],
     )
 
     return [

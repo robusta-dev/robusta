@@ -19,7 +19,16 @@ INTERNAL_PLAYBOOKS_ROOT = os.environ.get(
     "INTERNAL_PLAYBOOKS_ROOT", "/app/robusta/core/playbooks/internal"
 )
 DEFAULT_TIMEZONE = pytz.timezone(os.environ.get("DEFAULT_TIMEZONE", "UTC"))
-NUM_EVENT_THREADS = int(os.environ.get("NUM_EVENT_THREADS", 20))
+NUM_EVENT_THREADS = int(os.environ.get("NUM_EVENT_THREADS", 10))
+INCOMING_EVENTS_QUEUE_MAX_SIZE = int(
+    os.environ.get("INCOMING_EVENTS_QUEUE_MAX_SIZE", 500)
+)
+
+FLOAT_PRECISION_LIMIT = int(os.environ.get("FLOAT_PRECISION_LIMIT", 11))
+
+PROMETHEUS_REQUEST_TIMEOUT_SECONDS = float(
+    os.environ.get("PROMETHEUS_REQUEST_TIMEOUT_SECONDS", 90.0)
+)
 
 INCOMING_REQUEST_TIME_WINDOW_SECONDS = int(
     os.environ.get("INCOMING_REQUEST_TIME_WINDOW_SECONDS", 3600)
