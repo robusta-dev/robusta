@@ -40,7 +40,8 @@ logging.getLogger().setLevel(LOGGING_LEVEL)
 log = logging.getLogger("werkzeug")
 log.setLevel(logging.ERROR)
 logging.info(f"logger initialized using {LOGGING_LEVEL} log level")
-task_queue = TaskQueue(num_workers=NUM_EVENT_THREADS)
+api_server_queue = TaskQueue(name="api server queue", num_workers=NUM_EVENT_THREADS)
+alerts_queue = TaskQueue(name="alerts queue", num_workers=NUM_EVENT_THREADS)
 
 
 def main():
@@ -61,14 +62,14 @@ def main():
 @app.route("/api/alerts", methods=["POST"])
 def handle_alert_event():
     cloud_event = parse_incoming_prometheus_alerts(request)
-    task_queue.add_task(run_playbooks, cloud_event)
+    alerts_queue.add_task(run_playbooks, cloud_event)
     return jsonify(success=True)
 
 
 @app.route("/api/handle", methods=["POST"])
 def handle_cloud_event():
     cloud_event = CloudEvent(**request.get_json())
-    task_queue.add_task(run_playbooks, cloud_event)
+    api_server_queue.add_task(run_playbooks, cloud_event)
     return jsonify(success=True)
 
 
@@ -77,6 +78,7 @@ def handle_manual_trigger():
     cloud_event = parse_incoming_manual_trigger(request)
     run_playbooks(cloud_event)
     return jsonify(success=True)
+
 
 
 if __name__ == "__main__":

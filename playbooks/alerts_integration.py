@@ -114,7 +114,9 @@ class GraphEnricher(Enricher):
         graph_duration = max(alert_duration, timedelta(minutes=60))
         start_time = end_time - graph_duration
         increment = graph_duration.total_seconds() / 60
-        result = prom.custom_query_range(promql_query, start_time, end_time, increment)
+        result = prom.custom_query_range(
+            promql_query, start_time, end_time, increment, {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+        )
 
         chart = pygal.XY(show_dots=True, style=ChosenStyle, truncate_legend=15)
         chart.x_label_rotation = 35
@@ -125,7 +127,7 @@ class GraphEnricher(Enricher):
         chart.title = promql_query
         for series in result:
             label = "\n".join([v for v in series["metric"].values()])
-            values = [(timestamp, float(val)) for (timestamp, val) in series["values"]]
+            values = [(timestamp, round(float(val), FLOAT_PRECISION_LIMIT)) for (timestamp, val) in series["values"]]
             chart.add(label, values)
         alert.finding.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
 

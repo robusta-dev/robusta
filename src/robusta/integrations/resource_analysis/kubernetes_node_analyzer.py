@@ -2,6 +2,7 @@ from collections import OrderedDict
 from hikaru.model import Node
 from prometheus_api_client import PrometheusConnect
 from ..prometheus.utils import PrometheusDiscovery
+from ...core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 
 
 class NodeAnalyzer:
@@ -20,6 +21,9 @@ class NodeAnalyzer:
             prometheus_url = PrometheusDiscovery.find_prometheus_url()
 
         self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
+        self.default_prometheus_params = {
+            "timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+        }
 
     def get_total_cpu_usage(self, other_method=False):
         """
@@ -58,7 +62,7 @@ class NodeAnalyzer:
         query = self._build_query_for_containerized_cpu_usage(
             False, normalize_by_cpu_count
         )
-        result = self.prom.custom_query(query)
+        result = self.prom.custom_query(query, params=self.default_prometheus_params)
         pod_value_pairs = [(r["metric"]["pod"], float(r["value"][1])) for r in result]
         pod_value_pairs = [(k, v) for (k, v) in pod_value_pairs if v >= threshold]
         pod_value_pairs.sort(key=lambda x: x[1], reverse=True)
@@ -67,14 +71,14 @@ class NodeAnalyzer:
 
     def get_per_pod_cpu_request(self):
         query = f'sum by (pod)(kube_pod_container_resource_requests_cpu_cores{{node="{self.node.metadata.name}"}})'
-        result = self.prom.custom_query(query)
+        result = self.prom.custom_query(query, params=self.default_prometheus_params)
         return dict((r["metric"]["pod"], float(r["value"][1])) for r in result)
 
     def _query(self, query):
         """
         Runs a simple query returning a single metric and returns that metric
         """
-        result = self.prom.custom_query(query)
+        result = self.prom.custom_query(query, params=self.default_prometheus_params)
         return float(result[0]["value"][1])
 
     def _build_query_for_containerized_cpu_usage(self, total, normalized_by_cpu_count):
