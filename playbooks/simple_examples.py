@@ -15,3 +15,12 @@ def test_pod_orm(event: PodEvent):
     logging.info(f"deleting pod {pod.metadata.name}")
     RobustaPod.deleteNamespacedPod(pod.metadata.name, pod.metadata.namespace)
     logging.info(f"pod deleted")
+
+
+class EchoParams(BaseModel):
+    message: str
+
+
+@action
+def echo(event: ExecutionBaseEvent, params: EchoParams):
+    logging.warning(f"echo: {params.message}")
