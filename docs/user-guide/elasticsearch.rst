@@ -23,10 +23,10 @@ Example Elasticsearch Watcher
 
 The following Elasticsearch Watcher configuration will trigger a Robusta playbook.
 Make sure you update ``<account_id>``, ``<cluster_name>``, and ``<secret_key>`` in the emphasized line.
-These should match the same values you define in the Robusta Helm chart.
+These should match the Robusta Helm chart values.
 
 .. code-block:: json
-   :emphasize-lines: 24
+   :emphasize-lines: 26,27,33
 
     {
       "trigger": {
@@ -51,7 +51,16 @@ These should match the same values you define in the Robusta Helm chart.
           "throttle_period_in_millis": 0,
           "transform": {
             "script": {
-              "source": "return ['body' : ['account_id' : '<account_id>', 'cluster_name' : '<cluster_name>', 'action_name' : 'echo', 'action_params' : ['message' : 'Hello Robusta!'], 'sinks' : ['slack sink'], 'origin' : 'elasticsearch'], 'key' : '<secret_key>']",
+              "source": """
+                return ['body' :
+                    ['account_id' : 'some_account',
+                     'cluster_name' : 'gke_arabica-300319_us-central1-c_cluster-5',
+                     'origin' : 'elasticsearch',
+                     'action_name' : 'echo',
+                     'action_params' : ['message' : 'Hello Robusta!'],
+                      'sinks' : ['slack']
+                    ],
+                    'key' : 'very_secret']""",
               "lang": "painless"
             }
           },
@@ -68,3 +77,7 @@ These should match the same values you define in the Robusta Helm chart.
         }
       }
     }
+
+.. note::
+
+    Any Robusta action can be triggered in this manner. Try changing ``action_name`` and ``action_params`` above to trigger a different action
