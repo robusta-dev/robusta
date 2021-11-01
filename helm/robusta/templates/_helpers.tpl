@@ -24,8 +24,8 @@ global_config:
   {{- if .Values.clusterZone }}
   cluster_zone: {{ .Values.clusterZone }}
   {{- end }}
-  {{- if .Values.global_config }}
-  {{- range $k, $v := .Values.global_config }}
+  {{- if .Values.globalConfig }}
+  {{- range $k, $v := .Values.globalConfig }}
   {{- if $v }}
   {{ $k }}: {{ $v }}
   {{- end }}

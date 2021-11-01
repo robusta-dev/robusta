@@ -5,7 +5,7 @@ playbook_sets: []
 clusterName: ""
 clusterZone: ""
 
-global_config:
+globalConfig:
   grafana_url: ""
   grafana_api_key: ""
   grafana_dashboard_uid: ""
