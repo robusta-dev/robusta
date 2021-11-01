@@ -1,13 +1,12 @@
 import kubernetes
 import logging
 from kubernetes import config
-# from pytest_kind import KindCluster
 from tests.utils.kubernetes_utils import create_sleeping_deployment
 from robusta.api import *
 
 
 def test_upload():
-    # config.load_kube_config(str(kind_cluster.kubeconfig_path))
+    config.load_kube_config()
     sleepypod = create_sleeping_deployment()
     time.sleep(60)
     pod = RobustaPod.find_pod(sleepypod.metadata.name, "default")
