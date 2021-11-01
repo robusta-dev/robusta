@@ -95,7 +95,7 @@ grafanaRenderer:
 
 # parameters for the robusta runner
 runner:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.7.0-dirty
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.7.1-dirty
   log_level: INFO
   resources:
     requests:
