@@ -2,4 +2,4 @@ sphinx
 furo
 sphinx-autobuild
 sphinx-copybutton
-sphinx-inline-tabs
+sphinx-design
