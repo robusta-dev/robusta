@@ -42,6 +42,16 @@ class ActionRequest(BaseModel):
     body: ActionRequestBody
 
 
+def sign_action_request(body: ActionRequestBody, signing_key: str):
+    format_req = str.encode(f"v0:{body.json(exclude_none=True, sort_keys=True)}")
+    if not signing_key:
+        raise Exception("Signing key not available. Cannot sign action request")
+    request_hash = hmac.new(
+        signing_key.encode(), format_req, hashlib.sha256
+    ).hexdigest()
+    return f"v0={request_hash}"
+
+
 class ActionRequestReceiver:
     def __init__(self, event_handler: PlaybooksEventHandler):
         self.event_handler = event_handler
@@ -135,17 +145,18 @@ class ActionRequestReceiver:
         logging.info(f"Relay websocket error: {error}")
 
     def on_open(self, ws):
-        logging.info(f"connecting to server as {TARGET_ID}")
         account_id = self.event_handler.get_global_config().get("account_id")
         cluster_name = self.event_handler.get_global_config().get("cluster_name")
         open_payload = {"action": "auth", "key": "dummy key", "target_id": TARGET_ID}
         if account_id and cluster_name:
             open_payload["account_id"] = account_id
             open_payload["cluster_name"] = cluster_name
+        logging.info(
+            f"connecting to server as target_id={TARGET_ID}; account_id={account_id}; cluster_name={cluster_name}"
+        )
         ws.send(json.dumps(open_payload))
 
     def __validate_request(self, action_request: ActionRequest) -> bool:
-        format_req = str.encode(f"v0:{action_request.body.json(exclude_none=True)}")
         signing_key = self.event_handler.get_global_config().get("signing_key")
         if not signing_key:
             logging.error(
@@ -161,8 +172,5 @@ class ActionRequestReceiver:
                 f"Rejecting incoming request because it's too old. Cannot verify request {action_request}"
             )
             return False
-
-        encoded_secret = str.encode(signing_key)
-        request_hash = hmac.new(encoded_secret, format_req, hashlib.sha256).hexdigest()
-        generated_signature = f"v0={request_hash}"
+        generated_signature = sign_action_request(action_request.body, signing_key)
         return hmac.compare_digest(generated_signature, action_request.signature)
