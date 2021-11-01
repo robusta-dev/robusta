@@ -5,10 +5,13 @@ playbook_sets: []
 clusterName: ""
 clusterZone: ""
 
-grafanaUrl: ""
-grafanaApiKey: ""
-grafanaDashboardUid: ""
-prometheusUrl: ""
+global_config:
+  grafana_url: ""
+  grafana_api_key: ""
+  grafana_dashboard_uid: ""
+  prometheus_url: ""
+  account_id: ""
+  signing_key: ""
 
 
 # slack integration params

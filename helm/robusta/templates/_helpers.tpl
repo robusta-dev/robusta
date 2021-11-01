@@ -24,17 +24,12 @@ global_config:
   {{- if .Values.clusterZone }}
   cluster_zone: {{ .Values.clusterZone }}
   {{- end }}
-  {{- if .Values.grafanaUrl }}
-  grafana_url: {{ .Values.grafanaUrl }}
+  {{- if .Values.global_config }}
+  {{- range $k, $v := .Values.global_config }}
+  {{- if $v }}
+  {{ $k }}: {{ $v }}
   {{- end }}
-  {{- if .Values.grafanaApiKey }}
-  grafana_api_key: {{ .Values.grafanaApiKey }}
   {{- end }}
-  {{- if .Values.grafanaDashboardUid }}
-  grafana_dashboard_uid: {{ .Values.grafanaDashboardUid }}
-  {{- end }}
-  {{- if .Values.prometheusUrl }}
-  prometheus_url: {{ .Values.prometheusUrl }}
   {{- end }}
 active_playbooks:
 {{ toYaml .Values.playbooks | indent 2 }}
