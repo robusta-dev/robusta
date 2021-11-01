@@ -46,6 +46,7 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    user-guide/playbook-configuration
    user-guide/slack
    user-guide/prometheus
+   user-guide/elasticsearch
    user-guide/architecture
 
 .. toctree::
