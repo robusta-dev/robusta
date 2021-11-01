@@ -30,6 +30,8 @@ Edit ``example_playbooks.hello.py``:
         logging.info(f"Hello world! Pod {event.obj.metadata.name} created on namespace {event.obj.metadata.namespace}")
 
 
+Optionally add a pip ``requirements.txt`` file specifying python libraries that your playbooks need. These will be installed automatically.
+
 Load the **playbook_directory** into Robusta:
 
 .. code-block:: bash
