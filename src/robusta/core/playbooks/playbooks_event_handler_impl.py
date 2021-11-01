@@ -4,6 +4,7 @@ import traceback
 from typing import Any, Dict, Optional, List
 
 from .base_trigger import TriggerEvent, BaseTrigger
+from .playbook_utils import merge_global_params
 from .playbooks_event_handler import PlaybooksEventHandler
 from ..model.events import ExecutionBaseEvent
 from ..reporting.base import Finding
@@ -106,12 +107,16 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             if not action.action_params:
                 registered_action.func(execution_event)
             else:
+                action_params = None
                 try:
-                    params = registered_action.params_type(**action.action_params)
+                    action_params = merge_global_params(
+                        self.get_global_config(), action.action_params
+                    )
+                    params = registered_action.params_type(**action_params)
                 except Exception:
                     msg = (
                         f"Failed to create {registered_action.params_type} "
-                        f"using {action.action_params} for running {action.action_name}"
+                        f"using {action_params} for running {action.action_name}"
                     )
                     execution_event.response = self.__error_resp(msg)
                     continue
