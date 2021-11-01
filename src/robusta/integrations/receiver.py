@@ -69,7 +69,7 @@ class ActionRequestReceiver:
             return
 
         if WEBSOCKET_RELAY_ADDRESS == "":
-            logging.warning("relay adress empty. Not initializing relay")
+            logging.warning("relay address empty. Not initializing relay")
             return
 
         websocket.enableTrace(RECEIVER_ENABLE_WEBSOCKET_TRACING)
