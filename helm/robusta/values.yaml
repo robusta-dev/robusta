@@ -21,6 +21,8 @@ slackChannel: ""
 # robusta ui integration params
 robustaApiKey: ""
 
+# relay address for incoming requests (e.g. from slack)
+websocketRelayAddress: "wss://relay.robusta.dev"
 
 # playbook configuration
 playbooks:

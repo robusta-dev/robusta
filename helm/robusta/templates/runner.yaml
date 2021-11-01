@@ -23,6 +23,10 @@ spec:
         securityContext:
           privileged: false
         env:
+          {{ if .Values.websocketRelayAddress }}
+          - name:  WEBSOCKET_RELAY_ADDRESS
+            value: {{ .Values.websocketRelayAddress }}
+          {{ end }}
           - name: PLAYBOOKS_ROOT
             value: /etc/robusta/playbooks/
           - name: PLAYBOOKS_CONFIG_FILE_PATH
