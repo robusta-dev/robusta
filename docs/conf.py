@@ -70,6 +70,7 @@ html_theme_options = {
     "light_logo": "logo.png",
     "dark_logo": "logo-dark.png",
     "light_css_variables": {
+        # for branding purposes this should really be #d9534f, but it doesn't look as good
         "color-brand-primary": "#7253ed",
         "color-brand-content": "#7253ed",
     },

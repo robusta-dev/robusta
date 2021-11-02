@@ -5,3 +5,7 @@
 .sidebar-search-container {
     width: 90%;
 }
+
+h2, h3 {
+    border-bottom: 2px solid whitesmoke;
+}
