@@ -57,8 +57,10 @@ release = "DOCS_RELEASE_PLACEHOLDER"
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "manni"
+# pygments_style = "manni"
 # pygments_dark_style = "monokai"
+pygments_style = "witchhazel.WitchHazelStyle"
+pygments_dark_style = "witchhazel.WitchHazelStyle"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False

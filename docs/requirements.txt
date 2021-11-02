@@ -3,3 +3,4 @@ furo
 sphinx-autobuild
 sphinx-copybutton
 sphinx-design
+witchhazel
