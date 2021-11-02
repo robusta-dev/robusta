@@ -14,5 +14,4 @@ For instructions on using Black with your IDE, `see Black's documentation. <http
 
 Data classes
 -------------------------------------
-Use pydantic.BaseModel instead of Python dataclasses when possible. Pydantic performs datavalidation whereas Python
-dataclasses just reduce boilerplate code like defining __init__()
+Use pydantic.BaseModel instead of Python dataclasses when possible. Pydantic performs datavalidation whereas Python dataclasses just reduce boilerplate code like defining __init__()
