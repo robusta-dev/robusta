@@ -9,18 +9,6 @@ from pygal.style import DarkStyle as ChosenStyle
 from prometheus_api_client import PrometheusConnect
 
 from robusta.api import *
-from node_cpu_analysis import do_node_cpu_analysis
-from oom_killer import do_show_recent_oom_kills
-from node_enrichments import node_running_pods, node_allocatable_resources
-from pod_enrichments import pod_events_enrichment
-from daemonsets import (
-    do_daemonset_mismatch_analysis,
-    do_daemonset_enricher,
-    check_for_known_mismatch_false_alarm,
-)
-from bash_enrichments import pod_bash_enrichment, node_bash_enrichment
-from deployment_enrichments import deployment_status_enrichment
-from cpu_throttling import do_cpu_throttling_analysis
 
 
 class SeverityParams(BaseModel):
@@ -65,13 +53,6 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
     alert.stop_processing = datetime.utcnow().timestamp() < (
         node_start_time.timestamp() + params.post_restart_silence
     )
-
-
-@action
-def daemonset_misscheduled_smart_silencer(alert: PrometheusKubernetesAlert):
-    if not alert.daemonset:
-        return
-    alert.stop_processing = check_for_known_mismatch_false_alarm(alert.daemonset)
 
 
 @action
@@ -122,36 +103,6 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
         ]
         chart.add(label, values)
     alert.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
-
-
-@action
-def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
-    if not event.get_node():
-        logging.error(f"NodeCPUEnricher was called on event without node: {event}")
-        return
-    event.add_enrichment(do_node_cpu_analysis(event.get_node(), params.prometheus_url))
-
-
-@action
-def node_running_pods_enricher(event: NodeEvent):
-    if not event.get_node():
-        logging.error(
-            f"NodeRunningPodsEnricher was called on event without node: {event}"
-        )
-        return
-
-    event.add_enrichment(node_running_pods(event.get_node()))
-
-
-@action
-def node_allocatable_resources_enricher(event: NodeEvent):
-    if not event.get_node():
-        logging.error(
-            f"NodeAllocatableResourcesEnricher was called on event without node : {event}"
-        )
-        return
-
-    event.add_enrichment(node_allocatable_resources(event.get_node()))
 
 
 class TemplateParams(BaseModel):
@@ -237,80 +188,3 @@ def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
             )
         ]
     )
-
-
-@action
-def oom_killer_enricher(event: NodeEvent):
-    if not event.get_node():
-        logging.error(
-            f"cannot run OOMKillerEnricher on event with no node object: {event}"
-        )
-        return
-    event.add_enrichment(do_show_recent_oom_kills(event.get_node()))
-
-
-@action
-def daemonset_misscheduled_analysis_enricher(event: DaemonSetEvent):
-    if not event.get_daemonset():
-        logging.error(
-            f"cannot run DaemonsetMisscheduledAnalysis on event with no daemonset: {event}"
-        )
-        return
-    event.add_enrichment(do_daemonset_mismatch_analysis(event.get_daemonset()))
-
-
-@action
-def cpu_throttling_analysis_enricher(event: PodEvent):
-    if not event.get_pod():
-        logging.error(f"cannot run CPUThrottlingAnalysis on event with no pod: {event}")
-        return
-    event.add_enrichment(
-        do_cpu_throttling_analysis(event.get_pod()),
-        annotations={SlackAnnotations.UNFURL: False},
-    )
-
-
-@action
-def daemonset_enricher(event: DaemonSetEvent):
-    if not event.get_daemonset():
-        logging.error(
-            f"cannot run DaemonsetEnricher on event with no daemonset: {event}"
-        )
-        return
-    event.add_enrichment(do_daemonset_enricher(event.get_daemonset()))
-
-
-@action
-def pod_bash_enricher(event: PodEvent, params: BashParams):
-    if not event.get_pod():
-        logging.error(f"cannot run PodBashEnricher on event with no pod: {event}")
-        return
-    event.add_enrichment(pod_bash_enrichment(event.get_pod(), params.bash_command))
-
-
-@action
-def node_bash_enricher(event: NodeEvent, params: BashParams):
-    if not event.get_node():
-        logging.error(f"cannot run NodeBashEnricher on event with no node: {event}")
-        return
-    event.add_enrichment(node_bash_enrichment(event.get_node(), params.bash_command))
-
-
-@action
-def deployment_status_enricher(event: DeploymentEvent):
-    if not event.get_deployment():
-        logging.error(
-            f"cannot run DeploymentStatusEnricher on event with no deployment: {event}"
-        )
-        return
-    event.add_enrichment(deployment_status_enrichment(event.get_deployment()))
-
-
-@action
-def pod_events_enricher(event: PodEvent):
-    if not event.get_pod():
-        logging.error(
-            f"cannot run PodEventsEnricher on alert with no pod object: {event}"
-        )
-        return
-    event.add_enrichment(pod_events_enrichment(event.get_pod()))

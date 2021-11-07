@@ -14,7 +14,15 @@ def pod_row(pod: Pod) -> List[str]:
     ]
 
 
-def node_running_pods(node: Node) -> List[BaseBlock]:
+@action
+def node_running_pods_enricher(event: NodeEvent):
+    node = event.get_node()
+    if not node:
+        logging.error(
+            f"NodeRunningPodsEnricher was called on event without node: {event}"
+        )
+        return
+
     block_list: List[BaseBlock] = []
     pod_list: PodList = Pod.listPodForAllNamespaces(
         field_selector=f"spec.nodeName={node.metadata.name}"
@@ -22,10 +30,18 @@ def node_running_pods(node: Node) -> List[BaseBlock]:
     effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
     block_list.append(MarkdownBlock("Pods running on the node"))
     block_list.append(TableBlock(effected_pods_rows, ["namespace", "name", "ready"]))
-    return block_list
+    event.add_enrichment(block_list)
 
 
-def node_allocatable_resources(node: Node) -> List[BaseBlock]:
+@action
+def node_allocatable_resources_enricher(event: NodeEvent):
+    node = event.get_node()
+    if not node:
+        logging.error(
+            f"NodeAllocatableResourcesEnricher was called on event without node : {event}"
+        )
+        return
+
     block_list: List[BaseBlock] = []
     if node:
         block_list.append(
@@ -39,4 +55,4 @@ def node_allocatable_resources(node: Node) -> List[BaseBlock]:
                 ["resource", "value"],
             )
         )
-    return block_list
+    event.add_enrichment(block_list)
