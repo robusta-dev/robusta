@@ -34,7 +34,7 @@ def obj_diff(
 
 
 @action
-def git_change_audit(event: KubernetesAnyEvent, action_params: GitAuditParams):
+def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditParams):
     """Save a configuration copy to git"""
     if event.obj.kind in skipped_kinds:
         return

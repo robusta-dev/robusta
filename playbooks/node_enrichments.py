@@ -14,10 +14,10 @@ def pod_row(pod: Pod) -> List[str]:
     ]
 
 
-def node_running_pods(node_name: str) -> List[BaseBlock]:
+def node_running_pods(node: Node) -> List[BaseBlock]:
     block_list: List[BaseBlock] = []
     pod_list: PodList = Pod.listPodForAllNamespaces(
-        field_selector=f"spec.nodeName={node_name}"
+        field_selector=f"spec.nodeName={node.metadata.name}"
     ).obj
     effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
     block_list.append(MarkdownBlock("Pods running on the node"))
@@ -25,8 +25,7 @@ def node_running_pods(node_name: str) -> List[BaseBlock]:
     return block_list
 
 
-def node_allocatable_resources(node_name: str) -> List[BaseBlock]:
-    node: Node = Node.readNode(node_name).obj
+def node_allocatable_resources(node: Node) -> List[BaseBlock]:
     block_list: List[BaseBlock] = []
     if node:
         block_list.append(
@@ -41,18 +40,3 @@ def node_allocatable_resources(node_name: str) -> List[BaseBlock]:
             )
         )
     return block_list
-
-
-@action
-def show_node_enrichments(event: ExecutionBaseEvent, params: NodeNameParams):
-    blocks = node_allocatable_resources(params.node_name)
-    blocks.extend(node_running_pods(params.node_name))
-    if blocks:
-        finding = Finding(
-            title=f"Node not ready - {params.node_name}",
-            subject=FindingSubject(name=params.node_name),
-            source=FindingSource.MANUAL,
-            aggregation_key="show_node_enrichments",
-        )
-        finding.add_enrichment(blocks)
-        event.add_finding(finding)

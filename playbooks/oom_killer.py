@@ -42,18 +42,3 @@ def do_show_recent_oom_kills(node: Node) -> List[BaseBlock]:
     else:
         logging.info(f"found no oom killers on {node.metadata.name}")
         return []
-
-
-@action
-def show_recent_oom_kills(event: ExecutionBaseEvent, params: NodeNameParams):
-    node = Node().read(name=params.node_name)
-    blocks = do_show_recent_oom_kills(node)
-    if blocks:
-        finding = Finding(
-            title=f"Latest OOM Kills on {params.node_name}",
-            subject=FindingSubject(name=params.node_name),
-            source=FindingSource.MANUAL,
-            aggregation_key="show_recent_oom_kills",
-        )
-        finding.add_enrichment(blocks)
-        event.add_finding(finding)

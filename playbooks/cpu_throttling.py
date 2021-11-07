@@ -19,16 +19,3 @@ def do_cpu_throttling_analysis(pod: Pod) -> List[BaseBlock]:
             "safe as long as other pods have somewhat-accurate CPU requests>"
         ),
     ]
-
-
-@action
-def cpu_throttling_analysis(event: ExecutionBaseEvent, params: PodParams):
-    pod = RobustaPod.read(params.pod_name, params.pod_namespace)
-    finding = Finding(
-        title="Throttling report", aggregation_key="cpu_throttling_analysis"
-    )
-    finding.add_enrichment(
-        enrichment_blocks=do_cpu_throttling_analysis(pod),
-        annotations={SlackAnnotations.UNFURL: False},
-    )
-    event.add_finding(finding)

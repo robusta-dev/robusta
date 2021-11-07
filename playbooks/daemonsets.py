@@ -166,25 +166,3 @@ def do_daemonset_mismatch_analysis(ds: DaemonSet) -> List[BaseBlock]:
             },
         ),
     ]
-
-
-class DaemonsetAnalysisParams(BaseModel):
-    daemonset_name: str
-    namespace: str
-
-
-@action
-def daemonset_mismatch_analysis(
-    event: ExecutionBaseEvent, params: DaemonsetAnalysisParams
-):
-    ds = DaemonSet().read(name=params.daemonset_name, namespace=params.namespace)
-    finding = Finding(
-        title="Daemonset Mismatch Analysis",
-        source=FindingSource.MANUAL,
-        aggregation_key="daemonset_mismatch_analysis",
-    )
-    finding.add_enrichment(
-        do_daemonset_enricher(ds), annotations={SlackAnnotations.UNFURL: False}
-    )
-    finding.add_enrichment(do_daemonset_mismatch_analysis(ds))
-    event.add_finding(finding)

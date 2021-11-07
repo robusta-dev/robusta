@@ -10,12 +10,12 @@ class ScaleHPAParams(BaseModel):
 
 
 @action
-def scale_hpa_callback(event: ExecutionBaseEvent, params: ScaleHPAParams):
-    hpa: HorizontalPodAutoscaler = (
-        HorizontalPodAutoscaler.readNamespacedHorizontalPodAutoscaler(
-            params.hpa_name, params.hpa_namespace
-        ).obj
-    )
+def scale_hpa_callback(event: HorizontalPodAutoscalerEvent, params: ScaleHPAParams):
+    hpa = event.get_horizontalpodautoscaler()
+    if not hpa:
+        logging.info(f"scale_hpa_callback - no hpa on event: {event}")
+        return
+
     hpa.spec.maxReplicas = params.max_replicas
     hpa.replaceNamespacedHorizontalPodAutoscaler(params.hpa_name, params.hpa_namespace)
     finding = Finding(
@@ -34,7 +34,7 @@ class HPALimitParams(BaseModel):
 
 @action
 def alert_on_hpa_reached_limit(
-    event: HorizontalPodAutoscalerEvent, action_params: HPALimitParams
+    event: HorizontalPodAutoscalerChangeEvent, action_params: HPALimitParams
 ):
     logging.info(
         f"running alert_on_hpa_reached_limit: {event.obj.metadata.name} ns: {event.obj.metadata.namespace}"

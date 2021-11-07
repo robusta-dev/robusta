@@ -4,7 +4,7 @@ from robusta.core.discovery.top_service_resolver import TopServiceResolver
 
 
 @action
-def cluster_discovery_updates(event: KubernetesAnyEvent):
+def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
     if (
         event.operation in [K8sOperationType.CREATE, K8sOperationType.UPDATE]
         and event.obj.kind in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet"]

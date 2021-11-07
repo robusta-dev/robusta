@@ -125,35 +125,33 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
 
 
 @action
-def node_cpu_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
-    if not alert.node:
-        logging.error(
-            f"NodeCPUEnricher was called on alert without node metadata: {alert.alert}"
-        )
+def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
+    if not event.get_node():
+        logging.error(f"NodeCPUEnricher was called on event without node: {event}")
         return
-    alert.add_enrichment(do_node_cpu_analysis(alert.node, params.prometheus_url))
+    event.add_enrichment(do_node_cpu_analysis(event.get_node(), params.prometheus_url))
 
 
 @action
-def node_running_pods_enricher(alert: PrometheusKubernetesAlert):
-    if not alert.node:
+def node_running_pods_enricher(event: NodeEvent):
+    if not event.get_node():
         logging.error(
-            f"NodeRunningPodsEnricher was called on alert without node metadata: {alert.alert}"
+            f"NodeRunningPodsEnricher was called on event without node: {event}"
         )
         return
 
-    alert.add_enrichment(node_running_pods(alert.node.metadata.name))
+    event.add_enrichment(node_running_pods(event.get_node()))
 
 
 @action
-def node_allocatable_resources_enricher(alert: PrometheusKubernetesAlert):
-    if not alert.node:
+def node_allocatable_resources_enricher(event: NodeEvent):
+    if not event.get_node():
         logging.error(
-            f"NodeAllocatableResourcesEnricher was called on alert without node metadata: {alert.alert}"
+            f"NodeAllocatableResourcesEnricher was called on event without node : {event}"
         )
         return
 
-    alert.add_enrichment(node_allocatable_resources(alert.node.metadata.name))
+    event.add_enrichment(node_allocatable_resources(event.get_node()))
 
 
 class TemplateParams(BaseModel):
@@ -175,10 +173,11 @@ class LogEnricherParams(BaseModel):
 
 
 @action
-def logs_enricher(alert: PrometheusKubernetesAlert, params: LogEnricherParams):
-    if alert.pod is None:
+def logs_enricher(event: PodEvent, params: LogEnricherParams):
+    pod = event.get_pod()
+    if pod is None:
         if params.warn_on_missing_label:
-            alert.add_enrichment(
+            event.add_enrichment(
                 [
                     MarkdownBlock(
                         "Cannot fetch logs because the pod is unknown. The alert has no `pod` label"
@@ -186,10 +185,10 @@ def logs_enricher(alert: PrometheusKubernetesAlert, params: LogEnricherParams):
                 ],
             )
         return
-    log_data = alert.pod.get_logs()
+    log_data = pod.get_logs()
     if log_data:
-        alert.add_enrichment(
-            [FileBlock(f"{alert.pod.metadata.name}.log", log_data.encode())],
+        event.add_enrichment(
+            [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
         )
 
 
@@ -241,91 +240,77 @@ def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
 
 
 @action
-def oom_killer_enricher(alert: PrometheusKubernetesAlert):
-    if not alert.node:
+def oom_killer_enricher(event: NodeEvent):
+    if not event.get_node():
         logging.error(
-            f"cannot run OOMKillerEnricher on alert with no node object: {alert}"
+            f"cannot run OOMKillerEnricher on event with no node object: {event}"
         )
         return
-    alert.add_enrichment(do_show_recent_oom_kills(alert.node))
+    event.add_enrichment(do_show_recent_oom_kills(event.get_node()))
 
 
 @action
-def daemonset_misscheduled_analysis_enricher(alert: PrometheusKubernetesAlert):
-    if not alert.daemonset:
+def daemonset_misscheduled_analysis_enricher(event: DaemonSetEvent):
+    if not event.get_daemonset():
         logging.error(
-            f"cannot run DaemonsetMisscheduledAnalysis on alert with no daemonset object: {alert}"
+            f"cannot run DaemonsetMisscheduledAnalysis on event with no daemonset: {event}"
         )
         return
-    alert.add_enrichment(do_daemonset_mismatch_analysis(alert.daemonset))
+    event.add_enrichment(do_daemonset_mismatch_analysis(event.get_daemonset()))
 
 
 @action
-def cpu_throttling_analysis_enricher(alert: PrometheusKubernetesAlert):
-    if not alert.pod:
-        logging.error(
-            f"cannot run CPUThrottlingAnalysis on alert with no pod object: {alert}"
-        )
+def cpu_throttling_analysis_enricher(event: PodEvent):
+    if not event.get_pod():
+        logging.error(f"cannot run CPUThrottlingAnalysis on event with no pod: {event}")
         return
-    alert.add_enrichment(
-        do_cpu_throttling_analysis(alert.pod),
+    event.add_enrichment(
+        do_cpu_throttling_analysis(event.get_pod()),
         annotations={SlackAnnotations.UNFURL: False},
     )
 
 
 @action
-def daemonset_enricher(alert: PrometheusKubernetesAlert):
-    if not alert.daemonset:
+def daemonset_enricher(event: DaemonSetEvent):
+    if not event.get_daemonset():
         logging.error(
-            f"cannot run DaemonsetEnricher on alert with no daemonset object: {alert}"
+            f"cannot run DaemonsetEnricher on event with no daemonset: {event}"
         )
         return
-    alert.add_enrichment(do_daemonset_enricher(alert.daemonset))
+    event.add_enrichment(do_daemonset_enricher(event.get_daemonset()))
 
 
 @action
-def pod_bash_enricher(alert: PrometheusKubernetesAlert, params: BashParams):
-    if not alert.pod:
-        logging.error(
-            f"cannot run PodBashEnricher on alert with no pod object: {alert}"
-        )
+def pod_bash_enricher(event: PodEvent, params: BashParams):
+    if not event.get_pod():
+        logging.error(f"cannot run PodBashEnricher on event with no pod: {event}")
         return
-    alert.add_enrichment(
-        pod_bash_enrichment(
-            alert.pod.metadata.name,
-            alert.pod.metadata.namespace,
-            params.bash_command,
-        )
-    )
+    event.add_enrichment(pod_bash_enrichment(event.get_pod(), params.bash_command))
 
 
 @action
-def node_bash_enricher(alert: PrometheusKubernetesAlert, params: BashParams):
-    if not alert.node:
-        logging.error(
-            f"cannot run NodeBashEnricher on alert with no node object: {alert}"
-        )
+def node_bash_enricher(event: NodeEvent, params: BashParams):
+    if not event.get_node():
+        logging.error(f"cannot run NodeBashEnricher on event with no node: {event}")
         return
-    alert.add_enrichment(
-        node_bash_enrichment(alert.node.metadata.name, params.bash_command)
-    )
+    event.add_enrichment(node_bash_enrichment(event.get_node(), params.bash_command))
 
 
 @action
-def deployment_status_enricher(alert: PrometheusKubernetesAlert):
-    if not alert.deployment:
+def deployment_status_enricher(event: DeploymentEvent):
+    if not event.get_deployment():
         logging.error(
-            f"cannot run DeploymentStatusEnricher on alert with no deployment object: {alert}"
+            f"cannot run DeploymentStatusEnricher on event with no deployment: {event}"
         )
         return
-    alert.add_enrichment(deployment_status_enrichment(alert.deployment))
+    event.add_enrichment(deployment_status_enrichment(event.get_deployment()))
 
 
 @action
-def pod_events_enricher(alert: PrometheusKubernetesAlert):
-    if not alert.pod:
+def pod_events_enricher(event: PodEvent):
+    if not event.get_pod():
         logging.error(
-            f"cannot run PodEventsEnricher on alert with no pod object: {alert}"
+            f"cannot run PodEventsEnricher on alert with no pod object: {event}"
         )
         return
-    alert.add_enrichment(pod_events_enrichment(alert.pod))
+    event.add_enrichment(pod_events_enrichment(event.get_pod()))
