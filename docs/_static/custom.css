@@ -4,6 +4,8 @@
 
 .sidebar-search-container {
     width: 90%;
+    /*border-left: 1px solid var(--color-sidebar-search-border) !important;
+    border-right: 1px solid var(--color-sidebar-search-border) !important;*/
 }
 
 h2, h3 {
