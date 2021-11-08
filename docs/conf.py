@@ -73,8 +73,10 @@ html_theme_options = {
     "dark_logo": "logo-dark.png",
     "light_css_variables": {
         # for branding purposes this should really be #d9534f, but it doesn't look as good
-        "color-brand-primary": "#7253ed",
-        "color-brand-content": "#7253ed",
+        "color-brand-primary": "#1a0a57",
+        "color-brand-content": "#25107c",
+        "color-admonition-title-background": "#e9e7f1",
+        "color-admonition-title": "#A79FCA",
     },
     "dark_css_variables": {
         # "color-brand-primary": "#7C4DFF",
