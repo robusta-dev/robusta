@@ -13,7 +13,7 @@ class ReportParams(BaseModel):
 
 
 @action
-def report_rendering_task(event: ScheduledExecutionEvent, action_params: ReportParams):
+def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams):
     finding = Finding(
         title=action_params.report_name,
         aggregation_key="report_rendering_task",

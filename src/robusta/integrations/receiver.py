@@ -1,4 +1,3 @@
-import hashlib
 import hmac
 import logging
 import traceback
@@ -9,6 +8,7 @@ import os
 import time
 from threading import Thread
 
+from .action_requests import ActionRequest, sign_action_request
 from ..core.model.events import ExecutionBaseEvent
 from ..model.playbook_action import PlaybookAction
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
@@ -25,31 +25,6 @@ RECEIVER_ENABLE_WEBSOCKET_TRACING = "True" == os.environ.get(
 INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = int(
     os.environ.get("INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC", 3)
 )
-
-
-class ActionRequestBody(BaseModel):
-    account_id: str
-    cluster_name: str
-    action_name: str
-    timestamp: int
-    action_params: dict = None
-    sinks: Optional[List[str]] = None
-    origin: str = None
-
-
-class ActionRequest(BaseModel):
-    signature: str
-    body: ActionRequestBody
-
-
-def sign_action_request(body: ActionRequestBody, signing_key: str):
-    format_req = str.encode(f"v0:{body.json(exclude_none=True, sort_keys=True)}")
-    if not signing_key:
-        raise Exception("Signing key not available. Cannot sign action request")
-    request_hash = hmac.new(
-        signing_key.encode(), format_req, hashlib.sha256
-    ).hexdigest()
-    return f"v0={request_hash}"
 
 
 class ActionRequestReceiver:
