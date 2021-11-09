@@ -3,7 +3,7 @@ from typing import Callable, Optional, Dict, Type
 
 from pydantic.main import BaseModel
 
-from ..model.events import ExecutionBaseEvent
+from ..model.events import ExecutionBaseEvent, ExecutionEventBaseParams
 from ...utils.decorators import doublewrap
 
 
@@ -25,6 +25,14 @@ class Action:
         self.func = func
         self.event_type = event_type
         self.params_type = params_type
+        self.from_params_func = None
+        self.from_params_parameter_class = None
+        if vars(event_type).get("from_params"):  # execution event has 'from_params'
+            self.from_params_func = getattr(event_type, "from_params")
+            from_params_signature = inspect.signature(self.from_params_func)
+            self.from_params_parameter_class = list(
+                from_params_signature.parameters.values()
+            )[0].annotation
 
 
 class ActionsRegistry:
@@ -59,3 +67,17 @@ class ActionsRegistry:
         return (
             inspect.isfunction(func) and getattr(func, "_action_name", None) is not None
         )
+
+    def get_external_actions(
+        self,
+    ) -> [(str, Type[ExecutionEventBaseParams], Optional[Type[BaseModel]])]:
+        """Should be used to prepare calling schema for each action"""
+        return [
+            (
+                action_def.action_name,
+                action_def.from_params_parameter_class,
+                action_def.params_type,
+            )
+            for action_def in self._actions.values()
+            if action_def.from_params_func
+        ]

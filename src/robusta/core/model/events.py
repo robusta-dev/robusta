@@ -4,6 +4,8 @@ from enum import Enum
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
 
+from pydantic import BaseModel
+
 from ...integrations.scheduled.playbook_scheduler import PlaybooksScheduler
 from ..reporting.base import Finding, BaseBlock
 
@@ -13,6 +15,10 @@ class EventType(Enum):
     PROMETHEUS = 2
     MANUAL_TRIGGER = 3
     SCHEDULED_TRIGGER = 4
+
+
+class ExecutionEventBaseParams(BaseModel):
+    named_sinks: Optional[List[str]] = None
 
 
 # Right now:
@@ -66,3 +72,7 @@ class ExecutionBaseEvent:
             )
 
         self.findings[finding_key] = finding
+
+    @staticmethod
+    def from_params(params: ExecutionEventBaseParams) -> Optional["ExecutionBaseEvent"]:
+        return ExecutionBaseEvent(named_sinks=params.named_sinks)

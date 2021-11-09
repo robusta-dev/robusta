@@ -62,11 +62,10 @@ class Web:
             logging.error(msg)
             return {"success": False, "msg": msg}
 
-        playbook_action = PlaybookAction(
-            action_name=data["action_name"],
-            action_params=data.get("action_params", None),
-        )
-        execution_event = ExecutionBaseEvent(named_sinks=data.get("sinks", None))
         return jsonify(
-            Web.event_handler.run_actions(execution_event, [playbook_action])
+            Web.event_handler.run_external_action(
+                action_name=data["action_name"],
+                action_params=data.get("action_params", None),
+                sinks=data.get("sinks", None),
+            )
         )
