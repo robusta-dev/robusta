@@ -102,3 +102,27 @@ runner:
       memory: 1024Mi
     limits:
       cpu: ~
+
+kube-prometheus-stack:
+  alertmanager:
+    tplConfig: true
+    config:
+      global:
+        resolve_timeout: 5m
+      route:
+        group_by: [ 'job' ]
+        group_wait: 30s
+        group_interval: 5m
+        # TODO: change interval to something more sane
+        repeat_interval: 10m
+        receiver: 'robusta'
+        routes:
+          - match:
+              alertname: Watchdog
+            receiver: 'null'
+      receivers:
+        - name: 'null'
+        - name:  'robusta'
+          webhook_configs:
+            - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.cluster.local/api/alerts'
+              send_resolved: true

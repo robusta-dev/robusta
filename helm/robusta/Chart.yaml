@@ -5,3 +5,9 @@ description: Robusta Helm chart for Kubernetes
 type: application
 version: 0.7.0
 appVersion: "0.7.1"
+
+dependencies:
+- name: kube-prometheus-stack
+  # alias:
+  version: "19.2.3"
+  repository: "https://prometheus-community.github.io/helm-charts"
