@@ -80,24 +80,34 @@ def daemonset_silence_false_alarm(event: ExecutionBaseEvent):
     event.add_finding(finding)
 
 
-def do_daemonset_enricher(ds: DaemonSet) -> List[BaseBlock]:
-    return [
-        MarkdownBlock(f"*Daemonset Stats for {ds.metadata.name}*"),
-        KubernetesFieldsBlock(
-            ds,
-            [
-                "status.desiredNumberScheduled",
-                "status.currentNumberScheduled",
-                "status.numberAvailable",
-                "status.numberMisscheduled",
-            ],
-        ),
-        MarkdownBlock(
-            "_Daemonset lifecycle: pods start out as desired, then get scheduled, and then become available. "
-            "If Kubernetes then decides a pod shouldn't be running on a node after all, it becomes "
-            "misscheduled._"
-        ),
-    ]
+@action
+def daemonset_enricher(event: DaemonSetEvent):
+    ds = event.get_daemonset()
+    if not ds:
+        logging.error(
+            f"cannot run DaemonsetEnricher on event with no daemonset: {event}"
+        )
+        return
+
+    event.add_enrichment(
+        [
+            MarkdownBlock(f"*Daemonset Stats for {ds.metadata.name}*"),
+            KubernetesFieldsBlock(
+                ds,
+                [
+                    "status.desiredNumberScheduled",
+                    "status.currentNumberScheduled",
+                    "status.numberAvailable",
+                    "status.numberMisscheduled",
+                ],
+            ),
+            MarkdownBlock(
+                "_Daemonset lifecycle: pods start out as desired, then get scheduled, and then become available. "
+                "If Kubernetes then decides a pod shouldn't be running on a node after all, it becomes "
+                "misscheduled._"
+            ),
+        ]
+    )
 
 
 # checks if the issue issue described here: https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/
@@ -133,58 +143,56 @@ def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
     return False
 
 
-def do_daemonset_mismatch_analysis(ds: DaemonSet) -> List[BaseBlock]:
-    if not check_for_known_mismatch_false_alarm(ds):
-        return []
-
-    return [
-        MarkdownBlock(
-            "*Alert Cause*\n This specific firing of the alert is a *known false alarm* which occurs when the "
-            "cluster autoscaler removes nodes running daemonsets which didn't explicitly request to remain running "
-            "during node-shutdown."
-        ),
-        MarkdownBlock(
-            textwrap.dedent(
-                f"""\
-            (<https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/|Learn more>).
-            
-            *Remediation*
-            Would you like to:
-    
-            1. Fix the daemonset configuration to avoid the false alarm
-            2. Use Robusta to silence the false alarm while passing through real alerts.
-    
-            Choose an option below to learn more."""
-            )
-        ),
-        CallbackBlock(
-            choices={
-                "Fix the Configuration": CallbackChoice(action=daemonset_fix_config),
-                "Silence the false alarm": CallbackChoice(
-                    action=daemonset_silence_false_alarm
-                ),
-            },
-        ),
-    ]
-
-
-class DaemonsetAnalysisParams(BaseModel):
-    daemonset_name: str
-    namespace: str
+@action
+def daemonset_misscheduled_smart_silencer(alert: PrometheusKubernetesAlert):
+    if not alert.daemonset:
+        return
+    alert.stop_processing = check_for_known_mismatch_false_alarm(alert.daemonset)
 
 
 @action
-def daemonset_mismatch_analysis(
-    event: ExecutionBaseEvent, params: DaemonsetAnalysisParams
-):
-    ds = DaemonSet().read(name=params.daemonset_name, namespace=params.namespace)
-    finding = Finding(
-        title="Daemonset Mismatch Analysis",
-        source=FindingSource.MANUAL,
-        aggregation_key="daemonset_mismatch_analysis",
+def daemonset_misscheduled_analysis_enricher(event: DaemonSetEvent):
+    ds = event.get_daemonset()
+    if not ds:
+        logging.error(
+            f"cannot run DaemonsetMisscheduledAnalysis on event with no daemonset: {event}"
+        )
+        return
+
+    if not check_for_known_mismatch_false_alarm(ds):
+        event.add_enrichment([])
+        return
+
+    event.add_enrichment(
+        [
+            MarkdownBlock(
+                "*Alert Cause*\n This specific firing of the alert is a *known false alarm* which occurs when the "
+                "cluster autoscaler removes nodes running daemonsets which didn't explicitly request to remain running "
+                "during node-shutdown."
+            ),
+            MarkdownBlock(
+                textwrap.dedent(
+                    f"""\
+            (<https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/|Learn more>).
+
+            *Remediation*
+            Would you like to:
+
+            1. Fix the daemonset configuration to avoid the false alarm
+            2. Use Robusta to silence the false alarm while passing through real alerts.
+
+            Choose an option below to learn more."""
+                )
+            ),
+            CallbackBlock(
+                choices={
+                    "Fix the Configuration": CallbackChoice(
+                        action=daemonset_fix_config
+                    ),
+                    "Silence the false alarm": CallbackChoice(
+                        action=daemonset_silence_false_alarm
+                    ),
+                },
+            ),
+        ]
     )
-    finding.add_enrichment(
-        do_daemonset_enricher(ds), annotations={SlackAnnotations.UNFURL: False}
-    )
-    finding.add_enrichment(do_daemonset_mismatch_analysis(ds))
-    event.add_finding(finding)

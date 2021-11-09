@@ -24,6 +24,16 @@ class PlaybooksEventHandler(Protocol):
         pass
 
     @abstractmethod
+    def run_external_action(
+        self,
+        action_name: str,
+        action_params: Optional[dict],
+        sinks: Optional[List[str]],
+    ) -> Optional[Dict[str, Any]]:
+        """Execute an external action"""
+        pass
+
+    @abstractmethod
     def get_global_config(
         self,
     ) -> dict:

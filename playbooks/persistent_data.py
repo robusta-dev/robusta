@@ -14,7 +14,13 @@ PERSISTENT_DATA_NAME = "test_persistency"
 def count_pod_creations(event: DeploymentEvent):
     logging.info("we got an event... sending it to slack")
     with get_persistent_data(PERSISTENT_DATA_NAME, DeploymentChangeCounter) as data:
-        name = event.obj.metadata.name
+        deployment = event.get_deployment()
+        if not deployment:
+            logging.info(
+                f"count_pod_creations - no deployment for event: {DeploymentEvent}"
+            )
+            return
+        name = deployment.metadata.name
         value = data.changes_per_deployment.get(name, 0)
         data.changes_per_deployment[name] = value + 1
 
