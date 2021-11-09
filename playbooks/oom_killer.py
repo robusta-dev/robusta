@@ -15,7 +15,15 @@ def is_oom_status(status: ContainerStatus):
 OOMKill = namedtuple("OOMKill", ["datetime", "message"])
 
 
-def do_show_recent_oom_kills(node: Node) -> List[BaseBlock]:
+@action
+def oom_killer_enricher(event: NodeEvent):
+    node = event.get_node()
+    if not node:
+        logging.error(
+            f"cannot run OOMKillerEnricher on event with no node object: {event}"
+        )
+        return
+
     results: PodList = Pod.listPodForAllNamespaces(
         field_selector=f"spec.nodeName={node.metadata.name}"
     ).obj
@@ -32,28 +40,15 @@ def do_show_recent_oom_kills(node: Node) -> List[BaseBlock]:
 
     if oom_kills:
         logging.info(f"found at least one oom killer on {node.metadata.name}")
-        return [
-            TableBlock(
-                rows=oom_kills,
-                headers=headers,
-                column_renderers={"time": RendererType.DATETIME},
-            )
-        ]
+        event.add_enrichment(
+            [
+                TableBlock(
+                    rows=oom_kills,
+                    headers=headers,
+                    column_renderers={"time": RendererType.DATETIME},
+                )
+            ]
+        )
     else:
         logging.info(f"found no oom killers on {node.metadata.name}")
-        return []
-
-
-@action
-def show_recent_oom_kills(event: ExecutionBaseEvent, params: NodeNameParams):
-    node = Node().read(name=params.node_name)
-    blocks = do_show_recent_oom_kills(node)
-    if blocks:
-        finding = Finding(
-            title=f"Latest OOM Kills on {params.node_name}",
-            subject=FindingSubject(name=params.node_name),
-            source=FindingSource.MANUAL,
-            aggregation_key="show_recent_oom_kills",
-        )
-        finding.add_enrichment(blocks)
-        event.add_finding(finding)
+        event.add_enrichment([])

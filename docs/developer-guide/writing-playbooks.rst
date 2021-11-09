@@ -26,7 +26,7 @@ Edit ``example_playbooks.hello.py``:
     from robusta.api import *
 
     @on_pod_create()
-    def hello_world_playbook(event: PodEvent):
+    def hello_world_playbook(event: PodChangeEvent):
         logging.info(f"Hello world! Pod {event.obj.metadata.name} created on namespace {event.obj.metadata.namespace}")
 
 

@@ -1,7 +1,15 @@
 from robusta.api import *
 
 
-def pod_events_enrichment(pod: Pod) -> List[BaseBlock]:
+@action
+def pod_events_enricher(event: PodEvent):
+    pod = event.get_pod()
+    if not pod:
+        logging.error(
+            f"cannot run PodEventsEnricher on alert with no pod object: {event}"
+        )
+        return
+
     block_list: List[BaseBlock] = []
     event_list: EventList = EventList.listNamespacedEvent(
         namespace=pod.metadata.namespace,
@@ -21,15 +29,4 @@ def pod_events_enrichment(pod: Pod) -> List[BaseBlock]:
                 column_renderers={"time": RendererType.DATETIME},
             )
         )
-    return block_list
-
-
-@action
-def pod_events(event: ExecutionBaseEvent, action_params: PodParams):
-    logging.info(f"getting info for: {action_params}")
-    pod = RobustaPod.read(action_params.pod_name, action_params.pod_namespace)
-    blocks = pod_events_enrichment(pod)
-    for block in blocks:
-        if isinstance(block, TableBlock):
-            for row in block.rows:
-                print(f"row {row}")
+    event.add_enrichment(block_list)

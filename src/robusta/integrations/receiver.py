@@ -34,17 +34,14 @@ class ActionRequestReceiver:
         self.start_incoming_receiver()
 
     def __run_external_action_request(self, callback_request: ExternalActionRequest):
-        execution_event = ExecutionBaseEvent(
-            named_sinks=callback_request.sinks,
-        )
         logging.info(
             f"got callback `{callback_request.action_name}` {callback_request.action_params}"
         )
-        action = PlaybookAction(
-            action_name=callback_request.action_name,
-            action_params=callback_request.action_params,
+        self.event_handler.run_external_action(
+            callback_request.action_name,
+            callback_request.action_params,
+            callback_request.sinks,
         )
-        self.event_handler.run_actions(execution_event, [action])
 
     def start_incoming_receiver(self):
         if INCOMING_RECEIVER_ENABLED != "True":

@@ -5,12 +5,14 @@ from pygal.style import DarkStyle as ChosenStyle
 from robusta.api import *
 
 
-class NodeCPUAnalysisParams(NodeNameParams):
-    prometheus_url: str = None
+@action
+def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
+    if not event.get_node():
+        logging.error(f"NodeCPUEnricher was called on event without node: {event}")
+        return
+    node = event.get_node()
 
-
-def do_node_cpu_analysis(node: Node, prometheus_url: str = None) -> List[BaseBlock]:
-    analyzer = NodeAnalyzer(node, prometheus_url)
+    analyzer = NodeAnalyzer(node, params.prometheus_url)
 
     threshold = 0.005
     total_cpu_usage = analyzer.get_total_cpu_usage()
@@ -58,49 +60,37 @@ def do_node_cpu_analysis(node: Node, prometheus_url: str = None) -> List[BaseBlo
         ],
     )
 
-    return [
-        HeaderBlock("Node CPU Analysis"),
-        MarkdownBlock(
-            f"_*Quick explanation:* High CPU typically occurs if you define pod CPU "
-            f"requests incorrectly and Kubernetes schedules too many pods on one node. "
-            f"If this is the case, update your pod CPU requests to more accurate numbers"
-            f"using guidance from the attached graphs_"
-        ),
-        DividerBlock(),
-        MarkdownBlock(
-            textwrap.dedent(
-                f"""\
+    event.add_enrichment(
+        [
+            HeaderBlock("Node CPU Analysis"),
+            MarkdownBlock(
+                f"_*Quick explanation:* High CPU typically occurs if you define pod CPU "
+                f"requests incorrectly and Kubernetes schedules too many pods on one node. "
+                f"If this is the case, update your pod CPU requests to more accurate numbers"
+                f"using guidance from the attached graphs_"
+            ),
+            DividerBlock(),
+            MarkdownBlock(
+                textwrap.dedent(
+                    f"""\
                                         *Total CPU usage on node:* {int(total_cpu_usage * 100)}%
                                         *Container CPU usage on node:* {int(total_container_cpu_usage * 100)}%
                                         *Non-container CPU usage on node:* {int(non_container_cpu_usage * 100)}%
                                         """
-            )
-        ),
-        DividerBlock(),
-        MarkdownBlock(
-            f"*Pods with CPU > {threshold * 100:0.1f}* (all numbers between 0-100% regardless of CPU count)"
-        ),
-        ListBlock(
-            [
-                f"{k}: *{v * 100:0.1f}%*"
-                for (k, v) in per_pod_usage_normalized.items()
-                if v >= threshold
-            ]
-        ),
-        FileBlock("treemap.svg", treemap.render()),
-        FileBlock("usage_vs_requested.svg", bar_chart.render()),
-    ]
-
-
-@action
-def node_cpu_analysis(event: ExecutionBaseEvent, params: NodeCPUAnalysisParams):
-    node = Node().read(name=params.node_name)
-
-    finding = Finding(
-        title=f"Node CPU Usage Report for {params.node_name}",
-        subject=FindingSubject(name=params.node_name),
-        source=FindingSource.MANUAL,
-        aggregation_key="node_cpu_analysis",
+                )
+            ),
+            DividerBlock(),
+            MarkdownBlock(
+                f"*Pods with CPU > {threshold * 100:0.1f}* (all numbers between 0-100% regardless of CPU count)"
+            ),
+            ListBlock(
+                [
+                    f"{k}: *{v * 100:0.1f}%*"
+                    for (k, v) in per_pod_usage_normalized.items()
+                    if v >= threshold
+                ]
+            ),
+            FileBlock("treemap.svg", treemap.render()),
+            FileBlock("usage_vs_requested.svg", bar_chart.render()),
+        ]
     )
-    finding.add_enrichment(do_node_cpu_analysis(node, params.prometheus_url))
-    event.add_finding(finding)
