@@ -33,3 +33,7 @@ PROMETHEUS_REQUEST_TIMEOUT_SECONDS = float(
 INCOMING_REQUEST_TIME_WINDOW_SECONDS = int(
     os.environ.get("INCOMING_REQUEST_TIME_WINDOW_SECONDS", 3600)
 )
+
+RELAY_EXTERNAL_ACTIONS_URL = os.environ.get(
+    "RELAY_EXTERNAL_ACTIONS_URL", "https://robusta.dev/integrations/generic/actions"
+)
