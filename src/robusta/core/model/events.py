@@ -19,6 +19,7 @@ class EventType(Enum):
 # 1. this is a dataclass but we need to make all fields optional in subclasses because of https://stackoverflow.com/questions/51575931/
 # 2. this can't be a pydantic BaseModel because of various pydantic bugs (see https://github.com/samuelcolvin/pydantic/pull/2557)
 # once the pydantic PR that addresses those issues is merged, this should be a pydantic class
+# (note that we need to integrate with dataclasses because of hikaru)
 @dataclass
 class ExecutionBaseEvent:
     findings: Dict[str, Finding] = field(default_factory=lambda: {})
