@@ -1,4 +1,3 @@
-import hashlib
 import hmac
 import logging
 import traceback
@@ -9,6 +8,7 @@ import os
 import time
 from threading import Thread
 
+from .action_requests import ActionRequest, sign_action_request
 from ..core.model.events import ExecutionBaseEvent
 from ..model.playbook_action import PlaybookAction
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
@@ -27,31 +27,6 @@ INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = int(
 )
 
 
-class ActionRequestBody(BaseModel):
-    account_id: str
-    cluster_name: str
-    action_name: str
-    timestamp: int
-    action_params: dict = None
-    sinks: Optional[List[str]] = None
-    origin: str = None
-
-
-class ActionRequest(BaseModel):
-    signature: str
-    body: ActionRequestBody
-
-
-def sign_action_request(body: ActionRequestBody, signing_key: str):
-    format_req = str.encode(f"v0:{body.json(exclude_none=True, sort_keys=True)}")
-    if not signing_key:
-        raise Exception("Signing key not available. Cannot sign action request")
-    request_hash = hmac.new(
-        signing_key.encode(), format_req, hashlib.sha256
-    ).hexdigest()
-    return f"v0={request_hash}"
-
-
 class ActionRequestReceiver:
     def __init__(self, event_handler: PlaybooksEventHandler):
         self.event_handler = event_handler
@@ -59,17 +34,14 @@ class ActionRequestReceiver:
         self.start_incoming_receiver()
 
     def __run_external_action_request(self, callback_request: ExternalActionRequest):
-        execution_event = ExecutionBaseEvent(
-            named_sinks=callback_request.sinks,
-        )
         logging.info(
             f"got callback `{callback_request.action_name}` {callback_request.action_params}"
         )
-        action = PlaybookAction(
-            action_name=callback_request.action_name,
-            action_params=callback_request.action_params,
+        self.event_handler.run_external_action(
+            callback_request.action_name,
+            callback_request.action_params,
+            callback_request.sinks,
         )
-        self.event_handler.run_actions(execution_event, [action])
 
     def start_incoming_receiver(self):
         if INCOMING_RECEIVER_ENABLED != "True":

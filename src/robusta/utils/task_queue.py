@@ -40,12 +40,12 @@ class TaskQueue(Queue):
             )
             #  For now, just add it to the log. Can provide insightful data
             logging.info(
-                f"queue {self.name} "
-                f"size {self.qsize()} "
-                f"queued {self.metrics.queued} "
-                f"processed {self.metrics.processed} "
-                f"rejected {self.metrics.rejected} "
-                f"avg process time {avg_process_time}"
+                f"queue='{self.name}'"
+                f"size={self.qsize()} "
+                f"queued={self.metrics.queued} "
+                f"processed={self.metrics.processed} "
+                f"rejected={self.metrics.rejected} "
+                f"avg_process_time={avg_process_time}"
             )
             time.sleep(120)
 

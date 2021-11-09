@@ -14,7 +14,9 @@ class BabysitterConfig(BaseModel):
     fields_to_monitor: List[str] = ["spec"]
 
 
-def do_babysitter(event: KubernetesAnyEvent, config: BabysitterConfig):
+@action
+def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfig):
+    """Track changes to a k8s resource and send the changes to the configured sinks."""
     filtered_diffs = []
     if event.operation == K8sOperationType.UPDATE:
         all_diffs = event.obj.diff(event.old_obj)
@@ -48,9 +50,3 @@ def do_babysitter(event: KubernetesAnyEvent, config: BabysitterConfig):
     )
     finding.add_enrichment([KubernetesDiffBlock(filtered_diffs, old_obj, obj)])
     event.add_finding(finding)
-
-
-@action
-def resource_babysitter(event: KubernetesAnyEvent, config: BabysitterConfig):
-    """Track changes to a k8s resource and send the changes in slack."""
-    do_babysitter(event, config)

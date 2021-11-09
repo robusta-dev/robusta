@@ -140,6 +140,21 @@ class RobustaPod(Pod):
                 return True
         return False
 
+    def has_toleration(self, toleration_key):
+        return any(
+            toleration_key == toleration.key for toleration in self.spec.tolerations
+        )
+
+    def has_cpu_limit(self) -> bool:
+        for container in self.spec.containers:
+            if (
+                container.resources
+                and container.resources.limits["cpu"]
+                and container.resources.limits["cpu"]
+            ):
+                return True
+        return False
+
     def upload_file(self, path: str, contents: bytes, container: Optional[str] = None):
         if container is None:
             container = self.spec.containers[0].name

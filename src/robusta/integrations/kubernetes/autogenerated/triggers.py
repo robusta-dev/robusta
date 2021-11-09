@@ -19,7 +19,7 @@ class PodCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return PodEvent
+        return PodChangeEvent
 
 
 class PodUpdateTrigger(K8sBaseTrigger):
@@ -33,7 +33,7 @@ class PodUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return PodEvent
+        return PodChangeEvent
 
 
 class PodDeleteTrigger(K8sBaseTrigger):
@@ -47,7 +47,7 @@ class PodDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return PodEvent
+        return PodChangeEvent
 
 
 class PodAllChangesTrigger(K8sBaseTrigger):
@@ -61,7 +61,7 @@ class PodAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return PodEvent
+        return PodChangeEvent
 
 
 # ReplicaSet Triggers
@@ -76,7 +76,7 @@ class ReplicaSetCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ReplicaSetEvent
+        return ReplicaSetChangeEvent
 
 
 class ReplicaSetUpdateTrigger(K8sBaseTrigger):
@@ -90,7 +90,7 @@ class ReplicaSetUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ReplicaSetEvent
+        return ReplicaSetChangeEvent
 
 
 class ReplicaSetDeleteTrigger(K8sBaseTrigger):
@@ -104,7 +104,7 @@ class ReplicaSetDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ReplicaSetEvent
+        return ReplicaSetChangeEvent
 
 
 class ReplicaSetAllChangesTrigger(K8sBaseTrigger):
@@ -118,7 +118,7 @@ class ReplicaSetAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ReplicaSetEvent
+        return ReplicaSetChangeEvent
 
 
 # DaemonSet Triggers
@@ -133,7 +133,7 @@ class DaemonSetCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return DaemonSetEvent
+        return DaemonSetChangeEvent
 
 
 class DaemonSetUpdateTrigger(K8sBaseTrigger):
@@ -147,7 +147,7 @@ class DaemonSetUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return DaemonSetEvent
+        return DaemonSetChangeEvent
 
 
 class DaemonSetDeleteTrigger(K8sBaseTrigger):
@@ -161,7 +161,7 @@ class DaemonSetDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return DaemonSetEvent
+        return DaemonSetChangeEvent
 
 
 class DaemonSetAllChangesTrigger(K8sBaseTrigger):
@@ -175,7 +175,7 @@ class DaemonSetAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return DaemonSetEvent
+        return DaemonSetChangeEvent
 
 
 # Deployment Triggers
@@ -190,7 +190,7 @@ class DeploymentCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return DeploymentEvent
+        return DeploymentChangeEvent
 
 
 class DeploymentUpdateTrigger(K8sBaseTrigger):
@@ -204,7 +204,7 @@ class DeploymentUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return DeploymentEvent
+        return DeploymentChangeEvent
 
 
 class DeploymentDeleteTrigger(K8sBaseTrigger):
@@ -218,7 +218,7 @@ class DeploymentDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return DeploymentEvent
+        return DeploymentChangeEvent
 
 
 class DeploymentAllChangesTrigger(K8sBaseTrigger):
@@ -232,7 +232,7 @@ class DeploymentAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return DeploymentEvent
+        return DeploymentChangeEvent
 
 
 # StatefulSet Triggers
@@ -247,7 +247,7 @@ class StatefulSetCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return StatefulSetEvent
+        return StatefulSetChangeEvent
 
 
 class StatefulSetUpdateTrigger(K8sBaseTrigger):
@@ -261,7 +261,7 @@ class StatefulSetUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return StatefulSetEvent
+        return StatefulSetChangeEvent
 
 
 class StatefulSetDeleteTrigger(K8sBaseTrigger):
@@ -275,7 +275,7 @@ class StatefulSetDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return StatefulSetEvent
+        return StatefulSetChangeEvent
 
 
 class StatefulSetAllChangesTrigger(K8sBaseTrigger):
@@ -289,7 +289,7 @@ class StatefulSetAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return StatefulSetEvent
+        return StatefulSetChangeEvent
 
 
 # Service Triggers
@@ -304,7 +304,7 @@ class ServiceCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ServiceEvent
+        return ServiceChangeEvent
 
 
 class ServiceUpdateTrigger(K8sBaseTrigger):
@@ -318,7 +318,7 @@ class ServiceUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ServiceEvent
+        return ServiceChangeEvent
 
 
 class ServiceDeleteTrigger(K8sBaseTrigger):
@@ -332,7 +332,7 @@ class ServiceDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ServiceEvent
+        return ServiceChangeEvent
 
 
 class ServiceAllChangesTrigger(K8sBaseTrigger):
@@ -346,7 +346,7 @@ class ServiceAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ServiceEvent
+        return ServiceChangeEvent
 
 
 # ConfigMap Triggers
@@ -361,7 +361,7 @@ class ConfigMapCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ConfigMapEvent
+        return ConfigMapChangeEvent
 
 
 class ConfigMapUpdateTrigger(K8sBaseTrigger):
@@ -375,7 +375,7 @@ class ConfigMapUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ConfigMapEvent
+        return ConfigMapChangeEvent
 
 
 class ConfigMapDeleteTrigger(K8sBaseTrigger):
@@ -389,7 +389,7 @@ class ConfigMapDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ConfigMapEvent
+        return ConfigMapChangeEvent
 
 
 class ConfigMapAllChangesTrigger(K8sBaseTrigger):
@@ -403,7 +403,7 @@ class ConfigMapAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ConfigMapEvent
+        return ConfigMapChangeEvent
 
 
 # Event Triggers
@@ -418,7 +418,7 @@ class EventCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return EventEvent
+        return EventChangeEvent
 
 
 class EventUpdateTrigger(K8sBaseTrigger):
@@ -432,7 +432,7 @@ class EventUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return EventEvent
+        return EventChangeEvent
 
 
 class EventDeleteTrigger(K8sBaseTrigger):
@@ -446,7 +446,7 @@ class EventDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return EventEvent
+        return EventChangeEvent
 
 
 class EventAllChangesTrigger(K8sBaseTrigger):
@@ -460,7 +460,7 @@ class EventAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return EventEvent
+        return EventChangeEvent
 
 
 # HorizontalPodAutoscaler Triggers
@@ -475,7 +475,7 @@ class HorizontalPodAutoscalerCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return HorizontalPodAutoscalerEvent
+        return HorizontalPodAutoscalerChangeEvent
 
 
 class HorizontalPodAutoscalerUpdateTrigger(K8sBaseTrigger):
@@ -489,7 +489,7 @@ class HorizontalPodAutoscalerUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return HorizontalPodAutoscalerEvent
+        return HorizontalPodAutoscalerChangeEvent
 
 
 class HorizontalPodAutoscalerDeleteTrigger(K8sBaseTrigger):
@@ -503,7 +503,7 @@ class HorizontalPodAutoscalerDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return HorizontalPodAutoscalerEvent
+        return HorizontalPodAutoscalerChangeEvent
 
 
 class HorizontalPodAutoscalerAllChangesTrigger(K8sBaseTrigger):
@@ -517,7 +517,7 @@ class HorizontalPodAutoscalerAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return HorizontalPodAutoscalerEvent
+        return HorizontalPodAutoscalerChangeEvent
 
 
 # Node Triggers
@@ -532,7 +532,7 @@ class NodeCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return NodeEvent
+        return NodeChangeEvent
 
 
 class NodeUpdateTrigger(K8sBaseTrigger):
@@ -546,7 +546,7 @@ class NodeUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return NodeEvent
+        return NodeChangeEvent
 
 
 class NodeDeleteTrigger(K8sBaseTrigger):
@@ -560,7 +560,7 @@ class NodeDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return NodeEvent
+        return NodeChangeEvent
 
 
 class NodeAllChangesTrigger(K8sBaseTrigger):
@@ -574,7 +574,7 @@ class NodeAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return NodeEvent
+        return NodeChangeEvent
 
 
 # ClusterRole Triggers
@@ -589,7 +589,7 @@ class ClusterRoleCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ClusterRoleEvent
+        return ClusterRoleChangeEvent
 
 
 class ClusterRoleUpdateTrigger(K8sBaseTrigger):
@@ -603,7 +603,7 @@ class ClusterRoleUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ClusterRoleEvent
+        return ClusterRoleChangeEvent
 
 
 class ClusterRoleDeleteTrigger(K8sBaseTrigger):
@@ -617,7 +617,7 @@ class ClusterRoleDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ClusterRoleEvent
+        return ClusterRoleChangeEvent
 
 
 class ClusterRoleAllChangesTrigger(K8sBaseTrigger):
@@ -631,7 +631,64 @@ class ClusterRoleAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return ClusterRoleEvent
+        return ClusterRoleChangeEvent
+
+
+# ClusterRoleBinding Triggers
+class ClusterRoleBindingCreateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="ClusterRoleBinding",
+            operation=K8sOperationType.CREATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ClusterRoleBindingChangeEvent
+
+
+class ClusterRoleBindingUpdateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="ClusterRoleBinding",
+            operation=K8sOperationType.UPDATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ClusterRoleBindingChangeEvent
+
+
+class ClusterRoleBindingDeleteTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="ClusterRoleBinding",
+            operation=K8sOperationType.DELETE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ClusterRoleBindingChangeEvent
+
+
+class ClusterRoleBindingAllChangesTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="ClusterRoleBinding",
+            operation=None,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ClusterRoleBindingChangeEvent
 
 
 # Job Triggers
@@ -646,7 +703,7 @@ class JobCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return JobEvent
+        return JobChangeEvent
 
 
 class JobUpdateTrigger(K8sBaseTrigger):
@@ -660,7 +717,7 @@ class JobUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return JobEvent
+        return JobChangeEvent
 
 
 class JobDeleteTrigger(K8sBaseTrigger):
@@ -674,7 +731,7 @@ class JobDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return JobEvent
+        return JobChangeEvent
 
 
 class JobAllChangesTrigger(K8sBaseTrigger):
@@ -688,7 +745,64 @@ class JobAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return JobEvent
+        return JobChangeEvent
+
+
+# Namespace Triggers
+class NamespaceCreateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="Namespace",
+            operation=K8sOperationType.CREATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return NamespaceChangeEvent
+
+
+class NamespaceUpdateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="Namespace",
+            operation=K8sOperationType.UPDATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return NamespaceChangeEvent
+
+
+class NamespaceDeleteTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="Namespace",
+            operation=K8sOperationType.DELETE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return NamespaceChangeEvent
+
+
+class NamespaceAllChangesTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="Namespace",
+            operation=None,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return NamespaceChangeEvent
 
 
 # Kubernetes Any Triggers
@@ -703,7 +817,7 @@ class KubernetesAnyCreateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return KubernetesAnyEvent
+        return KubernetesAnyChangeEvent
 
 
 class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
@@ -717,7 +831,7 @@ class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return KubernetesAnyEvent
+        return KubernetesAnyChangeEvent
 
 
 class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
@@ -731,7 +845,7 @@ class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return KubernetesAnyEvent
+        return KubernetesAnyChangeEvent
 
 
 class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
@@ -745,7 +859,7 @@ class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
 
     @staticmethod
     def get_execution_event_type() -> type:
-        return KubernetesAnyEvent
+        return KubernetesAnyChangeEvent
 
 
 # K8s Trigger class
@@ -797,10 +911,18 @@ class K8sTriggers(BaseModel):
     on_clusterrole_update: Optional[ClusterRoleUpdateTrigger]
     on_clusterrole_delete: Optional[ClusterRoleDeleteTrigger]
     on_clusterrole_all_changes: Optional[ClusterRoleAllChangesTrigger]
+    on_clusterrolebinding_create: Optional[ClusterRoleBindingCreateTrigger]
+    on_clusterrolebinding_update: Optional[ClusterRoleBindingUpdateTrigger]
+    on_clusterrolebinding_delete: Optional[ClusterRoleBindingDeleteTrigger]
+    on_clusterrolebinding_all_changes: Optional[ClusterRoleBindingAllChangesTrigger]
     on_job_create: Optional[JobCreateTrigger]
     on_job_update: Optional[JobUpdateTrigger]
     on_job_delete: Optional[JobDeleteTrigger]
     on_job_all_changes: Optional[JobAllChangesTrigger]
+    on_namespace_create: Optional[NamespaceCreateTrigger]
+    on_namespace_update: Optional[NamespaceUpdateTrigger]
+    on_namespace_delete: Optional[NamespaceDeleteTrigger]
+    on_namespace_all_changes: Optional[NamespaceAllChangesTrigger]
     on_kubernetes_any_resource_create: Optional[KubernetesAnyCreateTrigger]
     on_kubernetes_any_resource_update: Optional[KubernetesAnyUpdateTrigger]
     on_kubernetes_any_resource_delete: Optional[KubernetesAnyDeleteTrigger]

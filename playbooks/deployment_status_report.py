@@ -13,7 +13,7 @@ class ReportParams(BaseModel):
 
 
 @action
-def report_rendering_task(event: ScheduledExecutionEvent, action_params: ReportParams):
+def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams):
     finding = Finding(
         title=action_params.report_name,
         aggregation_key="report_rendering_task",
@@ -30,7 +30,9 @@ def report_rendering_task(event: ScheduledExecutionEvent, action_params: ReportP
     event.add_finding(finding)
 
 
-def has_matching_diff(event: DeploymentEvent, fields_to_monitor: List[str]) -> bool:
+def has_matching_diff(
+    event: DeploymentChangeEvent, fields_to_monitor: List[str]
+) -> bool:
     all_diffs = event.obj.diff(event.old_obj)
     for diff in all_diffs:
         if is_matching_diff(diff, fields_to_monitor):
@@ -39,7 +41,7 @@ def has_matching_diff(event: DeploymentEvent, fields_to_monitor: List[str]) -> b
 
 
 @action
-def deployment_status_report(event: DeploymentEvent, action_params: ReportParams):
+def deployment_status_report(event: DeploymentChangeEvent, action_params: ReportParams):
     """Export configured reports, every pre-defined period"""
     if event.operation == K8sOperationType.DELETE:
         return
