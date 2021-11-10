@@ -131,6 +131,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         self.__prepare_execution_event(execution_event)
         execution_event.response = {"success": True}
         for action in actions:
+            if execution_event.stop_processing:
+                return execution_event.response
+
             registered_action = self.registry.get_actions().get_action(
                 action.action_name
             )
