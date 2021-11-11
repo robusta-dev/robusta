@@ -32,5 +32,19 @@ global_config:
   {{- end }}
   {{- end }}
 active_playbooks:
-{{ toYaml .Values.playbooks | indent 2 }}
+{{- if .Values.playbooks }}
+  {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}
+{{- end }}
+
+{{- if .Values.builtinPlaybooks }}
+{{ toYaml .Values.builtinPlaybooks | indent 2 }}
+{{- end }}
+
+{{- if and .Values.robustaApiKey .Values.platformPlaybooks }}
+{{ toYaml .Values.platformPlaybooks | indent 2 }}
+{{- end }}
+
+{{- if .Values.customPlaybooks }}
+{{ toYaml .Values.customPlaybooks | indent 2 }}
+{{- end }}
 {{ end }}
