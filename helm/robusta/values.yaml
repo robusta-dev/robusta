@@ -24,8 +24,11 @@ robustaApiKey: ""
 # install prometheus, alert-manager, and grafana along with Robusta?
 prometheusStackEnabled: false
 
-# playbook configuration
-playbooks:
+# custom user playbooks
+customPlaybooks: []
+
+# builtin playbooks
+builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: Watchdog
@@ -75,6 +78,28 @@ playbooks:
   - on_prometheus_alert: {}
   actions:
   - default_enricher: {}
+
+# additional builtin playbooks to enable when using Robusta UI
+# these are disabled by default without the UI because they are spammy when sent to slack
+platformPlaybooks:
+- triggers:
+    - on_deployment_update: {}
+  actions:
+    - resource_babysitter: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
+    - on_daemonset_update: {}
+  actions:
+    - resource_babysitter: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
+    - on_statefulset_update: {}
+  actions:
+    - resource_babysitter: {}
+  sinks:
+    - "robusta_ui_sink"
 
 # parameters for the robusta forwarder deployment
 kubewatch:
