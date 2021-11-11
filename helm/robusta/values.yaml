@@ -21,6 +21,8 @@ slackChannel: ""
 # robusta ui integration params
 robustaApiKey: ""
 
+# install prometheus, alert-manager, and grafana along with Robusta?
+prometheusStackEnabled: false
 
 # playbook configuration
 playbooks:
