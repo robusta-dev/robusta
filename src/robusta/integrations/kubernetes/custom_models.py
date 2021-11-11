@@ -147,11 +147,7 @@ class RobustaPod(Pod):
 
     def has_cpu_limit(self) -> bool:
         for container in self.spec.containers:
-            if (
-                container.resources
-                and container.resources.limits["cpu"]
-                and container.resources.limits["cpu"]
-            ):
+            if container.resources and container.resources.limits["cpu"]:
                 return True
         return False
 
