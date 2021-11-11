@@ -1,6 +1,6 @@
 dependencies:
-- name: vector-agent
-  repository: https://helm.vector.dev
-  version: 0.17.0
-digest: sha256:3ae1339b0ef49afd6a51037e5da0c637a1f702468a9c3c4f475445d37bb2f658
-generated: "2021-10-24T23:24:52.313697+03:00"
+- name: kube-prometheus-stack
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 19.2.3
+digest: sha256:5a722ed6a95c916fa159262e48d0503740ba2f1a3630891228796a530071201d
+generated: "2021-11-11T11:10:57.3971091+02:00"

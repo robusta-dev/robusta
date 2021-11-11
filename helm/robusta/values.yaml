@@ -21,9 +21,17 @@ slackChannel: ""
 # robusta ui integration params
 robustaApiKey: ""
 
+# install prometheus, alert-manager, and grafana along with Robusta?
+prometheusStackEnabled: false
 
-# playbook configuration
-playbooks:
+# enable triggering playbooks based on log lines - this installs a lightweight vector daemonset
+logTriggersEnabled: false
+
+# custom user playbooks
+customPlaybooks: []
+
+# builtin playbooks
+builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: Watchdog
@@ -74,6 +82,28 @@ playbooks:
   actions:
   - default_enricher: {}
 
+# additional builtin playbooks to enable when using Robusta UI
+# these are disabled by default without the UI because they are spammy when sent to slack
+platformPlaybooks:
+- triggers:
+    - on_deployment_update: {}
+  actions:
+    - resource_babysitter: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
+    - on_daemonset_update: {}
+  actions:
+    - resource_babysitter: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
+    - on_statefulset_update: {}
+  actions:
+    - resource_babysitter: {}
+  sinks:
+    - "robusta_ui_sink"
+
 # parameters for the robusta forwarder deployment
 kubewatch:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.11
@@ -103,7 +133,7 @@ runner:
     limits:
       cpu: ~
 
-# parameters for the vector installation we use for log-triggers
+# values for the bundled vector agent we use for log-triggers
 vector:
   dataVolume:
     hostPath:
@@ -150,3 +180,28 @@ vector:
         uri: http://robusta-runner.default.svc.cluster.local/api/vector
         encoding:
           codec: "json"
+
+# values for the bundled prometheus stack
+kube-prometheus-stack:
+  alertmanager:
+    tplConfig: true
+    config:
+      global:
+        resolve_timeout: 5m
+      route:
+        group_by: [ 'job' ]
+        group_wait: 30s
+        group_interval: 5m
+        # TODO: change interval to something more sane
+        repeat_interval: 10m
+        receiver: 'robusta'
+        routes:
+          - match:
+              alertname: Watchdog
+            receiver: 'null'
+      receivers:
+        - name: 'null'
+        - name:  'robusta'
+          webhook_configs:
+            - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.cluster.local/api/alerts'
+              send_resolved: true
