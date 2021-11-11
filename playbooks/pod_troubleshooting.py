@@ -8,7 +8,7 @@ from typing import List
 class StartProfilingParams(BaseModel):
     seconds: int = 2
     process_name: str = ""
-    include_idle = False
+    include_idle: bool = False
 
 
 @action
