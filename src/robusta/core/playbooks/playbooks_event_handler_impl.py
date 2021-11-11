@@ -4,6 +4,7 @@ import traceback
 from typing import Any, Dict, Optional, List
 
 from .base_trigger import TriggerEvent, BaseTrigger
+from .playbook_utils import merge_global_params
 from .playbooks_event_handler import PlaybooksEventHandler
 from ..model.events import ExecutionBaseEvent
 from ..reporting.base import Finding
@@ -74,6 +75,49 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
     def __prepare_execution_event(self, execution_event: ExecutionBaseEvent):
         execution_event.set_scheduler(self.registry.get_scheduler())
 
+    def run_external_action(
+        self,
+        action_name: str,
+        action_params: Optional[dict],
+        sinks: Optional[List[str]],
+    ) -> Optional[Dict[str, Any]]:
+        action_def = self.registry.get_actions().get_action(action_name)
+        if not action_def:
+            return self.__error_resp(f"External action not found {action_name}")
+
+        if not action_def.from_params_func:
+            return self.__error_resp(
+                f"Action {action_name} cannot run using external event"
+            )
+
+        if sinks:
+            if action_params:
+                action_params["named_sinks"] = sinks
+            else:
+                action_params = {"named_sinks": sinks}
+        try:
+            instantiation_params = action_def.from_params_parameter_class(
+                **action_params
+            )
+        except Exception:
+            return self.__error_resp(
+                f"Failed to create execution instance for"
+                f" {action_name} {action_def.from_params_parameter_class}"
+                f" {action_params} {traceback.print_exc()}"
+            )
+
+        execution_event = action_def.from_params_func(instantiation_params)
+        if not execution_event:
+            return self.__error_resp(
+                f"Failed to create execution event for "
+                f"{action_name} {action_params}"
+            )
+
+        playbook_action = PlaybookAction(
+            action_name=action_name, action_params=action_params
+        )
+        return self.run_actions(execution_event, [playbook_action])
+
     @classmethod
     def __error_resp(cls, msg: str) -> dict:
         logging.error(msg)
@@ -87,6 +131,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         self.__prepare_execution_event(execution_event)
         execution_event.response = {"success": True}
         for action in actions:
+            if execution_event.stop_processing:
+                return execution_event.response
+
             registered_action = self.registry.get_actions().get_action(
                 action.action_name
             )
@@ -103,15 +150,19 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(msg)
                 continue
 
-            if not action.action_params:
+            if not registered_action.params_type:
                 registered_action.func(execution_event)
             else:
+                action_params = None
                 try:
-                    params = registered_action.params_type(**action.action_params)
+                    action_params = merge_global_params(
+                        self.get_global_config(), action.action_params
+                    )
+                    params = registered_action.params_type(**action_params)
                 except Exception:
                     msg = (
                         f"Failed to create {registered_action.params_type} "
-                        f"using {action.action_params} for running {action.action_name}"
+                        f"using {action_params} for running {action.action_name}"
                     )
                     execution_event.response = self.__error_resp(msg)
                     continue
@@ -147,3 +198,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         f"Failed to publish finding to sink {sink_name}",
                         traceback.print_exc(),
                     )
+
+    def get_global_config(self) -> dict:
+        return self.registry.get_playbooks().get_global_config()

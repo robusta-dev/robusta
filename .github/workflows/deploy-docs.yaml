@@ -1,20 +1,15 @@
 name: Build & Deploy Robusta Docs
 
 on:
+  create: {}
   release:
     types: [published]
   push:
     paths:
       - 'docs/**'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Docs release version'
-        required: true
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROD_PROJECT }}
-  RELEASE_VER : ${{ github.event.release.tag_name }}
 jobs:
 
   setup-build-publish-deploy:
@@ -45,29 +40,16 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r docs/requirements.txt
 
-    - name: Set environmental variables
+    # see https://stackoverflow.com/a/58034787/495995 for an explanation on ${GITHUB_REF##*/}
+    - name: Update docs version
       run: |
-        if [ ! -z "${{ env.RELEASE_VER }}" ]; then
-          echo release
-          echo "DOCS_VERSION=${{ env.RELEASE_VER }}" >> $GITHUB_ENV
-        elif [ ! -z "${{ github.event.inputs.version }}" ];  then
-          echo manual
-          echo "DOCS_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-        else
-          echo default
-          echo "DOCS_VERSION=master" >> $GITHUB_ENV
-        fi
-
-    - name: Update docs version ${{ env.DOCS_VERSION }}
-      run: |
-        sed -i 's/DOCS_VERSION_PLACEHOLDER/${{ env.DOCS_VERSION }}/g' docs/conf.py
-        sed -i 's/DOCS_RELEASE_PLACEHOLDER/${{ env.DOCS_VERSION }}/g' docs/conf.py
+        echo "Setting DOCS_VERSION_PLACEHOLDER to ${GITHUB_REF##*/}"
+        sed -i "s/DOCS_VERSION_PLACEHOLDER/${GITHUB_REF##*/}/g" docs/conf.py
 
     - name: Build the docs
       run: |
         cd docs
         make html
 
-    # using relative path doesn't work for some reason (aka ./_build/html)
     - name: Upload docs to public gcp bucket
-      run: gsutil rsync -R /home/runner/work/robusta/robusta/docs/_build/html gs://robusta-public/${{ env.DOCS_VERSION }}/
+      run: gsutil rsync -R ./docs/_build/html "gs://robusta-public/${GITHUB_REF##*/}/"

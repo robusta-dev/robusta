@@ -96,6 +96,9 @@ class PlaybooksRegistry:
     def get_default_sinks(self):
         return []
 
+    def get_global_config(self) -> dict:
+        return {}
+
 
 class PlaybooksRegistryImpl(PlaybooksRegistry):
     def __init__(
@@ -161,6 +164,9 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
 
     def get_default_sinks(self) -> List[str]:
         return self.default_sinks
+
+    def get_global_config(self) -> dict:
+        return self.global_config
 
 
 class Registry:

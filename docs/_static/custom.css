@@ -1,3 +1,11 @@
-.wy-nav-content {
+/*.wy-nav-content {
     max-width: 1000px !important;
+}*/
+
+.sidebar-search-container {
+    width: 90%;
+}
+
+h2, h3 {
+    border-bottom: 2px solid whitesmoke;
 }

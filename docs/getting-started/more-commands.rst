@@ -1,4 +1,4 @@
-More Robusta CLI Commands
+More CLI Commands
 ##############################
 
 The ``robusta`` cli has commands for managing playbooks in your cluster:
@@ -39,3 +39,8 @@ To download your cluster's playbook directory at any time:
    robusta playbooks pull
 
 | **params:** ``--playbooks-directory TARGET_LOCAL_DIRECTORY``, default to current directory
+
+Uninstalling Robusta
+---------------------
+
+Robusta is installed using ``helm``. Running ``helm uninstall robusta`` removes all the installed components.

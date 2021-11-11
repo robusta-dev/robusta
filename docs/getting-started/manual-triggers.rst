@@ -1,4 +1,4 @@
-Manually triggering a playbook
+Manual Triggers
 ##############################
 
 All the playbooks we have seen so far respond to events in your cluster.

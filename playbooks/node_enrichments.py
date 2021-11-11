@@ -14,19 +14,34 @@ def pod_row(pod: Pod) -> List[str]:
     ]
 
 
-def node_running_pods(node_name: str) -> List[BaseBlock]:
+@action
+def node_running_pods_enricher(event: NodeEvent):
+    node = event.get_node()
+    if not node:
+        logging.error(
+            f"NodeRunningPodsEnricher was called on event without node: {event}"
+        )
+        return
+
     block_list: List[BaseBlock] = []
     pod_list: PodList = Pod.listPodForAllNamespaces(
-        field_selector=f"spec.nodeName={node_name}"
+        field_selector=f"spec.nodeName={node.metadata.name}"
     ).obj
     effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
     block_list.append(MarkdownBlock("Pods running on the node"))
     block_list.append(TableBlock(effected_pods_rows, ["namespace", "name", "ready"]))
-    return block_list
+    event.add_enrichment(block_list)
 
 
-def node_allocatable_resources(node_name: str) -> List[BaseBlock]:
-    node: Node = Node.readNode(node_name).obj
+@action
+def node_allocatable_resources_enricher(event: NodeEvent):
+    node = event.get_node()
+    if not node:
+        logging.error(
+            f"NodeAllocatableResourcesEnricher was called on event without node : {event}"
+        )
+        return
+
     block_list: List[BaseBlock] = []
     if node:
         block_list.append(
@@ -40,19 +55,4 @@ def node_allocatable_resources(node_name: str) -> List[BaseBlock]:
                 ["resource", "value"],
             )
         )
-    return block_list
-
-
-@action
-def show_node_enrichments(event: ExecutionBaseEvent, params: NodeNameParams):
-    blocks = node_allocatable_resources(params.node_name)
-    blocks.extend(node_running_pods(params.node_name))
-    if blocks:
-        finding = Finding(
-            title=f"Node not ready - {params.node_name}",
-            subject=FindingSubject(name=params.node_name),
-            source=FindingSource.MANUAL,
-            aggregation_key="show_node_enrichments",
-        )
-        finding.add_enrichment(blocks)
-        event.add_finding(finding)
+    event.add_enrichment(block_list)

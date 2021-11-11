@@ -25,12 +25,16 @@ def get_crashing_containers(
 
 @action
 def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
-    crashed_container_statuses = get_crashing_containers(event.obj.status, config)
+    pod = event.get_pod()
+    if not pod:
+        logging.info(f"restart_loop_reporter - no pod found on event: {event}")
+        return
+
+    crashed_container_statuses = get_crashing_containers(pod.status, config)
 
     if len(crashed_container_statuses) == 0:
         return  # no matched containers
 
-    pod = event.obj
     pod_name = pod.metadata.name
     if not RateLimiter.mark_and_test(
         "restart_loop_reporter", pod_name + pod.metadata.namespace, config.rate_limit

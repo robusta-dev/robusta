@@ -3,14 +3,19 @@ from pydantic import SecretStr
 from robusta.api import *
 
 
-class Params(BaseModel):
+class GrafanaAnnotationsParams(BaseModel):
     grafana_url: str = None
     grafana_api_key: SecretStr
     grafana_dashboard_uid: str
+    cluster_name: str
+    cluster_zone: str = None
+    custom_tags: List[str] = None
 
 
 @action
-def add_deployment_lines_to_grafana(event: DeploymentEvent, action_params: Params):
+def add_deployment_lines_to_grafana(
+    event: DeploymentChangeEvent, action_params: GrafanaAnnotationsParams
+):
     """
     Add annotations to grafana whenever a new application version is deployed so that you can easily see changes in performance.
     """
@@ -30,9 +35,17 @@ def add_deployment_lines_to_grafana(event: DeploymentEvent, action_params: Param
     grafana = Grafana(
         action_params.grafana_api_key.get_secret_value(), action_params.grafana_url
     )
-    grafana.add_line_to_dashboard(
-        action_params.grafana_dashboard_uid, msg, tags=[event.obj.metadata.name]
-    )
+    tags = [
+        event.obj.metadata.name,
+        event.obj.metadata.namespace,
+        action_params.cluster_name,
+    ]
+    if action_params.cluster_zone:
+        tags.append(action_params.cluster_zone)
+    if action_params.custom_tags:
+        tags.extend(action_params.custom_tags)
+
+    grafana.add_line_to_dashboard(action_params.grafana_dashboard_uid, msg, tags=tags)
 
 
 class AnnotationConfig(BaseModel):
@@ -70,7 +83,7 @@ def add_alert_lines_to_grafana(
 
 
 @action
-def report_image_changes(event: DeploymentEvent):
+def report_image_changes(event: DeploymentChangeEvent):
     """
     Report image changed whenever a new application version is deployed so that you can easily see changes.
     """

@@ -58,8 +58,8 @@ Robusta can run playbooks when Prometheus alerts are triggered. For example
     def high_cpu(alert: PrometheusPodAlert):
         print(f'pod {alert.obj} has high cpu alert: {alert.alert}')
 
-Manual Triggers
----------------
+Writing Manually Triggered Playbooks
+-------------------------------------
 Robusta can run playbooks on manual triggers. For example:
 
 .. code-block:: python

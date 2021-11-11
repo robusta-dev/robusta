@@ -9,7 +9,7 @@ from ...core.model.events import ExecutionBaseEvent
 
 
 @dataclass
-class K8sBaseEvent(ExecutionBaseEvent):
+class K8sBaseChangeEvent(ExecutionBaseEvent):
     description: str = ""
     operation: Optional[
         K8sOperationType

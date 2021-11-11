@@ -1,4 +1,10 @@
 {{ define "robusta.configfile" -}}
+{{- if or .Values.playbook_sets }}
+playbook_sets:
+{{- range $playbook_set := .Values.playbook_sets }}
+- {{ $playbook_set }}
+{{- end }}
+{{- end }}
 {{- if or .Values.slackApiKey .Values.robustaApiKey }}
 sinks_config:
 {{- if .Values.slackApiKey }}
@@ -15,6 +21,16 @@ sinks_config:
 {{- end }}
 global_config:
   cluster_name: {{ required "A valid .Values.clusterName entry is required!" .Values.clusterName }}
+  {{- if .Values.clusterZone }}
+  cluster_zone: {{ .Values.clusterZone }}
+  {{- end }}
+  {{- if .Values.globalConfig }}
+  {{- range $k, $v := .Values.globalConfig }}
+  {{- if $v }}
+  {{ $k }}: {{ $v }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
 active_playbooks:
 {{ toYaml .Values.playbooks | indent 2 }}
 {{ end }}

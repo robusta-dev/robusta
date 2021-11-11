@@ -1,5 +1,18 @@
+# playbooks sets
+playbook_sets: []
+
 # global parameters
 clusterName: ""
+clusterZone: ""
+
+globalConfig:
+  grafana_url: ""
+  grafana_api_key: ""
+  grafana_dashboard_uid: ""
+  prometheus_url: ""
+  account_id: ""
+  signing_key: ""
+
 
 # slack integration params
 slackApiKey: ""
@@ -7,6 +20,7 @@ slackChannel: ""
 
 # robusta ui integration params
 robustaApiKey: ""
+
 
 # playbook configuration
 playbooks:
@@ -81,7 +95,7 @@ grafanaRenderer:
 
 # parameters for the robusta runner
 runner:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.6.8-dirty
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.7.1-dirty
   log_level: INFO
   resources:
     requests:

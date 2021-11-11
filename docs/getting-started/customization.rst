@@ -1,4 +1,4 @@
-Customizing built-in playbooks
+Customizing Playbooks
 ##############################
 
 Robusta is a powerful rules engine for devops, but it needs rules to tell it what to do. These rules are called "playbooks".
@@ -6,35 +6,37 @@ Robusta is a powerful rules engine for devops, but it needs rules to tell it wha
 Enabling a new playbook
 ------------------------
 
-Lets edit Robusta's ``values.yaml`` and add the following:
+1. Enable the ``deployment_babysitter`` playbook:
 
-.. code-block:: yaml
+.. admonition:: values.yaml
 
-   (...)
-   playbooks:
-     (...)
-     - name: "deployment_babysitter"
-       action_params:
-         fields_to_monitor: ["spec.replicas"]
+    .. code-block:: yaml
+
+       playbooks:
+         - name: "deployment_babysitter"
+           action_params:
+             fields_to_monitor: ["spec.replicas"]
 
 
-This will add an additional playbook named ``deployment_babysitter`` - a playbook that monitors changes to deployments.
+This playbook monitors changes to deployments. You can see all the settings in the :ref:`playbook's documentation <deployment_babysitter>`.
 
-How did we know which parameters we could use with the ``deployment_babysitter`` playbook? It's simple. We read it's documentation in the :ref:`list of builtin playbooks <deployment_babysitter>`.
-
-.. note:: Make sure you apply the change to ``values.yaml`` with Helm so that it takes effect.
+2. Perform an upgrade with Helm to apply the new configuration
 
 Seeing your new config in action
 ----------------------------------
-Scale one of your deployments using the command below:
+
+1. Scale one of your deployments:
 
 .. code-block:: python
 
    kubectl scale --replicas NEW_REPLICAS_COUNT deployments/DEPLOYMENT_NAME
 
-Now, open the slack channel you configured when installing Robusta. A deployment change notification should appear:
 
-.. image:: ../images/replicas_change.png
+2. Check the slack channel you configured when installing Robusta:
+
+.. admonition:: Example Slack Message
+
+    .. image:: ../images/replicas_change.png
 
 How it works
 ----------------------------------

@@ -1,2 +1,6 @@
 sphinx
-sphinx_rtd_theme
+furo
+sphinx-autobuild
+sphinx-copybutton
+sphinx-design
+witchhazel

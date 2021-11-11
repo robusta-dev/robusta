@@ -6,7 +6,7 @@ from ..playbooks.actions_registry import ActionsRegistry
 
 
 class ExternalActionRequest(BaseModel):
-    target_id: str
+    target_id: str  # target_id is used by the relay, to route slack callback requests
     action_name: str
     action_params: dict = None
     sinks: Optional[List[str]] = None
