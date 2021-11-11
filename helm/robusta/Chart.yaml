@@ -3,18 +3,17 @@ name: robusta
 description: Robusta Helm chart for Kubernetes
 
 dependencies:
-  - name: vector-agent
-    version: 0.17.0
-    repository: https://helm.vector.dev
-    alias: vector
+- name: kube-prometheus-stack
+  repository: "https://prometheus-community.github.io/helm-charts"
+  version: "19.2.3"
+  condition: prometheusStackEnabled
+
+- name: vector-agent
+  repository: "https://helm.vector.dev"
+  version: 0.17.0
+  alias: vector
+  condition: logTriggersEnabled
 
 type: application
 version: 0.7.0
 appVersion: "0.7.1"
-
-dependencies:
-- name: kube-prometheus-stack
-  # alias:
-  version: "19.2.3"
-  condition: prometheusStackEnabled
-  repository: "https://prometheus-community.github.io/helm-charts"
