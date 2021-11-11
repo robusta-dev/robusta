@@ -22,7 +22,7 @@ slackChannel: ""
 robustaApiKey: ""
 
 # install prometheus, alert-manager, and grafana along with Robusta?
-prometheusStackEnabled: false
+enablePrometheusStack: false
 
 # custom user playbooks
 customPlaybooks: []
@@ -140,8 +140,7 @@ kube-prometheus-stack:
         group_by: [ 'job' ]
         group_wait: 30s
         group_interval: 5m
-        # TODO: change interval to something more sane
-        repeat_interval: 10m
+        repeat_interval: 4h
         receiver: 'robusta'
         routes:
           - match:
