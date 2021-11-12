@@ -25,7 +25,7 @@ robustaApiKey: ""
 enablePrometheusStack: false
 
 # enable triggering playbooks based on log lines - this installs a lightweight vector daemonset
-logTriggersEnabled: false
+enableLogTriggers: false
 
 # custom user playbooks
 customPlaybooks: []
