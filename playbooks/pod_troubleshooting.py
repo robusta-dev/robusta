@@ -8,6 +8,7 @@ from typing import List
 class StartProfilingParams(BaseModel):
     seconds: int = 2
     process_name: str = ""
+    include_idle: bool = False
 
 
 @action
@@ -19,7 +20,6 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
         logging.info(f"python_profiler - pod not found for event: {event}")
         return
     processes = pod.get_processes()
-
     debugger = RobustaPod.create_debugger_pod(pod.metadata.name, pod.spec.nodeName)
 
     try:
@@ -34,28 +34,32 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
             ),
         )
 
-        for proc in processes:
-            cmd = " ".join(proc.cmdline)
-            if action_params.process_name not in cmd:
+        for target_proc in processes:
+            target_cmd = " ".join(target_proc.cmdline)
+            if action_params.process_name not in target_cmd:
                 logging.info(
-                    f"skipping process because it doesn't match process_name. {cmd}"
+                    f"skipping process because it doesn't match process_name. {target_cmd}"
                 )
                 continue
-            elif "python" not in proc.exe:
+            elif "python" not in target_proc.exe:
                 logging.info(
-                    f"skipping process because it doesn't look like a python process. {cmd}"
+                    f"skipping process because it doesn't look like a python process. {target_cmd}"
                 )
                 continue
 
             filename = "/profile.svg"
-            pyspy_output = debugger.exec(
-                f"py-spy record --duration={action_params.seconds} --pid={proc.pid} --rate 30 --nonblocking -o {filename}"
+            pyspy_cmd = f"py-spy record --duration={action_params.seconds} --pid={target_proc.pid} --rate 30 --nonblocking -o {filename} {'--idle' if action_params.include_idle else ''}"
+            logging.info(
+                f"starting to run profiler on {target_cmd} with pyspy command: {pyspy_cmd}"
             )
+            pyspy_output = debugger.exec(pyspy_cmd)
             if "Error:" in pyspy_output:
+                logging.info(f"error profiler on {target_cmd}. error={pyspy_output}")
                 continue
 
+            logging.info(f"done running profiler on {target_cmd}")
             svg = debugger.exec(f"cat {filename}")
-            finding.add_enrichment([FileBlock(f"{cmd}.svg", svg)])
+            finding.add_enrichment([FileBlock(f"{target_cmd}.svg", svg)])
         event.add_finding(finding)
 
     finally:

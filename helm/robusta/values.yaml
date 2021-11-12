@@ -22,7 +22,7 @@ slackChannel: ""
 robustaApiKey: ""
 
 # install prometheus, alert-manager, and grafana along with Robusta?
-prometheusStackEnabled: false
+enablePrometheusStack: false
 
 # enable triggering playbooks based on log lines - this installs a lightweight vector daemonset
 logTriggersEnabled: false
@@ -125,7 +125,7 @@ grafanaRenderer:
 
 # parameters for the robusta runner
 runner:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.7.1-dirty
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.8.0-dirty
   log_level: INFO
   resources:
     requests:
@@ -192,8 +192,7 @@ kube-prometheus-stack:
         group_by: [ 'job' ]
         group_wait: 30s
         group_interval: 5m
-        # TODO: change interval to something more sane
-        repeat_interval: 10m
+        repeat_interval: 4h
         receiver: 'robusta'
         routes:
           - match:
