@@ -21,7 +21,7 @@ jobs:
           uses: actions/upload-artifact@v2
           with:
             name: robusta-pkg
-            path: src/dist/robusta_cli-0.0.0-py3-none-any.whl
+            path: dist/robusta_cli-0.0.0-py3-none-any.whl
 
 
     # we use a totally separate job for testing the package because we want an environment which is free of all the
