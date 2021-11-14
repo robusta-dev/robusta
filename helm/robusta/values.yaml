@@ -152,3 +152,5 @@ kube-prometheus-stack:
           webhook_configs:
             - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.cluster.local/api/alerts'
               send_resolved: true
+  kubeProxy:
+    enabled: false
