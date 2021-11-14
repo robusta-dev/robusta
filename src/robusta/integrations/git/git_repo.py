@@ -1,15 +1,16 @@
+import hashlib
 import logging
 import os
 import shutil
 import subprocess
 import textwrap
 import threading
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import traceback
 import re
-from typing import List, Tuple
+from typing import List
 
-from ...core.model.env_vars import TARGET_ID, GIT_MAX_RETRIES
+from ...core.model.env_vars import GIT_MAX_RETRIES
 
 GIT_DIR_NAME = "robusta-git"
 REPO_LOCAL_BASE_DIR = os.path.join(
@@ -44,15 +45,19 @@ class GitRepoManager:
             GitRepoManager.repo_map.clear()
 
 
+SingleChange = namedtuple("SingleChange", "commit_date commit_message")
+ClusterChanges = dict[str, List[SingleChange]]
+
+
 class GitRepo:
 
     initialized: bool = False
 
     def __init__(self, git_repo_url: str, git_key: str, cluster_name: str):
         GitRepo.init()
+        self.git_repo_url = git_repo_url
         self.key_file_name = self.init_key(git_key)
         self.repo_lock = threading.RLock()
-        self.git_repo_url = git_repo_url
         self.cluster_name = cluster_name
         self.repo_name = os.path.splitext(os.path.basename(git_repo_url))[0]
         self.repo_local_path = os.path.join(REPO_LOCAL_BASE_DIR, self.repo_name)
@@ -63,7 +68,8 @@ class GitRepo:
         self.init_repo()
 
     def init_key(self, git_key):
-        key_file_name = os.path.join(REPO_LOCAL_BASE_DIR, TARGET_ID)
+        url_hash = hashlib.sha1(self.git_repo_url.encode("utf-8")).hexdigest()
+        key_file_name = os.path.join(REPO_LOCAL_BASE_DIR, url_hash)
         if os.path.exists(key_file_name):
             return key_file_name
 
@@ -190,9 +196,7 @@ class GitRepo:
         with self.repo_lock:
             self.__exec_git_cmd(["git", "pull", "--rebase", "-Xtheirs"])
 
-    def cluster_changes(
-        self, since_minutes: int = 20
-    ) -> dict[str, List[Tuple[str, str]]]:
+    def cluster_changes(self, since_minutes: int = 20) -> ClusterChanges:
         cluster_changes = defaultdict(list)
         with self.repo_lock:
             self.pull_rebase()
@@ -214,7 +218,9 @@ class GitRepo:
                     else:
                         cluster = "Unknown"
                         commit_message = line
-                    cluster_changes[cluster].append((commit_date, commit_message))
+                    cluster_changes[cluster].append(
+                        SingleChange(commit_date, commit_message)
+                    )
 
             return cluster_changes
 
