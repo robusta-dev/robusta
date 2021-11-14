@@ -16,7 +16,7 @@ class RobustaController:
                 "helm",
                 "install",
                 "robusta",
-                "../helm/robusta/",
+                "./helm/robusta/",
                 "-f",
                 values_file,
                 "--set",
