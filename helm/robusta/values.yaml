@@ -30,10 +30,10 @@ customPlaybooks: []
 # builtin playbooks
 builtinPlaybooks:
 - triggers:
-  - on_prometheus_alert:
-      alert_name: Watchdog
+  - on_prometheus_alert: {}
   actions:
-  - severity_silencer: {}
+  - name_silencer:
+      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown"]
 - triggers:
   - on_pod_update: {}
   actions:
