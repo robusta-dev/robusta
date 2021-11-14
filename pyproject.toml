@@ -4,7 +4,7 @@ version = "0.0.0"
 description = ""
 authors = ["Natan Yellin <aantn@users.noreply.github.com>"]
 packages = [
-    { include = "robusta"},
+    { include = "robusta", from = "src"},
 ]
 
 [tool.poetry.scripts]
@@ -38,6 +38,12 @@ dpath = "^2.0.5"
 pre-commit = "^2.13.0"
 pytest = "^6.2.4"
 python-dotenv = "^0.18.0"
+Sphinx = "^4.3.0"
+furo = "^2021.11.12"
+sphinx-autobuild = "^2021.3.14"
+sphinx-copybutton = "^0.4.0"
+sphinx-design = "^0.0.13"
+witchhazel = "^2018.8.23"
 
 [tool.poetry.extras]
 all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "slack-sdk", "supabase-py", "datadog-api-client"]

@@ -1,10 +1,6 @@
 import random
 import subprocess
 import time
-import urllib.request
-from distutils.version import StrictVersion
-from typing import Optional
-from zipfile import ZipFile
 
 import typer
 import yaml
