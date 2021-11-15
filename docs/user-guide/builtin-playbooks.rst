@@ -1,6 +1,8 @@
 List of built-in playbooks
 ############################
 
+.. warning:: This page contains out-of-date information. It is currently being updated to reflect Robusta's new configuration format.
+
 Application Visibility and Troubleshooting
 -------------------------------------------
 
@@ -269,7 +271,7 @@ incluster_ping
                robusta playbooks trigger incluster_ping hostname=grafana.default.svc
 
 
-deployment_babysitter
+resource_babysitter
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. admonition:: Playbook
