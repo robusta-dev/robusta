@@ -9,18 +9,16 @@ Common Use Cases
 Using Robusta you can automatically:
 
 * See the largest files on a node when a ``HostOutOfDiskSpace`` Prometheus alert fires
-* See which Kubernetes resources were updated prior to a Prometheus alert firing
-* Safely run a CPU profiler for 2 seconds in production on high-cpu alerts
-* Share manual troubleshooting workflows with colleagues as code and not outdated wiki pages
-* Add annotations to Grafana graphs showing when applications were updated
+* See which Kubernetes resources were updated prior to an alert firing
+* Safely run a CPU profiler for 2 seconds in production on ``HighCPU`` alerts
 * Track and audit every change in a Kubernetes cluster
 * Enrich Prometheus alerts with pod logs and forward them to Slack/MSTeams
-* Verify that application updates didn't cause a regression in top-line metrics
 * Apply temporary workarounds to your cluster during an incident like increasing HPA max replicas
+* Share troubleshooting workflows with colleagues as code and not outdated wiki pages
 
 Robusta turns all the above maintenance operations into re-usable playbooks. See the :ref:`list of builtin playbooks <List of built-in playbooks>` or write your own.
 
-The Core Concept
+Core Concepts
 ~~~~~~~~~~~~~~~~~~~~
 Robusta is based on three principles:
 
