@@ -23,6 +23,7 @@ robustaApiKey: ""
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
+enableServiceMonitors: true
 
 # custom user playbooks
 customPlaybooks: []
