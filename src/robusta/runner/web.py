@@ -1,6 +1,8 @@
 import logging
 
 from flask import Flask, request, jsonify
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from prometheus_client import make_wsgi_app
 
 from ..core.model.events import ExecutionBaseEvent
 from ..model.playbook_action import PlaybookAction
@@ -12,22 +14,27 @@ from ..integrations.kubernetes.base_triggers import (
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..integrations.prometheus.models import AlertManagerEvent
 from ..core.model.env_vars import NUM_EVENT_THREADS
-from ..utils.task_queue import TaskQueue
+from ..utils.task_queue import TaskQueue, QueueMetrics
 
 app = Flask(__name__)
+app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
 
 
 class Web:
     api_server_queue: TaskQueue
     alerts_queue: TaskQueue
     event_handler: PlaybooksEventHandler
+    metrics: QueueMetrics
 
     @staticmethod
     def init(event_handler: PlaybooksEventHandler):
+        Web.metrics = QueueMetrics()
         Web.api_server_queue = TaskQueue(
-            name="api server queue", num_workers=NUM_EVENT_THREADS
+            name="api server queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics
         )
-        Web.alerts_queue = TaskQueue(name="alerts queue", num_workers=NUM_EVENT_THREADS)
+        Web.alerts_queue = TaskQueue(
+            name="alerts queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics
+        )
         Web.event_handler = event_handler
 
     @staticmethod
