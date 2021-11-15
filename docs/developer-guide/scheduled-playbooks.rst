@@ -1,6 +1,8 @@
 Scheduled Playbooks
 ############################
 
+.. warning:: This page contains out-of-date information. It is currently being updated to reflect Robusta's new configuration format.
+
 Scheduling Overview
 -------------------
 | Robusta playbooks can be scheduled and run periodically.

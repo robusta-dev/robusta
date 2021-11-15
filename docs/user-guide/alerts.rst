@@ -3,6 +3,8 @@
 Prometheus Alert Enrichment
 ##################################
 
+.. warning:: This page contains out-of-date information. It is currently being updated to reflect Robusta's new configuration format.
+
 Introduction
 --------------
 Robusta has special features for handling Prometheus alerts in Kubernetes clusters including:

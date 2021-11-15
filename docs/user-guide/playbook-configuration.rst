@@ -1,6 +1,8 @@
 Playbook configuration
 ################################
 
+.. warning:: This page contains out-of-date information. It is currently being updated to reflect Robusta's new configuration format.
+
 Enabling playbooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 To activate a playbook, the playbook name must be listed in values.yaml and the playbook directory must then be loaded.
