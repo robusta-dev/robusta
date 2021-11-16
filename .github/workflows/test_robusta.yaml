@@ -20,6 +20,29 @@ jobs:
             cd src/
             poetry config virtualenvs.create false
             poetry install --extras "all"
+
+        # build an image to test
+        - run: |-
+            curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64
+            chmod a+x skaffold
+        - name: Cache skaffold image builds & config
+          uses: actions/cache@v2
+          with:
+            path: ~/.skaffold/
+            key: fixed-${{ github.sha }}
+            restore-keys: |
+              fixed-${{ github.sha }}
+              fixed-
+        - name: Build with skaffold
+          run: |
+            echo 'building with tag test-${GITHUB_SHA}'
+            ./skaffold build --file-output=container-ids.json --tag='test-${GITHUB_SHA}'
+
+        #  update helm chart to use the image we just built
+        - name: Update package version
+          run: |
+            sed -i 's/0.0.0/test-${GITHUB_SHA}/g' helm/robusta/Chart.yaml helm/robusta/values.yaml
+
         - name: Test Robusta
           env:
             PYTEST_SLACK_TOKEN: ${{ secrets.PYTEST_SLACK_TOKEN }}
