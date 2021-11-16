@@ -137,6 +137,8 @@ class TableBlock(BaseBlock):
 
     @classmethod
     def __calc_max_width(cls, headers, rendered_rows) -> List[int]:
+        # We need to make sure the total table width, doesn't exceed the max width,
+        # otherwise, the table is printed corrupted
         columns_max_widths = [len(header) for header in headers]
         for row in rendered_rows:
             for idx, val in enumerate(row):
@@ -149,6 +151,14 @@ class TableBlock(BaseBlock):
             widest_column_idx = columns_max_widths.index(largest_width)
             diff = sum(columns_max_widths) - PRINTED_TABLE_MAX_WIDTH
             columns_max_widths[widest_column_idx] = largest_width - diff
+            if (
+                columns_max_widths[widest_column_idx] < 0
+            ):  # in case the diff is bigger than the largest column
+                # just divide equally
+                columns_max_widths = [
+                    int(PRINTED_TABLE_MAX_WIDTH / len(columns_max_widths))
+                    for i in range(0, len(columns_max_widths))
+                ]
 
         return columns_max_widths
 
