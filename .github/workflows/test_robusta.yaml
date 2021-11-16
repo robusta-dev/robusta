@@ -42,8 +42,8 @@ jobs:
               fixed-
         - name: Configure skaffold not to push images to a remote registry
           # this works by telling skaffold that the kubernetes context named "kind-chart-testing" (the name of our KIND cluster) is local
-          run: skaffold config set --kube-context kind-chart-testing local-cluster true
-          
+          run: ./skaffold config set --kube-context kind-chart-testing local-cluster true
+
         - name: Build with skaffold
           run: |
             echo 'building with tag test-${{ github.sha }}'
