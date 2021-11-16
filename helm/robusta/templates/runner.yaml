@@ -19,7 +19,8 @@ spec:
       containers:
       - name: runner
         image: {{ .Values.runner.image }}
-        imagePullPolicy: Always
+        # TODO: fixme
+        imagePullPolicy: IfNotPresent
         securityContext:
           privileged: false
         env:
