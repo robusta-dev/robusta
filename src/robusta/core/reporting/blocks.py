@@ -15,6 +15,7 @@ from tabulate import tabulate
 
 from .custom_rendering import render_value
 from .base import BaseBlock
+from ..model.env_vars import PRINTED_TABLE_MAX_WIDTH
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
@@ -134,12 +135,32 @@ class TableBlock(BaseBlock):
     ):
         super().__init__(rows=rows, headers=headers, column_renderers=column_renderers)
 
+    @classmethod
+    def __calc_max_width(cls, headers, rendered_rows) -> List[int]:
+        columns_max_widths = [len(header) for header in headers]
+        for row in rendered_rows:
+            for idx, val in enumerate(row):
+                columns_max_widths[idx] = max(len(str(val)), columns_max_widths[idx])
+
+        if (
+            sum(columns_max_widths) > PRINTED_TABLE_MAX_WIDTH
+        ):  # We want to limit the widest column
+            largest_width = max(columns_max_widths)
+            widest_column_idx = columns_max_widths.index(largest_width)
+            diff = sum(columns_max_widths) - PRINTED_TABLE_MAX_WIDTH
+            columns_max_widths[widest_column_idx] = largest_width - diff
+
+        return columns_max_widths
+
     def to_markdown(self) -> MarkdownBlock:
-        # TODO: when the next version of tabulate is released, use maxcolwidths to wrap lines that are too long
-        # this is currently implemented on tabulate's git master but isn't yet in the pypi package
-        # unfortunately, we can't take a dependency on the tabulate git version as that breaks our package with pypi
-        # see https://github.com/python-poetry/poetry/issues/2828
-        table = tabulate(self.render_rows(), headers=self.headers, tablefmt="presto")
+        rendered_rows = self.render_rows()
+        col_max_width = self.__calc_max_width(self.headers, rendered_rows)
+        table = tabulate(
+            rendered_rows,
+            headers=self.headers,
+            tablefmt="presto",
+            maxcolwidths=col_max_width,
+        )
         return MarkdownBlock(f"```\n{table}\n```")
 
     def render_rows(self) -> List[List]:
