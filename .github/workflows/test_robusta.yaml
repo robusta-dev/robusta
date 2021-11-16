@@ -13,6 +13,11 @@ jobs:
             python-version: 3.9
         - name: Create k8s Kind Cluster
           uses: helm/kind-action@v1.2.0
+        - name: Output debug info
+          run: |
+            kubectl config get-contexts
+            kubectl config get pods -A
+            exit 1
         - name: Install Robusta
           run: |
             curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
@@ -35,13 +40,13 @@ jobs:
               fixed-
         - name: Build with skaffold
           run: |
-            echo 'building with tag test-${{env.GITHUB_SHA}}'
-            ./skaffold build --file-output=container-ids.json --tag='test-${{env.GITHUB_SHA}}'
+            echo 'building with tag test-${{ github.sha }}'
+            ./skaffold build --file-output=container-ids.json --tag='test-${{ github.sha }}'
 
         #  update helm chart to use the image we just built
         - name: Update package version
           run: |
-            sed -i 's/0.0.0/test-${{env.GITHUB_SHA}}/g' helm/robusta/Chart.yaml helm/robusta/values.yaml
+            sed -i 's/0.0.0/test-${{ github.sha }}/g' helm/robusta/Chart.yaml helm/robusta/values.yaml
 
         - name: Test Robusta
           env:
