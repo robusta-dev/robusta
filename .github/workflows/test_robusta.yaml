@@ -35,13 +35,13 @@ jobs:
               fixed-
         - name: Build with skaffold
           run: |
-            echo 'building with tag test-${GITHUB_SHA}'
-            ./skaffold build --file-output=container-ids.json --tag='test-${GITHUB_SHA}'
+            echo 'building with tag test-${{env.GITHUB_SHA}}'
+            ./skaffold build --file-output=container-ids.json --tag='test-${{env.GITHUB_SHA}}'
 
         #  update helm chart to use the image we just built
         - name: Update package version
           run: |
-            sed -i 's/0.0.0/test-${GITHUB_SHA}/g' helm/robusta/Chart.yaml helm/robusta/values.yaml
+            sed -i 's/0.0.0/test-${{env.GITHUB_SHA}}/g' helm/robusta/Chart.yaml helm/robusta/values.yaml
 
         - name: Test Robusta
           env:
