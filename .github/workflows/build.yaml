@@ -40,7 +40,7 @@ jobs:
 
     - name: Update package version
       run: |
-        sed -i 's/0.0.0/${{env.RELEASE_VER}}/g' src/robusta/_version.py src/pyproject.toml
+        sed -i 's/0.0.0/${{env.RELEASE_VER}}/g' src/robusta/_version.py src/pyproject.toml helm/robusta/Chart.yaml helm/robusta/values.yaml
 
     # see https://github.com/GoogleContainerTools/skaffold/issues/4842
     - name: Cache skaffold image builds & config
@@ -51,8 +51,15 @@ jobs:
         restore-keys: |
           fixed-${{ github.sha }}
           fixed-
+
     - name: Build with skaffold
-      run: ./skaffold build --file-output=container-ids.json
+      run: ./skaffold build --file-output=container-ids.json --tag='${{env.RELEASE_VER}}'
+
+    - name: Save artifact with tags of built containers
+      uses: actions/upload-artifact@v2
+      with:
+        name: container-ids
+        path: container-ids.json
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -72,3 +79,12 @@ jobs:
         bash -c "pip3 install --requirement <(poetry export --dev --format requirements.txt --without-hashes)"
         poetry publish --build -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_PASS }}
         cd ../
+
+    - name: Save artifact with helm chart
+      uses: actions/upload-artifact@v2
+      with:
+        name: helm-chart
+        path: helm/robusta/
+
+
+    # TODO: run helm/upload_chart.sh

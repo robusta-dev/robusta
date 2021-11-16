@@ -9,12 +9,4 @@ If you want to upload a new chart version, follow these steps:
 4. From the directory, `helm`, run: `./upload_chart.sh`
 
 # Installing robusta with the helm chart
-1. Download the Robusta cli:
-`pip3 install -U robusta-cli --no-cache`
-2. Add Robusta's chart repo:
-`helm repo add robusta https://robusta-charts.storage.googleapis.com`
-3. Create the initial configuration for Robusta:
-`robusta gen-config`
-Follow the instructions, and a file named `active_playbooks_generated.yaml` is created
-4. Lastly, install Robusta:
-`helm install robusta robusta/robusta --set-file playbooks_file=./active_playbooks_generated.yaml` 
+See https://docs.robusta.dev/master/getting-started/installation.html
