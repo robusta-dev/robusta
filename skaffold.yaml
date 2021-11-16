@@ -39,3 +39,13 @@ profiles:
     local:
       push: true
       concurrency: 0
+
+- name: github-pytest
+  build:
+    artifacts:
+    - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+      context: .
+      docker:
+        dockerfile: Dockerfile
+    local:
+      push: false
