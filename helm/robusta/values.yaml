@@ -23,6 +23,7 @@ robustaApiKey: ""
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
+enableServiceMonitors: false
 
 # custom user playbooks
 customPlaybooks: []
@@ -30,10 +31,10 @@ customPlaybooks: []
 # builtin playbooks
 builtinPlaybooks:
 - triggers:
-  - on_prometheus_alert:
-      alert_name: Watchdog
+  - on_prometheus_alert: {}
   actions:
-  - severity_silencer: {}
+  - name_silencer:
+      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown"]
 - triggers:
   - on_pod_update: {}
   actions:
@@ -122,7 +123,7 @@ grafanaRenderer:
 
 # parameters for the robusta runner
 runner:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.8.0-dirty
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.8.1-dirty
   log_level: INFO
   resources:
     requests:
@@ -152,3 +153,5 @@ kube-prometheus-stack:
           webhook_configs:
             - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.cluster.local/api/alerts'
               send_resolved: true
+  kubeProxy:
+    enabled: false

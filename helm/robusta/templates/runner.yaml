@@ -82,6 +82,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Release.Name }}-runner
+  labels:
+    app: {{ .Release.Name }}-runner
 spec:
   selector:
     app: {{ .Release.Name }}-runner
@@ -90,3 +92,19 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 5000
+---
+{{ if .Values.enableServiceMonitors }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: robusta-runner-service-monitor
+  labels:
+    release: {{ .Release.Name }}
+spec:
+  endpoints:
+    - path: /metrics
+      port: http
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-runner
+{{ end }}

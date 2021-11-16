@@ -18,7 +18,18 @@ class SeverityParams(BaseModel):
 @action
 def severity_silencer(alert: PrometheusKubernetesAlert, params: SeverityParams):
     if alert.alert_severity == params.severity:
-        logging.debug(f"skipping watchdog alert {alert}")
+        logging.debug(f"skipping alert {alert}")
+        alert.stop_processing = True
+
+
+class NameSilencerParams(BaseModel):
+    names: List[str]
+
+
+@action
+def name_silencer(alert: PrometheusKubernetesAlert, params: NameSilencerParams):
+    if alert.alert_name in params.names:
+        logging.debug(f"silencing alert {alert}")
         alert.stop_processing = True
 
 

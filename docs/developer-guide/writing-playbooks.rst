@@ -1,6 +1,8 @@
 Writing playbooks
 #################
 
+.. warning:: This page contains out-of-date information. It is currently being updated to reflect Robusta's new configuration format.
+
 Extending Robusta with your own Python playbook takes no longer than 5 minutes.
 
 We recommend sharing your playbook back with the community and adding it to the official Robusta repository by opening a PR on GitHub.

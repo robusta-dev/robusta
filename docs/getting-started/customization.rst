@@ -6,21 +6,27 @@ Robusta is a powerful rules engine for devops, but it needs rules to tell it wha
 Enabling a new playbook
 ------------------------
 
-1. Enable the ``deployment_babysitter`` playbook:
+1. Enable the ``resource_babysitter`` playbook:
 
-.. admonition:: values.yaml
+.. admonition:: generated_values.yaml
 
     .. code-block:: yaml
 
-       playbooks:
-         - name: "deployment_babysitter"
-           action_params:
-             fields_to_monitor: ["spec.replicas"]
+        customPlaybooks:
+        - triggers:
+            - on_deployment_update: {}
+          actions:
+            - resource_babysitter:
+                fields_to_monitor: ["spec.replicas"]
 
 
-This playbook monitors changes to deployments. You can see all the settings in the :ref:`playbook's documentation <deployment_babysitter>`.
+This playbook monitors changes to deployments. You can see all the settings in the :ref:`playbook's documentation <resource_babysitter>`.
 
 2. Perform an upgrade with Helm to apply the new configuration
+
+.. code-block:: bash
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 Seeing your new config in action
 ----------------------------------
@@ -37,6 +43,8 @@ Seeing your new config in action
 .. admonition:: Example Slack Message
 
     .. image:: ../images/replicas_change.png
+      :width: 600
+      :align: center
 
 How it works
 ----------------------------------
