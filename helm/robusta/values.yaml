@@ -23,7 +23,7 @@ robustaApiKey: ""
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
-enableServiceMonitors: true
+enableServiceMonitors: false
 
 # custom user playbooks
 customPlaybooks: []
@@ -123,7 +123,7 @@ grafanaRenderer:
 
 # parameters for the robusta runner
 runner:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.8.0-dirty
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.8.1-dirty
   log_level: INFO
   resources:
     requests:
