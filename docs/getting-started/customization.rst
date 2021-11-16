@@ -8,7 +8,7 @@ Enabling a new playbook
 
 1. Enable the ``resource_babysitter`` playbook:
 
-.. admonition:: values.yaml
+.. admonition:: generated_values.yaml
 
     .. code-block:: yaml
 
@@ -23,6 +23,10 @@ Enabling a new playbook
 This playbook monitors changes to deployments. You can see all the settings in the :ref:`playbook's documentation <resource_babysitter>`.
 
 2. Perform an upgrade with Helm to apply the new configuration
+
+.. code-block:: bash
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 Seeing your new config in action
 ----------------------------------

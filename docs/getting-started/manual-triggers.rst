@@ -8,8 +8,8 @@ Example
 -----------------
 Let's manually profile a Python application in your cluster. No prior setup for the Python application is necessary!
 
-We will need an example Python application to profile. The ``robusta-runner`` is written in Python and already
-installed in your cluster, so we can profile that. First, get the name of the robusta-runner pod:
+We need a Python application to profile. Robusta itself is written in Python and already installed in your cluster,
+so we can profile that. Get the name of the robusta-runner pod:
 
 .. code-block:: bash
 
@@ -17,7 +17,7 @@ installed in your cluster, so we can profile that. First, get the name of the ro
     default       robusta-runner-8f4558f9b-pcbj9
 
 
-Now trigger the ``python_profiler`` playbook via the ``robusta`` cli:
+Trigger the ``python_profiler`` playbook via the ``robusta`` cli:
 
 .. code-block:: bash
 

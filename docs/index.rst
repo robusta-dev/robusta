@@ -109,14 +109,21 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    :maxdepth: 4
    :caption: User Guide
    :hidden:
+   :glob:
 
    user-guide/builtin-playbooks
    user-guide/alerts
    user-guide/playbook-configuration
-   user-guide/slack
-   user-guide/prometheus
-   user-guide/elasticsearch
    user-guide/architecture
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Integrations
+   :hidden:
+
+   integrations/slack
+   integrations/prometheus
+   integrations/elasticsearch
 
 .. toctree::
    :maxdepth: 4
