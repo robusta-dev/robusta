@@ -1,7 +1,7 @@
 Customizing Playbooks
 ##############################
 
-Robusta is a powerful rules engine for devops, but it needs rules to tell it what to do. These rules are called "playbooks".
+Robusta needs rules to tell it what to do. These rules are called "playbooks".
 
 Enabling a new playbook
 ------------------------
