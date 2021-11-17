@@ -17,7 +17,7 @@ spec:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
         image: {{ .Values.kubewatch.image }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.kubewatch.imagePullPolicy }}
         env:
           - name: KW_CONFIG
             value: /config

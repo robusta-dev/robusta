@@ -19,8 +19,7 @@ spec:
       containers:
       - name: runner
         image: {{ .Values.runner.image }}
-        # TODO: fixme
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: {{ .Values.runner.imagePullPolicy }}
         securityContext:
           privileged: false
         env:
@@ -55,7 +54,7 @@ spec:
             {{ if .Values.runner.resources.limits.cpu }}cpu: {{ .Values.runner.resources.limits.cpu | quote }}{{ end }}
       - name: grafana-renderer
         image: {{ .Values.grafanaRenderer.image }}
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.grafanaRenderer.imagePullPolicy }}
         securityContext:
           privileged: false
         lifecycle:
@@ -100,6 +99,8 @@ kind: ServiceMonitor
 metadata:
   name: robusta-runner-service-monitor
   labels:
+    # this label is how the Prometheus installed with Robusta finds ServiceMonitors
+    # TODO: we probably need to add custom labels here for a Prometheus installed separately
     release: {{ .Release.Name }}
 spec:
   endpoints:
