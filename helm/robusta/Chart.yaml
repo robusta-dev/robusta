@@ -7,7 +7,7 @@ type: application
 # we bump the appVersion (and only the appVersion) when only the image tag for the robusta-runner changes
 # see https://codefresh.io/docs/docs/new-helm/helm-best-practices/
 version: 0.8.1
-appVersion: 0.8.1
+appVersion: 0.0.0
 
 dependencies:
 - name: kube-prometheus-stack
