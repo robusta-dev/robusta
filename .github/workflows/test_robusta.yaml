@@ -27,6 +27,8 @@ jobs:
             cd src/
             poetry config virtualenvs.create false
             poetry install --extras "all"
+            # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
+            pip install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
 
         # build robusta docker images for tests which run in-cluster on KIND
         - run: |-
