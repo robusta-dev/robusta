@@ -60,7 +60,7 @@ Robusta was inspired by three good ideas from other domains:
 More examples
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here are common Robusta automations:
+Here are some common things people automate with Robusta:
 
 * Send logs of crashing pods to Slack/MSTeams
 * Enrich ``HostOutOfDiskSpace`` alerts with details about large files
