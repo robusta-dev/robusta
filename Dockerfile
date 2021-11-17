@@ -22,7 +22,6 @@ WORKDIR /app
 RUN /root/.local/bin/poetry install --no-root --extras "all"
 
 COPY src/ /app/src
-RUN ls -al /app
 
 RUN pip3 install --use-feature=in-tree-build .
 
