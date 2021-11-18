@@ -8,7 +8,7 @@ import threading
 from collections import defaultdict, namedtuple
 import traceback
 import re
-from typing import List
+from typing import List, Dict
 
 from ...core.model.env_vars import GIT_MAX_RETRIES
 
@@ -46,7 +46,7 @@ class GitRepoManager:
 
 
 SingleChange = namedtuple("SingleChange", "commit_date commit_message")
-ClusterChanges = dict[str, List[SingleChange]]
+ClusterChanges = Dict[str, List[SingleChange]]
 
 
 class GitRepo:
@@ -95,7 +95,7 @@ class GitRepo:
             raise e
         GitRepo.initialized = True
 
-    def __exec_git_cmd(self, cmd: list[str]):
+    def __exec_git_cmd(self, cmd: List[str]):
         shell = False
         if os.name == "nt":
             shell = True
