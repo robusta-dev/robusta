@@ -61,7 +61,7 @@ class RobustaController:
                 slack_channel,
                 "--output-path",
                 output_path,
-                "--robusta-api-key=none",
+                "--robusta-api-key=''",
             ],
         )
         assert "Saved configuration" in logs, logs
