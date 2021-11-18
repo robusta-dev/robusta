@@ -24,7 +24,6 @@ jobs:
           run: |
             curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
             source $HOME/.poetry/env
-            cd src/
             poetry config virtualenvs.create false
             poetry install --extras "all"
             # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
@@ -60,5 +59,4 @@ jobs:
             PYTEST_IN_CLUSTER_SLACK_TOKEN: ${{ secrets.PYTEST_IN_CLUSTER_SLACK_TOKEN }}
           run: |
             source $HOME/.poetry/env
-            cd src/
-            pytest .. -s
+            pytest -s

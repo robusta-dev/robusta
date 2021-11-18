@@ -16,12 +16,12 @@ RUN mkdir /app
 RUN pip3 install --upgrade pip
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
 RUN /root/.local/bin/poetry config virtualenvs.create false
-COPY src/pyproject.toml /app
-COPY src/poetry.lock /app
+COPY pyproject.toml /app
+COPY poetry.lock /app
 WORKDIR /app
 RUN /root/.local/bin/poetry install --no-root --extras "all"
 
-ADD src/ /app
+COPY src/ /app/src
 
 RUN pip3 install --use-feature=in-tree-build .
 # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here

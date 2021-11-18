@@ -73,18 +73,15 @@ jobs:
 
     - name: Prepare pypi dist
       run: |
-        cd src
         pip3 install poetry==1.1.6
         poetry config virtualenvs.create false
         bash -c "pip3 install --requirement <(poetry export --dev --format requirements.txt --without-hashes)"
         poetry publish --build -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_PASS }}
-        cd ../
 
     - name: Save artifact with helm chart
       uses: actions/upload-artifact@v2
       with:
         name: helm-chart
         path: helm/robusta/
-
 
     # TODO: run helm/upload_chart.sh

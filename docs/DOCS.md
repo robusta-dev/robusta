@@ -14,7 +14,7 @@ If you need to override an existing doc release, you can manually trigger the wo
 The docs definitions are .rst files.
 
 First install the build requirements:
-`pip3 install -r requirements.txt`
+`poetry install`
 
 To build the html, form the docs root, run:
 
