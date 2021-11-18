@@ -1,3 +1,5 @@
+from pydantic import SecretStr
+
 from robusta.api import *
 
 from pydantic.main import BaseModel
@@ -6,7 +8,7 @@ from pydantic.main import BaseModel
 class GitAuditParams(BaseModel):
     cluster_name: str
     git_url: str
-    git_key: str
+    git_key: SecretStr
     ignored_changes: List[str] = []
 
     def __str__(self):
@@ -42,13 +44,17 @@ def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditPar
     if len(event.obj.metadata.ownerReferences) != 0:
         return  # not handling runtime objects
 
-    git_repo = GitRepoManager.get_git_repo(action_params.git_url, action_params.git_key)
+    git_repo = GitRepoManager.get_git_repo(
+        action_params.git_url,
+        action_params.git_key.get_secret_value(),
+        action_params.cluster_name,
+    )
     name = f"{git_safe_name(event.obj.metadata.name)}.yaml"
     namespace = event.obj.metadata.namespace or "None"
     path = f"{git_safe_name(action_params.cluster_name)}/{git_safe_name(namespace)}"
 
     if event.operation == K8sOperationType.DELETE:
-        git_repo.delete_push(path, name)
+        git_repo.delete_push(path, name, f"Delete {path}/{name}")
     elif event.operation == K8sOperationType.CREATE:
         obj_yaml = hikaru.get_yaml(event.obj.spec)
         git_repo.commit_push(

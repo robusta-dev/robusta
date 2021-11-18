@@ -25,11 +25,7 @@ global_config:
   cluster_zone: {{ .Values.clusterZone }}
   {{- end }}
   {{- if .Values.globalConfig }}
-  {{- range $k, $v := .Values.globalConfig }}
-  {{- if $v }}
-  {{ $k }}: {{ $v }}
-  {{- end }}
-  {{- end }}
+{{ toYaml .Values.globalConfig | indent 2 }}
   {{- end }}
 active_playbooks:
 {{- if .Values.playbooks }}
