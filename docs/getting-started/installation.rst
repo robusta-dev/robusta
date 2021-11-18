@@ -1,17 +1,19 @@
 Installation Guide
 ##################
 
-Robusta is installed with Helm. You can handwrite the values.yaml file, but it is easier to autogenerate it.
+Robusta is installed with Helm. You can handwrite the values.yaml, but it is easier to autogenerate it.
 
 Helm Installation
 ------------------------------
 
-1. Autogenerate the Helm values.yaml file:
+1. Autogenerate the Helm values file:
 
 .. code-block:: bash
 
    python3 -m pip install -U robusta-cli --no-cache
    robusta gen-config
+
+Save ``generated_values.yaml``! This is your Robusta configuration file.
 
 2. Install Robusta using `Helm <https://helm.sh/>`_:
 
