@@ -136,7 +136,6 @@ def upload_file(
             if resp.peek_stderr():
                 print("STDERR: %s" % resp.read_stderr())
             else:
-                print("BREAKING")
                 break
         resp.close()
 
