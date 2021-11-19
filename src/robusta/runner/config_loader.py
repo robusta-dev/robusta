@@ -114,9 +114,10 @@ class ConfigLoader:
         actions_registry: ActionsRegistry,
     ) -> (SinksRegistry, PlaybooksRegistry):
         cluster_name = runner_config.global_config.get("cluster_name", "")
+        signing_key = runner_config.global_config.get("signing_key", "")
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(
-            runner_config.sinks_config, existing_sinks, cluster_name
+            runner_config.sinks_config, existing_sinks, cluster_name, signing_key
         )
         sinks_registry = SinksRegistry(new_sinks)
 

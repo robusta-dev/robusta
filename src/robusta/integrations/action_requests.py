@@ -19,7 +19,7 @@ class ActionRequest(BaseModel):
     body: ActionRequestBody
 
 
-def sign_action_request(body: ActionRequestBody, signing_key: str):
+def sign_action_request(body: BaseModel, signing_key: str):
     format_req = str.encode(f"v0:{body.json(exclude_none=True, sort_keys=True)}")
     if not signing_key:
         raise Exception("Signing key not available. Cannot sign action request")

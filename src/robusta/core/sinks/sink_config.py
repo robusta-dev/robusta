@@ -14,5 +14,5 @@ class SinkConfigBase(BaseModel):
     def get_params(self) -> SinkBaseParams:
         """get sink params"""
 
-    def create_sink(self, cluster_name: str) -> SinkBase:
+    def create_sink(self, cluster_name: str, signing_key: str) -> SinkBase:
         raise Exception(f"Sink not supported {type(self)}")

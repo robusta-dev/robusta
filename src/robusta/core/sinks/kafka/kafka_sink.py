@@ -24,7 +24,7 @@ class KafkaSinkConfigWrapper(SinkConfigBase):
     def get_params(self) -> SinkBaseParams:
         return self.kafka_sink
 
-    def create_sink(self, cluster_name: str) -> SinkBase:
+    def create_sink(self, cluster_name: str, signing_key: str) -> SinkBase:
         return KafkaSink(self)
 
 
