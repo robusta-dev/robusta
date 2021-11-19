@@ -35,12 +35,12 @@ class ActionRequestReceiver:
 
     def __run_external_action_request(self, callback_request: ExternalActionRequest):
         logging.info(
-            f"got callback `{callback_request.action_name}` {callback_request.action_params}"
+            f"got callback `{callback_request.body.action_name}` {callback_request.body.action_params}"
         )
         self.event_handler.run_external_action(
-            callback_request.action_name,
-            callback_request.action_params,
-            callback_request.sinks,
+            callback_request.body.action_name,
+            callback_request.body.action_params,
+            callback_request.body.sinks,
         )
 
     def start_incoming_receiver(self):
@@ -83,10 +83,18 @@ class ActionRequestReceiver:
         if actions:  # this is slack callback format
             for action in actions:
                 try:
-                    incoming_request = IncomingRequest.parse_raw(action["value"])
-                    self.__run_external_action_request(
-                        incoming_request.incoming_request
-                    )
+                    incoming_request = IncomingRequest.parse_raw(
+                        action["value"]
+                    ).incoming_request
+                    if not self.__validate_request(
+                        incoming_request.body, incoming_request.signature
+                    ):
+                        logging.error(
+                            f"Failed to validate action request {incoming_request}"
+                        )
+                        continue
+
+                    self.__run_external_action_request(incoming_request)
                 except Exception:
                     logging.error(
                         f"Failed to run incoming event {incoming_event}",
@@ -95,16 +103,30 @@ class ActionRequestReceiver:
         else:  # assume it's ActionRequest format
             try:
                 action_request = ActionRequest(**incoming_event)
-                if not self.__validate_request(action_request):
+                if (
+                    time.time() - action_request.body.timestamp
+                    > INCOMING_REQUEST_TIME_WINDOW_SECONDS
+                ):
+                    logging.error(
+                        f"Rejecting incoming request because it's too old. Cannot verify request {action_request}"
+                    )
+                    return
+
+                if not self.__validate_request(
+                    action_request.body, action_request.signature
+                ):
                     logging.error(f"Failed to validate action request {action_request}")
                     return
 
-                incoming_request = ExternalActionRequest(
+                body = ExternalActionRequestBody(
                     target_id="",
                     action_name=action_request.body.action_name,
                     action_params=action_request.body.action_params,
                     sinks=action_request.body.sinks,
                     origin=action_request.body.origin,
+                )
+                incoming_request = ExternalActionRequest(
+                    body=body,
                 )
                 self.__run_external_action_request(incoming_request)
             except Exception:
@@ -128,21 +150,11 @@ class ActionRequestReceiver:
         )
         ws.send(json.dumps(open_payload))
 
-    def __validate_request(self, action_request: ActionRequest) -> bool:
+    def __validate_request(self, body: BaseModel, signature: str) -> bool:
         signing_key = self.event_handler.get_global_config().get("signing_key")
         if not signing_key:
-            logging.error(
-                f"Signing key not available. Cannot verify request {action_request}"
-            )
+            logging.error(f"Signing key not available. Cannot verify request {body}")
             return False
 
-        if (
-            time.time() - action_request.body.timestamp
-            > INCOMING_REQUEST_TIME_WINDOW_SECONDS
-        ):
-            logging.error(
-                f"Rejecting incoming request because it's too old. Cannot verify request {action_request}"
-            )
-            return False
-        generated_signature = sign_action_request(action_request.body, signing_key)
-        return hmac.compare_digest(generated_signature, action_request.signature)
+        generated_signature = sign_action_request(body, signing_key)
+        return hmac.compare_digest(generated_signature, signature)

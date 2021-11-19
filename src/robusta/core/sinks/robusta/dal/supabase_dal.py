@@ -89,6 +89,7 @@ class SupabaseDal:
         password: str,
         sink_name: str,
         cluster_name: str,
+        signing_key: str,
     ):
         self.url = url
         self.key = key
@@ -101,6 +102,7 @@ class SupabaseDal:
         self.sign_in()
         self.target_id = TARGET_ID
         self.sink_name = sink_name
+        self.signing_key = signing_key
 
     def to_issue(self, finding: Finding):
         return {
@@ -183,7 +185,11 @@ class SupabaseDal:
                             "text": text,
                             "callback": IncomingRequest(
                                 incoming_request=ExternalActionRequest.create_for_func(
-                                    callback, self.sink_name, self.target_id, text
+                                    callback,
+                                    self.sink_name,
+                                    self.target_id,
+                                    text,
+                                    self.signing_key,
                                 )
                             ).json(),
                         }

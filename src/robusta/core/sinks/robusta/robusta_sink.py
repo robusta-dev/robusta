@@ -31,8 +31,8 @@ class RobustaSinkConfigWrapper(SinkConfigBase):
     def get_params(self) -> SinkBaseParams:
         return self.robusta_sink
 
-    def create_sink(self, cluster_name: str) -> SinkBase:
-        return RobustaSink(self, cluster_name)
+    def create_sink(self, cluster_name: str, signing_key: str) -> SinkBase:
+        return RobustaSink(self, cluster_name, signing_key)
 
 
 class RobustaToken(BaseModel):
@@ -48,6 +48,7 @@ class RobustaSink(SinkBase):
         self,
         sink_config: RobustaSinkConfigWrapper,
         cluster_name: str,
+        signing_key: str,
     ):
         super().__init__(sink_config.robusta_sink)
         self.token = sink_config.robusta_sink.token
@@ -61,6 +62,7 @@ class RobustaSink(SinkBase):
             robusta_token.password,
             sink_config.robusta_sink.name,
             self.cluster_name,
+            signing_key,
         )
         # start service discovery
         self.__active = True

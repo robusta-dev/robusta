@@ -162,8 +162,13 @@ class TableBlock(BaseBlock):
 
         return columns_max_widths
 
+    @classmethod
+    def __to_strings_rows(cls, rows):
+        # This is just to assert all row column values are strings. Tabulate might fail on other types
+        return [list(map(lambda column_value: str(column_value), row)) for row in rows]
+
     def to_markdown(self) -> MarkdownBlock:
-        rendered_rows = self.render_rows()
+        rendered_rows = self.__to_strings_rows(self.render_rows())
         col_max_width = self.__calc_max_width(self.headers, rendered_rows)
         table = tabulate(
             rendered_rows,

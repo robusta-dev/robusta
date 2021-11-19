@@ -91,7 +91,7 @@ def pod_ps(event: PodEvent):
     finding.add_enrichment(
         [
             TableBlock(
-                [[proc.pid, proc.exe, proc.cmdline] for proc in processes],
+                [[proc.pid, proc.exe, " ".join(proc.cmdline)] for proc in processes],
                 ["pid", "exe", "cmdline"],
             )
         ]
