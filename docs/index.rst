@@ -78,6 +78,9 @@ Next Steps
 Still not convinced? See `the demos on our website <http://startup.natanyellin.com/>`_.
 
 .. toctree::
+   self
+
+.. toctree::
    :maxdepth: 4
    :caption: Getting Started
    :hidden:
