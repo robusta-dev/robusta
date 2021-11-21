@@ -45,11 +45,3 @@ Seeing your new config in action
     .. image:: ../images/replicas_change.png
       :width: 600
       :align: center
-
-How it works
-----------------------------------
-In the playbooks configuration, we asked to get notified every time the ``'spec.replicas'`` field changes.
-
-Scaling the deployment triggered a notification.
-
-Try changing the configuration in ``values.yaml`` so that Robusta monitors changes to a deployment's image tag too.

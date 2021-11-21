@@ -87,7 +87,6 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    getting-started/installation
    getting-started/customization
    getting-started/manual-triggers
-   getting-started/more-commands
 
 .. toctree::
    :maxdepth: 4
