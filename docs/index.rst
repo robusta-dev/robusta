@@ -1,7 +1,6 @@
 Welcome to Robusta!
 =====================
-Robusta is the best way to stay on top of Kubernetes alerts. It monitors incoming alerts and triggers automated
-responses.
+Robusta is the best way to stay on top of Kubernetes alerts. It monitors alerts and triggers automated responses.
 
 Features:
 

@@ -16,7 +16,7 @@ Robusta playbooks can run in response to any Prometheus alert. To configure, add
                 send_resolved: true
 
 .. warning::
-    If you use the Prometheus Operator, configure AlertManager using a `manually managed secret
+    If you use the Prometheus Operator, use a `manually managed secret
     <https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md#manually-managed-secret>`_
     and **not** an AlertmanagerConfig due to `this limitation <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
 
