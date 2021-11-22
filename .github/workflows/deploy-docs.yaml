@@ -47,6 +47,7 @@ jobs:
       run: |
         echo "Setting DOCS_VERSION_PLACEHOLDER to ${GITHUB_REF##*/}"
         sed -i "s/DOCS_VERSION_PLACEHOLDER/${GITHUB_REF##*/}/g" docs/conf.py
+        sed -i "s/DOCS_RELEASE_PLACEHOLDER/${GITHUB_REF##*/}/g" docs/conf.py
 
     - name: Build the docs
       run: |
