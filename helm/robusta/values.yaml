@@ -40,6 +40,8 @@ builtinPlaybooks:
   actions:
   - restart_loop_reporter:
       restart_reason: CrashLoopBackOff
+  - image_pull_backoff_reporter:
+      rate_limit: 3600
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeNodeNotReady
