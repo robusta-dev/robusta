@@ -1,0 +1,19 @@
+{% extends '!page.html' %}
+{# we override this template only to change the word "Contents" in the sidebar to "On this page" #}
+{# if the furo theme ever lets us override this a different way, that would be better #}
+{% block right_sidebar %}
+    {% if not furo_hide_toc %}
+    <div class="toc-sticky toc-scroll">
+    <div class="toc-title-container">
+      <span class="toc-title">
+        {{ _("On this page") }}
+      </span>
+    </div>
+    <div class="toc-tree-container">
+      <div class="toc-tree">
+        {{ toc }}
+      </div>
+    </div>
+    </div>
+    {% endif %}
+{% endblock right_sidebar %}
