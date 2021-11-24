@@ -117,6 +117,45 @@ git_change_audit
             ``git_key`` github deployment key on the audit repository, with *allow write access*. To set this up `generate a private/public key pair for GitHub <https://docs.github.com/en/developers/overview/managing-deploy-keys#setup-2>`_.
             Store the public key as the Github deployment key and the private key in the playbook configuration.
 
+argo_app_sync
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. admonition:: Playbook
+
+    .. tab-set::
+
+        .. tab-item:: Description
+
+            **What it does:** syncs an Argo CD application
+
+            **When it runs:** can be triggered by any event or manually
+
+            .. image:: /images/argo-app-sync.png
+               :width: 1200
+               :align: center
+
+        .. tab-item:: Configuration
+
+            .. code-block:: yaml
+
+              playbooks:
+                - name: "argo_app_sync"
+                  action_params:
+                    argo_url: "https://my-argo.server.com"
+                    argo_token: "ARGO TOKEN"
+                    argo_app_name: "my app name"
+
+            ``argo_url`` Argo CD server url
+
+            ``argo_token`` Argo CD authentication token
+
+            ``argo_app_name`` Argo CD application that needs syncing
+
+            Optional:
+            ``argo_verify_server_cert`` verify Argo CD server certificate. Defaults to True
+
+            ``rate_limit_seconds`` this playbook is rate limited. Defaults to 1800 seconds.
+
 restart_loop_reporter
 ^^^^^^^^^^^^^^^^^^^^^
 
