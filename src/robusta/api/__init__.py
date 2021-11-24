@@ -25,6 +25,7 @@ from ..integrations.action_requests import *
 from ..integrations.grafana import *
 from ..integrations.scheduled.playbook_scheduler_manager_impl import *
 from ..integrations.git.git_repo import *
+from ..integrations.argocd.argocd_client import *
 from ..integrations.resource_analysis.kubernetes_node_analyzer import NodeAnalyzer
 from ..integrations.prometheus.utils import PrometheusDiscovery
 from ..core.persistency.in_memory import get_persistent_data
