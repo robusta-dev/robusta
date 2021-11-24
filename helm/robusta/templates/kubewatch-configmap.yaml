@@ -4,4 +4,7 @@ metadata:
   name: {{ .Release.Name }}-kubewatch-config
 data:
   .kubewatch.yaml: |-
+    handler:
+      cloudevent:
+        url: "http://{{ .Release.Name }}-runner:80/api/handle"
 {{ .Files.Get "kubewatch.yaml" | indent 4}}

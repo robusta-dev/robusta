@@ -1,7 +1,4 @@
 namespace: ""
-handler:
-  cloudevent:
-    url: "http://robusta-runner:80/api/handle"
 resource:
   deployment: true
   replicationcontroller: true
