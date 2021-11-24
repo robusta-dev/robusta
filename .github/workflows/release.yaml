@@ -40,7 +40,7 @@ jobs:
 
     - name: Update package version
       run: |
-        sed -i 's/0.0.0/${{env.RELEASE_VER}}/g' src/robusta/_version.py src/pyproject.toml helm/robusta/Chart.yaml helm/robusta/values.yaml
+        sed -i 's/0.0.0/${{env.RELEASE_VER}}/g' src/robusta/_version.py pyproject.toml helm/robusta/Chart.yaml helm/robusta/values.yaml
 
     # see https://github.com/GoogleContainerTools/skaffold/issues/4842
     - name: Cache skaffold image builds & config
