@@ -46,7 +46,7 @@ def push(
             shell=True,
         )
         subprocess.check_call(
-            f'kubectl annotate pods {namespace_to_kubectl(namespace)} --all --overwrite "playbooks-last-modified={time.time()}"',
+            f'kubectl annotate pods {namespace_to_kubectl(namespace)} --selector="robustaComponent=runner" --overwrite "playbooks-last-modified={time.time()}"',
             shell=True,
         )
         time.sleep(
