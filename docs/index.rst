@@ -9,6 +9,13 @@ Features:
 * Monitor changes to Kubernetes resources
 * Benefit from open source playbooks written by other companies
 
+You can use Robusta in two ways:
+
+TODO: add links and detailed tutorial for each one
+
+* As a full Prometheus stack with alerts pre-configured and no false alarms.
+* As a standalone automation platform that works with your existing stack.
+
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -120,3 +127,4 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    developer-guide/general-guidelines
    developer-guide/scheduled-playbooks
    developer-guide/reference
+   developer-guide/findings-api
