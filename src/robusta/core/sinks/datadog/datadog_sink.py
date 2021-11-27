@@ -43,7 +43,9 @@ class DataDogSinkConfigWrapper(SinkConfigBase):
     def get_params(self) -> SinkBaseParams:
         return self.datadog_sink
 
-    def create_sink(self, cluster_name: str, signing_key: str) -> SinkBase:
+    def create_sink(
+        self, account_id: str, cluster_name: str, signing_key: str
+    ) -> SinkBase:
         return DataDogSink(self, cluster_name)
 
 

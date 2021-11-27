@@ -14,9 +14,9 @@ class ActionRequestBody(BaseModel):
     origin: str = None
 
 
-class ActionRequest(BaseModel):
-    signature: str
+class ExternalActionRequest(BaseModel):
     body: ActionRequestBody
+    signature: str = ""
 
 
 def sign_action_request(body: BaseModel, signing_key: str):

@@ -1,3 +1,5 @@
+import base64
+import json
 import random
 import subprocess
 import time
@@ -35,6 +37,7 @@ def get_runner_url(runner_version=None):
 
 class GlobalConfig(BaseModel):
     signing_key: str = ""
+    account_id: str = ""
 
 
 class HelmValues(BaseModel):
@@ -126,6 +129,11 @@ def gen_config(
         else:
             robusta_api_key = ""
 
+    account_id = str(uuid.uuid4())
+    if robusta_api_key:  # if Robusta ui sink is defined, take the account id from it
+        token = json.loads(base64.b64decode(robusta_api_key))
+        account_id = token.get("account_id", account_id)
+
     if enable_prometheus_stack is None:
         enable_prometheus_stack = typer.confirm(
             "Would you like to include the Prometheus stack with Robusta?"
@@ -138,7 +146,7 @@ def gen_config(
         slackApiKey=slack_api_key,
         slackChannel=slack_channel,
         robustaApiKey=robusta_api_key,
-        globalConfig=GlobalConfig(signing_key=signing_key),
+        globalConfig=GlobalConfig(signing_key=signing_key, account_id=account_id),
         enablePrometheusStack=enable_prometheus_stack,
     )
 

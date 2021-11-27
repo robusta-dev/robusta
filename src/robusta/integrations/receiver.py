@@ -1,19 +1,20 @@
 import hmac
 import logging
+import time
 import traceback
-
 import websocket
 import json
 import os
-import time
 from threading import Thread
+from pydantic import BaseModel
 
-from .action_requests import ActionRequest, sign_action_request
-from ..core.model.events import ExecutionBaseEvent
-from ..model.playbook_action import PlaybookAction
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
-from ..core.model.env_vars import TARGET_ID, INCOMING_REQUEST_TIME_WINDOW_SECONDS
-from ..core.reporting.callbacks import *
+from ..core.model.env_vars import INCOMING_REQUEST_TIME_WINDOW_SECONDS
+from .action_requests import (
+    ExternalActionRequest,
+    ActionRequestBody,
+    sign_action_request,
+)
 
 WEBSOCKET_RELAY_ADDRESS = os.environ.get(
     "WEBSOCKET_RELAY_ADDRESS", "wss://relay.robusta.dev"
@@ -31,16 +32,24 @@ class ActionRequestReceiver:
     def __init__(self, event_handler: PlaybooksEventHandler):
         self.event_handler = event_handler
         self.active = True
+        self.account_id = self.event_handler.get_global_config().get("account_id")
+        self.cluster_name = self.event_handler.get_global_config().get("cluster_name")
+
+        if not self.account_id or not self.cluster_name:
+            logging.error(
+                f"Action receiver cannot start. "
+                f"Missing required account_id {self.account_id} cluster_name {self.cluster_name}"
+            )
+            return
+
         self.start_incoming_receiver()
 
-    def __run_external_action_request(self, callback_request: ExternalActionRequest):
-        logging.info(
-            f"got callback `{callback_request.body.action_name}` {callback_request.body.action_params}"
-        )
+    def __run_external_action_request(self, request: ActionRequestBody):
+        logging.info(f"got callback `{request.action_name}` {request.action_params}")
         self.event_handler.run_external_action(
-            callback_request.body.action_name,
-            callback_request.body.action_params,
-            callback_request.body.sinks,
+            request.action_name,
+            request.action_params,
+            request.sinks,
         )
 
     def start_incoming_receiver(self):
@@ -75,6 +84,24 @@ class ActionRequestReceiver:
         logging.info(f"Stopping incoming receiver")
         self.active = False
 
+    def __exec_external_request(
+        self, action_request: ExternalActionRequest, validate_timestamp: bool
+    ):
+        if validate_timestamp and (
+            time.time() - action_request.body.timestamp
+            > INCOMING_REQUEST_TIME_WINDOW_SECONDS
+        ):
+            logging.error(
+                f"Rejecting incoming request because it's too old. Cannot verify request {action_request}"
+            )
+            return
+
+        if not self.__validate_request(action_request.body, action_request.signature):
+            logging.error(f"Failed to validate action request {action_request}")
+            return
+
+        self.__run_external_action_request(action_request.body)
+
     def on_message(self, ws, message):
         # TODO: use typed pydantic classes here?
         logging.debug(f"received incoming message {message}")
@@ -83,18 +110,9 @@ class ActionRequestReceiver:
         if actions:  # this is slack callback format
             for action in actions:
                 try:
-                    incoming_request = IncomingRequest.parse_raw(
-                        action["value"]
-                    ).incoming_request
-                    if not self.__validate_request(
-                        incoming_request.body, incoming_request.signature
-                    ):
-                        logging.error(
-                            f"Failed to validate action request {incoming_request}"
-                        )
-                        continue
-
-                    self.__run_external_action_request(incoming_request)
+                    self.__exec_external_request(
+                        ExternalActionRequest.parse_raw(action["value"]), False
+                    )
                 except Exception:
                     logging.error(
                         f"Failed to run incoming event {incoming_event}",
@@ -102,33 +120,9 @@ class ActionRequestReceiver:
                     )
         else:  # assume it's ActionRequest format
             try:
-                action_request = ActionRequest(**incoming_event)
-                if (
-                    time.time() - action_request.body.timestamp
-                    > INCOMING_REQUEST_TIME_WINDOW_SECONDS
-                ):
-                    logging.error(
-                        f"Rejecting incoming request because it's too old. Cannot verify request {action_request}"
-                    )
-                    return
-
-                if not self.__validate_request(
-                    action_request.body, action_request.signature
-                ):
-                    logging.error(f"Failed to validate action request {action_request}")
-                    return
-
-                body = ExternalActionRequestBody(
-                    target_id="",
-                    action_name=action_request.body.action_name,
-                    action_params=action_request.body.action_params,
-                    sinks=action_request.body.sinks,
-                    origin=action_request.body.origin,
+                self.__exec_external_request(
+                    ExternalActionRequest(**incoming_event), True
                 )
-                incoming_request = ExternalActionRequest(
-                    body=body,
-                )
-                self.__run_external_action_request(incoming_request)
             except Exception:
                 logging.error(
                     f"Failed to run incoming event {incoming_event}",
@@ -141,12 +135,14 @@ class ActionRequestReceiver:
     def on_open(self, ws):
         account_id = self.event_handler.get_global_config().get("account_id")
         cluster_name = self.event_handler.get_global_config().get("cluster_name")
-        open_payload = {"action": "auth", "key": "dummy key", "target_id": TARGET_ID}
-        if account_id and cluster_name:
-            open_payload["account_id"] = account_id
-            open_payload["cluster_name"] = cluster_name
+        open_payload = {
+            "action": "auth",
+            "key": "dummy key",
+            "account_id": account_id,
+            "cluster_name": cluster_name,
+        }
         logging.info(
-            f"connecting to server as target_id={TARGET_ID}; account_id={account_id}; cluster_name={cluster_name}"
+            f"connecting to server as account_id={account_id}; cluster_name={cluster_name}"
         )
         ws.send(json.dumps(open_payload))
 

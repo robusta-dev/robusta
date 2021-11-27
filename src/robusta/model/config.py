@@ -40,9 +40,11 @@ class SinksRegistry:
         cls,
         new_sinks_config: List[SinkConfigBase],
         existing_sinks: Dict[str, SinkBase],
-        cluster_name: str,
-        signing_key: str,
+        global_config: dict,
     ) -> Dict[str, SinkBase]:
+        cluster_name = global_config.get("cluster_name", "")
+        signing_key = global_config.get("signing_key", "")
+        account_id = global_config.get("account_id", "")
         new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
         # remove deleted sinks
         deleted_sink_names = [
@@ -70,7 +72,7 @@ class SinksRegistry:
                         f"Adding {type(sink_config)} sink named {sink_config.get_name()}"
                     )
                     new_sinks[sink_config.get_name()] = sink_config.create_sink(
-                        cluster_name, signing_key
+                        account_id, cluster_name, signing_key
                     )
                 elif (
                     sink_config.get_params() != new_sinks[sink_config.get_name()].params
@@ -80,7 +82,7 @@ class SinksRegistry:
                     )
                     new_sinks[sink_config.get_name()].stop()
                     new_sinks[sink_config.get_name()] = sink_config.create_sink(
-                        cluster_name, signing_key
+                        account_id, cluster_name, signing_key
                     )
             except Exception as e:
                 logging.error(

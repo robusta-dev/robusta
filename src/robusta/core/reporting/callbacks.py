@@ -1,30 +1,24 @@
-from typing import Union, Optional, List
+import time
 from pydantic import BaseModel
 
-from ...integrations.action_requests import sign_action_request
+from ...integrations.action_requests import (
+    sign_action_request,
+    ExternalActionRequest,
+    ActionRequestBody,
+)
 from . import CallbackChoice
 from ..playbooks.actions_registry import ActionsRegistry
 
 
-class ExternalActionRequestBody(BaseModel):
-    target_id: str  # target_id is used by the relay, to route slack callback requests
-    action_name: str
-    action_params: dict = None
-    sinks: Optional[List[str]] = None
-    origin: str = None
-
-
-class ExternalActionRequest(BaseModel):
-    body: ExternalActionRequestBody
-    signature: str = ""
-
+class ExternalActionRequestBuilder(BaseModel):
     @classmethod
     def create_for_func(
         cls,
         choice: CallbackChoice,
         sink: str,
-        target_id: str,
         text: str,
+        account_id: str,
+        cluster_name: str,
         signing_key: str,
     ):
         if choice.action is None:
@@ -43,18 +37,16 @@ class ExternalActionRequest(BaseModel):
         action_params = (
             {} if choice.action_params is None else choice.action_params.dict()
         )
-        body = ExternalActionRequestBody(
-            target_id=target_id,
+        body = ActionRequestBody(
+            account_id=account_id,
+            cluster_name=cluster_name,
+            timestamp=time.time(),
             action_name=choice.action.__name__,
             action_params=action_params,
             sinks=[sink],
             origin="callback",
         )
-        return cls(
+        return ExternalActionRequest(
             body=body,
             signature=sign_action_request(body, signing_key),
         )
-
-
-class IncomingRequest(BaseModel):
-    incoming_request: Union[ExternalActionRequest]

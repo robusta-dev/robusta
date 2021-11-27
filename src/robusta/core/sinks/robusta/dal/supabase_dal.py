@@ -25,8 +25,8 @@ from ....reporting.base import (
     Finding,
     Enrichment,
 )
-from ....model.env_vars import TARGET_ID, SUPABASE_LOGIN_RATE_LIMIT_SEC
-from ....reporting.callbacks import IncomingRequest, ExternalActionRequest
+from ....model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
+from ....reporting.callbacks import ExternalActionRequestBuilder
 from supabase_py import Client
 
 SERVICES_TABLE = "Services"
@@ -100,7 +100,6 @@ class SupabaseDal:
         self.password = password
         self.sign_in_time = 0
         self.sign_in()
-        self.target_id = TARGET_ID
         self.sink_name = sink_name
         self.signing_key = signing_key
 
@@ -183,14 +182,13 @@ class SupabaseDal:
                     callbacks.append(
                         {
                             "text": text,
-                            "callback": IncomingRequest(
-                                incoming_request=ExternalActionRequest.create_for_func(
-                                    callback,
-                                    self.sink_name,
-                                    self.target_id,
-                                    text,
-                                    self.signing_key,
-                                )
+                            "callback": ExternalActionRequestBuilder.create_for_func(
+                                callback,
+                                self.sink_name,
+                                text,
+                                self.account_id,
+                                self.cluster,
+                                self.signing_key,
                             ).json(),
                         }
                     )
