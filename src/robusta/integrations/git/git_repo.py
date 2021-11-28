@@ -73,6 +73,10 @@ class GitRepo:
         if os.path.exists(key_file_name):
             return key_file_name
 
+        # Secret managers might remove last empty line on private key, causing it to be illegal
+        if not git_key.endswith("\n"):
+            git_key = git_key + "\n"
+
         with open(key_file_name, "w") as key_file:
             key_file.write(textwrap.dedent(f"{git_key}"))
         os.chmod(key_file_name, 0o400)
