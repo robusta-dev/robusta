@@ -3,6 +3,7 @@ import re
 import subprocess
 import time
 import logging
+from typing import Optional
 
 import kubernetes
 from pathlib import Path
@@ -10,23 +11,30 @@ from hikaru.model import Namespace
 
 
 class RobustaController:
+    def __init__(self, robusta_runner_image: Optional[str]):
+        self.robusta_runner_image = robusta_runner_image
+
     def helm_install(self, values_file):
-        logs = self._run_cmd(
-            [
-                "helm",
-                "install",
-                "robusta",
-                "./helm/robusta/",
-                "-f",
-                values_file,
-                "--set",
-                "kubewatch.resources.requests.memory=64Mi",
-                "--set",
-                "grafanaRenderer.resources.requests.memory=64Mi",
-                "--set",
-                "runner.resources.requests.memory=512Mi",
-            ],
-        )
+        cmd = [
+            "helm",
+            "install",
+            "robusta",
+            "./helm/robusta/",
+            "-f",
+            values_file,
+            "--set",
+            "kubewatch.resources.requests.memory=64Mi",
+            "--set",
+            "grafanaRenderer.resources.requests.memory=64Mi",
+            "--set",
+            "runner.resources.requests.memory=512Mi",
+        ]
+
+        logging.error(f"runner image is {self.robusta_runner_image}")
+        if self.robusta_runner_image is not None:
+            cmd.extend(["--set", f"runner.image={self.robusta_runner_image}"])
+
+        logs = self._run_cmd(cmd)
         assert "STATUS: deployed" in logs
 
         # wait until robusta runner is created, takes some time to pull the 2 container images
@@ -48,6 +56,20 @@ class RobustaController:
         details = self._run_cmd(["kubectl", "describe", "pods"])
         logging.error(f"robusta runner did not start. logs={logs}; details={details}")
         raise Exception(f"robusta runner did not start")
+
+    def get_logs(self):
+        return self._run_cmd(
+            ["kubectl", "logs", "deployment/robusta-runner", "runner"],
+        )
+
+    def helm_uninstall(self):
+        self._run_cmd(
+            [
+                "helm",
+                "uninstall",
+                "robusta",
+            ],
+        )
 
     def gen_config(self, slack_channel: str, slack_api_key: str, output_path: str):
         logs = self._run_robusta_cli_cmd(
