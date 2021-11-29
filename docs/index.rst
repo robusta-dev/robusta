@@ -1,6 +1,6 @@
 Welcome to Robusta!
 =====================
-Robusta is the best way to stay on top of Kubernetes alerts. It monitors alerts and triggers automated responses.
+Robusta is the best way to stay on top of Kubernetes alerts. It monitors events and triggers automated responses.
 
 Features:
 
@@ -9,49 +9,69 @@ Features:
 * Monitor changes to Kubernetes resources
 * Benefit from open source playbooks written by other companies
 
-You can use Robusta in two ways:
+You can use Robusta as:
 
-TODO: add links and detailed tutorial for each one
+.. dropdown:: A complete Kubernetes monitoring stack
+    :color: light
 
-* As a full Prometheus stack with alerts pre-configured and no false alarms.
-* As a standalone automation platform that works with your existing stack.
+    Robusta will install a bundled Prometheus stack including:
+
+    * Prometheus, AlertManager, and Grafana
+    * Out of the box alerts fine-tuned for Kubernetes
+
+.. dropdown:: An automations engine for your existing stack
+    :color: light
+
+    Robusta will run automations in response to your existing alerts.
+
+    Supports Prometheus, Datadog, Elasticsearch, and more.
+
+    Robusta will **not** install Prometheus or other tools.
 
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You configure triggers and actions in YAML:
+You configure triggers and actions in YAML.
 
-.. admonition:: Example Configuration
+For example, you can configure Robusta to gather logs when a pod crashes:
 
-    .. code-block:: yaml
+.. code-block:: yaml
 
-        - triggers:
-          - on_prometheus_alert:
-              alert_name: HostOutOfDiskSpace
-          actions:
-          - node_bash_enricher:
-              bash_command: "df -h"
-
+    - triggers:
+      - on_prometheus_alert:
+          alert_name: KubePodCrashLooping
+      actions:
+      - logs_enricher: {}
 
 Results are sent to Slack, MSTeams, or other destinations:
 
-.. admonition:: Example Slack Message
+.. image:: /images/crash-report.png
+    :width: 700
+    :align: center
 
-    .. image:: /images/crash-report.png
+There are over 50 builtin actions you can use.
 
-You can write your own playbook actions in Python:
+If you know Python, you can write your own playbook actions like the ``logs_enricher`` used above.
 
-.. admonition:: Example Action
+.. dropdown:: View example action
+    :color: light
 
     .. code-block:: python
 
+        # this action runs on triggers you define in the YAML
         @action
-        def my_action(alert: PrometheusKubernetesAlert):
-            print(f"The alert {alert.alert_name} fired on pod {alert.pod.metadata.name}")
-            print(f"The pod has these processes:", alert.pod.exec("ps aux"))
-            print(f"The pod has {len(alert.pod.spec.containers)} containers")
+        def my_enricher(event: PrometheusKubernetesAlert):
+            # we have full access to the pod on which the alert fired
+            pod = event.get_pod()
+            pod_name = pod.metadata.name
+            pod_logs = pod.get_logs()
+            pod_processes = pod.exec("ps aux")
 
-
+            # this is how you send data to slack or other destinations
+            event.add_enrichment([
+                MarkdownBlock("*Oh no!* An alert occurred on " + pod_name)
+                FileBlock("crashing-pod.log", pod_logs)
+            ])
 
 Concepts
 ~~~~~~~~~~~~~~~~~~~~
@@ -85,6 +105,8 @@ Next Steps
 Still not convinced? See `the demos on our website <http://startup.natanyellin.com/>`_.
 
 .. toctree::
+   :hidden:
+
    self
 
 .. toctree::

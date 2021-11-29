@@ -9,3 +9,7 @@
 h2, h3 {
     border-bottom: 2px solid whitesmoke;
 }
+
+.sd-bg-light {
+    background-color: #ebebeb !important;
+}
