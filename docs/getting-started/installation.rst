@@ -14,6 +14,7 @@ Helm Installation
    robusta gen-config
 
 Save ``generated_values.yaml``! This is your Robusta configuration file.
+In the docs, we'll often refer to this file as just ``values.yaml``. The exact filename you save it as is up to you.
 
 2. Install Robusta using `Helm <https://helm.sh/>`_:
 
