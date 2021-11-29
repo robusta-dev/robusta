@@ -6,7 +6,7 @@ Features:
 
 * Add missing context to Prometheus alerts and filter out false alarms
 * Reduce the volume of flooded alert channels with prebuilt fixes
-* Monitor changes to Kubernetes resources
+* Notify on changes to Kubernetes resources and check for problems after updates
 * Benefit from open source playbooks written by other companies
 
 You can use Robusta as:
@@ -77,7 +77,7 @@ Concepts
 ~~~~~~~~~~~~~~~~~~~~
 Robusta was inspired by three good ideas from other domains:
 
-1. Automated tests make finding bugs a continuous and unavoidable process
+1. Automated tests make finding bugs a continuous process
 2. Infrastructure as code makes complicated workflows reproducible
 3. Package managers like Helm share operational knowledge via open source
 
@@ -89,11 +89,13 @@ More examples
 Here are some common things people automate with Robusta:
 
 * Send logs of crashing pods to Slack/MSTeams
-* Enrich ``HostOutOfDiskSpace`` alerts with details about large files
 * Enrich all alerts with diffs of recently changed deployments
-* Attach a CPU profiler for 2 seconds on ``HighCPU`` without restarting your application
 * Track and audit every change in a Kubernetes cluster
 * Increase max replicas from Slack during an incident
+* Better handling of common alerts:
+    * Enrich ``HostOutOfDiskSpace`` alerts with details about large files
+    * Attach a CPU profiler for 2 seconds on ``HighCPU`` without restarting your application
+    * TODO
 
 See the :ref:`builtin playbooks <List of built-in playbooks>` or write your own.
 
