@@ -43,15 +43,15 @@ For example, you can configure Robusta to gather logs when a pod crashes:
       actions:
       - logs_enricher: {}
 
-Results are sent to Slack, MSTeams, or other destinations:
+There are over 50 builtin actions you can use.
+
+Results are sent to Slack, MSTeams, and other destinations:
 
 .. image:: /images/crash-report.png
     :width: 700
     :align: center
 
-There are over 50 builtin actions you can use.
-
-If you know Python, you can write your own playbook actions like the ``logs_enricher`` used above.
+If you know Python, you can extend Robusta with your own actions like the ``logs_enricher`` used above.
 
 .. dropdown:: View example action
     :color: light
