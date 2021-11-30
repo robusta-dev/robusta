@@ -36,7 +36,7 @@ How it works
 You configure automations in a three-part yaml:
 
 Triggers:
-    When to run.
+    When to run
 
 Actions:
     What to do
@@ -51,7 +51,12 @@ Examples
 
     .. tab-item:: Crashing pods
 
-        .. admonition:: Send logs of crashing pods to Slack
+        .. admonition:: Example: monitor crashing pods
+
+            When a pod crashes, fetch the logs and send a message to Slack.
+
+            This is configured by default, so after installing Robusta it just works. If you configured it yourself,
+            it would look like this:
 
             .. code-block:: yaml
 
@@ -69,7 +74,9 @@ Examples
 
     .. tab-item:: Grafana Annotations
 
-        .. admonition:: Write annotations to Grafana when deployments are updated
+        .. admonition:: Example: show updates in Grafana
+
+            This writes annotations to Grafana when applications are updated.
 
             .. code-block:: yaml
 
@@ -87,7 +94,13 @@ Examples
 
     .. tab-item:: HighCPU alerts
 
-        .. admonition:: Send insights to Slack on high cpu usage. Also run ``ps aux`` on the relevant node.
+        .. admonition:: Example: show insights on HighCPU Usage
+
+            When a node has high CPU usage, analyze the node and provide actionable advice. Also run ``ps aux`` on the
+            node.
+
+            This is configured by default, so after installing Robusta it just works. If you configured it yourself,
+            it would look like this:
 
             .. code-block:: yaml
 
@@ -109,7 +122,9 @@ Examples
 
     .. tab-item:: Change Tracking
 
-        .. admonition:: Notify in Slack when deployments are updated
+        .. admonition:: Example: track deployment updates
+
+            This notifies in Slack when ``status.conditions`` is modified for a Deployment
 
             .. code-block:: yaml
 
@@ -127,11 +142,10 @@ Examples
 
 Here are more things people automate with Robusta:
 
-* Send logs of crashing pods to Slack/MSTeams
-* Enrich all alerts with diffs of recently changed deployments
+* See which applications were updated right before an alert fired
 * Track and audit every change in a Kubernetes cluster
 * Increase max replicas from Slack during an incident
-* Enrich ``HostOutOfDiskSpace`` alerts with details about large files
+* Monitor and fix health issues like low disk space on a node
 * Attach a CPU profiler for 2 seconds on ``HighCPU`` without restarting your application
 
 
