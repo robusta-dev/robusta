@@ -10,6 +10,7 @@ def pytest_addoption(parser):
 
 
 # see https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
+# the goal here is to let fixtures know if a test succeeded or not by checking `request.node.report_call.passed` etc
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     # execute all other hooks to obtain the report object
