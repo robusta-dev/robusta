@@ -6,9 +6,9 @@ and maintenance.
 Use Cases
 ~~~~~~~~~~~
 
-* Response to incidents in an automated and reproducible manner
-* Track changes to Kubernetes resources and identify regressions
-* Out-of-the-box insights for common alerts
+* Respond to incidents in a reproducible manner
+* Track changes and identify regressions
+* See out-of-the-box insights for common alerts
 * Automatically silence false alarms
 * Fix alerts in one click from Slack or the terminal
 
@@ -35,13 +35,13 @@ How it works
 
 You configure automations in a three-part yaml:
 
-Triggers:
+triggers:
     When to run
 
-Actions:
+actions:
     What to do
 
-Sinks:
+sinks:
     Where to send the result
 
 Examples
@@ -140,25 +140,23 @@ Examples
               :width: 600
               :align: center
 
-Here are more things people automate with Robusta:
+More examples:
 
-* See which applications were updated right before an alert fired
-* Track and audit every change in a Kubernetes cluster
-* Increase max replicas from Slack during an incident
-* Monitor and fix health issues like low disk space on a node
-* Attach a CPU profiler for 2 seconds on ``HighCPU`` without restarting your application
+* See what changed before an alert fired
+* Track and audit changes in a cluster
+* Apply workarounds from Slack like scaling up Deployments
+* Monitor and fix health issues like low disk space
+* Debug high CPU by profiling for 2 seconds without restarting your application
 
 
 Inspiration
 ~~~~~~~~~~~~~~~~~~~~
 
-Robusta was inspired by three good ideas from other domains:
+**Robusta makes troubleshooting automated, reproducible, and open source**.
 
 1. Automated testing taught us the power of **automation**
 2. Infrastructure as Code (IAC) made us love **reproducible** workflows
 3. Helm showed us the power of **open source** communities
-
-**Robusta makes troubleshooting automated, reproducible, and open source**.
 
 Features
 ~~~~~~~~~~~~~~~~~~~~
