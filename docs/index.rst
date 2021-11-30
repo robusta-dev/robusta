@@ -8,10 +8,9 @@ Use Cases
 
 * Response to incidents in an automated and reproducible manner
 * Out-of-the-box insights for common alerts
-* Automatically flag known false alarms
+* Automatically silence false alarms
 * Track changes to Kubernetes resources and identify regressions
-* Reduce alert fatigue with out-of-the-box playbooks
-* Activate fixes from Slack or the terminal
+* Fix alerts in one click from Slack or the terminal
 
 Robusta can be used as:
 
@@ -37,13 +36,13 @@ How it works
 You configure automations in a three-part yaml:
 
 Triggers:
-    When this automation should run.
+    When to run.
 
 Actions:
-    What the automation should do
+    What to do
 
 Sinks:
-    Where the result should be sent
+    Where to send the result
 
 Examples
 ~~~~~~~~~~~~~~~~~~
@@ -68,23 +67,22 @@ Examples
                 :width: 700
                 :align: center
 
+    .. tab-item:: Grafana Annotations
 
-    .. tab-item:: Deployment updates
-
-        .. admonition:: Notify in Slack when deployments are updated
+        .. admonition:: Write annotations to Grafana when deployments are updated
 
             .. code-block:: yaml
 
                 triggers:
                   - on_deployment_update: {}
                 actions:
-                  - resource_babysitter:
-                      fields_to_monitor: ["status.conditions"]
-                sinks:
-                  - slack
+                  - add_deployment_lines_to_grafana:
+                      grafana_url: <grafana_url>
+                      grafana_api_key: <grafana_api_key>
+                      grafana_dashboard_uid: <which_grafana_dashboard_to_update>
 
-            .. image:: /images/deployment-babysitter.png
-              :width: 600
+            .. image:: /images/grafana-deployment-enrichment.png
+              :width: 400
               :align: center
 
     .. tab-item:: HighCPU alerts
@@ -109,22 +107,22 @@ Examples
             .. image:: /images/node-cpu-usage-vs-request.svg
                 :width: 30 %
 
-    .. tab-item:: Grafana Annotations
+    .. tab-item:: Change Tracking
 
-        .. admonition:: Write annotations to Grafana when deployments are updated
+        .. admonition:: Notify in Slack when deployments are updated
 
             .. code-block:: yaml
 
                 triggers:
                   - on_deployment_update: {}
                 actions:
-                  - add_deployment_lines_to_grafana:
-                      grafana_url: <grafana_url>
-                      grafana_api_key: <grafana_api_key>
-                      grafana_dashboard_uid: <which_grafana_dashboard_to_update>
+                  - resource_babysitter:
+                      fields_to_monitor: ["status.conditions"]
+                sinks:
+                  - slack
 
-            .. image:: /images/grafana-deployment-enrichment.png
-              :width: 400
+            .. image:: /images/deployment-babysitter.png
+              :width: 600
               :align: center
 
 Here are more things people automate with Robusta:
@@ -155,7 +153,6 @@ Features
     :color: light
 
     * Prometheus alerts
-    * Datadog alerts
     * Elasticsearch monitors
     * Changes to Kubernetes resources
     * Log lines written by applications
