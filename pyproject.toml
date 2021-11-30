@@ -34,6 +34,7 @@ supabase-py = { version = "^0.0.2", optional = true }
 datadog-api-client = { version = "^1.2.0", optional = true }
 dpath = "^2.0.5"
 prometheus-client = "^0.12.0"
+sphinx-autobuild = "^2021.3.14"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
@@ -45,6 +46,8 @@ sphinx-autobuild = "^2021.3.14"
 sphinx-copybutton = "^0.4.0"
 sphinx-design = "^0.0.13"
 witchhazel = "^2018.8.23"
+sphinx-autodoc-typehints = "^1.12.0"
+autodoc-pydantic = "^1.5.1"
 
 [tool.poetry.extras]
 all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "slack-sdk", "supabase-py", "datadog-api-client"]
