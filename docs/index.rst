@@ -7,9 +7,9 @@ Use Cases
 ~~~~~~~~~~~
 
 * Response to incidents in an automated and reproducible manner
+* Track changes to Kubernetes resources and identify regressions
 * Out-of-the-box insights for common alerts
 * Automatically silence false alarms
-* Track changes to Kubernetes resources and identify regressions
 * Fix alerts in one click from Slack or the terminal
 
 Robusta can be used as:
