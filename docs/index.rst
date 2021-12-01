@@ -149,14 +149,15 @@ More examples:
 * Debug high CPU by profiling for 2 seconds without restarting your application
 
 
-Inspiration
+Motivation
 ~~~~~~~~~~~~~~~~~~~~
 
 **Robusta makes troubleshooting automated, reproducible, and open source**.
 
-1. Automated testing taught us the power of **automation**
-2. Infrastructure as Code (IAC) made us love **reproducible** workflows
-3. Helm showed us the power of **open source** communities
+The Robusta vision is to freely share all devops knowledge and best-practices.
+
+With Robusta, all companies can identify and troubleshoot problems like experts because
+Robusta turns expert knowledge into re-usable code.
 
 Features
 ~~~~~~~~~~~~~~~~~~~~
