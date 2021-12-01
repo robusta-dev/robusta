@@ -34,7 +34,12 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_design",
     "sphinxcontrib.autodoc_pydantic",
+    "sphinxcontrib.images",
 ]
+
+images_config = {
+    "override_image_directive": True,
+}
 
 autodoc_mock_imports = ["prometheus_api_client"]
 
