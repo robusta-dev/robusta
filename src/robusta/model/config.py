@@ -8,6 +8,7 @@ from ..core.sinks.sink_config import SinkConfigBase
 from ..integrations.scheduled.playbook_scheduler_manager import (
     PlaybooksSchedulerManager,
 )
+from ..integrations.receiver import ActionRequestReceiver
 from .playbook_definition import PlaybookDefinition
 from ..utils.function_hashes import get_function_hash
 from ..core.playbooks.playbook_utils import merge_global_params
@@ -172,6 +173,7 @@ class Registry:
     _playbooks: PlaybooksRegistry = PlaybooksRegistry()
     _sinks: SinksRegistry = None
     _scheduler = None
+    _receiver: ActionRequestReceiver = None
 
     def set_actions(self, actions: ActionsRegistry):
         self._actions = actions
@@ -196,3 +198,9 @@ class Registry:
 
     def get_scheduler(self) -> PlaybooksSchedulerManager:
         return self._scheduler
+
+    def set_receiver(self, receiver: ActionRequestReceiver):
+        self._receiver = receiver
+
+    def get_receiver(self) -> ActionRequestReceiver:
+        return self._receiver

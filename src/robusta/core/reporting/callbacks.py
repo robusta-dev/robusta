@@ -1,7 +1,7 @@
 import time
 from pydantic import BaseModel
 
-from ...integrations.action_requests import (
+from robusta.core.reporting.action_requests import (
     sign_action_request,
     ExternalActionRequest,
     ActionRequestBody,

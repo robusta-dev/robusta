@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..core.model.env_vars import INCOMING_REQUEST_TIME_WINDOW_SECONDS
-from .action_requests import (
+from robusta.core.reporting.action_requests import (
     ExternalActionRequest,
     ActionRequestBody,
     sign_action_request,
@@ -35,6 +35,13 @@ class ActionRequestReceiver:
         self.account_id = self.event_handler.get_global_config().get("account_id")
         self.cluster_name = self.event_handler.get_global_config().get("cluster_name")
 
+        self.ws = websocket.WebSocketApp(
+            WEBSOCKET_RELAY_ADDRESS,
+            on_open=self.on_open,
+            on_message=self.on_message,
+            on_error=self.on_error,
+        )
+
         if not self.account_id or not self.cluster_name:
             logging.error(
                 f"Action receiver cannot start. "
@@ -42,17 +49,9 @@ class ActionRequestReceiver:
             )
             return
 
-        self.start_incoming_receiver()
+        self.start_receiver()
 
-    def __run_external_action_request(self, request: ActionRequestBody):
-        logging.info(f"got callback `{request.action_name}` {request.action_params}")
-        self.event_handler.run_external_action(
-            request.action_name,
-            request.action_params,
-            request.sinks,
-        )
-
-    def start_incoming_receiver(self):
+    def start_receiver(self):
         if INCOMING_RECEIVER_ENABLED != "True":
             logging.info(
                 "outgoing messages only mode. Incoming event receiver not initialized"
@@ -67,22 +66,25 @@ class ActionRequestReceiver:
         receiver_thread = Thread(target=self.run_forever)
         receiver_thread.start()
 
+    def __run_external_action_request(self, request: ActionRequestBody):
+        logging.info(f"got callback `{request.action_name}` {request.action_params}")
+        self.event_handler.run_external_action(
+            request.action_name,
+            request.action_params,
+            request.sinks,
+        )
+
     def run_forever(self):
         logging.info("starting relay receiver")
         while self.active:
-            ws = websocket.WebSocketApp(
-                WEBSOCKET_RELAY_ADDRESS,
-                on_open=self.on_open,
-                on_message=self.on_message,
-                on_error=self.on_error,
-            )
-            ws.run_forever()
+            self.ws.run_forever()
             logging.info("relay websocket closed")
             time.sleep(INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC)
 
     def stop(self):
         logging.info(f"Stopping incoming receiver")
         self.active = False
+        self.ws.close()
 
     def __exec_external_request(
         self, action_request: ExternalActionRequest, validate_timestamp: bool
@@ -108,6 +110,9 @@ class ActionRequestReceiver:
         incoming_event = json.loads(message)
         actions = incoming_event.get("actions", None)
         if actions:  # this is slack callback format
+            # slack callbacks have a list of 'actions'. Within each action there a 'value' field,
+            # which container the actual action details we need to run.
+            # This wrapper format is part of the slack API, and cannot be changed by us.
             for action in actions:
                 try:
                     self.__exec_external_request(
