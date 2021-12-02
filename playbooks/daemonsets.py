@@ -160,7 +160,6 @@ def daemonset_misscheduled_analysis_enricher(event: DaemonSetEvent):
         return
 
     if not check_for_known_mismatch_false_alarm(ds):
-        event.add_enrichment([])
         return
 
     event.add_enrichment(

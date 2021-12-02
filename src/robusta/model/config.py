@@ -8,6 +8,7 @@ from ..core.sinks.sink_config import SinkConfigBase
 from ..integrations.scheduled.playbook_scheduler_manager import (
     PlaybooksSchedulerManager,
 )
+from ..integrations.receiver import ActionRequestReceiver
 from .playbook_definition import PlaybookDefinition
 from ..utils.function_hashes import get_function_hash
 from ..core.playbooks.playbook_utils import merge_global_params
@@ -40,8 +41,11 @@ class SinksRegistry:
         cls,
         new_sinks_config: List[SinkConfigBase],
         existing_sinks: Dict[str, SinkBase],
-        cluster_name: str,
+        global_config: dict,
     ) -> Dict[str, SinkBase]:
+        cluster_name = global_config.get("cluster_name", "")
+        signing_key = global_config.get("signing_key", "")
+        account_id = global_config.get("account_id", "")
         new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
         # remove deleted sinks
         deleted_sink_names = [
@@ -69,7 +73,7 @@ class SinksRegistry:
                         f"Adding {type(sink_config)} sink named {sink_config.get_name()}"
                     )
                     new_sinks[sink_config.get_name()] = sink_config.create_sink(
-                        cluster_name
+                        account_id, cluster_name, signing_key
                     )
                 elif (
                     sink_config.get_params() != new_sinks[sink_config.get_name()].params
@@ -79,7 +83,7 @@ class SinksRegistry:
                     )
                     new_sinks[sink_config.get_name()].stop()
                     new_sinks[sink_config.get_name()] = sink_config.create_sink(
-                        cluster_name
+                        account_id, cluster_name, signing_key
                     )
             except Exception as e:
                 logging.error(
@@ -169,6 +173,7 @@ class Registry:
     _playbooks: PlaybooksRegistry = PlaybooksRegistry()
     _sinks: SinksRegistry = None
     _scheduler = None
+    _receiver: ActionRequestReceiver = None
 
     def set_actions(self, actions: ActionsRegistry):
         self._actions = actions
@@ -193,3 +198,9 @@ class Registry:
 
     def get_scheduler(self) -> PlaybooksSchedulerManager:
         return self._scheduler
+
+    def set_receiver(self, receiver: ActionRequestReceiver):
+        self._receiver = receiver
+
+    def get_receiver(self) -> ActionRequestReceiver:
+        return self._receiver

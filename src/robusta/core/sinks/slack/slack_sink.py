@@ -19,16 +19,29 @@ class SlackSinkConfigWrapper(SinkConfigBase):
     def get_params(self) -> SinkBaseParams:
         return self.slack_sink
 
-    def create_sink(self, cluster_name: str) -> SinkBase:
-        return SlackSink(self)
+    def create_sink(
+        self, account_id: str, cluster_name: str, signing_key: str
+    ) -> SinkBase:
+        return SlackSink(self, account_id, cluster_name, signing_key)
 
 
 class SlackSink(SinkBase):
-    def __init__(self, sink_config: SlackSinkConfigWrapper):
+    def __init__(
+        self,
+        sink_config: SlackSinkConfigWrapper,
+        account_id: str,
+        cluster_name: str,
+        signing_key: str,
+    ):
         super().__init__(sink_config.slack_sink)
+        self.account_id = account_id
+        self.cluster_name = cluster_name
         self.slack_channel = sink_config.slack_sink.slack_channel
         self.api_key = sink_config.slack_sink.api_key
-        self.slack_sender = SlackSender(self.api_key)
+        self.signing_key = signing_key
+        self.slack_sender = SlackSender(
+            self.api_key, account_id, cluster_name, signing_key
+        )
 
     def __eq__(self, other):
         return (

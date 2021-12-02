@@ -9,6 +9,8 @@ import yaml
 from typing import Optional
 from inspect import getmembers
 
+from robusta.integrations.receiver import ActionRequestReceiver
+
 from ..integrations.scheduled.trigger import ScheduledTriggerEvent
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..core.model.runner_config import RunnerConfig
@@ -72,6 +74,20 @@ class ConfigLoader:
 
         scheduler.update(playbooks_registry.get_playbooks(ScheduledTriggerEvent()))
 
+    def __reload_receiver(self):
+        receiver = self.registry.get_receiver()
+        if not receiver:  # no existing receiver, just start one
+            self.registry.set_receiver(ActionRequestReceiver(self.event_handler))
+            return
+
+        current_account_id = self.event_handler.get_global_config().get("account_id")
+        current_cluster_name = self.event_handler.get_global_config().get("cluster_name")
+
+        if current_account_id != receiver.account_id or current_cluster_name != receiver.cluster_name:
+            # need to re-create the receiver
+            receiver.stop()
+            self.registry.set_receiver(ActionRequestReceiver(self.event_handler))
+
     def __reload_playbook_packages(self, change_name):
         logging.info(f"Reloading playbook packages due to change on {change_name}")
         with self.reload_lock:
@@ -101,6 +117,8 @@ class ConfigLoader:
                 self.registry.set_actions(action_registry)
                 self.registry.set_playbooks(playbooks_registry)
                 self.registry.set_sinks(sinks_registry)
+
+                self.__reload_receiver()
             except Exception as e:
                 logging.exception(
                     f"unknown error reloading playbooks. will try again when they next change. exception={e}"
@@ -113,10 +131,9 @@ class ConfigLoader:
         sinks_registry: SinksRegistry,
         actions_registry: ActionsRegistry,
     ) -> (SinksRegistry, PlaybooksRegistry):
-        cluster_name = runner_config.global_config.get("cluster_name", "")
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(
-            runner_config.sinks_config, existing_sinks, cluster_name
+            runner_config.sinks_config, existing_sinks, runner_config.global_config
         )
         sinks_registry = SinksRegistry(new_sinks)
 

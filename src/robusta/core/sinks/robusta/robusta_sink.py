@@ -31,8 +31,10 @@ class RobustaSinkConfigWrapper(SinkConfigBase):
     def get_params(self) -> SinkBaseParams:
         return self.robusta_sink
 
-    def create_sink(self, cluster_name: str) -> SinkBase:
-        return RobustaSink(self, cluster_name)
+    def create_sink(
+        self, account_id: str, cluster_name: str, signing_key: str
+    ) -> SinkBase:
+        return RobustaSink(self, account_id, cluster_name, signing_key)
 
 
 class RobustaToken(BaseModel):
@@ -47,12 +49,21 @@ class RobustaSink(SinkBase):
     def __init__(
         self,
         sink_config: RobustaSinkConfigWrapper,
+        account_id: str,
         cluster_name: str,
+        signing_key: str,
     ):
         super().__init__(sink_config.robusta_sink)
         self.token = sink_config.robusta_sink.token
         self.cluster_name = cluster_name
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
+        if account_id != robusta_token.account_id:
+            logging.error(
+                f"Account id configuration missmatch. "
+                f"Global Config: {account_id} Robusta token: {robusta_token.account_id}."
+                f"Using account id from Robusta token."
+            )
+
         self.dal = SupabaseDal(
             robusta_token.store_url,
             robusta_token.api_key,
@@ -61,6 +72,7 @@ class RobustaSink(SinkBase):
             robusta_token.password,
             sink_config.robusta_sink.name,
             self.cluster_name,
+            signing_key,
         )
         # start service discovery
         self.__active = True

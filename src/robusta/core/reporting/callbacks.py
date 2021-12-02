@@ -1,20 +1,25 @@
-from typing import Union, Optional, List
+import time
 from pydantic import BaseModel
 
+from robusta.core.reporting.action_requests import (
+    sign_action_request,
+    ExternalActionRequest,
+    ActionRequestBody,
+)
 from . import CallbackChoice
 from ..playbooks.actions_registry import ActionsRegistry
 
 
-class ExternalActionRequest(BaseModel):
-    target_id: str  # target_id is used by the relay, to route slack callback requests
-    action_name: str
-    action_params: dict = None
-    sinks: Optional[List[str]] = None
-    origin: str = None
-
+class ExternalActionRequestBuilder(BaseModel):
     @classmethod
     def create_for_func(
-        cls, choice: CallbackChoice, sink: str, target_id: str, text: str
+        cls,
+        choice: CallbackChoice,
+        sink: str,
+        text: str,
+        account_id: str,
+        cluster_name: str,
+        signing_key: str,
     ):
         if choice.action is None:
             raise Exception(
@@ -25,17 +30,23 @@ class ExternalActionRequest(BaseModel):
                 f"{choice.action} is not a function that was decorated with @action"
             )
 
+        if not signing_key:
+            raise Exception(
+                f"Cannot create callback request with no signing key. Configure signing_key in globalConfig"
+            )
         action_params = (
             {} if choice.action_params is None else choice.action_params.dict()
         )
-        return cls(
-            target_id=target_id,
+        body = ActionRequestBody(
+            account_id=account_id,
+            cluster_name=cluster_name,
+            timestamp=time.time(),
             action_name=choice.action.__name__,
             action_params=action_params,
             sinks=[sink],
             origin="callback",
         )
-
-
-class IncomingRequest(BaseModel):
-    incoming_request: Union[ExternalActionRequest]
+        return ExternalActionRequest(
+            body=body,
+            signature=sign_action_request(body, signing_key),
+        )

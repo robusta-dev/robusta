@@ -84,6 +84,7 @@ class RobustaController:
                 "--output-path",
                 output_path,
                 "--robusta-api-key=''",
+                "--no-enable-prometheus-stack",
             ],
         )
         assert "Saved configuration" in logs, logs

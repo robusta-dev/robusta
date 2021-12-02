@@ -1,6 +1,13 @@
+import base64
+import json
 import random
 import subprocess
 import time
+import urllib.request
+import uuid
+from distutils.version import StrictVersion
+from typing import Optional
+from zipfile import ZipFile
 
 import typer
 import yaml
@@ -28,11 +35,18 @@ def get_runner_url(runner_version=None):
     return f"https://gist.githubusercontent.com/robusta-lab/6b809d508dfc3d8d92afc92c7bbbe88e/raw/robusta-{runner_version}.yaml"
 
 
+class GlobalConfig(BaseModel):
+    signing_key: str = ""
+    account_id: str = ""
+
+
 class HelmValues(BaseModel):
+    globalConfig: GlobalConfig
     clusterName: str
     slackApiKey: str = ""
     slackChannel: str = ""
     robustaApiKey: str = ""
+    enablePrometheusStack: bool = False
 
 
 def slack_integration(
@@ -81,6 +95,7 @@ def gen_config(
         help="Slack Channel",
     ),
     robusta_api_key: str = typer.Option(None),
+    enable_prometheus_stack: bool = typer.Option(None),
     output_path: str = typer.Option(
         "./generated_values.yaml", help="Output path of generated Helm values"
     ),
@@ -114,11 +129,25 @@ def gen_config(
         else:
             robusta_api_key = ""
 
+    account_id = str(uuid.uuid4())
+    if robusta_api_key:  # if Robusta ui sink is defined, take the account id from it
+        token = json.loads(base64.b64decode(robusta_api_key))
+        account_id = token.get("account_id", account_id)
+
+    if enable_prometheus_stack is None:
+        enable_prometheus_stack = typer.confirm(
+            "Would you like to include the Prometheus stack with Robusta?"
+        )
+
+    signing_key = str(uuid.uuid4()).replace("_", "")
+
     values = HelmValues(
         clusterName=cluster_name,
         slackApiKey=slack_api_key,
         slackChannel=slack_channel,
         robustaApiKey=robusta_api_key,
+        globalConfig=GlobalConfig(signing_key=signing_key, account_id=account_id),
+        enablePrometheusStack=enable_prometheus_stack,
     )
 
     with open(output_path, "w") as output_file:

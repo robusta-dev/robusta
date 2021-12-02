@@ -8,9 +8,8 @@ from ...core.model.events import *
 from ...core.reporting.blocks import *
 from ...core.reporting.base import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
-from ...core.reporting.callbacks import IncomingRequest, ExternalActionRequest
+from ...core.reporting.callbacks import ExternalActionRequestBuilder
 from ...core.reporting.consts import SlackAnnotations
-from ...core.model.env_vars import TARGET_ID
 
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
@@ -18,12 +17,17 @@ SlackBlock = Dict[str, Any]
 
 
 class SlackSender:
-    def __init__(self, slack_token: str):
+    def __init__(
+        self, slack_token: str, account_id: str, cluster_name: str, signing_key: str
+    ):
         """
         Connect to Slack and verify that the Slack token is valid.
         Return True on success, False on failure
         """
         self.slack_client = WebClient(token=slack_token)
+        self.signing_key = signing_key
+        self.account_id = account_id
+        self.cluster_name = cluster_name
 
         try:
             self.slack_client.auth_test()
@@ -31,9 +35,8 @@ class SlackSender:
             logging.error(f"Cannot connect to Slack API: {e}")
             raise e
 
-    @staticmethod
     def __get_action_block_for_choices(
-        target_id: str, sink: str, choices: Dict[str, CallbackChoice] = None
+        self, sink: str, choices: Dict[str, CallbackChoice] = None
     ):
         if choices is None:
             return []
@@ -49,10 +52,13 @@ class SlackSender:
                     },
                     "style": "primary",
                     "action_id": f"{ACTION_TRIGGER_PLAYBOOK}_{i}",
-                    "value": IncomingRequest(
-                        incoming_request=ExternalActionRequest.create_for_func(
-                            callback_choice, sink, target_id, text
-                        )
+                    "value": ExternalActionRequestBuilder.create_for_func(
+                        callback_choice,
+                        sink,
+                        text,
+                        self.account_id,
+                        self.cluster_name,
+                        self.signing_key,
                     ).json(),
                 }
             )
@@ -66,15 +72,16 @@ class SlackSender:
         truncator = "..."
         return msg[: max_length - len(truncator)] + truncator
 
-    @staticmethod
-    def __to_slack_diff(block: KubernetesDiffBlock, sink_name: str) -> List[SlackBlock]:
+    def __to_slack_diff(
+        self, block: KubernetesDiffBlock, sink_name: str
+    ) -> List[SlackBlock]:
         # this can happen when a block.old=None or block.new=None - e.g. the resource was added or deleted
         if not block.diffs:
             return []
 
         slack_blocks = []
         slack_blocks.extend(
-            SlackSender.__to_slack(
+            self.__to_slack(
                 ListBlock(
                     [
                         f"*{d.formatted_path}*: {d.other_value} :arrow_right: {d.value}"
@@ -87,8 +94,7 @@ class SlackSender:
 
         return slack_blocks
 
-    @staticmethod
-    def __to_slack(block: BaseBlock, sink_name: str) -> List[SlackBlock]:
+    def __to_slack(self, block: BaseBlock, sink_name: str) -> List[SlackBlock]:
         if isinstance(block, MarkdownBlock):
             if not block.text:
                 return []
@@ -116,15 +122,11 @@ class SlackSender:
                 }
             ]
         elif isinstance(block, ListBlock) or isinstance(block, TableBlock):
-            return SlackSender.__to_slack(block.to_markdown(), sink_name)
+            return self.__to_slack(block.to_markdown(), sink_name)
         elif isinstance(block, KubernetesDiffBlock):
-            return SlackSender.__to_slack_diff(block, sink_name)
+            return self.__to_slack_diff(block, sink_name)
         elif isinstance(block, CallbackBlock):
-            return SlackSender.__get_action_block_for_choices(
-                TARGET_ID,
-                sink_name,
-                block.choices,
-            )
+            return self.__get_action_block_for_choices(sink_name, block.choices)
         else:
             logging.error(
                 f"cannot convert block of type {type(block)} to slack format block: {block}"
@@ -178,12 +180,12 @@ class SlackSender:
 
         output_blocks = []
         if title:
-            output_blocks.extend(SlackSender.__to_slack(HeaderBlock(title), sink_name))
+            output_blocks.extend(self.__to_slack(HeaderBlock(title), sink_name))
         for block in other_blocks:
-            output_blocks.extend(SlackSender.__to_slack(block, sink_name))
+            output_blocks.extend(self.__to_slack(block, sink_name))
         attachment_blocks = []
         for block in report_attachment_blocks:
-            attachment_blocks.extend(SlackSender.__to_slack(block, sink_name))
+            attachment_blocks.extend(self.__to_slack(block, sink_name))
 
         logging.debug(
             f"--sending to slack--\n"
