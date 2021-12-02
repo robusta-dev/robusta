@@ -11,7 +11,6 @@ KIND_TO_MODEL_CLASS = {
     "Deployment": RobustaDeployment,
     "StatefulSet": StatefulSet,
     "Service": Service,
-    "ConfigMap": ConfigMap,
     "Event": Event,
     "HorizontalPodAutoscaler": HorizontalPodAutoscaler,
     "Node": Node,
@@ -19,4 +18,5 @@ KIND_TO_MODEL_CLASS = {
     "ClusterRoleBinding": ClusterRoleBinding,
     "Job": RobustaJob,
     "Namespace": Namespace,
+    "ServiceAccount": ServiceAccount,
 }

@@ -84,7 +84,7 @@ class K8sBaseTrigger(BaseTrigger):
     ) -> Optional[ExecutionBaseEvent]:
         event_class = KIND_TO_EVENT_CLASS.get(event.k8s_payload.kind)
         if event_class is None:
-            logging.error(
+            logging.info(
                 f"classes for kind {event.k8s_payload.kind} cannot be found. skipping. description {event.k8s_payload.description}"
             )
             return None

@@ -37,6 +37,10 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          {{- if .Values.disableCloudRouting }}
+          - name: CLOUD_ROUTING
+            value: "False"
+          {{- end }}
         volumeMounts:
           - name: playbooks-config
             mountPath: /etc/robusta/config

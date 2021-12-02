@@ -19,7 +19,13 @@ def git_safe_name(name):
     return re.sub("[^0-9a-zA-Z\\-]+", "-", name)
 
 
-skipped_kinds = ["Event", "ClusterRole"]
+# kinds with no 'spec'
+skipped_kinds: List[str] = [
+    "Event",
+    "ClusterRole",
+    "ClusterRoleBinding",
+    "ServiceAccount",
+]
 
 
 def obj_diff(

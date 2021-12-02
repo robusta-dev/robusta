@@ -29,7 +29,7 @@ from ..integrations.resource_analysis.kubernetes_node_analyzer import NodeAnalyz
 from ..integrations.prometheus.utils import PrometheusDiscovery
 from ..core.persistency.in_memory import get_persistent_data
 from ..utils.rate_limiter import RateLimiter
-from ..utils.common import is_matching_diff
+from ..utils.common import *
 from ..utils.function_hashes import action_hash
 from ..runner.object_updater import *
 from ..core.playbooks.trigger import *

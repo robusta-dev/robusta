@@ -13,7 +13,6 @@ globalConfig:
   account_id: ""
   signing_key: ""
 
-
 # slack integration params
 slackApiKey: ""
 slackChannel: ""
@@ -24,6 +23,9 @@ robustaApiKey: ""
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
 enableServiceMonitors: false
+
+# disable messages routed by Robusta cloud
+disableCloudRouting: false
 
 # custom user playbooks
 customPlaybooks: []

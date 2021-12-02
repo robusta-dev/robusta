@@ -43,6 +43,29 @@ def get_images(containers: List[Container]) -> Dict[str, str]:
     return name_to_version
 
 
+def extract_images(k8s_obj: HikaruDocumentBase) -> Optional[Dict[str, str]]:
+    containers_paths = [
+        [
+            "spec",
+            "template",
+            "spec",
+            "containers",
+        ],  # deployment, replica set, daemon set, stateful set, job
+        ["spec", "containers"],  # pod
+    ]
+
+    for path in containers_paths:
+        try:
+            containers = k8s_obj.object_at_path(path)
+            if containers:
+                return get_images(containers)
+        except Exception:  # Path not found on object, not a real error
+            pass
+
+    # no containers found on that k8s obj
+    return None
+
+
 def does_daemonset_have_toleration(ds: DaemonSet, toleration_key: str) -> bool:
     return any(t.key == toleration_key for t in ds.spec.template.spec.tolerations)
 

@@ -19,9 +19,9 @@ from robusta.core.reporting.action_requests import (
 WEBSOCKET_RELAY_ADDRESS = os.environ.get(
     "WEBSOCKET_RELAY_ADDRESS", "wss://relay.robusta.dev"
 )
-INCOMING_RECEIVER_ENABLED = os.environ.get("INCOMING_RECEIVER_ENABLED", "True")
-RECEIVER_ENABLE_WEBSOCKET_TRACING = "True" == os.environ.get(
-    "RECEIVER_ENABLE_WEBSOCKET_TRACING"
+CLOUD_ROUTING = json.loads(os.environ.get("CLOUD_ROUTING", "True").lower())
+RECEIVER_ENABLE_WEBSOCKET_TRACING = json.loads(
+    os.environ.get("RECEIVER_ENABLE_WEBSOCKET_TRACING", "False").lower()
 )
 INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = int(
     os.environ.get("INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC", 3)
@@ -52,7 +52,7 @@ class ActionRequestReceiver:
         self.start_receiver()
 
     def start_receiver(self):
-        if INCOMING_RECEIVER_ENABLED != "True":
+        if not CLOUD_ROUTING:
             logging.info(
                 "outgoing messages only mode. Incoming event receiver not initialized"
             )
