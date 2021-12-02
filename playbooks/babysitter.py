@@ -28,7 +28,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
     obj = duplicate_without_fields(event.obj, config.omitted_fields)
     old_obj = duplicate_without_fields(event.old_obj, config.omitted_fields)
     if event.operation == K8sOperationType.UPDATE:
-        all_diffs = event.obj.diff(event.old_obj)
+        all_diffs = obj.diff(old_obj)
         filtered_diffs = list(
             filter(lambda x: is_matching_diff(x, config.fields_to_monitor), all_diffs)
         )
@@ -39,7 +39,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         event.operation == K8sOperationType.DELETE
     ):  # On delete, the current obj should be None, and not the actual object, as received
         obj = None
-        old_obj = event.obj
+        old_obj = obj
 
     diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj)
     finding = Finding(
