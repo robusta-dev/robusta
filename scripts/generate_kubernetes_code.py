@@ -11,7 +11,6 @@ KUBERNETES_RESOURCES = [
     "Deployment",
     "StatefulSet",
     "Service",
-    "ConfigMap",
     "Event",
     "HorizontalPodAutoscaler",
     "Node",
@@ -19,6 +18,7 @@ KUBERNETES_RESOURCES = [
     "ClusterRoleBinding",
     "Job",
     "Namespace",
+    "ServiceAccount",
 ]
 KUBERNETES_RESOURCES_STR = ",".join(KUBERNETES_RESOURCES)
 NON_NAMESPACED_RESOURCES = ["Node", "ClusterRole", "ClusterRoleBinding", "Namespace"]

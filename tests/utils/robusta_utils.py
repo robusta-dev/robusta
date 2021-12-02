@@ -83,8 +83,9 @@ class RobustaController:
                 slack_channel,
                 "--output-path",
                 output_path,
-                "--robusta-api-key=''",
+                "--robusta-api-key=",
                 "--no-enable-prometheus-stack",
+                "--no-disable-cloud-routing",
             ],
         )
         assert "Saved configuration" in logs, logs

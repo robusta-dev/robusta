@@ -14,15 +14,18 @@ class GrafanaAnnotationsParams(BaseModel):
 
 @action
 def add_deployment_lines_to_grafana(
-    event: DeploymentChangeEvent, action_params: GrafanaAnnotationsParams
+    event: KubernetesAnyChangeEvent, action_params: GrafanaAnnotationsParams
 ):
     """
     Add annotations to grafana whenever a new application version is deployed so that you can easily see changes in performance.
     """
-    new_images = event.obj.get_images()
-    old_images = event.old_obj.get_images()
+    new_images = extract_images(event.obj)
+    old_images = extract_images(event.old_obj)
     if new_images == old_images:
         return
+
+    if len(event.obj.metadata.ownerReferences) != 0:
+        return  # not handling runtime objects
 
     msg = ""
     if new_images.keys() != old_images.keys():
@@ -83,14 +86,17 @@ def add_alert_lines_to_grafana(
 
 
 @action
-def report_image_changes(event: DeploymentChangeEvent):
+def report_image_changes(event: KubernetesAnyChangeEvent):
     """
     Report image changed whenever a new application version is deployed so that you can easily see changes.
     """
-    new_images = event.obj.get_images()
-    old_images = event.old_obj.get_images()
+    new_images = extract_images(event.obj)
+    old_images = extract_images(event.old_obj)
     if new_images == old_images:
         return
+
+    if len(event.obj.metadata.ownerReferences) != 0:
+        return  # not handling runtime objects
 
     msg = ""
     changed_properties = []

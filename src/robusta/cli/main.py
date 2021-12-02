@@ -47,6 +47,7 @@ class HelmValues(BaseModel):
     slackChannel: str = ""
     robustaApiKey: str = ""
     enablePrometheusStack: bool = False
+    disableCloudRouting: bool = False
 
 
 def slack_integration(
@@ -96,6 +97,7 @@ def gen_config(
     ),
     robusta_api_key: str = typer.Option(None),
     enable_prometheus_stack: bool = typer.Option(None),
+    disable_cloud_routing: bool = typer.Option(None),
     output_path: str = typer.Option(
         "./generated_values.yaml", help="Output path of generated Helm values"
     ),
@@ -139,6 +141,28 @@ def gen_config(
             "Would you like to include the Prometheus stack with Robusta?"
         )
 
+    if disable_cloud_routing is None:
+        typer.echo(
+            "\nCertain Robusta features like two way Slack interactivity require routing traffic through Robusta's "
+            "cloud."
+        )
+        disable_cloud_routing = not typer.confirm(
+            "Would you like to enable these features?"
+        )
+
+        if not disable_cloud_routing:
+            typer.echo(
+                "\nPlease read and approve our End User License Agreement: https://robusta.dev/eula.html"
+            )
+            eula_approved = typer.confirm(
+                "Do you accept our End User License Agreement?"
+            )
+            if not eula_approved:
+                typer.echo(
+                    "\nEnd User License Agreement rejected. Installation aborted."
+                )
+                return
+
     signing_key = str(uuid.uuid4()).replace("_", "")
 
     values = HelmValues(
@@ -148,6 +172,7 @@ def gen_config(
         robustaApiKey=robusta_api_key,
         globalConfig=GlobalConfig(signing_key=signing_key, account_id=account_id),
         enablePrometheusStack=enable_prometheus_stack,
+        disableCloudRouting=disable_cloud_routing,
     )
 
     with open(output_path, "w") as output_file:

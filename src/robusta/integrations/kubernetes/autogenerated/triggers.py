@@ -349,63 +349,6 @@ class ServiceAllChangesTrigger(K8sBaseTrigger):
         return ServiceChangeEvent
 
 
-# ConfigMap Triggers
-class ConfigMapCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
-        super().__init__(
-            kind="ConfigMap",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
-            namespace_prefix=namespace_prefix,
-        )
-
-    @staticmethod
-    def get_execution_event_type() -> type:
-        return ConfigMapChangeEvent
-
-
-class ConfigMapUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
-        super().__init__(
-            kind="ConfigMap",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
-            namespace_prefix=namespace_prefix,
-        )
-
-    @staticmethod
-    def get_execution_event_type() -> type:
-        return ConfigMapChangeEvent
-
-
-class ConfigMapDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
-        super().__init__(
-            kind="ConfigMap",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
-            namespace_prefix=namespace_prefix,
-        )
-
-    @staticmethod
-    def get_execution_event_type() -> type:
-        return ConfigMapChangeEvent
-
-
-class ConfigMapAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
-        super().__init__(
-            kind="ConfigMap",
-            operation=None,
-            name_prefix=name_prefix,
-            namespace_prefix=namespace_prefix,
-        )
-
-    @staticmethod
-    def get_execution_event_type() -> type:
-        return ConfigMapChangeEvent
-
-
 # Event Triggers
 class EventCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
@@ -805,6 +748,63 @@ class NamespaceAllChangesTrigger(K8sBaseTrigger):
         return NamespaceChangeEvent
 
 
+# ServiceAccount Triggers
+class ServiceAccountCreateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="ServiceAccount",
+            operation=K8sOperationType.CREATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ServiceAccountChangeEvent
+
+
+class ServiceAccountUpdateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="ServiceAccount",
+            operation=K8sOperationType.UPDATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ServiceAccountChangeEvent
+
+
+class ServiceAccountDeleteTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="ServiceAccount",
+            operation=K8sOperationType.DELETE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ServiceAccountChangeEvent
+
+
+class ServiceAccountAllChangesTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+        super().__init__(
+            kind="ServiceAccount",
+            operation=None,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ServiceAccountChangeEvent
+
+
 # Kubernetes Any Triggers
 class KubernetesAnyCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
@@ -889,10 +889,6 @@ class K8sTriggers(BaseModel):
     on_service_update: Optional[ServiceUpdateTrigger]
     on_service_delete: Optional[ServiceDeleteTrigger]
     on_service_all_changes: Optional[ServiceAllChangesTrigger]
-    on_configmap_create: Optional[ConfigMapCreateTrigger]
-    on_configmap_update: Optional[ConfigMapUpdateTrigger]
-    on_configmap_delete: Optional[ConfigMapDeleteTrigger]
-    on_configmap_all_changes: Optional[ConfigMapAllChangesTrigger]
     on_event_create: Optional[EventCreateTrigger]
     on_event_update: Optional[EventUpdateTrigger]
     on_event_delete: Optional[EventDeleteTrigger]
@@ -923,6 +919,10 @@ class K8sTriggers(BaseModel):
     on_namespace_update: Optional[NamespaceUpdateTrigger]
     on_namespace_delete: Optional[NamespaceDeleteTrigger]
     on_namespace_all_changes: Optional[NamespaceAllChangesTrigger]
+    on_serviceaccount_create: Optional[ServiceAccountCreateTrigger]
+    on_serviceaccount_update: Optional[ServiceAccountUpdateTrigger]
+    on_serviceaccount_delete: Optional[ServiceAccountDeleteTrigger]
+    on_serviceaccount_all_changes: Optional[ServiceAccountAllChangesTrigger]
     on_kubernetes_any_resource_create: Optional[KubernetesAnyCreateTrigger]
     on_kubernetes_any_resource_update: Optional[KubernetesAnyUpdateTrigger]
     on_kubernetes_any_resource_delete: Optional[KubernetesAnyDeleteTrigger]
