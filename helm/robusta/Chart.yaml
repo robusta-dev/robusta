@@ -3,10 +3,8 @@ name: robusta
 description: Robusta Helm chart for Kubernetes
 type: application
 
-# we only bump the version (of the chart) on changes to templates and the chart itself
-# we bump the appVersion (and only the appVersion) when only the image tag for the robusta-runner changes
-# see https://codefresh.io/docs/docs/new-helm/helm-best-practices/
-version: 0.8.2
+# these are set to the right value by .github/workflows/release.yaml when you do a release
+version: 0.0.0
 appVersion: 0.0.0
 
 dependencies:
