@@ -1,12 +1,12 @@
 from robusta.api import *
 
-
+# TODO: merge with node_status_enricher?
 @action
 def deployment_status_enricher(event: DeploymentEvent):
     deployment = event.get_deployment()
     if not deployment:
         logging.error(
-            f"cannot run DeploymentStatusEnricher on event with no deployment: {event}"
+            f"cannot run deployment_status_enricher on event with no deployment: {event}"
         )
         return
 

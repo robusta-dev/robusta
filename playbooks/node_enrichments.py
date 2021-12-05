@@ -38,7 +38,7 @@ def node_allocatable_resources_enricher(event: NodeEvent):
     node = event.get_node()
     if not node:
         logging.error(
-            f"NodeAllocatableResourcesEnricher was called on event without node : {event}"
+            f"node_allocatable_resources_enricher was called on event without node : {event}"
         )
         return
 
@@ -56,3 +56,55 @@ def node_allocatable_resources_enricher(event: NodeEvent):
             )
         )
     event.add_enrichment(block_list)
+
+
+# TODO: can we make this a KubernetesAnyEvent and just check that the resource has .status.condition inside the code?
+# TODO: merge with deployment_status_enricher?
+@action
+def node_status_enricher(event: NodeEvent):
+    if not event.get_node():
+        logging.error(
+            f"node_status_enricher was called on event without node : {event}"
+        )
+        return
+
+    event.add_enrichment(
+        [
+            MarkdownBlock(f"*Node status details:*"),
+            TableBlock(
+                [[c.type, c.status] for c in event.get_node().status.conditions],
+                headers=["Type", "Status"],
+            ),
+        ]
+    )
+
+
+@action
+def node_health_watcher(event: NodeChangeEvent):
+    """
+    Checks for unhealthy nodes and adds useful information when a node is unhealthy.
+    """
+    new_condition = [c for c in event.obj.status.conditions if c.type == "Ready"]
+    old_condition = [c for c in event.old_obj.status.conditions if c.type == "Ready"]
+
+    if len(new_condition) != 1 or len(old_condition) != 1:
+        logging.warning(
+            f"more than one Ready condition. new={new_condition} old={old_condition}"
+        )
+
+    new_condition = new_condition[0]
+    old_condition = old_condition[0]
+
+    currently_ready = "true" in new_condition.status.lower()
+    previously_ready = "true" in old_condition.status.lower()
+
+    if currently_ready or currently_ready == previously_ready:
+        return
+
+    finding = Finding(
+        title=f"Unhealthy node {event.obj.metadata.name}",
+        source=FindingSource.KUBERNETES_API_SERVER,
+        aggregation_key="node_not_ready",
+    )
+    event.add_finding(finding, "DEFAULT")
+    node_status_enricher(event)
