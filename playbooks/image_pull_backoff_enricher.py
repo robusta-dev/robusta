@@ -27,11 +27,9 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackPar
     if len(image_pull_backoff_container_statuses) == 0:
         return
 
-    # If pod name or namespace are not found- terminate
+    # Extract pod name and namespace
     pod_name = pod.metadata.name
     namespace = pod.metadata.namespace
-    if pod_name is None or namespace is None:
-        return
 
     # Perform a rate limit for this pod according to the rate_limit parameter
     if not RateLimiter.mark_and_test(
