@@ -81,9 +81,14 @@ class ConfigLoader:
             return
 
         current_account_id = self.event_handler.get_global_config().get("account_id")
-        current_cluster_name = self.event_handler.get_global_config().get("cluster_name")
+        current_cluster_name = self.event_handler.get_global_config().get(
+            "cluster_name"
+        )
 
-        if current_account_id != receiver.account_id or current_cluster_name != receiver.cluster_name:
+        if (
+            current_account_id != receiver.account_id
+            or current_cluster_name != receiver.cluster_name
+        ):
             # need to re-create the receiver
             receiver.stop()
             self.registry.set_receiver(ActionRequestReceiver(self.event_handler))
