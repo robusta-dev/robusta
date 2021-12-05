@@ -95,14 +95,16 @@ def node_health_watcher(event: NodeChangeEvent):
     new_condition = new_condition[0]
     old_condition = old_condition[0]
 
-    if new_condition == old_condition:
+    currently_ready = "true" in new_condition.status.lower()
+    previously_ready = "true" in old_condition.status.lower()
+
+    if currently_ready or currently_ready == previously_ready:
         return
 
-    if "true" in new_condition.status.lower():
-        return
-
-    if "true" not in old_condition.status.lower():
-        return
-
-    event.add_enrichment([HeaderBlock(f"Node not-ready: {event.obj.metadata.name}")])
+    finding = Finding(
+        title=f"Unhealthy node {event.obj.metadata.name}",
+        source=FindingSource.KUBERNETES_API_SERVER,
+        aggregation_key="node_not_ready",
+    )
+    event.add_finding(finding, "DEFAULT")
     node_status_enricher(event)
