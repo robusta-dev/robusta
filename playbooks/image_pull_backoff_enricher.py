@@ -18,13 +18,14 @@ def get_image_pull_backoff_container_statuses(status: PodStatus) -> [ContainerSt
 @action
 def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackParams):
     # Check if image pull backoffs occurred. Terminate if not
-    image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(event.obj.status)
+    pod = event.get_pod()
+    image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(pod.status)
     if len(image_pull_backoff_container_statuses) == 0:
         return
 
     # If pod name or namespace are not found- terminate
-    pod_name = event.obj.metadata.name
-    namespace = event.obj.metadata.namespace
+    pod_name = pod.metadata.name
+    namespace = pod.metadata.namespace
     if pod_name is None or namespace is None:
         return
 
@@ -51,8 +52,8 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackPar
             )
             continue
 
-        reason = investigation["reason"]
-        error_message = investigation["error_message"]
+        reason = investigation.reason
+        error_message = investigation.error_message
 
         if reason != ImagePullBackoffReason.Unknown:
             blocks.append(
@@ -90,6 +91,15 @@ class ImagePullBackoffReason(Flag):
     NotAuthorized = 2
     ImageDoesntExist = 4
     TagNotFound = 8
+
+
+class ImagePullOffInvestigation:
+    error_message: str
+    reason: ImagePullBackoffReason
+
+    def __init__(self, error_message: str, reason: ImagePullBackoffReason):
+        self.error_message = error_message
+        self.reason = reason
 
 
 class ImagePullBackoffInvestigator:
@@ -132,23 +142,21 @@ class ImagePullBackoffInvestigator:
         }
     ]
 
-    def __init__(self, pod_name, namespace):
+    def __init__(self, pod_name: str, namespace: str):
         self.pod_name = pod_name
         self.namespace = namespace
 
-    def investigate(self, container_status: ContainerStatus):
-        pod_events: EventList = EventList.listNamespacedEvent(self.namespace, field_selector=f"involvedObject.name={self.pod_name}").obj
-        for pod_event in pod_events.items:
+        self.pod_events: EventList = EventList.listNamespacedEvent(self.namespace, field_selector=f"involvedObject.name={self.pod_name}").obj
+
+    def investigate(self, container_status: ContainerStatus) -> Optional[ImagePullOffInvestigation]:
+        for pod_event in self.pod_events.items:
             error_message = self.get_kubelet_image_pull_error_from_event(pod_event, container_status.image)
             if error_message is None:
                 continue
 
             reason = self.get_reason_from_kubelet_image_pull_error(error_message)
 
-            return {
-                "error_message": error_message,
-                "reason": reason
-            }
+            return ImagePullOffInvestigation(error_message=error_message, reason=reason)
 
         return None
 
