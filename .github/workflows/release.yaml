@@ -84,4 +84,6 @@ jobs:
         name: helm-chart
         path: helm/robusta/
 
-    # TODO: run helm/upload_chart.sh
+    - name: Upload helm chart
+      run: |
+        cd helm && ./upload_chart.sh
