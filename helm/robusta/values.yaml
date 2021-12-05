@@ -32,16 +32,22 @@ customPlaybooks: []
 
 # builtin playbooks
 builtinPlaybooks:
-- triggers:
-  - on_prometheus_alert: {}
-  actions:
-  - name_silencer:
-      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown"]
+# playbooks for non-prometheus based monitoring
 - triggers:
   - on_pod_update: {}
   actions:
   - restart_loop_reporter:
       restart_reason: CrashLoopBackOff
+- triggers:
+  - on_node_update: {}
+  actions:
+  - node_health_watcher: {}
+# playbooks for prometheus enrichment and silencing
+- triggers:
+  - on_prometheus_alert: {}
+  actions:
+  - name_silencer:
+      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown"]
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeNodeNotReady
