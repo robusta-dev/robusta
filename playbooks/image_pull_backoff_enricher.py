@@ -1,3 +1,4 @@
+import enum
 from enum import Flag
 from robusta.api import *
 
@@ -13,6 +14,11 @@ def get_image_pull_backoff_container_statuses(status: PodStatus) -> [ContainerSt
         if container_status.state.waiting is not None
         and container_status.state.waiting.reason == "ImagePullBackOff"
     ]
+
+
+def decompose_flag(flag: Flag) -> List[Flag]:
+    members, _ = enum._decompose(flag.__class__, flag._value_)
+    return members
 
 
 @action
@@ -58,17 +64,29 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackPar
         error_message = investigation.error_message
 
         if reason != ImagePullBackoffReason.Unknown:
-            blocks.append(
-                MarkdownBlock(
-                    f"Image pull error occurred for container *{container_status.name}* "
-                    f"for the following reason: *{reason}*\n\n"
-                    f"Error Message:\n{error_message}"
+            reasons = decompose_flag(reason)
+            if len(reasons) == 1:
+                blocks.append(
+                    MarkdownBlock(
+                        f"Image pull error occurred for container **{container_status.name}** "
+                        f"for the following reason: **{reason}**\n\n"
+                        f"Error Message:\n{error_message}"
+                    )
                 )
-            )
+            else:
+                line_separated_reasons = "\n".join([f"**{r}**" for r in reasons])
+                blocks.append(
+                    MarkdownBlock(
+                        f"Image pull error occurred for container **{container_status.name}** "
+                        f"for one of the following reasons:\n"
+                        f"{line_separated_reasons}\n\n"
+                        f"Error Message:\n{error_message}"
+                    )
+                )
         else:
             blocks.append(
                 MarkdownBlock(
-                    f"Failed to extract reason for image pull error for container *{container_status.name}*"
+                    f"Failed to extract reason for image pull error for container **{container_status.name}** "
                     f"for the following reason: error message not recognized\n\n"
                     f"Error message:\n{error_message}"
                 )
