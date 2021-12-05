@@ -14,7 +14,7 @@ Helm Installation
    robusta gen-config
 
 Save ``generated_values.yaml``! This is your Robusta configuration file.
-In the docs, we'll often refer to this file as just ``values.yaml``. The exact filename you save it as is up to you.
+In the docs, we'll often refer to it as ``values.yaml``. The exact filename is up to you.
 
 2. Install Robusta using `Helm <https://helm.sh/>`_:
 
@@ -29,12 +29,11 @@ In the docs, we'll often refer to this file as just ``values.yaml``. The exact f
 
     kubectl get pods
 
-Troubleshooting
-------------------------
-If pip fails with a permissions error, run the command as root or append ``--user`` to the command.
+.. admonition:: Common errors
+    :class: caution
 
-On Windows, you may need to add `Python's script directory to PATH <https://www.makeuseof.com/python-windows-path/>`_
-before you can run ``robusta gen-config``
+    * Permissions error: run the command as root or append ``--user`` to the command
+    * ``robusta`` not found error: add `Python's script directory to PATH <https://www.makeuseof.com/python-windows-path/>`_ before you can run ``robusta gen-config``
 
 Seeing Robusta in action
 ------------------------------
