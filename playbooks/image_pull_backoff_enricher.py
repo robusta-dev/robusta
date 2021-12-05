@@ -17,8 +17,12 @@ def get_image_pull_backoff_container_statuses(status: PodStatus) -> [ContainerSt
 
 @action
 def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackParams):
-    # Check if image pull backoffs occurred. Terminate if not
+    # Extract pod. Terminate if not found
     pod = event.get_pod()
+    if pod is None:
+        return
+
+    # Check if image pull backoffs occurred. Terminate if not
     image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(pod.status)
     if len(image_pull_backoff_container_statuses) == 0:
         return
