@@ -76,7 +76,9 @@ Examples
 
         .. admonition:: Example: show updates in Grafana
 
-            This writes annotations to Grafana when applications are updated.
+            Write annotations to Grafana showing when applications were updated.
+
+            No sink is configured. This action writes directly to Grafana and no output is sent to sinks.
 
             .. code-block:: yaml
 

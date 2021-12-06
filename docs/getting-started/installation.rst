@@ -32,8 +32,8 @@ In the docs, we'll often refer to it as ``values.yaml``. The exact filename is u
 .. admonition:: Common errors
     :class: caution
 
-    * Permissions error: run the command as root or append ``--user`` to the command
-    * ``robusta`` not found error: add `Python's script directory to PATH <https://www.makeuseof.com/python-windows-path/>`_ before you can run ``robusta gen-config``
+    * Permissions error: re-run the command as root or append ``--user`` to the command
+    * ``robusta`` not found error: add `Python's script directory to PATH <https://www.makeuseof.com/python-windows-path/>`_ before you run ``robusta gen-config``
 
 Seeing Robusta in action
 ------------------------------
