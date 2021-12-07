@@ -20,7 +20,17 @@ class K8sBaseChangeEvent(ExecutionBaseEvent):
     old_obj: Optional[HikaruDocumentBase] = None  # same above
 
     def create_default_finding(self) -> Finding:
-        title = f"Kubernetes change: operation: {self.operation}"
+        if (
+            self.obj
+            and hasattr(self.obj, "metadata")
+            and hasattr(self.obj.metadata, "name")
+        ):
+            # hikaru's docs say `kind` always exists on HikaruDocumentBase, but its not clear from hikaru's code
+            kind = getattr(self.obj, "kind", "").lower()
+            title = f"{self.operation.value.capitalize()} to {kind} {self.obj.metadata.name}"
+        else:
+            title = f"Kubernetes {self.operation.value.lower()}"
+
         return Finding(
             title=title,
             aggregation_key=title,
