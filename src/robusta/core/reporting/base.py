@@ -46,19 +46,8 @@ class FindingSubject:
 
 
 class Finding:
-    """A Finding is an event that users should be aware of. For example, Findings are created for alerts,
-    important configuration changes, and anything else playbooks want to tell users about.
-
-    All results that playbooks want to show the user should be wrapped in a finding. You should never directly send
-    messages to the user on Slack or in other manners.
-
-     Args:
-         arg1 (int): Description of arg1
-         arg2 (str): Description of arg2
-
-     Returns:
-         bool: Description of return value
-
+    """
+    A Finding represents an event that should be sent to sinks.
     """
 
     def __init__(
