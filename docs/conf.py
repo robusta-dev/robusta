@@ -22,11 +22,13 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent / Path("_ext")))
 
 # -- General configuration ------------------------------------------------
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.graphviz",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "sphinx.ext.autosectionlabel",
@@ -35,6 +37,7 @@ extensions = [
     "sphinx_design",
     "sphinxcontrib.autodoc_pydantic",
     "sphinxcontrib.images",
+    "autorobusta",
 ]
 
 images_config = {
@@ -42,6 +45,16 @@ images_config = {
 }
 
 autodoc_mock_imports = ["prometheus_api_client"]
+autodoc_default_options = {
+    "members": True,
+    "member-order": "bysource",
+    #'special-members': '__init__',
+    "undoc-members": True,
+    #'exclude-members': '__weakref__'
+}
+autoclass_content = "both"
+add_module_names = False
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

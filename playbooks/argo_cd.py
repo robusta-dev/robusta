@@ -18,20 +18,30 @@ class ArgoAppParams(ArgoBaseParams):
 def argo_app_sync(event: ExecutionBaseEvent, params: ArgoAppParams):
 
     if not RateLimiter.mark_and_test(
-        "argo_app_sync", params.argo_url + params.argo_app_name, params.rate_limit_seconds
+        "argo_app_sync",
+        params.argo_url + params.argo_app_name,
+        params.rate_limit_seconds,
     ):
         return
 
-    argo_client = ArgoCDClient(params.argo_url, params.argo_token.get_secret_value(), params.argo_verify_server_cert)
+    argo_client = ArgoCDClient(
+        params.argo_url,
+        params.argo_token.get_secret_value(),
+        params.argo_verify_server_cert,
+    )
     success = argo_client.sync_application(params.argo_app_name)
 
     finding = Finding(
         title="Argo CD application sync",
         aggregation_key="argo_app_sync",
         finding_type=FindingType.REPORT,
-        failure=False
+        failure=False,
     )
-    finding.add_enrichment([
-        MarkdownBlock(f"Argo CD app sync for application: *{params.argo_app_name}* ended with *{'success' if success else 'failure'}*")
-    ])
+    finding.add_enrichment(
+        [
+            MarkdownBlock(
+                f"Argo CD app sync for application: *{params.argo_app_name}* ended with *{'success' if success else 'failure'}*"
+            )
+        ]
+    )
     event.add_finding(finding)

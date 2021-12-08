@@ -29,7 +29,9 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackPar
         return
 
     # Check if image pull backoffs occurred. Terminate if not
-    image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(pod.status)
+    image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(
+        pod.status
+    )
     if len(image_pull_backoff_container_statuses) == 0:
         return
 
@@ -39,7 +41,9 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackPar
 
     # Perform a rate limit for this pod according to the rate_limit parameter
     if not RateLimiter.mark_and_test(
-            "image_pull_backoff_reporter", namespace + ":" + pod_name, action_params.rate_limit
+        "image_pull_backoff_reporter",
+        namespace + ":" + pod_name,
+        action_params.rate_limit,
     ):
         return
 
@@ -97,9 +101,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackPar
         title=f"failed to pull at least one image in pod {pod_name} in namespace {namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="image_pull_backoff_reporter",
-        subject=FindingSubject(
-            pod_name, FindingSubjectType.TYPE_POD, namespace
-        ),
+        subject=FindingSubject(pod_name, FindingSubjectType.TYPE_POD, namespace),
     )
     finding.add_enrichment(blocks)
     event.add_finding(finding)
@@ -127,50 +129,68 @@ class ImagePullBackoffInvestigator:
         # Containerd
         {
             "err_template": 'failed to pull and unpack image ".*?": failed to resolve reference ".*?": .*?: not found',
-            "reason": ImagePullBackoffReason.RepoDoesntExist | ImagePullBackoffReason.ImageDoesntExist | ImagePullBackoffReason.TagNotFound
+            "reason": ImagePullBackoffReason.RepoDoesntExist
+            | ImagePullBackoffReason.ImageDoesntExist
+            | ImagePullBackoffReason.TagNotFound,
         },
         {
-            "err_template": ('failed to pull and unpack image ".*?": failed to resolve reference ".*?": '
-                             'pull access denied, repository does not exist or may require authorization: server message: '
-                             'insufficient_scope: authorization failed'),
-            "reason": ImagePullBackoffReason.NotAuthorized | ImagePullBackoffReason.ImageDoesntExist
-        },
-        {
-            "err_template": ('failed to pull and unpack image ".*?": failed to resolve reference ".*?": '
-                             'failed to authorize: failed to fetch anonymous token: unexpected status: 403 Forbidden'),
+            "err_template": (
+                'failed to pull and unpack image ".*?": failed to resolve reference ".*?": '
+                "pull access denied, repository does not exist or may require authorization: server message: "
+                "insufficient_scope: authorization failed"
+            ),
             "reason": ImagePullBackoffReason.NotAuthorized
+            | ImagePullBackoffReason.ImageDoesntExist,
         },
-
+        {
+            "err_template": (
+                'failed to pull and unpack image ".*?": failed to resolve reference ".*?": '
+                "failed to authorize: failed to fetch anonymous token: unexpected status: 403 Forbidden"
+            ),
+            "reason": ImagePullBackoffReason.NotAuthorized,
+        },
         # Docker
         {
-            "err_template": ("Error response from daemon: pull access denied for .*?, "
-                             "repository does not exist or may require 'docker login': denied: requested access to the resource is denied"),
-            "reason": ImagePullBackoffReason.NotAuthorized | ImagePullBackoffReason.ImageDoesntExist
-        },
-        {
-            "err_template": 'Error response from daemon: manifest for .*? not found: manifest unknown: manifest unknown',
-            "reason": ImagePullBackoffReason.TagNotFound
-        },
-        {
-            "err_template": ('Error response from daemon: Head ".*?": denied: '
-                             'Permission "artifactregistry.repositories.downloadArtifacts" denied on resource ".*?" \\(or it may not exist\\)'),
+            "err_template": (
+                "Error response from daemon: pull access denied for .*?, "
+                "repository does not exist or may require 'docker login': denied: requested access to the resource is denied"
+            ),
             "reason": ImagePullBackoffReason.NotAuthorized
+            | ImagePullBackoffReason.ImageDoesntExist,
+        },
+        {
+            "err_template": "Error response from daemon: manifest for .*? not found: manifest unknown: manifest unknown",
+            "reason": ImagePullBackoffReason.TagNotFound,
+        },
+        {
+            "err_template": (
+                'Error response from daemon: Head ".*?": denied: '
+                'Permission "artifactregistry.repositories.downloadArtifacts" denied on resource ".*?" \\(or it may not exist\\)'
+            ),
+            "reason": ImagePullBackoffReason.NotAuthorized,
         },
         {
             "err_template": 'Error response from daemon: manifest for .*? not found: manifest unknown: Failed to fetch ".*?"',
-            "reason": ImagePullBackoffReason.ImageDoesntExist | ImagePullBackoffReason.TagNotFound
-        }
+            "reason": ImagePullBackoffReason.ImageDoesntExist
+            | ImagePullBackoffReason.TagNotFound,
+        },
     ]
 
     def __init__(self, pod_name: str, namespace: str):
         self.pod_name = pod_name
         self.namespace = namespace
 
-        self.pod_events: EventList = EventList.listNamespacedEvent(self.namespace, field_selector=f"involvedObject.name={self.pod_name}").obj
+        self.pod_events: EventList = EventList.listNamespacedEvent(
+            self.namespace, field_selector=f"involvedObject.name={self.pod_name}"
+        ).obj
 
-    def investigate(self, container_status: ContainerStatus) -> Optional[ImagePullOffInvestigation]:
+    def investigate(
+        self, container_status: ContainerStatus
+    ) -> Optional[ImagePullOffInvestigation]:
         for pod_event in self.pod_events.items:
-            error_message = self.get_kubelet_image_pull_error_from_event(pod_event, container_status.image)
+            error_message = self.get_kubelet_image_pull_error_from_event(
+                pod_event, container_status.image
+            )
             if error_message is None:
                 continue
 
@@ -181,7 +201,9 @@ class ImagePullBackoffInvestigator:
         return None
 
     @staticmethod
-    def get_kubelet_image_pull_error_from_event(pod_event: Event, image_name: str) -> Optional[str]:
+    def get_kubelet_image_pull_error_from_event(
+        pod_event: Event, image_name: str
+    ) -> Optional[str]:
         if pod_event.type != "Warning":
             return None
 
@@ -192,17 +214,19 @@ class ImagePullBackoffInvestigator:
             return None
 
         prefixes = [
-            f"Failed to pull image \"{image_name}\": rpc error: code = Unknown desc = ",
-            f"Failed to pull image \"{image_name}\": rpc error: code = NotFound desc = "
+            f'Failed to pull image "{image_name}": rpc error: code = Unknown desc = ',
+            f'Failed to pull image "{image_name}": rpc error: code = NotFound desc = ',
         ]
 
         for prefix in prefixes:
             if pod_event.message.startswith(prefix):
-                return pod_event.message[len(prefix):]
+                return pod_event.message[len(prefix) :]
 
         return None
 
-    def get_reason_from_kubelet_image_pull_error(self, kubelet_image_pull_error: str) -> ImagePullBackoffReason:
+    def get_reason_from_kubelet_image_pull_error(
+        self, kubelet_image_pull_error: str
+    ) -> ImagePullBackoffReason:
         for config in self.configs:
             err_template = config["err_template"]
             reason = config["reason"]

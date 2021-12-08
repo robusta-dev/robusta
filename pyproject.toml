@@ -47,8 +47,8 @@ sphinx-copybutton = "^0.4.0"
 sphinx-design = "^0.0.13"
 witchhazel = "^2018.8.23"
 sphinx-autodoc-typehints = "^1.12.0"
-autodoc-pydantic = "^1.5.1"
 sphinxcontrib-images = "^0.9.4"
+jsonref = "^0.2"
 
 [tool.poetry.extras]
 all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "slack-sdk", "supabase-py", "datadog-api-client"]

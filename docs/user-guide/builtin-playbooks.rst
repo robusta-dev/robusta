@@ -6,74 +6,9 @@ List of built-in playbooks
 Application Visibility and Troubleshooting
 -------------------------------------------
 
-add_deployment_lines_to_grafana
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. robusta-action:: playbooks.grafana_enrichment.add_deployment_lines_to_grafana
 
-.. admonition:: Playbook
-
-    .. tab-set::
-
-        .. tab-item:: Description
-
-            **What it does:** add annotations to grafana showing new versions of your application
-
-            **When it runs:** when the image tags inside a deployment change
-
-            .. image:: /images/grafana-deployment-enrichment.png
-              :width: 400
-              :align: center
-
-        .. tab-item:: Configuration
-
-            .. code-block:: yaml
-
-               playbooks:
-                 - name: "add_deployment_lines_to_grafana"
-                   action_params:
-                     grafana_dashboard_uid: "uid_from_url"
-                     grafana_api_key: "grafana_api_key_with_editor_role"
-                     grafana_url: "https://mygrafana.mycompany.com"
-
-            ``grafana_url`` can usually be left blank for a Grafana running in the same cluster which will be automatically detected.
-
-add_alert_lines_to_grafana
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. admonition:: Playbook
-
-    .. tab-set::
-
-        .. tab-item:: Description
-
-            **What it does:** add annotations to grafana showing Prometheus alerts
-
-            **When it runs:** when a relevant Prometheus alert is triggered
-
-            .. image:: /images/add-alert-lines-to-grafana.png
-              :width: 400
-              :align: center
-
-        .. tab-item:: Configuration
-
-            .. code-block:: yaml
-
-                playbooks:
-                  - name: "add_alert_lines_to_grafana"
-                    action_params:
-                      grafana_api_key: "grafana_api_key_with_editor_role"
-                      grafana_url: "http://grafana-service-name.namespace.svc"
-                      annotations:
-                        - alert_name: "CPUThrottlingHigh"
-                          dashboard_uid: "09ec8aa1e996d6ffcd6817bbaff4db1b"
-                        - alert_name: "TargetDown"
-                          dashboard_uid: "other_uid_goes_here"
-                          dashboard_panel: "ErrorBudget"
-
-            ``grafana_url`` can usually be left blank for a Grafana running in the same cluster which will be automatically detected.
-
-            ``dashboard_uuid`` should be copied from the dashboard's URL
-
-            ``dashboard_panel`` is an optional parameter. When present, annotations will be added only to panels containing that text in their title.
+.. robusta-action:: playbooks.grafana_enrichment.add_alert_lines_to_grafana
 
 git_change_audit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
