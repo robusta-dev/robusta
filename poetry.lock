@@ -742,7 +742,7 @@ name = "pillow"
 version = "8.4.0"
 description = "Python Imaging Library (Fork)"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6"
 
 [[package]]
@@ -1538,7 +1538,7 @@ all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-excepti
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "115615e588cc4795fa4f99705943279571af83357703e995921ba34687254828"
+content-hash = "82fc0616d1a05a7ec4c799ff99c25d9eac372614da443295531bb3795fa16496"
 
 [metadata.files]
 alabaster = [
