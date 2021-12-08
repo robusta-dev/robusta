@@ -35,7 +35,6 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
     "sphinx_design",
-    "sphinxcontrib.autodoc_pydantic",
     "sphinxcontrib.images",
     "autorobusta",
 ]
