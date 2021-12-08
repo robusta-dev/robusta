@@ -11,7 +11,13 @@ import hikaru
 from hikaru import DiffDetail, DiffType
 from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
-from tabulate import tabulate
+
+try:
+    from tabulate import tabulate
+except ModuleNotFoundError:
+    # it's OK if tabulate doesn't exist - we can fail at runtime when trying to use it
+    # no need to fail the import of this module
+    pass
 
 from .custom_rendering import render_value
 from .base import BaseBlock
