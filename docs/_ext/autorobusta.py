@@ -55,7 +55,7 @@ class PydanticModelDirective(SphinxDirective):
         if not issubclass(obj, BaseModel):
             raise Exception(f"not a pydantic model: {obj}")
         return self.__document_model(
-            obj, "show-code" in self.options, "show-optionalilty" in self.options
+            obj, "show-code" in self.options, "show-optionality" in self.options
         )
 
     @classmethod
@@ -88,7 +88,9 @@ class PydanticModelDirective(SphinxDirective):
             desc = sphinx.addnodes.desc()
             node.append(desc)
             desc.extend(cls.__document_field_signature(field, show_optionality))
-            desc.extend(cls.__document_field_content(field, show_code))
+            desc.extend(
+                cls.__document_field_content(field, show_code, show_optionality)
+            )
 
         return node.children
 
@@ -118,7 +120,9 @@ class PydanticModelDirective(SphinxDirective):
         return [sig]
 
     @classmethod
-    def __document_field_content(cls, field: ModelField, show_code: bool) -> List[Node]:
+    def __document_field_content(
+        cls, field: ModelField, show_code: bool, show_optionality: bool
+    ) -> List[Node]:
         content = sphinx.addnodes.desc_content()
 
         if field.field_info.description:
@@ -131,7 +135,9 @@ class PydanticModelDirective(SphinxDirective):
             paragraph = nodes.paragraph(text=f"each entry contains:")
             content.append(paragraph)
             # when documenting an inner model, we always show "required"/"optional" inline
-            paragraph.extend(cls.__document_model(field.type_, show_code, True))
+            content.extend(
+                cls.__document_model(field.type_, show_code, show_optionality)
+            )
 
         return [content]
 
@@ -163,10 +169,8 @@ class PydanticModelDirective(SphinxDirective):
 
     @staticmethod
     def __get_sample_value(field: pydantic.fields.ModelField):
-        if field.shape == pydantic.fields.SHAPE_SINGLETON:
-            return "<value>"
-        elif field.shape == pydantic.fields.SHAPE_LIST:
-            return ["<value1>, <value2>"]
+        if field.shape == pydantic.fields.SHAPE_LIST:
+            return ["<value1>", "<value2>"]
         elif field.shape == pydantic.fields.SHAPE_DICT:
             return {"key1": "value1", "key2": "value2"}
         return "<value>"
@@ -234,17 +238,6 @@ class RobustaActionDirective(SphinxDirective):
         )
         nested_parse_with_titles(self.state, StringList(content.split("\n")), node)
         return node.children
-
-    @staticmethod
-    def __get_readable_field_type(field: pydantic.fields.ModelField):
-        inner_type_name = field.type_.__name__.lower()
-        if field.shape == pydantic.fields.SHAPE_SINGLETON:
-            return inner_type_name
-        elif field.shape == pydantic.fields.SHAPE_LIST:
-            return f"{inner_type_name} list"
-        elif field.shape == pydantic.fields.SHAPE_DICT:
-            return f"{inner_type_name} dict"
-        return repr(field)
 
     @staticmethod
     def __get_source_code(obj) -> List[str]:
