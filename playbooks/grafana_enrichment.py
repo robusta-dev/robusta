@@ -1,13 +1,24 @@
-from pydantic import SecretStr
+from pydantic import SecretStr, Field
 
 from robusta.api import *
 
 
-class GrafanaAnnotationsParams(BaseModel):
-    grafana_url: str = None
+class GrafanaAnnotationsParams(ActionParams):
+    """
+    :var grafana_url: http(s) url of grafana or None for autodetection of an in-cluster grafana
+    :var grafana_api_key: grafana key with write permissions.
+    :var grafana_dashboard_uid: dashboard ID as it appears in the dashboard's url
+    :var cluster_name: writen as one of the annotation's tags
+    :var custom_tags: custom tags to add to the annotation
+
+    :example grafana_url: http://grafana.namespace.svc
+    :example grafana_dashboard_uid: 09ec8aa1e996d6ffcd6817bbaff4db1b
+    """
+
     grafana_api_key: SecretStr
     grafana_dashboard_uid: str
-    cluster_name: str
+    grafana_url: str = None
+    cluster_name: str = None
     cluster_zone: str = None
     custom_tags: List[str] = None
 
@@ -17,7 +28,9 @@ def add_deployment_lines_to_grafana(
     event: KubernetesAnyChangeEvent, action_params: GrafanaAnnotationsParams
 ):
     """
-    Add annotations to grafana whenever a new application version is deployed so that you can easily see changes in performance.
+    Add annotations to Grafana when a Kubernetes resource is updated and the image tags change.
+
+    Supports Deployments, ReplicaSets, DaemonSets, StatefulSets, Jobs, and Pods
     """
     new_images = extract_images(event.obj)
     old_images = extract_images(event.old_obj)
@@ -51,15 +64,29 @@ def add_deployment_lines_to_grafana(
     grafana.add_line_to_dashboard(action_params.grafana_dashboard_uid, msg, tags=tags)
 
 
-class AnnotationConfig(BaseModel):
+class AnnotationConfig(ActionParams):
+    """
+    :var dashboard_panel: when present, annotations will be added only to panels with this text text in their title.
+    :example alert_name: CPUThrottlingHigh
+    :example dashboard_uid: 09ec8aa1e996d6ffcd6817bbaff4db1b
+    """
+
     alert_name: str
     dashboard_uid: str
     dashboard_panel: Optional[str]
 
 
-class AlertLineParams(BaseModel):
+class AlertLineParams(ActionParams):
+    """
+    :var grafana_url: http(s) url of grafana or None for autodetection of an in-cluster grafana
+    :example grafana_url: http://grafana.namespace.svc
+    :var grafana_api_key: grafana key with write permissions.
+    :var annotations: list of alerts and which dashboard to write them to
+    """
+
     grafana_url: str = None
     grafana_api_key: SecretStr
+    # TODO: this is a bad name
     annotations: List[AnnotationConfig]
 
 

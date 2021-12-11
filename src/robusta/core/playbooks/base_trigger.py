@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, Optional
+from typing import Dict, Optional, Type
 
 from ..model.events import ExecutionBaseEvent
 from ..model.k8s_operation_type import K8sOperationType
@@ -27,5 +27,5 @@ class BaseTrigger(BaseModel):
         pass
 
     @staticmethod
-    def get_execution_event_type() -> type:
+    def get_execution_event_type() -> Type[ExecutionBaseEvent]:
         pass

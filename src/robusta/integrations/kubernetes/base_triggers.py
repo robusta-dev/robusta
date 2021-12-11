@@ -82,6 +82,13 @@ class K8sBaseTrigger(BaseTrigger):
     def build_execution_event(
         self, event: K8sTriggerEvent, findings: Dict[str, Finding]
     ) -> Optional[ExecutionBaseEvent]:
+        # we can't use self.get_execution_event_type() because for KubernetesAnyAllChangesTrigger we need to filter out
+        # stuff like ConfigMaps and we do that filtering here by checking if there is a real event_class
+        # it might be better to move that filtering logic to should_fire() where it belongs and to use
+        # self.get_execution_event_type() here instead of KIND_TO_EVENT_CLASS. Using KIND_TO_EVENT_CLASS leads to
+        # inconsistencies for KubernetesAnyAllChangesTrigger (and possibly elsewhere) which claims in
+        # get_execution_event_type() that it creates a KubernetesAnyChangeEvent object but it really creates
+        # a different concrete event class using the logic below
         event_class = KIND_TO_EVENT_CLASS.get(event.k8s_payload.kind)
         if event_class is None:
             logging.info(

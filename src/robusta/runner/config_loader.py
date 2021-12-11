@@ -14,7 +14,7 @@ from robusta.integrations.receiver import ActionRequestReceiver
 from ..integrations.scheduled.trigger import ScheduledTriggerEvent
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..core.model.runner_config import RunnerConfig
-from ..core.playbooks.actions_registry import ActionsRegistry
+from ..core.playbooks.actions_registry import ActionsRegistry, Action
 from ..core.model.env_vars import (
     INTERNAL_PLAYBOOKS_ROOT,
     PLAYBOOKS_CONFIG_FILE_PATH,
@@ -202,11 +202,9 @@ class ConfigLoader:
                 spec = importlib.util.spec_from_file_location(module_name, script)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
-                playbook_actions = getmembers(
-                    module, ActionsRegistry.is_playbook_action
-                )
+                playbook_actions = getmembers(module, Action.is_action)
                 for (action_name, action_func) in playbook_actions:
-                    action_registry.add_action(action_name, action_func)
+                    action_registry.add_action(action_func)
             except Exception as e:
                 logging.error(
                     f"error loading playbooks from file {script}. exception={e}"

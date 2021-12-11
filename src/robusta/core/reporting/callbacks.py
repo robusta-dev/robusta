@@ -7,7 +7,7 @@ from robusta.core.reporting.action_requests import (
     ActionRequestBody,
 )
 from . import CallbackChoice
-from ..playbooks.actions_registry import ActionsRegistry
+from ..playbooks.actions_registry import Action
 
 
 class ExternalActionRequestBuilder(BaseModel):
@@ -25,7 +25,7 @@ class ExternalActionRequestBuilder(BaseModel):
             raise Exception(
                 f"The callback for choice {text} is None. Did you accidentally pass `foo()` as a callback and not `foo`?"
             )
-        if not ActionsRegistry.is_playbook_action(choice.action):
+        if not Action.is_action(choice.action):
             raise Exception(
                 f"{choice.action} is not a function that was decorated with @action"
             )
