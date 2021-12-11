@@ -52,7 +52,7 @@ jobs:
     - name: Build the docs
       run: |
         cd docs
-        make html
+        poetry run make html
 
     - name: Upload docs to public gcp bucket
       run: gsutil rsync -R ./docs/_build/html "gs://robusta-public/${GITHUB_REF##*/}/"

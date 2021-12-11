@@ -52,6 +52,8 @@ class PydanticModelDirective(SphinxDirective):
     def run(self) -> List[Node]:
         objpath = self.arguments[0]
         obj = pydoc.locate(objpath)
+        if obj is None:
+            raise Exception(f"Cannot document None: {objpath}")
         if not issubclass(obj, BaseModel):
             raise Exception(f"not a pydantic model: {obj}")
         return self.__document_model(
@@ -186,6 +188,8 @@ class RobustaActionDirective(SphinxDirective):
     def run(self) -> List[Node]:
         objpath = self.arguments[0]
         obj = pydoc.locate(objpath)
+        if obj is None:
+            raise Exception(f"Cannot document None: {objpath}")
         action_definition = Action(obj)
         return self.__generate_rst(action_definition)
 

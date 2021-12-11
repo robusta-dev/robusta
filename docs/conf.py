@@ -23,6 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / Path("_ext")))
+sys.path.insert(0, str(Path(__file__).parent.parent))  # so we can import the playbooks
 
 # -- General configuration ------------------------------------------------
 

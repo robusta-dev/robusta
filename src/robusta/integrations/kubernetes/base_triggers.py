@@ -83,8 +83,6 @@ class K8sBaseTrigger(BaseTrigger):
         self, event: K8sTriggerEvent, findings: Dict[str, Finding]
     ) -> Optional[ExecutionBaseEvent]:
         # TODO use get_execution_event_type() and not KIND_TO_EVENT_CLASS?
-        # also, wont this be the wrong class type for PodEvent etc?
-        # does it even matter?
         event_class = KIND_TO_EVENT_CLASS.get(event.k8s_payload.kind)
         if event_class is None:
             logging.info(
