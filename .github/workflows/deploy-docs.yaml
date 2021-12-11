@@ -40,7 +40,7 @@ jobs:
         python3 -m pip install --upgrade pip
         pip3 install poetry==1.1.6
         poetry config virtualenvs.create false
-        poetry install
+        poetry install --extras=all
 
     # see https://stackoverflow.com/a/58034787/495995 for an explanation on ${GITHUB_REF##*/}
     - name: Update docs version
