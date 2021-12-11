@@ -9,7 +9,7 @@ from threading import Thread
 from pydantic import BaseModel
 
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
-from ..core.model.env_vars import INCOMING_REQUEST_TIME_WINDOW_SECONDS
+from ..core.model.env_vars import INCOMING_REQUEST_TIME_WINDOW_SECONDS, RUNNER_VERSION
 from robusta.core.reporting.action_requests import (
     ExternalActionRequest,
     ActionRequestBody,
@@ -142,9 +142,9 @@ class ActionRequestReceiver:
         cluster_name = self.event_handler.get_global_config().get("cluster_name")
         open_payload = {
             "action": "auth",
-            "key": "dummy key",
             "account_id": account_id,
             "cluster_name": cluster_name,
+            "version": RUNNER_VERSION,
         }
         logging.info(
             f"connecting to server as account_id={account_id}; cluster_name={cluster_name}"
