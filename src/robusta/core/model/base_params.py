@@ -11,25 +11,8 @@ class ActionParams(DocumentedModel):
     pass
 
 
-# TODO: is this still used anywhere?
-class GenParams(BaseModel):
-    name: str
-    params: Dict[Any, Any] = {}
-
-
 class SlackParams(ActionParams):
     slack_channel: str
-
-
-# TODO: can we remove this?
-class NodeNameParams(ActionParams):
-    node_name: str = None
-
-
-# TODO: can we remove this?
-class PodParams(ActionParams):
-    pod_name: str = None
-    pod_namespace: str = None
 
 
 class BashParams(ActionParams):

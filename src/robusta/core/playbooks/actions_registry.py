@@ -88,6 +88,7 @@ class Action:
         if not action_params:
             return None
         params_cls = action_params.annotation
+        # TODO: check for subclass of ActionParams
         if not issubclass(params_cls, BaseModel):
             raise Exception(
                 f"Illegal action second parameter {params_cls}. Action params must extend BaseModel"
