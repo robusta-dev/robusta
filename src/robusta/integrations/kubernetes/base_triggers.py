@@ -82,7 +82,6 @@ class K8sBaseTrigger(BaseTrigger):
     def build_execution_event(
         self, event: K8sTriggerEvent, findings: Dict[str, Finding]
     ) -> Optional[ExecutionBaseEvent]:
-        # TODO use get_execution_event_type() and not KIND_TO_EVENT_CLASS?
         event_class = KIND_TO_EVENT_CLASS.get(event.k8s_payload.kind)
         if event_class is None:
             logging.info(
