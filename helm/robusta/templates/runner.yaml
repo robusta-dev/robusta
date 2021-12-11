@@ -41,6 +41,8 @@ spec:
           - name: CLOUD_ROUTING
             value: "False"
           {{- end }}
+          - name: RUNNER_VERSION
+            value: {{ .Chart.AppVersion }}
         volumeMounts:
           - name: playbooks-config
             mountPath: /etc/robusta/config

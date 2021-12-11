@@ -40,3 +40,5 @@ RELAY_EXTERNAL_ACTIONS_URL = os.environ.get(
 GIT_MAX_RETRIES = int(os.environ.get("GIT_MAX_RETRIES", 100))
 
 PRINTED_TABLE_MAX_WIDTH = int(os.environ.get("PRINTED_TABLE_MAX_WIDTH", 70))
+
+RUNNER_VERSION = os.environ.get("RUNNER_VERSION", "unknown")
