@@ -1,4 +1,5 @@
 from robusta.api import *
+from networking import incluster_ping, PingParams
 
 
 def pod_row(pod: Pod) -> List[str]:
@@ -98,6 +99,11 @@ def node_health_watcher(event: NodeChangeEvent):
     currently_ready = "true" in new_condition.status.lower()
     previously_ready = "true" in old_condition.status.lower()
 
+    if currently_ready and not previously_ready:
+        logging.info(
+            f"node changed back to healthy: old={event.old_obj} new={event.obj}"
+        )
+
     if currently_ready or currently_ready == previously_ready:
         return
 
@@ -107,4 +113,10 @@ def node_health_watcher(event: NodeChangeEvent):
         aggregation_key="node_not_ready",
     )
     event.add_finding(finding, "DEFAULT")
+    event.add_enrichment([KubernetesDiffBlock([], event.old_obj, event.obj)])
+    addresses_to_ping = event.obj.status.addresses[
+        :1
+    ]  # don't bother to ping more than one address
+    for address in addresses_to_ping:
+        incluster_ping(event, PingParams(hostname=str(address.address)))
     node_status_enricher(event)
