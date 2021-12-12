@@ -277,7 +277,7 @@ python-versions = "*"
 
 [[package]]
 name = "datadog-api-client"
-version = "1.6.0"
+version = "1.7.0"
 description = "Collection of all Datadog Public endpoints"
 category = "main"
 optional = true
@@ -291,7 +291,7 @@ urllib3 = ">=1.15"
 
 [package.extras]
 apm = ["ddtrace"]
-tests = ["glom", "flexmock (>=0.10.4)", "freezegun", "jinja2", "pytest", "pytest-bdd (>=4.0.1)", "pytest-black", "pytest-cov", "pytest-randomly", "pytest-recording", "python-dateutil"]
+tests = ["glom", "flexmock (>=0.10.4)", "freezegun", "jinja2", "pytest", "pytest-bdd (>=4.0.1)", "pytest-randomly", "pytest-recording", "python-dateutil"]
 
 [[package]]
 name = "dateparser"
@@ -333,7 +333,7 @@ packaging = "*"
 
 [[package]]
 name = "distlib"
-version = "0.3.3"
+version = "0.3.4"
 description = "Distribution utilities"
 category = "dev"
 optional = false
@@ -1098,15 +1098,15 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "slack-sdk"
-version = "3.12.0"
+version = "3.13.0"
 description = "The Slack API Platform SDK for Python"
 category = "main"
-optional = true
+optional = false
 python-versions = ">=3.6.0"
 
 [package.extras]
 optional = ["aiodns (>1.0)", "aiohttp (>=3.7.3,<4)", "boto3 (<=2)", "SQLAlchemy (>=1,<2)", "websockets (>=10,<11)", "websocket-client (>=1,<2)"]
-testing = ["pytest (>=6.2.5,<7)", "pytest-asyncio (<1)", "Flask-Sockets (>=0.2,<1)", "Flask (>=1,<2)", "Werkzeug (<2)", "pytest-cov (>=2,<3)", "codecov (>=2,<3)", "flake8 (>=3,<4)", "black (==21.9b0)", "psutil (>=5,<6)", "databases (>=0.3)", "boto3 (<=2)", "moto (<2)"]
+testing = ["pytest (>=6.2.5,<7)", "pytest-asyncio (<1)", "Flask-Sockets (>=0.2,<1)", "Flask (>=1,<2)", "Werkzeug (<2)", "pytest-cov (>=2,<3)", "codecov (>=2,<3)", "flake8 (>=4,<5)", "black (==21.12b0)", "psutil (>=5,<6)", "databases (>=0.3)", "boto3 (<=2)", "moto (<2)"]
 
 [[package]]
 name = "sniffio"
@@ -1332,7 +1332,7 @@ name = "tabulate"
 version = "0.8.9"
 description = "Pretty-print tabular data"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 
 [package.extras]
@@ -1538,7 +1538,7 @@ all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-excepti
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "82fc0616d1a05a7ec4c799ff99c25d9eac372614da443295531bb3795fa16496"
+content-hash = "6d50811c4233db7b66c17f55279e9bef78fe93b9a25bc01f33c770d0bc1478b1"
 
 [metadata.files]
 alabaster = [
@@ -1700,7 +1700,7 @@ dataclasses = [
     {file = "dataclasses-0.6.tar.gz", hash = "sha256:6988bd2b895eef432d562370bb707d540f32f7360ab13da45340101bc2307d84"},
 ]
 datadog-api-client = [
-    {file = "datadog_api_client-1.6.0-py2.py3-none-any.whl", hash = "sha256:d612dcb15eb907ec89df5f45277a5a5b73ef531f13f50f5b037cde29225daa2f"},
+    {file = "datadog_api_client-1.7.0-py2.py3-none-any.whl", hash = "sha256:f874dab0d4d182132122cfcc70c549b5314817913a80ba0d80a837952327dd9d"},
 ]
 dateparser = [
     {file = "dateparser-1.1.0-py2.py3-none-any.whl", hash = "sha256:fec344db1f73d005182e214c0ff27313c748bbe0c1638ce9d48a809ddfdab2a0"},
@@ -1715,8 +1715,8 @@ deprecation = [
     {file = "deprecation-2.1.0.tar.gz", hash = "sha256:72b3bde64e5d778694b0cf68178aed03d15e15477116add3fb773e581f9518ff"},
 ]
 distlib = [
-    {file = "distlib-0.3.3-py2.py3-none-any.whl", hash = "sha256:c8b54e8454e5bf6237cc84c20e8264c3e991e824ef27e8f1e81049867d861e31"},
-    {file = "distlib-0.3.3.zip", hash = "sha256:d982d0751ff6eaaab5e2ec8e691d949ee80eddf01a62eaa96ddb11531fe16b05"},
+    {file = "distlib-0.3.4-py2.py3-none-any.whl", hash = "sha256:6564fe0a8f51e734df6333d08b8b94d4ea8ee6b99b5ed50613f731fd4089f34b"},
+    {file = "distlib-0.3.4.zip", hash = "sha256:e4b58818180336dc9c529bfb9a0b58728ffc09ad92027a3f30b7cd91e3458579"},
 ]
 docutils = [
     {file = "docutils-0.17.1-py2.py3-none-any.whl", hash = "sha256:cf316c8370a737a022b72b56874f6602acf974a37a9fba42ec2876387549fc61"},
@@ -2250,8 +2250,8 @@ six = [
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
 ]
 slack-sdk = [
-    {file = "slack_sdk-3.12.0-py2.py3-none-any.whl", hash = "sha256:f779ff3dc266491b02ad056d28038ec5d708b2a438a3a8f8794fb1121d8274e2"},
-    {file = "slack_sdk-3.12.0.tar.gz", hash = "sha256:a384d91c10229f94a9b2cae2ec5af2a683a3d5aee1287c01238630ab42747287"},
+    {file = "slack_sdk-3.13.0-py2.py3-none-any.whl", hash = "sha256:54f2a5f7419f1ab932af9e3200f7f2f93db96e0f0eb8ad7d3b4214aa9f124641"},
+    {file = "slack_sdk-3.13.0.tar.gz", hash = "sha256:aae6ce057e286a5e7fe7a9f256e85b886eee556def8e04b82b08f699e64d7f67"},
 ]
 sniffio = [
     {file = "sniffio-1.2.0-py3-none-any.whl", hash = "sha256:471b71698eac1c2112a40ce2752bb2f4a4814c22a54a3eed3676bc0f5ca9f663"},
