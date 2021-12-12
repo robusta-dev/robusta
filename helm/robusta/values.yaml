@@ -168,3 +168,18 @@ kube-prometheus-stack:
               send_resolved: true
   kubeProxy:
     enabled: false
+  prometheus:
+    prometheusSpec:
+      retention: 14d
+      # we set a value slightly lower than the 100Gi below
+      # the retentionSize uses the suffix GB but it is really Gi units
+      # that is, the retentionSize is measured in base2 units just like Gi, Mi, etc
+      retentionSize: "99GB"
+
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 100Gi
