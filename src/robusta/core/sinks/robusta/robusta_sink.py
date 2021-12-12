@@ -157,8 +157,7 @@ class RobustaSink(SinkBase):
                 self.__publish_new_services(current_services)
             except Exception as e:
                 logging.error(
-                    f"Failed to run periodic service discovery for {self.sink_name}",
-                    traceback.print_exc(),
+                    f"Failed to run periodic service discovery for {self.sink_name} exc={traceback.print_exc()}"
                 )
 
             time.sleep(self.__discovery_period_sec)
