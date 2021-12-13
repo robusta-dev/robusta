@@ -78,6 +78,8 @@ class Finding:
             return
         if annotations is None:
             annotations = {}
+        if isinstance(enrichment_blocks, BaseBlock):  # not a list
+            enrichment_blocks = [enrichment_blocks]
         self.enrichments.append(Enrichment(enrichment_blocks, annotations))
 
     def __str__(self):

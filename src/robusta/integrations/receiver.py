@@ -42,6 +42,7 @@ class ActionRequestReceiver:
             on_error=self.on_error,
         )
 
+        # TODO: take from robusta token if it exists just like robusta_sink.py?
         if not self.account_id or not self.cluster_name:
             logging.error(
                 f"Action receiver cannot start. "
