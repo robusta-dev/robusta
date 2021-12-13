@@ -1,4 +1,4 @@
-# playbooks for peeking inside running pods
+# TODO: move the python playbooks into their own subpackage and put each playbook in it's own file
 import textwrap
 import humanize
 from robusta.api import *
@@ -165,3 +165,57 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
     )
     finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
     event.add_finding(finding)
+
+
+class DebuggerParams(BaseModel):
+    process_substring: str = None
+    pid: int = None
+    port: int = 6789
+
+
+@action
+def python_debugger(event: PodEvent, params: DebuggerParams):
+    pod = event.get_pod()
+    if not pod:
+        logging.info(f"python_debugger - pod not found for event: {event}")
+        return
+
+    if params.process_substring is None and params.pid is None:
+        raise Exception("Either process_substring or pid must be given")
+
+    if params.pid is None:
+        pid = f"`debug-toolkit find-pid '{pod.metadata.uid}' '{params.process_substring}' python`"
+    else:
+        pid = params.pid
+
+    cmd = f"debug-toolkit debugger {pid} --port {params.port}"
+    output = RobustaPod.exec_in_debugger_pod(
+        pod.metadata.name,
+        pod.spec.nodeName,
+        cmd,
+        "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4",
+    )
+
+    finding = Finding(
+        title=f"Performed manual debug on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
+        source=FindingSource.MANUAL,
+        aggregation_key="python_debugger",
+        subject=FindingSubject(
+            pod.metadata.name,
+            FindingSubjectType.TYPE_POD,
+            pod.metadata.namespace,
+        ),
+    )
+
+    port_fwd_cmd = f"kubectl port-forward -n {pod.metadata.namespace} {pod.metadata.name} {params.port}:{params.port}"
+    finding.add_enrichment(
+        [
+            MarkdownBlock(
+                f"1. Run: `{port_fwd_cmd}`\n2. In VSCode do a Remote Attach to `localhost` and port {params.port}"
+            ),
+        ]
+    )
+    event.add_finding(finding)
+    logging.info(
+        "Done! See instructions for connecting to the debugger in Slack or Robusta UI"
+    )
