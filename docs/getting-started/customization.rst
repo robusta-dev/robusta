@@ -1,4 +1,4 @@
-Customizing Playbooks
+Example Playbook
 ##############################
 
 Robusta needs rules to tell it what to do. These rules are called "playbooks".

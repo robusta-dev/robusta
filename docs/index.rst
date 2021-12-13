@@ -242,7 +242,7 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    getting-started/customization
    getting-started/manual-triggers
    getting-started/upgrade
-   getting-started/more-commands
+   getting-started/support
 
 .. toctree::
    :maxdepth: 4
@@ -253,6 +253,7 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    user-guide/builtin-playbooks
    user-guide/alerts
    user-guide/playbook-configuration
+   user-guide/robusta-cli
    user-guide/architecture
 
 .. toctree::
@@ -263,6 +264,7 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    integrations/slack
    integrations/prometheus
    integrations/elasticsearch
+   integrations/webhook
 
 .. toctree::
    :maxdepth: 4
