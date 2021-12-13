@@ -188,7 +188,7 @@ class ConfigLoader:
         if playbook_dir not in sys.path:
             sys.path.append(playbook_dir)
 
-        self.__install_requirements(os.path.join(playbook_dir, "requirements.txt"))
+        self.install_requirements(os.path.join(playbook_dir, "requirements.txt"))
         python_files = glob.glob(f"{playbook_dir}/*.py")
         if len(python_files) == 0:
             logging.warning(f"no playbook scripts to load in directory {playbook_dir}")
@@ -212,7 +212,7 @@ class ConfigLoader:
         logging.info(f"{len(python_files)} playbooks loaded from {playbook_dir}")
 
     @classmethod
-    def __install_requirements(cls, requirements_path):
+    def install_requirements(cls, requirements_path):
         if os.path.exists(requirements_path):
             logging.info(f"installing requirements file {requirements_path}")
             subprocess.check_call(
