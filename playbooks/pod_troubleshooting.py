@@ -171,6 +171,7 @@ class DebuggerParams(BaseModel):
     process_substring: str = None
     pid: int = None
     port: int = 6789
+    verbose: bool = False
 
 
 @action
@@ -197,7 +198,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     )
 
     finding = Finding(
-        title=f"Performed manual debug on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
+        title=f"Python debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_debugger",
         subject=FindingSubject(
@@ -215,6 +216,9 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
             ),
         ]
     )
+    if params.verbose:
+        finding.add_enrichment([FileBlock("debugger-output.txt", output.encode())])
+
     event.add_finding(finding)
     logging.info(
         "Done! See instructions for connecting to the debugger in Slack or Robusta UI"
