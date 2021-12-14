@@ -212,7 +212,23 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     finding.add_enrichment(
         [
             MarkdownBlock(
-                f"1. Run: `{port_fwd_cmd}`\n2. In VSCode do a Remote Attach to `localhost` and port {params.port}"
+                f"""
+                1. Run: `{port_fwd_cmd}`
+                2. In VSCode do a Remote Attach to `localhost` and port {params.port}
+                3. If breakpoints don't work in VSCode then update `pathMappings` in launch.json. For example:
+                ```
+                    "pathMappings": [
+                        {{
+                            "localRoot": "${{workspaceFolder}}/src",
+                            "remoteRoot": "/usr/local/lib/python3.9/site-packages"
+                        }}
+                    ]
+                ```
+                `localRoot` should be the prefix to your python files locally and `remoteRoot` should be the prefix in your container
+
+                We are working on automatically identifying the pathMappings, so please speak to us if you have to change the settings. 
+                """,
+                dedent=True,
             ),
         ]
     )
