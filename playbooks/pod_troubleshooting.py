@@ -1,4 +1,5 @@
 # TODO: move the python playbooks into their own subpackage and put each playbook in it's own file
+import json
 import textwrap
 import humanize
 from robusta.api import *
@@ -170,8 +171,63 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
 class DebuggerParams(BaseModel):
     process_substring: str = None
     pid: int = None
-    port: int = 6789
-    verbose: bool = False
+    port: int = 5678
+
+
+def get_example_launch_json(params: DebuggerParams):
+    return {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Python: Remote Attach",
+                "type": "python",
+                "request": "attach",
+                "connect": {"host": "localhost", "port": params.port},
+                "justMyCode": False,
+                "pathMappings": [
+                    {
+                        "localRoot": "/local/path/to/module1",
+                        "remoteRoot": "/remote/path/to/module",
+                    },
+                    {
+                        "localRoot": "${workspaceFolder}/local/path/to/module2",
+                        "remoteRoot": "/remote/path/to/module2",
+                    },
+                ],
+            }
+        ],
+    }
+
+
+def get_loaded_module_info(data):
+    modules = data["loaded_modules"]
+    max_indent = min(40, max(len(name) for name in modules.keys()))
+
+    output = ""
+    for name in sorted(modules.keys()):
+        path = modules[name]
+        indentation = " " * max(0, max_indent - len(name))
+        output += f"{name}:{indentation}{path}\n"
+
+    return (
+        textwrap.dedent(
+            f"""\
+        These are the remote module paths
+        
+        Use this list to guess the right value for `remoteRoot` in launch.json
+        
+        When setting breakpoints, VSCode determines the remote filename by replacing `localRoot` with `remoteRoot` in the filename  
+        %s"""
+        )
+        % (output,)
+    )
+
+
+def get_debugger_warnings(data):
+    message = data["message"]
+    if message.strip().lower() == "success":
+        return None
+    return message
 
 
 @action
@@ -190,11 +246,12 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         pid = params.pid
 
     cmd = f"debug-toolkit debugger {pid} --port {params.port}"
-    output = RobustaPod.exec_in_debugger_pod(
-        pod.metadata.name,
-        pod.spec.nodeName,
-        cmd,
-        "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4",
+    output = json.loads(
+        RobustaPod.exec_in_debugger_pod(
+            pod.metadata.name,
+            pod.spec.nodeName,
+            cmd,
+        )
     )
 
     finding = Finding(
@@ -207,34 +264,33 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
             pod.metadata.namespace,
         ),
     )
-
-    port_fwd_cmd = f"kubectl port-forward -n {pod.metadata.namespace} {pod.metadata.name} {params.port}:{params.port}"
     finding.add_enrichment(
         [
             MarkdownBlock(
                 f"""
-                1. Run: `{port_fwd_cmd}`
+                1. Run: `kubectl port-forward -n {pod.metadata.namespace} {pod.metadata.name} {params.port}:{params.port}`
                 2. In VSCode do a Remote Attach to `localhost` and port {params.port}
-                3. If breakpoints don't work in VSCode then update `pathMappings` in launch.json. For example:
-                ```
-                    "pathMappings": [
-                        {{
-                            "localRoot": "${{workspaceFolder}}/src",
-                            "remoteRoot": "/usr/local/lib/python3.9/site-packages"
-                        }}
-                    ]
-                ```
-                `localRoot` should be the prefix to your python files locally and `remoteRoot` should be the prefix in your container
-
-                We are working on automatically identifying the pathMappings, so please speak to us if you have to change the settings. 
+                3. If breakpoints don't work in VSCode you will need to set `pathMappings` in launch.json. See attached files for assistance.
+                4. Use VSCode logpoints to debug without pausing your application. Happy debugging!
                 """,
                 dedent=True,
-            ),
+            )
         ]
     )
-    if params.verbose:
-        finding.add_enrichment([FileBlock("debugger-output.txt", output.encode())])
 
+    warnings = get_debugger_warnings(output)
+    if warnings is not None:
+        finding.add_enrichment([HeaderBlock("Warning"), MarkdownBlock(warnings)])
+
+    finding.add_enrichment(
+        [
+            FileBlock(
+                "launch.json",
+                json.dumps(get_example_launch_json(params), indent=4).encode(),
+            ),
+            FileBlock("loaded-modules.txt", get_loaded_module_info(output).encode()),
+        ]
+    )
     event.add_finding(finding)
     logging.info(
         "Done! See instructions for connecting to the debugger in Slack or Robusta UI"
