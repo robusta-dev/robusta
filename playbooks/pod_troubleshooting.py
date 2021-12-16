@@ -186,12 +186,8 @@ def get_example_launch_json(params: DebuggerParams):
                 "justMyCode": False,
                 "pathMappings": [
                     {
-                        "localRoot": "/local/path/to/module1",
-                        "remoteRoot": "/remote/path/to/module",
-                    },
-                    {
-                        "localRoot": "${workspaceFolder}/local/path/to/module2",
-                        "remoteRoot": "/remote/path/to/module2",
+                        "localRoot": "/local/path/to/module/root",
+                        "remoteRoot": "/remote/path/to/same/module",
                     },
                 ],
             }
