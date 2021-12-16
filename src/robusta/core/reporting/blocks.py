@@ -23,10 +23,11 @@ BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 class MarkdownBlock(BaseBlock):
     text: str
 
-    def __init__(self, text: str, single_paragraph: bool = False):
-        if single_paragraph:
+    def __init__(self, text: str, dedent: bool = False):
+        if dedent:
+            if text[0] == "\n":
+                text = text[1:]
             text = textwrap.dedent(text)
-            text = text.replace("\n", "")
 
         if len(text) >= BLOCK_SIZE_LIMIT:
             text = text[:BLOCK_SIZE_LIMIT] + "..."

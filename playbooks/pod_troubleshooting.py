@@ -1,4 +1,5 @@
-# playbooks for peeking inside running pods
+# TODO: move the python playbooks into their own subpackage and put each playbook in it's own file
+import json
 import textwrap
 import humanize
 from robusta.api import *
@@ -165,3 +166,128 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
     )
     finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
     event.add_finding(finding)
+
+
+class DebuggerParams(BaseModel):
+    process_substring: str = None
+    pid: int = None
+    port: int = 5678
+
+
+def get_example_launch_json(params: DebuggerParams):
+    return {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Python: Remote Attach",
+                "type": "python",
+                "request": "attach",
+                "connect": {"host": "localhost", "port": params.port},
+                "justMyCode": False,
+                "pathMappings": [
+                    {
+                        "localRoot": "/local/path/to/module/root",
+                        "remoteRoot": "/remote/path/to/same/module",
+                    },
+                ],
+            }
+        ],
+    }
+
+
+def get_loaded_module_info(data):
+    modules = data["loaded_modules"]
+    max_indent = min(40, max(len(name) for name in modules.keys()))
+
+    output = ""
+    for name in sorted(modules.keys()):
+        path = modules[name]
+        indentation = " " * max(0, max_indent - len(name))
+        output += f"{name}:{indentation}{path}\n"
+
+    return (
+        textwrap.dedent(
+            f"""\
+        These are the remote module paths
+        
+        Use this list to guess the right value for `remoteRoot` in launch.json
+        
+        When setting breakpoints, VSCode determines the remote filename by replacing `localRoot` with `remoteRoot` in the filename  
+        %s"""
+        )
+        % (output,)
+    )
+
+
+def get_debugger_warnings(data):
+    message = data["message"]
+    if message.strip().lower() == "success":
+        return None
+    return message
+
+
+@action
+def python_debugger(event: PodEvent, params: DebuggerParams):
+    pod = event.get_pod()
+    if not pod:
+        logging.info(f"python_debugger - pod not found for event: {event}")
+        return
+
+    if params.process_substring is None and params.pid is None:
+        raise Exception("Either process_substring or pid must be given")
+
+    if params.pid is None:
+        pid = f"`debug-toolkit find-pid '{pod.metadata.uid}' '{params.process_substring}' python`"
+    else:
+        pid = params.pid
+
+    cmd = f"debug-toolkit debugger {pid} --port {params.port}"
+    output = json.loads(
+        RobustaPod.exec_in_debugger_pod(
+            pod.metadata.name,
+            pod.spec.nodeName,
+            cmd,
+        )
+    )
+
+    finding = Finding(
+        title=f"Python debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
+        source=FindingSource.MANUAL,
+        aggregation_key="python_debugger",
+        subject=FindingSubject(
+            pod.metadata.name,
+            FindingSubjectType.TYPE_POD,
+            pod.metadata.namespace,
+        ),
+    )
+    finding.add_enrichment(
+        [
+            MarkdownBlock(
+                f"""
+                1. Run: `kubectl port-forward -n {pod.metadata.namespace} {pod.metadata.name} {params.port}:{params.port}`
+                2. In VSCode do a Remote Attach to `localhost` and port {params.port}
+                3. If breakpoints don't work in VSCode you will need to set `pathMappings` in launch.json. See attached files for assistance.
+                4. Use VSCode logpoints to debug without pausing your application. Happy debugging!
+                """,
+                dedent=True,
+            )
+        ]
+    )
+
+    warnings = get_debugger_warnings(output)
+    if warnings is not None:
+        finding.add_enrichment([HeaderBlock("Warning"), MarkdownBlock(warnings)])
+
+    finding.add_enrichment(
+        [
+            FileBlock(
+                "launch.json",
+                json.dumps(get_example_launch_json(params), indent=4).encode(),
+            ),
+            FileBlock("loaded-modules.txt", get_loaded_module_info(output).encode()),
+        ]
+    )
+    event.add_finding(finding)
+    logging.info(
+        "Done! See instructions for connecting to the debugger in Slack or Robusta UI"
+    )
