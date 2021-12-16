@@ -3,11 +3,13 @@ from pydantic import SecretStr, Field
 from robusta.api import *
 
 
-class GrafanaAnnotationsParams(ActionParams):
+class GrafanaAnnotationParams(ActionParams):
     """
     :var grafana_url: http(s) url of grafana or None for autodetection of an in-cluster grafana
     :var grafana_api_key: grafana key with write permissions.
     :var grafana_dashboard_uid: dashboard ID as it appears in the dashboard's url
+    :var grafana_dashboard_panel: when present, annotations will be added only to panels with this text in their title.
+
     :var cluster_name: writen as one of the annotation's tags
     :var custom_tags: custom tags to add to the annotation
 
@@ -18,6 +20,7 @@ class GrafanaAnnotationsParams(ActionParams):
     grafana_api_key: SecretStr
     grafana_dashboard_uid: str
     grafana_url: str = None
+    grafana_dashboard_panel: str = None
     cluster_name: str = None
     cluster_zone: str = None
     custom_tags: List[str] = None
@@ -25,7 +28,7 @@ class GrafanaAnnotationsParams(ActionParams):
 
 @action
 def add_deployment_lines_to_grafana(
-    event: KubernetesAnyChangeEvent, action_params: GrafanaAnnotationsParams
+    event: KubernetesAnyChangeEvent, action_params: GrafanaAnnotationParams
 ):
     """
     Add annotations to Grafana when a Kubernetes resource is updated and the image tags change.
@@ -61,55 +64,31 @@ def add_deployment_lines_to_grafana(
     if action_params.custom_tags:
         tags.extend(action_params.custom_tags)
 
-    grafana.add_line_to_dashboard(action_params.grafana_dashboard_uid, msg, tags=tags)
+    grafana.add_line_to_dashboard(
+        action_params.grafana_dashboard_uid,
+        msg,
+        tags=tags,
+        panel_substring=action_params.grafana_dashboard_panel,
+    )
 
 
-class AnnotationConfig(ActionParams):
-    """
-    :var dashboard_panel: when present, annotations will be added only to panels with this text text in their title.
-    :example alert_name: CPUThrottlingHigh
-    :example dashboard_uid: 09ec8aa1e996d6ffcd6817bbaff4db1b
-    """
-
-    alert_name: str
-    dashboard_uid: str
-    dashboard_panel: Optional[str]
-
-
-class AlertLineParams(ActionParams):
-    """
-    :var grafana_url: http(s) url of grafana or None for autodetection of an in-cluster grafana
-    :example grafana_url: http://grafana.namespace.svc
-    :var grafana_api_key: grafana key with write permissions.
-    :var annotations: list of alerts and which dashboard to write them to
-    """
-
-    grafana_url: str = None
-    grafana_api_key: SecretStr
-    # TODO: this is a bad name
-    annotations: List[AnnotationConfig]
-
-
-# TODO: should we use filter_params and configure multiple instances of add_alert_lines_to_grafana instead of one master instance?
 @action
 def add_alert_lines_to_grafana(
-    event: PrometheusKubernetesAlert, params: AlertLineParams
+    event: PrometheusKubernetesAlert, params: GrafanaAnnotationParams
 ):
     grafana = Grafana(params.grafana_api_key.get_secret_value(), params.grafana_url)
-    for annotation_config in params.annotations:
-        if annotation_config.alert_name != event.alert_name:
-            continue
 
-        if event.get_description():
-            description = f"<pre>{event.get_description()}</pre>"
-        else:
-            description = ""
-        grafana.add_line_to_dashboard(
-            annotation_config.dashboard_uid,
-            f'<h2>{event.get_title()}</h2><a href="{event.alert.generatorURL}">Open in AlertManager</a>{description}',
-            tags=[f"{k}={v}" for k, v in event.alert.labels.items()],
-            panel_substring=annotation_config.dashboard_panel,
-        )
+    if event.get_description():
+        description = f"<pre>{event.get_description()}</pre>"
+    else:
+        description = ""
+
+    grafana.add_line_to_dashboard(
+        params.grafana_dashboard_uid,
+        f'<h2>{event.get_title()}</h2><a href="{event.alert.generatorURL}">Open in AlertManager</a>{description}',
+        tags=[f"{k}={v}" for k, v in event.alert.labels.items()],
+        panel_substring=params.grafana_dashboard_panel,
+    )
 
 
 @action
