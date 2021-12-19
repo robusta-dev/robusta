@@ -3,16 +3,127 @@ Welcome to Robusta!
 Robusta is the best way to stay on top of Kubernetes alerts. It is an open source platform for automated troubleshooting
 and maintenance.
 
-Use Cases
-~~~~~~~~~~~
+Examples
+~~~~~~~~~~~~~~~~~~
 
-* Respond to incidents in a reproducible manner
-* Track changes and identify regressions
-* See out-of-the-box insights for common alerts
-* Automatically silence false alarms
-* Fix alerts in one click from Slack or the terminal
+.. tab-set::
 
-Robusta can be used as:
+    .. tab-item:: Crashing pods
+
+        .. image:: /images/crash-report2.png
+            :width: 700
+            :align: center
+
+        When a pod crashes, fetch the logs and send a message to Slack.
+
+        This is configured by default, so after installing Robusta it just works. If you configured it yourself,
+        it would look like this:
+
+        .. code-block:: yaml
+
+            triggers:
+              - on_prometheus_alert:
+                  alert_name: KubePodCrashLooping
+            actions:
+              - logs_enricher: {}
+            sinks:
+              - slack
+
+    .. tab-item:: Change tracking
+
+        .. image:: /images/grafana-deployment-enrichment.png
+          :width: 400
+          :align: center
+
+        Write annotations to Grafana showing when applications are updated.
+
+        Configure it like this:
+
+        .. code-block:: yaml
+
+            triggers:
+              - on_deployment_update: {}
+            actions:
+              - add_deployment_lines_to_grafana:
+                  grafana_url: <grafana_url>
+                  grafana_api_key: <grafana_api_key>
+                  grafana_dashboard_uid: <which_grafana_dashboard_to_update>
+
+    .. tab-item:: Alert insights
+
+        .. image:: /images/node-cpu-alerts-enrichment.png
+            :width: 30 %
+            :alt: Analysis of node cpu usage, breakdown by pods
+        .. image:: /images/node-cpu-usage-vs-request.svg
+            :width: 30 %
+
+        When a node has high CPU usage, analyze the node and provide actionable advice.
+
+        This is configured by default, so after installing Robusta it just works. If you configured it yourself,
+        it would look like this:
+
+        .. code-block:: yaml
+
+            triggers:
+              - on_prometheus_alert:
+                  alert_name: HostHighCpuLoad
+            actions:
+              - node_cpu_enricher: {}
+              - node_bash_enricher:
+                  bash_command: "ps aux"
+            sinks:
+              - slack
+
+    .. tab-item:: Cloud debugging
+
+        Run this command to attach a Python profiler to any pod:
+
+        .. code-block:: bash
+
+             robusta playbooks trigger python_debugger name=myapp namespace=default process_substring=main
+
+        You will get follow up instructions in Slack:
+
+        .. image:: /images/python-debugger.png
+          :width: 600
+          :align: center
+
+
+
+How it works
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You configure automations in a three-part yaml:
+
+.. grid:: 3
+
+    .. grid-item-card:: Triggers
+        :class-card: sd-bg-light
+        :link: catalog/triggers/index
+        :link-type: doc
+
+        When to run
+        (on alerts, logs, changes, etc)
+
+    .. grid-item-card::  Actions
+        :class-card: sd-bg-light
+        :link: catalog/actions/index
+        :link-type: doc
+
+        What to do
+        (over 50 builtin actions)
+
+    .. grid-item-card::  Sinks
+        :class-card: sd-bg-light
+        :link: catalog/sinks/index
+        :link-type: doc
+
+        Where to send the result
+        (Slack, etc)
+
+Architecture
+~~~~~~~~~~~~~~~~~~~~
+Robusta can be used as
 
 .. dropdown:: A complete Kubernetes monitoring stack
     :color: light
@@ -30,169 +141,18 @@ Robusta can be used as:
 
     * Robusta automations engine + builtin automations
 
+Why Robusta
+~~~~~~~~~~~
 
-How it works
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Robusta makes troubleshooting automated, reproducible, and open source.
 
-You configure automations in a three-part yaml:
+It turns expert knowledge into re-usable code so that you can:
 
-triggers:
-    When to run
-
-actions:
-    What to do
-
-sinks:
-    Where to send the result
-
-Examples
-~~~~~~~~~~~~~~~~~~
-
-.. tab-set::
-
-    .. tab-item:: Crashing pods
-
-        .. admonition:: Example: monitor crashing pods
-
-            When a pod crashes, fetch the logs and send a message to Slack.
-
-            This is configured by default, so after installing Robusta it just works. If you configured it yourself,
-            it would look like this:
-
-            .. code-block:: yaml
-
-                triggers:
-                  - on_prometheus_alert:
-                      alert_name: KubePodCrashLooping
-                actions:
-                  - logs_enricher: {}
-                sinks:
-                  - slack
-
-            .. image:: /images/crash-report.png
-                :width: 700
-                :align: center
-
-    .. tab-item:: Grafana Annotations
-
-        .. admonition:: Example: show updates in Grafana
-
-            Write annotations to Grafana showing when applications were updated.
-
-            No sink is configured. This action writes directly to Grafana and no output is sent to sinks.
-
-            .. code-block:: yaml
-
-                triggers:
-                  - on_deployment_update: {}
-                actions:
-                  - add_deployment_lines_to_grafana:
-                      grafana_url: <grafana_url>
-                      grafana_api_key: <grafana_api_key>
-                      grafana_dashboard_uid: <which_grafana_dashboard_to_update>
-
-            .. image:: /images/grafana-deployment-enrichment.png
-              :width: 400
-              :align: center
-
-    .. tab-item:: HighCPU alerts
-
-        .. admonition:: Example: show insights on HighCPU Usage
-
-            When a node has high CPU usage, analyze the node and provide actionable advice. Also run ``ps aux`` on the
-            node.
-
-            This is configured by default, so after installing Robusta it just works. If you configured it yourself,
-            it would look like this:
-
-            .. code-block:: yaml
-
-                triggers:
-                  - on_prometheus_alert:
-                      alert_name: HostHighCpuLoad
-                actions:
-                  - node_cpu_enricher: {}
-                  - node_bash_enricher:
-                      bash_command: "ps aux"
-                sinks:
-                  - slack
-
-            .. image:: /images/node-cpu-alerts-enrichment.png
-                :width: 30 %
-                :alt: Analysis of node cpu usage, breakdown by pods
-            .. image:: /images/node-cpu-usage-vs-request.svg
-                :width: 30 %
-
-    .. tab-item:: Change Tracking
-
-        .. admonition:: Example: track deployment updates
-
-            This notifies in Slack when ``status.conditions`` is modified for a Deployment
-
-            .. code-block:: yaml
-
-                triggers:
-                  - on_deployment_update: {}
-                actions:
-                  - resource_babysitter:
-                      fields_to_monitor: ["status.conditions"]
-                sinks:
-                  - slack
-
-            .. image:: /images/deployment-babysitter.png
-              :width: 600
-              :align: center
-
-More examples:
-
-* See what changed before an alert fired
-* Track and audit changes in a cluster
-* Apply workarounds from Slack like scaling up Deployments
-* Monitor and fix health issues like low disk space
-* Debug high CPU by profiling for 2 seconds without restarting your application
-
-
-Motivation
-~~~~~~~~~~~~~~~~~~~~
-
-**Robusta makes troubleshooting automated, reproducible, and open source**.
-
-The Robusta vision is to freely share all devops knowledge and best-practices.
-
-With Robusta, all companies can identify and troubleshoot problems like experts because
-Robusta turns expert knowledge into re-usable code.
-
-Features
-~~~~~~~~~~~~~~~~~~~~
-
-.. dropdown:: Supported triggers
-    :color: light
-
-    * Prometheus alerts
-    * Elasticsearch monitors
-    * Changes to Kubernetes resources
-    * Log lines written by applications
-
-
-.. dropdown:: Supported actions
-    :color: light
-
-    * Fetch a pod's logs
-    * Run a bash command on a pod
-    * Run a bash command on a node
-    * Attach a CPU profiler for X seconds
-    * More than 50 additional actions
-    * Easy to add your own actions
-
-.. dropdown:: Supported sinks
-    :color: light
-
-    * Slack
-    * MSTeams (beta)
-    * Datadog
-    * Kafka
-    * Robusta UI
-    * Open a Github issue requesting support for a new sink
+* Respond to incidents in a reproducible manner
+* Track changes and identify regressions
+* See out-of-the-box insights for common alerts
+* Automatically silence false alarms
+* Fix alerts in one click from Slack or the terminal
 
 Extending Robusta
 ~~~~~~~~~~~~~~~~~~~
@@ -244,6 +204,15 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
 
 .. toctree::
    :maxdepth: 4
+   :caption: Automation Catalog
+   :hidden:
+
+   catalog/triggers/index
+   catalog/actions/index
+   catalog/sinks/index
+
+.. toctree::
+   :maxdepth: 4
    :caption: User Guide
    :hidden:
    :glob:
@@ -252,16 +221,6 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    user-guide/upgrade
    user-guide/robusta-cli
    user-guide/architecture
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Reference
-   :hidden:
-
-   reference/triggers/index
-   reference/actions/index
-   reference/sinks/index
-
 
 .. toctree::
    :maxdepth: 4
