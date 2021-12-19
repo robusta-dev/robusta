@@ -9,6 +9,17 @@ from ..playbooks.actions_registry import Action
 from ..playbooks.trigger import Trigger
 from ...utils.json_schema import example_from_schema
 
+
+def get_possible_types(t):
+    """
+    Given a type or a Union of types, returns a list of the actual types
+    """
+    if get_origin(t) == Union:
+        return get_args(t)
+    else:
+        return [t]
+
+
 # see https://stackoverflow.com/questions/13518819/avoid-references-in-pyyaml
 class NoAliasDumper(yaml.SafeDumper):
     def ignore_aliases(self, data):
@@ -22,9 +33,7 @@ class ExamplesGenerator:
 
         for field_name, field in Trigger.__fields__.items():
             trigger_classes = [
-                t
-                for t in self.__get_possible_types(field.type_)
-                if issubclass(t, BaseTrigger)
+                t for t in get_possible_types(field.type_) if issubclass(t, BaseTrigger)
             ]
             if len(trigger_classes) == 0:
                 continue
@@ -39,16 +48,6 @@ class ExamplesGenerator:
                 )
                 for e in possible_events:
                     self.events_to_triggers[e].add(t)
-
-    @staticmethod
-    def __get_possible_types(t):
-        """
-        Given a type or a Union of types, returns a list of the actual types
-        """
-        if get_origin(t) == Union:
-            return get_args(t)
-        else:
-            return [t]
 
     def get_possible_triggers(self, event_cls: Type[ExecutionBaseEvent]) -> List[str]:
         name = event_cls.__name__

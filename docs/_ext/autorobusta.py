@@ -1,6 +1,7 @@
 import inspect
 import pydoc
 import textwrap
+import typing
 from pathlib import Path
 from typing import List, Type
 
@@ -20,7 +21,7 @@ from sphinx.util import nested_parse_with_titles
 from sphinx.util.docutils import SphinxDirective
 
 from robusta.api import Action
-from robusta.core.playbooks.generation import ExamplesGenerator
+from robusta.core.playbooks.generation import ExamplesGenerator, get_possible_types
 
 # creating this is slightly expensive so we create one global instance and re-use it
 generator = ExamplesGenerator()
@@ -133,7 +134,16 @@ class PydanticModelDirective(SphinxDirective):
         if show_code:
             content.extend(cls.__document_field_example(field))
 
-        if issubclass(field.type_, BaseModel):
+        if typing.get_origin(field.type_) == typing.Union:
+            possible_types = get_possible_types(field.type_)
+            paragraph = nodes.paragraph(text=f"each entry is one of the following:")
+            content.append(paragraph)
+            for t in possible_types:
+                if isinstance(None, t):
+                    continue
+                content.extend(cls.__document_model(t, show_code, show_optionality))
+
+        elif issubclass(field.type_, BaseModel):
             paragraph = nodes.paragraph(text=f"each entry contains:")
             content.append(paragraph)
             # when documenting an inner model, we always show "required"/"optional" inline
@@ -155,11 +165,14 @@ class PydanticModelDirective(SphinxDirective):
 
     @staticmethod
     def __get_readable_field_type(field: pydantic.fields.ModelField):
-        inner_type_name = field.type_.__name__.lower()
-        if inner_type_name == "secretstr":
-            inner_type_name = "str"
-        if issubclass(field.type_, BaseModel):
+        if typing.get_origin(field.type_) == typing.Union:
             inner_type_name = "complex"
+        else:
+            inner_type_name = field.type_.__name__.lower()
+            if inner_type_name == "secretstr":
+                inner_type_name = "str"
+            if issubclass(field.type_, BaseModel):
+                inner_type_name = "complex"
 
         if field.shape == pydantic.fields.SHAPE_SINGLETON:
             return inner_type_name
