@@ -2,7 +2,7 @@ Elasticsearch
 #########################
 
 Robusta playbooks can run in response to `Elasticsearch/Kibana watchers <https://www.elastic.co/guide/en/elasticsearch/reference/current/how-watcher-works.html>`_
-by using `webhook actions <https://www.elastic.co/guide/en/elasticsearch/reference/current/actions-webhook.html>`_.
+by using `Elasticsearch webhook actions <https://www.elastic.co/guide/en/elasticsearch/reference/current/actions-webhook.html>`_.
 
 A common use case is gathering troubleshooting data with Robusta when pods in your Kubernetes cluster write specific error logs.
 
@@ -83,4 +83,4 @@ These should match the Robusta Helm chart values.
 
 .. note::
 
-    Any Robusta action can be triggered in this manner. Try changing ``action_name`` and ``action_params`` above to trigger a different action
+    Most Robusta actions can be triggered in this manner. Try changing ``action_name`` and ``action_params`` above to trigger a different action
