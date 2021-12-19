@@ -50,6 +50,7 @@ sphinxcontrib-images = "^0.9.4"
 jsonref = "^0.2"
 Pillow = "^8.4.0"
 sphinxcontrib-mermaid = "^0.7.1"
+humanize = "^3.13.1"
 
 
 [tool.poetry.extras]

@@ -10,3 +10,4 @@ Builtin actions
    builtin-playbooks
    alerts
    grafana
+   python-troubleshooting

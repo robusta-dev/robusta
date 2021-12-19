@@ -181,7 +181,7 @@ class PydanticModelDirective(SphinxDirective):
 class RobustaActionDirective(SphinxDirective):
 
     option_spec = DummyOptionSpec()
-    has_content = False
+    has_content = True
     required_arguments = 1
     final_argument_whitespace = True
 
@@ -209,6 +209,7 @@ class RobustaActionDirective(SphinxDirective):
         possible_triggers = [
             generator.get_highest_possible_trigger(action_definition.event_type)
         ]
+
         indented_code = "\n".join(" " * 32 + l for l in code)
         indented_description = "\n".join(" " * 28 + l for l in description.split("\n"))
         indented_example = "\n".join(" " * 32 + l for l in example_yaml.split("\n"))
@@ -223,7 +224,7 @@ class RobustaActionDirective(SphinxDirective):
             
                 .. tab-set::
             
-                    .. tab-item:: Description\n\n{indented_description}
+                    .. tab-item:: Description\n\n{indented_description}\n\n
             
                     .. tab-item:: Parameters
                         
@@ -266,14 +267,15 @@ class RobustaActionDirective(SphinxDirective):
             height *= resize_ratio
         return width, height
 
-    @classmethod
-    def __get_description(cls, action_definition: Action):
+    def __get_description(self, action_definition: Action):
         description = ""
 
         docs = inspect.getdoc(action_definition.func)
         if docs:
             description += docs
-        else:
+        if self.content:
+            description += "\n".join(l for l in self.content)
+        if not description:
             description += "*No description*"
 
         image_dir = Path(inspect.getfile(action_definition.func)).parent / Path(
@@ -286,7 +288,7 @@ class RobustaActionDirective(SphinxDirective):
             root_docs_dir = Path(__file__).parent.parent.parent
             relative_path = "/../" + str(path.relative_to(root_docs_dir))
             image = Image.open(path.resolve())
-            width, height = cls.__get_image_size(*image.size)
+            width, height = self.__get_image_size(*image.size)
 
             description += textwrap.dedent(
                 f"""

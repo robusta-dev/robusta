@@ -118,36 +118,6 @@ restart_loop_reporter
 
             ``rate_limit`` optional parameter, measured in seconds, defaults to 3600
 
-python_profiler
-^^^^^^^^^^^^^^^
-
-.. admonition:: Playbook
-
-    .. tab-set::
-
-        .. tab-item:: Description
-
-            **What it does:** Run a CPU profiler on any Python pod
-
-            **When it runs:** When you trigger it manually.
-
-            .. image:: /images/python-profiler.png
-              :width: 600
-              :align: center
-
-        .. tab-item:: Configuration
-
-            .. code-block:: yaml
-
-               playbooks:
-                 - name: "python_profiler"
-
-        .. tab-item:: Manual trigger
-
-            .. code-block:: bash
-
-               robusta playbooks trigger python_profiler pod_name=your-pod namespace=you-ns process_name=your-process seconds=5
-
 pod_ps
 ^^^^^^
 
