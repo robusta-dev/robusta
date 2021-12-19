@@ -30,6 +30,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))  # so we can import the pl
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.graphviz",
+    "sphinx.ext.inheritance_diagram",
+    "sphinxcontrib.mermaid",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "sphinx.ext.autosectionlabel",
@@ -39,6 +41,9 @@ extensions = [
     "sphinxcontrib.images",
     "autorobusta",
 ]
+
+# for sphinx.ext.inheritance_diagram
+# inheritance_graph_attrs = dict(rankdir="TB", size='""')
 
 images_config = {
     "override_image_directive": True,
@@ -94,6 +99,7 @@ todo_include_todos = False
 # html_theme_path = [furo.get_pygments_stylesheet()]
 html_theme = "furo"
 html_theme_options = {
+    "announcement": "Want to work at an open source company? We're hiring in Israel and remote! Email jobs@robusta.dev",
     "sidebar_hide_name": True,
     "light_logo": "logo.png",
     "dark_logo": "logo-dark.png",

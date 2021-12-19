@@ -89,3 +89,4 @@ This interactive shell runs inside the Robusta runner, so don't do this in produ
 This feature is powered by `python-manhole <https://github.com/ionelmc/python-manhole>`_ and
 is only enabled when the environment variable ``ENABLE_MANHOLE`` is set to ``true``.
 
+hikaru timestamps are strings - use parse_kubernetes_datetime to parse

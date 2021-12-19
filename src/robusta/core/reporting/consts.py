@@ -1,6 +1,7 @@
 from enum import Enum
 
 # sink types
+# TODO: can we remove?
 class SinkType(Enum):
     ROBUSTA = "robusta"
     SLACK = "slack"

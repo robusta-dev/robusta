@@ -1,8 +1,8 @@
-Elasticsearch Integration
+Elasticsearch
 #########################
 
 Robusta playbooks can run in response to `Elasticsearch/Kibana watchers <https://www.elastic.co/guide/en/elasticsearch/reference/current/how-watcher-works.html>`_
-by using `webhook actions <https://www.elastic.co/guide/en/elasticsearch/reference/current/actions-webhook.html>`_.
+by using `Elasticsearch webhook actions <https://www.elastic.co/guide/en/elasticsearch/reference/current/actions-webhook.html>`_.
 
 A common use case is gathering troubleshooting data with Robusta when pods in your Kubernetes cluster write specific error logs.
 
@@ -17,6 +17,9 @@ Robusta Configuration
     globalConfig:
       account_id: ""       # your official Robusta account_id
       signing_key: ""      # a secret key used to verify the identity of Elasticsearch
+
+You do **not** define playbooks for Elasticsearch triggers in ``values.yaml``. Instead the playbook is defined
+entirely on the Elasticsearch side.
 
 Example Elasticsearch Watcher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,4 +83,4 @@ These should match the Robusta Helm chart values.
 
 .. note::
 
-    Any Robusta action can be triggered in this manner. Try changing ``action_name`` and ``action_params`` above to trigger a different action
+    Most Robusta actions can be triggered in this manner. Try changing ``action_name`` and ``action_params`` above to trigger a different action

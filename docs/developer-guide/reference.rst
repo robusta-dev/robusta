@@ -100,7 +100,7 @@ For example:
 
 Sinks
 -------------
-| Playbooks results can be forwarded to one or more sinks. See :ref:`Playbooks sinks` for details.
+| Playbooks results can be forwarded to one or more sinks. See :ref:`Sinks` for details.
 | For that to happen, we have to create ``Finding`` and ``Enrichments`` during the playbooks processing.
 | The Robusta platform will automatically forward findings and enrichments  to the configured sinks
 
