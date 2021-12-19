@@ -3,12 +3,12 @@ Getting Support
 
 It's not just about support. Stop by and say hi too!
 
-Where to find us
-----------------
+Community Support
+------------------
 
-1. Slack
-2. GitHub Issues
+1. `Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_
+2. `Github Issues <https://github.com/robusta-dev/robusta/issues>`_
 
-Paid support
+Paid Support
 ---------------
 We offer several affordable plans. Contact support@robusta.dev for details.
