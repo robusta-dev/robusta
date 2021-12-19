@@ -1,26 +1,31 @@
-import glob
 import importlib.util
 import logging
 import os
+import pkgutil
 import subprocess
 import sys
 import threading
 import yaml
-from typing import Optional
+from typing import Optional, List, Dict
 from inspect import getmembers
 
 from robusta.integrations.receiver import ActionRequestReceiver
 
 from ..integrations.scheduled.trigger import ScheduledTriggerEvent
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
-from ..core.model.runner_config import RunnerConfig
+from ..core.model.runner_config import RunnerConfig, PlaybookRepo
 from ..core.playbooks.actions_registry import ActionsRegistry, Action
 from ..core.model.env_vars import (
     INTERNAL_PLAYBOOKS_ROOT,
     PLAYBOOKS_CONFIG_FILE_PATH,
     PLAYBOOKS_ROOT,
 )
-from ..integrations.git.git_repo import GitRepoManager
+from ..integrations.git.git_repo import (
+    GitRepoManager,
+    GitRepo,
+    GIT_URL_PREFIX,
+    LOCAL_PATH_URL_PREFIX,
+)
 from ..utils.file_system_watcher import FileSystemWatcher
 from ..model.playbook_definition import PlaybookDefinition
 from ..model.config import (
@@ -93,6 +98,73 @@ class ConfigLoader:
             receiver.stop()
             self.registry.set_receiver(ActionRequestReceiver(self.event_handler))
 
+    def __load_playbooks_repos(
+        self,
+        actions_registry: ActionsRegistry,
+        playbooks_repos: Dict[str, PlaybookRepo],
+    ):
+        playbook_packages = []
+        for playbook_package, playbooks_repo in playbooks_repos.items():
+            try:
+                if (
+                    playbooks_repo.pip_install
+                ):  # skip playbooks that are already in site-packages
+                    if playbooks_repo.url.startswith(GIT_URL_PREFIX):
+                        repo = GitRepo(
+                            playbooks_repo.url,
+                            playbooks_repo.key.get_secret_value(),
+                        )
+                        local_path = repo.repo_local_path
+                    elif playbooks_repo.url.startswith(LOCAL_PATH_URL_PREFIX):
+                        local_path = playbooks_repo.url.replace(
+                            LOCAL_PATH_URL_PREFIX, ""
+                        )
+                    else:
+                        raise Exception(
+                            f"Illegal playbook repo url {playbooks_repo.url}. "
+                            f"Must start with '{GIT_URL_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
+                        )
+
+                    if not os.path.exists(
+                        local_path
+                    ):  # in case the repo url was defined before it was actually loaded
+                        logging.error(
+                            f"Playbooks local path {local_path} does not exist. Skipping"
+                        )
+                        continue
+
+                    # Adding to pip the playbooks repo from local_path
+                    subprocess.check_call(
+                        [sys.executable, "-m", "pip", "install", local_path]
+                    )
+
+                playbook_packages.append(playbook_package)
+            except Exception as e:
+                logging.error(f"Failed to add playbooks reop {playbook_package} {e}")
+
+        for package_name in playbook_packages:
+            self.__import_playbooks_package(actions_registry, package_name)
+
+    @classmethod
+    def __import_playbooks_package(
+        cls, actions_registry: ActionsRegistry, package_name: str
+    ):
+        logging.info(f"Importing actions package {package_name}")
+        pkg = importlib.import_module(package_name)
+        playbooks_modules = [
+            name for _, name, _ in pkgutil.walk_packages(path=pkg.__path__)
+        ]
+        for playbooks_module in playbooks_modules:
+            try:
+                module_name = ".".join([package_name, playbooks_module])
+                logging.info(f"importing actions from {module_name}")
+                m = importlib.import_module(module_name)
+                playbook_actions = getmembers(m, Action.is_action)
+                for (action_name, action_func) in playbook_actions:
+                    actions_registry.add_action(action_func)
+            except Exception as e:
+                logging.error(f"error loading module {playbooks_module}. exception={e}")
+
     def __reload_playbook_packages(self, change_name):
         logging.info(f"Reloading playbook packages due to change on {change_name}")
         with self.reload_lock:
@@ -101,15 +173,13 @@ class ConfigLoader:
                 if runner_config is None:
                     return
 
-                playbook_directories = [
-                    os.path.join(self.root_playbook_path, path)
-                    for path in runner_config.playbook_sets
-                ]
-
                 action_registry = ActionsRegistry()
-                self.__load_playbook_directory(INTERNAL_PLAYBOOKS_ROOT, action_registry)
-                for playbook_dir in playbook_directories:
-                    self.__load_playbook_directory(playbook_dir, action_registry)
+                runner_config.playbook_repos[
+                    "robusta.core.playbooks.internal"
+                ] = PlaybookRepo(url=INTERNAL_PLAYBOOKS_ROOT, pip_install=False)
+                self.__load_playbooks_repos(
+                    action_registry, runner_config.playbook_repos
+                )
 
                 (sinks_registry, playbooks_registry) = self.__prepare_runtime_config(
                     runner_config, self.registry.get_sinks(), action_registry
@@ -174,52 +244,3 @@ class ConfigLoader:
         with open(config_file_path) as file:
             yaml_content = yaml.safe_load(file)
             return RunnerConfig(**yaml_content)
-
-    def __load_playbook_directory(
-        self, playbook_dir: str, action_registry: ActionsRegistry
-    ):
-        logging.info(f"Loading playbooks sources from {playbook_dir}")
-        if not os.path.exists(playbook_dir):
-            logging.error(f"playbooks directory not found: {playbook_dir}")
-            return
-
-        # we add playbook directories to sys.path so that playbooks can do relative imports from one another.
-        # e.g. `from other_playbook_file import shared_function`
-        if playbook_dir not in sys.path:
-            sys.path.append(playbook_dir)
-
-        self.__install_requirements(os.path.join(playbook_dir, "requirements.txt"))
-        python_files = glob.glob(f"{playbook_dir}/*.py")
-        if len(python_files) == 0:
-            logging.warning(f"no playbook scripts to load in directory {playbook_dir}")
-            return
-
-        for script in python_files:
-            try:
-                logging.info(f"loading playbooks from file {script}")
-                filename = os.path.basename(script)
-                (module_name, ext) = os.path.splitext(filename)
-                spec = importlib.util.spec_from_file_location(module_name, script)
-                module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(module)
-                playbook_actions = getmembers(module, Action.is_action)
-                for (action_name, action_func) in playbook_actions:
-                    action_registry.add_action(action_func)
-            except Exception as e:
-                logging.error(
-                    f"error loading playbooks from file {script}. exception={e}"
-                )
-        logging.info(f"{len(python_files)} playbooks loaded from {playbook_dir}")
-
-    @classmethod
-    def __install_requirements(cls, requirements_path):
-        if os.path.exists(requirements_path):
-            logging.info(f"installing requirements file {requirements_path}")
-            subprocess.check_call(
-                [sys.executable, "-m", "pip", "install", "-r", requirements_path]
-            )
-            logging.info("requirements installed")
-        else:
-            logging.info(
-                f"not installing requirements as file {requirements_path} doesn't exist"
-            )

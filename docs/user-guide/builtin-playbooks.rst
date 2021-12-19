@@ -6,9 +6,9 @@ List of built-in playbooks
 Application Visibility and Troubleshooting
 -------------------------------------------
 
-.. robusta-action:: playbooks.grafana_enrichment.add_deployment_lines_to_grafana
+.. robusta-action:: playbooks.robusta_playbooks.grafana_enrichment.add_deployment_lines_to_grafana
 
-.. robusta-action:: playbooks.grafana_enrichment.add_alert_lines_to_grafana
+.. robusta-action:: playbooks.robusta_playbooks.grafana_enrichment.add_alert_lines_to_grafana
 
 git_change_audit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

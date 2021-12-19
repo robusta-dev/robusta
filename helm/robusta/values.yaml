@@ -1,5 +1,7 @@
-# playbooks sets
-playbook_sets: []
+# playbook repositories
+playbookRepos:
+  robusta_playbooks:
+    url: "file:///etc/robusta/playbooks/defaults"
 
 # global parameters
 clusterName: ""
@@ -26,6 +28,9 @@ enableServiceMonitors: false
 
 # disable messages routed by Robusta cloud
 disableCloudRouting: false
+
+# Enable loading playbooks to a persistent volume
+playbooksPersistentVolume: false
 
 # custom user playbooks
 customPlaybooks: []

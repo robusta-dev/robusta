@@ -1,10 +1,6 @@
 {{ define "robusta.configfile" -}}
-{{- if or .Values.playbook_sets }}
-playbook_sets:
-{{- range $playbook_set := .Values.playbook_sets }}
-- {{ $playbook_set }}
-{{- end }}
-{{- end }}
+playbook_repos:
+{{ toYaml .Values.playbookRepos | indent 2 }}
 {{- if or .Values.slackApiKey .Values.robustaApiKey }}
 sinks_config:
 {{- if .Values.slackApiKey }}

@@ -20,11 +20,27 @@ from ..cli.utils import (
     PLAYBOOKS_DIR,
 )
 
+PLAYBOOKS_MOUNT_LOCATION = "/etc/robusta/playbooks/storage"
 
 NAMESPACE_EXPLANATION = (
     "Installation namespace. If none use the namespace currently active with kubectl."
 )
 app = typer.Typer()
+
+
+def get_runner_pod(namespace: str) -> Optional[str]:
+    pods = subprocess.check_output(
+        f'kubectl get pods {namespace_to_kubectl(namespace)} --selector="robustaComponent=runner"',
+        shell=True,
+    )
+    text = pods.decode("utf-8")
+    if not text:
+        return None
+
+    lines = text.split("\n")
+    if len(lines) < 2:
+        return None
+    return lines[1].split(" ")[0]
 
 
 @app.command()
@@ -41,18 +57,30 @@ def push(
     """Load custom playbooks code"""
     log_title("Uploading playbooks code...")
     with fetch_runner_logs(namespace):
+        runner_pod = get_runner_pod(namespace)
+        if not runner_pod:
+            log_title("Runner pod not found.", color="red")
+            return
+
         subprocess.check_call(
-            f"kubectl create configmap {namespace_to_kubectl(namespace)} robusta-custom-playbooks --from-file {playbooks_directory} -o yaml --dry-run | kubectl apply -f -",
+            f"kubectl exec -it {namespace_to_kubectl(namespace)} {runner_pod} -c runner "
+            f"-- bash -c 'mkdir -p {PLAYBOOKS_MOUNT_LOCATION}'",
             shell=True,
         )
         subprocess.check_call(
-            f'kubectl annotate pods {namespace_to_kubectl(namespace)} --selector="robustaComponent=runner" --overwrite "playbooks-last-modified={time.time()}"',
+            f"kubectl cp {namespace_to_kubectl(namespace)} {playbooks_directory} "
+            f"{runner_pod}:{PLAYBOOKS_MOUNT_LOCATION}/ -c runner",
             shell=True,
         )
         time.sleep(
             5
         )  # wait five seconds for the runner to actually reload the playbooks
     log_title("Loaded custom playbooks code!")
+    log_title(
+        f"Make sure your playbook repos configuration contains:\n"
+        f"PLAYBOOKS_PACKAGE_NAME:\n"
+        f'  url: "file://{os.path.join(PLAYBOOKS_MOUNT_LOCATION, os.path.basename(playbooks_directory))}"'
+    )
 
 
 @app.command()
@@ -91,14 +119,6 @@ def get_playbooks_config(namespace: str):
     return yaml.safe_load(configmap_content)
 
 
-def get_custom_playbooks(namespace: str):
-    configmap_content = subprocess.check_output(
-        f"kubectl get configmap {namespace_to_kubectl(namespace)} robusta-custom-playbooks -o yaml",
-        shell=True,
-    )
-    return yaml.safe_load(configmap_content)
-
-
 @app.command()
 def pull(
     playbooks_directory: str = typer.Argument(
@@ -117,15 +137,81 @@ def pull(
     log_title(f"Pulling playbooks into {playbooks_directory} ")
 
     try:
-        playbooks_config = get_custom_playbooks(namespace)
+        runner_pod = get_runner_pod(namespace)
+        if not runner_pod:
+            log_title("Runner pod not found.", color="red")
+            return
 
-        for file_name in playbooks_config["data"].keys():
-            playbook_file = os.path.join(playbooks_directory, file_name)
-            with open(playbook_file, "w") as f:
-                f.write(playbooks_config["data"][file_name])
-
+        subprocess.check_call(
+            f"kubectl cp {namespace_to_kubectl(namespace)} "
+            f"{runner_pod}:{PLAYBOOKS_MOUNT_LOCATION}/ -c runner {playbooks_directory}",
+            shell=True,
+        )
     except Exception as e:
         typer.echo(f"Failed to pull deployed playbooks {e}", traceback.print_exc())
+
+
+@app.command("list-dirs")
+def list_dirs(
+    namespace: str = typer.Option(
+        None,
+        help=NAMESPACE_EXPLANATION,
+    ),
+):
+    """List stored playbooks directories"""
+    log_title(f"Listing playbooks directories ")
+
+    try:
+        runner_pod = get_runner_pod(namespace)
+        if not runner_pod:
+            log_title("Runner pod not found.", color="red")
+            return
+
+        ls_res = subprocess.check_output(
+            f"kubectl exec -it {namespace_to_kubectl(namespace)} {runner_pod} -c runner "
+            f"-- bash -c 'ls {PLAYBOOKS_MOUNT_LOCATION}'",
+            shell=True,
+        )
+
+        log_title(f"Stored playbooks directories: \n { ls_res.decode('utf-8')}")
+
+    except Exception as e:
+        typer.echo(f"Failed to list deployed playbooks {e}", traceback.print_exc())
+
+
+@app.command()
+def delete(
+    playbooks_directory: str = typer.Argument(
+        ...,
+        help="Playbooks directory that should be deleted",
+    ),
+    namespace: str = typer.Option(
+        None,
+        help=NAMESPACE_EXPLANATION,
+    ),
+):
+    """delete playbooks directory from storage"""
+    if not playbooks_directory:
+        log_title("Playbooks directory not specified", "red")
+        return
+
+    log_title(f"Deleting playbooks directory {playbooks_directory} ")
+
+    try:
+        runner_pod = get_runner_pod(namespace)
+        if not runner_pod:
+            log_title("Runner pod not found.", color="red")
+            return
+
+        path_to_delete = os.path.join(PLAYBOOKS_MOUNT_LOCATION, playbooks_directory)
+        subprocess.check_call(
+            f"kubectl exec -it {namespace_to_kubectl(namespace)} {runner_pod} -c runner "
+            f"-- bash -c 'rm -rf {path_to_delete}'",
+            shell=True,
+        )
+
+    except Exception as e:
+        typer.echo(f"Failed to delete deployed playbooks {e}", traceback.print_exc())
 
 
 def print_yaml_if_not_none(key: str, json_dict: dict):

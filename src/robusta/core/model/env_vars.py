@@ -2,7 +2,7 @@ import os
 import uuid
 import pytz
 
-PLAYBOOKS_ROOT = os.environ.get("PLAYBOOKS_ROOT")
+PLAYBOOKS_ROOT = os.environ.get("PLAYBOOKS_ROOT", "/etc/robusta/playbooks/")
 PLAYBOOKS_CONFIG_FILE_PATH = os.environ.get("PLAYBOOKS_CONFIG_FILE_PATH")
 
 INSTALLATION_NAMESPACE = os.environ.get("INSTALLATION_NAMESPACE", "robusta")

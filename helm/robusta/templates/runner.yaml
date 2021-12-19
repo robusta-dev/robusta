@@ -23,8 +23,6 @@ spec:
         securityContext:
           privileged: false
         env:
-          - name: PLAYBOOKS_ROOT
-            value: /etc/robusta/playbooks/
           - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml
           - name: ENABLE_MANHOLE
@@ -46,8 +44,10 @@ spec:
         volumeMounts:
           - name: playbooks-config
             mountPath: /etc/robusta/config
-          - name: custom-playbooks
-            mountPath: /etc/robusta/playbooks/custom
+          {{- if .Values.playbooksPersistentVolume }}
+          - name: persistent-playbooks-storage
+            mountPath: /etc/robusta/playbooks/storage
+          {{- end }}
         lifecycle:
           preStop:
             exec:
@@ -78,11 +78,24 @@ spec:
           configMap:
             name: robusta-playbooks-config
             optional: true
-        - name: custom-playbooks
-          configMap:
-            name: robusta-custom-playbooks
-            optional: true
-
+        {{- if .Values.playbooksPersistentVolume }}
+        - name: persistent-playbooks-storage
+          persistentVolumeClaim:
+            claimName: persistent-playbooks-pv-claim
+        {{- end }}
+{{- if .Values.playbooksPersistentVolume }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: persistent-playbooks-pv-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 128Mi
+{{- end }}
 ---
 apiVersion: v1
 kind: Service

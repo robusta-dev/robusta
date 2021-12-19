@@ -18,6 +18,9 @@ REPO_LOCAL_BASE_DIR = os.path.join(
 )
 SSH_ROOT_DIR = os.environ.get("SSH_ROOT_DIR", "/root/.ssh")
 
+GIT_URL_PREFIX = "git@"
+LOCAL_PATH_URL_PREFIX = "file://"
+
 
 class GitRepoManager:
 
@@ -25,12 +28,12 @@ class GitRepoManager:
     repo_map = defaultdict(None)
 
     @staticmethod
-    def get_git_repo(git_repo_url: str, git_key: str, cluster_name: str):
+    def get_git_repo(git_repo_url: str, git_key: str):
         with GitRepoManager.manager_lock:
             repo = GitRepoManager.repo_map.get(git_repo_url)
             if repo is not None:
                 return repo
-            repo = GitRepo(git_repo_url, git_key, cluster_name)
+            repo = GitRepo(git_repo_url, git_key)
             GitRepoManager.repo_map[git_repo_url] = repo
             return repo
 
@@ -53,18 +56,19 @@ class GitRepo:
 
     initialized: bool = False
 
-    def __init__(self, git_repo_url: str, git_key: str, cluster_name: str):
+    def __init__(self, git_repo_url: str, git_key: str):
         GitRepo.init()
         self.git_repo_url = git_repo_url
-        self.key_file_name = self.init_key(git_key)
+        self.env = os.environ.copy()
+        ssh_key_option = ""
+        if git_key:  # Add ssh key for non-public repositories
+            key_file_name = self.init_key(git_key)
+            ssh_key_option = f"-i {key_file_name}"
+
+        self.env["GIT_SSH_COMMAND"] = f"ssh {ssh_key_option} -o IdentitiesOnly=yes"
         self.repo_lock = threading.RLock()
-        self.cluster_name = cluster_name
         self.repo_name = os.path.splitext(os.path.basename(git_repo_url))[0]
         self.repo_local_path = os.path.join(REPO_LOCAL_BASE_DIR, self.repo_name)
-        self.env = os.environ.copy()
-        self.env[
-            "GIT_SSH_COMMAND"
-        ] = f"ssh -i {self.key_file_name} -o IdentitiesOnly=yes"
         self.init_repo()
 
     def init_key(self, git_key):
@@ -148,6 +152,7 @@ class GitRepo:
         file_path: str,
         file_name,
         commit_message,
+        cluster_name: str,
     ):
         with self.repo_lock:
             file_local_path = os.path.join(self.repo_local_path, file_path)
@@ -163,7 +168,7 @@ class GitRepo:
                         "git",
                         "commit",
                         "-m",
-                        self.__cluster_commit_msg(commit_message),
+                        self.__cluster_commit_msg(commit_message, cluster_name),
                         "--allow-empty",
                     ]
                 )
@@ -175,8 +180,9 @@ class GitRepo:
                 GitRepoManager.remove_git_repo(self.git_repo_url)
                 raise e
 
-    def __cluster_commit_msg(self, msg: str):
-        return f"Cluster {self.cluster_name}::{msg}"
+    @classmethod
+    def __cluster_commit_msg(cls, msg: str, cluster_name: str):
+        return f"Cluster {cluster_name}::{msg}"
 
     def push(self):
         with self.repo_lock:
@@ -229,13 +235,18 @@ class GitRepo:
             return cluster_changes
 
     def commit_push(
-        self, file_data: str, file_path: str, file_name, commit_message: str
+        self,
+        file_data: str,
+        file_path: str,
+        file_name,
+        commit_message: str,
+        cluster_name: str,
     ):
         with self.repo_lock:
-            self.commit(file_data, file_path, file_name, commit_message)
+            self.commit(file_data, file_path, file_name, commit_message, cluster_name)
             self.push()
 
-    def delete(self, file_path: str, file_name, commit_message: str):
+    def delete(self, file_path: str, file_name, commit_message: str, cluster_name: str):
         with self.repo_lock:
             file_local_path = os.path.join(self.repo_local_path, file_path)
             if not os.path.exists(
@@ -246,7 +257,12 @@ class GitRepo:
             try:
                 os.remove(os.path.join(file_local_path, file_name))
                 self.__exec_git_cmd(
-                    ["git", "commit", "-m", self.__cluster_commit_msg(commit_message)]
+                    [
+                        "git",
+                        "commit",
+                        "-m",
+                        self.__cluster_commit_msg(commit_message, cluster_name),
+                    ]
                 )
             except Exception as e:
                 logging.error(
@@ -256,7 +272,9 @@ class GitRepo:
                 GitRepoManager.remove_git_repo(self.git_repo_url)
                 raise e
 
-    def delete_push(self, file_path: str, file_name, commit_message: str):
+    def delete_push(
+        self, file_path: str, file_name, commit_message: str, cluster_name: str
+    ):
         with self.repo_lock:
-            self.delete(file_path, file_name, commit_message)
+            self.delete(file_path, file_name, commit_message, cluster_name)
             self.push()
