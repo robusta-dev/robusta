@@ -21,9 +21,17 @@ BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
 
 class MarkdownBlock(BaseBlock):
+    """
+    A Block of `Markdown <https://en.wikipedia.org/wiki/Markdown>`__
+    """
+
     text: str
 
     def __init__(self, text: str, single_paragraph: bool = False):
+        """
+        :param text: one or more paragraphs of Markdown markup
+        :param dedent: if True, remove common indentation so that you can use multi-line docstrings.
+        """
         if single_paragraph:
             text = textwrap.dedent(text)
             text = text.replace("\n", "")
@@ -38,10 +46,18 @@ class DividerBlock(BaseBlock):
 
 
 class FileBlock(BaseBlock):
+    """
+    A file of any type. Used for images, log files, binary files, and more.
+    """
+
     filename: str
     contents: bytes
 
     def __init__(self, filename: str, contents: bytes):
+        """
+        :param filename: the file's name
+        :param contents: the file's contents
+        """
         super().__init__(filename=filename, contents=contents)
 
 

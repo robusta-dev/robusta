@@ -37,8 +37,7 @@ triggers:
     We chose ``on_deployment_update`` so our playbook runs every time deployments are updated
 
 actions:
-    We chose ``resource_babysitter`` which is a builtin action. It has several parameters that influence behaviour
-    including ``fields_to_monitor`` .
+    We chose :ref:`resource_babysitter` which is a builtin action. That action has a parameter ``fields_to_monitor``.
 
 sinks:
     We didn't configure any sinks, so output is sent to the default sink. This is usually Slack.
@@ -61,6 +60,6 @@ Testing the playbook
       :width: 600
       :align: center
 
-Next steps
---------------
-Try changing the configuration in ``values.yaml`` so that Robusta monitors changes to a deployment's image tag too.
+Further customization
+------------------------
+Try changing the configuration to monitors changes to a deployment's image tag.
