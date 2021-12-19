@@ -148,6 +148,17 @@ Sometimes you need to prevent an action from running too often. You can use the 
 
 The second parameter to ``RateLimiter.mark_and_test`` defines a key used for checking the rate limit. Each key is rate-limited individually.
 
+Credits
+--------------------
+Robusta uses many open source libraries, but two of them outshine all others:
+
+1. `Hikaru <https://hikaru.readthedocs.io/>`_
+2. `Pydantic <https://pydantic-docs.helpmanual.io/>`_
+
+We owe a special thank you to Tom Carroll and Samuel Colvin.
+
+A further thank you is due to the countless developers who created other libraries we use. You rock.
+
 Common gotchas
 -------------------
 Datetime fields in Kubernetes resources are strings, not datetime objects. Use the utility function ``parse_kubernetes_datetime`` to convert them.
