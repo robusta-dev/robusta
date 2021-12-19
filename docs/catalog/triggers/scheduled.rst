@@ -1,60 +1,31 @@
 Scheduled
 ############################
 
-.. warning:: This page contains out-of-date information. It is currently being updated to reflect Robusta's new configuration format.
+Scheduled triggers fire periodically. They come in two forms:
 
-Scheduling Overview
--------------------
-| Robusta playbooks can be scheduled and run periodically.
-| Similarly to other playbooks, there's also a trigger.
-| In this case it's a recurring trigger.
+Fixed delay
+----------------------
 
-Trigger Details
--------------------
-
-| In order to define the recurring trigger, use the ``@on_recurring_trigger(seconds_delay=None, repeat=-1)``
-| Using this trigger, the playbook will be executed every ``second_delay`` seconds, for ``repeat`` times.
-
-
-| **Trigger Parameters:**
-| **seconds_delay -** The seconds delay between executions.
-| **repeat -** The number of time the scheduler will run the playbook. Specifying ``repeat=-1`` means the scheduler will tun the playbook forever.
-
-
-Scheduled Playbook Example
-------------------------------
-
-| First, we'll implement our playbook's code:
-| In the playbooks folder, add a file named: ``my_scheduled_playbook.py``
-| Edit it, and add the following:
-
-.. code-block:: python
-
-    from robusta.api import *
-
-    class MyScheduledPlaybookParams(BaseModel):
-        some_string_param: str
-
-    @on_recurring_trigger(seconds_delay=None, repeat=-1)
-    def my_scheduled_playbook(event: RecurringTriggerEvent, action_params: MyScheduledPlaybookParams):
-        # implement any python logic here
-        logging.info(f"My scheduled playbook running {action_params.some_string_param}")
-
-
-| Load the ``playbook`` code using ``robusta playbooks load ./playbooks``
-| Now, configure the playbook in the ``active_playbooks.yaml`` :
+These triggers run with a fixed delay between each invocation. For example:
 
 .. code-block:: yaml
 
-    active_playbooks:
-      - name: "my_scheduled_playbook"
-        trigger_params:
-          repeat: 10
-          seconds_delay: 20
-        action_params:
-          some_string_param: "Scheduled Playbook - Hello World"
+    triggers:
+    - on_schedule:
+        fixed_delay_repeat:
+          repeat: 10             # number of times to run or -1 to run forever
+          seconds_delay: 60      # seconds between each run
 
-| Lastly, activate the playbook: ``robusta playbooks configure ./playbooks/active_playbooks.yaml``
-| That's it!
-| Now, this playbook will run every ``20`` seconds for ``10`` times.
-| In the robusta-runner logs, you'll be able to see the log line printed on each execution.
+Dynamic delay
+----------------------
+
+These triggers run with a different delay between each invocation. For example, the following will run 3 times with
+a delay of 10 seconds the first time, 20 the second, and 25 the third.
+
+.. code-block:: yaml
+
+    triggers:
+    - on_schedule:
+        dynamic_delay_repeat:
+          delay_periods: [10, 20, 25]
+
