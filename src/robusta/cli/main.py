@@ -9,6 +9,7 @@ from distutils.version import StrictVersion
 from typing import Optional
 from zipfile import ZipFile
 
+import requests
 import typer
 import yaml
 from kubernetes import config
@@ -151,8 +152,9 @@ def gen_config(
         )
 
         if not disable_cloud_routing:
+            eula_url = "https://robusta.dev/eula.html"
             typer.echo(
-                "\nPlease read and approve our End User License Agreement: https://robusta.dev/eula.html"
+                f"\nPlease read and approve our End User License Agreement: {eula_url}"
             )
             eula_approved = typer.confirm(
                 "Do you accept our End User License Agreement?"
@@ -162,6 +164,11 @@ def gen_config(
                     "\nEnd User License Agreement rejected. Installation aborted."
                 )
                 return
+
+            try:
+                requests.get(f"{eula_url}?account_id={account_id}")
+            except Exception:
+                typer.echo(f"\nEula approval failed: {eula_url}")
 
     signing_key = str(uuid.uuid4()).replace("_", "")
 
