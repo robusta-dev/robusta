@@ -1,4 +1,4 @@
-Elasticsearch Integration
+Elasticsearch
 #########################
 
 Robusta playbooks can run in response to `Elasticsearch/Kibana watchers <https://www.elastic.co/guide/en/elasticsearch/reference/current/how-watcher-works.html>`_

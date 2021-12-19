@@ -1,4 +1,4 @@
-Scheduled Playbooks
+Scheduled
 ############################
 
 .. warning:: This page contains out-of-date information. It is currently being updated to reflect Robusta's new configuration format.

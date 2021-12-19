@@ -1,4 +1,4 @@
-Slack Integration
+Slack
 #################
 
 Robusta can send playbook results to Slack. There are two ways to set this up.

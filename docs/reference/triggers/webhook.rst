@@ -1,7 +1,7 @@
-Webhooks Integration
+Webhook
 #########################
 
-Pre-requisites
+Prerequisites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. The Robusta-relay must be enabled so that it can route webhooks to the appropriate Robusta runner
@@ -17,4 +17,5 @@ Example trigger
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
+
    curl

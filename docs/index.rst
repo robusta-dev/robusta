@@ -237,11 +237,9 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    :caption: Getting Started
    :hidden:
 
-
    getting-started/installation
-   getting-started/customization
+   getting-started/example-playbook
    getting-started/manual-triggers
-   getting-started/upgrade
    getting-started/support
 
 .. toctree::
@@ -250,21 +248,20 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    :hidden:
    :glob:
 
-   user-guide/builtin-playbooks
-   user-guide/alerts
-   user-guide/playbook-configuration
+   user-guide/configuration
+   user-guide/upgrade
    user-guide/robusta-cli
    user-guide/architecture
 
 .. toctree::
    :maxdepth: 4
-   :caption: Integrations
+   :caption: Reference
    :hidden:
 
-   integrations/slack
-   integrations/prometheus
-   integrations/elasticsearch
-   integrations/webhook
+   reference/triggers/index
+   reference/actions/index
+   reference/sinks/index
+
 
 .. toctree::
    :maxdepth: 4
@@ -273,6 +270,5 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
 
    developer-guide/writing-playbooks
    developer-guide/general-guidelines
-   developer-guide/scheduled-playbooks
    developer-guide/reference
    developer-guide/findings-api

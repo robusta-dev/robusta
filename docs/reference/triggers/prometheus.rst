@@ -1,7 +1,15 @@
-Prometheus Integration
+Prometheus
 ######################
 
-Setting up the webhook
+Usage
+^^^^^^^^^^^^^^^^^^^^^^
+
+Prometheus Trigger
+^^^^^^^^^^^^^^^^^^^^^^
+
+TODO: Supported Filters - pull in from `PrometheusAlertTrigger` class
+
+Setup
 ^^^^^^^^^^^^^^^^^^^^^^
 Robusta playbooks can run in response to any Prometheus alert. To configure, add the robusta-runner webhook to your alert manager configuration:
 
