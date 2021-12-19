@@ -27,14 +27,15 @@ class MarkdownBlock(BaseBlock):
 
     text: str
 
-    def __init__(self, text: str, single_paragraph: bool = False):
+    def __init__(self, text: str, dedent: bool = False):
         """
         :param text: one or more paragraphs of Markdown markup
         :param dedent: if True, remove common indentation so that you can use multi-line docstrings.
         """
-        if single_paragraph:
+        if dedent:
+            if text[0] == "\n":
+                text = text[1:]
             text = textwrap.dedent(text)
-            text = text.replace("\n", "")
 
         if len(text) >= BLOCK_SIZE_LIMIT:
             text = text[:BLOCK_SIZE_LIMIT] + "..."
