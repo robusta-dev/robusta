@@ -1,92 +1,153 @@
-Writing playbooks
-#################
+Writing playbook actions
+################################
 
-.. warning:: This page contains out-of-date information. It is currently being updated to reflect Robusta's new configuration format.
+Introduction
+------------------
+You can add your own playbook actions to Robusta with Python.
 
-Extending Robusta with your own Python playbook takes no longer than 5 minutes.
-
-We recommend sharing your playbook back with the community and adding it to the official Robusta repository by opening a PR on GitHub.
+Please consider sharing your playbook by opening a PR on Github.
 
 If you are interested in creating playbooks without writing code, contact us!
 
-Setting up a playbooks directory
+Playbook packages
 -------------------------------------------------------------
-Before a custom playbook can be configured in ``active_playbooks.yaml`` it must first be loaded into Robusta as part of a *playbook_directory*.
-(For Robusta's built-in playbooks you skip this step.)
+Before custom actions can be used, they must first be loaded into Robusta.
 
-A *playbook_directory* is a directory of Python files:
+A *playbooks package* is a directory of Python files with a special ``pyproject.toml`` file:
 
 .. code-block:: bash
 
     mkdir example_playbooks
     touch example_playbooks/hello.py
 
-Edit ``example_playbooks.hello.py``:
+Lets write the action itself in ``example_playbooks.hello.py``:
 
 .. code-block:: python
 
     from robusta.api import *
 
-    @on_pod_create()
-    def hello_world_playbook(event: PodChangeEvent):
-        logging.info(f"Hello world! Pod {event.obj.metadata.name} created on namespace {event.obj.metadata.namespace}")
+    @action
+    def my_action(event: PodEvent):
+        # we have full access to the pod on which the alert fired
+        pod = event.get_pod()
+        pod_name = pod.metadata.name
+        pod_logs = pod.get_logs()
+        pod_processes = pod.exec("ps aux")
 
+        # this is how you send data to slack or other destinations
+        event.add_enrichment([
+            MarkdownBlock("*Oh no!* An alert occurred on " + pod_name)
+            FileBlock("crashing-pod.log", pod_logs)
+        ])
 
-Load the **playbook_directory** into Robusta:
+Load the playbooks package into Robusta:
 
 .. code-block:: bash
 
     robusta playbooks push example_playbooks
 
-Configuring your playbook
+Using your action
 -------------------------------------------------------------
-Once the **playbook_directory** has been loaded, you can configure your playbook the same way as built-in playbooks.
-Add ``hello_world_playbook`` to your ``active_playbooks.yaml``:
+Once the playbooks package is loaded, you can use your action.
+
+The action above receives a ``PodEvent`` so it can be used for pod-related triggers.
 
 .. code-block:: yaml
-   :emphasize-lines: 2
+   :emphasize-lines: 5
 
-    active_playbooks:
-    - name: "hello_world_playbook"
+   customPlaybooks:
+   - triggers:
+     - on_pod_update: {}
+     actions:
+     - my_action: {}
 
-Write your ``active_playbooks.yaml`` to the cluster in the usual way:
+Choosing an event class
+------------------------
+Our above action needs a pod to run so the playbook takes a ``PodEvent``.
 
-.. code-block:: bash
+Some actions need **change** to run - for example, a playbook that shows you a diff of what changed. These actions should
+take one of the ChangeEvent classes. For example, ``PodChangeEvent``
 
-    robusta playbooks configure active_playbooks.yaml
+.. code-block:: python
 
-That's it! Every time a Kubernetes pod is created in the cluster, the above log line will be printed to the robusta-runner logs.
+   @action
+   def pod_change_monitor(event: PodChangeEvent):
+      logging.info(f"new object: {event.obj})
+      logging.info(f"old object: {event.old_obj})
 
-Go ahead and try it. Create a deployment (and therefore a pod):
+``PodChangeEvent`` will fire on creations, updates, and deletions. You can check the event type with ``event.operation``.
 
-.. code-block:: bash
+To write a more general action that monitors all Kubernetes changes, we can use ``KubernetesAnyChangeEvent``.
 
-    kubectl create deployment first-playbook-test-deployment --image=busybox -- echo "Hello World - Robusta"
+You should always use the highest-possible event class when writing actions. This will let your action be used in as many
+scenarios as possible. See :ref:`Event Hierarchy` for details.
 
-Check that "Hello World" appears in the Robusta logs:
+Actions with parameters
+-------------------------------
+Any action can define variables it needs. There are two steps:
 
-.. code-block:: bash
+1. Define a class inheriting from ``ActionParams`` and use type-annotations to define variables
+2. Add the parameter class as an additional argument to the action
 
-    kubectl logs deployment/robusta-runner runner | grep "Hello world"
+For example:
 
-Robusta Playground
----------------------------
+.. code-block:: python
 
-To experiment with the Robusta API, you can open an interactive Python shell with the Robusta
-API preconfigured:
+   from robusta.api import *
 
-.. code-block:: bash
+   class BashParams(ActionParams):
+      bash_command: str
 
-    $ robusta playground
-    # <stack traces are dumped... you can ignore this>
-    # ...
+   @action
+   def pod_bash_enricher(event: PodEvent, params: BashParams):
+       pod = event.get_pod()
+       if not pod:
+           logging.error(f"cannot run PodBashEnricher on event with no pod: {event}")
+           return
 
-    $ dep = Deployment.from_image("stress-test", "busybox", "ls /")
-    $ dep.create()
+       block_list: List[BaseBlock] = []
+       exec_result = pod.exec(params.bash_command)
+       block_list.append(MarkdownBlock(f"Command results for *{params.bash_command}:*"))
+       block_list.append(MarkdownBlock(exec_result))
+       event.add_enrichment(block_list)
 
+We can now define the ``bash_command`` parameter in ``values.yaml``:
 
-This interactive shell runs inside the Robusta runner, so don't do this in production.
-This feature is powered by `python-manhole <https://github.com/ionelmc/python-manhole>`_ and
-is only enabled when the environment variable ``ENABLE_MANHOLE`` is set to ``true``.
+.. code-block:: yaml
 
-hikaru timestamps are strings - use parse_kubernetes_datetime to parse
+   customPlaybooks:
+   - triggers:
+     - on_pod_update: {}
+     actions:
+     - pod_bash_enricher:
+         bash_command: "ls -al /"
+
+Under the hood, we use the excellent `Pydantic <https://pydantic-docs.helpmanual.io/>`_ library to implement this.
+
+Please consult Pydantic's documentation for details. ``ActionParams`` is a drop-in substitute for Pydantic's ``BaseModel``.
+
+Rate-limiting
+-------------
+
+Sometimes you need to prevent an action from running too often. You can use the ``RateLimiter`` class for that:
+
+.. code-block:: python
+   :emphasize-lines: 5-10
+
+   from robusta.api import *
+
+   @action
+   def argo_app_sync(event: ExecutionBaseEvent, params: ArgoAppParams):
+       if not RateLimiter.mark_and_test(
+           "argo_app_sync",
+           params.argo_url + params.argo_app_name,
+           params.rate_limit_seconds,
+       ):
+           return
+      ...
+
+The second parameter to ``RateLimiter.mark_and_test`` defines a key used for checking the rate limit. Each key is rate-limited individually.
+
+Common gotchas
+-------------------
+Datetime fields in Kubernetes resources are strings, not datetime objects. Use the utility function ``parse_kubernetes_datetime`` to convert them.

@@ -1,4 +1,4 @@
-Triggers and Events
+Event Hierarchy
 =====================
 
 When configuring Robusta as a user, you define :ref:`triggers <Triggers>` in ``values.yaml`` but when writing playbook
@@ -33,7 +33,7 @@ Support manual triggers
 You're writing a playbook action and you'd like to support :ref:`manual triggers`. It's easy.
 
 All classes above with names like ``PodEvent`` support manual triggers automatically. When running the manual trigger
-users specify the pod's name and Robusta will generate an artificial event.
+specify the pod's name and Robusta will generate an artificial event.
 
 On the other hand, events like ``PodChangeEvent`` don't support manual triggers. ``PodChangeEvent`` cannot be generated
 artificially because it requires two versions of the pod - a before and after version.

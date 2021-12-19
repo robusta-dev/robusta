@@ -109,14 +109,40 @@ Here is an example showing the above concepts:
 Advanced Usage
 -----------------
 
-TODO: finding name, default findings, custom findings, etc
+It is possible to customize a findings name, override the default finding for events, and more.
+
+But we haven't documented it yet. Please consult the source code.
+
+.. autoclass:: robusta.api.Finding
+   :members:
+   :undoc-members:
 
 Block Types
 -----------------------------
 
 Every Block represents a different type of visual data. Here are the possible Blocks:
 
-# TODO: this should just be a toc to the reference later, or possibly a gallery of images
+.. module:: robusta.api
+
+.. autosummary::
+
+    MarkdownBlock
+    FileBlock
+    DividerBlock
+    HeaderBlock
+    ListBlock
+    TableBlock
+    KubernetesFieldsBlock
+    KubernetesDiffBlock
+    JsonBlock
+    CallbackBlock
+
+.. note::
+
+    Not all block types are supported by all sinks. If an unsupported block arrives at a sink, it will be ignored
+
+Reference
+--------------
 
 .. autoclass:: robusta.api.MarkdownBlock
     :no-members:
@@ -156,9 +182,26 @@ Every Block represents a different type of visual data. Here are the possible Bl
 
         FileBlock("test.txt", "this is the file's contents")
 
-Reference
---------------
+.. autoclass:: robusta.api.DividerBlock
+    :no-members:
 
-.. autoclass:: robusta.api.Finding
-   :members:
-   :undoc-members:
+.. autoclass:: robusta.api.HeaderBlock
+    :no-members:
+
+.. autoclass:: robusta.api.ListBlock
+    :no-members:
+
+.. autoclass:: robusta.api.TableBlock
+    :no-members:
+
+.. autoclass:: robusta.api.KubernetesFieldsBlock
+    :no-members:
+
+.. autoclass:: robusta.api.KubernetesDiffBlock
+    :no-members:
+
+.. autoclass:: robusta.api.JsonBlock
+    :no-members:
+
+.. autoclass:: robusta.api.CallbackBlock
+    :no-members:

@@ -43,6 +43,10 @@ class MarkdownBlock(BaseBlock):
 
 
 class DividerBlock(BaseBlock):
+    """
+    A visual separator between other blocks
+    """
+
     pass
 
 
@@ -63,16 +67,30 @@ class FileBlock(BaseBlock):
 
 
 class HeaderBlock(BaseBlock):
+    """
+    Text formatted as a header
+    """
+
     text: str
 
     def __init__(self, text: str):
+        """
+        :param text: the header
+        """
         super().__init__(text=text)
 
 
 class ListBlock(BaseBlock):
+    """
+    A list of items, nicely formatted
+    """
+
     items: List[str]
 
     def __init__(self, items: List[str]):
+        """
+        :param items: a list of strings
+        """
         super().__init__(items=items)
 
     def to_markdown(self) -> MarkdownBlock:
@@ -82,6 +100,10 @@ class ListBlock(BaseBlock):
 
 # TODO: we should add a generalization of this which isn't K8s specific
 class KubernetesDiffBlock(BaseBlock):
+    """
+    A diff between two versions of a Kubernetes object
+    """
+
     diffs: List[DiffDetail]
     old: Optional[str]
     new: Optional[str]
@@ -97,6 +119,11 @@ class KubernetesDiffBlock(BaseBlock):
         old: Optional[HikaruDocumentBase],
         new: Optional[HikaruDocumentBase],
     ):
+        """
+        :param interesting_diffs: parts of the diff to emphasize - some sinks will only show these to save space
+        :param old: the old version of the object
+        :param new: the new version of the object
+        """
         num_additions = len(
             [d for d in interesting_diffs if d.diff_type == DiffType.ADDED]
         )
@@ -136,13 +163,24 @@ class KubernetesDiffBlock(BaseBlock):
 
 
 class JsonBlock(BaseBlock):
+    """
+    Json data
+    """
+
     json_str: str
 
     def __init__(self, json_str: str):
+        """
+        :param json_str: json as a string
+        """
         super().__init__(json_str=json_str)
 
 
 class TableBlock(BaseBlock):
+    """
+    Table display of a list of lists.
+    """
+
     rows: List[List]
     headers: Sequence[str] = ()
     column_renderers: Dict = {}
@@ -150,6 +188,10 @@ class TableBlock(BaseBlock):
     def __init__(
         self, rows: List[List], headers: Sequence[str] = (), column_renderers: Dict = {}
     ):
+        """
+        :param rows: a list of rows. each row is a list of columns
+        :param headers: names of each column
+        """
         super().__init__(rows=rows, headers=headers, column_renderers=column_renderers)
 
     @classmethod
@@ -207,6 +249,10 @@ class TableBlock(BaseBlock):
 
 
 class KubernetesFieldsBlock(TableBlock):
+    """
+    A nicely formatted Kubernetes objects, with a subset of the fields shown
+    """
+
     def __init__(
         self,
         k8s_obj: HikaruDocumentBase,
@@ -235,7 +281,14 @@ class CallbackChoice(BaseModel):
 
 
 class CallbackBlock(BaseBlock):
+    """
+    A set of buttons that allows callbacks from the sink - for example, a button in Slack that will trigger another action when clicked
+    """
+
     choices: Dict[str, CallbackChoice]
 
     def __init__(self, choices: Dict[str, CallbackChoice]):
+        """
+        :param choices: a dict mapping between each the text on each button to the action it triggers
+        """
         super().__init__(choices=choices)

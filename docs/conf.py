@@ -31,6 +31,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.graphviz",
     "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.autosummary",
     "sphinxcontrib.mermaid",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
