@@ -17,7 +17,7 @@ The main cli commands are:
     :ref:`Generate a values.yaml file for installing Robusta <Installation Guide>`.
 
 ``robusta integrations slack``
-    :ref:`Generate a Slack API key for Robusta <Slack Integration>`.
+    :ref:`Generate a Slack API key for Robusta <Slack>`.
 
 ``robusta playbooks trigger``
     :ref:`Manually trigger a playbook <Manual Triggers>`
