@@ -30,6 +30,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))  # so we can import the pl
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.graphviz",
+    "sphinx.ext.inheritance_diagram",
+    "sphinxcontrib.mermaid",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "sphinx.ext.autosectionlabel",
@@ -39,6 +41,9 @@ extensions = [
     "sphinxcontrib.images",
     "autorobusta",
 ]
+
+# for sphinx.ext.inheritance_diagram
+# inheritance_graph_attrs = dict(rankdir="TB", size='""')
 
 images_config = {
     "override_image_directive": True,
