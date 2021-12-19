@@ -70,11 +70,11 @@ class PydanticModelDirective(SphinxDirective):
         required_fields = list(filter(lambda f: f.required, all_fields))
         optional_fields = list(filter(lambda f: not f.required, all_fields))
 
-        if not show_optionality:
+        if not show_optionality and len(required_fields) > 0:
             node.append(nodes.strong(text="required:"))
         node.extend(cls.__document_fields(required_fields, show_code, show_optionality))
 
-        if not show_optionality:
+        if not show_optionality and len(optional_fields) > 0:
             node.append(nodes.strong(text="optional:"))
         node.extend(cls.__document_fields(optional_fields, show_code, show_optionality))
 
