@@ -9,7 +9,7 @@ This page documents the important values.
 Defining playbooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Playbooks are defined using ``customPlaybooks``:
+Playbooks are defined using the ``customPlaybooks`` Helm value:
 
 .. code-block:: yaml
 
