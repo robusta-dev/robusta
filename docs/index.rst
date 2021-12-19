@@ -84,7 +84,9 @@ Examples
 
         .. admonition:: Example
 
-            Run this command to attach a Python profiler to any pod:
+            Robusta can save time with manual troubleshooting too.
+
+            Run this command to attach a Python profiler to a running pod:
 
             .. code-block:: bash
 
@@ -234,3 +236,4 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    developer-guide/general-guidelines
    developer-guide/reference
    developer-guide/findings-api
+   developer-guide/triggers-and-events

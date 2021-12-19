@@ -1,17 +1,20 @@
-Grafana Integration
+Grafana actions
 #########################
 
 Robusta playbooks can write annotations to Grafana.
 
 A common use case is enriching existing Grafana dashboards with details on when Kubernetes resources were updated.
 
-Pre-requisites
+Prerequisites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-You will need a Grafana API key with write permissions. To generate one:
+You will need a Grafana API key with write permissions.
 
-Configuring Robusta
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+`Generating a Grafana API key. <https://stackoverflow.com/questions/63002202/options-for-creating-a-grafana-api-token>`_
 
 Relevant Playbooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The following playbooks...
+
+.. robusta-action:: playbooks.grafana_enrichment.add_deployment_lines_to_grafana
+
+.. robusta-action:: playbooks.grafana_enrichment.add_alert_lines_to_grafana
+

@@ -18,6 +18,9 @@ Robusta Configuration
       account_id: ""       # your official Robusta account_id
       signing_key: ""      # a secret key used to verify the identity of Elasticsearch
 
+You do **not** define playbooks for Elasticsearch triggers in ``values.yaml``. Instead the playbook is defined
+entirely on the Elasticsearch side.
+
 Example Elasticsearch Watcher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -6,6 +6,7 @@ Robusta is configured using Helm values. All possible values can be found in
 
 This page documents the important values.
 
+
 Defining playbooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -22,9 +23,32 @@ Playbooks are defined using the ``customPlaybooks`` Helm value:
       sinks:
       - "slack sink"
 
-See the documentation for :ref:`Triggers`, :ref:`Actions`, and :ref:`Sinks`.
+Configuring triggers
+----------------------
+In the yaml, ``triggers`` is an array, but currently it must contain exactly one entry.
 
-Enabling a playbook multiple times
+Most triggers support filters to further restrict when the playbook runs:
+
+.. code-block:: yaml
+    :emphasize-lines: 3-4
+
+    customPlaybooks:
+      - triggers:
+          - on_deployment_update:
+              name_prefix: MyApp
+        actions:
+          - resource_babysitter:
+              fields_to_monitor: ["status.conditions"]
+        sinks:
+          - "slack sink"
+
+These filters are almost always optional. When left out, the filter matches everything.
+
+Kubernetes triggers support ``name_prefix`` and ``namespace_prefix``
+
+Prometheus triggers support filters like ``alert_name``
+
+Multiple playbook instances
 -----------------------------------
 
 You can enable a playbook multiple times with different configurations:
@@ -113,43 +137,31 @@ Defining additional sinks
 
 To use sinks, first define the available named sinks in ``active_playbooks.yaml``.
 
-.. note:: In order to get a Slack key run: ``robusta integrations slack``.
-
 .. code-block:: yaml
 
     sinks_config:
     - slack_sink:
         name: slack sink
-        api_key: {{ .Values.slackApiKey }}
-        slack_channel: {{ required "A valid .Values.slackChannel entry is required!" .Values.slackChannel }}
-        default: false
-    - robusta_sink:
-        name: robusta_ui_sink
-        token: {{ .Values.robustaApiKey }}
+        api_key: "api-key from running `robusta integrations slack`"
+        slack_channel: channel1
         default: true
 
+    - robusta_sink:
+        name: robusta_ui_sink
+        token: "signup for a token online"
+        default: true
 
-    - sink_name: "my kafka sink"
-      sink_type: "kafka"
-      params:
+    - kafka_sink:
+        name: kafka_sink
         kafka_url: "localhost:9092"
         topic: "robusta-playbooks"
-    - sink_name: "datadog events"
-      sink_type: "datadog"
-      params:
-        api_key: "MY DATADOG ACCOUNT API KEY"
+        default: false
 
+    - datadog_sink:
+        name: datadog_sink
+        api_key: "datadog api key"
+        default: false
 
-By default, all playbooks will forward the results to the default sinks.
-The default sinks list can be overridden, per playbook:
+You can explicitly specify sinks per playbook, like above.
 
-.. code-block:: yaml
-
-     - name: "add_deployment_lines_to_grafana"
-       sinks:
-       - "my kafka sink"
-       action_params:
-         grafana_dashboard_uid: "uid_from_url"
-         grafana_api_key: "grafana_api_key_with_editor_role"
-         grafana_service_name: "grafana.namespace.svc.cluster.local:3000"
-
+If you don't specify sinks for a playbook, the default sinks will be used.
