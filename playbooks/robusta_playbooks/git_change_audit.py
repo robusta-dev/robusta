@@ -53,14 +53,15 @@ def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditPar
     git_repo = GitRepoManager.get_git_repo(
         action_params.git_url,
         action_params.git_key.get_secret_value(),
-        action_params.cluster_name,
     )
     name = f"{git_safe_name(event.obj.metadata.name)}.yaml"
     namespace = event.obj.metadata.namespace or "None"
     path = f"{git_safe_name(action_params.cluster_name)}/{git_safe_name(namespace)}"
 
     if event.operation == K8sOperationType.DELETE:
-        git_repo.delete_push(path, name, f"Delete {path}/{name}")
+        git_repo.delete_push(
+            path, name, f"Delete {path}/{name}", action_params.cluster_name
+        )
     elif event.operation == K8sOperationType.CREATE:
         obj_yaml = hikaru.get_yaml(event.obj.spec)
         git_repo.commit_push(
@@ -68,6 +69,7 @@ def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditPar
             path,
             name,
             f"Create {event.obj.kind} named {event.obj.metadata.name} on namespace {namespace}",
+            action_params.cluster_name,
         )
     else:  # update
         old_spec = event.old_obj.spec if event.old_obj else None
@@ -79,4 +81,5 @@ def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditPar
                 path,
                 name,
                 f"Update {event.obj.kind} named {event.obj.metadata.name} on namespace {namespace}",
+                action_params.cluster_name,
             )
