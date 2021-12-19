@@ -94,7 +94,7 @@ todo_include_todos = False
 # html_theme_path = [furo.get_pygments_stylesheet()]
 html_theme = "furo"
 html_theme_options = {
-    "announcement": "Want to work at an open source company? We're hiring in Israel and remote! Email natan@robusta.dev",
+    "announcement": "Want to work at an open source company? We're hiring in Israel and remote! Email jobs@robusta.dev",
     "sidebar_hide_name": True,
     "light_logo": "logo.png",
     "dark_logo": "logo-dark.png",
