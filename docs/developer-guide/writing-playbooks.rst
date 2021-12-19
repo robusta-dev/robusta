@@ -65,8 +65,8 @@ Choosing an event class
 ------------------------
 Our above action needs a pod to run so the playbook takes a ``PodEvent``.
 
-Some actions need **change** to run - for example, a playbook that shows you a diff of what changed. These actions should
-take one of the ChangeEvent classes. For example, ``PodChangeEvent``
+Some actions are interested in **changes** and not just static resources - for example, a playbook that shows you a diff
+of what changed. These actions should take one of the ChangeEvent classes. For example, ``PodChangeEvent``
 
 .. code-block:: python
 
