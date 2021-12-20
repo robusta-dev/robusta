@@ -1,5 +1,4 @@
 from robusta.api import *
-from .networking import incluster_ping, PingParams
 
 
 def pod_row(pod: Pod) -> List[str]:
@@ -114,9 +113,4 @@ def node_health_watcher(event: NodeChangeEvent):
     )
     event.add_finding(finding, "DEFAULT")
     event.add_enrichment([KubernetesDiffBlock([], event.old_obj, event.obj)])
-    addresses_to_ping = event.obj.status.addresses[
-        :1
-    ]  # don't bother to ping more than one address
-    for address in addresses_to_ping:
-        incluster_ping(event, PingParams(hostname=str(address.address)))
     node_status_enricher(event)
