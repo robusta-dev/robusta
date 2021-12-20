@@ -37,6 +37,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt-get install graphviz pandoc
         python3 -m pip install --upgrade pip
         pip3 install poetry==1.1.6
         poetry config virtualenvs.create false
