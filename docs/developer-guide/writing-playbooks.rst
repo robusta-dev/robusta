@@ -63,7 +63,8 @@ The action above receives a ``PodEvent`` so it can be used for pod-related trigg
 
 Choosing an event class
 ------------------------
-Our above action needs a pod to run so the playbook takes a ``PodEvent``.
+In our above action, we want to exec commands on a pod, so obviously we'll need a pod as input.
+Therefore the action takes a ``PodEvent``.
 
 Some actions are interested in **changes** and not just static resources - for example, a playbook that shows you a diff
 of what changed. These actions should take one of the ChangeEvent classes. For example, ``PodChangeEvent``
