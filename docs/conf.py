@@ -110,6 +110,7 @@ html_theme_options = {
         "color-brand-content": "#7253ed",
     },
     "dark_css_variables": {
+        "color-announcement-background": "#433e56",
         # "color-brand-primary": "#7C4DFF",
         # "color-brand-content": "#7C4DFF",
         # "color-sidebar-link-text": "black",

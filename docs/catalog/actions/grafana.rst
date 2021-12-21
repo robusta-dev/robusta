@@ -14,7 +14,7 @@ You will need a Grafana API key with write permissions.
 Builtin actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. robusta-action:: playbooks.grafana_enrichment.add_deployment_lines_to_grafana
+.. robusta-action:: playbooks.robusta_playbooks.grafana_enrichment.add_deployment_lines_to_grafana
 
-.. robusta-action:: playbooks.grafana_enrichment.add_alert_lines_to_grafana
+.. robusta-action:: playbooks.robusta_playbooks.grafana_enrichment.add_alert_lines_to_grafana
 
