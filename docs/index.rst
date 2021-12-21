@@ -1,6 +1,6 @@
 Welcome to Robusta!
 =====================
-Robusta is an source platform for automated troubleshooting and maintenance. We turn Kubernetes expertise into re-usable code.
+Robusta is an open source platform for automated troubleshooting and maintenance. We turn Kubernetes expertise into re-usable code.
 
 Robusta automates everything that happens **after** you deploy your application.
 
