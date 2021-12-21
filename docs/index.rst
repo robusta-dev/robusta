@@ -107,7 +107,7 @@ You configure automations in a three-part yaml:
 .. grid:: 3
 
     .. grid-item-card:: Triggers
-        :class-card: sd-bg-light
+        :class-card: sd-bg-light sd-bg-text-light
         :link: catalog/triggers/index
         :link-type: doc
 
@@ -115,7 +115,7 @@ You configure automations in a three-part yaml:
         (on alerts, logs, changes, etc)
 
     .. grid-item-card::  Actions
-        :class-card: sd-bg-light
+        :class-card: sd-bg-light sd-bg-text-light
         :link: catalog/actions/index
         :link-type: doc
 
@@ -123,7 +123,7 @@ You configure automations in a three-part yaml:
         (over 50 builtin actions)
 
     .. grid-item-card::  Sinks
-        :class-card: sd-bg-light
+        :class-card: sd-bg-light sd-bg-text-light
         :link: catalog/sinks/index
         :link-type: doc
 
