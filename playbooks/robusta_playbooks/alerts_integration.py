@@ -106,6 +106,7 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
         timestamp
     ).strftime("%I:%M:%S %p on %d, %b")
     chart.title = promql_query
+    # fix a pygal bug which causes infinite loops due to rounding errors with floating points
     for series in result:
         label = "\n".join([v for v in series["metric"].values()])
         values = [

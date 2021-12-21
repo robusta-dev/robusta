@@ -26,7 +26,7 @@ Configure Robusta
 
     Before you can enrich prometheus alerts, you must forward Prometheus alerts to Robusta by adding a webhook receiver to AlertsManager.
 
-    See :ref:`Setting up the webhook` for details.
+    See :ref:`Prometheus` for details.
 
 
 Lets look at the simplest possible configuration in ``values.yaml`` which instructs Robusta to forward Prometheus alerts to Slack without any enrichment:

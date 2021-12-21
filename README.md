@@ -9,6 +9,12 @@ If you want to develop features for Robusta itself you'll need to install Robust
 3. Run `robusta gen-config` and copy the result to `deployment/generated_values.yaml`
 4. Run `skaffold run --tail`
 
+If you encounter an error like: `"https://prometheus-community.github.io/helm-chart" is not a valid chart repository or cannot be reached` then run:
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+```
+
 # Running Robusta runner locally as a developer
 This is never necessary, but you might find it more convenient to run Robusta locally and not in cluster.
 

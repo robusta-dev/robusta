@@ -1,4 +1,5 @@
-# playbooks for peeking inside running pods
+# TODO: move the python playbooks into their own subpackage and put each playbook in it's own file
+import json
 import textwrap
 import humanize
 from robusta.api import *
@@ -185,12 +186,8 @@ def get_example_launch_json(params: DebuggerParams):
                 "justMyCode": False,
                 "pathMappings": [
                     {
-                        "localRoot": "/local/path/to/module1",
-                        "remoteRoot": "/remote/path/to/module",
-                    },
-                    {
-                        "localRoot": "${workspaceFolder}/local/path/to/module2",
-                        "remoteRoot": "/remote/path/to/module2",
+                        "localRoot": "/local/path/to/module/root",
+                        "remoteRoot": "/remote/path/to/same/module",
                     },
                 ],
             }
@@ -212,9 +209,9 @@ def get_loaded_module_info(data):
         textwrap.dedent(
             f"""\
         These are the remote module paths
-
+        
         Use this list to guess the right value for `remoteRoot` in launch.json
-
+        
         When setting breakpoints, VSCode determines the remote filename by replacing `localRoot` with `remoteRoot` in the filename  
         %s"""
         )

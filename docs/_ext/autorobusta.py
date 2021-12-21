@@ -1,6 +1,7 @@
 import inspect
 import pydoc
 import textwrap
+import typing
 from pathlib import Path
 from typing import List, Type
 
@@ -20,7 +21,7 @@ from sphinx.util import nested_parse_with_titles
 from sphinx.util.docutils import SphinxDirective
 
 from robusta.api import Action
-from robusta.core.playbooks.generation import ExamplesGenerator
+from robusta.core.playbooks.generation import ExamplesGenerator, get_possible_types
 
 # creating this is slightly expensive so we create one global instance and re-use it
 generator = ExamplesGenerator()
@@ -70,11 +71,11 @@ class PydanticModelDirective(SphinxDirective):
         required_fields = list(filter(lambda f: f.required, all_fields))
         optional_fields = list(filter(lambda f: not f.required, all_fields))
 
-        if not show_optionality:
+        if not show_optionality and len(required_fields) > 0:
             node.append(nodes.strong(text="required:"))
         node.extend(cls.__document_fields(required_fields, show_code, show_optionality))
 
-        if not show_optionality:
+        if not show_optionality and len(optional_fields) > 0:
             node.append(nodes.strong(text="optional:"))
         node.extend(cls.__document_fields(optional_fields, show_code, show_optionality))
 
@@ -133,7 +134,16 @@ class PydanticModelDirective(SphinxDirective):
         if show_code:
             content.extend(cls.__document_field_example(field))
 
-        if issubclass(field.type_, BaseModel):
+        if typing.get_origin(field.type_) == typing.Union:
+            possible_types = get_possible_types(field.type_)
+            paragraph = nodes.paragraph(text=f"each entry is one of the following:")
+            content.append(paragraph)
+            for t in possible_types:
+                if isinstance(None, t):
+                    continue
+                content.extend(cls.__document_model(t, show_code, show_optionality))
+
+        elif issubclass(field.type_, BaseModel):
             paragraph = nodes.paragraph(text=f"each entry contains:")
             content.append(paragraph)
             # when documenting an inner model, we always show "required"/"optional" inline
@@ -155,11 +165,14 @@ class PydanticModelDirective(SphinxDirective):
 
     @staticmethod
     def __get_readable_field_type(field: pydantic.fields.ModelField):
-        inner_type_name = field.type_.__name__.lower()
-        if inner_type_name == "secretstr":
-            inner_type_name = "str"
-        if issubclass(field.type_, BaseModel):
+        if typing.get_origin(field.type_) == typing.Union:
             inner_type_name = "complex"
+        else:
+            inner_type_name = field.type_.__name__.lower()
+            if inner_type_name == "secretstr":
+                inner_type_name = "str"
+            if issubclass(field.type_, BaseModel):
+                inner_type_name = "complex"
 
         if field.shape == pydantic.fields.SHAPE_SINGLETON:
             return inner_type_name
@@ -181,7 +194,7 @@ class PydanticModelDirective(SphinxDirective):
 class RobustaActionDirective(SphinxDirective):
 
     option_spec = DummyOptionSpec()
-    has_content = False
+    has_content = True
     required_arguments = 1
     final_argument_whitespace = True
 
@@ -209,6 +222,7 @@ class RobustaActionDirective(SphinxDirective):
         possible_triggers = [
             generator.get_highest_possible_trigger(action_definition.event_type)
         ]
+
         indented_code = "\n".join(" " * 32 + l for l in code)
         indented_description = "\n".join(" " * 28 + l for l in description.split("\n"))
         indented_example = "\n".join(" " * 32 + l for l in example_yaml.split("\n"))
@@ -223,7 +237,7 @@ class RobustaActionDirective(SphinxDirective):
             
                 .. tab-set::
             
-                    .. tab-item:: Description\n\n{indented_description}
+                    .. tab-item:: Description\n\n{indented_description}\n\n
             
                     .. tab-item:: Parameters
                         
@@ -266,14 +280,15 @@ class RobustaActionDirective(SphinxDirective):
             height *= resize_ratio
         return width, height
 
-    @classmethod
-    def __get_description(cls, action_definition: Action):
+    def __get_description(self, action_definition: Action):
         description = ""
 
         docs = inspect.getdoc(action_definition.func)
         if docs:
             description += docs
-        else:
+        if self.content:
+            description += "\n".join(l for l in self.content)
+        if not description:
             description += "*No description*"
 
         image_dir = Path(inspect.getfile(action_definition.func)).parent / Path(
@@ -286,7 +301,7 @@ class RobustaActionDirective(SphinxDirective):
             root_docs_dir = Path(__file__).parent.parent.parent
             relative_path = "/../" + str(path.relative_to(root_docs_dir))
             image = Image.open(path.resolve())
-            width, height = cls.__get_image_size(*image.size)
+            width, height = self.__get_image_size(*image.size)
 
             description += textwrap.dedent(
                 f"""

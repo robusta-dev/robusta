@@ -9,6 +9,7 @@ from distutils.version import StrictVersion
 from typing import Optional
 from zipfile import ZipFile
 
+import requests
 import typer
 import yaml
 from kubernetes import config
@@ -124,10 +125,36 @@ def gen_config(
     # asking the question
     if robusta_api_key is None:
         if typer.confirm("Would you like to use Robusta UI?"):
-            robusta_api_key = typer.prompt(
-                "Please insert your Robusta account token",
-                default=None,
-            )
+            if typer.confirm("Do you already have a Robusta account?"):
+                robusta_api_key = typer.prompt(
+                    "Please insert your Robusta account token",
+                    default=None,
+                )
+            else:  # self registration
+                account_name = typer.prompt("Choose your account name")
+                email = typer.prompt(
+                    "Enter a GMail/GSuite address. This will be used to login"
+                )
+                res = requests.post(
+                    "https://robusta.dev/accounts/create",
+                    json={
+                        "account_name": account_name,
+                        "email": email,
+                    },
+                )
+                if res.status_code == 201:
+                    robusta_api_key = res.json().get("token")
+                    typer.echo(
+                        "\nSuccessfully registered. You can login at https://platform.robusta.dev\n",
+                        color="green",
+                    )
+                    typer.echo("A few more questions and we're done...\n")
+                else:
+                    typer.echo(
+                        "Sorry, something didn't work out. Please contact us at support@robusta.dev",
+                        color="red",
+                    )
+                    robusta_api_key = ""
         else:
             robusta_api_key = ""
 
@@ -151,8 +178,9 @@ def gen_config(
         )
 
         if not disable_cloud_routing:
+            eula_url = "https://robusta.dev/eula.html"
             typer.echo(
-                "\nPlease read and approve our End User License Agreement: https://robusta.dev/eula.html"
+                f"\nPlease read and approve our End User License Agreement: {eula_url}"
             )
             eula_approved = typer.confirm(
                 "Do you accept our End User License Agreement?"
@@ -162,6 +190,11 @@ def gen_config(
                     "\nEnd User License Agreement rejected. Installation aborted."
                 )
                 return
+
+            try:
+                requests.get(f"{eula_url}?account_id={account_id}")
+            except Exception:
+                typer.echo(f"\nEula approval failed: {eula_url}")
 
     signing_key = str(uuid.uuid4()).replace("_", "")
 
@@ -180,6 +213,10 @@ def gen_config(
         typer.secho(
             f"Saved configuration to {output_path}",
             fg="green",
+        )
+        typer.secho(
+            f"Save this file for future use. It contains your account credentials",
+            fg="red",
         )
 
 
