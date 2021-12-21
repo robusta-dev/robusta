@@ -1,5 +1,5 @@
 from robusta.api import *
-from networking import incluster_ping, PingParams
+from .networking import incluster_ping, PingParams
 
 
 def pod_row(pod: Pod) -> List[str]:

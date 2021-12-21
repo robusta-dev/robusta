@@ -46,9 +46,7 @@ class FileSystemWatcher:
         observer.schedule(fs_change_handler, self.path_to_watch, recursive=True)
         observer.start()
         try:
-            while True:
-                if not self.active:
-                    break
+            while self.active:
                 time.sleep(WAIT_SEC)
 
                 if self.change_detected:

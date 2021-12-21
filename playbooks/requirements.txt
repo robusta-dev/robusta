@@ -1,8 +1,0 @@
-humanize
-cairosvg
-flask
-prometheus-api-client
-pygal
-tinycss
-cssselect
-rsa>=4.7 # not directly required, pinned by Snyk to avoid a vulnerability

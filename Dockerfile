@@ -28,8 +28,6 @@ RUN pip3 install --use-feature=in-tree-build .
 RUN pip3 install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
 
 COPY playbooks/ /etc/robusta/playbooks/defaults
-RUN pip3 install -r /etc/robusta/playbooks/defaults/requirements.txt
-# remove the requirements so that we don't reinstall them at runtime
-RUN rm /etc/robusta/playbooks/defaults/requirements.txt
+
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
 CMD [ "python3", "-u", "-m", "robusta.runner.main"]

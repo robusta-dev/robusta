@@ -26,6 +26,8 @@ This is never necessary, but you might find it more convenient to run Robusta lo
 
 If you're on Mac OS and receive errors about `Pillow` or `libjpeg` when running `poetry install` then run `brew install libjpeg` first.
 
+If you encounter `NotADirectoryError: [Errno 20] Not a directory` while trying to debug, you may need to disable the `Attach to subprocess` option on your debugger.
+
 # Running Robusta cli locally as a developer
 This is only necessary if you are developing features for the cli itself.
 
