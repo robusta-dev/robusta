@@ -228,6 +228,10 @@ def get_debugger_warnings(data):
 
 @action
 def python_debugger(event: PodEvent, params: DebuggerParams):
+    """
+    At the moment, exactly one process **must** match for the playbook to work. If this is not the case, run
+    ``robusta playbooks trigger pod_ps name=myapp namespace=default`` and use ``pid`` instead of ``process_substring``
+    """
     pod = event.get_pod()
     if not pod:
         logging.info(f"python_debugger - pod not found for event: {event}")

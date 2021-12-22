@@ -285,7 +285,7 @@ class RobustaActionDirective(SphinxDirective):
 
         docs = inspect.getdoc(action_definition.func)
         if docs:
-            description += docs
+            description += docs + "\n\n"
         if self.content:
             description += "\n".join(l for l in self.content)
         if not description:
