@@ -165,7 +165,7 @@ def gen_config(
 
     if enable_prometheus_stack is None:
         enable_prometheus_stack = typer.confirm(
-            "Would you like to include the Prometheus stack with Robusta?"
+            "If you haven't installed Prometheus yet, Robusta can install a pre-configured Prometheus. Would you like to do so?"
         )
 
     if disable_cloud_routing is None:
