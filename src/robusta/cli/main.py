@@ -5,6 +5,7 @@ import subprocess
 import time
 import urllib.request
 import uuid
+import click_spinner
 from distutils.version import StrictVersion
 from typing import Optional
 from zipfile import ZipFile
@@ -72,14 +73,15 @@ def slack_integration(
 
 
 def guess_cluster_name():
-    try:
-        all_contexts, current_context = config.list_kube_config_contexts()
-        if current_context and current_context.get("name"):
-            return current_context.get("name")
-    except Exception:  # this happens, for example, if you don't have a kubeconfig file
-        typer.echo("Error reading kubeconfig to generate cluster name")
+    with click_spinner.spinner():
+        try:
+            all_contexts, current_context = config.list_kube_config_contexts()
+            if current_context and current_context.get("name"):
+                return current_context.get("name")
+        except Exception:  # this happens, for example, if you don't have a kubeconfig file
+            typer.echo("Error reading kubeconfig to generate cluster name")
 
-    return f"cluster_{random.randint(0, 1000000)}"
+        return f"cluster_{random.randint(0, 1000000)}"
 
 
 @app.command()
