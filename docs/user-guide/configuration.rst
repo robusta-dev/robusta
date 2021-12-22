@@ -179,3 +179,5 @@ This feature is disable by default. If you would like to enable it then set:
     enablePrometheusStack: true
 
 We recommend you enable this if haven't yet installed Prometheus on your cluster.
+
+The alerts are currently based on kube-prometheus-stack but we expect to diverge more over time.
