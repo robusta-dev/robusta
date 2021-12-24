@@ -1,4 +1,4 @@
-Developer Guidelines
+Coding Conventions
 ###################################################
 
 The following guidelines apply to code contributions to the Robusta engine itself.

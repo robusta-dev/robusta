@@ -233,7 +233,5 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    :caption: Developer Guide
    :hidden:
 
-   developer-guide/writing-playbooks
-   developer-guide/findings-api
-   developer-guide/triggers-and-events
-   developer-guide/general-guidelines
+   developer-guide/actions/index
+   developer-guide/platform/index

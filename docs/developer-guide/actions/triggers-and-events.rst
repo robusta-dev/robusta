@@ -17,7 +17,7 @@ Lifecycle of a Robusta event
 
 Here is the Robusta event hierarchy:
 
-.. image:: ../images/event-inheritance.png
+.. image:: ../../images/event-inheritance.png
   :align: center
 
 

@@ -1,5 +1,5 @@
-Findings API
-###############
+Creating Findings
+###################
 
 Motivation
 --------------
