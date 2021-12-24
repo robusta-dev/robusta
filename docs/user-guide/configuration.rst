@@ -165,3 +165,19 @@ To use sinks, first define the available named sinks in ``active_playbooks.yaml`
 You can explicitly specify sinks per playbook, like above.
 
 If you don't specify sinks for a playbook, the default sinks will be used.
+
+Embedded Prometheus Stack
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Robusta can optionally install an embedded Prometheus stack with pre-configured alerts. The alerts are fine-tuned
+for low-noise and good defaults.
+
+This feature is disable by default. If you would like to enable it then set:
+
+.. code-block:: yaml
+
+    enablePrometheusStack: true
+
+We recommend you enable this if haven't yet installed Prometheus on your cluster.
+
+The alerts are currently based on kube-prometheus-stack but we expect to diverge more over time.
