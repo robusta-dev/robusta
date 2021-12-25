@@ -103,7 +103,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             return self.__error_resp(
                 f"Failed to create execution instance for"
                 f" {action_name} {action_def.from_params_parameter_class}"
-                f" {action_params} {traceback.print_exc()}"
+                f" {action_params} {traceback.format_exc()}"
             )
 
         execution_event = action_def.from_params_func(instantiation_params)
@@ -195,8 +195,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     sink.write_finding(finding_copy)
                 except Exception:  # Failure to send to one sink shouldn't fail all
                     logging.error(
-                        f"Failed to publish finding to sink {sink_name}",
-                        traceback.print_exc(),
+                        f"Failed to publish finding to sink {sink_name}", exc_info=True
                     )
 
     def get_global_config(self) -> dict:
