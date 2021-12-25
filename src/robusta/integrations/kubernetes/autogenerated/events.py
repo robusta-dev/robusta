@@ -193,7 +193,7 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
                 kind=params.kind, name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load resource {params}", traceback.print_exc())
+            logging.error(f"Could not load resource {params}", exc_info=True)
             return None
         return KubernetesResourceEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -202,82 +202,82 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
 class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
     obj: Optional[
         Union[
-            v1ClusterRole,
-            v1ClusterRoleBinding,
-            v2beta1Event,
-            RobustaDeployment,
-            v2beta2ClusterRole,
-            v2beta2Event,
-            v2beta1Namespace,
-            v2beta2DaemonSet,
-            v2beta2Service,
-            v2beta2HorizontalPodAutoscaler,
-            v1Service,
-            v2beta2Namespace,
-            v1Node,
-            v2beta2StatefulSet,
-            v2beta1Service,
-            v2beta2Node,
-            v2beta1ServiceAccount,
-            v1ReplicaSet,
-            v2beta2ServiceAccount,
-            v1Namespace,
-            RobustaPod,
             v1HorizontalPodAutoscaler,
-            v2beta1ClusterRoleBinding,
+            v2beta2Node,
+            v2beta1Service,
             v2beta1DaemonSet,
+            RobustaDeployment,
+            v1ReplicaSet,
             v1DaemonSet,
-            RobustaJob,
-            v1ServiceAccount,
             v2beta2ClusterRoleBinding,
+            v2beta2Namespace,
+            v2beta2ReplicaSet,
+            v2beta1Event,
+            v1Node,
+            v1StatefulSet,
+            v2beta1ClusterRoleBinding,
+            v2beta1Namespace,
+            v1ClusterRoleBinding,
+            RobustaJob,
+            v2beta2HorizontalPodAutoscaler,
+            v2beta2DaemonSet,
+            v2beta2StatefulSet,
+            v2beta2Service,
+            v2beta2Event,
             v2beta1HorizontalPodAutoscaler,
+            v2beta2ServiceAccount,
             v2beta1ReplicaSet,
             v1Event,
-            v2beta1ClusterRole,
-            v2beta2ReplicaSet,
+            v1ServiceAccount,
+            v1Service,
+            v1ClusterRole,
+            RobustaPod,
             v2beta1Node,
-            v1StatefulSet,
+            v2beta1ServiceAccount,
+            v2beta1ClusterRole,
+            v2beta2ClusterRole,
             v2beta1StatefulSet,
+            v1Namespace,
         ]
     ] = None
     old_obj: Optional[
         Union[
-            v1ClusterRole,
-            v1ClusterRoleBinding,
-            v2beta1Event,
-            RobustaDeployment,
-            v2beta2ClusterRole,
-            v2beta2Event,
-            v2beta1Namespace,
-            v2beta2DaemonSet,
-            v2beta2Service,
-            v2beta2HorizontalPodAutoscaler,
-            v1Service,
-            v2beta2Namespace,
-            v1Node,
-            v2beta2StatefulSet,
-            v2beta1Service,
-            v2beta2Node,
-            v2beta1ServiceAccount,
-            v1ReplicaSet,
-            v2beta2ServiceAccount,
-            v1Namespace,
-            RobustaPod,
             v1HorizontalPodAutoscaler,
-            v2beta1ClusterRoleBinding,
+            v2beta2Node,
+            v2beta1Service,
             v2beta1DaemonSet,
+            RobustaDeployment,
+            v1ReplicaSet,
             v1DaemonSet,
-            RobustaJob,
-            v1ServiceAccount,
             v2beta2ClusterRoleBinding,
+            v2beta2Namespace,
+            v2beta2ReplicaSet,
+            v2beta1Event,
+            v1Node,
+            v1StatefulSet,
+            v2beta1ClusterRoleBinding,
+            v2beta1Namespace,
+            v1ClusterRoleBinding,
+            RobustaJob,
+            v2beta2HorizontalPodAutoscaler,
+            v2beta2DaemonSet,
+            v2beta2StatefulSet,
+            v2beta2Service,
+            v2beta2Event,
             v2beta1HorizontalPodAutoscaler,
+            v2beta2ServiceAccount,
             v2beta1ReplicaSet,
             v1Event,
-            v2beta1ClusterRole,
-            v2beta2ReplicaSet,
+            v1ServiceAccount,
+            v1Service,
+            v1ClusterRole,
+            RobustaPod,
             v2beta1Node,
-            v1StatefulSet,
+            v2beta1ServiceAccount,
+            v2beta1ClusterRole,
+            v2beta2ClusterRole,
             v2beta1StatefulSet,
+            v1Namespace,
         ]
     ] = None
 
@@ -285,42 +285,42 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
         self,
     ) -> Optional[
         Union[
-            v1ClusterRole,
-            v1ClusterRoleBinding,
-            v2beta1Event,
-            RobustaDeployment,
-            v2beta2ClusterRole,
-            v2beta2Event,
-            v2beta1Namespace,
-            v2beta2DaemonSet,
-            v2beta2Service,
-            v2beta2HorizontalPodAutoscaler,
-            v1Service,
-            v2beta2Namespace,
-            v1Node,
-            v2beta2StatefulSet,
-            v2beta1Service,
-            v2beta2Node,
-            v2beta1ServiceAccount,
-            v1ReplicaSet,
-            v2beta2ServiceAccount,
-            v1Namespace,
-            RobustaPod,
             v1HorizontalPodAutoscaler,
-            v2beta1ClusterRoleBinding,
+            v2beta2Node,
+            v2beta1Service,
             v2beta1DaemonSet,
+            RobustaDeployment,
+            v1ReplicaSet,
             v1DaemonSet,
-            RobustaJob,
-            v1ServiceAccount,
             v2beta2ClusterRoleBinding,
+            v2beta2Namespace,
+            v2beta2ReplicaSet,
+            v2beta1Event,
+            v1Node,
+            v1StatefulSet,
+            v2beta1ClusterRoleBinding,
+            v2beta1Namespace,
+            v1ClusterRoleBinding,
+            RobustaJob,
+            v2beta2HorizontalPodAutoscaler,
+            v2beta2DaemonSet,
+            v2beta2StatefulSet,
+            v2beta2Service,
+            v2beta2Event,
             v2beta1HorizontalPodAutoscaler,
+            v2beta2ServiceAccount,
             v2beta1ReplicaSet,
             v1Event,
-            v2beta1ClusterRole,
-            v2beta2ReplicaSet,
+            v1ServiceAccount,
+            v1Service,
+            v1ClusterRole,
+            RobustaPod,
             v2beta1Node,
-            v1StatefulSet,
+            v2beta1ServiceAccount,
+            v2beta1ClusterRole,
+            v2beta2ClusterRole,
             v2beta1StatefulSet,
+            v1Namespace,
         ]
     ]:
         return self.obj
@@ -346,7 +346,7 @@ class PodEvent(KubernetesResourceEvent):
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load Pod {params}", traceback.print_exc())
+            logging.error(f"Could not load Pod {params}", exc_info=True)
             return None
         return PodEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -380,7 +380,7 @@ class ReplicaSetEvent(KubernetesResourceEvent):
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load ReplicaSet {params}", traceback.print_exc())
+            logging.error(f"Could not load ReplicaSet {params}", exc_info=True)
             return None
         return ReplicaSetEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -416,7 +416,7 @@ class DaemonSetEvent(KubernetesResourceEvent):
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load DaemonSet {params}", traceback.print_exc())
+            logging.error(f"Could not load DaemonSet {params}", exc_info=True)
             return None
         return DaemonSetEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -452,7 +452,7 @@ class DeploymentEvent(KubernetesResourceEvent):
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load Deployment {params}", traceback.print_exc())
+            logging.error(f"Could not load Deployment {params}", exc_info=True)
             return None
         return DeploymentEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -486,7 +486,7 @@ class StatefulSetEvent(KubernetesResourceEvent):
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load StatefulSet {params}", traceback.print_exc())
+            logging.error(f"Could not load StatefulSet {params}", exc_info=True)
             return None
         return StatefulSetEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -524,7 +524,7 @@ class ServiceEvent(KubernetesResourceEvent):
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load Service {params}", traceback.print_exc())
+            logging.error(f"Could not load Service {params}", exc_info=True)
             return None
         return ServiceEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -558,7 +558,7 @@ class EventEvent(KubernetesResourceEvent):
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load Event {params}", traceback.print_exc())
+            logging.error(f"Could not load Event {params}", exc_info=True)
             return None
         return EventEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -595,8 +595,7 @@ class HorizontalPodAutoscalerEvent(KubernetesResourceEvent):
             ).obj
         except Exception:
             logging.error(
-                f"Could not load HorizontalPodAutoscaler {params}",
-                traceback.print_exc(),
+                f"Could not load HorizontalPodAutoscaler {params}", exc_info=True
             )
             return None
         return HorizontalPodAutoscalerEvent(obj=obj, named_sinks=params.named_sinks)
@@ -650,7 +649,7 @@ class NodeEvent(KubernetesResourceEvent):
         try:
             obj = Node.readNode(name=params.name).obj
         except Exception:
-            logging.error(f"Could not load Node {params}", traceback.print_exc())
+            logging.error(f"Could not load Node {params}", exc_info=True)
             return None
         return NodeEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -681,7 +680,7 @@ class ClusterRoleEvent(KubernetesResourceEvent):
         try:
             obj = ClusterRole.readClusterRole(name=params.name).obj
         except Exception:
-            logging.error(f"Could not load ClusterRole {params}", traceback.print_exc())
+            logging.error(f"Could not load ClusterRole {params}", exc_info=True)
             return None
         return ClusterRoleEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -718,9 +717,7 @@ class ClusterRoleBindingEvent(KubernetesResourceEvent):
         try:
             obj = ClusterRoleBinding.readClusterRoleBinding(name=params.name).obj
         except Exception:
-            logging.error(
-                f"Could not load ClusterRoleBinding {params}", traceback.print_exc()
-            )
+            logging.error(f"Could not load ClusterRoleBinding {params}", exc_info=True)
             return None
         return ClusterRoleBindingEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -768,7 +765,7 @@ class JobEvent(KubernetesResourceEvent):
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(f"Could not load Job {params}", traceback.print_exc())
+            logging.error(f"Could not load Job {params}", exc_info=True)
             return None
         return JobEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -799,7 +796,7 @@ class NamespaceEvent(KubernetesResourceEvent):
         try:
             obj = Namespace.readNamespace(name=params.name).obj
         except Exception:
-            logging.error(f"Could not load Namespace {params}", traceback.print_exc())
+            logging.error(f"Could not load Namespace {params}", exc_info=True)
             return None
         return NamespaceEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -837,9 +834,7 @@ class ServiceAccountEvent(KubernetesResourceEvent):
                 name=params.name, namespace=params.namespace
             ).obj
         except Exception:
-            logging.error(
-                f"Could not load ServiceAccount {params}", traceback.print_exc()
-            )
+            logging.error(f"Could not load ServiceAccount {params}", exc_info=True)
             return None
         return ServiceAccountEvent(obj=obj, named_sinks=params.named_sinks)
 

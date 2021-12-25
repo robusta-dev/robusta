@@ -120,8 +120,7 @@ class ActionRequestReceiver:
                     )
                 except Exception:
                     logging.error(
-                        f"Failed to run incoming event {incoming_event}",
-                        traceback.print_exc(),
+                        f"Failed to run incoming event {incoming_event}", exc_info=True
                     )
         else:  # assume it's ActionRequest format
             try:
@@ -130,8 +129,7 @@ class ActionRequestReceiver:
                 )
             except Exception:
                 logging.error(
-                    f"Failed to run incoming event {incoming_event}",
-                    traceback.print_exc(),
+                    f"Failed to run incoming event {incoming_event}", exc_info=True
                 )
 
     def on_error(self, ws, error):
