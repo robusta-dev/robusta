@@ -278,6 +278,10 @@ class KubernetesFieldsBlock(TableBlock):
 class CallbackChoice(BaseModel):
     action: Callable
     action_params: Optional[BaseModel]
+    kubernetes_object: Optional[Any]
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class CallbackBlock(BaseBlock):
