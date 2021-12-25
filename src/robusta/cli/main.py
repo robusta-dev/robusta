@@ -7,7 +7,7 @@ import urllib.request
 import uuid
 import click_spinner
 from distutils.version import StrictVersion
-from typing import Optional
+from typing import Optional, List, Union
 from zipfile import ZipFile
 
 import requests
@@ -16,6 +16,12 @@ import yaml
 from kubernetes import config
 from pydantic import BaseModel
 
+# TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
+from ..core.sinks.robusta.robusta_sink import (
+    RobustaSinkConfigWrapper,
+    RobustaSinkParams,
+)
+from ..core.sinks.slack.slack_sink import SlackSinkConfigWrapper, SlackSinkParams
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
 from .playbooks_cmd import app as playbooks_commands
@@ -44,10 +50,8 @@ class GlobalConfig(BaseModel):
 
 class HelmValues(BaseModel):
     globalConfig: GlobalConfig
+    sinksConfig: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper]]
     clusterName: str
-    slackApiKey: str = ""
-    slackChannel: str = ""
-    robustaApiKey: str = ""
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
 
@@ -112,6 +116,7 @@ def gen_config(
             default=guess_cluster_name(),
         )
 
+    sinks_config: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper]] = []
     if not slack_api_key and typer.confirm(
         "Do you want to configure slack integration? this is HIGHLY recommended.",
         default=True,
@@ -121,6 +126,17 @@ def gen_config(
     if slack_api_key and not slack_channel:
         slack_channel = typer.prompt(
             "Which slack channel should I send notifications to?"
+        )
+
+    if slack_api_key and slack_channel:
+        sinks_config.append(
+            SlackSinkConfigWrapper(
+                slack_sink=SlackSinkParams(
+                    name="main_slack_sink",
+                    api_key=slack_api_key,
+                    slack_channel=slack_channel,
+                )
+            )
         )
 
     # we have a slightly different flow here than the other options so that pytest can pass robusta_api_key="" to skip
@@ -165,6 +181,14 @@ def gen_config(
         token = json.loads(base64.b64decode(robusta_api_key))
         account_id = token.get("account_id", account_id)
 
+        sinks_config.append(
+            RobustaSinkConfigWrapper(
+                robusta_sink=RobustaSinkParams(
+                    name="robusta_ui_sink", token=robusta_api_key
+                )
+            )
+        )
+
     if enable_prometheus_stack is None:
         enable_prometheus_stack = typer.confirm(
             "If you haven't installed Prometheus yet, Robusta can install a pre-configured Prometheus. Would you like to do so?"
@@ -202,16 +226,14 @@ def gen_config(
 
     values = HelmValues(
         clusterName=cluster_name,
-        slackApiKey=slack_api_key,
-        slackChannel=slack_channel,
-        robustaApiKey=robusta_api_key,
         globalConfig=GlobalConfig(signing_key=signing_key, account_id=account_id),
+        sinksConfig=sinks_config,
         enablePrometheusStack=enable_prometheus_stack,
         disableCloudRouting=disable_cloud_routing,
     )
 
     with open(output_path, "w") as output_file:
-        yaml.safe_dump(values.dict(), output_file, sort_keys=False)
+        yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
         typer.secho(
             f"Saved configuration to {output_path}",
             fg="green",
