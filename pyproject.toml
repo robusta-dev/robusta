@@ -19,6 +19,7 @@ kubernetes = "^12.0.1"
 hikaru = "^0.5.1-beta.0"
 click-spinner = "^0.1.10"
 pymsteams = "^0.1.16"
+supabase-py = { version = "^0.0.2"}
 tabulate = { version = "^0.8.9" }
 slack-sdk = { version = "^3.7.0" }
 Flask = { version = "^1.1.2", optional = true }
@@ -30,7 +31,6 @@ better-exceptions = { version =  "^0.3.3", optional = true }
 CairoSVG = { version = "^2.5.2", optional = true }
 kafka-python = { version = "^2.0.2", optional = true }
 prometheus-api-client = { version = "^0.4.2", optional = true }
-supabase-py = { version = "^0.0.2", optional = true }
 datadog-api-client = { version = "^1.2.0", optional = true }
 dpath = "^2.0.5"
 prometheus-client = "^0.12.0"
@@ -55,7 +55,7 @@ humanize = "^3.13.1"
 
 
 [tool.poetry.extras]
-all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "kafka-python", "prometheus-api-client", "slack-sdk", "supabase-py", "datadog-api-client"]
+all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "kafka-python", "prometheus-api-client", "slack-sdk", "datadog-api-client"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
