@@ -169,9 +169,10 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
 
 
 class DebuggerParams(BaseModel):
-    process_substring: str = None
+    process_substring: str = ""
     pid: int = None
     port: int = 5678
+    interactive: bool = False
 
 
 def get_example_launch_json(params: DebuggerParams):
@@ -226,6 +227,48 @@ def get_debugger_warnings(data):
     return message
 
 
+def get_relevant_processes(all_processes: List[Process], params: DebuggerParams):
+    pid_to_process = {p.pid: p for p in all_processes}
+
+    if params.pid is None:
+        return [
+            p
+            for p in pid_to_process.values()
+            if "python" in p.exe and params.process_substring in " ".join(p.cmdline)
+        ]
+
+    if params.pid not in pid_to_process:
+        return []
+
+    return [pid_to_process[params.pid]]
+
+
+def get_process_blocks(
+    processes: List[Process], pod: RobustaPod, params: DebuggerParams
+) -> List[BaseBlock]:
+    blocks = [
+        TableBlock(
+            [[p.pid, p.exe, " ".join(p.cmdline)] for p in processes],
+            ["pid", "exe", "cmdline"],
+        ),
+    ]
+    # we don't enable this by default because it is bad UX. if you press a callback buttons then nothing
+    # seems to happen for 60 seconds while the playbook runs
+    if params.interactive:
+        choices = {}
+        for proc in processes:
+            updated_params = params.copy()
+            updated_params.process_substring = ""
+            updated_params.pid = proc.pid
+            choices[f"Debug {proc.pid}"] = CallbackChoice(
+                action=python_debugger,
+                action_params=updated_params,
+                kubernetes_object=pod,
+            )
+        blocks.append(CallbackBlock(choices))
+    return blocks
+
+
 @action
 def python_debugger(event: PodEvent, params: DebuggerParams):
     """
@@ -237,23 +280,6 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         logging.info(f"python_debugger - pod not found for event: {event}")
         return
 
-    if params.process_substring is None and params.pid is None:
-        raise Exception("Either process_substring or pid must be given")
-
-    if params.pid is None:
-        pid = f"`debug-toolkit find-pid '{pod.metadata.uid}' '{params.process_substring}' python`"
-    else:
-        pid = params.pid
-
-    cmd = f"debug-toolkit debugger {pid} --port {params.port}"
-    output = json.loads(
-        RobustaPod.exec_in_debugger_pod(
-            pod.metadata.name,
-            pod.spec.nodeName,
-            cmd,
-        )
-    )
-
     finding = Finding(
         title=f"Python debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
@@ -263,6 +289,37 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
             FindingSubjectType.TYPE_POD,
             pod.metadata.namespace,
         ),
+    )
+    event.add_finding(finding)
+
+    all_processes = pod.get_processes()
+    relevant_processes = get_relevant_processes(all_processes, params)
+    if len(relevant_processes) == 0:
+        finding.add_enrichment(
+            [MarkdownBlock(f"No matching processes. The processes in the pod are:")]
+            + get_process_blocks(all_processes, pod, params)
+        )
+        return
+    elif len(relevant_processes) > 1:
+        finding.add_enrichment(
+            [
+                MarkdownBlock(
+                    f"More than one matching process. The matching processes are:"
+                )
+            ]
+            + get_process_blocks(relevant_processes, pod, params)
+        )
+        return
+
+    # we have exactly one process to debug
+    pid = relevant_processes[0].pid
+    cmd = f"debug-toolkit debugger {pid} --port {params.port}"
+    output = json.loads(
+        RobustaPod.exec_in_debugger_pod(
+            pod.metadata.name,
+            pod.spec.nodeName,
+            cmd,
+        )
     )
     finding.add_enrichment(
         [
@@ -291,7 +348,6 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
             FileBlock("loaded-modules.txt", get_loaded_module_info(output).encode()),
         ]
     )
-    event.add_finding(finding)
     logging.info(
         "Done! See instructions for connecting to the debugger in Slack or Robusta UI"
     )
