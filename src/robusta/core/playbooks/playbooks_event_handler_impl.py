@@ -162,7 +162,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 except Exception:
                     msg = (
                         f"Failed to create {registered_action.params_type} "
-                        f"using {action_params} for running {action.action_name}"
+                        f"using {action_params} for running {action.action_name} "
+                        f"exc={traceback.format_exc()}"
                     )
                     execution_event.response = self.__error_resp(msg)
                     continue
