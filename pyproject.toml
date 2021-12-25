@@ -55,7 +55,7 @@ humanize = "^3.13.1"
 
 
 [tool.poetry.extras]
-all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "kafka-python", "prometheus-api-client", "slack-sdk", "datadog-api-client"]
+all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "kafka-python", "prometheus-api-client", "datadog-api-client"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
