@@ -3,6 +3,9 @@ playbookRepos:
   robusta_playbooks:
     url: "file:///etc/robusta/playbooks/defaults"
 
+# sinks configurations
+sinksConfig: []
+
 # global parameters
 clusterName: ""
 clusterZone: ""
@@ -14,13 +17,6 @@ globalConfig:
   prometheus_url: ""
   account_id: ""
   signing_key: ""
-
-# slack integration params
-slackApiKey: ""
-slackChannel: ""
-
-# robusta ui integration params
-robustaApiKey: ""
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
