@@ -96,9 +96,9 @@ class GitRepo:
         try:
             os.makedirs(REPO_LOCAL_BASE_DIR, exist_ok=True)
         except Exception as e:
-            print(
+            logging.error(
                 f"Failed to create git audit base path {REPO_LOCAL_BASE_DIR}",
-                traceback.print_exc(),
+                exc_info=True,
             )
             raise e
         GitRepo.initialized = True
@@ -175,7 +175,7 @@ class GitRepo:
             except Exception as e:
                 logging.error(
                     f"Commit file failed {self.repo_local_path} {file_path} {file_name}",
-                    traceback.print_exc(),
+                    exc_info=True,
                 )
                 GitRepoManager.remove_git_repo(self.git_repo_url)
                 raise e
@@ -198,7 +198,7 @@ class GitRepo:
                     else:
                         GitRepoManager.remove_git_repo(self.git_repo_url)
                         logging.error(
-                            f"Push failed {self.repo_local_path}", traceback.print_exc()
+                            f"Push failed {self.repo_local_path}", exc_info=True
                         )
                         raise e
 
@@ -267,7 +267,7 @@ class GitRepo:
             except Exception as e:
                 logging.error(
                     f"Commit file failed {self.repo_local_path} {file_path} {file_name}",
-                    traceback.print_exc(),
+                    exc_info=True,
                 )
                 GitRepoManager.remove_git_repo(self.git_repo_url)
                 raise e

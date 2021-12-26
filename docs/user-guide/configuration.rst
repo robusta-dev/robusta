@@ -21,7 +21,7 @@ Playbooks are defined using the ``customPlaybooks`` Helm value:
       - resource_babysitter:
           fields_to_monitor: ["status.conditions"]
       sinks:
-      - "slack sink"
+      - "main_slack_sink"
 
 Configuring triggers
 ----------------------
@@ -40,7 +40,7 @@ Most triggers support filters to further restrict when the playbook runs:
           - resource_babysitter:
               fields_to_monitor: ["status.conditions"]
         sinks:
-          - "slack sink"
+          - "main_slack_sink"
 
 These filters are almost always optional. When left out, the filter matches everything.
 
@@ -65,7 +65,7 @@ You can enable a playbook multiple times with different configurations:
           grafana_dashboard_uid: id_for_dashboard1
           grafana_url: http://grafana.namespace.svc
       sinks:
-      - "slack sink"
+      - "main_slack_sink"
 
     - triggers:
       - on_deployment_update:
@@ -76,7 +76,7 @@ You can enable a playbook multiple times with different configurations:
           grafana_dashboard_uid: id_for_dashboard2
           grafana_url: http://grafana.namespace.svc
       sinks:
-      - "slack sink"
+      - "main_slack_sink"
 
 Global config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -101,7 +101,7 @@ any action or trigger which expects a parameter with the same name.
       - add_deployment_lines_to_grafana:
           grafana_dashboard_uid: id_for_dashboard1
       sinks:
-      - "slack sink"
+      - "main_slack_sink"
 
     - triggers:
       - on_deployment_update:
@@ -110,7 +110,7 @@ any action or trigger which expects a parameter with the same name.
       - add_deployment_lines_to_grafana:
           grafana_dashboard_uid: id_for_dashboard2
       sinks:
-      - "slack sink"
+      - "main_slack_sink"
 
 Robusta also expects several ``globalConfig`` parameters with specific names:
 

@@ -166,7 +166,7 @@ def autogenerate_events(f: TextIO):
                         namespace=params.namespace
                     ).obj
                 except Exception:
-                    logging.error(f"Could not load resource {{params}}", traceback.print_exc())
+                    logging.error(f"Could not load resource {{params}}", exc_info=True)
                     return None
                 return KubernetesResourceEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -221,7 +221,7 @@ def autogenerate_events(f: TextIO):
                     try:
                         obj = {get_model_class(resource)}.read{"" if resource in NON_NAMESPACED_RESOURCES else "Namespaced"}{resource}(name=params.name{"" if resource in NON_NAMESPACED_RESOURCES else ", namespace=params.namespace"}).obj
                     except Exception:
-                        logging.error(f"Could not load {resource} {{params}}", traceback.print_exc())
+                        logging.error(f"Could not load {resource} {{params}}", exc_info=True)
                         return None
                     return {resource}Event(obj=obj, named_sinks=params.named_sinks)
 

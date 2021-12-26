@@ -13,7 +13,10 @@ def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):
     """
     Duplicate a hikaru object, omitting the specified fields
 
-    :param HikaruBase obj: The person sending the message
+    This is useful when you want to compare two versions of an object and first "cleanup" fields that shouldn't be
+    compared.
+
+    :param HikaruBase obj: A kubernetes object
     :param List[str] omitted_fields: List of fields to be omitted. Field name format should be '.' separated
                                      For example: ["status", "metadata.generation"]
     """

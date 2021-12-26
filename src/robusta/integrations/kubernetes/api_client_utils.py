@@ -231,7 +231,7 @@ def exec_commands(name, exec_command, namespace="default", container=None):
 
 def to_kubernetes_name(name, prefix=""):
     """
-    returns a valid and unique kubernetes name based on prefix and name, replacing characters in name as necessary
+    Returns a valid and unique kubernetes name based on prefix and name, replacing characters in name as necessary
     see https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
     """
     unique_id = str(time.time()).replace(".", "-")
@@ -240,6 +240,9 @@ def to_kubernetes_name(name, prefix=""):
 
 
 def parse_kubernetes_datetime(k8s_datetime: str) -> datetime.datetime:
+    """
+    Parse a date/time related field in a Kubernetes object and convert it from string to a python datetime object
+    """
     return datetime.datetime.strptime(k8s_datetime, "%Y-%m-%dT%H:%M:%S%z")
 
 

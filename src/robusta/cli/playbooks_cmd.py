@@ -148,7 +148,7 @@ def pull(
             shell=True,
         )
     except Exception as e:
-        typer.echo(f"Failed to pull deployed playbooks {e}", traceback.print_exc())
+        typer.echo(f"Failed to pull deployed playbooks {traceback.format_exc()}")
 
 
 @app.command("list-dirs")
@@ -176,7 +176,7 @@ def list_dirs(
         log_title(f"Stored playbooks directories: \n { ls_res.decode('utf-8')}")
 
     except Exception as e:
-        typer.echo(f"Failed to list deployed playbooks {e}", traceback.print_exc())
+        typer.echo(f"Failed to list deployed playbooks {traceback.format_exc()}")
 
 
 @app.command()
@@ -211,7 +211,7 @@ def delete(
         )
 
     except Exception as e:
-        typer.echo(f"Failed to delete deployed playbooks {e}", traceback.print_exc())
+        typer.echo(f"Failed to delete deployed playbooks {traceback.format_exc()}")
 
 
 def print_yaml_if_not_none(key: str, json_dict: dict):
