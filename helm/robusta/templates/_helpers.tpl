@@ -1,7 +1,9 @@
 {{ define "robusta.configfile" -}}
 playbook_repos:
 {{ toYaml .Values.playbookRepos | indent 2 }}
+
 {{- if or .Values.slackApiKey .Values.robustaApiKey }}
+{{- /* support old values files, prior to chart version 0.8.9 */}}
 sinks_config:
 {{- if .Values.slackApiKey }}
 - slack_sink:
@@ -14,7 +16,12 @@ sinks_config:
     name: robusta_ui_sink
     token: {{ .Values.robustaApiKey }}
 {{- end }}
+
+{{ else }}
+sinks_config:
+{{ toYaml .Values.sinksConfig }}
 {{- end }}
+
 global_config:
   cluster_name: {{ required "A valid .Values.clusterName entry is required!" .Values.clusterName }}
   {{- if .Values.clusterZone }}

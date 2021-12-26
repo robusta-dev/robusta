@@ -76,11 +76,13 @@ def autogenerate_events(f: TextIO):
             all_versioned_resources = all_versioned_resources.union(
                 set(version_resources)
             )
+    # without this, every time that we re-run the autogeneration, the order changes
+    all_versioned_resources = sorted(list(all_versioned_resources))
 
     all_resources = [get_model_class(resource) for resource in KUBERNETES_RESOURCES]
 
-    for version in KUBERNETES_VERSIONS:
-        for resource in KUBERNETES_RESOURCES:
+    for version in sorted(KUBERNETES_VERSIONS):
+        for resource in sorted(KUBERNETES_RESOURCES):
             f.write(
                 textwrap.dedent(
                     f"""\
@@ -109,7 +111,7 @@ def autogenerate_events(f: TextIO):
 
     for resource in KUBERNETES_RESOURCES:
         f.write(
-            f"    '{resource}': ({resource not in NON_NAMESPACED_RESOURCES}, {get_model_class(resource)}.read{'' if resource in NON_NAMESPACED_RESOURCES else 'Namespaced'}{resource}),\n"
+            f"    '{resource.lower()}': ({resource not in NON_NAMESPACED_RESOURCES}, {get_model_class(resource)}.read{'' if resource in NON_NAMESPACED_RESOURCES else 'Namespaced'}{resource}),\n"
         )
 
     f.write(f"{'}'}\n\n\n")
@@ -120,7 +122,7 @@ def autogenerate_events(f: TextIO):
         class ResourceLoader:
             @staticmethod
             def read_resource(kind: str, name: str, namespace: str = None) -> Response:
-                resource_mapper = LOADERS_MAPPINGS[kind]
+                resource_mapper = LOADERS_MAPPINGS[kind.lower()]
                 if not resource_mapper:
                     raise Exception("resource loader not found")
                 
@@ -164,7 +166,7 @@ def autogenerate_events(f: TextIO):
                         namespace=params.namespace
                     ).obj
                 except Exception:
-                    logging.error(f"Could not load resource {{params}}", traceback.print_exc())
+                    logging.error(f"Could not load resource {{params}}", exc_info=True)
                     return None
                 return KubernetesResourceEvent(obj=obj, named_sinks=params.named_sinks)
 
@@ -219,7 +221,7 @@ def autogenerate_events(f: TextIO):
                     try:
                         obj = {get_model_class(resource)}.read{"" if resource in NON_NAMESPACED_RESOURCES else "Namespaced"}{resource}(name=params.name{"" if resource in NON_NAMESPACED_RESOURCES else ", namespace=params.namespace"}).obj
                     except Exception:
-                        logging.error(f"Could not load {resource} {{params}}", traceback.print_exc())
+                        logging.error(f"Could not load {resource} {{params}}", exc_info=True)
                         return None
                     return {resource}Event(obj=obj, named_sinks=params.named_sinks)
 
@@ -236,7 +238,7 @@ def autogenerate_events(f: TextIO):
             """
             )
         )
-    mappers = [f"'{r}': {r}ChangeEvent" for r in KUBERNETES_RESOURCES]
+    mappers = [f"'{r.lower()}': {r}ChangeEvent" for r in KUBERNETES_RESOURCES]
     mappers_str = ",\n    ".join(mappers)
     f.write(f"\nKIND_TO_EVENT_CLASS = {{\n    {mappers_str}\n}}\n")
 
@@ -261,7 +263,7 @@ def autogenerate_models(f: TextIO, version: str):
 
 def autogenerate_versioned_models(f: TextIO):
     f.write(COMMON_PREFIX)
-    for version in KUBERNETES_VERSIONS:
+    for version in sorted(KUBERNETES_VERSIONS):
         f.write(
             textwrap.dedent(
                 f"""\
@@ -270,7 +272,7 @@ def autogenerate_versioned_models(f: TextIO):
             )
         )
 
-    mappers = [f"'{version}': {version}" for version in KUBERNETES_VERSIONS]
+    mappers = sorted([f"'{version}': {version}" for version in KUBERNETES_VERSIONS])
     mappers_str = ",\n    ".join(mappers)
 
     f.write(f"VERSION_KIND_TO_MODEL_CLASS = {{\n    {mappers_str}\n}}\n")
@@ -313,7 +315,7 @@ def autogenerate_triggers(f: TextIO):
     triggers = []
     for resource in KUBERNETES_RESOURCES:
         f.write(f"# {resource} Triggers\n")
-        for trigger_name, operation_type in TRIGGER_TYPES.items():
+        for trigger_name, operation_type in sorted(TRIGGER_TYPES.items()):
             f.write(
                 textwrap.dedent(
                     f"""\
@@ -343,7 +345,7 @@ def autogenerate_triggers(f: TextIO):
             )
 
     f.write(f"# Kubernetes Any Triggers\n")
-    for trigger_name, operation_type in TRIGGER_TYPES.items():
+    for trigger_name, operation_type in sorted(TRIGGER_TYPES.items()):
         f.write(
             textwrap.dedent(
                 f"""\
@@ -382,7 +384,7 @@ def autogenerate_triggers(f: TextIO):
         )
     )
 
-    for trigger in triggers:
+    for trigger in sorted(triggers):
         f.write(
             textwrap.indent(f"{trigger[0]}: Optional[{trigger[1]}]\n", prefix="    ")
         )

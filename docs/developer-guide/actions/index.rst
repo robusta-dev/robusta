@@ -10,8 +10,8 @@ questions or open a `Github issue <https://github.com/robusta-dev/robusta/issues
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
 
    writing-playbooks
    findings-api
    triggers-and-events
+   utility-functions
