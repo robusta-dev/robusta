@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Dict, Any
+from urllib.parse import urlparse, unquote_plus
 from pydantic import BaseModel
 
 from hikaru.model import Node, DaemonSet
@@ -90,6 +91,13 @@ class PrometheusKubernetesAlert(
             return f'{annotations["summary"]}'
         else:
             return self.alert.labels.get("alertname", "")
+
+    def get_prometheus_query(self) -> str:
+        """
+        Gets the prometheus query that defines this alert.
+        """
+        url = urlparse(self.alert.generatorURL)
+        return re.match(r"g0.expr=(.*)&g0.tab=1", unquote_plus(url.query)).group(1)
 
     def get_description(self) -> str:
         annotations = self.alert.annotations

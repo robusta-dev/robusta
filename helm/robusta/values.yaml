@@ -90,6 +90,7 @@ builtinPlaybooks:
   - on_prometheus_alert: {}
   actions:
   - default_enricher: {}
+  - alert_definition_enricher: {}
 
 # additional builtin playbooks to enable when using Robusta UI
 # these are disabled by default without the UI because they are spammy when sent to slack
