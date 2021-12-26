@@ -8,11 +8,11 @@ from .events import *
 
 
 # Pod Triggers
-class PodCreateTrigger(K8sBaseTrigger):
+class PodAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Pod",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -22,11 +22,11 @@ class PodCreateTrigger(K8sBaseTrigger):
         return PodChangeEvent
 
 
-class PodUpdateTrigger(K8sBaseTrigger):
+class PodCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Pod",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -50,11 +50,11 @@ class PodDeleteTrigger(K8sBaseTrigger):
         return PodChangeEvent
 
 
-class PodAllChangesTrigger(K8sBaseTrigger):
+class PodUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Pod",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -65,11 +65,11 @@ class PodAllChangesTrigger(K8sBaseTrigger):
 
 
 # ReplicaSet Triggers
-class ReplicaSetCreateTrigger(K8sBaseTrigger):
+class ReplicaSetAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ReplicaSet",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -79,11 +79,11 @@ class ReplicaSetCreateTrigger(K8sBaseTrigger):
         return ReplicaSetChangeEvent
 
 
-class ReplicaSetUpdateTrigger(K8sBaseTrigger):
+class ReplicaSetCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ReplicaSet",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -107,11 +107,11 @@ class ReplicaSetDeleteTrigger(K8sBaseTrigger):
         return ReplicaSetChangeEvent
 
 
-class ReplicaSetAllChangesTrigger(K8sBaseTrigger):
+class ReplicaSetUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ReplicaSet",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -122,11 +122,11 @@ class ReplicaSetAllChangesTrigger(K8sBaseTrigger):
 
 
 # DaemonSet Triggers
-class DaemonSetCreateTrigger(K8sBaseTrigger):
+class DaemonSetAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="DaemonSet",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -136,11 +136,11 @@ class DaemonSetCreateTrigger(K8sBaseTrigger):
         return DaemonSetChangeEvent
 
 
-class DaemonSetUpdateTrigger(K8sBaseTrigger):
+class DaemonSetCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="DaemonSet",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -164,11 +164,11 @@ class DaemonSetDeleteTrigger(K8sBaseTrigger):
         return DaemonSetChangeEvent
 
 
-class DaemonSetAllChangesTrigger(K8sBaseTrigger):
+class DaemonSetUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="DaemonSet",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -179,11 +179,11 @@ class DaemonSetAllChangesTrigger(K8sBaseTrigger):
 
 
 # Deployment Triggers
-class DeploymentCreateTrigger(K8sBaseTrigger):
+class DeploymentAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Deployment",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -193,11 +193,11 @@ class DeploymentCreateTrigger(K8sBaseTrigger):
         return DeploymentChangeEvent
 
 
-class DeploymentUpdateTrigger(K8sBaseTrigger):
+class DeploymentCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Deployment",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -221,11 +221,11 @@ class DeploymentDeleteTrigger(K8sBaseTrigger):
         return DeploymentChangeEvent
 
 
-class DeploymentAllChangesTrigger(K8sBaseTrigger):
+class DeploymentUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Deployment",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -236,11 +236,11 @@ class DeploymentAllChangesTrigger(K8sBaseTrigger):
 
 
 # StatefulSet Triggers
-class StatefulSetCreateTrigger(K8sBaseTrigger):
+class StatefulSetAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="StatefulSet",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -250,11 +250,11 @@ class StatefulSetCreateTrigger(K8sBaseTrigger):
         return StatefulSetChangeEvent
 
 
-class StatefulSetUpdateTrigger(K8sBaseTrigger):
+class StatefulSetCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="StatefulSet",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -278,11 +278,11 @@ class StatefulSetDeleteTrigger(K8sBaseTrigger):
         return StatefulSetChangeEvent
 
 
-class StatefulSetAllChangesTrigger(K8sBaseTrigger):
+class StatefulSetUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="StatefulSet",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -293,11 +293,11 @@ class StatefulSetAllChangesTrigger(K8sBaseTrigger):
 
 
 # Service Triggers
-class ServiceCreateTrigger(K8sBaseTrigger):
+class ServiceAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Service",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -307,11 +307,11 @@ class ServiceCreateTrigger(K8sBaseTrigger):
         return ServiceChangeEvent
 
 
-class ServiceUpdateTrigger(K8sBaseTrigger):
+class ServiceCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Service",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -335,11 +335,11 @@ class ServiceDeleteTrigger(K8sBaseTrigger):
         return ServiceChangeEvent
 
 
-class ServiceAllChangesTrigger(K8sBaseTrigger):
+class ServiceUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Service",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -350,11 +350,11 @@ class ServiceAllChangesTrigger(K8sBaseTrigger):
 
 
 # Event Triggers
-class EventCreateTrigger(K8sBaseTrigger):
+class EventAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Event",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -364,11 +364,11 @@ class EventCreateTrigger(K8sBaseTrigger):
         return EventChangeEvent
 
 
-class EventUpdateTrigger(K8sBaseTrigger):
+class EventCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Event",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -392,11 +392,11 @@ class EventDeleteTrigger(K8sBaseTrigger):
         return EventChangeEvent
 
 
-class EventAllChangesTrigger(K8sBaseTrigger):
+class EventUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Event",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -407,11 +407,11 @@ class EventAllChangesTrigger(K8sBaseTrigger):
 
 
 # HorizontalPodAutoscaler Triggers
-class HorizontalPodAutoscalerCreateTrigger(K8sBaseTrigger):
+class HorizontalPodAutoscalerAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="HorizontalPodAutoscaler",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -421,11 +421,11 @@ class HorizontalPodAutoscalerCreateTrigger(K8sBaseTrigger):
         return HorizontalPodAutoscalerChangeEvent
 
 
-class HorizontalPodAutoscalerUpdateTrigger(K8sBaseTrigger):
+class HorizontalPodAutoscalerCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="HorizontalPodAutoscaler",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -449,11 +449,11 @@ class HorizontalPodAutoscalerDeleteTrigger(K8sBaseTrigger):
         return HorizontalPodAutoscalerChangeEvent
 
 
-class HorizontalPodAutoscalerAllChangesTrigger(K8sBaseTrigger):
+class HorizontalPodAutoscalerUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="HorizontalPodAutoscaler",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -464,11 +464,11 @@ class HorizontalPodAutoscalerAllChangesTrigger(K8sBaseTrigger):
 
 
 # Node Triggers
-class NodeCreateTrigger(K8sBaseTrigger):
+class NodeAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Node",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -478,11 +478,11 @@ class NodeCreateTrigger(K8sBaseTrigger):
         return NodeChangeEvent
 
 
-class NodeUpdateTrigger(K8sBaseTrigger):
+class NodeCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Node",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -506,11 +506,11 @@ class NodeDeleteTrigger(K8sBaseTrigger):
         return NodeChangeEvent
 
 
-class NodeAllChangesTrigger(K8sBaseTrigger):
+class NodeUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Node",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -521,11 +521,11 @@ class NodeAllChangesTrigger(K8sBaseTrigger):
 
 
 # ClusterRole Triggers
-class ClusterRoleCreateTrigger(K8sBaseTrigger):
+class ClusterRoleAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ClusterRole",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -535,11 +535,11 @@ class ClusterRoleCreateTrigger(K8sBaseTrigger):
         return ClusterRoleChangeEvent
 
 
-class ClusterRoleUpdateTrigger(K8sBaseTrigger):
+class ClusterRoleCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ClusterRole",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -563,11 +563,11 @@ class ClusterRoleDeleteTrigger(K8sBaseTrigger):
         return ClusterRoleChangeEvent
 
 
-class ClusterRoleAllChangesTrigger(K8sBaseTrigger):
+class ClusterRoleUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ClusterRole",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -578,11 +578,11 @@ class ClusterRoleAllChangesTrigger(K8sBaseTrigger):
 
 
 # ClusterRoleBinding Triggers
-class ClusterRoleBindingCreateTrigger(K8sBaseTrigger):
+class ClusterRoleBindingAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ClusterRoleBinding",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -592,11 +592,11 @@ class ClusterRoleBindingCreateTrigger(K8sBaseTrigger):
         return ClusterRoleBindingChangeEvent
 
 
-class ClusterRoleBindingUpdateTrigger(K8sBaseTrigger):
+class ClusterRoleBindingCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ClusterRoleBinding",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -620,11 +620,11 @@ class ClusterRoleBindingDeleteTrigger(K8sBaseTrigger):
         return ClusterRoleBindingChangeEvent
 
 
-class ClusterRoleBindingAllChangesTrigger(K8sBaseTrigger):
+class ClusterRoleBindingUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ClusterRoleBinding",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -635,11 +635,11 @@ class ClusterRoleBindingAllChangesTrigger(K8sBaseTrigger):
 
 
 # Job Triggers
-class JobCreateTrigger(K8sBaseTrigger):
+class JobAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Job",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -649,11 +649,11 @@ class JobCreateTrigger(K8sBaseTrigger):
         return JobChangeEvent
 
 
-class JobUpdateTrigger(K8sBaseTrigger):
+class JobCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Job",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -677,11 +677,11 @@ class JobDeleteTrigger(K8sBaseTrigger):
         return JobChangeEvent
 
 
-class JobAllChangesTrigger(K8sBaseTrigger):
+class JobUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Job",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -692,11 +692,11 @@ class JobAllChangesTrigger(K8sBaseTrigger):
 
 
 # Namespace Triggers
-class NamespaceCreateTrigger(K8sBaseTrigger):
+class NamespaceAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Namespace",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -706,11 +706,11 @@ class NamespaceCreateTrigger(K8sBaseTrigger):
         return NamespaceChangeEvent
 
 
-class NamespaceUpdateTrigger(K8sBaseTrigger):
+class NamespaceCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Namespace",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -734,11 +734,11 @@ class NamespaceDeleteTrigger(K8sBaseTrigger):
         return NamespaceChangeEvent
 
 
-class NamespaceAllChangesTrigger(K8sBaseTrigger):
+class NamespaceUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Namespace",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -749,11 +749,11 @@ class NamespaceAllChangesTrigger(K8sBaseTrigger):
 
 
 # ServiceAccount Triggers
-class ServiceAccountCreateTrigger(K8sBaseTrigger):
+class ServiceAccountAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ServiceAccount",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -763,11 +763,11 @@ class ServiceAccountCreateTrigger(K8sBaseTrigger):
         return ServiceAccountChangeEvent
 
 
-class ServiceAccountUpdateTrigger(K8sBaseTrigger):
+class ServiceAccountCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ServiceAccount",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -791,11 +791,11 @@ class ServiceAccountDeleteTrigger(K8sBaseTrigger):
         return ServiceAccountChangeEvent
 
 
-class ServiceAccountAllChangesTrigger(K8sBaseTrigger):
+class ServiceAccountUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="ServiceAccount",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -806,11 +806,11 @@ class ServiceAccountAllChangesTrigger(K8sBaseTrigger):
 
 
 # Kubernetes Any Triggers
-class KubernetesAnyCreateTrigger(K8sBaseTrigger):
+class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Any",
-            operation=K8sOperationType.CREATE,
+            operation=None,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -820,11 +820,11 @@ class KubernetesAnyCreateTrigger(K8sBaseTrigger):
         return KubernetesAnyChangeEvent
 
 
-class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
+class KubernetesAnyCreateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Any",
-            operation=K8sOperationType.UPDATE,
+            operation=K8sOperationType.CREATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -848,11 +848,11 @@ class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
         return KubernetesAnyChangeEvent
 
 
-class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
+class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
         super().__init__(
             kind="Any",
-            operation=None,
+            operation=K8sOperationType.UPDATE,
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
         )
@@ -865,65 +865,65 @@ class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
 # K8s Trigger class
 class K8sTriggers(BaseModel):
 
-    on_pod_create: Optional[PodCreateTrigger]
-    on_pod_update: Optional[PodUpdateTrigger]
-    on_pod_delete: Optional[PodDeleteTrigger]
-    on_pod_all_changes: Optional[PodAllChangesTrigger]
-    on_replicaset_create: Optional[ReplicaSetCreateTrigger]
-    on_replicaset_update: Optional[ReplicaSetUpdateTrigger]
-    on_replicaset_delete: Optional[ReplicaSetDeleteTrigger]
-    on_replicaset_all_changes: Optional[ReplicaSetAllChangesTrigger]
-    on_daemonset_create: Optional[DaemonSetCreateTrigger]
-    on_daemonset_update: Optional[DaemonSetUpdateTrigger]
-    on_daemonset_delete: Optional[DaemonSetDeleteTrigger]
+    on_clusterrole_all_changes: Optional[ClusterRoleAllChangesTrigger]
+    on_clusterrole_create: Optional[ClusterRoleCreateTrigger]
+    on_clusterrole_delete: Optional[ClusterRoleDeleteTrigger]
+    on_clusterrole_update: Optional[ClusterRoleUpdateTrigger]
+    on_clusterrolebinding_all_changes: Optional[ClusterRoleBindingAllChangesTrigger]
+    on_clusterrolebinding_create: Optional[ClusterRoleBindingCreateTrigger]
+    on_clusterrolebinding_delete: Optional[ClusterRoleBindingDeleteTrigger]
+    on_clusterrolebinding_update: Optional[ClusterRoleBindingUpdateTrigger]
     on_daemonset_all_changes: Optional[DaemonSetAllChangesTrigger]
-    on_deployment_create: Optional[DeploymentCreateTrigger]
-    on_deployment_update: Optional[DeploymentUpdateTrigger]
-    on_deployment_delete: Optional[DeploymentDeleteTrigger]
+    on_daemonset_create: Optional[DaemonSetCreateTrigger]
+    on_daemonset_delete: Optional[DaemonSetDeleteTrigger]
+    on_daemonset_update: Optional[DaemonSetUpdateTrigger]
     on_deployment_all_changes: Optional[DeploymentAllChangesTrigger]
-    on_statefulset_create: Optional[StatefulSetCreateTrigger]
-    on_statefulset_update: Optional[StatefulSetUpdateTrigger]
-    on_statefulset_delete: Optional[StatefulSetDeleteTrigger]
-    on_statefulset_all_changes: Optional[StatefulSetAllChangesTrigger]
-    on_service_create: Optional[ServiceCreateTrigger]
-    on_service_update: Optional[ServiceUpdateTrigger]
-    on_service_delete: Optional[ServiceDeleteTrigger]
-    on_service_all_changes: Optional[ServiceAllChangesTrigger]
-    on_event_create: Optional[EventCreateTrigger]
-    on_event_update: Optional[EventUpdateTrigger]
-    on_event_delete: Optional[EventDeleteTrigger]
+    on_deployment_create: Optional[DeploymentCreateTrigger]
+    on_deployment_delete: Optional[DeploymentDeleteTrigger]
+    on_deployment_update: Optional[DeploymentUpdateTrigger]
     on_event_all_changes: Optional[EventAllChangesTrigger]
-    on_horizontalpodautoscaler_create: Optional[HorizontalPodAutoscalerCreateTrigger]
-    on_horizontalpodautoscaler_update: Optional[HorizontalPodAutoscalerUpdateTrigger]
-    on_horizontalpodautoscaler_delete: Optional[HorizontalPodAutoscalerDeleteTrigger]
+    on_event_create: Optional[EventCreateTrigger]
+    on_event_delete: Optional[EventDeleteTrigger]
+    on_event_update: Optional[EventUpdateTrigger]
     on_horizontalpodautoscaler_all_changes: Optional[
         HorizontalPodAutoscalerAllChangesTrigger
     ]
-    on_node_create: Optional[NodeCreateTrigger]
-    on_node_update: Optional[NodeUpdateTrigger]
-    on_node_delete: Optional[NodeDeleteTrigger]
-    on_node_all_changes: Optional[NodeAllChangesTrigger]
-    on_clusterrole_create: Optional[ClusterRoleCreateTrigger]
-    on_clusterrole_update: Optional[ClusterRoleUpdateTrigger]
-    on_clusterrole_delete: Optional[ClusterRoleDeleteTrigger]
-    on_clusterrole_all_changes: Optional[ClusterRoleAllChangesTrigger]
-    on_clusterrolebinding_create: Optional[ClusterRoleBindingCreateTrigger]
-    on_clusterrolebinding_update: Optional[ClusterRoleBindingUpdateTrigger]
-    on_clusterrolebinding_delete: Optional[ClusterRoleBindingDeleteTrigger]
-    on_clusterrolebinding_all_changes: Optional[ClusterRoleBindingAllChangesTrigger]
-    on_job_create: Optional[JobCreateTrigger]
-    on_job_update: Optional[JobUpdateTrigger]
-    on_job_delete: Optional[JobDeleteTrigger]
+    on_horizontalpodautoscaler_create: Optional[HorizontalPodAutoscalerCreateTrigger]
+    on_horizontalpodautoscaler_delete: Optional[HorizontalPodAutoscalerDeleteTrigger]
+    on_horizontalpodautoscaler_update: Optional[HorizontalPodAutoscalerUpdateTrigger]
     on_job_all_changes: Optional[JobAllChangesTrigger]
-    on_namespace_create: Optional[NamespaceCreateTrigger]
-    on_namespace_update: Optional[NamespaceUpdateTrigger]
-    on_namespace_delete: Optional[NamespaceDeleteTrigger]
-    on_namespace_all_changes: Optional[NamespaceAllChangesTrigger]
-    on_serviceaccount_create: Optional[ServiceAccountCreateTrigger]
-    on_serviceaccount_update: Optional[ServiceAccountUpdateTrigger]
-    on_serviceaccount_delete: Optional[ServiceAccountDeleteTrigger]
-    on_serviceaccount_all_changes: Optional[ServiceAccountAllChangesTrigger]
-    on_kubernetes_any_resource_create: Optional[KubernetesAnyCreateTrigger]
-    on_kubernetes_any_resource_update: Optional[KubernetesAnyUpdateTrigger]
-    on_kubernetes_any_resource_delete: Optional[KubernetesAnyDeleteTrigger]
+    on_job_create: Optional[JobCreateTrigger]
+    on_job_delete: Optional[JobDeleteTrigger]
+    on_job_update: Optional[JobUpdateTrigger]
     on_kubernetes_any_resource_all_changes: Optional[KubernetesAnyAllChangesTrigger]
+    on_kubernetes_any_resource_create: Optional[KubernetesAnyCreateTrigger]
+    on_kubernetes_any_resource_delete: Optional[KubernetesAnyDeleteTrigger]
+    on_kubernetes_any_resource_update: Optional[KubernetesAnyUpdateTrigger]
+    on_namespace_all_changes: Optional[NamespaceAllChangesTrigger]
+    on_namespace_create: Optional[NamespaceCreateTrigger]
+    on_namespace_delete: Optional[NamespaceDeleteTrigger]
+    on_namespace_update: Optional[NamespaceUpdateTrigger]
+    on_node_all_changes: Optional[NodeAllChangesTrigger]
+    on_node_create: Optional[NodeCreateTrigger]
+    on_node_delete: Optional[NodeDeleteTrigger]
+    on_node_update: Optional[NodeUpdateTrigger]
+    on_pod_all_changes: Optional[PodAllChangesTrigger]
+    on_pod_create: Optional[PodCreateTrigger]
+    on_pod_delete: Optional[PodDeleteTrigger]
+    on_pod_update: Optional[PodUpdateTrigger]
+    on_replicaset_all_changes: Optional[ReplicaSetAllChangesTrigger]
+    on_replicaset_create: Optional[ReplicaSetCreateTrigger]
+    on_replicaset_delete: Optional[ReplicaSetDeleteTrigger]
+    on_replicaset_update: Optional[ReplicaSetUpdateTrigger]
+    on_service_all_changes: Optional[ServiceAllChangesTrigger]
+    on_service_create: Optional[ServiceCreateTrigger]
+    on_service_delete: Optional[ServiceDeleteTrigger]
+    on_service_update: Optional[ServiceUpdateTrigger]
+    on_serviceaccount_all_changes: Optional[ServiceAccountAllChangesTrigger]
+    on_serviceaccount_create: Optional[ServiceAccountCreateTrigger]
+    on_serviceaccount_delete: Optional[ServiceAccountDeleteTrigger]
+    on_serviceaccount_update: Optional[ServiceAccountUpdateTrigger]
+    on_statefulset_all_changes: Optional[StatefulSetAllChangesTrigger]
+    on_statefulset_create: Optional[StatefulSetCreateTrigger]
+    on_statefulset_delete: Optional[StatefulSetDeleteTrigger]
+    on_statefulset_update: Optional[StatefulSetUpdateTrigger]

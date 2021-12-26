@@ -37,6 +37,12 @@ class ExternalActionRequestBuilder(BaseModel):
         action_params = (
             {} if choice.action_params is None else choice.action_params.dict()
         )
+        if choice.kubernetes_object:
+            action_params["kind"] = choice.kubernetes_object.kind
+            action_params["name"] = choice.kubernetes_object.metadata.name
+            if hasattr(choice.kubernetes_object.metadata, "namespace"):
+                action_params["namespace"] = choice.kubernetes_object.metadata.namespace
+
         body = ActionRequestBody(
             account_id=account_id,
             cluster_name=cluster_name,
