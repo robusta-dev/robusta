@@ -70,21 +70,33 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
 def default_enricher(alert: PrometheusKubernetesAlert):
     labels = alert.alert.labels
     alert.add_enrichment(
-        [TableBlock([[k, v] for (k, v) in labels.items()], ["label", "value"])],
+        [
+            HeaderBlock("Alert labels"),
+            TableBlock([[k, v] for (k, v) in labels.items()], ["label", "value"]),
+        ],
+        annotations={SlackAnnotations.ATTACHMENT: True},
+    )
+
+
+@action
+def alert_definition_enricher(alert: PrometheusKubernetesAlert):
+    alert.add_enrichment(
+        [
+            HeaderBlock("Alert definition"),
+            MarkdownBlock(f"```\n{alert.get_prometheus_query()}\n```"),
+        ],
         annotations={SlackAnnotations.ATTACHMENT: True},
     )
 
 
 @action
 def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
-    url = urlparse(alert.alert.generatorURL)
     if params.prometheus_url:
         prometheus_base_url = params.prometheus_url
     else:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
     prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
-
-    promql_query = re.match(r"g0.expr=(.*)&g0.tab=1", unquote_plus(url.query)).group(1)
+    promql_query = alert.get_prometheus_query()
 
     end_time = datetime.now(tz=alert.alert.startsAt.tzinfo)
     alert_duration = end_time - alert.alert.startsAt
