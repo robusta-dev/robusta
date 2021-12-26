@@ -140,7 +140,7 @@ It turns expert knowledge into re-usable code so that you can:
 * Respond to incidents in a reproducible manner
 * Track changes and identify regressions
 * See out-of-the-box insights for common alerts
-* Automatically silence false alarms
+* Silence false alarms
 * Fix alerts in one click from Slack or the terminal
 
 :ref:`Robusta has over 50 builtin actions. <Actions>` and can be extended in Python:
