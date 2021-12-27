@@ -3,6 +3,8 @@ Robusta is an open source platform for automated troubleshooting and maintenance
 
 Robusta automates everything that happens after you deploy your application.
 
+You can use any of our builtin actions, or easily add your own.
+
 ## Examples
 You can monitor crashing pods and send their logs to Slack:
 
