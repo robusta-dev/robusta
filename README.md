@@ -5,6 +5,8 @@ Robusta automates everything that happens after you deploy your application.
 
 You can use any of our builtin actions, or easily add your own.
 
+[Read the docs for more info!](https://docs.robusta.dev/master/)
+
 ## Examples
 You can monitor crashing pods and send their logs to Slack:
 
