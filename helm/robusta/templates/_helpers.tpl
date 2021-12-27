@@ -39,7 +39,7 @@ active_playbooks:
 {{ toYaml .Values.builtinPlaybooks | indent 2 }}
 {{- end }}
 
-{{- if and .Values.robustaApiKey .Values.platformPlaybooks }}
+{{- if and .Values.enablePlatformPlaybooks .Values.platformPlaybooks }}
 {{ toYaml .Values.platformPlaybooks | indent 2 }}
 {{- end }}
 

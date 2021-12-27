@@ -13,7 +13,7 @@ app = typer.Typer()
 
 SLACK_INTEGRATION_SERVICE_ADDRESS = os.environ.get(
     "SLACK_INTEGRATION_SERVICE_ADDRESS",
-    "https://robusta.dev/integrations/slack/get-token",
+    "https://api.robusta.dev/integrations/slack/get-token",
 )
 
 
@@ -32,7 +32,7 @@ def wait_for_slack_api_key(id: str) -> str:
 
 def get_slack_key():
     id = str(uuid.uuid4())
-    url = f"https://robusta.dev/integrations/slack?id={id}"
+    url = f"https://api.robusta.dev/integrations/slack?id={id}"
     typer.secho(
         f"If your browser does not automatically launch, open the below url:\n{url}"
     )

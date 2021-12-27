@@ -4,6 +4,7 @@ from typing import List
 
 from grafana_api.grafana_face import GrafanaFace
 
+from ..core.model.env_vars import GRAFANA_READ_TIMEOUT
 from ..utils.service_discovery import find_service_url
 
 
@@ -20,7 +21,10 @@ class Grafana:
             f"Grafana params: protocol - {protocol_host[0]} host - {protocol_host[1]}"
         )
         self.grafana = GrafanaFace(
-            auth=api_key, protocol=protocol_host[0], host=protocol_host[1]
+            auth=api_key,
+            protocol=protocol_host[0],
+            host=protocol_host[1],
+            timeout=GRAFANA_READ_TIMEOUT,
         )
 
     def add_line_to_dashboard(

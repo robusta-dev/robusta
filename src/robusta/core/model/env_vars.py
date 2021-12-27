@@ -34,7 +34,7 @@ INCOMING_REQUEST_TIME_WINDOW_SECONDS = int(
 )
 
 RELAY_EXTERNAL_ACTIONS_URL = os.environ.get(
-    "RELAY_EXTERNAL_ACTIONS_URL", "https://robusta.dev/integrations/generic/actions"
+    "RELAY_EXTERNAL_ACTIONS_URL", "https://api.robusta.dev/integrations/generic/actions"
 )
 
 GIT_MAX_RETRIES = int(os.environ.get("GIT_MAX_RETRIES", 100))
@@ -42,3 +42,5 @@ GIT_MAX_RETRIES = int(os.environ.get("GIT_MAX_RETRIES", 100))
 PRINTED_TABLE_MAX_WIDTH = int(os.environ.get("PRINTED_TABLE_MAX_WIDTH", 70))
 
 RUNNER_VERSION = os.environ.get("RUNNER_VERSION", "unknown")
+
+GRAFANA_READ_TIMEOUT = int(os.environ.get("GRAFANA_READ_TIMEOUT", 20))
