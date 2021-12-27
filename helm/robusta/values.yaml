@@ -94,6 +94,9 @@ builtinPlaybooks:
 
 # additional builtin playbooks to enable when using Robusta UI
 # these are disabled by default without the UI because they are spammy when sent to slack
+
+enablePlatformPlaybooks: false
+
 platformPlaybooks:
 - triggers:
     - on_deployment_update: {}

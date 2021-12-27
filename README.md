@@ -46,7 +46,7 @@ helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo
 helm install robusta robusta/robusta -f ./generated_values.yaml
 ```
 
-Full instructions are in our [installation guide](https://robusta.dev/docs/getting-started/installing.html).
+Full instructions are in our [installation guide](https://docs.robusta.dev/master/getting-started/installation.html).
 
 # Documentation
 Interested? Read the [full documentation](https://docs.robusta.dev/master/index.html)

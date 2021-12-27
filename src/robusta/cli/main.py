@@ -54,6 +54,7 @@ class HelmValues(BaseModel):
     clusterName: str
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
+    enablePlatformPlaybooks: bool = False
 
 
 def slack_integration(
@@ -139,6 +140,7 @@ def gen_config(
             )
         )
 
+    enable_platform_playbooks = False
     # we have a slightly different flow here than the other options so that pytest can pass robusta_api_key="" to skip
     # asking the question
     if robusta_api_key is None:
@@ -154,7 +156,7 @@ def gen_config(
                     "Enter a GMail/GSuite address. This will be used to login"
                 )
                 res = requests.post(
-                    "https://robusta.dev/accounts/create",
+                    "https://api.robusta.dev/accounts/create",
                     json={
                         "account_name": account_name,
                         "email": email,
@@ -188,6 +190,7 @@ def gen_config(
                 )
             )
         )
+        enable_platform_playbooks = True
 
     if enable_prometheus_stack is None:
         enable_prometheus_stack = typer.confirm(
@@ -204,7 +207,7 @@ def gen_config(
         )
 
         if not disable_cloud_routing:
-            eula_url = "https://robusta.dev/eula.html"
+            eula_url = "https://api.robusta.dev/eula.html"
             typer.echo(
                 f"\nPlease read and approve our End User License Agreement: {eula_url}"
             )
@@ -230,6 +233,7 @@ def gen_config(
         sinksConfig=sinks_config,
         enablePrometheusStack=enable_prometheus_stack,
         disableCloudRouting=disable_cloud_routing,
+        enablePlatformPlaybooks=enable_platform_playbooks,
     )
 
     with open(output_path, "w") as output_file:

@@ -14,9 +14,13 @@ You can also generate a key by running ``robusta integrations slack`` and settin
 
     .. code-block:: yaml
 
+        sinks_config:
         # slack integration params
-        slackApiKey: ""
-        slackChannel: ""
+        - slack_sink:
+            name: main_slack_sink
+            api_key: MY SLACK KEY
+            slack_channel: MY SLACK CHANNEL
+
 
 This method is recommended as it supports multiple Kubernetes clusters and is easy to setup. Outgoing messages
 are sent directly to Slack. Incoming messages are routed through Robusta servers to the appropriate cluster.

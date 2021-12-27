@@ -69,7 +69,7 @@ These should match the Robusta Helm chart values.
           },
           "webhook": {
             "scheme": "https",
-            "host": "robusta.dev",
+            "host": "api.robusta.dev",
             "port": 443,
             "method": "post",
             "path": "/integrations/generic/actions_with_key",
