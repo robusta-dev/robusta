@@ -32,6 +32,8 @@ Examples
                 sinks:
                   - slack
 
+            See :ref:`Restart loop reporter` for more details
+
     .. tab-item:: Change tracking
 
         .. admonition:: Example
@@ -53,6 +55,8 @@ Examples
                       grafana_url: <grafana_url>
                       grafana_api_key: <grafana_api_key>
                       grafana_dashboard_uid: <which_grafana_dashboard_to_update>
+
+            See :ref:`Add deployment lines to grafana` for more details
 
     .. tab-item:: Alert insights
 
@@ -81,6 +85,8 @@ Examples
                 sinks:
                   - slack
 
+            See :ref:`NODE CPU ENRICHER` for more details
+
     .. tab-item:: Cloud debugging
 
         .. admonition:: Example
@@ -98,6 +104,8 @@ Examples
             .. image:: /images/python-debugger.png
               :width: 600
               :align: center
+
+            See :ref:`Python debugger` for more details
 
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -223,6 +231,7 @@ Still not convinced? See `the demos on our website <http://startup.natanyellin.c
    :hidden:
    :glob:
 
+   user-guide/playbook-repositories
    user-guide/configuration
    user-guide/upgrade
    user-guide/robusta-cli

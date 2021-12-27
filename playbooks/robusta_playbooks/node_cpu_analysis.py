@@ -7,6 +7,11 @@ from robusta.api import *
 
 @action
 def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
+    """
+    Enrich the finding with analysis of the node's CPU usage.
+    Collect information about pods running on this node, their CPU request configuration, their actual cpu usage etc.
+    Provides insightful information regarding node high CPU usage.
+    """
     if not event.get_node():
         logging.error(f"NodeCPUEnricher was called on event without node: {event}")
         return

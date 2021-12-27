@@ -20,6 +20,8 @@ A *playbooks package* is a directory of Python files with a special ``pyproject.
     mkdir example_playbooks
     touch example_playbooks/hello.py
 
+See :ref:`Building your own playbook repository` for more details about building a playbooks package.
+
 Lets write the action itself in ``example_playbooks.hello.py``:
 
 .. code-block:: python
@@ -45,6 +47,16 @@ Load the playbooks package into Robusta:
 .. code-block:: bash
 
     robusta playbooks push example_playbooks
+
+Now, we just need to configure Robusta to use our new playbook package.
+Update the ``playbookRepos`` helm value:
+
+.. code-block:: yaml
+
+    playbookRepos:
+      example_playbooks:
+        url: "file:///etc/robusta/playbooks/storage/example_playbooks"
+
 
 Using your action
 -------------------------------------------------------------

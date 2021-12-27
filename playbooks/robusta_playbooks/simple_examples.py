@@ -20,7 +20,7 @@ def test_pod_orm(event: PodEvent):
     logging.info(f"pod deleted")
 
 
-class EchoParams(BaseModel):
+class EchoParams(ActionParams):
     message: str
 
 

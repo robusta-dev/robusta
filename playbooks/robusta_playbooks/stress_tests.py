@@ -1,13 +1,22 @@
 from robusta.api import *
 
 
-class StressTestParams(BaseModel):
+class StressTestParams(ActionParams):
+    """
+    :var n: Number of requests to run.
+    :var url: In cluster target url.
+    """
     n: int = 1000
     url: str
 
 
 @action
 def http_stress_test(event: ExecutionBaseEvent, action_params: StressTestParams):
+    """
+    Run http stress test in your cluster.
+
+    Create a finding with the test results.
+    """
     # TODO: remove timeout?
     output = RobustaJob.run_simple_job(
         "williamyeh/hey", f"/hey -n {action_params.n} {action_params.url}", 120

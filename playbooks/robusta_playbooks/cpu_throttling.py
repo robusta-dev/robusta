@@ -3,6 +3,11 @@ from robusta.api import *
 
 @action
 def cpu_throttling_analysis_enricher(event: PodEvent):
+    """
+    Enrich the finding with a deep analysis for the cause of the CPU throttling.
+
+    Includes recommendations for the identified cause.
+    """
     pod = event.get_pod()
     if not pod:
         logging.error(f"cannot run CPUThrottlingAnalysis on event with no pod: {event}")

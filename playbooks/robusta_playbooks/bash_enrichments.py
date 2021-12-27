@@ -3,6 +3,10 @@ from robusta.api import *
 
 @action
 def pod_bash_enricher(event: PodEvent, params: BashParams):
+    """
+    Execute the specified bash command on the target **pod**.
+    Enrich the finding with the command results.
+    """
     pod = event.get_pod()
     if not pod:
         logging.error(f"cannot run PodBashEnricher on event with no pod: {event}")
@@ -17,6 +21,10 @@ def pod_bash_enricher(event: PodEvent, params: BashParams):
 
 @action
 def node_bash_enricher(event: NodeEvent, params: BashParams):
+    """
+    Execute the specified bash command on the target **node**.
+    Enrich the finding with the command results.
+    """
     node = event.get_node()
     if not node:
         logging.error(f"cannot run NodeBashEnricher on event with no node: {event}")

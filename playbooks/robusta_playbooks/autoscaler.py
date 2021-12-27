@@ -3,24 +3,30 @@ from math import ceil
 from robusta.api import *
 
 
-class ScaleHPAParams(BaseModel):
-    hpa_name: str
-    hpa_namespace: str
+class ScaleHPAParams(ActionParams):
+    """
+    :var max_replicas: New max_replicas to set this HPA to.
+    """
     max_replicas: int
 
 
 @action
 def scale_hpa_callback(event: HorizontalPodAutoscalerEvent, params: ScaleHPAParams):
+    """
+    Update the max_replicas of this HPA to the specified value.
+
+    Usually used as a callback action, when the HPA reached it's max_replicas limit.
+    """
     hpa = event.get_horizontalpodautoscaler()
     if not hpa:
         logging.info(f"scale_hpa_callback - no hpa on event: {event}")
         return
 
     hpa.spec.maxReplicas = params.max_replicas
-    hpa.replaceNamespacedHorizontalPodAutoscaler(params.hpa_name, params.hpa_namespace)
+    hpa.replaceNamespacedHorizontalPodAutoscaler(hpa.metadata.name, hpa.metadata.namespace)
     finding = Finding(
-        title=f"Max replicas for HPA *{params.hpa_name}* "
-        f"in namespace *{params.hpa_namespace}* updated to: *{params.max_replicas}*",
+        title=f"Max replicas for HPA *{hpa.metadata.name}* "
+        f"in namespace *{hpa.metadata.namespace}* updated to: *{params.max_replicas}*",
         severity=FindingSeverity.INFO,
         source=FindingSource.PROMETHEUS,
         aggregation_key="scale_hpa_callback",
@@ -28,7 +34,10 @@ def scale_hpa_callback(event: HorizontalPodAutoscalerEvent, params: ScaleHPAPara
     event.add_finding(finding)
 
 
-class HPALimitParams(BaseModel):
+class HPALimitParams(ActionParams):
+    """
+    :var increase_pct: Increase the HPA max_replicas by this percentage.
+    """
     increase_pct: int = 20
 
 
@@ -36,6 +45,11 @@ class HPALimitParams(BaseModel):
 def alert_on_hpa_reached_limit(
     event: HorizontalPodAutoscalerChangeEvent, action_params: HPALimitParams
 ):
+    """
+    Create a finding when HPA reaches it's max_replicas.
+
+    Add a callback button, which increases the HPA max_replicas limit.
+    """
     logging.info(
         f"running alert_on_hpa_reached_limit: {event.obj.metadata.name} ns: {event.obj.metadata.namespace}"
     )
@@ -58,8 +72,6 @@ def alert_on_hpa_reached_limit(
         f"Update HPA max replicas to: {new_max_replicas_suggestion}": CallbackChoice(
             action=scale_hpa_callback,
             action_params=ScaleHPAParams(
-                hpa_name=hpa.metadata.name,
-                hpa_namespace=hpa.metadata.namespace,
                 max_replicas=new_max_replicas_suggestion,
             ),
         )

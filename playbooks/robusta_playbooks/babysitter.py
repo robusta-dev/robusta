@@ -10,7 +10,11 @@ from hikaru.meta import DiffDetail, DiffType
 from robusta.api import *
 
 
-class BabysitterConfig(BaseModel):
+class BabysitterConfig(ActionParams):
+    """
+    :var fields_to_monitor: List of yaml attributes to monitor. Matching is done using 'contains' operator.
+    :var omitted_fields: List of yaml attributes changes to ignore.
+    """
     fields_to_monitor: List[str] = ["spec"]
     omitted_fields: List[str] = [
         "status",
@@ -22,8 +26,10 @@ class BabysitterConfig(BaseModel):
 
 @action
 def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfig):
-    """Track changes to a k8s resource and send the changes to the configured sinks."""
-
+    """
+    Track changes to a k8s resource.
+    Send the diff as a finding
+    """
     filtered_diffs = []
     obj = duplicate_without_fields(event.obj, config.omitted_fields)
     old_obj = duplicate_without_fields(event.old_obj, config.omitted_fields)
