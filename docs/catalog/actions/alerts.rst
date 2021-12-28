@@ -37,7 +37,7 @@ Lets look at the simplest possible configuration in ``values.yaml`` which instru
      - default_enricher: {}
 
 
-The above configuration isn't just forward prometheus alerts to the configured sinks.
+The above configuration just forward prometheus alerts to the configured sinks.
 We didn't add any special enrichment yet.
 Below you can see how the default alert information looks in Slack:
 
