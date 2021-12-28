@@ -7,6 +7,7 @@ class ScaleHPAParams(ActionParams):
     """
     :var max_replicas: New max_replicas to set this HPA to.
     """
+
     max_replicas: int
 
 
@@ -15,7 +16,7 @@ def scale_hpa_callback(event: HorizontalPodAutoscalerEvent, params: ScaleHPAPara
     """
     Update the max_replicas of this HPA to the specified value.
 
-    Usually used as a callback action, when the HPA reached it's max_replicas limit.
+    Usually used as a callback action, when the HPA reaches the max_replicas limit.
     """
     hpa = event.get_horizontalpodautoscaler()
     if not hpa:
@@ -23,7 +24,9 @@ def scale_hpa_callback(event: HorizontalPodAutoscalerEvent, params: ScaleHPAPara
         return
 
     hpa.spec.maxReplicas = params.max_replicas
-    hpa.replaceNamespacedHorizontalPodAutoscaler(hpa.metadata.name, hpa.metadata.namespace)
+    hpa.replaceNamespacedHorizontalPodAutoscaler(
+        hpa.metadata.name, hpa.metadata.namespace
+    )
     finding = Finding(
         title=f"Max replicas for HPA *{hpa.metadata.name}* "
         f"in namespace *{hpa.metadata.namespace}* updated to: *{params.max_replicas}*",
@@ -38,6 +41,7 @@ class HPALimitParams(ActionParams):
     """
     :var increase_pct: Increase the HPA max_replicas by this percentage.
     """
+
     increase_pct: int = 20
 
 
