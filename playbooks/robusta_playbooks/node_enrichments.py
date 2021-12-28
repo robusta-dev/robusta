@@ -16,6 +16,9 @@ def pod_row(pod: Pod) -> List[str]:
 
 @action
 def node_running_pods_enricher(event: NodeEvent):
+    """
+    Enrich the finding with pods running on this node, along with the 'Ready' status of each pod.
+    """
     node = event.get_node()
     if not node:
         logging.error(
@@ -35,6 +38,11 @@ def node_running_pods_enricher(event: NodeEvent):
 
 @action
 def node_allocatable_resources_enricher(event: NodeEvent):
+    """
+    Enrich the finding with the node resources available for allocation.
+
+    Can help troubleshooting node issues.
+    """
     node = event.get_node()
     if not node:
         logging.error(
@@ -62,6 +70,11 @@ def node_allocatable_resources_enricher(event: NodeEvent):
 # TODO: merge with deployment_status_enricher?
 @action
 def node_status_enricher(event: NodeEvent):
+    """
+    Enrich the finding with the node's status conditions.
+
+    Can help troubleshooting Node issues.
+    """
     if not event.get_node():
         logging.error(
             f"node_status_enricher was called on event without node : {event}"
@@ -82,7 +95,9 @@ def node_status_enricher(event: NodeEvent):
 @action
 def node_health_watcher(event: NodeChangeEvent):
     """
-    Checks for unhealthy nodes and adds useful information when a node is unhealthy.
+    Create a finding when a node becomes unhealthy.
+
+    Add useful information regarding the node's health status.
     """
     new_condition = [c for c in event.obj.status.conditions if c.type == "Ready"]
     old_condition = [c for c in event.old_obj.status.conditions if c.type == "Ready"]

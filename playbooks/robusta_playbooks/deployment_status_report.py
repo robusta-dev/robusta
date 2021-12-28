@@ -4,7 +4,18 @@ from robusta.api import *
 import requests
 
 
-class ReportParams(BaseModel):
+class ReportParams(ActionParams):
+    """
+    :var grafana_api_key: Grafana API key.
+    :var report_name: The name of the report.
+    :var fields_to_monitor: List of yaml attributes to monitor. Any field that contains one of these strings will match.
+    :var delays: List of seconds intervals in which to generate this report.
+            Specifying [60, 60] will generate this report twice, after 60 seconds and 120 seconds after the change.
+    :var reports_panel_urls: List of panel urls included in this report.
+         it's highly recommended to put relative time arguments, rather then absolute. i.e. from=now-1h&to=now
+
+    :example reports_panel_urls: ["http://MY_GRAFANA/d-solo/SOME_OTHER_DASHBOARD/.../?orgId=1&from=now-1h&to=now&panelId=3"]
+    """
     grafana_api_key: SecretStr
     report_name: str = "Deployment change report"
     fields_to_monitor: List[str] = ["image"]
@@ -42,7 +53,11 @@ def has_matching_diff(
 
 @action
 def deployment_status_report(event: DeploymentChangeEvent, action_params: ReportParams):
-    """Export configured reports, every pre-defined period"""
+    """
+    Collect predefined grafana panels screenshots, after a deployment change.
+    The report will be generated in intervals, as configured in the 'delays' parameter.
+    When the report is ready, it will be sent to the configured sinks.
+    """
     if event.operation == K8sOperationType.DELETE:
         return
 

@@ -3,22 +3,34 @@ import requests
 from robusta.api import *
 
 
-class PrometehusAlertParams(BaseModel):
+class PrometehusAlertParams(ActionParams):
+    """
+    :var alert_name: Simulated alert name.
+    :var pod_name: Pod name, for a simulated pod alert.
+    :var namespace: Pod namespace, for a simulated pod alert.
+    :var status: Simulated alert status. firing/resolved.
+    :var severity: Simulated alert severity.
+    :var description: Simulated alert description.
+    :var generator_url: Prometheus generator_url. Some enrichers, use this attribute to query Prometheus.
+    """
     alert_name: str
     pod_name: str
+    namespace: str = "default"
     status: str = "firing"
     severity: str = "error"
     description: str = "simulated prometheus alert"
-    namespace: str = "default"
     generator_url = ""
 
 
-# Usage: curl -X POST -F 'alert_name=HighCPUAlert' -F 'pod_name=robusta-runner-5d6f654bf9-jm2hx' -F 'namespace=robusta' -F 'trigger_name=prometheus_alert' http://localhost:5000/api/trigger
-# or: robusta trigger prometheus_alert alert_name=HighCPUAlert pod_name=robusta-runner-5d6f654bf9-jm2hx namespace=robusta
 @action
 def prometheus_alert(
     event: ExecutionBaseEvent, prometheus_event_data: PrometehusAlertParams
 ):
+    """
+    Simulate Prometheus alert sent to the Robusta runner.
+    Can be used for testing, when implementing actions triggered by Prometheus alerts.
+
+    """
     prometheus_event = AlertManagerEvent(
         **{
             "status": prometheus_event_data.status,

@@ -3,7 +3,10 @@ from enum import Flag
 from robusta.api import *
 
 
-class ImagePullPackParams(BaseModel):
+class ImagePullPackParams(ActionParams):
+    """
+    :var rate_limit: Rate limit the execution of this action (Seconds).
+    """
     rate_limit: int = 3600
 
 
@@ -23,6 +26,10 @@ def decompose_flag(flag: Flag) -> List[Flag]:
 
 @action
 def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackParams):
+    """
+    Create a finding when an image pull backoff occurs.
+    Extract additional information from the Kubernetes API server, and try to determine the cause for the failure.
+    """
     # Extract pod. Terminate if not found
     pod = event.get_pod()
     if pod is None:
@@ -98,7 +105,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackPar
 
     # Create and return a finding with the calculated blocks
     finding = Finding(
-        title=f"failed to pull at least one image in pod {pod_name} in namespace {namespace}",
+        title=f"Failed to pull at least one image in pod {pod_name} in namespace {namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="image_pull_backoff_reporter",
         subject=FindingSubject(pod_name, FindingSubjectType.TYPE_POD, namespace),

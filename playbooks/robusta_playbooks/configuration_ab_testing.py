@@ -3,15 +3,27 @@ from pydantic import SecretStr
 from robusta.api import *
 
 
-class ConfigurationSet(BaseModel):
+class ConfigurationSet(ActionParams):
+    """
+    :var config_set_name: The name of this configuration set. .
+    :var config_items: The yaml attributes values for this configuration set.
+
+    :example config_items:
+        "spec.template.spec.containers[0].resources.requests.cpu": 250m,
+        "spec.template.spec.containers[0].resources.requests.memory": 128Mi
+    """
     config_set_name: str
     config_items: Dict[str, str] = {}
 
 
-class ABTestingParams(BaseModel):
-    grafana_url: str = "http://kube-prometheus-stack-1616314181-grafana.default.svc"
-    grafana_api_key: SecretStr
-    grafana_dashboard_uid: str
+class ABTestingParams(GrafanaParams):
+    """
+    :var api_version: The api version of the tested resource.
+    :var kind: The kind of the tested resource. Kind can be 'Deployment'/'StatefulSet' etc
+    :var name: The name of the tested resource.
+    :var namespace: The namespace of the tested resource.
+    :var configuration_sets: List of test configurations.
+    """
     api_version: str = "v1"
     kind: str
     name: str
@@ -26,7 +38,22 @@ class ABTestingParams(BaseModel):
 
 @action
 def config_ab_testing(event: ScheduledExecutionEvent, action_params: ABTestingParams):
-    """Change configuration according to pre-defined configuration sets."""
+    """
+    Apply YAML configurations to Kubernetes resources for limited periods of time.
+
+    Adds adds grafana annotations showing when each configuration was applied.
+
+    The execution schedule is defined by the playbook trigger. (every X seconds)
+
+    Commonly used for:
+        **Troubleshooting** - Finding the first version a production bug appeared by iterating over image tags
+        **Cost/performance optimization** - Comparing the cost or performance of different deployment configurations
+
+    Note:
+         Only changing attributes that already exists in the active configuration is supported.
+
+         For example, you can change resources.requests.cpu, if that attribute already exists in the deployment.
+    """
     if len(action_params.configuration_sets) < event.recurrence:
         logging.error(
             f"No matching configuration set for recurrence {event.recurrence}"

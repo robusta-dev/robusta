@@ -61,7 +61,7 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: KubernetesDaemonsetMisscheduled
   actions:
-  - daemonset_enricher: {}
+  - daemonset_status_enricher: {}
   - daemonset_misscheduled_analysis_enricher: {}
 - triggers:
   - on_prometheus_alert:

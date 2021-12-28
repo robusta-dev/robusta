@@ -37,7 +37,7 @@ triggers:
     We chose ``on_deployment_update`` so our playbook runs every time deployments are updated
 
 actions:
-    We chose :ref:`resource_babysitter` which is a builtin action. That action has a parameter ``fields_to_monitor``.
+    We chose :ref:`Resource babysitter` which is a builtin action. That action has a parameter ``fields_to_monitor``.
 
 sinks:
     We didn't configure any sinks, so output is sent to the default sink. This is usually Slack.

@@ -2,10 +2,23 @@ from pydantic import SecretStr
 
 from robusta.api import *
 
-from pydantic.main import BaseModel
 
 
-class GitAuditParams(BaseModel):
+class GitAuditParams(ActionParams):
+    """
+    :var cluster_name: This cluster name. Changes will be audited under this cluster name.
+    :var git_url: Audit Git repository url.
+    :var git_key: Git repository deployment key with *write* access. To set this up `generate a private/public key pair for GitHub <https://docs.github.com/en/developers/overview/managing-deploy-keys#setup-2>`_.
+    :var ignored_changes: List of changes that shouldn't be audited.
+
+    :example git_url: "git@github.com:arikalon1/robusta-audit.git"
+    :example git_key: |
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        AMBhIkIOgFPMNquaRBVk57Pp1C87an7Vj7z2Phpi0KrzjdagRjTfLBIvI78wcY+C0sKKhM
+        y/kOCxQH4dNYUnLrxPb4ShNFt4Qrd/QSXFcwegfrewglmv2WrmVvmqT5pbJ3MBzI5tTZ94
+        j6siwgFUq0a/i/tWdasfadsrggERGRVESG.....
+        -----END OPENSSH PRIVATE KEY-----
+    """
     cluster_name: str
     git_url: str
     git_key: SecretStr
@@ -43,7 +56,12 @@ def obj_diff(
 
 @action
 def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditParams):
-    """Save a configuration copy to git"""
+    """
+    Audit Kubernetes resources from the cluster to Git as yaml files (cluster/namespace/resources hierarchy).
+    Monitor resource changes and save it to a dedicated Git repository.
+
+    Using this audit repository, you can easily detect unplanned changes on your clusters.
+    """
     if event.obj.kind in skipped_kinds:
         return
 

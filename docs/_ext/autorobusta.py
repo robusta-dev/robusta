@@ -191,6 +191,12 @@ class PydanticModelDirective(SphinxDirective):
         return "<value>"
 
 
+def to_name(action_name: str) -> str:
+    parts = action_name.split("_")
+    parts[0] = parts[0].capitalize()
+    return " ".join(parts)
+
+
 class RobustaActionDirective(SphinxDirective):
 
     option_spec = DummyOptionSpec()
@@ -219,39 +225,48 @@ class RobustaActionDirective(SphinxDirective):
         code = self.__get_source_code(action_definition.func)
         description = self.__get_description(action_definition)
         # possible_triggers = get_possible_triggers(action_definition.event_type)
-        possible_triggers = [
-            generator.get_highest_possible_trigger(action_definition.event_type)
-        ]
+        possible_triggers = generator.get_supported_triggers(action_definition)
+        cli_trigger = generator.get_manual_trigger_cmd(action_definition)
 
         indented_code = "\n".join(" " * 32 + l for l in code)
         indented_description = "\n".join(" " * 28 + l for l in description.split("\n"))
         indented_example = "\n".join(" " * 32 + l for l in example_yaml.split("\n"))
-        indented_triggers = "\n".join(" " * 28 + " * " + l for l in possible_triggers)
+        indented_triggers = "\n".join(" " * 28 + l for l in possible_triggers)
+
+        indented_cli_trigger_example = ""
+        if cli_trigger:
+            indented_cli_trigger_example = f"""\
+
+                        Can be triggered using the Robusta CLI:
+
+                        .. code-block:: bash \n\n{" " * 32 + cli_trigger}
+
+            """
 
         content = textwrap.dedent(
             f"""\
-            {action_definition.action_name}
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-            
+            {to_name(action_definition.action_name)}
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
             .. admonition:: Playbook Action
             
                 .. tab-set::
             
                     .. tab-item:: Description\n\n{indented_description}\n\n
             
-                    .. tab-item:: Parameters
-                        
-                        .. pydantic-model:: {params_cls_path}
-                       
-                    .. tab-item:: Supported Triggers\n\n{indented_triggers}
-                    
                     .. tab-item:: Example YAML
             
                         .. code-block:: yaml \n\n{indented_example}
                         
-                    .. tab-item:: Code
-            
-                        .. code-block:: python \n\n{indented_code}
+                    .. tab-item:: Parameters
+                        
+                        {".. pydantic-model:: " + params_cls_path if params_cls_path else "**No action parameters**"}
+                       
+                    .. tab-item:: Supported Triggers\n\n{indented_triggers} 
+                        
+                        {indented_cli_trigger_example}
+
+            | 
             """
         )
         nested_parse_with_titles(self.state, StringList(content.split("\n")), node)
@@ -268,8 +283,8 @@ class RobustaActionDirective(SphinxDirective):
         Returns new image sizes such that the image fits inside a 600x300 bounding box.
         If the image already fits inside that box then the original size is returned.
         """
-        MAX_WIDTH = 500.0
-        MAX_HEIGHT = 250.0
+        MAX_WIDTH = 1200.0
+        MAX_HEIGHT = 400.0
         if width > MAX_WIDTH:
             resize_ratio = MAX_WIDTH / width
             width *= resize_ratio

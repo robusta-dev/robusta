@@ -3,6 +3,11 @@ from robusta.api import *
 # TODO: merge with node_status_enricher?
 @action
 def deployment_status_enricher(event: DeploymentEvent):
+    """
+    Enrich the finding with deployment status conditions.
+
+    Usually these conditions can provide important information regarding possible issues.
+    """
     deployment = event.get_deployment()
     if not deployment:
         logging.error(

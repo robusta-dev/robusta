@@ -81,7 +81,12 @@ def daemonset_silence_false_alarm(event: ExecutionBaseEvent):
 
 
 @action
-def daemonset_enricher(event: DaemonSetEvent):
+def daemonset_status_enricher(event: DaemonSetEvent):
+    """
+    Enrich the finding with daemon set stats.
+
+    Includes recommendations for the identified cause.
+    """
     ds = event.get_daemonset()
     if not ds:
         logging.error(
@@ -145,6 +150,11 @@ def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
 
 @action
 def daemonset_misscheduled_smart_silencer(alert: PrometheusKubernetesAlert):
+    """
+    Silence daemonset misscheduled alert finding if it's a known false alarm.
+
+    checks if the issue issue described here: https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/
+    """
     if not alert.daemonset:
         return
     alert.stop_processing = check_for_known_mismatch_false_alarm(alert.daemonset)
@@ -152,6 +162,11 @@ def daemonset_misscheduled_smart_silencer(alert: PrometheusKubernetesAlert):
 
 @action
 def daemonset_misscheduled_analysis_enricher(event: DaemonSetEvent):
+    """
+    Enrich the alert finding with analysis and possible causes for the misscheduling, if the cause is identified.
+
+    <https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/|Learn more>
+    """
     ds = event.get_daemonset()
     if not ds:
         logging.error(

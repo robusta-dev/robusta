@@ -35,12 +35,13 @@ datadog-api-client = { version = "^1.2.0", optional = true }
 dpath = "^2.0.5"
 prometheus-client = "^0.12.0"
 pytz = "^2021.3"
+docutils="^0.17.0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
 pytest = "^6.2.4"
 python-dotenv = "^0.18.0"
-Sphinx = "^4.3.0"
+Sphinx = "^4.3.2"
 furo = "^2021.11.12"
 sphinx-autobuild = "^2021.3.14"
 sphinx-copybutton = "^0.4.0"
@@ -52,10 +53,15 @@ jsonref = "^0.2"
 Pillow = "^8.4.0"
 sphinxcontrib-mermaid = "^0.7.1"
 humanize = "^3.13.1"
+cssselect = "^1.1.0"
+pygal = "^3.0.0"
+tinycss = "^0.4"
+rsa = "^4.8"
+
 
 
 [tool.poetry.extras]
-all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "kafka-python", "prometheus-api-client", "datadog-api-client"]
+all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "kafka-python", "prometheus-api-client", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
