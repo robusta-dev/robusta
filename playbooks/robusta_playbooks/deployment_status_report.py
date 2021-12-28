@@ -8,7 +8,7 @@ class ReportParams(ActionParams):
     """
     :var grafana_api_key: Grafana API key.
     :var report_name: The name of the report.
-    :var fields_to_monitor: Monitor only the fields specified. Matching is done using 'contains' operator.
+    :var fields_to_monitor: List of yaml attributes to monitor. Any field that contains one of these strings will match.
     :var delays: List of seconds intervals in which to generate this report.
             Specifying [60, 60] will generate this report twice, after 60 seconds and 120 seconds after the change.
     :var reports_panel_urls: List of panel urls included in this report.

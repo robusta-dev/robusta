@@ -12,7 +12,7 @@ from robusta.api import *
 
 class BabysitterConfig(ActionParams):
     """
-    :var fields_to_monitor: List of yaml attributes to monitor. Matching is done using 'contains' operator.
+    :var fields_to_monitor: List of yaml attributes to monitor. Any field that contains one of these strings will match.
     :var omitted_fields: List of yaml attributes changes to ignore.
     """
     fields_to_monitor: List[str] = ["spec"]
