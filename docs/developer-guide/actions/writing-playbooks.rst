@@ -9,11 +9,122 @@ Please consider sharing your playbook by opening a PR on Github.
 
 If you are interested in creating playbooks without writing code, contact us!
 
-Playbook packages
--------------------------------------------------------------
-Before custom actions can be used, they must first be loaded into Robusta.
+Building your own playbook repository
+-----------------------------------------
+You can build your own playbook repository.
+You should build a python project with a ``pyproject.toml`` in it's root.
 
-A *playbooks package* is a directory of Python files with a special ``pyproject.toml`` file:
+An example ``pyproject.toml`` for the repository would be:
+
+.. code-block:: bash
+
+    [tool.poetry]
+    name = "my_playbook_repo"
+    version = "0.0.1"
+    description = ""
+    authors = ["USER NAME <myuser@users.noreply.github.com>"]
+
+    [tool.poetry.dependencies]
+    some-dependency = "^1.2.3"
+
+    [tool.poetry.dev-dependencies]
+    robusta-cli = "^0.8.9"
+
+    [build-system]
+    requires = ["poetry-core>=1.0.0"]
+    build-backend = "poetry.core.masonry.api"
+
+If your playbook requires additional python dependencies, list those in your ``pyproject.toml`` file
+and Robusta will install them with your playbooks repository.
+
+Your project should match the following structure:
+
+.. code-block:: yaml
+
+    root
+      pyproject.toml
+      my_playbook_repo
+        my_actions.py
+
+The package name in your ``pyproject.toml`` should match the name of the inner playbooks directory.
+(``my_playbook_repo`` on the example above)
+
+Ok, so our playbook is ready! Excellent. Now we need to deploy it.
+
+Deploying your own playbook repository
+-------------------------------------------
+As any other playbook, we have to options for loading it.
+The first, using a git repository (public or private).
+In order to do that, we have to upload our project to a git repository, and then configure it:
+
+.. code-block:: yaml
+
+    playbookRepos:
+      my_playbook_repo:
+        url: "git@github.com:my-user/my-playbook-repo.git"
+        key: |-
+          -----BEGIN OPENSSH PRIVATE KEY-----
+          ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
+          -----END OPENSSH PRIVATE KEY-----
+
+Now, Robusta will load our playbooks from this git repository.
+
+We have another option, which is more convenient while building a playbook and deploying it frequently.
+
+We can push our local playbooks repository, directly into Robusta.
+In order to do that, we have to enable playbooks persistent storage on our cluster, by setting the helm value
+``playbooksPersistentVolume`` to ``true``
+
+When Robusta is configured that way, we can use the Robusta CLI to load playbooks:
+
+.. code-block:: bash
+
+     robusta playbooks push ./my-playbooks-project-root
+
+This command will load the playbook repository into a mounted persistent volume on the Robusta runner.
+This volume is mounted to: ``/etc/robusta/playbooks/storage``
+
+Now, we just need to load this playbooks repository to the Robusta runner:
+
+.. code-block:: yaml
+
+    playbookRepos:
+      my_playbook_repo:
+        url: "file:///etc/robusta/playbooks/storage/my-playbooks-project-root"
+
+That's it!
+
+Now we can change playbooks locally, and just load them using ``robusta playbooks push ...``
+The Robusta runner watch for changes, and reload the playbooks when a change occurs.
+
+Changing Robusta's default playbooks
+----------------------------------------
+Some users may want to change Robusta's default playbooks.
+You can easily do that.
+
+Copy the default playbooks package, locally or to another git repository.
+Make your required changes.
+
+Now just configure Robusta to use your package, instead of the default one.
+Just replace the ``url`` in the ``playbookRepos`` helm value, for the ``robusta_playbooks`` repository.
+
+For example, if we have it locally:
+
+.. code-block:: yaml
+
+    playbookRepos:
+      robusta_playbooks:
+        url: "file:///etc/robusta/playbooks/storage/my-local-default-repository-copy"
+
+As described above, we will need to push this local repository to the Robusta runner:
+
+.. code-block:: bash
+
+    robusta playbooks push ./my-local-default-repository-copy
+
+Implementing your first playbook
+-------------------------------------------------------------
+Let's create our first playbooks reposirory.
 
 .. code-block:: bash
 
@@ -45,6 +156,16 @@ Load the playbooks package into Robusta:
 .. code-block:: bash
 
     robusta playbooks push example_playbooks
+
+Now, we just need to configure Robusta to use our new playbook package.
+Update the ``playbookRepos`` helm value:
+
+.. code-block:: yaml
+
+    playbookRepos:
+      example_playbooks:
+        url: "file:///etc/robusta/playbooks/storage/example_playbooks"
+
 
 Using your action
 -------------------------------------------------------------

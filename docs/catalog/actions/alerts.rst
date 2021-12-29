@@ -3,21 +3,18 @@
 Prometheus Alert Enrichment
 ##################################
 
-.. warning:: This page contains out-of-date information. It is currently being updated to reflect Robusta's new configuration format.
-
 Introduction
 --------------
 Robusta has special features for handling Prometheus alerts in Kubernetes clusters including:
 
-1. **Enrichers:** playbooks that enrich alerts with extra information based on the alert type
-2. **Silencers:** playbooks that silence noisy alerts using more advanced methods than Prometheus/AlertManager's builtin silencing feature
+1. **Enrichers:** actions that enrich alerts with extra information based on the alert type
+2. **Silencers:** actions that silence noisy alerts using more advanced methods than Prometheus/AlertManager's builtin silencing feature
 
 When trying out these features, you can leave your existing alerting Slack channel in place and add a new channel for Robusta's improved Prometheus alerts.
 This will let you compare Robusta's alerting with Prometheus' builtin alerting.
 
-These features are still in beta and therefore have been implemented differently than regular playbooks. To enable this mode
-of operation, you configure a root ``alerts_integration`` playbook in ``values.yaml`` and then add special enrichment
-and silencer playbooks underneath that playbook. In the future, this functionality will likely be merged into regular playbooks.
+Each triggered action will add enrichment data to the finding.
+After all the triggered actions are executed, the findings and enrichments will be sent to the configured sinks.
 
 Configure Robusta
 ---------------------------------
@@ -29,18 +26,23 @@ Configure Robusta
     See :ref:`Prometheus` for details.
 
 
-Lets look at the simplest possible configuration in ``values.yaml`` which instructs Robusta to forward Prometheus alerts to Slack without any enrichment:
+Lets look at the simplest possible configuration in ``values.yaml`` which instructs Robusta to forward Prometheus alerts without any special enrichment:
 
 .. code-block:: yaml
 
-  playbooks:
-  - name: "alerts_integration"
+   builtinPlaybooks:
+   - triggers:
+     - on_prometheus_alert: {}
+     actions:
+     - default_enricher: {}
 
-The above configuration isn't very useful because we haven't enriched any alerts yet.
-However, Robusta still sends default information for every alert as you can see below.
+
+The above configuration just forward prometheus alerts to the configured sinks.
+We didn't add any special enrichment yet.
+Below you can see how the default alert information looks in Slack:
 
 .. image:: /images/default-slack-enrichment.png
-  :width: 30 %
+  :width: 80 %
   :align: center
 
 Adding an Enricher
@@ -49,21 +51,25 @@ Now lets add an enricher to ``values.yaml`` which enriches the ``HostHighCPULoad
 
 .. code-block:: yaml
 
-  playbooks:
-  - name: "alerts_integration"
-    action_params:
-      alerts_config:
-      - alert_name: "HostHighCpuLoad"
-        enrichers:
-        - name: "NodeCPUAnalysis"
-        - name: "AlertDefaults"
+   builtinPlaybooks:
+   - triggers:
+     - on_prometheus_alert:
+         alert_name: HostHighCpuLoad
+     actions:
+     - node_cpu_enricher: {}
+   - triggers:
+     - on_prometheus_alert: {}
+     actions:
+     - default_enricher: {}
 
 
-When using the above yaml, all prometheus alerts are forwarded to Slack unmodified except for the ``HostHighCPULoad``
+When using the above yaml, all prometheus alerts are forwarded to the sinks unmodified except for the ``HostHighCPULoad``
 alert which is enriched as you can see below.
 
-Note that adding an enricher to a specific alert always replaces the default enricher which is called ``AlertDefaults``.
-Therefore, in the above example, we explicitly added back the ``AlertDefaults`` enricher to use both the default alert message and the enrichment.
+Note that adding an enricher to a specific alert, doesn't stop other enrichers from running.
+Enrichers will run by the order they appear in the values file.
+
+It's highly recommended to always leave the ``default_enricher`` last, to add the default information to all alerts.
 
 .. image:: /images/node-cpu-alerts-enrichment.png
   :width: 30 %
@@ -75,18 +81,25 @@ Therefore, in the above example, we explicitly added back the ``AlertDefaults`` 
 
 Make sure to check out the full list of enrichers to see what you can add.
 
-Setting the default enricher
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can change the default enricher(s) for all alerts using the ``default_enrichers`` parameter.
+If for some reason, you would like to stop processing after some enricher, you can use the ``stop`` playbook parameter:
 
 .. code-block:: yaml
 
-  playbooks:
-  - name: "alerts_integration"
-    action_params:
-      default_enrichers:
-        - name: "AlertDefaults"
+   builtinPlaybooks:
+   - triggers:
+     - on_prometheus_alert:
+         alert_name: HostHighCpuLoad
+     actions:
+     - node_cpu_enricher: {}
+     stop: True
+   - triggers:
+     - on_prometheus_alert: {}
+     actions:
+     - default_enricher: {}
+
+Using this configuration, the ``HostHighCpuLoad`` alert, will not include the default alert information.
+
 
 Adding a Silencer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -94,15 +107,18 @@ Lets silence `KubePodCrashLooping` alerts in the first ten minutes after a node 
 
 .. code-block:: yaml
 
-  playbooks:
-  - name: "alerts_integration"
-    action_params:
-      alerts_config:
-      - alert_name: "KubePodCrashLooping"
-        silencers:
-        - name: "NodeRestartSilencer"
-          params:
-            post_restart_silence: 600 # seconds
+   builtinPlaybooks:
+   - triggers:
+     - on_prometheus_alert:
+         alert_name: KubePodCrashLooping
+     actions:
+     - node_restart_silencer:
+         post_restart_silence: 600 # seconds
+   - triggers:
+     - on_prometheus_alert: {}
+     actions:
+     - default_enricher: {}
+
 
 Full example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -110,198 +126,95 @@ Here are all the above features working together:
 
 .. code-block:: yaml
 
-  playbooks:
-  - name: "alerts_integration"
-    action_params:
-      default_enrichers:
-        - name: "AlertDefaults"
-      alerts_config:
-      - alert_name: "HostHighCpuLoad"
-        enrichers:
-        - name: "NodeCPUAnalysis"
-      - alert_name: "KubeDeploymentReplicasMismatch"
-        enrichers:
-        - name: "SomeCustomEnricher"
-        - name: "AlertDefaults" # adding alert defaults as well
-      - alert_name: "KubePodCrashLooping"
-        silencers:
-        - name: "NodeRestartSilencer"
-          params:
-            post_restart_silence: 600 # seconds
+   builtinPlaybooks:
+   - triggers:
+     - on_prometheus_alert:
+         alert_name: KubePodCrashLooping
+     actions:
+     - node_restart_silencer:
+         post_restart_silence: 600 # seconds
+   - triggers:
+     - on_prometheus_alert:
+         alert_name: HostHighCpuLoad
+     actions:
+     - node_cpu_enricher: {}
+   - triggers:
+     - on_prometheus_alert: {}
+     actions:
+     - default_enricher: {}
+
 
 Available Enrichers
 -----------------------
 
-AlertDefaults
-^^^^^^^^^^^^^^^^
-Send the alert message and labels to Slack
+General Enrichers
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-NodeCPUAnalysis
-^^^^^^^^^^^^^^^^^^^^^
-Provide analysis of node cpu usage.
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.default_enricher
 
-.. note::
-    This enricher use ``prometheus``. The ``prometheus`` url can be overriden in the ``global_config`` section.
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.template_enricher
 
-    For example - ``prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"``
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.logs_enricher
 
-GraphEnricher
-^^^^^^^^^^^^^^^^^^^^^
-Display a graph of the Prometheus query which triggered the alert.
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_definition_enricher
 
-`See note above regarding the prometheus_url parameter.`
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.graph_enricher
 
-.. admonition:: Example
+Node Enrichers
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    .. image:: /images/graph-enricher.png
-      :width: 50 %
-      :align: center
+.. robusta-action:: playbooks.robusta_playbooks.node_cpu_analysis.node_cpu_enricher
 
-TemplateEnricher
-^^^^^^^^^^^^^^^^^^^^^
-Add a paragraph to the alert's description containing templated markdown. You can inject any of the alert's Prometheus labels into the markdown.
+.. robusta-action:: playbooks.robusta_playbooks.oom_killer.oom_killer_enricher
 
-A variable like ``$foo`` will be replaced by the value of the Prometheus label ``foo``. If a label isn't present then the text "<missing>" will be used instead.
+.. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_status_enricher
 
-Common variables to use are ``$alertname``, ``$deployment``, ``$namespace``, and ``$node``
+.. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_running_pods_enricher
 
-The template can include all markdown directives supported by Slack. Note that Slack markdown links use a different format than GitHub.
+.. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_allocatable_resources_enricher
 
-.. admonition:: Example
+.. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.node_bash_enricher
 
-    .. code-block:: yaml
+Pod Enrichers
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-       playbooks:
-       (...)
-          - alert_name: "ContainerVolumeUsage"
-            enrichers:
-            - name: "TemplateEnricher"
-              params:
-                template: "The alertname is $alertname and the pod is $pod"
+.. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
 
-LogsEnricher
-^^^^^^^^^^^^^^^^^^^^^
-Fetch logs related to the alert and attach them to the alert as a file.
+.. robusta-action:: playbooks.robusta_playbooks.cpu_throttling.cpu_throttling_analysis_enricher
 
-The pod to fetch logs for is determined by the alert's ``pod`` label from Prometheus.
+.. robusta-action:: playbooks.robusta_playbooks.image_pull_backoff_enricher.image_pull_backoff_reporter
 
-By default, if the alert has no label named ``pod`` then this enricher will silently do nothing. To show an explicit error, set the ``warn_on_missing_label`` parameter to ``true``
+.. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_events_enricher
 
-OOMKillerEnricher
-^^^^^^^^^^^^^^^^^^^^^
-Shows which pods were recently OOM Killed on a node
+Daemonset Enrichers
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-StackOverflowEnricher
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Add a button in Slack to search for the alert name on StackOverflow
+.. robusta-action:: playbooks.robusta_playbooks.daemonsets.daemonset_status_enricher
 
-NodeRunningPodsEnricher
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Add a list of the pods running on the node, with the pod Ready status
+.. robusta-action:: playbooks.robusta_playbooks.daemonsets.daemonset_misscheduled_analysis_enricher
 
-.. admonition:: Example
+Deployment Enrichers
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    .. image:: /images/node-running-pods.png
-      :width: 80 %
-      :align: center
+.. robusta-action:: playbooks.robusta_playbooks.deployment_enrichments.deployment_status_enricher
 
-NodeAllocatableResourcesEnricher
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Add the allocatable resources available on the node
+Other Enrichers
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. admonition:: Example
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.stack_overflow_enricher
 
-    .. image:: /images/node-allocatable-resources.png
-      :width: 80 %
-      :align: center
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.show_stackoverflow_search
 
-DaemonsetEnricher
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For daemonset related alerts, adds details about the daemonset status
-
-.. admonition:: Example
-
-    .. image:: /images/daemonset-enricher.png
-      :width: 80 %
-      :align: center
-
-DaemonsetMisscheduledAnalysis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Analyze the known Prometheus alert ``KubernetesDaemonsetMisscheduled`` and provide actionable advice on how to fix it.
-This enricher **only** displays output when it can verify that the alert is a false positive.
-
-.. admonition:: Example
-
-    .. image:: /images/daemonset-misscheduled.png
-
-PodBashEnricher
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Runs the specified bash command, on the **pod** associated with the alert. The bash command must already be installed in the target pod.
-
-.. admonition:: Example
-
-    .. code-block:: yaml
-
-       playbooks:
-       (...)
-          - alert_name: "ContainerVolumeUsage"
-            enrichers:
-            - name: "PodBashEnricher"
-              params:
-                bash_command: "df -h"
-
-    .. image:: /images/disk-usage.png
-      :width: 80 %
-      :align: center
-
-NodeBashEnricher
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Runs the specified bash command, on the **node** associated with the alert
-
-.. admonition:: Example
-
-    .. code-block:: yaml
-
-       playbooks:
-       (...)
-          - alert_name: "HostOutOfDiskSpace"
-            enrichers:
-            - name: "NodeBashEnricher"
-              params:
-                bash_command: "df -h"
-
-
-DeploymentStatusEnricher
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Adds deployment condition statuses
-
-.. admonition:: Example
-
-    .. code-block:: yaml
-
-       playbooks:
-       (...)
-          - alert_name: "KubernetesDeploymentReplicasMismatch"
-            enrichers:
-            - name: "DeploymentStatusEnricher"
-
-    .. image:: /images/deployment-status-details.png
-      :width: 100 %
-      :align: center
 
 Available Silencers
 -----------------------
 
-NodeRestartSilencer
-^^^^^^^^^^^^^^^^^^^^^^^^^
-After a node is restarted, silence alerts for pods running on it.
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.severity_silencer
 
-.. admonition:: Parameters
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.name_silencer
 
-    **post_restart_silence**: length of the silencing period in seconds; defaults to 300
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.node_restart_silencer
 
+.. robusta-action:: playbooks.robusta_playbooks.daemonsets.daemonset_misscheduled_smart_silencer
 
-DaemonsetMisscheduledSmartSilencer
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Silence the Prometheus alert ``KubernetesDaemonsetMisscheduled`` under conditions matching a known false alarm
 

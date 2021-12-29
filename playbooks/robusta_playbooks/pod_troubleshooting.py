@@ -6,7 +6,12 @@ from robusta.api import *
 from typing import List
 
 
-class StartProfilingParams(BaseModel):
+class StartProfilingParams(ActionParams):
+    """
+    :var seconds: Profiling duration.
+    :var process_name: Profiled process name prefix.
+    :var include_idle: Inclide idle threads
+    """
     seconds: int = 2
     process_name: str = ""
     include_idle: bool = False
@@ -14,6 +19,13 @@ class StartProfilingParams(BaseModel):
 
 @action
 def python_profiler(event: PodEvent, action_params: StartProfilingParams):
+    """
+    Attach a python profiler to a running pod, and run a profiling session for the specified duration.
+
+    No need to change the profiled application code, or to restart it.
+
+    Create a finding with the profiling result.
+    """
     # This should use ephemeral containers, but they aren't in GA yet. To enable them on GCP for example,
     # you need to create a brand new cluster. Therefore we're sticking with regular containers for now
     pod = event.get_pod()
@@ -71,6 +83,9 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
 
 @action
 def pod_ps(event: PodEvent):
+    """
+    Create a finding with the list of running processes on the pod.
+    """
     pod = event.get_pod()
     if not pod:
         logging.info(f"pod_ps - pod not found for event: {event}")
@@ -100,7 +115,11 @@ def pod_ps(event: PodEvent):
     event.add_finding(finding)
 
 
-class MemoryTraceParams(BaseModel):
+class MemoryTraceParams(ActionParams):
+    """
+    :var seconds: Memory allocations analysis duration.
+    :var process_substring: Inspected process name prefix.
+    """
     process_substring: str
     seconds: int = 60
 
@@ -128,6 +147,11 @@ class PythonMemorySnapshot(BaseModel):
 
 @action
 def python_memory(event: PodEvent, params: MemoryTraceParams):
+    """
+    Analyze memory allocation on the specified python process, for the specified duration.
+
+    Create a finding with the memory analysis results.
+    """
     pod = event.get_pod()
     if not pod:
         logging.info(f"python_memory - pod not found for event: {event}")
@@ -168,7 +192,13 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
     event.add_finding(finding)
 
 
-class DebuggerParams(BaseModel):
+class DebuggerParams(ActionParams):
+    """
+    :var process_substring: Debugged process name prefix.
+    :var pid: Process id of the target process.
+    :var port: Debugging port.
+    :var interactive: If more than one process is matched, interactively ask which process to debug via Slack. Note that you won't receive immediate output in Slack after clicking a button. It takes about 30-60 seconds for the playbook to finish running.
+    """
     process_substring: str = ""
     pid: int = None
     port: int = 5678
@@ -272,8 +302,22 @@ def get_process_blocks(
 @action
 def python_debugger(event: PodEvent, params: DebuggerParams):
     """
+    Attach a python debugger to a running pod.
+
+    No need to modify the python application code, or to restart the application.
+
     At the moment, exactly one process **must** match for the playbook to work. If this is not the case, run
     ``robusta playbooks trigger pod_ps name=myapp namespace=default`` and use ``pid`` instead of ``process_substring``
+
+    In few simple steps you can debug your application:
+        - Run this action on the target pod
+        - kubectl port-forward ...
+        - In VSCode do a Remote Attach to the target pod
+
+    Now you can use break points and log points in VSCode.
+
+    Note:
+        For now, only VSCode is supported.
     """
     pod = event.get_pod()
     if not pod:

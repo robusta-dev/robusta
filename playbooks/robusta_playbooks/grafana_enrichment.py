@@ -1,29 +1,4 @@
-from pydantic import SecretStr, Field
-
 from robusta.api import *
-
-
-class GrafanaAnnotationParams(ActionParams):
-    """
-    :var grafana_url: http(s) url of grafana or None for autodetection of an in-cluster grafana
-    :var grafana_api_key: grafana key with write permissions.
-    :var grafana_dashboard_uid: dashboard ID as it appears in the dashboard's url
-    :var grafana_dashboard_panel: when present, annotations will be added only to panels with this text in their title.
-
-    :var cluster_name: writen as one of the annotation's tags
-    :var custom_tags: custom tags to add to the annotation
-
-    :example grafana_url: http://grafana.namespace.svc
-    :example grafana_dashboard_uid: 09ec8aa1e996d6ffcd6817bbaff4db1b
-    """
-
-    grafana_api_key: SecretStr
-    grafana_dashboard_uid: str
-    grafana_url: str = None
-    grafana_dashboard_panel: str = None
-    cluster_name: str = None
-    cluster_zone: str = None
-    custom_tags: List[str] = None
 
 
 @action

@@ -2,7 +2,11 @@ import logging
 from robusta.api import *
 
 
-class RestartLoopParams(BaseModel):
+class RestartLoopParams(ActionParams):
+    """
+    :var restart_reason: Limit restart loops for this specific reason. If omitted, all restart reasons will be included.
+    :var rate_limit: Rate limit the execution of this action. (Seconds).
+    """
     restart_reason: str = None
     rate_limit: int = 3600
 
@@ -25,6 +29,9 @@ def get_crashing_containers(
 
 @action
 def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
+    """
+    When a pod is in restart loop, create a finding and attach the restring pod logs to it.
+    """
     pod = event.get_pod()
     if not pod:
         logging.info(f"restart_loop_reporter - no pod found on event: {event}")

@@ -17,6 +17,11 @@ OOMKill = namedtuple("OOMKill", ["datetime", "message"])
 
 @action
 def oom_killer_enricher(event: NodeEvent):
+    """
+    Enrich the finding information regarding node OOM killer.
+
+    Add the list of pods on this node that we're killed by the OOM killer.
+    """
     node = event.get_node()
     if not node:
         logging.error(

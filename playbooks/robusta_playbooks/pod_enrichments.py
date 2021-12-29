@@ -3,6 +3,9 @@ from robusta.api import *
 
 @action
 def pod_events_enricher(event: PodEvent):
+    """
+    Enrich the finding with the pod events.
+    """
     pod = event.get_pod()
     if not pod:
         logging.error(

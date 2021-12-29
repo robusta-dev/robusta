@@ -1,7 +1,14 @@
 from robusta.api import *
 
 
-class DiskBenchmarkParams(BaseModel):
+class DiskBenchmarkParams(ActionParams):
+    """
+    :var pvc_name: Name of the pvc created for the benchmark.
+    :var test_seconds: The benchmark duration.
+    :var namespace: Namespace used for the benchmark.
+    :var disk_size: The size of pvc used for the benchmark.
+    :var storage_class_name: Pvc storage class, From the available cluster storage classes. standard/fast/etc.
+    """
     pvc_name: str = "robusta-disk-benchmark"
     test_seconds: int = 20
     namespace: str = INSTALLATION_NAMESPACE
@@ -15,6 +22,11 @@ def format_float_per2(f_param):
 
 @action
 def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams):
+    """
+    Run disk benchmark in your cluster.
+    The benchmark creates a PVC, using the configured storage class, and runs the benchmark using fio.
+    For more details: https://fio.readthedocs.io/en/latest/
+    """
     pvc = PersistentVolumeClaim(
         metadata=ObjectMeta(
             name=action_params.pvc_name, namespace=action_params.namespace
@@ -70,14 +82,23 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
         )
         job = json_output["jobs"][0]
 
-        logging.info(
-            f"\nfio benchmark:\n"
-            f"Total Time: {action_params.test_seconds} Sec\n"
-            f"Read Band Width: {format_float_per2(job['read']['bw'])} KB \n"
-            f"Read IO Ops/Sec: {format_float_per2(job['read']['iops'])}\n"
-            f"Write Band Width: {format_float_per2(job['write']['bw'])} KB \n"
+        benchmark_results =             \
+            f"\nfio benchmark:\n" \
+            f"Total Time: {action_params.test_seconds} Sec\n" \
+            f"Read Band Width: {format_float_per2(job['read']['bw'])} KB \n" \
+            f"Read IO Ops/Sec: {format_float_per2(job['read']['iops'])}\n" \
+            f"Write Band Width: {format_float_per2(job['write']['bw'])} KB \n"\
             f"Write Ops/Sec: {format_float_per2(job['write']['iops'])}\n "
+
+        logging.info(benchmark_results)
+
+        finding = Finding(
+            f"Fio disk benchmark for storage class {action_params.storage_class_name}",
+            finding_type=FindingType.REPORT,
+            failure=False,
+            aggregation_key="disk_benchmark",
         )
+        finding.add_enrichment([MarkdownBlock(text=benchmark_results)])
 
     finally:
         pvc.deleteNamespacedPersistentVolumeClaim(
