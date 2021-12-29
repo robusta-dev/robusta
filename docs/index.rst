@@ -2,6 +2,9 @@ Welcome to Robusta!
 =====================
 Robusta is an open source platform for automated troubleshooting and maintenance. We turn Kubernetes expertise into re-usable code.
 
+It is basically webhooks on steroids and we wrote the interesting webhooks for you. You just enable them with
+YAML. Works with Prometheus, Kubernetes, Elasticsearch... you name it!
+
 Robusta automates everything that happens **after** you deploy your application.
 
 Examples
