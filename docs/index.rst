@@ -71,32 +71,21 @@ Examples
     See :ref:`Python debugger` for more details
 
 
-.. admonition:: Alert Insights
+.. admonition:: Chatops
 
-    .. image:: /images/node-cpu-alerts-enrichment.png
-        :width: 30 %
-        :alt: Analysis of node cpu usage, breakdown by pods
-    .. image:: /images/node-cpu-usage-vs-request.svg
-        :width: 30 %
+    .. image:: /images/alert_on_hpa_reached_limit1.png
+        :width: 600
+        :align: center
 
-    When a node has high CPU usage, analyze the node and provide actionable advice.
-
-    This is configured by default, so after installing Robusta it just works. If you configured it yourself,
-    it would look like this:
+    Allow increasing the max HPA replicas from Slack.
+    This will be sent when the HPA reaches the maximum.
 
     .. code-block:: yaml
 
         triggers:
-          - on_prometheus_alert:
-              alert_name: HostHighCpuLoad
+        - on_horizontalpodautoscaler_update: {}
         actions:
-          - node_cpu_enricher: {}
-          - node_bash_enricher:
-              bash_command: "ps aux"
-        sinks:
-          - slack
-
-    See :ref:`NODE CPU ENRICHER` for more details
+        - alert_on_hpa_reached_limit: {}
 
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
