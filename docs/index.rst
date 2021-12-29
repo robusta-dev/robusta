@@ -54,19 +54,15 @@ Examples
 
 .. admonition:: Debug pods with VSCode
 
-    Robusta can save time with manual troubleshooting too.
+    .. image:: /images/python-debugger.png
+      :width: 600
+      :align: center
 
-    Run this command to attach a Python profiler to a running pod:
+    Robusta can save time with manual troubleshooting too! Attach a Python profiler to a running pod with one command.
 
     .. code-block:: bash
 
          robusta playbooks trigger python_debugger name=myapp namespace=default process_substring=main
-
-    You will get follow up instructions in Slack:
-
-    .. image:: /images/python-debugger.png
-      :width: 600
-      :align: center
 
     See :ref:`Python debugger` for more details
 
