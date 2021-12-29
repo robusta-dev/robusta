@@ -29,21 +29,8 @@ Playbooks are configured with the ``customPlaybooks`` helm value.
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-How the playbook works
-----------------------------------
-Every playbook configuration has three parts.
 
-triggers:
-    We chose ``on_deployment_update`` so our playbook runs every time deployments are updated
-
-actions:
-    We chose :ref:`Resource babysitter` which is a builtin action. That action has a parameter ``fields_to_monitor``.
-
-sinks:
-    We didn't configure any sinks, so output is sent to the default sink. This is usually Slack.
-
-
-Testing the playbook
+Seeing the Playbook in action
 ----------------------------------
 
 1. Scale one of your deployments:
@@ -59,6 +46,19 @@ Testing the playbook
     .. image:: ../images/replicas_change.png
       :width: 600
       :align: center
+
+How the playbook works
+----------------------------------
+Every playbook configuration has three parts.
+
+triggers:
+    We chose ``on_deployment_update`` so our playbook runs every time deployments are updated
+
+actions:
+    We chose :ref:`Resource babysitter` which is a builtin action. That action has a parameter ``fields_to_monitor``.
+
+sinks:
+    We didn't configure any sinks, so output is sent to the default sink. This is usually Slack.
 
 Further customization
 ------------------------
