@@ -176,7 +176,7 @@ Next Steps
 :ref:`Ready to install Robusta? Get started! <Installation Guide>`
 
 Want a better UI for Kubernetes? Try `the Robusta UI <https://home.robusta.dev/ui/>`_. It shows all the data that
-Robusta automations can gather.
+Robusta automations gather and more.
 
 .. toctree::
    :hidden:
