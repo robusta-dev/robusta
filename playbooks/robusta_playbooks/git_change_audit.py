@@ -3,7 +3,6 @@ from pydantic import SecretStr
 from robusta.api import *
 
 
-
 class GitAuditParams(ActionParams):
     """
     :var cluster_name: This cluster name. Changes will be audited under this cluster name.
@@ -12,13 +11,8 @@ class GitAuditParams(ActionParams):
     :var ignored_changes: List of changes that shouldn't be audited.
 
     :example git_url: "git@github.com:arikalon1/robusta-audit.git"
-    :example git_key: |
-        -----BEGIN OPENSSH PRIVATE KEY-----
-        AMBhIkIOgFPMNquaRBVk57Pp1C87an7Vj7z2Phpi0KrzjdagRjTfLBIvI78wcY+C0sKKhM
-        y/kOCxQH4dNYUnLrxPb4ShNFt4Qrd/QSXFcwegfrewglmv2WrmVvmqT5pbJ3MBzI5tTZ94
-        j6siwgFUq0a/i/tWdasfadsrggERGRVESG.....
-        -----END OPENSSH PRIVATE KEY-----
     """
+
     cluster_name: str
     git_url: str
     git_key: SecretStr
