@@ -50,6 +50,8 @@ images_config = {
     "override_image_directive": True,
 }
 
+smartquotes = False
+
 autodoc_mock_imports = ["prometheus_api_client"]
 autodoc_default_options = {
     "members": True,
