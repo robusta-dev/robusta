@@ -62,7 +62,7 @@ Examples
 
     .. code-block:: bash
 
-         robusta playbooks trigger python_debugger name=myapp namespace=default process_substring=main
+         robusta playbooks trigger python_debugger name=myapp namespace=default
 
     See :ref:`Python debugger` for more details
 
