@@ -41,11 +41,22 @@ Seeing the Playbook in action
 
 2. Check the slack channel you configured when installing Robusta:
 
-.. admonition:: Example Slack Message
+.. image:: ../images/replicas_change.png
+  :width: 600
+  :align: center
 
-    .. image:: ../images/replicas_change.png
-      :width: 600
-      :align: center
+If you setup the Robusta UI, it will appear in the timeline of all alerts and changes:
+
+.. image:: ../images/ui-timeline.png
+  :width: 600
+  :align: center
+
+You can click to see the diff:
+
+.. image:: ../images/ui-diff.png
+  :width: 600
+  :align: center
+
 
 How the playbook works
 ----------------------------------
@@ -58,8 +69,8 @@ actions:
     We chose :ref:`Resource babysitter` which is a builtin action. That action has a parameter ``fields_to_monitor``.
 
 sinks:
-    We didn't configure any sinks, so output is sent to the default sink. This is usually Slack.
+    We didn't configure any sinks, so output is sent to the default sink. This is usually Slack and/or the `Robusta UI <https://home.robusta.dev/ui/>`_.
 
 Further customization
 ------------------------
-Try changing the configuration to monitors changes to a deployment's image tag.
+Try changing the configuration to monitors changes to a deployment\'s image tag.
