@@ -12,6 +12,7 @@ class Grafana:
     def __init__(self, api_key, grafana_url=None):
         """
         Create a new connection to Grafana.
+
         :param grafana_url: if None, then attempt to discover the address of an in-cluster Grafana service
         """
         if grafana_url is None:
