@@ -45,7 +45,7 @@ Seeing the Playbook in action
   :width: 600
   :align: center
 
-If you setup the Robusta UI, it will appear in the timeline of all alerts and changes:
+If you setup `Robusta UI <https://home.robusta.dev/ui/>`_, it will appear in the timeline of all alerts and changes:
 
 .. image:: ../images/ui-timeline.png
   :width: 600
