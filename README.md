@@ -3,7 +3,7 @@ Robusta is an open source platform for automated troubleshooting and maintenance
 
 Robusta automates everything that happens after you deploy your application.
 
-You can use any of our builtin actions, or easily add your own.
+You can use any of our builtin actions, or easily add your own. It is basically like Prometheus/Kubernetes webhooks on steroids and someone already wrote all the interesting webhooks for you.
 
 [Read the docs for more info!](https://docs.robusta.dev/master/)
 

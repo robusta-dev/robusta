@@ -29,6 +29,35 @@ Playbooks are configured with the ``customPlaybooks`` helm value.
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
+
+Seeing the Playbook in action
+----------------------------------
+
+1. Scale one of your deployments:
+
+.. code-block:: python
+
+   kubectl scale --replicas NEW_REPLICAS_COUNT deployments/DEPLOYMENT_NAME
+
+2. Check the slack channel you configured when installing Robusta:
+
+.. image:: ../images/replicas_change.png
+  :width: 600
+  :align: center
+
+If you setup `Robusta UI <https://home.robusta.dev/ui/>`_, it will appear in the timeline of all alerts and changes:
+
+.. image:: ../images/ui-timeline.png
+  :width: 600
+  :align: center
+
+You can click to see the diff:
+
+.. image:: ../images/ui-diff.png
+  :width: 600
+  :align: center
+
+
 How the playbook works
 ----------------------------------
 Every playbook configuration has three parts.
@@ -40,26 +69,8 @@ actions:
     We chose :ref:`Resource babysitter` which is a builtin action. That action has a parameter ``fields_to_monitor``.
 
 sinks:
-    We didn't configure any sinks, so output is sent to the default sink. This is usually Slack.
-
-
-Testing the playbook
-----------------------------------
-
-1. Scale one of your deployments:
-
-.. code-block:: python
-
-   kubectl scale --replicas NEW_REPLICAS_COUNT deployments/DEPLOYMENT_NAME
-
-2. Check the slack channel you configured when installing Robusta:
-
-.. admonition:: Example Slack Message
-
-    .. image:: ../images/replicas_change.png
-      :width: 600
-      :align: center
+    We didn't configure any sinks, so output is sent to the default sink. This is usually Slack and/or the `Robusta UI <https://home.robusta.dev/ui/>`_.
 
 Further customization
 ------------------------
-Try changing the configuration to monitors changes to a deployment's image tag.
+Try changing the configuration to monitors changes to a deployment\'s image tag.

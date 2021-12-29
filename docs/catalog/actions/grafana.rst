@@ -1,9 +1,10 @@
 Grafana
 #########################
 
-Robusta playbooks can write annotations to Grafana.
+Robusta playbooks can:
 
-A common use case is enriching existing Grafana dashboards with details on when Kubernetes resources were updated.
+1. Write annotations to Grafana
+2. Fetch graphs from Grafana and send them to Slack
 
 Prerequisites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -18,3 +19,4 @@ Builtin actions
 
 .. robusta-action:: playbooks.robusta_playbooks.grafana_enrichment.add_alert_lines_to_grafana
 
+.. robusta-action:: playbooks.robusta_playbooks.deployment_status_report.deployment_status_report

@@ -8,7 +8,7 @@ Supported sinks
 Currently four sink types are supported:
 
 * :ref:`slack`
-* robusta - send playbooks results Robusta's dedicated UI
+* `Robusta UI <https://home.robusta.dev/ui/>`_ - send playbooks results Robusta's web UI
 * kafka - send playbooks results to a Kafka topic
 * datadog - send playbooks results to the Datadog events API
 
