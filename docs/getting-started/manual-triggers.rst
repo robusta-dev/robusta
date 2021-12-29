@@ -1,27 +1,32 @@
 Manual Triggers
 ##############################
 
-So far, all the playbooks you've seen respond to events in your cluster. You can also run playbooks on demand.
+You can trigger playbooks manually to make annoying tasks re-usable.
+
+Make your tedious tasks more automatic!
+
+Example Manual Triggers
+------------------------------
+
+If you need to do an annoying manual task, someone probably wrote a Robusta action for it. For example:
+
+1. See why a pod is using high CPU by running a profiler
+2. Find memory leaks in python applications
+3. Debug a python pod with VSCode
+4. Stress-test a pod over HTTP
+5. Show recent OOM kills
+
+All these tasks can be done without Robusta, but they're annoying to do. We automated them for you.
 
 Manually triggering a playbook
 -------------------------------
-Let's profile a Python application in your cluster. Robusta itself is written in Python so we can profile that.
-
-Get the name of the robusta-runner pod:
-
-.. code-block:: bash
-
-    $ kubectl get pods -A | grep robusta-runner
-    default       robusta-runner-8f4558f9b-pcbj9
-
-
-Trigger the ``python_profiler`` playbook via the robusta cli:
+Let's manually run the ``python_profiler`` playbook:
 
 .. code-block:: bash
 
     robusta playbooks trigger python_profiler name=robusta-runner-8f4558f9b-pcbj9 namespace=default seconds=5
 
-The profiler result will be sent to the sink. Here is an example result in Slack:
+The result will be sent to the sink. Here is an example result in Slack:
 
 .. image:: /images/python-profiler.png
   :width: 600
@@ -29,7 +34,9 @@ The profiler result will be sent to the sink. Here is an example result in Slack
 
 How manual triggers work
 ----------------------------------
-``python_profiler`` is just a regular action that takes a Pod as input. It can be run automatically:
+Like every Robusta action, manual playbooks are just re-usable Python functions.
+
+The above ``python_profiler`` is a built-in Robusta action. It takes a Pod as input and can be run automatically:
 
 .. code-block:: yaml
 
@@ -42,9 +49,6 @@ How manual triggers work
             seconds: 5
 
 Or it can be run manually like we did here.
-
-With manual triggers you have to provide yourself the name and namespace of Kubernetes resources the action needs.
-We did so with the ``name`` and ``namespace`` cli parameters.
 
 Full reference
 ---------------------------------
