@@ -7,105 +7,96 @@ Robusta automates everything that happens **after** you deploy your application.
 Examples
 ~~~~~~~~~~~~~~~~~~
 
-.. tab-set::
+.. admonition:: Crashing pods
 
-    .. tab-item:: Crashing pods
+    .. image:: /images/crash-report2.png
+        :width: 700
+        :align: center
 
-        .. admonition:: Example
+    When a pod crashes, fetch the logs and send a message to Slack.
 
-            .. image:: /images/crash-report2.png
-                :width: 700
-                :align: center
+    This is configured by default, so after installing Robusta it just works. If you configured it yourself,
+    it would look like this:
 
-            When a pod crashes, fetch the logs and send a message to Slack.
+    .. code-block:: yaml
 
-            This is configured by default, so after installing Robusta it just works. If you configured it yourself,
-            it would look like this:
+        triggers:
+          - on_prometheus_alert:
+              alert_name: KubePodCrashLooping
+        actions:
+          - logs_enricher: {}
+        sinks:
+          - slack
 
-            .. code-block:: yaml
+    See :ref:`Restart loop reporter` for more details
 
-                triggers:
-                  - on_prometheus_alert:
-                      alert_name: KubePodCrashLooping
-                actions:
-                  - logs_enricher: {}
-                sinks:
-                  - slack
+.. admonition:: Change tracking
 
-            See :ref:`Restart loop reporter` for more details
+    .. image:: /images/grafana-deployment-enrichment.png
+      :width: 400
+      :align: center
 
-    .. tab-item:: Change tracking
+    Write annotations to Grafana showing when applications are updated.
 
-        .. admonition:: Example
+    Configure it like this:
 
-            .. image:: /images/grafana-deployment-enrichment.png
-              :width: 400
-              :align: center
+    .. code-block:: yaml
 
-            Write annotations to Grafana showing when applications are updated.
+        triggers:
+          - on_deployment_update: {}
+        actions:
+          - add_deployment_lines_to_grafana:
+              grafana_url: <grafana_url>
+              grafana_api_key: <grafana_api_key>
+              grafana_dashboard_uid: <which_grafana_dashboard_to_update>
 
-            Configure it like this:
+    See :ref:`Add deployment lines to grafana` for more details
 
-            .. code-block:: yaml
+.. admonition:: Debug pods with VSCode
 
-                triggers:
-                  - on_deployment_update: {}
-                actions:
-                  - add_deployment_lines_to_grafana:
-                      grafana_url: <grafana_url>
-                      grafana_api_key: <grafana_api_key>
-                      grafana_dashboard_uid: <which_grafana_dashboard_to_update>
+    Robusta can save time with manual troubleshooting too.
 
-            See :ref:`Add deployment lines to grafana` for more details
+    Run this command to attach a Python profiler to a running pod:
 
-    .. tab-item:: Alert insights
+    .. code-block:: bash
 
-        .. admonition:: Example
+         robusta playbooks trigger python_debugger name=myapp namespace=default process_substring=main
 
-            .. image:: /images/node-cpu-alerts-enrichment.png
-                :width: 30 %
-                :alt: Analysis of node cpu usage, breakdown by pods
-            .. image:: /images/node-cpu-usage-vs-request.svg
-                :width: 30 %
+    You will get follow up instructions in Slack:
 
-            When a node has high CPU usage, analyze the node and provide actionable advice.
+    .. image:: /images/python-debugger.png
+      :width: 600
+      :align: center
 
-            This is configured by default, so after installing Robusta it just works. If you configured it yourself,
-            it would look like this:
+    See :ref:`Python debugger` for more details
 
-            .. code-block:: yaml
 
-                triggers:
-                  - on_prometheus_alert:
-                      alert_name: HostHighCpuLoad
-                actions:
-                  - node_cpu_enricher: {}
-                  - node_bash_enricher:
-                      bash_command: "ps aux"
-                sinks:
-                  - slack
+.. admonition:: Alert Insights
 
-            See :ref:`NODE CPU ENRICHER` for more details
+    .. image:: /images/node-cpu-alerts-enrichment.png
+        :width: 30 %
+        :alt: Analysis of node cpu usage, breakdown by pods
+    .. image:: /images/node-cpu-usage-vs-request.svg
+        :width: 30 %
 
-    .. tab-item:: Cloud debugging
+    When a node has high CPU usage, analyze the node and provide actionable advice.
 
-        .. admonition:: Example
+    This is configured by default, so after installing Robusta it just works. If you configured it yourself,
+    it would look like this:
 
-            Robusta can save time with manual troubleshooting too.
+    .. code-block:: yaml
 
-            Run this command to attach a Python profiler to a running pod:
+        triggers:
+          - on_prometheus_alert:
+              alert_name: HostHighCpuLoad
+        actions:
+          - node_cpu_enricher: {}
+          - node_bash_enricher:
+              bash_command: "ps aux"
+        sinks:
+          - slack
 
-            .. code-block:: bash
-
-                 robusta playbooks trigger python_debugger name=myapp namespace=default process_substring=main
-
-            You will get follow up instructions in Slack:
-
-            .. image:: /images/python-debugger.png
-              :width: 600
-              :align: center
-
-            See :ref:`Python debugger` for more details
+    See :ref:`NODE CPU ENRICHER` for more details
 
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
