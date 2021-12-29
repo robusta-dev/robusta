@@ -52,21 +52,6 @@ Examples
 
     See :ref:`Add deployment lines to grafana` for more details
 
-.. admonition:: Debug pods with VSCode
-
-    .. image:: /images/python-debugger.png
-      :width: 600
-      :align: center
-
-    Robusta can save time with manual troubleshooting too! Attach a Python profiler to a running pod with one command.
-
-    .. code-block:: bash
-
-         robusta playbooks trigger python_debugger name=myapp namespace=default
-
-    See :ref:`Python debugger` for more details
-
-
 .. admonition:: Chatops
 
     .. image:: /images/alert_on_hpa_reached_limit1.png
@@ -81,6 +66,21 @@ Examples
         - on_horizontalpodautoscaler_update: {}
         actions:
         - alert_on_hpa_reached_limit: {}
+
+.. admonition:: Debug pods with VSCode
+
+    .. image:: /images/python-debugger.png
+      :width: 600
+      :align: center
+
+    Robusta can save time with manual troubleshooting too! Attach a Python profiler to a running pod with one command.
+
+    .. code-block:: bash
+
+         robusta playbooks trigger python_debugger name=myapp namespace=default
+
+    See :ref:`Python debugger` for more details
+
 
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
