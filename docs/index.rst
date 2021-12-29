@@ -7,6 +7,8 @@ Robusta automates everything that happens **after** you deploy your application.
 Examples
 ~~~~~~~~~~~~~~~~~~
 
+**Most stuff works out of the box!** Here are examples for configuring from scratch.
+
 .. admonition:: Crashing pods
 
     .. image:: /images/crash-report2.png
@@ -14,9 +16,6 @@ Examples
         :align: center
 
     When a pod crashes, fetch the logs and send a message to Slack.
-
-    This is configured by default, so after installing Robusta it just works. If you configured it yourself,
-    it would look like this:
 
     .. code-block:: yaml
 
@@ -37,8 +36,6 @@ Examples
       :align: center
 
     Write annotations to Grafana showing when applications are updated.
-
-    Configure it like this:
 
     .. code-block:: yaml
 
@@ -73,8 +70,7 @@ Examples
         :width: 600
         :align: center
 
-    Allow increasing the max HPA replicas from Slack.
-    This will be sent when the HPA reaches the maximum.
+    Increase the max HPA replicas from Slack.
 
     .. code-block:: yaml
 
