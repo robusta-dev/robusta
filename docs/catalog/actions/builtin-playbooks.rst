@@ -48,7 +48,3 @@ Stress Testing and Chaos Engineering
 .. robusta-action:: playbooks.robusta_playbooks.stress_tests.http_stress_test
 
 .. robusta-action:: playbooks.robusta_playbooks.prometheus_simulation.prometheus_alert
-
-Alert Enrichment
----------------------
-This is a special playbook that has out-of-the box knowledge about specific Prometheus alerts. See :ref:`prometheus-alert-enrichment` for details.
