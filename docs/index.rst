@@ -1,86 +1,9 @@
 Welcome to Robusta!
 =====================
-Robusta is an open source platform for automated troubleshooting and maintenance. We turn Kubernetes expertise into re-usable code.
+Robusta - investigate Kubernetes errors and respond to incidents faster!
 
-It is basically webhooks on steroids and we wrote the interesting webhooks for you. You just enable them with
-YAML. Works with Prometheus, Kubernetes, Elasticsearch... you name it!
-
-Robusta automates everything that happens **after** you deploy your application.
-
-Examples
-~~~~~~~~~~~~~~~~~~
-
-**Most stuff works out of the box!** Here are examples for configuring from scratch.
-
-.. admonition:: Crashing pods
-
-    .. image:: /images/crash-report2.png
-        :width: 700
-        :align: center
-
-    When a pod crashes, fetch the logs and send a message to Slack.
-
-    .. code-block:: yaml
-
-        triggers:
-          - on_prometheus_alert:
-              alert_name: KubePodCrashLooping
-        actions:
-          - logs_enricher: {}
-        sinks:
-          - slack
-
-    See :ref:`Restart loop reporter` for more details
-
-.. admonition:: Change tracking
-
-    .. image:: /images/grafana-deployment-enrichment.png
-      :width: 400
-      :align: center
-
-    Write annotations to Grafana showing when applications are updated.
-
-    .. code-block:: yaml
-
-        triggers:
-          - on_deployment_update: {}
-        actions:
-          - add_deployment_lines_to_grafana:
-              grafana_url: <grafana_url>
-              grafana_api_key: <grafana_api_key>
-              grafana_dashboard_uid: <which_grafana_dashboard_to_update>
-
-    See :ref:`Add deployment lines to grafana` for more details
-
-.. admonition:: Chatops
-
-    .. image:: /images/alert_on_hpa_reached_limit1.png
-        :width: 600
-        :align: center
-
-    Increase the max HPA replicas from Slack.
-
-    .. code-block:: yaml
-
-        triggers:
-        - on_horizontalpodautoscaler_update: {}
-        actions:
-        - alert_on_hpa_reached_limit: {}
-
-.. admonition:: Debug pods with VSCode
-
-    .. image:: /images/python-debugger.png
-      :width: 600
-      :align: center
-
-    Robusta can save time with manual troubleshooting too! Attach a Python profiler to a running pod with one command.
-
-    .. code-block:: bash
-
-         robusta playbooks trigger python_debugger name=myapp namespace=default
-
-    See :ref:`Python debugger` for more details
-
+Robusta is like webhooks on steroids, and we already wrote the interesting webhooks for you.
+Works with Prometheus, Kubernetes, Elasticsearch... you name it!
 
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,12 +36,90 @@ You configure automations in a three-part yaml:
         Where to send the result
         (Slack, etc)
 
+Examples
+~~~~~~~~~~~~~~~~~~
+
+**You don't actually need to configure these. They work out of the box.**
+
+Crashing pods
+^^^^^^^^^^^^^^^
+
+.. image:: /images/crash-report2.png
+    :width: 700
+    :align: center
+
+When a pod crashes, fetch the logs and send a message to Slack.
+
+.. code-block:: yaml
+
+    triggers:
+      - on_prometheus_alert:
+          alert_name: KubePodCrashLooping
+    actions:
+      - logs_enricher: {}
+    sinks:
+      - slack
+
+See :ref:`Restart loop reporter` for more details
+
+Change tracking
+^^^^^^^^^^^^^^^^^
+
+.. image:: /images/grafana-deployment-enrichment.png
+  :width: 400
+  :align: center
+
+Write annotations to Grafana showing when applications are updated.
+
+.. code-block:: yaml
+
+    triggers:
+      - on_deployment_update: {}
+    actions:
+      - add_deployment_lines_to_grafana:
+          grafana_url: <grafana_url>
+          grafana_api_key: <grafana_api_key>
+          grafana_dashboard_uid: <which_grafana_dashboard_to_update>
+
+See :ref:`Add deployment lines to grafana` for more details
+
+Chatops
+^^^^^^^^^^^^^^^^^
+
+.. image:: /images/alert_on_hpa_reached_limit1.png
+    :width: 600
+    :align: center
+
+Increase the number of replicas from Slack.
+
+.. code-block:: yaml
+
+    triggers:
+    - on_horizontalpodautoscaler_update: {}
+    actions:
+    - alert_on_hpa_reached_limit: {}
+
+Debug pods with VSCode
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. image:: /images/python-debugger.png
+  :width: 600
+  :align: center
+
+Attach a Python debugger to a running pod:
+
+.. code-block:: bash
+
+     robusta playbooks trigger python_debugger name=myapp namespace=default
+
+See :ref:`Python debugger` for more details
+
 Why Robusta
 ~~~~~~~~~~~
 
-Robusta makes troubleshooting automated, reproducible, and open source.
+Robusta automates everything that happens **after** you deploy your application.
 
-It turns expert knowledge into re-usable code so that you can:
+We turn Kubernetes expertise into re-usable automations that can:
 
 * Respond to incidents in a reproducible manner
 * Track changes and identify regressions
