@@ -10,11 +10,12 @@ Example Manual Triggers
 
 If you need to do an annoying manual task, someone probably wrote a Robusta action for it. For example:
 
-1. See why a pod is using high CPU by running a profiler
-2. Find memory leaks in python applications
-3. Debug a python pod with VSCode
-4. Stress-test a pod over HTTP
-5. Show recent OOM kills
+1. `Run a chaos engineering scenario <https://github.com/robusta-dev/robusta-chaos>`_
+2. :ref:`Debug a python pod with VSCode <Python debugger>`
+3. :ref:`See why a pod is using high CPU by running a profiler <Python profiler>`
+4. :ref:`Find memory leaks in python applications <Python memory>`
+5. Stress-test a pod over HTTP
+6. Show recent OOM kills
 
 All these tasks can be done without Robusta, but they're annoying to do. We automated them for you.
 
