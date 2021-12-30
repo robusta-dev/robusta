@@ -1,5 +1,6 @@
 {% extends '!base.html' %}
 {% block site_meta %}
+{{ super() }}
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-G03HKXT60G"></script>
 <script>
@@ -28,5 +29,4 @@
 </script>
 <noscript><p><img src="https://robustadev.matomo.cloud/matomo.php?idsite=1&amp;rec=1" style="border:0;" alt="" /></p></noscript>
 <!-- End Matomo Code -->
-{{ super() }}
 {% endblock %}
