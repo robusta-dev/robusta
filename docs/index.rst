@@ -3,88 +3,83 @@ Welcome to Robusta!
 Robusta is an open source platform for automated troubleshooting and maintenance. It turns Kubernetes expertise into
 reusable code.
 
-Robusta automates everything that happens **after** you deploy your application. It contains:
-
-1. A library of high-level actions you can use instead of writing your own webhooks or scripts.
-2. A Python library to write your own actions
-3. Preconfigured actions for common errors and Prometheus alerts
+Robusta automates everything that happens **after** you deploy your application.
 
 Examples
 ~~~~~~~~~~~~~~~~~~
-
 
 .. tab-set::
 
     .. tab-item:: Crashing pods
 
-        .. image:: /images/crash-report2.png
-            :width: 700
-            :align: center
+        .. admonition:: When a pod crashes, fetch the logs and send a message to Slack.
 
-        When a pod crashes, fetch the logs and send a message to Slack.
+            .. image:: /images/crash-report2.png
+                :width: 700
+                :align: center
 
-        .. code-block:: yaml
+            .. code-block:: yaml
 
-            triggers:
-              - on_prometheus_alert:
-                  alert_name: KubePodCrashLooping
-            actions:
-              - logs_enricher: {}
-            sinks:
-              - slack
+                triggers:
+                  - on_prometheus_alert:
+                      alert_name: KubePodCrashLooping
+                actions:
+                  - logs_enricher: {}
+                sinks:
+                  - slack
 
-        See :ref:`Restart loop reporter` for more details
+            See :ref:`Restart loop reporter` for more details
 
     .. tab-item:: Change tracking
 
-        .. image:: /images/grafana-deployment-enrichment.png
-          :width: 400
-          :align: center
+        .. admonition:: Show application updates in Grafana
 
-        Write annotations to Grafana showing when applications are updated.
+            .. image:: /images/grafana-deployment-enrichment.png
+              :width: 400
+              :align: center
 
-        .. code-block:: yaml
+            .. code-block:: yaml
 
-            triggers:
-              - on_deployment_update: {}
-            actions:
-              - add_deployment_lines_to_grafana:
-                  grafana_url: <grafana_url>
-                  grafana_api_key: <grafana_api_key>
-                  grafana_dashboard_uid: <which_grafana_dashboard_to_update>
+                triggers:
+                  - on_deployment_update: {}
+                actions:
+                  - add_deployment_lines_to_grafana:
+                      grafana_url: <grafana_url>
+                      grafana_api_key: <grafana_api_key>
+                      grafana_dashboard_uid: <which_grafana_dashboard_to_update>
 
-        See :ref:`Add deployment lines to grafana` for more details
-
+            See :ref:`Add deployment lines to grafana` for more details
 
     .. tab-item:: Chatops
 
-        .. image:: /images/alert_on_hpa_reached_limit1.png
-            :width: 600
-            :align: center
+        .. admonition:: Increase the number of replicas from Slack.
 
-        Increase the number of replicas from Slack.
+            .. image:: /images/alert_on_hpa_reached_limit1.png
+                :width: 600
+                :align: center
 
-        .. code-block:: yaml
+            .. code-block:: yaml
 
-            triggers:
-            - on_horizontalpodautoscaler_update: {}
-            actions:
-            - alert_on_hpa_reached_limit: {}
+                triggers:
+                - on_horizontalpodautoscaler_update: {}
+                actions:
+                - alert_on_hpa_reached_limit: {}
 
 
     .. tab-item:: Debug pods with VSCode
 
-        .. image:: /images/python-debugger.png
-          :width: 600
-          :align: center
+        .. admonition:: Attach a Python debugger to a running pod:
 
-        Attach a Python debugger to a running pod:
+            .. image:: /images/python-debugger.png
+              :width: 600
+              :align: center
 
-        .. code-block:: bash
 
-             robusta playbooks trigger python_debugger name=myapp namespace=default
+            .. code-block:: bash
 
-        See :ref:`Python debugger` for more details
+                 robusta playbooks trigger python_debugger name=myapp namespace=default
+
+            See :ref:`Python debugger` for more details
 
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,20 +112,24 @@ You configure automations in a three-part yaml:
         Where to send the result
         (Slack, etc)
 
-Why Robusta
-~~~~~~~~~~~
+What's in the Box
+~~~~~~~~~~~~~~~~~~~
 
-Knowledge sharing is hard.
+Robusta is essentially three things:
 
-Docker and Terraform democratize the ability to setup environments. They make the instructions for installing servers
-reusable and reproducible. They did so by turning knowledge to code.
+A Python framework for writing actions
+    More easily write Prometheus webhooks and Kubernetes scripts.
 
-Robusta does the same for error handling. Our vision is a world where every company, no matter how big or small,
-can benefit from the knowledge of the world's best experts. We strive to encapsulate their knowledge in reusable and
-reproducible code.
+50+ prebuilt actions
+    No need to write code. Just configure these with YAML.
 
-Knowledge is captured as actions. :ref:`Robusta has over 50 builtin actions <Actions>`. You can easily write your own
-in Python:
+An opinionated Prometheus configuration (optional)
+    Don't configure anything. It just works. Alert insights powered by prebuilt actions.
+
+Writing your own action
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Robusta makes it easier to write Prometheus/AlertManager webhooks
 
 .. dropdown:: View example action (Python)
     :color: light
@@ -152,6 +151,21 @@ in Python:
                 FileBlock("crashing-pod.log", pod_logs)
             ])
 
+
+
+Why Robusta
+~~~~~~~~~~~
+
+Knowledge sharing is hard.
+
+Docker and Terraform democratize the ability to setup environments. They make the instructions for installing servers
+reusable and reproducible. They did so by turning knowledge to code.
+
+Robusta does the same for error handling. Our vision is a world where every company, no matter how big or small,
+can benefit from the knowledge of the world's best experts. We strive to encapsulate their knowledge in reusable and
+reproducible code.
+
+Our vision is a world where you never question what an alert means or what you should do for it.
 
 Architecture
 ~~~~~~~~~~~~~~~~~~~~
@@ -180,6 +194,8 @@ Next Steps
 
 Want a better UI for Kubernetes? Try `the Robusta UI <https://home.robusta.dev/ui/>`_. It shows all the data that
 Robusta automations gather and more.
+
+`Star us on Github to receive updates. <https://github.com/robusta-dev/robusta/>`_
 
 .. toctree::
    :hidden:
