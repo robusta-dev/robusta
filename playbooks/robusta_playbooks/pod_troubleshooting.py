@@ -12,6 +12,7 @@ class StartProfilingParams(ActionParams):
     :var process_name: Profiled process name prefix.
     :var include_idle: Inclide idle threads
     """
+
     seconds: int = 2
     process_name: str = ""
     include_idle: bool = False
@@ -24,7 +25,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
 
     No need to change the profiled application code, or to restart it.
 
-    Create a finding with the profiling result.
+    This is powered by PySpy
     """
     # This should use ephemeral containers, but they aren't in GA yet. To enable them on GCP for example,
     # you need to create a brand new cluster. Therefore we're sticking with regular containers for now
@@ -120,6 +121,7 @@ class MemoryTraceParams(ActionParams):
     :var seconds: Memory allocations analysis duration.
     :var process_substring: Inspected process name prefix.
     """
+
     process_substring: str
     seconds: int = 60
 
@@ -199,6 +201,7 @@ class DebuggerParams(ActionParams):
     :var port: Debugging port.
     :var interactive: If more than one process is matched, interactively ask which process to debug via Slack. Note that you won't receive immediate output in Slack after clicking a button. It takes about 30-60 seconds for the playbook to finish running.
     """
+
     process_substring: str = ""
     pid: int = None
     port: int = 5678
