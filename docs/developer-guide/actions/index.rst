@@ -12,6 +12,7 @@ questions or open a `Github issue <https://github.com/robusta-dev/robusta/issues
    :maxdepth: 1
 
    writing-playbooks
+   playbook-repositories
    findings-api
    triggers-and-events
    utility-functions
