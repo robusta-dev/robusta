@@ -192,8 +192,9 @@ Next Steps
 
 :ref:`Ready to install Robusta? Get started! <Installation Guide>`
 
-Want a better UI for Kubernetes? Try `the Robusta UI <https://home.robusta.dev/ui/>`_. It shows all the data that
-Robusta automations gather and more.
+Want a better frontend for AlertManager? Try `the Robusta UI <https://home.robusta.dev/ui/>`_. It shows alerts, changes
+to your cluster, and data from Robusta. See everything on a single timeline and slice/dice by cluster, microservice,
+and alert type.
 
 `Star us on Github to receive updates. <https://github.com/robusta-dev/robusta/>`_
 
