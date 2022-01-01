@@ -47,11 +47,6 @@ Default sinks
 If a playbook doesn't specify a sink then output will be sent to the default sinks. A sink is considered default
 if it has the field `default: true` in the yaml.
 
-Current limitations
-^^^^^^^^^^^^^^^^^^^^^^^^
-The Helm chart only exposes the ability to configure one Robusta sink and one Slack sink. If you want to use capabilities
-beyond that, you will have to modify the Helm chart to enable the underlying Robusta features.
-
 Sink documentation
 ^^^^^^^^^^^^^^^^^^^
 

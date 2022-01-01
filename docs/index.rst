@@ -227,7 +227,6 @@ Robusta automations gather and more.
    :hidden:
    :glob:
 
-   user-guide/playbook-repositories
    user-guide/configuration
    user-guide/upgrade
    user-guide/robusta-cli

@@ -10,7 +10,10 @@ This page documents the important values.
 Defining playbooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Playbooks are defined using the ``customPlaybooks`` Helm value:
+Playbooks are defined using the ``customPlaybooks`` Helm value.
+
+Every playbooks has three parts: triggers, actions, and sinks. See the :ref:`example playbook <Example Playbook>` for
+an explanation.
 
 .. code-block:: yaml
 
@@ -25,9 +28,7 @@ Playbooks are defined using the ``customPlaybooks`` Helm value:
 
 Configuring triggers
 ----------------------
-In the yaml, ``triggers`` is an array, but currently it must contain exactly one entry.
-
-Most triggers support filters to further restrict when the playbook runs:
+Triggers define when a playbook runs:
 
 .. code-block:: yaml
     :emphasize-lines: 3-4
@@ -42,11 +43,11 @@ Most triggers support filters to further restrict when the playbook runs:
         sinks:
           - "main_slack_sink"
 
-These filters are almost always optional. When left out, the filter matches everything.
+.. note::
 
-Kubernetes triggers support ``name_prefix`` and ``namespace_prefix``
+    In the yaml, ``triggers`` is an array, but currently it must contain exactly one entry.
 
-Prometheus triggers support filters like ``alert_name``
+Most triggers support extra filters like ``name_prefix`` which further restricts the trigger.
 
 Multiple playbook instances
 -----------------------------------
@@ -133,38 +134,64 @@ randomness.
 Defining additional sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. warning:: This section describes the internal Robusta ``active_playbooks.yaml`` file. This functionality is not yet exposed in the Helm chart's ``values.yaml``
-
-To use sinks, first define the available named sinks in ``active_playbooks.yaml``.
+Here is a full example showing how to ocnfigure all possible sinks:
 
 .. code-block:: yaml
 
-    sinks_config:
+    sinksConfig:
     - slack_sink:
-        name: slack sink
-        api_key: "api-key from running `robusta integrations slack`"
-        slack_channel: channel1
-        default: true
-
+        name: main_slack_sink
+        slack_channel: channel-name
+        api_key: secret-key    # generated with `robusta integrations slack`
     - robusta_sink:
         name: robusta_ui_sink
-        token: "signup for a token online"
-        default: true
-
+        token: secret-api-key  # generated with `robusta gen-config`
     - kafka_sink:
         name: kafka_sink
         kafka_url: "localhost:9092"
         topic: "robusta-playbooks"
         default: false
-
     - datadog_sink:
         name: datadog_sink
         api_key: "datadog api key"
         default: false
 
-You can explicitly specify sinks per playbook, like above.
+Loading additional playbooks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you don't specify sinks for a playbook, the default sinks will be used.
+Playbook actions are loaded into Robusta using the ``playbookRepos`` Helm value.
+
+The default configuration is:
+
+.. code-block:: yaml
+
+    playbookRepos:
+      robusta_playbooks:
+        url: "file:///etc/robusta/playbooks/defaults"
+
+You can load extra playbook actions from git:
+
+.. code-block:: yaml
+
+    playbookRepos:
+      # keep the defaults enabled
+      robusta_playbooks:
+        url: "file:///etc/robusta/playbooks/defaults"
+      # we're adding the robusta chaos-engineering playbooks here
+      my_extra_playbooks:
+        url: "git@github.com:robusta-dev/robusta-chaos.git"
+        key: |-
+          -----BEGIN OPENSSH PRIVATE KEY-----
+          ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
+          -----END OPENSSH PRIVATE KEY-----
+
+
+The ``key`` should contain a deployment key, with ``read`` access. It isn't necessary for public repositories.
+
+.. note::
+
+    Robusta does not watch for changes on git repositories. Playbooks are loaded from the repository when the server
+    starts or the configuration changes.
 
 Embedded Prometheus Stack
 ^^^^^^^^^^^^^^^^^^^^^^^^^
