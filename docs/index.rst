@@ -1,7 +1,7 @@
 Welcome to Robusta!
 =====================
-Robusta is an open source platform for Kubernetes webhooks and automations. It contains a library of 50+ builtin
-actions that can be triggered on alerts, Kubernetes changes, and any other webhook.
+Robusta is an open source platform for webhooks and automations. It contains a library of 50+ builtin
+actions that can be triggered on Prometheus/AlertManager alerts, Kubernetes changes, and any other webhook.
 
 Robusta is configured in YAML and extended in Python.
 
