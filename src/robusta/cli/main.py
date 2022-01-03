@@ -105,7 +105,7 @@ def gen_config(
         help="Slack Channel",
     ),
     msteams_webhook: str = typer.Option(
-        "",
+        None,
         help="MsTeams webhook url",
     ),
     robusta_api_key: str = typer.Option(None),
@@ -145,7 +145,7 @@ def gen_config(
             )
         )
 
-    if not msteams_webhook and typer.confirm(
+    if msteams_webhook is None and typer.confirm(
         "Do you want to configure MsTeams integration ?",
         default=True,
     ):
