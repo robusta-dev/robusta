@@ -153,6 +153,7 @@ def gen_config(
             "Please insert your MsTeams webhook url", default=None,
         )
 
+    if msteams_webhook:
         sinks_config.append(
             MsTeamsSinkConfigWrapper(
                 ms_teams_sink=MsTeamsSinkParams(

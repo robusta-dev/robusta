@@ -86,6 +86,7 @@ class RobustaController:
                 "--robusta-api-key=",
                 "--no-enable-prometheus-stack",
                 "--no-disable-cloud-routing",
+                "--msteams_webhook=",
             ],
         )
         assert "Saved configuration" in logs, logs
