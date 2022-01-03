@@ -1,11 +1,17 @@
 Welcome to Robusta!
 =====================
 Robusta is an open source platform for webhooks and automations. It contains a library of 50+ builtin
-actions that can be triggered on Prometheus/AlertManager alerts, Kubernetes changes, and any other webhook.
+actions triggered on:
+
+1. AlertManager webhooks
+2. Kubernetes changes
+3. Manual triggers
+4. Much more
 
 Robusta is configured in YAML and extended in Python.
 
-Robusta automates everything that happens **after** you deploy your application.
+Robusta automates everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT
+for devops, with an emphasis on prebuilt useful automations and not just "build your own".
 
 Examples
 ~~~~~~~~~~~~~~~~~~
@@ -137,7 +143,7 @@ An opinionated Prometheus configuration (optional)
 Writing your own automations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-50+ automations are included, but you can also write your own in Python.
+Many automations are included, but you can also write your own in Python.
 
 .. dropdown:: View example action (Python)
     :color: light
@@ -160,29 +166,19 @@ Writing your own automations
             ])
 
 
-Why Robusta
-~~~~~~~~~~~
 
-We've seen big companies that implemented this in-house. We want to democratize that.
-
-We all use the same open source components in our cloud.
-
-We all have similar alerts.
-
-We're all tired of getting woken up in the middle of the night for no reason.
-
-Alternatives
+FAQ
 ~~~~~~~~~~~~~~~~~~~~
 
-Plain Webhooks
-^^^^^^^^^^^^^^^
+How is this different from webhooks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can write your own webhooks and automations without Robusta.
+This is powered by webhooks! The advantage is configuring prebuilt webhooks using YAML instead of writing
+them from scratch as code.
 
-You will have to implement everything from scratch. With Robusta you often don't need to implement anything
-if our builtin actions cover it.
+We also let you re-use the same webhook action with multiple triggers: e.g. AlertManager, the APIServer, and more.
 
-Lastly, you will have to write your own Python code for common APIs that Robusta implements for you.
+Lastly, if you do want to write a webhook action from scratch, we make it easier with our Python API.
 
 Architecture
 ~~~~~~~~~~~~~~~~~~~~

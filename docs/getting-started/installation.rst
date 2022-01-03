@@ -6,20 +6,20 @@ Robusta is installed with Helm. You can handwrite the values.yaml, but it is eas
 Helm Installation
 ------------------------------
 
-1. Generate a Robusta configuration. This will setup Slack and other integrations.
+1. Download the Helm chart and generate a Robusta configuration. This will setup Slack and other integrations.
 
 .. code-block:: bash
 
+   helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
    python3 -m pip install -U robusta-cli --no-cache
    robusta gen-config
 
 2. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
 
-3. Install Robusta using `Helm <https://helm.sh/>`_:
+3. Install Robusta using Helm:
 
 .. code-block:: bash
 
-    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
     helm install robusta robusta/robusta -f ./generated_values.yaml
 
 4. Verify that Robusta installed two deployments in the current namespace:
