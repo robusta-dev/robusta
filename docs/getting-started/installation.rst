@@ -66,3 +66,5 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 .. code-block:: python
 
    kubectl delete deployment crashpod
+
+This example was pretty basic. :ref:`Let's see a more complicated example. Something you can't do easily without Robusta. <Example Playbook>`
