@@ -1,13 +1,22 @@
 # About Robusta
-Robusta is an open source platform for automated troubleshooting and maintenance. We turn Kubernetes expertise into re-usable code.
+Robusta is an open source platform for webhooks and automations. It contains a library of 50+ builtin
+actions triggered on:
 
-Robusta automates everything that happens after you deploy your application.
+1. AlertManager webhooks
+2. Kubernetes changes
+3. Manual triggers
+4. Much more
 
-You can use any of our builtin actions, or easily add your own. It is basically like Prometheus/Kubernetes webhooks on steroids and someone already wrote all the interesting webhooks for you.
+Robusta is configured in YAML and extended in Python.
+
+Robusta automates everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT
+for devops, with an emphasis on prebuilt useful automations and not just "build your own".
 
 [Read the docs for more info!](https://docs.robusta.dev/master/)
 
 ## Examples
+[For screenshots, see the docs](https://docs.robusta.dev/master/).
+
 You can monitor crashing pods and send their logs to Slack:
 
 ```yaml
