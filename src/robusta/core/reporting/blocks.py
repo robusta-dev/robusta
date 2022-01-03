@@ -227,15 +227,17 @@ class TableBlock(BaseBlock):
         return [list(map(lambda column_value: str(column_value), row)) for row in rows]
 
     def to_markdown(self) -> MarkdownBlock:
+        return MarkdownBlock(f"```\n{self.to_table_string()}\n```")
+
+    def to_table_string(self) -> str:
         rendered_rows = self.__to_strings_rows(self.render_rows())
         col_max_width = self.__calc_max_width(self.headers, rendered_rows)
-        table = tabulate(
+        return tabulate(
             rendered_rows,
             headers=self.headers,
             tablefmt="presto",
             maxcolwidths=col_max_width,
         )
-        return MarkdownBlock(f"```\n{table}\n```")
 
     def render_rows(self) -> List[List]:
         if self.column_renderers is None:

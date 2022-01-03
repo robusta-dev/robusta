@@ -6,6 +6,7 @@ from ..sinks.datadog.datadog_sink import DataDogSinkConfigWrapper
 from ..sinks.kafka.kafka_sink import KafkaSinkConfigWrapper
 from ..sinks.robusta.robusta_sink import RobustaSinkConfigWrapper
 from ..sinks.slack.slack_sink import SlackSinkConfigWrapper
+from ..sinks.msteams.msteams_sink import MsTeamsSinkConfigWrapper
 
 
 class PlaybookRepo(BaseModel):
@@ -25,6 +26,7 @@ class RunnerConfig(BaseModel):
                 SlackSinkConfigWrapper,
                 DataDogSinkConfigWrapper,
                 KafkaSinkConfigWrapper,
+                MsTeamsSinkConfigWrapper,
             ]
         ]
     ]
