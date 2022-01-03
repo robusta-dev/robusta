@@ -7,6 +7,7 @@ class RestartLoopParams(ActionParams):
     :var restart_reason: Limit restart loops for this specific reason. If omitted, all restart reasons will be included.
     :var rate_limit: Rate limit the execution of this action. (Seconds).
     """
+
     restart_reason: str = None
     rate_limit: int = 3600
 
@@ -30,7 +31,7 @@ def get_crashing_containers(
 @action
 def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
     """
-    When a pod is in restart loop, create a finding and attach the restring pod logs to it.
+    When a pod is in restart loop, debug the issue, fetch the logs, and send useful information on the restart
     """
     pod = event.get_pod()
     if not pod:

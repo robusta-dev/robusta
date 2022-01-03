@@ -1,9 +1,17 @@
 Welcome to Robusta!
 =====================
-Robusta is an open source platform for automated troubleshooting and maintenance. It turns Kubernetes expertise into
-reusable code.
+Robusta is an open source platform for webhooks and automations. It contains a library of 50+ builtin
+actions triggered on:
 
-Robusta automates everything that happens **after** you deploy your application.
+1. AlertManager webhooks
+2. Kubernetes changes
+3. Manual triggers
+4. Much more
+
+Robusta is configured in YAML and extended in Python.
+
+Robusta automates everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT
+for devops, with an emphasis on prebuilt useful automations and not just "build your own".
 
 Examples
 ~~~~~~~~~~~~~~~~~~
@@ -112,24 +120,30 @@ You configure automations in a three-part yaml:
         Where to send the result
         (Slack, etc)
 
+Automations run via webhook so if they fail it wont bring down your environment.
+
 What's in the Box
 ~~~~~~~~~~~~~~~~~~~
 
-Robusta is essentially three things:
+Robusta has several components:
 
-A Python framework for writing actions
-    More easily write Prometheus webhooks and Kubernetes scripts.
+A Python framework for writing better webhooks and automations
+    Robusta handles the plumbing so you can focus on the logic.
 
-50+ prebuilt actions
-    No need to write code. Just configure these with YAML.
+50+ prebuilt webhooks and automations for common actions
+    No need to write code. Just enable these with YAML.
 
 An opinionated Prometheus configuration (optional)
-    Don't configure anything. It just works. Alert insights powered by prebuilt actions.
+    Don't configure anything. It just works. Better alerts + insights.
 
-Writing your own action
-~~~~~~~~~~~~~~~~~~~~~~~~
+`A better frontend for AlertManager <https://home.robusta.dev/ui/>`_ (optional)
+    We put your existing alerts on a timeline and let you slice and dice them. You gain visibility into
+    Kubernetes changes that occurred before an alert fired. And more.
 
-Robusta makes it easier to write Prometheus/AlertManager webhooks
+Writing your own automations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Many automations are included, but you can also write your own in Python.
 
 .. dropdown:: View example action (Python)
     :color: light
@@ -153,19 +167,18 @@ Robusta makes it easier to write Prometheus/AlertManager webhooks
 
 
 
-Why Robusta
-~~~~~~~~~~~
+FAQ
+~~~~~~~~~~~~~~~~~~~~
 
-Knowledge sharing is hard.
+How is this different from webhooks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Docker and Terraform democratize the ability to setup environments. They make the instructions for installing servers
-reusable and reproducible. They did so by turning knowledge to code.
+This is powered by webhooks! The advantage is configuring prebuilt webhooks using YAML instead of writing
+them from scratch as code.
 
-Robusta does the same for error handling. Our vision is a world where every company, no matter how big or small,
-can benefit from the knowledge of the world's best experts. We strive to encapsulate their knowledge in reusable and
-reproducible code.
+We also let you re-use the same webhook action with multiple triggers: e.g. AlertManager, the APIServer, and more.
 
-Our vision is a world where you never question what an alert means or what you should do for it.
+Lastly, if you do want to write a webhook action from scratch, we make it easier with our Python API.
 
 Architecture
 ~~~~~~~~~~~~~~~~~~~~
