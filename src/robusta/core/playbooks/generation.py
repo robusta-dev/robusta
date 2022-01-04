@@ -70,7 +70,7 @@ class ExamplesGenerator:
             required: List[str] = action.params_type.schema().get("required", [])
             for field in required:
                 action_params_sample = (
-                    action_params_sample + f" --{field}={field.upper()}"
+                    action_params_sample + f" {field}={field.upper()}"
                 )
 
         if action.event_type.__name__ == "ExecutionBaseEvent":

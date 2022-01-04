@@ -7,7 +7,6 @@ So you're ready to extend Robusta with a custom action. Exciting stuff.
 questions or open a `Github issue <https://github.com/robusta-dev/robusta/issues>`_
 
 
-
 .. toctree::
    :maxdepth: 1
 
