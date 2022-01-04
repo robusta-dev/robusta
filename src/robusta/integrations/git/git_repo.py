@@ -86,7 +86,7 @@ class GitRepo:
         os.chmod(key_file_name, 0o400)
         if not os.path.exists(SSH_ROOT_DIR):
             os.mkdir(SSH_ROOT_DIR)
-        os.system(f"ssh-keyscan -H github.com >> {SSH_ROOT_DIR}/known_hosts")
+        os.system(f"ssh-keyscan -H github.com bitbucket.org >> {SSH_ROOT_DIR}/known_hosts")
         return key_file_name
 
     @staticmethod
