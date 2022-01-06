@@ -17,12 +17,9 @@ from kubernetes import config
 from pydantic import BaseModel
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
-from ..core.sinks.robusta.robusta_sink import (
-    RobustaSinkConfigWrapper,
-    RobustaSinkParams,
-)
-from ..core.sinks.slack.slack_sink import SlackSinkConfigWrapper, SlackSinkParams
-from ..core.sinks.msteams.msteams_sink import MsTeamsSinkConfigWrapper, MsTeamsSinkParams
+from ..core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrapper, MsTeamsSinkParams
+from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
+from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
 from .playbooks_cmd import app as playbooks_commands

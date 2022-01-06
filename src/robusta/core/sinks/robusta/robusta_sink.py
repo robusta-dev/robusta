@@ -2,47 +2,17 @@ import base64
 import json
 import logging
 import time
-import traceback
 import threading
 from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetList
 from typing import List, Dict
-from pydantic import BaseModel
 
-from ..sink_config import SinkConfigBase
-from ..sink_base_params import SinkBaseParams
+from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from ...model.env_vars import DISCOVERY_PERIOD_SEC
 from ...model.services import ServiceInfo
 from ...reporting.base import Finding
 from .dal.supabase_dal import SupabaseDal
 from ..sink_base import SinkBase
 from ...discovery.top_service_resolver import TopServiceResolver
-
-
-class RobustaSinkParams(SinkBaseParams):
-    token: str
-
-
-class RobustaSinkConfigWrapper(SinkConfigBase):
-    robusta_sink: RobustaSinkParams
-
-    def get_name(self) -> str:
-        return self.robusta_sink.name
-
-    def get_params(self) -> SinkBaseParams:
-        return self.robusta_sink
-
-    def create_sink(
-        self, account_id: str, cluster_name: str, signing_key: str
-    ) -> SinkBase:
-        return RobustaSink(self, account_id, cluster_name, signing_key)
-
-
-class RobustaToken(BaseModel):
-    store_url: str
-    api_key: str
-    account_id: str
-    email: str
-    password: str
 
 
 class RobustaSink(SinkBase):

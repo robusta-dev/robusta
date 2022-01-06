@@ -1,10 +1,10 @@
 import logging
 from collections import defaultdict
-from pydantic.main import BaseModel
 from typing import List, Dict, Optional
 
-from ..core.sinks.robusta.robusta_sink import RobustaSinkConfigWrapper
+from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper
 from ..core.sinks.sink_config import SinkConfigBase
+from ..core.sinks.sink_factory import SinkFactory
 from ..integrations.scheduled.playbook_scheduler_manager import (
     PlaybooksSchedulerManager,
 )
@@ -72,8 +72,8 @@ class SinksRegistry:
                     logging.info(
                         f"Adding {type(sink_config)} sink named {sink_config.get_name()}"
                     )
-                    new_sinks[sink_config.get_name()] = sink_config.create_sink(
-                        account_id, cluster_name, signing_key
+                    new_sinks[sink_config.get_name()] = SinkFactory.create_sink(
+                        sink_config, account_id, cluster_name, signing_key
                     )
                 elif (
                     sink_config.get_params() != new_sinks[sink_config.get_name()].params
@@ -82,8 +82,8 @@ class SinksRegistry:
                         f"Updating {type(sink_config)} sink named {sink_config.get_name()}"
                     )
                     new_sinks[sink_config.get_name()].stop()
-                    new_sinks[sink_config.get_name()] = sink_config.create_sink(
-                        account_id, cluster_name, signing_key
+                    new_sinks[sink_config.get_name()] = SinkFactory.create_sink(
+                        sink_config, account_id, cluster_name, signing_key
                     )
             except Exception as e:
                 logging.error(

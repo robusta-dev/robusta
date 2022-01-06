@@ -1,33 +1,11 @@
 import json
 import logging
-
 from kafka import KafkaProducer
 
-from ..sink_base_params import SinkBaseParams
-from ..sink_config import SinkConfigBase
+from .kafka_sink_params import KafkaSinkConfigWrapper
 from ...reporting.blocks import KubernetesDiffBlock, JsonBlock
 from ...reporting.base import Finding, Enrichment
 from ..sink_base import SinkBase
-
-
-class KafkaSinkParams(SinkBaseParams):
-    kafka_url: str
-    topic: str
-
-
-class KafkaSinkConfigWrapper(SinkConfigBase):
-    kafka_sink: KafkaSinkParams
-
-    def get_name(self) -> str:
-        return self.kafka_sink.name
-
-    def get_params(self) -> SinkBaseParams:
-        return self.kafka_sink
-
-    def create_sink(
-        self, account_id: str, cluster_name: str, signing_key: str
-    ) -> SinkBase:
-        return KafkaSink(self)
 
 
 class KafkaSink(SinkBase):

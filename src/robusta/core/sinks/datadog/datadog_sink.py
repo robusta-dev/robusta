@@ -1,8 +1,6 @@
-import json
 import logging
 import time
 
-from pydantic import BaseModel
 from datadog_api_client.v1 import ApiClient, ApiException, Configuration
 from datadog_api_client.v1.api import events_api
 from datadog_api_client.v1.models import *
@@ -10,8 +8,7 @@ from datadog_api_client.v1.models import *
 from typing import List
 from tabulate import tabulate
 
-from ..sink_config import SinkConfigBase
-from ..sink_base_params import SinkBaseParams
+from .datadog_sink_params import DataDogSinkConfigWrapper
 from ...reporting.blocks import (
     KubernetesDiffBlock,
     JsonBlock,
@@ -28,25 +25,6 @@ from ...reporting.base import (
     FindingSeverity,
 )
 from ..sink_base import SinkBase
-
-
-class DataDogSinkParams(SinkBaseParams):
-    api_key: str
-
-
-class DataDogSinkConfigWrapper(SinkConfigBase):
-    datadog_sink: DataDogSinkParams
-
-    def get_name(self) -> str:
-        return self.datadog_sink.name
-
-    def get_params(self) -> SinkBaseParams:
-        return self.datadog_sink
-
-    def create_sink(
-        self, account_id: str, cluster_name: str, signing_key: str
-    ) -> SinkBase:
-        return DataDogSink(self, cluster_name)
 
 
 class DataDogSink(SinkBase):
