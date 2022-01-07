@@ -5,6 +5,7 @@ from enum import Enum
 class SinkType(Enum):
     ROBUSTA = "robusta"
     SLACK = "slack"
+    MSTEAMS = "msteams"
     KAFKA = "kafka"
     DATADOG = "datadog"
 

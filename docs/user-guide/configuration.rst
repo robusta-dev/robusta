@@ -134,7 +134,7 @@ randomness.
 Defining additional sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Here is a full example showing how to ocnfigure all possible sinks:
+Here is a full example showing how to configure all possible sinks:
 
 .. code-block:: yaml
 
@@ -146,6 +146,9 @@ Here is a full example showing how to ocnfigure all possible sinks:
     - robusta_sink:
         name: robusta_ui_sink
         token: secret-api-key  # generated with `robusta gen-config`
+    - ms_teams_sink:
+        name: main_ms_teams_sink
+        webhook_url: teams channel incoming webhook  # configured using teams channel connectors
     - kafka_sink:
         name: kafka_sink
         kafka_url: "localhost:9092"

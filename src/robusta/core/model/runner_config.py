@@ -2,10 +2,11 @@ from typing import List, Optional, Union, Dict
 from pydantic import BaseModel, SecretStr
 
 from ...model.playbook_definition import PlaybookDefinition
-from ..sinks.datadog.datadog_sink import DataDogSinkConfigWrapper
-from ..sinks.kafka.kafka_sink import KafkaSinkConfigWrapper
-from ..sinks.robusta.robusta_sink import RobustaSinkConfigWrapper
-from ..sinks.slack.slack_sink import SlackSinkConfigWrapper
+from ..sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
+from ..sinks.kafka.kafka_sink_params import KafkaSinkConfigWrapper
+from ..sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrapper
+from ..sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper
+from ..sinks.slack.slack_sink_params import SlackSinkConfigWrapper
 
 
 class PlaybookRepo(BaseModel):
@@ -25,6 +26,7 @@ class RunnerConfig(BaseModel):
                 SlackSinkConfigWrapper,
                 DataDogSinkConfigWrapper,
                 KafkaSinkConfigWrapper,
+                MsTeamsSinkConfigWrapper,
             ]
         ]
     ]

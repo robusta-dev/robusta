@@ -8,9 +8,12 @@ Supported sinks
 Currently four sink types are supported:
 
 * :ref:`slack`
-* `Robusta UI <https://home.robusta.dev/ui/>`_ - send playbooks results Robusta's web UI
-* kafka - send playbooks results to a Kafka topic
-* datadog - send playbooks results to the Datadog events API
+* `Robusta UI <https://home.robusta.dev/ui/>`_ - send playbooks results to Robusta's web UI
+* MS Teams - send playbooks results to an MS Teams channel webhook.
+* Kafka - send playbooks results to a Kafka topic
+* Datadog - send playbooks results to the Datadog events API
+
+For sinks configuration options see :ref:`Defining additional sinks`
 
 Formatting data for sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -27,6 +30,12 @@ The output from ``resource_babysitter`` looks like this in the different sinks:
 **Slack:**
 
     .. image:: /images/deployment-babysitter-slack.png
+      :width: 600
+      :align: center
+
+**MS Teams:**
+
+    .. image:: /images/deployment-babysitter-teams.png
       :width: 600
       :align: center
 

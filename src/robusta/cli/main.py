@@ -17,11 +17,9 @@ from kubernetes import config
 from pydantic import BaseModel
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
-from ..core.sinks.robusta.robusta_sink import (
-    RobustaSinkConfigWrapper,
-    RobustaSinkParams,
-)
-from ..core.sinks.slack.slack_sink import SlackSinkConfigWrapper, SlackSinkParams
+from ..core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrapper, MsTeamsSinkParams
+from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
+from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
 from .playbooks_cmd import app as playbooks_commands
@@ -50,7 +48,7 @@ class GlobalConfig(BaseModel):
 
 class HelmValues(BaseModel):
     globalConfig: GlobalConfig
-    sinksConfig: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper]]
+    sinksConfig: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]]
     clusterName: str
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
@@ -103,6 +101,10 @@ def gen_config(
         "",
         help="Slack Channel",
     ),
+    msteams_webhook: str = typer.Option(
+        None,
+        help="MsTeams webhook url",
+    ),
     robusta_api_key: str = typer.Option(None),
     enable_prometheus_stack: bool = typer.Option(None),
     disable_cloud_routing: bool = typer.Option(None),
@@ -117,7 +119,7 @@ def gen_config(
             default=guess_cluster_name(),
         )
 
-    sinks_config: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper]] = []
+    sinks_config: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]] = []
     if not slack_api_key and typer.confirm(
         "Do you want to configure slack integration? this is HIGHLY recommended.",
         default=True,
@@ -136,6 +138,24 @@ def gen_config(
                     name="main_slack_sink",
                     api_key=slack_api_key,
                     slack_channel=slack_channel,
+                )
+            )
+        )
+
+    if msteams_webhook is None and typer.confirm(
+        "Do you want to configure MsTeams integration ?",
+        default=True,
+    ):
+        msteams_webhook = typer.prompt(
+            "Please insert your MsTeams webhook url", default=None,
+        )
+
+    if msteams_webhook:
+        sinks_config.append(
+            MsTeamsSinkConfigWrapper(
+                ms_teams_sink=MsTeamsSinkParams(
+                    name="main_ms_teams_sink",
+                    webhook_url=msteams_webhook,
                 )
             )
         )
