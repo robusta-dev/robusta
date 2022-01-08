@@ -1,10 +1,11 @@
 Grafana
 #########################
 
-Robusta playbooks can:
+This page lists Robusta actions related to Grafana.
 
-1. Write annotations to Grafana
-2. Fetch graphs from Grafana and send them to Slack
+Like all Robusta actions, these can be triggered by Prometheus/AlertManager, Kubernetes changes, :ref:`and more <Builtin triggers>`.
+
+If you are new to Robusta, read :ref:`the tutorial <Example Playbook>` first.
 
 Prerequisites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

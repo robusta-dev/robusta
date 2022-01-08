@@ -1,6 +1,10 @@
 Triggers
 ==========
 
+This page describes the events that can trigger Robusta automations.
+
+If you are new to Robusta, see :ref:`the tutorial <Example Playbook>` first.
+
 Builtin triggers
 ^^^^^^^^^^^^^^^^^^
 
