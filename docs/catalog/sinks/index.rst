@@ -1,17 +1,19 @@
 Sinks
 ======
 
-Playbooks results can be sent to one or more sinks.
+Playbooks results can be sent to one or more sinks (destinations).
 
 Supported sinks
 ^^^^^^^^^^^^^^^^^^^^^
-Currently four sink types are supported:
+The following sinks are supported:
 
 * :ref:`slack`
 * `Robusta UI <https://home.robusta.dev/ui/>`_ - send playbooks results to Robusta's web UI
 * MS Teams - send playbooks results to an MS Teams channel webhook.
 * Kafka - send playbooks results to a Kafka topic
 * Datadog - send playbooks results to the Datadog events API
+
+**Need support for something not listed here? `Tell us and we'll add it to the code. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_ **
 
 For sinks configuration options see :ref:`Defining additional sinks`
 
