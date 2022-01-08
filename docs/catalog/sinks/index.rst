@@ -13,9 +13,9 @@ The following sinks are supported:
 * Kafka - send playbooks results to a Kafka topic
 * Datadog - send playbooks results to the Datadog events API
 
-**Need support for something not listed here? `Tell us and we'll add it to the code. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_ **
+**Need support for something not listed here?** `Tell us and we'll add it to the code. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
 
-For sinks configuration options see :ref:`Defining additional sinks`
+:ref:`Read the docs on configuring sinks. <Defining additional sinks>`
 
 Formatting data for sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
