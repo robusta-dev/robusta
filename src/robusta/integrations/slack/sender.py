@@ -21,6 +21,10 @@ SEVERITY_EMOJI_MAP = {
     FindingSeverity.INFO: ":large_green_circle:",
 }
 
+class SlackResponse(Enum):
+    OK = 'OK'
+    CHANNEL_NOT_FOUND_ERROR = 'channel_not_found'
+    UNHANDLED_ERROR = 'unhandled_error'
 
 class SlackSender:
     def __init__(
@@ -183,7 +187,7 @@ class SlackSender:
         unfurl: bool,
         sink_name: str,
         severity: FindingSeverity,
-    ):
+    ) -> SlackResponse:
         file_blocks = add_pngs_for_all_svgs(
             [b for b in report_blocks if isinstance(b, FileBlock)]
         )
@@ -211,7 +215,7 @@ class SlackSender:
 
         try:
             if attachment_blocks:
-                self.slack_client.chat_postMessage(
+                return self.slack_client.chat_postMessage(
                     channel=slack_channel,
                     text=message,
                     blocks=output_blocks,
@@ -229,14 +233,25 @@ class SlackSender:
                     unfurl_links=unfurl,
                     unfurl_media=unfurl,
                 )
+            return SlackResponse.OK
+        except SlackApiError as e:
+            if e.response.data['error'] == SlackResponse.CHANNEL_NOT_FOUND_ERROR.value:
+                logging.error(
+                    f"The channel '{slack_channel}' was not found."
+                )
+                return SlackResponse.CHANNEL_NOT_FOUND_ERROR
+            logging.error(
+                f"error sending message to slack\ne={e}\ntext={message}\nblocks={output_blocks}\nattachment_blocks={attachment_blocks}"
+            )
         except Exception as e:
             logging.error(
                 f"error sending message to slack\ne={e}\ntext={message}\nblocks={output_blocks}\nattachment_blocks={attachment_blocks}"
             )
+        return SlackResponse.UNHANDLED_ERROR
 
     def send_finding_to_slack(
         self, finding: Finding, slack_channel: str, sink_name: str, platform_enabled: bool
-    ):
+    ) -> SlackResponse:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
@@ -257,6 +272,24 @@ class SlackSender:
             else:
                 blocks.extend(enrichment.blocks)
 
-        self.__send_blocks_to_slack(
+        return self.__send_blocks_to_slack(
             blocks, attachment_blocks, finding.title, slack_channel,unfurl, sink_name, finding.severity
         )
+
+    def send_welcome_message_to_slack_channel(self, channel_name) -> bool:
+        welcome_msg = "Welcome to Robusta"
+        finding = Finding(title=welcome_msg, aggregation_key=welcome_msg)
+        finding.add_enrichment(
+            [HeaderBlock(f"You have signed up for alerts for cluster: '{self.cluster_name}'"),
+             MarkdownBlock(f"Thank you for using Robusta.dev"),
+             MarkdownBlock(
+                 f"If you have any questions or feedback feel free to write us at <mailto:support@robusta.dev|support@robusta.dev>"), ]
+            )
+        slack_response = self.send_finding_to_slack(finding, channel_name, "", False)
+        if slack_response == SlackResponse.CHANNEL_NOT_FOUND_ERROR:
+            logging.error(
+                f"The channel '{channel_name}' was not found in your workspace.\n"
+                f"This is most likely caused by a typo in the name or the wrong workspace being selected during setup."
+            )
+            return False
+        return True
