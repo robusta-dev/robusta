@@ -15,6 +15,6 @@ class Transformer:
                 # take only the data between the first '<' and last '>'
                 splits = match[1:-1].split("|")
                 if len(splits) == 2:  # don't replace unexpected strings
-                    replacement = f"[{splits[1]}]({splits[0]})"
+                    replacement = f"[{splits[1]}](<{splits[0]}>)"
                     markdown_data = markdown_data.replace(match, replacement)
         return markdown_data

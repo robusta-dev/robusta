@@ -144,7 +144,7 @@ def gen_config(
 
     if msteams_webhook is None and typer.confirm(
         "Do you want to configure MsTeams integration ?",
-        default=True,
+        default=False,
     ):
         msteams_webhook = typer.prompt(
             "Please insert your MsTeams webhook url", default=None,
@@ -185,7 +185,7 @@ def gen_config(
                 if res.status_code == 201:
                     robusta_api_key = res.json().get("token")
                     typer.echo(
-                        "\nSuccessfully registered. You can login at https://platform.robusta.dev\n",
+                        "\nSuccessfully registered.\n",
                         color="green",
                     )
                     typer.echo("A few more questions and we're done...\n")
@@ -199,6 +199,7 @@ def gen_config(
             robusta_api_key = ""
 
     account_id = str(uuid.uuid4())
+    require_eula_approval = False
     if robusta_api_key:  # if Robusta ui sink is defined, take the account id from it
         token = json.loads(base64.b64decode(robusta_api_key))
         account_id = token.get("account_id", account_id)
@@ -211,6 +212,7 @@ def gen_config(
             )
         )
         enable_platform_playbooks = True
+        require_eula_approval = True
 
     if enable_prometheus_stack is None:
         enable_prometheus_stack = typer.confirm(
@@ -227,23 +229,26 @@ def gen_config(
         )
 
         if not disable_cloud_routing:
-            eula_url = "https://api.robusta.dev/eula.html"
-            typer.echo(
-                f"\nPlease read and approve our End User License Agreement: {eula_url}"
-            )
-            eula_approved = typer.confirm(
-                "Do you accept our End User License Agreement?"
-            )
-            if not eula_approved:
-                typer.echo(
-                    "\nEnd User License Agreement rejected. Installation aborted."
-                )
-                return
+            require_eula_approval = True
 
-            try:
-                requests.get(f"{eula_url}?account_id={account_id}")
-            except Exception:
-                typer.echo(f"\nEula approval failed: {eula_url}")
+    if require_eula_approval:
+        eula_url = "https://api.robusta.dev/eula.html"
+        typer.echo(
+            f"\nPlease read and approve our End User License Agreement: {eula_url}"
+        )
+        eula_approved = typer.confirm(
+            "Do you accept our End User License Agreement?"
+        )
+        if not eula_approved:
+            typer.echo(
+                "\nEnd User License Agreement rejected. Installation aborted."
+            )
+            return
+
+        try:
+            requests.get(f"{eula_url}?account_id={account_id}")
+        except Exception:
+            typer.echo(f"\nEula approval failed: {eula_url}")
 
     signing_key = str(uuid.uuid4()).replace("_", "")
 
@@ -266,6 +271,9 @@ def gen_config(
             f"Save this file for future use. It contains your account credentials",
             fg="red",
         )
+
+    if robusta_api_key:
+        typer.secho("\nLogin to Robusta UI at https://platform.robusta.dev\n", fg="green")
 
 
 @app.command()
