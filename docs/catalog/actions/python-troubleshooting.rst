@@ -3,18 +3,13 @@ Python troubleshooting
 
 Robusta makes it easy to troubleshoot and debug Python applications running on Kubernetes.
 
+Make sure you read about :ref:`Manual Triggers` to understand how this works.
+
 Builtin actions
 ^^^^^^^^^^^^^^^^^^
 
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.python_debugger
-
-    Manually trigger with:
-
-    .. code-block:: bash
-
-         robusta playbooks trigger python_debugger name=myapp namespace=default process_substring=main
-
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.python_profiler
 
