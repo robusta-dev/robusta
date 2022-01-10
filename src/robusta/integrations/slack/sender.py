@@ -285,14 +285,11 @@ class SlackSender:
              MarkdownBlock(
                  f"If you have any questions or feedback feel free to write us at <mailto:support@robusta.dev|support@robusta.dev>"), ]
             )
-        slack_response = self.send_finding_to_slack(finding=finding, slack_channel=channel_name, sink_name="", platform_enabled=False)
+        slack_response = self.send_finding_to_slack(finding, channel_name, "", False)
         if slack_response == SlackResponse.CHANNEL_NOT_FOUND_ERROR:
             logging.error(
                 f"The channel '{channel_name}' was not found in your workspace.\n"
                 f"This is most likely caused by a typo in the name or the wrong workspace being selected during setup."
             )
             return False
-        elif slack_response == SlackResponse.OK:
-            return True
-        return False
-
+        return True
