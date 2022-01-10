@@ -28,7 +28,7 @@ class PrometheusParams(ActionParams):
     prometheus_url: str = None
 
 
-class GrafanaParams(BaseModel):
+class GrafanaParams(ActionParams):
     """
     :var grafana_url: http(s) url of grafana or None for autodetection of an in-cluster grafana
     :var grafana_api_key: grafana key with write permissions.
