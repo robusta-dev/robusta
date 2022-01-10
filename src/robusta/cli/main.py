@@ -17,6 +17,7 @@ from kubernetes import config
 from pydantic import BaseModel
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
+from ..integrations.slack import SlackSender
 from ..core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrapper, MsTeamsSinkParams
 from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
 from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
@@ -73,6 +74,17 @@ def slack_integration(
 
     if slack_channel is not None:
         replace_in_file(slack_param_file_name, "<DEFAULT_SLACK_CHANNEL>", slack_channel)
+
+
+def verify_slack_channel(slack_api_key: str, cluster_name: str, channel_name: str) -> bool:
+    NOT_CONFIGURED_FOR_VERIFICATION_CHECK = None
+    slack_sender = SlackSender(
+        slack_token=slack_api_key,
+        account_id=NOT_CONFIGURED_FOR_VERIFICATION_CHECK,
+        cluster_name=cluster_name,
+        signing_key=NOT_CONFIGURED_FOR_VERIFICATION_CHECK
+    )
+    return slack_sender.send_welcome_message_to_slack_channel(channel_name)
 
 
 def guess_cluster_name():
@@ -141,6 +153,8 @@ def gen_config(
                 )
             )
         )
+        if not verify_slack_channel(slack_api_key, cluster_name, slack_channel):
+            return
 
     if msteams_webhook is None and typer.confirm(
         "Do you want to configure MsTeams integration ?",
