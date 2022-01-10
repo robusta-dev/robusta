@@ -155,6 +155,7 @@ def gen_config(
             )
         )
         if not verify_slack_channel(slack_api_key, cluster_name, slack_channel):
+            typer.echo(f"Invalid channel \"{slack_channel}\", Installation aborted.")
             return
 
     if msteams_webhook is None and typer.confirm(
