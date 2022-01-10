@@ -25,5 +25,5 @@ class MsTeamsSink(SinkBase):
             and other.webhook_url == self.webhook_url
         )
 
-    def write_finding(self, finding: Finding):
-        MsTeamsSender.send_finding_to_ms_teams(self.webhook_url, finding)
+    def write_finding(self, finding: Finding, platform_enabled: bool):
+        MsTeamsSender.send_finding_to_ms_teams(self.webhook_url, finding, platform_enabled)

@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from typing import List, Dict, Optional
 
-from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper
+from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
 from ..core.sinks.sink_config import SinkConfigBase
 from ..core.sinks.sink_factory import SinkFactory
 from ..integrations.scheduled.playbook_scheduler_manager import (
@@ -18,9 +18,6 @@ from ..core.playbooks.actions_registry import ActionsRegistry
 
 
 class SinksRegistry:
-    sinks: Dict[str, SinkBase] = {}
-    cluster_name: str
-    default_sinks: List[str]
 
     def __init__(self, sinks: Dict[str, SinkBase]):
         self.sinks = sinks
@@ -29,6 +26,8 @@ class SinksRegistry:
             logging.warning(
                 f"No default sinks defined. By default, actions results are ignored."
             )
+        platform_sinks = [sink for sink in sinks.values() if isinstance(sink.params, RobustaSinkParams)]
+        self.platform_enabled = len(platform_sinks) > 0
 
     def get_sink_by_name(self, sink_name: str) -> Optional[SinkBase]:
         return self.sinks.get(sink_name)

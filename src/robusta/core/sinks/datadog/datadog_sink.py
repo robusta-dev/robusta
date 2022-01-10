@@ -104,7 +104,7 @@ class DataDogSink(SinkBase):
             text = text[:size_limit] + "..."
         return text
 
-    def write_finding(self, finding: Finding):
+    def write_finding(self, finding: Finding, platform_enabled: bool):
         resource = finding.subject
         body = EventCreateRequest(
             aggregation_key=finding.aggregation_key,

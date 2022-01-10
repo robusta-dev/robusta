@@ -193,7 +193,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         continue
                     # create deep copy, so that iterating on one sink won't affect the others
                     finding_copy = copy.deepcopy(finding)
-                    sink.write_finding(finding_copy)
+                    sink.write_finding(finding_copy, self.registry.get_sinks().platform_enabled)
                 except Exception:  # Failure to send to one sink shouldn't fail all
                     logging.error(
                         f"Failed to publish finding to sink {sink_name}", exc_info=True

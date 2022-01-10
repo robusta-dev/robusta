@@ -3,7 +3,9 @@ from enum import Enum
 from pydantic.main import BaseModel
 from typing import List, Dict
 
+from ..model.env_vars import ROBUSTA_UI_DOMAIN
 from ..reporting.consts import FindingSubjectType, FindingSource, FindingType
+from ...core.discovery.top_service_resolver import TopServiceResolver
 
 
 class BaseBlock(BaseModel):
@@ -72,6 +74,12 @@ class Finding:
         self.category = None  # TODO fill real category
         self.subject = subject
         self.enrichments: List[Enrichment] = []
+        self.service_key = TopServiceResolver.guess_service_key(
+            name=subject.name,
+            namespace=subject.namespace
+        )
+        uri_path = f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
+        self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
 
     def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
         if not enrichment_blocks:

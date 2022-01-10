@@ -24,7 +24,7 @@ class KafkaSink(SinkBase):
             and other.topic == self.topic
         )
 
-    def write_finding(self, finding: Finding):
+    def write_finding(self, finding: Finding, platform_enabled: bool):
         for enrichment in finding.enrichments:
             self.send_enrichment(
                 enrichment,

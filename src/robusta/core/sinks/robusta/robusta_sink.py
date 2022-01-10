@@ -62,7 +62,7 @@ class RobustaSink(SinkBase):
     def stop(self):
         self.__active = False
 
-    def write_finding(self, finding: Finding):
+    def write_finding(self, finding: Finding, platform_enabled: bool):
         self.dal.persist_finding(finding)
 
     # service discovery impl
