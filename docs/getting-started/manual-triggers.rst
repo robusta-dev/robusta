@@ -1,14 +1,17 @@
 Manual Triggers
 ##############################
 
-You can trigger playbooks manually to make annoying tasks re-usable.
+Robusta automates tasks in Kubernetes clusters with a library of re-usable actions.
 
-Make your tedious tasks more automatic!
+These actions can be triggered automatically (:ref:`when supported triggers occur <Triggers>`) or on-demand
+(manually triggered) by running a CLI command. Most actions support both types of triggers.
+
+We'll focus below on actions which are most useful when triggered manually.
 
 Example Manual Triggers
 ------------------------------
 
-If you need to do an annoying manual task, someone probably wrote a Robusta action for it. For example:
+Here are some high-level tasks included in Robusta's library of actions:
 
 1. `Run a chaos engineering scenario <https://github.com/robusta-dev/robusta-chaos>`_
 2. :ref:`Debug a python pod with VSCode <Python debugger>`
@@ -19,8 +22,8 @@ If you need to do an annoying manual task, someone probably wrote a Robusta acti
 
 All these tasks can be done without Robusta, but they're annoying to do. We automated them for you.
 
-Manually triggering a playbook
--------------------------------
+How to use manual triggers
+----------------------------------
 Let's manually run the ``python_profiler`` playbook:
 
 .. code-block:: bash

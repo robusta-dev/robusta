@@ -205,7 +205,7 @@ class DebuggerParams(ActionParams):
     process_substring: str = ""
     pid: int = None
     port: int = 5678
-    interactive: bool = False
+    interactive: bool = True
 
 
 def get_example_launch_json(params: DebuggerParams):
@@ -299,28 +299,31 @@ def get_process_blocks(
                 kubernetes_object=pod,
             )
         blocks.append(CallbackBlock(choices))
+        blocks.append(
+            MarkdownBlock(
+                "*After clicking a button please wait up to 120 seconds for a response*"
+            )
+        )
     return blocks
 
 
 @action
 def python_debugger(event: PodEvent, params: DebuggerParams):
     """
-    Attach a python debugger to a running pod.
+    Attach a python debugger to a running pod. No need to modify the application's code or restart it.
 
-    No need to modify the python application code, or to restart the application.
+    Steps:
+        1. :ref:`Install Robusta <Installation Guide>`
+        2. Manually trigger this action using the Robusta CLI and the pod's name:
 
-    At the moment, exactly one process **must** match for the playbook to work. If this is not the case, run
-    ``robusta playbooks trigger pod_ps name=myapp namespace=default`` and use ``pid`` instead of ``process_substring``
+        .. code-block:: bash
 
-    In few simple steps you can debug your application:
-        - Run this action on the target pod
-        - kubectl port-forward ...
-        - In VSCode do a Remote Attach to the target pod
+             robusta playbooks trigger python_debugger name=myapp namespace=default
+
+        2. Follow the instructions you receive and run `kubectl port-forward`
+        3. In Visual Studio Code do a Remote Attach as per the instructions
 
     Now you can use break points and log points in VSCode.
-
-    Note:
-        For now, only VSCode is supported.
     """
     pod = event.get_pod()
     if not pod:
