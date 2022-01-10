@@ -14,6 +14,12 @@ from ...core.reporting.consts import SlackAnnotations
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 SlackBlock = Dict[str, Any]
+SEVERITY_EMOJI_MAP = {
+    FindingSeverity.HIGH: ":red_circle:",
+    FindingSeverity.MEDIUM: ":large_orange_circle:",
+    FindingSeverity.LOW: ":large_yellow_circle:",
+    FindingSeverity.INFO: ":large_green_circle:",
+}
 
 
 class SlackSender:
@@ -118,6 +124,7 @@ class SlackSender:
                     "text": {
                         "type": "plain_text",
                         "text": SlackSender.__apply_length_limit(block.text, 150),
+                        "emoji": True,
                     },
                 }
             ]
@@ -162,6 +169,11 @@ class SlackSender:
 
         return SlackSender.__apply_length_limit(message)
 
+    @classmethod
+    def __add_slack_severity(cls, title: str, severity: FindingSeverity) -> str:
+        icon = SEVERITY_EMOJI_MAP.get(severity, "")
+        return f"{icon} {severity.name} - {title}"
+
     def __send_blocks_to_slack(
         self,
         report_blocks: List[BaseBlock],
@@ -170,6 +182,7 @@ class SlackSender:
         slack_channel: str,
         unfurl: bool,
         sink_name: str,
+        severity: FindingSeverity,
     ):
         file_blocks = add_pngs_for_all_svgs(
             [b for b in report_blocks if isinstance(b, FileBlock)]
@@ -180,6 +193,7 @@ class SlackSender:
 
         output_blocks = []
         if title:
+            title = self.__add_slack_severity(title, severity)
             output_blocks.extend(self.__to_slack(HeaderBlock(title), sink_name))
         for block in other_blocks:
             output_blocks.extend(self.__to_slack(block, sink_name))
@@ -221,10 +235,13 @@ class SlackSender:
             )
 
     def send_finding_to_slack(
-        self, finding: Finding, slack_channel: str, sink_name: str
+        self, finding: Finding, slack_channel: str, sink_name: str, platform_enabled: bool
     ):
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
+        if platform_enabled:  # add link to the robusta ui, if it's configured
+            blocks.append(MarkdownBlock(text=f"<{finding.investigate_uri}|:mag_right: Investigate>"))
+
         # first add finding description block
         if finding.description:
             blocks.append(MarkdownBlock(finding.description))
@@ -241,5 +258,5 @@ class SlackSender:
                 blocks.extend(enrichment.blocks)
 
         self.__send_blocks_to_slack(
-            blocks, attachment_blocks, finding.title, slack_channel, unfurl, sink_name
+            blocks, attachment_blocks, finding.title, slack_channel,unfurl, sink_name, finding.severity
         )

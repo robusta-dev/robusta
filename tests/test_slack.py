@@ -14,7 +14,7 @@ def test_send_to_slack(slack_channel: SlackChannel):
     msg = "test123"
     finding = Finding(title=msg, aggregation_key=msg)
     finding.add_enrichment([MarkdownBlock("testing")])
-    slack_sender.send_finding_to_slack(finding, slack_channel.channel_name, "")
+    slack_sender.send_finding_to_slack(finding, slack_channel.channel_name, "", False)
     assert slack_channel.get_latest_message() == msg
 
 
@@ -24,7 +24,7 @@ def test_long_slack_messages(slack_channel: SlackChannel):
     )
     finding = Finding(title=f"A" * 151, aggregation_key=f"A" * 151)
     finding.add_enrichment([MarkdownBlock("H" * 3001)])
-    slack_sender.send_finding_to_slack(finding, slack_channel.channel_name, "")
+    slack_sender.send_finding_to_slack(finding, slack_channel.channel_name, "", False)
 
 
 # TODO: using the latest version of tabulate (currently not published to pypi yet) will allow fixing the formatting on this
@@ -46,4 +46,4 @@ def test_long_table_columns(slack_channel: SlackChannel):
             ),
         ],
     )
-    slack_sender.send_finding_to_slack(finding, slack_channel.channel_name, "")
+    slack_sender.send_finding_to_slack(finding, slack_channel.channel_name, "", False)

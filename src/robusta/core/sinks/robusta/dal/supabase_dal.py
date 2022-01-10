@@ -9,7 +9,6 @@ from typing import List, Dict, Any
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
 from ...transformer import Transformer
-from ....discovery.top_service_resolver import TopServiceResolver
 from ....model.services import ServiceInfo
 from ....reporting.blocks import (
     MarkdownBlock,
@@ -117,9 +116,7 @@ class SupabaseDal:
             "subject_type": finding.subject.subject_type.value,
             "subject_name": finding.subject.name,
             "subject_namespace": finding.subject.namespace,
-            "service_key": TopServiceResolver.guess_service_key(
-                finding.subject.name, finding.subject.namespace
-            ),
+            "service_key": finding.service_key,
             "cluster": self.cluster,
             "account_id": self.account_id,
         }

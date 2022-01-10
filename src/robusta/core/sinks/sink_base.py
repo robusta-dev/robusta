@@ -14,7 +14,7 @@ class SinkBase:
     def stop(self):
         pass
 
-    def write_finding(self, finding: Finding):
+    def write_finding(self, finding: Finding, platform_enabled: bool):
         raise NotImplementedError(
             f"write_finding not implemented for sink {self.sink_name}"
         )
