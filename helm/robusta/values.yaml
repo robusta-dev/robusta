@@ -1,3 +1,6 @@
+# most of this file is documented at https://docs.robusta.dev/master/user-guide/configuration.html
+# if you have any questions, feel free to ask via github issues or Slack (see link on robusta.dev)
+
 # playbook repositories
 playbookRepos:
   robusta_playbooks:
@@ -10,6 +13,7 @@ sinksConfig: []
 clusterName: ""
 clusterZone: ""
 
+# see https://docs.robusta.dev/master/user-guide/configuration.html#global-config
 globalConfig:
   grafana_url: ""
   grafana_api_key: ""
