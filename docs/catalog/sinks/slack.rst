@@ -8,6 +8,8 @@ Recommended: Using Robusta's official Slack app
 When installing Robusta, run ``robusta gen-config`` and follow the prompts. This will use our `official
 Slack app <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_.
 
+**Robusta can only write messages. We don't require read permissions.**
+
 You can also generate a key by running ``robusta integrations slack`` and setting the following Helm values:
 
 .. admonition:: values.yaml
