@@ -295,3 +295,4 @@ class SlackSender:
         elif slack_response == SlackResponse.OK:
             return True
         return False
+    
