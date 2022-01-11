@@ -91,5 +91,8 @@ Alternative Installation Methods
         helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
         helm show values robusta/robusta
 
+
+    Most values are documented in the :ref:`Configuration Guide`
+
     Do not use the ``values.yaml`` file in the GitHub repo. It has some empty placeholders which are replaced during
     our release process.

@@ -1,10 +1,17 @@
 Configuration Guide
 ################################
 
-Robusta is configured using Helm values. All possible values can be found in
-`values.yaml <https://github.com/robusta-dev/robusta/blob/master/helm/robusta/values.yaml>`_
+Robusta is configured using Helm values. This page documents the important values.
 
-This page documents the important values.
+All possible values can be found by running:
+
+.. code-block:: yaml
+
+    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
+    helm show values robusta/robusta
+
+Do not use the ``values.yaml`` file in the GitHub repo. It has some empty placeholders which are replaced during
+our release process.
 
 
 Defining playbooks
@@ -113,7 +120,11 @@ any action or trigger which expects a parameter with the same name.
       sinks:
       - "main_slack_sink"
 
-Robusta also expects several ``globalConfig`` parameters with specific names:
+
+Mandatory global config
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Robusta expects several ``globalConfig`` parameters with specific names:
 
 cluster_name
     Unique for each cluster in your organization. Can be human-readable and need not be secret
