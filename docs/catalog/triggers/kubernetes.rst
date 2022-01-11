@@ -3,7 +3,7 @@ Kubernetes
 
 Robusta can run playbooks in response to Kubernetes API Server events.
 
-When a ``Pod`` is created, or when a ``Deployment`` is changed, we can trigger Robusta actions.
+For example, when a ``Pod`` is created, or when a ``Deployment`` is changed, we can trigger Robusta actions.
 
 Configuration example
 ^^^^^^^^^^^^^^^^^^^^^^
