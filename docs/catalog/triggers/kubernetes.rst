@@ -1,6 +1,24 @@
 Kubernetes
 ############################
 
+Robusta can run playbooks in response to Kubernetes API Server events.
+
+When a ``Pod`` is created, or when a ``Deployment`` is changed, we can trigger Robusta actions.
+
+Configuration example
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+   - triggers:
+     - on_deployment_update:
+         name_prefix: my-app-name
+         namespace_prefix: ns1
+         labels_selector: app=my-app
+     actions:
+     - add_deployment_lines_to_grafana:
+         grafana_url: ....
+
 Basic triggers
 ----------------
 Most Kubernetes resources can be used to trigger playbooks. The trigger will fire when the resource changes. For example:
@@ -54,17 +72,4 @@ All Kubernetes triggers support the following filters:
 
 * ``name_prefix`` - Name prefix to match resources.
 * ``namespace_prefix`` - Namespace prefix to match resources.
-* ``labels_selector`` - Match resources with these labels. The format is: ``label1=value1,label2=value2``. If more than one labels is provided, **all** needs to match.
-
-For example:
-
-.. code-block:: yaml
-
-   - triggers:
-     - on_deployment_update:
-         name_prefix: my-app-name
-         namespace_prefix: ns1
-         labels_selector: app=my-app
-     actions:
-     - add_deployment_lines_to_grafana:
-         grafana_url: ....
+* ``labels_selector`` - Match resources with these labels. The format is: ``label1=value1,label2=value2``. If more than one labels is provided, **all** need to match.

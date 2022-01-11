@@ -41,7 +41,7 @@ class K8sBaseTrigger(BaseTrigger):
     name_prefix: str = None
     namespace_prefix: str = None
     labels_selector: str = None
-    _labels_map: dict = PrivateAttr()
+    _labels_map: Dict = PrivateAttr()
 
     def __init__(self, *args, **data):
         super().__init__(*args, **data)
