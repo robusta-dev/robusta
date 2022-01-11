@@ -9,12 +9,14 @@ from .events import *
 
 # Pod Triggers
 class PodAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Pod",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="Pod", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -23,12 +25,14 @@ class PodAllChangesTrigger(K8sBaseTrigger):
 
 
 class PodCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Pod",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="Pod", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -37,12 +41,14 @@ class PodCreateTrigger(K8sBaseTrigger):
 
 
 class PodDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Pod",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="Pod", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -51,12 +57,14 @@ class PodDeleteTrigger(K8sBaseTrigger):
 
 
 class PodUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Pod",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="Pod", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -66,12 +74,14 @@ class PodUpdateTrigger(K8sBaseTrigger):
 
 # ReplicaSet Triggers
 class ReplicaSetAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ReplicaSet",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="ReplicaSet", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -80,12 +90,14 @@ class ReplicaSetAllChangesTrigger(K8sBaseTrigger):
 
 
 class ReplicaSetCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ReplicaSet",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="ReplicaSet", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -94,12 +106,14 @@ class ReplicaSetCreateTrigger(K8sBaseTrigger):
 
 
 class ReplicaSetDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ReplicaSet",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="ReplicaSet", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -108,12 +122,14 @@ class ReplicaSetDeleteTrigger(K8sBaseTrigger):
 
 
 class ReplicaSetUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ReplicaSet",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="ReplicaSet", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -123,12 +139,14 @@ class ReplicaSetUpdateTrigger(K8sBaseTrigger):
 
 # DaemonSet Triggers
 class DaemonSetAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="DaemonSet",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="DaemonSet", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -137,12 +155,14 @@ class DaemonSetAllChangesTrigger(K8sBaseTrigger):
 
 
 class DaemonSetCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="DaemonSet",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="DaemonSet", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -151,12 +171,14 @@ class DaemonSetCreateTrigger(K8sBaseTrigger):
 
 
 class DaemonSetDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="DaemonSet",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="DaemonSet", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -165,12 +187,14 @@ class DaemonSetDeleteTrigger(K8sBaseTrigger):
 
 
 class DaemonSetUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="DaemonSet",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="DaemonSet", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -180,12 +204,14 @@ class DaemonSetUpdateTrigger(K8sBaseTrigger):
 
 # Deployment Triggers
 class DeploymentAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Deployment",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="Deployment", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -194,12 +220,14 @@ class DeploymentAllChangesTrigger(K8sBaseTrigger):
 
 
 class DeploymentCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Deployment",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="Deployment", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -208,12 +236,14 @@ class DeploymentCreateTrigger(K8sBaseTrigger):
 
 
 class DeploymentDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Deployment",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="Deployment", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -222,12 +252,14 @@ class DeploymentDeleteTrigger(K8sBaseTrigger):
 
 
 class DeploymentUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Deployment",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="Deployment", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -237,12 +269,14 @@ class DeploymentUpdateTrigger(K8sBaseTrigger):
 
 # StatefulSet Triggers
 class StatefulSetAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="StatefulSet",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="StatefulSet", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -251,12 +285,14 @@ class StatefulSetAllChangesTrigger(K8sBaseTrigger):
 
 
 class StatefulSetCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="StatefulSet",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="StatefulSet", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -265,12 +301,14 @@ class StatefulSetCreateTrigger(K8sBaseTrigger):
 
 
 class StatefulSetDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="StatefulSet",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="StatefulSet", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -279,12 +317,14 @@ class StatefulSetDeleteTrigger(K8sBaseTrigger):
 
 
 class StatefulSetUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="StatefulSet",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="StatefulSet", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -294,12 +334,14 @@ class StatefulSetUpdateTrigger(K8sBaseTrigger):
 
 # Service Triggers
 class ServiceAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Service",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="Service", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -308,12 +350,14 @@ class ServiceAllChangesTrigger(K8sBaseTrigger):
 
 
 class ServiceCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Service",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="Service", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -322,12 +366,14 @@ class ServiceCreateTrigger(K8sBaseTrigger):
 
 
 class ServiceDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Service",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="Service", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -336,12 +382,14 @@ class ServiceDeleteTrigger(K8sBaseTrigger):
 
 
 class ServiceUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Service",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="Service", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -351,12 +399,14 @@ class ServiceUpdateTrigger(K8sBaseTrigger):
 
 # Event Triggers
 class EventAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Event",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="Event", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -365,12 +415,14 @@ class EventAllChangesTrigger(K8sBaseTrigger):
 
 
 class EventCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Event",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="Event", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -379,12 +431,14 @@ class EventCreateTrigger(K8sBaseTrigger):
 
 
 class EventDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Event",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="Event", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -393,12 +447,14 @@ class EventDeleteTrigger(K8sBaseTrigger):
 
 
 class EventUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Event",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="Event", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -408,12 +464,14 @@ class EventUpdateTrigger(K8sBaseTrigger):
 
 # HorizontalPodAutoscaler Triggers
 class HorizontalPodAutoscalerAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="HorizontalPodAutoscaler",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="HorizontalPodAutoscaler", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -422,12 +480,14 @@ class HorizontalPodAutoscalerAllChangesTrigger(K8sBaseTrigger):
 
 
 class HorizontalPodAutoscalerCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="HorizontalPodAutoscaler",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="HorizontalPodAutoscaler", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -436,12 +496,14 @@ class HorizontalPodAutoscalerCreateTrigger(K8sBaseTrigger):
 
 
 class HorizontalPodAutoscalerDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="HorizontalPodAutoscaler",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="HorizontalPodAutoscaler", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -450,12 +512,14 @@ class HorizontalPodAutoscalerDeleteTrigger(K8sBaseTrigger):
 
 
 class HorizontalPodAutoscalerUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="HorizontalPodAutoscaler",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="HorizontalPodAutoscaler", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -465,12 +529,14 @@ class HorizontalPodAutoscalerUpdateTrigger(K8sBaseTrigger):
 
 # Node Triggers
 class NodeAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Node",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="Node", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -479,12 +545,14 @@ class NodeAllChangesTrigger(K8sBaseTrigger):
 
 
 class NodeCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Node",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="Node", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -493,12 +561,14 @@ class NodeCreateTrigger(K8sBaseTrigger):
 
 
 class NodeDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Node",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="Node", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -507,12 +577,14 @@ class NodeDeleteTrigger(K8sBaseTrigger):
 
 
 class NodeUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Node",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="Node", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -522,12 +594,14 @@ class NodeUpdateTrigger(K8sBaseTrigger):
 
 # ClusterRole Triggers
 class ClusterRoleAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ClusterRole",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="ClusterRole", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -536,12 +610,14 @@ class ClusterRoleAllChangesTrigger(K8sBaseTrigger):
 
 
 class ClusterRoleCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ClusterRole",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="ClusterRole", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -550,12 +626,14 @@ class ClusterRoleCreateTrigger(K8sBaseTrigger):
 
 
 class ClusterRoleDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ClusterRole",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="ClusterRole", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -564,12 +642,14 @@ class ClusterRoleDeleteTrigger(K8sBaseTrigger):
 
 
 class ClusterRoleUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ClusterRole",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="ClusterRole", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -579,12 +659,14 @@ class ClusterRoleUpdateTrigger(K8sBaseTrigger):
 
 # ClusterRoleBinding Triggers
 class ClusterRoleBindingAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ClusterRoleBinding",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="ClusterRoleBinding", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -593,12 +675,14 @@ class ClusterRoleBindingAllChangesTrigger(K8sBaseTrigger):
 
 
 class ClusterRoleBindingCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ClusterRoleBinding",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="ClusterRoleBinding", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -607,12 +691,14 @@ class ClusterRoleBindingCreateTrigger(K8sBaseTrigger):
 
 
 class ClusterRoleBindingDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ClusterRoleBinding",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="ClusterRoleBinding", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -621,12 +707,14 @@ class ClusterRoleBindingDeleteTrigger(K8sBaseTrigger):
 
 
 class ClusterRoleBindingUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ClusterRoleBinding",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="ClusterRoleBinding", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -636,12 +724,14 @@ class ClusterRoleBindingUpdateTrigger(K8sBaseTrigger):
 
 # Job Triggers
 class JobAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Job",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="Job", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -650,12 +740,14 @@ class JobAllChangesTrigger(K8sBaseTrigger):
 
 
 class JobCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Job",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="Job", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -664,12 +756,14 @@ class JobCreateTrigger(K8sBaseTrigger):
 
 
 class JobDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Job",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="Job", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -678,12 +772,14 @@ class JobDeleteTrigger(K8sBaseTrigger):
 
 
 class JobUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Job",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="Job", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -693,12 +789,14 @@ class JobUpdateTrigger(K8sBaseTrigger):
 
 # Namespace Triggers
 class NamespaceAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Namespace",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="Namespace", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -707,12 +805,14 @@ class NamespaceAllChangesTrigger(K8sBaseTrigger):
 
 
 class NamespaceCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Namespace",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="Namespace", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -721,12 +821,14 @@ class NamespaceCreateTrigger(K8sBaseTrigger):
 
 
 class NamespaceDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Namespace",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="Namespace", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -735,12 +837,14 @@ class NamespaceDeleteTrigger(K8sBaseTrigger):
 
 
 class NamespaceUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Namespace",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="Namespace", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -750,12 +854,14 @@ class NamespaceUpdateTrigger(K8sBaseTrigger):
 
 # ServiceAccount Triggers
 class ServiceAccountAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ServiceAccount",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="ServiceAccount", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -764,12 +870,14 @@ class ServiceAccountAllChangesTrigger(K8sBaseTrigger):
 
 
 class ServiceAccountCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ServiceAccount",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="ServiceAccount", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -778,12 +886,14 @@ class ServiceAccountCreateTrigger(K8sBaseTrigger):
 
 
 class ServiceAccountDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ServiceAccount",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="ServiceAccount", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -792,12 +902,14 @@ class ServiceAccountDeleteTrigger(K8sBaseTrigger):
 
 
 class ServiceAccountUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="ServiceAccount",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="ServiceAccount", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -807,12 +919,14 @@ class ServiceAccountUpdateTrigger(K8sBaseTrigger):
 
 # Kubernetes Any Triggers
 class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Any",
-            operation=None,
-            name_prefix=name_prefix,
+            kind="Any", 
+            operation=None, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -821,12 +935,14 @@ class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
 
 
 class KubernetesAnyCreateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Any",
-            operation=K8sOperationType.CREATE,
-            name_prefix=name_prefix,
+            kind="Any", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -835,12 +951,14 @@ class KubernetesAnyCreateTrigger(K8sBaseTrigger):
 
 
 class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Any",
-            operation=K8sOperationType.DELETE,
-            name_prefix=name_prefix,
+            kind="Any", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -849,12 +967,14 @@ class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
 
 
 class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
-    def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
         super().__init__(
-            kind="Any",
-            operation=K8sOperationType.UPDATE,
-            name_prefix=name_prefix,
+            kind="Any", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
             namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
 
     @staticmethod
@@ -885,9 +1005,7 @@ class K8sTriggers(BaseModel):
     on_event_create: Optional[EventCreateTrigger]
     on_event_delete: Optional[EventDeleteTrigger]
     on_event_update: Optional[EventUpdateTrigger]
-    on_horizontalpodautoscaler_all_changes: Optional[
-        HorizontalPodAutoscalerAllChangesTrigger
-    ]
+    on_horizontalpodautoscaler_all_changes: Optional[HorizontalPodAutoscalerAllChangesTrigger]
     on_horizontalpodautoscaler_create: Optional[HorizontalPodAutoscalerCreateTrigger]
     on_horizontalpodautoscaler_delete: Optional[HorizontalPodAutoscalerDeleteTrigger]
     on_horizontalpodautoscaler_update: Optional[HorizontalPodAutoscalerUpdateTrigger]

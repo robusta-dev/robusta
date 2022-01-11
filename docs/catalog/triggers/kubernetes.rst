@@ -46,3 +46,25 @@ The following wildcard triggers will fire for any supported Kubernetes resource:
 * on_kubernetes_any_resource_update
 * on_kubernetes_any_resource_delete
 * on_kubernetes_any_resource_all_changes
+
+Supported filters
+--------------------
+
+All Kubernetes triggers support the following filters:
+
+* ``name_prefix`` - Name prefix to match resources.
+* ``namespace_prefix`` - Namespace prefix to match resources.
+* ``labels_selector`` - Match resources with these labels. The format is: ``label1=value1,label2=value2``. If more than one labels is provided, **all** needs to match.
+
+For example:
+
+.. code-block:: yaml
+
+   - triggers:
+     - on_deployment_update:
+         name_prefix: my-app-name
+         namespace_prefix: ns1
+         labels_selector: app=my-app
+     actions:
+     - add_deployment_lines_to_grafana:
+         grafana_url: ....
