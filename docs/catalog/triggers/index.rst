@@ -8,14 +8,37 @@ If you are new to Robusta, see :ref:`the tutorial <Example Playbook>` first.
 Builtin triggers
 ^^^^^^^^^^^^^^^^^^
 
+You can trigger Robusta actions on all of the following events:
+
 .. toctree::
    :maxdepth: 1
 
-   prometheus
-   kubernetes
-   elasticsearch
-   scheduled
-   webhook
+   Prometheus and AlertManager alerts <prometheus>
+   Changes to Kubernetes Resources <kubernetes>
+   ElasticSearch Monitors <elasticsearch>
+   Scheduled events <scheduled>
+   External webhooks <webhook>
+   Manual triggers <../../getting-started/manual-triggers.rst>
+
+Trigger-action compatibility
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some actions require Kubernetes resources as input and can only run on compatible triggers.
+
+For example, the ``logs_enricher`` action requires a pod as input. It can only be connected to triggers which output a
+pod such as:
+
+* ``on_pod_create``
+* ``on_pod_update``
+* ``on_prometheus_alert`` - for alerts with a ``pod`` label
+* :ref:`manual trigger <Manual Triggers>` - by passing the pod's name as a cli argument
+
+Where possible, trigger-action compatibility is checked when Robusta loads its config. Feel free to experiment though.
+Incompatible triggers and actions will fail gracefully with a warning.
+
+How triggers pass data to actions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Each trigger loads data about the incoming event. This data is passed as a Python object to the action.
 
 Trigger hierarchy
 ^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,7 +1,10 @@
-Prometheus
-######################
+Prometheus and AlertManager
+#############################
 
-Robusta can run playbooks in response to any Prometheus alert.
+Robusta can run actions in response to any Prometheus alert. This is configured via AlertManager webhooks.
+
+When an alert has a ``pod`` label then the Pod will be automatically loaded and passed to the Robusta action. This applies
+to many Kubernetes resources like Pod, Deployment, Job, and DaemonSet.
 
 Example
 ^^^^^^^^^^^^^^^^^^^^^^
