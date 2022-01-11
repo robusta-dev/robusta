@@ -3,7 +3,10 @@ Installation Guide
 
 Robusta is installed with Helm. You can handwrite the values.yaml, but it is easier to autogenerate it.
 
-Helm Installation
+The standard installation uses Helm and the robusta-cli, but :ref:`other alternative methods are described below.
+<Alternative Installation Methods>`
+
+Standard Installation
 ------------------------------
 
 1. Download the Helm chart and generate a Robusta configuration. This will setup Slack and other integrations.
@@ -68,3 +71,25 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
    kubectl delete deployment crashpod
 
 This example was pretty basic. :ref:`Let's see a more complicated example. Something you can't do easily without Robusta. <Example Playbook>`
+
+Alternative Installation Methods
+---------------------------------
+
+.. dropdown:: Installing with GitOps
+    :color: light
+
+    Follow the instructions above to generate ``generated_values.yaml``. Commit it to git and use ArgoCD or
+    your favorite tool to install.
+
+.. dropdown:: Installing without the Robusta CLI
+    :color: light
+
+    Using the cli is totally optional. If you prefer, you can skip the CLI and fetch the default ``values.yaml``:
+
+    .. code-block:: yaml
+
+        helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
+        helm show values robusta/robusta
+
+    Do not use the ``values.yaml`` file in the GitHub repo. It has some empty placeholders which are replaced during
+    our release process.
