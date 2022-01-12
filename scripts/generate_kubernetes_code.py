@@ -321,12 +321,13 @@ def autogenerate_triggers(f: TextIO):
                     f"""\
             class {resource}{get_trigger_class_name(trigger_name)}Trigger(K8sBaseTrigger):
 
-                def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+                def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
                     super().__init__(
                         kind=\"{resource}\", 
                         operation={operation_type}, 
                         name_prefix=name_prefix, 
-                        namespace_prefix=namespace_prefix
+                        namespace_prefix=namespace_prefix,
+                        labels_selector=labels_selector,
                     )
 
                 @staticmethod
@@ -351,12 +352,13 @@ def autogenerate_triggers(f: TextIO):
                 f"""\
         class KubernetesAny{get_trigger_class_name(trigger_name)}Trigger(K8sBaseTrigger):
 
-            def __init__(self, name_prefix: str = None, namespace_prefix: str = None):
+            def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
                 super().__init__(
                     kind=\"Any\", 
                     operation={operation_type}, 
                     name_prefix=name_prefix, 
-                    namespace_prefix=namespace_prefix
+                    namespace_prefix=namespace_prefix,
+                    labels_selector=labels_selector,
                 )
 
             @staticmethod
