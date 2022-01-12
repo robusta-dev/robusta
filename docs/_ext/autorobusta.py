@@ -237,7 +237,7 @@ class RobustaActionDirective(SphinxDirective):
         if cli_trigger:
             indented_cli_trigger_example = f"""\
 
-                        Can be triggered using the Robusta CLI:
+                        This action can be :ref:`manually triggered <Manual Triggers>` using the Robusta CLI:
 
                         .. code-block:: bash \n\n{" " * 32 + cli_trigger}
 
@@ -254,19 +254,22 @@ class RobustaActionDirective(SphinxDirective):
             
                     .. tab-item:: Description\n\n{indented_description}\n\n
             
-                    .. tab-item:: Example YAML
+                    .. tab-item:: Automating it
+                    
+                        This action can be run automatically.
+                        
+                        Add this to your :ref:`Robusta configuration (values.yaml when installing with Helm) <Defining playbooks>`:
             
                         .. code-block:: yaml \n\n{indented_example}
+                        
+                        The above is an example. Try customizing the trigger and parameters.
                         
                     .. tab-item:: Parameters
                         
                         {".. pydantic-model:: " + params_cls_path if params_cls_path else "**No action parameters**"}
                        
                     .. tab-item:: Supported Triggers\n\n{indented_triggers} 
-                        
                         {indented_cli_trigger_example}
-
-            | 
             """
         )
         nested_parse_with_titles(self.state, StringList(content.split("\n")), node)
