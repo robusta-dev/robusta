@@ -1,7 +1,7 @@
 # see https://pythonspeed.com/articles/alpine-docker-python/ for the reason we don't use alpine
 FROM python:3.9-slim
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git ssh socat wget curl libcairo2 python3-dev libffi-dev socat \
+    && apt-get install -y --no-install-recommends git ssh socat wget curl gcc libcairo2 python3-dev libffi-dev socat \
     && apt-get purge -y --auto-remove \
     && rm -rf /var/lib/apt/lists/*
 
