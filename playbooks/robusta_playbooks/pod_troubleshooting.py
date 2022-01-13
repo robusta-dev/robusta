@@ -318,7 +318,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
 
         .. code-block:: bash
 
-             robusta playbooks trigger python_debugger name=myapp namespace=default
+             robusta playbooks trigger python_debugger name=podname namespace=default
 
         2. Follow the instructions you receive and run `kubectl port-forward`
         3. In Visual Studio Code do a Remote Attach as per the instructions

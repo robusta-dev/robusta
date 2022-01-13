@@ -5,10 +5,6 @@ Robusta makes it easy to troubleshoot and debug Python applications running on K
 
 Make sure you read about :ref:`Manual Triggers` to understand how this works.
 
-Builtin actions
-^^^^^^^^^^^^^^^^^^
-
-
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.python_debugger
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.python_profiler
@@ -18,7 +14,6 @@ Builtin actions
     .. code-block:: bash
 
         robusta playbooks trigger python_profiler pod_name=your-pod namespace=you-ns process_name=your-process seconds=5
-
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.python_memory
 
