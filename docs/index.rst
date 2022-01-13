@@ -1,20 +1,46 @@
-Welcome to Robusta!
-=====================
-Robusta is an open source platform for webhooks and automations. It contains a library of 50+ builtin
-actions triggered on:
+Welcome to Robusta
+================================
+
+Robusta makes Kubernetes monitoring better by:
+
+1. Adding missing context to alerts
+2. Tracking crashing pods
+3. Flagging false alarms
+4. Showing a visual timeline with the history of alerts and changes in your cluster
+5. Enriching alerts with custom data (recently changed deployments, output of bash commands, etc)
+
+`Robusta.dev <https://home.robusta.dev/>`_ describes the out-of-the-box benefits. These docs describe
+customizing Robusta to gain even more value.
+
+We recommend you start with `Robusta.dev <https://home.robusta.dev/>`_, do a :ref:`60-second install <Installation Guide>`,
+and then read the docs for advanced features.
+
+A Cloud Native Automations Engine
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Robusta automates everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT
+for devops, with an emphasis on prebuilt useful automations and not just "build your own".
+
+Robusta contains a library of 50+ builtin actions triggered on:
 
 1. AlertManager webhooks
 2. Kubernetes changes
 3. Manual triggers
 4. Much more
 
-Robusta is configured in YAML and extended in Python.
+Example actions:
 
-Robusta automates everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT
-for devops, with an emphasis on prebuilt useful automations and not just "build your own".
+1. Run bash commands on a pod/node
+2. Fetch logs
+3. Correlate alerts with changes to Kubernetes resources
+
+Robusta is configured in YAML and extended in Python.
 
 Examples
 ~~~~~~~~~~~~~~~~~~
+
+Most of these don't actually need to be configured (see out-of-the-box features at `robusta.dev <https://home.robusta.dev/>`_)
+but we show the configuration anyway to illustrate concepts.
 
 .. tab-set::
 
@@ -222,7 +248,6 @@ and alert type.
    :hidden:
 
    getting-started/installation
-   getting-started/example-playbook
    getting-started/manual-triggers
    getting-started/support
 
