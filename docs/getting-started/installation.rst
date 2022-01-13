@@ -70,7 +70,13 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 
    kubectl delete deployment crashpod
 
-This example was pretty basic. :ref:`Let's see a more complicated example. Something you can't do easily without Robusta. <Example Playbook>`
+Next Steps
+---------------------------------
+
+1. Explore the `Robusta UI <https://home.robusta.dev/ui/>`_ (use the URL you received during installation)
+2. :ref:`Send your Prometheus alerts to Robusta to start seeing enriched alerts <Sending Alerts to Robusta>`
+3. :ref:`Learn how to write your own Robusta automations. <Example Playbook>`
+4. :ref:`Learn about Robusta's features for manual troubleshooting <Manual Triggers>`
 
 Alternative Installation Methods
 ---------------------------------

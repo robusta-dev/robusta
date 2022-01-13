@@ -24,7 +24,7 @@ Supported filters
 
 .. pydantic-model:: robusta.integrations.prometheus.trigger.PrometheusAlertTrigger
 
-Setting it up
+Sending Alerts to Robusta
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You must configure AlertManager to send alerts to Robusta:
 

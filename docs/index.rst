@@ -266,6 +266,7 @@ and alert type.
    :hidden:
    :glob:
 
+   user-guide/example-playbook
    user-guide/configuration
    user-guide/upgrade
    user-guide/robusta-cli
