@@ -74,7 +74,7 @@ Next Steps
 ---------------------------------
 
 1. Explore the `Robusta UI <https://home.robusta.dev/ui/>`_ (use the URL you received during installation)
-2. :ref:`Send your Prometheus alerts to Robusta to start seeing enriched alerts <Sending Alerts to Robusta>`
+2. :ref:`Send your Prometheus alerts to Robusta to start seeing enriched alerts <Sending Alerts to Robusta>`. (You can also install Robusta's bundled Prometheus stack.)
 3. :ref:`Learn how to write your own Robusta automations. <Example Playbook>`
 4. :ref:`Learn about Robusta's features for manual troubleshooting <Manual Triggers>`
 
