@@ -1,7 +1,7 @@
 # see https://pythonspeed.com/articles/alpine-docker-python/ for the reason we don't use alpine
 FROM python:3.9-slim
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git ssh socat wget curl libcairo2 python3-dev libffi-dev socat \
+    && apt-get install -y --no-install-recommends git ssh gcc socat wget curl libcairo2 python3-dev libffi-dev socat \
     && apt-get purge -y --auto-remove \
     && rm -rf /var/lib/apt/lists/*
 
@@ -37,4 +37,6 @@ RUN pip3 install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e4
 COPY playbooks/ /etc/robusta/playbooks/defaults
 
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
+run ls srcrobusta
+run ./build_and_test.sh
 CMD [ "python3", "-u", "-m", "robusta.runner.main"]
