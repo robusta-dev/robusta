@@ -17,12 +17,12 @@ from kubernetes import config
 from pydantic import BaseModel
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
-from ..integrations.slack import SlackSender
 from ..core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrapper, MsTeamsSinkParams
 from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
 from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
+from .slack_verification import verify_slack_channel
 from .playbooks_cmd import app as playbooks_commands
 from .utils import (
     log_title,
@@ -54,37 +54,6 @@ class HelmValues(BaseModel):
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
-
-
-def slack_integration(
-    slack_api_key: str, slack_param_file_name: str, slack_channel: str = None
-):
-    if slack_api_key is None and typer.confirm(
-        "do you want to configure slack integration? this is HIGHLY recommended.",
-        default=True,
-    ):
-        slack_api_key = get_slack_key()
-
-        slack_channel = typer.prompt(
-            "which slack channel should I send notifications to?"
-        )
-
-    if slack_api_key is not None:
-        replace_in_file(slack_param_file_name, "<SLACK_API_KEY>", slack_api_key.strip())
-
-    if slack_channel is not None:
-        replace_in_file(slack_param_file_name, "<DEFAULT_SLACK_CHANNEL>", slack_channel)
-
-
-def verify_slack_channel(slack_api_key: str, cluster_name: str, channel_name: str) -> bool:
-    NOT_CONFIGURED_FOR_VERIFICATION_CHECK = None
-    slack_sender = SlackSender(
-        slack_token=slack_api_key,
-        account_id=NOT_CONFIGURED_FOR_VERIFICATION_CHECK,
-        cluster_name=cluster_name,
-        signing_key=NOT_CONFIGURED_FOR_VERIFICATION_CHECK
-    )
-    return slack_sender.send_welcome_message_to_slack_channel(channel_name)
 
 
 def guess_cluster_name():
