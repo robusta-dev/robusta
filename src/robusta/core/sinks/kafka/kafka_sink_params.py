@@ -1,5 +1,3 @@
-from typing import Dict
-
 from ..sink_base_params import SinkBaseParams
 from ..sink_config import SinkConfigBase
 
@@ -17,6 +15,3 @@ class KafkaSinkConfigWrapper(SinkConfigBase):
 
     def get_params(self) -> SinkBaseParams:
         return self.kafka_sink
-
-    def set_params(self, params: Dict):
-        self.kafka_sink = KafkaSinkParams(**params)
