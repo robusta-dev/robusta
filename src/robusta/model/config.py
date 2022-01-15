@@ -11,7 +11,7 @@ from ..integrations.scheduled.playbook_scheduler_manager import (
 from ..integrations.receiver import ActionRequestReceiver
 from .playbook_definition import PlaybookDefinition
 from ..utils.function_hashes import get_function_hash
-from ..core.playbooks.playbook_utils import merge_global_params
+from ..core.playbooks.playbook_utils import merge_configurations_and_env_params
 from ..core.sinks.sink_base import SinkBase
 from ..core.playbooks.base_trigger import TriggerEvent
 from ..core.playbooks.actions_registry import ActionsRegistry
@@ -42,6 +42,7 @@ class SinksRegistry:
         existing_sinks: Dict[str, SinkBase],
         global_config: dict,
     ) -> Dict[str, SinkBase]:
+        global_config = merge_configurations_and_env_params(global_config, {})  # populate values from env if needed
         cluster_name = global_config.get("cluster_name", "")
         signing_key = global_config.get("signing_key", "")
         account_id = global_config.get("account_id", "")
@@ -60,6 +61,10 @@ class SinksRegistry:
         new_sinks = existing_sinks.copy()
         # create new sinks, or update existing if changed
         for sink_config in new_sinks_config:
+            # populate sink config with env vars if required
+            sink_config.set_params(
+                merge_configurations_and_env_params(sink_config.get_params().dict(), global_config)
+            )
             try:
                 # temporary workaround to skip the default and unconfigured robusta token
                 if (
@@ -127,7 +132,7 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
                     raise Exception(msg)
                 action.set_func_hash(get_function_hash(action_def.func))
                 if action_def.params_type:  # action has params
-                    action.action_params = merge_global_params(
+                    action.action_params = merge_configurations_and_env_params(
                         global_config, action.action_params
                     )
                     if getattr(action_def.params_type, "pre_deploy_func", None):

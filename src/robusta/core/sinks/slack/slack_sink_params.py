@@ -1,3 +1,5 @@
+from typing import Dict
+
 from ..sink_config import SinkConfigBase
 from ..sink_base_params import SinkBaseParams
 
@@ -15,3 +17,6 @@ class SlackSinkConfigWrapper(SinkConfigBase):
 
     def get_params(self) -> SinkBaseParams:
         return self.slack_sink
+
+    def set_params(self, params: Dict):
+        self.slack_sink = SlackSinkParams(**params)

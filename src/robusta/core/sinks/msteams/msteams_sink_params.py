@@ -1,3 +1,5 @@
+from typing import Dict
+
 from ..sink_base_params import SinkBaseParams
 from ..sink_config import SinkConfigBase
 
@@ -15,3 +17,5 @@ class MsTeamsSinkConfigWrapper(SinkConfigBase):
     def get_params(self) -> SinkBaseParams:
         return self.ms_teams_sink
 
+    def set_params(self, params: Dict):
+        self.ms_teams_sink = MsTeamsSinkParams(**params)

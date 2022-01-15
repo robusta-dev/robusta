@@ -4,7 +4,7 @@ import traceback
 from typing import Any, Dict, Optional, List
 
 from .base_trigger import TriggerEvent, BaseTrigger
-from .playbook_utils import merge_global_params
+from .playbook_utils import merge_configurations_and_env_params
 from .playbooks_event_handler import PlaybooksEventHandler
 from ..model.events import ExecutionBaseEvent
 from ..reporting.base import Finding
@@ -155,7 +155,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             else:
                 action_params = None
                 try:
-                    action_params = merge_global_params(
+                    action_params = merge_configurations_and_env_params(
                         self.get_global_config(), action.action_params
                     )
                     params = registered_action.params_type(**action_params)
