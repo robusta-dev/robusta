@@ -11,10 +11,10 @@ Robusta is configured in YAML and extended in Python.
 Robusta automates everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT
 for devops, with an emphasis on prebuilt useful automations and not just "build your own".
 
-[Read the docs for more info!](https://docs.robusta.dev/master/)
+[Read the docs for more info!](https://docs.robusta.dev/master/?from=github) or see screenshots and demos at [http://robusta.dev/](http://robusta.dev/?from=github)
 
 ## Examples
-[For screenshots, see the docs](https://docs.robusta.dev/master/).
+[For screenshots, see the website](http://robusta.dev/?from=github).
 
 You can monitor crashing pods and send their logs to Slack:
 
