@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import subprocess
@@ -25,6 +26,8 @@ PLAYBOOKS_MOUNT_LOCATION = "/etc/robusta/playbooks/storage"
 NAMESPACE_EXPLANATION = (
     "Installation namespace. If none use the namespace currently active with kubectl."
 )
+CONFIG_SECRET_NAME = "robusta-playbooks-config-secret"
+
 app = typer.Typer()
 
 
@@ -98,11 +101,13 @@ def configure(
     log_title("Configuring playbooks...")
     with fetch_runner_logs(namespace):
         subprocess.check_call(
-            f"kubectl create configmap {namespace_to_kubectl(namespace)} robusta-playbooks-config --from-file active_playbooks.yaml={config_file} -o yaml --dry-run | kubectl apply -f -",
+            f"kubectl create secret generic {namespace_to_kubectl(namespace)} {CONFIG_SECRET_NAME} "
+            f"--from-file active_playbooks.yaml={config_file} --type=Opaque -o yaml --dry-run | kubectl apply -f -",
             shell=True,
         )
         subprocess.check_call(
-            f'kubectl annotate pods {namespace_to_kubectl(namespace)} -l robustaComponent=runner --overwrite "playbooks-last-modified={time.time()}"',
+            f'kubectl annotate pods {namespace_to_kubectl(namespace)} -l robustaComponent=runner '
+            f'--overwrite "playbooks-last-modified={time.time()}"',
             shell=True,
         )
         time.sleep(
@@ -113,10 +118,14 @@ def configure(
 
 def get_playbooks_config(namespace: str):
     configmap_content = subprocess.check_output(
-        f"kubectl get configmap {namespace_to_kubectl(namespace)} robusta-playbooks-config -o yaml",
+        f"kubectl get secret {namespace_to_kubectl(namespace)} {CONFIG_SECRET_NAME} -o yaml",
         shell=True,
     )
-    return yaml.safe_load(configmap_content)
+    playbooks_secret = yaml.safe_load(configmap_content)
+    playbooks_secret["data"]["active_playbooks.yaml"] = base64.b64decode(
+        playbooks_secret["data"]["active_playbooks.yaml"]
+    ).decode()
+    return playbooks_secret
 
 
 @app.command()
@@ -236,11 +245,10 @@ def list_(
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
     active_playbooks_yaml = yaml.safe_load(active_playbooks_file)
     for playbook in active_playbooks_yaml["active_playbooks"]:
-        log_title(f"Playbook: {playbook['name']}")
-        print_yaml_if_not_none("name", playbook)
+        typer.secho(f"--------------------------------------", fg="blue")
         print_yaml_if_not_none("sinks", playbook)
-        print_yaml_if_not_none("trigger_params", playbook)
-        print_yaml_if_not_none("action_params", playbook)
+        print_yaml_if_not_none("triggers", playbook)
+        print_yaml_if_not_none("actions", playbook)
 
 
 @app.command()
