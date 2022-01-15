@@ -4,8 +4,6 @@ from flask import Flask, request, jsonify
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from prometheus_client import make_wsgi_app
 
-from ..core.model.events import ExecutionBaseEvent
-from ..model.playbook_action import PlaybookAction
 from ..integrations.prometheus.trigger import PrometheusTriggerEvent
 from ..integrations.kubernetes.base_triggers import (
     IncomingK8sEventPayload,

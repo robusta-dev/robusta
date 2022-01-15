@@ -14,3 +14,4 @@ class MsTeamsSinkConfigWrapper(SinkConfigBase):
 
     def get_params(self) -> SinkBaseParams:
         return self.ms_teams_sink
+

@@ -1,7 +1,5 @@
-from typing import Dict, Any, List
-from pydantic import SecretStr, root_validator
-
-from ..playbooks.playbook_utils import replace_env_vars_values
+from typing import List
+from pydantic import SecretStr
 from ...utils.documented_pydantic import DocumentedModel
 
 
@@ -9,9 +7,7 @@ class ActionParams(DocumentedModel):
     """
     Base class for all Action parameter classes.
     """
-    @root_validator
-    def env_values_validation(cls, values: Dict):
-        return replace_env_vars_values(values)
+    pass
 
 
 class BashParams(ActionParams):

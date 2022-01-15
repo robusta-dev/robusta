@@ -11,7 +11,7 @@ from ..integrations.scheduled.playbook_scheduler_manager import (
 from ..integrations.receiver import ActionRequestReceiver
 from .playbook_definition import PlaybookDefinition
 from ..utils.function_hashes import get_function_hash
-from ..core.playbooks.playbook_utils import merge_global_params, replace_env_vars_values
+from ..core.playbooks.playbook_utils import merge_global_params
 from ..core.sinks.sink_base import SinkBase
 from ..core.playbooks.base_trigger import TriggerEvent
 from ..core.playbooks.actions_registry import ActionsRegistry
@@ -42,7 +42,6 @@ class SinksRegistry:
         existing_sinks: Dict[str, SinkBase],
         global_config: dict,
     ) -> Dict[str, SinkBase]:
-        global_config = replace_env_vars_values(global_config)  # populate values from env if needed
         cluster_name = global_config.get("cluster_name", "")
         signing_key = global_config.get("signing_key", "")
         account_id = global_config.get("account_id", "")

@@ -14,3 +14,4 @@ class DataDogSinkConfigWrapper(SinkConfigBase):
 
     def get_params(self) -> SinkBaseParams:
         return self.datadog_sink
+
