@@ -11,7 +11,7 @@ def get_env_replacement(value: str) -> Optional[str]:
     if env_values:
         env_var_value = os.environ.get(env_values[0].strip(), None)
         if not env_var_value:
-            msg = f"ENV var replacement {env_values[0]} does not exist for param: {key}: {value}"
+            msg = f"ENV var replacement {env_values[0]} does not exist for param: {value}"
             logging.error(msg)
             raise Exception(msg)
         return env_var_value
