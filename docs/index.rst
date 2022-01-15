@@ -1,46 +1,25 @@
 Welcome to Robusta
 ================================
 
-Robusta makes Kubernetes monitoring better by:
+Robusta is the Swiss Army Knife of Kubernetes troubleshooting and automation. You can use Robusta to:
 
-1. Adding missing context to alerts
-2. Tracking crashing pods
-3. Flagging false alarms
-4. Showing a visual timeline with the history of alerts and changes in your cluster
-5. Enriching alerts with custom data (recently changed deployments, output of bash commands, etc)
-
-`Robusta.dev <https://home.robusta.dev/>`_ describes the out-of-the-box benefits. These docs describe
-customizing Robusta to gain even more value.
+1. Manually troubleshoot errors, debug pods, run cpu profilers, etc
+2. Add missing context to alerts
+3. Remediate alerts by clicking a single button in Slack
+4. Complement Prometheus with monitoring of *discrete* events like crashing pods
 
 We recommend you start with `Robusta.dev <https://home.robusta.dev/>`_, do a :ref:`60-second install <Installation Guide>`,
 and then read the docs for advanced features.
 
-A Cloud Native Automations Engine
+What is Robusta
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Robusta automates everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT
-for devops, with an emphasis on prebuilt useful automations and not just "build your own".
-
-Robusta contains a library of 50+ builtin actions triggered on:
-
-1. AlertManager webhooks
-2. Kubernetes changes
-3. Manual triggers
-4. Much more
-
-Example actions:
-
-1. Run bash commands on a pod/node
-2. Fetch logs
-3. Correlate alerts with changes to Kubernetes resources
-
-Robusta is configured in YAML and extended in Python.
+Robusta is a Cloud Native Automations Engine. It automates everything that happens **after** you deploy your application.
+It is somewhat like Zapier/IFTTT for devops, with an emphasis on 50+ prebuilt automations and not just "build your own".
 
 Examples
 ~~~~~~~~~~~~~~~~~~
 
-Most of these don't actually need to be configured (see out-of-the-box features at `robusta.dev <https://home.robusta.dev/>`_)
-but we show the configuration anyway to illustrate concepts.
+Most of these can be installed pre-configured, but we show the configuration anyway to illustrate concepts.
 
 .. tab-set::
 
@@ -111,7 +90,7 @@ but we show the configuration anyway to illustrate concepts.
 
             .. code-block:: bash
 
-                 robusta playbooks trigger python_debugger name=myapp namespace=default
+                 robusta playbooks trigger python_debugger name=podname namespace=default
 
             See :ref:`Python debugger` for more details
 
@@ -147,6 +126,8 @@ You configure automations in a three-part yaml:
         (Slack, etc)
 
 Automations run via webhook so if they fail it wont bring down your environment.
+
+Robusta is configured in YAML and extended in Python.
 
 What's in the Box
 ~~~~~~~~~~~~~~~~~~~
