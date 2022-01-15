@@ -197,7 +197,7 @@ Robusta can be used as
     Robusta will install a bundled Prometheus stack. Includes:
 
     * Robusta automations engine + builtin automations
-    * Prometheus, AlertManager, and Grafana
+    * Prometheus Operator, AlertManager, and Grafana
     * Out of the box alerts fine-tuned for Kubernetes
 
 .. dropdown:: An automations engine for your existing stack
