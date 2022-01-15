@@ -11,11 +11,6 @@ Robusta is the Swiss Army Knife of Kubernetes troubleshooting and automation. Yo
 We recommend you start with `Robusta.dev <https://home.robusta.dev/>`_, do a :ref:`60-second install <Installation Guide>`,
 and then read the docs for advanced features.
 
-What is Robusta
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Robusta is a Cloud Native Automations Engine. It automates everything that happens **after** you deploy your application.
-It is somewhat like Zapier/IFTTT for devops, with an emphasis on 50+ prebuilt automations and not just "build your own".
-
 Examples
 ~~~~~~~~~~~~~~~~~~
 
@@ -96,6 +91,10 @@ Most of these can be installed pre-configured, but we show the configuration any
 
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Robusta automates everything that happens **after** you deploy your application.
+
+It is somewhat like Zapier/IFTTT for devops, with an emphasis on 50+ prebuilt automations and not just "build your own".
 
 You configure automations in a three-part yaml:
 
