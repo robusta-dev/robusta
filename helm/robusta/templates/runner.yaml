@@ -45,7 +45,7 @@ spec:
           {{ .Values.runner.additional_env_vars | nindent 10 }}
           {{- end }}
         volumeMounts:
-          - name: playbooks-config
+          - name: playbooks-config-secret
             mountPath: /etc/robusta/config
           {{- if .Values.playbooksPersistentVolume }}
           - name: persistent-playbooks-storage
@@ -77,9 +77,9 @@ spec:
             memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}
             {{ if .Values.grafanaRenderer.resources.limits.cpu }}cpu: {{ .Values.grafanaRenderer.resources.limits.cpu | quote }}{{ end }}
       volumes:
-        - name: playbooks-config
-          configMap:
-            name: robusta-playbooks-config
+        - name: playbooks-config-secret
+          secret:
+            secretName: robusta-playbooks-config-secret
             optional: true
         {{- if .Values.playbooksPersistentVolume }}
         - name: persistent-playbooks-storage
