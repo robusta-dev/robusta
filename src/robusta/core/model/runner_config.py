@@ -1,6 +1,7 @@
 from typing import List, Optional, Union, Dict
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, SecretStr, validator
 
+from ..playbooks.playbook_utils import replace_env_vars_values
 from ...model.playbook_definition import PlaybookDefinition
 from ..sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
 from ..sinks.kafka.kafka_sink_params import KafkaSinkConfigWrapper
@@ -32,3 +33,7 @@ class RunnerConfig(BaseModel):
     ]
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDefinition]] = []
+
+    @validator('global_config')
+    def env_var_params(cls, global_config: dict):
+        return replace_env_vars_values(global_config)

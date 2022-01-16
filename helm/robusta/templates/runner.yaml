@@ -41,6 +41,9 @@ spec:
           {{- end }}
           - name: RUNNER_VERSION
             value: {{ .Chart.AppVersion }}
+          {{- if .Values.runner.additional_env_vars }}
+          {{ .Values.runner.additional_env_vars | nindent 10 }}
+          {{- end }}
         volumeMounts:
           - name: playbooks-config
             mountPath: /etc/robusta/config

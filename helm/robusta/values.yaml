@@ -152,6 +152,7 @@ runner:
       memory: 1024Mi
     limits:
       cpu: ~
+  additional_env_vars: ""
 
 kube-prometheus-stack:
   alertmanager:
