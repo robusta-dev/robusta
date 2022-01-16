@@ -9,7 +9,6 @@ build:
     docker:
       dockerfile: Dockerfile
   local:
-    push: false
     concurrency: 0
   # this is very important. we need to use inputDigest so that different developers don't build the same tags
   # and interfere with one another's work (e.g. when building and then running pytest you want to test the version
@@ -42,5 +41,4 @@ profiles:
         custom:
           buildCommand: ./build_on_apple_m1.sh
     local:
-      push: false
       concurrency: 0
