@@ -1,5 +1,5 @@
 # see https://pythonspeed.com/articles/alpine-docker-python/ for the reason we don't use alpine
-FROM python:3.9-slim
+FROM python:3.9-slim as dev
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git ssh socat wget curl gcc libcairo2 python3-dev libffi-dev socat \
     && apt-get purge -y --auto-remove \
@@ -16,10 +16,10 @@ RUN mkdir /app
 RUN pip3 install --upgrade pip
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
 RUN /root/.local/bin/poetry config virtualenvs.create false
-COPY pyproject.toml /app
-COPY poetry.lock /app
+COPY pyproject.toml poetry.lock /app/
 WORKDIR /app
-RUN /root/.local/bin/poetry install --no-root --extras "all"
+RUN  /root/.local/bin/poetry install --no-root --extras "all" \
+ &&  apt-get purge -y --auto-remove gcc 
 
 COPY src/ /app/src
 
@@ -31,3 +31,7 @@ COPY playbooks/ /etc/robusta/playbooks/defaults
 
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
 CMD [ "python3", "-u", "-m", "robusta.runner.main"]
+
+FROM dev as prd
+ENV ENV_TYPE=PRD
+RUN /root/.local/bin/poetry install --no-dev

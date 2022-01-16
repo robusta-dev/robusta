@@ -8,6 +8,7 @@ build:
     context: .
     docker:
       dockerfile: Dockerfile
+      target: dev
   local:
     concurrency: 0
   # this is very important. we need to use inputDigest so that different developers don't build the same tags
@@ -42,3 +43,12 @@ profiles:
           buildCommand: ./build_on_apple_m1.sh
     local:
       concurrency: 0
+
+- name: prd
+  build:
+    artifacts:
+    - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+
+      docker:
+        dockerfile: Dockerfile
+        target: prd
