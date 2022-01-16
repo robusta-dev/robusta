@@ -1,20 +1,20 @@
-Welcome to Robusta!
-=====================
-Robusta is an open source platform for webhooks and automations. It contains a library of 50+ builtin
-actions triggered on:
+Welcome to Robusta
+================================
 
-1. AlertManager webhooks
-2. Kubernetes changes
-3. Manual triggers
-4. Much more
+Robusta is the Swiss Army Knife of Kubernetes troubleshooting and automation. You can use Robusta to:
 
-Robusta is configured in YAML and extended in Python.
+1. Manually troubleshoot errors, debug pods, run cpu profilers, etc
+2. Add missing context to alerts
+3. Remediate alerts by clicking a single button in Slack
+4. Complement Prometheus with monitoring of *discrete* events like crashing pods
 
-Robusta automates everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT
-for devops, with an emphasis on prebuilt useful automations and not just "build your own".
+We recommend you start with `Robusta.dev <https://home.robusta.dev/>`_, do a :ref:`60-second install <Installation Guide>`,
+and then read the docs for advanced features.
 
 Examples
 ~~~~~~~~~~~~~~~~~~
+
+Most of these can be installed pre-configured, but we show the configuration anyway to illustrate concepts.
 
 .. tab-set::
 
@@ -85,12 +85,16 @@ Examples
 
             .. code-block:: bash
 
-                 robusta playbooks trigger python_debugger name=myapp namespace=default
+                 robusta playbooks trigger python_debugger name=podname namespace=default
 
             See :ref:`Python debugger` for more details
 
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Robusta automates everything that happens **after** you deploy your application.
+
+It is somewhat like Zapier/IFTTT for devops, with an emphasis on 50+ prebuilt automations and not just "build your own".
 
 You configure automations in a three-part yaml:
 
@@ -121,6 +125,8 @@ You configure automations in a three-part yaml:
         (Slack, etc)
 
 Automations run via webhook so if they fail it wont bring down your environment.
+
+Robusta is configured in YAML and extended in Python.
 
 What's in the Box
 ~~~~~~~~~~~~~~~~~~~
@@ -190,7 +196,7 @@ Robusta can be used as
     Robusta will install a bundled Prometheus stack. Includes:
 
     * Robusta automations engine + builtin automations
-    * Prometheus, AlertManager, and Grafana
+    * Prometheus Operator, AlertManager, and Grafana
     * Out of the box alerts fine-tuned for Kubernetes
 
 .. dropdown:: An automations engine for your existing stack
@@ -222,7 +228,6 @@ and alert type.
    :hidden:
 
    getting-started/installation
-   getting-started/example-playbook
    getting-started/manual-triggers
    getting-started/support
 
@@ -241,6 +246,7 @@ and alert type.
    :hidden:
    :glob:
 
+   user-guide/example-playbook
    user-guide/configuration
    user-guide/upgrade
    user-guide/robusta-cli

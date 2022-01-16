@@ -8,7 +8,7 @@ If you are new to Robusta, see :ref:`the tutorial <Example Playbook>` first.
 Builtin triggers
 ^^^^^^^^^^^^^^^^^^
 
-You can trigger Robusta actions on all of the following events:
+You can automatically trigger Robusta actions on all of the following events:
 
 .. toctree::
    :maxdepth: 1
@@ -18,7 +18,8 @@ You can trigger Robusta actions on all of the following events:
    ElasticSearch Monitors <elasticsearch>
    Scheduled events <scheduled>
    External webhooks <webhook>
-   Manual triggers <../../getting-started/manual-triggers.rst>
+
+:ref:`You can also manually trigger many Robusta actions. <Manual Triggers>`
 
 Trigger-action compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
