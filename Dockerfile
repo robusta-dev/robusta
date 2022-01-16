@@ -18,6 +18,14 @@ RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/inst
 RUN /root/.local/bin/poetry config virtualenvs.create false
 COPY pyproject.toml poetry.lock /app/
 WORKDIR /app
+
+# Install gcc to compile rumal.yaml.clib, wheel is missing.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc \
+    && pip3 install ruamel.yaml.clib \
+    && apt-get purge -y --auto-remove gcc \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN /root/.local/bin/poetry install --no-root --extras "all"
 
 COPY src/ /app/src
