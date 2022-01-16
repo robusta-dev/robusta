@@ -16,8 +16,7 @@ RUN mkdir /app
 RUN pip3 install --upgrade pip
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
 RUN /root/.local/bin/poetry config virtualenvs.create false
-COPY pyproject.toml /app
-COPY poetry.lock /app
+COPY pyproject.toml poetry.lock /app/
 WORKDIR /app
 RUN /root/.local/bin/poetry install --no-root --extras "all"
 
