@@ -20,7 +20,7 @@ hikaru = "^0.5.1-beta.0"
 click-spinner = "^0.1.10"
 pymsteams = "^0.1.16"
 supabase-py = { version = "^0.0.2", optional = true}
-tabulate = {git = "https://github.com/astanin/python-tabulate.git"}
+tabulate = {git = "https://github.com/astanin/python-tabulate.git"} # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
 slack-sdk = { version = "^3.7.0" }
 Flask = { version = "^1.1.2", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }

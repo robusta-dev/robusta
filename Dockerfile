@@ -24,7 +24,6 @@ RUN  /root/.local/bin/poetry install --no-root --extras "all" \
 COPY src/ /app/src
 
 RUN pip3 install --use-feature=in-tree-build .
-# Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
 
 COPY playbooks/ /etc/robusta/playbooks/defaults
 
