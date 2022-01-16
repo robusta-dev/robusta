@@ -2,6 +2,11 @@ import typer
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
+SLACK_WELCOME_MESSAGE_TITLE = ":large_green_circle: INFO - Welcome to Robustas"
+SLACK_WELCOME_MESSAGE_HEADER_WITH_CLUSTER_NAME = "You have signed up for alerts for cluster: '{}'."
+SLACK_WELCOME_THANK_YOU_MESSAGE = "Thank you for using Robusta.dev"
+SLACK_WELCOME_SUPPORT_MESSAGE = "If you have any questions or feedback feel free to write us at " \
+                                "<mailto:support@robusta.dev|support@robusta.dev> "
 
 def verify_slack_channel(slack_api_key: str, cluster_name: str, channel_name: str) -> bool:
     try:
@@ -35,7 +40,7 @@ def gen_robusta_test_welcome_message(cluster_name: str):
             "type": "header",
             "text": {
                 "type": "plain_text",
-                "text": ":large_green_circle: INFO - Welcome to Robusta",
+                "text": SLACK_WELCOME_MESSAGE_TITLE,
                 "emoji": True
             }
         },
@@ -43,7 +48,7 @@ def gen_robusta_test_welcome_message(cluster_name: str):
             "type": "header",
             "text": {
                 "type": "plain_text",
-                "text": f"You have signed up for alerts for cluster: '{cluster_name}'.",
+                "text": SLACK_WELCOME_MESSAGE_HEADER_WITH_CLUSTER_NAME.format(cluster_name),
                 "emoji": True
             }
         },
@@ -51,14 +56,14 @@ def gen_robusta_test_welcome_message(cluster_name: str):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "Thank you for using Robusta.dev"
+                "text": SLACK_WELCOME_THANK_YOU_MESSAGE
             }
         },
         {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "If you have any questions or feedback feel free to write us at <mailto:support@robusta.dev|support@robusta.dev>"
+                "text": SLACK_WELCOME_SUPPORT_MESSAGE
             }
         }
     ]
