@@ -17,7 +17,7 @@ Make sure you read about :ref:`Manual Triggers` to understand how this works.
 
     .. code-block:: bash
 
-        robusta playbooks trigger python_profiler pod_name=your-pod namespace=you-ns process_name=your-process seconds=5
+        robusta playbooks trigger python_profiler name=podname namespace=default process_name=your-process seconds=5
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.python_memory
 
@@ -25,4 +25,4 @@ Make sure you read about :ref:`Manual Triggers` to understand how this works.
 
     .. code-block:: bash
 
-         robusta playbooks trigger python_memory name=myapp namespace=default process_substring=main
+         robusta playbooks trigger python_memory name=podname namespace=default process_substring=main
