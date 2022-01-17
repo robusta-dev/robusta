@@ -7,7 +7,7 @@ The robusta cli is installed via pip:
 
 .. code-block::
 
-    pip install robusta-cli
+    pip3 install robusta-cli
 
 Using the cli
 ---------------------

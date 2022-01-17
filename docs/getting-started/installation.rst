@@ -9,23 +9,33 @@ The standard installation uses Helm and the robusta-cli, but :ref:`other alterna
 Standard Installation
 ------------------------------
 
-1. Download the Helm chart and generate a Robusta configuration. This will setup Slack and other integrations.
+1. Download the Helm chart 
 
 .. code-block:: bash
 
-   helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-   python3 -m pip install -U robusta-cli --no-cache
-   robusta gen-config
+    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
 
-2. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
+2. Install Robusta-CLI
 
-3. Install Robusta using Helm:
+.. code-block::
+
+    pip3 install robusta-cli
+
+3. Generate a Robusta configuration. This will setup Slack and other integrations.
+    
+.. code-block::
+
+    robusta gen-config
+
+4. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
+
+5. Install Robusta using Helm:
 
 .. code-block:: bash
 
     helm install robusta robusta/robusta -f ./generated_values.yaml
 
-4. Verify that Robusta installed two deployments in the current namespace:
+6. Verify that Robusta installed two deployments in the current namespace:
 
 .. code-block:: bash
 
