@@ -14,8 +14,10 @@ Standard Installation
 .. code-block:: bash
 
    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-   python3 -m pip install -U robusta-cli --no-cache
+   pip install -U robusta-cli --no-cache
    robusta gen-config
+
+.. warning:: If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
 
 2. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
 
@@ -30,12 +32,6 @@ Standard Installation
 .. code-block:: bash
 
     kubectl get pods
-
-.. admonition:: Common errors
-    :class: caution
-
-    * Permissions error: re-run the command as root or append ``--user`` to the command
-    * ``robusta`` not found error: add `Python's script directory to PATH <https://www.makeuseof.com/python-windows-path/>`_ before you run ``robusta gen-config``
 
 Seeing Robusta in action
 ------------------------------
