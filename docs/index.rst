@@ -3,8 +3,8 @@ Welcome to Robusta
 
 Robusta is the Swiss Army Knife of Kubernetes troubleshooting and automation. You can use Robusta to:
 
-1. Manually troubleshoot errors, debug pods, run cpu profilers, etc
-2. Add missing context to alerts
+1. Manually troubleshoot errors (debug pods, run profilers, etc)
+2. Add missing context to alerts (logs, etc)
 3. Remediate alerts by clicking a single button in Slack
 4. Complement Prometheus with monitoring of *discrete* events like crashing pods
 
