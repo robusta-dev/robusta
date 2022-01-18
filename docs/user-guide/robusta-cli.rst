@@ -7,7 +7,9 @@ The robusta cli is installed via pip:
 
 .. code-block::
 
-    pip3 install robusta-cli
+    pip install robusta-cli
+
+.. warning:: If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
 
 Using the cli
 ---------------------
