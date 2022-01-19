@@ -31,6 +31,12 @@ spec:
             value: "true"
           - name: LOG_LEVEL
             value: {{ .Values.runner.log_level }}
+          - name: SECRET_SENTRY_DSN
+            valueFrom:
+              secretKeyRef:
+                name: secret-sentry
+                key: dsn
+                optional: true
           - name: INSTALLATION_NAMESPACE
             valueFrom:
               fieldRef:
@@ -131,4 +137,13 @@ spec:
   selector:
     matchLabels:
       app: {{ .Release.Name }}-runner
+{{ end }}
+{{ if .Values.runner.sentry_dsn }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-sentry
+type: Opaque
+stringData:
+  dsn: {{ .Values.runner.sentry_dsn }}
 {{ end }}
