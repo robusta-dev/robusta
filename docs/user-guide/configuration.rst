@@ -170,6 +170,14 @@ Here is a full example showing how to configure all possible sinks:
         name: datadog_sink
         api_key: "datadog api key"
         default: false
+    - opsgenie_sink:
+        name: ops_genie_ui_sink
+        api_key: OpsGenie integration API key  # configured from OpsGenie team integration
+        teams:
+        - "noc"
+        - "sre"
+        tags:
+        - "prod a"
 
 Loading additional playbooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
