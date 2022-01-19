@@ -1,8 +1,7 @@
 # TODO: move the python playbooks into their own subpackage and put each playbook in it's own file
-import json
-import textwrap
 import humanize
 from robusta.api import *
+from robusta.integrations.kubernetes.process_utils import ProcessFinder, ProcessType
 from robusta.utils.parsing import load_json
 from typing import List
 
@@ -117,7 +116,7 @@ def pod_ps(event: PodEvent):
     event.add_finding(finding)
 
 
-class MemoryTraceParams(PythonProcessParams):
+class MemoryTraceParams(ProcessParams):
     """
     :var seconds: Memory allocations analysis duration.
     """
@@ -169,16 +168,14 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         ),
     )
     event.add_finding(finding)
-
-    all_processes = pod.get_processes()
-    if not params.has_exactly_one_match(all_processes):
-        finding.add_enrichment(
-            params.get_retrigger_blocks(all_processes, pod, "Profile", python_memory)
-        )
+    process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
+    process = process_finder.get_match_or_report_error(
+        finding, "Profile", python_memory
+    )
+    if process is None:
         return
 
-    pid = params.get_exact_match(all_processes).pid
-    cmd = f"debug-toolkit memory --seconds={params.seconds} {pid}"
+    cmd = f"debug-toolkit memory --seconds={params.seconds} {process.pid}"
     output = RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd)
     snapshot = PythonMemorySnapshot(**load_json(output))
 
@@ -198,10 +195,9 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         MarkdownBlock(f"*Other unfreed memory:* {snapshot.other_data.to_markdown()}")
     )
     finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
-    event.add_finding(finding)
 
 
-class DebuggerParams(PythonProcessParams):
+class DebuggerParams(ProcessParams):
     """
     :var port: debugging port.
     """
@@ -296,15 +292,12 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     )
     event.add_finding(finding)
 
-    all_processes = pod.get_processes()
-    if not params.has_exactly_one_match(all_processes):
-        finding.add_enrichment(
-            params.get_retrigger_blocks(all_processes, pod, "Debug", python_debugger)
-        )
+    process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
+    process = process_finder.get_match_or_report_error(finding, "Debug", python_memory)
+    if process is None:
         return
 
-    pid = params.get_exact_match(all_processes).pid
-    cmd = f"debug-toolkit debugger {pid} --port {params.port}"
+    cmd = f"debug-toolkit debugger {process.pid} --port {params.port}"
     output = load_json(
         RobustaPod.exec_in_debugger_pod(
             pod.metadata.name,
