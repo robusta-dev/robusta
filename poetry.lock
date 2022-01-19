@@ -1110,6 +1110,36 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "sentry-sdk"
+version = "1.5.2"
+description = "Python client for Sentry (https://sentry.io)"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+certifi = "*"
+urllib3 = ">=1.10.0"
+
+[package.extras]
+aiohttp = ["aiohttp (>=3.5)"]
+beam = ["apache-beam (>=2.12)"]
+bottle = ["bottle (>=0.12.13)"]
+celery = ["celery (>=3)"]
+chalice = ["chalice (>=1.16.0)"]
+django = ["django (>=1.8)"]
+falcon = ["falcon (>=1.4)"]
+flask = ["flask (>=0.11)", "blinker (>=1.1)"]
+httpx = ["httpx (>=0.16.0)"]
+pure_eval = ["pure-eval", "executing", "asttokens"]
+pyspark = ["pyspark (>=2.4.4)"]
+quart = ["quart (>=0.16.1)", "blinker (>=1.1)"]
+rq = ["rq (>=0.6)"]
+sanic = ["sanic (>=0.8)"]
+sqlalchemy = ["sqlalchemy (>=1.2)"]
+tornado = ["tornado (>=5)"]
+
+[[package]]
 name = "six"
 version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -1577,7 +1607,7 @@ all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-excepti
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "90009ae66f97ce7fb037e5b7cb72df79e0a184b0b36651a458045753a5e97785"
+content-hash = "85d3e73d6391cc3e7d3d554d29aaeab20d1b63d351d53478fc60e4db52d45013"
 
 [metadata.files]
 alabaster = [
@@ -1766,20 +1796,26 @@ dpath = [
     {file = "dpath-2.0.5.tar.gz", hash = "sha256:ef74321b01479653c812fee69c53922364614d266a8e804d22058c5c02e5674e"},
 ]
 dulwich = [
+    {file = "dulwich-0.20.28-cp310-cp310-macosx_10_14_x86_64.whl", hash = "sha256:249c20faed33f3ff8f5b2449443b7f1746ad7df5f63eb12171b979437fec93a8"},
     {file = "dulwich-0.20.28-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bcc3ac789bc1a4bb8ce9c4beda94a456d4f42f350e593d8f2eb9733f5e8b8a5b"},
     {file = "dulwich-0.20.28-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:6b32afb1c37ced5b5aeab4e568ecf4e0c3b0e8aa63fc6f290fabd11ff4376da3"},
     {file = "dulwich-0.20.28-cp310-cp310-win_amd64.whl", hash = "sha256:1185d721df0ea3365b7eeb9ebc4b5a3c36929b5e29c61bdb34a5871be2d01ec4"},
+    {file = "dulwich-0.20.28-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:9a70d89989dff565f289b107d4ef2c0f429476423af3b758da4d70b92f9510e5"},
     {file = "dulwich-0.20.28-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bcf61610fa64af421a332f4b3542ef104e6ed684e55d9a4fdecb445fa522d350"},
     {file = "dulwich-0.20.28-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:e72dba000262f17d77bfb3c16abe071f7c434f011dc4fbddb68ac311f8b98860"},
     {file = "dulwich-0.20.28-cp36-cp36m-win_amd64.whl", hash = "sha256:754d69d84ff6f941f75f26dd7300c8c5415aca30c834ac58658d3fc394d362a9"},
+    {file = "dulwich-0.20.28-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:4c51a402a8956c0b22b932318c4b1fa5c470e11e835da708098494ae421372f4"},
     {file = "dulwich-0.20.28-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d4b7903d6f9e2f7650293c1037ae79dbe4fe24b6d5dfd6d81c5bd079ed7fbcc8"},
     {file = "dulwich-0.20.28-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:8b3cb1af7a9d57f3668670c21c35714c9abe54f6e9c1e41687eff069f4884002"},
     {file = "dulwich-0.20.28-cp37-cp37m-win_amd64.whl", hash = "sha256:c92243d8e2bb611ff4a1b2512c6a4c28667323c6aa49114b9a9be89396ffd25b"},
+    {file = "dulwich-0.20.28-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:020e8df3c252feb8a582a365688d9f2cd59ef9be4a2b8eb237d0adbaa239175e"},
     {file = "dulwich-0.20.28-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:766bb3762d6697c546ca0a0c54659e45d855c77bba876d7d779ef6bd21d4bb72"},
     {file = "dulwich-0.20.28-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:d9762486129d9b7ca15b2a4daf88455eb26ef25b5cf6822e38bdef61121e5353"},
     {file = "dulwich-0.20.28-cp38-cp38-win_amd64.whl", hash = "sha256:0d0f0de3bcfcdc91da876c35c516fc96a72e4b8dffaf8e5d4d53bc216e5e9e8c"},
+    {file = "dulwich-0.20.28-cp39-cp39-macosx_10_14_x86_64.whl", hash = "sha256:48bd4660c1295c8419c57e0cfd1f001005c546b7a501f193faf0925333ac2d65"},
     {file = "dulwich-0.20.28-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2c76f92b82740f099904dc30f966fa04518ccd0131e3cadda5a65235d1ba4412"},
     {file = "dulwich-0.20.28-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:5f1f8797b98f32710f020cb6b53f13dac2c6f624934a1311e60479549f260a97"},
+    {file = "dulwich-0.20.28-cp39-cp39-win_amd64.whl", hash = "sha256:f17d797179d4e37fadda15ca84277eaa4677ca7731010621d5f560d248bdcca3"},
     {file = "dulwich-0.20.28.tar.gz", hash = "sha256:703209530d934052bd03e26d5a1650519a3a6b046f3d6d78c91c463a01ab072a"},
 ]
 filelock = [
@@ -2363,6 +2399,10 @@ rsa = [
     {file = "ruamel.yaml.clib-0.2.6-cp39-cp39-win32.whl", hash = "sha256:3fb9575a5acd13031c57a62cc7823e5d2ff8bc3835ba4d94b921b4e6ee664104"},
     {file = "ruamel.yaml.clib-0.2.6-cp39-cp39-win_amd64.whl", hash = "sha256:825d5fccef6da42f3c8eccd4281af399f21c02b32d98e113dbc631ea6a6ecbc7"},
     {file = "ruamel.yaml.clib-0.2.6.tar.gz", hash = "sha256:4ff604ce439abb20794f05613c374759ce10e3595d1867764dd1ae675b85acbd"},
+]
+sentry-sdk = [
+    {file = "sentry-sdk-1.5.2.tar.gz", hash = "sha256:7bbaa32bba806ec629962f207b597e86831c7ee2c1f287c21ba7de7fea9a9c46"},
+    {file = "sentry_sdk-1.5.2-py2.py3-none-any.whl", hash = "sha256:2cec50166bcb67e1965f8073541b2321e3864cd6fd42a526bcde9f0c4e4cc3f8"},
 ]
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
