@@ -3,7 +3,7 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 SLACK_WELCOME_MESSAGE_TITLE = ":large_green_circle: INFO - Welcome to Robustas"
-SLACK_WELCOME_MESSAGE_HEADER_WITH_CLUSTER_NAME = "You have signed up for alerts for cluster: '{}'."
+SLACK_WELCOME_MESSAGE_HEADER_WITH_CLUSTER_NAME = "You have signed up for Slack Monitoring on cluster: '{}'."
 SLACK_WELCOME_THANK_YOU_MESSAGE = "Thank you for using Robusta.dev"
 SLACK_WELCOME_SUPPORT_MESSAGE = "If you have any questions or feedback feel free to write us at " \
                                 "<mailto:support@robusta.dev|support@robusta.dev> "
