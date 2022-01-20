@@ -5,6 +5,8 @@ Robusta is a troubleshooting and automations platform for Kubernetes. It streaml
 
 [Read the docs for more info](https://docs.robusta.dev/master/?from=github) or see screenshots and demos at [robusta.dev](http://robusta.dev/?from=github)
 
+[Follow us on twitter](https://twitter.com/RobustaDev)
+
 ## Examples
 [For screenshots, see the website](http://robusta.dev/?from=github).
 
