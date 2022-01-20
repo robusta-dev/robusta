@@ -26,7 +26,7 @@ class SinkFactory:
         elif isinstance(sink_config, MsTeamsSinkConfigWrapper):
             return MsTeamsSink(sink_config, account_id, cluster_name, signing_key)
         elif isinstance(sink_config, KafkaSinkConfigWrapper):
-            return KafkaSink(sink_config)
+            return KafkaSink(sink_config, cluster_name)
         elif isinstance(sink_config, DataDogSinkConfigWrapper):
             return DataDogSink(sink_config, cluster_name)
         elif isinstance(sink_config, OpsGenieSinkConfigWrapper):

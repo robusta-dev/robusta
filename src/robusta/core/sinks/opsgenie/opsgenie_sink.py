@@ -49,6 +49,7 @@ class OpsGenieSink(SinkBase):
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
+        self.tags.insert(0, self.cluster_name)
         body = opsgenie_sdk.CreateAlertPayload(
             source="Robusta",
             message=finding.title,
