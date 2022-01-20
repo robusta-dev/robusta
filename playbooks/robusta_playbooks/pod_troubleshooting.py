@@ -298,6 +298,15 @@ def get_process_blocks(
                 action_params=updated_params,
                 kubernetes_object=pod,
             )
+        for proc in processes:
+            updated_params = params.copy()
+            updated_params.process_substring = ""
+            updated_params.pid = proc.pid
+            choices[f"StackTrace {proc.pid}"] = CallbackChoice(
+                action=debugger_stack_trace,
+                action_params=updated_params,
+                kubernetes_object=pod,
+            )
         blocks.append(CallbackBlock(choices))
         blocks.append(
             MarkdownBlock(
@@ -306,6 +315,46 @@ def get_process_blocks(
         )
     return blocks
 
+@action
+def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
+    """
+    Analyze memory allocation on the specified python process, for the specified duration.
+
+    Create a finding with the memory analysis results.
+    """
+    pod = event.get_pod()
+    if not pod:
+        logging.info(f"python_debugger - pod not found for event: {event}")
+        return
+
+    all_processes = pod.get_processes()
+    relevant_processes = get_relevant_processes(all_processes, params)
+    # we have exactly one process to debug
+    pid = relevant_processes[0].pid
+    finding = Finding(
+        title=f"Stacktrace on pid {pid}:",
+        source=FindingSource.MANUAL,
+        aggregation_key="python_debugger",
+        subject=FindingSubject(
+            pod.metadata.name,
+            FindingSubjectType.TYPE_POD,
+            pod.metadata.namespace,
+        ),
+    )
+    event.add_finding(finding)
+    cmd = f"debug-toolkit stack-trace {pid}"
+    output = RobustaPod.exec_in_debugger_pod(
+            pod.metadata.name,
+            pod.spec.nodeName,
+            cmd,
+        )
+    for thread_output in output.split('Thread 0x'):
+        if thread_output:
+            finding.add_enrichment(
+                [
+                    MarkdownBlock(f"```\nThread 0x{thread_output}\n```")
+                ]
+            )
 
 @action
 def python_debugger(event: PodEvent, params: DebuggerParams):
