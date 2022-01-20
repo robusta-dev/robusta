@@ -36,14 +36,6 @@ class DataDogSink(SinkBase):
         config.api_key["apiKeyAuth"] = self.api_key
         self.api_instance = events_api.EventsApi(ApiClient(config))
 
-    def __eq__(self, other):
-        return (
-            isinstance(other, DataDogSink)
-            and other.sink_name == self.sink_name
-            and other.cluster_name == self.cluster_name
-            and other.api_key == self.api_key
-        )
-
     @staticmethod
     def __to_datadog_event_type(severity: FindingSeverity):
         # must be one of ["error", "warning", "info", "success", "user_update", "recommendation", "snapshot", ]

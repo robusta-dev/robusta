@@ -2,6 +2,7 @@ import logging
 import re
 
 import opsgenie_sdk
+import markdown2
 
 from typing import List
 from tabulate import tabulate
@@ -23,7 +24,7 @@ from ...reporting.base import (
 )
 from ..sink_base import SinkBase
 
-
+# Robusta has only 4 severities, OpsGenie has 5. We had to omit 1 priority
 PRIORITY_MAP = {
     FindingSeverity.INFO: "P5",
     FindingSeverity.LOW: "P4",
@@ -45,14 +46,6 @@ class OpsGenieSink(SinkBase):
 
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
         self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, OpsGenieSink)
-            and other.sink_name == self.sink_name
-            and other.cluster_name == self.cluster_name
-            and other.api_key == self.api_key
-        )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
@@ -92,8 +85,12 @@ class OpsGenieSink(SinkBase):
             link_parts = link_content.split("|")
             mrkdwn_text = mrkdwn_text.replace(link, f"<a href=\"{link_parts[0]}\">{link_parts[1]}</a>")
 
-        # replace bold: from *bold text* to <b>bold text<b>
-        return re.sub(r"\*([^\*]*)\*", r"<b>\1</b>", mrkdwn_text)
+        # replace slack markdown bold: from *bold text* to <b>bold text<b>  (markdown2 converts this to italic)
+        mrkdwn_text = re.sub(r"\*([^\*]*)\*", r"<b>\1</b>", mrkdwn_text)
+
+        # Note - markdown2 should be used after slack links already converted, other wise it's getting corrupted!
+        # Convert other markdown content
+        return markdown2.markdown(mrkdwn_text)
 
     @classmethod
     def __enrichment_text(cls, enrichment: Enrichment) -> str:
@@ -115,15 +112,10 @@ class OpsGenieSink(SinkBase):
             elif isinstance(block, HeaderBlock):
                 lines.append(f"<strong>{block.text}</strong>")
             elif isinstance(block, ListBlock):
-                list_lines = [" * " + item for item in block.items]
-                lines.extend(list_lines)
+                lines.extend(cls.__markdown_to_html(block.to_markdown().text))
             elif isinstance(block, TableBlock):
-                rendered_rows = block.render_rows()
-                for row in rendered_rows:
-                    for i in range(0, len(row)):
-                        row[i] = row[i] + "   "
                 lines.append(
-                    tabulate(rendered_rows, headers=block.headers, tablefmt="html").replace("\n", "")
+                    tabulate(block.render_rows(), headers=block.headers, tablefmt="html").replace("\n", "")
                 )
         return "\n".join(lines)
 
@@ -133,10 +125,4 @@ class OpsGenieSink(SinkBase):
             cls.__enrichment_text(enrichment) for enrichment in enrichments
         ]
         return "---\n".join(text_arr)
-
-    @staticmethod
-    def __trim_str(text: str, size_limit: int) -> str:
-        if len(text) >= size_limit:
-            text = text[:size_limit] + "..."
-        return text
 

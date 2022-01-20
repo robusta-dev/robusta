@@ -56,6 +56,8 @@ The output from ``resource_babysitter`` looks like this in the different sinks:
 
 **OpsGenie:**
 
+.. admonition:: Typically you'll send alerts from Robusta to OpsGenie and not deployment changes. We're showing a non-typical example with deployment changes because it helps compare the format with other sinks.
+
     .. image:: /images/deployment-babysitter-opsgenie.png
       :width: 1000
       :align: center
