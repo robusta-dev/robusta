@@ -221,8 +221,7 @@ def gen_config(
 
     if disable_cloud_routing is None:
         typer.echo(
-            "\nCertain Robusta features like two way Slack interactivity require routing traffic through Robusta's "
-            "cloud."
+            "\nCertain Robusta features like two way Slack interactivity require connecting to Robusta's cloud."
         )
         disable_cloud_routing = not typer.confirm(
             "Would you like to enable these features?"

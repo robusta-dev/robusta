@@ -16,14 +16,6 @@ class KafkaSink(SinkBase):
         )
         self.topic = sink_config.kafka_sink.topic
 
-    def __eq__(self, other):
-        return (
-            isinstance(other, KafkaSink)
-            and other.sink_name == self.sink_name
-            and other.producer == self.producer
-            and other.topic == self.topic
-        )
-
     def write_finding(self, finding: Finding, platform_enabled: bool):
         for enrichment in finding.enrichments:
             self.send_enrichment(

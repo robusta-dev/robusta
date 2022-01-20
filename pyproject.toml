@@ -36,6 +36,8 @@ dpath = "^2.0.5"
 prometheus-client = "^0.12.0"
 pytz = "^2021.3"
 docutils="^0.17.0"
+opsgenie-sdk = "^2.1.5"
+markdown2 = "^2.4.2"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
