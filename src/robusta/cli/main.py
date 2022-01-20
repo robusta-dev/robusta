@@ -22,6 +22,7 @@ from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, R
 from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
+from .slack_verification import verify_slack_channel
 from .playbooks_cmd import app as playbooks_commands
 from .utils import (
     log_title,
@@ -53,26 +54,6 @@ class HelmValues(BaseModel):
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
-
-
-def slack_integration(
-    slack_api_key: str, slack_param_file_name: str, slack_channel: str = None
-):
-    if slack_api_key is None and typer.confirm(
-        "do you want to configure slack integration? this is HIGHLY recommended.",
-        default=True,
-    ):
-        slack_api_key = get_slack_key()
-
-        slack_channel = typer.prompt(
-            "which slack channel should I send notifications to?"
-        )
-
-    if slack_api_key is not None:
-        replace_in_file(slack_param_file_name, "<SLACK_API_KEY>", slack_api_key.strip())
-
-    if slack_channel is not None:
-        replace_in_file(slack_param_file_name, "<DEFAULT_SLACK_CHANNEL>", slack_channel)
 
 
 def guess_cluster_name():
@@ -141,6 +122,11 @@ def gen_config(
                 )
             )
         )
+        if not verify_slack_channel(slack_api_key, cluster_name, slack_channel):
+            typer.echo(f"We couldn't send our welcome message to channel {slack_channel}."
+                       f"\nDoes this channel exist? Did you connect Robusta to the correct slack workspace?"
+                       f"\nInstallation Aborted.")
+            return
 
     if msteams_webhook is None and typer.confirm(
         "Do you want to configure MsTeams integration ?",
