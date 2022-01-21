@@ -298,15 +298,11 @@ def get_process_blocks(
                 action_params=updated_params,
                 kubernetes_object=pod,
             )
-        for proc in processes:
-            updated_params = params.copy()
-            updated_params.process_substring = ""
-            updated_params.pid = proc.pid
-            choices[f"StackTrace {proc.pid}"] = CallbackChoice(
-                action=debugger_stack_trace,
-                action_params=updated_params,
-                kubernetes_object=pod,
-            )
+        choices[f"Still can't choose?"] = CallbackChoice(
+            action=advanced_debugging_options,
+            action_params=params,
+            kubernetes_object=pod,
+        )
         blocks.append(CallbackBlock(choices))
         blocks.append(
             MarkdownBlock(
@@ -318,9 +314,9 @@ def get_process_blocks(
 @action
 def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
     """
-    Analyze memory allocation on the specified python process, for the specified duration.
+    Prints a stack track of a python process and child threads
 
-    Create a finding with the memory analysis results.
+    Create a finding with the stack trace results.
     """
     pod = event.get_pod()
     if not pod:
@@ -355,6 +351,56 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
                     MarkdownBlock(f"```\nThread 0x{thread_output}\n```")
                 ]
             )
+
+@action
+def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
+    """
+
+    Create a finding with alternative debugging options for received processes ; i.e. Stack-trace or Memory-trace.
+
+    """
+    pod = event.get_pod()
+    if not pod:
+        logging.info(f"python_debugger - pod not found for event: {event}")
+        return
+    finding = Finding(
+        title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
+        source=FindingSource.MANUAL,
+        aggregation_key="python_debugger",
+        subject=FindingSubject(
+            pod.metadata.name,
+            FindingSubjectType.TYPE_POD,
+            pod.metadata.namespace,
+        ),
+    )
+    event.add_finding(finding)
+    finding.add_enrichment(
+        [MarkdownBlock(f"Please Select an advanced debugging choice:")]
+    )
+    all_processes = pod.get_processes()
+    relevant_processes = get_relevant_processes(all_processes, params)
+    if params.interactive:
+        choices = {}
+        for proc in relevant_processes:
+            updated_params = params.copy()
+            updated_params.process_substring = ""
+            updated_params.pid = proc.pid
+            choices[f"StackTrace {proc.pid}"] = CallbackChoice(
+                action=debugger_stack_trace,
+                action_params=updated_params,
+                kubernetes_object=pod,
+            )
+            choices[f"MemoryTrace {proc.pid}"] = CallbackChoice(
+                action=python_memory,
+                action_params=updated_params,
+                kubernetes_object=pod,
+            )
+        finding.add_enrichment([CallbackBlock(choices),
+                                MarkdownBlock(
+                                    "*After clicking a button please wait up to 120 seconds for a response*"
+                                )
+                                ])
+
 
 @action
 def python_debugger(event: PodEvent, params: DebuggerParams):
