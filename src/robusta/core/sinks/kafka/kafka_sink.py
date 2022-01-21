@@ -9,12 +9,13 @@ from ..sink_base import SinkBase
 
 
 class KafkaSink(SinkBase):
-    def __init__(self, sink_config: KafkaSinkConfigWrapper):
+    def __init__(self, sink_config: KafkaSinkConfigWrapper, cluster_name: str):
         super().__init__(sink_config.kafka_sink)
         self.producer = KafkaProducer(
             bootstrap_servers=sink_config.kafka_sink.kafka_url
         )
         self.topic = sink_config.kafka_sink.topic
+        self.cluster_name = cluster_name
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         for enrichment in finding.enrichments:
@@ -48,6 +49,7 @@ class KafkaSink(SinkBase):
         for block in kafka_blocks:
             if isinstance(block, KubernetesDiffBlock):
                 data = {
+                    "cluster_name": self.cluster_name,
                     "resource_name": resource_name,
                     "resource_namespace": resource_namespace,
                     "resource_type": resource_type,
@@ -63,6 +65,8 @@ class KafkaSink(SinkBase):
                 }
                 message_payload = json.dumps(data).encode("utf-8")
             elif isinstance(block, JsonBlock):
-                message_payload = block.json_str.encode("utf-8")
+                json_obj = json.loads(block.json_str)
+                json_obj["cluster_name"] = self.cluster_name
+                message_payload = json.dumps(json_obj).encode("utf-8")
 
             self.producer.send(self.topic, value=message_payload)
