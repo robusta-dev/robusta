@@ -27,6 +27,7 @@ from .playbooks_cmd import app as playbooks_commands
 from .utils import (
     log_title,
     replace_in_file,
+    namespace_to_kubectl
 )
 
 app = typer.Typer()
@@ -263,7 +264,7 @@ def gen_config(
 
 @app.command()
 def playground():
-    """open a python playground - useful when writing playbooks"""
+    """Open a python playground - useful when writing playbooks"""
     typer.echo(
         "this command is temporarily disabled due to recent changes to python:3.8-slim"
     )
@@ -272,7 +273,7 @@ def playground():
 
 @app.command()
 def version():
-    """show the version of the local robusta-cli"""
+    """Show the version of the local robusta-cli"""
     if __version__ == "0.0.0":
         typer.echo("running with development version from git")
     else:
@@ -281,7 +282,7 @@ def version():
 
 @app.command()
 def demo():
-    """deliberately deploy a crashing pod to kubernetes so you can test robusta's response"""
+    """Deliberately deploy a crashing pod to kubernetes so you can test robusta's response"""
     CRASHPOD_YAML = "https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml"
     log_title("Deploying a crashing pod to kubernetes...")
     subprocess.check_call(f"kubectl apply -f {CRASHPOD_YAML}", shell=True)
@@ -291,6 +292,36 @@ def demo():
     time.sleep(60)
     subprocess.check_call(f"kubectl delete deployment crashpod", shell=True)
     log_title("Done!")
+
+@app.command()
+def logs(
+    namespace: str = typer.Option(
+        None,
+        help="Namespace",
+    ),
+    f: bool = typer.Option(
+        False,
+        "-f",
+        show_default=False,
+        help="Stream runner logs"
+    ),
+    since: str = typer.Option(
+        None,
+        help="Only return logs newer than a relative duration like 5s, 2m, or 3h."
+    ),
+    tail: int = typer.Option(
+        None,
+        help="Lines of recent log file to display."
+    )
+):
+    """Fetch Robusta runner logs"""
+    stream="-f" if f else ""
+    since=f"--since={since}" if since else ""
+    tail=f"--tail={tail}" if tail else ""
+    subprocess.check_call(
+        f"kubectl logs {stream} {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner {since} {tail}",
+        shell=True,
+    )
 
 
 if __name__ == "__main__":
