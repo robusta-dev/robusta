@@ -31,12 +31,6 @@ spec:
             value: "true"
           - name: LOG_LEVEL
             value: {{ .Values.runner.log_level }}
-          - name: SECRET_SENTRY_DSN
-            valueFrom:
-              secretKeyRef:
-                name: secret-sentry
-                key: dsn
-                optional: true
           - name: INSTALLATION_NAMESPACE
             valueFrom:
               fieldRef:
@@ -50,6 +44,10 @@ spec:
           {{- if .Values.runner.additional_env_vars }}
           {{ .Values.runner.additional_env_vars | nindent 10 }}
           {{- end }}
+        envFrom: 
+        - secretRef:
+            name: robusta-runner-secret
+            optional: true
         volumeMounts:
           - name: playbooks-config-secret
             mountPath: /etc/robusta/config
@@ -138,12 +136,13 @@ spec:
     matchLabels:
       app: {{ .Release.Name }}-runner
 {{ end }}
+---
 {{ if .Values.runner.sentry_dsn }}
 apiVersion: v1
 kind: Secret
 metadata:
-  name: secret-sentry
+  name: robusta-runner-secret
 type: Opaque
 stringData:
-  dsn: {{ .Values.runner.sentry_dsn }}
+  SENTRY_DSN: {{ .Values.runner.sentry_dsn }}
 {{ end }}
