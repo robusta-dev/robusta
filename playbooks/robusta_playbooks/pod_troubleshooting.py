@@ -1,8 +1,8 @@
 # TODO: move the python playbooks into their own subpackage and put each playbook in it's own file
-import json
-import textwrap
 import humanize
 from robusta.api import *
+from robusta.integrations.kubernetes.process_utils import ProcessFinder, ProcessType
+from robusta.utils.parsing import load_json
 from typing import List
 
 
@@ -10,7 +10,7 @@ class StartProfilingParams(ActionParams):
     """
     :var seconds: Profiling duration.
     :var process_name: Profiled process name prefix.
-    :var include_idle: Inclide idle threads
+    :var include_idle: Include idle threads
     """
 
     seconds: int = 2
@@ -116,13 +116,11 @@ def pod_ps(event: PodEvent):
     event.add_finding(finding)
 
 
-class MemoryTraceParams(ActionParams):
+class MemoryTraceParams(ProcessParams):
     """
     :var seconds: Memory allocations analysis duration.
-    :var process_substring: Inspected process name prefix.
     """
 
-    process_substring: str
     seconds: int = 60
 
 
@@ -159,11 +157,6 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         logging.info(f"python_memory - pod not found for event: {event}")
         return
 
-    find_pid_cmd = f"debug-toolkit find-pid '{pod.metadata.uid}' '{params.process_substring}' python"
-    cmd = f"debug-toolkit memory --seconds={params.seconds} `{find_pid_cmd}`"
-    output = RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd)
-    snapshot = PythonMemorySnapshot(**json.loads(output))
-
     finding = Finding(
         title=f"Memory allocations for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
@@ -174,6 +167,17 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
             pod.metadata.namespace,
         ),
     )
+    event.add_finding(finding)
+    process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
+    process = process_finder.get_match_or_report_error(
+        finding, "Profile", python_memory
+    )
+    if process is None:
+        return
+
+    cmd = f"debug-toolkit memory --seconds={params.seconds} {process.pid}"
+    output = RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd)
+    snapshot = PythonMemorySnapshot(**load_json(output))
 
     blocks = [
         HeaderBlock("Summary"),
@@ -191,21 +195,14 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         MarkdownBlock(f"*Other unfreed memory:* {snapshot.other_data.to_markdown()}")
     )
     finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
-    event.add_finding(finding)
 
 
-class DebuggerParams(ActionParams):
+class DebuggerParams(ProcessParams):
     """
-    :var process_substring: Debugged process name prefix.
-    :var pid: Process id of the target process.
-    :var port: Debugging port.
-    :var interactive: If more than one process is matched, interactively ask which process to debug via Slack. Note that you won't receive immediate output in Slack after clicking a button. It takes about 30-60 seconds for the playbook to finish running.
+    :var port: debugging port.
     """
 
-    process_substring: str = ""
-    pid: int = None
     port: int = 5678
-    interactive: bool = True
 
 
 def get_example_launch_json(params: DebuggerParams):
@@ -260,53 +257,6 @@ def get_debugger_warnings(data):
     return message
 
 
-def get_relevant_processes(all_processes: List[Process], params: DebuggerParams):
-    pid_to_process = {p.pid: p for p in all_processes}
-
-    if params.pid is None:
-        return [
-            p
-            for p in pid_to_process.values()
-            if "python" in p.exe and params.process_substring in " ".join(p.cmdline)
-        ]
-
-    if params.pid not in pid_to_process:
-        return []
-
-    return [pid_to_process[params.pid]]
-
-
-def get_process_blocks(
-    processes: List[Process], pod: RobustaPod, params: DebuggerParams
-) -> List[BaseBlock]:
-    blocks = [
-        TableBlock(
-            [[p.pid, p.exe, " ".join(p.cmdline)] for p in processes],
-            ["pid", "exe", "cmdline"],
-        ),
-    ]
-    # we don't enable this by default because it is bad UX. if you press a callback buttons then nothing
-    # seems to happen for 60 seconds while the playbook runs
-    if params.interactive:
-        choices = {}
-        for proc in processes:
-            updated_params = params.copy()
-            updated_params.process_substring = ""
-            updated_params.pid = proc.pid
-            choices[f"Debug {proc.pid}"] = CallbackChoice(
-                action=python_debugger,
-                action_params=updated_params,
-                kubernetes_object=pod,
-            )
-        blocks.append(CallbackBlock(choices))
-        blocks.append(
-            MarkdownBlock(
-                "*After clicking a button please wait up to 120 seconds for a response*"
-            )
-        )
-    return blocks
-
-
 @action
 def python_debugger(event: PodEvent, params: DebuggerParams):
     """
@@ -342,29 +292,13 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     )
     event.add_finding(finding)
 
-    all_processes = pod.get_processes()
-    relevant_processes = get_relevant_processes(all_processes, params)
-    if len(relevant_processes) == 0:
-        finding.add_enrichment(
-            [MarkdownBlock(f"No matching processes. The processes in the pod are:")]
-            + get_process_blocks(all_processes, pod, params)
-        )
-        return
-    elif len(relevant_processes) > 1:
-        finding.add_enrichment(
-            [
-                MarkdownBlock(
-                    f"More than one matching process. The matching processes are:"
-                )
-            ]
-            + get_process_blocks(relevant_processes, pod, params)
-        )
+    process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
+    process = process_finder.get_match_or_report_error(finding, "Debug", python_memory)
+    if process is None:
         return
 
-    # we have exactly one process to debug
-    pid = relevant_processes[0].pid
-    cmd = f"debug-toolkit debugger {pid} --port {params.port}"
-    output = json.loads(
+    cmd = f"debug-toolkit debugger {process.pid} --port {params.port}"
+    output = load_json(
         RobustaPod.exec_in_debugger_pod(
             pod.metadata.name,
             pod.spec.nodeName,
