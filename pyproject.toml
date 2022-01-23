@@ -26,7 +26,6 @@ Flask = { version = "^1.1.2", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
 manhole =  { version = "^1.8.0", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
-dulwich =  { version = "^0.20.23", optional = true }
 better-exceptions = { version =  "^0.3.3", optional = true }
 CairoSVG = { version = "^2.5.2", optional = true }
 kafka-python = { version = "^2.0.2", optional = true }
@@ -38,6 +37,11 @@ pytz = "^2021.3"
 docutils="^0.17.0"
 opsgenie-sdk = "^2.1.5"
 markdown2 = "^2.4.2"
+
+# we're freezing a specific version here because the latest version doesn't have prebuilt whls on pypi
+# and therefore requires gcc to install which we'd like to avoid
+# this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
+dulwich =  { version = "0.20.28", optional = true }
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
