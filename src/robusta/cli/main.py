@@ -7,7 +7,7 @@ import urllib.request
 import uuid
 import click_spinner
 from distutils.version import StrictVersion
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 from zipfile import ZipFile
 
 import requests
