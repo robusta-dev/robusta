@@ -72,8 +72,8 @@ class HelmValues(BaseModel):
 
     def set_pod_configs_for_small_clusters(self):
         self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
-        self.grafanaRenderer = PodConfigs.gen_config(RUNNER_CONFIG_FOR_SMALL_CLUSTERS)
-        self.runner = PodConfigs.gen_config(GRAFANA_CONFIG_FOR_SMALL_CLUSTERS)
+        self.runner = PodConfigs.gen_config(RUNNER_CONFIG_FOR_SMALL_CLUSTERS)
+        self.grafanaRenderer = PodConfigs.gen_config(GRAFANA_CONFIG_FOR_SMALL_CLUSTERS)
 
 def guess_cluster_name():
     with click_spinner.spinner():
