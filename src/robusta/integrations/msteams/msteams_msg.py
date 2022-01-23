@@ -27,11 +27,13 @@ class MsTeamsMsg:
         self.webhook_url = webhook_url
 
     def write_title_and_desc(self, title: str, description: str, severity: str,
-                             platform_enabled: bool, investigate_uri: str):
+                             platform_enabled: bool, investigate_uri: str, cluster_name: str):
         block = MsTeamsTextBlock(text=f"{severity} - {title}", font_size='extraLarge')
         self.__write_to_entire_msg([block])
         if platform_enabled:  # add link to the Robusta ui, if it's configured
             self.__write_to_entire_msg([MsTeamsTextBlock(text=f"<{investigate_uri}|Investigate>")])
+
+        self.__write_to_entire_msg([MsTeamsTextBlock(text=f"**Source:** *{cluster_name}*")])
 
         if description is not None:
             block = MsTeamsTextBlock(text=description)

@@ -7,6 +7,7 @@ class ActionParams(DocumentedModel):
     """
     Base class for all Action parameter classes.
     """
+
     pass
 
 
@@ -16,6 +17,7 @@ class BashParams(ActionParams):
 
     :example bash_command: ls -l /etc/data/db
     """
+
     bash_command: str
 
 
@@ -25,6 +27,7 @@ class PrometheusParams(ActionParams):
 
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     """
+
     prometheus_url: str = None
 
 
@@ -37,6 +40,7 @@ class GrafanaParams(ActionParams):
     :example grafana_url: http://grafana.namespace.svc
     :example grafana_dashboard_uid: 09ec8aa1e996d6ffcd6817bbaff4db1b
     """
+
     grafana_api_key: SecretStr
     grafana_dashboard_uid: str
     grafana_url: str = None
@@ -48,8 +52,20 @@ class GrafanaAnnotationParams(GrafanaParams):
     :var cluster_name: writen as one of the annotation's tags
     :var custom_tags: custom tags to add to the annotation
     """
+
     grafana_dashboard_panel: str = None
     cluster_name: str = None
     cluster_zone: str = None
     custom_tags: List[str] = None
 
+
+class ProcessParams(ActionParams):
+    """
+    :var process_substring: process name (or substring).
+    :var pid: pid
+    :var interactive: if more than one process matches, interactively ask which process to choose.
+    """
+
+    process_substring: str = ""
+    pid: int = None
+    interactive: bool = True

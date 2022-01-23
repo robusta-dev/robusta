@@ -37,6 +37,8 @@ prometheus-client = "^0.12.0"
 pytz = "^2021.3"
 docutils="^0.17.0"
 sentry-sdk = "^1.5.2"
+opsgenie-sdk = "^2.1.5"
+markdown2 = "^2.4.2"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
@@ -51,7 +53,7 @@ witchhazel = "^2018.8.23"
 sphinx-autodoc-typehints = "^1.12.0"
 sphinxcontrib-images = "^0.9.4"
 jsonref = "^0.2"
-Pillow = "^8.4.0"
+Pillow = "^9.0.0"
 sphinxcontrib-mermaid = "^0.7.1"
 humanize = "^3.13.1"
 cssselect = "^1.1.0"
@@ -62,7 +64,7 @@ rsa = "^4.8"
 
 
 [tool.poetry.extras]
-all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "slack-sdk", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa"]
+all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
