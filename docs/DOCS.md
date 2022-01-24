@@ -14,16 +14,7 @@ If you need to override an existing doc release, you can manually trigger the wo
 The docs definitions are .rst files.
 
 First install the build requirements:
-`poetry install`
+`poetry install -E all`
 
-To build the html, form the docs root, run:
-
-`make html`
-
-This command will create a directory named `_build` containing the build artifacts
-
-In order to deploy it to the `relay` service, copy the artifacts into the relay:
-
-`cp -r _build/html RELAY_ROOT/relay/static/docs`
-
-Redeploy the relay using skaffold
+To build the html and develop locally run the script:
+docs_autobuild.sh 

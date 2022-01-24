@@ -64,34 +64,22 @@ Now use the Robusta CLI to load your repository:
 
      robusta playbooks push ./my-playbooks-project-root
 
-This copies the repository to a mounted persistent volume on the Robusta runner at ``/etc/robusta/playbooks/storage``
+This copies the repository to a mounted persistent volume on the Robusta runner at ``/etc/robusta/playbooks/storage`` and are ready to use.
 
-Lastly, add this directory to the Helm values:
-
-.. code-block:: yaml
-
-    playbookRepos:
-      my_playbook_repo:
-        url: "file:///etc/robusta/playbooks/storage/my-playbooks-project-root"
-
-After setting this up once, you only need to run ``robusta playbooks push`` to update your playbooks.
 
 Changing Robusta's default playbooks
 ----------------------------------------
 Some users may want to change Robusta's default playbooks.
 
-1. Copy the default playbooks package, locally or to another git repository.
-2. Make your changes.
-3. Configure Robusta to use your package, instead of the default one. Update ``playbookRepos`` in the Helm chart to use your playbooks. For example:
+You can override the *entire* default playbooks package by loading another package with the name ``robusta_playbooks``,
+or you can override a single ``action`` just by implementing and loading another ``action`` with the same name.
 
-.. code-block:: yaml
+For example, if you want to override the ``resource_babysitter`` action:
 
-    playbookRepos:
-      robusta_playbooks:
-        url: "file:///etc/robusta/playbooks/storage/my-local-default-repository-copy"
-
-As described above, we will need to push this local repository to the Robusta runner:
+1. Create a playbooks package for your ``action``.
+2. Create a new ``resource_babysitter`` action in one of the package files.
+3. Push the playbooks package:
 
 .. code-block:: bash
 
-    robusta playbooks push ./my-local-default-repository-copy
+    robusta playbooks push ./my-custom-playbooks-package

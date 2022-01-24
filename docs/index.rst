@@ -1,20 +1,18 @@
 Welcome to Robusta
 ================================
 
-Robusta is the Swiss Army Knife of Kubernetes troubleshooting and automation. You can use Robusta to:
+Robusta is an open source platform for Kubernetes troubleshooting and automation. It contains
+50+ builtin actions to:
 
-1. Manually troubleshoot errors, debug pods, run cpu profilers, etc
-2. Add missing context to alerts
-3. Remediate alerts by clicking a single button in Slack
-4. Complement Prometheus with monitoring of *discrete* events like crashing pods
+1. Manually troubleshoot errors (debug pods, run profilers, etc)
+2. Enrich alerts with extra context
+3. Remediate alerts with one click
+4. Track Kubernetes changes and errors
 
-We recommend you start with `Robusta.dev <https://home.robusta.dev/>`_, do a :ref:`60-second install <Installation Guide>`,
-and then read the docs for advanced features.
+Robusta is configured in YAML and extended in Python.
 
 Examples
 ~~~~~~~~~~~~~~~~~~
-
-Most of these can be installed pre-configured, but we show the configuration anyway to illustrate concepts.
 
 .. tab-set::
 
@@ -28,6 +26,7 @@ Most of these can be installed pre-configured, but we show the configuration any
 
             .. code-block:: yaml
 
+                # this is configured by default using something like this:
                 triggers:
                   - on_prometheus_alert:
                       alert_name: KubePodCrashLooping
@@ -94,7 +93,7 @@ How it works
 
 Robusta automates everything that happens **after** you deploy your application.
 
-It is somewhat like Zapier/IFTTT for devops, with an emphasis on 50+ prebuilt automations and not just "build your own".
+It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt automations and not just "build your own".
 
 You configure automations in a three-part yaml:
 
@@ -125,8 +124,6 @@ You configure automations in a three-part yaml:
         (Slack, etc)
 
 Automations run via webhook so if they fail it wont bring down your environment.
-
-Robusta is configured in YAML and extended in Python.
 
 What's in the Box
 ~~~~~~~~~~~~~~~~~~~

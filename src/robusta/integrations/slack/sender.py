@@ -242,6 +242,8 @@ class SlackSender:
         if platform_enabled:  # add link to the robusta ui, if it's configured
             blocks.append(MarkdownBlock(text=f"<{finding.investigate_uri}|:mag_right: Investigate>"))
 
+        blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
+
         # first add finding description block
         if finding.description:
             blocks.append(MarkdownBlock(finding.description))

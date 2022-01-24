@@ -51,14 +51,6 @@ class RobustaSink(SinkBase):
         self.__thread = threading.Thread(target=self.__discover_services)
         self.__thread.start()
 
-    def __eq__(self, other):
-        return (
-            isinstance(other, RobustaSink)
-            and other.sink_name == self.sink_name
-            and other.cluster_name == self.cluster_name
-            and other.token == self.token
-        )
-
     def stop(self):
         self.__active = False
 

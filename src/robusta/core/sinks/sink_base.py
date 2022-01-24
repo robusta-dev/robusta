@@ -8,9 +8,6 @@ class SinkBase:
         self.params = sink_params
         self.default = sink_params.default
 
-    def __eq__(self, other):
-        raise Exception("Sink must implement __eq__")
-
     def stop(self):
         pass
 

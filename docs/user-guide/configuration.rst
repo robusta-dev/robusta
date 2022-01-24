@@ -170,6 +170,14 @@ Here is a full example showing how to configure all possible sinks:
         name: datadog_sink
         api_key: "datadog api key"
         default: false
+    - opsgenie_sink:
+        name: ops_genie_ui_sink
+        api_key: OpsGenie integration API key  # configured from OpsGenie team integration
+        teams:
+        - "noc"
+        - "sre"
+        tags:
+        - "prod a"
 
 Configuration secrets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -217,22 +225,13 @@ Loading additional playbooks
 
 Playbook actions are loaded into Robusta using the ``playbookRepos`` Helm value.
 
-The default configuration is:
+Robusta has a set of builtin playbooks.
+
+You can load extra playbook actions from git repositories:
 
 .. code-block:: yaml
 
     playbookRepos:
-      robusta_playbooks:
-        url: "file:///etc/robusta/playbooks/defaults"
-
-You can load extra playbook actions from git:
-
-.. code-block:: yaml
-
-    playbookRepos:
-      # keep the defaults enabled
-      robusta_playbooks:
-        url: "file:///etc/robusta/playbooks/defaults"
       # we're adding the robusta chaos-engineering playbooks here
       my_extra_playbooks:
         url: "git@github.com:robusta-dev/robusta-chaos.git"
@@ -247,7 +246,7 @@ The ``key`` should contain a deployment key, with ``read`` access. It isn't nece
 .. note::
 
     Robusta does not watch for changes on git repositories. Playbooks are loaded from the repository when the server
-    starts or the configuration changes.
+    starts or the configuration changes, or by running manual reload: ``robusta playbooks reload``
 
 Embedded Prometheus Stack
 ^^^^^^^^^^^^^^^^^^^^^^^^^

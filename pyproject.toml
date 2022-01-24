@@ -26,7 +26,6 @@ Flask = { version = "^1.1.2", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
 manhole =  { version = "^1.8.0", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
-dulwich =  { version = "^0.20.23", optional = true }
 better-exceptions = { version =  "^0.3.3", optional = true }
 CairoSVG = { version = "^2.5.2", optional = true }
 kafka-python = { version = "^2.0.2", optional = true }
@@ -36,6 +35,15 @@ dpath = "^2.0.5"
 prometheus-client = "^0.12.0"
 pytz = "^2021.3"
 docutils="^0.17.0"
+opsgenie-sdk = "^2.1.5"
+markdown2 = "^2.4.2"
+toml = "^0.10.2"
+watchgod = "^0.7"
+
+# we're freezing a specific version here because the latest version doesn't have prebuilt whls on pypi
+# and therefore requires gcc to install which we'd like to avoid
+# this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
+dulwich =  { version = "0.20.28", optional = true }
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
@@ -50,7 +58,7 @@ witchhazel = "^2018.8.23"
 sphinx-autodoc-typehints = "^1.12.0"
 sphinxcontrib-images = "^0.9.4"
 jsonref = "^0.2"
-Pillow = "^8.4.0"
+Pillow = "^9.0.0"
 sphinxcontrib-mermaid = "^0.7.1"
 humanize = "^3.13.1"
 cssselect = "^1.1.0"
@@ -61,7 +69,7 @@ rsa = "^4.8"
 
 
 [tool.poetry.extras]
-all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "slack-sdk", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa"]
+all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

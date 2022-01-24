@@ -18,12 +18,5 @@ class MsTeamsSink(SinkBase):
         self.signing_key = signing_key
         self.webhook_url = sink_config.ms_teams_sink.webhook_url
 
-    def __eq__(self, other):
-        return (
-            isinstance(other, MsTeamsSink)
-            and other.sink_name == self.sink_name
-            and other.webhook_url == self.webhook_url
-        )
-
     def write_finding(self, finding: Finding, platform_enabled: bool):
-        MsTeamsSender.send_finding_to_ms_teams(self.webhook_url, finding, platform_enabled)
+        MsTeamsSender.send_finding_to_ms_teams(self.webhook_url, finding, platform_enabled, self.cluster_name)

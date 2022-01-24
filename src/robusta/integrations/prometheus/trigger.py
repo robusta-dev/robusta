@@ -130,7 +130,8 @@ class PrometheusAlertTrigger(BaseTrigger):
             "job", None
         )  # a prometheus "job" not a kubernetes "job" resource
         # when the job_name is kube-state-metrics "instance" refers to the IP of kube-state-metrics not the node
-        if not execution_event.node and node_name and job_name != "kube-state-metrics":
+        # If the alert has pod, the 'instance' attribute contains the pod ip
+        if not execution_event.pod and not execution_event.node and node_name and job_name != "kube-state-metrics":
             execution_event.node = self.__load_node(execution_event.alert, node_name)
 
         return execution_event

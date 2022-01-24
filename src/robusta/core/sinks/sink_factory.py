@@ -10,6 +10,8 @@ from .datadog.datadog_sink_params import DataDogSinkConfigWrapper
 from .kafka.kafka_sink_params import KafkaSinkConfigWrapper
 from .msteams.msteams_sink_params import MsTeamsSinkConfigWrapper
 from .robusta.robusta_sink_params import RobustaSinkConfigWrapper
+from .opsgenie.opsgenie_sink import OpsGenieSink
+from .opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
 
 
 class SinkFactory:
@@ -24,8 +26,10 @@ class SinkFactory:
         elif isinstance(sink_config, MsTeamsSinkConfigWrapper):
             return MsTeamsSink(sink_config, account_id, cluster_name, signing_key)
         elif isinstance(sink_config, KafkaSinkConfigWrapper):
-            return KafkaSink(sink_config)
+            return KafkaSink(sink_config, cluster_name)
         elif isinstance(sink_config, DataDogSinkConfigWrapper):
             return DataDogSink(sink_config, cluster_name)
+        elif isinstance(sink_config, OpsGenieSinkConfigWrapper):
+            return OpsGenieSink(sink_config, cluster_name)
         else:
             raise Exception(f"Sink not supported {type(sink_config)}")

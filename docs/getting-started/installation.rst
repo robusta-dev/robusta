@@ -14,8 +14,10 @@ Standard Installation
 .. code-block:: bash
 
    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-   python3 -m pip install -U robusta-cli --no-cache
+   pip install -U robusta-cli --no-cache
    robusta gen-config
+
+.. warning:: If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
 
 2. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
 
@@ -30,12 +32,6 @@ Standard Installation
 .. code-block:: bash
 
     kubectl get pods
-
-.. admonition:: Common errors
-    :class: caution
-
-    * Permissions error: re-run the command as root or append ``--user`` to the command
-    * ``robusta`` not found error: add `Python's script directory to PATH <https://www.makeuseof.com/python-windows-path/>`_ before you run ``robusta gen-config``
 
 Seeing Robusta in action
 ------------------------------
@@ -70,13 +66,20 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 
    kubectl delete deployment crashpod
 
+Forwarding Prometheus Alerts to Robusta
+----------------------------------------
+
+Robusta can improve your existing Prometheus alerts by adding extra context and "fix-it" buttons.
+
+For this to work, :ref:`you must configure an AlertManager webhook. <Sending Alerts to Robusta>` This is **not**
+necessary if you installed Robusta's bundled Prometheus Stack. In that case, the webhook is preconfigured.
+
 Next Steps
 ---------------------------------
 
 1. Explore the `Robusta UI <https://home.robusta.dev/ui/>`_ (use the URL you received during installation)
-2. :ref:`Send your Prometheus alerts to Robusta to start seeing enriched alerts <Sending Alerts to Robusta>`. (You can also install Robusta's bundled Prometheus stack.)
-3. :ref:`Learn how to write your own Robusta automations. <Example Playbook>`
-4. :ref:`Learn about Robusta's features for manual troubleshooting <Manual Triggers>`
+2. :ref:`Learn how to write your own Robusta automations. <Example Playbook>`
+3. :ref:`Learn about Robusta's features for manual troubleshooting <Manual Triggers>`
 
 Alternative Installation Methods
 ---------------------------------
