@@ -49,9 +49,10 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
                     "(Prometheus-Alert)|Learn more.>)"
                 ),
                 MarkdownBlock(
-                    "*Robusta's Recommendation:* Remove this pod's CPU limit entirely. <https://github.com/"
-                    "robusta-dev/alert-explanations/wiki/CPUThrottlingHigh-(Prometheus-Alert)#no-limits|This is "
-                    "safe as long as other pods have somewhat-accurate CPU requests>"
+                    "*Robusta's Recommendation:* Remove this pod's CPU limit entirely. <https://github.com/robusta-dev/"
+                    "alert-explanations/wiki/CPUThrottlingHigh-(Prometheus-Alert)#:~:text=relatively%20accurate%20one-,"
+                    "Explanation,-As%20long%20as|Despite common misconceptions, using CPU limits is *not* a best "
+                    "practice.>"
                 ),
             ],
             annotations={SlackAnnotations.UNFURL: False},
@@ -60,10 +61,10 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
         event.add_enrichment(
             [
                 MarkdownBlock(
-                    "*Alert Explanation:* This pod is cpu throttled even though it doesn't have CPU limits and is free to take "
-                    "advantage of extra cpu on the node. This strongly implies that you have too few resources on your cluster "
-                    "or have defined your other CPU requests incorrectly, leading Kubernetes to schedule too many pods on this "
-                    "node."
+                    "*Alert Explanation:* This pod is cpu throttled even though it doesn't have CPU limits and is free "
+                    "to take advantage of extra cpu on the node. This strongly implies that you have too few resources "
+                    "on your cluster or have defined your other CPU requests incorrectly, leading Kubernetes to "
+                    "schedule too many pods on this node."
                 )
             ],
             annotations={SlackAnnotations.UNFURL: False},
