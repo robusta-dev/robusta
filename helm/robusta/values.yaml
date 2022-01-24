@@ -77,7 +77,9 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: HostOomKillDetected
   actions:
-  - oom_killer_enricher: {}
+  - oom_killer_enricher:
+      memory_threshold: 0.95
+      duration_in_secs: 1200
   - graph_enricher: {}
 - triggers:
   - on_prometheus_alert:

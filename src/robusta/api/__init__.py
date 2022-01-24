@@ -23,7 +23,7 @@ from ..integrations.grafana import *
 from ..integrations.scheduled.playbook_scheduler_manager_impl import *
 from ..integrations.git.git_repo import *
 from ..integrations.argocd.argocd_client import *
-from ..integrations.resource_analysis.kubernetes_node_analyzer import NodeAnalyzer
+from ..integrations.resource_analysis.node_cpu_analyzer import NodeCpuAnalyzer
 from ..integrations.prometheus.utils import PrometheusDiscovery
 from ..core.persistency.in_memory import get_persistent_data
 from ..utils.rate_limiter import RateLimiter

@@ -14,7 +14,8 @@ class PrometehusAlertParams(ActionParams):
     :var generator_url: Prometheus generator_url. Some enrichers, use this attribute to query Prometheus.
     """
     alert_name: str
-    pod_name: str
+    pod_name: str = ""
+    node_name: str = ""
     namespace: str = "default"
     status: str = "firing"
     severity: str = "error"
@@ -31,6 +32,16 @@ def prometheus_alert(
     Can be used for testing, when implementing actions triggered by Prometheus alerts.
 
     """
+    labels = {
+        "severity": prometheus_event_data.severity,
+        "namespace": prometheus_event_data.namespace,
+        "alertname": prometheus_event_data.alert_name,
+    }
+    if prometheus_event_data.pod_name != "":
+        labels["pod"] = prometheus_event_data.pod_name
+    if prometheus_event_data.node_name != "":
+        labels["node"] = prometheus_event_data.node_name
+
     prometheus_event = AlertManagerEvent(
         **{
             "status": prometheus_event_data.status,
@@ -45,12 +56,7 @@ def prometheus_alert(
                     "endsAt": datetime.now(),
                     "startsAt": datetime.now(),
                     "generatorURL": prometheus_event_data.generator_url,
-                    "labels": {
-                        "severity": prometheus_event_data.severity,
-                        "pod": prometheus_event_data.pod_name,
-                        "namespace": prometheus_event_data.namespace,
-                        "alertname": prometheus_event_data.alert_name,
-                    },
+                    "labels": labels,
                     "annotations": {},
                 }
             ],
