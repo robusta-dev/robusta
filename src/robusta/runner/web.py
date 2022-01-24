@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from prometheus_client import make_wsgi_app
 
+from .config_loader import ConfigLoader
 from ..integrations.prometheus.trigger import PrometheusTriggerEvent
 from ..integrations.kubernetes.base_triggers import (
     IncomingK8sEventPayload,
@@ -23,9 +24,10 @@ class Web:
     alerts_queue: TaskQueue
     event_handler: PlaybooksEventHandler
     metrics: QueueMetrics
+    loader: ConfigLoader
 
     @staticmethod
-    def init(event_handler: PlaybooksEventHandler):
+    def init(event_handler: PlaybooksEventHandler, loader: ConfigLoader):
         Web.metrics = QueueMetrics()
         Web.api_server_queue = TaskQueue(
             name="api server queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics
@@ -34,6 +36,7 @@ class Web:
             name="alerts queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics
         )
         Web.event_handler = event_handler
+        Web.loader = loader
 
     @staticmethod
     def run():
@@ -74,3 +77,9 @@ class Web:
                 sinks=data.get("sinks", None),
             )
         )
+
+    @staticmethod
+    @app.route("/api/playbooks/reload", methods=["POST"])
+    def handle_playbooks_reload():
+        Web.loader.reload("reload request")
+        return jsonify(success=True)
