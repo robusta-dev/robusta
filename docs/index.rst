@@ -5,8 +5,8 @@ Robusta is an open source platform for Kubernetes troubleshooting and automation
 50+ builtin actions to:
 
 1. Manually troubleshoot errors (debug pods, run profilers, etc)
-2. Add context to alerts with AlertManager webhooks
-3. Remediate alerts by clicking a single button in Slack
+2. Enrich alerts with extra context
+3. Remediate alerts with one click
 4. Track Kubernetes changes and errors
 
 Robusta is configured in YAML and extended in Python.
