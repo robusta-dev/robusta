@@ -76,8 +76,8 @@ class RobustaController:
             [
                 "gen-config",
                 "--cluster-name",
-                "--no-is-small-cluster",
                 "test-cluster",
+                "--no-is-small-cluster",
                 "--slack-api-key",
                 slack_api_key,
                 "--slack-channel",
