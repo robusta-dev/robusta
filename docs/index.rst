@@ -1,20 +1,18 @@
 Welcome to Robusta
 ================================
 
-Robusta is the Swiss Army Knife of Kubernetes troubleshooting and automation. You can use Robusta to:
+Robusta is an open source platform for Kubernetes troubleshooting and automation. It contains a library of
+50+ builtin actions to:
 
 1. Manually troubleshoot errors (debug pods, run profilers, etc)
-2. Add missing context to alerts (logs, etc)
+2. Add context to alerts with AlertManager webhooks
 3. Remediate alerts by clicking a single button in Slack
-4. Complement Prometheus with monitoring of *discrete* events like crashing pods
+4. Track Kubernetes changes and errors
 
-We recommend you start with `Robusta.dev <https://home.robusta.dev/>`_, do a :ref:`60-second install <Installation Guide>`,
-and then read the docs for advanced features.
+Robusta is configured in YAML and extended in Python.
 
 Examples
 ~~~~~~~~~~~~~~~~~~
-
-Most of these can be installed pre-configured, but we show the configuration anyway to illustrate concepts.
 
 .. tab-set::
 
@@ -28,6 +26,7 @@ Most of these can be installed pre-configured, but we show the configuration any
 
             .. code-block:: yaml
 
+                # this is configured by default using something like this:
                 triggers:
                   - on_prometheus_alert:
                       alert_name: KubePodCrashLooping
