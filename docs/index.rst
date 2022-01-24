@@ -1,7 +1,7 @@
 Welcome to Robusta
 ================================
 
-Robusta is an open source platform for Kubernetes troubleshooting and automation. It contains a library of
+Robusta is an open source platform for Kubernetes troubleshooting and automation. It contains 
 50+ builtin actions to:
 
 1. Manually troubleshoot errors (debug pods, run profilers, etc)
