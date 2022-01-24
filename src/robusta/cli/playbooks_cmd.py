@@ -7,7 +7,7 @@ import time
 import traceback
 import click_spinner
 import click
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import yaml
 
@@ -18,7 +18,7 @@ from ..cli.utils import (
     fetch_runner_logs,
     exec_in_robusta_runner,
     namespace_to_kubectl,
-    PLAYBOOKS_DIR,
+    PLAYBOOKS_DIR, get_package_name,
 )
 
 PLAYBOOKS_MOUNT_LOCATION = "/etc/robusta/playbooks/storage"
@@ -46,6 +46,24 @@ def get_runner_pod(namespace: str) -> Optional[str]:
     return lines[1].split(" ")[0]
 
 
+def __validate_playbooks_dir(playbooks_dir: str) -> bool:
+    files = os.listdir(playbooks_dir)
+    if "pyproject.toml" not in files:
+        typer.secho("Illegal playbooks package. missing pyproject.toml", fg="red")
+        return False
+
+    package_name = get_package_name(os.path.join(playbooks_dir))
+    if not package_name:
+        typer.secho("Illegal pyproject.toml. name not defined", fg="red")
+        return False
+
+    if package_name not in files:
+        typer.secho(f"Playbooks directory missing or does not match playbooks package name {package_name}", fg="red")
+        return False
+
+    return True
+
+
 @app.command()
 def push(
     playbooks_directory: str = typer.Argument(
@@ -70,20 +88,20 @@ def push(
             f"-- bash -c 'mkdir -p {PLAYBOOKS_MOUNT_LOCATION}'",
             shell=True,
         )
+        abs_path = os.path.abspath(playbooks_directory)
+        dir_name = os.path.basename(os.path.normpath(abs_path))
+        if not __validate_playbooks_dir(abs_path):
+            return
+
         subprocess.check_call(
-            f"kubectl cp {namespace_to_kubectl(namespace)} {playbooks_directory} "
-            f"{runner_pod}:{PLAYBOOKS_MOUNT_LOCATION}/ -c runner",
+            f"kubectl cp {namespace_to_kubectl(namespace)} {abs_path} "
+            f"{runner_pod}:{PLAYBOOKS_MOUNT_LOCATION}/{dir_name} -c runner",
             shell=True,
         )
         time.sleep(
             5
         )  # wait five seconds for the runner to actually reload the playbooks
     log_title("Loaded custom playbooks code!")
-    log_title(
-        f"Make sure your playbook repos configuration contains:\n"
-        f"PLAYBOOKS_PACKAGE_NAME:\n"
-        f'  url: "file://{os.path.join(PLAYBOOKS_MOUNT_LOCATION, os.path.basename(playbooks_directory))}"'
-    )
 
 
 @app.command()
@@ -277,6 +295,23 @@ def edit_config(
         configure(config_file=fname, namespace=namespace)
 
 
+def _post_in_runner_pod(namespace: str, api_path: str, req_body: Dict, req_name: str):
+    with fetch_runner_logs(namespace=namespace):
+        # cmd = f"curl -X POST -F 'trigger_name={trigger_name}' {action_params} http://localhost:5000/api/trigger"
+        cmd = (
+            f"curl -X POST http://localhost:5000/api/{api_path} "
+            f"-H 'Content-Type: application/json' "
+            f"-d '{json.dumps(req_body)}'"
+        )
+        exec_in_robusta_runner(
+            cmd,
+            namespace=namespace,
+            tries=3,
+            error_msg=f"Cannot {req_name} - usually this means Robusta just started. Will try again",
+        )
+        typer.echo("\n")
+
+
 @app.command()
 def trigger(
     action_name: str,
@@ -287,7 +322,7 @@ def trigger(
     ),
     namespace: str = typer.Option(
         None,
-        help="Install Robusta on the specified custom namespace",
+        help="Robusta namespace",
     ),
 ):
     """trigger a manually run playbook"""
@@ -299,20 +334,20 @@ def trigger(
     # action_params = " ".join([f"-F '{p}'" for p in param])
     req_body = {"action_name": action_name, "action_params": action_params}
 
-    with fetch_runner_logs(namespace=namespace):
-        # cmd = f"curl -X POST -F 'trigger_name={trigger_name}' {action_params} http://localhost:5000/api/trigger"
-        cmd = (
-            f"curl -X POST http://localhost:5000/api/trigger "
-            f"-H 'Content-Type: application/json' "
-            f"-d '{json.dumps(req_body)}'"
-        )
-        exec_in_robusta_runner(
-            cmd,
-            namespace=namespace,
-            tries=3,
-            error_msg="Cannot trigger action - usually this means Robusta just started. Will try again",
-        )
-        typer.echo("\n")
+    _post_in_runner_pod(namespace=namespace, api_path="trigger", req_body=req_body, req_name="trigger action")
+    log_title("Done!")
+
+
+@app.command()
+def reload(
+        namespace: str = typer.Option(
+            None,
+            help="Robusta namespace",
+        ),
+):
+    """reload playbooks configuration"""
+    log_title("Reloading playbooks...")
+    _post_in_runner_pod(namespace=namespace, api_path="playbooks/reload", req_body={}, req_name="reload playbooks")
     log_title("Done!")
 
 
