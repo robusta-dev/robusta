@@ -2,9 +2,7 @@
 # if you have any questions, feel free to ask via github issues or Slack (see link on robusta.dev)
 
 # playbook repositories
-playbookRepos:
-  robusta_playbooks:
-    url: "file:///etc/robusta/playbooks/defaults"
+playbookRepos: []
 
 # sinks configurations
 sinksConfig: []

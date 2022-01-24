@@ -3,6 +3,10 @@ import uuid
 import pytz
 
 PLAYBOOKS_ROOT = os.environ.get("PLAYBOOKS_ROOT", "/etc/robusta/playbooks/")
+# should be the same as the one in out Dockerfile
+DEFAULT_PLAYBOOKS_ROOT = os.environ.get("DEFAULT_PLAYBOOKS_ROOT", os.path.join(PLAYBOOKS_ROOT, "defaults"))
+CUSTOM_PLAYBOOKS_ROOT = os.path.join(PLAYBOOKS_ROOT, "storage")
+
 PLAYBOOKS_CONFIG_FILE_PATH = os.environ.get("PLAYBOOKS_CONFIG_FILE_PATH")
 
 INSTALLATION_NAMESPACE = os.environ.get("INSTALLATION_NAMESPACE", "robusta")

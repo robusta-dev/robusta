@@ -37,6 +37,8 @@ pytz = "^2021.3"
 docutils="^0.17.0"
 opsgenie-sdk = "^2.1.5"
 markdown2 = "^2.4.2"
+toml = "^0.10.2"
+watchgod = "^0.7"
 
 # we're freezing a specific version here because the latest version doesn't have prebuilt whls on pypi
 # and therefore requires gcc to install which we'd like to avoid

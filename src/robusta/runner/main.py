@@ -18,7 +18,7 @@ def main():
     loader = ConfigLoader(registry, event_handler)
     if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
         manhole.install(locals=dict(getmembers(robusta_api)))
-    Web.init(event_handler)
+    Web.init(event_handler, loader)
     Web.run()  # blocking
     loader.close()
 

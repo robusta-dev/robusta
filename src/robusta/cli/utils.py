@@ -1,12 +1,14 @@
+import os
 import subprocess
 import time
 from contextlib import contextmanager
 from typing import Optional
 
 import click_spinner
+import toml
 import typer
 import requests
-
+from dpath.util import get
 
 PLAYBOOKS_DIR = "playbooks/"
 
@@ -92,3 +94,10 @@ def fetch_runner_logs(namespace: Optional[str], all_logs=False):
                 f"kubectl logs {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner --since={int(time.time() - start + 1)}s",
                 shell=True,
             )
+
+
+def get_package_name(playbooks_dir: str) -> str:
+    with open(os.path.join(playbooks_dir, "pyproject.toml"), "r") as pyproj_toml:
+        data = pyproj_toml.read()
+        parsed = toml.loads(data)
+        return get(parsed, "tool/poetry/name", default="")
