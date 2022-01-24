@@ -17,7 +17,7 @@ class MemoryAnalyzer:
 
         self.prometheus_tzinfo = prometheus_tzinfo
 
-    def get_max_node_memory_usage_in_percentage(self, node_name: str, duration: timedelta) -> float:
+    def get_max_node_memory_usage_in_percentage(self, node_name: str, duration: timedelta) -> Optional[float]:
         """
         Gets the maximal memory usage (in percentage) for the node with the given node name, in the time range between now and now - duration.
         :return: a float between 0 and 1, representing the maximal percentage of memory in use by the given node
@@ -27,18 +27,16 @@ class MemoryAnalyzer:
         # However, since the corresponding metrics contain only the name of the node exporter's instance, and not the node name,
         # we perform a join of the instance name with the node_uname_info metric, in order to filter on the node name.
 
-        max_values = self._get_max_value_for_each_series_in_query(
-            f"(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * " \
+        max_memory_usage_in_percentage = self._get_max_value_in_first_series_of_query(
+            f"(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * "
             f"on(instance) group_left(nodename) (node_uname_info{{nodename=\"{node_name}\"}})",
-            duration,
-            "nodename"
+            duration
         )
-        return max_values[node_name]
+        return max_memory_usage_in_percentage
 
-    def get_max_containers_memory_usage_in_bytes(self, node_name: str, pod_name: str, duration: timedelta) -> Dict[str, int]:
+    def get_container_max_memory_usage_in_bytes(self, node_name: str, pod_name: str, container_name: str, duration: timedelta) -> float:
         """
-        Returns the maximal memory usage (in bytes) for each of the containers of the pod with the given pod name, in the time range between now and now - duration.
-        :return: a mapping between the container name and the maximal number of memory bytes used by the given container
+        Returns the maximal memory usage (in bytes) for the given container, in the time range between now and now - duration.r
         """
 
         # We use the container_memory_usage_bytes metric, with the following filters:
@@ -55,6 +53,9 @@ class MemoryAnalyzer:
         #   In order to ignore paused containers. For more information, please see:
         #   https://stackoverflow.com/questions/68683403/what-is-the-container-pod-label-in-prometheus-and-why-do-most-examples-exclude
         #
+        # - container={container_name}:
+        #   In order to filter on the given container name.
+        #
         # - id=~"/kubepods/.*":
         #   In order to filter multiple ids that are returned for the same container.
         #   In my minikube, for example, 2 time series are returned for each container, one with id=/docker/* and one with id=/kubepods/*.
@@ -65,29 +66,27 @@ class MemoryAnalyzer:
         #   Therefore, there will always be exactly one id of the form /kubpods/* prefix for each container.
         #   See https://stackoverflow.com/questions/49035724/how-do-i-resolve-kubepods-besteffort-poduuid-to-a-pod-name for more information.
 
-        return self._get_max_value_for_each_series_in_query(
-            f"container_memory_usage_bytes{{node=\"{node_name}\", pod=\"{pod_name}\", image!=\"\","
-            f"container!=\"POD\", id=~\"/kubepods/.*\"}}",
-            duration,
-            "container_name"
+        return self._get_max_value_in_first_series_of_query(
+            f"container_memory_usage_bytes{{node=\"{node_name}\", pod=\"{pod_name}\", image!=\"\", "
+            f"container!=\"POD\", container=\"{container_name}\", id=~\"/kubepods/.*\"}}",
+            duration
         )
 
-    def _get_max_value_for_each_series_in_query(self, promql_query: str, duration: timedelta, series_key: str) -> dict:
+    def _get_max_value_in_first_series_of_query(self, promql_query: str, duration: timedelta) -> Optional[float]:
         results = self._query(promql_query, duration)
 
-        max_results = {}
-        for series in results:
-            series_key = series["metrics"][series_key]
-            series_values = series["values"]
-            max_value_in_series = max([val for (timestamp, val) in series_values])
-            max_results[series_key] = max_value_in_series
+        if len(results) == 0:
+            return None
 
-        return max_results
+        series = results[0]
+        series_values = series["values"]
+        max_value_in_series = max([float(val) for (timestamp, val) in series_values])
+        return max_value_in_series
 
     def _query(self, promql_query: str, duration: timedelta) -> list:
         end_time = datetime.now(tz=self.prometheus_tzinfo)
         start_time = end_time - duration
-        step = 0.1
+        step = 1
         results = self.prom.custom_query_range(
             promql_query,
             start_time,
@@ -101,3 +100,26 @@ class MemoryAnalyzer:
         return results
 
 
+class K8sMemoryTransformer:
+    def __init__(self):
+        self.factors = {
+            "K": 1000,
+            "M": 1000*1000,
+            "G": 1000*1000*1000,
+            "P": 1000*1000*1000*1000,
+            "E": 1000*1000*1000*1000*1000,
+            "Ki": 1024,
+            "Mi": 1024*1024,
+            "Gi": 1024*1024*1024,
+            "Pi": 1024*1024*1024*1024,
+            "Ei": 1024*1024*1024*1024*1024
+        }
+
+    def get_number_of_bytes_from_kubernetes_mem_spec(self, mem_spec: str):
+        if len(mem_spec) > 2 and mem_spec[-2:] in self.factors:
+            return int(mem_spec[:-2]) * self.factors[mem_spec[-2:]]
+
+        if len(mem_spec) > 1 and mem_spec[-1] in self.factors:
+            return int(mem_spec[:-1]) * self.factors[mem_spec[-1]]
+
+        raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)

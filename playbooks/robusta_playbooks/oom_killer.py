@@ -1,7 +1,4 @@
-from datetime import timedelta, tzinfo
-
-from dateutil import tz
-from prometheus_api_client import PrometheusConnect
+from datetime import timedelta
 
 from robusta.api import *
 from robusta.integrations.resource_analysis.memory_analyzer import MemoryAnalyzer, K8sMemoryTransformer
