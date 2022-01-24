@@ -26,7 +26,8 @@ Supported filters
 
 Sending Alerts to Robusta
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-You must configure AlertManager to send alerts to Robusta:
+
+Forward alerts to Robusta by adding a webhook receiver to AlertManager:
 
 .. admonition:: AlertManager configuration
 
