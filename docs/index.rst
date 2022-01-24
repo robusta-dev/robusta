@@ -1,7 +1,7 @@
 Welcome to Robusta
 ================================
 
-Robusta is an open source platform for Kubernetes troubleshooting and automation. It contains 
+Robusta is an open source platform for Kubernetes troubleshooting and automation. It contains
 50+ builtin actions to:
 
 1. Manually troubleshoot errors (debug pods, run profilers, etc)
@@ -93,7 +93,7 @@ How it works
 
 Robusta automates everything that happens **after** you deploy your application.
 
-It is somewhat like Zapier/IFTTT for devops, with an emphasis on 50+ prebuilt automations and not just "build your own".
+It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt automations and not just "build your own".
 
 You configure automations in a three-part yaml:
 
@@ -124,8 +124,6 @@ You configure automations in a three-part yaml:
         (Slack, etc)
 
 Automations run via webhook so if they fail it wont bring down your environment.
-
-Robusta is configured in YAML and extended in Python.
 
 What's in the Box
 ~~~~~~~~~~~~~~~~~~~
