@@ -341,13 +341,14 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
             pod.spec.nodeName,
             cmd,
         )
-    for thread_output in output.split('Thread 0x'):
+    blocks =[]
+    for thread_output in output.split('\n\n'):
+        if thread_output.startswith('Current thread'):
+            # this is the thread we are getting the stack trace from, not relevant for debugging
+            continue
         if thread_output:
-            finding.add_enrichment(
-                [
-                    MarkdownBlock(f"```\nThread 0x{thread_output}\n```")
-                ]
-            )
+            blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
+    finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
 
 @action
 def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
