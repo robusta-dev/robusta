@@ -30,6 +30,15 @@ The main cli commands are:
 ``robusta playbooks push``
     Push custom playbooks into the current cluster
 
+``robusta playbooks delete``
+    Delete custom playbooks from the current cluster
+
+``robusta playbooks list-dirs``
+    List current custom playbooks directories in the cluster
+
+``robusta playbooks reload``
+    Reload all playbooks in the cluster
+
 ``robusta playbooks pull``
     Pull custom playbooks from the current cluster into a local directory
 

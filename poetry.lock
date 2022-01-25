@@ -530,11 +530,11 @@ tests = ["freezegun", "pytest", "pytest-cov"]
 
 [[package]]
 name = "identify"
-version = "2.4.4"
+version = "2.4.5"
 description = "File identification library for Python"
 category = "dev"
 optional = false
-python-versions = ">=3.6.1"
+python-versions = ">=3.7"
 
 [package.extras]
 license = ["ukkonen"]
@@ -1580,6 +1580,14 @@ python-versions = ">=3.6"
 watchmedo = ["PyYAML (>=3.10)"]
 
 [[package]]
+name = "watchgod"
+version = "0.7"
+description = "Simple, modern file watching and code reload in python."
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[[package]]
 name = "webencodings"
 version = "0.5.1"
 description = "Character encoding aliases for legacy web content"
@@ -1646,7 +1654,7 @@ all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-excepti
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "3b914a1399ef6f00982ff756502cf8b2f6bb72b6c179b71d3dff9af58eaf30d2"
+content-hash = "50e79b421a28b4626e8866259972100c11cde8e144b82bacd34f43f81de2a2d2"
 
 [metadata.files]
 alabaster = [
@@ -1901,8 +1909,8 @@ humanize = [
     {file = "humanize-3.13.1.tar.gz", hash = "sha256:12f113f2e369dac7f35d3823f49262934f4a22a53a6d3d4c86b736f50db88c7b"},
 ]
 identify = [
-    {file = "identify-2.4.4-py2.py3-none-any.whl", hash = "sha256:aa68609c7454dbcaae60a01ff6b8df1de9b39fe6e50b1f6107ec81dcda624aa6"},
-    {file = "identify-2.4.4.tar.gz", hash = "sha256:6b4b5031f69c48bf93a646b90de9b381c6b5f560df4cbe0ed3cf7650ae741e4d"},
+    {file = "identify-2.4.5-py2.py3-none-any.whl", hash = "sha256:d27d10099844741c277b45d809bd452db0d70a9b41ea3cd93799ebbbcc6dcb29"},
+    {file = "identify-2.4.5.tar.gz", hash = "sha256:d11469ff952a4d7fd7f9be520d335dc450f585d474b39b5dfb86a500831ab6c7"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
@@ -2649,6 +2657,10 @@ watchdog = [
     {file = "watchdog-2.1.6-py3-none-win_amd64.whl", hash = "sha256:bd9ba4f332cf57b2c1f698be0728c020399ef3040577cde2939f2e045b39c1e5"},
     {file = "watchdog-2.1.6-py3-none-win_ia64.whl", hash = "sha256:a0f1c7edf116a12f7245be06120b1852275f9506a7d90227648b250755a03923"},
     {file = "watchdog-2.1.6.tar.gz", hash = "sha256:a36e75df6c767cbf46f61a91c70b3ba71811dfa0aca4a324d9407a06a8b7a2e7"},
+]
+watchgod = [
+    {file = "watchgod-0.7-py3-none-any.whl", hash = "sha256:d6c1ea21df37847ac0537ca0d6c2f4cdf513562e95f77bb93abbcf05573407b7"},
+    {file = "watchgod-0.7.tar.gz", hash = "sha256:48140d62b0ebe9dd9cf8381337f06351e1f2e70b2203fa9c6eff4e572ca84f29"},
 ]
 webencodings = [
     {file = "webencodings-0.5.1-py2.py3-none-any.whl", hash = "sha256:a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78"},

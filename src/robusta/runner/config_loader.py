@@ -9,8 +9,8 @@ import yaml
 from typing import Optional, List, Dict
 from inspect import getmembers
 
-from robusta.integrations.receiver import ActionRequestReceiver
-
+from ..cli.utils import get_package_name
+from ..integrations.receiver import ActionRequestReceiver
 from ..integrations.scheduled.trigger import ScheduledTriggerEvent
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..core.model.runner_config import RunnerConfig, PlaybookRepo
@@ -18,7 +18,7 @@ from ..core.playbooks.actions_registry import ActionsRegistry, Action
 from ..core.model.env_vars import (
     INTERNAL_PLAYBOOKS_ROOT,
     PLAYBOOKS_CONFIG_FILE_PATH,
-    PLAYBOOKS_ROOT,
+    PLAYBOOKS_ROOT, DEFAULT_PLAYBOOKS_ROOT, CUSTOM_PLAYBOOKS_ROOT,
 )
 from ..integrations.git.git_repo import (
     GitRepoManager,
@@ -71,6 +71,9 @@ class ConfigLoader:
         self.watcher.stop_watcher()
         self.conf_watcher.stop_watcher()
 
+    def reload(self, description: str):
+        self.__reload_playbook_packages(description)
+
     def __reload_scheduler(self, playbooks_registry: PlaybooksRegistry):
         scheduler = self.registry.get_scheduler()
         if not scheduler:  # no scheduler yet, initialization
@@ -97,6 +100,13 @@ class ConfigLoader:
             # need to re-create the receiver
             receiver.stop()
             self.registry.set_receiver(ActionRequestReceiver(self.event_handler))
+
+    @classmethod
+    def __get_package_name(cls, local_path) -> str:
+        package_name = get_package_name(local_path)
+        if not package_name:
+            raise Exception(f"Illegal playbooks package {local_path}. Package name not found")
+        return package_name
 
     def __load_playbooks_repos(
         self,
@@ -177,6 +187,22 @@ class ConfigLoader:
                 runner_config.playbook_repos[
                     "robusta.core.playbooks.internal"
                 ] = PlaybookRepo(url=INTERNAL_PLAYBOOKS_ROOT, pip_install=False)
+                # order matters! Loading the default first, allows overriding it if adding package with the same name
+                # default playbooks
+                runner_config.playbook_repos[
+                    self.__get_package_name(DEFAULT_PLAYBOOKS_ROOT)
+                ] = PlaybookRepo(url=f"file://{DEFAULT_PLAYBOOKS_ROOT}")
+
+                # custom playbooks
+                if os.path.exists(CUSTOM_PLAYBOOKS_ROOT):
+                    for custom_playbooks_location in os.listdir(CUSTOM_PLAYBOOKS_ROOT):
+                        location = os.path.join(CUSTOM_PLAYBOOKS_ROOT, custom_playbooks_location)
+                        runner_config.playbook_repos[
+                            self.__get_package_name(location)
+                        ] = PlaybookRepo(url=f"file://{location}")
+                else:
+                    logging.info(f"No custom playbooks defined at {CUSTOM_PLAYBOOKS_ROOT}")
+
                 self.__load_playbooks_repos(
                     action_registry, runner_config.playbook_repos
                 )

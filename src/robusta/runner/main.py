@@ -28,7 +28,7 @@ def main():
             logging.error(f"Sentry error: {e}")
             pass
 
-    Web.init(event_handler)
+    Web.init(event_handler, loader)
     Web.run()  # blocking
     loader.close()
 
