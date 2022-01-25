@@ -71,12 +71,6 @@ class ProcessFinder:
         """
         return len(self.matching_processes) == 1
 
-    def get_all_matches(self) -> List[Process]:
-        """
-         Returns all processes matching this class
-        """
-        return self.all_processes
-
     def get_pids(self) -> List[int]:
         """
          Returns all relevant pids
