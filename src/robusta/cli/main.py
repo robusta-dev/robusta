@@ -29,9 +29,9 @@ from .utils import (
     replace_in_file,
 )
 
-FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "256Mi"
+FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
 RUNNER_CONFIG_FOR_SMALL_CLUSTERS = "512Mi"
-GRAFANA_CONFIG_FOR_SMALL_CLUSTERS = "256Mi"
+GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
 
 app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
@@ -55,7 +55,7 @@ class PodConfigs(Dict[str, Dict[str, Dict[str, str]]]):
     __root__: Dict[str, Dict[str, Dict[str, str]]]
 
     @classmethod
-    def gen_config(cls, memory_size: str = "256Mi"):
+    def gen_config(cls, memory_size: str):
         return {'resources': {'requests': {'memory': memory_size}}}
 
 
@@ -73,7 +73,7 @@ class HelmValues(BaseModel):
     def set_pod_configs_for_small_clusters(self):
         self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
         self.runner = PodConfigs.gen_config(RUNNER_CONFIG_FOR_SMALL_CLUSTERS)
-        self.grafanaRenderer = PodConfigs.gen_config(GRAFANA_CONFIG_FOR_SMALL_CLUSTERS)
+        self.grafanaRenderer = PodConfigs.gen_config(GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS)
 
 def guess_cluster_name():
     with click_spinner.spinner():
@@ -121,7 +121,7 @@ def gen_config(
         )
     if is_small_cluster is None:
         is_small_cluster = typer.confirm(
-            "Are you running a small local cluster? (Like minikube or kind)"
+            "Are you running a mini cluster? (Like minikube or kind)"
         )
 
     sinks_config: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]] = []
