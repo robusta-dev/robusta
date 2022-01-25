@@ -186,6 +186,12 @@ Pod Enrichers
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_events_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.pod_ps
+
+Networking
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. robusta-action:: playbooks.robusta_playbooks.networking.incluster_ping
+
 Daemonset Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

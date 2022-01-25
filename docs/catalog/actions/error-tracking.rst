@@ -1,26 +1,20 @@
-List of built-in playbooks
+Error tracking
 ############################
 
+Pod Health
+-------------------------------------------
 
-Kubernetes Error Handling
+.. robusta-action:: playbooks.robusta_playbooks.restart_loop_reporter.restart_loop_reporter
+
+.. robusta-action:: playbooks.robusta_playbooks.autoscaler.alert_on_hpa_reached_limit
+
+Node Health
 -------------------------
 
 .. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_health_watcher
 
-.. robusta-action:: playbooks.robusta_playbooks.autoscaler.alert_on_hpa_reached_limit
-
-.. robusta-action:: playbooks.robusta_playbooks.autoscaler.scale_hpa_callback
-
 Kubernetes Monitoring
 ---------------------
-
-.. robusta-action:: playbooks.robusta_playbooks.git_change_audit.git_change_audit
-
-.. robusta-action:: playbooks.robusta_playbooks.deployment_status_report.deployment_status_report
-
-.. robusta-action:: playbooks.robusta_playbooks.babysitter.resource_babysitter
-
-.. robusta-action:: playbooks.robusta_playbooks.networking.incluster_ping
 
 Integrations
 -------------------------------------------
@@ -42,3 +36,7 @@ Stress Testing and Chaos Engineering
 .. robusta-action:: playbooks.robusta_playbooks.stress_tests.http_stress_test
 
 .. robusta-action:: playbooks.robusta_playbooks.prometheus_simulation.prometheus_alert
+
+Alert Enrichment
+---------------------
+This is a special playbook that has out-of-the box knowledge about specific Prometheus alerts. See :ref:`prometheus-alert-enrichment` for details.
