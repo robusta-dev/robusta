@@ -7,7 +7,7 @@ import urllib.request
 import uuid
 import click_spinner
 from distutils.version import StrictVersion
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 from zipfile import ZipFile
 
 import requests
@@ -30,6 +30,10 @@ from .utils import (
     namespace_to_kubectl
 )
 
+FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
+RUNNER_CONFIG_FOR_SMALL_CLUSTERS = "512Mi"
+GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
+
 app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
 app.add_typer(
@@ -48,6 +52,14 @@ class GlobalConfig(BaseModel):
     account_id: str = ""
 
 
+class PodConfigs(Dict[str, Dict[str, Dict[str, str]]]):
+    __root__: Dict[str, Dict[str, Dict[str, str]]]
+
+    @classmethod
+    def gen_config(cls, memory_size: str):
+        return {'resources': {'requests': {'memory': memory_size}}}
+
+
 class HelmValues(BaseModel):
     globalConfig: GlobalConfig
     sinksConfig: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]]
@@ -55,7 +67,14 @@ class HelmValues(BaseModel):
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
+    kubewatch: PodConfigs = None
+    grafanaRenderer: PodConfigs = None
+    runner: PodConfigs = None
 
+    def set_pod_configs_for_small_clusters(self):
+        self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
+        self.runner = PodConfigs.gen_config(RUNNER_CONFIG_FOR_SMALL_CLUSTERS)
+        self.grafanaRenderer = PodConfigs.gen_config(GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS)
 
 def guess_cluster_name():
     with click_spinner.spinner():
@@ -75,6 +94,7 @@ def gen_config(
         None,
         help="Cluster Name",
     ),
+    is_small_cluster: bool = typer.Option(None),
     slack_api_key: str = typer.Option(
         "",
         help="Slack API Key",
@@ -99,6 +119,10 @@ def gen_config(
         cluster_name = typer.prompt(
             "Please specify a unique name for your cluster or press ENTER to use the default",
             default=guess_cluster_name(),
+        )
+    if is_small_cluster is None:
+        is_small_cluster = typer.confirm(
+            "Are you running a mini cluster? (Like minikube or kind)"
         )
 
     sinks_config: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]] = []
@@ -246,6 +270,9 @@ def gen_config(
         disableCloudRouting=disable_cloud_routing,
         enablePlatformPlaybooks=enable_platform_playbooks,
     )
+
+    if is_small_cluster:
+        values.set_pod_configs_for_small_clusters()
 
     with open(output_path, "w") as output_file:
         yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
