@@ -63,9 +63,11 @@ class ProcessParams(ActionParams):
     """
     :var process_substring: process name (or substring).
     :var pid: pid
+    :var pids: a list of relevant pids.
     :var interactive: if more than one process matches, interactively ask which process to choose.
     """
 
     process_substring: str = ""
     pid: int = None
+    pids: List[int] = None
     interactive: bool = True
