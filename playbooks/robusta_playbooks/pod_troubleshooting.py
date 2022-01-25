@@ -256,58 +256,6 @@ def get_debugger_warnings(data):
         return None
     return message
 
-
-def get_relevant_processes(all_processes: List[Process], params: DebuggerParams):
-    pid_to_process = {p.pid: p for p in all_processes}
-
-    if params.pid is None:
-        return [
-            p
-            for p in pid_to_process.values()
-            if "python" in p.exe and params.process_substring in " ".join(p.cmdline)
-        ]
-
-    if params.pid not in pid_to_process:
-        return []
-
-    return [pid_to_process[params.pid]]
-
-
-def get_process_blocks(
-    processes: List[Process], pod: RobustaPod, params: DebuggerParams
-) -> List[BaseBlock]:
-    blocks = [
-        TableBlock(
-            [[p.pid, p.exe, " ".join(p.cmdline)] for p in processes],
-            ["pid", "exe", "cmdline"],
-        ),
-    ]
-    # we don't enable this by default because it is bad UX. if you press a callback buttons then nothing
-    # seems to happen for 60 seconds while the playbook runs
-    if params.interactive:
-        choices = {}
-        for proc in processes:
-            updated_params = params.copy()
-            updated_params.process_substring = ""
-            updated_params.pid = proc.pid
-            choices[f"Debug {proc.pid}"] = CallbackChoice(
-                action=python_debugger,
-                action_params=updated_params,
-                kubernetes_object=pod,
-            )
-        choices[f"Still can't choose?"] = CallbackChoice(
-            action=advanced_debugging_options,
-            action_params=params,
-            kubernetes_object=pod,
-        )
-        blocks.append(CallbackBlock(choices))
-        blocks.append(
-            MarkdownBlock(
-                "*After clicking a button please wait up to 120 seconds for a response*"
-            )
-        )
-    return blocks
-
 @action
 def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
     """
@@ -320,8 +268,8 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         logging.info(f"python_debugger - pod not found for event: {event}")
         return
 
-    all_processes = pod.get_processes()
-    relevant_processes = get_relevant_processes(all_processes, params)
+    process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
+    relevant_processes = process_finder.get_all_matches()
     # we have exactly one process to debug
     pid = relevant_processes[0].pid
     finding = Finding(
@@ -375,8 +323,8 @@ def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
     finding.add_enrichment(
         [MarkdownBlock(f"Please Select an advanced debugging choice:")]
     )
-    all_processes = pod.get_processes()
-    relevant_processes = get_relevant_processes(all_processes, params)
+    process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
+    relevant_processes = process_finder.get_all_matches()
     if params.interactive:
         choices = {}
         for proc in relevant_processes:

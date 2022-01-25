@@ -1,4 +1,6 @@
 from typing import List, Callable, Optional
+
+from playbooks.robusta_playbooks.pod_troubleshooting import advanced_debugging_options
 from ...core.reporting.base import Finding
 from ...core.model.base_params import ProcessParams
 from ...integrations.kubernetes.custom_models import Process, RobustaPod
@@ -70,6 +72,12 @@ class ProcessFinder:
         """
         return len(self.matching_processes) == 1
 
+    def get_all_matches(self) -> List[Process]:
+        """
+         Returns all processes matching this class
+        """
+        return self.all_processes
+
     def get_exact_match(self) -> Process:
         """
         Returns a process matching this class and throws when there is more than one match
@@ -120,6 +128,11 @@ class ProcessFinder:
                     action_params=updated_params,
                     kubernetes_object=self.pod,
                 )
+            choices[f"Still can't choose?"] = CallbackChoice(
+                action=advanced_debugging_options,
+                action_params=self.filters,
+                kubernetes_object=self.pod,
+            )
             blocks.append(CallbackBlock(choices))
             blocks.append(
                 MarkdownBlock(
