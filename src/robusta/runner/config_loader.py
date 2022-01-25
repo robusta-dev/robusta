@@ -188,6 +188,7 @@ class ConfigLoader:
                     "robusta.core.playbooks.internal"
                 ] = PlaybookRepo(url=INTERNAL_PLAYBOOKS_ROOT, pip_install=False)
                 # order matters! Loading the default first, allows overriding it if adding package with the same name
+                # since python 3.7, iteration order is identical to insertion order, if dict didn't change
                 # default playbooks
                 runner_config.playbook_repos[
                     self.__get_package_name(DEFAULT_PLAYBOOKS_ROOT)
