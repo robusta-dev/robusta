@@ -22,14 +22,14 @@ sinks:
   - slack
 ```
 
-There are also builtin automations to analyze common alerts.
+There are also built-in automations to analyze common alerts.
 
 You can also trigger automations manually. For example, [attach a debugger to a python pod](https://docs.robusta.dev/master/catalog/actions/python-troubleshooting.html#python-debugger):
 ```commandline
 robusta playbooks trigger python_debugger name=mypod namespace=default
 ```
 
-[There are over 50 builtin automations.](https://docs.robusta.dev/master/catalog/actions/index.html)
+[There are over 50 built-in automations.](https://docs.robusta.dev/master/catalog/actions/index.html)
 
 # Installing Robusta
 
