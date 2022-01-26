@@ -111,3 +111,18 @@ Alternative Installation Methods
 
     Do not use the ``values.yaml`` file in the GitHub repo. It has some empty placeholders which are replaced during
     our release process.
+
+.. dropdown:: Installing in a different namespace
+    :color: light
+
+    Create a namespace ``robusta`` and install robusta in the new namespace using:
+
+    .. code-block:: bash
+
+        helm install robusta robusta/robusta -f ./generated_values.yaml -n robusta --create-namespace
+
+    Verify that Robusta installed two deployments in the ``robusta`` namespace:
+
+    .. code-block:: bash
+
+        kubectl get pods -n robusta
