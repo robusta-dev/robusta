@@ -1,18 +1,52 @@
 Welcome to Robusta
 ================================
 
-Robusta is an open source platform for Kubernetes troubleshooting and automation. It contains
-50+ builtin actions to:
+Robusta is an open source platform for Kubernetes troubleshooting and automation.
 
-1. Manually troubleshoot errors (debug pods, run profilers, etc)
-2. Enrich alerts with extra context
-3. Remediate alerts with one click
-4. Track Kubernetes changes and errors
+Just like Docker is infrastructure-as-code for *deploying* applications, Robusta is infrastructure-as-code for
+*maintaining* Kubernetes applications and handling their alerts.
 
-Robusta is configured in YAML and extended in Python.
+Robusta works with your existing applications and automates their day2 operations.
+
+Handling alerts with Robusta
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We're building a massive open source database of errors and Prometheus alerts.
+
+Robusta receives alerts by webhook from Prometheus, AlertManager, and other solutions. It then:
+
+1. Gathers extra context
+2. Identifies possible root causes
+3. Suggests fixes
+4. Automates applying workarounds
+
+Manual troubleshooting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Not every problem can be diagnosed automatically, so Robusta lets you:
+
+1. Attach debuggers to running pods
+2. Perform CPU profiling on K8s apps
+3. Get memory dumps from K8s apps
+
+Change and error tracking
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Robusta listens to API Server events. Using this it:
+
+1. Adds extra context to Grafana (like showing when applications updated)
+2. Notifies you on errors like crashing pods
+
+Other Day2 operations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can also use Robusta's automation framework to:
+
+1. Easily write chaos-engineering scenarios in Python.
+2. Automate the response to any Prometheus alert or Kubernetes event
 
 Examples
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 .. tab-set::
 
@@ -88,101 +122,6 @@ Examples
 
             See :ref:`Python debugger` for more details
 
-How it works
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Robusta automates everything that happens **after** you deploy your application.
-
-It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt automations and not just "build your own".
-
-You configure automations in a three-part yaml:
-
-.. grid:: 3
-
-    .. grid-item-card:: Triggers
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: catalog/triggers/index
-        :link-type: doc
-
-        When to run
-        (on alerts, logs, changes, etc)
-
-    .. grid-item-card::  Actions
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: catalog/actions/index
-        :link-type: doc
-
-        What to do
-        (over 50 builtin actions)
-
-    .. grid-item-card::  Sinks
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: catalog/sinks/index
-        :link-type: doc
-
-        Where to send the result
-        (Slack, etc)
-
-Automations run via webhook so if they fail it wont bring down your environment.
-
-What's in the Box
-~~~~~~~~~~~~~~~~~~~
-
-Robusta has several components:
-
-A Python framework for writing better webhooks and automations
-    Robusta handles the plumbing so you can focus on the logic.
-
-50+ prebuilt webhooks and automations for common actions
-    No need to write code. Just enable these with YAML.
-
-An opinionated Prometheus configuration (optional)
-    Don't configure anything. It just works. Better alerts + insights.
-
-`A better frontend for AlertManager <https://home.robusta.dev/ui/>`_ (optional)
-    We put your existing alerts on a timeline and let you slice and dice them. You gain visibility into
-    Kubernetes changes that occurred before an alert fired. And more.
-
-Writing your own automations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Many automations are included, but you can also write your own in Python.
-
-.. dropdown:: View example action (Python)
-    :color: light
-
-    .. code-block:: python
-
-        # this runs on Prometheus alerts you specify in the YAML
-        @action
-        def my_enricher(event: PrometheusKubernetesAlert):
-            # we have full access to the pod on which the alert fired
-            pod = event.get_pod()
-            pod_name = pod.metadata.name
-            pod_logs = pod.get_logs()
-            pod_processes = pod.exec("ps aux")
-
-            # this is how you send data to slack or other destinations
-            event.add_enrichment([
-                MarkdownBlock("*Oh no!* An alert occurred on " + pod_name)
-                FileBlock("crashing-pod.log", pod_logs)
-            ])
-
-
-
-FAQ
-~~~~~~~~~~~~~~~~~~~~
-
-How is this different from webhooks
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This is powered by webhooks! The advantage is configuring prebuilt webhooks using YAML instead of writing
-them from scratch as code.
-
-We also let you re-use the same webhook action with multiple triggers: e.g. AlertManager, the APIServer, and more.
-
-Lastly, if you do want to write a webhook action from scratch, we make it easier with our Python API.
-
 Architecture
 ~~~~~~~~~~~~~~~~~~~~
 Robusta can be used as
@@ -208,6 +147,8 @@ Next Steps
 
 :ref:`Ready to install Robusta? Get started! <Installation Guide>`
 
+:ref:`Want to learn more? Learn how it works <How it works>`
+
 Want a better frontend for AlertManager? Try `the Robusta UI <https://home.robusta.dev/ui/>`_. It shows alerts, changes
 to your cluster, and data from Robusta. See everything on a single timeline and slice/dice by cluster, microservice,
 and alert type.
@@ -224,6 +165,7 @@ and alert type.
    :caption: Getting Started
    :hidden:
 
+   getting-started/how-it-works
    getting-started/installation
    getting-started/manual-triggers
    getting-started/support
