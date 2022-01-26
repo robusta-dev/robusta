@@ -166,6 +166,7 @@ and alert type.
    :hidden:
 
    getting-started/how-it-works
+   getting-started/faq
    getting-started/installation
    getting-started/manual-triggers
    getting-started/support
