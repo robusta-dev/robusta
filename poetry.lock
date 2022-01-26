@@ -1654,7 +1654,7 @@ all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-excepti
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "50e79b421a28b4626e8866259972100c11cde8e144b82bacd34f43f81de2a2d2"
+content-hash = "80f39c5a1bf96e0a72633fc4b5d64d58bd18e0978692583b7958e82c26b5f86d"
 
 [metadata.files]
 alabaster = [
