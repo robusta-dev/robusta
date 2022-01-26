@@ -265,24 +265,19 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
     """
     pod = event.get_pod()
     if not pod:
-        logging.info(f"stack_trace - pod not found for event: {event}")
+        logging.info(f"debugger_stack_trace - pod not found for event: {event}")
         return
 
-    if not params.pid:
-        logging.info(f"debugger_stack_trace - pid not selected: {params.pid}")
-        return
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
+    if not params.pid and not process_finder.get_lowest_relevant_pid():
+        logging.info(f"debugger_stack_trace - no relevant pids")
 
-    if not process_finder.has_exactly_one_match():
-        logging.info(f"debugger_stack_trace - pid does not exist")
-        return
-
-    # we have exactly one process to debug
-    pid = params.pid
+    # if params pid is set, this will be returned, if not we return the parent process
+    pid = process_finder.get_lowest_relevant_pid()
     finding = Finding(
         title=f"Stacktrace on pid {pid}:",
         source=FindingSource.MANUAL,
-        aggregation_key="python_debugger",
+        aggregation_key="debugger_stack_trace",
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -315,12 +310,12 @@ def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
     """
     pod = event.get_pod()
     if not pod:
-        logging.info(f"python_debugger - pod not found for event: {event}")
+        logging.info(f"advanced_debugging_options - pod not found for event: {event}")
         return
     finding = Finding(
         title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="python_debugger",
+        aggregation_key="advanced_debugging_options",
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -329,7 +324,7 @@ def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
     )
     event.add_finding(finding)
     finding.add_enrichment(
-        [MarkdownBlock(f"Please Select an advanced debugging choice:")]
+        [MarkdownBlock(f"Please select an advanced debugging choice:")]
     )
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     relevant_processes_pids = process_finder.get_pids()
@@ -342,15 +337,9 @@ def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
         for proc_pid in relevant_processes_pids:
             updated_params = params.copy()
             updated_params.process_substring = ""
-            updated_params.pids = None
             updated_params.pid = proc_pid
             choices[f"StackTrace {updated_params.pid}"] = CallbackChoice(
                 action=debugger_stack_trace,
-                action_params=updated_params,
-                kubernetes_object=pod,
-            )
-            choices[f"MemoryTrace {updated_params.pid}"] = CallbackChoice(
-                action=python_memory,
                 action_params=updated_params,
                 kubernetes_object=pod,
             )

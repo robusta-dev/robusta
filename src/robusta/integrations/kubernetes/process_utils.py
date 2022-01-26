@@ -77,6 +77,12 @@ class ProcessFinder:
         """
         return [p.pid for p in self.matching_processes]
 
+    def get_lowest_relevant_pid(self) -> int:
+        """
+         Returns the lowest pid which is most likely the parent process
+        """
+        return min([p.pid for p in self.matching_processes])
+
     def get_exact_match(self) -> Process:
         """
         Returns a process matching this class and throws when there is more than one match
@@ -93,13 +99,6 @@ class ProcessFinder:
         Returns the processes that match a ProcessParams class
         """
         pid_to_process = {p.pid: p for p in processes}
-
-        if filters.pids:
-            return [
-                p
-                for p in pid_to_process.values()
-                if p.pid in filters.pids and process_type.value in p.exe
-            ]
 
         if filters.pid is None:
             return [
@@ -134,12 +133,9 @@ class ProcessFinder:
                     action_params=updated_params,
                     kubernetes_object=self.pod,
                 )
-            updated_params = self.filters.copy()
-            updated_params.process_substring = ""
-            updated_params.pids = self.get_pids()
             choices[f"Still can't choose?"] = CallbackChoice(
                 action=debug_action,
-                action_params=updated_params,
+                action_params=self.filters,
                 kubernetes_object=self.pod,
             )
             blocks.append(CallbackBlock(choices))
