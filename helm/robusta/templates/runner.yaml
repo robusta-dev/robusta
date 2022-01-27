@@ -44,6 +44,10 @@ spec:
           {{- if .Values.runner.additional_env_vars }}
           {{ .Values.runner.additional_env_vars | nindent 10 }}
           {{- end }}
+        envFrom: 
+        - secretRef:
+            name: robusta-runner-secret
+            optional: true
         volumeMounts:
           - name: playbooks-config-secret
             mountPath: /etc/robusta/config
@@ -131,4 +135,14 @@ spec:
   selector:
     matchLabels:
       app: {{ .Release.Name }}-runner
+{{ end }}
+---
+{{ if .Values.runner.sentry_dsn }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: robusta-runner-secret
+type: Opaque
+stringData:
+  SENTRY_DSN: {{ .Values.runner.sentry_dsn }}
 {{ end }}

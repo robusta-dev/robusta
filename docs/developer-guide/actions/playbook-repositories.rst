@@ -64,7 +64,7 @@ Now use the Robusta CLI to load your repository:
 
      robusta playbooks push ./my-playbooks-project-root
 
-This copies the repository to a mounted persistent volume on the Robusta runner at ``/etc/robusta/playbooks/storage`` and are ready to use.
+This copies the repository to a mounted persistent volume on the Robusta runner at ``/etc/robusta/playbooks/storage``.  The actions inside the repository are now loaded and ready for use.
 
 
 Changing Robusta's default playbooks

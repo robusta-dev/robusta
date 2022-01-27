@@ -147,6 +147,7 @@ runner:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
   log_level: INFO
+  sentry_dsn:
   resources:
     requests:
       memory: 1024Mi
