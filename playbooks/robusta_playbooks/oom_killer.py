@@ -6,28 +6,43 @@ from robusta.integrations.resource_analysis.memory_analyzer import MemoryAnalyze
 
 class OomKillerEnricherParams(ActionParams):
     """
+    :var new_oom_kills_duration_in_sec: In order to avoid duplicated, This playbook will only report OOMKills
+    that occurred in the last new_oom_kills_duration_in_sec seconds.
+    For example, if new_oom_kills_duration_in_sec is 1200, only OOMKills from the last 20 minutes will be considered.
+    """
+    new_oom_kills_duration_in_sec: int = 1200
+
+    """
     :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster.
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090".
     """
     prometheus_url: Optional[str] = None
 
     """
-    :var memory_threshold: The maximal amount of memory percentage a node or pod can use.
-    If this amount of memory was exceeded (in the last duration_in_secs seconds), the playbook will
-    report the corresponding node or pod as the reason for the OOMKill.
+    :var metrics_duration_in_secs: Memory usage metrics of nodes and pod containers where OOMKills have occurred will be queried
+    from prometheus in order to determine the estimated reason of each OOMKill.
+    This parameter determines the amount of time, in seconds, these metrics will be applied on.
+    For example, if duration_in_secs is 1200, memory usage metrics from the last 20 minutes will be considered.
     """
-    memory_threshold: float = 0.95
+    metrics_duration_in_secs: int = 1200
 
     """
-    :var duration_in_secs: The amount of time, in seconds, to inspect prometheus alerts.
-    For example, if duration_in_secs is 600, metrics from the last 10 minutes will be considered
-    in order to determine the reason of the OOMKills.
+    :var container_memory_threshold: The maximal amount of memory percentage a pod container can use.
+    If this amount of memory was exceeded (in the last metrics_duration_in_secs seconds), the playbook will
+    report the corresponding container as the reason for the OOMKill.
     """
-    duration_in_secs: int = 1200
+    container_memory_threshold: float = 0.92
+
+    """
+    :var node_memory_threshold: The maximal amount of memory percentage a node can use.
+    If this amount of memory was exceeded (in the last metrics_duration_in_secs seconds), the playbook will
+    report the corresponding node as the reason for the OOMKill.
+    """
+    node_memory_threshold: float = 0.95
 
 
 @action
-def oom_killer_enricher(event: NodeEvent, params: OomKillerEnricherParams):
+def oom_killer_enricher(event: NodeEvent, config: OomKillerEnricherParams):
     """
     Enrich the finding information regarding node OOM killer.
 
@@ -44,8 +59,8 @@ def oom_killer_enricher(event: NodeEvent, params: OomKillerEnricherParams):
         logging.info("OOMKillerEnricher can only be triggered by prometheus alerts")
         return
 
-    oom_kill_reason_investigator = KubernetesOomKillReasonInvestigator(node, event.alert, params)
-    oom_kills_extractor = OomKillsExtractor(node, oom_kill_reason_investigator)
+    oom_kill_reason_investigator = KubernetesOomKillReasonInvestigator(node, event.alert, config)
+    oom_kills_extractor = OomKillsExtractor(config, node, oom_kill_reason_investigator)
     oom_kills = oom_kills_extractor.extract_oom_kills()
 
     if len(oom_kills) > 0:
@@ -87,8 +102,7 @@ class OomKill:
     reason: Optional[str]
 
 
-# This class is used only because the OomKillsExtractor should appear before KubernetesOomKillReasonInvestigator,
-# but still know its interface.
+# This class is used only because the OomKillsExtractor should appear before KubernetesOomKillReasonInvestigator, but still know its interface.
 class OomKillReasonInvestigator(metaclass=abc.ABCMeta):
     @abstractmethod
     def get_reason(self, oom_kill: OomKill) -> str:
@@ -96,10 +110,12 @@ class OomKillReasonInvestigator(metaclass=abc.ABCMeta):
 
 
 class OomKillsExtractor:
-    def __init__(self, node: Node, oom_kill_reason_investigator: OomKillReasonInvestigator):
-        self.memory_transformer = K8sMemoryTransformer()
+    def __init__(self, config: OomKillerEnricherParams, node: Node, oom_kill_reason_investigator: OomKillReasonInvestigator):
+        self.config = config
         self.node = node
         self.oom_kill_reason_investigator = oom_kill_reason_investigator
+
+        self.memory_transformer = K8sMemoryTransformer()
 
     def extract_oom_kills(self) -> List[OomKill]:
         results: PodList = Pod.listPodForAllNamespaces(
@@ -115,21 +131,29 @@ class OomKillsExtractor:
         return oom_kills
 
     def get_oom_kills_from_pod(self, pod: Pod) -> List[OomKill]:
+        new_oom_kills_duration = timedelta(seconds=self.config.new_oom_kills_duration_in_sec)
+
         containers_spec_by_name = {}
         for c in pod.spec.containers:
             containers_spec_by_name[c.name] = c
 
         oom_kills: List[OomKill] = []
         for c_status in pod.status.containerStatuses:
+            # Ignore pods that were not oom killed
             state = self.get_oom_killed_state(c_status)
             if state is None:
                 continue
 
+            # Ignore old oom kills
+            dt = parse_kubernetes_datetime_to_ms(state.terminated.finishedAt)
+            oom_kill_from = datetime.fromtimestamp(dt / 1000)
+            now = datetime.now()
+            if now - oom_kill_from > new_oom_kills_duration:
+                continue
+
+            # Report the current container as oom killed
             resources = containers_spec_by_name[c_status.name].resources if c_status.name in containers_spec_by_name else None
             memory_specs = self.get_memory_specs(resources)
-
-            dt = parse_kubernetes_datetime_to_ms(state.terminated.finishedAt)
-
             oom_kill = OomKill(time=dt, pod_name=pod.metadata.name, container_name=c_status.name,
                                image=c_status.image, memory_specs=memory_specs, reason=None)
             oom_kill.reason = self.oom_kill_reason_investigator.get_reason(oom_kill)
@@ -191,9 +215,9 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
         self.node_reason = None
 
     def get_reason(self, oom_kill: OomKill) -> str:
-        pod_reason = self.get_busy_pod_reason(oom_kill)
-        if pod_reason is not None:
-            return pod_reason
+        container_reason = self.get_busy_container_reason(oom_kill)
+        if container_reason is not None:
+            return container_reason
 
         # Calculate if the node is the reason for the the OOMKill only once, rather than for every OomKill
         if not self.node_reason_calculated:
@@ -205,8 +229,8 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
 
         return f"reason not found"
 
-    def get_busy_pod_reason(self, oom_kill: OomKill):
-        duration = timedelta(seconds=self.config.duration_in_secs)
+    def get_busy_container_reason(self, oom_kill: OomKill):
+        duration = timedelta(seconds=self.config.metrics_duration_in_secs)
 
         if oom_kill.memory_specs.limits is None:
             return None
@@ -220,21 +244,21 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
             return None
 
         used_memory_percentage = container_max_used_memory_in_bytes / max_memory_in_bytes
-        if used_memory_percentage < self.config.memory_threshold:
+        if used_memory_percentage < self.config.container_memory_threshold:
             return None
 
         reason = f"container used too much memory: reached {used_memory_percentage} percentage of its specified limit"
         return reason
 
     def get_busy_node_reason(self) -> Optional[str]:
-        duration = timedelta(seconds=self.config.duration_in_secs)
+        duration = timedelta(seconds=self.config.metrics_duration_in_secs)
 
         node_max_used_memory_in_percentage = self.memory_analyzer.get_max_node_memory_usage_in_percentage(
             self.node.metadata.name, duration)
         if node_max_used_memory_in_percentage is None:
             return None
 
-        if node_max_used_memory_in_percentage < self.config.memory_threshold:
+        if node_max_used_memory_in_percentage < self.config.node_memory_threshold:
             return None
 
         reason = f"node used too much memory: reached {node_max_used_memory_in_percentage} percentage of its available memory"

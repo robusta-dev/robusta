@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, tzinfo
-from typing import Dict
+from typing import Optional
 
 from prometheus_api_client import PrometheusConnect
 
@@ -115,7 +115,7 @@ class K8sMemoryTransformer:
             "Ei": 1024*1024*1024*1024*1024
         }
 
-    def get_number_of_bytes_from_kubernetes_mem_spec(self, mem_spec: str):
+    def get_number_of_bytes_from_kubernetes_mem_spec(self, mem_spec: str) -> int:
         if len(mem_spec) > 2 and mem_spec[-2:] in self.factors:
             return int(mem_spec[:-2]) * self.factors[mem_spec[-2:]]
 
