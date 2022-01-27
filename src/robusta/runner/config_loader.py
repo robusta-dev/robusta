@@ -5,6 +5,7 @@ import pkgutil
 import subprocess
 import sys
 import threading
+import traceback
 import yaml
 from typing import Optional, List, Dict
 from inspect import getmembers
@@ -151,7 +152,8 @@ class ConfigLoader:
 
                 playbook_packages.append(playbook_package)
             except Exception as e:
-                logging.error(f"Failed to add playbooks reop {playbook_package} {e}")
+                logging.error(f"Failed to add playbooks repo {playbook_package} due to the following:")
+                traceback.print_exc()
 
         for package_name in playbook_packages:
             self.__import_playbooks_package(actions_registry, package_name)
@@ -174,7 +176,8 @@ class ConfigLoader:
                 for (action_name, action_func) in playbook_actions:
                     actions_registry.add_action(action_func)
             except Exception as e:
-                logging.error(f"error loading module {playbooks_module}. exception={e}")
+                logging.error(f"failed to module {playbooks_module} for the following reason:")
+                traceback.print_exc()
 
     def __reload_playbook_packages(self, change_name):
         logging.info(f"Reloading playbook packages due to change on {change_name}")
@@ -232,8 +235,9 @@ class ConfigLoader:
                 self.__reload_receiver()
             except Exception as e:
                 logging.exception(
-                    f"unknown error reloading playbooks. will try again when they next change. exception={e}"
+                    f"unknown error reloading playbooks. will try again when they next change. stacktrace follows:"
                 )
+                traceback.print_exc()
 
     @classmethod
     def __prepare_runtime_config(
