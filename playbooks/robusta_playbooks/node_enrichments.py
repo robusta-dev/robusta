@@ -95,7 +95,7 @@ def node_status_enricher(event: NodeEvent):
 @action
 def node_health_watcher(event: NodeChangeEvent):
     """
-    Create a finding when a node becomes unhealthy.
+    Notify when a node becomes unhealthy.
 
     Add useful information regarding the node's health status.
     """
