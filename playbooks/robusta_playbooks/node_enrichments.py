@@ -125,6 +125,7 @@ def node_health_watcher(event: NodeChangeEvent):
         title=f"Unhealthy node {event.obj.metadata.name}",
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="node_not_ready",
+        severity=FindingSeverity.MEDIUM,
     )
     event.add_finding(finding, "DEFAULT")
     event.add_enrichment([KubernetesDiffBlock([], event.old_obj, event.obj)])
