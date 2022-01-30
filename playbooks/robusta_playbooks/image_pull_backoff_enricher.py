@@ -7,6 +7,7 @@ class ImagePullPackParams(ActionParams):
     """
     :var rate_limit: Rate limit the execution of this action (Seconds).
     """
+
     rate_limit: int = 3600
 
 
@@ -27,8 +28,7 @@ def decompose_flag(flag: Flag) -> List[Flag]:
 @action
 def image_pull_backoff_reporter(event: PodEvent, action_params: ImagePullPackParams):
     """
-    Create a finding when an image pull backoff occurs.
-    Extract additional information from the Kubernetes API server, and try to determine the cause for the failure.
+    Notify when an ImagePullBackoff occurs and determine the reason why.
     """
     # Extract pod. Terminate if not found
     pod = event.get_pod()

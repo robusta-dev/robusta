@@ -6,6 +6,7 @@ class StressTestParams(ActionParams):
     :var n: Number of requests to run.
     :var url: In cluster target url.
     """
+
     n: int = 1000
     url: str
 
@@ -13,9 +14,7 @@ class StressTestParams(ActionParams):
 @action
 def http_stress_test(event: ExecutionBaseEvent, action_params: StressTestParams):
     """
-    Run http stress test in your cluster.
-
-    Create a finding with the test results.
+    Run an http stress test and send the results
     """
     # TODO: remove timeout?
     output = RobustaJob.run_simple_job(

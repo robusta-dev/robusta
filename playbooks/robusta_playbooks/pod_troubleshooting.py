@@ -85,7 +85,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
 @action
 def pod_ps(event: PodEvent):
     """
-    Create a finding with the list of running processes on the pod.
+    Fetch the list of running processes in a pod.
     """
     pod = event.get_pod()
     if not pod:
@@ -148,9 +148,9 @@ class PythonMemorySnapshot(BaseModel):
 @action
 def python_memory(event: PodEvent, params: MemoryTraceParams):
     """
-    Analyze memory allocation on the specified python process, for the specified duration.
+    Monitor a Python process for X seconds and show memory that was allocated and not freed.
 
-    Create a finding with the memory analysis results.
+    Use this to track memory leaks in your Python application on Kubernetes.
     """
     pod = event.get_pod()
     if not pod:

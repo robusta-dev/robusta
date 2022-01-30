@@ -87,7 +87,7 @@ Next Steps
 2. :ref:`Learn how to write your own Robusta automations. <Example Playbook>`
 3. :ref:`Learn about Robusta's features for manual troubleshooting <Manual Triggers>`
 
-Alternative Installation Methods
+Additional Installation Methods
 ---------------------------------
 
 .. dropdown:: Installing with GitOps
@@ -126,3 +126,10 @@ Alternative Installation Methods
     .. code-block:: bash
 
         kubectl get pods -n robusta
+
+.. dropdown:: Installing a second cluster
+    :color: light
+
+    When installing a second cluster on the same account, there is no need to run ``robusta gen-config`` again.
+
+    Just change ``clusterName`` in values.yaml. It can have any value as long as it is unique between clusters.
