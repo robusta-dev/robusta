@@ -269,11 +269,12 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         return
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
-    if not params.pid and not process_finder.get_lowest_relevant_pid():
+    pid = process_finder.get_lowest_relevant_pid()
+
+    if not pid:
         logging.info(f"debugger_stack_trace - no relevant pids")
 
     # if params pid is set, this will be returned, if not we return the parent process
-    pid = process_finder.get_lowest_relevant_pid()
     finding = Finding(
         title=f"Stacktrace on pid {pid}:",
         source=FindingSource.MANUAL,
@@ -323,15 +324,20 @@ def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
         ),
     )
     event.add_finding(finding)
-    finding.add_enrichment(
-        [MarkdownBlock(f"Please select an advanced debugging choice:")]
-    )
+
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     relevant_processes_pids = process_finder.get_pids()
     if not relevant_processes_pids :
-        logging.info(f"No processes selected for advanced_debugging_options")
+        ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
+        logging.info(ERROR_MESSAGE)
+        finding.add_enrichment(
+            [MarkdownBlock(ERROR_MESSAGE)]
+        )
         return
 
+    finding.add_enrichment(
+        [MarkdownBlock(f"Please select an advanced debugging choice:")]
+    )
     if params.interactive:
         choices = {}
         for proc_pid in relevant_processes_pids:
