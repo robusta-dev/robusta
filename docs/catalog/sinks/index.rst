@@ -13,6 +13,7 @@ The following sinks are supported:
 * Kafka - send playbooks results to a Kafka topic
 * Datadog - send playbooks results to the Datadog events API
 * OpsGenie - send playbooks results to the OpsGenie alerts API
+* :ref:`Telegram` - send playbooks results to Telegram group or private conversation
 
 **Need support for something not listed here?** `Tell us and we'll add it to the code. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
 
@@ -62,6 +63,12 @@ The output from ``resource_babysitter`` looks like this in the different sinks:
       :width: 1000
       :align: center
 
+**Telegram:**
+
+    .. image:: /images/deployment-babysitter-telegram.png
+      :width: 600
+      :align: center
+
 Default sinks
 -------------
 If a playbook doesn't specify a sink then output will be sent to the default sinks. A sink is considered default
@@ -74,3 +81,4 @@ Sink documentation
    :maxdepth: 1
 
    slack
+   telegram

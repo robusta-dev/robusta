@@ -5,9 +5,10 @@ from .sink_base_params import SinkBaseParams
 
 
 class SinkConfigBase(BaseModel):
-    @abc.abstractmethod
+
     def get_name(self) -> str:
         """get sink name"""
+        return self.get_params().name
 
     @abc.abstractmethod
     def get_params(self) -> SinkBaseParams:

@@ -10,8 +10,5 @@ class KafkaSinkParams(SinkBaseParams):
 class KafkaSinkConfigWrapper(SinkConfigBase):
     kafka_sink: KafkaSinkParams
 
-    def get_name(self) -> str:
-        return self.kafka_sink.name
-
     def get_params(self) -> SinkBaseParams:
         return self.kafka_sink
