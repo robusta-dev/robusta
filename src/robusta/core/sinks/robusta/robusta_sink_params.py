@@ -19,8 +19,5 @@ class RobustaSinkParams(SinkBaseParams):
 class RobustaSinkConfigWrapper(SinkConfigBase):
     robusta_sink: RobustaSinkParams
 
-    def get_name(self) -> str:
-        return self.robusta_sink.name
-
     def get_params(self) -> SinkBaseParams:
         return self.robusta_sink

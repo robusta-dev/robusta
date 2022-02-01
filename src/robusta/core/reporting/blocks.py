@@ -184,15 +184,16 @@ class TableBlock(BaseBlock):
     rows: List[List]
     headers: Sequence[str] = ()
     column_renderers: Dict = {}
+    table_name: str = ""
 
     def __init__(
-        self, rows: List[List], headers: Sequence[str] = (), column_renderers: Dict = {}
+        self, rows: List[List], headers: Sequence[str] = (), column_renderers: Dict = {}, table_name: str = ""
     ):
         """
         :param rows: a list of rows. each row is a list of columns
         :param headers: names of each column
         """
-        super().__init__(rows=rows, headers=headers, column_renderers=column_renderers)
+        super().__init__(rows=rows, headers=headers, column_renderers=column_renderers, table_name=table_name)
 
     @classmethod
     def __calc_max_width(cls, headers, rendered_rows) -> List[int]:
@@ -227,7 +228,8 @@ class TableBlock(BaseBlock):
         return [list(map(lambda column_value: str(column_value), row)) for row in rows]
 
     def to_markdown(self) -> MarkdownBlock:
-        return MarkdownBlock(f"```\n{self.to_table_string()}\n```")
+        table_header = f"{self.table_name}\n" if self.table_name else ""
+        return MarkdownBlock(f"{table_header}```\n{self.to_table_string()}\n```")
 
     def to_table_string(self) -> str:
         rendered_rows = self.__to_strings_rows(self.render_rows())

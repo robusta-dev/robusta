@@ -19,7 +19,6 @@ def pod_events_enricher(event: PodEvent):
         field_selector=f"involvedObject.name={pod.metadata.name}",
     ).obj
     if event_list.items:  # add enrichment only if we got events
-        block_list.append(MarkdownBlock("*Pod events:*"))
         headers = ["time", "message"]
         rows = [
             [parse_kubernetes_datetime_to_ms(event.lastTimestamp), event.message]
@@ -30,6 +29,7 @@ def pod_events_enricher(event: PodEvent):
                 rows=rows,
                 headers=headers,
                 column_renderers={"time": RendererType.DATETIME},
+                table_name="*Pod events:*"
             )
         )
     event.add_enrichment(block_list)

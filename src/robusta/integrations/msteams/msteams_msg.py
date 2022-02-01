@@ -77,8 +77,11 @@ class MsTeamsMsg:
         self.__write_to_current_section(block_list)
 
     def table(self, table_block : TableBlock):
-        msteam_table = MsTeamsTable(list(table_block.headers), table_block.rows)
-        self.__write_to_current_section([msteam_table])
+        blocks: List[MsTeamsBase] = []
+        if table_block.table_name:
+            blocks.append(MsTeamsTextBlock(table_block.table_name))
+        blocks.append(MsTeamsTable(list(table_block.headers), table_block.rows))
+        self.__write_to_current_section(blocks)
     
     def items_list(self, block: ListBlock):
         self.__sub_section_separator()
