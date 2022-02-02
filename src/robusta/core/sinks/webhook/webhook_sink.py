@@ -43,7 +43,7 @@ class WebhookSink(SinkBase):
         requests.post(self.url, data=message)
 
     @classmethod
-    def __to_cleat_text(cls, markdown_text: str) -> str:
+    def __to_clear_text(cls, markdown_text: str) -> str:
         # just create a readable links format
         links = Transformer.get_markdown_links(markdown_text)
         for link in links:
@@ -60,9 +60,9 @@ class WebhookSink(SinkBase):
         if isinstance(block, HeaderBlock):
             lines.append(block.text)
         elif isinstance(block, ListBlock):
-            lines.extend([cls.__to_cleat_text(item) for item in block.items])
+            lines.extend([cls.__to_clear_text(item) for item in block.items])
         elif isinstance(block, MarkdownBlock):
-            lines.append(cls.__to_cleat_text(block.text))
+            lines.append(cls.__to_clear_text(block.text))
         elif isinstance(block, JsonBlock):
             lines.append(block.json_str)
         elif isinstance(block, KubernetesDiffBlock):
