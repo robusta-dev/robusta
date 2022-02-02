@@ -9,26 +9,33 @@ from ...core.reporting import MarkdownBlock, BaseBlock, DividerBlock, JsonBlock,
 
 
 class Transformer:
+
+    @staticmethod
+    def get_markdown_links(markdown_data: str) -> List[str]:
+        regex = "<.*?\\|.*?>"
+        matches = re.findall(regex, markdown_data)
+        links = []
+        if matches:
+            links = [
+                match for match in matches if len(match) > 1
+            ]  # filter out illegal matches
+        return links
+
     @staticmethod
     def to_github_markdown(markdown_data: str, add_angular_brackets: bool = True) -> str:
         """Transform all occurrences of slack markdown, <URL|LINK TEXT>, to github markdown [LINK TEXT](URL)."""
-        regex = "<.*?\\|.*?>"
-        matches = re.findall(regex, markdown_data)
         # some markdown parsers doesn't support angular brackets on links
         OPENING_ANGULAR = "<" if add_angular_brackets else ""
         CLOSING_ANGULAR = ">" if add_angular_brackets else ""
-        if matches:
-            matches = [
-                match for match in matches if len(match) > 1
-            ]  # filter out illegal matches
-            for match in matches:
-                # take only the data between the first '<' and last '>'
-                splits = match[1:-1].split("|")
-                if len(splits) == 2:  # don't replace unexpected strings
-                    parsed_url = urllib.parse.urlparse(splits[0])
-                    parsed_url = parsed_url._replace(path=urllib.parse.quote_plus(parsed_url.path, safe="/"))
-                    replacement = f"[{splits[1]}]({OPENING_ANGULAR}{parsed_url.geturl()}{CLOSING_ANGULAR})"
-                    markdown_data = markdown_data.replace(match, replacement)
+        matches = Transformer.get_markdown_links(markdown_data)
+        for match in matches:
+            # take only the data between the first '<' and last '>'
+            splits = match[1:-1].split("|")
+            if len(splits) == 2:  # don't replace unexpected strings
+                parsed_url = urllib.parse.urlparse(splits[0])
+                parsed_url = parsed_url._replace(path=urllib.parse.quote_plus(parsed_url.path, safe="/"))
+                replacement = f"[{splits[1]}]({OPENING_ANGULAR}{parsed_url.geturl()}{CLOSING_ANGULAR})"
+                markdown_data = markdown_data.replace(match, replacement)
         return re.sub(r"\*([^\*]*)\*", r"**\1**", markdown_data)
 
     @classmethod
