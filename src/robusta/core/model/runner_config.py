@@ -2,6 +2,7 @@ from typing import List, Optional, Union, Dict
 from pydantic import BaseModel, SecretStr, validator
 
 from ..playbooks.playbook_utils import replace_env_vars_values
+from ..sinks.webhook.webhook_sink_params import WebhookSinkConfigWrapper
 from ..sinks.telegram.telegram_sink_params import TelegramSinkConfigWrapper
 from ...model.playbook_definition import PlaybookDefinition
 from ..sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
@@ -32,6 +33,7 @@ class RunnerConfig(BaseModel):
                 MsTeamsSinkConfigWrapper,
                 OpsGenieSinkConfigWrapper,
                 TelegramSinkConfigWrapper,
+                WebhookSinkConfigWrapper,
             ]
         ]
     ]

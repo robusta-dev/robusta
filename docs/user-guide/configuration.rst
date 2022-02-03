@@ -171,13 +171,16 @@ Here is a full example showing how to configure all possible sinks:
         api_key: "datadog api key"
         default: false
     - opsgenie_sink:
-        name: ops_genie_ui_sink
+        name: ops_genie_sink
         api_key: OpsGenie integration API key  # configured from OpsGenie team integration
         teams:
         - "noc"
         - "sre"
         tags:
         - "prod a"
+    - webhook_sink:
+        name: webhook_sink
+        url: "https://my-webhook-service.com/robusta-alerts"
 
 Configuration secrets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

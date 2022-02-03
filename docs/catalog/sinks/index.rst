@@ -14,6 +14,7 @@ The following sinks are supported:
 * Datadog - send playbooks results to the Datadog events API
 * OpsGenie - send playbooks results to the OpsGenie alerts API
 * :ref:`Telegram` - send playbooks results to Telegram group or private conversation
+* Webhook - send playbooks results to a webhook
 
 **Need support for something not listed here?** `Tell us and we'll add it to the code. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
 
@@ -66,6 +67,14 @@ The output from ``resource_babysitter`` looks like this in the different sinks:
 **Telegram:**
 
     .. image:: /images/deployment-babysitter-telegram.png
+      :width: 600
+      :align: center
+
+**Webhook:**
+
+.. admonition:: This example is sending Robusta notifications to ntfy.sh, push notification service
+
+    .. image:: /images/deployment-babysitter-webhook.png
       :width: 600
       :align: center
 
