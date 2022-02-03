@@ -36,7 +36,7 @@ class WebhookSink(SinkBase):
                 {line}
                 """
             )
-            while len(message) + len(wrapped) >= self.size_limit:
+            if len(message) + len(wrapped) >= self.size_limit:
                 break
             message += wrapped
 
