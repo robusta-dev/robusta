@@ -34,6 +34,7 @@ class ExecutionBaseEvent:
         str, Any
     ] = None  # Response returned to caller. For admission or manual triggers for example
     stop_processing: bool = False
+    stop_playbook: bool = False  # if set to True, skip the following playbook actions
     _scheduler: Optional[PlaybooksScheduler] = None
 
     def set_scheduler(self, scheduler: PlaybooksScheduler):

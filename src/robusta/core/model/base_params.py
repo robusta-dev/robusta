@@ -11,6 +11,22 @@ class ActionParams(DocumentedModel):
     pass
 
 
+class RateLimitParams(ActionParams):
+    """
+    :var rate_limit: Rate limit the execution of this action (Seconds).
+    """
+
+    rate_limit: int = 3600
+
+
+class FindingKeyParams(ActionParams):
+    """
+    :var finding_key: Specify the finding identifier, to reference it in other actions.
+    """
+
+    finding_key: str = "DEFAULT"
+
+
 class BashParams(ActionParams):
     """
     :var bash_command: Bash command to execute on the target.

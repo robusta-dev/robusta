@@ -74,6 +74,15 @@ def does_node_have_taint(node: Node, taint_key: str) -> bool:
     return any(t.key == taint_key for t in node.spec.taints)
 
 
+class RobustaEvent:
+    @classmethod
+    def get_events(cls, kind: str, name: str, namespace: str = None) -> EventList:
+        field_selector = f"involvedObject.kind={kind},involvedObject.name={name}"
+        if namespace:
+            field_selector += f",involvedObject.namespace={namespace}"
+
+        return Event.listEventForAllNamespaces(field_selector=field_selector).obj
+
 class RobustaPod(Pod):
     def exec(self, shell_command: str, container: str = None) -> str:
         """Execute a command inside the pod"""

@@ -100,6 +100,13 @@ enablePlatformPlaybooks: false
 
 platformPlaybooks:
 - triggers:
+  - on_kubernetes_warning_event: {}
+  actions:
+  - event_report: {}
+  - event_resource_events: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
     - on_deployment_update: {}
   actions:
     - resource_babysitter: {}

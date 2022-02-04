@@ -136,6 +136,52 @@ Sometimes you need to prevent an action from running too often. You can use the 
 
 The second parameter to ``RateLimiter.mark_and_test`` defines a key used for checking the rate limit. Each key is rate-limited individually.
 
+Flow control
+-------------
+Every Robusta playbook has a list of :ref:`Triggers` and a list of :ref:`Actions`.
+
+.. code-block:: yaml
+
+   - triggers:
+     - on_deployment_create: {}
+     - on_daemonset_update: {}
+     actions:
+     - resource_babysitter: {}
+     - add_deployment_lines_to_grafana: {}
+
+For every incoming event, Robusta will run any playbook, that *one* of it's ``triggers`` is matched.
+
+All the playbook's ``actions`` will be executed, according to the order specified in the configuration.
+
+Playbooks execution order is according to the order specified in the configuration as well.
+
+There are few mechanisms in place, to stop the processing flow, if needed:
+
+1. Stop handing the current event. No other ``playbooks`` or ``actions`` will be executed
+
+.. code-block:: python
+   :emphasize-lines: 5
+
+    @action
+    def event_report(event: EventChangeEvent, action_params: EventErrorReportParams):
+
+       if DONT RUN ANYTHING ELSE ON THIS EVENT:
+           event.stop_processing = True  # no need to run any other playbook or action
+           return
+
+2. For a single ``playbook``, skip the following ``actions``. For this we will set the ``skip_playbook`` attribute
+
+.. code-block:: python
+   :emphasize-lines: 5
+
+    @action
+    def event_report(event: EventChangeEvent, action_params: EventErrorReportParams):
+
+       if DONT RUN ANY FOLLOWING ACTION ON THE SAME PLAYBOOK:
+           event.stop_playbook = True  # no need to run the rest of the playbook actions
+           return
+
+
 Credits
 --------------------
 Robusta uses many open source libraries, but two of them outshine all others:
