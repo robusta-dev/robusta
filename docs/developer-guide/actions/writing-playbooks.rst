@@ -149,15 +149,28 @@ Every Robusta playbook has a list of :ref:`Triggers` and a list of :ref:`Actions
      - resource_babysitter: {}
      - add_deployment_lines_to_grafana: {}
 
-For every incoming event, Robusta will run any playbook, that *one* of it's ``triggers`` is matched.
+For every incoming event, Robusta will run actions if any of the ``triggers`` match.
 
 All the playbook's ``actions`` will be executed, according to the order specified in the configuration.
 
-Playbooks execution order is according to the order specified in the configuration as well.
+Playbooks execution order, is the same as the configuration file order. For example:
 
-There are few mechanisms in place, to stop the processing flow, if needed:
+.. code-block:: yaml
 
-1. Stop handing the current event. No other ``playbooks`` or ``actions`` will be executed
+   - triggers:  # playbook A
+     - on_deployment_create: {}
+     actions:
+     - resource_babysitter: {}
+   - triggers:  # playbook B
+     - on_deployment_create: {}
+     actions:
+     - add_deployment_lines_to_grafana: {}
+
+On the example above, ``playbook A`` will run before ``playbook B``
+
+There is a mechanisms in place, to stop the processing flow, if needed:
+
+Set ``event.stop_processing = True``. No other ``playbooks`` or ``actions`` will be executed
 
 .. code-block:: python
    :emphasize-lines: 5
@@ -168,19 +181,6 @@ There are few mechanisms in place, to stop the processing flow, if needed:
        if DONT RUN ANYTHING ELSE ON THIS EVENT:
            event.stop_processing = True  # no need to run any other playbook or action
            return
-
-2. For a single ``playbook``, skip the following ``actions``. For this we will set the ``skip_playbook`` attribute
-
-.. code-block:: python
-   :emphasize-lines: 5
-
-    @action
-    def event_report(event: EventChangeEvent, action_params: EventErrorReportParams):
-
-       if DONT RUN ANY FOLLOWING ACTION ON THE SAME PLAYBOOK:
-           event.stop_playbook = True  # no need to run the rest of the playbook actions
-           return
-
 
 Credits
 --------------------

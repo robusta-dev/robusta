@@ -24,9 +24,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
         execution_response = None
         execution_event: Optional[ExecutionBaseEvent] = None
-        findings: Dict[str, Finding] = {}
+        findings: List[Finding] = []
         for playbook in playbooks:
-            fired_trigger = self.__get_fired_trigger(trigger_event, playbook.triggers)
+            fired_trigger = self.__get_fired_trigger(trigger_event, playbook.triggers, playbook.get_id())
             if fired_trigger:
                 execution_event = fired_trigger.build_execution_event(
                     trigger_event, findings
@@ -131,7 +131,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         self.__prepare_execution_event(execution_event)
         execution_event.response = {"success": True}
         for action in actions:
-            if execution_event.stop_processing or execution_event.stop_playbook:
+            if execution_event.stop_processing:
                 return execution_event.response
 
             registered_action = self.registry.get_actions().get_action(
@@ -174,15 +174,15 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     @classmethod
     def __get_fired_trigger(
-        cls, trigger_event: TriggerEvent, playbook_triggers: List[Trigger]
+        cls, trigger_event: TriggerEvent, playbook_triggers: List[Trigger], playbook_id: str
     ) -> Optional[BaseTrigger]:
         for trigger in playbook_triggers:
-            if trigger.get().should_fire(trigger_event):
+            if trigger.get().should_fire(trigger_event, playbook_id):
                 return trigger.get()
         return None
 
     def __handle_findings(self, execution_event: ExecutionBaseEvent):
-        for finding in execution_event.findings.values():
+        for finding in execution_event.findings:
             for sink_name in execution_event.named_sinks:
                 try:
                     sink = self.registry.get_sinks().sinks.get(sink_name)

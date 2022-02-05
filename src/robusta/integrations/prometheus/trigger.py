@@ -1,5 +1,5 @@
 import logging
-from typing import NamedTuple, Union, Dict, Optional, Type
+from typing import NamedTuple, Union, Type, List, Optional
 from pydantic.main import BaseModel
 from hikaru.model.rel_1_16 import *
 
@@ -44,7 +44,7 @@ class PrometheusAlertTrigger(BaseTrigger):
     def get_trigger_event(self):
         return PrometheusTriggerEvent.__name__
 
-    def should_fire(self, event: TriggerEvent):
+    def should_fire(self, event: TriggerEvent, playbook_id: str):
         if not isinstance(event, PrometheusTriggerEvent):
             return False
 
@@ -91,7 +91,7 @@ class PrometheusAlertTrigger(BaseTrigger):
         return node
 
     def build_execution_event(
-        self, event: PrometheusTriggerEvent, findings: Dict[str, Finding]
+        self, event: PrometheusTriggerEvent, findings: List[Finding]
     ) -> Optional[ExecutionBaseEvent]:
         labels = event.alert.labels
         execution_event = PrometheusKubernetesAlert(

@@ -122,6 +122,6 @@ def node_health_watcher(event: NodeChangeEvent):
         aggregation_key="node_not_ready",
         severity=FindingSeverity.MEDIUM,
     )
-    event.add_finding(finding, "DEFAULT")
+    event.add_finding(finding)
     event.add_enrichment([KubernetesDiffBlock([], event.old_obj, event.obj)])
     node_status_enricher(event)
