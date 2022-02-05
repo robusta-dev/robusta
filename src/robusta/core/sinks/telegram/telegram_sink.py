@@ -1,7 +1,4 @@
-import asyncio
-from telethon import TelegramClient
-from telethon.tl.types import DocumentAttributeFilename
-
+from .telegram_client import TelegramClient
 from .telegram_sink_params import TelegramSinkConfigWrapper
 from ..transformer import Transformer
 from ...reporting.blocks import (
@@ -14,7 +11,6 @@ from ...reporting.base import (
     FindingSeverity, BaseBlock,
 )
 from ..sink_base import SinkBase
-from ...reporting.utils import convert_svg_to_png
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.INFO: u"\U0001F7E2",
@@ -29,38 +25,18 @@ class TelegramSink(SinkBase):
     def __init__(self, sink_config: TelegramSinkConfigWrapper, cluster_name: str):
         super().__init__(sink_config.telegram_sink)
         self.cluster_name = cluster_name
-        self.api_id = sink_config.telegram_sink.api_id
-        self.api_hash = sink_config.telegram_sink.api_hash
-        self.bot_token = sink_config.telegram_sink.bot_token
-        try:  # if the recipient is a group, the group id should be provided, and passed as int
-            self.recipient = int(sink_config.telegram_sink.recipient)
-        except ValueError:
-            self.recipient = sink_config.telegram_sink.recipient
-
+        self.client = TelegramClient(sink_config.telegram_sink.chat_id, sink_config.telegram_sink.bot_token)
         self.send_files = sink_config.telegram_sink.send_files
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
-        asyncio.run(self.__send_telegram_message(finding, platform_enabled))
+        self.__send_telegram_message(finding, platform_enabled)
 
-    async def __send_telegram_message(self, finding: Finding, platform_enabled: bool):
-        client = TelegramClient('Robusta', self.api_id, self.api_hash)
-        await client.start(bot_token=self.bot_token)
-        async with client:
-            await client.send_message(
-                self.recipient, self.__get_message_text(finding, platform_enabled),
-                link_preview=False
-            )
-            if self.send_files:
-                for enrichment in finding.enrichments:
-                    for block in [block for block in enrichment.blocks if isinstance(block, FileBlock)]:
-                        contents = block.contents
-                        file_name = block.filename
-                        if block.filename.endswith("svg"):
-                            contents = convert_svg_to_png(block.contents)
-                            file_name = file_name.replace(".svg", ".png")
-                        await client.send_file(
-                            self.recipient, attributes=[DocumentAttributeFilename(file_name)], file=contents
-                        )
+    def __send_telegram_message(self, finding: Finding, platform_enabled: bool):
+        self.client.send_message(self.__get_message_text(finding, platform_enabled))
+        if self.send_files:
+            for enrichment in finding.enrichments:
+                for block in [block for block in enrichment.blocks if isinstance(block, FileBlock)]:
+                    self.client.send_file(file_name=block.filename, contents=block.contents)
 
     def __get_message_text(self, finding: Finding, platform_enabled: bool):
         message_content = self.__build_telegram_title(finding.title, finding.severity)
