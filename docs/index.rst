@@ -214,6 +214,8 @@ and alert type.
 
 `Star us on Github to receive updates. <https://github.com/robusta-dev/robusta/>`_
 
+`Edit this page in GitHub <https://github.com/robusta-dev/robusta/edit/master/docs/index.rst>`_
+
 .. toctree::
    :hidden:
 
