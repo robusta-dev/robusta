@@ -45,7 +45,6 @@ watchgod = "^0.7"
 # and therefore requires gcc to install which we'd like to avoid
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
 dulwich =  { version = "0.20.28", optional = true }
-Telethon = "^1.24.0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
