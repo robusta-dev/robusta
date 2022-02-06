@@ -146,8 +146,8 @@ Every Robusta playbook has a list of :ref:`Triggers` and a list of :ref:`Actions
      - on_deployment_create: {}
      - on_daemonset_update: {}
      actions:
-     - resource_babysitter: {}
-     - add_deployment_lines_to_grafana: {}
+     - my_first_action: {}
+     - my_second_action: {}
 
 For every incoming event, Robusta will run actions if any of the ``triggers`` match.
 
@@ -160,11 +160,11 @@ Playbooks execution order, is the same as the configuration file order. For exam
    - triggers:  # playbook A
      - on_deployment_create: {}
      actions:
-     - resource_babysitter: {}
+     - my_first_action: {}
    - triggers:  # playbook B
      - on_deployment_create: {}
      actions:
-     - add_deployment_lines_to_grafana: {}
+     - my_second_action: {}
 
 On the example above, ``playbook A`` will run before ``playbook B``
 
@@ -176,7 +176,7 @@ Set ``event.stop_processing = True``. No other ``playbooks`` or ``actions`` will
    :emphasize-lines: 5
 
     @action
-    def event_report(event: EventChangeEvent, action_params: EventErrorReportParams):
+    def my_first_action(event: EventChangeEvent):
 
        if DONT RUN ANYTHING ELSE ON THIS EVENT:
            event.stop_processing = True  # no need to run any other playbook or action
