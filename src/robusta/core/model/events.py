@@ -28,7 +28,7 @@ class ExecutionEventBaseParams(BaseModel):
 # (note that we need to integrate with dataclasses because of hikaru)
 @dataclass
 class ExecutionBaseEvent:
-    findings: Dict[str, Finding] = field(default_factory=lambda: {})
+    findings: List[Finding] = field(default_factory=lambda: [])
     named_sinks: Optional[List[str]] = None
     response: Dict[
         str, Any
@@ -50,28 +50,20 @@ class ExecutionBaseEvent:
         self,
         enrichment_blocks: List[BaseBlock],
         annotations=None,
-        finding_key: str = "DEFAULT",
     ):
-        finding = self.findings.get(finding_key)
-        if not finding:
-            finding = self.create_default_finding()
-            self.findings[finding_key] = finding
 
-        finding.add_enrichment(enrichment_blocks, annotations)
+        if len(self.findings) == 0:
+            self.findings.append(self.create_default_finding())
 
-    def add_finding(self, finding: Finding, finding_key: str = None):
-        if (
-            not finding_key
-        ):  # user didn't specify a key, so this finding shouldn't be accessed by key. Randomise it
-            finding_key = str(uuid.uuid4())
+        self.findings[0].add_enrichment(enrichment_blocks, annotations)
 
-        existing_finding = self.findings.get(finding_key)
-        if existing_finding:
+    def add_finding(self, finding: Finding):
+        if len(self.findings) > 0:
             logging.warning(
-                f"Overriding existing finding. finding_key: {finding_key} new finding: {finding}"
+                f"Overriding active finding. new finding: {finding}"
             )
 
-        self.findings[finding_key] = finding
+        self.findings.insert(0, finding)
 
     @staticmethod
     def from_params(params: ExecutionEventBaseParams) -> Optional["ExecutionBaseEvent"]:

@@ -17,6 +17,13 @@ Kubernetes Error Handling
 
 .. robusta-action:: playbooks.robusta_playbooks.autoscaler.scale_hpa_callback
 
+Kubernetes Events
+-------------------------
+
+.. robusta-action:: playbooks.robusta_playbooks.events_enrichments.event_report
+
+.. robusta-action:: playbooks.robusta_playbooks.events_enrichments.event_resource_events
+
 Kubernetes Monitoring
 ---------------------
 
