@@ -161,8 +161,8 @@ Next Steps
    :hidden:
 
    tutorials/configuring-automations
-   tutorials/troubleshooting-applications
    tutorials/prometheus-enrichment
+   tutorials/troubleshooting-applications
 
 ..
    tutorials/alert-correlation

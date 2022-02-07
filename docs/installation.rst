@@ -83,12 +83,10 @@ If you installed Robusta's bundled Prometheus Stack then you can skip this step.
 Next Steps
 ---------------------------------
 
-1. Explore the `Robusta UI <https://home.robusta.dev/ui/>`_ (use the URL you received during installation)
-2. Join the :ref:`community`
-3. Define your first automation to :ref:`track Kubernetes changes <Track Kubernetes Changes>`
-4. Complete the :ref:`manual troubleshooting tutorial <Troubleshoot Applications>`
-5. Add your first :ref:`Prometheus enrichment <Improve Prometheus Alerts>`
-6. Start :ref:`correlating alerts and Kubernetes changes <Correlate Alerts>`
+1. Define your first automation to :ref:`track Kubernetes changes <Track Kubernetes Changes>`
+2. Add your first :ref:`Prometheus enrichment <Improve Prometheus Alerts>`
+3. Complete the :ref:`manual troubleshooting tutorial <Troubleshoot Applications>`
+4. Explore the Robusta UI (use the URL you received during installation)
 
 Additional Installation Methods
 ---------------------------------
