@@ -395,7 +395,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     process = process_finder.get_match_or_report_error(
-        finding, "Debug", python_memory, advanced_debugging_options
+        finding, "Debug", python_debugger, advanced_debugging_options
     )
     if process is None:
         return
