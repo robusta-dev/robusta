@@ -159,8 +159,8 @@ Next Steps
    :caption: Use Robusta to
    :hidden:
 
-   tutorials/troubleshooting-applications
    tutorials/configuring-automations
+   tutorials/troubleshooting-applications
    tutorials/prometheus-enrichment
 
 ..

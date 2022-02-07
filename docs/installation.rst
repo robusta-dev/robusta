@@ -85,8 +85,8 @@ Next Steps
 
 1. Explore the `Robusta UI <https://home.robusta.dev/ui/>`_ (use the URL you received during installation)
 2. Join the :ref:`community`
-3. Complete the :ref:`manual troubleshooting tutorial <Troubleshoot Applications>`
-4. Define your first automation to :ref:`track Kubernetes changes <Track Kubernetes Changes>`
+3. Define your first automation to :ref:`track Kubernetes changes <Track Kubernetes Changes>`
+4. Complete the :ref:`manual troubleshooting tutorial <Troubleshoot Applications>`
 5. Add your first :ref:`Prometheus enrichment <Improve Prometheus Alerts>`
 6. Start :ref:`correlating alerts and Kubernetes changes <Correlate Alerts>`
 

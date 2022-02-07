@@ -28,7 +28,7 @@ The base configuration in ``values.yaml`` forwards all Prometheus alerts:
      actions:
      - default_enricher: {}
 
-On top of this there are additional enrichments for specific alerts.
+On top of this there are additional enrichments for specific alerts. (See :ref:`Insights Coverage`)
 
 You can also define your own enrichments using ``customPlaybooks``:
 
