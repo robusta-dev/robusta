@@ -256,6 +256,7 @@ def get_debugger_warnings(data):
         return None
     return message
 
+
 @action
 def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
     """
@@ -288,13 +289,13 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
     event.add_finding(finding)
     cmd = f"debug-toolkit stack-trace {pid}"
     output = RobustaPod.exec_in_debugger_pod(
-            pod.metadata.name,
-            pod.spec.nodeName,
-            cmd,
-        )
-    blocks =[]
-    for thread_output in output.split('\n\n'):
-        if thread_output.startswith('Current thread'):
+        pod.metadata.name,
+        pod.spec.nodeName,
+        cmd,
+    )
+    blocks = []
+    for thread_output in output.split("\n\n"):
+        if thread_output.startswith("Current thread"):
             # this is the thread we are getting the stack trace from, not relevant for debugging
             continue
         if thread_output:
@@ -327,12 +328,10 @@ def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     relevant_processes_pids = process_finder.get_pids()
-    if not relevant_processes_pids :
+    if not relevant_processes_pids:
         ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
         logging.info(ERROR_MESSAGE)
-        finding.add_enrichment(
-            [MarkdownBlock(ERROR_MESSAGE)]
-        )
+        finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
         return
 
     finding.add_enrichment(
@@ -349,11 +348,14 @@ def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
                 action_params=updated_params,
                 kubernetes_object=pod,
             )
-        finding.add_enrichment([CallbackBlock(choices),
-                                MarkdownBlock(
-                                    "*After clicking a button please wait up to 120 seconds for a response*"
-                                )
-                                ])
+        finding.add_enrichment(
+            [
+                CallbackBlock(choices),
+                MarkdownBlock(
+                    "*After clicking a button please wait up to 120 seconds for a response*"
+                ),
+            ]
+        )
 
 
 @action
@@ -362,7 +364,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     Attach a python debugger to a running pod. No need to modify the application's code or restart it.
 
     Steps:
-        1. :ref:`Install Robusta <Installation Guide>`
+        1. :ref:`Install Robusta <Installation>`
         2. Manually trigger this action using the Robusta CLI and the pod's name:
 
         .. code-block:: bash
@@ -392,7 +394,9 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     event.add_finding(finding)
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
-    process = process_finder.get_match_or_report_error(finding, "Debug", python_memory, advanced_debugging_options)
+    process = process_finder.get_match_or_report_error(
+        finding, "Debug", python_memory, advanced_debugging_options
+    )
     if process is None:
         return
 

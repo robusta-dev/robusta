@@ -1,10 +1,9 @@
-Installation Guide
+Installation
 ##################
 
 Robusta is installed with Helm. You can handwrite the values.yaml, but it is easier to autogenerate it.
 
-The standard installation uses Helm and the robusta-cli, but :ref:`other alternative methods are described below.
-<Alternative Installation Methods>`
+The standard installation uses Helm and the robusta-cli, but :ref:`other alternative methods are described below. <Alternative Installation Methods>`
 
 Standard Installation
 ------------------------------
@@ -75,17 +74,19 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 Forwarding Prometheus Alerts to Robusta
 ----------------------------------------
 
-Robusta can improve your existing Prometheus alerts by adding extra context and "fix-it" buttons.
+Robusta can suggest fixes for your existing Prometheus alerts and tell you why they happen.
 
-For this to work, :ref:`you must configure an AlertManager webhook. <Sending Alerts to Robusta>` This is **not**
-necessary if you installed Robusta's bundled Prometheus Stack. In that case, the webhook is preconfigured.
+First, :ref:`you must configure an AlertManager webhook. <Sending Alerts to Robusta>`
+
+If you installed Robusta's bundled Prometheus Stack then you can skip this step.
 
 Next Steps
 ---------------------------------
 
-1. Explore the `Robusta UI <https://home.robusta.dev/ui/>`_ (use the URL you received during installation)
-2. :ref:`Learn how to write your own Robusta automations. <Example Playbook>`
-3. :ref:`Learn about Robusta's features for manual troubleshooting <Manual Triggers>`
+1. Define your first automation to :ref:`track Kubernetes changes <Track Kubernetes Changes>`
+2. Add your first :ref:`Prometheus enrichment <Improve Prometheus Alerts>`
+3. Complete the :ref:`manual troubleshooting tutorial <Troubleshoot Applications>`
+4. Explore the Robusta UI (use the URL you received during installation)
 
 Additional Installation Methods
 ---------------------------------
