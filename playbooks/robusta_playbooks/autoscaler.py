@@ -50,9 +50,7 @@ def alert_on_hpa_reached_limit(
     event: HorizontalPodAutoscalerChangeEvent, action_params: HPALimitParams
 ):
     """
-    Create a finding when HPA reaches it's max_replicas.
-
-    Add a callback button, which increases the HPA max_replicas limit.
+    Notify when the HPA reaches it's maximum replicas and allow fixing it.
     """
     logging.info(
         f"running alert_on_hpa_reached_limit: {event.obj.metadata.name} ns: {event.obj.metadata.namespace}"

@@ -147,6 +147,7 @@ class ConfigLoader:
                     subprocess.check_call(
                         [sys.executable, "-m", "pip", "install", local_path]
                     )
+                    playbook_package = self.__get_package_name(local_path=local_path)
 
                 playbook_packages.append(playbook_package)
             except Exception as e:
@@ -184,15 +185,24 @@ class ConfigLoader:
                     return
 
                 action_registry = ActionsRegistry()
-                runner_config.playbook_repos[
+                # reordering playbooks repos, so that the internal and default playbooks will be loaded first
+                # It allows to override these, with playbooks loaded afterwards
+                playbook_repos: Dict[str, PlaybookRepo] = {}
+                playbook_repos[
                     "robusta.core.playbooks.internal"
                 ] = PlaybookRepo(url=INTERNAL_PLAYBOOKS_ROOT, pip_install=False)
                 # order matters! Loading the default first, allows overriding it if adding package with the same name
+                # since python 3.7, iteration order is identical to insertion order, if dict didn't change
                 # default playbooks
-                runner_config.playbook_repos[
+                playbook_repos[
                     self.__get_package_name(DEFAULT_PLAYBOOKS_ROOT)
                 ] = PlaybookRepo(url=f"file://{DEFAULT_PLAYBOOKS_ROOT}")
 
+                for url, repo in runner_config.playbook_repos.items():
+                    playbook_repos[url] = repo
+
+                # saving the ordered playbooks repo into runner config
+                runner_config.playbook_repos = playbook_repos
                 # custom playbooks
                 if os.path.exists(CUSTOM_PLAYBOOKS_ROOT):
                     for custom_playbooks_location in os.listdir(CUSTOM_PLAYBOOKS_ROOT):

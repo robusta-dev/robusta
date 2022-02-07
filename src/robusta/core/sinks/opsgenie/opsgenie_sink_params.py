@@ -13,9 +13,6 @@ class OpsGenieSinkParams(SinkBaseParams):
 class OpsGenieSinkConfigWrapper(SinkConfigBase):
     opsgenie_sink: OpsGenieSinkParams
 
-    def get_name(self) -> str:
-        return self.opsgenie_sink.name
-
     def get_params(self) -> SinkBaseParams:
         return self.opsgenie_sink
 

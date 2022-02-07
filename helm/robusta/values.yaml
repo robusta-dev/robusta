@@ -92,7 +92,6 @@ builtinPlaybooks:
   - on_prometheus_alert: {}
   actions:
   - default_enricher: {}
-  - alert_definition_enricher: {}
 
 # additional builtin playbooks to enable when using Robusta UI
 # these are disabled by default without the UI because they are spammy when sent to slack
@@ -100,6 +99,13 @@ builtinPlaybooks:
 enablePlatformPlaybooks: false
 
 platformPlaybooks:
+- triggers:
+  - on_kubernetes_warning_event: {}
+  actions:
+  - event_report: {}
+  - event_resource_events: {}
+  sinks:
+    - "robusta_ui_sink"
 - triggers:
     - on_deployment_update: {}
   actions:
@@ -145,6 +151,7 @@ runner:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
   log_level: INFO
+  sentry_dsn:
   resources:
     requests:
       memory: 1024Mi

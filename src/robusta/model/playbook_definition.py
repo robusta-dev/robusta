@@ -41,5 +41,5 @@ class PlaybookDefinition(BaseModel):
     def post_init(self):
         self._playbook_id = self.__playbook_hash()
 
-    def get_id(self):
+    def get_id(self) -> str:
         return self._playbook_id

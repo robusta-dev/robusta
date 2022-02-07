@@ -1,22 +1,9 @@
 import logging
-import re
-
 import opsgenie_sdk
-import markdown2
-
 from typing import List
-from tabulate import tabulate
 
 from .opsgenie_sink_params import OpsGenieSinkConfigWrapper
-from ...reporting.blocks import (
-    KubernetesDiffBlock,
-    JsonBlock,
-    MarkdownBlock,
-    HeaderBlock,
-    ListBlock,
-    TableBlock,
-    DividerBlock,
-)
+from ..transformer import Transformer
 from ...reporting.base import (
     Finding,
     Enrichment,
@@ -78,52 +65,9 @@ class OpsGenieSink(SinkBase):
         return f"{description}{self.__enrichments_as_text(finding.enrichments)}"
 
     @classmethod
-    def __markdown_to_html(cls, mrkdwn_text: str) -> str:
-        # replace links: from <http://url|name> to <a href="url">name</a>
-        mrkdwn_links = re.findall(r"<[^\\|]*\|[^\>]*>", mrkdwn_text)
-        for link in mrkdwn_links:
-            link_content = link[1:-1]
-            link_parts = link_content.split("|")
-            mrkdwn_text = mrkdwn_text.replace(link, f"<a href=\"{link_parts[0]}\">{link_parts[1]}</a>")
-
-        # replace slack markdown bold: from *bold text* to <b>bold text<b>  (markdown2 converts this to italic)
-        mrkdwn_text = re.sub(r"\*([^\*]*)\*", r"<b>\1</b>", mrkdwn_text)
-
-        # Note - markdown2 should be used after slack links already converted, other wise it's getting corrupted!
-        # Convert other markdown content
-        return markdown2.markdown(mrkdwn_text)
-
-    @classmethod
-    def __enrichment_text(cls, enrichment: Enrichment) -> str:
-        lines = []
-        for block in enrichment.blocks:
-            if isinstance(block, MarkdownBlock):
-                if not block.text:
-                    continue
-                lines.append(f"{cls.__markdown_to_html(block.text)}")
-            elif isinstance(block, DividerBlock):
-                lines.append("-------------------")
-            elif isinstance(block, JsonBlock):
-                lines.append(block.json_str)
-            elif isinstance(block, KubernetesDiffBlock):
-                for diff in block.diffs:
-                    lines.append(
-                        cls.__markdown_to_html(f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}")
-                    )
-            elif isinstance(block, HeaderBlock):
-                lines.append(f"<strong>{block.text}</strong>")
-            elif isinstance(block, ListBlock):
-                lines.extend(cls.__markdown_to_html(block.to_markdown().text))
-            elif isinstance(block, TableBlock):
-                lines.append(
-                    tabulate(block.render_rows(), headers=block.headers, tablefmt="html").replace("\n", "")
-                )
-        return "\n".join(lines)
-
-    @classmethod
     def __enrichments_as_text(cls, enrichments: List[Enrichment]) -> str:
         text_arr = [
-            cls.__enrichment_text(enrichment) for enrichment in enrichments
+            Transformer.to_html(enrichment.blocks) for enrichment in enrichments
         ]
         return "---\n".join(text_arr)
 

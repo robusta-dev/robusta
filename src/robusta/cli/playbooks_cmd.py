@@ -54,7 +54,7 @@ def __validate_playbooks_dir(playbooks_dir: str) -> bool:
 
     package_name = get_package_name(os.path.join(playbooks_dir))
     if not package_name:
-        typer.secho("Illegal pyproject.toml. name not defined", fg="red")
+        typer.secho("Illegal pyproject.toml. `name` attribute not defined in pyproject.toml", fg="red")
         return False
 
     if package_name not in files:
@@ -297,7 +297,6 @@ def edit_config(
 
 def _post_in_runner_pod(namespace: str, api_path: str, req_body: Dict, req_name: str):
     with fetch_runner_logs(namespace=namespace):
-        # cmd = f"curl -X POST -F 'trigger_name={trigger_name}' {action_params} http://localhost:5000/api/trigger"
         cmd = (
             f"curl -X POST http://localhost:5000/api/{api_path} "
             f"-H 'Content-Type: application/json' "

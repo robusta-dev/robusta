@@ -21,6 +21,8 @@ def init_logging():
         )
 
     logging.getLogger().setLevel(logging_level)
-    log = logging.getLogger("werkzeug")
-    log.setLevel(logging.ERROR)
+    for logger_name in ["werkzeug", "telethon"]:
+        log = logging.getLogger(logger_name)
+        log.setLevel(logging.ERROR)
+
     logging.info(f"logger initialized using {logging_level} log level")

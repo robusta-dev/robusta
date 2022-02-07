@@ -8,25 +8,31 @@ The standard installation uses Helm and the robusta-cli, but :ref:`other alterna
 Standard Installation
 ------------------------------
 
-1. Download the Helm chart and generate a Robusta configuration. This will setup Slack and other integrations.
+1. Download the Helm chart and install Robusta-CLI:
 
 .. code-block:: bash
 
    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
    pip install -U robusta-cli --no-cache
-   robusta gen-config
+   
 
 .. warning:: If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
 
-2. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
+2. Generate a Robusta configuration. This will setup Slack and other integrations.
 
-3. Install Robusta using Helm:
+.. code-block:: bash
+
+    robusta gen-config
+
+3. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
+
+4. Install Robusta using Helm:
 
 .. code-block:: bash
 
     helm install robusta robusta/robusta -f ./generated_values.yaml
 
-4. Verify that Robusta installed two deployments in the current namespace:
+5. Verify that Robusta installed two deployments in the current namespace:
 
 .. code-block:: bash
 
@@ -84,7 +90,7 @@ Next Steps
 5. Add your first :ref:`Prometheus enrichment <Improve Prometheus Alerts>`
 6. Start :ref:`correlating alerts and Kubernetes changes <Correlate Alerts>`
 
-Alternative Installation Methods
+Additional Installation Methods
 ---------------------------------
 
 .. dropdown:: Installing with GitOps
@@ -108,3 +114,25 @@ Alternative Installation Methods
 
     Do not use the ``values.yaml`` file in the GitHub repo. It has some empty placeholders which are replaced during
     our release process.
+
+.. dropdown:: Installing in a different namespace
+    :color: light
+
+    Create a namespace ``robusta`` and install robusta in the new namespace using:
+
+    .. code-block:: bash
+
+        helm install robusta robusta/robusta -f ./generated_values.yaml -n robusta --create-namespace
+
+    Verify that Robusta installed two deployments in the ``robusta`` namespace:
+
+    .. code-block:: bash
+
+        kubectl get pods -n robusta
+
+.. dropdown:: Installing a second cluster
+    :color: light
+
+    When installing a second cluster on the same account, there is no need to run ``robusta gen-config`` again.
+
+    Just change ``clusterName`` in values.yaml. It can have any value as long as it is unique between clusters.

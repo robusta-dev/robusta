@@ -31,8 +31,7 @@ def node_running_pods_enricher(event: NodeEvent):
         field_selector=f"spec.nodeName={node.metadata.name}"
     ).obj
     effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
-    block_list.append(MarkdownBlock("Pods running on the node"))
-    block_list.append(TableBlock(effected_pods_rows, ["namespace", "name", "ready"]))
+    block_list.append(TableBlock(effected_pods_rows, ["namespace", "name", "ready"], table_name="Pods running on the node"))
     event.add_enrichment(block_list)
 
 
@@ -53,14 +52,10 @@ def node_allocatable_resources_enricher(event: NodeEvent):
     block_list: List[BaseBlock] = []
     if node:
         block_list.append(
-            MarkdownBlock(
-                "Node Allocatable Resources - The amount of compute resources that are available for pods"
-            )
-        )
-        block_list.append(
             TableBlock(
                 [[k, v] for (k, v) in node.status.allocatable.items()],
                 ["resource", "value"],
+                table_name="Node Allocatable Resources - The amount of compute resources that are available for pods"
             )
         )
     event.add_enrichment(block_list)
@@ -83,10 +78,10 @@ def node_status_enricher(event: NodeEvent):
 
     event.add_enrichment(
         [
-            MarkdownBlock(f"*Node status details:*"),
             TableBlock(
                 [[c.type, c.status] for c in event.get_node().status.conditions],
                 headers=["Type", "Status"],
+                table_name=f"*Node status details:*"
             ),
         ]
     )
@@ -95,7 +90,7 @@ def node_status_enricher(event: NodeEvent):
 @action
 def node_health_watcher(event: NodeChangeEvent):
     """
-    Create a finding when a node becomes unhealthy.
+    Notify when a node becomes unhealthy.
 
     Add useful information regarding the node's health status.
     """
@@ -125,7 +120,8 @@ def node_health_watcher(event: NodeChangeEvent):
         title=f"Unhealthy node {event.obj.metadata.name}",
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="node_not_ready",
+        severity=FindingSeverity.MEDIUM,
     )
-    event.add_finding(finding, "DEFAULT")
+    event.add_finding(finding)
     event.add_enrichment([KubernetesDiffBlock([], event.old_obj, event.obj)])
     node_status_enricher(event)

@@ -2,14 +2,12 @@ import logging
 from robusta.api import *
 
 
-class RestartLoopParams(ActionParams):
+class RestartLoopParams(RateLimitParams):
     """
     :var restart_reason: Limit restart loops for this specific reason. If omitted, all restart reasons will be included.
-    :var rate_limit: Rate limit the execution of this action. (Seconds).
     """
 
     restart_reason: str = None
-    rate_limit: int = 3600
 
 
 def get_crashing_containers(

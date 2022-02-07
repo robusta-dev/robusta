@@ -10,8 +10,5 @@ class SlackSinkParams(SinkBaseParams):
 class SlackSinkConfigWrapper(SinkConfigBase):
     slack_sink: SlackSinkParams
 
-    def get_name(self) -> str:
-        return self.slack_sink.name
-
     def get_params(self) -> SinkBaseParams:
         return self.slack_sink

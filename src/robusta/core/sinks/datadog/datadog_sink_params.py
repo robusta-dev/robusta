@@ -9,9 +9,6 @@ class DataDogSinkParams(SinkBaseParams):
 class DataDogSinkConfigWrapper(SinkConfigBase):
     datadog_sink: DataDogSinkParams
 
-    def get_name(self) -> str:
-        return self.datadog_sink.name
-
     def get_params(self) -> SinkBaseParams:
         return self.datadog_sink
 

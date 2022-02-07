@@ -36,3 +36,4 @@ from ..integrations.scheduled.trigger import (
     DynamicDelayRepeatTrigger,
     FixedDelayRepeatTrigger,
 )
+from ..core.playbooks.common import get_resource_events_table

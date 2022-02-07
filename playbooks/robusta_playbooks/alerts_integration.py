@@ -99,8 +99,11 @@ def default_enricher(alert: PrometheusKubernetesAlert):
     labels = alert.alert.labels
     alert.add_enrichment(
         [
-            HeaderBlock("Alert labels"),
-            TableBlock([[k, v] for (k, v) in labels.items()], ["label", "value"]),
+            TableBlock(
+                [[k, v] for (k, v) in labels.items()],
+                ["label", "value"],
+                table_name="*Alert labels*",
+            ),
         ],
         annotations={SlackAnnotations.ATTACHMENT: True},
     )
@@ -113,8 +116,9 @@ def alert_definition_enricher(alert: PrometheusKubernetesAlert):
     """
     alert.add_enrichment(
         [
-            HeaderBlock("Alert definition"),
-            MarkdownBlock(f"```\n{alert.get_prometheus_query()}\n```"),
+            MarkdownBlock(
+                f"*Alert definition*\n```\n{alert.get_prometheus_query()}\n```"
+            ),
         ],
         annotations={SlackAnnotations.ATTACHMENT: True},
     )

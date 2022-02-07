@@ -74,3 +74,7 @@ These actions can add context to any deployment-related event, be it from ``on_p
 
 .. robusta-action:: playbooks.robusta_playbooks.deployment_enrichments.deployment_status_enricher
 
+Event Enrichers
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. robusta-action:: playbooks.robusta_playbooks.events_enrichments.event_resource_events

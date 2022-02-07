@@ -15,12 +15,14 @@ class BabysitterConfig(ActionParams):
     :var fields_to_monitor: List of yaml attributes to monitor. Any field that contains one of these strings will match.
     :var omitted_fields: List of yaml attributes changes to ignore.
     """
+
     fields_to_monitor: List[str] = ["spec"]
     omitted_fields: List[str] = [
         "status",
         "metadata.generation",
         "metadata.resourceVersion",
         "metadata.managedFields",
+        "spec.replicas",
     ]
 
 
