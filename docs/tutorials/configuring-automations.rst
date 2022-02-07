@@ -19,6 +19,7 @@ Automations are configured with the ``customPlaybooks`` helm value.
         - on_deployment_update: {}
       actions:
         - resource_babysitter:
+            omitted_fields: []
             fields_to_monitor: ["spec.replicas"]
 
 
