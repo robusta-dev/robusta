@@ -263,7 +263,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     Attach a python debugger to a running pod. No need to modify the application's code or restart it.
 
     Steps:
-        1. :ref:`Install Robusta <Installation Guide>`
+        1. :ref:`Install Robusta <Installation>`
         2. Manually trigger this action using the Robusta CLI and the pod's name:
 
         .. code-block:: bash

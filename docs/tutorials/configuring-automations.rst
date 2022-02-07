@@ -1,17 +1,16 @@
-Example Playbook
+Track Kubernetes Changes
 ##############################
 
-Robusta needs rules to tell it what to do. These rules are called "playbooks".
+In this tutorial we will define a custom Robusta automation that monitors Deployments.
 
-On this page, we configure a new playbook that monitors deployments. It will notify in Slack every time the
-number of replicas changes.
+It will notify in Slack every time the Deployment's replica count changes.
 
-Enabling the playbook
-------------------------
+Configuring the automation
+-------------------------------
 
-Playbooks are configured with the ``customPlaybooks`` helm value.
+Automations are configured with the ``customPlaybooks`` helm value.
 
-1. Add the following to ``generated_values.yaml``:
+1. Add the following to your ``values.yaml``:
 
 .. code-block:: yaml
 
@@ -30,7 +29,7 @@ Playbooks are configured with the ``customPlaybooks`` helm value.
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 
-Seeing the Playbook in action
+Seeing the automation in action
 ----------------------------------
 
 1. Scale one of your deployments:
@@ -45,7 +44,7 @@ Seeing the Playbook in action
   :width: 600
   :align: center
 
-If you setup `Robusta UI <https://home.robusta.dev/ui/>`_, it will appear in the timeline of all alerts and changes:
+If you setup the `Robusta UI <https://home.robusta.dev/ui/>`_, it will appear in the timeline of all alerts and changes:
 
 .. image:: ../images/ui-timeline.png
   :width: 600
@@ -58,12 +57,12 @@ You can click to see the diff:
   :align: center
 
 
-How the playbook works
+How the automation works
 ----------------------------------
-Every playbook configuration has three parts.
+Every automation has three parts.
 
 triggers:
-    We chose ``on_deployment_update`` so our playbook runs every time deployments are updated
+    We chose ``on_deployment_update`` which runs whenever Kubernetes Deployments are updated
 
 actions:
     We chose :ref:`Resource babysitter` which is a builtin action. That action has a parameter ``fields_to_monitor``.
@@ -73,4 +72,4 @@ sinks:
 
 Further customization
 ------------------------
-Try changing the configuration to monitors changes to a deployment\'s image tag.
+Try changing the configuration to monitors changes to a deployment's image tag.
