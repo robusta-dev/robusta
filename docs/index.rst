@@ -11,7 +11,8 @@ Robusta has four parts:
 3. Manual troubleshooting tools for everything else
 4. A UI to see all alerts, changes, and events in your cluster
 
-*Optional*: You can install Robusta with a bundled Prometheus Operator and default alerts we fine-tuned for K8s.
+*Optional*: You can install Robusta with a bundled Prometheus Operator. It includes default alerts for Kubernetes.
+These alerts should cause no noise on a healthy cluster. If they're noisy in your env, let us know and we'll fix it.
 
 Example Use Cases
 ~~~~~~~~~~~~~~~~~~
