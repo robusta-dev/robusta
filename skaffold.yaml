@@ -42,3 +42,12 @@ profiles:
           buildCommand: ./build_on_apple_m1.sh
     local:
       concurrency: 0
+- name: gcloud-build
+  build:
+    googleCloudBuild:
+        projectId: genuine-flight-317411
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        docker:
+          dockerfile: Dockerfile
