@@ -16,7 +16,9 @@ T = TypeVar("T")
 PYTHON_DEBUGGER_IMAGE = (
     "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.3"
 )
-
+JAVA_DEBUGGER_IMAGE = (
+    "gcr.io/genuine-flight-317411/java-toolkit/jtk-11"
+)
 
 # TODO: import these from the python-tools project
 class Process(BaseModel):
@@ -106,6 +108,16 @@ class RobustaPod(Pod):
             previous,
             tail_lines,
         )
+
+    @staticmethod
+    def create_java_debugger_pod(
+        pod_name: str, node_name: str, debug_cmd=None
+    ) -> "RobustaPod":
+        return RobustaPod.create_debugger_pod(
+            pod_name=pod_name,
+            node_name=node_name,
+            debug_image=JAVA_DEBUGGER_IMAGE,
+            debug_cmd=debug_cmd)
 
     @staticmethod
     def create_debugger_pod(

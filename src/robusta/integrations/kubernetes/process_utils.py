@@ -15,7 +15,7 @@ from ...core.reporting.blocks import (
 
 class ProcessType(Enum):
     PYTHON = "python"
-
+    JAVA = "java"
 
 class ProcessFinder:
     """
@@ -25,7 +25,7 @@ class ProcessFinder:
     def __init__(
         self, pod: RobustaPod, filters: ProcessParams, process_type: ProcessType
     ):
-        if process_type != ProcessType.PYTHON:
+        if process_type not in {ProcessType.PYTHON, ProcessType.JAVA}:
             raise Exception(f"Unsupported process type: {process_type}")
         self.pod = pod
         self.filters = filters
