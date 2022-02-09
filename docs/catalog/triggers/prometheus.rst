@@ -10,10 +10,11 @@ Robusta can run actions in response to any Prometheus alert. For example:
       - on_prometheus_alert:
           alert_name: HostHighCpuLoad
       actions:
-      - node_cpu_enricher: {}
+      - node_bash_enricher:
+         bash_command: ps aux
 
-This will run the ``node_cpu_enricher`` whenever the ``HostHighCpuLoad`` alert fires. This will provide a detailed analysis of the
-node's CPU usage.
+This will run the ``ps aux`` on the relevant node whenever a ``HostHighCpuLoad`` alert fires. The output will be
+sent to the default sinks.
 
 How it works
 ^^^^^^^^^^^^^^^^^
