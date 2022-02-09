@@ -1,23 +1,25 @@
 from robusta.api import *
 from robusta.integrations.kubernetes.process_utils import ProcessFinder, ProcessType
-from robusta.utils.parsing import load_json
 from typing import List
+import traceback
 
-#from robusta.integrations.kubernetes.custom_models import JAVA_DEBUGGER_IMAGE
-
-JAVA_DEBUGGER_IMAGE = (
-    "gcr.io/genuine-flight-317411/java-toolkit/jtk-11:latest"
-)
+from robusta.integrations.kubernetes.custom_models import JAVA_DEBUGGER_IMAGE
 
 @action
 def java_debugger(event: PodEvent, params: ProcessParams):
     """
+
+    Displays all java-toolkit debugging options for every java process
 
     """
     pod = event.get_pod()
     if not pod:
         logging.info(f"Java debugging - pod not found for event: {event}")
         return
+    if not params.interactive:
+        logging.info(f"unable to support non interactive jdk events")
+        return
+
     finding = Finding(
         title=f"Java debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
@@ -29,20 +31,104 @@ def java_debugger(event: PodEvent, params: ProcessParams):
         ),
     )
     process_finder = ProcessFinder(pod, params, ProcessType.JAVA)
-    java_pids = process_finder.get_pids()
-    if not java_pids:
-        ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
+    if not process_finder.matching_processes:
+        ERROR_MESSAGE = f"No relevant processes found for java debugging."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment(
             [MarkdownBlock(ERROR_MESSAGE)]
         )
         return
-    logging.info("jdk_choices_in_finding_for_pid")
     finding.add_enrichment(
-        [MarkdownBlock(f"Please select an advanced debugging choice:")]
+        [
+            TableBlock(
+                [[proc.pid, proc.exe, " ".join(proc.cmdline)] for proc in process_finder.matching_processes],
+                ["pid", "exe", "cmdline"],
+            )
+        ]
+    )
+    finding = add_jdk_choices_to_finding(finding, params, process_finder.get_pids(), pod)
+    event.add_finding(finding)
+
+
+@action
+def pod_jmap_pid(event: PodEvent, params: ProcessParams):
+    """
+        Runs jmap on a specific pid in your pod
+    """
+    jmap_cmd = "jmap"
+    aggregation_key="pod_jmap_pid"
+    run_jdk_command_on_pid(event, params, jmap_cmd, aggregation_key)
+
+
+@action
+def pod_jstack_pid(event: PodEvent, params: ProcessParams):
+    """
+        Runs jstack on a specific pid in your pod
+    """
+    jstack_cmd = "jstack"
+    aggregation_key="pod_jstack_pid"
+    run_jdk_command_on_pid(event, params, jstack_cmd, aggregation_key)
+
+
+def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, aggregation_key: str):
+    """
+        A generic function to run any jdk command that needs a specific pid
+        Creates a jdk command for the java-toolkit and returns the finding with the output
+    """
+    if not params.pid:
+        logging.info(f"{aggregation_key} - pid not found for event: {event}")
+        return
+
+    pod = event.get_pod()
+    if not pod:
+        logging.info(f"{aggregation_key} - pod not found for event: {event}")
+        return
+
+    finding = Finding(
+        title=f"{cmd} run on pid {params.pid} in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
+        source=FindingSource.MANUAL,
+        aggregation_key=aggregation_key,
+        subject=FindingSubject(
+            pod.metadata.name,
+            FindingSubjectType.TYPE_POD,
+            pod.metadata.namespace,
+        ),
+    )
+    jdk_cmd = f"{cmd} {params.pid}"
+    try:
+        jdk_output = run_jdk_command(jdk_cmd, pod)
+        finding.add_enrichment(
+            [
+                [MarkdownBlock(f"{aggregation_key} ran on process [{params.pid}")],
+                FileBlock(f"{aggregation_key}_{params.pid}.txt", jdk_output.encode()),
+            ]
+        )
+    except Exception:
+        finding.add_enrichment(
+            [
+                MarkdownBlock(f"```{traceback.format_exc()}```")
+            ]
+        )
+    finally:
+        event.add_finding(finding)
+
+
+def run_jdk_command(jdk_cmd: str, pod: RobustaPod ):
+    java_toolkit_cmd = f"java-toolkit {jdk_cmd}"
+    output = RobustaPod.exec_in_debugger_pod(
+            pod.metadata.name,
+            pod.spec.nodeName,
+            java_toolkit_cmd, debug_image=JAVA_DEBUGGER_IMAGE
+        )
+    return output
+
+
+def add_jdk_choices_to_finding(finding: Finding, params: ProcessParams, pids: List[int], pod: RobustaPod):
+    finding.add_enrichment(
+        [MarkdownBlock(f"Please select a JDK debugging choice:")]
     )
     choices = {}
-    for pid in java_pids:
+    for pid in pids:
         logging.info(f"jdk_choices_in_finding_for_pid {pid}")
         updated_params = params.copy()
         updated_params.process_substring = ""
@@ -62,99 +148,4 @@ def java_debugger(event: PodEvent, params: ProcessParams):
                                 "*After clicking a button please wait up to 120 seconds for a response*"
                             )
                             ])
-    event.add_finding(finding)
-    #jdk_choices_in_finding_for_pid(finding, params, java_pid, pod)
-
-
-@action
-def pod_jmap_pid(event: PodEvent, params: ProcessParams):
-    """
-
-    """
-    pod = event.get_pod()
-    if not pod:
-        logging.info(f"pod_jmap_pid - pod not found for event: {event}")
-        return
-
-    if not params.pid:
-        logging.info(f"pod_jmap_pid - pid not found for event: {event}")
-        return
-    jmap_cmd = f"jmap {params.pid}"
-    finding, jmap_output = run_jdk_command(jmap_cmd, pod.metadata, "pod_jmap_pid")
-    finding.add_enrichment(
-        [
-            [MarkdownBlock(f"jmap ran on process [{params.pid}")],
-            FileBlock(f"jmap_{params.pid}.txt", jmap_output.encode()),
-        ]
-    )
-    event.add_finding(finding)
-
-
-@action
-def pod_jstack_pid(event: PodEvent, params: ProcessParams):
-    """
-
-    """
-    pod = event.get_pod()
-    if not pod:
-        logging.info(f"pod_jstack_pid - pod not found for event: {event}")
-        return
-
-    if not params.pid:
-        logging.info(f"pod_jstack_pid - pid not found for event: {event}")
-        return
-    jmap_cmd = f"jstack {params.pid}"
-    finding, jmap_output = run_jdk_command(jmap_cmd, pod.metadata, "pod_jstack_pid")
-    finding.add_enrichment(
-        [
-            [MarkdownBlock(f"jstack_pid ran on process [{params.pid}")],
-            FileBlock(f"jstack_{params.pid}.txt", jmap_output.encode()),
-        ]
-    )
-    event.add_finding(finding)
-
-def run_jdk_command(jdk_cmd: str, pod_meta: ObjectMeta, aggregation_key ):
-    finding = Finding(
-        title=f"Running Java-toolkit in pod {pod_meta.name} in namespace {pod_meta.namespace}:",
-        source=FindingSource.MANUAL,
-        aggregation_key=aggregation_key,
-        subject=FindingSubject(
-            pod_meta.name,
-            FindingSubjectType.TYPE_POD,
-            pod_meta.namespace,
-        ),
-    )
-    cmd = f"k=java-toolkit {jdk_cmd}"
-    output = RobustaPod.exec_in_debugger_pod(
-            pod_meta.name,
-            pod_meta.namespace,
-            cmd, debug_image=JAVA_DEBUGGER_IMAGE, command_timeout=90
-        )
-    return finding, output
-
-
-def jdk_choices_in_finding_for_pid(finding: Finding, params: ProcessParams, pid: int, pod: RobustaPod):
-    finding.add_enrichment(
-        [MarkdownBlock(f"Please select an advanced debugging choice:")]
-    )
-    if params.interactive:
-        choices = {}
-        updated_params = params.copy()
-        updated_params.process_substring = ""
-        updated_params.pid = pid
-        choices[f"jmap {updated_params.pid}"] = CallbackChoice(
-            action=pod_jmap_pid,
-            action_params=updated_params,
-            kubernetes_object=pod,
-        )
-        choices[f"jstack {updated_params.pid}"] = CallbackChoice(
-            action=pod_jstack_pid,
-            action_params=updated_params,
-            kubernetes_object=pod,
-        )
-        finding.add_enrichment([CallbackBlock(choices),
-                                MarkdownBlock(
-                                    "*After clicking a button please wait up to 120 seconds for a response*"
-                                )
-                                ])
     return finding
