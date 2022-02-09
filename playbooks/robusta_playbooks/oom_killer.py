@@ -246,14 +246,14 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
 
     def get_busy_node_reason(self) -> Optional[str]:
         duration = timedelta(seconds=self.config.metrics_duration_in_secs)
+        node_name = self.node.metadata.name
 
-        node_max_used_memory_in_percentage = self.memory_analyzer.get_max_node_memory_usage_in_percentage(
-            self.node.metadata.name, duration)
+        node_max_used_memory_in_percentage = self.memory_analyzer.get_max_node_memory_usage_in_percentage(node_name, duration)
         if node_max_used_memory_in_percentage is None:
             return None
 
         if node_max_used_memory_in_percentage < self.config.node_memory_threshold:
             return None
 
-        reason = f"node used too much memory: reached {node_max_used_memory_in_percentage} percentage of its available memory"
+        reason = f"node {node_name} used too much memory: reached {node_max_used_memory_in_percentage} percentage of its available memory"
         return reason
