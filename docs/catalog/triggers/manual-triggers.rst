@@ -5,7 +5,7 @@ Motivation
 -------------------------------------------
 The main use-case for manual triggers is making troubleshooting easier.
 
-This ties into Robusta's goal of reducing MTT-WTF (mean time to WTF).
+This ties into Robusta's goal of reducing MTTR (mean time to recovery).
 
 Additional use cases are discussed below.
 
