@@ -9,7 +9,7 @@ from robusta.integrations.kubernetes.custom_models import JAVA_DEBUGGER_IMAGE
 def java_debugger(event: PodEvent, params: ProcessParams):
     """
 
-    Displays all java-toolkit debugging options for every java process
+        Displays all java-toolkit debugging options for every java process
 
     """
     pod = event.get_pod()
@@ -72,8 +72,7 @@ def pod_jstack_pid(event: PodEvent, params: ProcessParams):
 
 def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, aggregation_key: str):
     """
-        A generic function to run any jdk command that needs a specific pid
-        Creates a jdk command for the java-toolkit and returns the finding with the output
+        A generic entrypoint function to run any jdk command via the java toolkit and creates a finding on it
     """
     if not params.pid:
         logging.info(f"{aggregation_key} - pid not found for event: {event}")
@@ -96,7 +95,7 @@ def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, agg
     )
     jdk_cmd = f"{cmd} {params.pid}"
     try:
-        jdk_output = run_jdk_command(jdk_cmd, pod)
+        jdk_output = run_java_toolkit_command(jdk_cmd, pod)
         finding.add_enrichment(
             [
                 [MarkdownBlock(f"{aggregation_key} ran on process [{params.pid}")],
@@ -113,7 +112,7 @@ def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, agg
         event.add_finding(finding)
 
 
-def run_jdk_command(jdk_cmd: str, pod: RobustaPod ):
+def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod ):
     java_toolkit_cmd = f"java-toolkit {jdk_cmd}"
     output = RobustaPod.exec_in_debugger_pod(
             pod.metadata.name,
