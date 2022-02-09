@@ -100,26 +100,27 @@ class MemoryAnalyzer:
         return results
 
 
+k8s_memory_factors = {
+    "K": 1000,
+    "M": 1000*1000,
+    "G": 1000*1000*1000,
+    "P": 1000*1000*1000*1000,
+    "E": 1000*1000*1000*1000*1000,
+    "Ki": 1024,
+    "Mi": 1024*1024,
+    "Gi": 1024*1024*1024,
+    "Pi": 1024*1024*1024*1024,
+    "Ei": 1024*1024*1024*1024*1024
+}
+
+
 class K8sMemoryTransformer:
-    def __init__(self):
-        self.factors = {
-            "K": 1000,
-            "M": 1000*1000,
-            "G": 1000*1000*1000,
-            "P": 1000*1000*1000*1000,
-            "E": 1000*1000*1000*1000*1000,
-            "Ki": 1024,
-            "Mi": 1024*1024,
-            "Gi": 1024*1024*1024,
-            "Pi": 1024*1024*1024*1024,
-            "Ei": 1024*1024*1024*1024*1024
-        }
+    @staticmethod
+    def get_number_of_bytes_from_kubernetes_mem_spec(mem_spec: str) -> int:
+        if len(mem_spec) > 2 and mem_spec[-2:] in k8s_memory_factors:
+            return int(mem_spec[:-2]) * k8s_memory_factors[mem_spec[-2:]]
 
-    def get_number_of_bytes_from_kubernetes_mem_spec(self, mem_spec: str) -> int:
-        if len(mem_spec) > 2 and mem_spec[-2:] in self.factors:
-            return int(mem_spec[:-2]) * self.factors[mem_spec[-2:]]
-
-        if len(mem_spec) > 1 and mem_spec[-1] in self.factors:
-            return int(mem_spec[:-1]) * self.factors[mem_spec[-1]]
+        if len(mem_spec) > 1 and mem_spec[-1] in k8s_memory_factors:
+            return int(mem_spec[:-1]) * k8s_memory_factors[mem_spec[-1]]
 
         raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)

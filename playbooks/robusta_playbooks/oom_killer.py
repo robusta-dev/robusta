@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+import pydantic
+
 from robusta.api import *
 from robusta.integrations.resource_analysis.memory_analyzer import MemoryAnalyzer, K8sMemoryTransformer
 
@@ -42,7 +44,7 @@ class OomKillerEnricherParams(ActionParams):
 
 
 @action
-def oom_killer_enricher(event: NodeEvent, config: OomKillerEnricherParams):
+def oom_killer_enricher(event: PrometheusKubernetesAlert, config: OomKillerEnricherParams):
     """
     Enrich the finding information regarding node OOM killer.
 
@@ -53,10 +55,6 @@ def oom_killer_enricher(event: NodeEvent, config: OomKillerEnricherParams):
         logging.error(
             f"cannot run OOMKillerEnricher on event with no node object: {event}"
         )
-        return
-
-    if not isinstance(event, PrometheusKubernetesAlert):
-        logging.info("OOMKillerEnricher can only be triggered by prometheus alerts")
         return
 
     oom_kill_reason_investigator = KubernetesOomKillReasonInvestigator(node, event.alert, config)
@@ -86,14 +84,12 @@ def oom_killer_enricher(event: NodeEvent, config: OomKillerEnricherParams):
         event.add_enrichment([])
 
 
-@dataclass
-class MemorySpecs:
+class MemorySpecs(pydantic.BaseModel):
     requests: Optional[str] = None
     limits: Optional[str] = None
 
 
-@dataclass
-class OomKill:
+class OomKill(pydantic.BaseModel):
     time: float
     pod_name: str
     container_name: str
@@ -125,8 +121,7 @@ class OomKillsExtractor:
         oom_kills: List[OomKill] = []
         for pod in results.items:
             pod_oom_kills = self.get_oom_kills_from_pod(pod)
-            for oom_kill in pod_oom_kills:
-                oom_kills.append(oom_kill)
+            oom_kills.extend(pod_oom_kills)
 
         return oom_kills
 
@@ -209,7 +204,6 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
     def __init__(self, node: Node, alert: PrometheusAlert, params: OomKillerEnricherParams):
         self.config = params
         self.memory_analyzer = MemoryAnalyzer(params.prometheus_url, alert.startsAt.tzinfo)
-        self.memory_transformer = K8sMemoryTransformer()
         self.node = node
         self.node_reason_calculated = False
         self.node_reason = None
@@ -236,7 +230,7 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
             return None
 
         memory_limit = oom_kill.memory_specs.limits
-        max_memory_in_bytes = self.memory_transformer.get_number_of_bytes_from_kubernetes_mem_spec(memory_limit)
+        max_memory_in_bytes = K8sMemoryTransformer.get_number_of_bytes_from_kubernetes_mem_spec(memory_limit)
 
         container_max_used_memory_in_bytes = self.memory_analyzer.get_container_max_memory_usage_in_bytes(
             self.node.metadata.name, oom_kill.pod_name, oom_kill.container_name, duration)
