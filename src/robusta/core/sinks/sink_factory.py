@@ -12,6 +12,10 @@ from .msteams.msteams_sink_params import MsTeamsSinkConfigWrapper
 from .robusta.robusta_sink_params import RobustaSinkConfigWrapper
 from .opsgenie.opsgenie_sink import OpsGenieSink
 from .opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
+from .telegram.telegram_sink import TelegramSink
+from .telegram.telegram_sink_params import TelegramSinkConfigWrapper
+from .webhook.webhook_sink import WebhookSink
+from .webhook.webhook_sink_params import WebhookSinkConfigWrapper
 
 
 class SinkFactory:
@@ -31,5 +35,9 @@ class SinkFactory:
             return DataDogSink(sink_config, cluster_name)
         elif isinstance(sink_config, OpsGenieSinkConfigWrapper):
             return OpsGenieSink(sink_config, cluster_name)
+        elif isinstance(sink_config, TelegramSinkConfigWrapper):
+            return TelegramSink(sink_config, cluster_name)
+        elif isinstance(sink_config, WebhookSinkConfigWrapper):
+            return WebhookSink(sink_config, cluster_name)
         else:
             raise Exception(f"Sink not supported {type(sink_config)}")

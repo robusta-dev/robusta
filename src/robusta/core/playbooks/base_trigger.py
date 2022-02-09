@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, Optional, Type
+from typing import Dict, Optional, Type, List
 
 from ..model.events import ExecutionBaseEvent
 from ..model.k8s_operation_type import K8sOperationType
@@ -18,11 +18,11 @@ class BaseTrigger(BaseModel):
     def get_trigger_event(self) -> str:
         pass
 
-    def should_fire(self, event: TriggerEvent):
+    def should_fire(self, event: TriggerEvent, playbook_id: str):
         return True
 
     def build_execution_event(
-        self, event: TriggerEvent, findings: Dict[str, Finding]
+        self, event: TriggerEvent, findings: List[Finding]
     ) -> Optional[ExecutionBaseEvent]:
         pass
 

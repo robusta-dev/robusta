@@ -148,6 +148,11 @@ class SupabaseDal:
             elif isinstance(block, ListBlock):
                 structured_data.append({"type": "list", "data": block.items})
             elif isinstance(block, TableBlock):
+                if block.table_name:
+                    structured_data.append({
+                            "type": "markdown",
+                            "data": Transformer.to_github_markdown(block.table_name),
+                    })
                 structured_data.append(
                     {
                         "type": "table",

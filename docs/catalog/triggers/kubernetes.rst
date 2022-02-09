@@ -1,12 +1,9 @@
-Kubernetes
+Kubernetes (API Server)
 ############################
 
-Robusta can run playbooks in response to Kubernetes API Server events.
+Robusta can run automated actions when Kubernetes resources change.
 
-For example, when a ``Pod`` is created, or when a ``Deployment`` is changed, we can trigger Robusta actions.
-
-Configuration example
-^^^^^^^^^^^^^^^^^^^^^^
+For example, we can write annotations to Grafana when deployments update:
 
 .. code-block:: yaml
 
@@ -19,11 +16,10 @@ Configuration example
      - add_deployment_lines_to_grafana:
          grafana_url: ....
 
-Basic triggers
-----------------
-Most Kubernetes resources can be used to trigger playbooks. The trigger will fire when the resource changes. For example:
+Example triggers
+------------------
 
-**Pod triggers**:
+The following triggers are available for Pods:
 
 * ``on_pod_create``
 * ``on_pod_update``
@@ -65,10 +61,10 @@ The following wildcard triggers will fire for any supported Kubernetes resource:
 * on_kubernetes_any_resource_delete
 * on_kubernetes_any_resource_all_changes
 
-Supported filters
---------------------
+Limiting when triggers run
+----------------------------
 
-All Kubernetes triggers support the following filters:
+You can limit when triggers run using the following filters:
 
 * ``name_prefix`` - Name prefix to match resources.
 * ``namespace_prefix`` - Namespace prefix to match resources.

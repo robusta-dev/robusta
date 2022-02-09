@@ -14,7 +14,7 @@ from .templates import get_deployment_yaml
 S = TypeVar("S")
 T = TypeVar("T")
 PYTHON_DEBUGGER_IMAGE = (
-    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.2"
+    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.3"
 )
 
 
@@ -73,6 +73,15 @@ def does_daemonset_have_toleration(ds: DaemonSet, toleration_key: str) -> bool:
 def does_node_have_taint(node: Node, taint_key: str) -> bool:
     return any(t.key == taint_key for t in node.spec.taints)
 
+
+class RobustaEvent:
+    @classmethod
+    def get_events(cls, kind: str, name: str, namespace: str = None) -> EventList:
+        field_selector = f"involvedObject.kind={kind},involvedObject.name={name}"
+        if namespace:
+            field_selector += f",involvedObject.namespace={namespace}"
+
+        return Event.listEventForAllNamespaces(field_selector=field_selector).obj
 
 class RobustaPod(Pod):
     def exec(self, shell_command: str, container: str = None) -> str:

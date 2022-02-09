@@ -9,9 +9,6 @@ class MsTeamsSinkParams(SinkBaseParams):
 class MsTeamsSinkConfigWrapper(SinkConfigBase):
     ms_teams_sink: MsTeamsSinkParams
 
-    def get_name(self) -> str:
-        return self.ms_teams_sink.name
-
     def get_params(self) -> SinkBaseParams:
         return self.ms_teams_sink
 

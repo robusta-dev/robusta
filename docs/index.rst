@@ -1,86 +1,55 @@
 Welcome to Robusta
 ================================
 
-Robusta is an open source platform for Kubernetes troubleshooting and automation. It contains
-50+ builtin actions to:
+Robusta is an open source platform for Kubernetes troubleshooting. It sits on top of your monitoring stack
+(Prometheus, Elasticsearch, etc) and tells you why alerts occurred and how to fix them.
 
-1. Manually troubleshoot errors (debug pods, run profilers, etc)
-2. Enrich alerts with extra context
-3. Remediate alerts with one click
-4. Track Kubernetes changes and errors
+Robusta has four parts:
 
-Robusta is configured in YAML and extended in Python.
+1. An automations engine for Kubernetes
+2. Builtin automations to enrich and fix common alerts
+3. Manual troubleshooting tools for everything else
+4. A UI to see all alerts, changes, and events in your cluster
 
-Examples
+*Optional*: You can install Robusta with a bundled Prometheus Operator. It includes default alerts for Kubernetes.
+These alerts should cause no noise on a healthy cluster. If they're noisy in your env, let us know and we'll fix it.
+
+Example Use Cases
 ~~~~~~~~~~~~~~~~~~
 
 .. tab-set::
 
     .. tab-item:: Crashing pods
 
-        .. admonition:: When a pod crashes, fetch the logs and send a message to Slack.
+        .. admonition:: Monitor crashing pods and send their logs to Slack
 
             .. image:: /images/crash-report2.png
                 :width: 700
                 :align: center
 
-            .. code-block:: yaml
+    .. tab-item:: Event Correlation
 
-                # this is configured by default using something like this:
-                triggers:
-                  - on_prometheus_alert:
-                      alert_name: KubePodCrashLooping
-                actions:
-                  - logs_enricher: {}
-                sinks:
-                  - slack
-
-            See :ref:`Restart loop reporter` for more details
-
-    .. tab-item:: Change tracking
-
-        .. admonition:: Show application updates in Grafana
+        .. admonition:: Show application updates in Grafana to correlate them with error spikes
 
             .. image:: /images/grafana-deployment-enrichment.png
               :width: 400
               :align: center
 
-            .. code-block:: yaml
+    .. tab-item:: Remediate alerts
 
-                triggers:
-                  - on_deployment_update: {}
-                actions:
-                  - add_deployment_lines_to_grafana:
-                      grafana_url: <grafana_url>
-                      grafana_api_key: <grafana_api_key>
-                      grafana_dashboard_uid: <which_grafana_dashboard_to_update>
-
-            See :ref:`Add deployment lines to grafana` for more details
-
-    .. tab-item:: Chatops
-
-        .. admonition:: Increase the number of replicas from Slack.
+        .. admonition:: Temporarily increase the HPA maximum so you can go back to sleep
 
             .. image:: /images/alert_on_hpa_reached_limit1.png
                 :width: 600
                 :align: center
 
-            .. code-block:: yaml
+    .. tab-item:: Debug Pods
 
-                triggers:
-                - on_horizontalpodautoscaler_update: {}
-                actions:
-                - alert_on_hpa_reached_limit: {}
-
-
-    .. tab-item:: Debug pods with VSCode
-
-        .. admonition:: Attach a Python debugger to a running pod:
+        .. admonition:: Attach the VSCode debugger to a runnning Python pod without tearing your hair out
 
             .. image:: /images/python-debugger.png
               :width: 600
               :align: center
-
 
             .. code-block:: bash
 
@@ -95,7 +64,19 @@ Robusta automates everything that happens **after** you deploy your application.
 
 It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt automations and not just "build your own".
 
-You configure automations in a three-part yaml:
+For example, the following automation sends logs to Slack when an alert fires for crashing pods:
+
+.. code-block:: yaml
+
+    triggers:
+      - on_prometheus_alert:
+          alert_name: KubePodCrashLooping
+    actions:
+      - logs_enricher: {}
+    sinks:
+      - slack
+
+Every automation has three parts:
 
 .. grid:: 3
 
@@ -125,24 +106,6 @@ You configure automations in a three-part yaml:
 
 Automations run via webhook so if they fail it wont bring down your environment.
 
-What's in the Box
-~~~~~~~~~~~~~~~~~~~
-
-Robusta has several components:
-
-A Python framework for writing better webhooks and automations
-    Robusta handles the plumbing so you can focus on the logic.
-
-50+ prebuilt webhooks and automations for common actions
-    No need to write code. Just enable these with YAML.
-
-An opinionated Prometheus configuration (optional)
-    Don't configure anything. It just works. Better alerts + insights.
-
-`A better frontend for AlertManager <https://home.robusta.dev/ui/>`_ (optional)
-    We put your existing alerts on a timeline and let you slice and dice them. You gain visibility into
-    Kubernetes changes that occurred before an alert fired. And more.
-
 Writing your own automations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -168,86 +131,53 @@ Many automations are included, but you can also write your own in Python.
                 FileBlock("crashing-pod.log", pod_logs)
             ])
 
-
-
-FAQ
-~~~~~~~~~~~~~~~~~~~~
-
-How is this different from webhooks
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This is powered by webhooks! The advantage is configuring prebuilt webhooks using YAML instead of writing
-them from scratch as code.
-
-We also let you re-use the same webhook action with multiple triggers: e.g. AlertManager, the APIServer, and more.
-
-Lastly, if you do want to write a webhook action from scratch, we make it easier with our Python API.
-
-Architecture
-~~~~~~~~~~~~~~~~~~~~
-Robusta can be used as
-
-.. dropdown:: A complete Kubernetes monitoring stack
-    :color: light
-
-    Robusta will install a bundled Prometheus stack. Includes:
-
-    * Robusta automations engine + builtin automations
-    * Prometheus Operator, AlertManager, and Grafana
-    * Out of the box alerts fine-tuned for Kubernetes
-
-.. dropdown:: An automations engine for your existing stack
-    :color: light
-
-    Robusta will integrate with external tools like your existing Prometheus, Datadog, or Elasticsearch. Includes:
-
-    * Robusta automations engine + builtin automations
-
 Next Steps
 ~~~~~~~~~~~~
 
-:ref:`Ready to install Robusta? Get started! <Installation Guide>`
-
-Want a better frontend for AlertManager? Try `the Robusta UI <https://home.robusta.dev/ui/>`_. It shows alerts, changes
-to your cluster, and data from Robusta. See everything on a single timeline and slice/dice by cluster, microservice,
-and alert type.
+:ref:`Ready to install Robusta? Get started! <installation>`
 
 `Star us on Github to receive updates. <https://github.com/robusta-dev/robusta/>`_
 
 .. toctree::
    :hidden:
 
-   self
+   Project Home <https://home.robusta.dev/?from=docs>
 
 .. toctree::
    :maxdepth: 4
    :caption: Getting Started
    :hidden:
 
-   getting-started/installation
-   getting-started/manual-triggers
-   getting-started/support
+   Overview <self>
+   installation
+   architecture
+   upgrade
+   coverage
+   community
 
 .. toctree::
    :maxdepth: 4
-   :caption: Automation Catalog
+   :caption: Use Robusta to
    :hidden:
 
+   tutorials/configuring-automations
+   tutorials/prometheus-enrichment
+   tutorials/troubleshooting-applications
+
+..
+   tutorials/alert-correlation
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Reference
+   :hidden:
+
+   user-guide/configuration
+   user-guide/trigger-action-binding
+   user-guide/robusta-cli
    catalog/triggers/index
    catalog/actions/index
    catalog/sinks/index
-
-.. toctree::
-   :maxdepth: 4
-   :caption: User Guide
-   :hidden:
-   :glob:
-
-   user-guide/example-playbook
-   user-guide/configuration
-   user-guide/upgrade
-   user-guide/robusta-cli
-   user-guide/architecture
 
 .. toctree::
    :maxdepth: 4

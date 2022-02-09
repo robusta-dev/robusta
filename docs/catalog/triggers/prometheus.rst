@@ -1,13 +1,7 @@
 Prometheus and AlertManager
 #############################
 
-Robusta can run actions in response to any Prometheus alert. This is configured via AlertManager webhooks.
-
-When an alert has a ``pod`` label then the Pod will be automatically loaded and passed to the Robusta action. This applies
-to many Kubernetes resources like Pod, Deployment, Job, and DaemonSet.
-
-Example
-^^^^^^^^^^^^^^^^^^^^^^
+Robusta can run actions in response to any Prometheus alert. For example:
 
 .. code-block:: yaml
 
@@ -16,18 +10,33 @@ Example
       - on_prometheus_alert:
           alert_name: HostHighCpuLoad
       actions:
-      - node_cpu_enricher: {}
-      - graph_enricher: {}
+      - node_bash_enricher:
+         bash_command: ps aux
 
-Supported filters
-^^^^^^^^^^^^^^^^^^^^^^
+This will run the ``ps aux`` on the relevant node whenever a ``HostHighCpuLoad`` alert fires. The output will be
+sent to the default sinks.
+
+How it works
+^^^^^^^^^^^^^^^^^
+
+Relevant Kubernetes resources are loaded from the alert's metadata. Then Robusta actions are run with those resources
+as input.
+
+In the example above, the ``node_cpu_enricher`` receives the node on which the alert fired.
+
+Limiting when automations run
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can limit when the automation runs by applying the following filters to ``on_prometheus_alert``:
 
 .. pydantic-model:: robusta.integrations.prometheus.trigger.PrometheusAlertTrigger
 
 Sending Alerts to Robusta
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forward alerts to Robusta by adding a webhook receiver to AlertManager:
+Forward alerts to Robusta by adding a webhook receiver to AlertManager.
+
+You can skip this step if you installed Robusta's bundled Prometheus stack.
 
 .. admonition:: AlertManager configuration
 

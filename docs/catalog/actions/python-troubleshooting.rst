@@ -25,4 +25,4 @@ Make sure you read about :ref:`Manual Triggers` to understand how this works.
 
     .. code-block:: bash
 
-         robusta playbooks trigger python_memory name=podname namespace=default process_substring=main
+         robusta playbooks trigger python_memory name=podname namespace=default

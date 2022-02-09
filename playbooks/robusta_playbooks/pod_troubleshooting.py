@@ -85,7 +85,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
 @action
 def pod_ps(event: PodEvent):
     """
-    Create a finding with the list of running processes on the pod.
+    Fetch the list of running processes in a pod.
     """
     pod = event.get_pod()
     if not pod:
@@ -148,9 +148,9 @@ class PythonMemorySnapshot(BaseModel):
 @action
 def python_memory(event: PodEvent, params: MemoryTraceParams):
     """
-    Analyze memory allocation on the specified python process, for the specified duration.
+    Monitor a Python process for X seconds and show memory that was allocated and not freed.
 
-    Create a finding with the memory analysis results.
+    Use this to track memory leaks in your Python application on Kubernetes.
     """
     pod = event.get_pod()
     if not pod:
@@ -170,7 +170,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
     event.add_finding(finding)
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     process = process_finder.get_match_or_report_error(
-        finding, "Profile", python_memory
+        finding, "Profile", python_memory, advanced_debugging_options
     )
     if process is None:
         return
@@ -258,12 +258,113 @@ def get_debugger_warnings(data):
 
 
 @action
+def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
+    """
+    Prints a stack track of a python process and child threads
+
+    Create a finding with the stack trace results.
+    """
+    pod = event.get_pod()
+    if not pod:
+        logging.info(f"debugger_stack_trace - pod not found for event: {event}")
+        return
+
+    process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
+    pid = process_finder.get_lowest_relevant_pid()
+
+    if not pid:
+        logging.info(f"debugger_stack_trace - no relevant pids")
+
+    # if params pid is set, this will be returned, if not we return the parent process
+    finding = Finding(
+        title=f"Stacktrace on pid {pid}:",
+        source=FindingSource.MANUAL,
+        aggregation_key="debugger_stack_trace",
+        subject=FindingSubject(
+            pod.metadata.name,
+            FindingSubjectType.TYPE_POD,
+            pod.metadata.namespace,
+        ),
+    )
+    event.add_finding(finding)
+    cmd = f"debug-toolkit stack-trace {pid}"
+    output = RobustaPod.exec_in_debugger_pod(
+        pod.metadata.name,
+        pod.spec.nodeName,
+        cmd,
+    )
+    blocks = []
+    for thread_output in output.split("\n\n"):
+        if thread_output.startswith("Current thread"):
+            # this is the thread we are getting the stack trace from, not relevant for debugging
+            continue
+        if thread_output:
+            blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
+    finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
+
+
+@action
+def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
+    """
+
+    Create a finding with alternative debugging options for received processes ; i.e. Stack-trace or Memory-trace.
+
+    """
+    pod = event.get_pod()
+    if not pod:
+        logging.info(f"advanced_debugging_options - pod not found for event: {event}")
+        return
+    finding = Finding(
+        title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
+        source=FindingSource.MANUAL,
+        aggregation_key="advanced_debugging_options",
+        subject=FindingSubject(
+            pod.metadata.name,
+            FindingSubjectType.TYPE_POD,
+            pod.metadata.namespace,
+        ),
+    )
+    event.add_finding(finding)
+
+    process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
+    relevant_processes_pids = process_finder.get_pids()
+    if not relevant_processes_pids:
+        ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
+        logging.info(ERROR_MESSAGE)
+        finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
+        return
+
+    finding.add_enrichment(
+        [MarkdownBlock(f"Please select an advanced debugging choice:")]
+    )
+    if params.interactive:
+        choices = {}
+        for proc_pid in relevant_processes_pids:
+            updated_params = params.copy()
+            updated_params.process_substring = ""
+            updated_params.pid = proc_pid
+            choices[f"StackTrace {updated_params.pid}"] = CallbackChoice(
+                action=debugger_stack_trace,
+                action_params=updated_params,
+                kubernetes_object=pod,
+            )
+        finding.add_enrichment(
+            [
+                CallbackBlock(choices),
+                MarkdownBlock(
+                    "*After clicking a button please wait up to 120 seconds for a response*"
+                ),
+            ]
+        )
+
+
+@action
 def python_debugger(event: PodEvent, params: DebuggerParams):
     """
     Attach a python debugger to a running pod. No need to modify the application's code or restart it.
 
     Steps:
-        1. :ref:`Install Robusta <Installation Guide>`
+        1. :ref:`Install Robusta <Installation>`
         2. Manually trigger this action using the Robusta CLI and the pod's name:
 
         .. code-block:: bash
@@ -293,7 +394,9 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     event.add_finding(finding)
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
-    process = process_finder.get_match_or_report_error(finding, "Debug", python_memory)
+    process = process_finder.get_match_or_report_error(
+        finding, "Debug", python_debugger, advanced_debugging_options
+    )
     if process is None:
         return
 

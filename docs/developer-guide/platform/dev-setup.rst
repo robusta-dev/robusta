@@ -4,7 +4,7 @@ Setup
 These are instructions for developing Robusta's core platform.
 
 
-Most users are looking for the regular :ref:`Installation Guide` or the documentation on :ref:`Writing Playbook Actions`.
+Most users are looking for the regular :ref:`Installation` or the documentation on :ref:`Writing Playbook Actions`.
 For developing Robusta itself, read on!
 
 Installing Robusta in-cluster from source

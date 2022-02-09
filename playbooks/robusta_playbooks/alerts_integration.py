@@ -17,13 +17,14 @@ class SeverityParams(ActionParams):
 
     :example severity: warning
     """
+
     severity: str = "none"
 
 
 @action
 def severity_silencer(alert: PrometheusKubernetesAlert, params: SeverityParams):
     """
-    Silence alert findings with with the specified severity level.
+    Silence alerts with with the specified severity level.
     """
     if alert.alert_severity == params.severity:
         logging.debug(f"skipping alert {alert}")
@@ -34,6 +35,7 @@ class NameSilencerParams(ActionParams):
     """
     :var names: List of alert names that should be silenced.
     """
+
     names: List[str]
 
 
@@ -51,13 +53,14 @@ class NodeRestartParams(ActionParams):
     """
     :var post_restart_silence: Period after restart to silence alerts. Seconds.
     """
+
     post_restart_silence: int = 300
 
 
 @action
 def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartParams):
     """
-    Silence alert findings for pods, that are on a node that was recently restarted.
+    Silence alerts for pods on a node that recently restarted.
     """
     if not alert.pod:
         return  # Silencing only pod alerts on NodeRestartSilencer
@@ -89,15 +92,18 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
 @action
 def default_enricher(alert: PrometheusKubernetesAlert):
     """
-    Enrich an alert finding with the original message and labels.
+    Enrich an alert with the original message and labels.
 
     By default, this enricher is last in the processing order, so it will be added to all alerts, that aren't silenced.
     """
     labels = alert.alert.labels
     alert.add_enrichment(
         [
-            HeaderBlock("Alert labels"),
-            TableBlock([[k, v] for (k, v) in labels.items()], ["label", "value"]),
+            TableBlock(
+                [[k, v] for (k, v) in labels.items()],
+                ["label", "value"],
+                table_name="*Alert labels*",
+            ),
         ],
         annotations={SlackAnnotations.ATTACHMENT: True},
     )
@@ -106,12 +112,13 @@ def default_enricher(alert: PrometheusKubernetesAlert):
 @action
 def alert_definition_enricher(alert: PrometheusKubernetesAlert):
     """
-    Enrich an alert finding with Prometheus query that triggered the alert.
+    Enrich an alert with the Prometheus query that triggered the alert.
     """
     alert.add_enrichment(
         [
-            HeaderBlock("Alert definition"),
-            MarkdownBlock(f"```\n{alert.get_prometheus_query()}\n```"),
+            MarkdownBlock(
+                f"*Alert definition*\n```\n{alert.get_prometheus_query()}\n```"
+            ),
         ],
         annotations={SlackAnnotations.ATTACHMENT: True},
     )
@@ -120,7 +127,7 @@ def alert_definition_enricher(alert: PrometheusKubernetesAlert):
 @action
 def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     """
-    Enrich the alert finding with a graph of the Prometheus query which triggered the alert.
+    Enrich the alert with a graph of the Prometheus query which triggered the alert.
     """
     if params.prometheus_url:
         prometheus_base_url = params.prometheus_url
@@ -166,13 +173,14 @@ class TemplateParams(ActionParams):
 
     :example template: "The alertname is $alertname and the pod is $pod"
     """
+
     template: str = ""
 
 
 @action
 def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
     """
-    Enrich an alert finding with a paragraph to the alert’s description containing templated markdown.
+    Enrich an alert with a paragraph to the alert’s description containing templated markdown.
     You can inject any of the alert’s Prometheus labels into the markdown.
 
     A variable like $foo will be replaced by the value of the Prometheus label foo.
@@ -195,13 +203,14 @@ class LogEnricherParams(ActionParams):
     """
     :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
     """
+
     warn_on_missing_label: bool = False
 
 
 @action
 def logs_enricher(event: PodEvent, params: LogEnricherParams):
     """
-    Enrich the alert finding with the pod logs, as a file.
+    Enrich the alert with pod logs
     The pod to fetch logs for is determined by the alert’s pod label from Prometheus.
 
     By default, if the alert has no pod this enricher will silently do nothing.
@@ -228,6 +237,7 @@ class SearchTermParams(ActionParams):
     """
     :var search_term: StackOverflow search term
     """
+
     search_term: str
 
 
@@ -262,7 +272,7 @@ def show_stackoverflow_search(event: ExecutionBaseEvent, params: SearchTermParam
 @action
 def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
     """
-    Enrich the alert finding with a button, which clicking it will show the top StackOverflow search results on this alert name.
+    Add a button to the alert - clicking it will show the top StackOverflow search results on this alert name.
     """
     alert_name = alert.alert.labels.get("alertname", "")
     if not alert_name:

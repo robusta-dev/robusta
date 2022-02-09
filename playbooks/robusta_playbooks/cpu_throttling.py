@@ -61,10 +61,10 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
         event.add_enrichment(
             [
                 MarkdownBlock(
-                    "*Alert Explanation:* This pod is cpu throttled even though it doesn't have CPU limits and is free "
-                    "to take advantage of extra cpu on the node. This strongly implies that you have too few resources "
-                    "on your cluster or have defined your other CPU requests incorrectly, leading Kubernetes to "
-                    "schedule too many pods on this node."
+                    "*Alert Explanation:* This pod is throttled because it is using more CPU than it's request and the "
+                    "node doesn't have spare CPU to give. Increase the pod's CPU request. This will impact Kubernetes' "
+                    "scheduling decisions and guarantee the pod is placed on a node with sufficient CPU to match the "
+                    "new request."
                 )
             ],
             annotations={SlackAnnotations.UNFURL: False},

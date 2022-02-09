@@ -77,6 +77,8 @@ class DataDogSink(SinkBase):
             elif isinstance(block, ListBlock):
                 lines.extend(block.items)
             elif isinstance(block, TableBlock):
+                if block.table_name:
+                    lines.append(f"%%%\n{block.table_name}\n%%%")
                 rendered_rows = block.render_rows()
                 lines.append(
                     tabulate(rendered_rows, headers=block.headers, tablefmt="presto")
