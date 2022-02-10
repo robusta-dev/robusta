@@ -4,15 +4,16 @@ Welcome to Robusta
 Robusta is an open source platform for Kubernetes troubleshooting. It sits on top of your monitoring stack
 (Prometheus, Elasticsearch, etc) and tells you why alerts occurred and how to fix them.
 
-Robusta has four parts:
+Robusta has three main parts, all open source:
 
 1. An automations engine for Kubernetes
 2. Builtin automations to enrich and fix common alerts
 3. Manual troubleshooting tools for everything else
-4. A UI to see all alerts, changes, and events in your cluster
 
-*Optional*: You can install Robusta with a bundled Prometheus Operator. It includes default alerts for Kubernetes.
-These alerts should cause no noise on a healthy cluster. If they're noisy in your env, let us know and we'll fix it.
+There are additional *optional* components:
+
+4. An all-in-one bundle with Robusta, the Prometheus Operator, and default Kubernetes alerts [#f1]_
+5. `A web UI to see all alerts, changes, and events in your cluster. <http://home.robusta.dev/ui?from=docs>`_ [#f2]_
 
 Example Use Cases
 ~~~~~~~~~~~~~~~~~~
@@ -137,6 +138,12 @@ Next Steps
 :ref:`Ready to install Robusta? Get started! <installation>`
 
 `Star us on Github to receive updates. <https://github.com/robusta-dev/robusta/>`_
+
+.. rubric:: Footnotes
+
+.. [#f1] These alerts should cause no noise on a healthy cluster. If they're noisy in your env, let us know and we'll fix it.
+
+.. [#f2] This is the only component that isn't open source and it's completely optional. An on-prem version is in development too.
 
 .. toctree::
    :hidden:
