@@ -1,12 +1,12 @@
 Community
 #######################
 
-Kubernetes University
+Kubernetes Kommunity
 -------------------------
 
 Our free videos on Kubernetes are fairly popular. They are extremely short (under five minutes) and mildly entertaining.
 
-See `Kubernetes University for details <https://home.robusta.dev/learning/>`_
+See `Kubernetes Kommunity for details <https://home.robusta.dev/learning/>`_
 
 Join the conversation
 ----------------------
