@@ -152,21 +152,20 @@ Next Steps
 
 .. toctree::
    :maxdepth: 4
-   :caption: Getting Started
+   :caption: About Robusta
    :hidden:
 
    Overview <self>
-   installation
    architecture
-   upgrade
    coverage
    community
 
 .. toctree::
    :maxdepth: 4
-   :caption: Use Robusta to
+   :caption: Tutorials
    :hidden:
 
+   installation
    tutorials/configuring-automations
    tutorials/prometheus-enrichment
    tutorials/troubleshooting-applications
@@ -179,12 +178,13 @@ Next Steps
    :caption: Reference
    :hidden:
 
+   upgrade
    user-guide/configuration
-   user-guide/trigger-action-binding
-   user-guide/robusta-cli
    catalog/triggers/index
    catalog/actions/index
    catalog/sinks/index
+   user-guide/robusta-cli
+   user-guide/trigger-action-binding
 
 .. toctree::
    :maxdepth: 4

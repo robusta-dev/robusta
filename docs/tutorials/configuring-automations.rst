@@ -1,14 +1,7 @@
 Track Kubernetes Changes
 ##############################
 
-In this tutorial we will define a custom Robusta automation that monitors Deployments.
-
-It will notify in Slack every time the Deployment's replica count changes.
-
-Configuring the automation
--------------------------------
-
-Automations are configured with the ``customPlaybooks`` helm value.
+Lets configure an automation to send Slack messages when deployment's change:
 
 1. Add the following to your ``values.yaml``:
 

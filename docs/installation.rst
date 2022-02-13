@@ -18,7 +18,7 @@ Standard Installation
 
 .. warning:: If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
 
-2. Generate a Robusta configuration. This will setup Slack and other integrations.
+2. Generate a Robusta configuration. This will setup Slack and other integrations. We **highly recommend** enabling the cloud UI so you can see all features in action.
 
 .. code-block:: bash
 
