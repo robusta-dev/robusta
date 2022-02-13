@@ -61,7 +61,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         source=FindingSource.KUBERNETES_API_SERVER,
         finding_type=FindingType.CONF_CHANGE,
         failure=False,
-        aggregation_key=f"ConfigurationChange/KubernetesResource/{event.operation.value}",
+        aggregation_key=f"ConfigurationChange/KubernetesResource/Change",
         subject=FindingSubject(
             event.obj.metadata.name,
             FindingSubjectType.from_kind(event.obj.kind),
