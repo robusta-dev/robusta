@@ -118,6 +118,8 @@ class KubernetesDiffBlock(BaseBlock):
         interesting_diffs: List[DiffDetail],
         old: Optional[HikaruDocumentBase],
         new: Optional[HikaruDocumentBase],
+        name: str = None,
+        namespace: str = None
     ):
         """
         :param interesting_diffs: parts of the diff to emphasize - some sinks will only show these to save space
@@ -132,11 +134,13 @@ class KubernetesDiffBlock(BaseBlock):
         )
         num_modifications = len(interesting_diffs) - num_additions - num_deletions
 
+        resource_name = self._obj_to_name(old, name, namespace) or self._obj_to_name(new, name, namespace)
+
         super().__init__(
             diffs=interesting_diffs,
             old=self._obj_to_content(old),
             new=self._obj_to_content(new),
-            resource_name=self._obj_to_name(old) or self._obj_to_name(new),
+            resource_name=resource_name,
             num_additions=num_additions,
             num_deletions=num_deletions,
             num_modifications=num_modifications,
@@ -150,16 +154,20 @@ class KubernetesDiffBlock(BaseBlock):
             return hikaru.get_yaml(obj)
 
     @staticmethod
-    def _obj_to_name(obj: Optional[HikaruDocumentBase]):
+    def _obj_to_name(obj: Optional[HikaruDocumentBase], name: str = "", namespace: str = ""):
         if obj is None:
             return ""
-        if not hasattr(obj, "metadata"):
-            return ""
 
-        name = getattr(obj.metadata, "name", "")
-        namespace = getattr(obj.metadata, "namespace", "")
         kind = getattr(obj, "kind", "").lower()
-        return f"{kind}/{namespace}/{name}.yaml"
+        obj_name = ""
+        if kind:
+            obj_name += f"{kind}/"
+        if namespace:
+            obj_name += f"{namespace}/"
+        if name:
+            obj_name += name
+
+        return f"{obj_name}.yaml"
 
 
 class JsonBlock(BaseBlock):

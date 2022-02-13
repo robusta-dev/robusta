@@ -32,6 +32,10 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
     Track changes to a k8s resource.
     Send the diff as a finding
     """
+    if not event.obj.metadata:
+        logging.warning(f"resource_babysitter skipping resource with no meta - {event.obj}")
+        return
+
     filtered_diffs = []
     obj = duplicate_without_fields(event.obj, config.omitted_fields)
     old_obj = duplicate_without_fields(event.old_obj, config.omitted_fields)
@@ -46,10 +50,11 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
     if (
         event.operation == K8sOperationType.DELETE
     ):  # On delete, the current obj should be None, and not the actual object, as received
-        obj = None
         old_obj = obj
+        obj = None
 
-    diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj)
+    meta = event.obj.metadata
+    diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj, meta.name, meta.namespace)
     finding = Finding(
         title=f"{diff_block.resource_name} {event.operation.value}d",
         description=f"Updates to significant fields: {diff_block.num_additions} additions, {diff_block.num_deletions} deletions, {diff_block.num_modifications} changes.",
@@ -63,5 +68,5 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
             event.obj.metadata.namespace,
         ),
     )
-    finding.add_enrichment([KubernetesDiffBlock(filtered_diffs, old_obj, obj)])
+    finding.add_enrichment([diff_block])
     event.add_finding(finding)
