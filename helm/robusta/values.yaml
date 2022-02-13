@@ -107,19 +107,9 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 - triggers:
-    - on_deployment_update: {}
-  actions:
-    - resource_babysitter: {}
-  sinks:
-    - "robusta_ui_sink"
-- triggers:
-    - on_daemonset_update: {}
-  actions:
-    - resource_babysitter: {}
-  sinks:
-    - "robusta_ui_sink"
-- triggers:
-    - on_statefulset_update: {}
+    - on_deployment_all_changes: {}
+    - on_daemonset_all_changes: {}
+    - on_statefulset_all_changes: {}
   actions:
     - resource_babysitter: {}
   sinks:
