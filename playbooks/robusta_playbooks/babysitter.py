@@ -32,7 +32,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
     Track changes to a k8s resource.
     Send the diff as a finding
     """
-    if not event.obj.metadata:
+    if not event.obj.metadata:  # shouldn't happen, just to be on the safe side
         logging.warning(f"resource_babysitter skipping resource with no meta - {event.obj}")
         return
 
@@ -53,6 +53,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         old_obj = obj
         obj = None
 
+    # we take it from the original event, in case metadata is omitted
     meta = event.obj.metadata
     diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj, meta.name, meta.namespace)
     finding = Finding(
