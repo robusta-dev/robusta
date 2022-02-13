@@ -118,7 +118,7 @@ class KubernetesDiffBlock(BaseBlock):
         interesting_diffs: List[DiffDetail],
         old: Optional[HikaruDocumentBase],
         new: Optional[HikaruDocumentBase],
-        name: str = None,
+        name: str,
         namespace: str = None
     ):
         """
@@ -154,7 +154,7 @@ class KubernetesDiffBlock(BaseBlock):
             return hikaru.get_yaml(obj)
 
     @staticmethod
-    def _obj_to_name(obj: Optional[HikaruDocumentBase], name: str = "", namespace: str = ""):
+    def _obj_to_name(obj: Optional[HikaruDocumentBase], name: str, namespace: str = ""):
         if obj is None:
             return ""
 
@@ -164,10 +164,8 @@ class KubernetesDiffBlock(BaseBlock):
             obj_name += f"{kind}/"
         if namespace:
             obj_name += f"{namespace}/"
-        if name:
-            obj_name += name
 
-        return f"{obj_name}.yaml"
+        return f"{obj_name}{name}.yaml"
 
 
 class JsonBlock(BaseBlock):
