@@ -316,7 +316,7 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
     finding = Finding(
         title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="advanced_debugging_options",
+        aggregation_key="python_process_inspector",
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,

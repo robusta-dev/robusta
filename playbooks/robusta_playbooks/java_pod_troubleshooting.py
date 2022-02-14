@@ -5,6 +5,7 @@ import traceback
 
 from robusta.integrations.kubernetes.custom_models import RobustaPod
 
+
 @action
 def java_process_inspector(event: PodEvent, params: ProcessParams):
     """
@@ -21,7 +22,7 @@ def java_process_inspector(event: PodEvent, params: ProcessParams):
     finding = Finding(
         title=f"Java debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="java_debugger",
+        aggregation_key="java_process_inspector",
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
