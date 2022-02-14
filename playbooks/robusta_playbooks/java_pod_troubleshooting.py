@@ -3,14 +3,12 @@ from robusta.integrations.kubernetes.process_utils import ProcessFinder, Process
 from typing import List
 import traceback
 
-from robusta.integrations.kubernetes.custom_models import JAVA_DEBUGGER_IMAGE
+from robusta.integrations.kubernetes.custom_models import RobustaPod
 
 @action
-def java_debugger(event: PodEvent, params: ProcessParams):
+def java_process_inspector(event: PodEvent, params: ProcessParams):
     """
-
-        Displays all java-toolkit debugging options for every java process
-
+    Displays all java-toolkit debugging options for every java process
     """
     pod = event.get_pod()
     if not pod:
@@ -114,11 +112,10 @@ def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, agg
 
 def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod ):
     java_toolkit_cmd = f"java-toolkit {jdk_cmd}"
-    output = RobustaPod.exec_in_debugger_pod(
+    output = RobustaPod.exec_in_java_pod(
             pod.metadata.name,
             pod.spec.nodeName,
-            java_toolkit_cmd, debug_image=JAVA_DEBUGGER_IMAGE
-        )
+            java_toolkit_cmd )
     return output
 
 

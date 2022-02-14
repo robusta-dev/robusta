@@ -85,6 +85,7 @@ class RobustaEvent:
 
         return Event.listEventForAllNamespaces(field_selector=field_selector).obj
 
+
 class RobustaPod(Pod):
     def exec(self, shell_command: str, container: str = None) -> str:
         """Execute a command inside the pod"""
@@ -110,14 +111,13 @@ class RobustaPod(Pod):
         )
 
     @staticmethod
-    def create_java_debugger_pod(
+    def exec_in_java_pod(
         pod_name: str, node_name: str, debug_cmd=None
-    ) -> "RobustaPod":
-        return RobustaPod.create_debugger_pod(
-            pod_name=pod_name,
-            node_name=node_name,
-            debug_image=JAVA_DEBUGGER_IMAGE,
-            debug_cmd=debug_cmd)
+    ) -> str:
+        return RobustaPod.exec_in_debugger_pod(
+            pod_name,
+            node_name,
+            debug_cmd, debug_image=JAVA_DEBUGGER_IMAGE)
 
     @staticmethod
     def create_debugger_pod(
