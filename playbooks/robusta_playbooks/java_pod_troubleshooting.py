@@ -5,7 +5,6 @@ import traceback
 
 from robusta.integrations.kubernetes.custom_models import RobustaPod
 
-
 @action
 def java_process_inspector(event: PodEvent, params: ProcessParams):
     """
@@ -56,7 +55,7 @@ def pod_jmap_pid(event: PodEvent, params: ProcessParams):
     """
     jmap_cmd = "jmap"
     aggregation_key="pod_jmap_pid"
-    run_jdk_command_on_pid(event, params, jmap_cmd, aggregation_key)
+    run_jdk_command_on_pid(event, params, jmap_cmd, aggregation_key, pod_jmap_pid)
 
 
 @action
@@ -66,17 +65,13 @@ def pod_jstack_pid(event: PodEvent, params: ProcessParams):
     """
     jstack_cmd = "jstack"
     aggregation_key="pod_jstack_pid"
-    run_jdk_command_on_pid(event, params, jstack_cmd, aggregation_key)
+    run_jdk_command_on_pid(event, params, jstack_cmd, aggregation_key, pod_jstack_pid)
 
 
-def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, aggregation_key: str):
+def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, aggregation_key: str, retrigger_action :Callable):
     """
         A generic entrypoint function to run any jdk command via the java toolkit and creates a finding on it
     """
-    if not params.pid:
-        logging.info(f"{aggregation_key} - pid not found for event: {event}")
-        return
-
     pod = event.get_pod()
     if not pod:
         logging.info(f"{aggregation_key} - pod not found for event: {event}")
@@ -92,6 +87,13 @@ def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, agg
             pod.metadata.namespace,
         ),
     )
+
+    if not params.pid:
+        process_finder = ProcessFinder(pod, params, ProcessType.JAVA)
+        process = process_finder.get_match_or_report_error(finding, "Debug", retrigger_action, java_process_inspector)
+        if process is None:
+            logging.info(f"{aggregation_key} - pid not found for event: {event}")
+
     jdk_cmd = f"{cmd} {params.pid}"
     try:
         jdk_output = run_java_toolkit_command(jdk_cmd, pod)

@@ -17,7 +17,7 @@ PYTHON_DEBUGGER_IMAGE = (
     "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.3"
 )
 JAVA_DEBUGGER_IMAGE = (
-    "gcr.io/genuine-flight-317411/java-toolkit/jtk-11:latest"
+    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:v1"
 )
 
 # TODO: import these from the python-tools project
