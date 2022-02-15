@@ -17,18 +17,20 @@ from kubernetes import config
 from pydantic import BaseModel
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
-from ..core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrapper, MsTeamsSinkParams
-from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
+from ..core.sinks.msteams.msteams_sink_params import (
+    MsTeamsSinkConfigWrapper,
+    MsTeamsSinkParams,
+)
+from ..core.sinks.robusta.robusta_sink_params import (
+    RobustaSinkConfigWrapper,
+    RobustaSinkParams,
+)
 from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
 from .slack_verification import verify_slack_channel
 from .playbooks_cmd import app as playbooks_commands
-from .utils import (
-    log_title,
-    replace_in_file,
-    namespace_to_kubectl
-)
+from .utils import log_title, replace_in_file, namespace_to_kubectl
 
 FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
 RUNNER_CONFIG_FOR_SMALL_CLUSTERS = "512Mi"
@@ -57,12 +59,16 @@ class PodConfigs(Dict[str, Dict[str, Dict[str, str]]]):
 
     @classmethod
     def gen_config(cls, memory_size: str):
-        return {'resources': {'requests': {'memory': memory_size}}}
+        return {"resources": {"requests": {"memory": memory_size}}}
 
 
 class HelmValues(BaseModel):
     globalConfig: GlobalConfig
-    sinksConfig: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]]
+    sinksConfig: List[
+        Union[
+            SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper
+        ]
+    ]
     clusterName: str
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
@@ -74,7 +80,10 @@ class HelmValues(BaseModel):
     def set_pod_configs_for_small_clusters(self):
         self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
         self.runner = PodConfigs.gen_config(RUNNER_CONFIG_FOR_SMALL_CLUSTERS)
-        self.grafanaRenderer = PodConfigs.gen_config(GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS)
+        self.grafanaRenderer = PodConfigs.gen_config(
+            GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS
+        )
+
 
 def guess_cluster_name():
     with click_spinner.spinner():
@@ -125,9 +134,13 @@ def gen_config(
             "Are you running a mini cluster? (Like minikube or kind)"
         )
 
-    sinks_config: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]] = []
+    sinks_config: List[
+        Union[
+            SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper
+        ]
+    ] = []
     if not slack_api_key and typer.confirm(
-        "Do you want to configure slack integration? this is HIGHLY recommended.",
+        "Do you want to configure slack integration? This is HIGHLY recommended.",
         default=True,
     ):
         slack_api_key = get_slack_key()
@@ -148,9 +161,11 @@ def gen_config(
             )
         )
         if not verify_slack_channel(slack_api_key, cluster_name, slack_channel):
-            typer.echo(f"We couldn't send our welcome message to channel {slack_channel}."
-                       f"\nDoes this channel exist? Did you connect Robusta to the correct slack workspace?"
-                       f"\nInstallation Aborted.")
+            typer.echo(
+                f"We couldn't send our welcome message to channel {slack_channel}."
+                f"\nDoes this channel exist? Did you connect Robusta to the correct slack workspace?"
+                f"\nInstallation Aborted."
+            )
             return
 
     if msteams_webhook is None and typer.confirm(
@@ -158,7 +173,8 @@ def gen_config(
         default=False,
     ):
         msteams_webhook = typer.prompt(
-            "Please insert your MsTeams webhook url", default=None,
+            "Please insert your MsTeams webhook url",
+            default=None,
         )
 
     if msteams_webhook:
@@ -175,7 +191,9 @@ def gen_config(
     # we have a slightly different flow here than the other options so that pytest can pass robusta_api_key="" to skip
     # asking the question
     if robusta_api_key is None:
-        if typer.confirm("Would you like to use Robusta UI?"):
+        if typer.confirm(
+            "Would you like to use Robusta UI? This is HIGHLY recommended."
+        ):
             if typer.confirm("Do you already have a Robusta account?"):
                 robusta_api_key = typer.prompt(
                     "Please insert your Robusta account token",
@@ -186,6 +204,7 @@ def gen_config(
                 email = typer.prompt(
                     "Enter a GMail/GSuite address. This will be used to login"
                 )
+                email = email.strip()
                 res = requests.post(
                     "https://api.robusta.dev/accounts/create",
                     json={
@@ -196,7 +215,7 @@ def gen_config(
                 if res.status_code == 201:
                     robusta_api_key = res.json().get("token")
                     typer.echo(
-                        "\nSuccessfully registered.\n",
+                        "Successfully registered.\n",
                         color="green",
                     )
                     typer.echo("A few more questions and we're done...\n")
@@ -231,28 +250,20 @@ def gen_config(
         )
 
     if disable_cloud_routing is None:
-        typer.echo(
-            "\nCertain Robusta features like two way Slack interactivity require connecting to Robusta's cloud."
-        )
         disable_cloud_routing = not typer.confirm(
-            "Would you like to enable these features?"
+            "Would you like to enable two-way interactivity (e.g. fix-it buttons in Slack) via Robusta's cloud?"
         )
-
         if not disable_cloud_routing:
             require_eula_approval = True
 
     if require_eula_approval:
         eula_url = "https://api.robusta.dev/eula.html"
         typer.echo(
-            f"\nPlease read and approve our End User License Agreement: {eula_url}"
+            f"Please read and approve our End User License Agreement: {eula_url}"
         )
-        eula_approved = typer.confirm(
-            "Do you accept our End User License Agreement?"
-        )
+        eula_approved = typer.confirm("Do you accept our End User License Agreement?")
         if not eula_approved:
-            typer.echo(
-                "\nEnd User License Agreement rejected. Installation aborted."
-            )
+            typer.echo("End User License Agreement rejected. Installation aborted.")
             return
 
         try:
@@ -286,7 +297,10 @@ def gen_config(
         )
 
     if robusta_api_key:
-        typer.secho("\nLogin to Robusta UI at https://platform.robusta.dev\n", fg="green")
+        typer.secho(
+            "Finish the Helm install and then login to Robusta UI at https://platform.robusta.dev\n",
+            fg="green",
+        )
 
 
 @app.command()
@@ -320,31 +334,23 @@ def demo():
     subprocess.check_call(f"kubectl delete deployment crashpod", shell=True)
     log_title("Done!")
 
+
 @app.command()
 def logs(
     namespace: str = typer.Option(
         None,
         help="Namespace",
     ),
-    f: bool = typer.Option(
-        False,
-        "-f",
-        show_default=False,
-        help="Stream runner logs"
-    ),
+    f: bool = typer.Option(False, "-f", show_default=False, help="Stream runner logs"),
     since: str = typer.Option(
-        None,
-        help="Only return logs newer than a relative duration like 5s, 2m, or 3h."
+        None, help="Only return logs newer than a relative duration like 5s, 2m, or 3h."
     ),
-    tail: int = typer.Option(
-        None,
-        help="Lines of recent log file to display."
-    )
+    tail: int = typer.Option(None, help="Lines of recent log file to display."),
 ):
     """Fetch Robusta runner logs"""
-    stream="-f" if f else ""
-    since=f"--since={since}" if since else ""
-    tail=f"--tail={tail}" if tail else ""
+    stream = "-f" if f else ""
+    since = f"--since={since}" if since else ""
+    tail = f"--tail={tail}" if tail else ""
     subprocess.check_call(
         f"kubectl logs {stream} {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner {since} {tail}",
         shell=True,
