@@ -215,7 +215,7 @@ def gen_config(
                 if res.status_code == 201:
                     robusta_api_key = res.json().get("token")
                     typer.echo(
-                        "\nSuccessfully registered.\n",
+                        "Successfully registered.\n",
                         color="green",
                     )
                     typer.echo("A few more questions and we're done...\n")
@@ -251,7 +251,7 @@ def gen_config(
 
     if disable_cloud_routing is None:
         disable_cloud_routing = not typer.confirm(
-            "\nWould you like to enable two-way interactivity (e.g. fix-it buttons in Slack) via Robusta's cloud?"
+            "Would you like to enable two-way interactivity (e.g. fix-it buttons in Slack) via Robusta's cloud?"
         )
         if not disable_cloud_routing:
             require_eula_approval = True
@@ -259,11 +259,11 @@ def gen_config(
     if require_eula_approval:
         eula_url = "https://api.robusta.dev/eula.html"
         typer.echo(
-            f"\nPlease read and approve our End User License Agreement: {eula_url}"
+            f"Please read and approve our End User License Agreement: {eula_url}"
         )
         eula_approved = typer.confirm("Do you accept our End User License Agreement?")
         if not eula_approved:
-            typer.echo("\nEnd User License Agreement rejected. Installation aborted.")
+            typer.echo("End User License Agreement rejected. Installation aborted.")
             return
 
         try:
@@ -298,7 +298,7 @@ def gen_config(
 
     if robusta_api_key:
         typer.secho(
-            "\nFinish the Helm install and then login to Robusta UI at https://platform.robusta.dev\n",
+            "Finish the Helm install and then login to Robusta UI at https://platform.robusta.dev\n",
             fg="green",
         )
 
