@@ -16,7 +16,9 @@ T = TypeVar("T")
 PYTHON_DEBUGGER_IMAGE = (
     "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.3"
 )
-
+JAVA_DEBUGGER_IMAGE = (
+    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:v1"
+)
 
 # TODO: import these from the python-tools project
 class Process(BaseModel):
@@ -83,6 +85,7 @@ class RobustaEvent:
 
         return Event.listEventForAllNamespaces(field_selector=field_selector).obj
 
+
 class RobustaPod(Pod):
     def exec(self, shell_command: str, container: str = None) -> str:
         """Execute a command inside the pod"""
@@ -106,6 +109,15 @@ class RobustaPod(Pod):
             previous,
             tail_lines,
         )
+
+    @staticmethod
+    def exec_in_java_pod(
+        pod_name: str, node_name: str, debug_cmd=None, override_jtk_image:str=JAVA_DEBUGGER_IMAGE
+    ) -> str:
+        return RobustaPod.exec_in_debugger_pod(
+            pod_name,
+            node_name,
+            debug_cmd, debug_image=override_jtk_image)
 
     @staticmethod
     def create_debugger_pod(

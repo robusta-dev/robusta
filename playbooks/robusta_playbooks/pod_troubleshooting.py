@@ -170,7 +170,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
     event.add_finding(finding)
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     process = process_finder.get_match_or_report_error(
-        finding, "Profile", python_memory, advanced_debugging_options
+        finding, "Profile", python_memory, python_process_inspector
     )
     if process is None:
         return
@@ -304,7 +304,7 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
 
 
 @action
-def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
+def python_process_inspector(event: PodEvent, params: DebuggerParams):
     """
 
     Create a finding with alternative debugging options for received processes ; i.e. Stack-trace or Memory-trace.
@@ -317,7 +317,7 @@ def advanced_debugging_options(event: PodEvent, params: DebuggerParams):
     finding = Finding(
         title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="advanced_debugging_options",
+        aggregation_key="python_process_inspector",
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -395,7 +395,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     process = process_finder.get_match_or_report_error(
-        finding, "Debug", python_debugger, advanced_debugging_options
+        finding, "Debug", python_debugger, python_process_inspector
     )
     if process is None:
         return
