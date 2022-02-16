@@ -1,21 +1,31 @@
-Webhook 
-###########
+Opsgenie
+##########
 
-Robusta can send playbooks results to a webhook.
+Robusta can send playbooks results to the OpsGenie alerts API.
+
+To configure OpsGenie, We need OpsGenie API key. It can be configured using OpsGenie team integration.
+
+Configuring the OpsGenie sink
+------------------------------------------------
 
 .. admonition:: values.yaml
 
     .. code-block:: yaml
 
         sinks_config:
-        - webhook_sink:
-            name: webhook_sink
-            url: "https://my-webhook-service.com/robusta-alerts"
+        - opsgenie_sink:
+            name: ops_genie_sink
+            api_key: OpsGenie integration API key  # configured from OpsGenie team integration
+            teams:
+            - "noc"
+            - "sre"
+            tags:
+            - "prod a"
 
-**Webhook:**
+**OpsGenie:**
 
-.. admonition:: This example is sending Robusta notifications to ntfy.sh, push notification service
+.. admonition:: Typically you'll send alerts from Robusta to OpsGenie and not deployment changes. We're showing a non-typical example with deployment changes because it helps compare the format with other sinks.
 
-    .. image:: /images/deployment-babysitter-webhook.png
-      :width: 600
+    .. image:: /images/deployment-babysitter-opsgenie.png
+      :width: 1000
       :align: center
