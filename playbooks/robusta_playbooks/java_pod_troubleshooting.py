@@ -90,7 +90,7 @@ def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, agg
 
     if not params.pid:
         process_finder = ProcessFinder(pod, params, ProcessType.JAVA)
-        process = process_finder.get_match_or_report_error(finding, "Debug", retrigger_action, java_process_inspector)
+        process = process_finder.get_match_or_report_error(finding, cmd, retrigger_action, java_process_inspector)
         if process is None:
             logging.info(f"{aggregation_key} - pid not found for event: {event}")
 
