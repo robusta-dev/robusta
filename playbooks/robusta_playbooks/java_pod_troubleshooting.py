@@ -5,8 +5,15 @@ import traceback
 
 from robusta.integrations.kubernetes.custom_models import RobustaPod
 
+class JavaParams(ProcessParams):
+    """
+    :var jtk_image: the java-toolkit image to use for debugging
+    """
+
+    jtk_image: str
+
 @action
-def java_process_inspector(event: PodEvent, params: ProcessParams):
+def java_process_inspector(event: PodEvent, params: JavaParams):
     """
     Displays all java-toolkit debugging options for every java process
     """
@@ -49,7 +56,7 @@ def java_process_inspector(event: PodEvent, params: ProcessParams):
 
 
 @action
-def pod_jmap_pid(event: PodEvent, params: ProcessParams):
+def pod_jmap_pid(event: PodEvent, params: JavaParams):
     """
         Runs jmap on a specific pid in your pod
     """
@@ -59,7 +66,7 @@ def pod_jmap_pid(event: PodEvent, params: ProcessParams):
 
 
 @action
-def pod_jstack_pid(event: PodEvent, params: ProcessParams):
+def pod_jstack_pid(event: PodEvent, params: JavaParams):
     """
         Runs jstack on a specific pid in your pod
     """
@@ -68,7 +75,7 @@ def pod_jstack_pid(event: PodEvent, params: ProcessParams):
     run_jdk_command_on_pid(event, params, jstack_cmd, aggregation_key, pod_jstack_pid)
 
 
-def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, aggregation_key: str, retrigger_action :Callable):
+def run_jdk_command_on_pid(event: PodEvent, params: JavaParams, cmd: str, aggregation_key: str, retrigger_action :Callable):
     """
         A generic entrypoint function to run any jdk command via the java toolkit and creates a finding on it
     """
@@ -96,7 +103,7 @@ def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, agg
 
     jdk_cmd = f"{cmd} {params.pid}"
     try:
-        jdk_output = run_java_toolkit_command(jdk_cmd, pod)
+        jdk_output = run_java_toolkit_command(jdk_cmd, pod, params.jtk_image)
         finding.add_enrichment(
             [
                 [MarkdownBlock(f"{aggregation_key} ran on process [{params.pid}")],
@@ -113,16 +120,20 @@ def run_jdk_command_on_pid(event: PodEvent, params: ProcessParams, cmd: str, agg
         event.add_finding(finding)
 
 
-def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod ):
+def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod, override_jtk_image: str):
     java_toolkit_cmd = f"java-toolkit {jdk_cmd}"
-    output = RobustaPod.exec_in_java_pod(
-            pod.metadata.name,
-            pod.spec.nodeName,
-            java_toolkit_cmd )
-    return output
+    if override_jtk_image:
+        return RobustaPod.exec_in_java_pod(
+                pod.metadata.name,
+                pod.spec.nodeName,
+                java_toolkit_cmd,override_jtk_image=override_jtk_image )
+    return RobustaPod.exec_in_java_pod(
+        pod.metadata.name,
+        pod.spec.nodeName,
+        java_toolkit_cmd)
 
 
-def add_jdk_choices_to_finding(finding: Finding, params: ProcessParams, pids: List[int], pod: RobustaPod):
+def add_jdk_choices_to_finding(finding: Finding, params: JavaParams, pids: List[int], pod: RobustaPod):
     finding.add_enrichment(
         [MarkdownBlock(f"Please select a JDK debugging choice:")]
     )

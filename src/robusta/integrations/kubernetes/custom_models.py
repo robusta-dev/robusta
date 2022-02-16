@@ -112,12 +112,12 @@ class RobustaPod(Pod):
 
     @staticmethod
     def exec_in_java_pod(
-        pod_name: str, node_name: str, debug_cmd=None
+        pod_name: str, node_name: str, debug_cmd=None, override_jtk_image:str=JAVA_DEBUGGER_IMAGE
     ) -> str:
         return RobustaPod.exec_in_debugger_pod(
             pod_name,
             node_name,
-            debug_cmd, debug_image=JAVA_DEBUGGER_IMAGE)
+            debug_cmd, debug_image=override_jtk_image)
 
     @staticmethod
     def create_debugger_pod(
