@@ -1,7 +1,7 @@
 Scheduled
 ############################
 
-Scheduled triggers fire periodically. They come in two forms:
+Robusta can run actions on a schedule. Schedules come in two forms:
 
 Fixed delay
 ----------------------

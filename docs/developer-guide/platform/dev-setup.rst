@@ -4,7 +4,7 @@ Setup
 These are instructions for developing Robusta's core platform.
 
 
-Most users are looking for the regular :ref:`Installation Guide` or the documentation on :ref:`Writing Playbook Actions`.
+Most users are looking for the regular :ref:`Installation` or the documentation on :ref:`Writing Playbook Actions`.
 For developing Robusta itself, read on!
 
 Installing Robusta in-cluster from source
@@ -22,6 +22,14 @@ If you encounter an error like: ``"https://prometheus-community.github.io/helm-c
 .. code-block:: bash
 
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+For faster builds that are running on Google Cloud
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1. Install `gcloud <https://cloud.google.com/sdk/docs/install/>`_
+2. Run ``gcloud auth application-default login``
+3. Now when you want to build:
+    a. Run ``skaffold run -p gcloud-build``
 
 Running Robusta locally
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

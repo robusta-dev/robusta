@@ -7,7 +7,8 @@ Builtin actions
 .. toctree::
    :maxdepth: 1
 
-   builtin-playbooks
-   alerts
+   event-enrichment
+   change-tracking
    grafana
    python-troubleshooting
+   miscellaneous
