@@ -25,6 +25,8 @@ Local Build
 
 The docs definitions are ``.rst`` files.
 
+Learn more about ``.rst`` files `here <https://learnxinyminutes.com/docs/rst/>`_
+
 Prerequisites to be present on your local machine:
 
 * `Python <https://www.python.org/downloads/>`_

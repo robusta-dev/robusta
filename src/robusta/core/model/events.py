@@ -44,7 +44,9 @@ class ExecutionBaseEvent:
 
     def create_default_finding(self) -> Finding:
         """Create finding default fields according to the event type"""
-        return Finding(title="Generic Finding", aggregation_key="Generic finding key")
+        return Finding(
+            title="Robusta notification", aggregation_key="Generic finding key"
+        )
 
     def add_enrichment(
         self,
@@ -59,9 +61,7 @@ class ExecutionBaseEvent:
 
     def add_finding(self, finding: Finding):
         if len(self.findings) > 0:
-            logging.warning(
-                f"Overriding active finding. new finding: {finding}"
-            )
+            logging.warning(f"Overriding active finding. new finding: {finding}")
 
         self.findings.insert(0, finding)
 

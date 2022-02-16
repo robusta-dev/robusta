@@ -254,11 +254,9 @@ class RobustaActionDirective(SphinxDirective):
             
                     .. tab-item:: Description\n\n{indented_description}\n\n
             
-                    .. tab-item:: Automating it
+                    .. tab-item:: Example Config
                     
-                        This action can be run automatically.
-                        
-                        Add this to your :ref:`Robusta configuration (values.yaml when installing with Helm) <Defining playbooks>`:
+                        Add this to your :ref:`Robusta configuration (Helm values.yaml) <Defining playbooks>`:
             
                         .. code-block:: yaml \n\n{indented_example}
                         

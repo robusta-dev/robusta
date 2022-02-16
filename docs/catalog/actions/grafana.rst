@@ -3,9 +3,7 @@ Grafana
 
 This page lists Robusta actions related to Grafana.
 
-Like all Robusta actions, these can be triggered by Prometheus/AlertManager, Kubernetes changes, :ref:`and more <Builtin triggers>`.
-
-If you are new to Robusta, read :ref:`the tutorial <Example Playbook>` first.
+Like all Robusta actions, these can be triggered by Prometheus/AlertManager, Kubernetes changes, :ref:`and more <Triggers>`.
 
 Prerequisites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

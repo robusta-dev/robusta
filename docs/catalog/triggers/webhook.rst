@@ -1,4 +1,4 @@
-Webhook
+Webhooks
 #########################
 
 In-cluster webhooks

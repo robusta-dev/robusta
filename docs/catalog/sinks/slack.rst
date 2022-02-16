@@ -38,4 +38,4 @@ You can use Robusta with a custom Slack app as follows:
 5. Click "Install into Workspace"
 6. Copy the signing token from basic information and the bot token from "OAuth and Permissions". Add them to the yaml
 
-You will then need to run your own Slack relay or enable only outgoing messages. :ref:`Contact us for details. <Getting Support>`
+You will then need to run your own Slack relay or enable only outgoing messages. :ref:`Contact us for details. <Community>`
