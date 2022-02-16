@@ -10,7 +10,7 @@ class JavaParams(ProcessParams):
     :var jtk_image: the java-toolkit image to use for debugging
     """
 
-    jtk_image: str
+    jtk_image: str = None
 
 @action
 def java_process_inspector(event: PodEvent, params: JavaParams):
