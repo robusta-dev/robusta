@@ -22,7 +22,7 @@ java-troubleshooting.rst
 Seeing the result
 -------------------------------------
 
-You should receive a message (by default in Slack) with the Java troubleshooting to run on your pod.
+You should receive a message (by default in Slack) with the troubleshooting options to run on your pod.
 
 .. image:: /images/java_process_inspector.png
   :width: 600

@@ -9,6 +9,12 @@ Look at :ref:`Java Troubleshooting` for a tutorial on Java troubleshooting.
 
 .. robusta-action:: playbooks.robusta_playbooks.java_pod_troubleshooting.java_process_inspector
 
+    Manually trigger with:
+
+    .. code-block:: bash
+
+        robusta playbooks trigger java_process_inspector name=podname namespace=default
+
 .. robusta-action:: playbooks.robusta_playbooks.java_pod_troubleshooting.pod_jmap_pid
 
     Manually trigger with:
