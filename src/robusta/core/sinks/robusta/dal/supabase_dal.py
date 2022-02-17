@@ -9,6 +9,7 @@ from typing import List, Dict, Any
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
 from ...transformer import Transformer
+from ....model.nodes import NodeInfo
 from ....model.services import ServiceInfo
 from ....reporting.blocks import (
     MarkdownBlock,
@@ -29,6 +30,7 @@ from ....reporting.callbacks import ExternalActionRequestBuilder
 from supabase_py import Client
 
 SERVICES_TABLE = "Services"
+NODES_TABLE = "Nodes"
 EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
 
@@ -276,6 +278,80 @@ class SupabaseDal:
             )
             for service in res.get("data")
         ]
+
+    def get_active_nodes(self) -> List[NodeInfo]:
+        res = (
+            self.client.table(NODES_TABLE)
+            .select(
+                "name", "node_creation_time", "taints", "conditions", "memory_capacity", "allocatable_memory",
+                "allocated_memory", "cpu_capacity", "allocatable_cpu", "allocated_cpu", "pods_count", "pods",
+                "internal_ip", "external_ip", "node_info",
+            )
+            .filter("account_id", "eq", self.account_id)
+            .filter("cluster_id", "eq", self.cluster)
+            .filter("deleted", "eq", False)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to get existing nodes (supabase) error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+        return [
+            NodeInfo(
+                name=node["name"],
+                node_creation_time=node["node_creation_time"],
+                taints=node["taints"],
+                conditions=node["conditions"],
+                memory_capacity_mb=node["memory_capacity"],
+                allocatable_memory_mb=node["allocatable_memory"],
+                allocated_memory_mb=node["allocated_memory"],
+                cpu_capacity=node["cpu_capacity"],
+                allocatable_cpu=node["allocatable_cpu"],
+                allocated_cpu=node["allocated_cpu"],
+                pods_count=node["pods_count"],
+                pods=node["pods"],
+                internal_ip=node["internal_ip"],
+                external_ip=node["external_ip"],
+                node_info=json.loads(node["node_info"]),
+            )
+            for node in res.get("data")
+        ]
+
+    def __to_db_node(self, node: NodeInfo) -> Dict[Any, Any]:
+        return {
+            "account_id": self.account_id,
+            "cluster_id": self.cluster,
+            "name": node.name,
+            "node_creation_time": node.node_creation_time,
+            "taints": node.taints,
+            "conditions": node.conditions,
+            "memory_capacity": node.memory_capacity_mb,
+            "allocatable_memory": node.allocatable_memory_mb,
+            "allocated_memory": node.allocated_memory_mb,
+            "cpu_capacity": node.cpu_capacity,
+            "allocatable_cpu": node.allocatable_cpu,
+            "allocated_cpu": node.allocated_cpu,
+            "pods_count": node.pods_count,
+            "pods": node.pods,
+            "internal_ip": node.internal_ip,
+            "external_ip": node.external_ip,
+            "node_info": node.node_info,
+            "deleted": node.deleted,
+            "updated_at": "now()",
+        }
+
+    def publish_node(self, node: NodeInfo):
+        db_node = self.__to_db_node(node)
+        res = (
+            self.client.table(NODES_TABLE).insert(db_node, upsert=True).execute()
+        )
+        if res.get("status_code") not in [200, 201]:
+            logging.error(
+                f"Failed to persist node {node} error: {res.get('data')}"
+            )
+            self.handle_supabase_error()
 
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
