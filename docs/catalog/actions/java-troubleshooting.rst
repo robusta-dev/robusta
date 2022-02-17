@@ -15,7 +15,7 @@ Look at :ref:`Java Troubleshooting` for a tutorial on Java troubleshooting.
 
     .. code-block:: bash
 
-        robusta playbooks trigger pod_jmap_pid name=podname namespace=default
+        robusta playbooks trigger pod_jmap_pid name=podname namespace=default pid=pid_to_inspect
 
 .. robusta-action:: playbooks.robusta_playbooks.java_pod_troubleshooting.pod_jstack_pid
 
@@ -23,4 +23,4 @@ Look at :ref:`Java Troubleshooting` for a tutorial on Java troubleshooting.
 
     .. code-block:: bash
 
-         robusta playbooks trigger pod_jstack_pid name=podname namespace=default
+         robusta playbooks trigger pod_jstack_pid name=podname namespace=default pid=pid_to_inspect
