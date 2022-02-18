@@ -3,7 +3,7 @@ Opsgenie
 
 Robusta can send playbooks results to the OpsGenie alerts API.
 
-To configure OpsGenie, We need OpsGenie API key. It can be configured using OpsGenie team integration.
+To configure OpsGenie, We need an OpsGenie API key. It can be configured using the OpsGenie team integration.
 
 Configuring the OpsGenie sink
 ------------------------------------------------
@@ -22,7 +22,7 @@ Configuring the OpsGenie sink
             tags:
             - "prod a"
 
-**OpsGenie:**
+**Example Output:**
 
 .. admonition:: Typically you'll send alerts from Robusta to OpsGenie and not deployment changes. We're showing a non-typical example with deployment changes because it helps compare the format with other sinks.
 
