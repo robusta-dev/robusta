@@ -41,6 +41,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
             title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
             source=FindingSource.MANUAL,
             aggregation_key="python_profiler",
+            finding_type=FindingType.REPORT,
             subject=FindingSubject(
                 pod.metadata.name,
                 FindingSubjectType.TYPE_POD,
@@ -99,6 +100,7 @@ def pod_ps(event: PodEvent):
         title=f"Processes in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="pod_processes",
+        finding_type=FindingType.REPORT,
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -161,6 +163,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         title=f"Memory allocations for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_memory_allocations",
+        finding_type=FindingType.REPORT,
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -280,6 +283,7 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         title=f"Stacktrace on pid {pid}:",
         source=FindingSource.MANUAL,
         aggregation_key="debugger_stack_trace",
+        finding_type=FindingType.REPORT,
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -318,6 +322,7 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_process_inspector",
+        finding_type=FindingType.REPORT,
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -385,6 +390,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         title=f"Python debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_debugger",
+        finding_type=FindingType.REPORT,
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
