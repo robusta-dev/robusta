@@ -1,7 +1,7 @@
 Kafka 
 ######### 
 
-Robusta can send playbook result to a Kafka topic.
+Robusta can send playbook results to a Kafka topic.
 
 Configuring the Kafka sink
 ------------------------------------------------
@@ -15,10 +15,9 @@ Configuring the Kafka sink
             name: kafka_sink
             kafka_url: "localhost:9092"
             topic: "robusta-playbooks"
-            default: false
 
 
-**kafka:**
+**Example Output:**
 
     .. image:: /images/deployment-babysitter-kafka.png
       :width: 400
