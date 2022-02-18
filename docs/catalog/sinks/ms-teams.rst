@@ -1,9 +1,9 @@
 MS teams
 ##########
 
-Robusta can send playbook result to MS teams channel webhook.
+Robusta can send playbook result to a MS teams channel webhook.
 
-To configure MS teams sink we need a webhook URL for the target teams channel. You can configure it in MS teams channel connectors.
+To configure a MS teams sink we need a webhook URL for the target teams channel. You can configure it in MS teams channel connectors.
 
 Configuring the MS teams sink
 ------------------------------------------------
@@ -17,7 +17,7 @@ Configuring the MS teams sink
             name: main_ms_teams_sink
             webhook_url: teams channel incoming webhook  # configured using teams channel connectors
 
-**MS Teams:**
+**Example Output:**
 
     .. image:: /images/deployment-babysitter-teams.png
       :width: 600
