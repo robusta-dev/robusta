@@ -28,19 +28,14 @@ class OomKillerEnricherParams(ActionParams):
     """
     metrics_duration_in_secs: int = 1200
 
-    """
-    :var container_memory_threshold: The maximal amount of memory percentage a pod container can use.
-    If this amount of memory was exceeded (in the last metrics_duration_in_secs seconds), the playbook will
-    report the corresponding container as the reason for the OOMKill.
-    """
-    container_memory_threshold: float = 0.92
 
-    """
-    :var node_memory_threshold: The maximal amount of memory percentage a node can use.
-    If this amount of memory was exceeded (in the last metrics_duration_in_secs seconds), the playbook will
-    report the corresponding node as the reason for the OOMKill.
-    """
-    node_memory_threshold: float = 0.95
+# If this amount of memory was exceeded (in the last metrics_duration_in_secs seconds), the playbook will
+# report the corresponding node as the reason for the OOMKill.
+CONTAINER_MEMORY_THRESHOLD = 0.92
+
+# If this amount of memory was exceeded (in the last metrics_duration_in_secs seconds), the playbook will
+# report the corresponding node as the reason for the OOMKill.
+NODE_MEMORY_THRESHOLD = 0.95
 
 
 @action
@@ -238,7 +233,7 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
             return None
 
         used_memory_percentage = container_max_used_memory_in_bytes / max_memory_in_bytes
-        if used_memory_percentage < self.config.container_memory_threshold:
+        if used_memory_percentage < CONTAINER_MEMORY_THRESHOLD:
             return None
 
         reason = f"container used too much memory: reached {used_memory_percentage} percentage of its specified limit"
@@ -252,7 +247,7 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
         if node_max_used_memory_in_percentage is None:
             return None
 
-        if node_max_used_memory_in_percentage < self.config.node_memory_threshold:
+        if node_max_used_memory_in_percentage < NODE_MEMORY_THRESHOLD:
             return None
 
         reason = f"node {node_name} used too much memory: reached {node_max_used_memory_in_percentage} percentage of its available memory"

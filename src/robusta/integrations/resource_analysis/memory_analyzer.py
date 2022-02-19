@@ -23,13 +23,8 @@ class MemoryAnalyzer:
         :return: a float between 0 and 1, representing the maximal percentage of memory in use by the given node
         """
 
-        # We estimate the node memory usage in percentage by the expression (1 - MemAvailable)/MemTotal.
-        # However, since the corresponding metrics contain only the name of the node exporter's instance, and not the node name,
-        # we perform a join of the instance name with the node_uname_info metric, in order to filter on the node name.
-
         max_memory_usage_in_percentage = self._get_max_value_in_first_series_of_query(
-            f"(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * "
-            f"on(instance) group_left(nodename) (node_uname_info{{nodename=\"{node_name}\"}})",
+            f"instance:node_memory_utilisation:ratio{{job=\"node-exporter\", job=\"node-exporter\", instance=\"{node_name}\"}}",
             duration
         )
         return max_memory_usage_in_percentage
