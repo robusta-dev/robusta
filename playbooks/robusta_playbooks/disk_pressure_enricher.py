@@ -2,7 +2,7 @@ from robusta.api import *
 
 
 @action
-def disk_pressure_enricher(event: NodeEvent):
+def disk_pressure_enricher(event: PrometheusKubernetesAlert):
     """
     Provides relevant disk information for troubleshooting disk pressure issues when the disk on a node is filling up.
     """
@@ -35,7 +35,7 @@ def disk_pressure_enricher(event: NodeEvent):
             sum([container["disk_size"] for container in pod["containers"]])
         ] for pod in pods_distribution_info["pods_disk_distribution"]["pods_distribution"]
     ]
-    pod_distribution_rows.sort(key= lambda row: row[2], reverse = True)
+    pod_distribution_rows.sort(key=lambda row: row[2], reverse = True)
     event.add_enrichment([TableBlock(headers=pod_distribution_headers, rows=pod_distribution_rows)])
 
     # calculate container-level disk distribution
