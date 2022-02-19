@@ -9,12 +9,12 @@ class NodeInfo(BaseModel):
     external_ip: str
     taints: str
     conditions: str
-    memory_capacity_mb: int
-    allocatable_memory_mb: int
-    allocated_memory_mb: int
+    memory_capacity: int  # MB
+    memory_allocatable: int  # MB
+    memory_allocated: int  # MB
     cpu_capacity: float
-    allocatable_cpu: float
-    allocated_cpu: float
+    cpu_allocatable: float
+    cpu_allocated: float
     pods_count: int
     pods: str
     node_info: Dict
@@ -27,22 +27,10 @@ class NodeInfo(BaseModel):
         if not isinstance(other, NodeInfo):
             return NotImplemented
 
-        return (
-            self.name == other.name
-            and self.internal_ip == other.internal_ip
-            and self.external_ip == other.external_ip
-            and self.taints == other.taints
-            and self.conditions == other.conditions
-            and self.memory_capacity_mb == other.memory_capacity_mb
-            and self.allocatable_memory_mb == other.allocatable_memory_mb
-            and self.allocated_memory_mb == other.allocated_memory_mb
-            and self.cpu_capacity == other.cpu_capacity
-            and self.allocatable_cpu == other.allocatable_cpu
-            and self.allocated_cpu == other.allocated_cpu
-            and self.pods_count == other.pods_count
-            and self.pods == other.pods
-            and self.__compare_node_info(other.node_info)
-        )
+        ignored_fields = ["deleted", "node_creation_time"]  # node_creation_time never changes
+        filtered_self = {k: v for k, v in self.dict().items() if k not in ignored_fields}
+        filtered_other = {k: v for k, v in other.dict().items() if k not in ignored_fields}
+        return filtered_self == filtered_other
 
 
 k8s_memory_factors = {

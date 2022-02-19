@@ -282,11 +282,7 @@ class SupabaseDal:
     def get_active_nodes(self) -> List[NodeInfo]:
         res = (
             self.client.table(NODES_TABLE)
-            .select(
-                "name", "node_creation_time", "taints", "conditions", "memory_capacity", "allocatable_memory",
-                "allocated_memory", "cpu_capacity", "allocatable_cpu", "allocated_cpu", "pods_count", "pods",
-                "internal_ip", "external_ip", "node_info",
-            )
+            .select("*")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster_id", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -304,12 +300,12 @@ class SupabaseDal:
                 node_creation_time=node["node_creation_time"],
                 taints=node["taints"],
                 conditions=node["conditions"],
-                memory_capacity_mb=node["memory_capacity"],
-                allocatable_memory_mb=node["allocatable_memory"],
-                allocated_memory_mb=node["allocated_memory"],
+                memory_capacity=node["memory_capacity"],
+                memory_allocatable=node["memory_allocatable"],
+                memory_allocated=node["memory_allocated"],
                 cpu_capacity=node["cpu_capacity"],
-                allocatable_cpu=node["allocatable_cpu"],
-                allocated_cpu=node["allocated_cpu"],
+                cpu_allocatable=node["cpu_allocatable"],
+                cpu_allocated=node["cpu_allocated"],
                 pods_count=node["pods_count"],
                 pods=node["pods"],
                 internal_ip=node["internal_ip"],
@@ -320,27 +316,11 @@ class SupabaseDal:
         ]
 
     def __to_db_node(self, node: NodeInfo) -> Dict[Any, Any]:
-        return {
-            "account_id": self.account_id,
-            "cluster_id": self.cluster,
-            "name": node.name,
-            "node_creation_time": node.node_creation_time,
-            "taints": node.taints,
-            "conditions": node.conditions,
-            "memory_capacity": node.memory_capacity_mb,
-            "allocatable_memory": node.allocatable_memory_mb,
-            "allocated_memory": node.allocated_memory_mb,
-            "cpu_capacity": node.cpu_capacity,
-            "allocatable_cpu": node.allocatable_cpu,
-            "allocated_cpu": node.allocated_cpu,
-            "pods_count": node.pods_count,
-            "pods": node.pods,
-            "internal_ip": node.internal_ip,
-            "external_ip": node.external_ip,
-            "node_info": node.node_info,
-            "deleted": node.deleted,
-            "updated_at": "now()",
-        }
+        db_node = node.dict()
+        db_node["account_id"] = self.account_id
+        db_node["cluster_id"] = self.cluster
+        db_node["updated_at"] = "now()"
+        return db_node
 
     def publish_node(self, node: NodeInfo):
         db_node = self.__to_db_node(node)

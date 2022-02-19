@@ -53,13 +53,14 @@ class RobustaSink(SinkBase):
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
-        self.__init_node_cache()
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
 
-    def __init_node_cache(self):
-        for node in self.dal.get_active_nodes():
-            self.__nodes_cache[node.name] = node
+    def __assert_node_cache_initialized(self):
+        if not self.__nodes_cache:
+            logging.info("Initializing nodes cache")
+            for node in self.dal.get_active_nodes():
+                self.__nodes_cache[node.name] = node
 
     def stop(self):
         self.__active = False
@@ -168,12 +169,12 @@ class RobustaSink(SinkBase):
             external_ip=external_ip,
             taints=taints,
             conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),
-            memory_capacity_mb=PodRequests.parse_mem(api_server_node.status.capacity.get("memory", "0Mi")),
-            allocatable_memory_mb=PodRequests.parse_mem(api_server_node.status.allocatable.get("memory", "0Mi")),
-            allocated_memory_mb=sum([req.memory for req in pod_requests]),
+            memory_capacity=PodRequests.parse_mem(api_server_node.status.capacity.get("memory", "0Mi")),
+            memory_allocatable=PodRequests.parse_mem(api_server_node.status.allocatable.get("memory", "0Mi")),
+            memory_allocated=sum([req.memory for req in pod_requests]),
             cpu_capacity=PodRequests.parse_cpu(api_server_node.status.capacity.get("cpu", "0")),
-            allocatable_cpu=PodRequests.parse_cpu(api_server_node.status.allocatable.get("cpu", "0")),
-            allocated_cpu=round(sum([req.cpu for req in pod_requests]), 3),
+            cpu_allocatable=PodRequests.parse_cpu(api_server_node.status.allocatable.get("cpu", "0")),
+            cpu_allocated=round(sum([req.cpu for req in pod_requests]), 3),
             pods_count=len(pod_requests),
             pods=",".join([pod_req.pod_name for pod_req in pod_requests]),
             node_info=cls.__to_node_info(api_server_node)
@@ -202,6 +203,7 @@ class RobustaSink(SinkBase):
 
     def __discover_nodes(self):
         try:
+            self.__assert_node_cache_initialized()
             current_nodes: NodeList = NodeList.listNode().obj
             node_requests = defaultdict(list)
             for status in ["Running", "Unknown", "Pending"]:
