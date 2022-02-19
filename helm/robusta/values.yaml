@@ -79,6 +79,11 @@ builtinPlaybooks:
   - graph_enricher: {}
 - triggers:
   - on_prometheus_alert:
+      alert_name: NodeFilesystemSpaceFillingUp
+  actions:
+  - disk_pressure_enricher: {}
+- triggers:
+  - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
   actions:
   - cpu_throttling_analysis_enricher: {}
