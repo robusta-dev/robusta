@@ -13,7 +13,7 @@ def disk_pressure_enricher(event: PrometheusKubernetesAlert):
         )
         return
 
-    # Run disk-tools on node and parse its json output
+    # run disk-tools on node and parse its json output
     pods_distribution_str_info = RobustaPod.exec_in_debugger_pod(
         node.metadata.name,
         node.metadata.name,
