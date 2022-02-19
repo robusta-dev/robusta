@@ -67,17 +67,17 @@ class PrometheusAlertTrigger(BaseTrigger):
         return True
 
     @classmethod
-    def __find_node_by_ip(cls, ip) -> Node:
+    def __find_node_by_ip(cls, ip) -> Optional[Node]:
         nodes: NodeList = NodeList.listNode().obj
         for node in nodes.items:
             addresses = [a.address for a in node.status.addresses]
             logging.info(f"node {node.metadata.name} has addresses {addresses}")
             if ip in addresses:
                 return node
-        raise Exception(f"No node exists with IP '{ip}'")
+        return None
 
     @classmethod
-    def __load_node(cls, alert: PrometheusAlert, node_name: str) -> Node:
+    def __load_node(cls, alert: PrometheusAlert, node_name: str) -> Optional[Node]:
         node = None
         try:
             # sometimes we get an IP:PORT instead of the node name. handle that case
@@ -131,7 +131,7 @@ class PrometheusAlertTrigger(BaseTrigger):
         )  # a prometheus "job" not a kubernetes "job" resource
         # when the job_name is kube-state-metrics "instance" refers to the IP of kube-state-metrics not the node
         # If the alert has pod, the 'instance' attribute contains the pod ip
-        if not execution_event.pod and not execution_event.node and node_name and job_name != "kube-state-metrics":
+        if not execution_event.node and node_name and job_name != "kube-state-metrics":
             execution_event.node = self.__load_node(execution_event.alert, node_name)
 
         return execution_event
