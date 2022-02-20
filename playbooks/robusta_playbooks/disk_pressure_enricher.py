@@ -2,7 +2,7 @@ from robusta.api import *
 
 
 @action
-def disk_pressure_enricher(event: PrometheusKubernetesAlert):
+def disk_pressure_enricher(event: NodeEvent):
     """
     Provides relevant disk information for troubleshooting disk pressure issues when the disk on a node is filling up.
     """
@@ -14,11 +14,10 @@ def disk_pressure_enricher(event: PrometheusKubernetesAlert):
         return
 
     # run disk-tools on node and parse its json output
-    pods_distribution_str_info = RobustaPod.exec_in_debugger_pod(
+    pods_distribution_str_info = RobustaPod.run_privileged_pod(
         node.metadata.name,
-        node.metadata.name,
-        "python3 /app/src/pods_distribution.py",
-        debug_image="us-central1-docker.pkg.dev/genuine-flight-317411/devel/disk-tools:1.0"
+        pod_image="us-central1-docker.pkg.dev/genuine-flight-317411/devel/disk-tools:debug",
+        proc_mount="Unmasked"
     )
     pods_distribution_info = json.loads(pods_distribution_str_info)
 

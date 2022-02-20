@@ -17,6 +17,7 @@ from kubernetes.stream import stream
 from hikaru.model import Job
 
 RUNNING_STATE = "Running"
+SUCCEEDED_STATE = "Succeeded"
 
 try:
     if os.getenv("KUBERNETES_SERVICE_HOST"):
@@ -158,7 +159,8 @@ def get_pod_logs(
             previous=previous,
             tail_lines=tail_lines,
             since_seconds=since_seconds,
-        )
+            _preload_content=False
+        ).data.decode("utf-8")
 
     except ApiException as e:
         if e.status != 404:
@@ -216,12 +218,6 @@ def exec_commands(name, exec_command, namespace="default", container=None):
         wsclient.run_forever()
         response = wsclient.read_all()
         logging.debug(f"exec command response {response}")
-    except ApiException as e:
-        if e.status == 404:
-            logging.exception(f"exec command {exec_command} resulted with 404: {e}")
-        else:
-            logging.exception(f"exec command {exec_command} resulted with error: {e}")
-        response = f"error executing commands: {e}"
     finally:
         if wsclient is not None:
             wsclient.close()
