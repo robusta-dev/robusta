@@ -34,7 +34,7 @@ class NodeCpuAnalyzer:
                 f'/ scalar(sum (machine_cpu_cores{{node="{self.node.metadata.name}"}}))'
             )
 
-        # the instance here refers to the node as identified by it's internal IP
+        # the instance here refers to the node as identified by its internal IP
         # we average by the instance to account for multiple cpus and still return a number between 0-1
         return self._query(
             f"1"

@@ -44,7 +44,7 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
             [
                 MarkdownBlock(
                     "*Alert Explanation:* This pod is throttled. It wanted to use the CPU and was blocked due to "
-                    "it's CPU limit. This can occur even when CPU usage is far below the limit."
+                    "its CPU limit. This can occur even when CPU usage is far below the limit."
                     "(<https://github.com/robusta-dev/alert-explanations/wiki/CPUThrottlingHigh-"
                     "(Prometheus-Alert)|Learn more.>)"
                 ),
@@ -61,7 +61,7 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
         event.add_enrichment(
             [
                 MarkdownBlock(
-                    "*Alert Explanation:* This pod is throttled because it is using more CPU than it's request and the "
+                    "*Alert Explanation:* This pod is throttled because it is using more CPU than its request and the "
                     "node doesn't have spare CPU to give. Increase the pod's CPU request. This will impact Kubernetes' "
                     "scheduling decisions and guarantee the pod is placed on a node with sufficient CPU to match the "
                     "new request."
