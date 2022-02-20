@@ -47,7 +47,7 @@ class MsTeamsMsg:
         separator_block = MsTeamsTextBlock(text=' ', separator=True)
 
         underline_block = MsTeamsColumn()
-        underline_block.add_column(items=[space_block, separator_block], width_strech=True)
+        underline_block.add_column(items=[space_block, separator_block], width_stretch=True)
 
         self.__write_to_entire_msg([underline_block])
         self.__write_to_entire_msg(self.current_section)
