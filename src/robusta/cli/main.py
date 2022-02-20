@@ -202,7 +202,7 @@ def gen_config(
             else:  # self registration
                 account_name = typer.prompt("Choose your account name")
                 email = typer.prompt(
-                    "Enter a GMail/GSuite address. This will be used to login"
+                    "Enter a Gmail/GSuite address. This will be used to login"
                 )
                 email = email.strip()
                 res = requests.post(
