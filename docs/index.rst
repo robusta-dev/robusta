@@ -46,7 +46,7 @@ Example Use Cases
 
     .. tab-item:: Debug Pods
 
-        .. admonition:: Attach the VSCode debugger to a runnning Python pod without tearing your hair out
+        .. admonition:: Attach the VSCode debugger to a running Python pod without tearing your hair out
 
             .. image:: /images/python-debugger.png
               :width: 600
