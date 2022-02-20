@@ -6,8 +6,21 @@ on:
     - master
 name: Semgrep
 jobs:
+  has-secrets:
+    name: Check Secrets
+    runs-on: ubuntu-latest
+    steps:
+    - id: semgrep
+      env:
+        SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+      if: ${{ env.SEMGREP_APP_TOKEN != '' }}
+      run: echo '::set-output name=semgrep::true'
+    outputs:
+      semgrep: ${{ steps.semgrep.outputs.semgrep }}
   semgrep:
     name: Scan
+    needs: [has-secrets]
+    if: needs.has-secrets.outputs.semgrep
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
