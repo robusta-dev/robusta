@@ -4,6 +4,11 @@ Java Troubleshooting
 In this tutorial, you will use Robusta to troubleshoot a java application running on Kubernetes.
 This tool can be used to analyze memory in your java application or diagnose problems due to thread activity.
 
+
+.. raw:: html
+
+  <div style="position: relative; padding-bottom: 62.5%; height: 0;"><iframe src="https://www.youtube.com/embed/DaxgfLp14vE" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+
 Doing it
 ---------------------------------------
 
