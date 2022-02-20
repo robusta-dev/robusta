@@ -25,7 +25,7 @@ class K8sBaseChangeEvent(ExecutionBaseEvent):
             and hasattr(self.obj, "metadata")
             and hasattr(self.obj.metadata, "name")
         ):
-            # hikaru's docs say `kind` always exists on HikaruDocumentBase, but its not clear from hikaru's code
+            # hikaru's docs say `kind` always exists on HikaruDocumentBase, but it isn't clear from hikaru's code
             kind = getattr(self.obj, "kind", "").lower()
             title = f"{self.operation.value.capitalize()} to {kind} {self.obj.metadata.name}"
         else:
