@@ -58,7 +58,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
                 MarkdownBlock(
                     f"We cannot detect the reason for the ImagePullBackoff, as we failed to extract the image pull backoff error message "
                     f"for container {container_status.name} with image {container_status.image}. "
-                    f"(Is your cluster using a container runtime that is other than docker and containerd?)"
+                    f"(Is your cluster using a container runtime that is other than docker or containerd?)"
                 )
             )
             continue
