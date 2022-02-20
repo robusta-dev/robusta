@@ -31,12 +31,12 @@ class MsTeamsAdaptiveCardFilesText:
         self.open_key_list = []
         self.close_start_key_list = []
         self.close_end_key_list = []
-        self.text_file_presentaiton_key_list = []
+        self.text_file_presentation_key_list = []
 
         self.open_text_list = []
         self.close_start_text_list = []
         self.close_end_text_list = []
-        self.text_file_presentaiton_list = []
+        self.text_file_presentation_list = []
 
         self.action_open_text_list = []
         self.action_close_start_text_list = []
@@ -70,7 +70,7 @@ class MsTeamsAdaptiveCardFilesText:
         self.open_key_list.append(str(uuid.uuid4()))
         self.close_start_key_list.append(str(uuid.uuid4()))
         self.close_end_key_list.append(str(uuid.uuid4()))
-        self.text_file_presentaiton_key_list.append(str(uuid.uuid4()))
+        self.text_file_presentation_key_list.append(str(uuid.uuid4()))
 
     def __manage_blocks_for_single_file(self, index, file_name : str, content : bytes):
         open_text_action = self.__action(index, open=True, title='press to open')
@@ -88,7 +88,7 @@ class MsTeamsAdaptiveCardFilesText:
         self.action_close_start_text_list.append(close_text_action)
         self.action_close_end_text_list.append(close_text_action)
 
-        self.text_file_presentaiton_list.append(self.__present_text_file_block(self.text_file_presentaiton_key_list[index], content.decode('utf-8')))
+        self.text_file_presentation_list.append(self.__present_text_file_block(self.text_file_presentation_key_list[index], content.decode('utf-8')))
 
     def __manage_all_text_to_send(self):
         top_column_set = MsTeamsColumn()
@@ -113,7 +113,7 @@ class MsTeamsAdaptiveCardFilesText:
                                          action=self.action_close_end_text_list[index])
         
         list_to_return = [top_column_set]
-        list_to_return += self.text_file_presentaiton_list
+        list_to_return += self.text_file_presentation_list
         list_to_return.append(bottom_column_set)
 
         return list_to_return
@@ -135,8 +135,8 @@ class MsTeamsAdaptiveCardFilesText:
             visible = open and (curr_key == key)
             visible_elements_map[visible].append(key)
 
-        curr_key = self.text_file_presentaiton_key_list[index]
-        for key in self.text_file_presentaiton_key_list:
+        curr_key = self.text_file_presentation_key_list[index]
+        for key in self.text_file_presentation_key_list:
             visible = open and (curr_key == key)
             visible_elements_map[visible].append(key)
 
