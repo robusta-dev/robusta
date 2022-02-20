@@ -41,7 +41,7 @@ markdown2 = "^2.4.2"
 toml = "^0.10.2"
 watchgod = "^0.7"
 
-# we're freezing a specific version here because the latest version doesn't have prebuilt whls on pypi
+# we're freezing a specific version here because the latest version doesn't have prebuilt wheels on pypi
 # and therefore requires gcc to install which we'd like to avoid
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
 dulwich =  { version = "0.20.28", optional = true }
