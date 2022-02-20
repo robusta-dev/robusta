@@ -4,7 +4,7 @@ from typing import List
 
 from .msteams_elements.msteams_text_block import MsTeamsTextBlock
 from .msteams_elements.msteams_action import MsTeamsAction
-from .msteams_elements.msteams_colum import MsTeamsColumn
+from .msteams_elements.msteams_column import MsTeamsColumn
 from .msteams_elements.msteams_container import MsTeamsContainer
 
 from ...core.reporting import FileBlock

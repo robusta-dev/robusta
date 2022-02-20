@@ -7,7 +7,7 @@ from .msteams_elements.msteams_base import MsTeamsBase
 from .msteams_adaptive_card_files import MsTeamsAdaptiveCardFiles
 from .msteams_elements.msteams_table import MsTeamsTable
 from .msteams_elements.msteams_text_block import MsTeamsTextBlock
-from .msteams_elements.msteams_colum import MsTeamsColumn
+from .msteams_elements.msteams_column import MsTeamsColumn
 from .msteams_elements.msteams_card import MsTeamsCard
 from .msteams_elements.msteams_images import MsTeamsImages
 from ...core.reporting import FileBlock, TableBlock, ListBlock, MarkdownBlock, KubernetesDiffBlock, HeaderBlock

@@ -1,6 +1,6 @@
 from typing import List
 
-from .msteams_colum import MsTeamsColumn
+from .msteams_column import MsTeamsColumn
 from .msteams_text_block import MsTeamsTextBlock
 from .msteams_base import MsTeamsBase
 
