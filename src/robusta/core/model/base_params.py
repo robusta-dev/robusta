@@ -65,7 +65,7 @@ class GrafanaParams(ActionParams):
 class GrafanaAnnotationParams(GrafanaParams):
     """
     :var grafana_dashboard_panel: when present, annotations will be added only to panels with this text in their title.
-    :var cluster_name: writen as one of the annotation's tags
+    :var cluster_name: written as one of the annotation's tags
     :var custom_tags: custom tags to add to the annotation
     """
 
