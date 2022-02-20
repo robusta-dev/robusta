@@ -10,7 +10,7 @@ These docs are Sphinx docs.
 
 Currently it's all manual docs, but at a later phase can crawl the python code, and auto generate additional docs.
 
-Github actions build & deploy
+GitHub actions build & deploy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The docs are deployed into a public gcp bucket.

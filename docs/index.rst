@@ -137,7 +137,7 @@ Next Steps
 
 :ref:`Ready to install Robusta? Get started! <installation>`
 
-`Star us on Github to receive updates. <https://github.com/robusta-dev/robusta/>`_
+`Star us on GitHub to receive updates. <https://github.com/robusta-dev/robusta/>`_
 
 .. rubric:: Footnotes
 
