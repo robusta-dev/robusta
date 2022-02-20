@@ -48,7 +48,7 @@ We will enable them once we finish the fine-tuning. Until them, you can enable t
 
 
 ..
-    these are all commented out for now - no point in showing how they're configured as it doens't add anything
+    these are all commented out for now - no point in showing how they're configured as it doesn't add anything
     this is an RST comment BTW as are the lines below
     .. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_health_watcher
     .. robusta-action:: playbooks.robusta_playbooks.restart_loop_reporter.restart_loop_reporter
