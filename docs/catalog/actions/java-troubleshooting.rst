@@ -1,4 +1,4 @@
-Java troubleshooting
+Java Troubleshooting Actions
 ######################
 
 Robusta makes it easy to troubleshoot and debug Java applications running on Kubernetes.

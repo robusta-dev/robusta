@@ -38,7 +38,10 @@ You should receive a message (by default in Slack) with the troubleshooting opti
   :align: center
 
 
+From here you can debug the memory in your Java application with jmap or diagnose problems with thread activity via jstack
+
 Learn more
 ------------------
 
+* :ref:`Java Troubleshooting Actions`
 * :ref:`Manual Triggers`
