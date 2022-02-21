@@ -147,8 +147,9 @@ def gen_config(
 
     if slack_api_key and not slack_channel:
         slack_channel = typer.prompt(
-            "Which slack channel should I send notifications to?"
-        )
+            "Which slack channel should I send notifications to? ",
+            prompt_suffix="#"
+        ).strip().strip("#")
 
     if slack_api_key and slack_channel:
         sinks_config.append(
@@ -316,7 +317,7 @@ def playground():
 def version():
     """Show the version of the local robusta-cli"""
     if __version__ == "0.0.0":
-        typer.echo("running with development version from git")
+        typer.echo("running with development version from git xxx")
     else:
         typer.echo(f"version {__version__}")
 
