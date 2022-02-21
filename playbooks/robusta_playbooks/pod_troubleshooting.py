@@ -5,6 +5,8 @@ from robusta.integrations.kubernetes.process_utils import ProcessFinder, Process
 from robusta.utils.parsing import load_json
 from typing import List
 
+from robusta.core.reporting.base import PodFindingSubject
+
 
 class StartProfilingParams(ActionParams):
     """
@@ -41,11 +43,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
             title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
             source=FindingSource.MANUAL,
             aggregation_key="python_profiler",
-            subject=FindingSubject(
-                pod.metadata.name,
-                FindingSubjectType.TYPE_POD,
-                pod.metadata.namespace,
-            ),
+            subject=PodFindingSubject(pod),
         )
 
         for target_proc in processes:
@@ -99,11 +97,7 @@ def pod_ps(event: PodEvent):
         title=f"Processes in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="pod_processes",
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
+        subject=PodFindingSubject(pod),
     )
     finding.add_enrichment(
         [
@@ -161,11 +155,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         title=f"Memory allocations for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_memory_allocations",
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
+        subject=PodFindingSubject(pod),
     )
     event.add_finding(finding)
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
@@ -280,11 +270,7 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         title=f"Stacktrace on pid {pid}:",
         source=FindingSource.MANUAL,
         aggregation_key="debugger_stack_trace",
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
+        subject=PodFindingSubject(pod),
     )
     event.add_finding(finding)
     cmd = f"debug-toolkit stack-trace {pid}"
@@ -318,11 +304,7 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_process_inspector",
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
+        subject=PodFindingSubject(pod),
     )
     event.add_finding(finding)
 
@@ -385,11 +367,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         title=f"Python debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_debugger",
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
+        subject=PodFindingSubject(pod),
     )
     event.add_finding(finding)
 

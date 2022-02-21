@@ -3,6 +3,7 @@ from enum import Enum
 from pydantic.main import BaseModel
 from typing import List, Dict
 
+from ...integrations.kubernetes.custom_models import RobustaPod
 from ..model.env_vars import ROBUSTA_UI_DOMAIN
 from ..reporting.consts import FindingSubjectType, FindingSource, FindingType
 from ...core.discovery.top_service_resolver import TopServiceResolver
@@ -41,11 +42,20 @@ class FindingSubject:
         name: str = None,
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
         namespace: str = None,
+        node: str = None
     ):
         self.name = name
         self.subject_type = subject_type
         self.namespace = namespace
+        self.node = node
 
+
+class PodFindingSubject(FindingSubject):
+    def __init__(
+        self,
+        pod: RobustaPod = None
+    ):
+        super(FindingSubject, self).__init__(pod.metadata.name, FindingSubjectType.TYPE_POD, pod.metadata.namespace, pod.spec.nodeName)
 
 class Finding:
     """

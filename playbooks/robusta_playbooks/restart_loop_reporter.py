@@ -1,6 +1,8 @@
 import logging
 from robusta.api import *
 
+from robusta.core.reporting.base import PodFindingSubject
+
 
 class RestartLoopParams(RateLimitParams):
     """
@@ -51,9 +53,7 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
         title=f"Crashing pod {pod.metadata.name} in namespace {pod.metadata.namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="restart_loop_reporter",
-        subject=FindingSubject(
-            pod_name, FindingSubjectType.TYPE_POD, pod.metadata.namespace
-        ),
+        subject=PodFindingSubject(pod),
     )
     blocks: List[BaseBlock] = []
     for container_status in crashed_container_statuses:

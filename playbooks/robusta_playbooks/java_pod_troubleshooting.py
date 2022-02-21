@@ -5,6 +5,9 @@ import traceback
 
 from robusta.integrations.kubernetes.custom_models import RobustaPod
 
+from robusta.core.reporting.base import PodFindingSubject
+
+
 class JavaParams(ProcessParams):
     """
     :var jtk_image: the java-toolkit image to use for debugging
@@ -29,11 +32,7 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
         title=f"Java debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="java_process_inspector",
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
+        subject=PodFindingSubject(pod),
     )
     process_finder = ProcessFinder(pod, params, ProcessType.JAVA)
     if not process_finder.matching_processes:
@@ -88,11 +87,7 @@ def run_jdk_command_on_pid(event: PodEvent, params: JavaParams, cmd: str, aggreg
         title=f"{cmd} run on pid {params.pid} in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key=aggregation_key,
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
+        subject=PodFindingSubject(pod),
     )
 
     if not params.pid:
