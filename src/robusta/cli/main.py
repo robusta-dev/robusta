@@ -162,10 +162,9 @@ def gen_config(
             )
         )
         if not verify_slack_channel(slack_api_key, cluster_name, slack_channel):
-            typer.echo(
-                f"We couldn't send our welcome message to channel {slack_channel}."
-                f"\nDoes this channel exist? Did you connect Robusta to the correct slack workspace?"
-                f"\nInstallation Aborted."
+            typer.secho(
+                f"\nInstallation Aborted.",
+                fg=typer.colors.RED
             )
             return
 
