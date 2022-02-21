@@ -3,7 +3,7 @@ Installation
 
 Robusta is installed with Helm. You can handwrite the values.yaml, but it is easier to autogenerate it.
 
-The standard installation uses Helm and the robusta-cli, but :ref:`other alternative methods are described below. <Alternative Installation Methods>`
+The standard installation uses Helm and the robusta-cli, but :ref:`other alternative methods are described below. <Additional Installation Methods>`
 
 Standard Installation
 ------------------------------
