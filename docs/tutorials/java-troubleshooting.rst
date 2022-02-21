@@ -5,7 +5,8 @@ In this tutorial, you will use Robusta to troubleshoot a java application runnin
 This tool can be used to analyze memory in your java application or diagnose problems due to thread activity.
 
 .. note::
-    The current kubernetes services supported for Java Troubleshooting are Google Kubernetes Engine, Azure Kubernetes Services and Amazon Kubernetes Services.
+    | GKE, AKS, and EKS are all supported.
+    | As of now, KIND and Minikube are not yet supported.
 
 .. raw:: html
 
