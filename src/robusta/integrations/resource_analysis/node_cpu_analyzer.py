@@ -5,7 +5,7 @@ from ..prometheus.utils import PrometheusDiscovery
 from ...core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 
 
-class NodeAnalyzer:
+class NodeCpuAnalyzer:
 
     # TODO: perhaps we should handle this more elegantly by first loading all the data into a pandas dataframe
     # and then slicing it different ways
