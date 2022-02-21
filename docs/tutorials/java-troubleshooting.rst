@@ -19,7 +19,7 @@ Let's run the ``java_process_inspector`` action builtin to Robusta.
 
 .. code-block:: bash
 
-    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/java_toolkit/d3b32f3cabb3c416b404ca7231ff6ad7d5ffbc8d/java_test_pod/test_pod_config.yaml
+    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/java_toolkit/416d62ba6a6c6cb2e5270c4cf793d340b708b9ea/java_test_pod/test_pod_config.yaml
 
 | For debugging your own pod replace the pod name below with the Java applications pod actual pod name.
 
