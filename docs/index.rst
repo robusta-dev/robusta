@@ -169,6 +169,7 @@ Next Steps
    tutorials/configuring-automations
    tutorials/prometheus-enrichment
    tutorials/troubleshooting-applications
+   tutorials/java-troubleshooting
 
 ..
    tutorials/alert-correlation

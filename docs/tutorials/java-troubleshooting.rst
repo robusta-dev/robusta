@@ -16,13 +16,17 @@ Let's run the ``java_process_inspector`` action builtin to Robusta.
 
 | You need a Java application to debug.
 | To create our demo java application on your cluster run:
-| ``kubectl apply -f https://github.com/robusta-dev/java_toolkit/blob/d3b32f3cabb3c416b404ca7231ff6ad7d5ffbc8d/java_test_pod/test_pod_config.yaml``
+
+.. code-block:: bash
+
+    kubectl apply -f https://github.com/robusta-dev/java_toolkit/blob/d3b32f3cabb3c416b404ca7231ff6ad7d5ffbc8d/java_test_pod/test_pod_config.yaml``
+
 | For debugging your own pod replace the pod name below with the Java applications pod actual pod name.
 
 .. code-block:: bash
 
     robusta playbooks trigger java_process_inspector name=test-java-pod namespace=default
-java-troubleshooting.rst
+
 
 Seeing the result
 -------------------------------------
@@ -34,7 +38,16 @@ You should receive a message (by default in Slack) with the troubleshooting opti
   :align: center
 
 
+| From here you can debug the memory in your Java application with jmap or diagnose problems with thread activity via jstack.
+| Check out :ref:`Java Troubleshooting Actions` for more information on what each of the debugging choices do.
+| For example, here is jmap output showing a summary of the application's memory usage:
+
+.. image:: /images/pod_jmap_pid.png
+  :width: 600
+  :align: center
+
 Learn more
 ------------------
 
+* :ref:`Java Troubleshooting Actions`
 * :ref:`Manual Triggers`
