@@ -4,6 +4,9 @@ Java Troubleshooting
 In this tutorial, you will use Robusta to troubleshoot a java application running on Kubernetes.
 This tool can be used to analyze memory in your java application or diagnose problems due to thread activity.
 
+.. note::
+    | GKE, AKS, and EKS are all supported.
+    | As of now, KIND and Minikube are not yet supported.
 
 .. raw:: html
 
