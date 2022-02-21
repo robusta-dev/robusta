@@ -40,6 +40,11 @@ You should receive a message (by default in Slack) with the troubleshooting opti
 
 | From here you can debug the memory in your Java application with jmap or diagnose problems with thread activity via jstack.
 | Check out :ref:`Java Troubleshooting Actions` for more information on what each of the debugging choices do.
+| For example, here is jmap output showing a summary of the application's memory usage:
+
+.. image:: /images/pod_jmap_pid.png
+  :width: 600
+  :align: center
 
 Learn more
 ------------------
