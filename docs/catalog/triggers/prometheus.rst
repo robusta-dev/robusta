@@ -53,6 +53,35 @@ You can skip this step if you installed Robusta's bundled Prometheus stack.
     <https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md#manually-managed-secret>`_
     and **not** an AlertmanagerConfig due to `this limitation <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
 
+Sending Alerts to Robusta from an external Alertmanager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+On some installations, Alertmanager may be located out of your Kubernetes cluster.
+
+You can still send it to Robusta.
+
+You should enable two-way interactivity to support that (```disableCloudRouting```: false, in your ```values.yaml```).
+
+.. admonition:: External AlertManager configuration
+
+    .. code-block:: yaml
+
+        receivers:
+          - name: 'webhook'
+            webhook_configs:
+              - url: 'https://api.robusta.dev/integrations/generic/alertmanager'
+                http_config:
+                  bearer_token_secret:
+                    name: NAME OF THE SECRET CONTAINING THE TOKEN
+                    key: TOKEN SECRET KEY
+                send_resolved: true
+
+The ```token``` format is: ```ACCOUNT_ID SIGNING_KEY```
+The alerts label should contain the ```cluster_name```, as defined in your ```values.yaml``` file
+
+.. note::
+    The ```secret``` that contains the token, should be in the same ```namespace``` of Alertmanager, and can be accessed by it.
+
 Developing actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

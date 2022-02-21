@@ -66,3 +66,21 @@ def prometheus_alert(
         data=prometheus_event.json(),
         headers=headers,
     )
+
+
+class AlertManagerEventParams(ActionParams):
+    event: Dict
+
+
+@action
+def handle_alertmanager_event(event: ExecutionBaseEvent, alert_manager_event: AlertManagerEventParams):
+    """
+    Handle alert manager event, as a Robusta action.
+    """
+    prometheus_event = AlertManagerEvent(**alert_manager_event.event)
+    headers = {"Content-type": "application/json"}
+    return requests.post(
+        "http://localhost:5000/api/alerts",
+        data=prometheus_event.json(),
+        headers=headers,
+    )
