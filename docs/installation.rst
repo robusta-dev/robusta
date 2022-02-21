@@ -85,7 +85,7 @@ Next Steps
 
 1. Define your first automation to :ref:`track Kubernetes changes <Track Kubernetes Changes>`
 2. Add your first :ref:`Prometheus enrichment <Improve Prometheus Alerts>`
-3. Complete the :ref:`manual troubleshooting tutorial <Troubleshoot Applications>`
+3. Complete the :ref:`manual troubleshooting tutorial <Python Troubleshooting>`
 4. Explore the Robusta UI (use the URL you received during installation)
 
 Additional Installation Methods

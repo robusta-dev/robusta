@@ -11,4 +11,5 @@ Builtin actions
    change-tracking
    grafana
    python-troubleshooting
+   java-troubleshooting
    miscellaneous
