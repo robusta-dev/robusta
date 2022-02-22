@@ -5,6 +5,8 @@ Robusta is installed with Helm. You can handwrite the values.yaml, but it is eas
 
 The standard installation uses Helm and the robusta-cli, but :ref:`other alternative methods are described below. <Additional Installation Methods>`
 
+Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster. [#f1]_
+
 Standard Installation
 ------------------------------
 
@@ -87,6 +89,10 @@ Next Steps
 2. Add your first :ref:`Prometheus enrichment <Improve Prometheus Alerts>`
 3. Complete the :ref:`manual troubleshooting tutorial <Python Troubleshooting>`
 4. Explore the Robusta UI (use the URL you received during installation)
+
+.. rubric:: Footnotes
+
+.. [#f1] `See this great video on YouTube where a community member installs Robusta with a stopwatch. <https://www.youtube.com/watch?v=l_zaCaY_wls>`_. If you beat his time by more than 30% we'll send you a Robusta mug too.
 
 Additional Installation Methods
 ---------------------------------
