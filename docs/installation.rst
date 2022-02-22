@@ -92,7 +92,7 @@ Next Steps
 
 .. rubric:: Footnotes
 
-.. [#f1] `See this great video on YouTube where a community member installs Robusta with a stopwatch. <https://www.youtube.com/watch?v=l_zaCaY_wls>`_. If you beat his time by more than 30% we'll send you a Robusta mug too.
+.. [#f1] `See this great video on YouTube where a community member installs Robusta with a stopwatch. <https://www.youtube.com/watch?v=l_zaCaY_wls>`_. If you beat his time by more than 30% and document it, we'll send you a Robusta mug too.
 
 Additional Installation Methods
 ---------------------------------
