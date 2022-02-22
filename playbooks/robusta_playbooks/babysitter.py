@@ -9,6 +9,8 @@ from hikaru.meta import DiffDetail, DiffType
 
 from robusta.api import *
 
+from src.robusta.core.reporting import KubeObjFindingSubject
+
 
 class BabysitterConfig(ActionParams):
     """
@@ -63,11 +65,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         finding_type=FindingType.CONF_CHANGE,
         failure=False,
         aggregation_key=f"ConfigurationChange/KubernetesResource/Change",
-        subject=FindingSubject(
-            event.obj.metadata.name,
-            FindingSubjectType.from_kind(event.obj.kind),
-            event.obj.metadata.namespace,
-        ),
+        subject=KubeObjFindingSubject(event.obj),
     )
     finding.add_enrichment([diff_block])
     event.add_finding(finding)

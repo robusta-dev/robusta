@@ -1,5 +1,7 @@
 from robusta.api import *
 
+from src.robusta.core.reporting import KubeObjFindingSubject
+
 
 class EventErrorReportParams(FindingKeyParams, RateLimitParams):
     pass
@@ -22,11 +24,7 @@ def event_report(event: EventChangeEvent, action_params: EventErrorReportParams)
         else FindingSeverity.HIGH,
         finding_type=FindingType.ISSUE,
         aggregation_key=f"Kubernetes {event.obj.type} Event",
-        subject=FindingSubject(
-            k8s_obj.name,
-            FindingSubjectType.from_kind(k8s_obj.kind),
-            k8s_obj.namespace,
-        ),
+        subject=KubeObjFindingSubject(k8s_obj),
     )
     event.add_finding(finding)
 

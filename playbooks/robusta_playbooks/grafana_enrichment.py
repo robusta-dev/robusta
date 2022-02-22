@@ -1,5 +1,7 @@
 from robusta.api import *
 
+from src.robusta.core.reporting import KubeObjFindingSubject
+
 
 @action
 def add_deployment_lines_to_grafana(
@@ -101,11 +103,7 @@ def report_image_changes(event: KubernetesAnyChangeEvent):
         title=f"{FindingSubjectType.TYPE_DEPLOYMENT.value} {event.obj.metadata.name} updated in namespace {event.obj.metadata.namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="report_image_changes",
-        subject=FindingSubject(
-            event.obj.metadata.name,
-            FindingSubjectType.TYPE_DEPLOYMENT,
-            event.obj.metadata.namespace,
-        ),
+        subject=KubeObjFindingSubject(event.obj, FindingSubjectType.TYPE_DEPLOYMENT),
     )
     json_str = json.dumps(
         {
