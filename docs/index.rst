@@ -46,7 +46,7 @@ Example Use Cases
 
     .. tab-item:: Debug Pods
 
-        .. admonition:: Attach the VSCode debugger to a runnning Python pod without tearing your hair out
+        .. admonition:: Attach the VSCode debugger to a running Python pod without tearing your hair out
 
             .. image:: /images/python-debugger.png
               :width: 600
@@ -137,7 +137,7 @@ Next Steps
 
 :ref:`Ready to install Robusta? Get started! <installation>`
 
-`Star us on Github to receive updates. <https://github.com/robusta-dev/robusta/>`_
+`Star us on GitHub to receive updates. <https://github.com/robusta-dev/robusta/>`_
 
 .. rubric:: Footnotes
 

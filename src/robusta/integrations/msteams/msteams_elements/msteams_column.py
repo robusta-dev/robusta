@@ -18,14 +18,14 @@ class MsTeamsColumn(MsTeamsBase):
     def add_column(
         self,
         items: List[MsTeamsBase],
-        width_strech: bool = False,
+        width_stretch: bool = False,
         is_visible: bool = True,
         key: str = None,
         action: MsTeamsAction = None,
     ):
         block = {
             "type": "Column",
-            "width": "stretch" if width_strech else "auto",
+            "width": "stretch" if width_stretch else "auto",
             "isVisible": is_visible,
             "items": self.__to_map_list(items),
         }

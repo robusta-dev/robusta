@@ -115,7 +115,7 @@ def daemonset_status_enricher(event: DaemonSetEvent):
     )
 
 
-# checks if the issue issue described here: https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/
+# checks if the issue described here: https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/
 # we check for it in the simplest way possible to avoid re-implementing k8s' scheduling logic for taints ourselves
 def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
     # if the daemonset was configured with an appropriate toleration, this false alarm isn't possible
@@ -153,7 +153,7 @@ def daemonset_misscheduled_smart_silencer(alert: PrometheusKubernetesAlert):
     """
     Silence daemonset misscheduled alert finding if it's a known false alarm.
 
-    checks if the issue issue described here: https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/
+    checks if the issue described here: https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/
     """
     if not alert.daemonset:
         return

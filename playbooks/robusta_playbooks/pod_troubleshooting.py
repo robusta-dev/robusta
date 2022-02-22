@@ -1,4 +1,4 @@
-# TODO: move the python playbooks into their own subpackage and put each playbook in it's own file
+# TODO: move the python playbooks into their own subpackage and put each playbook in its own file
 import humanize
 from robusta.api import *
 from robusta.integrations.kubernetes.process_utils import ProcessFinder, ProcessType
