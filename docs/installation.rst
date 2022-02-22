@@ -136,9 +136,21 @@ Additional Installation Methods
 
         kubectl get pods -n robusta
 
+.. dropdown:: Installing on OpenShift
+    :color: light
+
+    You will need to run one additional command:
+
+    .. code-block:: bash
+
+        oc adm policy add-scc-to-user anyuid -z robusta-runner-service-account
+
+    It's possible to reduce the permissions more. Please feel free to open a PR suggesting something more minimal
+
 .. dropdown:: Installing a second cluster
     :color: light
 
     When installing a second cluster on the same account, there is no need to run ``robusta gen-config`` again.
 
     Just change ``clusterName`` in values.yaml. It can have any value as long as it is unique between clusters.
+
