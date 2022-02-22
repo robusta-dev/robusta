@@ -1,6 +1,6 @@
 from robusta.api import *
 
-from src.robusta.core.reporting import KubeObjFindingSubject
+from src.robusta.core.reporting.finding_subjects import KubeObjFindingSubject
 
 
 @action

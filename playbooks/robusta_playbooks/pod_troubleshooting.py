@@ -5,7 +5,7 @@ from robusta.integrations.kubernetes.process_utils import ProcessFinder, Process
 from robusta.utils.parsing import load_json
 from typing import List
 
-from robusta.core.reporting.base import PodFindingSubject
+from robusta.core.reporting.finding_subjects import PodFindingSubject
 
 
 class StartProfilingParams(ActionParams):

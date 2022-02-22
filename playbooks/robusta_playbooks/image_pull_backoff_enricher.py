@@ -2,7 +2,7 @@ import enum
 from enum import Flag
 from robusta.api import *
 
-from src.robusta.core.reporting import PodFindingSubject
+from src.robusta.core.reporting.finding_subjects import PodFindingSubject
 
 
 def get_image_pull_backoff_container_statuses(status: PodStatus) -> [ContainerStatus]:

@@ -9,7 +9,7 @@ from hikaru.meta import DiffDetail, DiffType
 
 from robusta.api import *
 
-from src.robusta.core.reporting import KubeObjFindingSubject
+from src.robusta.core.reporting.finding_subjects import KubeObjFindingSubject
 
 
 class BabysitterConfig(ActionParams):

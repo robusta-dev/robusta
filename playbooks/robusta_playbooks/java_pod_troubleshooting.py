@@ -5,7 +5,7 @@ import traceback
 
 from robusta.integrations.kubernetes.custom_models import RobustaPod
 
-from robusta.core.reporting.base import PodFindingSubject
+from robusta.core.reporting.finding_subjects import PodFindingSubject
 
 
 class JavaParams(ProcessParams):
