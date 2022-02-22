@@ -28,7 +28,7 @@ Standard Installation
 
 3. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
 
-4. Install Robusta using Helm:
+4. Install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
 
 .. code-block:: bash
 
@@ -92,7 +92,9 @@ Next Steps
 
 .. rubric:: Footnotes
 
-.. [#f1] `See this great video on YouTube where a community member installs Robusta with a stopwatch. <https://www.youtube.com/watch?v=l_zaCaY_wls>`_. If you beat his time by more than 30% and document it, we'll send you a Robusta mug too.
+.. [#f1] `See this great video on YouTube where a community member installs Robusta with a stopwatch. <https://www.youtube.com/watch?v=l_zaCaY_wls>`_
+
+.. [#f2] AWS EKS, we're looking at you!
 
 Additional Installation Methods
 ---------------------------------
