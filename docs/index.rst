@@ -170,6 +170,7 @@ Next Steps
    tutorials/prometheus-enrichment
    tutorials/python-troubleshooting
    tutorials/java-troubleshooting
+   tutorials/more-tutorials
 
 ..
    tutorials/alert-correlation
