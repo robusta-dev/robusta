@@ -142,7 +142,8 @@ class RobustaSink(SinkBase):
         if not conditions:
             return ""
         return ",".join(
-            [f"{condition.type}:{condition.status}" for condition in conditions if condition.status != "False"]
+            [f"{condition.type}:{condition.status}" for condition in conditions
+             if condition.status != "False" or condition.type == "Ready"]
         )
 
     @classmethod
