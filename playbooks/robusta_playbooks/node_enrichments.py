@@ -1,5 +1,7 @@
 from robusta.api import *
 
+from robusta.core.reporting.finding_subjects import KubeObjFindingSubject
+
 
 def pod_row(pod: Pod) -> List[str]:
     ready_condition = [
@@ -121,6 +123,7 @@ def node_health_watcher(event: NodeChangeEvent):
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="node_not_ready",
         severity=FindingSeverity.MEDIUM,
+        subject=KubeObjFindingSubject(event.obj)
     )
     event.add_finding(finding)
     event.add_enrichment([KubernetesDiffBlock([], event.old_obj, event.obj, event.obj.metadata.name)])

@@ -26,13 +26,14 @@ class KubeObjFindingSubject(FindingSubject):
     @staticmethod
     def get_node_name(obj: UnionKubernetesObjects):
         try:
-            kind = obj.kind
-            if kind == "Node":
+            if obj.kind == "Node":
                 return obj.metadata.name
-            elif kind == "Pod":
+            elif (
+                    obj
+                    and hasattr(obj, "spec")
+                    and hasattr(obj.spec, "nodeName")
+            ):
                 return obj.spec.nodeName
-            elif kind == "Job":
-                return None
         except:
             pass
         return None
