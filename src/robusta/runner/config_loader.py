@@ -119,7 +119,7 @@ class ConfigLoader:
                 if (
                     playbooks_repo.pip_install
                 ):  # skip playbooks that are already in site-packages
-                    if playbooks_repo.url.startswith(GIT_URL_PREFIX):
+                    if playbooks_repo.url.startswith(GIT_URL_PREFIX) or playbooks_repo.url.startswith("https://git"):
                         repo = GitRepo(
                             playbooks_repo.url,
                             playbooks_repo.key.get_secret_value(),
