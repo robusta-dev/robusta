@@ -282,6 +282,32 @@ class SupabaseDal:
             for service in res.get("data")
         ]
 
+    def get_first_finding_timestamp(self, aggregation_key: str) -> List[ServiceInfo]:
+        res = (
+            self.client.table(ISSUES_TABLE)
+            .select("creation_date", "type", "namespace", "classification")
+            .filter("account_id", "eq", self.account_id)
+            .filter("cluster", "eq", self.cluster)
+            .filter("aggregation_key", "eq", aggregation_key)
+            .filter("deleted", "eq", False)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to get existing services (supabase) error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+        return [
+            ServiceInfo(
+                name=service["name"],
+                service_type=service["type"],
+                namespace=service["namespace"],
+                classification=service["classification"],
+            )
+            for service in res.get("data")
+        ]
+
     def get_active_nodes(self) -> List[NodeInfo]:
         res = (
             self.client.table(NODES_TABLE)

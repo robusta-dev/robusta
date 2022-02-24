@@ -43,3 +43,20 @@ def event_resource_events(event: EventChangeEvent, action_params: FindingKeyPara
     )
     if events_table:
         event.add_enrichment([events_table])
+
+@action
+def get_event_history(event: EventEvent):
+    """
+
+    get_resource_events_table
+
+    query dal for finding
+
+    """
+    finding = Finding(
+        title=f"get_event_history",
+        description="Robusta ran for the first time, getting event history",
+        finding_type=FindingType.REPORT,
+        aggregation_key=f"get_event_history"
+        ),
+    event.add_finding(finding)
