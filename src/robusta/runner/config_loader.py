@@ -133,7 +133,7 @@ class ConfigLoader:
                     else:
                         raise Exception(
                             f"Illegal playbook repo url {playbooks_repo.url}. "
-                            f"Must start with '{GIT_SSH_PREFIX}', {GIT_HTTPS_PREFIX} or '{LOCAL_PATH_URL_PREFIX}'"
+                            f"Must start with '{GIT_SSH_PREFIX}', '{GIT_HTTPS_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
                         )
 
                     if not os.path.exists(
