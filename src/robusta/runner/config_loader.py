@@ -23,7 +23,8 @@ from ..core.model.env_vars import (
 from ..integrations.git.git_repo import (
     GitRepoManager,
     GitRepo,
-    GIT_URL_PREFIX,
+    GIT_SSH_PREFIX,
+    GIT_HTTPS_PREFIX,
     LOCAL_PATH_URL_PREFIX,
 )
 from ..utils.file_system_watcher import FileSystemWatcher
@@ -119,7 +120,7 @@ class ConfigLoader:
                 if (
                     playbooks_repo.pip_install
                 ):  # skip playbooks that are already in site-packages
-                    if playbooks_repo.url.startswith(GIT_URL_PREFIX):
+                    if playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
                         repo = GitRepo(
                             playbooks_repo.url,
                             playbooks_repo.key.get_secret_value(),
@@ -132,7 +133,7 @@ class ConfigLoader:
                     else:
                         raise Exception(
                             f"Illegal playbook repo url {playbooks_repo.url}. "
-                            f"Must start with '{GIT_URL_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
+                            f"Must start with '{GIT_SSH_PREFIX}', '{GIT_HTTPS_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
                         )
 
                     if not os.path.exists(

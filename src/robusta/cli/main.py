@@ -73,6 +73,7 @@ class HelmValues(BaseModel):
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
+    playbooksPersistentVolumeSize: str = None
     kubewatch: PodConfigs = None
     grafanaRenderer: PodConfigs = None
     runner: PodConfigs = None
@@ -284,6 +285,7 @@ def gen_config(
 
     if is_small_cluster:
         values.set_pod_configs_for_small_clusters()
+        values.playbooksPersistentVolumeSize = "128Mi"
 
     with open(output_path, "w") as output_file:
         yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)

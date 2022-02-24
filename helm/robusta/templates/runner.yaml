@@ -101,7 +101,7 @@ spec:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 128Mi
+      storage: {{ .Values.playbooksPersistentVolumeSize }}
 {{- end }}
 ---
 apiVersion: v1
