@@ -186,7 +186,7 @@ class RobustaPod(Pod):
         try:
             pod_name = debugger.metadata.name
             pod_namespace = debugger.metadata.namespace
-            pod_status = wait_for_pod_status(pod_name, pod_namespace, SUCCEEDED_STATE, 240, 0.2)
+            pod_status = wait_for_pod_status(pod_name, pod_namespace, SUCCEEDED_STATE, 360, 0.2)
             if pod_status != SUCCEEDED_STATE:
                 raise Exception(f"pod {pod_name} in {pod_namespace} failed to complete. It is in state {pod_status}")
 
