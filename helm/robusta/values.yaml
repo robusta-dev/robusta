@@ -188,3 +188,12 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 100Gi
+  prometheus-node-exporter:
+    resources:
+      requests:
+        cpu: 50m
+  prometheusOperator:
+    prometheusConfigReloader:
+      resources:
+        limits:
+          cpu: 0
