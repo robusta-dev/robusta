@@ -1,5 +1,6 @@
 import logging
 import uuid
+from collections import defaultdict
 from enum import Enum
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
@@ -28,7 +29,7 @@ class ExecutionEventBaseParams(BaseModel):
 # (note that we need to integrate with dataclasses because of hikaru)
 @dataclass
 class ExecutionBaseEvent:
-    findings: List[Finding] = field(default_factory=lambda: [])
+    sink_findings: Dict[str, List[Finding]] = field(default_factory=lambda: defaultdict(list))
     named_sinks: Optional[List[str]] = None
     response: Dict[
         str, Any
@@ -53,17 +54,21 @@ class ExecutionBaseEvent:
         enrichment_blocks: List[BaseBlock],
         annotations=None,
     ):
+        finding_id: uuid = uuid.uuid4()
+        for sink in self.named_sinks:
+            if len(self.sink_findings[sink]) == 0:
+                sink_finding = self.create_default_finding()
+                sink_finding.id = finding_id  # share the same finding id between different sinks
+                self.sink_findings[sink].append(sink_finding)
 
-        if len(self.findings) == 0:
-            self.findings.append(self.create_default_finding())
-
-        self.findings[0].add_enrichment(enrichment_blocks, annotations)
+            self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations)
 
     def add_finding(self, finding: Finding):
-        if len(self.findings) > 0:
-            logging.warning(f"Overriding active finding. new finding: {finding}")
+        for sink in self.named_sinks:
+            if len(self.sink_findings[sink]) > 0:
+                logging.warning(f"Overriding active finding for {sink}. new finding: {finding}")
 
-        self.findings.insert(0, finding)
+            self.sink_findings[sink].insert(0, finding)
 
     @staticmethod
     def from_params(params: ExecutionEventBaseParams) -> Optional["ExecutionBaseEvent"]:
