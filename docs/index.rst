@@ -128,7 +128,7 @@ Many automations are included, but you can also write your own in Python.
 
             # this is how you send data to slack or other destinations
             event.add_enrichment([
-                MarkdownBlock("*Oh no!* An alert occurred on " + pod_name)
+                MarkdownBlock("*Oh no!* An alert occurred on " + pod_name),
                 FileBlock("crashing-pod.log", pod_logs)
             ])
 
