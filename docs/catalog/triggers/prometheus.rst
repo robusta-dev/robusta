@@ -78,9 +78,6 @@ You should enable two-way interactivity to support that (```disableCloudRouting`
 The ```TOKEN``` format is: ```ACCOUNT_ID SIGNING_KEY```
 The alerts label should contain the ```cluster_name```, as defined in your ```values.yaml``` file
 
-.. note::
-    The ```secret``` that contains the token, should be in the same ```namespace``` of Alertmanager, and can be accessed by it.
-
 Developing actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
