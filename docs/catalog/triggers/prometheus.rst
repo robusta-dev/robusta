@@ -75,8 +75,8 @@ You should enable two-way interactivity to support that (```disableCloudRouting`
                     credentials: TOKEN
                 send_resolved: true
 
-The ```TOKEN``` format is: ```ACCOUNT_ID SIGNING_KEY```
-The alerts label should contain the ```cluster_name```, as defined in your ```values.yaml``` file
+The `TOKEN` format is: `ACCOUNT_ID SIGNING_KEY`
+The alerts label should contain the `cluster_name`, as defined in your `values.yaml` file
 
 Developing actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
