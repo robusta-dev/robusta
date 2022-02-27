@@ -1,4 +1,3 @@
-from pydantic import SecretStr
 from kubernetes import client
 from robusta.api import *
 
@@ -47,7 +46,7 @@ def create_pvc_snapshot(event: ScheduledExecutionEvent, params: VolumeSnapshotPa
 
     finding = Finding(
         title=f"Created VolumeSnapshot {snapshot_name}",
-        aggregation_key="snapshot",
+        aggregation_key="volume_snapshot",
         finding_type=FindingType.REPORT,
         failure=False,
     )
