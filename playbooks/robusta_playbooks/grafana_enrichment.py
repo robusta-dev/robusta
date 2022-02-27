@@ -106,6 +106,8 @@ def report_image_changes(event: KubernetesAnyChangeEvent):
             FindingSubjectType.TYPE_DEPLOYMENT,
             event.obj.metadata.namespace,
         ),
+        finding_type=FindingType.CONF_CHANGE,
+        failure=False,
     )
     json_str = json.dumps(
         {

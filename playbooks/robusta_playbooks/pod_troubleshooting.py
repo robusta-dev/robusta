@@ -42,6 +42,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
             source=FindingSource.MANUAL,
             aggregation_key="python_profiler",
             finding_type=FindingType.REPORT,
+            failure=False,
             subject=FindingSubject(
                 pod.metadata.name,
                 FindingSubjectType.TYPE_POD,
@@ -101,6 +102,7 @@ def pod_ps(event: PodEvent):
         source=FindingSource.MANUAL,
         aggregation_key="pod_processes",
         finding_type=FindingType.REPORT,
+        failure=False,
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -164,6 +166,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         source=FindingSource.MANUAL,
         aggregation_key="python_memory_allocations",
         finding_type=FindingType.REPORT,
+        failure=False,
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -284,6 +287,7 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         source=FindingSource.MANUAL,
         aggregation_key="debugger_stack_trace",
         finding_type=FindingType.REPORT,
+        failure=False,
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -323,6 +327,7 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         source=FindingSource.MANUAL,
         aggregation_key="python_process_inspector",
         finding_type=FindingType.REPORT,
+        failure=False,
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
@@ -391,6 +396,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         source=FindingSource.MANUAL,
         aggregation_key="python_debugger",
         finding_type=FindingType.REPORT,
+        failure=False,
         subject=FindingSubject(
             pod.metadata.name,
             FindingSubjectType.TYPE_POD,
