@@ -49,24 +49,23 @@ def event_resource_events(event: EventChangeEvent, action_params: FindingKeyPara
 
 
 @action
-def get_event_history(event: ExecutionBaseEvent, params: ActionParams):
+def get_event_history(event: ExecutionBaseEvent):
     """
-
-    get_resource_events_table
-
-    query dal for finding
-
+    Creates findings for the all the past events for any object that has had at one point a warning event
     """
+    reported_obj_history_list = []
     warning_events = get_events_list(event_type="Warning")
     for warning_event in warning_events.items:
+        warning_event_obj_name = warning_event.involvedObject.name
+        if warning_event_obj_name in reported_obj_history_list:
+            # if there were multiple warnings on the same object we dont want the history pulled multiple times
+            continue
         event_obj_history = get_object_events_history(warning_event.involvedObject.kind,
-                                                      warning_event.involvedObject.name,
+                                                      warning_event_obj_name,
                                                       warning_event.involvedObject.namespace)
         for hist_event in event_obj_history.items:
             event.add_finding(create_historical_event_finding(hist_event))
-            logging.info(
-                f"{json.dumps(get_json(hist_event), indent=4, sort_keys=True)}"
-            )
+        reported_obj_history_list.append(warning_event_obj_name)
 
 
 def create_historical_event_finding(event: Event):
@@ -83,8 +82,7 @@ def create_historical_event_finding(event: Event):
         if event.type == "Normal"
         else FindingSeverity.HIGH,
         finding_type=FindingType.ISSUE,
-#        aggregation_key=f"Kubernetes {event.type} Event",
-        aggregation_key=f"test_event_to_delete",
+        aggregation_key=f"Kubernetes {event.type} Event",
         subject=FindingSubject(
             k8s_obj.name,
             FindingSubjectType.from_kind(k8s_obj.kind),
