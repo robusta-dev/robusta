@@ -13,7 +13,12 @@ from ...core.schedule.model import (
     SchedulingInfo,
 )
 
-INITIAL_SCHEDULE_DELAY_SEC = os.environ.get("INITIAL_SCHEDULE_DELAY_SEC", 5)
+# this initial delay is important for when the robusta-runner version is updated
+# at the same time a scheduled playbook is added to the configuration
+# for a short time there are two runners running (old+new version) and they both
+# see the new scheduled playbook. we add a delay so that only the new runner ends up
+# running the scheduled playbook
+INITIAL_SCHEDULE_DELAY_SEC = os.environ.get("INITIAL_SCHEDULE_DELAY_SEC", 120)
 
 
 class Scheduler:
