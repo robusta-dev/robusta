@@ -29,7 +29,12 @@ class ExecutionEventBaseParams(BaseModel):
 # (note that we need to integrate with dataclasses because of hikaru)
 @dataclass
 class ExecutionBaseEvent:
-    sink_findings: Dict[str, List[Finding]] = field(default_factory=lambda: defaultdict(list))
+    # Collection of findings that should be sent to each sink.
+    # This collection is shared between different playbooks that are triggered by the same event.
+    sink_findings: Dict[str, List[Finding]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+    # Target sinks for this execution event. Each playbook may have a different list of target sinks.
     named_sinks: Optional[List[str]] = None
     response: Dict[
         str, Any
@@ -58,7 +63,9 @@ class ExecutionBaseEvent:
         for sink in self.named_sinks:
             if len(self.sink_findings[sink]) == 0:
                 sink_finding = self.create_default_finding()
-                sink_finding.id = finding_id  # share the same finding id between different sinks
+                sink_finding.id = (
+                    finding_id  # share the same finding id between different sinks
+                )
                 self.sink_findings[sink].append(sink_finding)
 
             self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations)
@@ -66,7 +73,9 @@ class ExecutionBaseEvent:
     def add_finding(self, finding: Finding):
         for sink in self.named_sinks:
             if len(self.sink_findings[sink]) > 0:
-                logging.warning(f"Overriding active finding for {sink}. new finding: {finding}")
+                logging.warning(
+                    f"Overriding active finding for {sink}. new finding: {finding}"
+                )
 
             self.sink_findings[sink].insert(0, finding)
 
