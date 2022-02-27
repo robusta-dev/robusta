@@ -3,7 +3,7 @@ import pydoc
 import textwrap
 import typing
 from pathlib import Path
-from typing import List, Type
+from typing import List, Type, Optional
 
 import pydantic.fields
 import sphinx.addnodes
@@ -198,25 +198,46 @@ def to_name(action_name: str) -> str:
 
 
 class RobustaActionDirective(SphinxDirective):
+    """
+    Document a Robusta playbook action
+
+    Example:
+
+        .. robusta-action:: playbooks.robusta_playbooks.some_module.some_playbook
+
+    Optionally, a second parameter can be given, recommending a relevant trigger to show in the documentation:
+
+        .. robusta-action:: playbooks.robusta_playbooks.some_module.some_playbook on_deployment_update
+
+    """
 
     option_spec = DummyOptionSpec()
     has_content = True
     required_arguments = 1
+    optional_arguments = 1
     final_argument_whitespace = True
 
     def run(self) -> List[Node]:
         objpath = self.arguments[0]
+        if len(self.arguments) < 2:
+            recommended_trigger = None
+        else:
+            recommended_trigger = self.arguments[1]
         obj = pydoc.locate(objpath)
         if obj is None:
             raise Exception(f"Cannot document None: {objpath}")
         action_definition = Action(obj)
-        return self.__generate_rst(action_definition)
+        return self.__generate_rst(action_definition, recommended_trigger)
 
-    def __generate_rst(self, action_definition: Action):
+    def __generate_rst(
+        self, action_definition: Action, recommended_trigger: Optional[str]
+    ):
         node = nodes.section()
         node.document = self.state.document
 
-        example_yaml = generator.generate_example_config(action_definition.func)
+        example_yaml = generator.generate_example_config(
+            action_definition.func, recommended_trigger
+        )
         params_cls = action_definition.params_type
         params_cls_path = ""
         if params_cls is not None:
