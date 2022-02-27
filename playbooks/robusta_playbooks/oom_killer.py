@@ -252,3 +252,21 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
 
         reason = f"node {node_name} used too much memory: reached {node_max_used_memory_in_percentage} percentage of its available memory"
         return reason
+
+
+@action
+def pod_oom_kill_simulator(event: ExecutionBaseEvent):
+    pod = Pod(apiVersion='v1', kind='Pod',
+              metadata=ObjectMeta(name='memory-eater', namespace='default'),
+              spec=PodSpec(restartPolicy="Never", containers=[Container(
+                  name='memory-eater',
+                  image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/memory-eater:1.0',
+                  args=['55MiB', '45MiB', '45', '1'],
+                  resources=ResourceRequirements(limits={'memory': '100Mi'}))])
+              )
+    pod.create()
+
+
+@action
+def node_oom_kill_simulator(event: ExecutionBaseEvent):
+    pass
