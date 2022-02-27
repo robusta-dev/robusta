@@ -234,7 +234,20 @@ Playbook actions are loaded into Robusta using the ``playbookRepos`` Helm value.
 
 Robusta has a set of builtin playbooks.
 
-You can load extra playbook actions from git repositories:
+You can load extra playbook actions in two different ways from git repositories, via HTTPS or via SSH.
+For public repos load the playbook via HTTPS, for private repos you will need to use SSH.
+
+1) Loading a git playbook by HTTPS:
+
+.. code-block:: yaml
+
+    playbookRepos:
+      # we're adding the robusta chaos-engineering playbooks here from https://github.com/robusta-dev/robusta-chaos
+      my_extra_playbooks:
+        url: "https://github.com/robusta-dev/robusta-chaos.git"
+
+
+2) Loading a git playbook by SSH:
 
 .. code-block:: yaml
 
@@ -248,7 +261,7 @@ You can load extra playbook actions from git repositories:
           -----END OPENSSH PRIVATE KEY-----
 
 
-The ``key`` should contain a deployment key, with ``read`` access. It isn't necessary for public repositories.
+The ``key`` should contain a deployment key, with ``read`` access. The ``key`` is required when accessing a git repo via ssh, even for public repositories.
 
 .. note::
 

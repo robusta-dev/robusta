@@ -103,7 +103,7 @@ class K8sBaseTrigger(BaseTrigger):
         return obj, old_obj
 
     def build_execution_event(
-        self, event: K8sTriggerEvent, findings: List[Finding]
+        self, event: K8sTriggerEvent, sink_findings: Dict[str,List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
         # we can't use self.get_execution_event_type() because for KubernetesAnyAllChangesTrigger we need to filter out
         # stuff like ConfigMaps and we do that filtering here by checking if there is a real event_class
@@ -121,7 +121,7 @@ class K8sBaseTrigger(BaseTrigger):
         (obj, old_obj) = self.__parse_kubernetes_objs(event.k8s_payload)
         operation_type = K8sOperationType(event.k8s_payload.operation)
         return event_class(
-            findings=findings,
+            sink_findings=sink_findings,
             operation=operation_type,
             description=event.k8s_payload.description.replace("\n", ""),
             obj=obj,

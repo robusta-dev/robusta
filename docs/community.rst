@@ -14,7 +14,7 @@ Join the conversation
 Ask for help, or just say hi!
 
 1. `Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ - **link only works on desktop**
-2. `Github Issues <https://github.com/robusta-dev/robusta/issues>`_
+2. `GitHub Issues <https://github.com/robusta-dev/robusta/issues>`_
 
 Commercial Support
 -------------------

@@ -50,7 +50,7 @@ class Transformer:
         # replace slack markdown bold: from *bold text* to <b>bold text<b>  (markdown2 converts this to italic)
         mrkdwn_text = re.sub(r"\*([^\*]*)\*", r"<b>\1</b>", mrkdwn_text)
 
-        # Note - markdown2 should be used after slack links already converted, other wise it's getting corrupted!
+        # Note - markdown2 should be used after slack links already converted, otherwise it's getting corrupted!
         # Convert other markdown content
         return markdown2.markdown(mrkdwn_text)
 

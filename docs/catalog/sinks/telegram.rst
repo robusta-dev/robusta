@@ -5,7 +5,7 @@ Robusta can send playbook results to Telegram conversations.
 
 .. note::
 
-    Tables are omitted from Telegram sinks because it's too big for most Telegram chat clients.
+    Tables are sent as file attachments to Telegram sinks because it's too big for most Telegram chat clients.
 
     In addition, 2-way interactivity (``CallbackBlock``) isn't implemented yet.
 

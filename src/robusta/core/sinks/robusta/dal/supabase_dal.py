@@ -9,6 +9,7 @@ from typing import List, Dict, Any
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
 from ...transformer import Transformer
+from ....model.nodes import NodeInfo
 from ....model.services import ServiceInfo
 from ....reporting.blocks import (
     MarkdownBlock,
@@ -29,6 +30,7 @@ from ....reporting.callbacks import ExternalActionRequestBuilder
 from supabase_py import Client
 
 SERVICES_TABLE = "Services"
+NODES_TABLE = "Nodes"
 EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
 
@@ -277,6 +279,60 @@ class SupabaseDal:
             for service in res.get("data")
         ]
 
+    def get_active_nodes(self) -> List[NodeInfo]:
+        res = (
+            self.client.table(NODES_TABLE)
+            .select("*")
+            .filter("account_id", "eq", self.account_id)
+            .filter("cluster_id", "eq", self.cluster)
+            .filter("deleted", "eq", False)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to get existing nodes (supabase) error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+        return [
+            NodeInfo(
+                name=node["name"],
+                node_creation_time=node["node_creation_time"],
+                taints=node["taints"],
+                conditions=node["conditions"],
+                memory_capacity=node["memory_capacity"],
+                memory_allocatable=node["memory_allocatable"],
+                memory_allocated=node["memory_allocated"],
+                cpu_capacity=node["cpu_capacity"],
+                cpu_allocatable=node["cpu_allocatable"],
+                cpu_allocated=node["cpu_allocated"],
+                pods_count=node["pods_count"],
+                pods=node["pods"],
+                internal_ip=node["internal_ip"],
+                external_ip=node["external_ip"],
+                node_info=json.loads(node["node_info"]),
+            )
+            for node in res.get("data")
+        ]
+
+    def __to_db_node(self, node: NodeInfo) -> Dict[Any, Any]:
+        db_node = node.dict()
+        db_node["account_id"] = self.account_id
+        db_node["cluster_id"] = self.cluster
+        db_node["updated_at"] = "now()"
+        return db_node
+
+    def publish_node(self, node: NodeInfo):
+        db_node = self.__to_db_node(node)
+        res = (
+            self.client.table(NODES_TABLE).insert(db_node, upsert=True).execute()
+        )
+        if res.get("status_code") not in [200, 201]:
+            logging.error(
+                f"Failed to persist node {node} error: {res.get('data')}"
+            )
+            self.handle_supabase_error()
+
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
             logging.info("Supabase dal login")
@@ -292,4 +348,4 @@ class SupabaseDal:
         try:
             self.sign_in()
         except Exception as e:
-            logging.error(f"Failed to signin on error", exc_info=True)
+            logging.error(f"Failed to sign in on error", exc_info=True)

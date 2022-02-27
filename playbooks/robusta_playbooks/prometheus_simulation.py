@@ -1,9 +1,7 @@
-import requests
-
 from robusta.api import *
 
 
-class PrometehusAlertParams(ActionParams):
+class PrometheusAlertParams(ActionParams):
     """
     :var alert_name: Simulated alert name.
     :var pod_name: Pod name, for a simulated pod alert.
@@ -14,7 +12,8 @@ class PrometehusAlertParams(ActionParams):
     :var generator_url: Prometheus generator_url. Some enrichers, use this attribute to query Prometheus.
     """
     alert_name: str
-    pod_name: str
+    pod_name: Optional[str] = None
+    node_name: Optional[str] = None
     namespace: str = "default"
     status: str = "firing"
     severity: str = "error"
@@ -24,13 +23,23 @@ class PrometehusAlertParams(ActionParams):
 
 @action
 def prometheus_alert(
-    event: ExecutionBaseEvent, prometheus_event_data: PrometehusAlertParams
+    event: ExecutionBaseEvent, prometheus_event_data: PrometheusAlertParams
 ):
     """
     Simulate Prometheus alert sent to the Robusta runner.
     Can be used for testing, when implementing actions triggered by Prometheus alerts.
 
     """
+    labels = {
+        "severity": prometheus_event_data.severity,
+        "namespace": prometheus_event_data.namespace,
+        "alertname": prometheus_event_data.alert_name,
+    }
+    if prometheus_event_data.pod_name is not None:
+        labels["pod"] = prometheus_event_data.pod_name
+    if prometheus_event_data.node_name is not None:
+        labels["node"] = prometheus_event_data.node_name
+
     prometheus_event = AlertManagerEvent(
         **{
             "status": prometheus_event_data.status,
@@ -45,17 +54,30 @@ def prometheus_alert(
                     "endsAt": datetime.now(),
                     "startsAt": datetime.now(),
                     "generatorURL": prometheus_event_data.generator_url,
-                    "labels": {
-                        "severity": prometheus_event_data.severity,
-                        "pod": prometheus_event_data.pod_name,
-                        "namespace": prometheus_event_data.namespace,
-                        "alertname": prometheus_event_data.alert_name,
-                    },
+                    "labels": labels,
                     "annotations": {},
                 }
             ],
         }
     )
+    headers = {"Content-type": "application/json"}
+    return requests.post(
+        "http://localhost:5000/api/alerts",
+        data=prometheus_event.json(),
+        headers=headers,
+    )
+
+
+class AlertManagerEventParams(ActionParams):
+    event: Dict
+
+
+@action
+def handle_alertmanager_event(event: ExecutionBaseEvent, alert_manager_event: AlertManagerEventParams):
+    """
+    Handle alert manager event, as a Robusta action.
+    """
+    prometheus_event = AlertManagerEvent(**alert_manager_event.event)
     headers = {"Content-type": "application/json"}
     return requests.post(
         "http://localhost:5000/api/alerts",

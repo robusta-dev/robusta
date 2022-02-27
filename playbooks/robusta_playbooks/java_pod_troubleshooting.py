@@ -154,7 +154,7 @@ def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod, override_jtk_image: 
 def add_jdk_choices_to_finding(
     finding: Finding, params: JavaParams, pids: List[int], pod: RobustaPod
 ) -> Finding:
-    finding.add_enrichment([MarkdownBlock(f"Please select a JDK debugging choice:")])
+    finding.add_enrichment([MarkdownBlock(f"Please select a Java troubleshooting choice:")])
     choices = {}
     for pid in pids:
         logging.info(f"jdk_choices_in_finding_for_pid {pid}")

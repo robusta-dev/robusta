@@ -1,4 +1,4 @@
-Troubleshoot Applications
+Python Profiling
 ######################################################
 
 In this tutorial, you will use Robusta to troubleshoot a Python application running on Kubernetes. Specifically,

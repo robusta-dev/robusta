@@ -46,7 +46,7 @@ Example Use Cases
 
     .. tab-item:: Debug Pods
 
-        .. admonition:: Attach the VSCode debugger to a runnning Python pod without tearing your hair out
+        .. admonition:: Attach the VSCode debugger to a running Python pod without tearing your hair out
 
             .. image:: /images/python-debugger.png
               :width: 600
@@ -128,7 +128,7 @@ Many automations are included, but you can also write your own in Python.
 
             # this is how you send data to slack or other destinations
             event.add_enrichment([
-                MarkdownBlock("*Oh no!* An alert occurred on " + pod_name)
+                MarkdownBlock("*Oh no!* An alert occurred on " + pod_name),
                 FileBlock("crashing-pod.log", pod_logs)
             ])
 
@@ -137,7 +137,7 @@ Next Steps
 
 :ref:`Ready to install Robusta? Get started! <installation>`
 
-`Star us on Github to receive updates. <https://github.com/robusta-dev/robusta/>`_
+`Star us on GitHub to receive updates. <https://github.com/robusta-dev/robusta/>`_
 
 .. rubric:: Footnotes
 
@@ -168,7 +168,9 @@ Next Steps
    installation
    tutorials/configuring-automations
    tutorials/prometheus-enrichment
-   tutorials/troubleshooting-applications
+   tutorials/python-profiling
+   tutorials/java-troubleshooting
+   tutorials/more-tutorials
 
 ..
    tutorials/alert-correlation

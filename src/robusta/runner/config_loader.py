@@ -23,7 +23,8 @@ from ..core.model.env_vars import (
 from ..integrations.git.git_repo import (
     GitRepoManager,
     GitRepo,
-    GIT_URL_PREFIX,
+    GIT_SSH_PREFIX,
+    GIT_HTTPS_PREFIX,
     LOCAL_PATH_URL_PREFIX,
 )
 from ..utils.file_system_watcher import FileSystemWatcher
@@ -119,7 +120,7 @@ class ConfigLoader:
                 if (
                     playbooks_repo.pip_install
                 ):  # skip playbooks that are already in site-packages
-                    if playbooks_repo.url.startswith(GIT_URL_PREFIX):
+                    if playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
                         repo = GitRepo(
                             playbooks_repo.url,
                             playbooks_repo.key.get_secret_value(),
@@ -132,7 +133,7 @@ class ConfigLoader:
                     else:
                         raise Exception(
                             f"Illegal playbook repo url {playbooks_repo.url}. "
-                            f"Must start with '{GIT_URL_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
+                            f"Must start with '{GIT_SSH_PREFIX}', '{GIT_HTTPS_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
                         )
 
                     if not os.path.exists(
@@ -151,7 +152,7 @@ class ConfigLoader:
 
                 playbook_packages.append(playbook_package)
             except Exception as e:
-                logging.error(f"Failed to add playbooks reop {playbook_package} {e}")
+                logging.error(f"Failed to add playbooks repo {playbook_package}", exc_info=True)
 
         for package_name in playbook_packages:
             self.__import_playbooks_package(actions_registry, package_name)
@@ -174,7 +175,7 @@ class ConfigLoader:
                 for (action_name, action_func) in playbook_actions:
                     actions_registry.add_action(action_func)
             except Exception as e:
-                logging.error(f"error loading module {playbooks_module}. exception={e}")
+                logging.error(f"failed to module {playbooks_module}", exc_info=True)
 
     def __reload_playbook_packages(self, change_name):
         logging.info(f"Reloading playbook packages due to change on {change_name}")
@@ -231,9 +232,7 @@ class ConfigLoader:
 
                 self.__reload_receiver()
             except Exception as e:
-                logging.exception(
-                    f"unknown error reloading playbooks. will try again when they next change. exception={e}"
-                )
+                logging.error(f"unknown error reloading playbooks. will try again when they next change", exc_info=True)
 
     @classmethod
     def __prepare_runtime_config(
