@@ -126,8 +126,8 @@ class SupabaseDal:
             "account_id": self.account_id,
         }
 
-        if finding.creation_time:
-            issue_obj["creation_time"] = finding.creation_time
+        if finding.creation_date:
+            issue_obj["creation_date"] = finding.creation_date
 
         return issue_obj
 

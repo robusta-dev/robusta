@@ -63,7 +63,7 @@ def get_event_history(event: ExecutionBaseEvent, params: ActionParams):
                                                       warning_event.involvedObject.name,
                                                       warning_event.involvedObject.namespace)
         for hist_event in event_obj_history.items:
-            event.add_finding(create_historical_event_finding(event))
+            event.add_finding(create_historical_event_finding(hist_event))
             logging.info(
                 f"{json.dumps(get_json(hist_event), indent=4, sort_keys=True)}"
             )
@@ -83,11 +83,12 @@ def create_historical_event_finding(event: Event):
         if event.type == "Normal"
         else FindingSeverity.HIGH,
         finding_type=FindingType.ISSUE,
-        aggregation_key=f"Kubernetes {event.type} Event",
+#        aggregation_key=f"Kubernetes {event.type} Event",
+        aggregation_key=f"test_event_to_delete",
         subject=FindingSubject(
             k8s_obj.name,
             FindingSubjectType.from_kind(k8s_obj.kind),
             k8s_obj.namespace,
         ),
-        creation_time=event.metadata.creationTimestamp
+        creation_date=event.metadata.creationTimestamp
     )
