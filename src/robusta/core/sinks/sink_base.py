@@ -7,6 +7,7 @@ class SinkBase:
         self.sink_name = sink_params.name
         self.params = sink_params
         self.default = sink_params.default
+        self.telemetry = None
 
     def stop(self):
         pass
@@ -15,3 +16,6 @@ class SinkBase:
         raise NotImplementedError(
             f"write_finding not implemented for sink {self.sink_name}"
         )
+
+    def inject_telemetry(self,  tel):
+        self.telemetry = tel

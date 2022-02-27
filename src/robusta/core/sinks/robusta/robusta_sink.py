@@ -17,7 +17,7 @@ from ...reporting.base import Finding
 from .dal.supabase_dal import SupabaseDal
 from ..sink_base import SinkBase
 from ...discovery.top_service_resolver import TopServiceResolver
-
+from ...model.cluster_status import ClusterStatus
 
 class RobustaSink(SinkBase):
     def __init__(
@@ -30,6 +30,7 @@ class RobustaSink(SinkBase):
         super().__init__(sink_config.robusta_sink)
         self.token = sink_config.robusta_sink.token
         self.cluster_name = cluster_name
+        self.account_id = account_id
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if account_id != robusta_token.account_id:
             logging.error(
@@ -231,8 +232,28 @@ class RobustaSink(SinkBase):
                 exc_info=True,
             )
 
+    def __update_cluster_status(self):
+        if self.telemetry is None:
+            return
+        try:
+            # retrieve prometheus alert.
+            cluster_status = ClusterStatus(
+                cluster_id= self.cluster_name,
+                version= self.telemetry.get("runner_version"),
+                last_alert_at= self.telemetry.get("last_alert_at"),
+                account_id= self.account_id
+            )
+
+            self.dal.publish_cluster_status(cluster_status)
+        except Exception as e:
+            logging.error(
+                f"Failed to run periodic service discovery for {self.sink_name}",
+                exc_info=True,
+            )
+
     def __discover_cluster(self):
         while self.__active:
+            self.__update_cluster_status()
             self.__discover_services()
             self.__discover_nodes()
             time.sleep(self.__discovery_period_sec)

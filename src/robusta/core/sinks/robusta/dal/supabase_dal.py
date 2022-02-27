@@ -9,6 +9,7 @@ from typing import List, Dict, Any
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
 from ...transformer import Transformer
+from ....model.cluster_status import ClusterStatus
 from ....model.nodes import NodeInfo
 from ....model.services import ServiceInfo
 from ....reporting.blocks import (
@@ -33,6 +34,7 @@ SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
 EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
+CLUSTERS_STATUS_TABLE = "ClustersStatus"
 
 
 class RobustaAuthClient(SupabaseAuthClient):
@@ -349,3 +351,23 @@ class SupabaseDal:
             self.sign_in()
         except Exception as e:
             logging.error(f"Failed to sign in on error", exc_info=True)
+
+    def to_db_cluster_status(self, data: ClusterStatus) -> Dict[str, Any]:
+        db_cluster_status = data.dict()
+        del db_cluster_status['created_at']
+        db_cluster_status["updated_at"] = "now()"
+        if data.last_alert_at is not None:
+            db_cluster_status["last_alert_at"] = str(data.last_alert_at)
+            
+        logging.info(f'to db cluster status {db_cluster_status}')
+        return db_cluster_status
+
+    def publish_cluster_status(self, cluster_status: ClusterStatus):
+        res = (
+            self.client.table(CLUSTERS_STATUS_TABLE).insert(self.to_db_cluster_status(cluster_status), upsert=True).execute()
+        )
+        if res.get("status_code") not in [200, 201]:
+            logging.error(
+                f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {res.get('data')}"
+            )
+            self.handle_supabase_error()
