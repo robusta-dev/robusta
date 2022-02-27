@@ -107,7 +107,7 @@ class SupabaseDal:
         self.signing_key = signing_key
 
     def to_issue(self, finding: Finding):
-        return {
+        issue_obj = {
             "id": str(finding.id),
             "title": finding.title,
             "description": finding.description,
@@ -125,6 +125,11 @@ class SupabaseDal:
             "cluster": self.cluster,
             "account_id": self.account_id,
         }
+
+        if finding.creation_time:
+            issue_obj["creation_time"] = finding.creation_time
+            
+        return issue_obj
 
     def to_evidence(self, finding_id: uuid, enrichment: Enrichment) -> Dict[Any, Any]:
         structured_data = []
