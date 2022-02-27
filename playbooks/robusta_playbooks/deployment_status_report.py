@@ -16,6 +16,7 @@ class ReportParams(ActionParams):
 
     :example reports_panel_urls: ["http://MY_GRAFANA/d-solo/SOME_OTHER_DASHBOARD/.../?orgId=1&from=now-1h&to=now&panelId=3"]
     """
+
     grafana_api_key: SecretStr
     report_name: str = "Deployment change report"
     fields_to_monitor: List[str] = ["image"]
@@ -28,6 +29,8 @@ def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams
     finding = Finding(
         title=action_params.report_name,
         aggregation_key="report_rendering_task",
+        finding_type=FindingType.REPORT,
+        failure=False,
     )
     for panel_url in action_params.reports_panel_urls:
         image: requests.models.Response = requests.post(
