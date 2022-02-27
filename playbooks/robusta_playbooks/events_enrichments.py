@@ -63,12 +63,13 @@ def get_event_history(event: ExecutionBaseEvent, params: ActionParams):
                                                       warning_event.involvedObject.name,
                                                       warning_event.involvedObject.namespace)
         for hist_event in event_obj_history.items:
-            #event.add_finding(create_event_finding(event))
+            event.add_finding(create_historical_event_finding(event))
             logging.info(
                 f"{json.dumps(get_json(hist_event), indent=4, sort_keys=True)}"
             )
 
-def create_event_finding(event: Event):
+
+def create_historical_event_finding(event: Event):
     """
     Create finding based on the kubernetes event
     """
@@ -88,4 +89,5 @@ def create_event_finding(event: Event):
             FindingSubjectType.from_kind(k8s_obj.kind),
             k8s_obj.namespace,
         ),
+        creation_time=event.metadata.creationTimestamp
     )

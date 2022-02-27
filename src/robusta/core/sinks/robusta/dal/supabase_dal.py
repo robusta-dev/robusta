@@ -128,7 +128,7 @@ class SupabaseDal:
 
         if finding.creation_time:
             issue_obj["creation_time"] = finding.creation_time
-            
+
         return issue_obj
 
     def to_evidence(self, finding_id: uuid, enrichment: Enrichment) -> Dict[Any, Any]:
