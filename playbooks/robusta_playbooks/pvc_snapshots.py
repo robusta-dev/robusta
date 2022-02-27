@@ -32,7 +32,7 @@ def create_pvc_snapshot(event: ExecutionBaseEvent, params: VolumeSnapshotParams)
         event.add_enrichment(
             [
                 MarkdownBlock(
-                    f"No such PersistentVolumeClaim {params.name} in namespace {params.namespace}"
+                    f"Backup failed because PersistentVolumeClaim {params.name} in namespace {params.namespace} doesn't exist"
                 )
             ]
         )
