@@ -16,7 +16,7 @@ SLACK_INTEGRATION_SERVICE_ADDRESS = os.environ.get(
     "SLACK_INTEGRATION_SERVICE_ADDRESS",
     "https://api.robusta.dev/integrations/slack/get-token",
 )
-SlackApiKey = namedtuple('SlackApiKey', 'key team_name')
+SlackApiKey = namedtuple("SlackApiKey", "key team_name")
 
 
 def wait_for_slack_api_key(id: str) -> SlackApiKey:
@@ -26,10 +26,9 @@ def wait_for_slack_api_key(id: str) -> SlackApiKey:
                 f"{SLACK_INTEGRATION_SERVICE_ADDRESS}?id={id}"
             ).json()
             if response_json["token"]:
-                team_name = None
-                if 'team-name' in response_json:
-                    team_name = str(response_json['team-name'])
-                return SlackApiKey(str(response_json["token"]), team_name)
+                return SlackApiKey(
+                    str(response_json["token"]), response_json.get("team-name", None)
+                )
             time.sleep(0.5)
         except Exception as e:
             log_title(f"Error getting slack token {e}")

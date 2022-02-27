@@ -146,10 +146,14 @@ def gen_config(
         slack_api_key = get_slack_key()
 
     if slack_api_key and not slack_channel:
-        slack_channel = typer.prompt(
-            "Which slack channel should I send notifications to? ",
-            prompt_suffix="#"
-        ).strip().strip("#")
+        slack_channel = (
+            typer.prompt(
+                "Which slack channel should I send notifications to? ",
+                prompt_suffix="#",
+            )
+            .strip()
+            .strip("#")
+        )
 
     if slack_api_key and slack_channel:
         sinks_config.append(
@@ -162,10 +166,7 @@ def gen_config(
             )
         )
         if not verify_slack_channel(slack_api_key, cluster_name, slack_channel):
-            typer.secho(
-                f"\nInstallation Aborted.",
-                fg=typer.colors.RED
-            )
+            typer.secho(f"\nInstallation Aborted.", fg=typer.colors.RED)
             return
 
     if msteams_webhook is None and typer.confirm(
@@ -316,7 +317,7 @@ def playground():
 def version():
     """Show the version of the local robusta-cli"""
     if __version__ == "0.0.0":
-        typer.echo("running with development version from git xxx")
+        typer.echo("running with development version from git")
     else:
         typer.echo(f"version {__version__}")
 
