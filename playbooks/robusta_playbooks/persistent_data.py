@@ -27,5 +27,7 @@ def count_pod_creations(event: DeploymentEvent):
     finding = Finding(
         title=f"DeploymentChangeCounter: {data.changes_per_deployment}",
         aggregation_key="count_pod_creations",
+        finding_type=FindingType.REPORT,
+        failure=False,
     )
     event.add_finding(finding)

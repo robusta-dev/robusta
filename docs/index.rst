@@ -168,7 +168,7 @@ Next Steps
    installation
    tutorials/configuring-automations
    tutorials/prometheus-enrichment
-   tutorials/python-troubleshooting
+   tutorials/python-profiling
    tutorials/java-troubleshooting
    tutorials/more-tutorials
 

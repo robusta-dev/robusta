@@ -1,11 +1,11 @@
 Java Troubleshooting Actions
-######################
+##############################
 
 Robusta makes it easy to troubleshoot and debug Java applications running on Kubernetes.
 
 Make sure you read about :ref:`Manual Triggers` to understand how this works.
 
-Look at :ref:`Java Troubleshooting` for a tutorial on Java troubleshooting.
+Look at :ref:`Java jmap and stack` for a tutorial on Java troubleshooting.
 
 .. robusta-action:: playbooks.robusta_playbooks.java_pod_troubleshooting.java_process_inspector
 
