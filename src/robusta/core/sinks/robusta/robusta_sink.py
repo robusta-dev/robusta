@@ -236,7 +236,6 @@ class RobustaSink(SinkBase):
         if self.telemetry is None:
             return
         try:
-            # retrieve prometheus alert.
             cluster_status = ClusterStatus(
                 cluster_id= self.cluster_name,
                 version= self.telemetry.get("runner_version"),
@@ -247,7 +246,7 @@ class RobustaSink(SinkBase):
             self.dal.publish_cluster_status(cluster_status)
         except Exception as e:
             logging.error(
-                f"Failed to run periodic service discovery for {self.sink_name}",
+                f"Failed to run periodic update cluster status for {self.sink_name}",
                 exc_info=True,
             )
 

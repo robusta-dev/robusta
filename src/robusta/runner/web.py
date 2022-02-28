@@ -14,7 +14,7 @@ from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..integrations.prometheus.models import AlertManagerEvent
 from ..core.model.env_vars import NUM_EVENT_THREADS
 from ..utils.task_queue import TaskQueue, QueueMetrics
-from ..runner.runner_telemetry import RunnerTelemetry
+from .telemetry import Telemetry
 
 app = Flask(__name__)
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
@@ -26,10 +26,10 @@ class Web:
     event_handler: PlaybooksEventHandler
     metrics: QueueMetrics
     loader: ConfigLoader
-    telemetry: RunnerTelemetry
+    telemetry: Telemetry
 
     @staticmethod
-    def init(event_handler: PlaybooksEventHandler, loader: ConfigLoader, telemetryData: RunnerTelemetry):
+    def init(event_handler: PlaybooksEventHandler, loader: ConfigLoader, telemetryData: Telemetry):
         Web.metrics = QueueMetrics()
         Web.api_server_queue = TaskQueue(
             name="api server queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics

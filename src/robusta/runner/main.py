@@ -11,14 +11,14 @@ from .. import api as robusta_api
 from .config_loader import ConfigLoader
 from ..model.config import Registry
 from ..core.model.env_vars import SENTRY_TRACES_SAMPLE_RATE, RUNNER_VERSION
-from ..runner.runner_telemetry import RunnerTelemetry
+from .telemetry import Telemetry
 
 def main():
     init_logging()
     registry = Registry()
     event_handler = PlaybooksEventHandlerImpl(registry)
     loader = ConfigLoader(registry, event_handler)
-    telemetry = RunnerTelemetry(registry, RUNNER_VERSION)
+    telemetry = Telemetry(registry, RUNNER_VERSION)
     if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
         manhole.install(locals=dict(getmembers(robusta_api)))
 

@@ -359,7 +359,6 @@ class SupabaseDal:
         if data.last_alert_at is not None:
             db_cluster_status["last_alert_at"] = str(data.last_alert_at)
             
-        logging.info(f'to db cluster status {db_cluster_status}')
         return db_cluster_status
 
     def publish_cluster_status(self, cluster_status: ClusterStatus):

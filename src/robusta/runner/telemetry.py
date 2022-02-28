@@ -1,7 +1,7 @@
 import logging
 from ..model.config import Registry
 
-class RunnerTelemetry:
+class Telemetry:
     def __init__(self, registry: Registry, runner_version: str):
         self._data = dict()
         self._data["runner_version"] = runner_version
