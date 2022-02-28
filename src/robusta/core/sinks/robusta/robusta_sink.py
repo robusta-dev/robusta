@@ -116,7 +116,7 @@ class RobustaSink(SinkBase):
         # save the cached services in the resolver.
         TopServiceResolver.store_cached_services(list(self.__services_cache.values()))
 
-    def get_events_history(self):
+    def __get_events_history(self):
         from robusta.runner.web import Web
 
         if self.dal.has_cluster_findings():
@@ -271,7 +271,7 @@ class RobustaSink(SinkBase):
             )
 
     def __discover_cluster(self):
-        self.get_events_history()
+        self.__get_events_history()
         while self.__active:
             self.__periodic_cluster_status()
             self.__discover_services()
