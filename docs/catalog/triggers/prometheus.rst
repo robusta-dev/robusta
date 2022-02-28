@@ -71,16 +71,12 @@ You should enable two-way interactivity to support that (```disableCloudRouting`
             webhook_configs:
               - url: 'https://api.robusta.dev/integrations/generic/alertmanager'
                 http_config:
-                  bearer_token_secret:
-                    name: NAME OF THE SECRET CONTAINING THE TOKEN
-                    key: TOKEN SECRET KEY
+                  authorization:
+                    credentials: TOKEN
                 send_resolved: true
 
-The ```token``` format is: ```ACCOUNT_ID SIGNING_KEY```
-The alerts label should contain the ```cluster_name```, as defined in your ```values.yaml``` file
-
-.. note::
-    The ```secret``` that contains the token, should be in the same ```namespace``` of Alertmanager, and can be accessed by it.
+The `TOKEN` format is: `ACCOUNT_ID SIGNING_KEY`
+The alerts label should contain the `cluster_name`, as defined in your `values.yaml` file
 
 Developing actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

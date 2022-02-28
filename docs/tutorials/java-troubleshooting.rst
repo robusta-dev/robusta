@@ -1,4 +1,4 @@
-Java Troubleshooting
+Java jmap and stack
 ######################################################
 
 In this tutorial, you will use Robusta to troubleshoot a java application running on Kubernetes.

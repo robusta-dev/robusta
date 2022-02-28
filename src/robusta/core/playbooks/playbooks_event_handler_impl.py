@@ -1,12 +1,14 @@
 import copy
 import logging
 import traceback
+from collections import defaultdict
 from typing import Any, Dict, Optional, List
 
 from .base_trigger import TriggerEvent, BaseTrigger
 from .playbook_utils import merge_global_params
 from .playbooks_event_handler import PlaybooksEventHandler
 from ..model.events import ExecutionBaseEvent
+from ..reporting import MarkdownBlock
 from ..reporting.base import Finding
 from ...model.playbook_action import PlaybookAction
 from ...model.config import Registry
@@ -24,12 +26,14 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
         execution_response = None
         execution_event: Optional[ExecutionBaseEvent] = None
-        findings: List[Finding] = []
+        sink_findings: Dict[str, List[Finding]] = defaultdict(list)
         for playbook in playbooks:
-            fired_trigger = self.__get_fired_trigger(trigger_event, playbook.triggers, playbook.get_id())
+            fired_trigger = self.__get_fired_trigger(
+                trigger_event, playbook.triggers, playbook.get_id()
+            )
             if fired_trigger:
                 execution_event = fired_trigger.build_execution_event(
-                    trigger_event, findings
+                    trigger_event, sink_findings
                 )
                 if execution_event:  # might not exist for unsupported k8s types
                     execution_event.named_sinks = (
@@ -168,13 +172,29 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event.response = self.__error_resp(msg)
                     continue
 
-                registered_action.func(execution_event, params)
+                try:
+                    registered_action.func(execution_event, params)
+                except Exception:
+                    logging.error(
+                        f"Failed to execute action {action.action_name} {action_params}",
+                        exc_info=True,
+                    )
+                    execution_event.add_enrichment(
+                        [
+                            MarkdownBlock(
+                                text=f"Oops... Error processing {action.action_name}"
+                            )
+                        ]
+                    )
 
         return execution_event.response
 
     @classmethod
     def __get_fired_trigger(
-        cls, trigger_event: TriggerEvent, playbook_triggers: List[Trigger], playbook_id: str
+        cls,
+        trigger_event: TriggerEvent,
+        playbook_triggers: List[Trigger],
+        playbook_id: str,
     ) -> Optional[BaseTrigger]:
         for trigger in playbook_triggers:
             if trigger.get().should_fire(trigger_event, playbook_id):
@@ -182,8 +202,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         return None
 
     def __handle_findings(self, execution_event: ExecutionBaseEvent):
-        for finding in execution_event.findings:
-            for sink_name in execution_event.named_sinks:
+        for sink_name in execution_event.named_sinks:
+            for finding in execution_event.sink_findings[sink_name]:
                 try:
                     sink = self.registry.get_sinks().sinks.get(sink_name)
                     if not sink:
@@ -191,9 +211,12 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                             f"sink {sink_name} not found. Skipping event finding {finding}"
                         )
                         continue
-                    # create deep copy, so that iterating on one sink won't affect the others
+                    # create deep copy, so that iterating on one sink enrichments won't affect the others
+                    # Each sink has a different findings, but enrichments are shared
                     finding_copy = copy.deepcopy(finding)
-                    sink.write_finding(finding_copy, self.registry.get_sinks().platform_enabled)
+                    sink.write_finding(
+                        finding_copy, self.registry.get_sinks().platform_enabled
+                    )
                 except Exception:  # Failure to send to one sink shouldn't fail all
                     logging.error(
                         f"Failed to publish finding to sink {sink_name}", exc_info=True

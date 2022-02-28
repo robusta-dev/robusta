@@ -73,6 +73,7 @@ class HelmValues(BaseModel):
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
+    playbooksPersistentVolumeSize: str = None
     kubewatch: PodConfigs = None
     grafanaRenderer: PodConfigs = None
     runner: PodConfigs = None
@@ -146,8 +147,13 @@ def gen_config(
         slack_api_key = get_slack_key()
 
     if slack_api_key and not slack_channel:
-        slack_channel = typer.prompt(
-            "Which slack channel should I send notifications to?"
+        slack_channel = (
+            typer.prompt(
+                "Which slack channel should I send notifications to? ",
+                prompt_suffix="#",
+            )
+            .strip()
+            .strip("#")
         )
 
     if slack_api_key and slack_channel:
@@ -161,11 +167,7 @@ def gen_config(
             )
         )
         if not verify_slack_channel(slack_api_key, cluster_name, slack_channel):
-            typer.echo(
-                f"We couldn't send our welcome message to channel {slack_channel}."
-                f"\nDoes this channel exist? Did you connect Robusta to the correct slack workspace?"
-                f"\nInstallation Aborted."
-            )
+            typer.secho(f"\nInstallation Aborted.", fg=typer.colors.RED)
             return
 
     if msteams_webhook is None and typer.confirm(
@@ -284,6 +286,7 @@ def gen_config(
 
     if is_small_cluster:
         values.set_pod_configs_for_small_clusters()
+        values.playbooksPersistentVolumeSize = "128Mi"
 
     with open(output_path, "w") as output_file:
         yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
