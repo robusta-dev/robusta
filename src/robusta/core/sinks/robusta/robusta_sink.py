@@ -19,6 +19,7 @@ from ..sink_base import SinkBase
 from ...discovery.top_service_resolver import TopServiceResolver
 from ...model.cluster_status import ClusterStatus
 
+
 class RobustaSink(SinkBase):
     def __init__(
         self,
@@ -26,10 +27,12 @@ class RobustaSink(SinkBase):
         account_id: str,
         cluster_name: str,
         signing_key: str,
+        registry
     ):
         super().__init__(sink_config.robusta_sink)
         self.token = sink_config.robusta_sink.token
         self.cluster_name = cluster_name    
+        self.registry = registry
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if account_id != robusta_token.account_id:
             logging.error(
@@ -233,13 +236,11 @@ class RobustaSink(SinkBase):
             )
 
     def __update_cluster_status(self):
-        if self.telemetry is None:
-            return
         try:
             cluster_status = ClusterStatus(
                 cluster_id= self.cluster_name,
-                version= self.telemetry.get("runner_version"),
-                last_alert_at= self.telemetry.get("last_alert_at"),
+                version= self.registry.get_telemetry().runner_version,
+                last_alert_at= self.registry.get_telemetry().last_alert_at,
                 account_id= self.account_id
             )
 

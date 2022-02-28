@@ -13,6 +13,7 @@ from ..reporting.base import Finding
 from ...model.playbook_action import PlaybookAction
 from ...model.config import Registry
 from .trigger import Trigger
+from ...runner.telemetry import Telemetry
 
 
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
@@ -224,3 +225,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def get_global_config(self) -> dict:
         return self.registry.get_playbooks().get_global_config()
+
+    def get_telemetry(self) -> Telemetry:
+        return self.registry.get_telemetry()

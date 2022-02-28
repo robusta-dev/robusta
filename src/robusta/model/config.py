@@ -15,6 +15,8 @@ from ..core.playbooks.playbook_utils import merge_global_params
 from ..core.sinks.sink_base import SinkBase
 from ..core.playbooks.base_trigger import TriggerEvent
 from ..core.playbooks.actions_registry import ActionsRegistry
+from ..runner.telemetry import Telemetry
+from ..core.model.env_vars import RUNNER_VERSION
 
 
 class SinksRegistry:
@@ -41,6 +43,7 @@ class SinksRegistry:
         new_sinks_config: List[SinkConfigBase],
         existing_sinks: Dict[str, SinkBase],
         global_config: dict,
+        registry
     ) -> Dict[str, SinkBase]:
         cluster_name = global_config.get("cluster_name", "")
         signing_key = global_config.get("signing_key", "")
@@ -72,7 +75,7 @@ class SinksRegistry:
                         f"Adding {type(sink_config)} sink named {sink_config.get_name()}"
                     )
                     new_sinks[sink_config.get_name()] = SinkFactory.create_sink(
-                        sink_config, account_id, cluster_name, signing_key
+                        sink_config, account_id, cluster_name, signing_key, registry
                     )
                 elif (
                     sink_config.get_params() != new_sinks[sink_config.get_name()].params
@@ -82,7 +85,7 @@ class SinksRegistry:
                     )
                     new_sinks[sink_config.get_name()].stop()
                     new_sinks[sink_config.get_name()] = SinkFactory.create_sink(
-                        sink_config, account_id, cluster_name, signing_key
+                        sink_config, account_id, cluster_name, signing_key, registry
                     )
             except Exception as e:
                 logging.error(
@@ -173,6 +176,7 @@ class Registry:
     _sinks: SinksRegistry = None
     _scheduler = None
     _receiver: ActionRequestReceiver = None
+    _telemetry: Telemetry = Telemetry(runner_version=RUNNER_VERSION)
 
     def set_actions(self, actions: ActionsRegistry):
         self._actions = actions
@@ -203,3 +207,6 @@ class Registry:
 
     def get_receiver(self) -> ActionRequestReceiver:
         return self._receiver
+    
+    def get_telemetry(self) -> Telemetry:
+        return self._telemetry

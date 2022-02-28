@@ -10,15 +10,13 @@ from ..core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerI
 from .. import api as robusta_api
 from .config_loader import ConfigLoader
 from ..model.config import Registry
-from ..core.model.env_vars import SENTRY_TRACES_SAMPLE_RATE, RUNNER_VERSION
-from .telemetry import Telemetry
+from ..core.model.env_vars import SENTRY_TRACES_SAMPLE_RATE
 
 def main():
     init_logging()
     registry = Registry()
     event_handler = PlaybooksEventHandlerImpl(registry)
     loader = ConfigLoader(registry, event_handler)
-    telemetry = Telemetry(registry, RUNNER_VERSION)
     if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
         manhole.install(locals=dict(getmembers(robusta_api)))
 
@@ -30,7 +28,7 @@ def main():
             logging.error(f"Sentry error: {e}")
             pass
 
-    Web.init(event_handler, loader, telemetry)
+    Web.init(event_handler, loader)
     Web.run()  # blocking
     loader.close()
 
