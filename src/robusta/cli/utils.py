@@ -84,16 +84,20 @@ def fetch_runner_logs(namespace: Optional[str], all_logs=False):
         yield
     finally:
         log_title("Fetching logs...")
-        if all_logs:
-            subprocess.check_call(
-                f"kubectl logs {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner",
-                shell=True,
-            )
-        else:
-            subprocess.check_call(
-                f"kubectl logs {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner --since={int(time.time() - start + 1)}s",
-                shell=True,
-            )
+        try:
+            if all_logs:
+                subprocess.check_call(
+                    f"kubectl logs {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner",
+                    shell=True,
+                )
+            else:
+                subprocess.check_call(
+                    f"kubectl logs {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner --since={int(time.time() - start + 1)}s",
+                    shell=True,
+                )
+        except:
+            log_title("Cannot fetch logs. robusta-runner not found", color="red")
+            return
 
 
 def get_package_name(playbooks_dir: str) -> str:
