@@ -293,7 +293,6 @@ class SupabaseDal:
             .select( '*')
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
-            .filter("deleted", "eq", False)
             .execute()
         )
         if res.get("status_code") not in [200]:
@@ -302,7 +301,7 @@ class SupabaseDal:
             self.handle_supabase_error()
             raise Exception(msg)
 
-        return len(res.data) > 0
+        return len(res.get("data")) > 0
 
     def get_active_nodes(self) -> List[NodeInfo]:
         res = (

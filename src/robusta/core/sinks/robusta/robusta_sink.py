@@ -9,8 +9,6 @@ from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetL
     NodeCondition, PodList, Pod
 from typing import List, Dict
 
-from robusta.runner.web import Web
-
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from ...model.env_vars import DISCOVERY_PERIOD_SEC , PERIODIC_LONG_SEC
 from ...model.nodes import NodeInfo, PodRequests
@@ -119,7 +117,10 @@ class RobustaSink(SinkBase):
         TopServiceResolver.store_cached_services(list(self.__services_cache.values()))
 
     def get_events_history(self):
+        from robusta.runner.web import Web
+
         if self.dal.has_cluster_findings():
+            logging.info("Cluster already has historical data, No history pulled.")
             return
         # Sinks are initiated before the event handler runs,
         # This will prevent any races of trying to access rescources before it is initiated
@@ -130,6 +131,7 @@ class RobustaSink(SinkBase):
             action_params=None,
             sinks=[self.sink_name])
 
+        logging.info("Cluster historical data sent.")
 
     def __discover_services(self):
         try:
@@ -269,6 +271,7 @@ class RobustaSink(SinkBase):
             )
 
     def __discover_cluster(self):
+        self.get_events_history()
         while self.__active:
             self.__periodic_cluster_status()
             self.__discover_services()
