@@ -287,13 +287,12 @@ class SupabaseDal:
             for service in res.get("data")
         ]
 
-    def get_first_finding_timestamp(self, aggregation_key: str) -> List[ServiceInfo]:
+    def has_cluster_findings(self) -> List[ServiceInfo]:
         res = (
             self.client.table(ISSUES_TABLE)
-            .select("creation_date", "type", "namespace", "classification")
+            .select( '*')
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
-            .filter("aggregation_key", "eq", aggregation_key)
             .filter("deleted", "eq", False)
             .execute()
         )
@@ -303,15 +302,7 @@ class SupabaseDal:
             self.handle_supabase_error()
             raise Exception(msg)
 
-        return [
-            ServiceInfo(
-                name=service["name"],
-                service_type=service["type"],
-                namespace=service["namespace"],
-                classification=service["classification"],
-            )
-            for service in res.get("data")
-        ]
+        return len(res.data) > 0
 
     def get_active_nodes(self) -> List[NodeInfo]:
         res = (

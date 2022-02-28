@@ -9,6 +9,8 @@ from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetL
     NodeCondition, PodList, Pod
 from typing import List, Dict
 
+from robusta.runner.web import Web
+
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from ...model.env_vars import DISCOVERY_PERIOD_SEC , PERIODIC_LONG_SEC
 from ...model.nodes import NodeInfo, PodRequests
@@ -115,6 +117,19 @@ class RobustaSink(SinkBase):
 
         # save the cached services in the resolver.
         TopServiceResolver.store_cached_services(list(self.__services_cache.values()))
+
+    def get_events_history(self):
+        if self.dal.has_cluster_findings():
+            return
+        # Sinks are initiated before the event handler runs,
+        # This will prevent any races of trying to access rescources before it is initiated
+        while not Web.event_handler:
+            time.sleep(1)
+        Web.event_handler.run_external_action(
+            action_name="get_event_history",
+            action_params=None,
+            sinks=[self.sink_name])
+
 
     def __discover_services(self):
         try:
