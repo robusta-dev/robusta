@@ -29,8 +29,7 @@ class RobustaSink(SinkBase):
     ):
         super().__init__(sink_config.robusta_sink)
         self.token = sink_config.robusta_sink.token
-        self.cluster_name = cluster_name
-        self.account_id = account_id
+        self.cluster_name = cluster_name    
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if account_id != robusta_token.account_id:
             logging.error(
@@ -38,6 +37,7 @@ class RobustaSink(SinkBase):
                 f"Global Config: {account_id} Robusta token: {robusta_token.account_id}."
                 f"Using account id from Robusta token."
             )
+        self.account_id = robusta_token.account_id
 
         self.dal = SupabaseDal(
             robusta_token.store_url,
