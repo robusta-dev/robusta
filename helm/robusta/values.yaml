@@ -44,10 +44,6 @@ builtinPlaybooks:
       restart_reason: CrashLoopBackOff
   - image_pull_backoff_reporter:
       rate_limit: 3600
-- triggers:
-  - on_node_update: {}
-  actions:
-  - node_health_watcher: {}
 # playbooks for prometheus enrichment and silencing
 - triggers:
   - on_prometheus_alert: {}
