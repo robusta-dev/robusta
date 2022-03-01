@@ -1,3 +1,5 @@
+.. _on_prometheus_alert:
+
 Prometheus and AlertManager
 #############################
 
@@ -24,8 +26,8 @@ as input.
 
 In the example above, the ``node_cpu_enricher`` receives the node on which the alert fired.
 
-Limiting when automations run
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Limiting when on_prometheus_alert fires
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can limit when the automation runs by applying the following filters to ``on_prometheus_alert``:
 
