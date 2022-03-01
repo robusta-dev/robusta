@@ -1,7 +1,5 @@
 from robusta.api import *
 
-from src.robusta.core.reporting.finding_subjects import KubeObjFindingSubject
-
 
 @action
 def add_deployment_lines_to_grafana(

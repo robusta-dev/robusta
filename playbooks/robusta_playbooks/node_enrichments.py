@@ -1,7 +1,5 @@
 from robusta.api import *
 
-from robusta.core.reporting.finding_subjects import KubeObjFindingSubject
-
 
 def pod_row(pod: Pod) -> List[str]:
     ready_condition = [

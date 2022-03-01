@@ -1,11 +1,6 @@
 from robusta.api import *
-from robusta.integrations.kubernetes.process_utils import ProcessFinder, ProcessType
 from typing import List
 import traceback
-
-from robusta.integrations.kubernetes.custom_models import RobustaPod
-
-from robusta.core.reporting.finding_subjects import PodFindingSubject
 
 
 class JavaParams(ProcessParams):

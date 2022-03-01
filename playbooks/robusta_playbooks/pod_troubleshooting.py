@@ -1,11 +1,7 @@
 # TODO: move the python playbooks into their own subpackage and put each playbook in its own file
 import humanize
 from robusta.api import *
-from robusta.integrations.kubernetes.process_utils import ProcessFinder, ProcessType
-from robusta.utils.parsing import load_json
 from typing import List
-
-from robusta.core.reporting.finding_subjects import PodFindingSubject
 
 
 class StartProfilingParams(ActionParams):

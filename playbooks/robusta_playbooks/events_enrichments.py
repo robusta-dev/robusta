@@ -1,7 +1,5 @@
 from robusta.api import *
 
-from robusta.core.reporting.finding_subjects import KubeObjFindingSubject
-
 
 class EventErrorReportParams(FindingKeyParams, RateLimitParams):
     pass

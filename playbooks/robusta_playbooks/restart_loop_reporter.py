@@ -1,8 +1,6 @@
 import logging
 from robusta.api import *
 
-from robusta.core.reporting.finding_subjects import PodFindingSubject
-
 
 class RestartLoopParams(RateLimitParams):
     """
