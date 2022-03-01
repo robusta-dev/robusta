@@ -22,7 +22,7 @@ Kubernetes Optimization
 Backups
 -------------------
 
-.. robusta-action:: playbooks.robusta_playbooks.pvc_snapshots.create_pvc_snapshot
+.. robusta-action:: playbooks.robusta_playbooks.pvc_snapshots.create_pvc_snapshot on_schedule
 
 Stress Testing and Chaos Engineering
 ------------------------------------
