@@ -50,6 +50,7 @@ An example ``on_RESOURCE_create`` trigger is given for each one. The ``update``,
 * Job: on_job_create
 * Namespace: on_namespace_create
 * ServiceAccount: on_serviceaccount_create
+* PersistentVolume: on_persistentvolume_create
 
 Wildcard triggers
 --------------------
