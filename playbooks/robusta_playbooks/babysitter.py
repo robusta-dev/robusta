@@ -55,6 +55,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         old_obj = obj
         obj = None
 
+    should_get_subject_node_name = isinstance(event, NodeChangeEvent)
     # we take it from the original event, in case metadata is omitted
     meta = event.obj.metadata
     diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj, meta.name, meta.namespace)
@@ -65,7 +66,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         finding_type=FindingType.CONF_CHANGE,
         failure=False,
         aggregation_key=f"ConfigurationChange/KubernetesResource/Change",
-        subject=KubeObjFindingSubject(event.obj),
+        subject=KubeObjFindingSubject(event.obj, should_add_node_name=should_get_subject_node_name),
     )
     finding.add_enrichment([diff_block])
     event.add_finding(finding)

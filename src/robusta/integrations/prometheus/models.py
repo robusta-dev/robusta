@@ -134,7 +134,6 @@ class PrometheusKubernetesAlert(
         elif self.node:
             subject_type = FindingSubjectType.TYPE_NODE
             name = self.node.metadata.name
-        if self.node:
             node_name = self.node.metadata.name
 
         return FindingSubject(name, subject_type, namespace, node_name)
