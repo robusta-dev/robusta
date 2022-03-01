@@ -1,0 +1,6 @@
+Thank you for installing {{ .Chart.Name | title }} {{ .Chart.AppVersion }}
+{{- range .Values.sinksConfig }}
+{{if .robusta_sink}}
+Visit the web UI at: https://platform.robusta.dev/
+{{- end }}
+{{- end }}
