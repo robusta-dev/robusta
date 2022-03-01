@@ -3,7 +3,7 @@ Upgrade Guide
 
 Robusta is installed with Helm, so Robusta upgrades are just Helm upgrades.
 
-.. warning:: Upgrading an existing Release to a new major version might require manual actions. :ref:`read here <Upgrading to a new major version>`
+.. warning:: Upgrading an existing Release with bundled Prometheus Stack might require manual actions. :ref:`Read here <Upgrading with bundled Prometheus Stack>`
 
 Helm Upgrade
 ------------------------------
@@ -32,14 +32,14 @@ Notes
 
 2. To install a Robusta pre-release, run ``helm upgrade`` with the ``--devel`` flag.
 
-Upgrading to a new major version
-------------------------------
+Upgrading with bundled Prometheus Stack
+----------------------------------------
 
-If you didnt install Robusta's bundled Prometheus Stack then you can :ref:`Upgrade at ease <Helm Upgrade>`, Otherwise, keep reading.
+If you didn't install Robusta's bundled Prometheus Stack then you can :ref:`Upgrade at ease <Helm Upgrade>`, Otherwise, keep reading.
 
-1. Why do i need to manually upgrade?
+1. Why do I need to manually upgrade?
 
-Robusta uses Prometheus Stack as a dependency, Prometheus creates Custom resources also known as `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_ on installation.     
+Robusta uses kube-prometheus-stack, which creates custom resources also known as `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_ on installation.     
 With Helm v3, CRDs are not updated or removed by default and should be manually handled. Consult also the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_. 
 
 From 0.8.x to >= 0.9.x 
@@ -57,7 +57,9 @@ From 0.8.x to >= 0.9.x
 
     helm uninstall robusta
 
-3. Manually remove the instlled CRDs (`for more info read here <https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#uninstall-chart>`_):
+3. Manually remove the installed CRDs (`for more info read here <https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#uninstall-chart>`_):
+
+.. warning:: If you have an existing Prometheus Operator installed independently of Robusta then be very careful! Upgrading CRDs will impact all Prometheus Operators in your cluster.
 
 .. code-block:: bash
 
