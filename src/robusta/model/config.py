@@ -42,12 +42,9 @@ class SinksRegistry:
         cls,
         new_sinks_config: List[SinkConfigBase],
         existing_sinks: Dict[str, SinkBase],
-        global_config: dict,
         registry
     ) -> Dict[str, SinkBase]:
-        cluster_name = global_config.get("cluster_name", "")
-        signing_key = global_config.get("signing_key", "")
-        account_id = global_config.get("account_id", "")
+    
         new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
         # remove deleted sinks
         deleted_sink_names = [
@@ -75,7 +72,7 @@ class SinksRegistry:
                         f"Adding {type(sink_config)} sink named {sink_config.get_name()}"
                     )
                     new_sinks[sink_config.get_name()] = SinkFactory.create_sink(
-                        sink_config, account_id, cluster_name, signing_key, registry
+                        sink_config, registry
                     )
                 elif (
                     sink_config.get_params() != new_sinks[sink_config.get_name()].params
@@ -85,7 +82,7 @@ class SinksRegistry:
                     )
                     new_sinks[sink_config.get_name()].stop()
                     new_sinks[sink_config.get_name()] = SinkFactory.create_sink(
-                        sink_config, account_id, cluster_name, signing_key, registry
+                        sink_config, registry
                     )
             except Exception as e:
                 logging.error(
@@ -177,6 +174,7 @@ class Registry:
     _scheduler = None
     _receiver: ActionRequestReceiver = None
     _telemetry: Telemetry = Telemetry(runner_version=RUNNER_VERSION)
+    _global_config = dict()
 
     def set_actions(self, actions: ActionsRegistry):
         self._actions = actions
@@ -210,3 +208,9 @@ class Registry:
     
     def get_telemetry(self) -> Telemetry:
         return self._telemetry
+
+    def set_global_config(self, config : Dict ):
+        self.global_config = config
+    
+    def get_global_config(self) -> Dict:
+        return self.global_config

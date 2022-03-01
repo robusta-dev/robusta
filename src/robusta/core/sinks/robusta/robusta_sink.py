@@ -10,7 +10,7 @@ from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetL
 from typing import List, Dict
 
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
-from ...model.env_vars import DISCOVERY_PERIOD_SEC
+from ...model.env_vars import DISCOVERY_PERIOD_SEC , PERIODIC_LONG_SEC
 from ...model.nodes import NodeInfo, PodRequests
 from ...model.services import ServiceInfo
 from ...reporting.base import Finding
@@ -24,15 +24,16 @@ class RobustaSink(SinkBase):
     def __init__(
         self,
         sink_config: RobustaSinkConfigWrapper,
-        account_id: str,
-        cluster_name: str,
-        signing_key: str,
         registry
     ):
-        super().__init__(sink_config.robusta_sink)
+        super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
-        self.cluster_name = cluster_name    
-        self.registry = registry
+        global_config = self.registry.get_global_config()
+
+        signing_key = global_config.get("signing_key", "")
+        account_id = global_config.get("account_id", "")
+        self.cluster_name =  global_config.get("cluster_name", "")
+   
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if account_id != robusta_token.account_id:
             logging.error(
@@ -59,6 +60,9 @@ class RobustaSink(SinkBase):
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
+
+        self.__update_cluster_thread = threading.Thread(target=self.__periodic_cluster_status)
+        self.__update_cluster_thread.start()
 
     def __assert_node_cache_initialized(self):
         if not self.__nodes_cache:
@@ -253,9 +257,22 @@ class RobustaSink(SinkBase):
 
     def __discover_cluster(self):
         while self.__active:
-            self.__update_cluster_status()
             self.__discover_services()
             self.__discover_nodes()
             time.sleep(self.__discovery_period_sec)
 
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
+
+    def __periodic_cluster_status(self):
+        retry_count = 5
+        while self.__active:
+            peroid_interval_sec = PERIODIC_LONG_SEC  if ( retry_count == 0 or self.registry.get_telemetry().last_alert_at is not None ) else self.__discovery_period_sec
+
+            retry_count -=1
+            retry_count = max(0, retry_count)
+
+            logging.info(f"period interval is now: {peroid_interval_sec} " )
+            self.__update_cluster_status()
+            time.sleep(peroid_interval_sec)
+
+        logging.info(f"Update cluster status for sink {self.sink_name} ended.")

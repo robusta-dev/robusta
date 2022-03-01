@@ -20,24 +20,24 @@ from .webhook.webhook_sink_params import WebhookSinkConfigWrapper
 
 class SinkFactory:
     @classmethod
-    def create_sink(
-            cls, sink_config: SinkConfigBase, account_id: str, cluster_name: str, signing_key: str, registry
+    def create_sink(#account_id: str, cluster_name: str, signing_key: str,
+            cls, sink_config: SinkConfigBase, registry
     ) -> SinkBase:
         if isinstance(sink_config, SlackSinkConfigWrapper):
-            return SlackSink(sink_config, account_id, cluster_name, signing_key)
+            return SlackSink(sink_config, registry)
         elif isinstance(sink_config, RobustaSinkConfigWrapper):
-            return RobustaSink(sink_config, account_id, cluster_name, signing_key, registry)
+            return RobustaSink(sink_config, registry)
         elif isinstance(sink_config, MsTeamsSinkConfigWrapper):
-            return MsTeamsSink(sink_config, account_id, cluster_name, signing_key)
+            return MsTeamsSink(sink_config, registry)
         elif isinstance(sink_config, KafkaSinkConfigWrapper):
-            return KafkaSink(sink_config, cluster_name)
+            return KafkaSink(sink_config, registry)
         elif isinstance(sink_config, DataDogSinkConfigWrapper):
-            return DataDogSink(sink_config, cluster_name)
+            return DataDogSink(sink_config, registry)
         elif isinstance(sink_config, OpsGenieSinkConfigWrapper):
-            return OpsGenieSink(sink_config, cluster_name)
+            return OpsGenieSink(sink_config, registry)
         elif isinstance(sink_config, TelegramSinkConfigWrapper):
-            return TelegramSink(sink_config, cluster_name)
+            return TelegramSink(sink_config, registry)
         elif isinstance(sink_config, WebhookSinkConfigWrapper):
-            return WebhookSink(sink_config, cluster_name)
+            return WebhookSink(sink_config, registry)
         else:
             raise Exception(f"Sink not supported {type(sink_config)}")

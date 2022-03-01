@@ -8,18 +8,18 @@ class SlackSink(SinkBase):
     def __init__(
         self,
         sink_config: SlackSinkConfigWrapper,
-        account_id: str,
-        cluster_name: str,
-        signing_key: str,
+        registry
     ):
-        super().__init__(sink_config.slack_sink)
-        self.account_id = account_id
-        self.cluster_name = cluster_name
+        super().__init__(sink_config.slack_sink, registry)
+        global_config = self.registry.get_global_config()
+
+        self.account_id = global_config.get("account_id", "")
+        self.cluster_name = global_config.get("cluster_name", "")
         self.slack_channel = sink_config.slack_sink.slack_channel
         self.api_key = sink_config.slack_sink.api_key
-        self.signing_key = signing_key
+        self.signing_key = global_config.get("signing_key", "")
         self.slack_sender = SlackSender(
-            self.api_key, account_id, cluster_name, signing_key
+            self.api_key, self.account_id, self.cluster_name, self.signing_key
         )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):

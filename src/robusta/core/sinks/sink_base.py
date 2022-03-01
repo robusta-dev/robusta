@@ -3,10 +3,11 @@ from ...core.reporting.base import Finding
 
 
 class SinkBase:
-    def __init__(self, sink_params: SinkBaseParams):
+    def __init__(self, sink_params: SinkBaseParams, registry):
         self.sink_name = sink_params.name
         self.params = sink_params
-        self.default = sink_params.default  
+        self.default = sink_params.default
+        self.registry = registry
 
     def stop(self):
         pass

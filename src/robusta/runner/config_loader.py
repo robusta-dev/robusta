@@ -185,6 +185,7 @@ class ConfigLoader:
                 if runner_config is None:
                     return
 
+                self.registry.set_global_config(runner_config.global_config)
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
                 # It allows to override these, with playbooks loaded afterwards
@@ -244,7 +245,7 @@ class ConfigLoader:
     ) -> (SinksRegistry, PlaybooksRegistry):
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(
-            runner_config.sinks_config, existing_sinks, runner_config.global_config, registry
+            runner_config.sinks_config, existing_sinks, registry
         )
         sinks_registry = SinksRegistry(new_sinks)
 
