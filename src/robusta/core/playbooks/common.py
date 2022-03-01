@@ -28,14 +28,6 @@ def get_resource_events_table(table_name: str, kind: str, name: str, namespace: 
     return None
 
 
-def get_object_events_history( kind: str, name: str, namespace: str = None) -> EventList:
-    field_selector = f"involvedObject.kind={kind},involvedObject.name={name}"
-    if namespace:
-        field_selector += f",involvedObject.namespace={namespace}"
-
-    return Event.listEventForAllNamespaces(field_selector=field_selector).obj
-
-
 def get_events_list(event_type: str = None) -> EventList:
     """
     event_types are ["Normal","Warning"]

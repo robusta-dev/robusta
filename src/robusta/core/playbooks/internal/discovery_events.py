@@ -2,7 +2,7 @@ from robusta.api import *
 from robusta.core.model.services import ServiceInfo
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 
-from src.robusta.core.playbooks.common import get_object_events_history, get_events_list
+from src.robusta.core.playbooks.common import get_events_list
 
 
 @action
@@ -33,11 +33,16 @@ def get_event_history(event: ExecutionBaseEvent):
         if warning_event_obj_name in reported_obj_history_list:
             # if there were multiple warnings on the same object we dont want the history pulled multiple times
             continue
-        event_obj_history = get_object_events_history(warning_event.involvedObject.kind,
-                                                      warning_event_obj_name,
-                                                      warning_event.involvedObject.namespace)
-        for hist_event in event_obj_history.items:
-            event.add_finding(create_historical_event_finding(hist_event))
+        finding = create_historical_event_finding(warning_event)
+        events_table = get_resource_events_table(
+            "Resource events",
+            warning_event.involvedObject.kind,
+            warning_event.involvedObject.name,
+            warning_event.involvedObject.namespace
+        )
+        if events_table:
+            finding.add_enrichment([events_table])
+        event.add_finding(finding)
         reported_obj_history_list.append(warning_event_obj_name)
 
 
@@ -47,7 +52,7 @@ def create_historical_event_finding(event: Event):
     """
     k8s_obj = event.involvedObject
 
-    return Finding(
+    finding =  Finding(
         title=f"{event.reason} {event.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
         description=event.message,
         source=FindingSource.KUBERNETES_API_SERVER,
@@ -63,3 +68,5 @@ def create_historical_event_finding(event: Event):
         ),
         creation_date=event.metadata.creationTimestamp
     )
+    finding.service_key = f"{k8s_obj.namespace}/{k8s_obj.kind}/{k8s_obj.name}"
+    return finding

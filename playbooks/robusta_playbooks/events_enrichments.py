@@ -1,7 +1,4 @@
 from robusta.api import *
-from hikaru import get_json
-import json
-from robusta.core.playbooks.common import get_events_list, get_object_events_history
 
 
 class EventErrorReportParams(FindingKeyParams, RateLimitParams):
