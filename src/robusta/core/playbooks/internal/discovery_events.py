@@ -63,7 +63,7 @@ def create_historical_event_finding(event: Event):
         aggregation_key=f"Kubernetes {event.type} Event",
         subject=FindingSubject(
             k8s_obj.name,
-            FindingSubjectType.from_kind(k8s_obj.kind),
+            FindingSubjectType.from_kind(k8s_obj.kind.lower()),
             k8s_obj.namespace,
         ),
         creation_date=event.metadata.creationTimestamp
