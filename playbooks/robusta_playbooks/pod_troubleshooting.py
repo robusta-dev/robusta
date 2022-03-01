@@ -1,4 +1,4 @@
-# TODO: move the python playbooks into their own subpackage and put each playbook in it's own file
+# TODO: move the python playbooks into their own subpackage and put each playbook in its own file
 import humanize
 from robusta.api import *
 from robusta.integrations.kubernetes.process_utils import ProcessFinder, ProcessType
@@ -44,6 +44,8 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
             source=FindingSource.MANUAL,
             aggregation_key="python_profiler",
             subject=PodFindingSubject(pod),
+            finding_type=FindingType.REPORT,
+            failure=False,
         )
 
         for target_proc in processes:
@@ -98,6 +100,8 @@ def pod_ps(event: PodEvent):
         source=FindingSource.MANUAL,
         aggregation_key="pod_processes",
         subject=PodFindingSubject(pod),
+        finding_type=FindingType.REPORT,
+        failure=False,
     )
     finding.add_enrichment(
         [
@@ -156,6 +160,8 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         source=FindingSource.MANUAL,
         aggregation_key="python_memory_allocations",
         subject=PodFindingSubject(pod),
+        finding_type=FindingType.REPORT,
+        failure=False,
     )
     event.add_finding(finding)
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
@@ -271,6 +277,8 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         source=FindingSource.MANUAL,
         aggregation_key="debugger_stack_trace",
         subject=PodFindingSubject(pod),
+        finding_type=FindingType.REPORT,
+        failure=False,
     )
     event.add_finding(finding)
     cmd = f"debug-toolkit stack-trace {pid}"
@@ -305,6 +313,8 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         source=FindingSource.MANUAL,
         aggregation_key="python_process_inspector",
         subject=PodFindingSubject(pod),
+        finding_type=FindingType.REPORT,
+        failure=False,
     )
     event.add_finding(finding)
 
@@ -368,6 +378,8 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         source=FindingSource.MANUAL,
         aggregation_key="python_debugger",
         subject=PodFindingSubject(pod),
+        finding_type=FindingType.REPORT,
+        failure=False,
     )
     event.add_finding(finding)
 

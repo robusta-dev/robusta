@@ -1,3 +1,5 @@
+.. _on_prometheus_alert:
+
 Prometheus and AlertManager
 #############################
 
@@ -24,8 +26,8 @@ as input.
 
 In the example above, the ``node_cpu_enricher`` receives the node on which the alert fired.
 
-Limiting when automations run
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Limiting when on_prometheus_alert fires
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can limit when the automation runs by applying the following filters to ``on_prometheus_alert``:
 
@@ -52,6 +54,31 @@ You can skip this step if you installed Robusta's bundled Prometheus stack.
     If you use the Prometheus Operator, use a `manually managed secret
     <https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md#manually-managed-secret>`_
     and **not** an AlertmanagerConfig due to `this limitation <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
+
+Sending Alerts to Robusta from an external Alertmanager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+On some installations, Alertmanager may be located out of your Kubernetes cluster.
+
+You can still send it to Robusta.
+
+You should enable two-way interactivity to support that (```disableCloudRouting```: false, in your ```values.yaml```).
+
+.. admonition:: External AlertManager configuration
+
+    .. code-block:: yaml
+
+        receivers:
+          - name: 'webhook'
+            webhook_configs:
+              - url: 'https://api.robusta.dev/integrations/generic/alertmanager'
+                http_config:
+                  authorization:
+                    credentials: TOKEN
+                send_resolved: true
+
+The `TOKEN` format is: `ACCOUNT_ID SIGNING_KEY`
+The alerts label should contain the `cluster_name`, as defined in your `values.yaml` file
 
 Developing actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

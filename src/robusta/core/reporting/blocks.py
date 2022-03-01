@@ -272,7 +272,7 @@ class KubernetesFieldsBlock(TableBlock):
         """
         :param k8s_obj: a kubernetes object
         :param fields: a list of fields to display. for example ["metadata.name", "metadata.namespace"]
-        :param explanations: an explanation for each field. for example {"metdata.name": "the pods name"}
+        :param explanations: an explanation for each field. for example {"metadata.name": "the pods name"}
         """
         if explanations:
             rows = [

@@ -7,7 +7,7 @@ from .msteams_elements.msteams_base import MsTeamsBase
 from .msteams_adaptive_card_files import MsTeamsAdaptiveCardFiles
 from .msteams_elements.msteams_table import MsTeamsTable
 from .msteams_elements.msteams_text_block import MsTeamsTextBlock
-from .msteams_elements.msteams_colum import MsTeamsColumn
+from .msteams_elements.msteams_column import MsTeamsColumn
 from .msteams_elements.msteams_card import MsTeamsCard
 from .msteams_elements.msteams_images import MsTeamsImages
 from ...core.reporting import FileBlock, TableBlock, ListBlock, MarkdownBlock, KubernetesDiffBlock, HeaderBlock
@@ -47,7 +47,7 @@ class MsTeamsMsg:
         separator_block = MsTeamsTextBlock(text=' ', separator=True)
 
         underline_block = MsTeamsColumn()
-        underline_block.add_column(items=[space_block, separator_block], width_strech=True)
+        underline_block.add_column(items=[space_block, separator_block], width_stretch=True)
 
         self.__write_to_entire_msg([underline_block])
         self.__write_to_entire_msg(self.current_section)

@@ -1,6 +1,6 @@
 from typing import List
 
-from .msteams_colum import MsTeamsColumn
+from .msteams_column import MsTeamsColumn
 from .msteams_text_block import MsTeamsTextBlock
 from .msteams_base import MsTeamsBase
 
@@ -17,7 +17,7 @@ class MsTeamsTable(MsTeamsBase):
         for index in range(len(headers)):
             single_column = [MsTeamsTextBlock(text=headers[index], weight="bolder")]
             single_column = single_column + self.__create_single_column_list(rows=rows, index=index)
-            column_element.add_column(items=single_column, width_strech=True)
+            column_element.add_column(items=single_column, width_stretch=True)
 
         return column_element
 

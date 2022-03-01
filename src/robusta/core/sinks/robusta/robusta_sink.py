@@ -33,7 +33,7 @@ class RobustaSink(SinkBase):
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if account_id != robusta_token.account_id:
             logging.error(
-                f"Account id configuration missmatch. "
+                f"Account id configuration mismatch. "
                 f"Global Config: {account_id} Robusta token: {robusta_token.account_id}."
                 f"Using account id from Robusta token."
             )
@@ -142,7 +142,8 @@ class RobustaSink(SinkBase):
         if not conditions:
             return ""
         return ",".join(
-            [f"{condition.type}:{condition.status}" for condition in conditions if condition.status != "False"]
+            [f"{condition.type}:{condition.status}" for condition in conditions
+             if condition.status != "False" or condition.type == "Ready"]
         )
 
     @classmethod

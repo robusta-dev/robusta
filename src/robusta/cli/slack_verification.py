@@ -8,6 +8,7 @@ SLACK_WELCOME_THANK_YOU_MESSAGE = "Thank you for using Robusta.dev"
 SLACK_WELCOME_SUPPORT_MESSAGE = "If you have any questions or feedback feel free to write us at " \
                                 "<mailto:support@robusta.dev|support@robusta.dev> "
 
+
 def verify_slack_channel(slack_api_key: str, cluster_name: str, channel_name: str) -> bool:
     try:
         output_welcome_message_blocks = gen_robusta_test_welcome_message(cluster_name)
@@ -23,13 +24,16 @@ def verify_slack_channel(slack_api_key: str, cluster_name: str, channel_name: st
         return True
     except SlackApiError as e:
         if e.response.data['error'] == 'channel_not_found':
-            typer.echo(
-                f"The channel '{channel_name}' was not found."
+            channel_name_styled = typer.style(channel_name, fg=typer.colors.WHITE, bg=typer.colors.RED)
+            typer.secho(
+                f"The channel '{channel_name_styled}' was not found."
             )
+        return False
     except Exception as e:
         pass
-    typer.echo(
-        f"There was an unknown exception setting up slack, please contact robusta support."
+    typer.secho(
+        f"There was an unknown exception setting up Slack, please contact Robusta support.",
+        fg=typer.colors.RED
     )
     return False
 

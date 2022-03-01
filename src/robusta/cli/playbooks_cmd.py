@@ -80,7 +80,7 @@ def push(
     with fetch_runner_logs(namespace):
         runner_pod = get_runner_pod(namespace)
         if not runner_pod:
-            log_title("Runner pod not found.", color="red")
+            log_title(f"Runner pod not found in the {namespace} namespace. If robusta is installed in a different namespace, use the --namespace flag.", color="red")
             return
 
         subprocess.check_call(

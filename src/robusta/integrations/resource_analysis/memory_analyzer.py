@@ -58,7 +58,7 @@ class MemoryAnalyzer:
         #       /kubepods/burstable/*
         #       /kubepods/besteffort/*
         #       /kubepods/guaranteed/*
-        #   Therefore, there will always be exactly one id of the form /kubpods/* prefix for each container.
+        #   Therefore, there will always be exactly one id of the form /kubepods/* prefix for each container.
         #   See https://stackoverflow.com/questions/49035724/how-do-i-resolve-kubepods-besteffort-poduuid-to-a-pod-name for more information.
 
         return self._get_max_value_in_first_series_of_query(

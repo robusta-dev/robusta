@@ -93,7 +93,7 @@ class Grafana:
             logging.debug(f"grafana dashboard annotation response {resp}")
         # add an annotation to specific panels only
         else:
-            panel_ids = self.__get_panels_with_subtring(dashboard, panel_substring)
+            panel_ids = self.__get_panels_with_substring(dashboard, panel_substring)
             for panel_id in panel_ids:
                 resp = self.grafana.annotations.add_annotation(
                     dashboard_id=dashboard_id,
@@ -105,7 +105,7 @@ class Grafana:
                 )
                 logging.debug(f"grafana panel annotation response {resp}")
 
-    def __get_panels_with_subtring(self, dashboard, panel_substring):
+    def __get_panels_with_substring(self, dashboard, panel_substring):
         panel_ids = []
         for row in dashboard["rows"]:
             for panel in row["panels"]:

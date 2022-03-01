@@ -18,5 +18,6 @@ KIND_TO_MODEL_CLASS = {
     'ClusterRoleBinding': ClusterRoleBinding,
     'Job': RobustaJob,
     'Namespace': Namespace,
-    'ServiceAccount': ServiceAccount
+    'ServiceAccount': ServiceAccount,
+    'PersistentVolume': PersistentVolume
 }

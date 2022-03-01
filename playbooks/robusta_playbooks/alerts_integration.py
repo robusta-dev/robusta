@@ -24,7 +24,7 @@ class SeverityParams(ActionParams):
 @action
 def severity_silencer(alert: PrometheusKubernetesAlert, params: SeverityParams):
     """
-    Silence alerts with with the specified severity level.
+    Silence alerts with the specified severity level.
     """
     if alert.alert_severity == params.severity:
         logging.debug(f"skipping alert {alert}")

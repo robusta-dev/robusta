@@ -104,6 +104,8 @@ def report_image_changes(event: KubernetesAnyChangeEvent):
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="report_image_changes",
         subject=KubeObjFindingSubject(event.obj, should_add_node_name=should_get_subject_node_name),
+        finding_type=FindingType.CONF_CHANGE,
+        failure=False,
     )
     json_str = json.dumps(
         {

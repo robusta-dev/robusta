@@ -208,7 +208,7 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
         if container_reason is not None:
             return container_reason
 
-        # Calculate if the node is the reason for the the OOMKill only once, rather than for every OomKill
+        # Calculate if the node is the reason for the OOMKill only once, rather than for every OomKill
         if not self.node_reason_calculated:
             self.node_reason = self.get_busy_node_reason()
             self.node_reason_calculated = True

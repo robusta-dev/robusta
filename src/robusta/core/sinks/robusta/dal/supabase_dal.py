@@ -349,4 +349,4 @@ class SupabaseDal:
         try:
             self.sign_in()
         except Exception as e:
-            logging.error(f"Failed to signin on error", exc_info=True)
+            logging.error(f"Failed to sign in on error", exc_info=True)

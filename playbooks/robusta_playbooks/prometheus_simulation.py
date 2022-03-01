@@ -1,7 +1,7 @@
 from robusta.api import *
 
 
-class PrometehusAlertParams(ActionParams):
+class PrometheusAlertParams(ActionParams):
     """
     :var alert_name: Simulated alert name.
     :var pod_name: Pod name, for a simulated pod alert.
@@ -23,7 +23,7 @@ class PrometehusAlertParams(ActionParams):
 
 @action
 def prometheus_alert(
-    event: ExecutionBaseEvent, prometheus_event_data: PrometehusAlertParams
+    event: ExecutionBaseEvent, prometheus_event_data: PrometheusAlertParams
 ):
     """
     Simulate Prometheus alert sent to the Robusta runner.
@@ -60,6 +60,24 @@ def prometheus_alert(
             ],
         }
     )
+    headers = {"Content-type": "application/json"}
+    return requests.post(
+        "http://localhost:5000/api/alerts",
+        data=prometheus_event.json(),
+        headers=headers,
+    )
+
+
+class AlertManagerEventParams(ActionParams):
+    event: Dict
+
+
+@action
+def handle_alertmanager_event(event: ExecutionBaseEvent, alert_manager_event: AlertManagerEventParams):
+    """
+    Handle alert manager event, as a Robusta action.
+    """
+    prometheus_event = AlertManagerEvent(**alert_manager_event.event)
     headers = {"Content-type": "application/json"}
     return requests.post(
         "http://localhost:5000/api/alerts",
