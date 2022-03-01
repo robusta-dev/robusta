@@ -271,7 +271,6 @@ class RobustaSink(SinkBase):
             retry_count -=1
             retry_count = max(0, retry_count)
 
-            logging.info(f"period interval is now: {peroid_interval_sec} " )
             self.__update_cluster_status()
             time.sleep(peroid_interval_sec)
 
