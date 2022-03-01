@@ -27,6 +27,11 @@ You can also generate a key by running ``robusta integrations slack`` and settin
 This method is recommended as it supports multiple Kubernetes clusters and is easy to setup. Outgoing messages
 are sent directly to Slack. Incoming messages are routed through Robusta servers to the appropriate cluster.
 
+.. note::
+
+    You can change the slack_channel at any time in values.yaml. No need to re-run ``robusta integrations slack``.
+
+
 Not Recommended: Creating your own Slack app
 -------------------------------------------------------------------
 You can use Robusta with a custom Slack app as follows:
