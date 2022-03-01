@@ -19,9 +19,10 @@ KUBERNETES_RESOURCES = [
     "Job",
     "Namespace",
     "ServiceAccount",
+    "PersistentVolume",
 ]
 KUBERNETES_RESOURCES_STR = ",".join(KUBERNETES_RESOURCES)
-NON_NAMESPACED_RESOURCES = ["Node", "ClusterRole", "ClusterRoleBinding", "Namespace"]
+NON_NAMESPACED_RESOURCES = ["Node", "ClusterRole", "ClusterRoleBinding", "Namespace", "PersistentVolume"]
 TRIGGER_TYPES = {
     "create": "K8sOperationType.CREATE",
     "update": "K8sOperationType.UPDATE",
