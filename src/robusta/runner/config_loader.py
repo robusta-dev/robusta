@@ -185,6 +185,7 @@ class ConfigLoader:
                 if runner_config is None:
                     return
 
+                self.registry.set_global_config(runner_config.global_config)
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
                 # It allows to override these, with playbooks loaded afterwards
@@ -219,7 +220,7 @@ class ConfigLoader:
                 )
 
                 (sinks_registry, playbooks_registry) = self.__prepare_runtime_config(
-                    runner_config, self.registry.get_sinks(), action_registry
+                    runner_config, self.registry.get_sinks(), action_registry, self.registry
                 )
                 # clear git repos, so it would be re-initialized
                 GitRepoManager.clear_git_repos()
@@ -240,10 +241,11 @@ class ConfigLoader:
         runner_config: RunnerConfig,
         sinks_registry: SinksRegistry,
         actions_registry: ActionsRegistry,
+        registry
     ) -> (SinksRegistry, PlaybooksRegistry):
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(
-            runner_config.sinks_config, existing_sinks, runner_config.global_config
+            runner_config.sinks_config, existing_sinks, registry
         )
         sinks_registry = SinksRegistry(new_sinks)
 

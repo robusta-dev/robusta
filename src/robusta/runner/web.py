@@ -1,5 +1,5 @@
 import logging
-
+from datetime import datetime
 from flask import Flask, request, jsonify
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from prometheus_client import make_wsgi_app
@@ -26,6 +26,7 @@ class Web:
     metrics: QueueMetrics
     loader: ConfigLoader
 
+
     @staticmethod
     def init(event_handler: PlaybooksEventHandler, loader: ConfigLoader):
         Web.metrics = QueueMetrics()
@@ -37,6 +38,7 @@ class Web:
         )
         Web.event_handler = event_handler
         Web.loader = loader
+
 
     @staticmethod
     def run():
@@ -50,6 +52,8 @@ class Web:
             Web.alerts_queue.add_task(
                 Web.event_handler.handle_trigger, PrometheusTriggerEvent(alert=alert)
             )
+        
+        Web.event_handler.get_telemetry().last_alert_at = datetime.now()
         return jsonify(success=True)
 
     @staticmethod

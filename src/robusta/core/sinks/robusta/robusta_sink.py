@@ -10,33 +10,33 @@ from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetL
 from typing import List, Dict
 
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
-from ...model.env_vars import DISCOVERY_PERIOD_SEC
+from ...model.env_vars import DISCOVERY_PERIOD_SEC , PERIODIC_LONG_SEC
 from ...model.nodes import NodeInfo, PodRequests
 from ...model.services import ServiceInfo
 from ...reporting.base import Finding
 from .dal.supabase_dal import SupabaseDal
 from ..sink_base import SinkBase
 from ...discovery.top_service_resolver import TopServiceResolver
+from ...model.cluster_status import ClusterStatus
 
 
 class RobustaSink(SinkBase):
     def __init__(
         self,
         sink_config: RobustaSinkConfigWrapper,
-        account_id: str,
-        cluster_name: str,
-        signing_key: str,
+        registry
     ):
-        super().__init__(sink_config.robusta_sink)
+        super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
-        self.cluster_name = cluster_name
+   
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
-        if account_id != robusta_token.account_id:
+        if self.account_id != robusta_token.account_id:
             logging.error(
                 f"Account id configuration mismatch. "
-                f"Global Config: {account_id} Robusta token: {robusta_token.account_id}."
+                f"Global Config: {self.account_id} Robusta token: {robusta_token.account_id}."
                 f"Using account id from Robusta token."
             )
+        self.account_id = robusta_token.account_id
 
         self.dal = SupabaseDal(
             robusta_token.store_url,
@@ -46,8 +46,12 @@ class RobustaSink(SinkBase):
             robusta_token.password,
             sink_config.robusta_sink.name,
             self.cluster_name,
-            signing_key,
+            self.signing_key,
         )
+
+        self.last_send_time = 0
+        self.__update_cluster_status() # send runner version initially, then force prometheus alert time periodically.
+
         # start cluster discovery
         self.__active = True
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
@@ -55,6 +59,8 @@ class RobustaSink(SinkBase):
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
+
+
 
     def __assert_node_cache_initialized(self):
         if not self.__nodes_cache:
@@ -231,10 +237,35 @@ class RobustaSink(SinkBase):
                 exc_info=True,
             )
 
+    def __update_cluster_status(self):
+        try:
+            cluster_status = ClusterStatus(
+                cluster_id= self.cluster_name,
+                version= self.registry.get_telemetry().runner_version,
+                last_alert_at= self.registry.get_telemetry().last_alert_at,
+                account_id= self.account_id
+            )
+
+            self.dal.publish_cluster_status(cluster_status)
+        except Exception as e:
+            logging.error(
+                f"Failed to run periodic update cluster status for {self.sink_name}",
+                exc_info=True,
+            )
+
     def __discover_cluster(self):
         while self.__active:
+            self.__periodic_cluster_status()
             self.__discover_services()
             self.__discover_nodes()
             time.sleep(self.__discovery_period_sec)
 
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
+
+    def __periodic_cluster_status(self):
+        if self.registry.get_telemetry().last_alert_at:
+            if time.time() - self.last_send_time > PERIODIC_LONG_SEC:
+                self.last_send_time = time.time()
+                self.__update_cluster_status()
+
+

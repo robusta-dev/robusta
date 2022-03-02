@@ -24,9 +24,9 @@ INVESTIGATE_ICON = u"\U0001F50E"
 
 
 class TelegramSink(SinkBase):
-    def __init__(self, sink_config: TelegramSinkConfigWrapper, cluster_name: str):
-        super().__init__(sink_config.telegram_sink)
-        self.cluster_name = cluster_name
+    def __init__(self, sink_config: TelegramSinkConfigWrapper, registry):
+        super().__init__(sink_config.telegram_sink, registry)
+
         self.client = TelegramClient(sink_config.telegram_sink.chat_id, sink_config.telegram_sink.bot_token)
         self.send_files = sink_config.telegram_sink.send_files
 

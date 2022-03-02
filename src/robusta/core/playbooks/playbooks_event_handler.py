@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any, List, Protocol
 from ...model.playbook_action import PlaybookAction
 from ...core.model.events import ExecutionBaseEvent
 from ...core.playbooks.base_trigger import TriggerEvent
+from ...runner.telemetry import Telemetry
 
 
 class PlaybooksEventHandler(Protocol):
@@ -38,4 +39,11 @@ class PlaybooksEventHandler(Protocol):
         self,
     ) -> dict:
         """Return runner global config"""
+        pass
+
+    @abstractmethod
+    def get_telemetry(
+        self,
+    ) -> Telemetry:
+        """Return runner telemetry"""
         pass
