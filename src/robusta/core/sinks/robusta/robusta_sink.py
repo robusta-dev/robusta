@@ -28,13 +28,12 @@ class RobustaSink(SinkBase):
     ):
         super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
-        account_id = self.account_id
    
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
-        if account_id != robusta_token.account_id:
+        if self.account_id != robusta_token.account_id:
             logging.error(
                 f"Account id configuration mismatch. "
-                f"Global Config: {account_id} Robusta token: {robusta_token.account_id}."
+                f"Global Config: {self.account_id} Robusta token: {robusta_token.account_id}."
                 f"Using account id from Robusta token."
             )
         self.account_id = robusta_token.account_id
