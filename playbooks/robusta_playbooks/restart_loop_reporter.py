@@ -7,7 +7,7 @@ class RestartLoopParams(RateLimitParams):
     :var restart_reason: Limit restart loops for this specific reason. If omitted, all restart reasons will be included.
     """
 
-    restart_reason: List[str] = None
+    restart_reason: str = None
 
 
 def get_crashing_containers(
@@ -22,7 +22,7 @@ def get_crashing_containers(
         > 1  # report only after the 2nd restart and get previous logs
         and (
             config.restart_reason is None
-            or container_status.state.waiting.reason in config.restart_reason
+            or config.restart_reason in container_status.state.waiting.reason
         )
     ]
 
