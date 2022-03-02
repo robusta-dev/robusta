@@ -26,6 +26,7 @@ def event_report(event: EventChangeEvent, action_params: EventErrorReportParams)
             k8s_obj.name,
             FindingSubjectType.from_kind(k8s_obj.kind),
             k8s_obj.namespace,
+            KubeObjFindingSubject.get_node_name(k8s_obj)
         ),
     )
     event.add_finding(finding)

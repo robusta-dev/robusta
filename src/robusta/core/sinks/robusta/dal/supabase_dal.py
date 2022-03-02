@@ -118,6 +118,7 @@ class SupabaseDal:
             "subject_type": finding.subject.subject_type.value,
             "subject_name": finding.subject.name,
             "subject_namespace": finding.subject.namespace,
+            "subject_node": finding.subject.node,
             "service_key": finding.service_key,
             "cluster": self.cluster,
             "account_id": self.account_id,

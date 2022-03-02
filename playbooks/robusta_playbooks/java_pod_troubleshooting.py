@@ -1,9 +1,6 @@
 from robusta.api import *
-from robusta.integrations.kubernetes.process_utils import ProcessFinder, ProcessType
 from typing import List
 import traceback
-
-from robusta.integrations.kubernetes.custom_models import RobustaPod
 
 
 class JavaParams(ProcessParams):
@@ -31,13 +28,9 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
         title=f"Java debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="java_process_inspector",
+        subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
     )
     process_finder = ProcessFinder(pod, params, ProcessType.JAVA)
     if not process_finder.matching_processes:
@@ -101,13 +94,9 @@ def run_jdk_command_on_pid(
         title=f"{cmd} run on pid {params.pid} in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key=aggregation_key,
+        subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
     )
 
     if not params.pid:
