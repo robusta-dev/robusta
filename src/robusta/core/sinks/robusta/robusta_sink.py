@@ -50,7 +50,7 @@ class RobustaSink(SinkBase):
         )
 
         self.last_send_time = 0
-        self.__update_cluster_status()
+        self.__update_cluster_status() # send runner version initially, then force prometheus alert time periodically.
 
         # start cluster discovery
         self.__active = True

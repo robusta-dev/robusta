@@ -20,9 +20,7 @@ from .webhook.webhook_sink_params import WebhookSinkConfigWrapper
 
 class SinkFactory:
     @classmethod
-    def create_sink(#account_id: str, cluster_name: str, signing_key: str,
-            cls, sink_config: SinkConfigBase, registry
-    ) -> SinkBase:
+    def create_sink(cls, sink_config: SinkConfigBase, registry) -> SinkBase:
         if isinstance(sink_config, SlackSinkConfigWrapper):
             return SlackSink(sink_config, registry)
         elif isinstance(sink_config, RobustaSinkConfigWrapper):
