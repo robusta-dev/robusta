@@ -30,8 +30,7 @@ from ..sink_base import SinkBase
 class DataDogSink(SinkBase):
     def __init__(self, sink_config: DataDogSinkConfigWrapper, registry):
         super().__init__(sink_config.datadog_sink, registry)
-        global_config = self.registry.get_global_config()
-        self.cluster_name = global_config.get("cluster_name", "")
+
         self.api_key = sink_config.datadog_sink.api_key
         config = Configuration()
         config.api_key["apiKeyAuth"] = self.api_key

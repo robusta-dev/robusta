@@ -16,9 +16,6 @@ class KafkaSink(SinkBase):
         )
         self.topic = sink_config.kafka_sink.topic
 
-        global_config = self.registry.get_global_config()
-        self.cluster_name = global_config.get("cluster_name", "")
-
     def write_finding(self, finding: Finding, platform_enabled: bool):
         for enrichment in finding.enrichments:
             self.send_enrichment(

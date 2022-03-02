@@ -28,11 +28,7 @@ class RobustaSink(SinkBase):
     ):
         super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
-        global_config = self.registry.get_global_config()
-
-        signing_key = global_config.get("signing_key", "")
-        account_id = global_config.get("account_id", "")
-        self.cluster_name =  global_config.get("cluster_name", "")
+        account_id = self.account_id
    
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if account_id != robusta_token.account_id:
@@ -51,8 +47,12 @@ class RobustaSink(SinkBase):
             robusta_token.password,
             sink_config.robusta_sink.name,
             self.cluster_name,
-            signing_key,
+            self.signing_key,
         )
+
+        self.last_send_time = 0
+        self.__update_cluster_status()
+
         # start cluster discovery
         self.__active = True
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
@@ -61,8 +61,7 @@ class RobustaSink(SinkBase):
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
 
-        self.__update_cluster_thread = threading.Thread(target=self.__periodic_cluster_status)
-        self.__update_cluster_thread.start()
+
 
     def __assert_node_cache_initialized(self):
         if not self.__nodes_cache:
@@ -257,6 +256,7 @@ class RobustaSink(SinkBase):
 
     def __discover_cluster(self):
         while self.__active:
+            self.__periodic_cluster_status()
             self.__discover_services()
             self.__discover_nodes()
             time.sleep(self.__discovery_period_sec)
@@ -264,14 +264,9 @@ class RobustaSink(SinkBase):
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
 
     def __periodic_cluster_status(self):
-        retry_count = 5
-        while self.__active:
-            peroid_interval_sec = PERIODIC_LONG_SEC  if ( retry_count == 0 or self.registry.get_telemetry().last_alert_at is not None ) else self.__discovery_period_sec
+        if self.registry.get_telemetry().last_alert_at:
+            if time.time() - self.last_send_time > PERIODIC_LONG_SEC:
+                self.last_send_time = time.time()
+                self.__update_cluster_status()
 
-            retry_count -=1
-            retry_count = max(0, retry_count)
 
-            self.__update_cluster_status()
-            time.sleep(peroid_interval_sec)
-
-        logging.info(f"Update cluster status for sink {self.sink_name} ended.")

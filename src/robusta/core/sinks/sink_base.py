@@ -8,7 +8,11 @@ class SinkBase:
         self.params = sink_params
         self.default = sink_params.default
         self.registry = registry
+        global_config = self.registry.get_global_config()
 
+        self.account_id = global_config.get("account_id", "")
+        self.cluster_name = global_config.get("cluster_name", "")
+        self.signing_key = global_config.get("signing_key", "")
     def stop(self):
         pass
 
