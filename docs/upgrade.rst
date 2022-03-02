@@ -45,35 +45,35 @@ With Helm v3, CRDs are not updated or removed by default and should be manually 
 From 0.8.x to >= 0.9.x 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Check robusta version:
+1. Check robusta version, look under Robusta:
 
 .. code-block:: bash
 
-    robusta version
+    helm list
 
-2. We suggest removing and installing for the smoothest experience, start by uninstalling Robusta:
+2. Due to the upgrade of the dependency, kube-state-metrics chart, removal of its deployment/stateful needs to be done manually prior to upgrading:
 
 .. code-block:: bash
 
-    helm uninstall robusta
+    kubectl delete deployment robusta-kube-state-metrics robusta-kube-prometheus-st-operator  --cascade=orphan
 
-3. Manually remove the installed CRDs (`for more info read here <https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#uninstall-chart>`_):
+3. Manually update the installed CRDs (`for more info read here <https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#uninstall-chart>`_):
 
 .. warning:: If you have an existing Prometheus Operator installed independently of Robusta then be very careful! Upgrading CRDs will impact all Prometheus Operators in your cluster.
 
 .. code-block:: bash
 
-    kubectl delete crd alertmanagerconfigs.monitoring.coreos.com
-    kubectl delete crd alertmanagers.monitoring.coreos.com
-    kubectl delete crd podmonitors.monitoring.coreos.com
-    kubectl delete crd probes.monitoring.coreos.com
-    kubectl delete crd prometheuses.monitoring.coreos.com
-    kubectl delete crd prometheusrules.monitoring.coreos.com
-    kubectl delete crd servicemonitors.monitoring.coreos.com
-    kubectl delete crd thanosrulers.monitoring.coreos.com
+    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.54.0/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
+    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.54.0/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
+    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.54.0/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
+    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.54.0/example/prometheus-operator-crd/monitoring.coreos.com_probes.yaml
+    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.54.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
+    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.54.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
+    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.54.0/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+    kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.54.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
 
-4. Update helm chart and install Robusta:
+4. Update helm chart and upgrade Robusta:
 
 .. code-block:: bash
 
-    helm repo update && helm install robusta robusta/robusta -f ./generated_values.yaml
+    helm repo update && helm upgrade robusta robusta/robusta -f ./generated_values.yaml

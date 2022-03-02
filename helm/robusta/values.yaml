@@ -123,6 +123,7 @@ kubewatch:
   pprof: True
   resources:
     requests:
+      cpu: 10m
       memory: 512Mi
     limits:
       cpu: ~
@@ -133,6 +134,7 @@ grafanaRenderer:
   imagePullPolicy: IfNotPresent
   resources:
     requests:
+      cpu: 100m
       memory: 512Mi
     limits:
       cpu: ~
@@ -145,6 +147,7 @@ runner:
   sentry_dsn:
   resources:
     requests:
+      cpu: 250m
       memory: 1024Mi
     limits:
       cpu: ~
@@ -172,10 +175,17 @@ kube-prometheus-stack:
           webhook_configs:
             - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.cluster.local/api/alerts'
               send_resolved: true
+    alertmanagerSpec:
+      resources:
+        requests:
+          cpu: 50m
   kubeProxy:
     enabled: false
   prometheus:
     prometheusSpec:
+      resources:
+        requests:
+          cpu: 50m
       retention: 14d
       # we set a value slightly lower than the 100Gi below
       # the retentionSize uses the suffix GB but it is really Gi units
@@ -194,7 +204,15 @@ kube-prometheus-stack:
       requests:
         cpu: 50m
   prometheusOperator:
+    resources:
+      requests:
+        cpu: 100m
     prometheusConfigReloader:
       resources:
         limits:
           cpu: 0
+  kube-state-metrics:
+    resources:
+      requests:
+        cpu: 10m
+
