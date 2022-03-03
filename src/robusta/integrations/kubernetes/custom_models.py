@@ -180,8 +180,8 @@ class RobustaPod(Pod):
             node_runner.delete()
 
     @staticmethod
-    def run_privileged_pod(node_name: str, pod_image: str, env: Optional[List[EnvVar]] = None,
-                           mount_host_root: bool = False) -> str:
+    def run_debugger_pod(node_name: str, pod_image: str, env: Optional[List[EnvVar]] = None,
+                         mount_host_root: bool = False) -> str:
         debugger = RobustaPod.create_debugger_pod(node_name, node_name, pod_image, env=env, mount_host_root=mount_host_root)
         try:
             pod_name = debugger.metadata.name
