@@ -1,9 +1,7 @@
 Installation
 ##################
 
-Robusta is installed with Helm. You can handwrite the values.yaml, but it is easier to autogenerate it.
-
-The standard installation uses Helm and the robusta-cli, but :ref:`other alternative methods are described below. <Additional Installation Methods>`
+The standard installation uses `Helm 3 <https://helm.sh/docs/intro/install/>`_ and the robusta-cli, but :ref:`alternative methods are described below. <Additional Installation Methods>`
 
 Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster. [#f1]_
 
@@ -18,7 +16,11 @@ Standard Installation
    pip install -U robusta-cli --no-cache
    
 
-.. warning:: If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
+.. admonition:: Common Errors
+    :class: warning
+
+    * If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
+    * Errors about *tiller* mean you are running Helm 2, not Helm 3
 
 2. Generate a Robusta configuration. This will setup Slack and other integrations. We **highly recommend** enabling the cloud UI so you can see all features in action.
 
@@ -34,11 +36,12 @@ Standard Installation
 
     helm install robusta robusta/robusta -f ./generated_values.yaml
 
-5. Verify that Robusta installed two deployments in the current namespace:
+5. Verify that Robusta is running two pods and there are no errors in the logs:
 
 .. code-block:: bash
 
     kubectl get pods
+    robusta logs
 
 Seeing Robusta in action
 ------------------------------
