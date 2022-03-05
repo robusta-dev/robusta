@@ -160,6 +160,9 @@ def gen_config(
         slack_channel = get_slack_channel()
 
     if slack_api_key and slack_channel:
+        while not verify_slack_channel(slack_api_key, cluster_name, slack_channel, slack_workspace):
+            slack_channel = get_slack_channel()
+
         sinks_config.append(
             SlackSinkConfigWrapper(
                 slack_sink=SlackSinkParams(
@@ -169,8 +172,6 @@ def gen_config(
                 )
             )
         )
-        while not verify_slack_channel(slack_api_key, cluster_name, slack_channel, slack_workspace):
-            slack_channel = get_slack_channel()
 
     if msteams_webhook is None and typer.confirm(
         "Do you want to configure MsTeams integration ?",
@@ -210,7 +211,7 @@ def gen_config(
                     except Exception:
                         typer.secho(
                             "Sorry, invalid token format. "
-                            "The token can be found in your generated_values.yaml file, under the robusta_sink",
+                            "The token can be found in any existing generated_values.yaml file, under the robusta_sink",
                             fg="red",
                         )
 
