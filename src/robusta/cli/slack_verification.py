@@ -9,7 +9,7 @@ SLACK_WELCOME_SUPPORT_MESSAGE = "If you have any questions or feedback feel free
                                 "<mailto:support@robusta.dev|support@robusta.dev> "
 
 
-def verify_slack_channel(slack_api_key: str, cluster_name: str, channel_name: str) -> bool:
+def verify_slack_channel(slack_api_key: str, cluster_name: str, channel_name: str, workspace: str) -> bool:
     try:
         output_welcome_message_blocks = gen_robusta_test_welcome_message(cluster_name)
         slack_client = WebClient(token=slack_api_key)
@@ -24,9 +24,9 @@ def verify_slack_channel(slack_api_key: str, cluster_name: str, channel_name: st
         return True
     except SlackApiError as e:
         if e.response.data['error'] == 'channel_not_found':
-            channel_name_styled = typer.style(channel_name, fg=typer.colors.WHITE, bg=typer.colors.RED)
+            channel_name_styled = typer.style(channel_name, fg=typer.colors.RED)
             typer.secho(
-                f"The channel '{channel_name_styled}' was not found."
+                f"The channel {channel_name_styled} was not found on Slack workspace {workspace}."
             )
         return False
     except Exception as e:
