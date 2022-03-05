@@ -26,7 +26,10 @@ def verify_slack_channel(slack_api_key: str, cluster_name: str, channel_name: st
         if e.response.data['error'] == 'channel_not_found':
             channel_name_styled = typer.style(channel_name, fg=typer.colors.RED)
             typer.secho(
-                f"The channel {channel_name_styled} was not found on Slack workspace {workspace}."
+                f"The channel {channel_name_styled} was not found on Slack workspace {workspace}.\n"
+                f"Please verify that the channel exists.\n"
+                f"If this is a private channel, verify the Robusta app was added to the channel."
+                f"(See https://docs.robusta.dev/master/catalog/sinks/slack.html#sending-robusta-notifications-to-a-private-channel)"
             )
         return False
     except Exception as e:
