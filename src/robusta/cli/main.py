@@ -98,6 +98,15 @@ def guess_cluster_name():
         return f"cluster_{random.randint(0, 1000000)}"
 
 
+def get_slack_channel() -> str:
+    return (typer.prompt(
+                "Which slack channel should I send notifications to? ",
+                prompt_suffix="#",
+            )
+            .strip()
+            .strip("#")
+            )
+
 @app.command()
 def gen_config(
     cluster_name: str = typer.Option(
@@ -140,23 +149,20 @@ def gen_config(
             SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper
         ]
     ] = []
+    slack_workspace = "N/A"
     if not slack_api_key and typer.confirm(
         "Do you want to configure slack integration? This is HIGHLY recommended.",
         default=True,
     ):
-        slack_api_key = get_slack_key()
+        slack_api_key, slack_workspace = get_slack_key()
 
     if slack_api_key and not slack_channel:
-        slack_channel = (
-            typer.prompt(
-                "Which slack channel should I send notifications to? ",
-                prompt_suffix="#",
-            )
-            .strip()
-            .strip("#")
-        )
+        slack_channel = get_slack_channel()
 
     if slack_api_key and slack_channel:
+        while not verify_slack_channel(slack_api_key, cluster_name, slack_channel, slack_workspace):
+            slack_channel = get_slack_channel()
+
         sinks_config.append(
             SlackSinkConfigWrapper(
                 slack_sink=SlackSinkParams(
@@ -166,9 +172,6 @@ def gen_config(
                 )
             )
         )
-        if not verify_slack_channel(slack_api_key, cluster_name, slack_channel):
-            typer.secho(f"\nInstallation Aborted.", fg=typer.colors.RED)
-            return
 
     if msteams_webhook is None and typer.confirm(
         "Do you want to configure MsTeams integration ?",
@@ -194,13 +197,24 @@ def gen_config(
     # asking the question
     if robusta_api_key is None:
         if typer.confirm(
-            "Would you like to use Robusta UI? This is HIGHLY recommended."
+            "Would you like to use Robusta UI? This is HIGHLY recommended.", default=True
         ):
             if typer.confirm("Do you already have a Robusta account?"):
-                robusta_api_key = typer.prompt(
-                    "Please insert your Robusta account token",
-                    default=None,
-                )
+                while True:
+                    robusta_api_key = typer.prompt(
+                        "Please insert your Robusta account token",
+                        default=None,
+                    )
+                    try:
+                        json.loads(base64.b64decode(robusta_api_key))
+                        break
+                    except Exception:
+                        typer.secho(
+                            "Sorry, invalid token format. "
+                            "The token can be found in any existing generated_values.yaml file, under the robusta_sink",
+                            fg="red",
+                        )
+
             else:  # self registration
                 account_name = typer.prompt("Choose your account name")
                 email = typer.prompt(
