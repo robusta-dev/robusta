@@ -247,7 +247,7 @@ class RobustaActionDirective(SphinxDirective):
         code = self.__get_source_code(action_definition.func)
         description = self.__get_description(action_definition)
         triggers = self.__get_triggers(
-            generator.get_supported_triggers(action_definition)
+            generator.get_supported_triggers(action_definition), recommended_trigger
         )
         cli_trigger = generator.get_manual_trigger_cmd(action_definition)
 
@@ -329,12 +329,20 @@ class RobustaActionDirective(SphinxDirective):
             return trigger_name
 
     @classmethod
-    def __get_triggers(cls, supported_triggers):
+    def __get_triggers(
+        cls, supported_triggers: List[str], recommended_trigger: Optional[str]
+    ):
         if ExamplesGenerator.SUBTRIGGER_MARKER in supported_triggers:
             has_subtriggers = True
             supported_triggers.remove(ExamplesGenerator.SUBTRIGGER_MARKER)
         else:
             has_subtriggers = False
+
+        if (
+            recommended_trigger is not None
+            and recommended_trigger not in supported_triggers
+        ):
+            supported_triggers.insert(0, recommended_trigger)
 
         rst = [
             f"* :ref:`{t} <{cls.__get_ref_for_trigger(t)}>`" for t in supported_triggers
