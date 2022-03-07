@@ -2,7 +2,7 @@ from robusta.api import *
 from robusta.core.model.services import ServiceInfo
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 
-from src.robusta.core.playbooks.common import get_events_list
+from robusta.core.playbooks.common import get_events_list
 
 
 @action
@@ -22,18 +22,18 @@ def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
 
 
 @action
-def get_event_history(event: ExecutionBaseEvent):
+def event_history(event: ExecutionBaseEvent):
     """
     Creates findings for the all the past events for any object that has had at one point a warning event
     """
     reported_obj_history_list = []
     warning_events = get_events_list(event_type="Warning")
     for warning_event in warning_events.items:
-        warning_event_obj_name = warning_event.involvedObject.name
-        if warning_event_obj_name in reported_obj_history_list:
+        warning_event_key = gen_object_key(warning_event.involvedObject)
+        if warning_event_key in reported_obj_history_list:
             # if there were multiple warnings on the same object we dont want the history pulled multiple times
             continue
-        finding = create_historical_event_finding(warning_event)
+        finding = create_event_finding(warning_event)
         events_table = get_resource_events_table(
             "Resource events",
             warning_event.involvedObject.kind,
@@ -43,22 +43,20 @@ def get_event_history(event: ExecutionBaseEvent):
         if events_table:
             finding.add_enrichment([events_table])
         event.add_finding(finding)
-        reported_obj_history_list.append(warning_event_obj_name)
+        reported_obj_history_list.append(warning_event_key)
 
 
-def create_historical_event_finding(event: Event):
+def create_event_finding(event: Event):
     """
     Create finding based on the kubernetes event
     """
     k8s_obj = event.involvedObject
 
-    finding =  Finding(
+    finding = Finding(
         title=f"{event.reason} {event.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
         description=event.message,
         source=FindingSource.KUBERNETES_API_SERVER,
-        severity=FindingSeverity.INFO
-        if event.type == "Normal"
-        else FindingSeverity.HIGH,
+        severity=FindingSeverity.MEDIUM,
         finding_type=FindingType.ISSUE,
         aggregation_key=f"Kubernetes {event.type} Event",
         subject=FindingSubject(
@@ -68,5 +66,12 @@ def create_historical_event_finding(event: Event):
         ),
         creation_date=event.metadata.creationTimestamp
     )
-    finding.service_key = f"{k8s_obj.namespace}/{k8s_obj.kind}/{k8s_obj.name}"
+    finding.service_key = TopServiceResolver.guess_service_key(name=k8s_obj.name, namespace=k8s_obj.namespace)
+    # non-running services won't be in top service resolver
+    if not finding.service_key:
+        finding.service_key = gen_object_key(k8s_obj)
     return finding
+
+
+def gen_object_key(object):
+    return f"{object.namespace}/{object.kind}/{object.name}"

@@ -16,8 +16,8 @@ def get_resource_events_table(table_name: str, kind: str, name: str, namespace: 
     if event_list.items:
         headers = ["reason", "type", "time", "message"]
         rows = [
-            [event.reason, event.type, parse_kubernetes_datetime_to_ms(event.lastTimestamp), event.message]
-            for event in event_list.items if event.lastTimestamp
+            [event.reason, event.type, parse_kubernetes_datetime_to_ms(get_event_timestamp(event)), event.message]
+            for event in event_list.items if get_event_timestamp(event)
         ]
         return TableBlock(
                 rows=rows,
@@ -25,6 +25,16 @@ def get_resource_events_table(table_name: str, kind: str, name: str, namespace: 
                 column_renderers={"time": RendererType.DATETIME},
                 table_name=table_name
             )
+    return None
+
+
+def get_event_timestamp(event: Event):
+    if event.lastTimestamp:
+        return event.lastTimestamp
+    elif event.eventTime:
+        return event.eventTime
+    elif event.firstTimestamp:
+        return event.firstTimestamp
     return None
 
 

@@ -9,6 +9,7 @@ from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetL
     NodeCondition, PodList, Pod
 from typing import List, Dict
 
+from robusta.runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from ...model.env_vars import DISCOVERY_PERIOD_SEC , PERIODIC_LONG_SEC
 from ...model.nodes import NodeInfo, PodRequests
@@ -117,21 +118,25 @@ class RobustaSink(SinkBase):
         TopServiceResolver.store_cached_services(list(self.__services_cache.values()))
 
     def __get_events_history(self):
-        from robusta.runner.web import Web
-
-        if self.dal.has_cluster_findings():
-            logging.info("Cluster already has historical data, No history pulled.")
-            return
-        # Sinks are initiated before the event handler runs,
-        # This will prevent any races of trying to access rescources before it is initiated
-        while not Web.event_handler:
-            time.sleep(1)
-        Web.event_handler.run_external_action(
-            action_name="get_event_history",
-            action_params=None,
-            sinks=[self.sink_name])
-
-        logging.info("Cluster historical data sent.")
+        try:
+            if self.dal.has_cluster_findings():
+                logging.info("Cluster already has historical data, No history pulled.")
+                return
+            # we will need the services in cache before the event history is run to guess service name
+            self.__discover_services()
+            response = WebApi.run_manual_action(
+                action_name="event_history",
+                action_params=None,
+                sinks=[self.sink_name],
+                retries=4,
+                timeout_delay=5
+            )
+            if response != 200:
+                logging.info("Error running 'event_history'.")
+            else:
+                logging.info("Cluster historical data sent.")
+        except Exception as e:
+            logging.error(f"Error getting events history {e}")
 
     def __discover_services(self):
         try:
@@ -270,8 +275,12 @@ class RobustaSink(SinkBase):
                 exc_info=True,
             )
 
+    def __get_events_history_thread(self):
+        thread = threading.Thread(target=self.__get_events_history)
+        thread.start()
+
     def __discover_cluster(self):
-        self.__get_events_history()
+        self.__get_events_history_thread()
         while self.__active:
             self.__periodic_cluster_status()
             self.__discover_services()

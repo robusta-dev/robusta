@@ -287,16 +287,17 @@ class SupabaseDal:
             for service in res.get("data")
         ]
 
-    def has_cluster_findings(self) -> List[ServiceInfo]:
+    def has_cluster_findings(self) -> bool:
         res = (
             self.client.table(ISSUES_TABLE)
-            .select( '*')
+            .select('*')
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
+            .limit(1)
             .execute()
         )
         if res.get("status_code") not in [200]:
-            msg = f"Failed to get existing services (supabase) error: {res.get('data')}"
+            msg = f"Failed to check cluster issues: {res.get('data')}"
             logging.error(msg)
             self.handle_supabase_error()
             raise Exception(msg)
