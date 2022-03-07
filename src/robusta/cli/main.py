@@ -99,13 +99,15 @@ def guess_cluster_name():
 
 
 def get_slack_channel() -> str:
-    return (typer.prompt(
-                "Which slack channel should I send notifications to? ",
-                prompt_suffix="#",
-            )
-            .strip()
-            .strip("#")
-            )
+    return (
+        typer.prompt(
+            "Which slack channel should I send notifications to? ",
+            prompt_suffix="#",
+        )
+        .strip()
+        .strip("#")
+    )
+
 
 @app.command()
 def gen_config(
@@ -132,6 +134,7 @@ def gen_config(
     output_path: str = typer.Option(
         "./generated_values.yaml", help="Output path of generated Helm values"
     ),
+    debug: bool = typer.Option(False),
 ):
     """Create runtime configuration file"""
     if cluster_name is None:
@@ -160,7 +163,9 @@ def gen_config(
         slack_channel = get_slack_channel()
 
     if slack_api_key and slack_channel:
-        while not verify_slack_channel(slack_api_key, cluster_name, slack_channel, slack_workspace):
+        while not verify_slack_channel(
+            slack_api_key, cluster_name, slack_channel, slack_workspace, debug
+        ):
             slack_channel = get_slack_channel()
 
         sinks_config.append(
@@ -197,7 +202,8 @@ def gen_config(
     # asking the question
     if robusta_api_key is None:
         if typer.confirm(
-            "Would you like to use Robusta UI? This is HIGHLY recommended.", default=True
+            "Would you like to use Robusta UI? This is HIGHLY recommended.",
+            default=True,
         ):
             if typer.confirm("Do you already have a Robusta account?"):
                 while True:
