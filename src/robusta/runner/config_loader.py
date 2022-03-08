@@ -231,6 +231,10 @@ class ConfigLoader:
                 self.registry.set_playbooks(playbooks_registry)
                 self.registry.set_sinks(sinks_registry)
 
+                telemetry = self.registry.get_telemetry()
+                telemetry.sinks_findings_count = { k:0 for (k, _) in sinks_registry.get_all().items() }
+                telemetry.playbooks_count = len(runner_config.active_playbooks)
+
                 self.__reload_receiver()
             except Exception as e:
                 logging.error(f"unknown error reloading playbooks. will try again when they next change", exc_info=True)
@@ -241,7 +245,7 @@ class ConfigLoader:
         runner_config: RunnerConfig,
         sinks_registry: SinksRegistry,
         actions_registry: ActionsRegistry,
-        registry
+        registry : Registry
     ) -> (SinksRegistry, PlaybooksRegistry):
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(

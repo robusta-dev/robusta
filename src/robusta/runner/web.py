@@ -53,7 +53,7 @@ class Web:
                 Web.event_handler.handle_trigger, PrometheusTriggerEvent(alert=alert)
             )
         
-        Web.event_handler.get_telemetry().last_alert_at = datetime.now()
+        Web.event_handler.get_telemetry().last_alert_at = str(datetime.now())
         return jsonify(success=True)
 
     @staticmethod
