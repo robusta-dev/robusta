@@ -8,18 +8,12 @@ class WebApi:
 
     @staticmethod
     def run_manual_action(action_name: str, params, sinks, retries=1, timeout_delay=1):
-        MANUAL_ACTION_URL = "https://127.0.0.1/api/trigger"
-        headers = {"Content-type": "application/json"}
-        data = {
-                    {"action_name": action_name,
-                     "action_params": params,
-                     "sinks": sinks}
-                }
+        MANUAL_ACTION_URL = "http://127.0.0.1:5000/api/trigger"
+        data = { "action_name": action_name, "action_params": params, "sinks": sinks }
         for _ in range(retries):
             response = requests.post(
                 MANUAL_ACTION_URL,
-                data=data,
-                headers=headers
+                json=data
             )
 
             if response.status_code == 200:

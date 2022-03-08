@@ -2,8 +2,7 @@ from robusta.api import *
 from robusta.core.model.services import ServiceInfo
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 
-from robusta.core.playbooks.common import get_events_list
-
+from robusta.core.playbooks.common import get_events_list, get_event_timestamp
 
 @action
 def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
@@ -64,7 +63,7 @@ def create_event_finding(event: Event):
             FindingSubjectType.from_kind(k8s_obj.kind.lower()),
             k8s_obj.namespace,
         ),
-        creation_date=event.metadata.creationTimestamp
+        creation_date= get_event_timestamp(event)
     )
     finding.service_key = TopServiceResolver.guess_service_key(name=k8s_obj.name, namespace=k8s_obj.namespace)
     # non-running services won't be in top service resolver

@@ -3,6 +3,7 @@ import json
 import logging
 import time
 import threading
+import traceback
 from collections import defaultdict
 
 from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetList, Node, NodeList, Taint, \
@@ -119,14 +120,11 @@ class RobustaSink(SinkBase):
 
     def __get_events_history(self):
         try:
-            if self.dal.has_cluster_findings():
-                logging.info("Cluster already has historical data, No history pulled.")
-                return
             # we will need the services in cache before the event history is run to guess service name
             self.__discover_services()
             response = WebApi.run_manual_action(
                 action_name="event_history",
-                action_params=None,
+                params=None,
                 sinks=[self.sink_name],
                 retries=4,
                 timeout_delay=5
@@ -136,7 +134,8 @@ class RobustaSink(SinkBase):
             else:
                 logging.info("Cluster historical data sent.")
         except Exception as e:
-            logging.error(f"Error getting events history {e}")
+            logging.error(f"Error getting events history {e}\n"
+                          f"{traceback.format_exc()}")
 
     def __discover_services(self):
         try:
@@ -275,12 +274,16 @@ class RobustaSink(SinkBase):
                 exc_info=True,
             )
 
-    def __get_events_history_thread(self):
+    def __run_events_history_thread(self):
+        # here to prevent a race between checking and writing findings from robusta sink
+        if self.dal.has_cluster_findings():
+            logging.info("Cluster already has historical data, No history pulled.")
+            return
         thread = threading.Thread(target=self.__get_events_history)
         thread.start()
 
     def __discover_cluster(self):
-        self.__get_events_history_thread()
+        self.__run_events_history_thread()
         while self.__active:
             self.__periodic_cluster_status()
             self.__discover_services()
