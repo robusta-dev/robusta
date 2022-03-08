@@ -32,14 +32,14 @@ def get_resource_events_table(table_name: str, kind: str, name: str, namespace: 
 
 
 def get_event_timestamp(event: Event):
-    if event.metadata.creationTimestamp:
-        return event.metadata.creationTimestamp
-    elif event.lastTimestamp:
+    if event.lastTimestamp:
         return event.lastTimestamp
     elif event.eventTime:
         return event.eventTime
     elif event.firstTimestamp:
         return event.firstTimestamp
+    if event.metadata.creationTimestamp:
+        return event.metadata.creationTimestamp
     return
 
 
