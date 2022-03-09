@@ -124,13 +124,12 @@ class RobustaSink(SinkBase):
             self.__discover_services()
             response = WebApi.run_manual_action(
                 action_name="event_history",
-                params=None,
                 sinks=[self.sink_name],
                 retries=4,
-                timeout_delay=5
+                timeout_delay=30
             )
             if response != 200:
-                logging.info("Error running 'event_history'.")
+                logging.error("Error running 'event_history'.")
             else:
                 logging.info("Cluster historical data sent.")
         except Exception as e:
@@ -275,12 +274,15 @@ class RobustaSink(SinkBase):
             )
 
     def __run_events_history_thread(self):
-        # here to prevent a race between checking and writing findings from robusta sink
-        if self.dal.has_cluster_findings():
-            logging.info("Cluster already has historical data, No history pulled.")
-            return
-        thread = threading.Thread(target=self.__get_events_history)
-        thread.start()
+        try:
+            # here to prevent a race between checking and writing findings from robusta sink
+            if self.dal.has_cluster_findings():
+                logging.info("Cluster already has historical data, No history pulled.")
+                return
+            thread = threading.Thread(target=self.__get_events_history)
+            thread.start()
+        except:
+            logging.error(f"Failed to run events history thread")
 
     def __discover_cluster(self):
         self.__run_events_history_thread()

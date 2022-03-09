@@ -41,7 +41,7 @@ def event_history(event: ExecutionBaseEvent):
         )
         if events_table:
             finding.add_enrichment([events_table])
-        event.add_finding(finding)
+            event.add_finding(finding)
         reported_obj_history_list.append(warning_event_key)
 
 

@@ -18,7 +18,7 @@ def get_resource_events_table(table_name: str, kind: str, name: str, namespace: 
         rows = [
             [event.reason,
              event.type,
-             parse_kubernetes_datetime_to_ms(get_event_timestamp(event)) if get_event_timestamp(event) else "Missing Timestamp",
+             parse_kubernetes_datetime_to_ms(get_event_timestamp(event)) if get_event_timestamp(event) else 0,
              event.message]
             for event in event_list.items
         ]
