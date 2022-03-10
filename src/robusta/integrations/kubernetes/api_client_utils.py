@@ -246,5 +246,19 @@ def parse_kubernetes_datetime(k8s_datetime: str) -> datetime.datetime:
     return datetime.datetime.strptime(k8s_datetime, "%Y-%m-%dT%H:%M:%S%z")
 
 
+def parse_kubernetes_datetime_with_ms(k8s_datetime: str) -> datetime.datetime:
+    return datetime.datetime.strptime(k8s_datetime, "%Y-%m-%dT%H:%M:%S.%f%z")
+
+
+def is_ms_format(k8s_datetime: str) -> datetime.datetime:
+    try:
+        parse_kubernetes_datetime_with_ms(k8s_datetime)
+        return True
+    except:
+        return False
+
+
 def parse_kubernetes_datetime_to_ms(k8s_datetime: str) -> float:
+    if is_ms_format(k8s_datetime):
+        return parse_kubernetes_datetime_with_ms(k8s_datetime).timestamp() * 1000
     return parse_kubernetes_datetime(k8s_datetime).timestamp() * 1000
