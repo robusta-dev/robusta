@@ -66,9 +66,6 @@ def create_event_finding(event: Event):
         creation_date= get_event_timestamp(event)
     )
     finding.service_key = TopServiceResolver.guess_service_key(name=k8s_obj.name, namespace=k8s_obj.namespace)
-    # non-running services won't be in top service resolver
-    if not finding.service_key:
-        finding.service_key = gen_object_key(k8s_obj)
     return finding
 
 
