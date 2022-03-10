@@ -107,7 +107,7 @@ class SupabaseDal:
         self.signing_key = signing_key
 
     def to_issue(self, finding: Finding):
-        return {
+        issue_obj = {
             "id": str(finding.id),
             "title": finding.title,
             "description": finding.description,
@@ -125,6 +125,11 @@ class SupabaseDal:
             "cluster": self.cluster,
             "account_id": self.account_id,
         }
+
+        if finding.creation_date:
+            issue_obj["creation_date"] = finding.creation_date
+
+        return issue_obj
 
     def to_evidence(self, finding_id: uuid, enrichment: Enrichment) -> Dict[Any, Any]:
         structured_data = []
@@ -281,6 +286,23 @@ class SupabaseDal:
             )
             for service in res.get("data")
         ]
+
+    def has_cluster_findings(self) -> bool:
+        res = (
+            self.client.table(ISSUES_TABLE)
+            .select('*')
+            .filter("account_id", "eq", self.account_id)
+            .filter("cluster", "eq", self.cluster)
+            .limit(1)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to check cluster issues: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+        return len(res.get("data")) > 0
 
     def get_active_nodes(self) -> List[NodeInfo]:
         res = (

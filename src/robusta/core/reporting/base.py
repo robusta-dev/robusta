@@ -63,6 +63,7 @@ class Finding:
         subject: FindingSubject = FindingSubject(),
         finding_type: FindingType = FindingType.ISSUE,
         failure: bool = True,
+        creation_date: str = None
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
@@ -81,6 +82,7 @@ class Finding:
         )
         uri_path = f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
+        self.creation_date = creation_date
 
     def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
         if not enrichment_blocks:
