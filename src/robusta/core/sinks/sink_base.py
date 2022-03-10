@@ -17,7 +17,7 @@ class SinkBase:
     def stop(self):
         pass
 
-    def check_matchers(self, finding: Finding) -> bool:
+    def accepts(self, finding: Finding) -> bool:
         return finding.matches(self.params.match)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):

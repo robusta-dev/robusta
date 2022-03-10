@@ -214,7 +214,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         continue
 
                     # only write the finding if is matching against the sink matchers
-                    if sink.check_matchers(finding):
+                    if sink.accepts(finding):
                         # create deep copy, so that iterating on one sink enrichments won't affect the others
                         # Each sink has a different findings, but enrichments are shared
                         finding_copy = copy.deepcopy(finding)
