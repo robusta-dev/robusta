@@ -1,4 +1,6 @@
+import logging
 import uuid
+import re
 from enum import Enum
 from pydantic.main import BaseModel
 from typing import List, Dict
@@ -34,13 +36,37 @@ class Enrichment:
         return f"annotations: {self.annotations} Enrichment: {self.blocks} "
 
 
+class Filterable:
+    @property
+    def attribute_map(self) -> Dict[str, str]:
+        raise NotImplementedError
+
+    def get_invalid_attributes(self, attributes: List[str]) -> List:
+        return list(set(attributes) - set(self.attribute_map))
+
+    def attribute_matches(self, attribute: str, expression: str) -> bool:
+        value = self.attribute_map[attribute]
+        return bool(re.match(expression, value))
+
+    def matches(self, requirements: Dict[str, str]) -> bool:
+        invalid_attributes = self.get_invalid_attributes(requirements.keys())
+        if len(invalid_attributes) > 0:
+            logging.warning(f"Invalid match attributes: {invalid_attributes}")
+            return False
+
+        for attribute, expression in requirements.items():
+            if not self.attribute_matches(attribute, expression):
+                return False
+        return True
+
+
 class FindingSubject:
     def __init__(
         self,
         name: str = None,
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
         namespace: str = None,
-        node: str = None
+        node: str = None,
     ):
         self.name = name
         self.subject_type = subject_type
@@ -48,7 +74,7 @@ class FindingSubject:
         self.node = node
 
 
-class Finding:
+class Finding(Filterable):
     """
     A Finding represents an event that should be sent to sinks.
     """
@@ -63,7 +89,7 @@ class Finding:
         subject: FindingSubject = FindingSubject(),
         finding_type: FindingType = FindingType.ISSUE,
         failure: bool = True,
-        creation_date: str = None
+        creation_date: str = None,
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
@@ -77,12 +103,27 @@ class Finding:
         self.subject = subject
         self.enrichments: List[Enrichment] = []
         self.service_key = TopServiceResolver.guess_service_key(
-            name=subject.name,
-            namespace=subject.namespace
+            name=subject.name, namespace=subject.namespace
         )
-        uri_path = f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
+        uri_path = (
+            f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
+        )
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
         self.creation_date = creation_date
+
+    @property
+    def attribute_map(self) -> Dict[str, str]:
+        return {
+            "title": str(self.title),
+            "identifier": str(self.aggregation_key),
+            "severity": str(self.severity.name),
+            "source": str(self.source.name),
+            "type": str(self.finding_type.name),
+            "kind": str(self.subject.subject_type.value),
+            "namespace": str(self.subject.namespace),
+            "node": str(self.subject.node),
+            "name": str(self.subject.name),
+        }
 
     def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
         if not enrichment_blocks:
