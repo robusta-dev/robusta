@@ -3,12 +3,14 @@ import json
 import logging
 import time
 import threading
+import traceback
 from collections import defaultdict
 
 from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetList, Node, NodeList, Taint, \
     NodeCondition, PodList, Pod
 from typing import List, Dict
 
+from robusta.runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from ...model.env_vars import DISCOVERY_PERIOD_SEC , PERIODIC_LONG_SEC
 from ...model.nodes import NodeInfo, PodRequests
@@ -115,6 +117,24 @@ class RobustaSink(SinkBase):
 
         # save the cached services in the resolver.
         TopServiceResolver.store_cached_services(list(self.__services_cache.values()))
+
+    def __get_events_history(self):
+        try:
+            # we will need the services in cache before the event history is run to guess service name
+            self.__discover_services()
+            response = WebApi.run_manual_action(
+                action_name="event_history",
+                sinks=[self.sink_name],
+                retries=4,
+                timeout_delay=30
+            )
+            if response != 200:
+                logging.error("Error running 'event_history'.")
+            else:
+                logging.info("Cluster historical data sent.")
+        except Exception as e:
+            logging.error(f"Error getting events history {e}\n"
+                          f"{traceback.format_exc()}")
 
     def __discover_services(self):
         try:
@@ -253,7 +273,19 @@ class RobustaSink(SinkBase):
                 exc_info=True,
             )
 
+    def __run_events_history_thread(self):
+        try:
+            # here to prevent a race between checking and writing findings from robusta sink
+            if self.dal.has_cluster_findings():
+                logging.info("Cluster already has historical data, No history pulled.")
+                return
+            thread = threading.Thread(target=self.__get_events_history)
+            thread.start()
+        except:
+            logging.error(f"Failed to run events history thread")
+
     def __discover_cluster(self):
+        self.__run_events_history_thread()
         while self.__active:
             self.__periodic_cluster_status()
             self.__discover_services()

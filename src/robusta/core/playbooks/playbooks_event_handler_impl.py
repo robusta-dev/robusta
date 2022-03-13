@@ -214,16 +214,19 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                             f"sink {sink_name} not found. Skipping event finding {finding}"
                         )
                         continue
-                    # create deep copy, so that iterating on one sink enrichments won't affect the others
-                    # Each sink has a different findings, but enrichments are shared
-                    finding_copy = copy.deepcopy(finding)
-                    sink.write_finding(
-                        finding_copy, self.registry.get_sinks().platform_enabled
-                    )
-                    
-                    sink_info = sinks_info[sink_name]
-                    sink_info.type = sink.__class__.__name__
-                    sink_info.findings_count += 1
+
+                    # only write the finding if is matching against the sink matchers
+                    if sink.accepts(finding):
+                        # create deep copy, so that iterating on one sink enrichments won't affect the others
+                        # Each sink has a different findings, but enrichments are shared
+                        finding_copy = copy.deepcopy(finding)
+                        sink.write_finding(
+                            finding_copy, self.registry.get_sinks().platform_enabled
+                        )
+                        
+                        sink_info = sinks_info[sink_name]
+                        sink_info.type = sink.__class__.__name__
+                        sink_info.findings_count += 1
 
                 except Exception:  # Failure to send to one sink shouldn't fail all
                     logging.error(
