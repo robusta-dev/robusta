@@ -19,7 +19,7 @@ def event_report(event: EventChangeEvent, action_params: EventErrorReportParams)
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.INFO
         if event.obj.type == "Normal"
-        else FindingSeverity.HIGH,
+        else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
         aggregation_key=f"Kubernetes {event.obj.type} Event",
         subject=FindingSubject(
