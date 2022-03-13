@@ -55,7 +55,7 @@ def create_event_finding(event: Event):
         title=f"{event.reason} {event.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
         description=event.message,
         source=FindingSource.KUBERNETES_API_SERVER,
-        severity=FindingSeverity.MEDIUM,
+        severity=FindingSeverity.MEDIUM if event.type.lower() != "warning" else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
         aggregation_key=f"Kubernetes {event.type} Event",
         subject=FindingSubject(
