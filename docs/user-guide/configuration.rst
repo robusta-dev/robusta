@@ -247,12 +247,12 @@ In your ``values.yaml`` file add:
 .. code-block:: yaml
 
    runner:
-     additional_env_vars: |-
-       - name: GRAFANA_KEY
-         valueFrom:
-           secretKeyRef:
-             name: my-robusta-secrets
-             key: secret_grafana_key
+     additional_env_vars:
+     - name: GRAFANA_KEY
+       valueFrom:
+         secretKeyRef:
+           name: my-robusta-secrets
+           key: secret_grafana_key
 
 
 Next, define that the value should be pulled from an environment variable by using the special {{ env.VARIABLE }} syntax:
