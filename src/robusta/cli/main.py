@@ -312,7 +312,7 @@ def gen_config(
     if backend_profile.custom_profile:
         if not values.runner:
             values.runner = {}
-        additional_env_vars = [
+        values.runner["additional_env_vars"] = [
             {
                 "name": "RELAY_EXTERNAL_ACTIONS_URL",
                 "value": backend_profile.robusta_relay_external_actions_url,
@@ -323,7 +323,6 @@ def gen_config(
             },
             {"name": "ROBUSTA_UI_DOMAIN", "value": backend_profile.robusta_ui_domain},
         ]
-        values.runner["additional_env_vars"] = yaml.dump(additional_env_vars)
 
     with open(output_path, "w") as output_file:
         yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
