@@ -8,13 +8,14 @@ import typer
 from pydantic import BaseModel
 from collections import namedtuple
 
+from .backend_profile import backend_profile
 from .utils import log_title
 
 app = typer.Typer()
 
 SLACK_INTEGRATION_SERVICE_ADDRESS = os.environ.get(
     "SLACK_INTEGRATION_SERVICE_ADDRESS",
-    "https://api.robusta.dev/integrations/slack/get-token",
+    f"{backend_profile.robusta_cloud_api_host}/integrations/slack/get-token",
 )
 SlackApiKey = namedtuple("SlackApiKey", "key team_name")
 
@@ -36,7 +37,7 @@ def wait_for_slack_api_key(id: str) -> SlackApiKey:
 
 def _get_slack_key_once() -> SlackApiKey:
     id = str(uuid.uuid4())
-    url = f"https://api.robusta.dev/integrations/slack?id={id}"
+    url = f"{backend_profile.robusta_cloud_api_host}/integrations/slack?id={id}"
     typer.secho(
         f"If your browser does not automatically launch, open the below url:\n{url}"
     )
@@ -59,8 +60,10 @@ def get_slack_key() -> (str, str):
 def slack():
     """generate slack api key"""
     key, workspace = get_slack_key()
-    log_title(f"Connected to Slack workspace {workspace}.\n"
-              f"Your Slack key is:\n{key}\nAdd it to the slack sink configuration")
+    log_title(
+        f"Connected to Slack workspace {workspace}.\n"
+        f"Your Slack key is:\n{key}\nAdd it to the slack sink configuration"
+    )
 
 
 if __name__ == "__main__":
