@@ -16,8 +16,7 @@ from ..core.sinks.sink_base import SinkBase
 from ..core.playbooks.base_trigger import TriggerEvent
 from ..core.playbooks.actions_registry import ActionsRegistry
 from ..runner.telemetry import Telemetry
-from ..core.model.env_vars import RUNNER_VERSION, PROMETHEUS_ENABLED, \
-    ACCOUNT_ID_HASH, CLUSTER_ID_HASH
+from ..core.model.env_vars import RUNNER_VERSION, PROMETHEUS_ENABLED
 
 
 
@@ -178,9 +177,7 @@ class Registry:
     _global_config = dict()
     _telemetry: Telemetry = Telemetry(
         runner_version=RUNNER_VERSION,
-        prometheus_enabled=PROMETHEUS_ENABLED,
-        account_id=ACCOUNT_ID_HASH,
-        cluster_id=CLUSTER_ID_HASH    
+        prometheus_enabled=PROMETHEUS_ENABLED, 
     )
 
     def set_actions(self, actions: ActionsRegistry):

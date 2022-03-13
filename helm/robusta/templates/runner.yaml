@@ -31,10 +31,6 @@ spec:
             value: "true"
           - name: PROMETHEUS_ENABLED
             value: {{ .Values.enablePrometheusStack | quote}}
-          - name: CLUSTER_ID_HASH
-            value: {{ .Values.clusterName | sha256sum | quote}}
-          - name: ACCOUNT_ID_HASH
-            value: {{ .Values.globalConfig.account_id | sha256sum | quote}}
           - name: SEND_ADDITIONAL_TELEMETRY
             value: {{ .Values.runner.sendAdditionalTelemetry | quote }}
           - name: LOG_LEVEL

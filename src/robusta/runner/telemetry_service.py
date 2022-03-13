@@ -1,11 +1,14 @@
 import logging
 import os
+from collections import defaultdict
 from enum import Enum
 from time import sleep
 import sentry_sdk
 import requests
 import threading
 from src.robusta.model.config import Registry, Telemetry
+from src.robusta.runner.telemetry import SinkInfo
+
 from hikaru.model import NodeList
 
 class TelemetryLevel(Enum):
@@ -32,43 +35,33 @@ class TelemetryService:
             try:
                 sentry_sdk.init(sentry_dsn, traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", 0.5)))
             except Exception as e:
-                logging.error(f"Sentry error: {e}")
-                pass
+                logging.error(f"Sentry error: {e}", exc_info=True)
 
         self.__thread = threading.Thread(target=self.__log_periodic)
         self.__thread.start()
 
 
     def __log_periodic(self):
-
         while(True):
-            tele = self.registry.get_telemetry()
-          
-            current_nodes: NodeList = NodeList.listNode().obj
-            tele.nodes_count = len(current_nodes.items)
+            try:
+                tele = self.registry.get_telemetry()
+            
+                current_nodes: NodeList = NodeList.listNode().obj
+                tele.nodes_count = len(current_nodes.items)
 
-            self.log(tele)
+                self.__log(tele)
 
-            tele.sinks_findings_count = {k:0 for k in tele.sinks_findings_count} # periodic data.
-            sleep(self.periodic_time_sec)
+                tele.sinks_info = defaultdict(lambda: SinkInfo())
 
-
-    def log(self, data: Telemetry):
-        try:
-            r = requests.post(self.endpoint, data=data.json(), headers={'Content-Type': 'application/json'})
-            if(r.status_code != 201):
-                logging.error(
-                    f"Failed to log telemetry data",
-                    exc_info=True,
-                )
-            return r
-        except Exception as e:
-            logging.error(
-                f"Failed to run periodic telemetry update {e}",
-                exc_info=True,
-            )
-            pass
-        return
+                sleep(self.periodic_time_sec)
+            except Exception as e:
+                logging.error(f"Failed to run periodic telemetry update {e}", exc_info=True)
+                pass
 
 
-    
+    def __log(self, data: Telemetry):
+        r = requests.post(self.endpoint, data=data.json(), headers={'Content-Type': 'application/json'})
+        if(r.status_code != 201):
+            logging.error(f"Failed to log telemetry data")
+
+        return r

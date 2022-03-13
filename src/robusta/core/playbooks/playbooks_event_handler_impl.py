@@ -202,8 +202,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 return trigger.get()
         return None
 
-    def __handle_findings(self, execution_event: ExecutionBaseEvent): #todo add the code to increase finding count.
-        sinks_findings_dict = self.registry.get_telemetry().sinks_findings_count
+    def __handle_findings(self, execution_event: ExecutionBaseEvent):
+        sinks_info = self.registry.get_telemetry().sinks_info
 
         for sink_name in execution_event.named_sinks:
             for finding in execution_event.sink_findings[sink_name]:
@@ -220,8 +220,11 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     sink.write_finding(
                         finding_copy, self.registry.get_sinks().platform_enabled
                     )
+                    
+                    sink_info = sinks_info[sink_name]
+                    sink_info.type = sink.__class__.__name__
+                    sink_info.findings_count += 1
 
-                    sinks_findings_dict[sink_name] += 1
                 except Exception:  # Failure to send to one sink shouldn't fail all
                     logging.error(
                         f"Failed to publish finding to sink {sink_name}", exc_info=True

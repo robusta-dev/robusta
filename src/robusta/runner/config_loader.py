@@ -38,7 +38,7 @@ from ..model.config import (
 from ..integrations.scheduled.playbook_scheduler_manager_impl import (
     PlaybooksSchedulerManagerImpl,
 )
-
+import hashlib
 
 class ConfigLoader:
 
@@ -232,8 +232,9 @@ class ConfigLoader:
                 self.registry.set_sinks(sinks_registry)
 
                 telemetry = self.registry.get_telemetry()
-                telemetry.sinks_findings_count = { k:0 for (k, _) in sinks_registry.get_all().items() }
                 telemetry.playbooks_count = len(runner_config.active_playbooks)
+                telemetry.account_id = hashlib.sha256(str(runner_config.global_config.get("account_id")).encode("utf-8")).hexdigest()
+                telemetry.cluster_id = hashlib.sha256(str(runner_config.global_config.get("cluster_name")).encode("utf-8")).hexdigest()
 
                 self.__reload_receiver()
             except Exception as e:
