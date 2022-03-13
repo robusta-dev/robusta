@@ -7,7 +7,11 @@ import humanize
 @action
 def node_disk_analyzer(event: NodeEvent):
     """
-    Provides relevant disk information for troubleshooting disk issues
+    Provides relevant disk information for troubleshooting disk issues.
+    Currently, the following information is provided:
+        1. The total disk space used by pods, and the total disk space used by the node for other purposes
+        2. Disk usage of pods, sorted from highest to lowest
+        3. Disk usage of containers, sorted (separately for every pod) from highest to lowest
     """
     node = event.get_node()
     if not node:
