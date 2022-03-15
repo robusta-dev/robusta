@@ -7,8 +7,8 @@ class SinkInfo(BaseModel):
     findings_count: int = 0
 
 class Telemetry(BaseModel):
-    account_id: str = 'None'
-    cluster_id: str = 'None'
+    account_id: str = ""
+    cluster_id: str = ""
     runner_version : str
     last_alert_at : Optional[str] #ts
 

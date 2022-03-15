@@ -233,8 +233,8 @@ class ConfigLoader:
 
                 telemetry = self.registry.get_telemetry()
                 telemetry.playbooks_count = len(runner_config.active_playbooks)
-                telemetry.account_id = hashlib.sha256(str(runner_config.global_config.get("account_id")).encode("utf-8")).hexdigest()
-                telemetry.cluster_id = hashlib.sha256(str(runner_config.global_config.get("cluster_name")).encode("utf-8")).hexdigest()
+                telemetry.account_id = hashlib.sha256(str(runner_config.global_config.get("account_id", "no_account")).encode("utf-8")).hexdigest()
+                telemetry.cluster_id = hashlib.sha256(str(runner_config.global_config.get("cluster_name", "no_cluster")).encode("utf-8")).hexdigest()
 
                 self.__reload_receiver()
             except Exception as e:
