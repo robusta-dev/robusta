@@ -32,7 +32,7 @@ def event_history(event: ExecutionBaseEvent):
         if warning_event_key in reported_obj_history_list:
             # if there were multiple warnings on the same object we dont want the history pulled multiple times
             continue
-        finding = create_event_finding(warning_event)
+        finding = create_debug_event_finding(warning_event)
         events_table = get_resource_events_table(
             "Resource events",
             warning_event.involvedObject.kind,
@@ -45,7 +45,7 @@ def event_history(event: ExecutionBaseEvent):
         reported_obj_history_list.append(warning_event_key)
 
 
-def create_event_finding(event: Event):
+def create_debug_event_finding(event: Event):
     """
     Create finding based on the kubernetes event
     """
@@ -55,7 +55,7 @@ def create_event_finding(event: Event):
         title=f"{event.reason} {event.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
         description=event.message,
         source=FindingSource.KUBERNETES_API_SERVER,
-        severity=FindingSeverity.MEDIUM if event.type.lower() != "warning" else FindingSeverity.DEBUG,
+        severity=FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
         aggregation_key=f"Kubernetes {event.type} Event",
         subject=FindingSubject(
