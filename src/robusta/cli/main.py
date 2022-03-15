@@ -17,6 +17,7 @@ from kubernetes import config
 from pydantic import BaseModel
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
+from .backend_profile import backend_profile
 from ..core.sinks.msteams.msteams_sink_params import (
     MsTeamsSinkConfigWrapper,
     MsTeamsSinkParams,
@@ -58,7 +59,7 @@ class PodConfigs(Dict[str, Dict[str, Dict[str, str]]]):
     __root__: Dict[str, Dict[str, Dict[str, str]]]
 
     @classmethod
-    def gen_config(cls, memory_size: str):
+    def gen_config(cls, memory_size: str) -> Dict:
         return {"resources": {"requests": {"memory": memory_size}}}
 
 
@@ -74,9 +75,9 @@ class HelmValues(BaseModel):
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
     playbooksPersistentVolumeSize: str = None
-    kubewatch: PodConfigs = None
-    grafanaRenderer: PodConfigs = None
-    runner: PodConfigs = None
+    kubewatch: Dict = None
+    grafanaRenderer: Dict = None
+    runner: Dict = None
 
     def set_pod_configs_for_small_clusters(self):
         self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
@@ -228,7 +229,7 @@ def gen_config(
                 )
                 email = email.strip()
                 res = requests.post(
-                    "https://api.robusta.dev/accounts/create",
+                    f"{backend_profile.robusta_cloud_api_host}/accounts/create",
                     json={
                         "account_name": account_name,
                         "email": email,
@@ -279,7 +280,7 @@ def gen_config(
             require_eula_approval = True
 
     if require_eula_approval:
-        eula_url = "https://api.robusta.dev/eula.html"
+        eula_url = f"{backend_profile.robusta_cloud_api_host}/eula.html"
         typer.echo(
             f"Please read and approve our End User License Agreement: {eula_url}"
         )
@@ -308,6 +309,21 @@ def gen_config(
         values.set_pod_configs_for_small_clusters()
         values.playbooksPersistentVolumeSize = "128Mi"
 
+    if backend_profile.custom_profile:
+        if not values.runner:
+            values.runner = {}
+        values.runner["additional_env_vars"] = [
+            {
+                "name": "RELAY_EXTERNAL_ACTIONS_URL",
+                "value": backend_profile.robusta_relay_external_actions_url,
+            },
+            {
+                "name": "WEBSOCKET_RELAY_ADDRESS",
+                "value": backend_profile.robusta_relay_ws_address,
+            },
+            {"name": "ROBUSTA_UI_DOMAIN", "value": backend_profile.robusta_ui_domain},
+        ]
+
     with open(output_path, "w") as output_file:
         yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
         typer.secho(
@@ -321,7 +337,7 @@ def gen_config(
 
     if robusta_api_key:
         typer.secho(
-            "Finish the Helm install and then login to Robusta UI at https://platform.robusta.dev\n",
+            f"Finish the Helm install and then login to Robusta UI at {backend_profile.robusta_ui_domain}\n",
             fg="green",
         )
 

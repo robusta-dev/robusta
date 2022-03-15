@@ -45,8 +45,11 @@ spec:
           {{- end }}
           - name: RUNNER_VERSION
             value: {{ .Chart.AppVersion }}
+          {{- if kindIs "string" .Values.runner.additional_env_vars }}
+          {{- fail "The `additional_env_vars` string value is deprecated. Change the `additional_env_vars` value to an array" -}}
+          {{- end }}
           {{- if .Values.runner.additional_env_vars }}
-          {{ .Values.runner.additional_env_vars | nindent 10 }}
+          {{ toYaml .Values.runner.additional_env_vars | nindent 10 }}
           {{- end }}
         envFrom: 
         - secretRef:
