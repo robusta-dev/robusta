@@ -13,6 +13,7 @@ class BackendProfile(BaseModel):
     robusta_ui_domain: str = ""
     robusta_relay_ws_address: str = ""
     robusta_relay_external_actions_url: str = ""
+    robusta_telemetry_endpoint: str = ""
     custom_profile: bool = False
 
 

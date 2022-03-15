@@ -38,7 +38,7 @@ from ..model.config import (
 from ..integrations.scheduled.playbook_scheduler_manager_impl import (
     PlaybooksSchedulerManagerImpl,
 )
-
+import hashlib
 
 class ConfigLoader:
 
@@ -231,6 +231,11 @@ class ConfigLoader:
                 self.registry.set_playbooks(playbooks_registry)
                 self.registry.set_sinks(sinks_registry)
 
+                telemetry = self.registry.get_telemetry()
+                telemetry.playbooks_count = len(runner_config.active_playbooks)
+                telemetry.account_id = hashlib.sha256(str(runner_config.global_config.get("account_id", "no_account")).encode("utf-8")).hexdigest()
+                telemetry.cluster_id = hashlib.sha256(str(runner_config.global_config.get("cluster_name", "no_cluster")).encode("utf-8")).hexdigest()
+
                 self.__reload_receiver()
             except Exception as e:
                 logging.error(f"unknown error reloading playbooks. will try again when they next change", exc_info=True)
@@ -241,7 +246,7 @@ class ConfigLoader:
         runner_config: RunnerConfig,
         sinks_registry: SinksRegistry,
         actions_registry: ActionsRegistry,
-        registry
+        registry : Registry
     ) -> (SinksRegistry, PlaybooksRegistry):
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(
