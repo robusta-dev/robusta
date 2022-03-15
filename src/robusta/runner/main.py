@@ -12,7 +12,7 @@ from ..core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerI
 from .. import api as robusta_api
 from .config_loader import ConfigLoader
 from ..model.config import Registry
-from ..core.model.env_vars import TELEMETRY_ENDPOINT, SEND_ADDITIONAL_TELEMETRY, \
+from ..core.model.env_vars import ROBUSTA_TELEMETRY_ENDPOINT, SEND_ADDITIONAL_TELEMETRY, \
  ENABLE_TELEMETRY, TELEMETRY_PERIODIC_SEC
 
 def main():
@@ -24,7 +24,7 @@ def main():
     if ENABLE_TELEMETRY:    
         telemetry_service = TelemetryService(
             telemetry_level= TelemetryLevel.ERROR if SEND_ADDITIONAL_TELEMETRY else TelemetryLevel.USAGE,
-            endpoint=TELEMETRY_ENDPOINT,
+            endpoint=ROBUSTA_TELEMETRY_ENDPOINT,
             periodic_time_sec= TELEMETRY_PERIODIC_SEC,
             registry= registry,
             )

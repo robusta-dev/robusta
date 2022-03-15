@@ -322,6 +322,10 @@ def gen_config(
                 "value": backend_profile.robusta_relay_ws_address,
             },
             {"name": "ROBUSTA_UI_DOMAIN", "value": backend_profile.robusta_ui_domain},
+            {
+                "name": "ROBUSTA_TELEMETRY_ENDPOINT",
+                "value": backend_profile.robusta_telemetry_endpoint
+            }
         ]
 
     with open(output_path, "w") as output_file:
