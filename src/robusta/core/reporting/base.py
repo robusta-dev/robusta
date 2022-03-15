@@ -14,6 +14,7 @@ class BaseBlock(BaseModel):
 
 
 class FindingSeverity(Enum):
+    DEBUG = 0
     INFO = 1
     LOW = 2
     MEDIUM = 3
