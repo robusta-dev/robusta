@@ -68,6 +68,7 @@ spec:
               command: ["bash", "-c", "kill -SIGINT 1"]
         resources:
           requests:
+            cpu: {{ .Values.runner.resources.requests.cpu }}
             memory: {{ .Values.runner.resources.requests.memory | quote }}
           limits:
             memory: {{ .Values.runner.resources.requests.memory | quote }}
@@ -83,6 +84,7 @@ spec:
               command: ["bash", "-c", "kill -SIGINT 1"]
         resources:
           requests:
+            cpu: {{ .Values.grafanaRenderer.resources.requests.cpu }}
             memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}
           limits:
             memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}
