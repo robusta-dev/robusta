@@ -49,7 +49,7 @@ builtinPlaybooks:
   - on_prometheus_alert: {}
   actions:
   - name_silencer:
-      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown"]
+      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeNodeNotReady
