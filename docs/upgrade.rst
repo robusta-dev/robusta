@@ -3,7 +3,7 @@ Upgrade Guide
 
 Robusta is installed with Helm, so Robusta upgrades are just Helm upgrades.
 
-.. warning:: Upgrading an existing Release with bundled Prometheus Stack might require manual actions. :ref:`Read here <Upgrading with bundled Prometheus Stack>`
+.. warning:: Upgrading an existing release with bundled Prometheus Stack might require manual actions. :ref:`Read here <Upgrading with bundled Prometheus Stack>`
 
 Helm Upgrade
 ------------------------------
@@ -35,9 +35,10 @@ Notes
 Upgrading with bundled Prometheus Stack
 ----------------------------------------
 
-If you didn't install Robusta's bundled Prometheus Stack then you can :ref:`Upgrade at ease <Helm Upgrade>`, Otherwise, keep reading.
+If you didn't install Robusta's bundled Prometheus Stack then you can :ref:`upgrade at ease <Helm Upgrade>`. Otherwise, keep reading.
 
-1. Why do I need to manually upgrade?
+Why do I need to manually upgrade?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Robusta uses kube-prometheus-stack, which creates custom resources also known as `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_ on installation.     
 With Helm v3, CRDs are not updated or removed by default and should be manually handled. Consult also the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_. 
@@ -45,13 +46,13 @@ With Helm v3, CRDs are not updated or removed by default and should be manually 
 From 0.8.x to >= 0.9.x 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. Check robusta version, look under Robusta:
+1. Determine Robusta's version by running the following:
 
 .. code-block:: bash
 
     helm list
 
-2. Due to the upgrade of the dependency, kube-state-metrics chart, removal of its deployment/stateful needs to be done manually prior to upgrading:
+2. The kube-state-metrics chart needs to be manually removed prior to upgrading:
 
 .. code-block:: bash
 
