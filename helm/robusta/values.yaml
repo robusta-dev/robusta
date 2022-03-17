@@ -41,13 +41,9 @@ builtinPlaybooks:
   - on_pod_update: {}
   actions:
   - restart_loop_reporter:
-      restart_reason: CrashLoopBackOff
+      restart_reason: "CrashLoopBackOff"
   - image_pull_backoff_reporter:
       rate_limit: 3600
-- triggers:
-  - on_node_update: {}
-  actions:
-  - node_health_watcher: {}
 # playbooks for prometheus enrichment and silencing
 - triggers:
   - on_prometheus_alert: {}
@@ -78,6 +74,11 @@ builtinPlaybooks:
   actions:
   - oom_killer_enricher: {}
   - graph_enricher: {}
+- triggers:
+  - on_prometheus_alert:
+      alert_name: NodeFilesystemSpaceFillingUp
+  actions:
+  - node_disk_analyzer: {}
 - triggers:
   - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
@@ -144,14 +145,15 @@ runner:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
   log_level: INFO
-  sentry_dsn:
+  sentry_dsn: https://53b627690db14de7b02095407596fa16@o1120648.ingest.sentry.io/6156573
+  sendAdditionalTelemetry: false
   resources:
     requests:
       cpu: 250m
       memory: 1024Mi
     limits:
       cpu: ~
-  additional_env_vars: ""
+  additional_env_vars: []
 
 kube-prometheus-stack:
   alertmanager:

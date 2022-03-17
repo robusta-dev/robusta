@@ -1,6 +1,8 @@
 Kubernetes (API Server)
 ############################
 
+.. _kubernetes_triggers:
+
 Robusta can run automated actions when Kubernetes resources change.
 
 For example, we can write annotations to Grafana when deployments update:
@@ -50,6 +52,7 @@ An example ``on_RESOURCE_create`` trigger is given for each one. The ``update``,
 * Job: on_job_create
 * Namespace: on_namespace_create
 * ServiceAccount: on_serviceaccount_create
+* PersistentVolume: on_persistentvolume_create
 
 Wildcard triggers
 --------------------
@@ -61,10 +64,20 @@ The following wildcard triggers will fire for any supported Kubernetes resource:
 * on_kubernetes_any_resource_delete
 * on_kubernetes_any_resource_all_changes
 
-Limiting when triggers run
-----------------------------
+Additional triggers
+-----------------------
 
-You can limit when triggers run using the following filters:
+These triggers fire on very specific events:
+
+.. _on_kubernetes_warning_event:
+
+* on_kubernetes_warning_event - when a Kubernetes event of level WARNING is created or modified
+
+
+Limiting when kubernetes triggers fire
+----------------------------------------
+
+You can limit all the kubernetes triggers with the following filters:
 
 * ``name_prefix`` - Name prefix to match resources.
 * ``namespace_prefix`` - Namespace prefix to match resources.

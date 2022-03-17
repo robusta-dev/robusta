@@ -11,6 +11,7 @@ PLAYBOOKS_CONFIG_FILE_PATH = os.environ.get("PLAYBOOKS_CONFIG_FILE_PATH")
 
 INSTALLATION_NAMESPACE = os.environ.get("INSTALLATION_NAMESPACE", "robusta")
 DISCOVERY_PERIOD_SEC = int(os.environ.get("DISCOVERY_PERIOD_SEC", 90))
+PERIODIC_LONG_SEC = int(os.environ.get("PERIODIC_LONG_SEC", 60 * 60 * 3))
 SUPABASE_LOGIN_RATE_LIMIT_SEC = int(
     os.environ.get("SUPABASE_LOGIN_RATE_LIMIT_SEC", 900)
 )
@@ -32,6 +33,7 @@ FLOAT_PRECISION_LIMIT = int(os.environ.get("FLOAT_PRECISION_LIMIT", 11))
 PROMETHEUS_REQUEST_TIMEOUT_SECONDS = float(
     os.environ.get("PROMETHEUS_REQUEST_TIMEOUT_SECONDS", 90.0)
 )
+PROMETHEUS_ENABLED = os.environ.get("PROMETHEUS_ENABLED", "false").lower() == "true"
 
 INCOMING_REQUEST_TIME_WINDOW_SECONDS = int(
     os.environ.get("INCOMING_REQUEST_TIME_WINDOW_SECONDS", 3600)
@@ -53,4 +55,7 @@ TEAMS_IMAGE_WIDTH = os.environ.get("TEAMS_IMAGE_WIDTH", "700px")
 
 ROBUSTA_UI_DOMAIN = os.environ.get("ROBUSTA_UI_DOMAIN", "https://platform.robusta.dev")
 
-SENTRY_TRACES_SAMPLE_RATE = float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", 0.5))
+ROBUSTA_TELEMETRY_ENDPOINT = os.environ.get("ROBUSTA_TELEMETRY_ENDPOINT", "https://api.robusta.dev/telemetry")
+ENABLE_TELEMETRY = os.environ.get("ENABLE_TELEMETRY", "true").lower() == "true"
+SEND_ADDITIONAL_TELEMETRY = os.environ.get("SEND_ADDITIONAL_TELEMETRY", "false").lower() == "true"
+TELEMETRY_PERIODIC_SEC = int(os.environ.get("TELEMETRY_PERIODIC_SEC", 60 * 60 * 24)) # 24H

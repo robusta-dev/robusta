@@ -186,6 +186,51 @@ Here is a full example showing how to configure all possible sinks:
         name: webhook_sink
         url: "https://my-webhook-service.com/robusta-alerts"
 
+Sink matchers
+^^^^^^^^^^^^^
+
+Sinks can be configured to report findings only when they match **all** the specified regular expressions:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_slack_sink
+        slack_channel: test-notifications
+        api_key: secret-key
+        match:
+          # match any namespace containing the "test" substring
+          namespace: test
+          # match any node containing the "test-node" substring
+          node: test-node
+    - slack_sink:
+        name: prod_slack_sink
+        slack_channel: prod-notifications
+        api_key: secret-key
+        match:
+          # match the "prod" namespace exactly
+          namespace: ^prod$
+    - slack_sink:
+        name: pod_slack_sink
+        slack_channel: pod-notifications
+        api_key: secret-key
+        match:
+          # match only notifications for pods
+          kind: pod
+
+Supported attributes:
+  - ``title``: e.g. ``Crashing pod crash-pod in namespace default``
+  - ``identifier``: e.g. ``restart_loop_reporter``
+  - ``severity``: one of ``INFO``, ``LOW``, ``MEDIUM``, ``HIGH``
+  - ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
+  - ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
+  - ``source``: one of ``NONE``, ``KUBERNETES_API_SERVER``, ``PROMETHEUS``, ``MANUAL``, ``CALLBACK``
+  - ``namespace``: the Kubernetes object namespace
+  - ``node`` : the Kubernetes node name
+  - ``name`` : the Kubernetes object name
+
+The regular expressions must be in the `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_.
+
 Configuration secrets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -202,12 +247,12 @@ In your ``values.yaml`` file add:
 .. code-block:: yaml
 
    runner:
-     additional_env_vars: |-
-       - name: GRAFANA_KEY
-         valueFrom:
-           secretKeyRef:
-             name: my-robusta-secrets
-             key: secret_grafana_key
+     additional_env_vars:
+     - name: GRAFANA_KEY
+       valueFrom:
+         secretKeyRef:
+           name: my-robusta-secrets
+           key: secret_grafana_key
 
 
 Next, define that the value should be pulled from an environment variable by using the special {{ env.VARIABLE }} syntax:

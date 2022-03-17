@@ -1,8 +1,6 @@
 # TODO: move the python playbooks into their own subpackage and put each playbook in its own file
 import humanize
 from robusta.api import *
-from robusta.integrations.kubernetes.process_utils import ProcessFinder, ProcessType
-from robusta.utils.parsing import load_json
 from typing import List
 
 
@@ -41,13 +39,9 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
             title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
             source=FindingSource.MANUAL,
             aggregation_key="python_profiler",
+            subject=PodFindingSubject(pod),
             finding_type=FindingType.REPORT,
             failure=False,
-            subject=FindingSubject(
-                pod.metadata.name,
-                FindingSubjectType.TYPE_POD,
-                pod.metadata.namespace,
-            ),
         )
 
         for target_proc in processes:
@@ -101,13 +95,9 @@ def pod_ps(event: PodEvent):
         title=f"Processes in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="pod_processes",
+        subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
     )
     finding.add_enrichment(
         [
@@ -165,13 +155,9 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         title=f"Memory allocations for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_memory_allocations",
+        subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
     )
     event.add_finding(finding)
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
@@ -286,13 +272,9 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         title=f"Stacktrace on pid {pid}:",
         source=FindingSource.MANUAL,
         aggregation_key="debugger_stack_trace",
+        subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
     )
     event.add_finding(finding)
     cmd = f"debug-toolkit stack-trace {pid}"
@@ -326,13 +308,9 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_process_inspector",
+        subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
     )
     event.add_finding(finding)
 
@@ -395,13 +373,9 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         title=f"Python debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_debugger",
+        subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
-        subject=FindingSubject(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-        ),
     )
     event.add_finding(finding)
 

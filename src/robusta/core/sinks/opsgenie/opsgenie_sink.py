@@ -21,9 +21,9 @@ PRIORITY_MAP = {
 
 
 class OpsGenieSink(SinkBase):
-    def __init__(self, sink_config: OpsGenieSinkConfigWrapper, cluster_name: str):
-        super().__init__(sink_config.opsgenie_sink)
-        self.cluster_name = cluster_name
+    def __init__(self, sink_config: OpsGenieSinkConfigWrapper, registry):
+        super().__init__(sink_config.opsgenie_sink, registry)
+
         self.api_key = sink_config.opsgenie_sink.api_key
         self.teams = sink_config.opsgenie_sink.teams
         self.tags = sink_config.opsgenie_sink.tags

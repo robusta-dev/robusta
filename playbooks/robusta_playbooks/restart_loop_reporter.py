@@ -13,15 +13,16 @@ class RestartLoopParams(RateLimitParams):
 def get_crashing_containers(
     status: PodStatus, config: RestartLoopParams
 ) -> [ContainerStatus]:
+    all_statuses = status.containerStatuses + status.initContainerStatuses
     return [
         container_status
-        for container_status in status.containerStatuses
+        for container_status in all_statuses
         if container_status.state.waiting is not None
         and container_status.restartCount
         > 1  # report only after the 2nd restart and get previous logs
         and (
             config.restart_reason is None
-            or container_status.state.waiting.reason == config.restart_reason
+            or config.restart_reason in container_status.state.waiting.reason
         )
     ]
 
@@ -51,9 +52,7 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
         title=f"Crashing pod {pod.metadata.name} in namespace {pod.metadata.namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="restart_loop_reporter",
-        subject=FindingSubject(
-            pod_name, FindingSubjectType.TYPE_POD, pod.metadata.namespace
-        ),
+        subject=PodFindingSubject(pod),
     )
     blocks: List[BaseBlock] = []
     for container_status in crashed_container_statuses:

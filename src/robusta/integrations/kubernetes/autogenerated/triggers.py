@@ -917,6 +917,71 @@ class ServiceAccountUpdateTrigger(K8sBaseTrigger):
         return ServiceAccountChangeEvent
 
 
+# PersistentVolume Triggers
+class PersistentVolumeAllChangesTrigger(K8sBaseTrigger):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="PersistentVolume", 
+            operation=None, 
+            name_prefix=name_prefix, 
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return PersistentVolumeChangeEvent
+
+
+class PersistentVolumeCreateTrigger(K8sBaseTrigger):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="PersistentVolume", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return PersistentVolumeChangeEvent
+
+
+class PersistentVolumeDeleteTrigger(K8sBaseTrigger):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="PersistentVolume", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return PersistentVolumeChangeEvent
+
+
+class PersistentVolumeUpdateTrigger(K8sBaseTrigger):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="PersistentVolume", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return PersistentVolumeChangeEvent
+
+
 # Kubernetes Any Triggers
 class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
 
@@ -1025,6 +1090,10 @@ class K8sTriggers(BaseModel):
     on_node_create: Optional[NodeCreateTrigger]
     on_node_delete: Optional[NodeDeleteTrigger]
     on_node_update: Optional[NodeUpdateTrigger]
+    on_persistentvolume_all_changes: Optional[PersistentVolumeAllChangesTrigger]
+    on_persistentvolume_create: Optional[PersistentVolumeCreateTrigger]
+    on_persistentvolume_delete: Optional[PersistentVolumeDeleteTrigger]
+    on_persistentvolume_update: Optional[PersistentVolumeUpdateTrigger]
     on_pod_all_changes: Optional[PodAllChangesTrigger]
     on_pod_create: Optional[PodCreateTrigger]
     on_pod_delete: Optional[PodDeleteTrigger]

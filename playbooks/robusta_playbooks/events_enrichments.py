@@ -10,6 +10,11 @@ def event_report(event: EventChangeEvent, action_params: EventErrorReportParams)
     """
     Create finding based on the kubernetes event
     """
+    if (
+        event.operation != K8sOperationType.CREATE
+    ):  # run only when a new event is created
+        return
+
     k8s_obj = event.obj.involvedObject
 
     # creating the finding before the rate limiter, to use the service key for rate limiting
@@ -19,13 +24,14 @@ def event_report(event: EventChangeEvent, action_params: EventErrorReportParams)
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.INFO
         if event.obj.type == "Normal"
-        else FindingSeverity.HIGH,
+        else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
         aggregation_key=f"Kubernetes {event.obj.type} Event",
         subject=FindingSubject(
             k8s_obj.name,
             FindingSubjectType.from_kind(k8s_obj.kind),
             k8s_obj.namespace,
+            KubeObjFindingSubject.get_node_name(k8s_obj),
         ),
     )
     event.add_finding(finding)
