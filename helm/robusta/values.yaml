@@ -102,7 +102,7 @@ enablePlatformPlaybooks: false
 
 platformPlaybooks:
 - triggers:
-  - on_kubernetes_warning_event: {}
+  - on_kubernetes_warning_event_create: {}
   actions:
   - event_report: {}
   - event_resource_events: {}
