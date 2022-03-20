@@ -10,10 +10,6 @@ def event_report(event: EventChangeEvent, action_params: EventErrorReportParams)
     """
     Create finding based on the kubernetes event
     """
-    if (
-        event.operation != K8sOperationType.CREATE
-    ):  # run only when a new event is created
-        return
 
     k8s_obj = event.obj.involvedObject
 
