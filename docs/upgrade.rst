@@ -81,7 +81,7 @@ From versions lower than 0.9.1 to latest
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.55.0/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.55.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
 
-4. Update helm chart and upgrade Robusta: (:ref:`Where is my values.yaml <values-file>`)
+4. Update helm chart and upgrade Robusta (:ref:`where is my values.yaml <values-file>`):
 
 .. code-block:: bash
 
