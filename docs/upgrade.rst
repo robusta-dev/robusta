@@ -17,6 +17,8 @@ This will upgrade Robusta while preserving any custom settings:
 
 We recommend running the above command exactly as written.
 
+.. _values-file:
+
 .. admonition:: Where is my values.yaml?
 
     If you have lost your ``values.yaml`` file, you can extract it from the cluster:
@@ -24,6 +26,12 @@ We recommend running the above command exactly as written.
     .. code-block:: bash
 
          helm get values robusta
+
+Verify that Robusta is running and there are no errors in the logs:
+
+.. code-block:: bash
+
+    robusta logs
 
 Notes
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -43,8 +51,8 @@ Why do I need to manually upgrade?
 Robusta uses kube-prometheus-stack, which creates custom resources also known as `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_ on installation.     
 With Helm v3, CRDs are not updated or removed by default and should be manually handled. Consult also the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_. 
 
-From  > 0.9.1 to latest
-^^^^^^^^^^^^^^^^^^^^^^^^
+From versions lower than 0.9.1 to latest
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Determine Robusta's version by running the following:
 
@@ -73,8 +81,14 @@ From  > 0.9.1 to latest
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.55.0/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.55.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
 
-4. Update helm chart and upgrade Robusta:
+4. Update helm chart and upgrade Robusta: (:ref:`Where is my values.yaml <values-file>`)
 
 .. code-block:: bash
 
-    helm repo update && helm upgrade robusta robusta/robusta -f ./generated_values.yaml
+    helm repo update && helm upgrade robusta robusta/robusta -f ./values.yaml
+
+5. Verify that Robusta is running and there are no errors in the logs:
+
+.. code-block:: bash
+
+    robusta logs
