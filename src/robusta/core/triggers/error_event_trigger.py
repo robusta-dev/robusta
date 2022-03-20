@@ -69,3 +69,54 @@ class WarningEventTrigger(EventAllChangesTrigger):
             service_key if service_key else namespace + ":" + name,
             self.rate_limit,
         )
+
+
+class WarningEventCreateTrigger(WarningEventTrigger):
+    def __init__(
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+        rate_limit: int = 3600,
+    ):
+        super().__init__(
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+            rate_limit=rate_limit,
+            operations=["create"],
+        )
+
+
+class WarningEventUpdateTrigger(WarningEventTrigger):
+    def __init__(
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+        rate_limit: int = 3600,
+    ):
+        super().__init__(
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+            rate_limit=rate_limit,
+            operations=["update"],
+        )
+
+
+class WarningEventDeleteTrigger(WarningEventTrigger):
+    def __init__(
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+        rate_limit: int = 3600,
+    ):
+        super().__init__(
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+            rate_limit=rate_limit,
+            operations=["delete"],
+        )
