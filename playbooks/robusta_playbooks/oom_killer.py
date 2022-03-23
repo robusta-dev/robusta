@@ -21,8 +21,8 @@ class OomKillerEnricherParams(ActionParams):
     prometheus_url: Optional[str] = None
 
     """
-    :var metrics_duration_in_secs: Memory usage metrics of nodes and pod containers where OOMKills have occurred will be queried
-    from prometheus in order to determine the estimated reason of each OOMKill.
+    :var metrics_duration_in_secs: Memory usage metrics of nodes and pod containers where OOMKills have occurred
+    will be queried from prometheus in order to determine the estimated reason of each OOMKill.
     This parameter determines the amount of time, in seconds, these metrics will be applied on.
     For example, if duration_in_secs is 1200, memory usage metrics from the last 20 minutes will be considered.
     """
@@ -257,16 +257,30 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
 @action
 def pod_oom_kill_simulator(event: ExecutionBaseEvent):
     pod = Pod(apiVersion='v1', kind='Pod',
-              metadata=ObjectMeta(name='memory-eater', namespace='default'),
+              metadata=ObjectMeta(name='oom-kill-by-pod', namespace='default'),
               spec=PodSpec(restartPolicy="Never", containers=[Container(
+                  imagePullPolicy="Always",
                   name='memory-eater',
                   image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/memory-eater:1.0',
-                  args=['55MiB', '45MiB', '45', '1'],
+                  args=['65Mi', '40Mi', '20', '1'],
                   resources=ResourceRequirements(limits={'memory': '100Mi'}))])
               )
     pod.create()
 
 
 @action
-def node_oom_kill_simulator(event: ExecutionBaseEvent):
-    pass
+def node_oom_kill_simulator(event: NodeEvent):
+    node = event.get_node()
+    if node is None:
+        logging.error(f"cannot run node oom kill simulator on event with no node object: {event}")
+        return
+
+    pod = Pod(apiVersion='v1', kind='Pod',
+              metadata=ObjectMeta(name='oom-kill-by-node', namespace='default'),
+              spec=PodSpec(restartPolicy="Never", nodeName=node.metadata.name, containers=[Container(
+                  imagePullPolicy="Always",
+                  name='memory-eater',
+                  image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/memory-eater:1.0',
+                  args=['0Gi', '1000Gi', '1000', '0.02'])])
+              )
+    pod.create()
