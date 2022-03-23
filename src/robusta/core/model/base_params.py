@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import SecretStr
 from ...utils.documented_pydantic import DocumentedModel
 
@@ -55,6 +55,8 @@ class CustomGraphEnricherParams(PrometheusParams):
     """
 
     promql_query: str = None
+    query_name: Optional[str] = None
+    graph_duration_minutes: Optional[int] = None
 
 
 class GrafanaParams(ActionParams):

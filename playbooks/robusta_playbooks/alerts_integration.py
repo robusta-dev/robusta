@@ -126,15 +126,25 @@ def alert_definition_enricher(alert: PrometheusKubernetesAlert):
     )
 
 
-def __create_chart_from_prometheus_query(prometheus_base_url: str, promql_query: str, starts_at: datetime):
+def __create_chart_from_prometheus_query(
+        prometheus_base_url: str,
+        promql_query: str,
+        starts_at: datetime,
+        show_dots: bool,
+        include_x_axis: bool,
+        use_max_increment: bool,
+        graph_duration_minutes: int,
+):
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
     prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
     end_time = datetime.now(tz=starts_at.tzinfo)
     alert_duration = end_time - starts_at
-    graph_duration = max(alert_duration, timedelta(minutes=60))
+    graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
     start_time = end_time - graph_duration
-    increment = graph_duration.total_seconds() / 60
+    # avoiding PrometheusApiClientException "exceeded maximum resolution of 11,000 points per timeseries'
+    max_possible_increment = max(graph_duration.total_seconds() / 11000.0, 1.0)
+    increment = max_possible_increment if use_max_increment else graph_duration.total_seconds() / 60
     result = prom.custom_query_range(
         promql_query,
         start_time,
@@ -143,7 +153,7 @@ def __create_chart_from_prometheus_query(prometheus_base_url: str, promql_query:
         {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
     )
 
-    chart = pygal.XY(show_dots=True, style=ChosenStyle, truncate_legend=15)
+    chart = pygal.XY(show_dots=show_dots, style=ChosenStyle, truncate_legend=15, include_x_axis=include_x_axis)
     chart.x_label_rotation = 35
     chart.truncate_label = -1
     chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(
@@ -167,26 +177,16 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     Enrich the alert with a graph of the Prometheus query which triggered the alert.
     """
     promql_query = alert.get_prometheus_query()
-    chart = __create_chart_from_prometheus_query(params.prometheus_url, promql_query, alert.alert.startsAt)
+    chart = __create_chart_from_prometheus_query(
+        params.prometheus_url,
+        promql_query,
+        alert.alert.startsAt,
+        show_dots=True,
+        include_x_axis=False,
+        use_max_increment=False,
+        graph_duration_minutes=60
+    )
     alert.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
-
-
-import time
-@action
-def generate_high_cpu2(event: ExecutionBaseEvent):
-    logging.info("starting high cpu")
-    dep = RobustaDeployment.from_image(
-        "stress-test", "jfusterm/stress", "stress --cpu 100"
-    )
-    dep: RobustaDeployment = dep.createNamespacedDeployment(dep.metadata.namespace).obj
-    dep.spec.template.spec.containers[0].resources.limits["cpu"] = '1m'
-    logging.info("cpu limit set to dep.spec.template.spec.containers[0].resources.limits['cpu'] " + str(dep.spec.template.spec.containers[0].resources.limits["cpu"]))
-    time.sleep(60)
-    logging.info("stopping high cpu")
-    RobustaDeployment.deleteNamespacedDeployment(
-        dep.metadata.name, dep.metadata.namespace
-    )
-    logging.info("done")
 
 @action
 def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphEnricherParams):
@@ -201,18 +201,18 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
     logging.info('promql query is:' + promql_query)
     logging.info('starting at: ' + str(alert.alert.startsAt))
 
-    chart = __create_chart_from_prometheus_query(params.prometheus_url, promql_query, alert.alert.startsAt) # TODO probably should use something else other than the alert startsat
-    svg_name = 'query.svg'  # f"{promql_query}.svg"
+    chart = __create_chart_from_prometheus_query(
+        params.prometheus_url,
+        promql_query,
+        alert.alert.startsAt,
+        show_dots=False,
+        include_x_axis=True,
+        use_max_increment=True,
+        graph_duration_minutes=params.graph_duration_minutes if params.graph_duration_minutes else 60
+    )
+    chart_name = params.query_name if params.query_name else promql_query
+    svg_name = f"{chart_name}.svg"
     alert.add_enrichment([FileBlock(svg_name, chart.render())])
-
-@action
-def testme_graph_enricher(event: PodEvent, params: CustomGraphEnricherParams):
-    """
-    Enrich the alert with a custom Prometheus query using the promql.
-    """
-    promql_query = params.promql_query
-    chart = __create_chart_from_prometheus_query(params.prometheus_url, promql_query, datetime.fromtimestamp(1326244364))
-    event.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
 
 class TemplateParams(ActionParams):
     """
