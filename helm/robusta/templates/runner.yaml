@@ -29,6 +29,10 @@ spec:
             value: "true"
           - name: ENABLE_COLORED_LOGS
             value: "true"
+          - name: PROMETHEUS_ENABLED
+            value: {{ .Values.enablePrometheusStack | quote}}
+          - name: SEND_ADDITIONAL_TELEMETRY
+            value: {{ .Values.runner.sendAdditionalTelemetry | quote }}
           - name: LOG_LEVEL
             value: {{ .Values.runner.log_level }}
           - name: INSTALLATION_NAMESPACE
@@ -41,8 +45,11 @@ spec:
           {{- end }}
           - name: RUNNER_VERSION
             value: {{ .Chart.AppVersion }}
+          {{- if kindIs "string" .Values.runner.additional_env_vars }}
+          {{- fail "The `additional_env_vars` string value is deprecated. Change the `additional_env_vars` value to an array" -}}
+          {{- end }}
           {{- if .Values.runner.additional_env_vars }}
-          {{ .Values.runner.additional_env_vars | nindent 10 }}
+          {{ toYaml .Values.runner.additional_env_vars | nindent 10 }}
           {{- end }}
         envFrom: 
         - secretRef:
@@ -61,6 +68,7 @@ spec:
               command: ["bash", "-c", "kill -SIGINT 1"]
         resources:
           requests:
+            cpu: {{ .Values.runner.resources.requests.cpu }}
             memory: {{ .Values.runner.resources.requests.memory | quote }}
           limits:
             memory: {{ .Values.runner.resources.requests.memory | quote }}
@@ -76,6 +84,7 @@ spec:
               command: ["bash", "-c", "kill -SIGINT 1"]
         resources:
           requests:
+            cpu: {{ .Values.grafanaRenderer.resources.requests.cpu }}
             memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}
           limits:
             memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}

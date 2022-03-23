@@ -19,6 +19,11 @@ Kubernetes Optimization
 
 .. robusta-action:: playbooks.robusta_playbooks.disk_benchmark.disk_benchmark
 
+Backups
+-------------------
+
+.. robusta-action:: playbooks.robusta_playbooks.pvc_snapshots.create_pvc_snapshot on_schedule
+
 Stress Testing and Chaos Engineering
 ------------------------------------
 

@@ -28,6 +28,7 @@ spec:
             mountPath: /config
         resources:
           requests:
+            cpu: {{ .Values.kubewatch.resources.requests.cpu }}
             memory: {{ .Values.kubewatch.resources.requests.memory | quote }}
           limits:
             memory: {{ .Values.kubewatch.resources.requests.memory | quote }}

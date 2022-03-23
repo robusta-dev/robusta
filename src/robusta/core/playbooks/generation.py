@@ -3,7 +3,7 @@ import yaml
 import logging
 import jsonref
 from collections import defaultdict
-from typing import Type, List, Callable, Union, get_origin, get_args
+from typing import Type, List, Callable, Optional, Union, get_origin, get_args
 from ..playbooks.base_trigger import BaseTrigger, ExecutionBaseEvent
 from ..playbooks.actions_registry import Action
 from ..playbooks.trigger import Trigger
@@ -31,6 +31,10 @@ class NoAliasDumper(yaml.SafeDumper):
 
 
 class ExamplesGenerator:
+
+    SUBTRIGGER_MARKER = "..."
+    ANY_TRIGGER_MARKER = "any trigger"
+
     def __init__(self):
         self.events_to_triggers = defaultdict(set)
         self.triggers_to_yaml = {}
@@ -64,7 +68,6 @@ class ExamplesGenerator:
 
     @classmethod
     def get_manual_trigger_cmd(cls, action: Action) -> str:
-
         action_params_sample = ""
         if action.params_type:
             required: List[str] = action.params_type.schema().get("required", [])
@@ -101,34 +104,22 @@ class ExamplesGenerator:
     def get_k8s_trigger_list(
         cls, name: str, all_triggers, include_prometheus: bool = False
     ):
-        if (
-            name == "KubernetesAnyChangeEvent" or name == "KubernetesResourceEvent"
-        ):  # any resource
-            any_triggers = [
-                trigger
-                for trigger in all_triggers
-                if "on_kubernetes_any_resource" in trigger
-            ]
-            if include_prometheus:
-                any_triggers.extend(
-                    [trigger for trigger in all_triggers if "prometheus" in trigger]
-                )
+        if name not in ["KubernetesAnyChangeEvent", "KubernetesResourceEvent"]:
+            return all_triggers
 
-            any_triggers.append(
-                "Or any other inheriting trigger. See :ref:`Triggers` for details"
-            )
-            additional_triggers = [
-                trigger for trigger in all_triggers if trigger not in any_triggers
-            ]
+        any_triggers = [
+            trigger
+            for trigger in all_triggers
+            if "on_kubernetes_any_resource" in trigger
+        ]
+
+        if include_prometheus:
             any_triggers.extend(
-                additional_triggers
-                if len(additional_triggers) < 4
-                else additional_triggers[0:3]
+                [trigger for trigger in all_triggers if "prometheus" in trigger]
             )
-            any_triggers.append(" * ...")
-            return any_triggers
 
-        return all_triggers
+        any_triggers.append(cls.SUBTRIGGER_MARKER)
+        return any_triggers
 
     def get_supported_triggers(self, action: Action) -> List[str]:
         """
@@ -138,12 +129,11 @@ class ExamplesGenerator:
         event_cls: Type[ExecutionBaseEvent] = action.event_type
         name = event_cls.__name__
         if name == "ExecutionBaseEvent":
-            return [" * Any trigger"]
+            return [self.ANY_TRIGGER_MARKER]
 
-        all_triggers = set(self.get_possible_triggers(event_cls))  # remove duplications
-        all_triggers = [
-            " * " + trigger for trigger in all_triggers
-        ]  # create triggers list items
+        # remove duplications and sort
+        all_triggers = sorted(list(set(self.get_possible_triggers(event_cls))))
+
         if len(all_triggers) == 1:  # prometheus alert trigger, scheduled trigger
             return list(all_triggers)
 
@@ -158,9 +148,14 @@ class ExamplesGenerator:
         # Resource trigger, PodEvent, DeploymentEvent etc
         return self.get_k8s_trigger_list(name, all_triggers, True)
 
-    def generate_example_config(self, action_func: Callable):
+    def generate_example_config(
+        self, action_func: Callable, suggested_trigger: Optional[str]
+    ):
         action_metadata = Action(action_func)
-        trigger = self.get_possible_triggers(action_metadata.event_type)[0]
+        if suggested_trigger is not None:
+            trigger = suggested_trigger
+        else:
+            trigger = self.get_possible_triggers(action_metadata.event_type)[0]
         example = {
             "actions": [{action_metadata.action_name: {}}],
             "triggers": [{trigger: {}}],

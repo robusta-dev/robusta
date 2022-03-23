@@ -13,6 +13,7 @@ from ..reporting.base import Finding
 from ...model.playbook_action import PlaybookAction
 from ...model.config import Registry
 from .trigger import Trigger
+from ...runner.telemetry import Telemetry
 
 
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
@@ -202,6 +203,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         return None
 
     def __handle_findings(self, execution_event: ExecutionBaseEvent):
+        sinks_info = self.registry.get_telemetry().sinks_info
+
         for sink_name in execution_event.named_sinks:
             for finding in execution_event.sink_findings[sink_name]:
                 try:
@@ -211,12 +214,20 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                             f"sink {sink_name} not found. Skipping event finding {finding}"
                         )
                         continue
-                    # create deep copy, so that iterating on one sink enrichments won't affect the others
-                    # Each sink has a different findings, but enrichments are shared
-                    finding_copy = copy.deepcopy(finding)
-                    sink.write_finding(
-                        finding_copy, self.registry.get_sinks().platform_enabled
-                    )
+
+                    # only write the finding if is matching against the sink matchers
+                    if sink.accepts(finding):
+                        # create deep copy, so that iterating on one sink enrichments won't affect the others
+                        # Each sink has a different findings, but enrichments are shared
+                        finding_copy = copy.deepcopy(finding)
+                        sink.write_finding(
+                            finding_copy, self.registry.get_sinks().platform_enabled
+                        )
+                        
+                        sink_info = sinks_info[sink_name]
+                        sink_info.type = sink.__class__.__name__
+                        sink_info.findings_count += 1
+
                 except Exception:  # Failure to send to one sink shouldn't fail all
                     logging.error(
                         f"Failed to publish finding to sink {sink_name}", exc_info=True
@@ -224,3 +235,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def get_global_config(self) -> dict:
         return self.registry.get_playbooks().get_global_config()
+
+    def get_telemetry(self) -> Telemetry:
+        return self.registry.get_telemetry()

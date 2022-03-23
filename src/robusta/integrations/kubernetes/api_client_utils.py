@@ -17,6 +17,7 @@ from kubernetes.stream import stream
 from hikaru.model import Job
 
 RUNNING_STATE = "Running"
+SUCCEEDED_STATE = "Succeeded"
 
 try:
     if os.getenv("KUBERNETES_SERVICE_HOST"):
@@ -158,7 +159,10 @@ def get_pod_logs(
             previous=previous,
             tail_lines=tail_lines,
             since_seconds=since_seconds,
-        )
+            _preload_content=False  # If this flag is not used, double quotes in json objects in stdout are converted
+            # by the kubernetes client to single quotes, which makes json.loads() fail.
+            # We therefore use this flag in order to get the raw bytes and decode the output
+        ).data.decode("utf-8")
 
     except ApiException as e:
         if e.status != 404:
@@ -216,12 +220,6 @@ def exec_commands(name, exec_command, namespace="default", container=None):
         wsclient.run_forever()
         response = wsclient.read_all()
         logging.debug(f"exec command response {response}")
-    except ApiException as e:
-        if e.status == 404:
-            logging.exception(f"exec command {exec_command} resulted with 404: {e}")
-        else:
-            logging.exception(f"exec command {exec_command} resulted with error: {e}")
-        response = f"error executing commands: {e}"
     finally:
         if wsclient is not None:
             wsclient.close()
@@ -246,5 +244,16 @@ def parse_kubernetes_datetime(k8s_datetime: str) -> datetime.datetime:
     return datetime.datetime.strptime(k8s_datetime, "%Y-%m-%dT%H:%M:%S%z")
 
 
+def parse_kubernetes_datetime_with_ms(k8s_datetime: str) -> datetime.datetime:
+    return datetime.datetime.strptime(k8s_datetime, "%Y-%m-%dT%H:%M:%S.%f%z")
+
+
 def parse_kubernetes_datetime_to_ms(k8s_datetime: str) -> float:
-    return parse_kubernetes_datetime(k8s_datetime).timestamp() * 1000
+    """
+        for timestamps eventTime has milliseconds and firstTimestamp,lastTimestamp,creationTimestamp do not.
+        we parse the more commonly used timestamp first
+    """
+    try:
+        return parse_kubernetes_datetime(k8s_datetime).timestamp() * 1000
+    except:
+        return parse_kubernetes_datetime_with_ms(k8s_datetime).timestamp() * 1000

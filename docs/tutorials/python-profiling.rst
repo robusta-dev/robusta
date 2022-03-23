@@ -1,4 +1,4 @@
-Python Troubleshooting
+Python Profiling
 ######################################################
 
 In this tutorial, you will use Robusta to troubleshoot a Python application running on Kubernetes. Specifically,
@@ -30,4 +30,5 @@ You can learn how to read the output in Brendan Gregg's excellent `blogpost on f
 Learn more
 ------------------
 
+* :ref:`All python troubleshooting actions <Python troubleshooting>`
 * :ref:`Manual Triggers`

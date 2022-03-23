@@ -121,11 +121,24 @@ class RobustaPod(Pod):
 
     @staticmethod
     def create_debugger_pod(
-        pod_name: str, node_name: str, debug_image=PYTHON_DEBUGGER_IMAGE, debug_cmd=None
-    ) -> "RobustaPod":
+            pod_name: str, node_name: str, debug_image=PYTHON_DEBUGGER_IMAGE, debug_cmd=None,
+            env: Optional[List[EnvVar]] = None, mount_host_root: bool = False) -> "RobustaPod":
         """
         Creates a debugging pod with high privileges
         """
+
+        volume_mounts = None
+        volumes = None
+        if mount_host_root:
+            volume_mounts = [VolumeMount(name="host-root", mountPath="/host")]
+            volumes = [Volume(
+                name="host-root",
+                hostPath=HostPathVolumeSource(
+                    path="/",
+                    type="Directory"
+                )
+            )]
+
         debugger = RobustaPod(
             apiVersion="v1",
             kind="Pod",
@@ -136,6 +149,7 @@ class RobustaPod(Pod):
             spec=PodSpec(
                 hostPID=True,
                 nodeName=node_name,
+                restartPolicy="OnFailure",
                 containers=[
                     Container(
                         name="debugger",
@@ -144,10 +158,13 @@ class RobustaPod(Pod):
                         command=prepare_pod_command(debug_cmd),
                         securityContext=SecurityContext(
                             capabilities=Capabilities(add=["SYS_PTRACE", "SYS_ADMIN"]),
-                            privileged=True,
+                            privileged=True
                         ),
+                        volumeMounts=volume_mounts,
+                        env=env
                     )
                 ],
+                volumes=volumes
             ),
         )
         # TODO: check the result code
@@ -161,6 +178,23 @@ class RobustaPod(Pod):
             node_runner.exec(f"nsenter -t 1 -a {cmd}")
         finally:
             node_runner.delete()
+
+    @staticmethod
+    def run_debugger_pod(node_name: str, pod_image: str, env: Optional[List[EnvVar]] = None,
+                         mount_host_root: bool = False) -> str:
+        debugger = RobustaPod.create_debugger_pod(node_name, node_name, pod_image, env=env, mount_host_root=mount_host_root)
+        try:
+            pod_name = debugger.metadata.name
+            pod_namespace = debugger.metadata.namespace
+            pod_status = wait_for_pod_status(pod_name, pod_namespace, SUCCEEDED_STATE, 360, 0.2)
+            if pod_status != SUCCEEDED_STATE:
+                raise Exception(f"pod {pod_name} in {pod_namespace} failed to complete. It is in state {pod_status}")
+
+            return debugger.get_logs()
+        finally:
+            RobustaPod.deleteNamespacedPod(
+                debugger.metadata.name, debugger.metadata.namespace
+            )
 
     @staticmethod
     def exec_in_debugger_pod(
