@@ -135,7 +135,8 @@ def __create_chart_from_prometheus_query(
         include_x_axis: bool,
         use_max_increment: bool,
         graph_duration_minutes: int,
-        chart_title: Optional[str] = None
+        chart_title: Optional[str] = None,
+        stacked: Optional[bool] = None
 ):
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
@@ -156,6 +157,7 @@ def __create_chart_from_prometheus_query(
         {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
     )
 
+    # TODO not using stacked
     chart = pygal.XY(
         show_dots=show_dots,
         style=ChosenStyle,
@@ -164,6 +166,7 @@ def __create_chart_from_prometheus_query(
         width=1280,
         height=720
     )
+
     chart.x_label_rotation = 35
     chart.truncate_label = -1
     chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(
@@ -224,7 +227,8 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
         include_x_axis=True,
         use_max_increment=True,
         graph_duration_minutes=params.graph_duration_minutes if params.graph_duration_minutes else 60,
-        chart_title=params.query_name
+        chart_title=params.query_name,
+        stacked=params.stacked
     )
     chart_name = params.query_name if params.query_name else promql_query
     svg_name = f"{chart_name}.svg"

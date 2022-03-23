@@ -57,6 +57,7 @@ class CustomGraphEnricherParams(PrometheusParams):
     promql_query: str = None
     query_name: Optional[str] = None
     graph_duration_minutes: Optional[int] = None
+    stacked: Optional[bool] = False
 
 
 class GrafanaParams(ActionParams):
