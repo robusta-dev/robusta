@@ -85,6 +85,7 @@ builtinPlaybooks:
   actions:
   - cpu_throttling_analysis_enricher: {}
   - custom_graph_enricher:
+      # TODO not using cluser="$cluster" here
       promql_query: sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"$pod"})
       query_name: CPU Usage for this pod
       graph_duration_minutes: 360
