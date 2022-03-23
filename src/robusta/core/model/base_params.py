@@ -47,6 +47,16 @@ class PrometheusParams(ActionParams):
     prometheus_url: str = None
 
 
+class CustomGraphEnricherParams(PrometheusParams):
+    """
+    :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
+
+    :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+    """
+
+    promql_query: str = None
+
+
 class GrafanaParams(ActionParams):
     """
     :var grafana_url: http(s) url of grafana or None for autodetection of an in-cluster grafana

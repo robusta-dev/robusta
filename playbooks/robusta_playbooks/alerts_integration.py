@@ -1,3 +1,5 @@
+import logging
+
 import requests
 from string import Template
 from datetime import datetime, timedelta
@@ -124,20 +126,12 @@ def alert_definition_enricher(alert: PrometheusKubernetesAlert):
     )
 
 
-@action
-def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
-    """
-    Enrich the alert with a graph of the Prometheus query which triggered the alert.
-    """
-    if params.prometheus_url:
-        prometheus_base_url = params.prometheus_url
-    else:
+def __create_chart_from_prometheus_query(prometheus_base_url: str, promql_query: str, starts_at: datetime):
+    if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
     prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
-    promql_query = alert.get_prometheus_query()
-
-    end_time = datetime.now(tz=alert.alert.startsAt.tzinfo)
-    alert_duration = end_time - alert.alert.startsAt
+    end_time = datetime.now(tz=starts_at.tzinfo)
+    alert_duration = end_time - starts_at
     graph_duration = max(alert_duration, timedelta(minutes=60))
     start_time = end_time - graph_duration
     increment = graph_duration.total_seconds() / 60
@@ -164,8 +158,61 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
             for (timestamp, val) in series["values"]
         ]
         chart.add(label, values)
+    return chart
+
+
+@action
+def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
+    """
+    Enrich the alert with a graph of the Prometheus query which triggered the alert.
+    """
+    promql_query = alert.get_prometheus_query()
+    chart = __create_chart_from_prometheus_query(params.prometheus_url, promql_query, alert.alert.startsAt)
     alert.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
 
+
+import time
+@action
+def generate_high_cpu2(event: ExecutionBaseEvent):
+    logging.info("starting high cpu")
+    dep = RobustaDeployment.from_image(
+        "stress-test", "jfusterm/stress", "stress --cpu 100"
+    )
+    dep: RobustaDeployment = dep.createNamespacedDeployment(dep.metadata.namespace).obj
+    dep.spec.template.spec.containers[0].resources.limits["cpu"] = '1m'
+    logging.info("cpu limit set to dep.spec.template.spec.containers[0].resources.limits['cpu'] " + str(dep.spec.template.spec.containers[0].resources.limits["cpu"]))
+    time.sleep(60)
+    logging.info("stopping high cpu")
+    RobustaDeployment.deleteNamespacedDeployment(
+        dep.metadata.name, dep.metadata.namespace
+    )
+    logging.info("done")
+
+@action
+def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphEnricherParams):
+    """
+    Enrich the alert with a graph of a custom Prometheus query
+    """
+    labels = defaultdict(lambda: "<missing>")
+    logging.info('labels are ' + str(alert.alert.labels))
+    labels.update(alert.alert.labels)
+    template = Template(params.promql_query)
+    promql_query = template.safe_substitute(labels)
+    logging.info('promql query is:' + promql_query)
+    logging.info('starting at: ' + str(alert.alert.startsAt))
+
+    chart = __create_chart_from_prometheus_query(params.prometheus_url, promql_query, alert.alert.startsAt) # TODO probably should use something else other than the alert startsat
+    svg_name = 'query.svg'  # f"{promql_query}.svg"
+    alert.add_enrichment([FileBlock(svg_name, chart.render())])
+
+@action
+def testme_graph_enricher(event: PodEvent, params: CustomGraphEnricherParams):
+    """
+    Enrich the alert with a custom Prometheus query using the promql.
+    """
+    promql_query = params.promql_query
+    chart = __create_chart_from_prometheus_query(params.prometheus_url, promql_query, datetime.fromtimestamp(1326244364))
+    event.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
 
 class TemplateParams(ActionParams):
     """
