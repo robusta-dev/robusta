@@ -1,5 +1,6 @@
 import logging
 
+import humanize
 import requests
 from string import Template
 from datetime import datetime, timedelta
@@ -134,6 +135,7 @@ def __create_chart_from_prometheus_query(
         include_x_axis: bool,
         use_max_increment: bool,
         graph_duration_minutes: int,
+        chart_title: Optional[str] = None
 ):
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
@@ -167,7 +169,12 @@ def __create_chart_from_prometheus_query(
     chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(
         timestamp
     ).strftime("%I:%M:%S %p on %d, %b")
-    chart.title = promql_query
+
+    if chart_title:
+        chart.title = f'{chart_title} starting {humanize.naturaldelta(timedelta(minutes=graph_duration_minutes))}\
+        before the alert was triggered'
+    else:
+        chart.title = promql_query
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
     for series in result:
         label = "\n".join([v for v in series["metric"].values()])
@@ -216,7 +223,8 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
         show_dots=False,
         include_x_axis=True,
         use_max_increment=True,
-        graph_duration_minutes=params.graph_duration_minutes if params.graph_duration_minutes else 60
+        graph_duration_minutes=params.graph_duration_minutes if params.graph_duration_minutes else 60,
+        chart_title=params.query_name
     )
     chart_name = params.query_name if params.query_name else promql_query
     svg_name = f"{chart_name}.svg"

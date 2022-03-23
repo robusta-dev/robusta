@@ -86,7 +86,7 @@ builtinPlaybooks:
   - cpu_throttling_analysis_enricher: {}
   - custom_graph_enricher:
       promql_query: sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"$pod"})
-      query_name: CPUUsage
+      query_name: CPU Usage for this pod
       graph_duration_minutes: 360
 - triggers:
   - on_prometheus_alert:
