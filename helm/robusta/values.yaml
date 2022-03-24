@@ -67,7 +67,11 @@ builtinPlaybooks:
       alert_name: HostHighCpuLoad
   actions:
   - node_cpu_enricher: {}
-  - graph_enricher: {}
+  - custom_graph_enricher:
+      promql_query: instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0
+      query_name: CPU Utilization for this node
+      graph_duration_minutes: 60
+      chart_values_format: Percentage
 - triggers:
   - on_prometheus_alert:
       alert_name: HostOomKillDetected
@@ -77,7 +81,6 @@ builtinPlaybooks:
       promql_query: instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0
       query_name: Memory Utilization for this node
       graph_duration_minutes: 60
-      stacked: true
       chart_values_format: Percentage
 - triggers:
   - on_prometheus_alert:
