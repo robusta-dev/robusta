@@ -87,6 +87,11 @@ builtinPlaybooks:
       alert_name: NodeFilesystemSpaceFillingUp
   actions:
   - node_disk_analyzer: {}
+  - custom_graph_enricher:
+      promql_query: sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})) != 0))
+      query_name: Disk Space Utilization for this node
+      graph_duration_minutes: 60
+      chart_values_format: Percentage
 - triggers:
   - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
