@@ -136,7 +136,8 @@ def __create_chart_from_prometheus_query(
         use_max_increment: bool,
         graph_duration_minutes: int,
         chart_title: Optional[str] = None,
-        stacked: Optional[bool] = None
+        stacked: Optional[bool] = None,
+        values_format: Optional[str] = None
 ):
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
@@ -159,7 +160,7 @@ def __create_chart_from_prometheus_query(
 
     # TODO not using stacked
     chart = pygal.XY(
-        show_dots=show_dots,
+        show_dots=True,
         style=ChosenStyle,
         truncate_legend=15,
         include_x_axis=include_x_axis,
@@ -172,6 +173,14 @@ def __create_chart_from_prometheus_query(
     chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(
         timestamp
     ).strftime("%I:%M:%S %p on %d, %b")
+
+    value_formatters = {
+        ChartValuesFormat.Plain: lambda val: str(val),
+        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True)
+    }
+    chart_values_format = ChartValuesFormat[values_format] if values_format else ChartValuesFormat.Plain
+    logging.info('using value formatter ' + str(chart_values_format))
+    chart.value_formatter = value_formatters[chart_values_format]
 
     if chart_title:
         chart.title = f'{chart_title} starting {humanize.naturaldelta(timedelta(minutes=graph_duration_minutes))}\
@@ -228,7 +237,8 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
         use_max_increment=True,
         graph_duration_minutes=params.graph_duration_minutes if params.graph_duration_minutes else 60,
         chart_title=params.query_name,
-        stacked=params.stacked
+        stacked=params.stacked,
+        values_format=params.chart_values_format
     )
     chart_name = params.query_name if params.query_name else promql_query
     svg_name = f"{chart_name}.svg"

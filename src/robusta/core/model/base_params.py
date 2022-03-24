@@ -1,6 +1,15 @@
 from typing import List, Optional
 from pydantic import SecretStr
 from ...utils.documented_pydantic import DocumentedModel
+from enum import Enum, auto
+
+
+class ChartValuesFormat(Enum):
+    """
+    Option for chart rendering
+    """
+    Plain = auto()
+    Bytes = auto()
 
 
 class ActionParams(DocumentedModel):
@@ -54,10 +63,11 @@ class CustomGraphEnricherParams(PrometheusParams):
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     """
 
-    promql_query: str = None
+    promql_query: str
     query_name: Optional[str] = None
     graph_duration_minutes: Optional[int] = None
     stacked: Optional[bool] = False
+    chart_values_format: Optional[str] = None
 
 
 class GrafanaParams(ActionParams):

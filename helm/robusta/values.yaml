@@ -80,6 +80,7 @@ builtinPlaybooks:
       query_name: Memory Usage for this node
       graph_duration_minutes: 180
       stacked: true
+      chart_values_format: Bytes
 - triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
