@@ -10,6 +10,7 @@ class ChartValuesFormat(Enum):
     """
     Plain = auto()
     Bytes = auto()
+    Percentage = auto()
 
 
 class ActionParams(DocumentedModel):

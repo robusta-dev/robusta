@@ -74,13 +74,11 @@ builtinPlaybooks:
   actions:
   - oom_killer_enricher: {}
   - custom_graph_enricher:
-      # TODO does not look good because y axis labels are not human readable
-      # TODO not using cluser="$cluster" here
-      promql_query: sum(node_namespace_pod_container:container_memory_working_set_bytes{node=~"$node", container!=""})
-      query_name: Memory Usage for this node
-      graph_duration_minutes: 180
+      promql_query: instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0
+      query_name: Memory Utilization for this node
+      graph_duration_minutes: 60
       stacked: true
-      chart_values_format: Bytes
+      chart_values_format: Percentage
 - triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp

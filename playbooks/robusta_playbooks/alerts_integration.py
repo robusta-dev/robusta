@@ -176,7 +176,8 @@ def __create_chart_from_prometheus_query(
 
     value_formatters = {
         ChartValuesFormat.Plain: lambda val: str(val),
-        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True)
+        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
+        ChartValuesFormat.Percentage: lambda val: f'{(100*val):.1f}'
     }
     chart_values_format = ChartValuesFormat[values_format.capitalize()] if values_format else ChartValuesFormat.Plain
     logging.info('using value formatter ' + str(chart_values_format))
@@ -215,6 +216,16 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     )
     alert.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
 
+
+def __get_node_internal_ip_from_node(node: Node) -> str:
+    internal_ip = next(
+        addr.address
+        for addr in node.status.addresses
+        if addr.type == "InternalIP"
+    )
+    return internal_ip
+
+
 @action
 def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphEnricherParams):
     """
@@ -223,6 +234,17 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
     labels = defaultdict(lambda: "<missing>")
     logging.info('labels are ' + str(alert.alert.labels))
     labels.update(alert.alert.labels)
+    if '$node_internal_ip' in params.promql_query:
+        # TODO: do we already have alert.Node here?
+        node_name = alert.alert.labels['node']
+        node: Node = Node.readNode(node_name).obj
+        if not node:
+            logging.warning(
+                f"Node {node_name} not found for custom_graph_enricher for {alert}"
+            )
+            return
+        node_internal_ip = __get_node_internal_ip_from_node(node)
+        labels['node_internal_ip'] = node_internal_ip
     template = Template(params.promql_query)
     promql_query = template.safe_substitute(labels)
     logging.info('promql query is:' + promql_query)
