@@ -8,7 +8,7 @@ from urllib.parse import urlparse, unquote_plus
 from collections import defaultdict
 
 import pygal
-from pygal.style import DarkStyle as ChosenStyle
+from pygal.style import DarkColorizedStyle as ChosenStyle
 from prometheus_api_client import PrometheusConnect
 
 from robusta.api import *
@@ -145,7 +145,7 @@ def __create_chart_from_prometheus_query(
     alert_duration = end_time - starts_at
     graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
     start_time = end_time - graph_duration
-    #  250 is a good resolution. It is used in Prometheus web client.
+    #  250 is a good resolution. It is used in Prometheus web client in /graph
     resolution = 250
     max_possible_increment = max(graph_duration.total_seconds() / resolution, 1.0)
     increment = max_possible_increment if use_max_increment else graph_duration.total_seconds() / 60
