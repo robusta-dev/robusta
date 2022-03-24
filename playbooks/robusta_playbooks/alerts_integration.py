@@ -178,7 +178,7 @@ def __create_chart_from_prometheus_query(
         ChartValuesFormat.Plain: lambda val: str(val),
         ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True)
     }
-    chart_values_format = ChartValuesFormat[values_format] if values_format else ChartValuesFormat.Plain
+    chart_values_format = ChartValuesFormat[values_format.capitalize()] if values_format else ChartValuesFormat.Plain
     logging.info('using value formatter ' + str(chart_values_format))
     chart.value_formatter = value_formatters[chart_values_format]
 
