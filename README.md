@@ -31,6 +31,11 @@ robusta playbooks trigger python_debugger name=mypod namespace=default
 
 [There are over 50 built-in automations.](https://docs.robusta.dev/master/catalog/actions/index.html)
 
+# Stay up to date
+We add new features regularly. Stay up to date by watching us on GitHub.
+
+![](./docs/images/star-repo.gif)
+
 # Installing Robusta
 
 1. Install our python cli:
