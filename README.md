@@ -1,11 +1,12 @@
 # Robusta
-Robusta is a troubleshooting and automations platform for Kubernetes. It streamlines everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT for devops, written in Python, with an emphasis on prebuilt useful automations and not just "build your own".
+Robusta is a troubleshooting and automations platform for Kubernetes. It streamlines everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt useful automations and not just "build your own".
 
 Use cases:
-[X] Event-triggered automations for Kubernetes (like Argo Events) with an emphasis on simplicity
-[X] Kubernetes monitoring - Prometheus + Robusta = better alerts that tell you *why* they happened and how to fix them
-[X] Auto-remediations - out of the box fixes for common alerts + write your own
-[X] [Change tracking - track and audit every change to your Kubernetes cluster](http://home.robusta.dev/ui?from=github)
+
+- [X] Event-triggered automations for Kubernetes (like Argo Events) with an emphasis on simplicity
+- [X] Kubernetes monitoring - Prometheus + Robusta = better alerts that tell you *why* they happened and how to fix them
+- [X] Auto-remediations - out of the box fixes for common alerts + write your own
+- [X] [Change tracking - track and audit every change to your Kubernetes cluster](http://home.robusta.dev/ui?from=github)
 
 [Read the docs for more info](https://docs.robusta.dev/master/?from=github) or see screenshots and demos at [robusta.dev](http://robusta.dev/?from=github)
 
