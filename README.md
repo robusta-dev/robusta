@@ -4,8 +4,8 @@ Robusta is a troubleshooting and automations platform for Kubernetes. It streaml
 ## Use cases
 
 - [X] Event-triggered automations for Kubernetes (like Argo Events) with an emphasis on simplicity
-- [X] Kubernetes monitoring - Prometheus + Robusta = better alerts that tell you *why* they happened and how to fix them
-- [X] Auto-remediations - out of the box fixes for common alerts + write your own
+- [X] Kubernetes monitoring - a prebuilt Prometheus integration that makes alerts better by telling you *why* they happened and how to fix them
+- [X] Auto-remediations - out of the box fixes for common alerts. Write your own in Python.
 - [X] [Change tracking - track and audit every change to your Kubernetes cluster](http://home.robusta.dev/ui?from=github)
 
 [Read the docs for more info](https://docs.robusta.dev/master/?from=github) or see screenshots and demos at [robusta.dev](http://robusta.dev/?from=github)
