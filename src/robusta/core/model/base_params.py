@@ -87,9 +87,17 @@ class ResourceGraphEnricherParams(PrometheusParams):
 
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     """
-    item_type: str
     resource_type: str
     graph_duration_minutes: Optional[int] = None
+
+
+class AlertResourceGraphEnricherParams(ResourceGraphEnricherParams):
+    """
+    :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
+
+    :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+    """
+    item_type: str
 
 
 class GrafanaParams(ActionParams):

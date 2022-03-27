@@ -67,7 +67,7 @@ builtinPlaybooks:
       alert_name: HostHighCpuLoad
   actions:
   - node_cpu_enricher: {}
-  - resource_graph_enricher:
+  - alert_resource_graph_enricher:
       resource_type: CPU
       item_type: Node
       graph_duration_minutes: 30
@@ -76,7 +76,7 @@ builtinPlaybooks:
       alert_name: HostOomKillDetected
   actions:
   - oom_killer_enricher: {}
-  - resource_graph_enricher:
+  - alert_resource_graph_enricher:
       resource_type: Memory
       item_type: Node
 - triggers:
@@ -84,7 +84,7 @@ builtinPlaybooks:
       alert_name: NodeFilesystemSpaceFillingUp
   actions:
   - node_disk_analyzer: {}
-  - resource_graph_enricher:
+  - alert_resource_graph_enricher:
       resource_type: Disk
       item_type: Node
 - triggers:
@@ -92,7 +92,7 @@ builtinPlaybooks:
       alert_name: CPUThrottlingHigh
   actions:
   - cpu_throttling_analysis_enricher: {}
-  - resource_graph_enricher:
+  - alert_resource_graph_enricher:
       resource_type: CPU
       item_type: Pod
       graph_duration_minutes: 30

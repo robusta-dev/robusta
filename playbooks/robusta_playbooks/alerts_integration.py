@@ -175,12 +175,10 @@ def __create_chart_from_prometheus_query(
         ChartValuesFormat.Percentage: lambda val: f'{(100*val):.1f}'
     }
     chart_values_format = values_format if values_format else ChartValuesFormat.Plain
-    logging.info('using value formatter ' + str(chart_values_format))
     chart.value_formatter = value_formatters[chart_values_format]
 
     if chart_title:
-        chart.title = f'{chart_title} starting {humanize.naturaldelta(timedelta(minutes=graph_duration_minutes))}\
-        before the alert was triggered'
+        chart.title = f'{chart_title} starting {humanize.naturaldelta(timedelta(minutes=graph_duration_minutes))} ago'
     else:
         chart.title = promql_query
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
@@ -219,18 +217,18 @@ def __get_node_internal_ip_from_node(node: Node) -> str:
     return internal_ip
 
 
-def _prepare_promql_query(alert: PrometheusKubernetesAlert, promql_query_template: str) -> str:
+def _prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
     labels = defaultdict(lambda: "<missing>")
-    labels.update(alert.alert.labels)
+    labels.update(provided_labels)
     if '$node_internal_ip' in promql_query_template:
         # TODO: do we already have alert.Node here?
-        node_name = alert.alert.labels['node']
+        node_name = labels['node']
         node: Node = Node.readNode(node_name).obj
         if not node:
             logging.warning(
-                f"Node {node_name} not found for custom_graph_enricher for {alert}"
+                f"Node {node_name} not found for"
             )
-            return ""
+            raise AttributeError(f'Cannot get internal ip for node: {node_name}')
         node_internal_ip = __get_node_internal_ip_from_node(node)
         labels['node_internal_ip'] = node_internal_ip
     template = Template(promql_query_template)
@@ -238,20 +236,19 @@ def _prepare_promql_query(alert: PrometheusKubernetesAlert, promql_query_templat
     return promql_query
 
 
-def _add_graph_enrichment(
-        alert: PrometheusKubernetesAlert,
+def __create_graph_enrichment(
+        start_at: datetime,
+        labels: Dict[Any, Any],
         promql_query: str,
         prometheus_url: Optional[str],
         graph_duration_minutes: Optional[int],
         query_name: Optional[str],
-        chart_values_format: Optional[ChartValuesFormat]):
-    promql_query = _prepare_promql_query(alert, promql_query)
-    if not promql_query:
-        return
+        chart_values_format: Optional[ChartValuesFormat]) -> FileBlock:
+    promql_query = _prepare_promql_query(labels, promql_query)
     chart = __create_chart_from_prometheus_query(
         prometheus_url,
         promql_query,
-        alert.alert.startsAt,
+        start_at,
         include_x_axis=True,
         graph_duration_minutes=graph_duration_minutes if graph_duration_minutes else 60,
         chart_title=query_name,
@@ -259,7 +256,7 @@ def _add_graph_enrichment(
     )
     chart_name = query_name if query_name else promql_query
     svg_name = f"{chart_name}.svg"
-    alert.add_enrichment([FileBlock(svg_name, chart.render())])
+    return FileBlock(svg_name, chart.render())
 
 
 @action
@@ -268,18 +265,26 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
     Enrich the alert with a graph of a custom Prometheus query
     """
     chart_values_format = ChartValuesFormat[params.chart_values_format] if params.chart_values_format else None
-    _add_graph_enrichment(
-        alert,
+    graph_enrichment = __create_graph_enrichment(
+        alert.alert.startsAt,
+        alert.alert.labels,
         params.promql_query,
         prometheus_url=params.prometheus_url,
         graph_duration_minutes=params.graph_duration_minutes,
         query_name=params.query_name,
         chart_values_format=chart_values_format
     )
+    alert.add_enrichment([graph_enrichment])
 
 
-@action
-def resource_graph_enricher(alert: PrometheusKubernetesAlert, params: ResourceGraphEnricherParams):
+def __create_resource_enrichment(
+    starts_at: datetime,
+    labels: Dict[Any, Any],
+    resource_type: ResourceChartResourceType,
+    item_type: ResourceChartItemType,
+    prometheus_url: Optional[str] = None,
+    graph_duration_minutes: Optional[int] = None
+) -> FileBlock:
     ChartOptions = namedtuple('ChartOptions', ['query', 'values_format'])
     combinations = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
@@ -292,33 +297,75 @@ def resource_graph_enricher(alert: PrometheusKubernetesAlert, params: ResourceGr
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
             query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container!="", image!=""})',
-            values_format=ChartValuesFormat.Percentage
+            values_format=ChartValuesFormat.Bytes
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
             query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0',
             values_format=ChartValuesFormat.Percentage
         ),
-        (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): ChartOptions(
-            query='',
-            values_format=ChartValuesFormat.Percentage
-        ),
+        (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): None,
         (ResourceChartResourceType.Disk, ResourceChartItemType.Node): ChartOptions(
             query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})) != 0))',
             values_format=ChartValuesFormat.Percentage
         ),
     }
-    resource_type = ResourceChartResourceType[params.resource_type]
-    item_type = ResourceChartItemType[params.item_type]
-    chosen_combination = combinations[(resource_type, item_type)]
+    combination = (resource_type, item_type)
+    chosen_combination = combinations[combination]
+    if not chosen_combination:
+        raise AttributeError(f'The following combination for resource chart is not supported: {combination}')
     values_format_text = 'Utilization' if chosen_combination.values_format == ChartValuesFormat.Percentage else 'Usage'
-    _add_graph_enrichment(
-        alert,
+    graph_enrichment = __create_graph_enrichment(
+        starts_at,
+        labels,
         chosen_combination.query,
-        prometheus_url=params.prometheus_url,
-        graph_duration_minutes=params.graph_duration_minutes,
-        query_name=f'{params.resource_type} {values_format_text} for this {params.item_type}',
+        prometheus_url=prometheus_url,
+        graph_duration_minutes=graph_duration_minutes,
+        query_name=f'{resource_type.name} {values_format_text} for this {item_type.name.lower()}',
         chart_values_format=chosen_combination.values_format
     )
+    return graph_enrichment
+
+
+@action
+def pod_resource_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherParams):
+    start_at = datetime.now()  # TODO get pod time? get pod tz?
+    labels = {'pod': pod_event.get_pod().metadata.name, 'namespace': pod_event.get_pod().metadata.namespace}
+    graph_enrichment = __create_resource_enrichment(
+        start_at,
+        labels,
+        ResourceChartResourceType[params.resource_type],
+        ResourceChartItemType.Pod,
+        prometheus_url=params.prometheus_url,
+        graph_duration_minutes=params.graph_duration_minutes
+    )
+    pod_event.add_enrichment([graph_enrichment])
+
+
+@action
+def node_resource_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherParams):
+    start_at = datetime.now()  # TODO get node time? get node tz?
+    labels = {'node': node_event.get_node().metadata.name}
+    graph_enrichment = __create_resource_enrichment(
+        start_at,
+        labels,
+        ResourceChartResourceType[params.resource_type],
+        ResourceChartItemType.Node,
+        prometheus_url=params.prometheus_url,
+        graph_duration_minutes=params.graph_duration_minutes
+    )
+    node_event.add_enrichment([graph_enrichment])
+
+
+@action
+def alert_resource_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResourceGraphEnricherParams):
+    graph_enrichment = __create_resource_enrichment(
+        alert.alert.startsAt,
+        alert.alert.labels,
+        ResourceChartResourceType[params.resource_type],
+        ResourceChartItemType[params.item_type],
+        prometheus_url=params.prometheus_url,
+        graph_duration_minutes=params.graph_duration_minutes)
+    alert.add_enrichment([graph_enrichment])
 
 
 class TemplateParams(ActionParams):
