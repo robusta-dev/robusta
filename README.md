@@ -1,14 +1,17 @@
-# About Robusta
-**New: [Use Robusta to debug and profile Python applications running on Kubernetes](https://home.robusta.dev/python/?from=github). No prior setup needed.**
-
+# Robusta
 Robusta is a troubleshooting and automations platform for Kubernetes. It streamlines everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT for devops, written in Python, with an emphasis on prebuilt useful automations and not just "build your own".
+
+Use cases:
+[X] Event-triggered automations for Kubernetes (like Argo Events) with an emphasis on simplicity
+[X] Kubernetes monitoring - Prometheus + Robusta = better alerts that tell you *why* they happened and how to fix them
+[X] Auto-remediations - out of the box fixes for common alerts + write your own
+[X] [Change tracking - track and audit every change to your Kubernetes cluster](http://home.robusta.dev/ui?from=github)
 
 [Read the docs for more info](https://docs.robusta.dev/master/?from=github) or see screenshots and demos at [robusta.dev](http://robusta.dev/?from=github)
 
 [![twitter robusta](https://img.shields.io/twitter/follow/RobustaDev?logo=twitter&style=for-the-badge)](https://twitter.com/RobustaDev) ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/robusta-dev/robusta/Test%20robusta%20with%20pytest?event=push&style=for-the-badge)
 
 ## Examples
-[For screenshots, see the website](http://robusta.dev/?from=github).
 
 You can monitor crashing pods and send their logs to Slack:
 
@@ -22,7 +25,11 @@ sinks:
   - slack
 ```
 
-There are also built-in automations to analyze common alerts.
+![](./docs/images/crash-report.png)
+
+There are also built-in automations to analyze common alerts and fix them:
+
+![](./docs/images/alert_on_hpa_reached_limit1.png)
 
 You can also trigger automations manually. For example, [attach a debugger to a python pod](https://docs.robusta.dev/master/catalog/actions/python-troubleshooting.html#python-debugger):
 ```commandline
