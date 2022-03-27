@@ -325,9 +325,12 @@ def __create_resource_enrichment(
     )
     return graph_enrichment
 
-
+# TODO should not be in alerts integration
 @action
 def pod_resource_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherParams):
+    """
+    Get a graph of a specific resource for this pod. Note: "Disk" Resource is not supported.
+    """
     start_at = datetime.now()
     labels = {'pod': pod_event.get_pod().metadata.name, 'namespace': pod_event.get_pod().metadata.namespace}
     graph_enrichment = __create_resource_enrichment(
@@ -340,9 +343,12 @@ def pod_resource_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnrich
     )
     pod_event.add_enrichment([graph_enrichment])
 
-
+# TODO should not be in alerts integration
 @action
 def node_resource_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherParams):
+    """
+    Get a graph of a specific resource for this node.
+    """
     start_at = datetime.now()
     labels = {'node': node_event.get_node().metadata.name}
     graph_enrichment = __create_resource_enrichment(
@@ -358,6 +364,9 @@ def node_resource_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnr
 
 @action
 def alert_resource_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResourceGraphEnricherParams):
+    """
+    Enrich the alert with a graph of a relevant resource (Pod or Node).
+    """
     graph_enrichment = __create_resource_enrichment(
         alert.alert.startsAt,
         alert.alert.labels,

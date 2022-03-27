@@ -6,7 +6,7 @@ from enum import Enum, auto
 
 class ChartValuesFormat(Enum):
     """
-    Option for chart rendering
+    Format option for chart rendering
     """
     Plain = auto()
     Bytes = auto()
@@ -14,11 +14,17 @@ class ChartValuesFormat(Enum):
 
 
 class ResourceChartItemType(Enum):
+    """
+    Item selection for Alert resource enricher
+    """
     Pod = auto()
     Node = auto()
 
 
 class ResourceChartResourceType(Enum):
+    """
+    Resource selection for resource enricher(s)
+    """
     CPU = auto()
     Memory = auto()
     Disk = auto()
@@ -70,9 +76,10 @@ class PrometheusParams(ActionParams):
 
 class CustomGraphEnricherParams(PrometheusParams):
     """
-    :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
-
-    :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+    :var promql_query: Promql query. See https://prometheus.io/docs/prometheus/latest/querying/basics/
+    :var query_name: A nicer name for the Prometheus query.
+    :var graph_duration_minutes: Graph duration is minutes. Default is 60.
+    :var chart_values_format: one of the ChartValuesFormat. Default is Plain.
     """
 
     promql_query: str
@@ -83,9 +90,9 @@ class CustomGraphEnricherParams(PrometheusParams):
 
 class ResourceGraphEnricherParams(PrometheusParams):
     """
-    :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
+    :var resource_type: one of ResourceChartResourceType.
+    :var graph_duration_minutes: Graph duration is minutes. Default is 60.
 
-    :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     """
     resource_type: str
     graph_duration_minutes: Optional[int] = None
@@ -93,9 +100,7 @@ class ResourceGraphEnricherParams(PrometheusParams):
 
 class AlertResourceGraphEnricherParams(ResourceGraphEnricherParams):
     """
-    :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
-
-    :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+    :var item_type: one of ResourceChartItemType.
     """
     item_type: str
 
