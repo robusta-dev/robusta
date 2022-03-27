@@ -13,6 +13,17 @@ class ChartValuesFormat(Enum):
     Percentage = auto()
 
 
+class ResourceChartItemType(Enum):
+    Pod = auto()
+    Node = auto()
+
+
+class ResourceChartResourceType(Enum):
+    CPU = auto()
+    Memory = auto()
+    Disk = auto()
+
+
 class ActionParams(DocumentedModel):
     """
     Base class for all Action parameter classes.
@@ -67,8 +78,18 @@ class CustomGraphEnricherParams(PrometheusParams):
     promql_query: str
     query_name: Optional[str] = None
     graph_duration_minutes: Optional[int] = None
-    stacked: Optional[bool] = False
     chart_values_format: Optional[str] = None
+
+
+class ResourceGraphEnricherParams(PrometheusParams):
+    """
+    :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
+
+    :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+    """
+    item_type: str
+    resource_type: str
+    graph_duration_minutes: Optional[int] = None
 
 
 class GrafanaParams(ActionParams):

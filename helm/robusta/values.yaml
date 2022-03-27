@@ -67,39 +67,34 @@ builtinPlaybooks:
       alert_name: HostHighCpuLoad
   actions:
   - node_cpu_enricher: {}
-  - custom_graph_enricher:
-      promql_query: instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0
-      query_name: CPU Utilization for this node
+  - resource_graph_enricher:
+      resource_type: CPU
+      item_type: Node
       graph_duration_minutes: 30
-      chart_values_format: Percentage
 - triggers:
   - on_prometheus_alert:
       alert_name: HostOomKillDetected
   actions:
   - oom_killer_enricher: {}
-  - custom_graph_enricher:
-      promql_query: instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0
-      query_name: Memory Utilization for this node
-      graph_duration_minutes: 60
-      chart_values_format: Percentage
+  - resource_graph_enricher:
+      resource_type: Memory
+      item_type: Node
 - triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
   actions:
   - node_disk_analyzer: {}
-  - custom_graph_enricher:
-      promql_query: sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})) != 0))
-      query_name: Disk Space Utilization for this node
-      graph_duration_minutes: 60
-      chart_values_format: Percentage
+  - resource_graph_enricher:
+      resource_type: Disk
+      item_type: Node
 - triggers:
   - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
   actions:
   - cpu_throttling_analysis_enricher: {}
-  - custom_graph_enricher:
-      promql_query: sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"$pod"})
-      query_name: CPU Usage for this pod
+  - resource_graph_enricher:
+      resource_type: CPU
+      item_type: Pod
       graph_duration_minutes: 30
 - triggers:
   - on_prometheus_alert:

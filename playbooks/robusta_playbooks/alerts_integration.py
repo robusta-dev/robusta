@@ -11,8 +11,9 @@ import pygal
 from pygal.style import DarkColorizedStyle as ChosenStyle
 from prometheus_api_client import PrometheusConnect
 
-from robusta.api import *
+from collections import namedtuple
 
+from robusta.api import *
 
 class SeverityParams(ActionParams):
     """
@@ -134,7 +135,7 @@ def __create_chart_from_prometheus_query(
         include_x_axis: bool,
         graph_duration_minutes: int,
         chart_title: Optional[str] = None,
-        values_format: Optional[str] = None
+        values_format: Optional[ChartValuesFormat] = None
 ):
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
@@ -173,7 +174,7 @@ def __create_chart_from_prometheus_query(
         ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
         ChartValuesFormat.Percentage: lambda val: f'{(100*val):.1f}'
     }
-    chart_values_format = ChartValuesFormat[values_format.capitalize()] if values_format else ChartValuesFormat.Plain
+    chart_values_format = values_format if values_format else ChartValuesFormat.Plain
     logging.info('using value formatter ' + str(chart_values_format))
     chart.value_formatter = value_formatters[chart_values_format]
 
@@ -236,26 +237,88 @@ def _prepare_promql_query(alert: PrometheusKubernetesAlert, promql_query_templat
     promql_query = template.safe_substitute(labels)
     return promql_query
 
+
+def _add_graph_enrichment(
+        alert: PrometheusKubernetesAlert,
+        promql_query: str,
+        prometheus_url: Optional[str],
+        graph_duration_minutes: Optional[int],
+        query_name: Optional[str],
+        chart_values_format: Optional[ChartValuesFormat]):
+    promql_query = _prepare_promql_query(alert, promql_query)
+    if not promql_query:
+        return
+    chart = __create_chart_from_prometheus_query(
+        prometheus_url,
+        promql_query,
+        alert.alert.startsAt,
+        include_x_axis=True,
+        graph_duration_minutes=graph_duration_minutes if graph_duration_minutes else 60,
+        chart_title=query_name,
+        values_format=chart_values_format
+    )
+    chart_name = query_name if query_name else promql_query
+    svg_name = f"{chart_name}.svg"
+    alert.add_enrichment([FileBlock(svg_name, chart.render())])
+
+
 @action
 def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphEnricherParams):
     """
     Enrich the alert with a graph of a custom Prometheus query
     """
-    promql_query = _prepare_promql_query(alert, params.promql_query)
-    if not promql_query:
-        return
-    chart = __create_chart_from_prometheus_query(
-        params.prometheus_url,
-        promql_query,
-        alert.alert.startsAt,
-        include_x_axis=True,
-        graph_duration_minutes=params.graph_duration_minutes if params.graph_duration_minutes else 60,
-        chart_title=params.query_name,
-        values_format=params.chart_values_format
+    chart_values_format = ChartValuesFormat[params.chart_values_format] if params.chart_values_format else None
+    _add_graph_enrichment(
+        alert,
+        params.promql_query,
+        prometheus_url=params.prometheus_url,
+        graph_duration_minutes=params.graph_duration_minutes,
+        query_name=params.query_name,
+        chart_values_format=chart_values_format
     )
-    chart_name = params.query_name if params.query_name else promql_query
-    svg_name = f"{chart_name}.svg"
-    alert.add_enrichment([FileBlock(svg_name, chart.render())])
+
+
+@action
+def resource_graph_enricher(alert: PrometheusKubernetesAlert, params: ResourceGraphEnricherParams):
+    ChartOptions = namedtuple('ChartOptions', ['query', 'values_format'])
+    combinations = {
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
+            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"$pod"})',
+            values_format=ChartValuesFormat.Plain
+        ),
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Node): ChartOptions(
+            query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0',
+            values_format=ChartValuesFormat.Percentage
+        ),
+        (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
+            query='',
+            values_format=ChartValuesFormat.Percentage
+        ),
+        (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
+            query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0',
+            values_format=ChartValuesFormat.Percentage
+        ),
+        (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): ChartOptions(
+            query='',
+            values_format=ChartValuesFormat.Percentage
+        ),
+        (ResourceChartResourceType.Disk, ResourceChartItemType.Node): ChartOptions(
+            query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})) != 0))',
+            values_format=ChartValuesFormat.Percentage
+        ),
+    }
+    resource_type = ResourceChartResourceType[params.resource_type]
+    item_type = ResourceChartItemType[params.item_type]
+    chosen_combination = combinations[(resource_type, item_type)]
+    values_format_text = 'Utilization' if chosen_combination.values_format == ChartValuesFormat.Percentage else 'Usage'
+    _add_graph_enrichment(
+        alert,
+        chosen_combination.query,
+        prometheus_url=params.prometheus_url,
+        graph_duration_minutes=params.graph_duration_minutes,
+        query_name=f'{params.resource_type} {values_format_text} for this {params.item_type}',
+        chart_values_format=chosen_combination.values_format
+    )
 
 
 class TemplateParams(ActionParams):
