@@ -131,12 +131,9 @@ def __create_chart_from_prometheus_query(
         prometheus_base_url: str,
         promql_query: str,
         starts_at: datetime,
-        show_dots: bool,
         include_x_axis: bool,
-        use_max_increment: bool,
         graph_duration_minutes: int,
         chart_title: Optional[str] = None,
-        stacked: Optional[bool] = None,
         values_format: Optional[str] = None
 ):
     if not prometheus_base_url:
@@ -146,10 +143,8 @@ def __create_chart_from_prometheus_query(
     alert_duration = end_time - starts_at
     graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
     start_time = end_time - graph_duration
-    #  250 is a good resolution. It is used in Prometheus web client in /graph
-    resolution = 250
-    max_possible_increment = max(graph_duration.total_seconds() / resolution, 1.0)
-    increment = max_possible_increment if use_max_increment else graph_duration.total_seconds() / 60
+    resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
+    increment = max(graph_duration.total_seconds() / resolution, 1.0)
     result = prom.custom_query_range(
         promql_query,
         start_time,
@@ -158,7 +153,6 @@ def __create_chart_from_prometheus_query(
         {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
     )
 
-    # TODO not using stacked
     chart = pygal.XY(
         show_dots=True,
         style=ChosenStyle,
@@ -209,9 +203,7 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
         params.prometheus_url,
         promql_query,
         alert.alert.startsAt,
-        show_dots=True,
         include_x_axis=False,
-        use_max_increment=False,
         graph_duration_minutes=60
     )
     alert.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
@@ -226,15 +218,10 @@ def __get_node_internal_ip_from_node(node: Node) -> str:
     return internal_ip
 
 
-@action
-def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphEnricherParams):
-    """
-    Enrich the alert with a graph of a custom Prometheus query
-    """
+def _prepare_promql_query(alert: PrometheusKubernetesAlert, promql_query_template: str) -> str:
     labels = defaultdict(lambda: "<missing>")
-    logging.info('labels are ' + str(alert.alert.labels))
     labels.update(alert.alert.labels)
-    if '$node_internal_ip' in params.promql_query:
+    if '$node_internal_ip' in promql_query_template:
         # TODO: do we already have alert.Node here?
         node_name = alert.alert.labels['node']
         node: Node = Node.readNode(node_name).obj
@@ -242,29 +229,34 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
             logging.warning(
                 f"Node {node_name} not found for custom_graph_enricher for {alert}"
             )
-            return
+            return ""
         node_internal_ip = __get_node_internal_ip_from_node(node)
         labels['node_internal_ip'] = node_internal_ip
-    template = Template(params.promql_query)
+    template = Template(promql_query_template)
     promql_query = template.safe_substitute(labels)
-    logging.info('promql query is:' + promql_query)
-    logging.info('starting at: ' + str(alert.alert.startsAt))
+    return promql_query
 
+@action
+def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphEnricherParams):
+    """
+    Enrich the alert with a graph of a custom Prometheus query
+    """
+    promql_query = _prepare_promql_query(alert, params.promql_query)
+    if not promql_query:
+        return
     chart = __create_chart_from_prometheus_query(
         params.prometheus_url,
         promql_query,
         alert.alert.startsAt,
-        show_dots=False,
         include_x_axis=True,
-        use_max_increment=True,
         graph_duration_minutes=params.graph_duration_minutes if params.graph_duration_minutes else 60,
         chart_title=params.query_name,
-        stacked=params.stacked,
         values_format=params.chart_values_format
     )
     chart_name = params.query_name if params.query_name else promql_query
     svg_name = f"{chart_name}.svg"
     alert.add_enrichment([FileBlock(svg_name, chart.render())])
+
 
 class TemplateParams(ActionParams):
     """
