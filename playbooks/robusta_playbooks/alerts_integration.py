@@ -328,7 +328,7 @@ def __create_resource_enrichment(
 
 @action
 def pod_resource_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherParams):
-    start_at = datetime.now()  # TODO get pod time? get pod tz?
+    start_at = datetime.now()
     labels = {'pod': pod_event.get_pod().metadata.name, 'namespace': pod_event.get_pod().metadata.namespace}
     graph_enrichment = __create_resource_enrichment(
         start_at,
@@ -343,7 +343,7 @@ def pod_resource_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnrich
 
 @action
 def node_resource_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherParams):
-    start_at = datetime.now()  # TODO get node time? get node tz?
+    start_at = datetime.now()
     labels = {'node': node_event.get_node().metadata.name}
     graph_enrichment = __create_resource_enrichment(
         start_at,
