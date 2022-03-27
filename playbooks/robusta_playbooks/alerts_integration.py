@@ -283,7 +283,7 @@ def resource_graph_enricher(alert: PrometheusKubernetesAlert, params: ResourceGr
     ChartOptions = namedtuple('ChartOptions', ['query', 'values_format'])
     combinations = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"$pod"})',
+            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod"})',
             values_format=ChartValuesFormat.Plain
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Node): ChartOptions(
@@ -291,7 +291,7 @@ def resource_graph_enricher(alert: PrometheusKubernetesAlert, params: ResourceGr
             values_format=ChartValuesFormat.Percentage
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
-            query='',
+            query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container!="", image!=""})',
             values_format=ChartValuesFormat.Percentage
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
