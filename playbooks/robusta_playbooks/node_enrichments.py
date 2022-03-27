@@ -1,5 +1,8 @@
 from robusta.api import *
 
+from datetime import datetime
+from . import playbooks_utils
+
 
 def pod_row(pod: Pod) -> List[str]:
     ready_condition = [
@@ -126,3 +129,21 @@ def node_health_watcher(event: NodeChangeEvent):
     event.add_finding(finding)
     event.add_enrichment([KubernetesDiffBlock([], event.old_obj, event.obj, event.obj.metadata.name)])
     node_status_enricher(event)
+
+
+@action
+def node_resource_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherParams):
+    """
+    Get a graph of a specific resource for this node.
+    """
+    start_at = datetime.now()
+    labels = {'node': node_event.get_node().metadata.name}
+    graph_enrichment = playbooks_utils.create_resource_enrichment(
+        start_at,
+        labels,
+        ResourceChartResourceType[params.resource_type],
+        ResourceChartItemType.Node,
+        prometheus_url=params.prometheus_url,
+        graph_duration_minutes=params.graph_duration_minutes
+    )
+    node_event.add_enrichment([graph_enrichment])
