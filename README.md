@@ -1,7 +1,8 @@
 # Robusta
 Robusta is a troubleshooting and automations platform for Kubernetes. It streamlines everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt useful automations and not just "build your own".
 
-Use cases:
+##
+Use cases
 
 - [X] Event-triggered automations for Kubernetes (like Argo Events) with an emphasis on simplicity
 - [X] Kubernetes monitoring - Prometheus + Robusta = better alerts that tell you *why* they happened and how to fix them
@@ -14,7 +15,7 @@ Use cases:
 
 ## Examples
 
-You can monitor crashing pods and send their logs to Slack:
+Monitor crashing pods and send their logs to Slack:
 
 ```yaml
 triggers:
@@ -28,11 +29,12 @@ sinks:
 
 ![](./docs/images/crash-report.png)
 
-There are also built-in automations to analyze common alerts and fix them:
+Remediate alerts with the click of a button:
 
 ![](./docs/images/alert_on_hpa_reached_limit1.png)
 
-You can also trigger automations manually. For example, [attach a debugger to a python pod](https://docs.robusta.dev/master/catalog/actions/python-troubleshooting.html#python-debugger):
+Take manual troubleshooting actions, like [attaching a debugger to a python pod](https://docs.robusta.dev/master/catalog/actions/python-troubleshooting.html#python-debugger):
+
 ```commandline
 robusta playbooks trigger python_debugger name=mypod namespace=default
 ```
