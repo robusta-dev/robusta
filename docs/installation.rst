@@ -1,7 +1,7 @@
 Installation
 ##################
 
-The standard installation uses `Helm 3 <https://helm.sh/docs/intro/install/>`_ and the robusta-cli, but :ref:`alternative methods <Additional Installation Methods>` are described below. 
+The standard installation uses `Helm 3 <https://helm.sh/docs/intro/install/>`_ and the robusta-cli, but :ref:`alternative methods <Additional Installation Methods>` are described below.
 
 Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1]_. You can also install on minikube or KIND. :ref:`Uninstalling <Helm Uninstall>`  takes one command, so go ahead and try!
 
@@ -141,7 +141,7 @@ Additional Installation Methods
 
 .. dropdown:: Installing on OpenShift
     :color: light
-    
+
     You will need to run one additional command:
 
     .. code-block:: bash
