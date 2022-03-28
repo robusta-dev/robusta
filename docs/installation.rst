@@ -1,9 +1,9 @@
 Installation
 ##################
 
-The standard installation uses `Helm 3 <https://helm.sh/docs/intro/install/>`_ and the robusta-cli, but :ref:`alternative methods are described below. <Additional Installation Methods>`
+The standard installation uses `Helm 3 <https://helm.sh/docs/intro/install/>`_ and the robusta-cli, but :ref:`alternative methods <Additional Installation Methods>` are described below. 
 
-Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster. [#f1]_ You can  install on minikube or KIND. :ref:`Uninstalling <Helm Uninstall>`  takes one command, so go ahead and try!
+Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1]_. You can also install on minikube or KIND. :ref:`Uninstalling <Helm Uninstall>`  takes one command, so go ahead and try!
 
 Standard Installation
 ------------------------------
@@ -50,7 +50,7 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 
 1. Create a crashing pod:
 
-.. code-block:: python
+.. code-block:: bash
 
    kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw
 
@@ -72,7 +72,7 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 
 4. Clean up the crashing pod:
 
-.. code-block:: python
+.. code-block:: bash
 
    kubectl delete deployment crashpod
 
@@ -81,7 +81,7 @@ Forwarding Prometheus Alerts to Robusta
 
 Robusta can suggest fixes for your existing Prometheus alerts and tell you why they happen.
 
-First, :ref:`you must configure an AlertManager webhook. <Sending Alerts to Robusta>`
+First, you must configure an :ref:`AlertManager webhook. <Sending Alerts to Robusta>`
 
 If you installed Robusta's bundled Prometheus Stack then you can skip this step.
 
@@ -113,7 +113,7 @@ Additional Installation Methods
 
     Using the cli is totally optional. If you prefer, you can skip the CLI and fetch the default ``values.yaml``:
 
-    .. code-block:: yaml
+    .. code-block:: bash
 
         helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
         helm show values robusta/robusta
@@ -141,7 +141,7 @@ Additional Installation Methods
 
 .. dropdown:: Installing on OpenShift
     :color: light
-
+    
     You will need to run one additional command:
 
     .. code-block:: bash
