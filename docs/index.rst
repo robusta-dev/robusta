@@ -12,7 +12,7 @@ Robusta has three main parts, all open source:
 
 There are additional *optional* components:
 
-4. An all-in-one bundle with Robusta, the Prometheus Operator, and default Kubernetes alerts [#f1]_
+4. `An all-in-one bundle with Robusta, the Prometheus Operator, and default Kubernetes alerts <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_ [#f1]_
 5. `A web UI to see all alerts, changes, and events in your cluster. <http://home.robusta.dev/ui?from=docs>`_ [#f2]_
 
 Example Use Cases
