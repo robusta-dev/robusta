@@ -56,6 +56,8 @@ Triggers define when a playbook runs:
 
 Most triggers support extra filters like ``name_prefix`` which further restricts the trigger.
 
+If multiple triggers match, multiple playbooks will run according to the rules in :ref:`Flow Control`
+
 Multiple playbook instances
 -----------------------------------
 

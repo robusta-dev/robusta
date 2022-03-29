@@ -136,41 +136,11 @@ Sometimes you need to prevent an action from running too often. You can use the 
 
 The second parameter to ``RateLimiter.mark_and_test`` defines a key used for checking the rate limit. Each key is rate-limited individually.
 
-Flow control
--------------
-Every Robusta playbook has a list of :ref:`Triggers` and a list of :ref:`Actions`.
+stop_processing
+--------------------------------------
+Normally, multiple actions run one after another. (See :ref:`Flow Control`.)
 
-.. code-block:: yaml
-
-   - triggers:
-     - on_deployment_create: {}
-     - on_daemonset_update: {}
-     actions:
-     - my_first_action: {}
-     - my_second_action: {}
-
-For every incoming event, Robusta will run actions if any of the ``triggers`` match.
-
-All the playbook's ``actions`` will be executed, according to the order specified in the configuration.
-
-Playbooks execution order, is the same as the configuration file order. For example:
-
-.. code-block:: yaml
-
-   - triggers:  # playbook A
-     - on_deployment_create: {}
-     actions:
-     - my_first_action: {}
-   - triggers:  # playbook B
-     - on_deployment_create: {}
-     actions:
-     - my_second_action: {}
-
-On the example above, ``playbook A`` will run before ``playbook B``
-
-There is a mechanisms in place, to stop the processing flow, if needed:
-
-Set ``event.stop_processing = True``. No other ``playbooks`` or ``actions`` will be executed
+A playbook can stop Robusta from running further actions by setting ``event.stop_processing = True``.
 
 .. code-block:: python
    :emphasize-lines: 5

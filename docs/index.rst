@@ -182,6 +182,7 @@ Next Steps
 
    upgrade
    user-guide/configuration
+   user-guide/flow-control
    catalog/triggers/index
    catalog/actions/index
    catalog/sinks/index
