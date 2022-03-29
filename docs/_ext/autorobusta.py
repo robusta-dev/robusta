@@ -268,6 +268,8 @@ class RobustaActionDirective(SphinxDirective):
 
         content = textwrap.dedent(
             f"""\
+            .. _{action_definition.action_name}:
+            
             {to_name(action_definition.action_name)}
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
