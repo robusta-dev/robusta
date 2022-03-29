@@ -38,6 +38,8 @@ On the example above, ``playbook A`` will run before ``playbook B``
 
 Stop Processing
 ^^^^^^^^^^^^^^^^^^
-An action can stop the processing flow if needed. No further actions will run.
+Any action can :ref:`stop the processing flow <stop_processing>` if needed. No further actions will run.
 
-See :ref:`stop_processing` for details.
+This is how actions like :ref:`node_restart_silencer <node_restart_silencer>` work.
+
+Only actions that appear **after** the current action will be stopped. This means, for example, that silencers must appear before other playbooks.
