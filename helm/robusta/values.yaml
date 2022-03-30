@@ -67,24 +67,33 @@ builtinPlaybooks:
       alert_name: HostHighCpuLoad
   actions:
   - node_cpu_enricher: {}
-  - graph_enricher: {}
+  - alert_graph_enricher:
+      resource_type: CPU
+      item_type: Node
 - triggers:
   - on_prometheus_alert:
       alert_name: HostOomKillDetected
   actions:
   - oom_killer_enricher: {}
-  - graph_enricher: {}
+  - alert_graph_enricher:
+      resource_type: Memory
+      item_type: Node
 - triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
   actions:
   - node_disk_analyzer: {}
+  - alert_graph_enricher:
+      resource_type: Disk
+      item_type: Node
 - triggers:
   - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
   actions:
   - cpu_throttling_analysis_enricher: {}
-  - graph_enricher: {}
+  - alert_graph_enricher:
+      resource_type: CPU
+      item_type: Pod
 - triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDeploymentReplicasMismatch

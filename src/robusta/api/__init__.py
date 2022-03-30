@@ -40,3 +40,4 @@ from ..integrations.scheduled.trigger import (
 )
 from ..core.playbooks.common import get_resource_events_table
 from ..core.reporting.finding_subjects import PodFindingSubject, KubeObjFindingSubject
+from ..core.playbooks.prometheus_enrichment_utils import *

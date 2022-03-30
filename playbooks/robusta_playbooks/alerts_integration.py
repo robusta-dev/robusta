@@ -1,12 +1,10 @@
+import logging
+
 import requests
 from string import Template
 from datetime import datetime, timedelta
 from urllib.parse import urlparse, unquote_plus
 from collections import defaultdict
-
-import pygal
-from pygal.style import DarkStyle as ChosenStyle
-from prometheus_api_client import PrometheusConnect
 
 from robusta.api import *
 
@@ -129,42 +127,56 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     """
     Enrich the alert with a graph of the Prometheus query which triggered the alert.
     """
-    if params.prometheus_url:
-        prometheus_base_url = params.prometheus_url
-    else:
-        prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
-    prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
     promql_query = alert.get_prometheus_query()
-
-    end_time = datetime.now(tz=alert.alert.startsAt.tzinfo)
-    alert_duration = end_time - alert.alert.startsAt
-    graph_duration = max(alert_duration, timedelta(minutes=60))
-    start_time = end_time - graph_duration
-    increment = graph_duration.total_seconds() / 60
-    result = prom.custom_query_range(
+    chart = create_chart_from_prometheus_query(
+        params.prometheus_url,
         promql_query,
-        start_time,
-        end_time,
-        increment,
-        {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
+        alert.alert.startsAt,
+        include_x_axis=False,
+        graph_duration_minutes=60
     )
-
-    chart = pygal.XY(show_dots=True, style=ChosenStyle, truncate_legend=15)
-    chart.x_label_rotation = 35
-    chart.truncate_label = -1
-    chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(
-        timestamp
-    ).strftime("%I:%M:%S %p on %d, %b")
-    chart.title = promql_query
-    # fix a pygal bug which causes infinite loops due to rounding errors with floating points
-    for series in result:
-        label = "\n".join([v for v in series["metric"].values()])
-        values = [
-            (timestamp, round(float(val), FLOAT_PRECISION_LIMIT))
-            for (timestamp, val) in series["values"]
-        ]
-        chart.add(label, values)
     alert.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
+
+
+@action
+def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphEnricherParams):
+    """
+    Enrich the alert with a graph of a custom Prometheus query
+    """
+    chart_values_format = ChartValuesFormat[params.chart_values_format] if params.chart_values_format else None
+    graph_enrichment = create_graph_enrichment(
+        alert.alert.startsAt,
+        alert.alert.labels,
+        params.promql_query,
+        prometheus_url=params.prometheus_url,
+        graph_duration_minutes=params.graph_duration_minutes,
+        graph_title=params.graph_title,
+        chart_values_format=chart_values_format
+    )
+    alert.add_enrichment([graph_enrichment])
+
+
+@action
+def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResourceGraphEnricherParams):
+    """
+    Enrich the alert with a graph of a relevant resource (Pod or Node).
+    """
+    alert_labels = alert.alert.labels
+    labels = {x: alert_labels[x] for x in alert_labels}
+    node = alert.get_node()
+    if node:
+        internal_ip = get_node_internal_ip(node)
+        if internal_ip:
+            labels['node_internal_ip'] = internal_ip
+
+    graph_enrichment = create_resource_enrichment(
+        alert.alert.startsAt,
+        labels,
+        ResourceChartResourceType[params.resource_type],
+        ResourceChartItemType[params.item_type],
+        prometheus_url=params.prometheus_url,
+        graph_duration_minutes=params.graph_duration_minutes)
+    alert.add_enrichment([graph_enrichment])
 
 
 class TemplateParams(ActionParams):
