@@ -83,7 +83,7 @@ def create_chart_from_prometheus_query(
     value_formatters = {
         ChartValuesFormat.Plain: lambda val: str(val),
         ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
-        ChartValuesFormat.Percentage: lambda val: f'{(100*val):.1f}'
+        ChartValuesFormat.Percentage: lambda val: f'{(100*val):.1f}%'
     }
     chart_values_format = values_format if values_format else ChartValuesFormat.Plain
     chart.value_formatter = value_formatters[chart_values_format]
@@ -106,7 +106,7 @@ def create_graph_enrichment(
         labels: Dict[Any, Any],
         promql_query: str,
         prometheus_url: Optional[str],
-        graph_duration_minutes: Optional[int],
+        graph_duration_minutes: int,
         graph_title: Optional[str],
         chart_values_format: Optional[ChartValuesFormat]) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
@@ -115,7 +115,7 @@ def create_graph_enrichment(
         promql_query,
         start_at,
         include_x_axis=True,
-        graph_duration_minutes=graph_duration_minutes if graph_duration_minutes else 60,
+        graph_duration_minutes=graph_duration_minutes,
         chart_title=graph_title,
         values_format=chart_values_format
     )
@@ -129,8 +129,8 @@ def create_resource_enrichment(
     labels: Dict[Any, Any],
     resource_type: ResourceChartResourceType,
     item_type: ResourceChartItemType,
+    graph_duration_minutes: int,
     prometheus_url: Optional[str] = None,
-    graph_duration_minutes: Optional[int] = None
 ) -> FileBlock:
     ChartOptions = namedtuple('ChartOptions', ['query', 'values_format'])
     combinations = {

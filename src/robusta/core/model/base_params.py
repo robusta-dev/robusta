@@ -78,14 +78,14 @@ class CustomGraphEnricherParams(PrometheusParams):
     """
     :var promql_query: Promql query. See https://prometheus.io/docs/prometheus/latest/querying/basics/
     :var graph_title: A nicer name for the Prometheus query.
-    :var graph_duration_minutes: Graph duration is minutes. Default is 60.
-    :var chart_values_format: one of the ChartValuesFormat. Default is Plain.
+    :var graph_duration_minutes: Graph duration is minutes.
+    :var chart_values_format: one of the ChartValuesFormat.
     """
 
     promql_query: str
     graph_title: Optional[str] = None
-    graph_duration_minutes: Optional[int] = None
-    chart_values_format: Optional[str] = None
+    graph_duration_minutes: int = 60
+    chart_values_format: str = 'Plain'
 
 
 class ResourceGraphEnricherParams(PrometheusParams):
@@ -95,7 +95,7 @@ class ResourceGraphEnricherParams(PrometheusParams):
 
     """
     resource_type: str
-    graph_duration_minutes: Optional[int] = None
+    graph_duration_minutes: int = 60
 
 
 class AlertResourceGraphEnricherParams(ResourceGraphEnricherParams):
