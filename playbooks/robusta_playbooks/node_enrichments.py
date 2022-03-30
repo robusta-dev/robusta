@@ -137,6 +137,12 @@ def node_resource_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnr
     """
     start_at = datetime.now()
     labels = {'node': node_event.get_node().metadata.name}
+
+    node = node_event.get_node()
+    internal_ip = get_node_internal_ip(node)
+    if internal_ip:
+        labels['node_internal_ip'] = internal_ip
+
     graph_enrichment = create_resource_enrichment(
         start_at,
         labels,

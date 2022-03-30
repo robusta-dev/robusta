@@ -161,9 +161,17 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
     """
     Enrich the alert with a graph of a relevant resource (Pod or Node).
     """
+    alert_labels = alert.alert.labels
+    labels = {x: alert_labels[x] for x in alert_labels}
+    node = alert.get_node()
+    if node:
+        internal_ip = get_node_internal_ip(node)
+        if internal_ip:
+            labels['node_internal_ip'] = internal_ip
+
     graph_enrichment = create_resource_enrichment(
         alert.alert.startsAt,
-        alert.alert.labels,
+        labels,
         ResourceChartResourceType[params.resource_type],
         ResourceChartItemType[params.item_type],
         prometheus_url=params.prometheus_url,

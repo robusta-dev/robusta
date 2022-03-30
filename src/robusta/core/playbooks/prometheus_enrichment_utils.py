@@ -11,32 +11,21 @@ from datetime import datetime, timedelta
 import humanize
 
 
-def __get_node_internal_ip_from_node(node: Node) -> str:
+def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
+    labels = defaultdict(lambda: "<missing>")
+    labels.update(provided_labels)
+    template = Template(promql_query_template)
+    promql_query = template.safe_substitute(labels)
+    return promql_query
+
+
+def get_node_internal_ip(node: Node) -> str:
     internal_ip = next(
         addr.address
         for addr in node.status.addresses
         if addr.type == "InternalIP"
     )
     return internal_ip
-
-
-def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
-    labels = defaultdict(lambda: "<missing>")
-    labels.update(provided_labels)
-    if '$node_internal_ip' in promql_query_template:
-        # TODO: do we already have alert.Node here?
-        node_name = labels['node']
-        node: Node = Node.readNode(node_name).obj
-        if not node:
-            logging.warning(
-                f"Node {node_name} not found for"
-            )
-            raise AttributeError(f'Cannot get internal ip for node: {node_name}')
-        node_internal_ip = __get_node_internal_ip_from_node(node)
-        labels['node_internal_ip'] = node_internal_ip
-    template = Template(promql_query_template)
-    promql_query = template.safe_substitute(labels)
-    return promql_query
 
 
 def create_chart_from_prometheus_query(
