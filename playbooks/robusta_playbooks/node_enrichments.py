@@ -1,7 +1,6 @@
 from robusta.api import *
 
 from datetime import datetime
-from . import playbooks_utils
 
 
 def pod_row(pod: Pod) -> List[str]:
@@ -138,7 +137,7 @@ def node_resource_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnr
     """
     start_at = datetime.now()
     labels = {'node': node_event.get_node().metadata.name}
-    graph_enrichment = playbooks_utils.create_resource_enrichment(
+    graph_enrichment = create_resource_enrichment(
         start_at,
         labels,
         ResourceChartResourceType[params.resource_type],

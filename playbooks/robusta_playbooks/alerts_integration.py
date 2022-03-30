@@ -6,8 +6,6 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse, unquote_plus
 from collections import defaultdict
 
-from . import playbooks_utils
-
 from robusta.api import *
 
 
@@ -130,7 +128,7 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     Enrich the alert with a graph of the Prometheus query which triggered the alert.
     """
     promql_query = alert.get_prometheus_query()
-    chart = playbooks_utils.create_chart_from_prometheus_query(
+    chart = create_chart_from_prometheus_query(
         params.prometheus_url,
         promql_query,
         alert.alert.startsAt,
@@ -146,7 +144,7 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
     Enrich the alert with a graph of a custom Prometheus query
     """
     chart_values_format = ChartValuesFormat[params.chart_values_format] if params.chart_values_format else None
-    graph_enrichment = playbooks_utils.create_graph_enrichment(
+    graph_enrichment = create_graph_enrichment(
         alert.alert.startsAt,
         alert.alert.labels,
         params.promql_query,
@@ -163,7 +161,7 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
     """
     Enrich the alert with a graph of a relevant resource (Pod or Node).
     """
-    graph_enrichment = playbooks_utils.create_resource_enrichment(
+    graph_enrichment = create_resource_enrichment(
         alert.alert.startsAt,
         alert.alert.labels,
         ResourceChartResourceType[params.resource_type],
