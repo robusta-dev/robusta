@@ -88,9 +88,7 @@ def create_chart_from_prometheus_query(
     chart_values_format = values_format if values_format else ChartValuesFormat.Plain
     chart.value_formatter = value_formatters[chart_values_format]
 
-    if chart_title:
-        chart.title = f'{chart_title} starting {humanize.naturaldelta(timedelta(minutes=graph_duration_minutes))} ago'
-    else:
+    if not chart_title:
         chart.title = promql_query
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
     for series in result:
@@ -109,7 +107,7 @@ def create_graph_enrichment(
         promql_query: str,
         prometheus_url: Optional[str],
         graph_duration_minutes: Optional[int],
-        query_name: Optional[str],
+        graph_title: Optional[str],
         chart_values_format: Optional[ChartValuesFormat]) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
@@ -118,10 +116,10 @@ def create_graph_enrichment(
         start_at,
         include_x_axis=True,
         graph_duration_minutes=graph_duration_minutes if graph_duration_minutes else 60,
-        chart_title=query_name,
+        chart_title=graph_title,
         values_format=chart_values_format
     )
-    chart_name = query_name if query_name else promql_query
+    chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
     return FileBlock(svg_name, chart.render())
 
@@ -169,7 +167,7 @@ def create_resource_enrichment(
         chosen_combination.query,
         prometheus_url=prometheus_url,
         graph_duration_minutes=graph_duration_minutes,
-        query_name=f'{resource_type.name} {values_format_text} for this {item_type.name.lower()}',
+        graph_title=f'{resource_type.name} {values_format_text} for this {item_type.name.lower()}',
         chart_values_format=chosen_combination.values_format
     )
     return graph_enrichment

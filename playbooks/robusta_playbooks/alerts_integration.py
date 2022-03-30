@@ -152,14 +152,14 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
         params.promql_query,
         prometheus_url=params.prometheus_url,
         graph_duration_minutes=params.graph_duration_minutes,
-        query_name=params.query_name,
+        graph_title=params.graph_title,
         chart_values_format=chart_values_format
     )
     alert.add_enrichment([graph_enrichment])
 
 
 @action
-def alert_resource_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResourceGraphEnricherParams):
+def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResourceGraphEnricherParams):
     """
     Enrich the alert with a graph of a relevant resource (Pod or Node).
     """

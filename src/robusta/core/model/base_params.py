@@ -77,13 +77,13 @@ class PrometheusParams(ActionParams):
 class CustomGraphEnricherParams(PrometheusParams):
     """
     :var promql_query: Promql query. See https://prometheus.io/docs/prometheus/latest/querying/basics/
-    :var query_name: A nicer name for the Prometheus query.
+    :var graph_title: A nicer name for the Prometheus query.
     :var graph_duration_minutes: Graph duration is minutes. Default is 60.
     :var chart_values_format: one of the ChartValuesFormat. Default is Plain.
     """
 
     promql_query: str
-    query_name: Optional[str] = None
+    graph_title: Optional[str] = None
     graph_duration_minutes: Optional[int] = None
     chart_values_format: Optional[str] = None
 

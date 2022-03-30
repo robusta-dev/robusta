@@ -22,7 +22,7 @@ def pod_events_enricher(event: PodEvent):
 
 
 @action
-def pod_resource_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherParams):
+def pod_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherParams):
     """
     Get a graph of a specific resource for this pod. Note: "Disk" Resource is not supported.
     """
