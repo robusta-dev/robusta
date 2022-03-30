@@ -1,0 +1,16 @@
+Thank you for installing {{ .Chart.Name | title }} {{ .Chart.AppVersion }}
+
+As an open source project, we collect general usage statistics.
+This data is extremely limited and contains only general metadata to help us understand usage patterns.
+If you are willing to share additional data, please do so! It really help us improve Robusta.
+
+You can set sendAdditionalTelemetry: true as a Helm value to send exception reports and additional data.
+This is disabled by default. 
+
+To opt-out of telemetry entirely, set a ENABLE_TELEMETRY=false environment variable on the robusta-runner deployment.
+
+{{- range .Values.sinksConfig }}
+{{if .robusta_sink}}
+Visit the web UI at: https://platform.robusta.dev/
+{{- end }}
+{{- end }}

@@ -113,11 +113,12 @@ class PrometheusKubernetesAlert(
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE
         name: Optional[str] = None
         namespace: Optional[str] = None
-
+        node_name: Optional[str] = None
         if self.pod:
             subject_type = FindingSubjectType.TYPE_POD
             name = self.pod.metadata.name
             namespace = self.pod.metadata.namespace
+            node_name = self.pod.spec.nodeName
         elif self.job:
             subject_type = FindingSubjectType.TYPE_JOB
             name = self.job.metadata.name
@@ -133,8 +134,9 @@ class PrometheusKubernetesAlert(
         elif self.node:
             subject_type = FindingSubjectType.TYPE_NODE
             name = self.node.metadata.name
+            node_name = self.node.metadata.name
 
-        return FindingSubject(name, subject_type, namespace)
+        return FindingSubject(name, subject_type, namespace, node_name)
 
     def create_default_finding(self) -> Finding:
         alert_subject = self.__get_alert_subject()

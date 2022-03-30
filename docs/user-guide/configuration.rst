@@ -186,6 +186,51 @@ Here is a full example showing how to configure all possible sinks:
         name: webhook_sink
         url: "https://my-webhook-service.com/robusta-alerts"
 
+Sink matchers
+^^^^^^^^^^^^^
+
+Sinks can be configured to report findings only when they match **all** the specified regular expressions:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_slack_sink
+        slack_channel: test-notifications
+        api_key: secret-key
+        match:
+          # match any namespace containing the "test" substring
+          namespace: test
+          # match any node containing the "test-node" substring
+          node: test-node
+    - slack_sink:
+        name: prod_slack_sink
+        slack_channel: prod-notifications
+        api_key: secret-key
+        match:
+          # match the "prod" namespace exactly
+          namespace: ^prod$
+    - slack_sink:
+        name: pod_slack_sink
+        slack_channel: pod-notifications
+        api_key: secret-key
+        match:
+          # match only notifications for pods
+          kind: pod
+
+Supported attributes:
+  - ``title``: e.g. ``Crashing pod crash-pod in namespace default``
+  - ``identifier``: e.g. ``restart_loop_reporter``
+  - ``severity``: one of ``INFO``, ``LOW``, ``MEDIUM``, ``HIGH``
+  - ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
+  - ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
+  - ``source``: one of ``NONE``, ``KUBERNETES_API_SERVER``, ``PROMETHEUS``, ``MANUAL``, ``CALLBACK``
+  - ``namespace``: the Kubernetes object namespace
+  - ``node`` : the Kubernetes node name
+  - ``name`` : the Kubernetes object name
+
+The regular expressions must be in the `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_.
+
 Configuration secrets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -202,12 +247,12 @@ In your ``values.yaml`` file add:
 .. code-block:: yaml
 
    runner:
-     additional_env_vars: |-
-       - name: GRAFANA_KEY
-         valueFrom:
-           secretKeyRef:
-             name: my-robusta-secrets
-             key: secret_grafana_key
+     additional_env_vars:
+     - name: GRAFANA_KEY
+       valueFrom:
+         secretKeyRef:
+           name: my-robusta-secrets
+           key: secret_grafana_key
 
 
 Next, define that the value should be pulled from an environment variable by using the special {{ env.VARIABLE }} syntax:
@@ -234,7 +279,20 @@ Playbook actions are loaded into Robusta using the ``playbookRepos`` Helm value.
 
 Robusta has a set of builtin playbooks.
 
-You can load extra playbook actions from git repositories:
+You can load extra playbook actions in two different ways from git repositories, via HTTPS or via SSH.
+For public repos load the playbook via HTTPS, for private repos you will need to use SSH.
+
+1) Loading a git playbook by HTTPS:
+
+.. code-block:: yaml
+
+    playbookRepos:
+      # we're adding the robusta chaos-engineering playbooks here from https://github.com/robusta-dev/robusta-chaos
+      my_extra_playbooks:
+        url: "https://github.com/robusta-dev/robusta-chaos.git"
+
+
+2) Loading a git playbook by SSH:
 
 .. code-block:: yaml
 
@@ -248,7 +306,7 @@ You can load extra playbook actions from git repositories:
           -----END OPENSSH PRIVATE KEY-----
 
 
-The ``key`` should contain a deployment key, with ``read`` access. It isn't necessary for public repositories.
+The ``key`` should contain a deployment key, with ``read`` access. The ``key`` is required when accessing a git repo via ssh, even for public repositories.
 
 .. note::
 

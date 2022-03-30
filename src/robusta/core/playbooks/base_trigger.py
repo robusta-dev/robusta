@@ -22,7 +22,7 @@ class BaseTrigger(BaseModel):
         return True
 
     def build_execution_event(
-        self, event: TriggerEvent, findings: List[Finding]
+        self, event: TriggerEvent, sink_findings: Dict[str,List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
         pass
 

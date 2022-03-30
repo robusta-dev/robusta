@@ -23,7 +23,8 @@ from ..core.model.env_vars import (
 from ..integrations.git.git_repo import (
     GitRepoManager,
     GitRepo,
-    GIT_URL_PREFIX,
+    GIT_SSH_PREFIX,
+    GIT_HTTPS_PREFIX,
     LOCAL_PATH_URL_PREFIX,
 )
 from ..utils.file_system_watcher import FileSystemWatcher
@@ -37,7 +38,7 @@ from ..model.config import (
 from ..integrations.scheduled.playbook_scheduler_manager_impl import (
     PlaybooksSchedulerManagerImpl,
 )
-
+import hashlib
 
 class ConfigLoader:
 
@@ -119,7 +120,7 @@ class ConfigLoader:
                 if (
                     playbooks_repo.pip_install
                 ):  # skip playbooks that are already in site-packages
-                    if playbooks_repo.url.startswith(GIT_URL_PREFIX):
+                    if playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
                         repo = GitRepo(
                             playbooks_repo.url,
                             playbooks_repo.key.get_secret_value(),
@@ -132,7 +133,7 @@ class ConfigLoader:
                     else:
                         raise Exception(
                             f"Illegal playbook repo url {playbooks_repo.url}. "
-                            f"Must start with '{GIT_URL_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
+                            f"Must start with '{GIT_SSH_PREFIX}', '{GIT_HTTPS_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
                         )
 
                     if not os.path.exists(
@@ -184,6 +185,7 @@ class ConfigLoader:
                 if runner_config is None:
                     return
 
+                self.registry.set_global_config(runner_config.global_config)
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
                 # It allows to override these, with playbooks loaded afterwards
@@ -218,7 +220,7 @@ class ConfigLoader:
                 )
 
                 (sinks_registry, playbooks_registry) = self.__prepare_runtime_config(
-                    runner_config, self.registry.get_sinks(), action_registry
+                    runner_config, self.registry.get_sinks(), action_registry, self.registry
                 )
                 # clear git repos, so it would be re-initialized
                 GitRepoManager.clear_git_repos()
@@ -228,6 +230,11 @@ class ConfigLoader:
                 self.registry.set_actions(action_registry)
                 self.registry.set_playbooks(playbooks_registry)
                 self.registry.set_sinks(sinks_registry)
+
+                telemetry = self.registry.get_telemetry()
+                telemetry.playbooks_count = len(runner_config.active_playbooks)
+                telemetry.account_id = hashlib.sha256(str(runner_config.global_config.get("account_id", "no_account")).encode("utf-8")).hexdigest()
+                telemetry.cluster_id = hashlib.sha256(str(runner_config.global_config.get("cluster_name", "no_cluster")).encode("utf-8")).hexdigest()
 
                 self.__reload_receiver()
             except Exception as e:
@@ -239,10 +246,11 @@ class ConfigLoader:
         runner_config: RunnerConfig,
         sinks_registry: SinksRegistry,
         actions_registry: ActionsRegistry,
+        registry : Registry
     ) -> (SinksRegistry, PlaybooksRegistry):
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(
-            runner_config.sinks_config, existing_sinks, runner_config.global_config
+            runner_config.sinks_config, existing_sinks, registry
         )
         sinks_registry = SinksRegistry(new_sinks)
 

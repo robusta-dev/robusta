@@ -9,13 +9,12 @@ from ..sink_base import SinkBase
 
 
 class KafkaSink(SinkBase):
-    def __init__(self, sink_config: KafkaSinkConfigWrapper, cluster_name: str):
-        super().__init__(sink_config.kafka_sink)
+    def __init__(self, sink_config: KafkaSinkConfigWrapper, registry):
+        super().__init__(sink_config.kafka_sink, registry)
         self.producer = KafkaProducer(
             bootstrap_servers=sink_config.kafka_sink.kafka_url
         )
         self.topic = sink_config.kafka_sink.topic
-        self.cluster_name = cluster_name
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         for enrichment in finding.enrichments:

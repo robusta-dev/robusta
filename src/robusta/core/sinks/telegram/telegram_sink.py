@@ -1,3 +1,5 @@
+from tabulate import tabulate
+
 from .telegram_client import TelegramClient
 from .telegram_sink_params import TelegramSinkConfigWrapper
 from ..transformer import Transformer
@@ -22,9 +24,9 @@ INVESTIGATE_ICON = u"\U0001F50E"
 
 
 class TelegramSink(SinkBase):
-    def __init__(self, sink_config: TelegramSinkConfigWrapper, cluster_name: str):
-        super().__init__(sink_config.telegram_sink)
-        self.cluster_name = cluster_name
+    def __init__(self, sink_config: TelegramSinkConfigWrapper, registry):
+        super().__init__(sink_config.telegram_sink, registry)
+
         self.client = TelegramClient(sink_config.telegram_sink.chat_id, sink_config.telegram_sink.bot_token)
         self.send_files = sink_config.telegram_sink.send_files
 
@@ -35,8 +37,16 @@ class TelegramSink(SinkBase):
         self.client.send_message(self.__get_message_text(finding, platform_enabled))
         if self.send_files:
             for enrichment in finding.enrichments:
-                for block in [block for block in enrichment.blocks if isinstance(block, FileBlock)]:
+                file_blocks = [block for block in enrichment.blocks if isinstance(block, FileBlock)]
+                for block in file_blocks:
                     self.client.send_file(file_name=block.filename, contents=block.contents)
+                table_blocks = [block for block in enrichment.blocks if isinstance(block, TableBlock)]
+                for block in table_blocks:
+                    table_text = tabulate(block.render_rows(), headers=block.headers, tablefmt="presto")
+                    self.client.send_file(
+                        file_name=f"{block.table_name}.txt",
+                        contents=table_text.encode("utf-8")
+                    )
 
     def __get_message_text(self, finding: Finding, platform_enabled: bool):
         message_content = self.__build_telegram_title(finding.title, finding.severity)

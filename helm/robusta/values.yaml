@@ -2,7 +2,7 @@
 # if you have any questions, feel free to ask via github issues or Slack (see link on robusta.dev)
 
 # playbook repositories
-playbookRepos: []
+playbookRepos: {}
 
 # sinks configurations
 sinksConfig: []
@@ -29,6 +29,7 @@ disableCloudRouting: false
 
 # Enable loading playbooks to a persistent volume
 playbooksPersistentVolume: false
+playbooksPersistentVolumeSize: 4Gi
 
 # custom user playbooks
 customPlaybooks: []
@@ -40,19 +41,15 @@ builtinPlaybooks:
   - on_pod_update: {}
   actions:
   - restart_loop_reporter:
-      restart_reason: CrashLoopBackOff
+      restart_reason: "CrashLoopBackOff"
   - image_pull_backoff_reporter:
       rate_limit: 3600
-- triggers:
-  - on_node_update: {}
-  actions:
-  - node_health_watcher: {}
 # playbooks for prometheus enrichment and silencing
 - triggers:
   - on_prometheus_alert: {}
   actions:
   - name_silencer:
-      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown"]
+      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeNodeNotReady
@@ -79,6 +76,11 @@ builtinPlaybooks:
   - graph_enricher: {}
 - triggers:
   - on_prometheus_alert:
+      alert_name: NodeFilesystemSpaceFillingUp
+  actions:
+  - node_disk_analyzer: {}
+- triggers:
+  - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
   actions:
   - cpu_throttling_analysis_enricher: {}
@@ -100,7 +102,7 @@ enablePlatformPlaybooks: false
 
 platformPlaybooks:
 - triggers:
-  - on_kubernetes_warning_event: {}
+  - on_kubernetes_warning_event_create: {}
   actions:
   - event_report: {}
   - event_resource_events: {}
@@ -122,6 +124,7 @@ kubewatch:
   pprof: True
   resources:
     requests:
+      cpu: 10m
       memory: 512Mi
     limits:
       cpu: ~
@@ -132,6 +135,7 @@ grafanaRenderer:
   imagePullPolicy: IfNotPresent
   resources:
     requests:
+      cpu: 100m
       memory: 512Mi
     limits:
       cpu: ~
@@ -141,13 +145,15 @@ runner:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
   log_level: INFO
-  sentry_dsn:
+  sentry_dsn: https://53b627690db14de7b02095407596fa16@o1120648.ingest.sentry.io/6156573
+  sendAdditionalTelemetry: false
   resources:
     requests:
+      cpu: 250m
       memory: 1024Mi
     limits:
       cpu: ~
-  additional_env_vars: ""
+  additional_env_vars: []
 
 kube-prometheus-stack:
   alertmanager:
@@ -171,10 +177,17 @@ kube-prometheus-stack:
           webhook_configs:
             - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.cluster.local/api/alerts'
               send_resolved: true
+    alertmanagerSpec:
+      resources:
+        requests:
+          cpu: 50m
   kubeProxy:
     enabled: false
   prometheus:
     prometheusSpec:
+      resources:
+        requests:
+          cpu: 50m
       retention: 14d
       # we set a value slightly lower than the 100Gi below
       # the retentionSize uses the suffix GB but it is really Gi units
@@ -188,3 +201,20 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 100Gi
+  prometheus-node-exporter:
+    resources:
+      requests:
+        cpu: 50m
+  prometheusOperator:
+    resources:
+      requests:
+        cpu: 100m
+    prometheusConfigReloader:
+      resources:
+        limits:
+          cpu: 0
+  kube-state-metrics:
+    resources:
+      requests:
+        cpu: 10m
+

@@ -1,6 +1,8 @@
 Triggers
 ==========
 
+.. _any_trigger:
+
 You can trigger Robusta automations on all of the following events:
 
 .. toctree::

@@ -68,7 +68,7 @@ These actions enrich Prometheus alerts. They only work with the ``on_prometheus_
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_definition_enricher
 
 Prometheus Silencers
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These actions can selectively silence Prometheus alerts. They only work with the ``on_prometheus_alert`` trigger:
 

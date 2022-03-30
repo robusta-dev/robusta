@@ -9,6 +9,7 @@ from typing import List, Dict, Any
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
 from ...transformer import Transformer
+from ....model.cluster_status import ClusterStatus
 from ....model.nodes import NodeInfo
 from ....model.services import ServiceInfo
 from ....reporting.blocks import (
@@ -33,6 +34,7 @@ SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
 EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
+CLUSTERS_STATUS_TABLE = "ClustersStatus"
 
 
 class RobustaAuthClient(SupabaseAuthClient):
@@ -105,7 +107,7 @@ class SupabaseDal:
         self.signing_key = signing_key
 
     def to_issue(self, finding: Finding):
-        return {
+        issue_obj = {
             "id": str(finding.id),
             "title": finding.title,
             "description": finding.description,
@@ -118,10 +120,16 @@ class SupabaseDal:
             "subject_type": finding.subject.subject_type.value,
             "subject_name": finding.subject.name,
             "subject_namespace": finding.subject.namespace,
+            "subject_node": finding.subject.node,
             "service_key": finding.service_key,
             "cluster": self.cluster,
             "account_id": self.account_id,
         }
+
+        if finding.creation_date:
+            issue_obj["creation_date"] = finding.creation_date
+
+        return issue_obj
 
     def to_evidence(self, finding_id: uuid, enrichment: Enrichment) -> Dict[Any, Any]:
         structured_data = []
@@ -279,6 +287,23 @@ class SupabaseDal:
             for service in res.get("data")
         ]
 
+    def has_cluster_findings(self) -> bool:
+        res = (
+            self.client.table(ISSUES_TABLE)
+            .select('*')
+            .filter("account_id", "eq", self.account_id)
+            .filter("cluster", "eq", self.cluster)
+            .limit(1)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to check cluster issues: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+        return len(res.get("data")) > 0
+
     def get_active_nodes(self) -> List[NodeInfo]:
         res = (
             self.client.table(NODES_TABLE)
@@ -348,4 +373,23 @@ class SupabaseDal:
         try:
             self.sign_in()
         except Exception as e:
-            logging.error(f"Failed to signin on error", exc_info=True)
+            logging.error(f"Failed to sign in on error", exc_info=True)
+
+    def to_db_cluster_status(self, data: ClusterStatus) -> Dict[str, Any]:
+        db_cluster_status = data.dict()
+        if data.last_alert_at is  None:
+            del db_cluster_status["last_alert_at"]
+            
+        db_cluster_status["updated_at"] = "now()"    
+        logging.info(f"cluster status {db_cluster_status}")        
+        return db_cluster_status
+
+    def publish_cluster_status(self, cluster_status: ClusterStatus):
+        res = (
+            self.client.table(CLUSTERS_STATUS_TABLE).insert(self.to_db_cluster_status(cluster_status), upsert=True).execute()
+        )
+        if res.get("status_code") not in [200, 201]:
+            logging.error(
+                f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {res.get('data')}"
+            )
+            self.handle_supabase_error()

@@ -11,9 +11,9 @@ from ..sink_base import SinkBase
 
 
 class WebhookSink(SinkBase):
-    def __init__(self, sink_config: WebhookSinkConfigWrapper, cluster_name: str):
-        super().__init__(sink_config.webhook_sink)
-        self.cluster_name = cluster_name
+    def __init__(self, sink_config: WebhookSinkConfigWrapper, registry):
+        super().__init__(sink_config.webhook_sink, registry)
+
         self.url = sink_config.webhook_sink.url
         self.size_limit = sink_config.webhook_sink.size_limit
 
