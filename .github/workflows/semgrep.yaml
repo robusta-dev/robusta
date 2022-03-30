@@ -12,8 +12,8 @@ jobs:
     steps:
     - id: semgrep
       env:
-        SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
-      if: ${{ env.SEMGREP_APP_TOKEN != '' }}
+        HAS_SECRET_ACCESS: ${{ secrets.HAS_SECRET_ACCESS }}
+      if: ${{ env.HAS_SECRET_ACCESS != '' }}
       run: echo '::set-output name=semgrep::true'
     outputs:
       semgrep: ${{ steps.semgrep.outputs.semgrep }}
