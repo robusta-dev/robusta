@@ -131,7 +131,7 @@ def node_health_watcher(event: NodeChangeEvent):
 
 
 @action
-def node_resource_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherParams):
+def node_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherParams):
     """
     Get a graph of a specific resource for this node.
     """

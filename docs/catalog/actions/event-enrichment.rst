@@ -18,6 +18,8 @@ These actions can add context to any node-related event, be it from ``on_prometh
 
 .. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_allocatable_resources_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_graph_enricher
+
 .. robusta-action:: playbooks.robusta_playbooks.node_cpu_analysis.node_cpu_enricher
 
 Pod Enrichers
@@ -30,6 +32,8 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_events_enricher
+
+.. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_graph_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.pod_ps
 
@@ -58,6 +62,10 @@ Prometheus Enrichers
 These actions enrich Prometheus alerts. They only work with the ``on_prometheus_alert`` trigger:
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.graph_enricher
+
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.custom_graph_enricher
+
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_graph_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.template_enricher
 
