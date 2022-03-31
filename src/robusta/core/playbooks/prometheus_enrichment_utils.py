@@ -77,7 +77,9 @@ def create_chart_from_prometheus_query(
     chart_values_format = values_format if values_format else ChartValuesFormat.Plain
     chart.value_formatter = value_formatters[chart_values_format]
 
-    if not chart_title:
+    if chart_title:
+        chart.title = chart_title
+    else:
         chart.title = promql_query
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
     for series in result:

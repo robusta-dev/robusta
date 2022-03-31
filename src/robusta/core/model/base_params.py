@@ -76,10 +76,13 @@ class PrometheusParams(ActionParams):
 
 class CustomGraphEnricherParams(PrometheusParams):
     """
-    :var promql_query: Promql query. See https://prometheus.io/docs/prometheus/latest/querying/basics/
+    :var promql_query: Promql query. You can use $pod, $node and $node_internal_ip to template (see example). For more information, see https://prometheus.io/docs/prometheus/latest/querying/basics/
     :var graph_title: A nicer name for the Prometheus query.
     :var graph_duration_minutes: Graph duration is minutes.
-    :var chart_values_format: one of the ChartValuesFormat.
+    :var chart_values_format: Customize the y-axis labels with one of: Plain, Bytes, Percentage (see ChartValuesFormat)
+
+    :example promql_query: instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0
+    :example graph_title: CPU Usage for this nod
     """
 
     promql_query: str
@@ -90,9 +93,10 @@ class CustomGraphEnricherParams(PrometheusParams):
 
 class ResourceGraphEnricherParams(PrometheusParams):
     """
-    :var resource_type: one of ResourceChartResourceType.
+    :var resource_type: one of: CPU, Memory, Disk (see ResourceChartResourceType)
     :var graph_duration_minutes: Graph duration is minutes. Default is 60.
 
+    :example resource_type: Memory
     """
     resource_type: str
     graph_duration_minutes: int = 60
@@ -100,7 +104,8 @@ class ResourceGraphEnricherParams(PrometheusParams):
 
 class AlertResourceGraphEnricherParams(ResourceGraphEnricherParams):
     """
-    :var item_type: one of ResourceChartItemType.
+    :var item_type: one of: Pod, Node (see ResourceChartItemType)
+    :example item_type: Pod
     """
     item_type: str
 
