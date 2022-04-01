@@ -6,13 +6,23 @@ import threading
 import traceback
 from collections import defaultdict
 
-from hikaru.model import Deployment, StatefulSetList, DaemonSetList, ReplicaSetList, Node, NodeList, Taint, \
-    NodeCondition, PodList, Pod
+from hikaru.model import (
+    Deployment,
+    StatefulSetList,
+    DaemonSetList,
+    ReplicaSetList,
+    Node,
+    NodeList,
+    Taint,
+    NodeCondition,
+    PodList,
+    Pod,
+)
 from typing import List, Dict
 
 from robusta.runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
-from ...model.env_vars import DISCOVERY_PERIOD_SEC , PERIODIC_LONG_SEC
+from ...model.env_vars import DISCOVERY_PERIOD_SEC, PERIODIC_LONG_SEC
 from ...model.nodes import NodeInfo, PodRequests
 from ...model.services import ServiceInfo
 from ...reporting.base import Finding
@@ -23,14 +33,10 @@ from ...model.cluster_status import ClusterStatus
 
 
 class RobustaSink(SinkBase):
-    def __init__(
-        self,
-        sink_config: RobustaSinkConfigWrapper,
-        registry
-    ):
+    def __init__(self, sink_config: RobustaSinkConfigWrapper, registry):
         super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
-   
+
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if self.account_id != robusta_token.account_id:
             logging.error(
@@ -52,7 +58,7 @@ class RobustaSink(SinkBase):
         )
 
         self.last_send_time = 0
-        self.__update_cluster_status() # send runner version initially, then force prometheus alert time periodically.
+        self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         # start cluster discovery
         self.__active = True
@@ -61,8 +67,6 @@ class RobustaSink(SinkBase):
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
-
-
 
     def __assert_node_cache_initialized(self):
         if not self.__nodes_cache:
@@ -120,21 +124,23 @@ class RobustaSink(SinkBase):
 
     def __get_events_history(self):
         try:
+            logging.info("Getting events history")
             # we will need the services in cache before the event history is run to guess service name
             self.__discover_services()
             response = WebApi.run_manual_action(
                 action_name="event_history",
                 sinks=[self.sink_name],
                 retries=4,
-                timeout_delay=30
+                timeout_delay=30,
             )
             if response != 200:
                 logging.error("Error running 'event_history'.")
             else:
                 logging.info("Cluster historical data sent.")
         except Exception as e:
-            logging.error(f"Error getting events history {e}\n"
-                          f"{traceback.format_exc()}")
+            logging.error(
+                f"Error getting events history {e}\n" f"{traceback.format_exc()}"
+            )
 
     def __discover_services(self):
         try:
@@ -168,8 +174,11 @@ class RobustaSink(SinkBase):
         if not conditions:
             return ""
         return ",".join(
-            [f"{condition.type}:{condition.status}" for condition in conditions
-             if condition.status != "False" or condition.type == "Ready"]
+            [
+                f"{condition.type}:{condition.status}"
+                for condition in conditions
+                if condition.status != "False" or condition.type == "Ready"
+            ]
         )
 
     @classmethod
@@ -181,13 +190,21 @@ class RobustaSink(SinkBase):
         return node_info
 
     @classmethod
-    def __from_api_server_node(cls, api_server_node: Node, pod_requests: List[PodRequests]) -> NodeInfo:
+    def __from_api_server_node(
+        cls, api_server_node: Node, pod_requests: List[PodRequests]
+    ) -> NodeInfo:
         addresses = api_server_node.status.addresses
-        external_addresses = [address for address in addresses if "externalip" in address.type.lower()]
+        external_addresses = [
+            address for address in addresses if "externalip" in address.type.lower()
+        ]
         external_ip = ",".join([addr.address for addr in external_addresses])
-        internal_addresses = [address for address in addresses if "internalip" in address.type.lower()]
+        internal_addresses = [
+            address for address in addresses if "internalip" in address.type.lower()
+        ]
         internal_ip = ",".join([addr.address for addr in internal_addresses])
-        taints = ",".join([cls.__to_taint_str(taint) for taint in api_server_node.spec.taints])
+        taints = ",".join(
+            [cls.__to_taint_str(taint) for taint in api_server_node.spec.taints]
+        )
 
         return NodeInfo(
             name=api_server_node.metadata.name,
@@ -195,19 +212,31 @@ class RobustaSink(SinkBase):
             internal_ip=internal_ip,
             external_ip=external_ip,
             taints=taints,
-            conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),
-            memory_capacity=PodRequests.parse_mem(api_server_node.status.capacity.get("memory", "0Mi")),
-            memory_allocatable=PodRequests.parse_mem(api_server_node.status.allocatable.get("memory", "0Mi")),
+            conditions=cls.__to_active_conditions_str(
+                api_server_node.status.conditions
+            ),
+            memory_capacity=PodRequests.parse_mem(
+                api_server_node.status.capacity.get("memory", "0Mi")
+            ),
+            memory_allocatable=PodRequests.parse_mem(
+                api_server_node.status.allocatable.get("memory", "0Mi")
+            ),
             memory_allocated=sum([req.memory for req in pod_requests]),
-            cpu_capacity=PodRequests.parse_cpu(api_server_node.status.capacity.get("cpu", "0")),
-            cpu_allocatable=PodRequests.parse_cpu(api_server_node.status.allocatable.get("cpu", "0")),
+            cpu_capacity=PodRequests.parse_cpu(
+                api_server_node.status.capacity.get("cpu", "0")
+            ),
+            cpu_allocatable=PodRequests.parse_cpu(
+                api_server_node.status.allocatable.get("cpu", "0")
+            ),
             cpu_allocated=round(sum([req.cpu for req in pod_requests]), 3),
             pods_count=len(pod_requests),
             pods=",".join([pod_req.pod_name for pod_req in pod_requests]),
-            node_info=cls.__to_node_info(api_server_node)
+            node_info=cls.__to_node_info(api_server_node),
         )
 
-    def __publish_new_nodes(self, current_nodes: NodeList, node_requests: Dict[str, List[PodRequests]]):
+    def __publish_new_nodes(
+        self, current_nodes: NodeList, node_requests: Dict[str, List[PodRequests]]
+    ):
         # convert to map
         curr_nodes = {}
         for node in current_nodes.items:
@@ -223,8 +252,12 @@ class RobustaSink(SinkBase):
 
         # new or changed nodes
         for node_name in curr_nodes.keys():
-            updated_node = self.__from_api_server_node(curr_nodes.get(node_name), node_requests.get(node_name))
-            if self.__nodes_cache.get(node_name) != updated_node:  # node not in the cache, or changed
+            updated_node = self.__from_api_server_node(
+                curr_nodes.get(node_name), node_requests[node_name]
+            )
+            if (
+                self.__nodes_cache.get(node_name) != updated_node
+            ):  # node not in the cache, or changed
                 self.dal.publish_node(updated_node)
                 self.__nodes_cache[node_name] = updated_node
 
@@ -234,21 +267,33 @@ class RobustaSink(SinkBase):
             current_nodes: NodeList = NodeList.listNode().obj
             node_requests = defaultdict(list)
             for status in ["Running", "Unknown", "Pending"]:
-                pods: PodList = Pod.listPodForAllNamespaces(field_selector=f"status.phase={status}").obj
+                pods: PodList = Pod.listPodForAllNamespaces(
+                    field_selector=f"status.phase={status}"
+                ).obj
                 for pod in pods.items:
                     if pod.spec.nodeName:
                         pod_cpu_req: float = 0.0
                         pod_mem_req: int = 0
                         for container in pod.spec.containers:
                             try:
-                                requests = container.object_at_path(["resources", "requests"])
-                                pod_cpu_req += PodRequests.parse_cpu(requests.get("cpu", 0.0))
-                                pod_mem_req += PodRequests.parse_mem(requests.get("memory", "0Mi"))
+                                requests = container.object_at_path(
+                                    ["resources", "requests"]
+                                )
+                                pod_cpu_req += PodRequests.parse_cpu(
+                                    requests.get("cpu", 0.0)
+                                )
+                                pod_mem_req += PodRequests.parse_mem(
+                                    requests.get("memory", "0Mi")
+                                )
                             except Exception:
                                 pass  # no requests on container, object_at_path throws error
 
                         node_requests[pod.spec.nodeName].append(
-                            PodRequests(pod_name=pod.metadata.name, cpu=pod_cpu_req, memory=pod_mem_req)
+                            PodRequests(
+                                pod_name=pod.metadata.name,
+                                cpu=pod_cpu_req,
+                                memory=pod_mem_req,
+                            )
                         )
             self.__publish_new_nodes(current_nodes, node_requests)
         except Exception as e:
@@ -260,10 +305,10 @@ class RobustaSink(SinkBase):
     def __update_cluster_status(self):
         try:
             cluster_status = ClusterStatus(
-                cluster_id= self.cluster_name,
-                version= self.registry.get_telemetry().runner_version,
-                last_alert_at= self.registry.get_telemetry().last_alert_at,
-                account_id= self.account_id
+                cluster_id=self.cluster_name,
+                version=self.registry.get_telemetry().runner_version,
+                last_alert_at=self.registry.get_telemetry().last_alert_at,
+                account_id=self.account_id,
             )
 
             self.dal.publish_cluster_status(cluster_status)
@@ -285,6 +330,7 @@ class RobustaSink(SinkBase):
             logging.error(f"Failed to run events history thread")
 
     def __discover_cluster(self):
+        logging.info("Cluster discovery initialized")
         self.__run_events_history_thread()
         while self.__active:
             self.__periodic_cluster_status()
@@ -299,5 +345,3 @@ class RobustaSink(SinkBase):
             if time.time() - self.last_send_time > PERIODIC_LONG_SEC:
                 self.last_send_time = time.time()
                 self.__update_cluster_status()
-
-
