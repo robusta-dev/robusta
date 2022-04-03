@@ -52,11 +52,14 @@ You can load your playbook in one of two ways:
 We'll describe the second option which is convenient for development. It allows deploying playbooks rapidly while you
 develop them.
 
-First, persistent playbooks storage by setting the helm value:
+First, enable persistent playbooks storage by setting the helm value in the Robusta's configuration file (generated_values.yaml):
 
 .. code-block:: yaml
 
     playbooksPersistentVolume: true
+.. code-block:: bash
+
+     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 Now use the Robusta CLI to load your repository:
 
