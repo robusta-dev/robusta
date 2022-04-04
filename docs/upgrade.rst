@@ -25,7 +25,7 @@ We recommend running the above command exactly as written.
 
     .. code-block:: bash
 
-         helm get values robusta
+         helm get values -o yaml robusta
 
 Verify that Robusta is running and there are no errors in the logs:
 
