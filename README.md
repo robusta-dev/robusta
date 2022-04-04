@@ -10,7 +10,9 @@ Robusta is a troubleshooting and automations platform for Kubernetes. It streaml
 
 [Read the docs for more info](https://docs.robusta.dev/master/?from=github) or see screenshots and demos at [robusta.dev](http://robusta.dev/?from=github)
 
-[![twitter robusta](https://img.shields.io/twitter/follow/RobustaDev?logo=twitter&style=for-the-badge)](https://twitter.com/RobustaDev) ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/robusta-dev/robusta/Test%20robusta%20with%20pytest?event=push&style=for-the-badge)
+[![twitter robusta](https://img.shields.io/twitter/follow/RobustaDev?logo=twitter&style=for-the-badge)](https://twitter.com/RobustaDev)
+[![slack robusta](https://img.shields.io/badge/Slack-Join-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg) 
+![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/robusta-dev/robusta/Test%20robusta%20with%20pytest?event=push&style=for-the-badge)
 
 ## Examples
 
@@ -68,3 +70,7 @@ Full instructions are in our [installation guide](https://docs.robusta.dev/maste
 
 # Documentation
 Interested? Read the [full documentation](https://docs.robusta.dev/master/index.html)
+
+# Contribute to Robusta
+
+ Instructions to get [Robusta Docs](https://docs.robusta.dev/master/developer-guide/platform/docs-contributions.html) working locally for development.
