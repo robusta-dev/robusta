@@ -211,6 +211,9 @@ kube-prometheus-stack:
               requests:
                 storage: 100Gi
   prometheus-node-exporter:
+    service:
+      port: 9104
+      targetPort: 9104
     resources:
       requests:
         cpu: 50m
