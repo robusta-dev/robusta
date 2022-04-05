@@ -87,11 +87,16 @@ class HelmValues(BaseModel):
         )
 
 
-def guess_cluster_name():
+def guess_cluster_name(context):
     with click_spinner.spinner():
         try:
             all_contexts, current_context = config.list_kube_config_contexts()
+            if context is not None:
+                for i in range(len(all_contexts)):
+                    if all_contexts[i].get('name') == context:
+                        return context
             if current_context and current_context.get("name"):
+                typer.echo("default")
                 return current_context.get("name")
         except Exception:  # this happens, for example, if you don't have a kubeconfig file
             typer.echo("Error reading kubeconfig to generate cluster name")
@@ -136,12 +141,16 @@ def gen_config(
         "./generated_values.yaml", help="Output path of generated Helm values"
     ),
     debug: bool = typer.Option(False),
+    context: str = typer.Option(
+        None,
+        help="The name of the kubeconfig context to use",
+    ),
 ):
     """Create runtime configuration file"""
     if cluster_name is None:
         cluster_name = typer.prompt(
             "Please specify a unique name for your cluster or press ENTER to use the default",
-            default=guess_cluster_name(),
+            default=guess_cluster_name(context),
         )
     if is_small_cluster is None:
         is_small_cluster = typer.confirm(
@@ -389,13 +398,18 @@ def logs(
         None, help="Only return logs newer than a relative duration like 5s, 2m, or 3h."
     ),
     tail: int = typer.Option(None, help="Lines of recent log file to display."),
+    context: str = typer.Option(
+        None,
+        help="The name of the kubeconfig context to use"
+    ),
 ):
     """Fetch Robusta runner logs"""
     stream = "-f" if f else ""
     since = f"--since={since}" if since else ""
     tail = f"--tail={tail}" if tail else ""
+    context = f"--context={context}" if context else ""
     subprocess.check_call(
-        f"kubectl logs {stream} {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner {since} {tail}",
+        f"kubectl logs {stream} {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner {since} {tail} {context}",
         shell=True,
     )
 
