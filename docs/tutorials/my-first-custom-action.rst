@@ -167,8 +167,8 @@ Use this useful debugging commands to make sure your action ( ``report_schedulin
 
 .. code-block:: bash
 
-    robusta logs # get robusta logs, see errors.
-    robusta playbooks list-dirs  # get see if you custom action was loaded
+    robusta logs # get robusta logs, see errors
+    robusta playbooks list-dirs  # get see if you custom action package was loaded
 
 Let’s push the new action to Robusta, and then test it by triggering the action manually immediately.
 
@@ -199,20 +199,8 @@ We need to add a custom playbook that this action it in the generated_values.yam
     - robusta_sink:
         name: robusta_ui_sink
         token: XXXXXX  # generated with `robusta gen-config`
-    clusterName: kind-kind
+    clusterName: my-cluster
     enablePrometheusStack: true
-    kubewatch:
-      resources:
-        requests:
-          memory: 64Mi
-    grafanaRenderer:
-      resources:
-        requests:
-          memory: 64Mi
-    runner:
-      resources:
-        requests:
-          memory: 778Mi
     # Custom Playbooks from here
     customPlaybooks:
     - triggers:
@@ -230,12 +218,14 @@ Time to update Robusta’s config with the new generated_config.yaml:
 .. code-block:: bash
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
+    robusta playbooks list # see all the playbooks. Run it after a few minutes
 
 After a minute or two Robusta will be ready.
 
 Let’s push the new action to Robusta:
 
 .. code-block:: bash
+
     robusta playbooks push <PATH_TO_PLAYBOOK_FOLDER>
 
 After a minute or two Robusta will be ready.
@@ -247,6 +237,17 @@ Run the scenario from the first section again (creating a bad bad configuration)
 Check our slack channel, and:
 
 .. image:: /images/example_report_scheduling_failure.png
+
+Cleaning up
+----
+
+.. code-block:: bash
+
+    kubectl delete pod nginx # delete the pod
+    robusta playbooks delete <PLAYBOOK_FOLDER> # remove the playbook we just added from Robusta
+
+    # Remove "customPlaybooks" and "playbooksPersistentVolume" from you config, and then run helm upgrade
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 
 Summary
