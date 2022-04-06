@@ -11,6 +11,10 @@ First, we’ll describe the the scenario, and then we’ll implement a Robusta a
 
 You’re more than welcome to follow along the scenario on your own machine 💻
 
+.. note::
+
+    It is recommended to read :ref:`Example Playbook` before starting this guide.
+
 The scenario
 ---------------------------------------
 You want to create a new pod with the image “ngnix”!
@@ -102,31 +106,83 @@ What we need to do?
 .. note::
     Make sure to clean up the pod from the last section by running ``kubectl delete pod nginx``
 
-First, let’s understand how to configure a playbook, without writing any code.
-
-Check out :ref:`Example Playbook` now to understand how!
-AHHHHHHHHHH
-
-Ok, so what we need now are two things:
+A playbook consists of two things:
 
 - Trigger - We’re gonna use a built in trigger
 - Action - We’re gonna write our own action!
 
+
 Finding the correct trigger
 ----
 So what is the correct trigger for the job?
-We think of two triggers that may fit:
+We can think of two triggers that may fit:
+
 - Creation of a new pod (because we create a new pod, ‘ngnix’)
 - A Kubernetes Event is fired (because we ran kubectl get event to find out the scheduling error)
 
-Let’s look at the Trigger section about "Kubernetes (API Server)”, and try to find out triggers for both (1. and 2.)
+Let’s look at the Trigger section about :ref:`Kubernetes (API Server)`, and try to find out triggers for both.
 Go ahead and try to find them!
 
 Okay! We find ``on_pod_create`` and ``on_event_create``
 
 We’ll use ``on_event_create``, because in this case ``on_pod_create`` is not even called because the pod is not created.
-Now we need a custom action. Let’s name it ``report_scheduling_failure``.
 
+Writing the action
+----
+
+Now we need to write code that checks this event and reports it. To find out the correct event class that matches our trigger ``on_event_create``. please take a look at :ref:`Event Hierarchy`.
+
+Okay! We find out it’s ``EventEvent``!
+
+So we need to get the information, check for the scenario, and then report it (for more information about reporting it see :ref:`Findings API`)
+
+Let’s name our action ``report_scheduling_failure``, and write everything in a python file:
+
+.. code-block:: python
+
+    from robusta.api import *
+
+    @action
+    def report_scheduling_failure(event: EventEvent):
+        actual_event = event.get_event()
+
+        print(f"This print will be shown in the robusta logs={actual_event}")
+
+        if actual_event.type.casefold() == f'Warning'.casefold() and \
+            actual_event.reason.casefold() == f'FailedScheduling'.casefold() and \
+            actual_event.involvedObject.kind.casefold() == f'Pod'.casefold():
+            _report_failed_scheduling(event, actual_event.involvedObject.name, actual_event.message)
+
+    def _report_failed_scheduling(event: EventEvent, pod_name: str, message: str):
+        # this is how you send data to slack or other destinations
+        event.add_enrichment([
+            MarkdownBlock(f"Failed to schedule a pod named '{pod_name}', error: {message}"),
+        ])
+
+Before we proceed, we need to enable local playbook repositories in Robusta.
+
+Follow this quick guide to learn how to package your python file for Robusta: :ref:`Custom playbook repositories`
+
+Use this useful debugging commands to make sure your action ( ``report_scheduling_failure``) is loaded:
+
+.. code-block:: bash
+
+    robusta logs # get robusta logs, see errors.
+    robusta playbooks list-dirs  # get see if you custom action was loaded
+
+Let’s push the new action to Robusta, and then test it by triggering the action manually immediately.
+
+.. code-block:: bash
+
+    robusta playbooks push <PATH_TO_LOCAL_PLAYBOOK_FOLDER>
+    robusta playbooks trigger report_scheduling_failure name=robusta-runner-8cd69f7cb-g5bkb namespace=default seconds=5
+
+Check our slack channel, and:
+
+.. image:: /images/example_report_scheduling_failure.png
+
+Connection the trigger to the action - a Playbook is born!
+-------------------------------------
 
 We need to add a custom playbook that this action it in the generated_values.yaml.
 
@@ -166,62 +222,6 @@ We need to add a custom playbook that this action it in the generated_values.yam
     # Enable loading playbooks to a persistent volume
     playbooksPersistentVolume: true
 
-Before updating Robusta with this configuration, let’s write the action ``report_scheduling_failure``.
-
-Writing the action
-----
-Check out :ref:`Writing-PlayBook - Basic` to learn how to write one. AHHHHHHHHHHH
-
-Useful debugging commands:
-
-.. code-block:: bash
-
-    robusta logs # get robusta logs, see errors.
-    robusta playbooks list-dirs  # get see if you custom action was loaded
-    robusta playbooks trigger my_action name=robusta-runner-8cd69f7cb-g5bkb namespace=default seconds=5 # Trigger immediately by hand, to see if the action works. replace name= with robusta-runner pod name in your cluster
-
-Now we need to write code that checks this event and reports it. To find out the correct event class please take a look at :ref:`Event Hierarchy`.
-
-Okay! We find out it’s ``EventEvent``!
-
-So we need to get the information, check for the scenario, and then report it (for more information about reporting it see :ref:``Findings API`)
-
-.. code-block:: python
-
-    from robusta.api import *
-
-    @action
-    def report_scheduling_failure(event: EventEvent):
-        actual_event = event.get_event()
-
-        print(f"This print will be shown in the robusta logs={actual_event}")
-
-        if actual_event.type.casefold() == f'Warning'.casefold() and \
-            actual_event.reason.casefold() == f'FailedScheduling'.casefold() and \
-            actual_event.involvedObject.kind.casefold() == f'Pod'.casefold():
-            _report_failed_scheduling(event, actual_event.involvedObject.name, actual_event.message)
-
-    def _report_failed_scheduling(event: EventEvent, pod_name: str, message: str):
-        # this is how you send data to slack or other destinations
-        event.add_enrichment([
-            MarkdownBlock(f"Failed to schedule a pod named '{pod_name}', error: {message}"),
-        ])
-
-
-Let’s push the new action to Robusta, and then test it by triggering the action manually
-
-.. code-block:: bash
-
-    robusta playbooks push <PATH_TO_LOCAL_PLAYBOOK_FOLDER>
-    robusta playbooks trigger report_scheduling_failure name=robusta-runner-8cd69f7cb-g5bkb namespace=default seconds=5
-
-Check our slack channel, and:
-
-.. image:: /images/example_report_scheduling_failure.png
-
-Wrapping up
--------------------------------------
-
 .. note::
     If you haven't already, make sure to clean up the pod from the last section by running ``kubectl delete pod nginx``
 
@@ -231,14 +231,14 @@ Time to update Robusta’s config with the new generated_config.yaml:
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-After a minute or two Robusta will be ready. AHHHHHHHH
+After a minute or two Robusta will be ready.
 
 Let’s push the new action to Robusta:
 
 .. code-block:: bash
     robusta playbooks push <PATH_TO_PLAYBOOK_FOLDER>
 
-After a minute or two Robusta will be ready. AHHHHHHHH
+After a minute or two Robusta will be ready.
 
 Great!
 
