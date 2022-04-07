@@ -44,7 +44,13 @@ def node_disk_analyzer(event: NodeEvent):
     # run disk-tools on node and parse its json output
     disk_info_str = RobustaPod.run_debugger_pod(
         node.metadata.name,
-        pod_image="us-central1-docker.pkg.dev/genuine-flight-317411/devel/disk-tools:1.2",
+        pod_image="us-central1-docker.pkg.dev/genuine-flight-317411/devel/disk-tools:1.3",
+        env=[
+            EnvVar(
+                name="CURRENT_POD_UID",
+                valueFrom=EnvVarSource(fieldRef=ObjectFieldSelector(fieldPath="metadata.uid"))
+            )
+        ],
         mount_host_root=True
     )
     # The code for the disk-tools image can be found in https://github.com/robusta-dev/disk-tools
@@ -63,11 +69,12 @@ def node_disk_analyzer(event: NodeEvent):
             total_pods_disk_space_in_bytes += c["disk_size"]
 
     used = humanize.naturalsize(used_bytes, binary=True)
+    total = humanize.naturalsize(total_bytes, binary=True)
     used_percentage = round(used_bytes/total_bytes*100, 2)
     total_pod_disk_space = humanize.naturalsize(total_pods_disk_space_in_bytes, binary=True)
     other_disk_space = humanize.naturalsize(used_bytes - total_pods_disk_space_in_bytes, binary=True)
     blocks.append(MarkdownBlock(f"Disk analysis for node {node.metadata.name} follows.\n"
-                                f"The used disk space is currently at {used} ({used_percentage}%).\n"
+                                f"The used disk space is currently at {used} out of {total} ({used_percentage}%).\n"
                                 f"Of this space, {total_pod_disk_space} is used by pods "
                                 f"and the rest ({other_disk_space}) is consumed by the node."))
 
