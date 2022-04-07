@@ -1,13 +1,13 @@
 Your first custom action!
 ######################################################
 
-Learn how to automate everything with Robusta, in *15 minutes* or less :)
+Learn how to automate Kubernetes error handling with Robusta., in *15 minutes* or less :)
 
 Goals
 ---------------------------------------
-We’re gonna learn how to create a custom playbook using a short and made-up (but realistic) scenario.
+We’re going to create a custom playbook using a short and made-up (but realistic) scenario.
 
-First, we’ll describe the the scenario, and then we’ll implement a Robusta automation (Playbook) that detect this issue immediately and recommends a fix!
+First, we’ll describe the the scenario, and then we’ll implement a Robusta automation (playbook) that detects this issue immediately and recommends a fix!
 
 You’re more than welcome to follow along the scenario on your own machine 💻
 
@@ -19,7 +19,7 @@ The scenario
 ---------------------------------------
 You want to create a new pod with the image “ngnix”!
 
-Being the smart person that you are, you decide save some time by copying and pasting an existing YAML file you have in your computer, and change the pod name and image to ngnix.
+Being the smart person that you are, you decide save some time by copying and pasting an existing YAML file you have in your computer, and changing the pod name and image to ngnix.
 
 .. code-block:: yaml
 
@@ -44,7 +44,7 @@ Now you start the pod by running the following command:
     $ kubectl apply -f nginx-pod.yaml
     pod/nginx created
 
-but for some reason it it not starting (note it’s “Pending” Status):
+For some reason the pod doesn't start (note it’s “Pending” Status):
 
 .. code-block:: bash
 
@@ -109,13 +109,13 @@ What we need to do?
 
 A playbook consists of two things:
 
-- Trigger - We’re gonna use a built in trigger
-- Action - We’re gonna write our own action!
+- Trigger - We’re going to use a built in trigger
+- Action - We’re going to write our own action!
 
 
 Finding the correct trigger
 ----
-So what is the correct trigger for the job?
+What is the correct trigger for the job?
 We can think of two triggers that may fit:
 
 - Creation of a new pod (because we create a new pod, ‘ngnix’)
@@ -131,7 +131,7 @@ We’ll use ``on_event_create``, because in this case ``on_pod_create`` is not e
 Writing the action
 ----
 
-Now we need to write code that checks this event and reports it. To find out the correct event class that matches our trigger ``on_event_create``. please take a look at :ref:`Event Hierarchy`.
+Now we need to write code that checks this event and reports it. To find the correct event class that matches our trigger ``on_event_create``. please take a look at :ref:`Event Hierarchy`.
 
 Okay! We find out it’s ``EventEvent``!
 
@@ -255,3 +255,5 @@ Summary
 -------------------------------------
 
 We learned how to solve a real problem (pod not scheduling) only once and have Robusta automate it in the future for all our happy co-workers (and future us) to enjoy.
+
+This example of an unschedulable pod is actually covered by Robusta out of the box (if you enable the builtin Prometheus stack) but you can see how easy it is to track any error you like and send it to a notifications system with extra data.
