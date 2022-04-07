@@ -1,4 +1,4 @@
-Your first custom action!
+Customizing Robusta
 ######################################################
 
 Learn how to automate Kubernetes error handling with Robusta., in *15 minutes* or less :)
@@ -13,7 +13,7 @@ You’re more than welcome to follow along the scenario on your own machine 💻
 
 .. note::
 
-    It is recommended to read :ref:`Example Playbook` before starting this guide.
+    It is recommended to read :ref:`Track Kubernetes Changes` before starting this guide.
 
 The scenario
 ---------------------------------------

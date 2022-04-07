@@ -168,6 +168,7 @@ Next Steps
    installation
    tutorials/configuring-automations
    tutorials/prometheus-enrichment
+   tutorials/my-first-custom-action
    tutorials/python-profiling
    tutorials/java-troubleshooting
    tutorials/more-tutorials
