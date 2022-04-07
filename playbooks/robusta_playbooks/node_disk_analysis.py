@@ -37,6 +37,12 @@ def node_disk_analyzer(event: NodeEvent):
         pod_uid_to_name[pod.metadata.uid] = pod.metadata.name
         pod_uid_to_namespace[pod.metadata.uid] = pod.metadata.namespace
 
+        # If the "kubernetes.io/config.hash" annotation exists, it is used as the UID. Therefore, if it is present, we consider the config hash to be a pod uid too.
+        # See https://github.com/weaveworks/scope/issues/2931 and https://github.com/weaveworks/scope/blob/v1.6.5/probe/kubernetes/pod.go#L47 for more information.
+        if pod.metadata.annotations is not None and "kubernetes.io/config.hash" in pod.metadata.annotations:
+            pod_uid_to_name[pod.metadata.annotations["kubernetes.io/config.hash"]] = pod.metadata.name
+            pod_uid_to_namespace[pod.metadata.annotations["kubernetes.io/config.hash"]] = pod.metadata.namespace
+
         for container_status in pod.status.containerStatuses:
             container_id = re.match(".*//(.*)$", container_status.containerID).group(1)
             container_id_to_name[container_id] = container_status.name
