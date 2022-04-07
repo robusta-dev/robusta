@@ -126,7 +126,7 @@ Go ahead and try to find them!
 
 Okay! We find ``on_pod_create`` and ``on_event_create``
 
-We’ll use ``on_event_create``, because in this case ``on_pod_create`` is not even called because the pod is not created.
+We'll use ``on_event_create`` in this tutorial because it will be easier to identify scheduling issues by looking at the event.
 
 Writing the action
 ----
