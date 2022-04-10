@@ -324,8 +324,8 @@ def gen_config(
             {"name": "ROBUSTA_UI_DOMAIN", "value": backend_profile.robusta_ui_domain},
             {
                 "name": "ROBUSTA_TELEMETRY_ENDPOINT",
-                "value": backend_profile.robusta_telemetry_endpoint
-            }
+                "value": backend_profile.robusta_telemetry_endpoint,
+            },
         ]
 
     with open(output_path, "w") as output_file:
@@ -337,12 +337,6 @@ def gen_config(
         typer.secho(
             f"Save this file for future use. It contains your account credentials",
             fg="red",
-        )
-
-    if robusta_api_key:
-        typer.secho(
-            f"Finish the Helm install and then login to Robusta UI at {backend_profile.robusta_ui_domain}\n",
-            fg="green",
         )
 
 
