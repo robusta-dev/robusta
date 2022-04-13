@@ -94,13 +94,12 @@ def guess_cluster_name(context):
             if context is not None:
                 for i in range(len(all_contexts)):
                     if all_contexts[i].get('name') == context:
-                        return context
+                        return all_contexts[i].get('context').get('cluster')
+                typer.echo(f" no context exists with the name '{context}', your current context is {current_context.get('cluster')}")
             if current_context and current_context.get("name"):
-                typer.echo("default")
-                return current_context.get("name")
+                return current_context.get("context").get("cluster")
         except Exception:  # this happens, for example, if you don't have a kubeconfig file
             typer.echo("Error reading kubeconfig to generate cluster name")
-
         return f"cluster_{random.randint(0, 1000000)}"
 
 
