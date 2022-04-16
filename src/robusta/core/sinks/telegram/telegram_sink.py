@@ -43,8 +43,9 @@ class TelegramSink(SinkBase):
                 table_blocks = [block for block in enrichment.blocks if isinstance(block, TableBlock)]
                 for block in table_blocks:
                     table_text = tabulate(block.render_rows(), headers=block.headers, tablefmt="presto")
+                    table_name = block.table_name if block.table_name else "table"
                     self.client.send_file(
-                        file_name=f"{block.table_name}.txt",
+                        file_name=f"{table_name}.txt",
                         contents=table_text.encode("utf-8")
                     )
 

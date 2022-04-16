@@ -1,13 +1,6 @@
 from enum import Enum
 
-# sink types
-# TODO: can we remove?
-class SinkType(Enum):
-    ROBUSTA = "robusta"
-    SLACK = "slack"
-    MSTEAMS = "msteams"
-    KAFKA = "kafka"
-    DATADOG = "datadog"
+SYNC_RESPONSE_SYNC = "robusta-synchronized-response-sink"
 
 
 class FindingType(Enum):

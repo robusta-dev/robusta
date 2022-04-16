@@ -17,6 +17,7 @@ from kubernetes import config
 from pydantic import BaseModel
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
+from .auth import gen_rsa_pair, RSAKeyPair
 from .backend_profile import backend_profile
 from ..core.sinks.msteams.msteams_sink_params import (
     MsTeamsSinkConfigWrapper,
@@ -29,6 +30,7 @@ from ..core.sinks.robusta.robusta_sink_params import (
 from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
+from .auth import app as auth_commands
 from .slack_verification import verify_slack_channel
 from .playbooks_cmd import app as playbooks_commands
 from .utils import log_title, replace_in_file, namespace_to_kubectl
@@ -41,6 +43,9 @@ app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
 app.add_typer(
     integrations_commands, name="integrations", help="Integrations commands menu"
+)
+app.add_typer(
+    auth_commands, name="auth", help="Auth commands menu"
 )
 
 
@@ -78,6 +83,7 @@ class HelmValues(BaseModel):
     kubewatch: Dict = None
     grafanaRenderer: Dict = None
     runner: Dict = None
+    rsa: RSAKeyPair = None
 
     def set_pod_configs_for_small_clusters(self):
         self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
@@ -303,6 +309,7 @@ def gen_config(
         enablePrometheusStack=enable_prometheus_stack,
         disableCloudRouting=disable_cloud_routing,
         enablePlatformPlaybooks=enable_platform_playbooks,
+        rsa=gen_rsa_pair()
     )
 
     if is_small_cluster:

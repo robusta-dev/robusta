@@ -1,20 +1,26 @@
+import base64
+import hashlib
 import hmac
 import logging
 import time
-import traceback
+from typing import Optional, Dict, Any
+from uuid import UUID
 import websocket
 import json
 import os
 from threading import Thread
-from pydantic import BaseModel
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..core.model.env_vars import INCOMING_REQUEST_TIME_WINDOW_SECONDS, RUNNER_VERSION
-from robusta.core.reporting.action_requests import (
+from ..core.reporting.action_requests import (
     ExternalActionRequest,
     ActionRequestBody,
-    sign_action_request,
+    sign_action_request, PartialAuth,
 )
+from ..utils.auth_provider import AuthProvider
 
 WEBSOCKET_RELAY_ADDRESS = os.environ.get(
     "WEBSOCKET_RELAY_ADDRESS", "wss://relay.robusta.dev"
@@ -66,12 +72,18 @@ class ActionRequestReceiver:
         receiver_thread = Thread(target=self.run_forever)
         receiver_thread.start()
 
-    def __run_external_action_request(self, request: ActionRequestBody):
+    def __run_external_action_request(self,
+                                      request: ActionRequestBody,
+                                      sync_response: bool,
+                                      no_sinks: bool,
+                                      ) -> Optional[Dict[str, Any]]:
         logging.info(f"got callback `{request.action_name}` {request.action_params}")
-        self.event_handler.run_external_action(
+        return self.event_handler.run_external_action(
             request.action_name,
             request.action_params,
             request.sinks,
+            sync_response,
+            no_sinks,
         )
 
     def run_forever(self):
@@ -86,6 +98,15 @@ class ActionRequestReceiver:
         self.active = False
         self.ws.close()
 
+    @classmethod
+    def __sync_response(cls, status_code: int, request_id: str, data) -> Dict:
+        return {
+            "action": "response",
+            "request_id": request_id,
+            "status_code": status_code,
+            "data": data
+        }
+
     def __exec_external_request(
         self, action_request: ExternalActionRequest, validate_timestamp: bool
     ):
@@ -98,11 +119,17 @@ class ActionRequestReceiver:
             )
             return
 
-        if not self.__validate_request(action_request.body, action_request.signature):
+        sync_response = action_request.request_id != ""  # if request_id is set, we need to write back the response
+        if not self.__validate_request(action_request):
             logging.error(f"Failed to validate action request {action_request}")
+            if sync_response:
+                self.ws.send(data=json.dumps(self.__sync_response(401, action_request.request_id, "")))
             return
 
-        self.__run_external_action_request(action_request.body)
+        response = self.__run_external_action_request(action_request.body, sync_response, action_request.no_sinks)
+        if sync_response:
+            http_code = 200 if response.get("success") else 500
+            self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
 
     def on_message(self, ws, message):
         # TODO: use typed pydantic classes here?
@@ -149,11 +176,80 @@ class ActionRequestReceiver:
         )
         ws.send(json.dumps(open_payload))
 
-    def __validate_request(self, body: BaseModel, signature: str) -> bool:
+    def __validate_request(self, action_request: ExternalActionRequest) -> bool:
+        """
+            Two auth protocols are supported:
+            1. signature - Signing the body using the signing_key should match the signature
+            2. partial keys auth - using partial_auth_a and partial_auth_b
+               Each partial auth should be decrypted using the private key (rsa private key).
+               The content should have 2 items:
+               - key
+               - body hash
+               The operation key_a XOR key_b should be equal to the signing_key
+        """
         signing_key = self.event_handler.get_global_config().get("signing_key")
+        body = action_request.body
         if not signing_key:
             logging.error(f"Signing key not available. Cannot verify request {body}")
             return False
 
-        generated_signature = sign_action_request(body, signing_key)
-        return hmac.compare_digest(generated_signature, signature)
+        # First auth protocol option, based on signature only
+        signature = action_request.signature
+        if signature:
+            generated_signature = sign_action_request(body, signing_key)
+            return hmac.compare_digest(generated_signature, signature)
+
+        # Second auth protocol option, based on public key
+        partial_auth_a = action_request.partial_auth_a
+        partial_auth_b = action_request.partial_auth_b
+        if not partial_auth_a or not partial_auth_b:
+            logging.error(f"Insufficient authentication data. Cannot verify request {body}")
+            return False
+
+        private_key = AuthProvider.get_private_rsa_key()
+        if not private_key:
+            logging.error(f"Private RSA key missing. Cannot validate request for {body}")
+            return False
+
+        a_valid, key_a = self.__extract_key_and_validate(partial_auth_a, private_key, body)
+        b_valid, key_b = self.__extract_key_and_validate(partial_auth_b, private_key, body)
+
+        if not a_valid or not b_valid:
+            logging.error(f"Cloud not validate partial auth for {body}")
+            return False
+
+        try:
+            signing_key_uuid = UUID(signing_key)
+        except Exception:
+            logging.error(f"Wrong signing key format. Cannot validate parital auth for {body}")
+            return False
+
+        if (key_a.int ^ key_b.int) != signing_key_uuid.int:
+            logging.error(f"Partial auth keys combination miss-match for {body}")
+            return False
+
+        return True
+
+    @classmethod
+    def __extract_key_and_validate(
+            cls,
+            encrypted: str,
+            private_key: RSAPrivateKey,
+            body: ActionRequestBody
+    ) -> (bool, Optional[UUID]):
+        try:
+            plain = private_key.decrypt(
+                base64.b64decode(encrypted.encode("utf-8")),
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+            auth = PartialAuth(**json.loads(plain.decode("utf-8")))
+            body_string = f"{body.json(exclude_none=True, sort_keys=True)}".encode("utf-8")
+            body_hash = f"v0={hashlib.sha256(body_string).hexdigest()}"
+            return hmac.compare_digest(body_hash, auth.hash), auth.key
+        except Exception:
+            logging.error("Error validating partial auth data", exc_info=True)
+            return False, None

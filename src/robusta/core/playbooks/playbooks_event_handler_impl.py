@@ -10,6 +10,8 @@ from .playbooks_event_handler import PlaybooksEventHandler
 from ..model.events import ExecutionBaseEvent
 from ..reporting import MarkdownBlock
 from ..reporting.base import Finding
+from ..reporting.consts import SYNC_RESPONSE_SYNC
+from ..sinks.robusta.dal.model_conversion import ModelConversion
 from ...model.playbook_action import PlaybookAction
 from ...model.config import Registry
 from .trigger import Trigger
@@ -63,11 +65,19 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         self,
         execution_event: ExecutionBaseEvent,
         actions: List[PlaybookAction],
+        sync_response: bool = False,
+        no_sinks: bool = False,
     ) -> Optional[Dict[str, Any]]:
-        if execution_event.named_sinks is None:
+        if not no_sinks and execution_event.named_sinks is None:  # take the default sinks only if sinks not excluded
             execution_event.named_sinks = (
                 self.registry.get_playbooks().get_default_sinks()
             )
+
+        if sync_response:  # if we need to return sync response, we'll collect the findings under this sink name
+            if execution_event.named_sinks:
+                execution_event.named_sinks.append(SYNC_RESPONSE_SYNC)
+            else:
+                execution_event.named_sinks = [SYNC_RESPONSE_SYNC]
 
         execution_response = self.__run_playbook_actions(
             execution_event,
@@ -75,7 +85,33 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         )
         self.__handle_findings(execution_event)
 
+        if sync_response:  # add the findings to the response
+            execution_response["findings"] = [
+                self.__to_finding_json(finding)
+                for finding in execution_event.sink_findings[SYNC_RESPONSE_SYNC]
+            ]
+
         return execution_response
+
+    def __to_finding_json(self, finding: Finding) -> Dict:
+        account_id = self.registry.get_global_config().get("account_id", "")
+        cluster_id = self.registry.get_global_config().get("cluster_name", "")
+        signing_key = self.registry.get_global_config().get("signing_key", "")
+
+        finding_json = ModelConversion.to_json(account_id, cluster_id, finding)
+
+        finding_json["evidence"] = [
+            ModelConversion.to_evidence_json(
+                account_id,
+                cluster_id,
+                SYNC_RESPONSE_SYNC,
+                signing_key,
+                finding.id,
+                enrichment
+            )
+            for enrichment in finding.enrichments
+        ]
+        return finding_json
 
     def __prepare_execution_event(self, execution_event: ExecutionBaseEvent):
         execution_event.set_scheduler(self.registry.get_scheduler())
@@ -85,6 +121,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         action_name: str,
         action_params: Optional[dict],
         sinks: Optional[List[str]],
+        sync_response: bool = False,
+        no_sinks: bool = False,
     ) -> Optional[Dict[str, Any]]:
         action_def = self.registry.get_actions().get_action(action_name)
         if not action_def:
@@ -95,7 +133,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 f"Action {action_name} cannot run using external event"
             )
 
-        if sinks:
+        if not no_sinks and sinks:
             if action_params:
                 action_params["named_sinks"] = sinks
             else:
@@ -121,7 +159,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         playbook_action = PlaybookAction(
             action_name=action_name, action_params=action_params
         )
-        return self.run_actions(execution_event, [playbook_action])
+        return self.run_actions(execution_event, [playbook_action], sync_response, no_sinks)
 
     @classmethod
     def __error_resp(cls, msg: str) -> dict:
@@ -206,6 +244,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         sinks_info = self.registry.get_telemetry().sinks_info
 
         for sink_name in execution_event.named_sinks:
+            if SYNC_RESPONSE_SYNC == sink_name:
+                continue  # not a real sink, just container for findings that needs to be returned synchronously
+
             for finding in execution_event.sink_findings[sink_name]:
                 try:
                     sink = self.registry.get_sinks().sinks.get(sink_name)
