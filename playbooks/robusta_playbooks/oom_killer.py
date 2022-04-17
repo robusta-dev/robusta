@@ -1,4 +1,6 @@
 from datetime import timedelta
+import random
+import string
 
 import pydantic
 
@@ -254,15 +256,20 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
         return reason
 
 
+def get_random_string(n: int):
+    chars = string.ascii_lowercase + string.digits
+    return "".join(random.choices(chars, k=n))
+
 @action
 def pod_oom_kill_simulator(event: ExecutionBaseEvent):
+    pod_name = "oom-kill-by-pod-" + get_random_string(6)
     pod = Pod(apiVersion='v1', kind='Pod',
-              metadata=ObjectMeta(name='oom-kill-by-pod', namespace='default'),
+              metadata=ObjectMeta(name=pod_name, namespace='default'),
               spec=PodSpec(restartPolicy="Never", containers=[Container(
                   imagePullPolicy="Always",
                   name='memory-eater',
                   image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/memory-eater:1.0',
-                  args=['65Mi', '40Mi', '20', '1'],
+                  args=['75Mi', '30Mi', '240', '1'],
                   resources=ResourceRequirements(limits={'memory': '100Mi'}))])
               )
     pod.create()
@@ -274,13 +281,14 @@ def node_oom_kill_simulator(event: NodeEvent):
     if node is None:
         logging.error(f"cannot run node oom kill simulator on event with no node object: {event}")
         return
-
+ 
+    pod_name = 'oom-kill-by-node-' + get_random_string(6)
     pod = Pod(apiVersion='v1', kind='Pod',
-              metadata=ObjectMeta(name='oom-kill-by-node', namespace='default'),
+              metadata=ObjectMeta(name=pod_name, namespace='default'),
               spec=PodSpec(restartPolicy="Never", nodeName=node.metadata.name, containers=[Container(
                   imagePullPolicy="Always",
                   name='memory-eater',
                   image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/memory-eater:1.0',
-                  args=['0Gi', '1000Gi', '1000', '0.02'])])
+                  args=['10Gi', '0Gi', '1', '1'])])
               )
     pod.create()

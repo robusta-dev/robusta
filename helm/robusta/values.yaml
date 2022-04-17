@@ -73,7 +73,8 @@ builtinPlaybooks:
       alert_name: HostOomKillDetected
   actions:
   - oom_killer_enricher: {}
-  - graph_enricher: {}
+  - node_graph_enricher:
+      resource_type: Memory
 - triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
