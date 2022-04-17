@@ -54,12 +54,22 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
         investigation = investigator.investigate(container_status)
 
         if investigation is None:
-            blocks.append(
+            events = [{
+                "type": event.type,
+                "reason": event.reason,
+                "source.component": event.source.component,
+                "message": event.message
+            } for event in investigator.pod_events.items]
+            logging.info("could not find the image pull error in the kubernetes events. All the relevant events follow, so we can figure out why")    
+            logging.info(json.dumps(events, indent=4))
+
+            blocks.extend([
+                HeaderBlock("Unable to detect image pull backoff error"),
                 MarkdownBlock(
                     f"We cannot detect the reason for the ImagePullBackoff, as we failed to extract the image pull backoff error message "
                     f"for container {container_status.name} with image {container_status.image}. "
                     f"(Is your cluster using a container runtime that is other than docker or containerd?)"
-                )
+                )]
             )
             continue
 
@@ -69,29 +79,33 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
         if reason != ImagePullBackoffReason.Unknown:
             reasons = decompose_flag(reason)
             if len(reasons) == 1:
-                blocks.append(
+                blocks.extend([
+                    HeaderBlock(f"Possible reason for the image pull backoff error of container {container_status.name}"),
                     MarkdownBlock(
-                        f"Image pull error occurred for container **{container_status.name}** "
-                        f"for the following reason: **{reason}**\n\n"
-                        f"Error Message:\n{error_message}"
-                    )
-                )
+                        f"Image pull error occurred for container *{container_status.name}* "
+                        f"for the following reason: *{reason}*"
+                    ),
+                    HeaderBlock("Source for reported reason"),
+                    MarkdownBlock(f"The reported reason is based on the following error message:\n*{error_message}*")
+                ])
             else:
-                line_separated_reasons = "\n".join([f"**{r}**" for r in reasons])
-                blocks.append(
+                line_separated_reasons = "\n".join([f"*{r}*" for r in reasons])
+                blocks.extend([
+                    HeaderBlock(f"Possible reasons for the image pull backoff error of container {container_status.name}"),
                     MarkdownBlock(
-                        f"Image pull error occurred for container **{container_status.name}** "
+                        f"Image pull error occurred for container *{container_status.name}* "
                         f"for one of the following reasons:\n"
-                        f"{line_separated_reasons}\n\n"
-                        f"Error Message:\n{error_message}"
-                    )
-                )
+                        f"{line_separated_reasons}"
+                    ),
+                    HeaderBlock("Source for reported reasons"),
+                    MarkdownBlock(f"The reported reasons are based on the following error message:\n*{error_message}*")
+                ])
         else:
             blocks.append(
                 MarkdownBlock(
-                    f"Failed to extract reason for image pull error for container **{container_status.name}** "
+                    f"Failed to extract reason for image pull error for container *{container_status.name}* "
                     f"for the following reason: error message not recognized\n\n"
-                    f"Error message:\n{error_message}"
+                    f"Error message:\n*{error_message}*"
                 )
             )
 
