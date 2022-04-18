@@ -38,7 +38,7 @@ class AuthProvider:
     def _load_public_key(file_name: str) -> Optional[RSAPublicKey]:
         try:
             with open(file_name, "rb") as key_file:
-                public_key = serialization.load_ssh_public_key(key_file.read())
+                public_key = serialization.load_pem_public_key(key_file.read())
                 logging.info(f"Loaded public key file {file_name}")
                 return public_key
         except Exception:

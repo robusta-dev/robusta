@@ -31,7 +31,7 @@ def gen_rsa_pair() -> RSAKeyPair:
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
     # get public key in OpenSSH format
-    public_key = key.public_key().public_bytes(Encoding.OpenSSH, PublicFormat.OpenSSH)
+    public_key = key.public_key().public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
 
     # get private key in PEM container format
     pem = key.private_bytes(

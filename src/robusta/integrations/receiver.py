@@ -247,7 +247,7 @@ class ActionRequestReceiver:
                 )
             )
             auth = PartialAuth(**json.loads(plain.decode("utf-8")))
-            body_string = f"{body.json(exclude_none=True, sort_keys=True)}".encode("utf-8")
+            body_string = f"{body.json(exclude_none=True, sort_keys=True, separators=(',', ':'))}".encode("utf-8")
             body_hash = f"v0={hashlib.sha256(body_string).hexdigest()}"
             return hmac.compare_digest(body_hash, auth.hash), auth.key
         except Exception:
