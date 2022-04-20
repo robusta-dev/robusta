@@ -73,4 +73,4 @@ Interested? Read the [full documentation](https://docs.robusta.dev/master/index.
 
 # Contribute to Robusta
 
- Instructions to get [Robusta Docs](https://docs.robusta.dev/master/developer-guide/platform/docs-contributions.html) working locally for development.
+ Instructions to get [Robusta working locally for development](https://docs.robusta.dev/master/developer-guide/platform/index.html).
