@@ -26,3 +26,19 @@ Make sure you read about :ref:`Manual Triggers` to understand how this works.
     .. code-block:: bash
 
          robusta playbooks trigger python_memory name=podname namespace=default
+
+.. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.python_process_inspector
+
+    Manually trigger with:
+
+    .. code-block:: bash
+
+         robusta playbooks trigger python_process_inspector name=podname namespace=default
+
+.. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.python_stack_trace
+
+    Manually trigger with:
+
+    .. code-block:: bash
+
+         robusta playbooks trigger python_stack_trace name=podname namespace=default pid=process_pid

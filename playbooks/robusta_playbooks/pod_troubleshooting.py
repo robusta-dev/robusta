@@ -250,7 +250,7 @@ def get_debugger_warnings(data):
 
 
 @action
-def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
+def python_stack_trace(event: PodEvent, params: DebuggerParams):
     """
     Prints a stack track of a python process and child threads
 
@@ -258,20 +258,20 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
     """
     pod = event.get_pod()
     if not pod:
-        logging.info(f"debugger_stack_trace - pod not found for event: {event}")
+        logging.info(f"python_stack_trace - pod not found for event: {event}")
         return
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     pid = process_finder.get_lowest_relevant_pid()
 
     if not pid:
-        logging.info(f"debugger_stack_trace - no relevant pids")
+        logging.info(f"python_stack_trace - no relevant pids")
 
     # if params pid is set, this will be returned, if not we return the parent process
     finding = Finding(
         title=f"Stacktrace on pid {pid}:",
         source=FindingSource.MANUAL,
-        aggregation_key="debugger_stack_trace",
+        aggregation_key="python_stack_trace",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
@@ -297,15 +297,15 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
 def python_process_inspector(event: PodEvent, params: DebuggerParams):
     """
 
-    Create a finding with alternative debugging options for received processes ; i.e. Stack-trace or Memory-trace.
+    Prompts the user with debugging options for all python processes currently running in the pod.
 
     """
     pod = event.get_pod()
     if not pod:
-        logging.info(f"advanced_debugging_options - pod not found for event: {event}")
+        logging.info(f"python_process_inspector - pod not found for event: {event}")
         return
     finding = Finding(
-        title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
+        title=f"Process inspector for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
         aggregation_key="python_process_inspector",
         subject=PodFindingSubject(pod),
@@ -317,7 +317,7 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     relevant_processes_pids = process_finder.get_pids()
     if not relevant_processes_pids:
-        ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
+        ERROR_MESSAGE = f"No relevant processes found for inspecting."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
         return
@@ -332,7 +332,7 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
             updated_params.process_substring = ""
             updated_params.pid = proc_pid
             choices[f"StackTrace {updated_params.pid}"] = CallbackChoice(
-                action=debugger_stack_trace,
+                action=python_stack_trace,
                 action_params=updated_params,
                 kubernetes_object=pod,
             )
