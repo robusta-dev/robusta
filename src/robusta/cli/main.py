@@ -9,6 +9,7 @@ import click_spinner
 from distutils.version import StrictVersion
 from typing import Optional, List, Union, Dict
 from zipfile import ZipFile
+import traceback
 
 import requests
 import typer
@@ -30,6 +31,7 @@ from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSi
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
 from .slack_verification import verify_slack_channel
+from .slack_feedback_message import SlackFeedbackMessagesSender
 from .playbooks_cmd import app as playbooks_commands
 from .utils import log_title, replace_in_file, namespace_to_kubectl
 
@@ -186,6 +188,16 @@ def gen_config(
                 )
             )
         )
+
+        try:
+            SlackFeedbackMessagesSender(
+                slack_api_key,
+                slack_channel,
+                debug
+            ).schedule_feedback_messages()
+        except Exception as e:
+            if debug:
+                typer.secho(traceback.format_exc())
 
     if msteams_webhook is None and typer.confirm(
         "Do you want to configure MsTeams integration ?",
