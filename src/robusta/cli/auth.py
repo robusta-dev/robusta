@@ -66,7 +66,7 @@ class TokenDetails(BaseModel):
     pub: str
     account_id: str
     user_id: str
-    stk: str
+    session_token: str
     enc_key: str
     key_id: str
 
@@ -94,7 +94,7 @@ def gen_token(
         None,
         help="User id for which the token is created",
     ),
-    stk: str = typer.Option(
+    session_token: str = typer.Option(
         None,
         help="User session token. Created for an authenticated user via the Robusta UI",
     ),
@@ -105,8 +105,8 @@ def gen_token(
     debug: bool = typer.Option(False),
 ):
     """Generate token required to run actions manually in Robusta UI"""
-    if not account_id or not user_id or not stk:
-        typer.secho("account_id, user_id and stk are mandatory. Aborting!", fg="red")
+    if not account_id or not user_id or not session_token:
+        typer.secho("account_id, user_id and session_token are mandatory. Aborting!", fg="red")
         return
 
     typer.echo("connecting to cluster...")
@@ -141,7 +141,7 @@ def gen_token(
         pub=auth_config.pub,
         account_id=account_id,
         user_id=user_id,
-        stk=stk,
+        session_token=session_token,
         enc_key=str(server_enc_key),
         key_id=key_id,
     )
@@ -153,4 +153,4 @@ def gen_token(
     token_response.enc_key = str(client_enc_key)
 
     typer.secho(f"Token created successfully. Submit it in the Robusta UI", fg="green")
-    typer.secho(str(base64.b64encode(json.dumps(token_response.json()).encode("utf-8"))))
+    typer.secho(str(base64.b64encode(json.dumps(token_response.json(exclude={"session_token"})).encode("utf-8"))))
