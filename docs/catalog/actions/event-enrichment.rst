@@ -51,6 +51,13 @@ These actions can add context to any deployment-related event, be it from ``on_p
 
 .. robusta-action:: playbooks.robusta_playbooks.deployment_enrichments.deployment_status_enricher
 
+Kubernetes Resource Enrichers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These actions can add context to more than one Kubernetes resource type
+
+.. robusta-action:: playbooks.robusta_playbooks.k8s_resource_enrichments.related_pods
+
 Event Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
