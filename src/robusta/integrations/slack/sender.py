@@ -189,6 +189,15 @@ class SlackSender:
         )
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
+        # wide tables aren't displayed properly on slack. looks better in a text file
+        table_blocks = [b for b in other_blocks if isinstance(b, TableBlock)]
+        for table_block in table_blocks:
+            if len(table_block.headers) > 4:
+                table_name = table_block.table_name if table_block.table_name else "data"
+                table_content = table_block.to_table_string()
+                file_blocks.append(FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8")))
+                other_blocks.remove(table_block)
+
         message = self.prepare_slack_text(title, file_blocks)
 
         output_blocks = []

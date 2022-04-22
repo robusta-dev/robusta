@@ -185,6 +185,8 @@ class JsonBlock(BaseBlock):
 class TableBlock(BaseBlock):
     """
     Table display of a list of lists.
+
+    Note: Wider tables appears as a file attachment on Slack, because they aren't rendered properly inline
     """
 
     rows: List[List]
