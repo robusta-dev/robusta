@@ -194,7 +194,7 @@ class SlackSender:
         for table_block in table_blocks:
             if len(table_block.headers) > 4:
                 table_name = table_block.table_name if table_block.table_name else "data"
-                table_content = table_block.to_table_string()
+                table_content = table_block.to_table_string(table_max_width=250)  # bigger max width for file
                 file_blocks.append(FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8")))
                 other_blocks.remove(table_block)
 
