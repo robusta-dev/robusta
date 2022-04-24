@@ -1,53 +1,60 @@
 import datetime
 from slack_sdk import WebClient
-from typing import NamedTuple
+from typing import Optional
+from pydantic import BaseModel
 
-import json
 import urllib.request
 
 REMOTE_FEEDBACK_MESSAGE_ADDRESS = "https://docs.robusta.dev/extra/feedback_messages.json"
 
 
-class SlackFeedbackMessage(NamedTuple):
-    seconds_from_now: int
+class SlackFeedbackMessage(BaseModel):
+    minutes_from_now: int
     title: str
     other_sections: list[str]
 
 
+class SlackFeedbackConfig(BaseModel):
+    heads_up_message: str
+    messages: list[SlackFeedbackMessage]
+
+
 class SlackFeedbackMessagesSender(object):
-    def __init__(self, slack_api_key: str, channel_name: str, debug: bool):
+    def __init__(self, slack_api_key: str, channel_name: str, account_id: str, debug: bool):
         self.slack_api_key = slack_api_key
         self.channel_name = channel_name
+        self.account_id = account_id
         self.debug = debug
 
-    def schedule_feedback_messages(self):
-        raw_feedback_messages = self._get_feedback_messages_from_remote()
-        feedback_messages = self._parse_feedback_messages(raw_feedback_messages)
-        for feedback_message in feedback_messages:
+    def schedule_feedback_messages(self) -> Optional[str]:
+        raw_feedback_messages = self._get_feedback_config_from_remote()
+        slack_feedback_config: SlackFeedbackConfig = SlackFeedbackConfig.parse_raw(raw_feedback_messages)
+        if len(slack_feedback_config.messages) == 0:
+            return None
+        for feedback_message in slack_feedback_config.messages:
             self._schedule_message(
-                feedback_message.seconds_from_now,
-                feedback_message.title,
-                feedback_message.other_sections)
+                feedback_message.minutes_from_now,
+                self._replace_account_id(feedback_message.title),
+                list(map(self._replace_account_id, feedback_message.other_sections)))
+        return slack_feedback_config.heads_up_message
+
+    def _replace_account_id(self, text: str):
+        return text.replace('$ACCOUNT_ID', self.account_id)
 
     @staticmethod
-    def _parse_feedback_messages(raw_feedback_messages: str) -> list[SlackFeedbackMessage]:
-        json_feedback_messages = json.loads(raw_feedback_messages)
-        return [SlackFeedbackMessage(**feedback_message) for feedback_message in json_feedback_messages]
-
-    @staticmethod
-    def _get_feedback_messages_from_remote() -> str:
+    def _get_feedback_config_from_remote() -> str:
         with urllib.request.urlopen(REMOTE_FEEDBACK_MESSAGE_ADDRESS) as response:
             return response.read()
 
     def _schedule_message(
-        self,
-        seconds_from_now: int,
-        title: str,
-        other_sections: list[str]
+            self,
+            minutes_from_now: int,
+            title: str,
+            other_sections: list[str]
     ):
         slack_client = WebClient(token=self.slack_api_key)
 
-        schedule_datetime = datetime.datetime.now() + datetime.timedelta(seconds=seconds_from_now)
+        schedule_datetime = datetime.datetime.now() + datetime.timedelta(minutes=minutes_from_now)
         schedule_timestamp = schedule_datetime.strftime('%s')
 
         slack_client.chat_scheduleMessage(
