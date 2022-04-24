@@ -9,6 +9,7 @@ import click_spinner
 from distutils.version import StrictVersion
 from typing import Optional, List, Union, Dict
 from zipfile import ZipFile
+import traceback
 
 import requests
 import typer
@@ -30,6 +31,7 @@ from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSi
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
 from .slack_verification import verify_slack_channel
+from .slack_feedback_message import SlackFeedbackMessagesSender, SlackFeedbackConfig
 from .playbooks_cmd import app as playbooks_commands
 from .utils import log_title, replace_in_file, namespace_to_kubectl
 
@@ -171,6 +173,7 @@ def gen_config(
     if slack_api_key and not slack_channel:
         slack_channel = get_slack_channel()
 
+    slack_integration_configured = False
     if slack_api_key and slack_channel:
         while not verify_slack_channel(
             slack_api_key, cluster_name, slack_channel, slack_workspace, debug
@@ -186,6 +189,8 @@ def gen_config(
                 )
             )
         )
+
+        slack_integration_configured = True
 
     if msteams_webhook is None and typer.confirm(
         "Do you want to configure MsTeams integration ?",
@@ -275,6 +280,19 @@ def gen_config(
         enable_platform_playbooks = True
         require_eula_approval = True
 
+    slack_feedback_heads_up_message: Optional[str] = None
+    if slack_integration_configured:
+        try:
+            slack_feedback_heads_up_message = SlackFeedbackMessagesSender(
+                slack_api_key,
+                slack_channel,
+                account_id,
+                debug
+            ).schedule_feedback_messages()
+        except Exception as e:
+            if debug:
+                typer.secho(traceback.format_exc())
+
     if enable_prometheus_stack is None:
         enable_prometheus_stack = typer.confirm(
             "If you haven't installed Prometheus yet, Robusta can install a pre-configured Prometheus. Would you like to do so?"
@@ -352,6 +370,9 @@ def gen_config(
             f"Finish the Helm install and then login to Robusta UI at {backend_profile.robusta_ui_domain}\n",
             fg="green",
         )
+
+    if slack_feedback_heads_up_message:
+        typer.secho(slack_feedback_heads_up_message)
 
 
 @app.command()

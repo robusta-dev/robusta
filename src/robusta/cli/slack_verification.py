@@ -22,7 +22,7 @@ def verify_slack_channel(
     debug: bool,
 ) -> bool:
     try:
-        output_welcome_message_blocks = gen_robusta_test_welcome_message(cluster_name)
+        output_welcome_message_blocks = __gen_robusta_test_welcome_message(cluster_name)
         slack_client = WebClient(token=slack_api_key)
         slack_client.chat_postMessage(
             channel=channel_name,
@@ -53,7 +53,7 @@ def verify_slack_channel(
     return False
 
 
-def gen_robusta_test_welcome_message(cluster_name: str):
+def __gen_robusta_test_welcome_message(cluster_name: str):
     return [
         {
             "type": "header",
