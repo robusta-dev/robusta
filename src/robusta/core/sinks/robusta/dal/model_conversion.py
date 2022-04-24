@@ -13,8 +13,8 @@ from .....core.reporting import Finding, Enrichment, MarkdownBlock, logging, Cal
 class ModelConversion:
 
     @staticmethod
-    def to_json(account_id: str, cluster_id: str, finding: Finding):
-        return {
+    def to_finding_json(account_id: str, cluster_id: str, finding: Finding):
+        finding_json = {
             "id": str(finding.id),
             "title": finding.title,
             "description": finding.description,
@@ -32,6 +32,11 @@ class ModelConversion:
             "cluster": cluster_id,
             "account_id": account_id,
         }
+
+        if finding.creation_date:
+            finding_json["creation_date"] = finding.creation_date
+
+        return finding_json
 
     @staticmethod
     def to_evidence_json(

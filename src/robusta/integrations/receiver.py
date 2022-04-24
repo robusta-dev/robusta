@@ -40,6 +40,7 @@ class ActionRequestReceiver:
         self.active = True
         self.account_id = self.event_handler.get_global_config().get("account_id")
         self.cluster_name = self.event_handler.get_global_config().get("cluster_name")
+        self.auth_provider = AuthProvider()
 
         self.ws = websocket.WebSocketApp(
             WEBSOCKET_RELAY_ADDRESS,
@@ -72,20 +73,6 @@ class ActionRequestReceiver:
         receiver_thread = Thread(target=self.run_forever)
         receiver_thread.start()
 
-    def __run_external_action_request(self,
-                                      request: ActionRequestBody,
-                                      sync_response: bool,
-                                      no_sinks: bool,
-                                      ) -> Optional[Dict[str, Any]]:
-        logging.info(f"got callback `{request.action_name}` {request.action_params}")
-        return self.event_handler.run_external_action(
-            request.action_name,
-            request.action_params,
-            request.sinks,
-            sync_response,
-            no_sinks,
-        )
-
     def run_forever(self):
         logging.info("starting relay receiver")
         while self.active:
@@ -110,23 +97,22 @@ class ActionRequestReceiver:
     def __exec_external_request(
         self, action_request: ExternalActionRequest, validate_timestamp: bool
     ):
-        if validate_timestamp and (
-            time.time() - action_request.body.timestamp
-            > INCOMING_REQUEST_TIME_WINDOW_SECONDS
-        ):
-            logging.error(
-                f"Rejecting incoming request because it's too old. Cannot verify request {action_request}"
-            )
-            return
-
         sync_response = action_request.request_id != ""  # if request_id is set, we need to write back the response
-        if not self.__validate_request(action_request):
+        if not self.__validate_request(action_request, validate_timestamp):
             logging.error(f"Failed to validate action request {action_request}")
             if sync_response:
                 self.ws.send(data=json.dumps(self.__sync_response(401, action_request.request_id, "")))
             return
 
-        response = self.__run_external_action_request(action_request.body, sync_response, action_request.no_sinks)
+        logging.info(f"got callback `{action_request.body.action_name}` {action_request.body.action_params}")
+        response = self.event_handler.run_external_action(
+            action_request.body.action_name,
+            action_request.body.action_params,
+            action_request.body.sinks,
+            sync_response,
+            action_request.no_sinks,
+        )
+
         if sync_response:
             http_code = 200 if response.get("success") else 500
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
@@ -176,7 +162,7 @@ class ActionRequestReceiver:
         )
         ws.send(json.dumps(open_payload))
 
-    def __validate_request(self, action_request: ExternalActionRequest) -> bool:
+    def __validate_request(self, action_request: ExternalActionRequest, validate_timestamp: bool) -> bool:
         """
             Two auth protocols are supported:
             1. signature - Signing the body using the signing_key should match the signature
@@ -186,7 +172,18 @@ class ActionRequestReceiver:
                - key
                - body hash
                The operation key_a XOR key_b should be equal to the signing_key
+
+            If both protocols are present, we only check the signature
         """
+        if validate_timestamp and (
+            time.time() - action_request.body.timestamp
+            > INCOMING_REQUEST_TIME_WINDOW_SECONDS
+        ):
+            logging.error(
+                f"Rejecting incoming request because it's too old. Cannot verify request {action_request}"
+            )
+            return False
+
         signing_key = self.event_handler.get_global_config().get("signing_key")
         body = action_request.body
         if not signing_key:
@@ -206,7 +203,7 @@ class ActionRequestReceiver:
             logging.error(f"Insufficient authentication data. Cannot verify request {body}")
             return False
 
-        private_key = AuthProvider.get_private_rsa_key()
+        private_key = self.auth_provider.get_private_rsa_key()
         if not private_key:
             logging.error(f"Private RSA key missing. Cannot validate request for {body}")
             return False
@@ -225,7 +222,7 @@ class ActionRequestReceiver:
             return False
 
         if (key_a.int ^ key_b.int) != signing_key_uuid.int:
-            logging.error(f"Partial auth keys combination miss-match for {body}")
+            logging.error(f"Partial auth keys combination mismatch for {body}")
             return False
 
         return True
@@ -247,7 +244,7 @@ class ActionRequestReceiver:
                 )
             )
             auth = PartialAuth(**json.loads(plain.decode("utf-8")))
-            body_string = f"{body.json(exclude_none=True, sort_keys=True, separators=(',', ':'))}".encode("utf-8")
+            body_string = body.json(exclude_none=True, sort_keys=True, separators=(',', ':')).encode("utf-8")
             body_hash = f"v0={hashlib.sha256(body_string).hexdigest()}"
             return hmac.compare_digest(body_hash, auth.hash), auth.key
         except Exception:

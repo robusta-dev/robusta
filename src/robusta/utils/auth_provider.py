@@ -8,16 +8,17 @@ from ..core.model.env_vars import RSA_KEYS_PATH
 
 
 class AuthProvider:
-    pub: RSAPublicKey = None
-    prv: RSAPrivateKey = None
 
-    @classmethod
-    def get_private_rsa_key(cls) -> RSAPrivateKey:
-        return cls.prv
+    def __init__(self):
+        logging.info(f"Loading RSA keys from {RSA_KEYS_PATH}")
+        self.prv: RSAPrivateKey = self.__class__._load_private_key(os.path.join(RSA_KEYS_PATH, "prv"))
+        self.pub: RSAPublicKey = self.__class__._load_public_key(os.path.join(RSA_KEYS_PATH, "pub"))
 
-    @classmethod
-    def get_public_rsa_key(cls) -> RSAPublicKey:
-        return cls.pub
+    def get_private_rsa_key(self) -> RSAPrivateKey:
+        return self.prv
+
+    def get_public_rsa_key(self) -> RSAPublicKey:
+        return self.pub
 
     @staticmethod
     def _load_private_key(file_name: str) -> Optional[RSAPrivateKey]:
@@ -45,11 +46,3 @@ class AuthProvider:
             logging.error(f"Could not load public key file {file_name}")
 
         return None
-
-    @classmethod
-    def _load_rsa_keys(cls):
-        logging.info(f"Loading RSA keys from {RSA_KEYS_PATH}")
-        cls.prv = cls._load_private_key(os.path.join(RSA_KEYS_PATH, "prv"))
-        cls.pub = cls._load_public_key(os.path.join(RSA_KEYS_PATH, "pub"))
-
-AuthProvider._load_rsa_keys()

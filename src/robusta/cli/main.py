@@ -14,7 +14,7 @@ import requests
 import typer
 import yaml
 from kubernetes import config
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
 from .auth import gen_rsa_pair, RSAKeyPair
@@ -45,7 +45,7 @@ app.add_typer(
     integrations_commands, name="integrations", help="Integrations commands menu"
 )
 app.add_typer(
-    auth_commands, name="auth", help="Auth commands menu"
+    auth_commands, name="auth", help="Authentication commands menu"
 )
 
 
@@ -68,7 +68,7 @@ class PodConfigs(Dict[str, Dict[str, Dict[str, str]]]):
         return {"resources": {"requests": {"memory": memory_size}}}
 
 
-class HelmValues(BaseModel):
+class HelmValues(BaseModel, extra=Extra.allow):
     globalConfig: GlobalConfig
     sinksConfig: List[
         Union[
@@ -114,6 +114,19 @@ def get_slack_channel() -> str:
         .strip()
         .strip("#")
     )
+
+
+def write_values_file(output_path: str, values: HelmValues):
+    with open(output_path, "w") as output_file:
+        yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
+        typer.secho(
+            f"Saved configuration to {output_path}",
+            fg="green",
+        )
+        typer.secho(
+            f"Save this file for future use. It contains your account credentials",
+            fg="red",
+        )
 
 
 @app.command()
@@ -335,16 +348,39 @@ def gen_config(
             },
         ]
 
-    with open(output_path, "w") as output_file:
-        yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
-        typer.secho(
-            f"Saved configuration to {output_path}",
-            fg="green",
-        )
-        typer.secho(
-            f"Save this file for future use. It contains your account credentials",
-            fg="red",
-        )
+    write_values_file(output_path, values)
+
+
+@app.command()
+def update_config(
+    existing_values: str = typer.Option(
+        ...,
+        help="Existing values.yaml file name. You can run `helm get values` to get it from the cluster.",
+    ),
+):
+    """
+        Update an existing values.yaml file.
+        Add RSA key-pair if not exists
+        Add a signing key if not exists, or replace with a valid one if the key has an invalid format
+    """
+    with open(existing_values, "r") as existing_values_file:
+        values: HelmValues = HelmValues(**yaml.safe_load(existing_values_file))
+        if not values.rsa:
+            typer.secho("Generating RSA key-pair", fg="green")
+            values.rsa = gen_rsa_pair()
+
+        if not values.globalConfig.signing_key:
+            typer.secho("Generating signing key", fg="green")
+            values.globalConfig.signing_key = str(uuid.uuid4())
+
+        try:
+            uuid.UUID(values.globalConfig.signing_key)
+        except:
+            typer.secho("Invalid signing key. Generating a new one", fg="green")
+            values.globalConfig.signing_key = str(uuid.uuid4())
+
+        write_values_file("updated_values.yaml", values)
+        typer.secho("Run `helm upgrade robusta -f ./updated_values.yaml`", fg="green")
 
 
 @app.command()

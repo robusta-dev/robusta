@@ -10,7 +10,7 @@ from .playbooks_event_handler import PlaybooksEventHandler
 from ..model.events import ExecutionBaseEvent
 from ..reporting import MarkdownBlock
 from ..reporting.base import Finding
-from ..reporting.consts import SYNC_RESPONSE_SYNC
+from ..reporting.consts import SYNC_RESPONSE_SINK
 from ..sinks.robusta.dal.model_conversion import ModelConversion
 from ...model.playbook_action import PlaybookAction
 from ...model.config import Registry
@@ -75,9 +75,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
         if sync_response:  # if we need to return sync response, we'll collect the findings under this sink name
             if execution_event.named_sinks:
-                execution_event.named_sinks.append(SYNC_RESPONSE_SYNC)
+                execution_event.named_sinks.append(SYNC_RESPONSE_SINK)
             else:
-                execution_event.named_sinks = [SYNC_RESPONSE_SYNC]
+                execution_event.named_sinks = [SYNC_RESPONSE_SINK]
 
         execution_response = self.__run_playbook_actions(
             execution_event,
@@ -88,7 +88,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         if sync_response:  # add the findings to the response
             execution_response["findings"] = [
                 self.__to_finding_json(finding)
-                for finding in execution_event.sink_findings[SYNC_RESPONSE_SYNC]
+                for finding in execution_event.sink_findings[SYNC_RESPONSE_SINK]
             ]
 
         return execution_response
@@ -98,13 +98,13 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         cluster_id = self.registry.get_global_config().get("cluster_name", "")
         signing_key = self.registry.get_global_config().get("signing_key", "")
 
-        finding_json = ModelConversion.to_json(account_id, cluster_id, finding)
+        finding_json = ModelConversion.to_finding_json(account_id, cluster_id, finding)
 
         finding_json["evidence"] = [
             ModelConversion.to_evidence_json(
                 account_id,
                 cluster_id,
-                SYNC_RESPONSE_SYNC,
+                SYNC_RESPONSE_SINK,
                 signing_key,
                 finding.id,
                 enrichment
@@ -244,7 +244,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         sinks_info = self.registry.get_telemetry().sinks_info
 
         for sink_name in execution_event.named_sinks:
-            if SYNC_RESPONSE_SYNC == sink_name:
+            if SYNC_RESPONSE_SINK == sink_name:
                 continue  # not a real sink, just container for findings that needs to be returned synchronously
 
             for finding in execution_event.sink_findings[sink_name]:

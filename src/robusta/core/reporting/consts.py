@@ -1,6 +1,6 @@
 from enum import Enum
 
-SYNC_RESPONSE_SYNC = "robusta-synchronized-response-sink"
+SYNC_RESPONSE_SINK = "robusta-synchronized-response-sink"
 
 
 class FindingType(Enum):

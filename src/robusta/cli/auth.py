@@ -46,7 +46,7 @@ def gen_rsa_pair() -> RSAKeyPair:
     )
 
 
-def get_auth_config(namespace: str) -> Optional[RSAKeyPair]:
+def get_existing_auth_config(namespace: str) -> Optional[RSAKeyPair]:
     try:
         secret_content = subprocess.check_output(
             f"kubectl get secret {namespace_to_kubectl(namespace)} {AUTH_SECRET_NAME} -o yaml",
@@ -87,15 +87,15 @@ def store_server_token(token_details: TokenDetails, debug: bool = False) -> bool
 @app.command()
 def gen_token(
     account_id: str = typer.Option(
-        None,
+        ...,
         help="Robusta account id",
     ),
     user_id: str = typer.Option(
-        None,
+        ...,
         help="User id for which the token is created",
     ),
     session_token: str = typer.Option(
-        None,
+        ...,
         help="User session token. Created for an authenticated user via the Robusta UI",
     ),
     namespace: str = typer.Option(
@@ -105,17 +105,13 @@ def gen_token(
     debug: bool = typer.Option(False),
 ):
     """Generate token required to run actions manually in Robusta UI"""
-    if not account_id or not user_id or not session_token:
-        typer.secho("account_id, user_id and session_token are mandatory. Aborting!", fg="red")
-        return
-
     typer.echo("connecting to cluster...")
     with click_spinner.spinner():
-        auth_config = get_auth_config(namespace)
+        auth_config = get_existing_auth_config(namespace)
 
     if not auth_config:
         typer.secho("\nRSA auth isn't configured. "
-                    "Please update Robusta and run gen-config to configure it. Aborting!", fg="red")
+                    "Please update Robusta and run `robusta update-config` to configure it. Aborting!", fg="red")
         return
 
     playbooks_config = get_playbooks_config(namespace)
@@ -123,13 +119,13 @@ def gen_token(
     playbooks_config_yaml = yaml.safe_load(active_playbooks_file)
     signing_key = get(playbooks_config_yaml, "global_config/signing_key", default=None)
     if not signing_key:
-        typer.secho("signing_key is not defined. Please update Robusta and run gen-config", fg="red")
+        typer.secho("signing_key is not defined. Please update Robusta and run `robusta update-config`", fg="red")
         return
 
     try:
         signing_key = uuid.UUID(signing_key)
     except Exception:
-        typer.secho("Bad format for signing_key. Please run gen-config to generate a new valid"
+        typer.secho("Bad format for signing_key. Please run `robusta update-config` to generate a new valid"
                     " signing_key for your account.", fg="red")
         return
 

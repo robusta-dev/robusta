@@ -110,7 +110,7 @@ class SupabaseDal:
                 )
 
         res = self.client.table(ISSUES_TABLE).insert(
-            ModelConversion.to_json(self.account_id, self.cluster, finding)
+            ModelConversion.to_finding_json(self.account_id, self.cluster, finding)
         ).execute()
         if res.get("status_code") != 201:
             logging.error(
