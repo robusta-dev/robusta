@@ -360,8 +360,8 @@ def update_config(
 ):
     """
         Update an existing values.yaml file.
-        Add RSA key-pair if not exists
-        Add a signing key if not exists, or replace with a valid one if the key has an invalid format
+        Add RSA key-pair if it doesn't exist
+        Add a signing key if it doesn't exist, or replace with a valid one if the key has an invalid format
     """
     with open(existing_values, "r") as existing_values_file:
         values: HelmValues = HelmValues(**yaml.safe_load(existing_values_file))
