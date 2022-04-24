@@ -9,6 +9,18 @@ supported_resources = [
 ]
 
 
+def to_pod_row(pod: Pod, cluster_name: str) -> List:
+    resource_requests = pod_requests(pod)
+    resource_limits = pod_limits(pod)
+    addresses = ",".join([address.ip for address in pod.status.podIPs])
+    return [
+        pod.metadata.name, pod.metadata.namespace, cluster_name, pod.spec.nodeName,
+        resource_limits.cpu, resource_requests.cpu, resource_limits.memory, resource_requests.memory,
+        pod.metadata.creationTimestamp, pod_restarts(pod), addresses, len(pod.spec.containers),
+        pod.status.phase
+    ]
+
+
 @action
 def related_pods(event: KubernetesResourceEvent):
     """
@@ -28,19 +40,7 @@ def related_pods(event: KubernetesResourceEvent):
         selector = build_selector_query(resource.spec.selector)
         pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
 
-    rows = []
-    for pod in pods:
-        resource_requests = pod_requests(pod)
-        resource_limits = pod_limits(pod)
-        addresses = ",".join([address.ip for address in pod.status.podIPs])
-        rows.append(
-            [
-                pod.metadata.name, pod.metadata.namespace, event.get_context().cluster_name, pod.spec.nodeName,
-                resource_limits.cpu, resource_requests.cpu, resource_limits.memory, resource_requests.memory,
-                pod.metadata.creationTimestamp, pod_restarts(pod), addresses, len(pod.spec.containers),
-                pod.status.phase
-            ]
-        )
+    rows = [to_pod_row(pod, event.get_context().cluster_name) for pod in pods]
 
     event.add_enrichment([
         TableBlock(

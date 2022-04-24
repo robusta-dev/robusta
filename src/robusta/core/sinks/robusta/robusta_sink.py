@@ -192,7 +192,7 @@ class RobustaSink(SinkBase):
 
     @classmethod
     def __from_api_server_node(
-        cls, api_server_node: Node, pod_requests: List[PodResources]
+        cls, api_server_node: Node, pod_requests_list: List[PodResources]
     ) -> NodeInfo:
         addresses = api_server_node.status.addresses
         external_addresses = [
@@ -222,16 +222,16 @@ class RobustaSink(SinkBase):
             memory_allocatable=PodResources.parse_mem(
                 api_server_node.status.allocatable.get("memory", "0Mi")
             ),
-            memory_allocated=sum([req.memory for req in pod_requests]),
+            memory_allocated=sum([req.memory for req in pod_requests_list]),
             cpu_capacity=PodResources.parse_cpu(
                 api_server_node.status.capacity.get("cpu", "0")
             ),
             cpu_allocatable=PodResources.parse_cpu(
                 api_server_node.status.allocatable.get("cpu", "0")
             ),
-            cpu_allocated=round(sum([req.cpu for req in pod_requests]), 3),
-            pods_count=len(pod_requests),
-            pods=",".join([pod_req.pod_name for pod_req in pod_requests]),
+            cpu_allocated=round(sum([req.cpu for req in pod_requests_list]), 3),
+            pods_count=len(pod_requests_list),
+            pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
             node_info=cls.__to_node_info(api_server_node),
         )
 

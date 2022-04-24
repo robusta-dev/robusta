@@ -4,6 +4,7 @@ import tempfile
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
+from ...core.model.env_vars import SLACK_TABLE_COLUMNS_LIMIT
 from ...core.model.events import *
 from ...core.reporting.blocks import *
 from ...core.reporting.base import *
@@ -192,7 +193,7 @@ class SlackSender:
         # wide tables aren't displayed properly on slack. looks better in a text file
         table_blocks = [b for b in other_blocks if isinstance(b, TableBlock)]
         for table_block in table_blocks:
-            if len(table_block.headers) > 4:
+            if len(table_block.headers) > SLACK_TABLE_COLUMNS_LIMIT:
                 table_name = table_block.table_name if table_block.table_name else "data"
                 table_content = table_block.to_table_string(table_max_width=250)  # bigger max width for file
                 file_blocks.append(FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8")))
