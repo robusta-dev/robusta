@@ -1,6 +1,6 @@
 import datetime
 from slack_sdk import WebClient
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 
 import urllib.request
@@ -11,12 +11,12 @@ REMOTE_FEEDBACK_MESSAGE_ADDRESS = "https://docs.robusta.dev/extra/feedback_messa
 class SlackFeedbackMessage(BaseModel):
     minutes_from_now: int
     title: str
-    other_sections: list[str]
+    other_sections: List[str]
 
 
 class SlackFeedbackConfig(BaseModel):
     heads_up_message: str
-    messages: list[SlackFeedbackMessage]
+    messages: List[SlackFeedbackMessage]
 
 
 class SlackFeedbackMessagesSender(object):
@@ -50,7 +50,7 @@ class SlackFeedbackMessagesSender(object):
             self,
             minutes_from_now: int,
             title: str,
-            other_sections: list[str]
+            other_sections: List[str]
     ):
         slack_client = WebClient(token=self.slack_api_key)
 
@@ -68,7 +68,7 @@ class SlackFeedbackMessagesSender(object):
         )
 
     @staticmethod
-    def _gen_robusta_slack_message(title: str, other_sections: list[str]):
+    def _gen_robusta_slack_message(title: str, other_sections: List[str]):
         blocks = [
             {
                 "type": "header",
