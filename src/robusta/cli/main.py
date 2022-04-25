@@ -15,9 +15,10 @@ import requests
 import typer
 import yaml
 from kubernetes import config
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
+from .auth import gen_rsa_pair, RSAKeyPair
 from .backend_profile import backend_profile
 from ..core.sinks.msteams.msteams_sink_params import (
     MsTeamsSinkConfigWrapper,
@@ -30,6 +31,7 @@ from ..core.sinks.robusta.robusta_sink_params import (
 from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
+from .auth import app as auth_commands
 from .slack_verification import verify_slack_channel
 from .slack_feedback_message import SlackFeedbackMessagesSender, SlackFeedbackConfig
 from .playbooks_cmd import app as playbooks_commands
@@ -43,6 +45,9 @@ app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
 app.add_typer(
     integrations_commands, name="integrations", help="Integrations commands menu"
+)
+app.add_typer(
+    auth_commands, name="auth", help="Authentication commands menu"
 )
 
 
@@ -65,7 +70,7 @@ class PodConfigs(Dict[str, Dict[str, Dict[str, str]]]):
         return {"resources": {"requests": {"memory": memory_size}}}
 
 
-class HelmValues(BaseModel):
+class HelmValues(BaseModel, extra=Extra.allow):
     globalConfig: GlobalConfig
     sinksConfig: List[
         Union[
@@ -80,6 +85,7 @@ class HelmValues(BaseModel):
     kubewatch: Dict = None
     grafanaRenderer: Dict = None
     runner: Dict = None
+    rsa: RSAKeyPair = None
 
     def set_pod_configs_for_small_clusters(self):
         self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
@@ -114,6 +120,19 @@ def get_slack_channel() -> str:
         .strip()
         .strip("#")
     )
+
+
+def write_values_file(output_path: str, values: HelmValues):
+    with open(output_path, "w") as output_file:
+        yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
+        typer.secho(
+            f"Saved configuration to {output_path}",
+            fg="green",
+        )
+        typer.secho(
+            f"Save this file for future use. It contains your account credentials",
+            fg="red",
+        )
 
 
 @app.command()
@@ -329,6 +348,7 @@ def gen_config(
         enablePrometheusStack=enable_prometheus_stack,
         disableCloudRouting=disable_cloud_routing,
         enablePlatformPlaybooks=enable_platform_playbooks,
+        rsa=gen_rsa_pair()
     )
 
     if is_small_cluster:
@@ -354,16 +374,39 @@ def gen_config(
             }
         ]
 
-    with open(output_path, "w") as output_file:
-        yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
-        typer.secho(
-            f"Saved configuration to {output_path}",
-            fg="green",
-        )
-        typer.secho(
-            f"Save this file for future use. It contains your account credentials",
-            fg="red",
-        )
+    write_values_file(output_path, values)
+
+
+@app.command()
+def update_config(
+    existing_values: str = typer.Option(
+        ...,
+        help="Existing values.yaml file name. You can run `helm get values` to get it from the cluster.",
+    ),
+):
+    """
+        Update an existing values.yaml file.
+        Add RSA key-pair if it doesn't exist
+        Add a signing key if it doesn't exist, or replace with a valid one if the key has an invalid format
+    """
+    with open(existing_values, "r") as existing_values_file:
+        values: HelmValues = HelmValues(**yaml.safe_load(existing_values_file))
+        if not values.rsa:
+            typer.secho("Generating RSA key-pair", fg="green")
+            values.rsa = gen_rsa_pair()
+
+        if not values.globalConfig.signing_key:
+            typer.secho("Generating signing key", fg="green")
+            values.globalConfig.signing_key = str(uuid.uuid4())
+
+        try:
+            uuid.UUID(values.globalConfig.signing_key)
+        except:
+            typer.secho("Invalid signing key. Generating a new one", fg="green")
+            values.globalConfig.signing_key = str(uuid.uuid4())
+
+        write_values_file("updated_values.yaml", values)
+        typer.secho("Run `helm upgrade robusta -f ./updated_values.yaml`", fg="green")
 
     if robusta_api_key:
         typer.secho(

@@ -3,9 +3,7 @@ import os.path
 from inspect import getmembers
 import manhole
 
-from src.robusta.runner.telemetry_service import TelemetryService, TelemetryLevel
-
-
+from .telemetry_service import TelemetryService, TelemetryLevel
 from .log_init import logging, init_logging
 from .web import Web
 from ..core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl

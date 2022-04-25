@@ -230,3 +230,5 @@ kube-prometheus-stack:
       requests:
         cpu: 10m
 
+rsa: ~
+
