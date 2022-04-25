@@ -23,7 +23,8 @@ from typing import List, Dict
 from robusta.runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from ...model.env_vars import DISCOVERY_PERIOD_SEC, PERIODIC_LONG_SEC
-from ...model.nodes import NodeInfo, PodRequests
+from ...model.nodes import NodeInfo
+from ...model.pods import PodResources, pod_requests
 from ...model.services import ServiceInfo
 from ...reporting.base import Finding
 from .dal.supabase_dal import SupabaseDal
@@ -191,7 +192,7 @@ class RobustaSink(SinkBase):
 
     @classmethod
     def __from_api_server_node(
-        cls, api_server_node: Node, pod_requests: List[PodRequests]
+        cls, api_server_node: Node, pod_requests_list: List[PodResources]
     ) -> NodeInfo:
         addresses = api_server_node.status.addresses
         external_addresses = [
@@ -215,27 +216,27 @@ class RobustaSink(SinkBase):
             conditions=cls.__to_active_conditions_str(
                 api_server_node.status.conditions
             ),
-            memory_capacity=PodRequests.parse_mem(
+            memory_capacity=PodResources.parse_mem(
                 api_server_node.status.capacity.get("memory", "0Mi")
             ),
-            memory_allocatable=PodRequests.parse_mem(
+            memory_allocatable=PodResources.parse_mem(
                 api_server_node.status.allocatable.get("memory", "0Mi")
             ),
-            memory_allocated=sum([req.memory for req in pod_requests]),
-            cpu_capacity=PodRequests.parse_cpu(
+            memory_allocated=sum([req.memory for req in pod_requests_list]),
+            cpu_capacity=PodResources.parse_cpu(
                 api_server_node.status.capacity.get("cpu", "0")
             ),
-            cpu_allocatable=PodRequests.parse_cpu(
+            cpu_allocatable=PodResources.parse_cpu(
                 api_server_node.status.allocatable.get("cpu", "0")
             ),
-            cpu_allocated=round(sum([req.cpu for req in pod_requests]), 3),
-            pods_count=len(pod_requests),
-            pods=",".join([pod_req.pod_name for pod_req in pod_requests]),
+            cpu_allocated=round(sum([req.cpu for req in pod_requests_list]), 3),
+            pods_count=len(pod_requests_list),
+            pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
             node_info=cls.__to_node_info(api_server_node),
         )
 
     def __publish_new_nodes(
-        self, current_nodes: NodeList, node_requests: Dict[str, List[PodRequests]]
+        self, current_nodes: NodeList, node_requests: Dict[str, List[PodResources]]
     ):
         # convert to map
         curr_nodes = {}
@@ -272,29 +273,8 @@ class RobustaSink(SinkBase):
                 ).obj
                 for pod in pods.items:
                     if pod.spec.nodeName:
-                        pod_cpu_req: float = 0.0
-                        pod_mem_req: int = 0
-                        for container in pod.spec.containers:
-                            try:
-                                requests = container.object_at_path(
-                                    ["resources", "requests"]
-                                )
-                                pod_cpu_req += PodRequests.parse_cpu(
-                                    requests.get("cpu", 0.0)
-                                )
-                                pod_mem_req += PodRequests.parse_mem(
-                                    requests.get("memory", "0Mi")
-                                )
-                            except Exception:
-                                pass  # no requests on container, object_at_path throws error
+                        node_requests[pod.spec.nodeName].append(pod_requests(pod))
 
-                        node_requests[pod.spec.nodeName].append(
-                            PodRequests(
-                                pod_name=pod.metadata.name,
-                                cpu=pod_cpu_req,
-                                memory=pod_mem_req,
-                            )
-                        )
             self.__publish_new_nodes(current_nodes, node_requests)
         except Exception as e:
             logging.error(

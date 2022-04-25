@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, List
 from .base_trigger import TriggerEvent, BaseTrigger
 from .playbook_utils import merge_global_params
 from .playbooks_event_handler import PlaybooksEventHandler
-from ..model.events import ExecutionBaseEvent
+from ..model.events import ExecutionBaseEvent, ExecutionContext
 from ..reporting import MarkdownBlock
 from ..reporting.base import Finding
 from ..reporting.consts import SYNC_RESPONSE_SINK
@@ -115,6 +115,10 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def __prepare_execution_event(self, execution_event: ExecutionBaseEvent):
         execution_event.set_scheduler(self.registry.get_scheduler())
+        execution_event.set_context(ExecutionContext(
+            account_id=self.registry.get_global_config().get("account_id", ""),
+            cluster_name=self.registry.get_global_config().get("cluster_name", "")
+        ))
 
     def run_external_action(
         self,

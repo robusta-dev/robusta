@@ -22,6 +22,11 @@ class ExecutionEventBaseParams(BaseModel):
     named_sinks: Optional[List[str]] = None
 
 
+class ExecutionContext(BaseModel):
+    account_id: str
+    cluster_name: str
+
+
 # Right now:
 # 1. this is a dataclass but we need to make all fields optional in subclasses because of https://stackoverflow.com/questions/51575931/
 # 2. this can't be a pydantic BaseModel because of various pydantic bugs (see https://github.com/samuelcolvin/pydantic/pull/2557)
@@ -41,6 +46,13 @@ class ExecutionBaseEvent:
     ] = None  # Response returned to caller. For admission or manual triggers for example
     stop_processing: bool = False
     _scheduler: Optional[PlaybooksScheduler] = None
+    _context: Optional[ExecutionContext] = None
+
+    def set_context(self, context: ExecutionContext):
+        self._context = context
+
+    def get_context(self) -> ExecutionContext:
+        return self._context
 
     def set_scheduler(self, scheduler: PlaybooksScheduler):
         self._scheduler = scheduler

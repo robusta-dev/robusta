@@ -100,9 +100,9 @@ So you comment out those lines, run kubectl apply again, and all is well.
 
 
 Automating the detection with a Robusta Playbook
-----
+--------------------------------------------------
 What we need to do?
-----
+---------------------
 
 .. note::
     Make sure to clean up the pod from the last section by running ``kubectl delete pod nginx``
@@ -114,7 +114,7 @@ A playbook consists of two things:
 
 
 Finding the correct trigger
-----
+------------------------------
 What is the correct trigger for the job?
 We can think of two triggers that may fit:
 
@@ -129,7 +129,7 @@ Okay! We find ``on_pod_create`` and ``on_event_create``
 We'll use ``on_event_create`` in this tutorial because it will be easier to identify scheduling issues by looking at the event.
 
 Writing the action
-----
+--------------------
 
 Now we need to write code that checks this event and reports it. To find the correct event class that matches our trigger ``on_event_create``. please take a look at :ref:`Event Hierarchy`.
 
@@ -183,7 +183,7 @@ Check our slack channel, and:
 .. image:: /images/example_report_scheduling_failure.png
 
 Connection the trigger to the action - a Playbook is born!
--------------------------------------
+-------------------------------------------------------------
 
 We need to add a custom playbook that this action it in the generated_values.yaml.
 
@@ -240,7 +240,7 @@ Check our slack channel, and:
 .. image:: /images/example_report_scheduling_failure.png
 
 Cleaning up
-----
+--------------
 
 .. code-block:: bash
 
