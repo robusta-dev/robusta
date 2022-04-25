@@ -376,6 +376,15 @@ def gen_config(
 
     write_values_file(output_path, values)
 
+    if robusta_api_key:
+        typer.secho(
+            f"Finish the Helm install and then login to Robusta UI at {backend_profile.robusta_ui_domain}\n",
+            fg="green",
+        )
+
+    if slack_feedback_heads_up_message:
+        typer.secho(slack_feedback_heads_up_message)
+
 
 @app.command()
 def update_config(
@@ -407,15 +416,6 @@ def update_config(
 
         write_values_file("updated_values.yaml", values)
         typer.secho("Run `helm upgrade robusta -f ./updated_values.yaml`", fg="green")
-
-    if robusta_api_key:
-        typer.secho(
-            f"Finish the Helm install and then login to Robusta UI at {backend_profile.robusta_ui_domain}\n",
-            fg="green",
-        )
-
-    if slack_feedback_heads_up_message:
-        typer.secho(slack_feedback_heads_up_message)
 
 
 @app.command()
