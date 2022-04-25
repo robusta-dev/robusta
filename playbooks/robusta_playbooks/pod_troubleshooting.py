@@ -4,7 +4,7 @@ from robusta.api import *
 from typing import List
 
 
-class StartProfilingParams(ActionParams):
+class StartProfilingParams(ProcessParams):
     """
     :var seconds: Profiling duration.
     :var process_name: Profiled process name prefix.
@@ -12,12 +12,11 @@ class StartProfilingParams(ActionParams):
     """
 
     seconds: int = 2
-    process_name: str = ""
     include_idle: bool = False
 
 
 @action
-def python_profiler(event: PodEvent, action_params: StartProfilingParams):
+def python_profiler(event: PodEvent, params: StartProfilingParams):
     """
     Attach a python profiler to a running pod, and run a profiling session for the specified duration.
 
@@ -31,46 +30,44 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
     if not pod:
         logging.info(f"python_profiler - pod not found for event: {event}")
         return
-    processes = pod.get_processes()
+
+    finding = Finding(
+        title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
+        source=FindingSource.MANUAL,
+        aggregation_key="python_profiler",
+        subject=PodFindingSubject(pod),
+        finding_type=FindingType.REPORT,
+        failure=False,
+    )
+    event.add_finding(finding)
+
+    process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
+    processes = process_finder.get_multi_match_or_report_error(
+        finding, "Profile", python_profiler, python_stack_trace
+    )
+    if processes is None:
+        return
+
     debugger = RobustaPod.create_debugger_pod(pod.metadata.name, pod.spec.nodeName)
 
     try:
-        finding = Finding(
-            title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
-            source=FindingSource.MANUAL,
-            aggregation_key="python_profiler",
-            subject=PodFindingSubject(pod),
-            finding_type=FindingType.REPORT,
-            failure=False,
-        )
-
         for target_proc in processes:
-            target_cmd = " ".join(target_proc.cmdline)
-            if action_params.process_name not in target_cmd:
-                logging.info(
-                    f"skipping process because it doesn't match process_name. {target_cmd}"
-                )
-                continue
-            elif "python" not in target_proc.exe:
-                logging.info(
-                    f"skipping process because it doesn't look like a python process. {target_cmd}"
-                )
-                continue
-
+            target_description = " ".join(target_proc.cmdline)
             filename = "/profile.svg"
-            pyspy_cmd = f"py-spy record --duration={action_params.seconds} --pid={target_proc.pid} --rate 30 --nonblocking -o {filename} {'--idle' if action_params.include_idle else ''}"
+            pyspy_cmd = f"py-spy record --duration={params.seconds} --pid={target_proc.pid} --rate 30 --nonblocking -o {filename} {'--idle' if params.include_idle else ''}"
             logging.info(
-                f"starting to run profiler on {target_cmd} with pyspy command: {pyspy_cmd}"
+                f"starting to run profiler on {target_description} with pyspy command: {pyspy_cmd}"
             )
-            pyspy_output = debugger.exec(pyspy_cmd)
+            pyspy_output = debugger.exec(target_description)
             if "Error:" in pyspy_output:
-                logging.info(f"error profiler on {target_cmd}. error={pyspy_output}")
+                logging.info(
+                    f"error profiler on {target_description}. error={pyspy_output}"
+                )
                 continue
 
-            logging.info(f"done running profiler on {target_cmd}")
+            logging.info(f"done running profiler on {target_description}")
             svg = debugger.exec(f"cat {filename}")
-            finding.add_enrichment([FileBlock(f"{target_cmd}.svg", svg)])
-        event.add_finding(finding)
+            finding.add_enrichment([FileBlock(f"{target_description}.svg", svg)])
 
     finally:
         debugger.deleteNamespacedPod(
@@ -162,7 +159,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
     event.add_finding(finding)
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     process = process_finder.get_match_or_report_error(
-        finding, "Profile", python_memory, python_process_inspector
+        finding, "Profile", python_memory, python_stack_trace
     )
     if process is None:
         return
@@ -331,11 +328,27 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
             updated_params = params.copy()
             updated_params.process_substring = ""
             updated_params.pid = proc_pid
-            choices[f"StackTrace {updated_params.pid}"] = CallbackChoice(
+            choices[f"Stacktrace {updated_params.pid}"] = CallbackChoice(
                 action=python_stack_trace,
                 action_params=updated_params,
                 kubernetes_object=pod,
             )
+            choices[f"Debugger {updated_params.pid}"] = CallbackChoice(
+                action=python_debugger,
+                action_params=updated_params,
+                kubernetes_object=pod,
+            )
+            choices[f"Memory profiler {updated_params.pid}"] = CallbackChoice(
+                action=python_stack_trace,
+                action_params=updated_params,
+                kubernetes_object=pod,
+            )
+            choices[f"CPU profiler {updated_params.pid}"] = CallbackChoice(
+                action=python_profiler,
+                action_params=updated_params,
+                kubernetes_object=pod,
+            )
+
         finding.add_enrichment(
             [
                 CallbackBlock(choices),
@@ -381,7 +394,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     process = process_finder.get_match_or_report_error(
-        finding, "Debug", python_debugger, python_process_inspector
+        finding, "Debug", python_debugger, python_stack_trace
     )
     if process is None:
         return
