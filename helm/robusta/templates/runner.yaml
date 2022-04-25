@@ -56,6 +56,8 @@ spec:
             name: robusta-runner-secret
             optional: true
         volumeMounts:
+          - name: auth-config-secret
+            mountPath: /etc/robusta/auth
           - name: playbooks-config-secret
             mountPath: /etc/robusta/config
           {{- if .Values.playbooksPersistentVolume }}
@@ -93,6 +95,10 @@ spec:
         - name: playbooks-config-secret
           secret:
             secretName: robusta-playbooks-config-secret
+            optional: true
+        - name: auth-config-secret
+          secret:
+            secretName: robusta-auth-config-secret
             optional: true
         {{- if .Values.playbooksPersistentVolume }}
         - name: persistent-playbooks-storage

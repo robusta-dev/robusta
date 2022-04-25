@@ -1,33 +1,17 @@
-import base64
 import json
 import logging
 import threading
 import time
 import traceback
-import uuid
 from typing import List, Dict, Any
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
-from ...transformer import Transformer
+from .model_conversion import ModelConversion
 from ....model.cluster_status import ClusterStatus
 from ....model.nodes import NodeInfo
 from ....model.services import ServiceInfo
-from ....reporting.blocks import (
-    MarkdownBlock,
-    KubernetesDiffBlock,
-    DividerBlock,
-    FileBlock,
-    HeaderBlock,
-    CallbackBlock,
-    ListBlock,
-    TableBlock,
-)
-from ....reporting.base import (
-    Finding,
-    Enrichment,
-)
+from ....reporting.base import Finding
 from ....model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
-from ....reporting.callbacks import ExternalActionRequestBuilder
 from supabase_py import Client
 
 SERVICES_TABLE = "Services"
@@ -106,124 +90,18 @@ class SupabaseDal:
         self.sink_name = sink_name
         self.signing_key = signing_key
 
-    def to_issue(self, finding: Finding):
-        issue_obj = {
-            "id": str(finding.id),
-            "title": finding.title,
-            "description": finding.description,
-            "source": finding.source.value,
-            "aggregation_key": finding.aggregation_key,
-            "failure": finding.failure,
-            "finding_type": finding.finding_type.value,
-            "category": finding.category,
-            "priority": finding.severity.name,
-            "subject_type": finding.subject.subject_type.value,
-            "subject_name": finding.subject.name,
-            "subject_namespace": finding.subject.namespace,
-            "subject_node": finding.subject.node,
-            "service_key": finding.service_key,
-            "cluster": self.cluster,
-            "account_id": self.account_id,
-        }
-
-        if finding.creation_date:
-            issue_obj["creation_date"] = finding.creation_date
-
-        return issue_obj
-
-    def to_evidence(self, finding_id: uuid, enrichment: Enrichment) -> Dict[Any, Any]:
-        structured_data = []
-        for block in enrichment.blocks:
-            if isinstance(block, MarkdownBlock):
-                if not block.text:
-                    continue
-                structured_data.append(
-                    {
-                        "type": "markdown",
-                        "data": Transformer.to_github_markdown(block.text),
-                    }
-                )
-            elif isinstance(block, DividerBlock):
-                structured_data.append({"type": "divider"})
-            elif isinstance(block, FileBlock):
-                last_dot_idx = block.filename.rindex(".")
-                structured_data.append(
-                    {
-                        "type": block.filename[last_dot_idx + 1 :],
-                        "data": str(base64.b64encode(block.contents)),
-                    }
-                )
-            elif isinstance(block, HeaderBlock):
-                structured_data.append({"type": "header", "data": block.text})
-            elif isinstance(block, ListBlock):
-                structured_data.append({"type": "list", "data": block.items})
-            elif isinstance(block, TableBlock):
-                if block.table_name:
-                    structured_data.append({
-                            "type": "markdown",
-                            "data": Transformer.to_github_markdown(block.table_name),
-                    })
-                structured_data.append(
-                    {
-                        "type": "table",
-                        "data": {
-                            "headers": block.headers,
-                            "rows": [row for row in block.rows],
-                            "column_renderers": block.column_renderers,
-                        },
-                    }
-                )
-            elif isinstance(block, KubernetesDiffBlock):
-                structured_data.append(
-                    {
-                        "type": "diff",
-                        "data": {
-                            "old": block.old,
-                            "new": block.new,
-                            "resource_name": block.resource_name,
-                            "num_additions": block.num_additions,
-                            "num_deletions": block.num_deletions,
-                            "num_modifications": block.num_modifications,
-                            "updated_paths": [d.formatted_path for d in block.diffs],
-                        },
-                    }
-                )
-            elif isinstance(block, CallbackBlock):
-                callbacks = []
-                for (text, callback) in block.choices.items():
-                    callbacks.append(
-                        {
-                            "text": text,
-                            "callback": ExternalActionRequestBuilder.create_for_func(
-                                callback,
-                                self.sink_name,
-                                text,
-                                self.account_id,
-                                self.cluster,
-                                self.signing_key,
-                            ).json(),
-                        }
-                    )
-
-                structured_data.append({"type": "callbacks", "data": callbacks})
-            else:
-                logging.error(
-                    f"cannot convert block of type {type(block)} to robusta platform format block: {block}"
-                )
-                continue  # no reason to crash the entire report
-
-        return {
-            "issue_id": str(finding_id),
-            "file_type": "structured_data",
-            "data": json.dumps(structured_data),
-            "account_id": self.account_id,
-        }
-
     def persist_finding(self, finding: Finding):
         for enrichment in finding.enrichments:
             res = (
                 self.client.table(EVIDENCE_TABLE)
-                .insert(self.to_evidence(finding.id, enrichment))
+                .insert(ModelConversion.to_evidence_json(
+                    account_id=self.account_id,
+                    cluster_id=self.cluster,
+                    sink_name=self.sink_name,
+                    signing_key=self.signing_key,
+                    finding_id=finding.id,
+                    enrichment=enrichment
+                ))
                 .execute()
             )
             if res.get("status_code") != 201:
@@ -231,7 +109,9 @@ class SupabaseDal:
                     f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"
                 )
 
-        res = self.client.table(ISSUES_TABLE).insert(self.to_issue(finding)).execute()
+        res = self.client.table(ISSUES_TABLE).insert(
+            ModelConversion.to_finding_json(self.account_id, self.cluster, finding)
+        ).execute()
         if res.get("status_code") != 201:
             logging.error(
                 f"Failed to persist finding {finding.id} error: {res.get('data')}"
