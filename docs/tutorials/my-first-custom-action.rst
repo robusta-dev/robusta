@@ -131,7 +131,7 @@ We'll use ``on_event_create`` in this tutorial because it will be easier to iden
 Writing the action
 --------------------
 
-Now we need to write code that checks this event and reports it. To find the correct event class that matches our trigger ``on_event_create``. please take a look at :ref:`Event Hierarchy`.
+Now we need to write code that checks this event and reports it. To find the correct event class that matches our trigger ``on_event_create``. please take a look at :ref:`Events and Triggers`.
 
 Okay! We find out it’s ``EventEvent``!
 

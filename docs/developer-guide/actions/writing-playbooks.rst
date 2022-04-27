@@ -68,7 +68,7 @@ of what changed. These actions should take one of the ChangeEvent classes. For e
 To write a more general action that monitors all Kubernetes changes, we can use ``KubernetesAnyChangeEvent``.
 
 You should always use the highest-possible event class when writing actions. This will let your action be used in as many
-scenarios as possible. See :ref:`Event Hierarchy` for details.
+scenarios as possible. See :ref:`Events and Triggers` for details.
 
 Actions with parameters
 -------------------------------
