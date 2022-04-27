@@ -70,7 +70,8 @@ pygal = "^3.0.0"
 tinycss = "^0.4"
 rsa = "^4.8"
 
-
+# There is a bug in jinga2 and markupsafe (explicitly markupsafe 2.1.1)
+markupsafe = "2.0.1"
 
 [tool.poetry.extras]
 all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk"]
