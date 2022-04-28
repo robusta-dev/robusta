@@ -269,7 +269,7 @@ def pod_oom_kill_simulator(event: ExecutionBaseEvent):
                   imagePullPolicy="Always",
                   name='memory-eater',
                   image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/memory-eater:1.0',
-                  args=['75Mi', '30Mi', '240', '1'],
+                  args=['75Mi', '0', '30Mi', '80', '1'],
                   resources=ResourceRequirements(limits={'memory': '100Mi'}))])
               )
     pod.create()
@@ -289,6 +289,7 @@ def node_oom_kill_simulator(event: NodeEvent):
                   imagePullPolicy="Always",
                   name='memory-eater',
                   image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/memory-eater:1.0',
-                  args=['10Gi', '0Gi', '1', '1'])])
+                  args=['0Gi', '20', '10Gi', '1', '1'])])
               )
     pod.create()
+
