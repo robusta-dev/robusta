@@ -6,8 +6,8 @@ from time import sleep
 import sentry_sdk
 import requests
 import threading
-from src.robusta.model.config import Registry, Telemetry
-from src.robusta.runner.telemetry import SinkInfo
+from ..model.config import Registry, Telemetry
+from .telemetry import SinkInfo
 
 from hikaru.model import NodeList
 

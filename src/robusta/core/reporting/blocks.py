@@ -185,6 +185,8 @@ class JsonBlock(BaseBlock):
 class TableBlock(BaseBlock):
     """
     Table display of a list of lists.
+
+    Note: Wider tables appears as a file attachment on Slack, because they aren't rendered properly inline
     """
 
     rows: List[List]
@@ -202,7 +204,7 @@ class TableBlock(BaseBlock):
         super().__init__(rows=rows, headers=headers, column_renderers=column_renderers, table_name=table_name)
 
     @classmethod
-    def __calc_max_width(cls, headers, rendered_rows) -> List[int]:
+    def __calc_max_width(cls, headers, rendered_rows, table_max_width: int) -> List[int]:
         # We need to make sure the total table width, doesn't exceed the max width,
         # otherwise, the table is printed corrupted
         columns_max_widths = [len(header) for header in headers]
@@ -211,18 +213,18 @@ class TableBlock(BaseBlock):
                 columns_max_widths[idx] = max(len(str(val)), columns_max_widths[idx])
 
         if (
-            sum(columns_max_widths) > PRINTED_TABLE_MAX_WIDTH
+            sum(columns_max_widths) > table_max_width
         ):  # We want to limit the widest column
             largest_width = max(columns_max_widths)
             widest_column_idx = columns_max_widths.index(largest_width)
-            diff = sum(columns_max_widths) - PRINTED_TABLE_MAX_WIDTH
+            diff = sum(columns_max_widths) - table_max_width
             columns_max_widths[widest_column_idx] = largest_width - diff
             if (
                 columns_max_widths[widest_column_idx] < 0
             ):  # in case the diff is bigger than the largest column
                 # just divide equally
                 columns_max_widths = [
-                    int(PRINTED_TABLE_MAX_WIDTH / len(columns_max_widths))
+                    int(table_max_width / len(columns_max_widths))
                     for i in range(0, len(columns_max_widths))
                 ]
 
@@ -237,9 +239,9 @@ class TableBlock(BaseBlock):
         table_header = f"{self.table_name}\n" if self.table_name else ""
         return MarkdownBlock(f"{table_header}```\n{self.to_table_string()}\n```")
 
-    def to_table_string(self) -> str:
+    def to_table_string(self, table_max_width: int = PRINTED_TABLE_MAX_WIDTH) -> str:
         rendered_rows = self.__to_strings_rows(self.render_rows())
-        col_max_width = self.__calc_max_width(self.headers, rendered_rows)
+        col_max_width = self.__calc_max_width(self.headers, rendered_rows, table_max_width)
         return tabulate(
             rendered_rows,
             headers=self.headers,

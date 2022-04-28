@@ -20,6 +20,8 @@ class PlaybooksEventHandler(Protocol):
         self,
         execution_event: ExecutionBaseEvent,
         actions: List[PlaybookAction],
+        sync_response: bool = False,
+        no_sinks: bool = False,
     ) -> Optional[Dict[str, Any]]:
         """Run list of actions using the provided execution event"""
         pass
@@ -30,6 +32,8 @@ class PlaybooksEventHandler(Protocol):
         action_name: str,
         action_params: Optional[dict],
         sinks: Optional[List[str]],
+        sync_response: bool = False,
+        no_sinks: bool = False
     ) -> Optional[Dict[str, Any]]:
         """Execute an external action"""
         pass

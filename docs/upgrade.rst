@@ -1,7 +1,7 @@
-Upgrade Guide
-##################
+Upgrade and Uninstall
+######################
 
-Robusta is installed with Helm, so Robusta upgrades are just Helm upgrades.
+Robusta is installed with Helm, so Robusta upgrades are just Helm upgrades. Uninstalls are just Helm uninstalls.
 
 .. warning:: Upgrading an existing release with bundled Prometheus Stack might require manual actions. :ref:`Read here <Upgrading with bundled Prometheus Stack>`
 
@@ -25,7 +25,7 @@ We recommend running the above command exactly as written.
 
     .. code-block:: bash
 
-         helm get values robusta
+         helm get values -o yaml robusta
 
 Verify that Robusta is running and there are no errors in the logs:
 
@@ -92,3 +92,13 @@ From versions lower than 0.9.1 to latest
 .. code-block:: bash
 
     robusta logs
+
+
+Helm Uninstall
+------------------------------
+
+This will uninstall Robusta:
+
+.. code-block:: bash
+
+    helm uninstall robusta

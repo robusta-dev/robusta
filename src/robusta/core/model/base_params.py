@@ -1,6 +1,33 @@
-from typing import List
+from typing import List, Optional
 from pydantic import SecretStr
 from ...utils.documented_pydantic import DocumentedModel
+from enum import Enum, auto
+
+
+class ChartValuesFormat(Enum):
+    """
+    Format option for chart rendering
+    """
+    Plain = auto()
+    Bytes = auto()
+    Percentage = auto()
+
+
+class ResourceChartItemType(Enum):
+    """
+    Item selection for Alert resource enricher
+    """
+    Pod = auto()
+    Node = auto()
+
+
+class ResourceChartResourceType(Enum):
+    """
+    Resource selection for resource enricher(s)
+    """
+    CPU = auto()
+    Memory = auto()
+    Disk = auto()
 
 
 class ActionParams(DocumentedModel):
@@ -45,6 +72,42 @@ class PrometheusParams(ActionParams):
     """
 
     prometheus_url: str = None
+
+
+class CustomGraphEnricherParams(PrometheusParams):
+    """
+    :var promql_query: Promql query. You can use $pod, $node and $node_internal_ip to template (see example). For more information, see https://prometheus.io/docs/prometheus/latest/querying/basics/
+    :var graph_title: A nicer name for the Prometheus query.
+    :var graph_duration_minutes: Graph duration is minutes.
+    :var chart_values_format: Customize the y-axis labels with one of: Plain, Bytes, Percentage (see ChartValuesFormat)
+
+    :example promql_query: instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0
+    :example graph_title: CPU Usage for this nod
+    """
+
+    promql_query: str
+    graph_title: Optional[str] = None
+    graph_duration_minutes: int = 60
+    chart_values_format: str = 'Plain'
+
+
+class ResourceGraphEnricherParams(PrometheusParams):
+    """
+    :var resource_type: one of: CPU, Memory, Disk (see ResourceChartResourceType)
+    :var graph_duration_minutes: Graph duration is minutes. Default is 60.
+
+    :example resource_type: Memory
+    """
+    resource_type: str
+    graph_duration_minutes: int = 60
+
+
+class AlertResourceGraphEnricherParams(ResourceGraphEnricherParams):
+    """
+    :var item_type: one of: Pod, Node (see ResourceChartItemType)
+    :example item_type: Pod
+    """
+    item_type: str
 
 
 class GrafanaParams(ActionParams):

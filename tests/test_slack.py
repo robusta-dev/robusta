@@ -1,3 +1,5 @@
+import os
+import pytest
 from robusta.api import *
 from .config import CONFIG
 from tests.utils.slack_utils import SlackChannel
@@ -6,6 +8,9 @@ TEST_ACCOUNT = "test account"
 TEST_CLUSTER = "test cluster"
 TEST_KEY = "test key"
 
+
+if not "PYTEST_SLACK_TOKEN" in os.environ or not "PYTEST_SLACK_CHANNEL" in os.environ:
+    pytest.skip("skipping slack tests (missing environment variables)", allow_module_level=True)
 
 def test_send_to_slack(slack_channel: SlackChannel):
     slack_sender = SlackSender(

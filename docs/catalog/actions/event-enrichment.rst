@@ -18,6 +18,8 @@ These actions can add context to any node-related event, be it from ``on_prometh
 
 .. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_allocatable_resources_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.node_enrichments.node_graph_enricher
+
 .. robusta-action:: playbooks.robusta_playbooks.node_cpu_analysis.node_cpu_enricher
 
 Pod Enrichers
@@ -30,6 +32,8 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_events_enricher
+
+.. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_graph_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.pod_ps
 
@@ -47,6 +51,13 @@ These actions can add context to any deployment-related event, be it from ``on_p
 
 .. robusta-action:: playbooks.robusta_playbooks.deployment_enrichments.deployment_status_enricher
 
+Kubernetes Resource Enrichers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These actions can add context to more than one Kubernetes resource type
+
+.. robusta-action:: playbooks.robusta_playbooks.k8s_resource_enrichments.related_pods
+
 Event Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -59,6 +70,10 @@ These actions enrich Prometheus alerts. They only work with the ``on_prometheus_
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.graph_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.custom_graph_enricher
+
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_graph_enricher
+
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.template_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.stack_overflow_enricher
@@ -68,7 +83,7 @@ These actions enrich Prometheus alerts. They only work with the ``on_prometheus_
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_definition_enricher
 
 Prometheus Silencers
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These actions can selectively silence Prometheus alerts. They only work with the ``on_prometheus_alert`` trigger:
 

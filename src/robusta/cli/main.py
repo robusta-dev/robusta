@@ -9,14 +9,16 @@ import click_spinner
 from distutils.version import StrictVersion
 from typing import Optional, List, Union, Dict
 from zipfile import ZipFile
+import traceback
 
 import requests
 import typer
 import yaml
 from kubernetes import config
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
+from .auth import gen_rsa_pair, RSAKeyPair
 from .backend_profile import backend_profile
 from ..core.sinks.msteams.msteams_sink_params import (
     MsTeamsSinkConfigWrapper,
@@ -29,7 +31,9 @@ from ..core.sinks.robusta.robusta_sink_params import (
 from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key
+from .auth import app as auth_commands
 from .slack_verification import verify_slack_channel
+from .slack_feedback_message import SlackFeedbackMessagesSender, SlackFeedbackConfig
 from .playbooks_cmd import app as playbooks_commands
 from .utils import log_title, replace_in_file, namespace_to_kubectl
 
@@ -41,6 +45,9 @@ app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
 app.add_typer(
     integrations_commands, name="integrations", help="Integrations commands menu"
+)
+app.add_typer(
+    auth_commands, name="auth", help="Authentication commands menu"
 )
 
 
@@ -63,7 +70,7 @@ class PodConfigs(Dict[str, Dict[str, Dict[str, str]]]):
         return {"resources": {"requests": {"memory": memory_size}}}
 
 
-class HelmValues(BaseModel):
+class HelmValues(BaseModel, extra=Extra.allow):
     globalConfig: GlobalConfig
     sinksConfig: List[
         Union[
@@ -78,6 +85,7 @@ class HelmValues(BaseModel):
     kubewatch: Dict = None
     grafanaRenderer: Dict = None
     runner: Dict = None
+    rsa: RSAKeyPair = None
 
     def set_pod_configs_for_small_clusters(self):
         self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
@@ -87,15 +95,19 @@ class HelmValues(BaseModel):
         )
 
 
-def guess_cluster_name():
+def guess_cluster_name(context):
     with click_spinner.spinner():
         try:
             all_contexts, current_context = config.list_kube_config_contexts()
+            if context is not None:
+                for i in range(len(all_contexts)):
+                    if all_contexts[i].get('name') == context:
+                        return all_contexts[i].get('context').get('cluster')
+                typer.echo(f" no context exists with the name '{context}', your current context is {current_context.get('cluster')}")
             if current_context and current_context.get("name"):
-                return current_context.get("name")
+                return current_context.get("context").get("cluster")
         except Exception:  # this happens, for example, if you don't have a kubeconfig file
             typer.echo("Error reading kubeconfig to generate cluster name")
-
         return f"cluster_{random.randint(0, 1000000)}"
 
 
@@ -108,6 +120,19 @@ def get_slack_channel() -> str:
         .strip()
         .strip("#")
     )
+
+
+def write_values_file(output_path: str, values: HelmValues):
+    with open(output_path, "w") as output_file:
+        yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
+        typer.secho(
+            f"Saved configuration to {output_path}",
+            fg="green",
+        )
+        typer.secho(
+            f"Save this file for future use. It contains your account credentials",
+            fg="red",
+        )
 
 
 @app.command()
@@ -136,12 +161,16 @@ def gen_config(
         "./generated_values.yaml", help="Output path of generated Helm values"
     ),
     debug: bool = typer.Option(False),
+    context: str = typer.Option(
+        None,
+        help="The name of the kubeconfig context to use",
+    ),
 ):
     """Create runtime configuration file"""
     if cluster_name is None:
         cluster_name = typer.prompt(
             "Please specify a unique name for your cluster or press ENTER to use the default",
-            default=guess_cluster_name(),
+            default=guess_cluster_name(context),
         )
     if is_small_cluster is None:
         is_small_cluster = typer.confirm(
@@ -163,6 +192,7 @@ def gen_config(
     if slack_api_key and not slack_channel:
         slack_channel = get_slack_channel()
 
+    slack_integration_configured = False
     if slack_api_key and slack_channel:
         while not verify_slack_channel(
             slack_api_key, cluster_name, slack_channel, slack_workspace, debug
@@ -178,6 +208,8 @@ def gen_config(
                 )
             )
         )
+
+        slack_integration_configured = True
 
     if msteams_webhook is None and typer.confirm(
         "Do you want to configure MsTeams integration ?",
@@ -267,6 +299,19 @@ def gen_config(
         enable_platform_playbooks = True
         require_eula_approval = True
 
+    slack_feedback_heads_up_message: Optional[str] = None
+    if slack_integration_configured:
+        try:
+            slack_feedback_heads_up_message = SlackFeedbackMessagesSender(
+                slack_api_key,
+                slack_channel,
+                account_id,
+                debug
+            ).schedule_feedback_messages()
+        except Exception as e:
+            if debug:
+                typer.secho(traceback.format_exc())
+
     if enable_prometheus_stack is None:
         enable_prometheus_stack = typer.confirm(
             "If you haven't installed Prometheus yet, Robusta can install a pre-configured Prometheus. Would you like to do so?"
@@ -303,6 +348,7 @@ def gen_config(
         enablePrometheusStack=enable_prometheus_stack,
         disableCloudRouting=disable_cloud_routing,
         enablePlatformPlaybooks=enable_platform_playbooks,
+        rsa=gen_rsa_pair()
     )
 
     if is_small_cluster:
@@ -328,22 +374,48 @@ def gen_config(
             }
         ]
 
-    with open(output_path, "w") as output_file:
-        yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
-        typer.secho(
-            f"Saved configuration to {output_path}",
-            fg="green",
-        )
-        typer.secho(
-            f"Save this file for future use. It contains your account credentials",
-            fg="red",
-        )
+    write_values_file(output_path, values)
 
     if robusta_api_key:
         typer.secho(
             f"Finish the Helm install and then login to Robusta UI at {backend_profile.robusta_ui_domain}\n",
             fg="green",
         )
+
+    if slack_feedback_heads_up_message:
+        typer.secho(slack_feedback_heads_up_message)
+
+
+@app.command()
+def update_config(
+    existing_values: str = typer.Option(
+        ...,
+        help="Existing values.yaml file name. You can run `helm get values` to get it from the cluster.",
+    ),
+):
+    """
+        Update an existing values.yaml file.
+        Add RSA key-pair if it doesn't exist
+        Add a signing key if it doesn't exist, or replace with a valid one if the key has an invalid format
+    """
+    with open(existing_values, "r") as existing_values_file:
+        values: HelmValues = HelmValues(**yaml.safe_load(existing_values_file))
+        if not values.rsa:
+            typer.secho("Generating RSA key-pair", fg="green")
+            values.rsa = gen_rsa_pair()
+
+        if not values.globalConfig.signing_key:
+            typer.secho("Generating signing key", fg="green")
+            values.globalConfig.signing_key = str(uuid.uuid4())
+
+        try:
+            uuid.UUID(values.globalConfig.signing_key)
+        except:
+            typer.secho("Invalid signing key. Generating a new one", fg="green")
+            values.globalConfig.signing_key = str(uuid.uuid4())
+
+        write_values_file("updated_values.yaml", values)
+        typer.secho("Run `helm upgrade robusta -f ./updated_values.yaml`", fg="green")
 
 
 @app.command()
@@ -389,13 +461,18 @@ def logs(
         None, help="Only return logs newer than a relative duration like 5s, 2m, or 3h."
     ),
     tail: int = typer.Option(None, help="Lines of recent log file to display."),
+    context: str = typer.Option(
+        None,
+        help="The name of the kubeconfig context to use"
+    ),
 ):
     """Fetch Robusta runner logs"""
     stream = "-f" if f else ""
     since = f"--since={since}" if since else ""
     tail = f"--tail={tail}" if tail else ""
+    context = f"--context={context}" if context else ""
     subprocess.check_call(
-        f"kubectl logs {stream} {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner {since} {tail}",
+        f"kubectl logs {stream} {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner {since} {tail} {context}",
         shell=True,
     )
 

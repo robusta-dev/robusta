@@ -23,3 +23,4 @@ Configuring the Datadog sink
     .. image:: /images/deployment-babysitter-datadog.png
       :width: 1000
       :align: center
+ 

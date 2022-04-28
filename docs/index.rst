@@ -2,7 +2,7 @@ Welcome to Robusta
 ================================
 
 Robusta is an open source platform for Kubernetes troubleshooting. It sits on top of your monitoring stack
-(Prometheus, Elasticsearch, etc) and tells you why alerts occurred and how to fix them.
+(Prometheus, Elasticsearch, etc.) and tells you why alerts occurred and how to fix them.
 
 Robusta has three main parts, all open source:
 
@@ -12,7 +12,7 @@ Robusta has three main parts, all open source:
 
 There are additional *optional* components:
 
-4. An all-in-one bundle with Robusta, the Prometheus Operator, and default Kubernetes alerts [#f1]_
+4. `An all-in-one bundle with Robusta, the Prometheus Operator, and default Kubernetes alerts <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_ [#f1]_
 5. `A web UI to see all alerts, changes, and events in your cluster. <http://home.robusta.dev/ui?from=docs>`_ [#f2]_
 
 Example Use Cases
@@ -168,6 +168,7 @@ Next Steps
    installation
    tutorials/configuring-automations
    tutorials/prometheus-enrichment
+   tutorials/my-first-custom-action
    tutorials/python-profiling
    tutorials/java-troubleshooting
    tutorials/more-tutorials
@@ -182,6 +183,7 @@ Next Steps
 
    upgrade
    user-guide/configuration
+   user-guide/flow-control
    catalog/triggers/index
    catalog/actions/index
    catalog/sinks/index

@@ -31,6 +31,24 @@ class ProcessList(BaseModel):
     processes: List[Process]
 
 
+def _get_match_expression_filter(expression: LabelSelectorRequirement) -> str:
+    if expression.operator.lower() == "exists":
+        return expression.key
+    elif expression.operator.lower() == "doesnotexist":
+        return f"!{expression.key}"
+
+    values = ",".join(expression.values)
+    return f"{expression.key} {expression.operator} ({values})"
+
+
+def build_selector_query(selector: LabelSelector) -> str:
+    label_filters = [f"{label[0]}={label[1]}" for label in selector.matchLabels.items()]
+    label_filters.extend([
+        _get_match_expression_filter(expression) for expression in selector.matchExpressions
+    ])
+    return ",".join(label_filters)
+
+
 def get_images(containers: List[Container]) -> Dict[str, str]:
     """
     Takes a list of containers and returns a dict mapping image name to image tag.

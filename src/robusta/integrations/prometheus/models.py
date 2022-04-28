@@ -140,8 +140,10 @@ class PrometheusKubernetesAlert(
 
     def create_default_finding(self) -> Finding:
         alert_subject = self.__get_alert_subject()
+        status_message = '[RESOLVED] ' if self.alert.status.lower() == 'resolved' else ''
+        title = f'{status_message}{self.get_title()}'
         return Finding(
-            title=self.get_title(),
+            title=title,
             description=self.get_description(),
             source=FindingSource.PROMETHEUS,
             aggregation_key=self.alert_name,
