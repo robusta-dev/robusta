@@ -36,6 +36,11 @@ You can limit when the automation runs by applying the following filters to ``on
 Sending Alerts to Robusta
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. warning::
+
+    Sometimes it takes time for the builtin Prometheus stack to connect to Robusta after installation. If you installed the builtin Prometheus,
+    you can ignore the red banner in the UI. It will disappear on it's own. (We are working on fix for this.)
+
 Forward alerts to Robusta by adding a webhook receiver to AlertManager.
 
 You can skip this step if you installed Robusta's bundled Prometheus stack.
