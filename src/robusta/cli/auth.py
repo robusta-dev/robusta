@@ -149,4 +149,4 @@ def gen_token(
     token_response.enc_key = str(client_enc_key)
 
     typer.secho(f"Token created successfully. Submit it in the Robusta UI", fg="green")
-    typer.secho(str(base64.b64encode(json.dumps(token_response.json(exclude={"session_token"})).encode("utf-8"))))
+    typer.secho(base64.b64encode(token_response.json(exclude={"session_token"}).encode("utf-8")).decode())
