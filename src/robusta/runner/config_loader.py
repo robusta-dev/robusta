@@ -232,7 +232,7 @@ class ConfigLoader:
                 self.registry.set_sinks(sinks_registry)
 
                 telemetry = self.registry.get_telemetry()
-                telemetry.playbooks_count = len(runner_config.active_playbooks)
+                telemetry.playbooks_count = len(runner_config.active_playbooks) if runner_config.active_playbooks else 0
                 telemetry.account_id = hashlib.sha256(str(runner_config.global_config.get("account_id", "no_account")).encode("utf-8")).hexdigest()
                 telemetry.cluster_id = hashlib.sha256(str(runner_config.global_config.get("cluster_name", "no_cluster")).encode("utf-8")).hexdigest()
 
@@ -263,7 +263,10 @@ class ConfigLoader:
                 actions=[{"cluster_discovery_updates": {}}],
             )
         ]
-        active_playbooks.extend(runner_config.active_playbooks)
+        if runner_config.active_playbooks:
+            active_playbooks.extend(runner_config.active_playbooks)
+        else:
+            logging.warning("No active playbooks configured")
 
         playbooks_registry = PlaybooksRegistryImpl(
             active_playbooks,
