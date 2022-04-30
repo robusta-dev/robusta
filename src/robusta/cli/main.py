@@ -46,9 +46,7 @@ app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands men
 app.add_typer(
     integrations_commands, name="integrations", help="Integrations commands menu"
 )
-app.add_typer(
-    auth_commands, name="auth", help="Authentication commands menu"
-)
+app.add_typer(auth_commands, name="auth", help="Authentication commands menu")
 
 
 def get_runner_url(runner_version=None):
@@ -101,9 +99,11 @@ def guess_cluster_name(context):
             all_contexts, current_context = config.list_kube_config_contexts()
             if context is not None:
                 for i in range(len(all_contexts)):
-                    if all_contexts[i].get('name') == context:
-                        return all_contexts[i].get('context').get('cluster')
-                typer.echo(f" no context exists with the name '{context}', your current context is {current_context.get('cluster')}")
+                    if all_contexts[i].get("name") == context:
+                        return all_contexts[i].get("context").get("cluster")
+                typer.echo(
+                    f" no context exists with the name '{context}', your current context is {current_context.get('cluster')}"
+                )
             if current_context and current_context.get("name"):
                 return current_context.get("context").get("cluster")
         except Exception:  # this happens, for example, if you don't have a kubeconfig file
@@ -255,11 +255,13 @@ def gen_config(
                         )
 
             else:  # self registration
-                account_name = typer.prompt("Choose your account name")
                 email = typer.prompt(
-                    "Enter a Gmail/Google Workspace address. This will be used to login"
+                    "Enter a Gmail/Google Workspace address. This will be used to login. Choose an email you haven't "
+                    "used with Robusta before"
                 )
                 email = email.strip()
+                account_name = typer.prompt("Choose your account name")
+
                 res = requests.post(
                     f"{backend_profile.robusta_cloud_api_host}/accounts/create",
                     json={
@@ -269,15 +271,17 @@ def gen_config(
                 )
                 if res.status_code == 201:
                     robusta_api_key = res.json().get("token")
-                    typer.echo(
+                    typer.secho(
                         "Successfully registered.\n",
-                        color="green",
+                        fg="green",
                     )
                     typer.echo("A few more questions and we're done...\n")
                 else:
-                    typer.echo(
-                        "Sorry, something didn't work out. Please contact us at support@robusta.dev",
-                        color="red",
+                    typer.secho(
+                        "Sorry, something didn't work out. Please contact us at support@robusta.dev - if you already "
+                        "registered for Robusta in the past you'll have to use a different email or contact "
+                        "support@robusta.dev",
+                        fg="red",
                     )
                     robusta_api_key = ""
         else:
@@ -303,10 +307,7 @@ def gen_config(
     if slack_integration_configured:
         try:
             slack_feedback_heads_up_message = SlackFeedbackMessagesSender(
-                slack_api_key,
-                slack_channel,
-                account_id,
-                debug
+                slack_api_key, slack_channel, account_id, debug
             ).schedule_feedback_messages()
         except Exception as e:
             if debug:
@@ -348,7 +349,7 @@ def gen_config(
         enablePrometheusStack=enable_prometheus_stack,
         disableCloudRouting=disable_cloud_routing,
         enablePlatformPlaybooks=enable_platform_playbooks,
-        rsa=gen_rsa_pair()
+        rsa=gen_rsa_pair(),
     )
 
     if is_small_cluster:
@@ -370,8 +371,8 @@ def gen_config(
             {"name": "ROBUSTA_UI_DOMAIN", "value": backend_profile.robusta_ui_domain},
             {
                 "name": "ROBUSTA_TELEMETRY_ENDPOINT",
-                "value": backend_profile.robusta_telemetry_endpoint
-            }
+                "value": backend_profile.robusta_telemetry_endpoint,
+            },
         ]
 
     write_values_file(output_path, values)
@@ -394,9 +395,9 @@ def update_config(
     ),
 ):
     """
-        Update an existing values.yaml file.
-        Add RSA key-pair if it doesn't exist
-        Add a signing key if it doesn't exist, or replace with a valid one if the key has an invalid format
+    Update an existing values.yaml file.
+    Add RSA key-pair if it doesn't exist
+    Add a signing key if it doesn't exist, or replace with a valid one if the key has an invalid format
     """
     with open(existing_values, "r") as existing_values_file:
         values: HelmValues = HelmValues(**yaml.safe_load(existing_values_file))
@@ -461,10 +462,7 @@ def logs(
         None, help="Only return logs newer than a relative duration like 5s, 2m, or 3h."
     ),
     tail: int = typer.Option(None, help="Lines of recent log file to display."),
-    context: str = typer.Option(
-        None,
-        help="The name of the kubeconfig context to use"
-    ),
+    context: str = typer.Option(None, help="The name of the kubeconfig context to use"),
 ):
     """Fetch Robusta runner logs"""
     stream = "-f" if f else ""
