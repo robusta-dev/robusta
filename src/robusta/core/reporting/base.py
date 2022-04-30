@@ -3,7 +3,7 @@ import uuid
 import re
 from enum import Enum
 from pydantic.main import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Union
 from ..model.env_vars import ROBUSTA_UI_DOMAIN
 from ..reporting.consts import FindingSubjectType, FindingSource, FindingType
 from ...core.discovery.top_service_resolver import TopServiceResolver
@@ -45,12 +45,15 @@ class Filterable:
     def get_invalid_attributes(self, attributes: List[str]) -> List:
         return list(set(attributes) - set(self.attribute_map))
 
-    def attribute_matches(self, attribute: str, expression: str) -> bool:
+    def attribute_matches(self, attribute: str, expression: Union[str, List[str]]) -> bool:
         value = self.attribute_map[attribute]
-        return bool(re.match(expression, value))
+        if isinstance(expression, str):
+            return bool(re.match(expression, value))
+        else:  # expression is list of values
+            return value in expression
 
-    def matches(self, requirements: Dict[str, str]) -> bool:
-        invalid_attributes = self.get_invalid_attributes(requirements.keys())
+    def matches(self, requirements: Dict[str, Union[str, List[str]]]) -> bool:
+        invalid_attributes = self.get_invalid_attributes(list(requirements.keys()))
         if len(invalid_attributes) > 0:
             logging.warning(f"Invalid match attributes: {invalid_attributes}")
             return False

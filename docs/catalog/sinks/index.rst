@@ -3,6 +3,8 @@ Sinks
 
 Playbooks results can be sent to one or more sinks (destinations).
 
+A sink can be configured to report only a subset of the created findings. See :ref:`Sink matchers` for more details.
+
 Supported sinks
 ^^^^^^^^^^^^^^^^^^^^^
 The following sinks are supported:
