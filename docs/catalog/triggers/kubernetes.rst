@@ -18,6 +18,9 @@ For example, we can write annotations to Grafana when deployments update:
      - add_deployment_lines_to_grafana:
          grafana_url: ....
 
+
+There are also higher-level triggers for interesting events like CrashLoopBackoffs - see :ref:`Smart Triggers` for details
+
 Example triggers
 ------------------
 

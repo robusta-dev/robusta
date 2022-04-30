@@ -38,10 +38,13 @@ customPlaybooks: []
 builtinPlaybooks:
 # playbooks for non-prometheus based monitoring
 - triggers:
+  - on_pod_crash_loop:
+      restart_reason: "CrashLoopBackOff"
+  actions:
+  - report_crash_loop: {}
+- triggers:
   - on_pod_update: {}
   actions:
-  - restart_loop_reporter:
-      restart_reason: "CrashLoopBackOff"
   - image_pull_backoff_reporter:
       rate_limit: 3600
 # playbooks for prometheus enrichment and silencing
