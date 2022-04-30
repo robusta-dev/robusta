@@ -247,7 +247,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
     def __handle_findings(self, execution_event: ExecutionBaseEvent):
         sinks_info = self.registry.get_telemetry().sinks_info
 
-        for sink_name in execution_event.named_sinks:
+        for sink_name in execution_event.sink_findings.keys():
             if SYNC_RESPONSE_SINK == sink_name:
                 continue  # not a real sink, just container for findings that needs to be returned synchronously
 

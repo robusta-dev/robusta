@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from typing import List
 
 from ..discovery.top_service_resolver import TopServiceResolver
