@@ -191,7 +191,9 @@ Here is a full example showing how to configure all possible sinks:
 Sink matchers
 ^^^^^^^^^^^^^
 
-Sinks can be configured to report findings only when they match **all** the specified regular expressions:
+Sinks can be configured to report findings only when they match **all** the specified matchers.
+
+Each matcher can be a regular expression or a list of exact values:
 
 .. code-block:: yaml
 
@@ -201,8 +203,10 @@ Sinks can be configured to report findings only when they match **all** the spec
         slack_channel: test-notifications
         api_key: secret-key
         match:
-          # match any namespace containing the "test" substring
-          namespace: test
+          # match "dev" or "test" namespaces
+          namespace:
+          - dev
+          - test
           # match any node containing the "test-node" substring
           node: test-node
     - slack_sink:
