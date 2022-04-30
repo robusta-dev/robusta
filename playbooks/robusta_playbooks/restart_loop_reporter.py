@@ -67,6 +67,11 @@ def report_crash_loop(event: PodEvent):
 
 
 # The code below is deprecated. Please use the new crash loop action
+# We added a new trigger, on_pod_crash_loop.
+# The trigger is deciding when to fire. It can be configured for different restart reasons and restart counts
+# The new action is only doing the report
+# The advantage with the new approach, is that we can chain few actions, which will all fire only if the trigger fires
+# On the old implementation, the identification of the crash loop, was inside the action, which isn't the best.
 class RestartLoopParams(RateLimitParams):
     """
     :var restart_reason: Limit restart loops for this specific reason. If omitted, all restart reasons will be included.

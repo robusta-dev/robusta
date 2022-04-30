@@ -10,7 +10,7 @@ You can trigger Robusta automations on all of the following events:
 
    Prometheus and AlertManager <prometheus>
    Kubernetes (API Server) <kubernetes>
-   Smart <smart>
+   Smart Triggers <smart>
    Scheduled <scheduled>
    Manual Triggers <manual-triggers>
    Webhooks <webhook>

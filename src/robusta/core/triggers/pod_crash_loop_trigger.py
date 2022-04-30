@@ -61,14 +61,11 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
         if not crashing:
             return False
 
-        # Perform a rate limit for this service key according to the rate_limit parameter
-        name = pod.metadata.name
+        # Perform a rate limit for this pod according to the rate_limit parameter
+        name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name
         namespace = pod.metadata.namespace
-        service_key = TopServiceResolver.guess_service_key(
-            name=name, namespace=namespace
-        )
         return RateLimiter.mark_and_test(
             f"PodCrashLoopTrigger_{playbook_id}",
-            service_key if service_key else namespace + ":" + name,
+            namespace + ":" + name,
             self.rate_limit,
         )
