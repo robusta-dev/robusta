@@ -73,6 +73,8 @@ Here is the Robusta event hierarchy:
     Note that ``PrometheusKubernetesAlert`` inherits from many Kubernetes event classes, so you can use
     ``on_prometheus_alert`` with many types of playbook actions. For example, ``on_prometheus_alert`` is
     compatible with any playbook that accepts ``PodEvent``, ``NodeEvent``, ``DeploymentEvent``, and so on.
+    However, at runtime the alert must contain a relevant label in order to map the alert to the relevant
+    Kubernetes object.
 
 Support manual triggers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
