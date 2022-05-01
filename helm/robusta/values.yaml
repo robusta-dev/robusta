@@ -140,6 +140,7 @@ kubewatch:
       memory: 512Mi
     limits:
       cpu: ~
+  tolerations: []
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:

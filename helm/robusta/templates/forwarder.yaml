@@ -37,3 +37,7 @@ spec:
         - name:  robusta-kubewatch-config
           configMap:
             name: {{ .Release.Name }}-kubewatch-config
+      tolerations:
+        {{- if .Values.kubewatch.tolerations }}
+        {{ toYaml .Values.kubewatch.tolerations | nindent 8 }}
+        {{- end }}
