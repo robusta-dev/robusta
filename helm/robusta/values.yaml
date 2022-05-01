@@ -140,6 +140,8 @@ kubewatch:
       memory: 512Mi
     limits:
       cpu: ~
+  tolerations: []
+  annotations: {}
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -166,6 +168,8 @@ runner:
     limits:
       cpu: ~
   additional_env_vars: []
+  tolerations: []
+  annotations: {}
 
 kube-prometheus-stack:
   alertmanager:
