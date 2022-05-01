@@ -11,8 +11,8 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-forwarder
-      {{- if .Values.runner.annotations }}
-      annotations: {{ toYaml .Values.runner.annotations | nindent 8 }}
+      {{- if .Values.kubewatch.annotations }}
+      annotations: {{ toYaml .Values.kubewatch.annotations | nindent 8 }}
       {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-forwarder-service-account
