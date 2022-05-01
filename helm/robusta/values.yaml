@@ -166,6 +166,7 @@ runner:
     limits:
       cpu: ~
   additional_env_vars: []
+  tolerations: []
 
 kube-prometheus-stack:
   alertmanager:
