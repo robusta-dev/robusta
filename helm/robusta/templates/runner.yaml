@@ -14,6 +14,9 @@ spec:
       labels:
         app: {{ .Release.Name }}-runner
         robustaComponent: "runner"
+      {{- if .Values.runner.annotations }}
+      annotations: {{ toYaml .Values.runner.annotations | nindent 8 }}
+      {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-runner-service-account
       containers:
