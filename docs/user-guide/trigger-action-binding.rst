@@ -63,7 +63,7 @@ The latter may be used wherever the former is expected.
 
 .. note::
 
-    **Note that on_prometheus_alert is compatible with most Robusta actions that takes Kubernetes resources.
+    ``on_prometheus_alert`` is compatible with most Robusta actions that take Kubernetes resources.
 
 Further Reading
 -----------------

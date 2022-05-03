@@ -1,7 +1,7 @@
-Improve Prometheus Alerts
+Alert enrichment
 ##############################
 
-In this tutorial we will try out Robusta's features for handling Prometheus alerts in Kubernetes clusters.
+In this tutorial we will continue learning about Robusta automations. This time we will configure automations that enrich and remediate Prometheus alerts.
 
 Setup
 ---------------------------------

@@ -14,6 +14,8 @@ Example triggers
 Pod Crash Loop
 ^^^^^^^^^^^^^^^^^^^
 
+.. _on_pod_crash_loop:
+
 * ``on_pod_crash_loop``
 
 This trigger will fire when a Pod is crash looping.
