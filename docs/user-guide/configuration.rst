@@ -19,7 +19,7 @@ Defining playbooks
 
 Playbooks are defined using the ``customPlaybooks`` Helm value.
 
-Every playbooks has three parts: triggers, actions, and sinks. See the :ref:`Track Kubernetes Changes` tutorial for
+Every playbooks has three parts: triggers, actions, and sinks. See the :ref:`Automation Basics` tutorial for
 a walkthrough.
 
 .. code-block:: yaml
