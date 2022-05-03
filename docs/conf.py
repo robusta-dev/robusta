@@ -40,7 +40,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_design",
     "sphinxcontrib.images",
-    # "autorobusta",
+    "autorobusta",
 ]
 
 # for sphinx.ext.inheritance_diagram
