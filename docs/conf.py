@@ -40,7 +40,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_design",
     "sphinxcontrib.images",
-    "autorobusta",
+    # "autorobusta",
 ]
 
 # for sphinx.ext.inheritance_diagram
@@ -127,6 +127,10 @@ html_static_path = ["_static"]
 
 html_css_files = [
     "custom.css",
+]
+
+html_js_files = [
+    'posthog.js'
 ]
 
 html_favicon = "_static/favicon.png"
