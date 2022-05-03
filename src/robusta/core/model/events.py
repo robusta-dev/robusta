@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pydantic import BaseModel
 
 from ...integrations.scheduled.playbook_scheduler import PlaybooksScheduler
-from ..reporting.base import Finding, BaseBlock
+from ..reporting.base import Finding, BaseBlock, FindingSeverity
 
 
 class EventType(Enum):
@@ -90,6 +90,16 @@ class ExecutionBaseEvent:
                 )
 
             self.sink_findings[sink].insert(0, finding)
+
+    def override_finding_attributes(self, title: str = "", description: str = "", severity: FindingSeverity = None):
+        for sink in self.named_sinks:
+            for finding in self.sink_findings[sink]:
+                if title:
+                    finding.title = title
+                if description:
+                    finding.description = description
+                if severity:
+                    finding.severity = severity
 
     @staticmethod
     def from_params(params: ExecutionEventBaseParams) -> Optional["ExecutionBaseEvent"]:
