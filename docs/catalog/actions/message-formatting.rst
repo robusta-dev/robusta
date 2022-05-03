@@ -1,4 +1,4 @@
-Customising
+Message Formatting
 ########################
 
 These actions are useful for customising the output of existing actions

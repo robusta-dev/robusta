@@ -2,9 +2,9 @@ from robusta.api import *
 
 
 class FindingOverrides(ActionParams):
-    title: str = ""
-    description: str = ""
-    severity: str = ""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    severity: Optional[str] = None
 
     """
     :var title: Overriding finding title.
@@ -16,9 +16,13 @@ class FindingOverrides(ActionParams):
 @action
 def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
     """
-    Overrides the created finding attribute with the provided attributes overrides.
+    Overrides a finding attribute with the provided value.
 
-    This action does not create a new Finding, it just override the attributes of an existing Finding.
+    All messages from Robusta are represented as a Finding object.
+    This action lets you override Finding fields to change that messages Robusta sends.
+    This lets you modify messages created by other actions without needing to rewrite those actions.
+
+    This action does not create a new Finding, it just overrides the attributes of an existing Finding.
     It must be placed as the last action in the playbook configuration, to override the attributes created by previous
     actions
     """
