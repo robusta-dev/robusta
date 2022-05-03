@@ -61,7 +61,15 @@ def python_profiler(event: PodEvent, params: StartProfilingParams):
             pyspy_output = debugger.exec(target_description)
             if "Error:" in pyspy_output:
                 logging.info(
-                    f"error profiler on {target_description}. error={pyspy_output}"
+                    f"error running profiler on {target_description}. error={pyspy_output}"
+                )
+                finding.add_enrichment(
+                    [
+                        FileBlock(
+                            filename=f"Error for process {target_description}",
+                            contents=pyspy_output.encode(),
+                        )
+                    ]
                 )
                 continue
 
