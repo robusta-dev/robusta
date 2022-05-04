@@ -10,6 +10,10 @@ function setupCopyListener() {
 }
 
 function reportCopy(baseElement) {
+  // don’t track users who ask not to be tracked
+  if (navigator.doNotTrack === "1") {
+    return
+  }
   let id_element = (baseElement.closest('div[id^=cb-]')); // corresponds to the :name: in the code-blocks. prefix cb-
   if (id_element) {
     const path = window.location.pathname;
