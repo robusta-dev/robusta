@@ -13,6 +13,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
+from ..core.playbooks.playbook_utils import to_safe_str
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..core.model.env_vars import INCOMING_REQUEST_TIME_WINDOW_SECONDS, RUNNER_VERSION
 from ..core.reporting.action_requests import (
@@ -104,7 +105,7 @@ class ActionRequestReceiver:
                 self.ws.send(data=json.dumps(self.__sync_response(401, action_request.request_id, "")))
             return
 
-        logging.info(f"got callback `{action_request.body.action_name}` {action_request.body.action_params}")
+        logging.info(f"got callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
         response = self.event_handler.run_external_action(
             action_request.body.action_name,
             action_request.body.action_params,
