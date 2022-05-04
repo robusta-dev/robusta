@@ -129,6 +129,10 @@ html_css_files = [
     "custom.css",
 ]
 
+html_js_files = [
+    'posthog.js'
+]
+
 html_favicon = "_static/favicon.png"
 
 # html_logo = "_static/logo.png"
