@@ -1,7 +1,7 @@
 from typing import List, Optional, Union, Dict
 from pydantic import BaseModel, SecretStr, validator
 
-from ..playbooks.playbook_utils import replace_env_vars_values
+from ..playbooks.playbook_utils import get_env_replacement, replace_env_vars_values
 from ..sinks.webhook.webhook_sink_params import WebhookSinkConfigWrapper
 from ..sinks.telegram.telegram_sink_params import TelegramSinkConfigWrapper
 from ...model.playbook_definition import PlaybookDefinition
@@ -39,6 +39,17 @@ class RunnerConfig(BaseModel):
     ]
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDefinition]] = []
+
+    @validator('playbook_repos')
+    def env_var_repo_keys(cls, playbook_repos: Dict[str, PlaybookRepo]):
+        return {k: RunnerConfig._replace_env_var_in_playbook_repo(v) for k, v in playbook_repos.items()}
+
+    @staticmethod
+    def _replace_env_var_in_playbook_repo(playbook_repo: PlaybookRepo):
+        if not playbook_repo.key:
+            return playbook_repo
+        playbook_repo.key = SecretStr(get_env_replacement(playbook_repo.key.get_secret_value()))
+        return playbook_repo
 
     @validator('global_config')
     def env_var_params(cls, global_config: dict):
