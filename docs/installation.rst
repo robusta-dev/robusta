@@ -20,6 +20,7 @@ Standard Installation
 .. admonition:: Common Errors
     :class: warning
 
+    * Python 3.7 or higher is required
     * If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
     * Errors about *tiller* mean you are running Helm 2, not Helm 3
 
