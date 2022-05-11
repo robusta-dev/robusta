@@ -20,7 +20,8 @@ from hikaru.model import (
 )
 from typing import List, Dict
 
-from robusta.runner.web_api import WebApi
+from ....integrations.kubernetes.custom_models import extract_image_list
+from ....runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from ...model.env_vars import DISCOVERY_PERIOD_SEC, PERIODIC_LONG_SEC
 from ...model.nodes import NodeInfo
@@ -97,6 +98,8 @@ class RobustaSink(SinkBase):
                 name=service.metadata.name,
                 namespace=service.metadata.namespace,
                 service_type=service.kind,
+                images=extract_image_list(service),
+                labels=service.metadata.labels,
             )
             cache_key = service_info.get_service_key()
             active_services_keys.add(cache_key)
