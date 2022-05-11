@@ -16,6 +16,8 @@ def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
                 name=event.obj.metadata.name,
                 service_type=event.obj.kind,
                 namespace=event.obj.metadata.namespace,
+                images=extract_image_list(event.obj),
+                labels=event.obj.metadata.labels,
             )
         )
 
