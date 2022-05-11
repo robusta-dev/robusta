@@ -49,41 +49,36 @@ def build_selector_query(selector: LabelSelector) -> str:
     return ",".join(label_filters)
 
 
+def _get_image_name_and_tag(image: str) -> (str, str):
+    if ":" in image:
+        image_name, image_tag = image.split(":", maxsplit=1)
+        return image_name, image_tag
+    else:
+        return image, "<NONE>"
+
+
 def get_images(containers: List[Container]) -> Dict[str, str]:
     """
     Takes a list of containers and returns a dict mapping image name to image tag.
     """
     name_to_version = {}
     for container in containers:
-        if ":" in container.image:
-            image_name, image_tag = container.image.split(":", maxsplit=1)
-            name_to_version[image_name] = image_tag
-        else:
-            name_to_version[container.image] = "<NONE>"
+        image_name, tag = _get_image_name_and_tag(container.image)
+        name_to_version[image_name] = tag
     return name_to_version
 
 
 def extract_images(k8s_obj: HikaruDocumentBase) -> Optional[Dict[str, str]]:
-    containers_paths = [
-        [
-            "spec",
-            "template",
-            "spec",
-            "containers",
-        ],  # deployment, replica set, daemon set, stateful set, job
-        ["spec", "containers"],  # pod
-    ]
+    images = extract_image_list(k8s_obj)
+    if not images:
+        # no containers found on that k8s obj
+        return None
 
-    for path in containers_paths:
-        try:
-            containers = k8s_obj.object_at_path(path)
-            if containers:
-                return get_images(containers)
-        except Exception:  # Path not found on object, not a real error
-            pass
-
-    # no containers found on that k8s obj
-    return None
+    name_to_version = {}
+    for image in images:
+        image_name, tag = _get_image_name_and_tag(image)
+        name_to_version[image_name] = tag
+    return name_to_version
 
 
 def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
