@@ -34,6 +34,9 @@ class TelemetryService:
             logging.info(f"Telemetry set to include error info, Thank you for helping us improve Robusta.")
             try:
                 sentry_sdk.init(sentry_dsn, traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", 0.5)))
+                tele = self.registry.get_telemetry()
+                sentry_sdk.set_user({"id": tele.account_id})
+                sentry_sdk.set_context("user_data", {"cluster_id": tele.cluster_id})
             except Exception as e:
                 logging.error(f"Sentry error: {e}", exc_info=True)
 

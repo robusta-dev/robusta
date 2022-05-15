@@ -165,6 +165,7 @@ def gen_config(
         None,
         help="The name of the kubeconfig context to use",
     ),
+    enable_crash_report: bool = typer.Option(None)
 ):
     """Create runtime configuration file"""
     if cluster_name is None:
@@ -340,6 +341,12 @@ def gen_config(
         except Exception:
             typer.echo(f"\nEula approval failed: {eula_url}")
 
+    if enable_crash_report is None:
+        enable_crash_report = typer.prompt(
+            "Help us improve Robusta by sending exception reports",
+            default=False,
+        )
+
     signing_key = str(uuid.uuid4()).replace("_", "")
 
     values = HelmValues(
@@ -374,6 +381,8 @@ def gen_config(
                 "value": backend_profile.robusta_telemetry_endpoint,
             },
         ]
+    
+    values.runner.sendAdditionalTelemetry = enable_crash_report
 
     write_values_file(output_path, values)
 
