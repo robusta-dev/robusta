@@ -342,10 +342,8 @@ def gen_config(
             typer.echo(f"\nEula approval failed: {eula_url}")
 
     if enable_crash_report is None:
-        enable_crash_report = typer.prompt(
-            "Help us improve Robusta by sending exception reports",
-            default=False,
-        )
+        enable_crash_report = typer.confirm(
+            "Help us improve Robusta by sending exception reports")
 
     signing_key = str(uuid.uuid4()).replace("_", "")
 
@@ -363,9 +361,10 @@ def gen_config(
         values.set_pod_configs_for_small_clusters()
         values.playbooksPersistentVolumeSize = "128Mi"
 
+    values.runner = {}  
+    values.runner["sendAdditionalTelemetry"] = enable_crash_report
+    
     if backend_profile.custom_profile:
-        if not values.runner:
-            values.runner = {}
         values.runner["additional_env_vars"] = [
             {
                 "name": "RELAY_EXTERNAL_ACTIONS_URL",
@@ -382,7 +381,7 @@ def gen_config(
             },
         ]
     
-    values.runner.sendAdditionalTelemetry = enable_crash_report
+
 
     write_values_file(output_path, values)
 
