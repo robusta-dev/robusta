@@ -189,6 +189,7 @@ Next Steps
    catalog/sinks/index
    user-guide/robusta-cli
    user-guide/trigger-action-binding
+   advanced/index
 
 .. toctree::
    :maxdepth: 4
