@@ -343,7 +343,7 @@ def gen_config(
 
     if enable_crash_report is None:
         enable_crash_report = typer.confirm(
-            "Help us improve Robusta by sending exception reports")
+            "Would you like to help us improve Robusta by sending exception reports?")
 
     signing_key = str(uuid.uuid4()).replace("_", "")
 
