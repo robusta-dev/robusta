@@ -1,3 +1,4 @@
+import functools
 import logging
 
 import requests
@@ -5,6 +6,7 @@ from string import Template
 from datetime import datetime, timedelta
 from urllib.parse import urlparse, unquote_plus
 from collections import defaultdict
+import re
 
 from robusta.api import *
 
@@ -83,7 +85,7 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
 
     node_start_time = datetime.strptime(node_start_time_str, "%Y-%m-%dT%H:%M:%SZ")
     alert.stop_processing = datetime.utcnow().timestamp() < (
-        node_start_time.timestamp() + params.post_restart_silence
+            node_start_time.timestamp() + params.post_restart_silence
     )
 
 
@@ -211,12 +213,23 @@ def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
     )
 
 
+class RegexReplacementStyle(Enum):
+    """
+    Patterns for replacers, either asterisks "****" matching the length of the match, or the string "[REDACTED]"
+    """
+    SameLengthAsterisks = auto()
+    Redacted = auto()
+
+
 class LogEnricherParams(ActionParams):
     """
     :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
+    :var regex_replacer_pattern: a regex pattern to replace text for example for security reasons
+    :var regex_replacement_style: one of SameLengthAsterisks or Redacted (See RegexReplacementStyle)
     """
-
     warn_on_missing_label: bool = False
+    regex_replacer_pattern: Optional[str] = None
+    regex_replacement_style: str = "SameLengthAsterisks"
 
 
 @action
@@ -238,11 +251,22 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
                 ],
             )
         return
+
     log_data = pod.get_logs()
-    if log_data:
-        event.add_enrichment(
-            [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
-        )
+    if not log_data:
+        return
+
+    if params.regex_replacer_pattern:
+        regex_replacement_style = RegexReplacementStyle[params.regex_replacement_style]
+        logging.info('Sanitizing log data with the provided regex pattern')
+        def same_length_asterisks(match): return '*' * len((match.group(0)))
+        replacement = \
+            '[REDACTED]' if regex_replacement_style == RegexReplacementStyle.Redacted else same_length_asterisks
+        log_data = re.sub(params.regex_replacer_pattern, replacement, log_data)
+
+    event.add_enrichment(
+        [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
+    )
 
 
 class SearchTermParams(ActionParams):
