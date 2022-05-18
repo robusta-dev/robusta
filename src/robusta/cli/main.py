@@ -165,6 +165,7 @@ def gen_config(
         None,
         help="The name of the kubeconfig context to use",
     ),
+    enable_crash_report: bool = typer.Option(None)
 ):
     """Create runtime configuration file"""
     if cluster_name is None:
@@ -340,6 +341,10 @@ def gen_config(
         except Exception:
             typer.echo(f"\nEula approval failed: {eula_url}")
 
+    if enable_crash_report is None:
+        enable_crash_report = typer.confirm(
+            "Would you like to help us improve Robusta by sending exception reports?")
+
     signing_key = str(uuid.uuid4()).replace("_", "")
 
     values = HelmValues(
@@ -356,9 +361,10 @@ def gen_config(
         values.set_pod_configs_for_small_clusters()
         values.playbooksPersistentVolumeSize = "128Mi"
 
+    values.runner = {}  
+    values.runner["sendAdditionalTelemetry"] = enable_crash_report
+    
     if backend_profile.custom_profile:
-        if not values.runner:
-            values.runner = {}
         values.runner["additional_env_vars"] = [
             {
                 "name": "RELAY_EXTERNAL_ACTIONS_URL",
@@ -374,6 +380,8 @@ def gen_config(
                 "value": backend_profile.robusta_telemetry_endpoint,
             },
         ]
+    
+
 
     write_values_file(output_path, values)
 
