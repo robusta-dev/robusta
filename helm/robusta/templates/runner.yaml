@@ -108,6 +108,9 @@ spec:
           persistentVolumeClaim:
             claimName: persistent-playbooks-pv-claim
         {{- end }}
+      {{- if .Values.runner.affinity }}
+      affinity: {{ toYaml .Values.runner.affinity | nindent 8 }}
+      {{- end }}
       {{- if .Values.runner.tolerations }}
       tolerations:  {{ toYaml .Values.runner.tolerations | nindent 8 }}
       {{- end }}

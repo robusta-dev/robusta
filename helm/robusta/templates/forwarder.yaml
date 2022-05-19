@@ -40,6 +40,9 @@ spec:
         - name:  robusta-kubewatch-config
           configMap:
             name: {{ .Release.Name }}-kubewatch-config
+      {{- if .Values.kubewatch.affinity }}
+      affinity: {{ toYaml .Values.kubewatch.affinity | nindent 8 }}
+      {{- end }}
       {{- if .Values.kubewatch.tolerations }}
       tolerations:  {{ toYaml .Values.kubewatch.tolerations | nindent 8 }}
       {{- end }}
