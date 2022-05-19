@@ -3,7 +3,13 @@ import logging
 from robusta.api import *
 
 
-def _send_crash_report(event: PodEvent, crashed_container_statuses: [ContainerStatus], action_name: str):
+def _send_crash_report(
+        event: PodEvent,
+        crashed_container_statuses: [ContainerStatus],
+        action_name: str,
+        regex_replacer_pattern: Optional[str] = None,
+        regex_replacement_style: Optional[RegexReplacementStyle] = None
+):
 
     pod = event.get_pod()
     finding = Finding(
@@ -38,7 +44,12 @@ def _send_crash_report(event: PodEvent, crashed_container_statuses: [ContainerSt
                     f"*{container_status.name}* termination reason: {container_status.lastState.terminated.reason}"
                 )
             )
-        container_log = pod.get_logs(container_status.name, previous=True)
+        container_log = pod.get_logs(
+            container_status.name,
+            previous=True,
+            regex_replacer_pattern=regex_replacer_pattern,
+            regex_replacement_style=regex_replacement_style
+        )
         if container_log:
             blocks.append(FileBlock(f"{pod.metadata.name}.txt", container_log))
         else:
@@ -55,15 +66,27 @@ def _send_crash_report(event: PodEvent, crashed_container_statuses: [ContainerSt
     event.add_finding(finding)
 
 
+class ReportCrashLoopParams(ActionParams):
+    """
+    :var regex_replacer_pattern: a regex pattern to replace text for example for security reasons
+    :var regex_replacement_style: one of SameLengthAsterisks or Redacted (See RegexReplacementStyle)
+    """
+    regex_replacer_pattern: Optional[str] = None
+    regex_replacement_style: str = "SameLengthAsterisks"
+
+
 @action
-def report_crash_loop(event: PodEvent):
+def report_crash_loop(event: PodEvent, params: ReportCrashLoopParams):
     pod = event.get_pod()
     all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
     crashing_containers = [
         container_status for container_status in all_statuses
         if container_status.state.waiting is not None and container_status.restartCount >= 1
     ]
-    _send_crash_report(event, crashing_containers, "report_crash_loop")
+    regex_replacement_style = \
+        RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
+    _send_crash_report(
+        event, crashing_containers, "report_crash_loop", params.regex_replacer_pattern, regex_replacement_style)
 
 
 # The code below is deprecated. Please use the new crash loop action

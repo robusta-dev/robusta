@@ -212,14 +212,6 @@ def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
     )
 
 
-class RegexReplacementStyle(Enum):
-    """
-    Patterns for replacers, either asterisks "****" matching the length of the match, or the string "[REDACTED]"
-    """
-    SameLengthAsterisks = auto()
-    Redacted = auto()
-
-
 class LogEnricherParams(ActionParams):
     """
     :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
@@ -228,7 +220,7 @@ class LogEnricherParams(ActionParams):
     """
     warn_on_missing_label: bool = False
     regex_replacer_pattern: Optional[str] = None
-    regex_replacement_style: str = "SameLengthAsterisks"
+    regex_replacement_style: Optional[str] = None
 
 
 @action
@@ -251,17 +243,14 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
             )
         return
 
-    log_data = pod.get_logs()
+    regex_replacement_style = \
+        RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
+    log_data = pod.get_logs(
+        regex_replacer_pattern=params.regex_replacer_pattern,
+        regex_replacement_style=regex_replacement_style
+    )
     if not log_data:
         return
-
-    if params.regex_replacer_pattern:
-        regex_replacement_style = RegexReplacementStyle[params.regex_replacement_style]
-        logging.info('Sanitizing log data with the provided regex pattern')
-        def same_length_asterisks(match): return '*' * len((match.group(0)))
-        replacement = \
-            '[REDACTED]' if regex_replacement_style == RegexReplacementStyle.Redacted else same_length_asterisks
-        log_data = re.sub(params.regex_replacer_pattern, replacement, log_data)
 
     event.add_enrichment(
         [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
