@@ -353,3 +353,21 @@ The alerts are based on excellent work already done by the kube-prometheus-stack
 alerts from the kubernetes-mixin project.
 
 Our alerting will likely diverge more over time as we take advantage of more Robusta features.
+
+Deploying Robusta on Specific Nodes using NodeSelectors
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Additional configurations can be added to specify which nodes you would like for robusta to run on.
+The NodeSelector chosen should be configured for both runner and kubewatch.
+
+The following configuration is an example that will cause robusta's pods to only be scheduled on nodes running linux.
+
+.. code-block:: yaml
+
+    runner:
+      nodeSelector:
+        kubernetes.io/os: linux
+
+    kubewatch:
+      nodeSelector:
+        kubernetes.io/os: linux
