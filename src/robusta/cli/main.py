@@ -128,7 +128,7 @@ def write_values_file(output_path: str, values: HelmValues):
         yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
         typer.secho(
             f"Saved configuration to {output_path} - save this file for future use!",
-            fg="green",
+            fg="red",
         )
 
 
