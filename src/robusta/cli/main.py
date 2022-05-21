@@ -302,6 +302,7 @@ def gen_config(
         )
         enable_platform_playbooks = True
         require_eula_approval = True
+        disable_cloud_routing = False
 
     slack_feedback_heads_up_message: Optional[str] = None
     if slack_integration_configured:
