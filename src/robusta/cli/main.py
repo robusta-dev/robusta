@@ -29,8 +29,9 @@ from ..core.sinks.robusta.robusta_sink_params import (
     RobustaSinkParams,
 )
 from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
+from .eula import handle_eula
 from robusta._version import __version__
-from .integrations_cmd import app as integrations_commands, get_slack_key
+from .integrations_cmd import app as integrations_commands, get_slack_key, get_ui_key
 from .auth import app as auth_commands
 from .slack_verification import verify_slack_channel
 from .slack_feedback_message import SlackFeedbackMessagesSender, SlackFeedbackConfig
@@ -126,12 +127,8 @@ def write_values_file(output_path: str, values: HelmValues):
     with open(output_path, "w") as output_file:
         yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
         typer.secho(
-            f"Saved configuration to {output_path}",
+            f"Saved configuration to {output_path} - save this file for future use!",
             fg="green",
-        )
-        typer.secho(
-            f"Save this file for future use. It contains your account credentials",
-            fg="red",
         )
 
 
@@ -239,56 +236,13 @@ def gen_config(
             "Would you like to use Robusta UI? This is HIGHLY recommended.",
             default=True,
         ):
-            if typer.confirm("Do you already have a Robusta account?"):
-                while True:
-                    robusta_api_key = typer.prompt(
-                        "Please insert your Robusta account token",
-                        default=None,
-                    )
-                    try:
-                        json.loads(base64.b64decode(robusta_api_key))
-                        break
-                    except Exception:
-                        typer.secho(
-                            "Sorry, invalid token format. "
-                            "The token can be found in any existing generated_values.yaml file, under the robusta_sink",
-                            fg="red",
-                        )
-
-            else:  # self registration
-                email = typer.prompt(
-                    "Enter a Gmail/Google Workspace address. This will be used to login:"
-                )
-                email = email.strip()
-                account_name = typer.prompt("Choose your account name")
-
-                res = requests.post(
-                    f"{backend_profile.robusta_cloud_api_host}/accounts/create",
-                    json={
-                        "account_name": account_name,
-                        "email": email,
-                    },
-                )
-                if res.status_code == 201:
-                    robusta_api_key = res.json().get("token")
-                    typer.secho(
-                        "Successfully registered.\n",
-                        fg="green",
-                    )
-                    typer.echo("A few more questions and we're done...\n")
-                else:
-                    typer.secho(
-                        "Sorry, something didn't work out. Please contact us at support@robusta.dev - if you already "
-                        "registered for Robusta in the past you'll have to use a different email or contact "
-                        "support@robusta.dev",
-                        fg="red",
-                    )
-                    robusta_api_key = ""
+            robusta_api_key = get_ui_key()
         else:
             robusta_api_key = ""
 
+    typer.secho("Just a few more questions and we're done...\n", fg="green")
+
     account_id = str(uuid.uuid4())
-    require_eula_approval = False
     if robusta_api_key:  # if Robusta ui sink is defined, take the account id from it
         token = json.loads(base64.b64decode(robusta_api_key))
         account_id = token.get("account_id", account_id)
@@ -301,7 +255,6 @@ def gen_config(
             )
         )
         enable_platform_playbooks = True
-        require_eula_approval = True
         disable_cloud_routing = False
 
     slack_feedback_heads_up_message: Optional[str] = None
@@ -323,27 +276,12 @@ def gen_config(
         disable_cloud_routing = not typer.confirm(
             "Would you like to enable two-way interactivity (e.g. fix-it buttons in Slack) via Robusta's cloud?"
         )
-        if not disable_cloud_routing:
-            require_eula_approval = True
 
-    if require_eula_approval:
-        eula_url = f"{backend_profile.robusta_cloud_api_host}/eula.html"
-        typer.echo(
-            f"Please read and approve our End User License Agreement: {eula_url}"
-        )
-        eula_approved = typer.confirm("Do you accept our End User License Agreement?")
-        if not eula_approved:
-            typer.echo("End User License Agreement rejected. Installation aborted.")
-            return
-
-        try:
-            requests.get(f"{eula_url}?account_id={account_id}")
-        except Exception:
-            typer.echo(f"\nEula approval failed: {eula_url}")
+    handle_eula(account_id, robusta_api_key, not disable_cloud_routing)
 
     if enable_crash_report is None:
         enable_crash_report = typer.confirm(
-            "Would you like to help us improve Robusta by sending exception reports?"
+            "Last question! Would you like to help us improve Robusta by sending exception reports?"
         )
 
     signing_key = str(uuid.uuid4()).replace("_", "")
@@ -386,7 +324,12 @@ def gen_config(
 
     if robusta_api_key:
         typer.secho(
-            f"Finish the Helm install and then login to Robusta UI at {backend_profile.robusta_ui_domain}\n",
+            f"Finish installing with Helm (see the Robusta docs). Then login to Robusta UI at https://platform.robusta.dev\n",
+            fg="green",
+        )
+    else:
+        typer.secho(
+            f"Finish installing with Helm (see the Robusta docs). By the way, you're missing out on the UI! See https://home.robusta.dev/ui/\n",
             fg="green",
         )
 
