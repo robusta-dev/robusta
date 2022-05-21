@@ -324,7 +324,7 @@ def gen_config(
 
     if robusta_api_key:
         typer.secho(
-            f"Finish installing with Helm (see the Robusta docs). Then login to Robusta UI at https://platform.robusta.dev\n",
+            f"Finish installing with Helm (see the Robusta docs). Then login to Robusta UI at {backend_profile.robusta_ui_domain}\n",
             fg="green",
         )
     else:
