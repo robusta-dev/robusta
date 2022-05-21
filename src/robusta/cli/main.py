@@ -165,7 +165,7 @@ def gen_config(
         None,
         help="The name of the kubeconfig context to use",
     ),
-    enable_crash_report: bool = typer.Option(None)
+    enable_crash_report: bool = typer.Option(None),
 ):
     """Create runtime configuration file"""
     if cluster_name is None:
@@ -257,8 +257,7 @@ def gen_config(
 
             else:  # self registration
                 email = typer.prompt(
-                    "Enter a Gmail/Google Workspace address. This will be used to login. Choose an email you haven't "
-                    "used with Robusta before"
+                    "Enter a Gmail/Google Workspace address. This will be used to login:"
                 )
                 email = email.strip()
                 account_name = typer.prompt("Choose your account name")
@@ -343,7 +342,8 @@ def gen_config(
 
     if enable_crash_report is None:
         enable_crash_report = typer.confirm(
-            "Would you like to help us improve Robusta by sending exception reports?")
+            "Would you like to help us improve Robusta by sending exception reports?"
+        )
 
     signing_key = str(uuid.uuid4()).replace("_", "")
 
@@ -361,9 +361,9 @@ def gen_config(
         values.set_pod_configs_for_small_clusters()
         values.playbooksPersistentVolumeSize = "128Mi"
 
-    values.runner = {}  
+    values.runner = {}
     values.runner["sendAdditionalTelemetry"] = enable_crash_report
-    
+
     if backend_profile.custom_profile:
         values.runner["additional_env_vars"] = [
             {
@@ -380,8 +380,6 @@ def gen_config(
                 "value": backend_profile.robusta_telemetry_endpoint,
             },
         ]
-    
-
 
     write_values_file(output_path, values)
 
