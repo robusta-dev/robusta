@@ -84,9 +84,9 @@ If AlertManager is located outside of your Kubernetes cluster then a few more st
 
 1. Enable two-way interactivity in :ref:`Robusta's configuration <Configuration Guide>` by setting ``disableCloudRouting: false``
 2. Make sure that your alerts contain a label named ``cluster_name`` which matches the :ref:`cluster_name defined in Robusta's configuration <Mandatory global config>`. This is necessary so that the Robusta cloud knows which cluster to forward events to.
-3. Add an http_config to AlertManager's configuration to configure security features.
+3. Configure AlertManager as follows:
 
-.. admonition:: External AlertManager configuration
+.. admonition:: alertmanager.yaml
 
     .. code-block:: yaml
 
@@ -106,7 +106,7 @@ Developing actions
 
 Here is a custom playbook action that runs on Prometheus alerts:
 
-.. admonition:: Example Prometheus playbook
+.. admonition:: my_playbook.py
 
     .. code-block:: python
 
