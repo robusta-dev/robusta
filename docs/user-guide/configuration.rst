@@ -371,3 +371,31 @@ The following configuration is an example that will cause robusta's pods to only
     kubewatch:
       nodeSelector:
         kubernetes.io/os: linux
+
+Additionally we also support affinities in our pods, you can select a node in a similar way using nodeAffinities.
+
+.. code-block:: yaml
+
+
+    runner:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+
+    kubewatch:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+
