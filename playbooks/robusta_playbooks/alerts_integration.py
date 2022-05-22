@@ -215,11 +215,11 @@ def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
 class LogEnricherParams(ActionParams):
     """
     :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
-    :var regex_replacer_pattern: a regex pattern to replace text for example for security reasons
+    :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
     :var regex_replacement_style: one of SameLengthAsterisks or Redacted (See RegexReplacementStyle)
     """
     warn_on_missing_label: bool = False
-    regex_replacer_pattern: Optional[str] = None
+    regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
     regex_replacement_style: Optional[str] = None
 
 
@@ -246,7 +246,7 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
     regex_replacement_style = \
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     log_data = pod.get_logs(
-        regex_replacer_pattern=params.regex_replacer_pattern,
+        regex_replacer_patterns=params.regex_replacer_patterns,
         regex_replacement_style=regex_replacement_style
     )
     if not log_data:

@@ -7,7 +7,7 @@ def _send_crash_report(
         event: PodEvent,
         crashed_container_statuses: [ContainerStatus],
         action_name: str,
-        regex_replacer_pattern: Optional[str] = None,
+        regex_replacer_patterns: Optional[NamedRegexPattern] = None,
         regex_replacement_style: Optional[RegexReplacementStyle] = None
 ):
 
@@ -47,7 +47,7 @@ def _send_crash_report(
         container_log = pod.get_logs(
             container_status.name,
             previous=True,
-            regex_replacer_pattern=regex_replacer_pattern,
+            regex_replacer_patterns=regex_replacer_patterns,
             regex_replacement_style=regex_replacement_style
         )
         if container_log:
@@ -68,10 +68,10 @@ def _send_crash_report(
 
 class ReportCrashLoopParams(ActionParams):
     """
-    :var regex_replacer_pattern: a regex pattern to replace text for example for security reasons
+    :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
     :var regex_replacement_style: one of SameLengthAsterisks or Redacted (See RegexReplacementStyle)
     """
-    regex_replacer_pattern: Optional[str] = None
+    regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
     regex_replacement_style: str = "SameLengthAsterisks"
 
 
@@ -86,7 +86,7 @@ def report_crash_loop(event: PodEvent, params: ReportCrashLoopParams):
     regex_replacement_style = \
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     _send_crash_report(
-        event, crashing_containers, "report_crash_loop", params.regex_replacer_pattern, regex_replacement_style)
+        event, crashing_containers, "report_crash_loop", params.regex_replacer_patterns, regex_replacement_style)
 
 
 # The code below is deprecated. Please use the new crash loop action

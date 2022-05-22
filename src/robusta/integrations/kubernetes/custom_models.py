@@ -120,12 +120,22 @@ class RobustaEvent:
 
         return Event.listEventForAllNamespaces(field_selector=field_selector).obj
 
+
 class RegexReplacementStyle(Enum):
     """
-    Patterns for replacers, either asterisks "****" matching the length of the match, or the string "[REDACTED]"
+    Patterns for replacers, either asterisks "****" matching the length of the match, or the replacement name, e.g "[IP]"
     """
-    SameLengthAsterisks = auto()
-    Redacted = auto()
+    SAME_LENGTH_ASTERISKS = auto()
+    NAMED = auto()
+
+
+class NamedRegexPattern(BaseModel):
+    """
+    A named regex pattern
+    """
+    name: str = "Redacted"
+    regex: str
+
 
 class RobustaPod(Pod):
     def exec(self, shell_command: str, container: str = None) -> str:
@@ -142,7 +152,7 @@ class RobustaPod(Pod):
             container=None,
             previous=None,
             tail_lines=None,
-            regex_replacer_pattern: Optional[str] = None,
+            regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None,
             regex_replacement_style: Optional[RegexReplacementStyle] = None) -> str:
         """
         Fetch pod logs, can replace sensitive data in the logs using a regex
@@ -157,12 +167,16 @@ class RobustaPod(Pod):
             tail_lines,
         )
 
-        if pods_logs and regex_replacer_pattern:
-            logging.info('Sanitizing log data with the provided regex pattern')
-            def same_length_asterisks(match): return '*' * len((match.group(0)))
-            replacement = \
-                '[REDACTED]' if regex_replacement_style == RegexReplacementStyle.Redacted else same_length_asterisks
-            pods_logs = re.sub(regex_replacer_pattern, replacement, pods_logs)
+        if pods_logs and regex_replacer_patterns:
+            logging.info('Sanitizing log data with the provided regex patterns')
+            if regex_replacement_style == RegexReplacementStyle.NAMED:
+                for replacer in regex_replacer_patterns:
+                    pods_logs = re.sub(replacer.regex, f'[{replacer.name.upper()}]', pods_logs)
+            else:
+                def same_length_asterisks(match):
+                    return '*' * len((match.group(0)))
+                for replacer in regex_replacer_patterns:
+                    pods_logs = re.sub(replacer.regex, same_length_asterisks, pods_logs)
 
         return pods_logs
 
