@@ -43,6 +43,9 @@ spec:
       {{- if .Values.kubewatch.nodeSelector }}
       nodeSelector: {{ toYaml .Values.kubewatch.nodeSelector | nindent 8 }}
       {{- end }}
+      {{- if .Values.kubewatch.affinity }}
+      affinity: {{ toYaml .Values.kubewatch.affinity | nindent 8 }}
+      {{- end }}
       {{- if .Values.kubewatch.tolerations }}
       tolerations:  {{ toYaml .Values.kubewatch.tolerations | nindent 8 }}
       {{- end }}
