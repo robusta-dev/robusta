@@ -361,6 +361,7 @@ Additional configurations can be added to specify which nodes you would like for
 The ``nodeSelector`` chosen should be configured for both runner and kubewatch.
 
 The following configuration is an example that will cause robusta's pods to only be scheduled on nodes running linux.
+Our ``nodeSelector`` checks if node has a label ``kubernetes.io/os`` that has the value ``linux``.
 
 .. code-block:: yaml
 
@@ -399,3 +400,4 @@ Additionally we also support affinities in our pods, you can select a node in a 
                 values:
                 - linux
 
+For a list of all the current labels and values you have on your nodes run ``kubectl get nodes --show-labels``
