@@ -354,13 +354,13 @@ alerts from the kubernetes-mixin project.
 
 Our alerting will likely diverge more over time as we take advantage of more Robusta features.
 
-Deploying Robusta on Specific Nodes
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Deploying Robusta on specific nodes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Additional configurations can be added to specify which nodes you would like for robusta to run on by using ``nodeSelectors`` or ``affinity``.
-The ``nodeSelector`` or ``affinity`` chosen should be configured for both runner and kubewatch.
+Additional configurations can be added to specify which nodes you would like for Robusta to run on by using ``nodeSelectors`` or ``affinity``.
+The ``nodeSelector`` or ``affinity`` chosen should be configured for both runner and forwarder (kubewatch).
 
-The following configuration is an example that will cause robusta's pods to only be scheduled on nodes running linux.
+The following configuration is an example that will cause Robusta's pods to only be scheduled on nodes running linux.
 Our ``nodeSelector`` checks if node has a label ``kubernetes.io/os`` that has the value ``linux``.
 
 .. code-block:: yaml
