@@ -358,7 +358,7 @@ Deploying Robusta on Specific Nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Additional configurations can be added to specify which nodes you would like for robusta to run on by using ``nodeSelectors`` or ``affinity``.
-The ``nodeSelector`` chosen should be configured for both runner and kubewatch.
+The ``nodeSelector`` or ``affinity`` chosen should be configured for both runner and kubewatch.
 
 The following configuration is an example that will cause robusta's pods to only be scheduled on nodes running linux.
 Our ``nodeSelector`` checks if node has a label ``kubernetes.io/os`` that has the value ``linux``.
