@@ -1,5 +1,7 @@
 import base64
 import os
+import textwrap
+
 import time
 import uuid
 
@@ -67,7 +69,6 @@ def slack():
 
 
 def get_ui_key() -> str:
-    """Generate a Robusta API key for the UI"""
     while True:
         email = typer.prompt(
             "Enter a Gmail/Google Workspace address. This will be used to login"
@@ -102,10 +103,20 @@ def get_ui_key() -> str:
 
 @app.command()
 def ui():
+    """Generate a Robusta API key for the UI"""
     ui_key = get_ui_key()
     if ui_key:
+        yaml = textwrap.dedent(
+            f"""\
+            sinksConfig:
+            - robusta_sink:
+                name: robusta_ui_sink
+                token: {ui_key}
+            """
+        )
+
         log_title(
-            f"Your UI key is:\n{ui_key}\nAdd it to the Robusta sink configuration"
+            f"Success! Add the following to your Helm values. (If you already have a sinksConfig variable then add to it.):\n\n{yaml}"
         )
 
 
