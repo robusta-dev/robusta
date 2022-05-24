@@ -131,7 +131,7 @@ Any contribution is most welcome, fork the project, make changes and create a PR
 * Twitter - [@RobustaDev](https://twitter.com/RobustaDev)
 * LinkedIn - [robusta-dev](https://www.linkedin.com/company/robusta-dev/)
 * Jobs - [jobs@robusta.dev ](mailto:jobs@robusta.dev)
-* Commercial Support - [support@robusta.dev ](mailto:support@robusta.dev )
+* Email Support - [support@robusta.dev ](mailto:support@robusta.dev )
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
