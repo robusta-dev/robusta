@@ -31,6 +31,15 @@ disableCloudRouting: false
 playbooksPersistentVolume: false
 playbooksPersistentVolumeSize: 4Gi
 
+# priority builtin playbooks for running before all playbooks
+priorityBuiltinPlaybooks:
+# playbooks for prometheus silencing
+- triggers:
+  - on_prometheus_alert: {}
+  actions:
+  - name_silencer:
+      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
+
 # custom user playbooks
 customPlaybooks: []
 
@@ -47,12 +56,7 @@ builtinPlaybooks:
   actions:
   - image_pull_backoff_reporter:
       rate_limit: 3600
-# playbooks for prometheus enrichment and silencing
-- triggers:
-  - on_prometheus_alert: {}
-  actions:
-  - name_silencer:
-      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
+# playbooks for prometheus alerts enrichment
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeNodeNotReady
