@@ -6,8 +6,13 @@ import re
 import humanize
 
 
+class DiskAnalyzerParams(ActionParams):
+    show_pod_level_details: bool = True
+    show_container_level_details: bool = False
+
+
 @action
-def node_disk_analyzer(event: NodeEvent):
+def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
     """
     Provides relevant disk information for troubleshooting disk issues.
     Currently, the following information is provided:
@@ -26,8 +31,8 @@ def node_disk_analyzer(event: NodeEvent):
 
     # map pod names and namespaces by pod uid, and container names by container id
     node_pods: PodList = Pod.listPodForAllNamespaces(
-            field_selector=f"spec.nodeName={node.metadata.name}"
-        ).obj
+        field_selector=f"spec.nodeName={node.metadata.name}"
+    ).obj
 
     pod_uid_to_name: Dict[str, str] = {}
     pod_uid_to_namespace: Dict[str, str] = {}
@@ -39,9 +44,16 @@ def node_disk_analyzer(event: NodeEvent):
 
         # If the "kubernetes.io/config.hash" annotation exists, it is used as the UID. Therefore, if it is present, we consider the config hash to be a pod uid too.
         # See https://github.com/weaveworks/scope/issues/2931 and https://github.com/weaveworks/scope/blob/v1.6.5/probe/kubernetes/pod.go#L47 for more information.
-        if pod.metadata.annotations is not None and "kubernetes.io/config.hash" in pod.metadata.annotations:
-            pod_uid_to_name[pod.metadata.annotations["kubernetes.io/config.hash"]] = pod.metadata.name
-            pod_uid_to_namespace[pod.metadata.annotations["kubernetes.io/config.hash"]] = pod.metadata.namespace
+        if (
+            pod.metadata.annotations is not None
+            and "kubernetes.io/config.hash" in pod.metadata.annotations
+        ):
+            pod_uid_to_name[
+                pod.metadata.annotations["kubernetes.io/config.hash"]
+            ] = pod.metadata.name
+            pod_uid_to_namespace[
+                pod.metadata.annotations["kubernetes.io/config.hash"]
+            ] = pod.metadata.namespace
 
         for container_status in pod.status.containerStatuses:
             container_id = re.match(".*//(.*)$", container_status.containerID).group(1)
@@ -54,10 +66,12 @@ def node_disk_analyzer(event: NodeEvent):
         env=[
             EnvVar(
                 name="CURRENT_POD_UID",
-                valueFrom=EnvVarSource(fieldRef=ObjectFieldSelector(fieldPath="metadata.uid"))
+                valueFrom=EnvVarSource(
+                    fieldRef=ObjectFieldSelector(fieldPath="metadata.uid")
+                ),
             )
         ],
-        mount_host_root=True
+        mount_host_root=True,
     )
     # The code for the disk-tools image can be found in https://github.com/robusta-dev/disk-tools
     # Please refer to this code in order to see the structure of the json that is returned
@@ -76,46 +90,73 @@ def node_disk_analyzer(event: NodeEvent):
 
     used = humanize.naturalsize(used_bytes, binary=True)
     total = humanize.naturalsize(total_bytes, binary=True)
-    used_percentage = round(used_bytes/total_bytes*100, 2)
-    total_pod_disk_space = humanize.naturalsize(total_pods_disk_space_in_bytes, binary=True)
-    other_disk_space = humanize.naturalsize(used_bytes - total_pods_disk_space_in_bytes, binary=True)
-    blocks.append(MarkdownBlock(f"Disk analysis for node {node.metadata.name} follows.\n"
-                                f"The used disk space is currently at {used} out of {total} ({used_percentage}%).\n"
-                                f"Of this space, {total_pod_disk_space} is used by pods "
-                                f"and the rest ({other_disk_space}) is consumed by the node."))
+    used_percentage = round(used_bytes / total_bytes * 100, 2)
+    total_pod_disk_space = humanize.naturalsize(
+        total_pods_disk_space_in_bytes, binary=True
+    )
+    other_disk_space = humanize.naturalsize(
+        used_bytes - total_pods_disk_space_in_bytes, binary=True
+    )
+    blocks.append(
+        MarkdownBlock(
+            f"Disk analysis for node {node.metadata.name} follows.\n"
+            f"The used disk space is currently at {used} out of {total} ({used_percentage}%).\n"
+            f"Of this space, {total_pod_disk_space} is used by pods "
+            f"and the rest ({other_disk_space}) is consumed by the node."
+        )
+    )
 
     # calculate pod-level disk distribution block
-    pod_distribution_headers = ["pod_namespace", "pod_name", "disk_space"]
-    pod_distribution_rows = [
-        [
-            find_in_dict_or_default(pod_uid_to_namespace, p["pod_uid"], ""),
-            find_in_dict_or_default(pod_uid_to_name, p["pod_uid"], p["pod_uid"]),
-            sum([c["disk_size"] for c in p["containers"]])
-        ] for p in pods_distribution
-    ]
-    pod_distribution_rows.sort(key=lambda row: row[2], reverse=True)
-    for row in pod_distribution_rows:
-        row[2] = humanize.naturalsize(row[2], binary=True)
-    blocks.append(TableBlock(headers=pod_distribution_headers, rows=pod_distribution_rows))
+    if params.show_pod_level_details:
+        pod_distribution_headers = ["pod_namespace", "pod_name", "disk_space"]
+        pod_distribution_rows = [
+            [
+                find_in_dict_or_default(pod_uid_to_namespace, p["pod_uid"], ""),
+                find_in_dict_or_default(pod_uid_to_name, p["pod_uid"], p["pod_uid"]),
+                sum([c["disk_size"] for c in p["containers"]]),
+            ]
+            for p in pods_distribution
+        ]
+        pod_distribution_rows.sort(key=lambda row: row[2], reverse=True)
+        for row in pod_distribution_rows:
+            row[2] = humanize.naturalsize(row[2], binary=True)
+        blocks.append(
+            TableBlock(headers=pod_distribution_headers, rows=pod_distribution_rows)
+        )
 
     # calculate container-level disk distribution block
-    container_distribution_headers = ["pod_namespace", "pod_name", "container_name", "disk_space"]
-    container_distribution_rows = []
-    for p in pods_distribution:
-        container_distribution_rows.extend(
-            [
+    if params.show_container_level_details:
+        container_distribution_headers = [
+            "pod_namespace",
+            "pod_name",
+            "container_name",
+            "disk_space",
+        ]
+        container_distribution_rows = []
+        for p in pods_distribution:
+            container_distribution_rows.extend(
                 [
-                    find_in_dict_or_default(pod_uid_to_namespace, p["pod_uid"], ""),
-                    find_in_dict_or_default(pod_uid_to_name, p["pod_uid"], p["pod_uid"]),
-                    find_in_dict_or_default(container_id_to_name, c["container_id"], c["container_id"]),
-                    c["disk_size"]
-                ] for c in p["containers"]
-            ]
+                    [
+                        find_in_dict_or_default(pod_uid_to_namespace, p["pod_uid"], ""),
+                        find_in_dict_or_default(
+                            pod_uid_to_name, p["pod_uid"], p["pod_uid"]
+                        ),
+                        find_in_dict_or_default(
+                            container_id_to_name, c["container_id"], c["container_id"]
+                        ),
+                        c["disk_size"],
+                    ]
+                    for c in p["containers"]
+                ]
+            )
+        container_distribution_rows.sort(key=lambda row: (row[0], row[1], -row[3]))
+        for row in container_distribution_rows:
+            row[3] = humanize.naturalsize(row[3], binary=True)
+        blocks.append(
+            TableBlock(
+                headers=container_distribution_headers, rows=container_distribution_rows
+            )
         )
-    container_distribution_rows.sort(key=lambda row: (row[0], row[1], -row[3]))
-    for row in container_distribution_rows:
-        row[3] = humanize.naturalsize(row[3], binary=True)
-    blocks.append(TableBlock(headers=container_distribution_headers, rows=container_distribution_rows))
 
     # calculate disk-tools warnings block
     if len(disk_info["pods_disk_info"]["warnings"]) > 0:
