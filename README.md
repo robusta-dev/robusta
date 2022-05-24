@@ -1,5 +1,5 @@
 # Robusta
-Robusta is a troubleshooting and automations platform for Kubernetes. It streamlines everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt useful automations and not just "build your own".
+Robusta is a troubleshooting and automations platform for Kubernetes.Robusta is an open source platform for multi-cluster Kubernetes troubleshooting and automation. It streamlines everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt useful automations and not just "build your own".
 
 ## Use cases
 
