@@ -43,7 +43,6 @@ priorityBuiltinPlaybooks:
 # custom user playbooks
 customPlaybooks: []
 
-
 # builtin playbooks
 builtinPlaybooks:
 # playbooks for non-prometheus based monitoring
