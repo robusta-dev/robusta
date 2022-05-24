@@ -35,15 +35,19 @@ active_playbooks:
   {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}
 {{- end }}
 
+{{- if .Values.priorityBuiltinPlaybooks }}
+{{ toYaml .Values.priorityBuiltinPlaybooks | indent 2 }}
+{{- end }}
+
+{{- if .Values.customPlaybooks }}
+{{ toYaml .Values.customPlaybooks | indent 2 }}
+{{- end }}
+
 {{- if .Values.builtinPlaybooks }}
 {{ toYaml .Values.builtinPlaybooks | indent 2 }}
 {{- end }}
 
 {{- if and .Values.enablePlatformPlaybooks .Values.platformPlaybooks }}
 {{ toYaml .Values.platformPlaybooks | indent 2 }}
-{{- end }}
-
-{{- if .Values.customPlaybooks }}
-{{ toYaml .Values.customPlaybooks | indent 2 }}
 {{- end }}
 {{ end }}
