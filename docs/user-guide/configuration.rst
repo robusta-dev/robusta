@@ -226,7 +226,7 @@ Each matcher can be a regular expression or a list of exact values:
 
 Supported attributes:
   - ``title``: e.g. ``Crashing pod crash-pod in namespace default``
-  - ``identifier``: e.g. ``restart_loop_reporter``
+  - ``identifier``: e.g. ``restart_loop_reporter`` [#f1]_
   - ``severity``: one of ``INFO``, ``LOW``, ``MEDIUM``, ``HIGH``
   - ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
   - ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
@@ -401,3 +401,7 @@ Additionally we also support affinities in our pods, you can select a node in a 
                 - linux
 
 For a list of all the current labels and values you have on your nodes run ``kubectl get nodes --show-labels``
+
+.. rubric:: Footnotes
+
+.. [#f1] This is equivalent to ``Finding.aggregation_key`` which is set by each playbook that generates results. For now you'll have to check a playbook's source code to see what the value should be. We should probably expose it in the UI in the future.
