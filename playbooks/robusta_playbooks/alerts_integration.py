@@ -216,7 +216,7 @@ class LogEnricherParams(ActionParams):
     """
     :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
     :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
-    :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or Redacted (See RegexReplacementStyle)
+    :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
     """
     warn_on_missing_label: bool = False
     regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
