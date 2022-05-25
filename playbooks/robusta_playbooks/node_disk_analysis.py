@@ -7,18 +7,20 @@ import humanize
 
 
 class DiskAnalyzerParams(ActionParams):
-    show_pod_level_details: bool = True
-    show_container_level_details: bool = False
+    show_pods: bool = True
+    show_containers: bool = False
 
 
 @action
 def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
     """
     Provides relevant disk information for troubleshooting disk issues.
-    Currently, the following information is provided:
-        1. The total disk space used by pods, and the total disk space used by the node for other purposes
-        2. Disk usage of pods, sorted from highest to lowest
-        3. Disk usage of containers, sorted (separately for every pod) from highest to lowest
+    Currently, the following information is provided by default:
+        * The total disk space used by pods, and the total disk space used by the node for other purposes
+        * Disk usage of pods, sorted from highest to lowest
+
+    You can change the parameters to show additional data:
+        * Disk usage of containers, sorted (separately for every pod) from highest to lowest
     """
     node = event.get_node()
     if not node:
@@ -107,7 +109,7 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
     )
 
     # calculate pod-level disk distribution block
-    if params.show_pod_level_details:
+    if params.show_pods:
         pod_distribution_headers = ["pod_namespace", "pod_name", "disk_space"]
         pod_distribution_rows = [
             [
@@ -125,7 +127,7 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
         )
 
     # calculate container-level disk distribution block
-    if params.show_container_level_details:
+    if params.show_containers:
         container_distribution_headers = [
             "pod_namespace",
             "pod_name",
