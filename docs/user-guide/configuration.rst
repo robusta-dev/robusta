@@ -221,8 +221,9 @@ Each matcher can be a regular expression or a list of exact values:
         slack_channel: pod-notifications
         api_key: secret-key
         match:
-          # match only notifications for pods
-          kind: pod
+          # match all notifications EXCEPT for those related to pods and deployments
+          # this uses negative-lookahead regexes as well as a regex OR
+          kind: ^(?!(pod)|(deployment))
 
 Supported attributes:
   - ``title``: e.g. ``Crashing pod crash-pod in namespace default``
