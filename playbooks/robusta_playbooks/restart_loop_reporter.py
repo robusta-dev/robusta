@@ -69,10 +69,10 @@ def _send_crash_report(
 class ReportCrashLoopParams(ActionParams):
     """
     :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
-    :var regex_replacement_style: one of SameLengthAsterisks or Redacted (See RegexReplacementStyle)
+    :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
     """
     regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
-    regex_replacement_style: str = "SameLengthAsterisks"
+    regex_replacement_style: str = "SAME_LENGTH_ASTERISKS"
 
 
 @action
