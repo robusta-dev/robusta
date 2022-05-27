@@ -191,9 +191,11 @@ Here is a full example showing how to configure all possible sinks:
 Sink matchers
 ^^^^^^^^^^^^^
 
-Sinks can be configured to report findings only when they match **all** the specified matchers.
+Sinks can be configured to only report certain findings. If a finding matches more than one sink, it
+will be sent to each one.
 
-Each matcher can be a regular expression or a list of exact values:
+Each matcher can be a regular expression or a list of exact values.
+If there is more than one rule, **all** the rules must match for a finding to be sent.
 
 .. code-block:: yaml
 
