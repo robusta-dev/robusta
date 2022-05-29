@@ -191,9 +191,11 @@ Here is a full example showing how to configure all possible sinks:
 Sink matchers
 ^^^^^^^^^^^^^
 
-Sinks can be configured to report findings only when they match **all** the specified matchers.
+Sinks can be configured to only report certain findings. If a finding matches more than one sink, it
+will be sent to each one.
 
-Each matcher can be a regular expression or a list of exact values:
+Each matcher can be a regular expression or a list of exact values.
+If there is more than one rule, **all** the rules must match for a finding to be sent.
 
 .. code-block:: yaml
 
@@ -221,12 +223,13 @@ Each matcher can be a regular expression or a list of exact values:
         slack_channel: pod-notifications
         api_key: secret-key
         match:
-          # match only notifications for pods
-          kind: pod
+          # match all notifications EXCEPT for those related to pods and deployments
+          # this uses negative-lookahead regexes as well as a regex OR
+          kind: ^(?!(pod)|(deployment))
 
 Supported attributes:
   - ``title``: e.g. ``Crashing pod crash-pod in namespace default``
-  - ``identifier``: e.g. ``restart_loop_reporter``
+  - ``identifier``: e.g. ``restart_loop_reporter`` [#f1]_
   - ``severity``: one of ``INFO``, ``LOW``, ``MEDIUM``, ``HIGH``
   - ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
   - ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
@@ -353,3 +356,55 @@ The alerts are based on excellent work already done by the kube-prometheus-stack
 alerts from the kubernetes-mixin project.
 
 Our alerting will likely diverge more over time as we take advantage of more Robusta features.
+
+Deploying Robusta on specific nodes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Additional configurations can be added to specify which nodes you would like for Robusta to run on by using ``nodeSelectors`` or ``affinity``.
+The ``nodeSelector`` or ``affinity`` chosen should be configured for both runner and forwarder (kubewatch).
+
+The following configuration is an example that will cause Robusta's pods to only be scheduled on nodes running linux.
+Our ``nodeSelector`` checks if node has a label ``kubernetes.io/os`` that has the value ``linux``.
+
+.. code-block:: yaml
+
+    runner:
+      nodeSelector:
+        kubernetes.io/os: linux
+
+    kubewatch:
+      nodeSelector:
+        kubernetes.io/os: linux
+
+Additionally we also support affinities in our pods, you can select a node in a similar way using nodeAffinities.
+
+.. code-block:: yaml
+
+
+    runner:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+
+    kubewatch:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+
+For a list of all the current labels and values you have on your nodes run ``kubectl get nodes --show-labels``
+
+.. rubric:: Footnotes
+
+.. [#f1] This is equivalent to ``Finding.aggregation_key`` which is set by each playbook that generates results. For now you'll have to check a playbook's source code to see what the value should be. We should probably expose it in the UI in the future.

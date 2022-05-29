@@ -89,22 +89,12 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 
    kubectl delete deployment crashpod
 
-Forwarding Prometheus Alerts to Robusta
-----------------------------------------
-
-Robusta can suggest fixes for your existing Prometheus alerts and tell you why they happen.
-
-First, you must configure an :ref:`AlertManager webhook. <Sending Alerts to Robusta>`
-
-If you installed Robusta's bundled Prometheus Stack then you can skip this step.
-
 Next Steps
 ---------------------------------
 
-1. Define your :ref:`first automation <Automation Basics>`
-2. Add your first :ref:`Prometheus enrichment <Alert Enrichment>`
-3. Complete the :ref:`manual troubleshooting tutorial <Python Profiling>`
-4. Explore the Robusta UI (use the URL you received during installation)
+1. Explore the `Robusta UI <https://platform.robusta.dev/>`_
+2. Define your :ref:`first automation <Automation Basics>`
+3. Add your first :ref:`Prometheus enrichment <Alert Enrichment>`
 
 .. rubric:: Footnotes
 

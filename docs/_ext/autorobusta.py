@@ -282,7 +282,7 @@ class RobustaActionDirective(SphinxDirective):
             {to_name(action_definition.action_name)}
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-            .. admonition:: Playbook Action
+            .. admonition:: Playbook Action: {action_definition.action_name}
             
                 .. tab-set::
             
