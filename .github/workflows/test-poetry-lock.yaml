@@ -16,7 +16,5 @@ jobs:
         - name: Test lock file
           run: |
             curl -sSL https://install.python-poetry.org | python3 - --version 1.2.0b1 
-            source $HOME/.poetry/env
-            poetry config virtualenvs.create false
             poetry lock --check
 
