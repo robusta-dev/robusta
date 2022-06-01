@@ -15,7 +15,7 @@ please contact support@robusta.dev or go to `our slack channel <https://robustac
 
         which python3
     
-    this <new-path> should be added to the user path directores.
+    This <new-path> should be added to the user path directores.
 
     2. Find your shell config file ( ~/.profile or ~/.bash_profile or ~/.zshrc etc...) and append the following line:
 
@@ -38,5 +38,5 @@ please contact support@robusta.dev or go to `our slack channel <https://robustac
     Try running the script located at:
     /Applications/Python 3.9/Install Certificates.command
 
-    for more info see:
+    For more info see:
     https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate

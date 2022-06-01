@@ -43,7 +43,7 @@ GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
 
 # catch unhandled exceptions.
 def my_except_hook(exctype, value, traceback):
-    typer.echo("Please use —debug flag for more info")
+    typer.echo("Please use —-debug flag for more info")
     return False
 
 sys.excepthook = my_except_hook
