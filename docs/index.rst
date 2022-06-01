@@ -182,6 +182,7 @@ Next Steps
    :hidden:
 
    upgrade
+   common-errors
    user-guide/configuration
    user-guide/flow-control
    catalog/triggers/index
