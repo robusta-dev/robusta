@@ -23,7 +23,7 @@ from typing import List, Dict
 from ....integrations.kubernetes.custom_models import extract_image_list
 from ....runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
-from ...model.env_vars import DISCOVERY_PERIOD_SEC, PERIODIC_LONG_SEC
+from ...model.env_vars import DISCOVERY_PERIOD_SEC, CLUSTER_STATUS_PERIOD_SEC
 from ...model.nodes import NodeInfo
 from ...model.pods import PodResources, pod_requests
 from ...model.services import ServiceInfo
@@ -59,6 +59,7 @@ class RobustaSink(SinkBase):
             self.signing_key,
         )
 
+        self.first_prometheus_alert_time = 0
         self.last_send_time = 0
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
@@ -296,7 +297,7 @@ class RobustaSink(SinkBase):
 
             self.dal.publish_cluster_status(cluster_status)
         except Exception as e:
-            logging.error(
+            logging.exception(
                 f"Failed to run periodic update cluster status for {self.sink_name}",
                 exc_info=True,
             )
@@ -324,7 +325,11 @@ class RobustaSink(SinkBase):
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
 
     def __periodic_cluster_status(self):
-        if self.registry.get_telemetry().last_alert_at:
-            if time.time() - self.last_send_time > PERIODIC_LONG_SEC:
-                self.last_send_time = time.time()
-                self.__update_cluster_status()
+        first_alert = False
+        if self.registry.get_telemetry().last_alert_at and self.first_prometheus_alert_time == 0:
+            first_alert = True
+            self.first_prometheus_alert_time = time.time()
+
+        if time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC or first_alert:
+            self.last_send_time = time.time()
+            self.__update_cluster_status()
