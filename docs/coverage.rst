@@ -12,6 +12,7 @@ Prometheus Alerts
 * HostHighCpuLoad - show CPU usage analysis
 * KubernetesDaemonsetMisscheduled - flag known false positives and suggest fixes
 * KubernetesDeploymentReplicasMismatch - show the deployment's status
+* NodeFilesystemSpaceFillingUp - show disk usage
 
 .. warning::
 

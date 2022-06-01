@@ -21,5 +21,6 @@ To use this feature on multiple clusters, make sure you install Robusta with the
     - :code:`globalConfig.account_id`
     - :code:`globalConfig.signing_key`
     - :code:`rsa`
+
 | These values are inside the :code:`values.yaml` file you use when you run :code:`helm install robusta...`
 | See `Installation Guide <https://docs.robusta.dev/master/installation.html>`_ for more details.
