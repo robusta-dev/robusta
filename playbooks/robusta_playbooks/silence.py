@@ -22,7 +22,7 @@ class Silence(BaseModel):
 
     def list(self) -> List[str]:
         return [str(self.id), self.status.state, self.comment, self.createdBy,
-                self.startsAt.isoformat(timespec='seconds'), self.endsAt.isoformat(timespec='seconds'), '\n'.join(str(matcher) for matcher in self.matchers) ]
+                self.startsAt.isoformat(timespec='seconds'), self.endsAt.isoformat(timespec='seconds'), " ".join(str(matcher) for matcher in self.matchers) ]
         
 
 class get_silenece_params(ActionParams):
