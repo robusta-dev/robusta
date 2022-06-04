@@ -32,7 +32,6 @@
     <li><a href="#examples">Examples</a></li>
     <li><a href="#installing-robusta">Installing</a></li>
     <li><a href="#documentation">Documentation</a></li>
-    <li><a href="#contributing">Contributing</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#stay-up-to-date">Stay up to date</a></li>
@@ -117,13 +116,6 @@ Interested? Learn more about Robusta
 [Full documentation »](https://docs.robusta.dev/master/index.html)
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-## Contributing
-Any contribution is most welcome, fork the project, make changes and create a PR. We can't wait to review and merge your PR's!
-
-* [Coding Conventions](https://docs.robusta.dev/master/developer-guide/platform/coding-conventions.html#formatting-and-coding-conventions)
-* [Core platform contributions](https://docs.robusta.dev/master/developer-guide/platform/dev-setup.html)
-* [Documentation contributions](https://docs.robusta.dev/master/developer-guide/platform/docs-contributions.html)
-* [Issue/Feature](https://github.com/robusta-dev/robusta/issues)
 
 ## Contact
 
