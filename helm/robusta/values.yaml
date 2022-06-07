@@ -56,7 +56,14 @@ builtinPlaybooks:
   actions:
   - image_pull_backoff_reporter:
       rate_limit: 3600
+
 # playbooks for prometheus alerts enrichment
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubePodCrashLooping
+  actions:
+  - logs_enricher: {}
+
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeNodeNotReady
