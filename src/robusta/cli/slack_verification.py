@@ -46,16 +46,16 @@ def verify_slack_channel(
         return False
     except URLError as e:
         typer.secho(
-            f"SSL certificate issue. See https://docs.robusta.dev/master/common-errors.html",
+            f"SSL certificate issue. See https://docs.robusta.dev/master/common-errors.html\n"
             f"Use --debug for more info.",
             fg=typer.colors.RED,
         )
-        return False
+        exit(1)
     except Exception as e:
         if debug:
             typer.secho(traceback.format_exc())
     typer.secho(
-        f"There was an unknown exception setting up Slack, use --debug for more info.",
+        f"There was an unknown exception setting up Slack, use --debug for more info.\n"
         f"Please contact support@robusta.dev",
         fg=typer.colors.RED,
     )
