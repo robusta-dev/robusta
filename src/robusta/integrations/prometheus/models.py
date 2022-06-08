@@ -142,6 +142,8 @@ class PrometheusKubernetesAlert(
         alert_subject = self.__get_alert_subject()
         status_message = '[RESOLVED] ' if self.alert.status.lower() == 'resolved' else ''
         title = f'{status_message}{self.get_title()}'
+        # AlertManager sends 0001-01-01T00:00:00Z when there's no end date
+        ends_at = self.alert.endsAt if self.alert.endsAt.timestamp() > 0 else None
         return Finding(
             title=title,
             description=self.get_description(),
@@ -151,4 +153,7 @@ class PrometheusKubernetesAlert(
                 self.alert.labels.get("severity"), FindingSeverity.INFO
             ),
             subject=alert_subject,
+            fingerprint=self.alert.fingerprint,
+            starts_at=self.alert.startsAt,
+            ends_at=ends_at
         )

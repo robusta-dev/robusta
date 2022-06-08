@@ -12,7 +12,7 @@ from ..integrations.kubernetes.base_triggers import (
 )
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..integrations.prometheus.models import AlertManagerEvent
-from ..core.model.env_vars import NUM_EVENT_THREADS
+from ..core.model.env_vars import NUM_EVENT_THREADS, TRACE_INCOMING_REQUESTS
 from ..utils.task_queue import TaskQueue, QueueMetrics
 
 app = Flask(__name__)
@@ -47,7 +47,9 @@ class Web:
     @staticmethod
     @app.route("/api/alerts", methods=["POST"])
     def handle_alert_event():
-        alert_manager_event = AlertManagerEvent(**request.get_json())
+        req_json = request.get_json()
+        Web._trace_incoming("alerts", req_json)
+        alert_manager_event = AlertManagerEvent(**req_json)
         for alert in alert_manager_event.alerts:
             Web.alerts_queue.add_task(
                 Web.event_handler.handle_trigger, PrometheusTriggerEvent(alert=alert)
@@ -59,7 +61,9 @@ class Web:
     @staticmethod
     @app.route("/api/handle", methods=["POST"])
     def handle_api_server_event():
-        k8s_payload = IncomingK8sEventPayload(**request.get_json()["data"])
+        data = request.get_json()["data"]
+        Web._trace_incoming("api server", data)
+        k8s_payload = IncomingK8sEventPayload(**data)
         Web.api_server_queue.add_task(
             Web.event_handler.handle_trigger, K8sTriggerEvent(k8s_payload=k8s_payload)
         )
@@ -69,6 +73,7 @@ class Web:
     @app.route("/api/trigger", methods=["POST"])
     def handle_manual_trigger():
         data = request.get_json()
+        Web._trace_incoming("trigger", data)
         if not data.get("action_name", None):
             msg = f"Illegal trigger request {data}"
             logging.error(msg)
@@ -87,3 +92,14 @@ class Web:
     def handle_playbooks_reload():
         Web.loader.reload("reload request")
         return jsonify(success=True)
+
+    @staticmethod
+    def _trace_incoming(api: str, incoming_request):
+        """
+            Used for Robusta development purposes
+            Sometimes, it's useful to view incoming requests payload, whether it's AlertManager alerts,
+            API server events or any other data source
+        """
+        if TRACE_INCOMING_REQUESTS:
+            logging.info(f"{api}: {incoming_request}")
+
