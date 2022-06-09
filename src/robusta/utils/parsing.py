@@ -16,7 +16,7 @@ def load_json(s: Union[str, bytes]) -> Any:
         raise
 
 
-def to_datetime_str(datetime_obj: datetime.datetime) -> str:
+def datetime_to_db_str(datetime_obj: datetime.datetime) -> str:
     """
     Return datetime string (DB parsable)
     """

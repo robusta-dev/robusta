@@ -96,7 +96,7 @@ class Finding(Filterable):
         failure: bool = True,
         creation_date: str = None,
         fingerprint: str = None,
-        starts_at: datetime = datetime.now(),
+        starts_at: datetime = None,
         ends_at: datetime = None,
     ) -> None:
         self.id: uuid = uuid.uuid4()
@@ -119,7 +119,7 @@ class Finding(Filterable):
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
         self.creation_date = creation_date
         self.fingerprint = fingerprint
-        self.starts_at = starts_at
+        self.starts_at = starts_at if starts_at else datetime.now()
         self.ends_at = ends_at
 
 
