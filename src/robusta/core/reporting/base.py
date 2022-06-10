@@ -1,6 +1,7 @@
 import logging
 import uuid
 import re
+from datetime import datetime
 from enum import Enum
 from pydantic.main import BaseModel
 from typing import List, Dict, Union
@@ -94,6 +95,9 @@ class Finding(Filterable):
         finding_type: FindingType = FindingType.ISSUE,
         failure: bool = True,
         creation_date: str = None,
+        fingerprint: str = None,
+        starts_at: datetime = None,
+        ends_at: datetime = None,
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
@@ -114,6 +118,10 @@ class Finding(Filterable):
         )
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
         self.creation_date = creation_date
+        self.fingerprint = fingerprint
+        self.starts_at = starts_at if starts_at else datetime.now()
+        self.ends_at = ends_at
+
 
     @property
     def attribute_map(self) -> Dict[str, str]:
