@@ -73,6 +73,8 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDaemonsetMisscheduled
+  - on_prometheus_alert:
+      alert_name: KubeDaemonsetMisscheduled
   actions:
   - daemonset_status_enricher: {}
   - daemonset_misscheduled_analysis_enricher: {}
@@ -111,6 +113,8 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDeploymentReplicasMismatch
+  - on_prometheus_alert:
+      alert_name: KubeDeploymentReplicasMismatch
   actions:
   - deployment_status_enricher: {}
 - triggers:
