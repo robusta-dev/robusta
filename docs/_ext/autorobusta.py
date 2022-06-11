@@ -215,9 +215,11 @@ class RobustaActionDirective(SphinxDirective):
          :reference-label: Change the Sphinx reference (anchor) that is generated here - see https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#role-ref
                            This is useful when a playbook action is documented in multiple locations and you want to avoid duplicate labels
 
+         :manual-trigger-only: For actions that are expected to be used as manual triggers only. Hides the example YAML config.
+
     """
 
-    option_spec = {"reference-label": str}
+    option_spec = {"reference-label": str, "manual-trigger-only": directives.flag}
     has_content = True
     required_arguments = 1
     optional_arguments = 1
@@ -264,6 +266,7 @@ class RobustaActionDirective(SphinxDirective):
         reference_label = self.options.get(
             "reference-label", action_definition.action_name
         )
+        manual_trigger_only = "manual-trigger-only" in self.options
 
         indented_cli_trigger_example = ""
         if cli_trigger:
@@ -274,6 +277,21 @@ class RobustaActionDirective(SphinxDirective):
                         .. code-block:: bash \n\n{" " * 32 + cli_trigger}
 
             """
+
+        if manual_trigger_only:
+            example_config = f"""\
+                        
+                        This action is typically used via manual triggers and **not** predefined YAML triggers. An example config is not shown because it is not relevant for this action.
+                        """
+        else:
+            example_config = f"""\
+
+                        Add this to your :ref:`Robusta configuration (Helm values.yaml) <Defining playbooks>`:
+
+                        .. code-block:: yaml \n\n{indented_example}
+
+                        The above is an example. Try customizing the trigger and parameters.
+                        """
 
         content = textwrap.dedent(
             f"""\
@@ -287,15 +305,9 @@ class RobustaActionDirective(SphinxDirective):
                 .. tab-set::
             
                     .. tab-item:: Description\n\n{indented_description}\n\n
-            
-                    .. tab-item:: Example Config
                     
-                        Add this to your :ref:`Robusta configuration (Helm values.yaml) <Defining playbooks>`:
-            
-                        .. code-block:: yaml \n\n{indented_example}
-                        
-                        The above is an example. Try customizing the trigger and parameters.
-                        
+                    .. tab-item:: Example Config\n\n{example_config}
+
                     .. tab-item:: Parameters
                         
                         {".. pydantic-model:: " + params_cls_path if params_cls_path else "**No action parameters**"}
