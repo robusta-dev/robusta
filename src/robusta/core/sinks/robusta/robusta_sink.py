@@ -160,7 +160,14 @@ class RobustaSink(SinkBase):
                 [
                     rs
                     for rs in ReplicaSetList.listReplicaSetForAllNamespaces().obj.items
-                    if rs.metadata.ownerReferences is None
+                    if not rs.metadata.ownerReferences
+                ]
+            )
+            current_services.extend(
+                [
+                    pod
+                    for pod in Pod.listPodForAllNamespaces().obj.items
+                    if not pod.metadata.ownerReferences
                 ]
             )
             self.__publish_new_services(current_services)
@@ -326,7 +333,10 @@ class RobustaSink(SinkBase):
 
     def __periodic_cluster_status(self):
         first_alert = False
-        if self.registry.get_telemetry().last_alert_at and self.first_prometheus_alert_time == 0:
+        if (
+            self.registry.get_telemetry().last_alert_at
+            and self.first_prometheus_alert_time == 0
+        ):
             first_alert = True
             self.first_prometheus_alert_time = time.time()
 
