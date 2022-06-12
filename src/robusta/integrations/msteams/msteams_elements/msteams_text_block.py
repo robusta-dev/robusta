@@ -3,34 +3,46 @@ from ..msteams_mark_down_fix_url import MsTeamsMarkDownFixUrl
 
 
 class MsTeamsTextBlock(MsTeamsBase):
-    def __init__(self,
-                 text : str,
-                 is_subtle : bool = None,
-                 wrap: bool = None,
-                 weight: str = None,
-                 is_visible : bool = True,
-                 separator : bool = False,
-                 font_size : str = 'medium',
-                 horizontal_alignment : str = "left"
-                 ):
-        super().__init__(self.__text_block(text, is_subtle, wrap, weight, is_visible,
-                                           separator, font_size, horizontal_alignment))
+    def __init__(
+        self,
+        text: str,
+        is_subtle: bool = None,
+        wrap: bool = None,
+        weight: str = None,
+        is_visible: bool = True,
+        separator: bool = False,
+        font_size: str = "medium",
+        horizontal_alignment: str = "left",
+    ):
+        super().__init__(
+            self.__text_block(
+                text,
+                is_subtle,
+                wrap,
+                weight,
+                is_visible,
+                separator,
+                font_size,
+                horizontal_alignment,
+            )
+        )
 
     def __to_msteams_text(self, text: str) -> str:
-        teams_text = MsTeamsMarkDownFixUrl().fix_text(text)
+        teams_text = MsTeamsMarkDownFixUrl().fix_text(str(text))
         teams_text = teams_text.replace("```", "")
         return teams_text
 
-    def __text_block(self,
-                     text: str,
-                     is_subtle: bool = None,
-                     wrap: bool = None,
-                     weight: str = None,
-                     is_visible: bool = True,
-                     separator: bool = False,
-                     font_size: str = 'medium',
-                     horizontal_alignment: str = "left"
-                     ):
+    def __text_block(
+        self,
+        text: str,
+        is_subtle: bool = None,
+        wrap: bool = None,
+        weight: str = None,
+        is_visible: bool = True,
+        separator: bool = False,
+        font_size: str = "medium",
+        horizontal_alignment: str = "left",
+    ):
         self.block = {
             "type": "TextBlock",
             "text": self.__to_msteams_text(text),
@@ -60,5 +72,3 @@ class MsTeamsTextBlock(MsTeamsBase):
 
     def set_text_from_block(self, text: str):
         self.block["text"] = text
-
-
