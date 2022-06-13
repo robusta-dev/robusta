@@ -14,6 +14,9 @@ spec:
       labels:
         app: {{ .Release.Name }}-runner
         robustaComponent: "runner"
+      {{- if .Values.runner.annotations }}
+      annotations: {{ toYaml .Values.runner.annotations | nindent 8 }}
+      {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-runner-service-account
       containers:
@@ -105,6 +108,15 @@ spec:
           persistentVolumeClaim:
             claimName: persistent-playbooks-pv-claim
         {{- end }}
+      {{- if .Values.runner.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.runner.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.runner.affinity }}
+      affinity: {{ toYaml .Values.runner.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.runner.tolerations }}
+      tolerations:  {{ toYaml .Values.runner.tolerations | nindent 8 }}
+      {{- end }}
 {{- if .Values.playbooksPersistentVolume }}
 ---
 apiVersion: v1

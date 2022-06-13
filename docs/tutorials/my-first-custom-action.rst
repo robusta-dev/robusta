@@ -1,25 +1,21 @@
-Customizing Robusta
+Custom Automations
 ######################################################
 
-Learn how to automate Kubernetes error handling with Robusta., in *15 minutes* or less :)
+In previous tutorials, we configured automations. We used builtin actions and configured them in YAML.
 
-Goals
----------------------------------------
-We’re going to create a custom playbook using a short and made-up (but realistic) scenario.
+In this tutorial, we will write a custom action in Python code.
 
-First, we’ll describe the the scenario, and then we’ll implement a Robusta automation (playbook) that detects this issue immediately and recommends a fix!
-
-You’re more than welcome to follow along the scenario on your own machine 💻
+For educational purposes, we'll automate the investigation of a short and made-up (but realistic) error scenario.
 
 .. note::
 
-    It is recommended to read :ref:`Track Kubernetes Changes` before starting this guide.
+    It is recommended to read :ref:`Automation Basics` before starting this guide.
 
 The scenario
 ---------------------------------------
-You want to create a new pod with the image “ngnix”!
+You want to create a new pod with the ``ngnix`` image.
 
-Being the smart person that you are, you decide save some time by copying and pasting an existing YAML file you have in your computer, and changing the pod name and image to ngnix.
+Being the smart person that you are, you decide to save time by copy-pasting an existing YAML file. You change the pod name and image to ngnix.
 
 .. code-block:: yaml
 
@@ -37,14 +33,14 @@ Being the smart person that you are, you decide save some time by copying and pa
       nodeSelector:
         spoiler: alert
 
-Now you start the pod by running the following command:
+You start the pod by running the following command:
 
 .. code-block:: bash
 
     $ kubectl apply -f nginx-pod.yaml
     pod/nginx created
 
-For some reason the pod doesn't start (note it’s “Pending” Status):
+For some reason the pod doesn't start (note it’s "Pending" Status):
 
 .. code-block:: bash
 
@@ -54,9 +50,9 @@ For some reason the pod doesn't start (note it’s “Pending” Status):
 
     nginx                                                    0/1     Pending   0          5h19m
 
-You wait a few minutes, but is remains the same.
+You wait a few minutes, but it remains the same.
 
-Then you say, ok, let’s look at the event log:
+To investigate you look at the event log:
 
 .. code-block:: bash
 
@@ -64,16 +60,14 @@ Then you say, ok, let’s look at the event log:
     LAST SEEN   TYPE      REASON             OBJECT      MESSAGE
     64s         Warning   FailedScheduling   pod/nginx   0/1 nodes are available: 1 node(s) didn't match Pod's node affinity/selector.
 
-Aha! “1 node(s) didn't match Pod's node affinity/selector.”! ALRIGHT!!!
+Aha! "1 node(s) didn't match Pod's node affinity/selector." ALRIGHT!
 
 .. note::
     You can see this event on an informative timeline in `Robusta UI <http://home.robusta.dev/ui?from=docs>`_. Check it out!
 
 Wait, what does it mean? 😖 (Hint: Check the YAML config for the spoiler)
 
-
-
-After searching online for some time, you find out that the YAML file you copied had a “nodeSelector” with the key-value “spoiler: alert”, which means that it can only be scheduled on nodes (machines) that have this configuration 🤦‍♂️.
+After searching online for some time, you find out that the YAML file you copied had a “nodeSelector” with the key-value "spoiler: alert", which means that it can only be scheduled on nodes (machines) that have this configuration 🤦‍♂️.
 
 From the docs:
 
@@ -98,9 +92,11 @@ So you comment out those lines, run kubectl apply again, and all is well.
     #  nodeSelector:
     #    spoiler: alert
 
+Wouldn't it be nice if we could automate the detection of issues like this?
 
 Automating the detection with a Robusta Playbook
 --------------------------------------------------
+
 What we need to do?
 ---------------------
 
@@ -131,11 +127,11 @@ We'll use ``on_event_create`` in this tutorial because it will be easier to iden
 Writing the action
 --------------------
 
-Now we need to write code that checks this event and reports it. To find the correct event class that matches our trigger ``on_event_create``. please take a look at :ref:`Event Hierarchy`.
+Now we need to write code that checks this event and reports it. To find the correct event class that matches our trigger ``on_event_create``. please take a look at :ref:`Events and Triggers`.
 
 Okay! We find out it’s ``EventEvent``!
 
-So we need to get the information, check for the scenario, and then report it (for more information about reporting it see :ref:`Findings API`)
+So we need to get the information, check for the scenario, and then report it (for more information about reporting it see :ref:`Creating Findings`)
 
 Let’s name our action ``report_scheduling_failure``, and write everything in a python file:
 
@@ -178,7 +174,7 @@ Let’s push the new action to Robusta, and then test it by triggering the actio
     robusta playbooks push <PATH_TO_LOCAL_PLAYBOOK_FOLDER>
     robusta playbooks trigger report_scheduling_failure name=robusta-runner-8cd69f7cb-g5bkb namespace=default seconds=5
 
-Check our slack channel, and:
+Check our slack channel:
 
 .. image:: /images/example_report_scheduling_failure.png
 
@@ -189,26 +185,16 @@ We need to add a custom playbook that this action it in the generated_values.yam
 
 .. code-block:: yaml
 
-    globalConfig:
-      signing_key: XXXX
-      account_id: XXXX
-    sinksConfig:
-    - slack_sink:
-        name: main_slack_sink
-        slack_channel: '#my-slack-channel'
-        api_key: XXXXX
-    - robusta_sink:
-        name: robusta_ui_sink
-        token: XXXXXX  # generated with `robusta gen-config`
-    clusterName: my-cluster
-    enablePrometheusStack: true
-    # Custom Playbooks from here
+    # SNIP! existing contents of the file removed for clarity...
+
+    # This is your custom playbook
     customPlaybooks:
     - triggers:
       - on_event_create: {}
       actions:
       - report_scheduling_failure: {}
-    # Enable loading playbooks to a persistent volume
+
+    # This enables loading custom playbooks
     playbooksPersistentVolume: true
 
 .. note::
@@ -235,7 +221,7 @@ Great!
 
 Run the scenario from the first section again (creating a bad bad configuration), and you should see this in your slack:
 
-Check our slack channel, and:
+Check our slack channel:
 
 .. image:: /images/example_report_scheduling_failure.png
 

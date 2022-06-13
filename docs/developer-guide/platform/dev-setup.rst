@@ -17,11 +17,15 @@ Installing Robusta in-cluster from source
 
 Common errors
 ---------------
-If you encounter an error like: ``"https://prometheus-community.github.io/helm-chart" is not a valid chart repository or cannot be reached`` then run:
+* If you encounter an error like: ``"https://prometheus-community.github.io/helm-chart" is not a valid chart repository or cannot be reached`` then run:
 
 .. code-block:: bash
 
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+* If you're on Mac OS and receive errors about Pillow or libjpeg when running ``poetry install`` then run ``brew install libjpeg`` first.
+
+* If you encounter ``NotADirectoryError: [Errno 20] Not a directory`` while trying to debug, you may need to disable the ``Attach to subprocess`` option on your debugger.
 
 For faster builds that are running on Google Cloud
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -40,12 +44,6 @@ This is never necessary, but you might find it more convenient to run Robusta lo
 2. ``poetry install``
 3. ``poetry run python3 -m robusta.runner.main``
 4. Consider using `telepresence <https://www.telepresence.io/>`_ to connect your local Robusta process with in-cluster services like Prometheus.
-
-Common errors
-----------------
-
-* If you're on Mac OS and receive errors about Pillow or libjpeg when running ``poetry install`` then run ``brew install libjpeg`` first.
-* If you encounter ``NotADirectoryError: [Errno 20] Not a directory`` while trying to debug, you may need to disable the ``Attach to subprocess`` option on your debugger.
 
 Running Robusta cli locally
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

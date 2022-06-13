@@ -1,19 +1,16 @@
-Improve Prometheus Alerts
+Alert enrichment
 ##############################
 
-In this tutorial we will try out Robusta's features for handling Prometheus alerts in Kubernetes clusters.
+In this tutorial we will continue learning about Robusta automations. This time we will configure automations that enrich and remediate Prometheus alerts.
 
-Setup
+Robusta comes with many Prometheus enrichments that work out of the box. In this tutorial you will add an additional custom enrichment.
+
+Pre-requisites
 ---------------------------------
 
-Before you can enrich prometheus alerts, you must forward Prometheus alerts to Robusta by adding a webhook receiver to AlertsManager.
+Before you can enrich prometheus alerts, you must forward Prometheus alerts to Robusta.
 
-See :ref:`Sending Alerts to Robusta` for details.
-
-General tips
----------------
-When trying out these features, you can leave your existing alerting Slack channel in place and add a new channel for
-Robusta's improved Prometheus alerts. This will let you compare Robusta's alerting with Prometheus' builtin alerting.
+The best way to do so, is to answer "YES" in the Robusta installation to using the bundled Prometheus. If you did **not** do so, see :ref:`Sending Alerts to Robusta` for alernatives.
 
 Enriching alerts
 -----------------

@@ -11,7 +11,7 @@ PLAYBOOKS_CONFIG_FILE_PATH = os.environ.get("PLAYBOOKS_CONFIG_FILE_PATH")
 
 INSTALLATION_NAMESPACE = os.environ.get("INSTALLATION_NAMESPACE", "robusta")
 DISCOVERY_PERIOD_SEC = int(os.environ.get("DISCOVERY_PERIOD_SEC", 90))
-PERIODIC_LONG_SEC = int(os.environ.get("PERIODIC_LONG_SEC", 60 * 60 * 3))
+CLUSTER_STATUS_PERIOD_SEC = int(os.environ.get("CLUSTER_STATUS_PERIOD_SEC", 60 * 15)) # 15 min
 SUPABASE_LOGIN_RATE_LIMIT_SEC = int(
     os.environ.get("SUPABASE_LOGIN_RATE_LIMIT_SEC", 900)
 )
@@ -62,3 +62,10 @@ TELEMETRY_PERIODIC_SEC = int(os.environ.get("TELEMETRY_PERIODIC_SEC", 60 * 60 * 
 
 SLACK_TABLE_COLUMNS_LIMIT = int(os.environ.get("SLACK_TABLE_COLUMNS_LIMIT", 4))
 RSA_KEYS_PATH = os.environ.get("RSA_KEYS_PATH", "/etc/robusta/auth")
+
+# default of 120 seconds was chosen, because we saw some disconnections after 6 minutes. We needed a lower interval
+WEBSOCKET_PING_INTERVAL = int(os.environ.get("WEBSOCKET_PING_INTERVAL", 120))
+# Timeout for the ping response, before killing the connection. Must be smaller than the interval
+WEBSOCKET_PING_TIMEOUT = int(os.environ.get("WEBSOCKET_PING_TIMEOUT", 30))
+
+TRACE_INCOMING_REQUESTS = bool(os.environ.get("TRACE_INCOMING_REQUESTS", False))

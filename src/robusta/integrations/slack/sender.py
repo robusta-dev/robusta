@@ -21,6 +21,7 @@ SEVERITY_EMOJI_MAP = {
     FindingSeverity.LOW: ":large_yellow_circle:",
     FindingSeverity.INFO: ":large_green_circle:",
 }
+MAX_BLOCK_CHARS = 3000
 
 
 class SlackSender:
@@ -73,7 +74,7 @@ class SlackSender:
         return [{"type": "actions", "elements": buttons}]
 
     @staticmethod
-    def __apply_length_limit(msg: str, max_length: int = 3000):
+    def __apply_length_limit(msg: str, max_length: int = MAX_BLOCK_CHARS):
         if len(msg) <= max_length:
             return msg
         truncator = "..."
@@ -129,7 +130,11 @@ class SlackSender:
                     },
                 }
             ]
-        elif isinstance(block, ListBlock) or isinstance(block, TableBlock):
+        elif isinstance(block, TableBlock):
+            return self.__to_slack(
+                block.to_markdown(max_chars=MAX_BLOCK_CHARS), sink_name
+            )
+        elif isinstance(block, ListBlock):
             return self.__to_slack(block.to_markdown(), sink_name)
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_slack_diff(block, sink_name)
@@ -194,9 +199,15 @@ class SlackSender:
         table_blocks = [b for b in other_blocks if isinstance(b, TableBlock)]
         for table_block in table_blocks:
             if len(table_block.headers) > SLACK_TABLE_COLUMNS_LIMIT:
-                table_name = table_block.table_name if table_block.table_name else "data"
-                table_content = table_block.to_table_string(table_max_width=250)  # bigger max width for file
-                file_blocks.append(FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8")))
+                table_name = (
+                    table_block.table_name if table_block.table_name else "data"
+                )
+                table_content = table_block.to_table_string(
+                    table_max_width=250
+                )  # bigger max width for file
+                file_blocks.append(
+                    FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8"))
+                )
                 other_blocks.remove(table_block)
 
         message = self.prepare_slack_text(title, file_blocks)
@@ -245,12 +256,20 @@ class SlackSender:
             )
 
     def send_finding_to_slack(
-        self, finding: Finding, slack_channel: str, sink_name: str, platform_enabled: bool
+        self,
+        finding: Finding,
+        slack_channel: str,
+        sink_name: str,
+        platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
-            blocks.append(MarkdownBlock(text=f"<{finding.investigate_uri}|:mag_right: Investigate>"))
+            blocks.append(
+                MarkdownBlock(
+                    text=f"<{finding.investigate_uri}|:mag_right: Investigate>"
+                )
+            )
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
 
@@ -270,5 +289,11 @@ class SlackSender:
                 blocks.extend(enrichment.blocks)
 
         self.__send_blocks_to_slack(
-            blocks, attachment_blocks, finding.title, slack_channel,unfurl, sink_name, finding.severity
+            blocks,
+            attachment_blocks,
+            finding.title,
+            slack_channel,
+            unfurl,
+            sink_name,
+            finding.severity,
         )

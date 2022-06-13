@@ -5,7 +5,7 @@ from collections import defaultdict
 from typing import Any, Dict, Optional, List
 
 from .base_trigger import TriggerEvent, BaseTrigger
-from .playbook_utils import merge_global_params
+from .playbook_utils import merge_global_params, to_safe_str
 from .playbooks_event_handler import PlaybooksEventHandler
 from ..model.events import ExecutionBaseEvent, ExecutionContext
 from ..reporting import MarkdownBlock
@@ -209,7 +209,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 except Exception:
                     msg = (
                         f"Failed to create {registered_action.params_type} "
-                        f"using {action_params} for running {action.action_name} "
+                        f"using {to_safe_str(action_params)} for running {action.action_name} "
                         f"exc={traceback.format_exc()}"
                     )
                     execution_event.response = self.__error_resp(msg)
@@ -219,7 +219,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     registered_action.func(execution_event, params)
                 except Exception:
                     logging.error(
-                        f"Failed to execute action {action.action_name} {action_params}",
+                        f"Failed to execute action {action.action_name} {to_safe_str(action_params)}",
                         exc_info=True,
                     )
                     execution_event.add_enrichment(
@@ -247,7 +247,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
     def __handle_findings(self, execution_event: ExecutionBaseEvent):
         sinks_info = self.registry.get_telemetry().sinks_info
 
-        for sink_name in execution_event.named_sinks:
+        for sink_name in execution_event.sink_findings.keys():
             if SYNC_RESPONSE_SINK == sink_name:
                 continue  # not a real sink, just container for findings that needs to be returned synchronously
 

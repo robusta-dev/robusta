@@ -22,8 +22,7 @@ jobs:
         # install robusta so that we can run tests on it
         - name: Install Robusta
           run: |
-            curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-            source $HOME/.poetry/env
+            curl -sSL https://install.python-poetry.org | python3 - --version 1.2.0b1 
             poetry config virtualenvs.create false
             poetry install --extras "all"
             # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
@@ -58,5 +57,4 @@ jobs:
             PYTEST_SLACK_TOKEN: ${{ secrets.PYTEST_SLACK_TOKEN }}
             PYTEST_IN_CLUSTER_SLACK_TOKEN: ${{ secrets.PYTEST_IN_CLUSTER_SLACK_TOKEN }}
           run: |
-            source $HOME/.poetry/env
             pytest -s

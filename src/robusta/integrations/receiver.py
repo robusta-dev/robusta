@@ -13,8 +13,10 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
+from ..core.playbooks.playbook_utils import to_safe_str
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
-from ..core.model.env_vars import INCOMING_REQUEST_TIME_WINDOW_SECONDS, RUNNER_VERSION
+from ..core.model.env_vars import INCOMING_REQUEST_TIME_WINDOW_SECONDS, RUNNER_VERSION, WEBSOCKET_PING_INTERVAL, \
+    WEBSOCKET_PING_TIMEOUT
 from ..core.reporting.action_requests import (
     ExternalActionRequest,
     ActionRequestBody,
@@ -76,7 +78,11 @@ class ActionRequestReceiver:
     def run_forever(self):
         logging.info("starting relay receiver")
         while self.active:
-            self.ws.run_forever()
+            self.ws.run_forever(
+                ping_interval=WEBSOCKET_PING_INTERVAL,
+                ping_payload="p",
+                ping_timeout=WEBSOCKET_PING_TIMEOUT,
+            )
             logging.info("relay websocket closed")
             time.sleep(INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC)
 
@@ -97,14 +103,16 @@ class ActionRequestReceiver:
     def __exec_external_request(
         self, action_request: ExternalActionRequest, validate_timestamp: bool
     ):
+        logging.info(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
         sync_response = action_request.request_id != ""  # if request_id is set, we need to write back the response
         if not self.__validate_request(action_request, validate_timestamp):
-            logging.error(f"Failed to validate action request {action_request}")
+            req_json = action_request.json(exclude={"body"})
+            body_json = action_request.body.json(exclude={"action_params"})  # action params already printed above
+            logging.error(f"Failed to validate action request {req_json} {body_json}")
             if sync_response:
                 self.ws.send(data=json.dumps(self.__sync_response(401, action_request.request_id, "")))
             return
 
-        logging.info(f"got callback `{action_request.body.action_name}` {action_request.body.action_params}")
         response = self.event_handler.run_external_action(
             action_request.body.action_name,
             action_request.body.action_params,
@@ -119,7 +127,6 @@ class ActionRequestReceiver:
 
     def on_message(self, ws, message):
         # TODO: use typed pydantic classes here?
-        logging.debug(f"received incoming message {message}")
         incoming_event = json.loads(message)
         actions = incoming_event.get("actions", None)
         if actions:  # this is slack callback format
@@ -127,13 +134,15 @@ class ActionRequestReceiver:
             # which container the actual action details we need to run.
             # This wrapper format is part of the slack API, and cannot be changed by us.
             for action in actions:
+                raw_action = action.get("value", None)
                 try:
                     self.__exec_external_request(
-                        ExternalActionRequest.parse_raw(action["value"]), False
+                        ExternalActionRequest.parse_raw(raw_action), False
                     )
                 except Exception:
                     logging.error(
-                        f"Failed to run incoming event {incoming_event}", exc_info=True
+                        f"Failed to run incoming event {ActionRequestReceiver._stringify_incoming_event(raw_action)}",
+                        exc_info=True
                     )
         else:  # assume it's ActionRequest format
             try:
@@ -142,8 +151,26 @@ class ActionRequestReceiver:
                 )
             except Exception:
                 logging.error(
-                    f"Failed to run incoming event {incoming_event}", exc_info=True
+                    f"Failed to run incoming event {ActionRequestReceiver._stringify_incoming_event(incoming_event)}",
+                    exc_info=True
                 )
+
+    @staticmethod
+    def _stringify_incoming_event(incoming_event) -> str:
+        """Stringify incoming request masking action params in case it contains secrets"""
+        if isinstance(incoming_event, str):  # slack format, stringified json
+            try:
+                event_dict = json.loads(incoming_event)
+            except Exception:
+                logging.error("Failed to parse raw incoming event", exc_info=True)
+                return "parse error"
+        elif isinstance(incoming_event, dict):
+            event_dict = incoming_event
+        else:
+            return f"Unknown incoming_event type {type(incoming_event)}"
+        body = event_dict.pop("body", {})
+        action_params = body.pop("action_params", {})
+        return f"{event_dict} {body} {to_safe_str(action_params)}"
 
     def on_error(self, ws, error):
         logging.info(f"Relay websocket error: {error}")

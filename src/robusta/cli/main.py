@@ -3,7 +3,6 @@ import json
 import random
 import subprocess
 import time
-import urllib.request
 import uuid
 import click_spinner
 from distutils.version import StrictVersion
@@ -11,7 +10,7 @@ from typing import Optional, List, Union, Dict
 from zipfile import ZipFile
 import traceback
 
-import requests
+import sys
 import typer
 import yaml
 from kubernetes import config
@@ -29,8 +28,9 @@ from ..core.sinks.robusta.robusta_sink_params import (
     RobustaSinkParams,
 )
 from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
+from .eula import handle_eula
 from robusta._version import __version__
-from .integrations_cmd import app as integrations_commands, get_slack_key
+from .integrations_cmd import app as integrations_commands, get_slack_key, get_ui_key
 from .auth import app as auth_commands
 from .slack_verification import verify_slack_channel
 from .slack_feedback_message import SlackFeedbackMessagesSender, SlackFeedbackConfig
@@ -41,14 +41,13 @@ FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
 RUNNER_CONFIG_FOR_SMALL_CLUSTERS = "512Mi"
 GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
 
+
 app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
 app.add_typer(
     integrations_commands, name="integrations", help="Integrations commands menu"
 )
-app.add_typer(
-    auth_commands, name="auth", help="Authentication commands menu"
-)
+app.add_typer(auth_commands, name="auth", help="Authentication commands menu")
 
 
 def get_runner_url(runner_version=None):
@@ -101,9 +100,11 @@ def guess_cluster_name(context):
             all_contexts, current_context = config.list_kube_config_contexts()
             if context is not None:
                 for i in range(len(all_contexts)):
-                    if all_contexts[i].get('name') == context:
-                        return all_contexts[i].get('context').get('cluster')
-                typer.echo(f" no context exists with the name '{context}', your current context is {current_context.get('cluster')}")
+                    if all_contexts[i].get("name") == context:
+                        return all_contexts[i].get("context").get("cluster")
+                typer.echo(
+                    f" no context exists with the name '{context}', your current context is {current_context.get('cluster')}"
+                )
             if current_context and current_context.get("name"):
                 return current_context.get("context").get("cluster")
         except Exception:  # this happens, for example, if you don't have a kubeconfig file
@@ -126,11 +127,7 @@ def write_values_file(output_path: str, values: HelmValues):
     with open(output_path, "w") as output_file:
         yaml.safe_dump(values.dict(exclude_defaults=True), output_file, sort_keys=False)
         typer.secho(
-            f"Saved configuration to {output_path}",
-            fg="green",
-        )
-        typer.secho(
-            f"Save this file for future use. It contains your account credentials",
+            f"Saved configuration to {output_path} - save this file for future use!",
             fg="red",
         )
 
@@ -165,6 +162,7 @@ def gen_config(
         None,
         help="The name of the kubeconfig context to use",
     ),
+    enable_crash_report: bool = typer.Option(None),
 ):
     """Create runtime configuration file"""
     if cluster_name is None:
@@ -216,7 +214,7 @@ def gen_config(
         default=False,
     ):
         msteams_webhook = typer.prompt(
-            "Please insert your MsTeams webhook url",
+            "Please insert your MsTeams webhook url. See https://docs.robusta.dev/master/catalog/sinks/ms-teams.html",
             default=None,
         )
 
@@ -238,53 +236,13 @@ def gen_config(
             "Would you like to use Robusta UI? This is HIGHLY recommended.",
             default=True,
         ):
-            if typer.confirm("Do you already have a Robusta account?"):
-                while True:
-                    robusta_api_key = typer.prompt(
-                        "Please insert your Robusta account token",
-                        default=None,
-                    )
-                    try:
-                        json.loads(base64.b64decode(robusta_api_key))
-                        break
-                    except Exception:
-                        typer.secho(
-                            "Sorry, invalid token format. "
-                            "The token can be found in any existing generated_values.yaml file, under the robusta_sink",
-                            fg="red",
-                        )
-
-            else:  # self registration
-                account_name = typer.prompt("Choose your account name")
-                email = typer.prompt(
-                    "Enter a Gmail/Google Workspace address. This will be used to login"
-                )
-                email = email.strip()
-                res = requests.post(
-                    f"{backend_profile.robusta_cloud_api_host}/accounts/create",
-                    json={
-                        "account_name": account_name,
-                        "email": email,
-                    },
-                )
-                if res.status_code == 201:
-                    robusta_api_key = res.json().get("token")
-                    typer.echo(
-                        "Successfully registered.\n",
-                        color="green",
-                    )
-                    typer.echo("A few more questions and we're done...\n")
-                else:
-                    typer.echo(
-                        "Sorry, something didn't work out. Please contact us at support@robusta.dev",
-                        color="red",
-                    )
-                    robusta_api_key = ""
+            robusta_api_key = get_ui_key()
         else:
             robusta_api_key = ""
 
+    typer.secho("Just a few more questions and we're done...\n", fg="green")
+
     account_id = str(uuid.uuid4())
-    require_eula_approval = False
     if robusta_api_key:  # if Robusta ui sink is defined, take the account id from it
         token = json.loads(base64.b64decode(robusta_api_key))
         account_id = token.get("account_id", account_id)
@@ -297,16 +255,13 @@ def gen_config(
             )
         )
         enable_platform_playbooks = True
-        require_eula_approval = True
+        disable_cloud_routing = False
 
     slack_feedback_heads_up_message: Optional[str] = None
     if slack_integration_configured:
         try:
             slack_feedback_heads_up_message = SlackFeedbackMessagesSender(
-                slack_api_key,
-                slack_channel,
-                account_id,
-                debug
+                slack_api_key, slack_channel, account_id, debug
             ).schedule_feedback_messages()
         except Exception as e:
             if debug:
@@ -321,23 +276,13 @@ def gen_config(
         disable_cloud_routing = not typer.confirm(
             "Would you like to enable two-way interactivity (e.g. fix-it buttons in Slack) via Robusta's cloud?"
         )
-        if not disable_cloud_routing:
-            require_eula_approval = True
 
-    if require_eula_approval:
-        eula_url = f"{backend_profile.robusta_cloud_api_host}/eula.html"
-        typer.echo(
-            f"Please read and approve our End User License Agreement: {eula_url}"
+    handle_eula(account_id, robusta_api_key, not disable_cloud_routing)
+
+    if enable_crash_report is None:
+        enable_crash_report = typer.confirm(
+            "Last question! Would you like to help us improve Robusta by sending exception reports?"
         )
-        eula_approved = typer.confirm("Do you accept our End User License Agreement?")
-        if not eula_approved:
-            typer.echo("End User License Agreement rejected. Installation aborted.")
-            return
-
-        try:
-            requests.get(f"{eula_url}?account_id={account_id}")
-        except Exception:
-            typer.echo(f"\nEula approval failed: {eula_url}")
 
     signing_key = str(uuid.uuid4()).replace("_", "")
 
@@ -348,16 +293,17 @@ def gen_config(
         enablePrometheusStack=enable_prometheus_stack,
         disableCloudRouting=disable_cloud_routing,
         enablePlatformPlaybooks=enable_platform_playbooks,
-        rsa=gen_rsa_pair()
+        rsa=gen_rsa_pair(),
     )
 
     if is_small_cluster:
         values.set_pod_configs_for_small_clusters()
         values.playbooksPersistentVolumeSize = "128Mi"
 
+    values.runner = {}
+    values.runner["sendAdditionalTelemetry"] = enable_crash_report
+
     if backend_profile.custom_profile:
-        if not values.runner:
-            values.runner = {}
         values.runner["additional_env_vars"] = [
             {
                 "name": "RELAY_EXTERNAL_ACTIONS_URL",
@@ -370,15 +316,20 @@ def gen_config(
             {"name": "ROBUSTA_UI_DOMAIN", "value": backend_profile.robusta_ui_domain},
             {
                 "name": "ROBUSTA_TELEMETRY_ENDPOINT",
-                "value": backend_profile.robusta_telemetry_endpoint
-            }
+                "value": backend_profile.robusta_telemetry_endpoint,
+            },
         ]
 
     write_values_file(output_path, values)
 
     if robusta_api_key:
         typer.secho(
-            f"Finish the Helm install and then login to Robusta UI at {backend_profile.robusta_ui_domain}\n",
+            f"Finish installing with Helm (see the Robusta docs). Then login to Robusta UI at {backend_profile.robusta_ui_domain}\n",
+            fg="green",
+        )
+    else:
+        typer.secho(
+            f"Finish installing with Helm (see the Robusta docs). By the way, you're missing out on the UI! See https://home.robusta.dev/ui/\n",
             fg="green",
         )
 
@@ -394,9 +345,9 @@ def update_config(
     ),
 ):
     """
-        Update an existing values.yaml file.
-        Add RSA key-pair if it doesn't exist
-        Add a signing key if it doesn't exist, or replace with a valid one if the key has an invalid format
+    Update an existing values.yaml file.
+    Add RSA key-pair if it doesn't exist
+    Add a signing key if it doesn't exist, or replace with a valid one if the key has an invalid format
     """
     with open(existing_values, "r") as existing_values_file:
         values: HelmValues = HelmValues(**yaml.safe_load(existing_values_file))
@@ -461,10 +412,7 @@ def logs(
         None, help="Only return logs newer than a relative duration like 5s, 2m, or 3h."
     ),
     tail: int = typer.Option(None, help="Lines of recent log file to display."),
-    context: str = typer.Option(
-        None,
-        help="The name of the kubeconfig context to use"
-    ),
+    context: str = typer.Option(None, help="The name of the kubeconfig context to use"),
 ):
     """Fetch Robusta runner logs"""
     stream = "-f" if f else ""

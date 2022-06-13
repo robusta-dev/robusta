@@ -11,6 +11,9 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-forwarder
+      {{- if .Values.kubewatch.annotations }}
+      annotations: {{ toYaml .Values.kubewatch.annotations | nindent 8 }}
+      {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-forwarder-service-account
       containers:
@@ -37,3 +40,12 @@ spec:
         - name:  robusta-kubewatch-config
           configMap:
             name: {{ .Release.Name }}-kubewatch-config
+      {{- if .Values.kubewatch.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.kubewatch.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.kubewatch.affinity }}
+      affinity: {{ toYaml .Values.kubewatch.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.kubewatch.tolerations }}
+      tolerations:  {{ toYaml .Values.kubewatch.tolerations | nindent 8 }}
+      {{- end }}

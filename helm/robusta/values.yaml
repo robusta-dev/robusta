@@ -31,6 +31,15 @@ disableCloudRouting: false
 playbooksPersistentVolume: false
 playbooksPersistentVolumeSize: 4Gi
 
+# priority builtin playbooks for running before all playbooks
+priorityBuiltinPlaybooks:
+# playbooks for prometheus silencing
+- triggers:
+  - on_prometheus_alert: {}
+  actions:
+  - name_silencer:
+      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
+
 # custom user playbooks
 customPlaybooks: []
 
@@ -38,18 +47,23 @@ customPlaybooks: []
 builtinPlaybooks:
 # playbooks for non-prometheus based monitoring
 - triggers:
+  - on_pod_crash_loop:
+      restart_reason: "CrashLoopBackOff"
+  actions:
+  - report_crash_loop: {}
+- triggers:
   - on_pod_update: {}
   actions:
-  - restart_loop_reporter:
-      restart_reason: "CrashLoopBackOff"
   - image_pull_backoff_reporter:
       rate_limit: 3600
-# playbooks for prometheus enrichment and silencing
+
+# playbooks for prometheus alerts enrichment
 - triggers:
-  - on_prometheus_alert: {}
+  - on_prometheus_alert:
+      alert_name: KubePodCrashLooping
   actions:
-  - name_silencer:
-      names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
+  - logs_enricher: {}
+
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeNodeNotReady
@@ -59,6 +73,8 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDaemonsetMisscheduled
+  - on_prometheus_alert:
+      alert_name: KubeDaemonSetMisScheduled
   actions:
   - daemonset_status_enricher: {}
   - daemonset_misscheduled_analysis_enricher: {}
@@ -97,6 +113,8 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDeploymentReplicasMismatch
+  - on_prometheus_alert:
+      alert_name: KubeDeploymentReplicasMismatch
   actions:
   - deployment_status_enricher: {}
 - triggers:
@@ -137,6 +155,8 @@ kubewatch:
       memory: 512Mi
     limits:
       cpu: ~
+  tolerations: []
+  annotations: {}
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -163,6 +183,8 @@ runner:
     limits:
       cpu: ~
   additional_env_vars: []
+  tolerations: []
+  annotations: {}
 
 kube-prometheus-stack:
   alertmanager:
