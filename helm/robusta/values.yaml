@@ -56,7 +56,14 @@ builtinPlaybooks:
   actions:
   - image_pull_backoff_reporter:
       rate_limit: 3600
+
 # playbooks for prometheus alerts enrichment
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubePodCrashLooping
+  actions:
+  - logs_enricher: {}
+
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeNodeNotReady
@@ -66,6 +73,8 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDaemonsetMisscheduled
+  - on_prometheus_alert:
+      alert_name: KubeDaemonSetMisScheduled
   actions:
   - daemonset_status_enricher: {}
   - daemonset_misscheduled_analysis_enricher: {}
@@ -104,6 +113,8 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDeploymentReplicasMismatch
+  - on_prometheus_alert:
+      alert_name: KubeDeploymentReplicasMismatch
   actions:
   - deployment_status_enricher: {}
 - triggers:

@@ -3,7 +3,6 @@ import json
 import random
 import subprocess
 import time
-import urllib.request
 import uuid
 import click_spinner
 from distutils.version import StrictVersion
@@ -11,7 +10,7 @@ from typing import Optional, List, Union, Dict
 from zipfile import ZipFile
 import traceback
 
-import requests
+import sys
 import typer
 import yaml
 from kubernetes import config
@@ -41,6 +40,7 @@ from .utils import log_title, replace_in_file, namespace_to_kubectl
 FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
 RUNNER_CONFIG_FOR_SMALL_CLUSTERS = "512Mi"
 GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
+
 
 app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")

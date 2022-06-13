@@ -15,7 +15,8 @@ from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
 from ..core.playbooks.playbook_utils import to_safe_str
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
-from ..core.model.env_vars import INCOMING_REQUEST_TIME_WINDOW_SECONDS, RUNNER_VERSION
+from ..core.model.env_vars import INCOMING_REQUEST_TIME_WINDOW_SECONDS, RUNNER_VERSION, WEBSOCKET_PING_INTERVAL, \
+    WEBSOCKET_PING_TIMEOUT
 from ..core.reporting.action_requests import (
     ExternalActionRequest,
     ActionRequestBody,
@@ -77,7 +78,11 @@ class ActionRequestReceiver:
     def run_forever(self):
         logging.info("starting relay receiver")
         while self.active:
-            self.ws.run_forever()
+            self.ws.run_forever(
+                ping_interval=WEBSOCKET_PING_INTERVAL,
+                ping_payload="p",
+                ping_timeout=WEBSOCKET_PING_TIMEOUT,
+            )
             logging.info("relay websocket closed")
             time.sleep(INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC)
 
