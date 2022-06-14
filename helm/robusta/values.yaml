@@ -35,7 +35,8 @@ playbooksPersistentVolumeSize: 4Gi
 priorityBuiltinPlaybooks:
 # playbooks for prometheus silencing
 - triggers:
-  - on_prometheus_alert: {}
+  - on_prometheus_alert:
+      status: "all"
   actions:
   - name_silencer:
       names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
@@ -118,7 +119,8 @@ builtinPlaybooks:
   actions:
   - deployment_status_enricher: {}
 - triggers:
-  - on_prometheus_alert: {}
+  - on_prometheus_alert:
+      status: "all"
   actions:
   - default_enricher: {}
 
