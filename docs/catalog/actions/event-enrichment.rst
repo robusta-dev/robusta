@@ -30,6 +30,7 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.logs_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
+    :trigger-params: {"alert_name": "ExampleLowDiskAlert"}
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_events_enricher
 
