@@ -27,7 +27,7 @@ Pod Enrichers
 
 These actions can add context to any pod-related event, be it from ``on_prometheus_alert`` or ``on_pod_update``.
 
-.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.logs_enricher
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.logs_enricher on_pod_crash_loop
 
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
 

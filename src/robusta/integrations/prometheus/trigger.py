@@ -35,8 +35,12 @@ MAPPINGS = [
 
 
 class PrometheusAlertTrigger(BaseTrigger):
+    """
+    :var status: one of "firing", "resolved", or "all"
+    """
+
     alert_name: str = None
-    status: str = None
+    status: str = "firing"
     pod_name_prefix: str = None
     namespace_prefix: str = None
     instance_name_prefix: str = None
@@ -52,7 +56,7 @@ class PrometheusAlertTrigger(BaseTrigger):
         if not exact_match(self.alert_name, labels["alertname"]):
             return False
 
-        if not exact_match(self.status, event.alert.status):
+        if self.status != "all" and not exact_match(self.status, event.alert.status):
             return False
 
         if not prefix_match(self.pod_name_prefix, labels.get("pod")):

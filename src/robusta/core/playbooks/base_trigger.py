@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import Dict, Optional, Type, List
 
 from ..model.events import ExecutionBaseEvent
+from ...utils.documented_pydantic import DocumentedModel
 from ..model.k8s_operation_type import K8sOperationType
 from ..reporting.base import Finding
 import abc
@@ -14,7 +15,7 @@ class TriggerEvent(BaseModel):
         return ""
 
 
-class BaseTrigger(BaseModel):
+class BaseTrigger(DocumentedModel):
     def get_trigger_event(self) -> str:
         pass
 
@@ -22,7 +23,7 @@ class BaseTrigger(BaseModel):
         return True
 
     def build_execution_event(
-        self, event: TriggerEvent, sink_findings: Dict[str,List[Finding]]
+        self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
         pass
 
