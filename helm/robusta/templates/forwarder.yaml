@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-forwarder
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
     matchLabels:
