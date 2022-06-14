@@ -63,6 +63,14 @@ builtinPlaybooks:
       alert_name: KubePodCrashLooping
   actions:
   - logs_enricher: {}
+  - pod_events_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubePodNotReady
+  actions:
+  - logs_enricher: {}
+  - pod_events_enricher: {}
 
 - triggers:
   - on_prometheus_alert:
@@ -116,7 +124,11 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: KubeDeploymentReplicasMismatch
   actions:
-  - deployment_status_enricher: {}
+  - deployment_events_enricher:
+      included_types: ["Warning"]
+  - deployment_events_enricher:
+      included_types: ["Warning", "Normal"]
+      dependent_pod_mode: true
 - triggers:
   - on_prometheus_alert: {}
   actions:
