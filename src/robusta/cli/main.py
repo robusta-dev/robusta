@@ -41,12 +41,6 @@ FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
 RUNNER_CONFIG_FOR_SMALL_CLUSTERS = "512Mi"
 GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
 
-# catch unhandled exceptions.
-def my_except_hook(exctype, value, traceback):
-    typer.echo("Please use —-debug flag for more info")
-    return False
-
-sys.excepthook = my_except_hook
 
 app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")

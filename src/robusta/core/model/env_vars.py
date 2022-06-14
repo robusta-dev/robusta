@@ -67,3 +67,5 @@ RSA_KEYS_PATH = os.environ.get("RSA_KEYS_PATH", "/etc/robusta/auth")
 WEBSOCKET_PING_INTERVAL = int(os.environ.get("WEBSOCKET_PING_INTERVAL", 120))
 # Timeout for the ping response, before killing the connection. Must be smaller than the interval
 WEBSOCKET_PING_TIMEOUT = int(os.environ.get("WEBSOCKET_PING_TIMEOUT", 30))
+
+TRACE_INCOMING_REQUESTS = bool(os.environ.get("TRACE_INCOMING_REQUESTS", False))

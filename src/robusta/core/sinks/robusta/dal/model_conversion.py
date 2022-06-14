@@ -1,6 +1,7 @@
 import base64
 import json
 import uuid
+from datetime import datetime
 
 from typing import Dict, Any
 
@@ -8,6 +9,7 @@ from ...transformer import Transformer
 from ....reporting.callbacks import ExternalActionRequestBuilder
 from .....core.reporting import Finding, Enrichment, MarkdownBlock, logging, CallbackBlock, KubernetesDiffBlock, \
     HeaderBlock, ListBlock, TableBlock, FileBlock, DividerBlock
+from .....utils.parsing import datetime_to_db_str
 
 
 class ModelConversion:
@@ -31,10 +33,18 @@ class ModelConversion:
             "service_key": finding.service_key,
             "cluster": cluster_id,
             "account_id": account_id,
+            "starts_at": datetime_to_db_str(finding.starts_at),
+            "updated_at": datetime_to_db_str(datetime.now())
         }
 
         if finding.creation_date:
             finding_json["creation_date"] = finding.creation_date
+
+        if finding.ends_at:
+            finding_json["ends_at"] = datetime_to_db_str(finding.ends_at)
+
+        if finding.fingerprint:  # currently only alerts supports fingerprint, and will be resolved
+            finding_json["fingerprint"] = finding.fingerprint
 
         return finding_json
 
