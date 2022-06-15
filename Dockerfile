@@ -36,5 +36,7 @@ RUN pip3 install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e4
 
 COPY playbooks/ /etc/robusta/playbooks/defaults
 
+RUN python3 -m pip install /etc/robusta/playbooks/defaults
+
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
 CMD [ "python3", "-u", "-m", "robusta.runner.main"]
