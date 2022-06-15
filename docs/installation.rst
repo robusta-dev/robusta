@@ -82,7 +82,9 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
     .. image:: /images/crash-report.png
 
 
-4. Clean up the crashing pod:
+4. Open the `Robusta UI <https://platform.robusta.dev/>`_ (if you enabled it) and look for the same message there.
+
+5. Clean up the crashing pod:
 
 .. code-block:: bash
    :name: cb-delete-crashpod
@@ -92,9 +94,8 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 Next Steps
 ---------------------------------
 
-1. Explore the `Robusta UI <https://platform.robusta.dev/>`_
-2. Define your :ref:`first automation <Automation Basics>`
-3. Add your first :ref:`Prometheus enrichment <Alert Enrichment>`
+1. Define your :ref:`first automation <Automation Basics>`
+2. Add your first :ref:`Prometheus enrichment <Alert Enrichment>`
 
 .. rubric:: Footnotes
 
