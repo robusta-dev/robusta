@@ -25,13 +25,13 @@ class Silence(BaseModel):
                 self.startsAt.isoformat(timespec='seconds'), self.endsAt.isoformat(timespec='seconds'), " ".join(str(matcher) for matcher in self.matchers) ]
         
 
-class get_silenece_params(ActionParams):
+class GetSilenceParams(ActionParams):
     """
     :var alertmanager_url: Alternative Alert Manager url to send requests.
     """
     alertmanager_url: Optional[str]
 
-class delete_silence_params(ActionParams):
+class DeleteSilenceParams(ActionParams):
     """
     :var id: uuid of the silence.
     :var alertmanager_url: Alternative Alert Manager url to send requests.
@@ -39,7 +39,7 @@ class delete_silence_params(ActionParams):
     id: str
     alertmanager_url: Optional[str]
 
-class add_silence_params(ActionParams):
+class AddSilenceParams(ActionParams):
     """
     :var comment: uuid of the silence.
     :var created_by: uuid of the silence.
@@ -57,10 +57,10 @@ class add_silence_params(ActionParams):
     alertmanager_url: Optional[str]
 
 @action
-def get_silences(event: ExecutionBaseEvent, params: get_silenece_params):
+def get_silences(event: ExecutionBaseEvent, params: GetSilenceParams):
     alertmanager_url = params.alertmanager_url if params.alertmanager_url else AlertManagerDiscovery.find_alert_manager_url()
     if alertmanager_url is None:
-        return False
+        return
 
     response = requests.get(
         f"{alertmanager_url}/api/v2/silences",
@@ -69,16 +69,15 @@ def get_silences(event: ExecutionBaseEvent, params: get_silenece_params):
 
     if response.status_code not in [200, 201]:
         logging.error(response.json())
-        return False
+        return
 
     silence_list = [list(Silence(**silence).list()) for silence in response.json()]
     if len(silence_list) == 0:
         event.add_enrichment([MarkdownBlock("*There are no silences*")])
-        return True
+        return
 
     event.add_enrichment(
         [
-            MarkdownBlock("*Silences*"),
             TableBlock(
                 rows=silence_list,
                 headers=[*Silence.__fields__],
@@ -86,31 +85,34 @@ def get_silences(event: ExecutionBaseEvent, params: get_silenece_params):
             ),
         ]
     )
-    return True
+
 
 @action
-def add_silence(event: ExecutionBaseEvent, params: add_silence_params):
+def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
     alertmanager_url = params.alertmanager_url if params.alertmanager_url else AlertManagerDiscovery.find_alert_manager_url()
     if alertmanager_url is None:
-        return False
+        return
     
-    logging.info(params)
- 
     res = requests.post(
         f"{alertmanager_url}/api/v2/silences",
         data=params.json(),
         headers= {"Content-type": "application/json"},
     )         
-
+    logging.info(res.json)
     return res.json()
 
 @action
-def delete_silence(event: ExecutionBaseEvent, params: delete_silence_params):
+def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
     alertmanager_url = params.alertmanager_url if params.alertmanager_url else AlertManagerDiscovery.find_alert_manager_url()
     if alertmanager_url is None:
-        return False
+        return
     
-    return requests.delete( 
+
+    res=  requests.delete( 
         f"{alertmanager_url}/api/v2/silence/{params.id}",
         headers= {"Content-type": "application/json"},
     )
+    logging.info(res.text())
+    logging.info(res)
+    logging.info(res.json)
+    return
