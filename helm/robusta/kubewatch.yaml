@@ -1,3 +1,4 @@
+namespace: ""
 resource:
   deployment: true
   replicationcontroller: true
