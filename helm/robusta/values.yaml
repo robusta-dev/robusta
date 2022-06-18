@@ -131,7 +131,8 @@ enablePlatformPlaybooks: false
 
 platformPlaybooks:
 - triggers:
-  - on_kubernetes_warning_event_create: {}
+  - on_kubernetes_warning_event_create:
+      exclude: ["NodeSysctlChange"]
   actions:
   - event_report: {}
   - event_resource_events: {}
