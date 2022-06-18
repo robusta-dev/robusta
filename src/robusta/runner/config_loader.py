@@ -153,7 +153,7 @@ class ConfigLoader:
 
                     # Adding to pip the playbooks repo from local_path
                     subprocess.check_call(
-                        [sys.executable, "-m", "pip", "install", local_path]
+                        [sys.executable, "-m", "pip", "install", "--no-build-isolation", local_path]
                     )
                     playbook_package = self.__get_package_name(local_path=local_path)
 
