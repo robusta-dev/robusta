@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-runner
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Release.Name }}-runner
 spec:
@@ -123,6 +124,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: persistent-playbooks-pv-claim
+  namespace: {{ .Release.Namespace }}
 spec:
   accessModes:
   - ReadWriteOnce
@@ -135,6 +137,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Release.Name }}-runner
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Release.Name }}-runner
 spec:
@@ -169,6 +172,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: robusta-runner-secret
+  namespace: {{ .Release.Namespace }}
 type: Opaque
 stringData:
   SENTRY_DSN: {{ .Values.runner.sentry_dsn }}

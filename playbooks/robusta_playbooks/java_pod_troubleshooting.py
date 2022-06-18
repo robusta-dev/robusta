@@ -116,7 +116,7 @@ def run_jdk_command_on_pid(
         jdk_output = run_java_toolkit_command(jdk_cmd, pod, params.jtk_image)
         finding.add_enrichment(
             [
-                [MarkdownBlock(f"{aggregation_key} ran on process [{params.pid}")],
+                MarkdownBlock(f"{aggregation_key} ran on process {params.pid}"),
                 FileBlock(f"{aggregation_key}_{params.pid}.txt", jdk_output.encode()),
             ]
         )

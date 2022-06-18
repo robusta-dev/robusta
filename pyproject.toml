@@ -12,7 +12,7 @@ robusta = "robusta.cli.main:app"
 
 [tool.poetry.dependencies]
 python = "^3.7.1"
-typer = "^0.3.2"
+typer = "^0.4.1"
 colorlog = "^5.0.1"
 pydantic = "^1.8.1"
 kubernetes = "^12.0.1"

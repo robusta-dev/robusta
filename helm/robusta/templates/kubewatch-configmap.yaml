@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-kubewatch-config
+  namespace: {{ .Release.Namespace }}
 data:
   .kubewatch.yaml: |-
     handler:

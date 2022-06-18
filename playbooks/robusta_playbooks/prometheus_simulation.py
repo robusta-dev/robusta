@@ -15,6 +15,7 @@ class PrometheusAlertParams(ActionParams):
     alert_name: str
     pod_name: Optional[str] = None
     node_name: Optional[str] = None
+    deployment_name: Optional[str] = None
     namespace: str = "default"
     status: str = "firing"
     severity: str = "error"
@@ -41,6 +42,8 @@ def prometheus_alert(
         labels["pod"] = prometheus_event_data.pod_name
     if prometheus_event_data.node_name is not None:
         labels["node"] = prometheus_event_data.node_name
+    if prometheus_event_data.deployment_name is not None:
+        labels["deployment"] = prometheus_event_data.deployment_name
 
     prometheus_event = AlertManagerEvent(
         **{
