@@ -64,9 +64,10 @@ class WarningEventTrigger(EventAllChangesTrigger):
             if exclusion.lower() in event_content:
                 return False
 
-        # exclude if any of the inclusions is NOT found in the event content
-        for inclusion in self.include:
-            if inclusion.lower() not in event_content:
+        # exclude if all of the inclusions are NOT found in the event content
+        if self.include:
+            matches = [inclusion for inclusion in self.include if inclusion.lower() in event_content]
+            if not matches:
                 return False
 
         # Perform a rate limit for this service key according to the rate_limit parameter
