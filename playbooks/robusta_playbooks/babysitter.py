@@ -16,7 +16,10 @@ class BabysitterConfig(ActionParams):
     :var omitted_fields: List of yaml attributes changes to ignore.
     """
 
-    fields_to_monitor: List[str] = ["spec"]
+    fields_to_monitor: List[str] = [
+        "spec",
+        "ConfigMap.data"
+    ]
     omitted_fields: List[str] = [
         "status",
         "metadata.generation",
