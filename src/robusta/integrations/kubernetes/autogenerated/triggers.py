@@ -982,6 +982,71 @@ class PersistentVolumeUpdateTrigger(K8sBaseTrigger):
         return PersistentVolumeChangeEvent
 
 
+# ConfigMap Triggers
+class ConfigMapAllChangesTrigger(K8sBaseTrigger):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="ConfigMap", 
+            operation=None, 
+            name_prefix=name_prefix, 
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ConfigMapChangeEvent
+
+
+class ConfigMapCreateTrigger(K8sBaseTrigger):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="ConfigMap", 
+            operation=K8sOperationType.CREATE, 
+            name_prefix=name_prefix, 
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ConfigMapChangeEvent
+
+
+class ConfigMapDeleteTrigger(K8sBaseTrigger):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="ConfigMap", 
+            operation=K8sOperationType.DELETE, 
+            name_prefix=name_prefix, 
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ConfigMapChangeEvent
+
+
+class ConfigMapUpdateTrigger(K8sBaseTrigger):
+
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="ConfigMap", 
+            operation=K8sOperationType.UPDATE, 
+            name_prefix=name_prefix, 
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return ConfigMapChangeEvent
+
+
 # Kubernetes Any Triggers
 class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
 
@@ -1058,6 +1123,10 @@ class K8sTriggers(BaseModel):
     on_clusterrolebinding_create: Optional[ClusterRoleBindingCreateTrigger]
     on_clusterrolebinding_delete: Optional[ClusterRoleBindingDeleteTrigger]
     on_clusterrolebinding_update: Optional[ClusterRoleBindingUpdateTrigger]
+    on_configmap_all_changes: Optional[ConfigMapAllChangesTrigger]
+    on_configmap_create: Optional[ConfigMapCreateTrigger]
+    on_configmap_delete: Optional[ConfigMapDeleteTrigger]
+    on_configmap_update: Optional[ConfigMapUpdateTrigger]
     on_daemonset_all_changes: Optional[DaemonSetAllChangesTrigger]
     on_daemonset_create: Optional[DaemonSetCreateTrigger]
     on_daemonset_delete: Optional[DaemonSetDeleteTrigger]
