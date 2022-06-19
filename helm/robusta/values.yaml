@@ -150,7 +150,7 @@ platformPlaybooks:
   actions:
     - resource_babysitter:
         fields_to_monitor: ["ConfigMap.data"]
-        ignored_namespaces: ["kube-system"]
+        ignored_namespaces: ["kube-system"] # kube-system configmaps updated a lot (spammy)
   sinks:
     - "robusta_ui_sink"
 
