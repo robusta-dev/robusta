@@ -50,6 +50,15 @@ def build_selector_query(selector: LabelSelector) -> str:
     return ",".join(label_filters)
 
 
+def list_pods_using_selector(namespace: str, selector: LabelSelector, field_selector: str = None) -> List[Pod]:
+    labels_selector = build_selector_query(selector)
+    return PodList.listNamespacedPod(
+        namespace=namespace,
+        label_selector=labels_selector,
+        field_selector=field_selector,
+    ).obj.items
+
+
 def _get_image_name_and_tag(image: str) -> (str, str):
     if ":" in image:
         image_name, image_tag = image.split(":", maxsplit=1)

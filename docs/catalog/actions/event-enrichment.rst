@@ -29,9 +29,11 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.logs_enricher on_pod_crash_loop
 
+.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.pod_events_enricher
+
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
 
-.. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_events_enricher
+.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.pod_events_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_graph_enricher
 
@@ -51,6 +53,8 @@ These actions can add context to any deployment-related event, be it from ``on_p
 
 .. robusta-action:: playbooks.robusta_playbooks.deployment_enrichments.deployment_status_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.deployment_events_enricher
+
 Kubernetes Resource Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -61,7 +65,11 @@ These actions can add context to more than one Kubernetes resource type
 Event Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. robusta-action:: playbooks.robusta_playbooks.events_enrichments.event_resource_events
+.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.event_resource_events
+
+.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.deployment_events_enricher
+
+.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.pod_events_enricher
 
 Prometheus Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
