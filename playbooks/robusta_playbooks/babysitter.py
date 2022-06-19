@@ -14,11 +14,11 @@ class BabysitterConfig(ActionParams):
     """
     :var fields_to_monitor: List of yaml attributes to monitor. Any field that contains one of these strings will match.
     :var omitted_fields: List of yaml attributes changes to ignore.
+    :var ignored_namespaces: List of namespaces to ignore
     """
 
     fields_to_monitor: List[str] = [
         "spec",
-        "ConfigMap.data"
     ]
     omitted_fields: List[str] = [
         "status",
@@ -27,6 +27,7 @@ class BabysitterConfig(ActionParams):
         "metadata.managedFields",
         "spec.replicas",
     ]
+    ignored_namespaces: List[str] = []
 
 
 @action
@@ -39,9 +40,13 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         logging.warning(f"resource_babysitter skipping resource with no meta - {event.obj}")
         return
 
+    if event.obj.metadata.namespace in config.ignored_namespaces:
+        return
+
     filtered_diffs = []
     obj = duplicate_without_fields(event.obj, config.omitted_fields)
     old_obj = duplicate_without_fields(event.old_obj, config.omitted_fields)
+
     if event.operation == K8sOperationType.UPDATE:
         all_diffs = obj.diff(old_obj)
         filtered_diffs = list(

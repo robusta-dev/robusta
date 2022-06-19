@@ -141,9 +141,16 @@ platformPlaybooks:
     - on_deployment_all_changes: {}
     - on_daemonset_all_changes: {}
     - on_statefulset_all_changes: {}
-    - on_configmap_all_changes: {}
   actions:
     - resource_babysitter: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
+    - on_configmap_all_changes: {}
+  actions:
+    - resource_babysitter:
+        fields_to_monitor: ["ConfigMap.data"]
+        ignored_namespaces: ["kube-system"]
   sinks:
     - "robusta_ui_sink"
 

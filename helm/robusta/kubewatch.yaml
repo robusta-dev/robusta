@@ -14,5 +14,5 @@ resource:
   serviceaccount: true
   persistentvolume: true
   namespace: true
-  configmap: true    # disabled by default because it is a little spammy. kube-system configmaps updated a lot
+  configmap: true
   secret: false       # disabled for security reasons
