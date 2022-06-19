@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from ...utils.service_discovery import find_service_url
 
@@ -27,14 +28,17 @@ class PrometheusDiscovery:
         )
         return None
 
-class AlertManagerDiscovery:
-    alertManager_url = None
+class AlertManagerDiscovery():
+    alertManager_url: str = None
 
     @classmethod
-    def find_alert_manager_url(cls):
+    def find_alert_manager_url(cls, alertManager_url: Optional[str]):
         """
         Try to autodiscover the url of an in-cluster alert manager service
         """
+        if alertManager_url:
+            cls.alertManager_url = alertManager_url
+
         if cls.alertManager_url:
             return cls.alertManager_url
         alertmanager_selectors = [

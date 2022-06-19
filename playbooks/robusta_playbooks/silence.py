@@ -1,4 +1,3 @@
-from uuid import UUID
 from robusta.integrations.prometheus.utils import  AlertManagerDiscovery
 from robusta.api import *
 
@@ -7,6 +6,9 @@ class Matcher(BaseModel):
     isRegex: bool
     name: str
     value: str
+
+    def stringify(self) -> str:
+        return f"{self.name}={self.value}"
 
 class Silence(BaseModel):
     class silence_status(BaseModel):
@@ -20,9 +22,12 @@ class Silence(BaseModel):
     endsAt: datetime
     matchers: List[Matcher]
 
+    def matchers_as_strings(self) -> List[str]:
+        return [matcher.stringify() for matcher in self.matchers]
+
     def list(self) -> List[str]:
         return [str(self.id), self.status.state, self.comment, self.createdBy,
-                self.startsAt.isoformat(timespec='seconds'), self.endsAt.isoformat(timespec='seconds'), " ".join(str(matcher) for matcher in self.matchers) ]
+                self.startsAt.isoformat(timespec='seconds'), self.endsAt.isoformat(timespec='seconds'), json.dumps(self.matchers_as_strings()) ]
         
 
 class GetSilenceParams(ActionParams):
@@ -58,7 +63,7 @@ class AddSilenceParams(ActionParams):
 
 @action
 def get_silences(event: ExecutionBaseEvent, params: GetSilenceParams):
-    alertmanager_url = params.alertmanager_url if params.alertmanager_url else AlertManagerDiscovery.find_alert_manager_url()
+    alertmanager_url = AlertManagerDiscovery.find_alert_manager_url(params.alertmanager_url)
     if alertmanager_url is None:
         return
 
@@ -67,9 +72,7 @@ def get_silences(event: ExecutionBaseEvent, params: GetSilenceParams):
         headers={"Content-type": "application/json"},
     )
 
-    if response.status_code not in [200, 201]:
-        logging.error(response.json())
-        return
+    response.raise_for_status()
 
     silence_list = [list(Silence(**silence).list()) for silence in response.json()]
     if len(silence_list) == 0:
@@ -89,7 +92,7 @@ def get_silences(event: ExecutionBaseEvent, params: GetSilenceParams):
 
 @action
 def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
-    alertmanager_url = params.alertmanager_url if params.alertmanager_url else AlertManagerDiscovery.find_alert_manager_url()
+    alertmanager_url = AlertManagerDiscovery.find_alert_manager_url(params.alertmanager_url)
     if alertmanager_url is None:
         return
     
@@ -98,12 +101,25 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
         data=params.json(),
         headers= {"Content-type": "application/json"},
     )         
-    logging.info(res.json)
-    return res.json()
+
+    res.raise_for_status()
+    logging.info(res.json())
+    if not res.json()["silenceID"]:
+        return
+
+    event.add_enrichment(
+        [
+            TableBlock(
+                rows=[[res.json()["silenceID"]]],
+                headers=["id"],
+                table_name="New Silence",
+            ),
+        ]
+    )
 
 @action
 def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
-    alertmanager_url = params.alertmanager_url if params.alertmanager_url else AlertManagerDiscovery.find_alert_manager_url()
+    alertmanager_url = AlertManagerDiscovery.find_alert_manager_url(params.alertmanager_url)
     if alertmanager_url is None:
         return
     
@@ -112,7 +128,15 @@ def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
         f"{alertmanager_url}/api/v2/silence/{params.id}",
         headers= {"Content-type": "application/json"},
     )
-    logging.info(res.text())
-    logging.info(res)
-    logging.info(res.json)
-    return
+
+    res.raise_for_status()
+    event.add_enrichment(
+        [
+            TableBlock(
+                rows=[[params.id]],
+                headers=["id"],
+                table_name="Deleted Silence",
+            ),
+        ]
+    )
+
