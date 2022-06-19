@@ -12,6 +12,7 @@ class ExtendedEventEnricherParams(EventEnricherParams):
     """
 
     dependent_pod_mode: bool = False
+    max_pods: int = 1
 
 
 @action
@@ -42,7 +43,7 @@ def event_report(event: EventChangeEvent):
 
 
 @action
-def event_resource_events(event: EventChangeEvent, params: EventEnricherParams):
+def event_resource_events(event: EventChangeEvent):
     """
     Given a Kubernetes event, gather all other events on the same resource in the near past
     """
@@ -57,8 +58,6 @@ def event_resource_events(event: EventChangeEvent, params: EventEnricherParams):
         obj.kind,
         obj.name,
         obj.namespace,
-        included_types=params.included_types,
-        max_events=params.max_events,
     )
     if events_table:
         event.add_enrichment([events_table], {SlackAnnotations.ATTACHMENT: True})
@@ -105,16 +104,25 @@ def deployment_events_enricher(
         return
 
     if params.dependent_pod_mode:
-        events_table_block = get_resource_events_table(
-            "*Related pod events:*",
-            "Pod",
-            None,
-            dep.metadata.namespace,
-            name_substring=dep.metadata.name,
-            included_types=params.included_types,
-            max_events=params.max_events,
-        )
+        pods = list_pods_using_selector(dep.metadata.namespace, dep.spec.selector, "status.phase!=Running")
+        if pods:
+            selected_pods = pods if len(pods) <= params.max_pods else pods[:params.max_pods]
+            for pod in selected_pods:
+                events_table_block = get_resource_events_table(
+                    f"*Pod events for {pod.metadata.name}:*",
+                    "Pod",
+                    pod.metadata.name,
+                    pod.metadata.namespace,
+                    included_types=params.included_types,
+                    max_events=params.max_events,
+                )
+                if events_table_block:
+                    event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
     else:
+        pods = list_pods_using_selector(dep.metadata.namespace, dep.spec.selector, "status.phase=Running")
+        event.add_enrichment(
+            [MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({len(pods)})*")]
+        )
         events_table_block = get_resource_events_table(
             "*Deployment events:*",
             dep.kind,
@@ -123,6 +131,5 @@ def deployment_events_enricher(
             included_types=params.included_types,
             max_events=params.max_events,
         )
-
-    if events_table_block:
-        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+        if events_table_block:
+            event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})

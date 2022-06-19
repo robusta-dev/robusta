@@ -9,7 +9,7 @@ from ...integrations.kubernetes.api_client_utils import parse_kubernetes_datetim
 def filter_event(
     ev: Event, name_substring_filter: str, included_types: Optional[List[str]]
 ) -> bool:
-    if name_substring_filter not in ev.involvedObject.name:
+    if name_substring_filter is not None and name_substring_filter not in ev.involvedObject.name:
         return False
     if included_types is not None and ev.type.lower() not in [
         t.lower() for t in included_types
