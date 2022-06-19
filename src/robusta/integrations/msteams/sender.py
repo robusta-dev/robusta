@@ -55,8 +55,9 @@ class MsTeamsSender:
     @classmethod
     def send_finding_to_ms_teams(cls, webhook_url: str, finding: Finding, platform_enabled: bool, cluster_name: str):
         msg = MsTeamsMsg(webhook_url)
+        silence_uri = finding.get_prometheus_silence_uri(cluster_name) if finding.add_silence_uri else ""
         msg.write_title_and_desc(finding.title, finding.description, finding.severity.name,
-                                 platform_enabled, finding.investigate_uri, cluster_name)
+                                 platform_enabled, finding.add_silence_uri, finding.investigate_uri, silence_uri, cluster_name)
         
         for enrichment in finding.enrichments:
             files_blocks, other_blocks = cls.__split_block_to_files_and_all_the_rest(enrichment)

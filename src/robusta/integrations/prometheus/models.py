@@ -155,5 +155,6 @@ class PrometheusKubernetesAlert(
             subject=alert_subject,
             fingerprint=self.alert.fingerprint,
             starts_at=self.alert.startsAt,
-            ends_at=ends_at
+            ends_at=ends_at,
+            add_silence_uri=True
         )
