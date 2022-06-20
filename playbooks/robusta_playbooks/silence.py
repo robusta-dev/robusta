@@ -1,5 +1,6 @@
-from robusta.integrations.prometheus.utils import  AlertManagerDiscovery
+from robusta.integrations.prometheus.utils import AlertManagerDiscovery
 from robusta.api import *
+
 
 class Matcher(BaseModel):
     isEqual: bool
@@ -9,6 +10,7 @@ class Matcher(BaseModel):
 
     def stringify(self) -> str:
         return f"{self.name}={self.value}"
+
 
 class Silence(BaseModel):
     class silence_status(BaseModel):
@@ -22,12 +24,20 @@ class Silence(BaseModel):
     endsAt: datetime
     matchers: List[Matcher]
 
-    def matchers_as_strings(self) -> List[str]:
-        return [matcher.stringify() for matcher in self.matchers]
+    def matchers_as_string(self) -> str:
+        class MatchersList(BaseModel):
+            matchers: List[Matcher]
+        return MatchersList(**{'matchers': self.matchers}).json()
 
     def list(self) -> List[str]:
-        return [str(self.id), self.status.state, self.comment, self.createdBy,
-                self.startsAt.isoformat(timespec='seconds'), self.endsAt.isoformat(timespec='seconds'), json.dumps(self.matchers_as_strings()) ]
+        return [
+            str(self.id),
+            self.status.state,
+            self.comment,
+            self.createdBy,
+            self.startsAt.isoformat(timespec='seconds'),
+            self.endsAt.isoformat(timespec='seconds'),
+            self.matchers_as_string()]
         
 
 class GetSilenceParams(ActionParams):
