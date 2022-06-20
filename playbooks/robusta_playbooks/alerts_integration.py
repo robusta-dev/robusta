@@ -221,6 +221,7 @@ class LogEnricherParams(ActionParams):
     warn_on_missing_label: bool = False
     regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
     regex_replacement_style: Optional[str] = None
+    previous: bool = False
 
 
 @action
@@ -247,7 +248,8 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     log_data = pod.get_logs(
         regex_replacer_patterns=params.regex_replacer_patterns,
-        regex_replacement_style=regex_replacement_style
+        regex_replacement_style=regex_replacement_style,
+        previous=params.previous
     )
     if not log_data:
         return
