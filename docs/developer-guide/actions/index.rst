@@ -15,3 +15,4 @@ questions or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues
    findings-api
    triggers-and-events
    utility-functions
+   documenting-actions

@@ -3,7 +3,7 @@ import yaml
 import logging
 import jsonref
 from collections import defaultdict
-from typing import Type, List, Callable, Optional, Union, get_origin, get_args
+from typing import Type, List, Dict, Callable, Optional, Union, get_origin, get_args
 from ..playbooks.base_trigger import BaseTrigger, ExecutionBaseEvent
 from ..playbooks.actions_registry import Action
 from ..playbooks.trigger import Trigger
@@ -149,16 +149,23 @@ class ExamplesGenerator:
         return self.get_k8s_trigger_list(name, all_triggers, True)
 
     def generate_example_config(
-        self, action_func: Callable, suggested_trigger: Optional[str]
+        self,
+        action_func: Callable,
+        suggested_trigger: Optional[str],
+        trigger_params: Optional[Dict[str, str]] = None,
     ):
         action_metadata = Action(action_func)
         if suggested_trigger is not None:
             trigger = suggested_trigger
         else:
             trigger = self.get_possible_triggers(action_metadata.event_type)[0]
+
+        if trigger_params is None:
+            trigger_params = {}
+
         example = {
             "actions": [{action_metadata.action_name: {}}],
-            "triggers": [{trigger: {}}],
+            "triggers": [{trigger: trigger_params}],
         }
         if action_metadata.params_type:
             action_model = action_metadata.params_type
