@@ -18,6 +18,7 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
     rate_limit: int = 3600
     restart_reason: str = None
     restart_count: int = 2
+    terminated_reason: str = None
 
     def __init__(
         self,
@@ -27,6 +28,7 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
         rate_limit: int = 3600,
         restart_reason: str = None,
         restart_count: int = 2,
+            terminated_reason: str = None
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -36,6 +38,7 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
         self.rate_limit = rate_limit
         self.restart_reason = restart_reason
         self.restart_count = restart_count
+        self.terminated_reason = terminated_reason
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         should_fire = super().should_fire(event, playbook_id)
@@ -63,6 +66,8 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
                 self.restart_reason is None
                 or self.restart_reason in container_status.state.waiting.reason
             )
+            and (self.is_terminated_reason(container_status.lastState, self.terminated_reason)
+                 or self.is_terminated_reason(container_status.state, self.terminated_reason))
         ]
 
         if not crashing:
@@ -80,3 +85,6 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
             namespace + ":" + name,
             self.rate_limit,
         )
+
+    def is_terminated_reason(self, container_state, terminated_reason):
+        return terminated_reason is None or (container_state and container_state.terminated and 'OOMKilled' in container_state.terminated.reason)
