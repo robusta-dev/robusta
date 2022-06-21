@@ -5,10 +5,11 @@ from datetime import datetime
 from enum import Enum
 from pydantic.main import BaseModel
 from typing import List, Dict, Union
+
 from ..model.env_vars import ROBUSTA_UI_DOMAIN
 from ..reporting.consts import FindingSubjectType, FindingSource, FindingType
 from ...core.discovery.top_service_resolver import TopServiceResolver
-
+from requests import get
 
 class BaseBlock(BaseModel):
     hidden: bool = False
@@ -98,6 +99,7 @@ class Finding(Filterable):
         fingerprint: str = None,
         starts_at: datetime = None,
         ends_at: datetime = None,
+        add_silence_uri: bool = False
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
@@ -117,6 +119,7 @@ class Finding(Filterable):
             f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
         )
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
+        self.add_silence_uri = add_silence_uri
         self.creation_date = creation_date
         self.fingerprint = fingerprint
         self.starts_at = starts_at if starts_at else datetime.now()
@@ -146,3 +149,20 @@ class Finding(Filterable):
 
     def __str__(self):
         return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
+
+    def get_prometheus_silence_uri(self, cluster_id: str) -> Dict[str,str]:
+        labels: Dict[str,str] = {}
+        labels["alertname"] = self.aggregation_key
+        labels["cluster"] = cluster_id
+        if self.subject.namespace:
+            labels["namespace"] = self.subject.namespace
+
+        kind : str = self.subject.subject_type.value
+        if kind and self.subject.name:
+            labels[kind] = self.subject.name
+ 
+        #todo add more resources.
+        uri = get(f"{ROBUSTA_UI_DOMAIN}/silences/create", labels)
+        return uri.url
+
+

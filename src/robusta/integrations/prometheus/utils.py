@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from ...utils.service_discovery import find_service_url
 
@@ -24,5 +25,32 @@ class PrometheusDiscovery:
                 return service_url
         logging.error(
             "Prometheus url could not be found. Add 'prometheus_url' under global_config"
+        )
+        return None
+
+class AlertManagerDiscovery():
+    alertManager_url: str = None
+
+    @classmethod
+    def find_alert_manager_url(cls, alertManager_url: Optional[str]):
+        """
+        Try to autodiscover the url of an in-cluster alert manager service
+        """
+        if alertManager_url:
+            cls.alertManager_url = alertManager_url
+
+        if cls.alertManager_url:
+            return cls.alertManager_url
+        alertmanager_selectors = [
+            "operated-alertmanager=true",
+            "app.kubernetes.io/name=alertmanager",
+        ]
+        for label_selector in alertmanager_selectors:
+            service_url = find_service_url(label_selector)
+            if service_url:
+                cls.alertManager_url = service_url
+                return service_url
+        logging.error(
+            "Alert manager url could not be found. Add 'alertmanager_url' under global_config"
         )
         return None
