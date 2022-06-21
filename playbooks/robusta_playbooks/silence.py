@@ -56,14 +56,15 @@ class DeleteSilenceParams(ActionParams):
 
 class AddSilenceParams(ActionParams):
     """
-    :var comment: uuid of the silence.
-    :var created_by: uuid of the silence.
-    :var starts_at: uuid of the silence.
-    :var ends_at: uuid of the silence.
+    :var id: uuid of the silence. use for update, empty on create.
+    :var comment: text comment of the silence.
+    :var created_by: author of the silence.
+    :var startsAt: date.
+    :var endsAt: date.
     :var matchers: List of matchers to filter the silence effect.
     :var alertmanager_url: Alternative Alert Manager url to send requests.
     """
-
+    id: Optional[str]
     comment: str
     createdBy: str
     startsAt: datetime
