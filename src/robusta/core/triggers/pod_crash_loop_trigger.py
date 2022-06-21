@@ -28,7 +28,7 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
         rate_limit: int = 3600,
         restart_reason: str = None,
         restart_count: int = 2,
-            terminated_reason: str = None
+        terminated_reason: str = None
     ):
         super().__init__(
             name_prefix=name_prefix,
