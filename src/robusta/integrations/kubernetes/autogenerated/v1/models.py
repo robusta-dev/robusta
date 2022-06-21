@@ -19,5 +19,6 @@ KIND_TO_MODEL_CLASS = {
     'Job': RobustaJob,
     'Namespace': Namespace,
     'ServiceAccount': ServiceAccount,
-    'PersistentVolume': PersistentVolume
+    'PersistentVolume': PersistentVolume,
+    'ConfigMap': ConfigMap
 }

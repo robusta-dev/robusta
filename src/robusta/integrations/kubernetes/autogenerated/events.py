@@ -4,7 +4,7 @@ import logging
 import traceback
 from dataclasses import dataclass
 from abc import abstractmethod
-from hikaru.model import Pod,ReplicaSet,DaemonSet,Deployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,Job,Namespace,ServiceAccount,PersistentVolume
+from hikaru.model import Pod,ReplicaSet,DaemonSet,Deployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,Job,Namespace,ServiceAccount,PersistentVolume,ConfigMap
 from hikaru.utils import Response
 from pydantic import BaseModel
 from typing import Union, Optional, List
@@ -13,6 +13,7 @@ from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
 from ..custom_models import RobustaPod,RobustaDeployment,RobustaJob
 from hikaru.model.rel_1_16.v1 import ClusterRole as v1ClusterRole    
 from hikaru.model.rel_1_16.v1 import ClusterRoleBinding as v1ClusterRoleBinding    
+from hikaru.model.rel_1_16.v1 import ConfigMap as v1ConfigMap    
 from hikaru.model.rel_1_16.v1 import DaemonSet as v1DaemonSet    
 from hikaru.model.rel_1_16.v1 import Deployment as v1Deployment    
 from hikaru.model.rel_1_16.v1 import Event as v1Event    
@@ -28,6 +29,7 @@ from hikaru.model.rel_1_16.v1 import ServiceAccount as v1ServiceAccount
 from hikaru.model.rel_1_16.v1 import StatefulSet as v1StatefulSet    
 from hikaru.model.rel_1_16.v2beta1 import ClusterRole as v2beta1ClusterRole    
 from hikaru.model.rel_1_16.v2beta1 import ClusterRoleBinding as v2beta1ClusterRoleBinding    
+from hikaru.model.rel_1_16.v2beta1 import ConfigMap as v2beta1ConfigMap    
 from hikaru.model.rel_1_16.v2beta1 import DaemonSet as v2beta1DaemonSet    
 from hikaru.model.rel_1_16.v2beta1 import Deployment as v2beta1Deployment    
 from hikaru.model.rel_1_16.v2beta1 import Event as v2beta1Event    
@@ -43,6 +45,7 @@ from hikaru.model.rel_1_16.v2beta1 import ServiceAccount as v2beta1ServiceAccoun
 from hikaru.model.rel_1_16.v2beta1 import StatefulSet as v2beta1StatefulSet    
 from hikaru.model.rel_1_16.v2beta2 import ClusterRole as v2beta2ClusterRole    
 from hikaru.model.rel_1_16.v2beta2 import ClusterRoleBinding as v2beta2ClusterRoleBinding    
+from hikaru.model.rel_1_16.v2beta2 import ConfigMap as v2beta2ConfigMap    
 from hikaru.model.rel_1_16.v2beta2 import DaemonSet as v2beta2DaemonSet    
 from hikaru.model.rel_1_16.v2beta2 import Deployment as v2beta2Deployment    
 from hikaru.model.rel_1_16.v2beta2 import Event as v2beta2Event    
@@ -74,6 +77,7 @@ LOADERS_MAPPINGS = {
     'namespace': (False, Namespace.readNamespace),
     'serviceaccount': (True, ServiceAccount.readNamespacedServiceAccount),
     'persistentvolume': (False, PersistentVolume.readPersistentVolume),
+    'configmap': (True, ConfigMap.readNamespacedConfigMap),
 }
 
 
@@ -98,13 +102,13 @@ class ResourceAttributes(ExecutionEventBaseParams):
 
 @dataclass
 class KubernetesResourceEvent(ExecutionBaseEvent):
-    _obj: Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume]] = None
+    _obj: Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,ConfigMap]] = None
 
-    def __init__(self, obj: Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume], named_sinks: List[str]):
+    def __init__(self, obj: Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,ConfigMap], named_sinks: List[str]):
         super().__init__(named_sinks=named_sinks)
         self._obj = obj
 
-    def get_resource(self) -> Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume]]:
+    def get_resource(self) -> Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,ConfigMap]]:
         return self._obj
 
     @staticmethod
@@ -123,10 +127,10 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
 
 @dataclass
 class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
-    obj: Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Namespace,v1Node,v1PersistentVolume,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet,v2beta1ClusterRole,v2beta1ClusterRoleBinding,v2beta1DaemonSet,v2beta1Event,v2beta1HorizontalPodAutoscaler,v2beta1Namespace,v2beta1Node,v2beta1PersistentVolume,v2beta1ReplicaSet,v2beta1Service,v2beta1ServiceAccount,v2beta1StatefulSet,v2beta2ClusterRole,v2beta2ClusterRoleBinding,v2beta2DaemonSet,v2beta2Event,v2beta2HorizontalPodAutoscaler,v2beta2Namespace,v2beta2Node,v2beta2PersistentVolume,v2beta2ReplicaSet,v2beta2Service,v2beta2ServiceAccount,v2beta2StatefulSet]] = None
-    old_obj: Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Namespace,v1Node,v1PersistentVolume,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet,v2beta1ClusterRole,v2beta1ClusterRoleBinding,v2beta1DaemonSet,v2beta1Event,v2beta1HorizontalPodAutoscaler,v2beta1Namespace,v2beta1Node,v2beta1PersistentVolume,v2beta1ReplicaSet,v2beta1Service,v2beta1ServiceAccount,v2beta1StatefulSet,v2beta2ClusterRole,v2beta2ClusterRoleBinding,v2beta2DaemonSet,v2beta2Event,v2beta2HorizontalPodAutoscaler,v2beta2Namespace,v2beta2Node,v2beta2PersistentVolume,v2beta2ReplicaSet,v2beta2Service,v2beta2ServiceAccount,v2beta2StatefulSet]] = None
+    obj: Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1ConfigMap,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Namespace,v1Node,v1PersistentVolume,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet,v2beta1ClusterRole,v2beta1ClusterRoleBinding,v2beta1ConfigMap,v2beta1DaemonSet,v2beta1Event,v2beta1HorizontalPodAutoscaler,v2beta1Namespace,v2beta1Node,v2beta1PersistentVolume,v2beta1ReplicaSet,v2beta1Service,v2beta1ServiceAccount,v2beta1StatefulSet,v2beta2ClusterRole,v2beta2ClusterRoleBinding,v2beta2ConfigMap,v2beta2DaemonSet,v2beta2Event,v2beta2HorizontalPodAutoscaler,v2beta2Namespace,v2beta2Node,v2beta2PersistentVolume,v2beta2ReplicaSet,v2beta2Service,v2beta2ServiceAccount,v2beta2StatefulSet]] = None
+    old_obj: Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1ConfigMap,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Namespace,v1Node,v1PersistentVolume,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet,v2beta1ClusterRole,v2beta1ClusterRoleBinding,v2beta1ConfigMap,v2beta1DaemonSet,v2beta1Event,v2beta1HorizontalPodAutoscaler,v2beta1Namespace,v2beta1Node,v2beta1PersistentVolume,v2beta1ReplicaSet,v2beta1Service,v2beta1ServiceAccount,v2beta1StatefulSet,v2beta2ClusterRole,v2beta2ClusterRoleBinding,v2beta2ConfigMap,v2beta2DaemonSet,v2beta2Event,v2beta2HorizontalPodAutoscaler,v2beta2Namespace,v2beta2Node,v2beta2PersistentVolume,v2beta2ReplicaSet,v2beta2Service,v2beta2ServiceAccount,v2beta2StatefulSet]] = None
 
-    def get_resource(self) -> Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Namespace,v1Node,v1PersistentVolume,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet,v2beta1ClusterRole,v2beta1ClusterRoleBinding,v2beta1DaemonSet,v2beta1Event,v2beta1HorizontalPodAutoscaler,v2beta1Namespace,v2beta1Node,v2beta1PersistentVolume,v2beta1ReplicaSet,v2beta1Service,v2beta1ServiceAccount,v2beta1StatefulSet,v2beta2ClusterRole,v2beta2ClusterRoleBinding,v2beta2DaemonSet,v2beta2Event,v2beta2HorizontalPodAutoscaler,v2beta2Namespace,v2beta2Node,v2beta2PersistentVolume,v2beta2ReplicaSet,v2beta2Service,v2beta2ServiceAccount,v2beta2StatefulSet]]:
+    def get_resource(self) -> Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1ConfigMap,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Namespace,v1Node,v1PersistentVolume,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet,v2beta1ClusterRole,v2beta1ClusterRoleBinding,v2beta1ConfigMap,v2beta1DaemonSet,v2beta1Event,v2beta1HorizontalPodAutoscaler,v2beta1Namespace,v2beta1Node,v2beta1PersistentVolume,v2beta1ReplicaSet,v2beta1Service,v2beta1ServiceAccount,v2beta1StatefulSet,v2beta2ClusterRole,v2beta2ClusterRoleBinding,v2beta2ConfigMap,v2beta2DaemonSet,v2beta2Event,v2beta2HorizontalPodAutoscaler,v2beta2Namespace,v2beta2Node,v2beta2PersistentVolume,v2beta2ReplicaSet,v2beta2Service,v2beta2ServiceAccount,v2beta2StatefulSet]]:
         return self.obj
 
 
@@ -610,6 +614,38 @@ class PersistentVolumeChangeEvent(PersistentVolumeEvent, KubernetesAnyChangeEven
         return self.obj
 
 
+class ConfigMapAttributes(ExecutionEventBaseParams):
+    name: str
+    namespace: str
+
+
+@dataclass
+class ConfigMapEvent(KubernetesResourceEvent):
+    def __init__(self, obj: ConfigMap, named_sinks: List[str]):
+        super().__init__(obj=obj, named_sinks=named_sinks)
+
+    def get_configmap(self) -> Optional[ConfigMap]:
+        return self._obj
+
+    @staticmethod
+    def from_params(params: ConfigMapAttributes) -> Optional["ConfigMapEvent"]:
+        try:
+            obj = ConfigMap.readNamespacedConfigMap(name=params.name, namespace=params.namespace).obj
+        except Exception:
+            logging.error(f"Could not load ConfigMap {params}", exc_info=True)
+            return None
+        return ConfigMapEvent(obj=obj, named_sinks=params.named_sinks)
+
+
+@dataclass
+class ConfigMapChangeEvent(ConfigMapEvent, KubernetesAnyChangeEvent):
+    obj: Optional[Union[v1ConfigMap,v2beta1ConfigMap,v2beta2ConfigMap]] = None
+    old_obj: Optional[Union[v1ConfigMap,v2beta1ConfigMap,v2beta2ConfigMap]] = None
+
+    def get_configmap(self) -> Optional[Union[v1ConfigMap,v2beta1ConfigMap,v2beta2ConfigMap]]:
+        return self.obj
+
+
 
 KIND_TO_EVENT_CLASS = {
     'pod': PodChangeEvent,
@@ -626,5 +662,6 @@ KIND_TO_EVENT_CLASS = {
     'job': JobChangeEvent,
     'namespace': NamespaceChangeEvent,
     'serviceaccount': ServiceAccountChangeEvent,
-    'persistentvolume': PersistentVolumeChangeEvent
+    'persistentvolume': PersistentVolumeChangeEvent,
+    'configmap': ConfigMapChangeEvent
 }
