@@ -32,7 +32,7 @@ class Silence(BaseModel):
     def list(self) -> List[str]:
         return [
             str(self.id),
-            self.status.state,
+            self.status.json(),
             self.comment,
             self.createdBy,
             self.startsAt.isoformat(timespec='seconds'),
