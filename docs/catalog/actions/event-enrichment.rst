@@ -33,8 +33,6 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
 
-.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.pod_events_enricher
-
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_graph_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.pod_ps
