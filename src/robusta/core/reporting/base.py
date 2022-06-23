@@ -160,6 +160,8 @@ class Finding(Filterable):
         kind : str = self.subject.subject_type.value
         if kind and self.subject.name:
             labels[kind] = self.subject.name
+
+        labels["referer"] = "sink"
  
         #todo add more resources.
         uri = get(f"{ROBUSTA_UI_DOMAIN}/silences/create", labels)
