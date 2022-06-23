@@ -19,7 +19,7 @@ class PlaybookDefinition(BaseModel):
         self._actions = []
         for action in self.actions:
             if len(action.keys()) != 1:
-                raise Exception("Action must have a single name")
+                raise Exception(f"Action must have a single name: {action.keys()}")
 
             (action_name, action_params) = next(iter(action.items()))
             self._actions.append(
