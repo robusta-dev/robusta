@@ -19,7 +19,7 @@ Defining playbooks
 
 Playbooks are defined using the ``customPlaybooks`` Helm value.
 
-Every playbooks has three parts: triggers, actions, and sinks. See the :ref:`Track Kubernetes Changes` tutorial for
+Every playbooks has three parts: triggers, actions, and sinks. See the :ref:`Automation Basics` tutorial for
 a walkthrough.
 
 .. code-block:: yaml
@@ -191,7 +191,11 @@ Here is a full example showing how to configure all possible sinks:
 Sink matchers
 ^^^^^^^^^^^^^
 
-Sinks can be configured to report findings only when they match **all** the specified regular expressions:
+Sinks can be configured to only report certain findings. If a finding matches more than one sink, it
+will be sent to each one.
+
+Each matcher can be a regular expression or a list of exact values.
+If there is more than one rule, **all** the rules must match for a finding to be sent.
 
 .. code-block:: yaml
 
@@ -201,8 +205,10 @@ Sinks can be configured to report findings only when they match **all** the spec
         slack_channel: test-notifications
         api_key: secret-key
         match:
-          # match any namespace containing the "test" substring
-          namespace: test
+          # match "dev" or "test" namespaces
+          namespace:
+          - dev
+          - test
           # match any node containing the "test-node" substring
           node: test-node
     - slack_sink:
@@ -213,16 +219,24 @@ Sinks can be configured to report findings only when they match **all** the spec
           # match the "prod" namespace exactly
           namespace: ^prod$
     - slack_sink:
-        name: pod_slack_sink
+        name: other_slack_sink
         slack_channel: pod-notifications
         api_key: secret-key
         match:
-          # match only notifications for pods
-          kind: pod
+          # match all notifications EXCEPT for those related to pods and deployments
+          # this uses negative-lookahead regexes as well as a regex OR
+          kind: ^(?!(pod)|(deployment))
+   - slack_sink:
+        name: crashloopbackoff_slack_sink
+        slack_channel: crash-notifications
+        api_key: secret-key
+        match:
+          # match notifications related to crashing pods
+          identifier: report_crash_loop
 
 Supported attributes:
   - ``title``: e.g. ``Crashing pod crash-pod in namespace default``
-  - ``identifier``: e.g. ``restart_loop_reporter``
+  - ``identifier``: e.g. ``report_crash_loop`` [#f1]_
   - ``severity``: one of ``INFO``, ``LOW``, ``MEDIUM``, ``HIGH``
   - ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
   - ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
@@ -307,8 +321,24 @@ For public repos load the playbook via HTTPS, for private repos you will need to
           ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
           -----END OPENSSH PRIVATE KEY-----
 
-
 The ``key`` should contain a deployment key, with ``read`` access. The ``key`` is required when accessing a git repo via ssh, even for public repositories.
+
+You can also save the SSH key in a `Kubernetes Secret <https://kubernetes.io/docs/concepts/configuration/secret/>`_, and reference it using an environment variable, like this:
+
+.. code-block:: yaml
+
+    additional_env_vars:
+     - name: GITHUB_SSH_KEY
+       valueFrom:
+         secretKeyRef:
+           name: ssh-key
+           key: id_rsa
+
+    playbookRepos:
+      # we're adding the robusta chaos-engineering playbooks here
+      my_extra_playbooks:
+        url: "git@github.com:robusta-dev/robusta-chaos.git"
+        key: "{{env.GITHUB_SSH_KEY}}"
 
 .. note::
 
@@ -333,3 +363,55 @@ The alerts are based on excellent work already done by the kube-prometheus-stack
 alerts from the kubernetes-mixin project.
 
 Our alerting will likely diverge more over time as we take advantage of more Robusta features.
+
+Deploying Robusta on specific nodes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Additional configurations can be added to specify which nodes you would like for Robusta to run on by using ``nodeSelectors`` or ``affinity``.
+The ``nodeSelector`` or ``affinity`` chosen should be configured for both runner and forwarder (kubewatch).
+
+The following configuration is an example that will cause Robusta's pods to only be scheduled on nodes running linux.
+Our ``nodeSelector`` checks if node has a label ``kubernetes.io/os`` that has the value ``linux``.
+
+.. code-block:: yaml
+
+    runner:
+      nodeSelector:
+        kubernetes.io/os: linux
+
+    kubewatch:
+      nodeSelector:
+        kubernetes.io/os: linux
+
+Additionally we also support affinities in our pods, you can select a node in a similar way using nodeAffinities.
+
+.. code-block:: yaml
+
+
+    runner:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+
+    kubewatch:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+
+For a list of all the current labels and values you have on your nodes run ``kubectl get nodes --show-labels``
+
+.. rubric:: Footnotes
+
+.. [#f1] This is equivalent to ``Finding.aggregation_key`` which is set by each playbook that generates results. For now you'll have to check a playbook's source code to see what the value should be. For example, the `resource_babysitter playbook  <https://github.com/robusta-dev/robusta/blob/master/playbooks/robusta_playbooks/babysitter.py#L66>`_  sets a value of ``ConfigurationChange/KubernetesResource/Change``

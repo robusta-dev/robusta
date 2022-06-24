@@ -11,9 +11,11 @@ class PrometheusAlertParams(ActionParams):
     :var description: Simulated alert description.
     :var generator_url: Prometheus generator_url. Some enrichers, use this attribute to query Prometheus.
     """
+
     alert_name: str
     pod_name: Optional[str] = None
     node_name: Optional[str] = None
+    deployment_name: Optional[str] = None
     namespace: str = "default"
     status: str = "firing"
     severity: str = "error"
@@ -29,6 +31,7 @@ def prometheus_alert(
     Simulate Prometheus alert sent to the Robusta runner.
     Can be used for testing, when implementing actions triggered by Prometheus alerts.
 
+    See the full parameters if you need to simulate an alert on a Pod or Node.
     """
     labels = {
         "severity": prometheus_event_data.severity,
@@ -39,6 +42,8 @@ def prometheus_alert(
         labels["pod"] = prometheus_event_data.pod_name
     if prometheus_event_data.node_name is not None:
         labels["node"] = prometheus_event_data.node_name
+    if prometheus_event_data.deployment_name is not None:
+        labels["deployment"] = prometheus_event_data.deployment_name
 
     prometheus_event = AlertManagerEvent(
         **{
@@ -73,7 +78,9 @@ class AlertManagerEventParams(ActionParams):
 
 
 @action
-def handle_alertmanager_event(event: ExecutionBaseEvent, alert_manager_event: AlertManagerEventParams):
+def handle_alertmanager_event(
+    event: ExecutionBaseEvent, alert_manager_event: AlertManagerEventParams
+):
     """
     Handle alert manager event, as a Robusta action.
     """

@@ -200,19 +200,24 @@ def to_name(action_name: str) -> str:
 
 class RobustaActionDirective(SphinxDirective):
     """
-    Document a Robusta playbook action
+     Document a Robusta playbook action
 
-    Example:
+     Example:
 
-        .. robusta-action:: playbooks.robusta_playbooks.some_module.some_playbook
+         .. robusta-action:: playbooks.robusta_playbooks.some_module.some_playbook
 
-    Optionally, a second parameter can be given, recommending a relevant trigger to show in the documentation:
+     Optionally, a second parameter can be given, recommending a relevant trigger to show in the documentation:
 
-        .. robusta-action:: playbooks.robusta_playbooks.some_module.some_playbook on_deployment_update
+         .. robusta-action:: playbooks.robusta_playbooks.some_module.some_playbook on_deployment_update
+
+    Finally, there are optional flags:
+
+         :reference-label: Change the Sphinx reference (anchor) that is generated here - see https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html#role-ref
+                           This is useful when a playbook action is documented in multiple locations and you want to avoid duplicate labels
 
     """
 
-    option_spec = DummyOptionSpec()
+    option_spec = {"reference-label": str}
     has_content = True
     required_arguments = 1
     optional_arguments = 1
@@ -256,6 +261,10 @@ class RobustaActionDirective(SphinxDirective):
         indented_example = "\n".join(" " * 32 + l for l in example_yaml.split("\n"))
         indented_triggers = "\n".join(" " * 24 + l for l in triggers)
 
+        reference_label = self.options.get(
+            "reference-label", action_definition.action_name
+        )
+
         indented_cli_trigger_example = ""
         if cli_trigger:
             indented_cli_trigger_example = f"""\
@@ -268,12 +277,12 @@ class RobustaActionDirective(SphinxDirective):
 
         content = textwrap.dedent(
             f"""\
-            .. _{action_definition.action_name}:
+            .. _{reference_label}:
             
             {to_name(action_definition.action_name)}
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-            .. admonition:: Playbook Action
+            .. admonition:: Playbook Action: {action_definition.action_name}
             
                 .. tab-set::
             
@@ -353,7 +362,7 @@ class RobustaActionDirective(SphinxDirective):
             rst.extend(
                 [
                     "",
-                    "Or any other inheriting trigger. See :ref:`Trigger Action Binding` for details",
+                    "Or any other inheriting trigger. See :ref:`Trigger-Action Compatibility` for details",
                     "",
                 ]
             )

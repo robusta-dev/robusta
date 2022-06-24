@@ -119,7 +119,7 @@ class KubernetesDiffBlock(BaseBlock):
         old: Optional[HikaruDocumentBase],
         new: Optional[HikaruDocumentBase],
         name: str,
-        namespace: str = None
+        namespace: str = None,
     ):
         """
         :param interesting_diffs: parts of the diff to emphasize - some sinks will only show these to save space
@@ -134,7 +134,9 @@ class KubernetesDiffBlock(BaseBlock):
         )
         num_modifications = len(interesting_diffs) - num_additions - num_deletions
 
-        resource_name = self._obj_to_name(old, name, namespace) or self._obj_to_name(new, name, namespace)
+        resource_name = self._obj_to_name(old, name, namespace) or self._obj_to_name(
+            new, name, namespace
+        )
 
         super().__init__(
             diffs=interesting_diffs,
@@ -185,6 +187,8 @@ class JsonBlock(BaseBlock):
 class TableBlock(BaseBlock):
     """
     Table display of a list of lists.
+
+    Note: Wider tables appears as a file attachment on Slack, because they aren't rendered properly inline
     """
 
     rows: List[List]
@@ -193,16 +197,27 @@ class TableBlock(BaseBlock):
     table_name: str = ""
 
     def __init__(
-        self, rows: List[List], headers: Sequence[str] = (), column_renderers: Dict = {}, table_name: str = ""
+        self,
+        rows: List[List],
+        headers: Sequence[str] = (),
+        column_renderers: Dict = {},
+        table_name: str = "",
     ):
         """
         :param rows: a list of rows. each row is a list of columns
         :param headers: names of each column
         """
-        super().__init__(rows=rows, headers=headers, column_renderers=column_renderers, table_name=table_name)
+        super().__init__(
+            rows=rows,
+            headers=headers,
+            column_renderers=column_renderers,
+            table_name=table_name,
+        )
 
     @classmethod
-    def __calc_max_width(cls, headers, rendered_rows) -> List[int]:
+    def __calc_max_width(
+        cls, headers, rendered_rows, table_max_width: int
+    ) -> List[int]:
         # We need to make sure the total table width, doesn't exceed the max width,
         # otherwise, the table is printed corrupted
         columns_max_widths = [len(header) for header in headers]
@@ -211,35 +226,68 @@ class TableBlock(BaseBlock):
                 columns_max_widths[idx] = max(len(str(val)), columns_max_widths[idx])
 
         if (
-            sum(columns_max_widths) > PRINTED_TABLE_MAX_WIDTH
+            sum(columns_max_widths) > table_max_width
         ):  # We want to limit the widest column
             largest_width = max(columns_max_widths)
             widest_column_idx = columns_max_widths.index(largest_width)
-            diff = sum(columns_max_widths) - PRINTED_TABLE_MAX_WIDTH
+            diff = sum(columns_max_widths) - table_max_width
             columns_max_widths[widest_column_idx] = largest_width - diff
             if (
                 columns_max_widths[widest_column_idx] < 0
             ):  # in case the diff is bigger than the largest column
                 # just divide equally
                 columns_max_widths = [
-                    int(PRINTED_TABLE_MAX_WIDTH / len(columns_max_widths))
+                    int(table_max_width / len(columns_max_widths))
                     for i in range(0, len(columns_max_widths))
                 ]
 
         return columns_max_widths
 
     @classmethod
+    def __trim_rows(cls, contents: str, max_chars: int):
+        # We need to make sure that the total character count doesn't exceed max_chars,
+        # but if we cut off a row in the middle then it messes up the whole table.
+        # So instead remove entire rows at a time
+        if len(contents) <= max_chars:
+            return contents
+
+        truncator = "\n..."
+        max_chars -= len(truncator)
+
+        lines = contents.splitlines()
+        length_so_far = 0
+        lines_to_include = 0
+        for l in lines:
+            new_length = length_so_far + len("\n") + len(l)
+            if new_length > max_chars:
+                break
+            else:
+                length_so_far = new_length
+                lines_to_include += 1
+
+        return "\n".join(lines[:lines_to_include]) + truncator
+
+    @classmethod
     def __to_strings_rows(cls, rows):
         # This is just to assert all row column values are strings. Tabulate might fail on other types
         return [list(map(lambda column_value: str(column_value), row)) for row in rows]
 
-    def to_markdown(self) -> MarkdownBlock:
+    def to_markdown(self, max_chars=None) -> MarkdownBlock:
         table_header = f"{self.table_name}\n" if self.table_name else ""
-        return MarkdownBlock(f"{table_header}```\n{self.to_table_string()}\n```")
+        prefix = f"{table_header}```\n"
+        suffix = f"\n```"
+        table_contents = self.to_table_string()
+        if max_chars is not None:
+            max_chars = max_chars - len(prefix) - len(suffix)
+            table_contents = self.__trim_rows(table_contents, max_chars)
 
-    def to_table_string(self) -> str:
+        return MarkdownBlock(f"{prefix}{table_contents}{suffix}")
+
+    def to_table_string(self, table_max_width: int = PRINTED_TABLE_MAX_WIDTH) -> str:
         rendered_rows = self.__to_strings_rows(self.render_rows())
-        col_max_width = self.__calc_max_width(self.headers, rendered_rows)
+        col_max_width = self.__calc_max_width(
+            self.headers, rendered_rows, table_max_width
+        )
         return tabulate(
             rendered_rows,
             headers=self.headers,

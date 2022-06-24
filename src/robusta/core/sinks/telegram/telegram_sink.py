@@ -21,7 +21,7 @@ SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: u"\U0001F534",
 }
 INVESTIGATE_ICON = u"\U0001F50E"
-
+SILENCE_ICON =	u"\U0001F515"
 
 class TelegramSink(SinkBase):
     def __init__(self, sink_config: TelegramSinkConfigWrapper, registry):
@@ -43,8 +43,9 @@ class TelegramSink(SinkBase):
                 table_blocks = [block for block in enrichment.blocks if isinstance(block, TableBlock)]
                 for block in table_blocks:
                     table_text = tabulate(block.render_rows(), headers=block.headers, tablefmt="presto")
+                    table_name = block.table_name if block.table_name else "table"
                     self.client.send_file(
-                        file_name=f"{block.table_name}.txt",
+                        file_name=f"{table_name}.txt",
                         contents=table_text.encode("utf-8")
                     )
 
@@ -52,7 +53,11 @@ class TelegramSink(SinkBase):
         message_content = self.__build_telegram_title(finding.title, finding.severity)
 
         if platform_enabled:
-            message_content += f"[{INVESTIGATE_ICON} Investigate]({finding.investigate_uri})\n\n"
+            message_content += f"[{INVESTIGATE_ICON} Investigate]({finding.investigate_uri}) "
+            if finding.add_silence_uri:
+                message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_uri(self.cluster_name)})"
+            
+            message_content += "\n\n"
 
         blocks = [MarkdownBlock(text=f"*Source:* `{self.cluster_name}`\n\n")]
 

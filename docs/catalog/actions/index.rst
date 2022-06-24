@@ -13,3 +13,4 @@ Builtin actions
    python-troubleshooting
    java-troubleshooting
    miscellaneous
+   message-formatting

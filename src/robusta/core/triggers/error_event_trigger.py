@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from typing import List
 
 from ..discovery.top_service_resolver import TopServiceResolver
@@ -15,6 +13,8 @@ from ...utils.rate_limiter import RateLimiter
 class WarningEventTrigger(EventAllChangesTrigger):
     rate_limit: int = 3600
     operations: List[str] = None
+    exclude: List[str] = None
+    include: List[str] = None
 
     def __init__(
         self,
@@ -23,6 +23,8 @@ class WarningEventTrigger(EventAllChangesTrigger):
         labels_selector: str = None,
         rate_limit: int = 3600,
         operations: List[str] = None,
+        exclude: List[str] = (),
+        include: List[str] = (),
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -31,6 +33,8 @@ class WarningEventTrigger(EventAllChangesTrigger):
         )
         self.rate_limit = rate_limit
         self.operations = operations
+        self.exclude = exclude
+        self.include = include
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         should_fire = super().should_fire(event, playbook_id)
@@ -53,6 +57,18 @@ class WarningEventTrigger(EventAllChangesTrigger):
 
         if self.operations and exec_event.operation.value not in self.operations:
             return False
+
+        event_content = f"{exec_event.obj.reason}{exec_event.obj.message}".lower()
+        # exclude if any of the exclusions is found in the event content
+        for exclusion in self.exclude:
+            if exclusion.lower() in event_content:
+                return False
+
+        # exclude if all of the inclusions are NOT found in the event content
+        if self.include:
+            matches = [inclusion for inclusion in self.include if inclusion.lower() in event_content]
+            if not matches:
+                return False
 
         # Perform a rate limit for this service key according to the rate_limit parameter
         name = exec_event.obj.involvedObject.name
@@ -78,6 +94,8 @@ class WarningEventCreateTrigger(WarningEventTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         rate_limit: int = 3600,
+        exclude: List[str] = (),
+        include: List[str] = (),
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -85,6 +103,8 @@ class WarningEventCreateTrigger(WarningEventTrigger):
             labels_selector=labels_selector,
             rate_limit=rate_limit,
             operations=["create"],
+            exclude=exclude,
+            include=include,
         )
 
 
@@ -95,6 +115,8 @@ class WarningEventUpdateTrigger(WarningEventTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         rate_limit: int = 3600,
+        exclude: List[str] = (),
+        include: List[str] = (),
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -102,6 +124,8 @@ class WarningEventUpdateTrigger(WarningEventTrigger):
             labels_selector=labels_selector,
             rate_limit=rate_limit,
             operations=["update"],
+            exclude=exclude,
+            include=include,
         )
 
 
@@ -112,6 +136,8 @@ class WarningEventDeleteTrigger(WarningEventTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         rate_limit: int = 3600,
+        exclude: List[str] = (),
+        include: List[str] = (),
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -119,4 +145,6 @@ class WarningEventDeleteTrigger(WarningEventTrigger):
             labels_selector=labels_selector,
             rate_limit=rate_limit,
             operations=["delete"],
+            exclude=exclude,
+            include=include,
         )

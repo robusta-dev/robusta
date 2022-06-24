@@ -18,7 +18,9 @@ from ..core.playbooks.actions_registry import ActionsRegistry, Action
 from ..core.model.env_vars import (
     INTERNAL_PLAYBOOKS_ROOT,
     PLAYBOOKS_CONFIG_FILE_PATH,
-    PLAYBOOKS_ROOT, DEFAULT_PLAYBOOKS_ROOT, CUSTOM_PLAYBOOKS_ROOT,
+    PLAYBOOKS_ROOT,
+    DEFAULT_PLAYBOOKS_ROOT,
+    CUSTOM_PLAYBOOKS_ROOT,
 )
 from ..integrations.git.git_repo import (
     GitRepoManager,
@@ -39,6 +41,7 @@ from ..integrations.scheduled.playbook_scheduler_manager_impl import (
     PlaybooksSchedulerManagerImpl,
 )
 import hashlib
+
 
 class ConfigLoader:
 
@@ -106,7 +109,9 @@ class ConfigLoader:
     def __get_package_name(cls, local_path) -> str:
         package_name = get_package_name(local_path)
         if not package_name:
-            raise Exception(f"Illegal playbooks package {local_path}. Package name not found")
+            raise Exception(
+                f"Illegal playbooks package {local_path}. Package name not found"
+            )
         return package_name
 
     def __load_playbooks_repos(
@@ -120,7 +125,9 @@ class ConfigLoader:
                 if (
                     playbooks_repo.pip_install
                 ):  # skip playbooks that are already in site-packages
-                    if playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
+                    if playbooks_repo.url.startswith(
+                        GIT_SSH_PREFIX
+                    ) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
                         repo = GitRepo(
                             playbooks_repo.url,
                             playbooks_repo.key.get_secret_value(),
@@ -146,13 +153,15 @@ class ConfigLoader:
 
                     # Adding to pip the playbooks repo from local_path
                     subprocess.check_call(
-                        [sys.executable, "-m", "pip", "install", local_path]
+                        [sys.executable, "-m", "pip", "install", "--no-build-isolation", local_path]
                     )
                     playbook_package = self.__get_package_name(local_path=local_path)
 
                 playbook_packages.append(playbook_package)
             except Exception as e:
-                logging.error(f"Failed to add playbooks repo {playbook_package}", exc_info=True)
+                logging.error(
+                    f"Failed to add playbooks repo {playbook_package}", exc_info=True
+                )
 
         for package_name in playbook_packages:
             self.__import_playbooks_package(actions_registry, package_name)
@@ -190,15 +199,17 @@ class ConfigLoader:
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
                 # It allows to override these, with playbooks loaded afterwards
                 playbook_repos: Dict[str, PlaybookRepo] = {}
-                playbook_repos[
-                    "robusta.core.playbooks.internal"
-                ] = PlaybookRepo(url=INTERNAL_PLAYBOOKS_ROOT, pip_install=False)
+                playbook_repos["robusta.core.playbooks.internal"] = PlaybookRepo(
+                    url=INTERNAL_PLAYBOOKS_ROOT, pip_install=False
+                )
                 # order matters! Loading the default first, allows overriding it if adding package with the same name
                 # since python 3.7, iteration order is identical to insertion order, if dict didn't change
                 # default playbooks
                 playbook_repos[
                     self.__get_package_name(DEFAULT_PLAYBOOKS_ROOT)
-                ] = PlaybookRepo(url=f"file://{DEFAULT_PLAYBOOKS_ROOT}")
+                ] = PlaybookRepo(
+                    url=f"file://{DEFAULT_PLAYBOOKS_ROOT}", pip_install=False
+                )
 
                 for url, repo in runner_config.playbook_repos.items():
                     playbook_repos[url] = repo
@@ -208,19 +219,26 @@ class ConfigLoader:
                 # custom playbooks
                 if os.path.exists(CUSTOM_PLAYBOOKS_ROOT):
                     for custom_playbooks_location in os.listdir(CUSTOM_PLAYBOOKS_ROOT):
-                        location = os.path.join(CUSTOM_PLAYBOOKS_ROOT, custom_playbooks_location)
+                        location = os.path.join(
+                            CUSTOM_PLAYBOOKS_ROOT, custom_playbooks_location
+                        )
                         runner_config.playbook_repos[
                             self.__get_package_name(location)
                         ] = PlaybookRepo(url=f"file://{location}")
                 else:
-                    logging.info(f"No custom playbooks defined at {CUSTOM_PLAYBOOKS_ROOT}")
+                    logging.info(
+                        f"No custom playbooks defined at {CUSTOM_PLAYBOOKS_ROOT}"
+                    )
 
                 self.__load_playbooks_repos(
                     action_registry, runner_config.playbook_repos
                 )
 
                 (sinks_registry, playbooks_registry) = self.__prepare_runtime_config(
-                    runner_config, self.registry.get_sinks(), action_registry, self.registry
+                    runner_config,
+                    self.registry.get_sinks(),
+                    action_registry,
+                    self.registry,
                 )
                 # clear git repos, so it would be re-initialized
                 GitRepoManager.clear_git_repos()
@@ -232,13 +250,28 @@ class ConfigLoader:
                 self.registry.set_sinks(sinks_registry)
 
                 telemetry = self.registry.get_telemetry()
-                telemetry.playbooks_count = len(runner_config.active_playbooks)
-                telemetry.account_id = hashlib.sha256(str(runner_config.global_config.get("account_id", "no_account")).encode("utf-8")).hexdigest()
-                telemetry.cluster_id = hashlib.sha256(str(runner_config.global_config.get("cluster_name", "no_cluster")).encode("utf-8")).hexdigest()
+                telemetry.playbooks_count = (
+                    len(runner_config.active_playbooks)
+                    if runner_config.active_playbooks
+                    else 0
+                )
+                telemetry.account_id = hashlib.sha256(
+                    str(
+                        runner_config.global_config.get("account_id", "no_account")
+                    ).encode("utf-8")
+                ).hexdigest()
+                telemetry.cluster_id = hashlib.sha256(
+                    str(
+                        runner_config.global_config.get("cluster_name", "no_cluster")
+                    ).encode("utf-8")
+                ).hexdigest()
 
                 self.__reload_receiver()
             except Exception as e:
-                logging.error(f"unknown error reloading playbooks. will try again when they next change", exc_info=True)
+                logging.error(
+                    f"unknown error reloading playbooks. will try again when they next change",
+                    exc_info=True,
+                )
 
     @classmethod
     def __prepare_runtime_config(
@@ -246,7 +279,7 @@ class ConfigLoader:
         runner_config: RunnerConfig,
         sinks_registry: SinksRegistry,
         actions_registry: ActionsRegistry,
-        registry : Registry
+        registry: Registry,
     ) -> (SinksRegistry, PlaybooksRegistry):
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(
@@ -263,7 +296,10 @@ class ConfigLoader:
                 actions=[{"cluster_discovery_updates": {}}],
             )
         ]
-        active_playbooks.extend(runner_config.active_playbooks)
+        if runner_config.active_playbooks:
+            active_playbooks.extend(runner_config.active_playbooks)
+        else:
+            logging.warning("No active playbooks configured")
 
         playbooks_registry = PlaybooksRegistryImpl(
             active_playbooks,

@@ -14,6 +14,7 @@ class BackendProfile(BaseModel):
     robusta_relay_ws_address: str = ""
     robusta_relay_external_actions_url: str = ""
     robusta_telemetry_endpoint: str = ""
+    robusta_store_token_url: str = ""
     custom_profile: bool = False
 
 
@@ -21,6 +22,7 @@ class BackendProfile(BaseModel):
 backend_profile = BackendProfile(
     robusta_cloud_api_host="https://api.robusta.dev",
     robusta_ui_domain="https://platform.robusta.dev",
+    robusta_store_token_url="https://api.robusta.dev/auth/server/tokens"
 )
 
 if ROBUSTA_BACKEND_PROFILE:

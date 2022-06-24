@@ -1,5 +1,6 @@
 import time
 from typing import Type, TypeVar, List, Dict
+from enum import Enum, auto
 
 import hikaru
 import json
@@ -31,21 +32,66 @@ class ProcessList(BaseModel):
     processes: List[Process]
 
 
+def _get_match_expression_filter(expression: LabelSelectorRequirement) -> str:
+    if expression.operator.lower() == "exists":
+        return expression.key
+    elif expression.operator.lower() == "doesnotexist":
+        return f"!{expression.key}"
+
+    values = ",".join(expression.values)
+    return f"{expression.key} {expression.operator} ({values})"
+
+
+def build_selector_query(selector: LabelSelector) -> str:
+    label_filters = [f"{label[0]}={label[1]}" for label in selector.matchLabels.items()]
+    label_filters.extend([
+        _get_match_expression_filter(expression) for expression in selector.matchExpressions
+    ])
+    return ",".join(label_filters)
+
+
+def list_pods_using_selector(namespace: str, selector: LabelSelector, field_selector: str = None) -> List[Pod]:
+    labels_selector = build_selector_query(selector)
+    return PodList.listNamespacedPod(
+        namespace=namespace,
+        label_selector=labels_selector,
+        field_selector=field_selector,
+    ).obj.items
+
+
+def _get_image_name_and_tag(image: str) -> (str, str):
+    if ":" in image:
+        image_name, image_tag = image.split(":", maxsplit=1)
+        return image_name, image_tag
+    else:
+        return image, "<NONE>"
+
+
 def get_images(containers: List[Container]) -> Dict[str, str]:
     """
     Takes a list of containers and returns a dict mapping image name to image tag.
     """
     name_to_version = {}
     for container in containers:
-        if ":" in container.image:
-            image_name, image_tag = container.image.split(":", maxsplit=1)
-            name_to_version[image_name] = image_tag
-        else:
-            name_to_version[container.image] = "<NONE>"
+        image_name, tag = _get_image_name_and_tag(container.image)
+        name_to_version[image_name] = tag
     return name_to_version
 
 
 def extract_images(k8s_obj: HikaruDocumentBase) -> Optional[Dict[str, str]]:
+    images = extract_image_list(k8s_obj)
+    if not images:
+        # no containers found on that k8s obj
+        return None
+
+    name_to_version = {}
+    for image in images:
+        image_name, tag = _get_image_name_and_tag(image)
+        name_to_version[image_name] = tag
+    return name_to_version
+
+
+def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
     containers_paths = [
         [
             "spec",
@@ -55,17 +101,15 @@ def extract_images(k8s_obj: HikaruDocumentBase) -> Optional[Dict[str, str]]:
         ],  # deployment, replica set, daemon set, stateful set, job
         ["spec", "containers"],  # pod
     ]
-
+    images = []
     for path in containers_paths:
         try:
-            containers = k8s_obj.object_at_path(path)
-            if containers:
-                return get_images(containers)
+            for container in k8s_obj.object_at_path(path):
+                images.append(container.image)
         except Exception:  # Path not found on object, not a real error
             pass
 
-    # no containers found on that k8s obj
-    return None
+    return images
 
 
 def does_daemonset_have_toleration(ds: DaemonSet, toleration_key: str) -> bool:
@@ -86,6 +130,22 @@ class RobustaEvent:
         return Event.listEventForAllNamespaces(field_selector=field_selector).obj
 
 
+class RegexReplacementStyle(Enum):
+    """
+    Patterns for replacers, either asterisks "****" matching the length of the match, or the replacement name, e.g "[IP]"
+    """
+    SAME_LENGTH_ASTERISKS = auto()
+    NAMED = auto()
+
+
+class NamedRegexPattern(BaseModel):
+    """
+    A named regex pattern
+    """
+    name: str = "Redacted"
+    regex: str
+
+
 class RobustaPod(Pod):
     def exec(self, shell_command: str, container: str = None) -> str:
         """Execute a command inside the pod"""
@@ -96,19 +156,38 @@ class RobustaPod(Pod):
             self.metadata.name, shell_command, self.metadata.namespace, container
         )
 
-    def get_logs(self, container=None, previous=None, tail_lines=None) -> str:
+    def get_logs(
+            self,
+            container=None,
+            previous=None,
+            tail_lines=None,
+            regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None,
+            regex_replacement_style: Optional[RegexReplacementStyle] = None) -> str:
         """
-        Fetch pod logs
+        Fetch pod logs, can replace sensitive data in the logs using a regex
         """
         if container is None:
             container = self.spec.containers[0].name
-        return get_pod_logs(
+        pods_logs = get_pod_logs(
             self.metadata.name,
             self.metadata.namespace,
             container,
             previous,
             tail_lines,
         )
+
+        if pods_logs and regex_replacer_patterns:
+            logging.info('Sanitizing log data with the provided regex patterns')
+            if regex_replacement_style == RegexReplacementStyle.NAMED:
+                for replacer in regex_replacer_patterns:
+                    pods_logs = re.sub(replacer.regex, f'[{replacer.name.upper()}]', pods_logs)
+            else:
+                def same_length_asterisks(match):
+                    return '*' * len((match.group(0)))
+                for replacer in regex_replacer_patterns:
+                    pods_logs = re.sub(replacer.regex, same_length_asterisks, pods_logs)
+
+        return pods_logs
 
     @staticmethod
     def exec_in_java_pod(

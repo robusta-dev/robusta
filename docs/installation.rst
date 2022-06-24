@@ -5,12 +5,18 @@ The standard installation uses `Helm 3 <https://helm.sh/docs/intro/install/>`_ a
 
 Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1]_. You can also install on minikube or KIND. :ref:`Uninstalling <Helm Uninstall>`  takes one command, so go ahead and try!
 
+.. admonition:: Have questions?
+
+    `Ask us on Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
+
+
 Standard Installation
 ------------------------------
 
 1. Download the Helm chart and install Robusta-CLI:
 
 .. code-block:: bash
+   :name: cb-helm-and-pip
 
    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
    pip install -U robusta-cli --no-cache
@@ -19,12 +25,14 @@ Standard Installation
 .. admonition:: Common Errors
     :class: warning
 
+    * Python 3.7 or higher is required
     * If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
     * Errors about *tiller* mean you are running Helm 2, not Helm 3
 
 2. Generate a Robusta configuration. This will setup Slack and other integrations. We **highly recommend** enabling the cloud UI so you can see all features in action.
 
 .. code-block:: bash
+   :name: cb-robusta-gen-config
 
     robusta gen-config
 
@@ -33,12 +41,14 @@ Standard Installation
 4. Install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
 
 .. code-block:: bash
+   :name: cb-helm-install-robusta
 
     helm install robusta robusta/robusta -f ./generated_values.yaml
 
 5. Verify that Robusta is running two pods and there are no errors in the logs:
 
 .. code-block:: bash
+    :name: cb-get-pods-robusta-logs
 
     kubectl get pods
     robusta logs
@@ -51,6 +61,7 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 1. Create a crashing pod:
 
 .. code-block:: bash
+   :name: cb-apply-crashpod
 
    kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw
 
@@ -58,6 +69,7 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 2. Verify that the pod is actually crashing:
 
 .. code-block:: bash
+   :name: cb-verify-crash-pod-crashing
 
    $ kubectl get pods -A
    NAME                            READY   STATUS             RESTARTS   AGE
@@ -70,28 +82,20 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
     .. image:: /images/crash-report.png
 
 
-4. Clean up the crashing pod:
+4. Open the `Robusta UI <https://platform.robusta.dev/>`_ (if you enabled it) and look for the same message there.
+
+5. Clean up the crashing pod:
 
 .. code-block:: bash
+   :name: cb-delete-crashpod
 
    kubectl delete deployment crashpod
-
-Forwarding Prometheus Alerts to Robusta
-----------------------------------------
-
-Robusta can suggest fixes for your existing Prometheus alerts and tell you why they happen.
-
-First, you must configure an :ref:`AlertManager webhook. <Sending Alerts to Robusta>`
-
-If you installed Robusta's bundled Prometheus Stack then you can skip this step.
 
 Next Steps
 ---------------------------------
 
-1. Define your first automation to :ref:`track Kubernetes changes <Track Kubernetes Changes>`
-2. Add your first :ref:`Prometheus enrichment <Improve Prometheus Alerts>`
-3. Complete the :ref:`manual troubleshooting tutorial <Python Profiling>`
-4. Explore the Robusta UI (use the URL you received during installation)
+1. Define your :ref:`first automation <Automation Basics>`
+2. Add your first :ref:`Prometheus enrichment <Alert Enrichment>`
 
 .. rubric:: Footnotes
 
@@ -114,6 +118,7 @@ Additional Installation Methods
     Using the cli is totally optional. If you prefer, you can skip the CLI and fetch the default ``values.yaml``:
 
     .. code-block:: bash
+        :name: cb-helm-repo-add-show-values
 
         helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
         helm show values robusta/robusta
@@ -130,12 +135,14 @@ Additional Installation Methods
     Create a namespace ``robusta`` and install robusta in the new namespace using:
 
     .. code-block:: bash
+        :name: cb-helm-install-robusta-custom
 
         helm install robusta robusta/robusta -f ./generated_values.yaml -n robusta --create-namespace
 
     Verify that Robusta installed two deployments in the ``robusta`` namespace:
 
     .. code-block:: bash
+       :name: cb-get-pods-robusta-logs-custom
 
         kubectl get pods -n robusta
 
@@ -145,6 +152,7 @@ Additional Installation Methods
     You will need to run one additional command:
 
     .. code-block:: bash
+       :name: cb-oc-adm-policy-add
 
         oc adm policy add-scc-to-user anyuid -z robusta-runner-service-account
 

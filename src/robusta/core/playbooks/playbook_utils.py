@@ -3,6 +3,8 @@ import os
 import re
 
 from typing import Dict, Optional
+
+from pydantic.main import BaseModel
 from pydantic.types import SecretStr
 
 
@@ -36,3 +38,27 @@ def merge_global_params(global_config: dict, config_params: dict) -> dict:
     merged = global_config.copy()
     merged.update(config_params)
     return merged
+
+
+def safe_str(s: str) -> str:
+    if len(s) >= 6:
+        return f"{s[0:3]}***{s[-3:]}"
+    elif len(s) >= 3:
+        return f"{s[0:3]}***"
+    else:
+        return s
+
+
+def dict_params_safe_str(params: dict) -> str:
+    return ", ".join([
+        f"{k}: {safe_str(str(v))}" for k, v in params.items()
+    ])
+
+
+def to_safe_str(action_params) -> str:
+    if isinstance(action_params, dict):
+        return dict_params_safe_str(action_params)
+    elif isinstance(action_params, BaseModel):
+        return dict_params_safe_str(action_params.dict())
+    else:
+        return f"Cannot stringify unknown params type {type(action_params)}"

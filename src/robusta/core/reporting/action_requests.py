@@ -2,6 +2,8 @@ import logging
 import hashlib
 import hmac
 from typing import Optional, List
+from uuid import UUID
+
 from pydantic import BaseModel
 import requests
 
@@ -20,7 +22,17 @@ class ActionRequestBody(BaseModel):
 
 class ExternalActionRequest(BaseModel):
     body: ActionRequestBody
-    signature: str = ""
+    signature: str = ""         # Used for signature based auth protocol option
+    partial_auth_a: str = ""    # Auth for public key auth protocol option - should be added by the client
+    partial_auth_b: str = ""    # Auth for public key auth protocol option - should be added by the relay
+    request_id: str = ""        # If specified, should return a sync response using the specified request_id
+    no_sinks: bool = False      # Indicates not to send to sinks at all. The request body has a sink list,
+                                # however an empty sink list means using the server default sinks
+
+
+class PartialAuth(BaseModel):
+    hash: str
+    key: UUID
 
 
 def sign_action_request(body: BaseModel, signing_key: str):

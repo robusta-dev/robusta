@@ -1,7 +1,13 @@
-Track Kubernetes Changes
-##############################
+Automation basics
+##################################
 
-Lets configure an automation to send Slack messages when deployment's change:
+To demonstrate how Robusta automations work, we will configure an automation that sends Slack messages when deployments change.
+
+.. note::
+
+    If you use the `Robusta UI <https://home.robusta.dev/ui/>`_, changes like this are already tracked in the UI by default.
+
+    This tutorial explains how that feature works under the hood.
 
 1. Add the following to your ``values.yaml``:
 
@@ -67,3 +73,9 @@ sinks:
 Further customization
 ------------------------
 Try changing the configuration to monitors changes to a deployment's image tag.
+
+Cleanup
+------------------------
+If you use the `Robusta UI <https://home.robusta.dev/ui/>`_, you should disable the automation you configured in this tutorial to prevent duplicates.
+
+A similar automation is already configured by default.

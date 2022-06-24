@@ -6,8 +6,8 @@ from time import sleep
 import sentry_sdk
 import requests
 import threading
-from src.robusta.model.config import Registry, Telemetry
-from src.robusta.runner.telemetry import SinkInfo
+from ..model.config import Registry, Telemetry
+from .telemetry import SinkInfo
 
 from hikaru.model import NodeList
 
@@ -34,6 +34,9 @@ class TelemetryService:
             logging.info(f"Telemetry set to include error info, Thank you for helping us improve Robusta.")
             try:
                 sentry_sdk.init(sentry_dsn, traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", 0.5)))
+                global_config = account_id = self.registry.get_global_config()
+                sentry_sdk.set_user({"id": global_config.get("account_id", "")})
+                sentry_sdk.set_tag("cluster_id", global_config.get("cluster_name", ""))
             except Exception as e:
                 logging.error(f"Sentry error: {e}", exc_info=True)
 

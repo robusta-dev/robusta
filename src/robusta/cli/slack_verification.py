@@ -1,4 +1,5 @@
 import traceback
+from urllib.error import URLError
 import typer
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -22,7 +23,7 @@ def verify_slack_channel(
     debug: bool,
 ) -> bool:
     try:
-        output_welcome_message_blocks = gen_robusta_test_welcome_message(cluster_name)
+        output_welcome_message_blocks = __gen_robusta_test_welcome_message(cluster_name)
         slack_client = WebClient(token=slack_api_key)
         slack_client.chat_postMessage(
             channel=channel_name,
@@ -43,17 +44,25 @@ def verify_slack_channel(
                 f"(See https://docs.robusta.dev/master/catalog/sinks/slack.html#sending-robusta-notifications-to-a-private-channel)"
             )
         return False
+    except URLError as e:
+        typer.secho(
+            f"SSL certificate issue. See https://docs.robusta.dev/master/common-errors.html\n"
+            f"Use --debug for more info.",
+            fg=typer.colors.RED,
+        )
+        exit(1)
     except Exception as e:
         if debug:
             typer.secho(traceback.format_exc())
     typer.secho(
-        f"There was an unknown exception setting up Slack, please contact Robusta support.",
+        f"There was an unknown exception setting up Slack, use --debug for more info.\n"
+        f"Please contact support@robusta.dev",
         fg=typer.colors.RED,
     )
     return False
 
 
-def gen_robusta_test_welcome_message(cluster_name: str):
+def __gen_robusta_test_welcome_message(cluster_name: str):
     return [
         {
             "type": "header",

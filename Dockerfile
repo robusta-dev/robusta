@@ -14,7 +14,7 @@ ENV ENV_TYPE=DEV
 # we install the project requirements and install the app in separate stages to optimize docker layer caching
 RUN mkdir /app
 RUN pip3 install --upgrade pip
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.2.0b1 
 RUN /root/.local/bin/poetry config virtualenvs.create false
 COPY pyproject.toml poetry.lock /app/
 WORKDIR /app
@@ -30,11 +30,13 @@ RUN /root/.local/bin/poetry install --no-root --extras "all"
 
 COPY src/ /app/src
 
-RUN pip3 install --use-feature=in-tree-build .
+RUN pip3 install .
 # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
 RUN pip3 install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
 
 COPY playbooks/ /etc/robusta/playbooks/defaults
+
+RUN python3 -m pip install /etc/robusta/playbooks/defaults
 
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
 CMD [ "python3", "-u", "-m", "robusta.runner.main"]

@@ -4,11 +4,13 @@ from robusta.core.discovery.top_service_resolver import TopServiceResolver
 
 from robusta.core.playbooks.common import get_events_list, get_event_timestamp
 
+
 @action
 def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
     if (
         event.operation in [K8sOperationType.CREATE, K8sOperationType.UPDATE]
-        and event.obj.kind in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet"]
+        and event.obj.kind
+        in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Pod"]
         and not event.obj.metadata.ownerReferences
     ):
         TopServiceResolver.add_cached_service(
@@ -16,6 +18,8 @@ def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
                 name=event.obj.metadata.name,
                 service_type=event.obj.kind,
                 namespace=event.obj.metadata.namespace,
+                images=extract_image_list(event.obj),
+                labels=event.obj.metadata.labels,
             )
         )
 
@@ -37,7 +41,7 @@ def event_history(event: ExecutionBaseEvent):
             "Resource events",
             warning_event.involvedObject.kind,
             warning_event.involvedObject.name,
-            warning_event.involvedObject.namespace
+            warning_event.involvedObject.namespace,
         )
         if events_table:
             finding.add_enrichment([events_table])
@@ -63,9 +67,11 @@ def create_debug_event_finding(event: Event):
             FindingSubjectType.from_kind(k8s_obj.kind.lower()),
             k8s_obj.namespace,
         ),
-        creation_date= get_event_timestamp(event)
+        creation_date=get_event_timestamp(event),
     )
-    finding.service_key = TopServiceResolver.guess_service_key(name=k8s_obj.name, namespace=k8s_obj.namespace)
+    finding.service_key = TopServiceResolver.guess_service_key(
+        name=k8s_obj.name, namespace=k8s_obj.namespace
+    )
     return finding
 
 

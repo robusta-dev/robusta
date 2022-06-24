@@ -2,7 +2,7 @@ Welcome to Robusta
 ================================
 
 Robusta is an open source platform for Kubernetes troubleshooting. It sits on top of your monitoring stack
-(Prometheus, Elasticsearch, etc) and tells you why alerts occurred and how to fix them.
+(Prometheus, Elasticsearch, etc.) and tells you why alerts occurred and how to fix them.
 
 Robusta has three main parts, all open source:
 
@@ -182,6 +182,7 @@ Next Steps
    :hidden:
 
    upgrade
+   common-errors
    user-guide/configuration
    user-guide/flow-control
    catalog/triggers/index
@@ -189,6 +190,7 @@ Next Steps
    catalog/sinks/index
    user-guide/robusta-cli
    user-guide/trigger-action-binding
+   advanced/index
 
 .. toctree::
    :maxdepth: 4

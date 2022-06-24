@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List, Dict
 
 
 class ServiceInfo(BaseModel):
@@ -7,6 +8,8 @@ class ServiceInfo(BaseModel):
     namespace: str
     classification: str = "None"
     deleted: bool = False
+    images: List[str]
+    labels: Dict[str, str]
 
     def get_service_key(self) -> str:
         return f"{self.namespace}/{self.service_type}/{self.name}"
@@ -21,4 +24,7 @@ class ServiceInfo(BaseModel):
             and self.namespace == other.namespace
             and self.classification == other.classification
             and self.deleted == other.deleted
+            and sorted(self.images) == sorted(other.images)
+            and len(self.labels.keys()) == len(other.labels.keys())
+            and all(self.labels.get(key) == other.labels.get(key) for key in self.labels.keys())
         )

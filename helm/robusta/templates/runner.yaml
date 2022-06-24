@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-runner
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Release.Name }}-runner
 spec:
@@ -14,6 +15,9 @@ spec:
       labels:
         app: {{ .Release.Name }}-runner
         robustaComponent: "runner"
+      {{- if .Values.runner.annotations }}
+      annotations: {{ toYaml .Values.runner.annotations | nindent 8 }}
+      {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-runner-service-account
       containers:
@@ -56,6 +60,8 @@ spec:
             name: robusta-runner-secret
             optional: true
         volumeMounts:
+          - name: auth-config-secret
+            mountPath: /etc/robusta/auth
           - name: playbooks-config-secret
             mountPath: /etc/robusta/config
           {{- if .Values.playbooksPersistentVolume }}
@@ -94,17 +100,31 @@ spec:
           secret:
             secretName: robusta-playbooks-config-secret
             optional: true
+        - name: auth-config-secret
+          secret:
+            secretName: robusta-auth-config-secret
+            optional: true
         {{- if .Values.playbooksPersistentVolume }}
         - name: persistent-playbooks-storage
           persistentVolumeClaim:
             claimName: persistent-playbooks-pv-claim
         {{- end }}
+      {{- if .Values.runner.nodeSelector }}
+      nodeSelector: {{ toYaml .Values.runner.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if .Values.runner.affinity }}
+      affinity: {{ toYaml .Values.runner.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.runner.tolerations }}
+      tolerations:  {{ toYaml .Values.runner.tolerations | nindent 8 }}
+      {{- end }}
 {{- if .Values.playbooksPersistentVolume }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: persistent-playbooks-pv-claim
+  namespace: {{ .Release.Namespace }}
 spec:
   accessModes:
   - ReadWriteOnce
@@ -117,6 +137,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Release.Name }}-runner
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Release.Name }}-runner
 spec:
@@ -151,6 +172,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: robusta-runner-secret
+  namespace: {{ .Release.Namespace }}
 type: Opaque
 stringData:
   SENTRY_DSN: {{ .Values.runner.sentry_dsn }}
