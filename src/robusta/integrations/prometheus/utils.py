@@ -28,16 +28,14 @@ class PrometheusDiscovery:
         )
         return None
 
-class AlertManagerDiscovery():
+class AlertManagerDiscovery:
     alertManager_url: str = None
 
     @classmethod
-    def find_alert_manager_url(cls, alertManager_url: Optional[str]):
+    def find_alert_manager_url(cls):
         """
         Try to autodiscover the url of an in-cluster alert manager service
         """
-        if alertManager_url:
-            cls.alertManager_url = alertManager_url
 
         if cls.alertManager_url:
             return cls.alertManager_url
