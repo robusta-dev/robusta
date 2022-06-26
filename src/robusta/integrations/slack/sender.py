@@ -268,7 +268,7 @@ class SlackSender:
             actions = f"<{finding.investigate_uri}|:mag_right: Investigate>"
 
             if finding.add_silence_uri:
-                actions = f"{actions} <{finding.get_prometheus_silence_uri(self.cluster_name)}|:no_bell: Silence>" 
+                actions = f"{actions} <{finding.get_prometheus_silence_url(self.cluster_name)}|:no_bell: Silence>" 
 
             blocks.append(
                 MarkdownBlock(

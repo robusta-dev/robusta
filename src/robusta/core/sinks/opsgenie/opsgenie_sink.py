@@ -62,7 +62,7 @@ class OpsGenieSink(SinkBase):
         if platform_enabled:
             description = f"<a href=\"{finding.investigate_uri}\">🔎 Investigate</a>"
             if finding.add_silence_uri:
-                description = f"{description}  <a href=\"{finding.get_prometheus_silence_uri(self.cluster_name)}\">🔕 Silence</a>"
+                description = f"{description}  <a href=\"{finding.get_prometheus_silence_url(self.cluster_name)}\">🔕 Silence</a>"
             
             description = f"{description}\n"
 

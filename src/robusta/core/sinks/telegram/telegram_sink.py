@@ -55,7 +55,7 @@ class TelegramSink(SinkBase):
         if platform_enabled:
             message_content += f"[{INVESTIGATE_ICON} Investigate]({finding.investigate_uri}) "
             if finding.add_silence_uri:
-                message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_uri(self.cluster_name)})"
+                message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(self.cluster_name)})"
             
             message_content += "\n\n"
 
