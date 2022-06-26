@@ -22,7 +22,7 @@ class WebhookSink(SinkBase):
         if platform_enabled:
             message_lines.append(f"Investigate: {finding.investigate_uri}")
 
-            if finding.add_silence_uri:
+            if finding.add_silence_url:
                 message_lines.append(f"Silence: {finding.get_prometheus_silence_url(self.cluster_name)}")
 
         message_lines.append(f"Source: {self.cluster_name}")
