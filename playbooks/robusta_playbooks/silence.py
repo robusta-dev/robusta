@@ -1,6 +1,7 @@
 from robusta.integrations.prometheus.utils import AlertManagerDiscovery
 from robusta.api import *
 
+
 class Matcher(BaseModel):
     # https://github.com/prometheus/alertmanager/blob/main/api/v2/models/matcher.go
     isEqual: bool
@@ -8,9 +9,11 @@ class Matcher(BaseModel):
     name: str
     value: str
 
+
 class SilenceStatus(BaseModel):
     # https://github.com/prometheus/alertmanager/blob/main/api/v2/models/silence_status.go
     state: str
+
 
 class Silence(BaseModel):
     # https://github.com/prometheus/alertmanager/blob/main/api/v2/models/silence.go
@@ -28,22 +31,27 @@ class Silence(BaseModel):
             self.status.json(),
             self.comment,
             self.createdBy,
-            self.startsAt.isoformat(timespec='seconds'),
-            self.endsAt.isoformat(timespec='seconds'),
-            json.dumps([matcher.dict() for matcher in self.matchers])]
+            self.startsAt.isoformat(timespec="seconds"),
+            self.endsAt.isoformat(timespec="seconds"),
+            json.dumps([matcher.dict() for matcher in self.matchers]),
+        ]
 
 
 class BaseSilenceParams(ActionParams):
     """
     :var alertmanager_url: Alternative Alert Manager url to send requests.
     """
+
     alertmanager_url: Optional[str]
+
 
 class DeleteSilenceParams(BaseSilenceParams):
     """
     :var id: uuid of the silence.
     """
+
     id: str
+
 
 class AddSilenceParams(BaseSilenceParams):
     """
@@ -54,6 +62,7 @@ class AddSilenceParams(BaseSilenceParams):
     :var endsAt: date.
     :var matchers: List of matchers to filter the silence effect.
     """
+
     id: Optional[str]
     comment: str
     createdBy: str
@@ -61,9 +70,14 @@ class AddSilenceParams(BaseSilenceParams):
     endsAt: datetime
     matchers: List[Matcher]
 
+
 @action
 def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
-    alertmanager_url = params.alertmanager_url if params.alertmanager_url else AlertManagerDiscovery.find_alert_manager_url()
+    alertmanager_url = (
+        params.alertmanager_url
+        if params.alertmanager_url
+        else AlertManagerDiscovery.find_alert_manager_url()
+    )
     if alertmanager_url is None:
         return
 
@@ -92,15 +106,19 @@ def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
 
 @action
 def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
-    alertmanager_url = params.alertmanager_url if params.alertmanager_url else AlertManagerDiscovery.find_alert_manager_url()
+    alertmanager_url = (
+        params.alertmanager_url
+        if params.alertmanager_url
+        else AlertManagerDiscovery.find_alert_manager_url()
+    )
     if alertmanager_url is None:
         return
-    
+
     res = requests.post(
         f"{alertmanager_url}/api/v2/silences",
         data=params.json(),
-        headers= {"Content-type": "application/json"},
-    )         
+        headers={"Content-type": "application/json"},
+    )
 
     res.raise_for_status()
     if not res.json()["silenceID"]:
@@ -116,16 +134,20 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
         ]
     )
 
+
 @action
 def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
-    alertmanager_url = params.alertmanager_url if params.alertmanager_url else AlertManagerDiscovery.find_alert_manager_url()
+    alertmanager_url = (
+        params.alertmanager_url
+        if params.alertmanager_url
+        else AlertManagerDiscovery.find_alert_manager_url()
+    )
     if alertmanager_url is None:
         return
-    
 
-    res = requests.delete( 
+    res = requests.delete(
         f"{alertmanager_url}/api/v2/silence/{params.id}",
-        headers= {"Content-type": "application/json"},
+        headers={"Content-type": "application/json"},
     )
 
     res.raise_for_status()
@@ -138,4 +160,3 @@ def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
             ),
         ]
     )
-
