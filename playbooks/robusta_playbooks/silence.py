@@ -57,7 +57,7 @@ class AddSilenceParams(BaseSilenceParams):
     """
     :var id: uuid of the silence. use for update, empty on create.
     :var comment: text comment of the silence.
-    :var created_by: author of the silence.
+    :var createdBy: author of the silence.
     :var startsAt: date.
     :var endsAt: date.
     :var matchers: List of matchers to filter the silence effect.

@@ -162,8 +162,7 @@ class Finding(Filterable):
             labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
- 
-        #todo add more resources.
+        
         uri = get(f"{ROBUSTA_UI_DOMAIN}/silences/create", labels)
         return uri.url
 
