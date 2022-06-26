@@ -366,7 +366,7 @@ def update_config(
             values.globalConfig.signing_key = str(uuid.uuid4())
 
         write_values_file("updated_values.yaml", values)
-        typer.secho("Run `helm upgrade robusta -f ./updated_values.yaml`", fg="green")
+        typer.secho("Run `helm upgrade robusta robusta/robusta -f ./updated_values.yaml`", fg="green")
 
 
 @app.command()
