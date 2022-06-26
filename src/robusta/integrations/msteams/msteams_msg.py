@@ -31,11 +31,9 @@ class MsTeamsMsg:
         block = MsTeamsTextBlock(text=f"{severity} - {title}", font_size='extraLarge')
         self.__write_to_entire_msg([block])
         if platform_enabled:  # add link to the Robusta ui, if it's configured
-            actions = f"<{investigate_uri}|Investigate>"
-
+            actions = f"[🔎 Investigate]({investigate_uri})"
             if add_silence_uri:
-                actions = f"{actions}  <{silence_uri}|Silence>"
-
+                actions = f"{actions}  [🔕 Silence]({silence_uri})"
             self.__write_to_entire_msg([MsTeamsTextBlock(text=actions)])
 
         self.__write_to_entire_msg([MsTeamsTextBlock(text=f"**Source:** *{cluster_name}*")])
