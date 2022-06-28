@@ -10,6 +10,8 @@ spec:
   replicas: 1
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/kubewatch-configmap.yaml") . | sha256sum }}
       labels:
         app: {{ .Release.Name }}-forwarder
       {{- if .Values.kubewatch.annotations }}
