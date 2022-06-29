@@ -87,12 +87,12 @@ def fetch_runner_logs(namespace: Optional[str], all_logs=False):
         try:
             if all_logs:
                 subprocess.check_call(
-                    f"kubectl logs {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner",
+                    f"kubectl logs {namespace_to_kubectl(namespace)} {get_runner_pod(namespace)} -c runner",
                     shell=True,
                 )
             else:
                 subprocess.check_call(
-                    f"kubectl logs {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner --since={int(time.time() - start + 1)}s",
+                    f"kubectl logs {namespace_to_kubectl(namespace)} {get_runner_pod(namespace)} -c runner --since={int(time.time() - start + 1)}s",
                     shell=True,
                 )
         except:
@@ -105,3 +105,13 @@ def get_package_name(playbooks_dir: str) -> str:
         data = pyproj_toml.read()
         parsed = toml.loads(data)
         return get(parsed, "tool/poetry/name", default="")
+
+
+def get_runner_pod(namespace: str) -> Optional[str]:
+    return subprocess.run(  
+        f'kubectl get pods {namespace_to_kubectl(namespace)} --selector="robustaComponent=runner" --no-headers -o custom-columns=":metadata.name"',
+        shell=True,
+        text=True,
+        capture_output=True,
+    ).stdout.strip()
+

@@ -18,6 +18,7 @@ from ..cli.utils import (
     fetch_runner_logs,
     exec_in_robusta_runner,
     namespace_to_kubectl,
+    get_runner_pod,
     PLAYBOOKS_DIR, get_package_name,
 )
 
@@ -29,21 +30,6 @@ NAMESPACE_EXPLANATION = (
 CONFIG_SECRET_NAME = "robusta-playbooks-config-secret"
 
 app = typer.Typer()
-
-
-def get_runner_pod(namespace: str) -> Optional[str]:
-    pods = subprocess.check_output(
-        f'kubectl get pods {namespace_to_kubectl(namespace)} --selector="robustaComponent=runner"',
-        shell=True,
-    )
-    text = pods.decode("utf-8")
-    if not text:
-        return None
-
-    lines = text.split("\n")
-    if len(lines) < 2:
-        return None
-    return lines[1].split(" ")[0]
 
 
 def __validate_playbooks_dir(playbooks_dir: str) -> bool:
