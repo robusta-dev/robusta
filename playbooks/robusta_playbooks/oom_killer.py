@@ -1,4 +1,6 @@
 from datetime import timedelta
+import random
+import string
 
 import pydantic
 
@@ -14,9 +16,11 @@ class OomKillerEnricherParams(ActionParams):
     :var new_oom_kills_duration_in_sec: In order to avoid duplicated, This playbook will only report OOMKills that occurred in the last new_oom_kills_duration_in_sec seconds. For example, if new_oom_kills_duration_in_sec is 1200, only OOMKills from the last 20 minutes will be considered.
     :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster.
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090".
-    :var metrics_duration_in_secs: Memory usage metrics of nodes and pod containers where OOMKills have occurred will be queried from prometheus in order to determine the estimated reason of each OOMKill. This parameter determines the amount of time, in seconds, these metrics will be applied on. For example, if duration_in_secs is 1200, memory usage metrics from the last 20 minutes will be considered.
+    :var metrics_duration_in_secs: Memory usage metrics of nodes and pod containers where OOMKills have occurred
+    will be queried from prometheus in order to determine the estimated reason of each OOMKill.
+    This parameter determines the amount of time, in seconds, these metrics will be applied on.
+    For example, if duration_in_secs is 1200, memory usage metrics from the last 20 minutes will be considered.
     """
-
     new_oom_kills_duration_in_sec: int = 1200
     prometheus_url: Optional[str] = None
     metrics_duration_in_secs: int = 1200
@@ -301,3 +305,42 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
 
         reason = f"node {node_name} used too much memory: reached {node_max_used_memory_in_percentage} percentage of its available memory"
         return reason
+
+
+def get_random_string(n: int):
+    chars = string.ascii_lowercase + string.digits
+    return "".join(random.choices(chars, k=n))
+
+@action
+def pod_oom_kill_simulator(event: ExecutionBaseEvent):
+    pod_name = "oom-kill-by-pod-" + get_random_string(6)
+    pod = Pod(apiVersion='v1', kind='Pod',
+              metadata=ObjectMeta(name=pod_name, namespace='default'),
+              spec=PodSpec(restartPolicy="Never", containers=[Container(
+                  imagePullPolicy="Always",
+                  name='memory-eater',
+                  image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/memory-eater:1.0',
+                  args=['75Mi', '0', '30Mi', '80', '1'],
+                  resources=ResourceRequirements(limits={'memory': '100Mi'}))])
+              )
+    pod.create()
+
+
+@action
+def node_oom_kill_simulator(event: NodeEvent):
+    node = event.get_node()
+    if node is None:
+        logging.error(f"cannot run node oom kill simulator on event with no node object: {event}")
+        return
+ 
+    pod_name = 'oom-kill-by-node-' + get_random_string(6)
+    pod = Pod(apiVersion='v1', kind='Pod',
+              metadata=ObjectMeta(name=pod_name, namespace='default'),
+              spec=PodSpec(restartPolicy="Never", nodeName=node.metadata.name, containers=[Container(
+                  imagePullPolicy="Always",
+                  name='memory-eater',
+                  image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/memory-eater:1.0',
+                  args=['0Gi', '20', '10Gi', '1', '1'])])
+              )
+    pod.create()
+
