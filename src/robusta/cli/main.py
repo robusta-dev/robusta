@@ -421,8 +421,6 @@ def logs(
     tail = f"--tail={tail}" if tail else ""
     context = f"--context={context}" if context else ""
     resource_name =  resource_name if resource_name else get_runner_pod(namespace)
-    typer.echo(resource_name)
-    typer.echo( f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}")
     try:
         subprocess.check_call(
             f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
