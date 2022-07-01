@@ -39,10 +39,10 @@
   </ol>
 </details>
 
-##💻 About the project
+## 💻 About the project
 Robusta streamlines everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT for DevOps, with an emphasis on prebuilt useful automations and not just "build your own".
 
-##🛠️ Use cases
+## 🛠️ Use cases
 
 - [X] [Kubernetes monitoring - prebuilt Prometheus integration that enriches alerts with extra context and graphs](https://home.robusta.dev/prometheus-based-monitoring/?from=github)
 - [X] Event-triggered automations for Kubernetes (like Argo Events) with an emphasis on simplicity
@@ -52,7 +52,7 @@ Robusta streamlines everything that happens **after** you deploy your applicatio
 [Screenshots and demos »](http://robusta.dev/?from=github)
 
 
-##⚡ Examples
+## ⚡ Examples
 
 **Monitor crashing pods and send their logs to Slack:**
 
@@ -82,7 +82,7 @@ robusta playbooks trigger python_debugger name=mypod namespace=default
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-##📒 Installing Robusta
+## 📒 Installing Robusta
 
 1. Install our python cli:
 
@@ -105,7 +105,7 @@ helm install robusta robusta/robusta -f ./generated_values.yaml
 
 <!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
 
-##📝 Documentation
+## 📝 Documentation
 Interested? Learn more about Robusta
 
 * [Architecture](https://docs.robusta.dev/master/architecture.html)
@@ -117,7 +117,7 @@ Interested? Learn more about Robusta
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
-##✉️ Contact
+## ✉️ Contact
 
 * Slack - [robustacommunity.slack.com](https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg)
 * Twitter - [@RobustaDev](https://twitter.com/RobustaDev)
@@ -127,17 +127,17 @@ Interested? Learn more about Robusta
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-##📑 License
+## 📑 License
 Robusta is distributed under the MIT License. See [LICENSE.md](https://github.com/robusta-dev/robusta/blob/master/LICENSE) for more information.
 
 
-##🕐 Stay up to date
+## 🕐 Stay up to date
 We add new features regularly. Stay up to date by watching us on GitHub.
 
 ![](./docs/images/star-repo.gif)
 
 
-##🙏 Acknowledgments
+## 🙏 Acknowledgments
 Thank you to all of our contributors!
 
 An additional thanks to all the open source projects we use. Especially:
