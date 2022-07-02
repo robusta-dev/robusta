@@ -1,4 +1,5 @@
 import os
+import shlex
 import subprocess
 import time
 from contextlib import contextmanager
@@ -26,6 +27,7 @@ def exec_in_robusta_runner(
     tries=1,
     time_between_attempts=10,
     error_msg="error running cmd",
+    dry_run: bool = False,
 ):
     exec_cmd = [
         "kubectl",
@@ -39,6 +41,10 @@ def exec_in_robusta_runner(
         exec_cmd += ["-n", namespace]
 
     exec_cmd += ["--", "bash", "-c", cmd]
+
+    if dry_run:
+        typer.echo(f"Run the following command:\n {shlex.join(exec_cmd)}")
+        return
 
     typer.echo(f"running cmd: {cmd}")
 
