@@ -148,6 +148,17 @@ class KubernetesDiffBlock(BaseBlock):
             num_modifications=num_modifications,
         )
 
+    def get_description(self):
+        if self.old is None:
+            return "Resource created"
+        elif self.new is None:
+            return "Resource deleted"
+        else:
+            return (
+                f"Updates to significant fields: {self.num_additions} additions, {self.num_deletions} deletions, "
+                f"{self.num_modifications} changes."
+            )
+
     @staticmethod
     def _obj_to_content(obj: Optional[HikaruDocumentBase]):
         if obj is None:
