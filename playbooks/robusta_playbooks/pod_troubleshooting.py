@@ -58,7 +58,7 @@ def python_profiler(event: PodEvent, params: StartProfilingParams):
             logging.info(
                 f"starting to run profiler on {target_description} with pyspy command: {pyspy_cmd}"
             )
-            pyspy_output = debugger.exec(target_description)
+            pyspy_output = debugger.exec(pyspy_cmd)
             if "Error:" in pyspy_output:
                 logging.info(
                     f"error running profiler on {target_description}. error={pyspy_output}"
@@ -73,7 +73,9 @@ def python_profiler(event: PodEvent, params: StartProfilingParams):
                 )
                 continue
 
-            logging.info(f"done running profiler on {target_description}")
+            logging.info(
+                f"done running profiler on {target_description}; output={pyspy_output}"
+            )
             svg = debugger.exec(f"cat {filename}")
             finding.add_enrichment([FileBlock(f"{target_description}.svg", svg)])
 
