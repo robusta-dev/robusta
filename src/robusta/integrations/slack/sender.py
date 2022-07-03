@@ -164,6 +164,9 @@ class SlackSender:
             # the file wasn't actually shared and the link was broken
             uploaded_files = []
             for file_block in files:
+                # slack throws an error if you write empty files, so skip it
+                if len(file_block.contents) == 0:
+                    continue
                 permalink = self.__upload_file_to_slack(file_block)
                 uploaded_files.append(f"* <{permalink} | {file_block.filename}>")
 
@@ -268,13 +271,9 @@ class SlackSender:
             actions = f"<{finding.investigate_uri}|:mag_right: Investigate>"
 
             if finding.add_silence_url:
-                actions = f"{actions} <{finding.get_prometheus_silence_url(self.cluster_name)}|:no_bell: Silence>" 
+                actions = f"{actions} <{finding.get_prometheus_silence_url(self.cluster_name)}|:no_bell: Silence>"
 
-            blocks.append(
-                MarkdownBlock(
-                    text=actions
-                )
-            )
+            blocks.append(MarkdownBlock(text=actions))
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
 
