@@ -37,7 +37,9 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
     Send the diff as a finding
     """
     if not event.obj.metadata:  # shouldn't happen, just to be on the safe side
-        logging.warning(f"resource_babysitter skipping resource with no meta - {event.obj}")
+        logging.warning(
+            f"resource_babysitter skipping resource with no meta - {event.obj}"
+        )
         return
 
     if event.obj.metadata.namespace in config.ignored_namespaces:
@@ -64,15 +66,19 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
     should_get_subject_node_name = isinstance(event, NodeChangeEvent)
     # we take it from the original event, in case metadata is omitted
     meta = event.obj.metadata
-    diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj, meta.name, meta.namespace)
+    diff_block = KubernetesDiffBlock(
+        filtered_diffs, old_obj, obj, meta.name, meta.namespace
+    )
     finding = Finding(
         title=f"{diff_block.resource_name} {event.operation.value}d",
-        description=f"Updates to significant fields: {diff_block.num_additions} additions, {diff_block.num_deletions} deletions, {diff_block.num_modifications} changes.",
+        description=diff_block.get_description(),
         source=FindingSource.KUBERNETES_API_SERVER,
         finding_type=FindingType.CONF_CHANGE,
         failure=False,
         aggregation_key=f"ConfigurationChange/KubernetesResource/Change",
-        subject=KubeObjFindingSubject(event.obj, should_add_node_name=should_get_subject_node_name),
+        subject=KubeObjFindingSubject(
+            event.obj, should_add_node_name=should_get_subject_node_name
+        ),
     )
     finding.add_enrichment([diff_block])
     event.add_finding(finding)
