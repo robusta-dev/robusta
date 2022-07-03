@@ -56,7 +56,7 @@ Standard Installation
 Seeing Robusta in action
 ------------------------------
 
-By default, Robusta sends Slack notifications when Kubernetes pods crash.
+By default, Robusta sends notifications when Kubernetes pods crash.
 
 1. Create a crashing pod:
 
