@@ -18,7 +18,8 @@ from ..cli.utils import (
     fetch_runner_logs,
     exec_in_robusta_runner,
     namespace_to_kubectl,
-    PLAYBOOKS_DIR, get_package_name,
+    PLAYBOOKS_DIR,
+    get_package_name,
 )
 
 PLAYBOOKS_MOUNT_LOCATION = "/etc/robusta/playbooks/storage"
@@ -54,11 +55,17 @@ def __validate_playbooks_dir(playbooks_dir: str) -> bool:
 
     package_name = get_package_name(os.path.join(playbooks_dir))
     if not package_name:
-        typer.secho("Illegal pyproject.toml. `name` attribute not defined in pyproject.toml", fg="red")
+        typer.secho(
+            "Illegal pyproject.toml. `name` attribute not defined in pyproject.toml",
+            fg="red",
+        )
         return False
 
     if package_name not in files:
-        typer.secho(f"Playbooks directory missing or does not match playbooks package name {package_name}", fg="red")
+        typer.secho(
+            f"Playbooks directory missing or does not match playbooks package name {package_name}",
+            fg="red",
+        )
         return False
 
     return True
@@ -80,7 +87,10 @@ def push(
     with fetch_runner_logs(namespace):
         runner_pod = get_runner_pod(namespace)
         if not runner_pod:
-            log_title(f"Runner pod not found in the {namespace} namespace. If robusta is installed in a different namespace, use the --namespace flag.", color="red")
+            log_title(
+                f"Runner pod not found in the {namespace} namespace. If robusta is installed in a different namespace, use the --namespace flag.",
+                color="red",
+            )
             return
 
         subprocess.check_call(
@@ -124,7 +134,7 @@ def configure(
             shell=True,
         )
         subprocess.check_call(
-            f'kubectl annotate pods {namespace_to_kubectl(namespace)} -l robustaComponent=runner '
+            f"kubectl annotate pods {namespace_to_kubectl(namespace)} -l robustaComponent=runner "
             f'--overwrite "playbooks-last-modified={time.time()}"',
             shell=True,
         )
@@ -295,7 +305,9 @@ def edit_config(
         configure(config_file=fname, namespace=namespace)
 
 
-def _post_in_runner_pod(namespace: str, api_path: str, req_body: Dict, req_name: str):
+def _post_in_runner_pod(
+    namespace: str, api_path: str, req_body: Dict, req_name: str, dry_run: bool = False
+):
     with fetch_runner_logs(namespace=namespace):
         cmd = (
             f"curl -X POST http://localhost:5000/api/{api_path} "
@@ -307,6 +319,7 @@ def _post_in_runner_pod(namespace: str, api_path: str, req_body: Dict, req_name:
             namespace=namespace,
             tries=3,
             error_msg=f"Cannot {req_name} - usually this means Robusta just started. Will try again",
+            dry_run=dry_run,
         )
         typer.echo("\n")
 
@@ -323,6 +336,10 @@ def trigger(
         None,
         help="Robusta namespace",
     ),
+    dry_run: bool = typer.Option(
+        False,
+        help="Don't actually run the trigger, just print a command that can be used to trigger",
+    ),
 ):
     """trigger a manually run playbook"""
     log_title("Triggering action...")
@@ -333,20 +350,31 @@ def trigger(
     # action_params = " ".join([f"-F '{p}'" for p in param])
     req_body = {"action_name": action_name, "action_params": action_params}
 
-    _post_in_runner_pod(namespace=namespace, api_path="trigger", req_body=req_body, req_name="trigger action")
+    _post_in_runner_pod(
+        namespace=namespace,
+        api_path="trigger",
+        req_body=req_body,
+        req_name="trigger action",
+        dry_run=dry_run,
+    )
     log_title("Done!")
 
 
 @app.command()
 def reload(
-        namespace: str = typer.Option(
-            None,
-            help="Robusta namespace",
-        ),
+    namespace: str = typer.Option(
+        None,
+        help="Robusta namespace",
+    ),
 ):
     """reload playbooks configuration"""
     log_title("Reloading playbooks...")
-    _post_in_runner_pod(namespace=namespace, api_path="playbooks/reload", req_body={}, req_name="reload playbooks")
+    _post_in_runner_pod(
+        namespace=namespace,
+        api_path="playbooks/reload",
+        req_body={},
+        req_name="reload playbooks",
+    )
     log_title("Done!")
 
 
