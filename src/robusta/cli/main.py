@@ -172,7 +172,7 @@ def gen_config(
         )
     if is_small_cluster is None:
         is_small_cluster = typer.confirm(
-            "Are you running a mini cluster? (Like minikube or kind)"
+            "Are you running a local Kubernetes cluster? (Like minikube, colima, or kind)"
         )
 
     sinks_config: List[

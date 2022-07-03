@@ -31,6 +31,10 @@ please contact support@robusta.dev or go to `our slack channel <https://robustac
 
         source <shell-config-file>
 
+    .. note::
+
+      another solution is to run a command (e.g gen-config) directly with python: ``python3 -m robusta.cli.main gen-config``
+
 .. dropdown:: CLI SSL certificate issue
     :color: light
 
