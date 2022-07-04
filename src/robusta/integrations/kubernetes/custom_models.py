@@ -226,6 +226,7 @@ class RobustaPod(Pod):
                 namespace=INSTALLATION_NAMESPACE,
             ),
             spec=PodSpec(
+                serviceAccountName="robusta-runner-service-account",
                 hostPID=True,
                 nodeName=node_name,
                 restartPolicy="OnFailure",
