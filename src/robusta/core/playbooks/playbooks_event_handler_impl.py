@@ -223,6 +223,14 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         exc_info=True,
                     )
 
+                    execution_event.add_enrichment(
+                        [
+                            MarkdownBlock(
+                                text=f"Oops... Error processing {action.action_name}"
+                            )
+                        ]
+                    )
+
         return execution_event.response
 
     @classmethod
