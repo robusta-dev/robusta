@@ -7,7 +7,7 @@ import json
 import yaml
 from hikaru.model import *  # *-import is necessary for hikaru subclasses to work
 from pydantic import BaseModel
-
+from ...core.model.env_vars import RELEASE_NAME
 from ...core.model.env_vars import INSTALLATION_NAMESPACE
 from .api_client_utils import *
 from .templates import get_deployment_yaml
@@ -226,7 +226,7 @@ class RobustaPod(Pod):
                 namespace=INSTALLATION_NAMESPACE,
             ),
             spec=PodSpec(
-                serviceAccountName="robusta-runner-service-account",
+                serviceAccountName=f"{RELEASE_NAME}-runner-service-account",
                 hostPID=True,
                 nodeName=node_name,
                 restartPolicy="OnFailure",
