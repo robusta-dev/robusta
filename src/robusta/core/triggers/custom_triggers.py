@@ -9,6 +9,7 @@ from .error_event_trigger import (
     WarningEventDeleteTrigger,
 )
 from .pod_crash_loop_trigger import PodCrashLoopTrigger
+from .pod_oom_killed_trigger import PodOOMKilledTrigger
 
 
 class CustomTriggers(BaseModel):
@@ -18,3 +19,4 @@ class CustomTriggers(BaseModel):
     on_kubernetes_warning_event_update: Optional[WarningEventUpdateTrigger]
     on_kubernetes_warning_event_delete: Optional[WarningEventDeleteTrigger]
     on_pod_crash_loop: Optional[PodCrashLoopTrigger]
+    on_pod_oom_killed: Optional[PodOOMKilledTrigger]
