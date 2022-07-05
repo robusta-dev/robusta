@@ -36,6 +36,11 @@ Standard Installation
 
     robusta gen-config
 
+.. admonition:: Robusta not in PATH
+    :class: warning
+
+    if you get "``command not found: robusta``", see :ref:`Common errors <Common Errors>`
+
 3. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
 
 4. Install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
@@ -56,7 +61,7 @@ Standard Installation
 Seeing Robusta in action
 ------------------------------
 
-By default, Robusta sends Slack notifications when Kubernetes pods crash.
+By default, Robusta sends notifications when Kubernetes pods crash.
 
 1. Create a crashing pod:
 

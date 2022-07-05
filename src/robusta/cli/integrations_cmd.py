@@ -71,7 +71,7 @@ def slack():
 def get_ui_key() -> str:
     while True:
         email = typer.prompt(
-            "Enter a Gmail/Google Workspace address. This will be used to login"
+            "Enter your Gmail/Google address. This will be used to login"
         )
         email = email.strip()
         account_name = typer.prompt("Choose your account name")

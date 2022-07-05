@@ -33,5 +33,5 @@ class K8sBaseChangeEvent(ExecutionBaseEvent):
 
         return Finding(
             title=title,
-            aggregation_key=title,
+            aggregation_key="Generic Change",
         )
