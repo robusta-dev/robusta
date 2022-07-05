@@ -66,8 +66,7 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
                 self.restart_reason is None
                 or self.restart_reason in container_status.state.waiting.reason
             )
-            and (self.is_terminated_reason(container_status.lastState, self.terminated_reason)
-                 or self.is_terminated_reason(container_status.state, self.terminated_reason))
+            and self.is_terminated_reason(container_status.state, self.terminated_reason)
         ]
 
         if not crashing:
@@ -87,4 +86,4 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
         )
 
     def is_terminated_reason(self, container_state, terminated_reason):
-        return terminated_reason is None or (container_state and container_state.terminated and 'OOMKilled' in container_state.terminated.reason)
+        return terminated_reason is None or (container_state and container_state.terminated and terminated_reason in container_state.terminated.reason)
