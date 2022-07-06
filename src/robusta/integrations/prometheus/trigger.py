@@ -103,6 +103,7 @@ class PrometheusAlertTrigger(BaseTrigger):
             alert=event.alert,
             alert_name=labels["alertname"],
             alert_severity=labels.get("severity"),
+            label_namespace=labels.get("namespace", None)
         )
 
         namespace = labels.get("namespace", "default")

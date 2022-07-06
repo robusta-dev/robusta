@@ -64,6 +64,7 @@ class PrometheusKubernetesAlert(
     alert: Optional[PrometheusAlert] = None
     alert_name: Optional[str] = None
     alert_severity: Optional[str] = None
+    label_namespace: Optional[str] = None
     node: Optional[Node] = None
     pod: Optional[RobustaPod] = None
     deployment: Optional[RobustaDeployment] = None
@@ -112,7 +113,7 @@ class PrometheusKubernetesAlert(
     def __get_alert_subject(self) -> FindingSubject:
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE
         name: Optional[str] = None
-        namespace: Optional[str] = None
+        namespace: Optional[str] = self.label_namespace
         node_name: Optional[str] = None
         if self.pod:
             subject_type = FindingSubjectType.TYPE_POD
