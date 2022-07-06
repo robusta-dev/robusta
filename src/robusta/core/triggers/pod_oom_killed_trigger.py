@@ -18,11 +18,11 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
     rate_limit: int = 3600
 
     def __init__(
-        self,
-        name_prefix: str = None,
-        namespace_prefix: str = None,
-        labels_selector: str = None,
-        rate_limit: int = 3600,
+            self,
+            name_prefix: str = None,
+            namespace_prefix: str = None,
+            labels_selector: str = None,
+            rate_limit: int = 3600,
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -50,7 +50,10 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
         oom_killed = [
             container_status
             for container_status in all_statuses
-            if PodOOMKilledTrigger.is_oom_killed_state(container_status.state)
+            if container_status.state.waiting \
+               and RESTART_REASON_CRASH_LOOPING in container_status.state.waiting.reason \
+               and (PodOOMKilledTrigger.is_oom_killed_state(
+                container_status.state) or PodOOMKilledTrigger.is_oom_killed_state(container_status.lastState))
         ]
 
         if not oom_killed:
@@ -72,7 +75,5 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
     @staticmethod
     def is_oom_killed_state(container_state):
         return container_state \
-               and container_state.waiting \
-               and RESTART_REASON_CRASH_LOOPING in container_state.waiting.reason \
                and container_state.terminated \
                and TERMINATED_REASON_OOM_KILLED in container_state.terminated.reason
