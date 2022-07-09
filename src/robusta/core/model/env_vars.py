@@ -5,6 +5,9 @@ import pytz
 PLAYBOOKS_ROOT = os.environ.get("PLAYBOOKS_ROOT", "/etc/robusta/playbooks/")
 # should be the same as the one in out Dockerfile
 DEFAULT_PLAYBOOKS_ROOT = os.environ.get("DEFAULT_PLAYBOOKS_ROOT", os.path.join(PLAYBOOKS_ROOT, "defaults"))
+# when developing playbooks, we want to install it using pip. Otherwise no need because it's pre baked into the image
+DEFAULT_PLAYBOOKS_PIP_INSTALL = bool(os.environ.get("DEFAULT_PLAYBOOKS_PIP_INSTALL", False))
+
 CUSTOM_PLAYBOOKS_ROOT = os.path.join(PLAYBOOKS_ROOT, "storage")
 
 PLAYBOOKS_CONFIG_FILE_PATH = os.environ.get("PLAYBOOKS_CONFIG_FILE_PATH")

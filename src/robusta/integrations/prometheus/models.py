@@ -109,7 +109,7 @@ class PrometheusKubernetesAlert(
             )
         return clean_description
 
-    def __get_alert_subject(self) -> FindingSubject:
+    def get_alert_subject(self) -> FindingSubject:
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE
         name: Optional[str] = None
         namespace: Optional[str] = None
@@ -139,7 +139,7 @@ class PrometheusKubernetesAlert(
         return FindingSubject(name, subject_type, namespace, node_name)
 
     def create_default_finding(self) -> Finding:
-        alert_subject = self.__get_alert_subject()
+        alert_subject = self.get_alert_subject()
         status_message = '[RESOLVED] ' if self.alert.status.lower() == 'resolved' else ''
         title = f'{status_message}{self.get_title()}'
         # AlertManager sends 0001-01-01T00:00:00Z when there's no end date
