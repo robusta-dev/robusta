@@ -187,7 +187,7 @@ class OomKillsExtractor:
 
         # Check if the container OOMKilled by inspecting the lastState field
         if self.is_last_state_in_oom_status(c_status):
-            return c_status.state
+            return c_status.lastState
 
         # OOMKilled state not found
         return None

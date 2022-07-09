@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from .blocks import *
@@ -13,17 +14,23 @@ def file_suffix_match(file_name: str, suffix: str) -> bool:
 
 
 def is_image(file_name: str):
-    return file_suffix_match(file_name, JPG_SUFFIX) \
-        or file_suffix_match(file_name, PNG_SUFFIX) \
+    return (
+        file_suffix_match(file_name, JPG_SUFFIX)
+        or file_suffix_match(file_name, PNG_SUFFIX)
         or file_suffix_match(file_name, SVG_SUFFIX)
+    )
 
 
-def convert_svg_to_png(svg: bytes) -> bytes:
+def convert_svg_to_png(svg: bytes) -> Optional[bytes]:
     # we import cairosvg here and not globally because in some environments it isn't trivially installed (e.g. windows)
     # and we don't want to throw an exception globally when it isn't around
     import cairosvg
 
-    return cairosvg.svg2png(bytestring=svg)
+    try:
+        return cairosvg.svg2png(bytestring=svg)
+    except Exception as e:
+        logging.error(f"error converting svg to png; svg={svg}")
+        return None
 
 
 def add_pngs_for_all_svgs(blocks: List[FileBlock]):
@@ -34,5 +41,7 @@ def add_pngs_for_all_svgs(blocks: List[FileBlock]):
         if not b.filename.endswith(".svg"):
             continue
         conversion = convert_svg_to_png(b.contents)
+        if conversion is None:
+            continue
         new_blocks.append(FileBlock(b.filename.replace(".svg", ".png"), conversion))
     return new_blocks
