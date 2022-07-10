@@ -10,6 +10,10 @@ class JobParams(ActionParams):
     :var restart_policy: Job container restart policy
     :var job_ttl_after_finished: Delete finished job ttl (seconds). If omitted, jobs will not be deleted automatically.
     :var notify: Add a notification for creating the job.
+    :var backoff_limit: Specifies the number of retries before marking this job failed. Defaults to 6
+    :var active_deadline_seconds: Specifies the duration in seconds relative to the startTime
+        that the job may be active before the system tries to terminate it; value must be
+        positive integer
 
     :example command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
     """
@@ -20,6 +24,8 @@ class JobParams(ActionParams):
     restart_policy: str = "OnFailure"
     job_ttl_after_finished: int = None
     notify: bool = False
+    backoff_limit: int = None
+    active_deadline_seconds: int = None
 
 
 @action
@@ -37,9 +43,9 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
 
     ALERT_OBJ_NAME
 
-    ALERT_OBJ_NAMESPACE (Optional)
+    ALERT_OBJ_NAMESPACE (If present)
 
-    ALERT_OBJ_NODE (Optional)
+    ALERT_OBJ_NODE (If present)
 
     """
     job_name = to_kubernetes_name(params.name)
@@ -56,17 +62,17 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
                             name=params.name,
                             image=params.image,
                             command=params.command,
-                            env=alert_env_vars(event)
+                            env=__get_alert_env_vars(event)
                         )
                     ],
                     restartPolicy=params.restart_policy
                 )
             ),
+            backoffLimit=params.backoff_limit,
+            activeDeadlineSeconds=params.active_deadline_seconds,
+            ttlSecondsAfterFinished=params.job_ttl_after_finished,
         )
     )
-
-    if params.job_ttl_after_finished:
-        job.spec.ttlSecondsAfterFinished = params.job_ttl_after_finished
 
     job.create()
 
@@ -76,7 +82,7 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
         ])
 
 
-def alert_env_vars(event: PrometheusKubernetesAlert) -> List[EnvVar]:
+def __get_alert_env_vars(event: PrometheusKubernetesAlert) -> List[EnvVar]:
     alert_subject = event.get_alert_subject()
     alert_env_vars = [
         EnvVar(name="ALERT_NAME", value=event.alert_name),
