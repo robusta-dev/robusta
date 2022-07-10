@@ -79,6 +79,7 @@ spec:
           limits:
             memory: {{ .Values.runner.resources.requests.memory | quote }}
             {{ if .Values.runner.resources.limits.cpu }}cpu: {{ .Values.runner.resources.limits.cpu | quote }}{{ end }}
+      {{- if .Values.grafanaRenderer.enableContainer }}
       - name: grafana-renderer
         image: {{ .Values.grafanaRenderer.image }}
         imagePullPolicy: {{ .Values.grafanaRenderer.imagePullPolicy }}
@@ -95,6 +96,7 @@ spec:
           limits:
             memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}
             {{ if .Values.grafanaRenderer.resources.limits.cpu }}cpu: {{ .Values.grafanaRenderer.resources.limits.cpu | quote }}{{ end }}
+      {{- end }}
       volumes:
         - name: playbooks-config-secret
           secret:

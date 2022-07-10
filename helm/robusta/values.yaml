@@ -183,6 +183,7 @@ kubewatch:
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
+  enableContainer: false
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:6
   imagePullPolicy: IfNotPresent
   resources:
