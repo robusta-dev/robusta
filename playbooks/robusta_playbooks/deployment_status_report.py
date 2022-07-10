@@ -26,21 +26,32 @@ class ReportParams(ActionParams):
 
 @action
 def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams):
+    """
+    Rendering from a grafana dashboard.
+    Make sure to set 'grafanaRenderer:enableContainer' to 'true' in the values yaml to use this action.
+    """
     finding = Finding(
         title=action_params.report_name,
         aggregation_key="report_rendering_task",
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    for panel_url in action_params.reports_panel_urls:
-        image: requests.models.Response = requests.post(
-            GRAFANA_RENDERER_URL,
-            data={
-                "apiKey": action_params.grafana_api_key.get_secret_value(),
-                "panelUrl": panel_url,
-            },
-        )
-        finding.add_enrichment([FileBlock("panel.png", image.content)])
+    try:
+        for panel_url in action_params.reports_panel_urls:
+            image: requests.models.Response = requests.post(
+                GRAFANA_RENDERER_URL,
+                data={
+                    "apiKey": action_params.grafana_api_key.get_secret_value(),
+                    "panelUrl": panel_url,
+                },
+            )
+            finding.add_enrichment([FileBlock("panel.png", image.content)])
+    except requests.exceptions.ConnectionError:
+        event.add_enrichment([
+            MarkdownBlock(
+            f"Connection to grafana-renderer container was refused. Make sure to set 'grafanaRenderer:enableContainer' to 'true' in the values yaml"
+        )])
+        return
     event.add_finding(finding)
 
 
