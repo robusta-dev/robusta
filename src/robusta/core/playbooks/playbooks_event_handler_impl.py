@@ -222,7 +222,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         f"Failed to execute action {action.action_name} {to_safe_str(action_params)}",
                         exc_info=True,
                     )
-
                     execution_event.add_enrichment(
                         [
                             MarkdownBlock(

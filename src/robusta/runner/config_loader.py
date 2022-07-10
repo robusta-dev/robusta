@@ -21,6 +21,7 @@ from ..core.model.env_vars import (
     PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_ROOT,
     CUSTOM_PLAYBOOKS_ROOT,
+    DEFAULT_PLAYBOOKS_PIP_INSTALL,
 )
 from ..integrations.git.git_repo import (
     GitRepoManager,
@@ -208,7 +209,7 @@ class ConfigLoader:
                 playbook_repos[
                     self.__get_package_name(DEFAULT_PLAYBOOKS_ROOT)
                 ] = PlaybookRepo(
-                    url=f"file://{DEFAULT_PLAYBOOKS_ROOT}", pip_install=False
+                    url=f"file://{DEFAULT_PLAYBOOKS_ROOT}", pip_install=DEFAULT_PLAYBOOKS_PIP_INSTALL
                 )
 
                 for url, repo in runner_config.playbook_repos.items():
