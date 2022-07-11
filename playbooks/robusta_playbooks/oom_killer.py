@@ -8,6 +8,8 @@ from robusta.integrations.resource_analysis.memory_analyzer import (
     K8sMemoryTransformer,
 )
 
+from .alerts_integration import LogEnricherParams
+
 
 class OomKillerEnricherParams(ActionParams):
     """
@@ -30,6 +32,78 @@ CONTAINER_MEMORY_THRESHOLD = 0.92
 # report the corresponding node as the reason for the OOMKill.
 NODE_MEMORY_THRESHOLD = 0.95
 
+
+@action
+def pod_oom_killer_enricher(
+    event: PodEvent,
+    params: LogEnricherParams
+):
+    pod = event.get_pod()
+    node: Node = Node.readNode(pod.spec.nodeName).obj
+    allocatable_memory = PodResources.parse_mem(node.status.allocatable.get("memory", "0Mi"))
+    capacity_memory = PodResources.parse_mem(node.status.capacity.get("memory", "0Mi"))
+    resource_requests = pod_requests(pod)
+    resource_limits = pod_limits(pod)
+
+    finding = Finding(
+        title=f"Pod {pod.metadata.name} OOMKilled results",
+        aggregation_key="pod_oom_killer_enricher",
+        severity=FindingSeverity.HIGH
+    )
+    logs_blocks: List[BaseBlock] = []
+    oom_killed_status = None
+    for container_status in pod.status.containerStatuses:
+        container_log = pod.get_logs(
+            container_status.name,
+            previous=True,
+            regex_replacer_patterns=params.regex_replacer_patterns,
+            regex_replacement_style=params.regex_replacement_style
+        )
+        if container_log:
+            logs_blocks.append(FileBlock(f"{pod.metadata.name}.txt", container_log))
+        else:
+            logs_blocks.append(
+                MarkdownBlock(
+                    f"Container logs unavailable for container: {container_status.name}"
+                )
+            )
+            logging.error(
+                f"could not fetch logs from container: {container_status.name}. logs were {container_log}"
+            )
+        if container_status.state.terminated and "OOMKilled" in container_status.state.terminated.reason:
+            oom_killed_status = container_status.state.terminated
+        elif container_status.lastState.terminated and "OOMKilled" in container_status.lastState.terminated.reason:
+            oom_killed_status = container_status.lastState.terminated
+
+    labels = [("Pod", pod.metadata.name),
+              ("Cpu limit", "None" if not resource_limits.cpu else f"{resource_limits.cpu} core(s)"),
+              ("Cpu requests", "None" if not resource_requests.cpu else f"{resource_requests.cpu} core(s)"),
+              ("Memory limit", "None" if not resource_limits.memory else f"{resource_limits.memory}MB"),
+              ("Memory requests", "None" if not resource_requests.memory else f"{resource_requests.memory}MB"),
+              ("Node Name", pod.spec.nodeName),
+              ("Node memory allocatable (free)", f"{allocatable_memory}MB"),
+              ("Node memory capacity", f"{capacity_memory}MB"),
+              ("Node memory precent used", f"{(capacity_memory - allocatable_memory) * 100 / capacity_memory}%"),
+              ]
+    if not oom_killed_status:
+        logging.error(
+            f"could not find OOMKilled status in pod {pod.metadata.name}"
+        )
+    else:
+        labels.append(("Container started at",oom_killed_status.startedAt))
+        labels.append(("Container finished at", oom_killed_status.finishedAt))
+        started_at = parse_kubernetes_datetime_to_ms(oom_killed_status.startedAt)
+        finished_at = parse_kubernetes_datetime_to_ms(oom_killed_status.finishedAt)
+        pod_start = datetime.fromtimestamp(started_at / 1000)
+        oom_kill_from = datetime.fromtimestamp(finished_at / 1000)
+        labels.append(("Container runtime", oom_kill_from - pod_start))
+    logs_blocks.append(TableBlock(
+        [[k, v] for (k, v) in labels],
+        ["label", "value"],
+        table_name="*Alert labels*",
+    ))
+    finding.add_enrichment(logs_blocks)
+    event.add_finding(finding)
 
 @action
 def oom_killer_enricher(
