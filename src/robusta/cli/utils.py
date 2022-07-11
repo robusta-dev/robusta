@@ -33,7 +33,7 @@ def exec_in_robusta_runner(
         "kubectl",
         "exec",
         "-it",
-        "deployment/robusta-runner",
+        get_runner_pod(namespace),
         "-c",
         "runner",
     ]
