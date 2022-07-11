@@ -40,6 +40,12 @@ def pod_oom_killer_enricher(
 ):
     pod = event.get_pod()
     node: Node = Node.readNode(pod.spec.nodeName).obj
+    if not node:
+        logging.warning(
+            f"Node {pod.spec.nodeName} not found for OOMKilled for pod {pod.metadata.name}"
+        )
+        return
+
     allocatable_memory = PodResources.parse_mem(node.status.allocatable.get("memory", "0Mi"))
     capacity_memory = PodResources.parse_mem(node.status.capacity.get("memory", "0Mi"))
     resource_requests = pod_requests(pod)
@@ -68,7 +74,7 @@ def pod_oom_killer_enricher(
                 )
             )
             logging.error(
-                f"could not fetch logs from container: {container_status.name}. logs were {container_log}"
+                f"could not fetch logs from container: {container_status.name}."
             )
         if container_status.state.terminated and "OOMKilled" in container_status.state.terminated.reason:
             oom_killed_status = container_status.state.terminated

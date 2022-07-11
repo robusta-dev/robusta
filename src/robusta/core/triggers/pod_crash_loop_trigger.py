@@ -75,8 +75,12 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
             else pod.metadata.name
         )
         namespace = pod.metadata.namespace
-        return RateLimiter.mark_and_test(
+        return PodCrashLoopTrigger.rate_limit_mark_and_test(playbook_id, namespace, name, self.rate_limit)
+
+    @staticmethod
+    def rate_limit_mark_and_test(playbook_id: str, namespace: str, name: str, rate_limit: int):
+        RateLimiter.mark_and_test(
             f"PodCrashLoopTrigger_{playbook_id}",
             namespace + ":" + name,
-            self.rate_limit,
+            rate_limit,
         )
