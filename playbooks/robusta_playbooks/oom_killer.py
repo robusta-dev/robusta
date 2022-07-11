@@ -46,7 +46,7 @@ def pod_oom_killer_enricher(
     resource_limits = pod_limits(pod)
 
     finding = Finding(
-        title=f"Pod {pod.metadata.name} OOMKilled results",
+        title=f"Pod {pod.metadata.name} in namespace {pod.metadata.namespace} OOMKilled results",
         aggregation_key="pod_oom_killer_enricher",
         severity=FindingSeverity.HIGH
     )
@@ -75,15 +75,13 @@ def pod_oom_killer_enricher(
         elif container_status.lastState.terminated and "OOMKilled" in container_status.lastState.terminated.reason:
             oom_killed_status = container_status.lastState.terminated
 
-    labels = [("Pod", pod.metadata.name),
-              ("Cpu limit", "None" if not resource_limits.cpu else f"{resource_limits.cpu} core(s)"),
-              ("Cpu requests", "None" if not resource_requests.cpu else f"{resource_requests.cpu} core(s)"),
+    labels = [("Pod", pod.metadata.name), ("Namespace", pod.metadata.namespace),
               ("Memory limit", "None" if not resource_limits.memory else f"{resource_limits.memory}MB"),
               ("Memory requests", "None" if not resource_requests.memory else f"{resource_requests.memory}MB"),
               ("Node Name", pod.spec.nodeName),
               ("Node memory allocatable (free)", f"{allocatable_memory}MB"),
               ("Node memory capacity", f"{capacity_memory}MB"),
-              ("Node memory precent used", f"{(capacity_memory - allocatable_memory) * 100 / capacity_memory}%"),
+              ("Node memory precent requested", f"{(capacity_memory - allocatable_memory) * 100 / capacity_memory}%"),
               ]
     if not oom_killed_status:
         logging.error(
