@@ -7,8 +7,7 @@ import json
 import yaml
 from hikaru.model import *  # *-import is necessary for hikaru subclasses to work
 from pydantic import BaseModel
-from ...core.model.env_vars import RELEASE_NAME
-from ...core.model.env_vars import INSTALLATION_NAMESPACE
+from ...core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
 from .api_client_utils import *
 from .templates import get_deployment_yaml
 
