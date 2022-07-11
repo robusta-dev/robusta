@@ -20,17 +20,19 @@ class PrometheusTriggerEvent(TriggerEvent):
 
 class ResourceMapping(NamedTuple):
     hikaru_class: Union[
-        Type[RobustaPod], Type[RobustaDeployment], Type[Job], Type[DaemonSet]
+        Type[RobustaPod], Type[RobustaDeployment], Type[Job], Type[DaemonSet],
+        Type[StatefulSet]
     ]
     attribute_name: str
     prometheus_label: str
 
 
 MAPPINGS = [
-    ResourceMapping(RobustaPod, "pod", "pod"),
     ResourceMapping(RobustaDeployment, "deployment", "deployment"),
-    ResourceMapping(RobustaJob, "job", "job_name"),
     ResourceMapping(DaemonSet, "daemonset", "daemonset"),
+    ResourceMapping(StatefulSet, "statefulset", "statefulset"),
+    ResourceMapping(RobustaJob, "job", "job_name"),
+    ResourceMapping(RobustaPod, "pod", "pod"),
 ]
 
 
@@ -122,7 +124,7 @@ class PrometheusAlertTrigger(BaseTrigger):
                 )
             except Exception as e:
                 logging.info(
-                    f"Error loading {mapping.hikaru_class} kubernetes object {execution_event.alert}. error: {e}"
+                    f"Error loading kubernetes {mapping.attribute_name} {namespace}/{resource_name}. {execution_event.alert}. error: {e}"
                 )
 
         node_name = labels.get("node")
