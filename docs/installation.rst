@@ -9,6 +9,15 @@ Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1
 
     `Ask us on Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
 
+We will now configure Robusta in you cluster.
+For this we need to install Robusta, and also connect at least one destination ("sink"), and at least one source ("triggers").
+
+A Kubernetes API source will be configured by default.
+
+We recommend connecting your `Prometheus <https://prometheus.io/docs/introduction/overview/>`_ to Robusta as an additional trigger source. If you don't have one installed, Robusta can install and configure it for you during the setup process.
+
+.. image:: ./images/robusta_motion_graphics_transparent.gif
+   :align: center
 
 Standard Installation
 ------------------------------
