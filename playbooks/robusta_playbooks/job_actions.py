@@ -7,6 +7,7 @@ class JobParams(ActionParams):
     :var command: The job command as array of strings
     :var name: Custom name for the job and job container.
     :var namespace: The created job namespace.
+    :var service_account: Job pod service account. If omitted, default is used.
     :var restart_policy: Job container restart policy
     :var job_ttl_after_finished: Delete finished job ttl (seconds). If omitted, jobs will not be deleted automatically.
     :var notify: Add a notification for creating the job.
@@ -21,6 +22,7 @@ class JobParams(ActionParams):
     command: List[str]
     name: str = "robusta-action-job"
     namespace: str = "default"
+    service_account: str = None
     restart_policy: str = "OnFailure"
     job_ttl_after_finished: int = None
     notify: bool = False
@@ -65,6 +67,7 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
                             env=__get_alert_env_vars(event)
                         )
                     ],
+                    serviceAccountName=params.service_account,
                     restartPolicy=params.restart_policy
                 )
             ),
