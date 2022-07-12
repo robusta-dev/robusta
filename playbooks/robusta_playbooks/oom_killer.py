@@ -71,7 +71,7 @@ def pod_oom_killer_enricher(
         node_labels = [("Node memory allocatable (free)", f"{allocatable_memory}MB"),
               ("Node memory capacity", f"{capacity_memory}MB"),
               ("Node memory precent requested", f"{(capacity_memory - allocatable_memory) * 100 / capacity_memory}%")]
-        labels.append(node_labels)
+        labels.extend(node_labels)
 
     if not oom_killed_status:
         logging.error(
