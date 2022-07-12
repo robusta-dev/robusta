@@ -57,6 +57,26 @@ def exec_in_robusta_runner(
     return subprocess.check_call(cmd)
 
 
+def exec_in_robusta_runner_output(command, namespace) -> Optional[bytes]:
+    exec_cmd = [
+        "kubectl",
+        "exec",
+        "-it",
+        "deployment/robusta-runner",
+        "-c",
+        "runner",
+    ]
+    if namespace is not None:
+        exec_cmd += ["-n", namespace]
+
+    exec_cmd += ["--", "bash", "-c", command]
+
+    result = subprocess.check_output(
+        exec_cmd
+    )
+    return result
+
+
 def download_file(url, local_path):
     with click_spinner.spinner():
         response = requests.get(url)
