@@ -1,4 +1,5 @@
 from robusta.api import *
+from robusta.core.playbooks.prometheus_enrichment_utils import XAxisLine
 
 from datetime import datetime
 
@@ -135,13 +136,32 @@ def node_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherPara
     """
     Get a graph of a specific resource for this node.
     """
-    start_at = datetime.now()
-    labels = {'node': node_event.get_node().metadata.name}
-
     node = node_event.get_node()
+    graph_enrichment = create_node_graph_enrichment(params, node)
+    node_event.add_enrichment([graph_enrichment])
+
+
+def create_node_graph_enrichment(params: ResourceGraphEnricherParams, node: Node):
+    start_at = datetime.now()
+    labels = {'node': node.metadata.name}
     internal_ip = get_node_internal_ip(node)
     if internal_ip:
         labels['node_internal_ip'] = internal_ip
+
+    limit_lines = []
+    if params.display_limits and \
+            params.resource_type == "CPU" and \
+            node.status.allocatable and \
+            'cpu' in node.status.allocatable:
+        limit_line = XAxisLine(label="CPU Limit", value=PodResources.parse_cpu(node.status.allocatable['cpu']))
+        limit_lines = [limit_line]
+    elif params.display_limits and \
+            params.resource_type == "Memory" and \
+            node.status.allocatable and \
+            'memory' in node.status.allocatable:
+        memory_limit_in_bytes = PodResources.parse_mem(node.status.allocatable['memory'])
+        limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
+        limit_lines = [limit_line]
 
     graph_enrichment = create_resource_enrichment(
         start_at,
@@ -149,6 +169,7 @@ def node_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherPara
         ResourceChartResourceType[params.resource_type],
         ResourceChartItemType.Node,
         prometheus_url=params.prometheus_url,
-        graph_duration_minutes=params.graph_duration_minutes
+        graph_duration_minutes=params.graph_duration_minutes,
+        lines=limit_lines
     )
-    node_event.add_enrichment([graph_enrichment])
+    return graph_enrichment

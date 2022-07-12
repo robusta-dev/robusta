@@ -40,7 +40,7 @@ def create_chart_from_prometheus_query(
         graph_duration_minutes: int,
         chart_title: Optional[str] = None,
         values_format: Optional[ChartValuesFormat] = None,
-        lines: Optional[List[XAxisLine]] = None
+        lines: Optional[List[XAxisLine]] = []
 ):
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
@@ -115,7 +115,7 @@ def create_graph_enrichment(
         graph_duration_minutes: int,
         graph_title: Optional[str],
         chart_values_format: Optional[ChartValuesFormat],
-        lines: Optional[List[XAxisLine]] = None
+        lines: Optional[List[XAxisLine]] = []
         ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
@@ -140,7 +140,7 @@ def create_resource_enrichment(
     item_type: ResourceChartItemType,
     graph_duration_minutes: int,
     prometheus_url: Optional[str] = None,
-    lines: Optional[List[XAxisLine]] = None
+    lines: Optional[List[XAxisLine]] = []
 ) -> FileBlock:
     ChartOptions = namedtuple('ChartOptions', ['query', 'values_format'])
     combinations = {
