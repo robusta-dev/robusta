@@ -11,6 +11,10 @@ from datetime import datetime, timedelta
 import humanize
 
 
+class XAxisLine(BaseModel):
+    label: str
+    value: float
+
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
     labels = defaultdict(lambda: "<missing>")
     labels.update(provided_labels)
@@ -35,7 +39,8 @@ def create_chart_from_prometheus_query(
         include_x_axis: bool,
         graph_duration_minutes: int,
         chart_title: Optional[str] = None,
-        values_format: Optional[ChartValuesFormat] = None
+        values_format: Optional[ChartValuesFormat] = None,
+        lines: Optional[List[XAxisLine]] = None
 ):
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
@@ -82,13 +87,23 @@ def create_chart_from_prometheus_query(
     else:
         chart.title = promql_query
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
+    min_time = None
+    max_time = None
     for series in result:
         label = "\n".join([v for v in series["metric"].values()])
         values = [
             (timestamp, round(float(val), FLOAT_PRECISION_LIMIT))
             for (timestamp, val) in series["values"]
         ]
+        times = [timestamp for (timestamp, _) in series["values"]]
+        if not min_time or min(times) < min_time:
+            min_time = min(times)
+        if not max_time or max(times) > max_time:
+            max_time = max(times)
         chart.add(label, values)
+    for line in lines:
+        value = [(min_time, line.value), (max_time, line.value)]
+        chart.add(line.label, value)
     return chart
 
 
@@ -99,7 +114,9 @@ def create_graph_enrichment(
         prometheus_url: Optional[str],
         graph_duration_minutes: int,
         graph_title: Optional[str],
-        chart_values_format: Optional[ChartValuesFormat]) -> FileBlock:
+        chart_values_format: Optional[ChartValuesFormat],
+        lines: Optional[List[XAxisLine]] = None
+        ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
         prometheus_url,
@@ -108,7 +125,8 @@ def create_graph_enrichment(
         include_x_axis=True,
         graph_duration_minutes=graph_duration_minutes,
         chart_title=graph_title,
-        values_format=chart_values_format
+        values_format=chart_values_format,
+        lines=lines
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
@@ -122,6 +140,7 @@ def create_resource_enrichment(
     item_type: ResourceChartItemType,
     graph_duration_minutes: int,
     prometheus_url: Optional[str] = None,
+    lines: Optional[List[XAxisLine]] = None
 ) -> FileBlock:
     ChartOptions = namedtuple('ChartOptions', ['query', 'values_format'])
     combinations = {
@@ -159,6 +178,7 @@ def create_resource_enrichment(
         prometheus_url=prometheus_url,
         graph_duration_minutes=graph_duration_minutes,
         graph_title=f'{resource_type.name} {values_format_text} for this {item_type.name.lower()}',
-        chart_values_format=chosen_combination.values_format
+        chart_values_format=chosen_combination.values_format,
+        lines=lines
     )
     return graph_enrichment

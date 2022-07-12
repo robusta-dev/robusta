@@ -95,12 +95,13 @@ class ResourceGraphEnricherParams(PrometheusParams):
     """
     :var resource_type: one of: CPU, Memory, Disk (see ResourceChartResourceType)
     :var graph_duration_minutes: Graph duration is minutes. Default is 60.
+    :var display_limits: displays the pod limit for the resource or the allocatable resources for the Node
 
     :example resource_type: Memory
     """
     resource_type: str
     graph_duration_minutes: int = 60
-
+    display_limits: bool = False
 
 class AlertResourceGraphEnricherParams(ResourceGraphEnricherParams):
     """
