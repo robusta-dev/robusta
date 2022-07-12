@@ -105,7 +105,8 @@ Every automation has three parts:
         Where to send the result
         (Slack, etc)
 
-Automations run via webhook so if they fail it wont bring down your environment.
+.. image:: ./images/robusta_motion_graphics_transparent.gif
+   :align: center
 
 Writing your own automations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
