@@ -84,7 +84,7 @@ def store_server_token(token_details: TokenDetails, debug: bool = False) -> bool
         return False
 
 
-def _get_signing_key_from_env_variable(namespace, env_var_name) -> str:
+def _get_signing_key_from_env_variable(namespace: Optional[str], env_var_name: str) -> str:
     return str(exec_in_robusta_runner_output(f'echo "${env_var_name}"', namespace), 'utf-8').strip()
 
 
