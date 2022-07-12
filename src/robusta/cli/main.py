@@ -5,12 +5,12 @@ import subprocess
 import time
 import uuid
 import click_spinner
-from distutils.version import StrictVersion
+
 from typing import Optional, List, Union, Dict
-from zipfile import ZipFile
+
 import traceback
 
-import sys
+from .utils import get_runner_pod
 import typer
 import yaml
 from kubernetes import config
@@ -419,16 +419,23 @@ def logs(
     ),
     tail: int = typer.Option(None, help="Lines of recent log file to display."),
     context: str = typer.Option(None, help="The name of the kubeconfig context to use"),
+    resource_name: str = typer.Option(None, help="Robusta Runner deployment or pod name")
 ):
     """Fetch Robusta runner logs"""
     stream = "-f" if f else ""
     since = f"--since={since}" if since else ""
     tail = f"--tail={tail}" if tail else ""
     context = f"--context={context}" if context else ""
-    subprocess.check_call(
-        f"kubectl logs {stream} {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner {since} {tail} {context}",
-        shell=True,
-    )
+    resource_name =  resource_name if resource_name else get_runner_pod(namespace)
+    try:
+        subprocess.check_call(
+            f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
+            shell=True
+        )
+    except Exception as e:
+        log_title("Robusta-runner pod not found. use help for more options.", color="red")
+
+
 
 
 if __name__ == "__main__":
