@@ -39,15 +39,7 @@ def pod_oom_killer_enricher(
     params: LogEnricherParams
 ):
     pod = event.get_pod()
-    node: Node = Node.readNode(pod.spec.nodeName).obj
-    if not node:
-        logging.warning(
-            f"Node {pod.spec.nodeName} not found for OOMKilled for pod {pod.metadata.name}"
-        )
-        return
 
-    allocatable_memory = PodResources.parse_mem(node.status.allocatable.get("memory", "0Mi"))
-    capacity_memory = PodResources.parse_mem(node.status.capacity.get("memory", "0Mi"))
     resource_requests = pod_requests(pod)
     resource_limits = pod_limits(pod)
 
@@ -59,23 +51,6 @@ def pod_oom_killer_enricher(
     logs_blocks: List[BaseBlock] = []
     oom_killed_status = None
     for container_status in pod.status.containerStatuses:
-        container_log = pod.get_logs(
-            container_status.name,
-            previous=True,
-            regex_replacer_patterns=params.regex_replacer_patterns,
-            regex_replacement_style=params.regex_replacement_style
-        )
-        if container_log:
-            logs_blocks.append(FileBlock(f"{pod.metadata.name}.txt", container_log))
-        else:
-            logs_blocks.append(
-                MarkdownBlock(
-                    f"Container logs unavailable for container: {container_status.name}"
-                )
-            )
-            logging.error(
-                f"could not fetch logs from container: {container_status.name}."
-            )
         if container_status.state.terminated and "OOMKilled" in container_status.state.terminated.reason:
             oom_killed_status = container_status.state.terminated
         elif container_status.lastState.terminated and "OOMKilled" in container_status.lastState.terminated.reason:
@@ -85,10 +60,19 @@ def pod_oom_killer_enricher(
               ("Memory limit", "None" if not resource_limits.memory else f"{resource_limits.memory}MB"),
               ("Memory requests", "None" if not resource_requests.memory else f"{resource_requests.memory}MB"),
               ("Node Name", pod.spec.nodeName),
-              ("Node memory allocatable (free)", f"{allocatable_memory}MB"),
-              ("Node memory capacity", f"{capacity_memory}MB"),
-              ("Node memory precent requested", f"{(capacity_memory - allocatable_memory) * 100 / capacity_memory}%"),
               ]
+    node: Node = Node.readNode(pod.spec.nodeName).obj
+    if node:
+        logging.warning(
+            f"Node {pod.spec.nodeName} not found for OOMKilled for pod {pod.metadata.name}"
+        )
+        allocatable_memory = PodResources.parse_mem(node.status.allocatable.get("memory", "0Mi"))
+        capacity_memory = PodResources.parse_mem(node.status.capacity.get("memory", "0Mi"))
+        node_labels = [("Node memory allocatable (free)", f"{allocatable_memory}MB"),
+              ("Node memory capacity", f"{capacity_memory}MB"),
+              ("Node memory precent requested", f"{(capacity_memory - allocatable_memory) * 100 / capacity_memory}%")]
+        labels.append(node_labels)
+
     if not oom_killed_status:
         logging.error(
             f"could not find OOMKilled status in pod {pod.metadata.name}"
@@ -104,7 +88,7 @@ def pod_oom_killer_enricher(
     logs_blocks.append(TableBlock(
         [[k, v] for (k, v) in labels],
         ["label", "value"],
-        table_name="*Alert labels*",
+        table_name="*Pod and Node OOMKilled data*",
     ))
     finding.add_enrichment(logs_blocks)
     event.add_finding(finding)

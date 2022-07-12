@@ -6,7 +6,7 @@ from robusta.core.playbooks.prometheus_enrichment_utils import XAxisLine
 from .node_enrichments import create_node_graph_enrichment
 
 @action
-def pod_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherParams):
+def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherParams):
     """
     Get a graph of a specific resource for this pod. Note: "Disk" Resource is not supported.
     """

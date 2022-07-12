@@ -14,11 +14,9 @@ TERMINATED_REASON_OOM_KILLED = "OOMKilled"
 class PodOOMKilledTrigger(PodUpdateTrigger):
     """
     :var rate_limit: Limit firing to once every `rate_limit` seconds
-    :var ignore_concurrent_crash_loop: doesn't trigger on_crash_loop events on the same pod within the rate_limit
     """
 
     rate_limit: int = 3600
-    ignore_concurrent_crash_loop: bool = False
 
     def __init__(
             self,
@@ -26,7 +24,6 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
             namespace_prefix: str = None,
             labels_selector: str = None,
             rate_limit: int = 3600,
-            ignore_concurrent_crash_loop: bool = False
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -34,7 +31,6 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
             labels_selector=labels_selector,
         )
         self.rate_limit = rate_limit
-        self.ignore_concurrent_crash_loop = ignore_concurrent_crash_loop
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         should_fire = super().should_fire(event, playbook_id)
@@ -71,16 +67,11 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
             else pod.metadata.name
         )
         namespace = pod.metadata.namespace
-        is_triggered =  RateLimiter.mark_and_test(
+        return RateLimiter.mark_and_test(
             f"PodOOMKilledTrigger_{playbook_id}",
             namespace + ":" + name,
             self.rate_limit,
         )
-
-        if is_triggered and self.ignore_concurrent_crash_loop:
-            PodCrashLoopTrigger.rate_limit_mark_and_test(playbook_id, namespace, name, self.rate_limit)
-
-        return is_triggered
 
     @staticmethod
     def is_oom_killed_state(container_state):
