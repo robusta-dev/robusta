@@ -8,8 +8,6 @@ from robusta.integrations.resource_analysis.memory_analyzer import (
     K8sMemoryTransformer,
 )
 
-from .alerts_integration import LogEnricherParams
-
 
 class OomKillerEnricherParams(ActionParams):
     """
@@ -36,7 +34,6 @@ NODE_MEMORY_THRESHOLD = 0.95
 @action
 def pod_oom_killer_enricher(
     event: PodEvent,
-    params: LogEnricherParams
 ):
     pod = event.get_pod()
 

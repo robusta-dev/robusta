@@ -46,7 +46,7 @@ def node_graph_enricher_for_pod(pod_event: PodEvent, params: ResourceGraphEnrich
     node: Node = Node.readNode(pod.spec.nodeName).obj
     if not node:
         logging.warning(
-            f"Node {pod.spec.nodeName} not found for OOMKilled for pod {pod.metadata.name}"
+            f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}"
         )
         return
     graph_enrichment = create_node_graph_enrichment(params, node)
