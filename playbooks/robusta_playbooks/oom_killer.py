@@ -61,7 +61,7 @@ def pod_oom_killer_enricher(
     node: Node = Node.readNode(pod.spec.nodeName).obj
     if node:
         logging.warning(
-            f"Node {pod.spec.nodeName} not found for OOMKilled for pod {pod.metadata.name}"
+            f"Node {pod.spec.nodeName} not found for OOMKilled pod {pod.metadata.name}"
         )
         allocatable_memory = PodResources.parse_mem(node.status.allocatable.get("memory", "0Mi"))
         capacity_memory = PodResources.parse_mem(node.status.capacity.get("memory", "0Mi"))

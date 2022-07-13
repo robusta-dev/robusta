@@ -104,7 +104,7 @@ class ResourceGraphEnricherParams(PrometheusParams):
 
 class PodResourceGraphEnricherParams(ResourceGraphEnricherParams):
     """
-    :var display_limits: displays the pod limit for the resource
+    :var display_limits: displays on the graph the pod limit for the resource if true (only CPU and Memory are supported)
     """
     display_limits: bool = False
 
