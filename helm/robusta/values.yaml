@@ -68,6 +68,7 @@ builtinPlaybooks:
       display_limits: true
   - node_graph_enricher_for_pod:
       resource_type: Memory
+  stop: true
 
 # playbooks for prometheus alerts enrichment
 - triggers:
