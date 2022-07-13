@@ -99,3 +99,47 @@ def __get_alert_env_vars(event: PrometheusKubernetesAlert) -> List[EnvVar]:
         alert_env_vars.append(EnvVar(name="ALERT_OBJ_NODE", value=alert_subject.node))
 
     return alert_env_vars
+
+@action
+def report_job_failure(event: JobEvent):
+    job = event.get_job()
+    if not job:
+        logging.error(
+            f"cannot run report_job_failure on alert with no job object: {event}"
+        )
+        return
+
+    job_name = job.metadata.name
+    job_namespace = job.metadata.namespace
+    event.add_finding(Finding(
+        title=f"Job {job_name} on namespace {job_namespace} failed",
+        aggregation_key="Job Failure",
+        subject=FindingSubject(job_name, FindingSubjectType.TYPE_JOB, job_namespace)
+    ))
+
+
+@action
+def job_events_enricher(event: JobEvent, params: EventEnricherParams):
+    """
+    Given a Kubernetes job, fetch related events in the near past
+    """
+    job = event.get_job()
+    if not job:
+        logging.error(
+            f"cannot run job_events_enricher on alert with no job object: {event}"
+        )
+        return
+
+    events_table_block = get_resource_events_table(
+        "*Job events:*",
+        job.kind,
+        job.metadata.name,
+        job.metadata.namespace,
+        included_types=params.included_types,
+        max_events=params.max_events,
+    )
+    if events_table_block:
+        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+
+
+

@@ -38,6 +38,23 @@ Trigger parameters:
 * ``rate_limit``: Limit firing to once every `rate_limit` seconds
 
 
+.. _on_job_failure:
+
+* ``on_job_failure``
+
+This trigger will fire when a Job becomes failed.
+
+
+.. code-block:: yaml
+
+    customPlaybooks:
+    - triggers:
+      - on_job_failure:
+          namespace_prefix: robusta
+      actions:
+      - report_job_failure: {}
+      - job_events_enricher: {}
+
 
 .. note::
 

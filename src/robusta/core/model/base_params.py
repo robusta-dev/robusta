@@ -148,3 +148,8 @@ class ProcessParams(ActionParams):
     process_substring: str = ""
     pid: int = None
     interactive: bool = True
+
+
+class EventEnricherParams(ActionParams):
+    max_events: int = 8
+    included_types: List[str] = ["Warning", "Normal"]
