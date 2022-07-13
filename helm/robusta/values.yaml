@@ -58,6 +58,17 @@ builtinPlaybooks:
   - image_pull_backoff_reporter:
       rate_limit: 3600
 
+# playbooks for non-prometheus based monitoring that use prometheus for enrichment
+- triggers:
+  - on_pod_oom_killed: {}
+  actions:
+  - pod_oom_killer_enricher: {}
+  - pod_graph_enricher:
+      resource_type: Memory
+      display_limits: true
+  - node_graph_enricher_for_pod:
+      resource_type: Memory
+
 # playbooks for prometheus alerts enrichment
 - triggers:
   - on_prometheus_alert:
