@@ -27,6 +27,7 @@ class FindingSubjectType(Enum):
     TYPE_POD = "pod"
     TYPE_JOB = "job"
     TYPE_DAEMONSET = "daemonset"
+    TYPE_STATEFULSET = "statefulset"
 
     @staticmethod
     def from_kind(kind: str):
@@ -40,6 +41,8 @@ class FindingSubjectType(Enum):
             return FindingSubjectType.TYPE_JOB
         elif kind == "daemonset":
             return FindingSubjectType.TYPE_DAEMONSET
+        elif kind == "statefulset":
+            return FindingSubjectType.TYPE_STATEFULSET
         return FindingSubjectType.TYPE_NONE
 
 

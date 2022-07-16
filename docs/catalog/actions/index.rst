@@ -8,6 +8,7 @@ Builtin actions
    :maxdepth: 1
 
    event-enrichment
+   remediation
    change-tracking
    grafana
    python-troubleshooting
