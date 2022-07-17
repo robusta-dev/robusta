@@ -87,8 +87,9 @@ def create_chart_from_prometheus_query(
     else:
         chart.title = promql_query
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
-    min_time = None
-    max_time = None
+    # TODO: change min_time time before  Jan 19 3001
+    min_time = 32536799999
+    max_time = 0
     for series in result:
         label = "\n".join([v for v in series["metric"].values()])
         values = [
@@ -96,10 +97,8 @@ def create_chart_from_prometheus_query(
             for (timestamp, val) in series["values"]
         ]
         times = [timestamp for (timestamp, _) in series["values"]]
-        if not min_time or min(times) < min_time:
-            min_time = min(times)
-        if not max_time or max(times) > max_time:
-            max_time = max(times)
+        min_time = min(min_time, min(times))
+        max_time = max(max_time, max(times))
         chart.add(label, values)
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]

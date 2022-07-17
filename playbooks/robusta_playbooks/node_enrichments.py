@@ -1,5 +1,4 @@
 from robusta.api import *
-from robusta.core.playbooks.prometheus_enrichment_utils import XAxisLine
 
 from datetime import datetime
 
