@@ -100,23 +100,6 @@ def __get_alert_env_vars(event: PrometheusKubernetesAlert) -> List[EnvVar]:
 
     return alert_env_vars
 
-@action
-def report_job_failure(event: JobEvent):
-    job = event.get_job()
-    if not job:
-        logging.error(
-            f"cannot run report_job_failure on alert with no job object: {event}"
-        )
-        return
-
-    job_name = job.metadata.name
-    job_namespace = job.metadata.namespace
-    event.add_finding(Finding(
-        title=f"Job {job_name} on namespace {job_namespace} failed",
-        aggregation_key="Job Failure",
-        subject=FindingSubject(job_name, FindingSubjectType.TYPE_JOB, job_namespace)
-    ))
-
 
 @action
 def job_events_enricher(event: JobEvent, params: EventEnricherParams):

@@ -10,6 +10,9 @@ from pydantic import BaseModel
 from typing import Union, Optional, List
 from ..base_event import K8sBaseChangeEvent
 from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
+from ....core.reporting.base import FindingSubject
+from ....core.reporting.consts import FindingSubjectType, FindingSource
+from ....core.reporting.finding_subjects import KubeObjFindingSubject
 from ..custom_models import RobustaPod,RobustaDeployment,RobustaJob
 from hikaru.model.rel_1_16.v1 import ClusterRole as v1ClusterRole    
 from hikaru.model.rel_1_16.v1 import ClusterRoleBinding as v1ClusterRoleBinding    
@@ -111,6 +114,18 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
     def get_resource(self) -> Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,ConfigMap]]:
         return self._obj
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+    @classmethod
+    def get_source(cls) -> FindingSource:
+        return FindingSource.KUBERNETES_API_SERVER
+
     @staticmethod
     def from_params(params: ResourceAttributes) -> Optional["KubernetesResourceEvent"]:
         try:
@@ -156,6 +171,15 @@ class PodEvent(KubernetesResourceEvent):
             return None
         return PodEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class PodChangeEvent(PodEvent, KubernetesAnyChangeEvent):
@@ -164,6 +188,14 @@ class PodChangeEvent(PodEvent, KubernetesAnyChangeEvent):
 
     def get_pod(self) -> Optional[RobustaPod]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class ReplicaSetAttributes(ExecutionEventBaseParams):
@@ -188,6 +220,15 @@ class ReplicaSetEvent(KubernetesResourceEvent):
             return None
         return ReplicaSetEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class ReplicaSetChangeEvent(ReplicaSetEvent, KubernetesAnyChangeEvent):
@@ -196,6 +237,14 @@ class ReplicaSetChangeEvent(ReplicaSetEvent, KubernetesAnyChangeEvent):
 
     def get_replicaset(self) -> Optional[Union[v1ReplicaSet,v2beta1ReplicaSet,v2beta2ReplicaSet]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class DaemonSetAttributes(ExecutionEventBaseParams):
@@ -220,6 +269,15 @@ class DaemonSetEvent(KubernetesResourceEvent):
             return None
         return DaemonSetEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class DaemonSetChangeEvent(DaemonSetEvent, KubernetesAnyChangeEvent):
@@ -228,6 +286,14 @@ class DaemonSetChangeEvent(DaemonSetEvent, KubernetesAnyChangeEvent):
 
     def get_daemonset(self) -> Optional[Union[v1DaemonSet,v2beta1DaemonSet,v2beta2DaemonSet]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class DeploymentAttributes(ExecutionEventBaseParams):
@@ -252,6 +318,15 @@ class DeploymentEvent(KubernetesResourceEvent):
             return None
         return DeploymentEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class DeploymentChangeEvent(DeploymentEvent, KubernetesAnyChangeEvent):
@@ -260,6 +335,14 @@ class DeploymentChangeEvent(DeploymentEvent, KubernetesAnyChangeEvent):
 
     def get_deployment(self) -> Optional[RobustaDeployment]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class StatefulSetAttributes(ExecutionEventBaseParams):
@@ -284,6 +367,15 @@ class StatefulSetEvent(KubernetesResourceEvent):
             return None
         return StatefulSetEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class StatefulSetChangeEvent(StatefulSetEvent, KubernetesAnyChangeEvent):
@@ -292,6 +384,14 @@ class StatefulSetChangeEvent(StatefulSetEvent, KubernetesAnyChangeEvent):
 
     def get_statefulset(self) -> Optional[Union[v1StatefulSet,v2beta1StatefulSet,v2beta2StatefulSet]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class ServiceAttributes(ExecutionEventBaseParams):
@@ -316,6 +416,15 @@ class ServiceEvent(KubernetesResourceEvent):
             return None
         return ServiceEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class ServiceChangeEvent(ServiceEvent, KubernetesAnyChangeEvent):
@@ -324,6 +433,14 @@ class ServiceChangeEvent(ServiceEvent, KubernetesAnyChangeEvent):
 
     def get_service(self) -> Optional[Union[v1Service,v2beta1Service,v2beta2Service]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class EventAttributes(ExecutionEventBaseParams):
@@ -348,6 +465,15 @@ class EventEvent(KubernetesResourceEvent):
             return None
         return EventEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class EventChangeEvent(EventEvent, KubernetesAnyChangeEvent):
@@ -356,6 +482,14 @@ class EventChangeEvent(EventEvent, KubernetesAnyChangeEvent):
 
     def get_event(self) -> Optional[Union[v1Event,v2beta1Event,v2beta2Event]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class HorizontalPodAutoscalerAttributes(ExecutionEventBaseParams):
@@ -380,6 +514,15 @@ class HorizontalPodAutoscalerEvent(KubernetesResourceEvent):
             return None
         return HorizontalPodAutoscalerEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class HorizontalPodAutoscalerChangeEvent(HorizontalPodAutoscalerEvent, KubernetesAnyChangeEvent):
@@ -388,6 +531,14 @@ class HorizontalPodAutoscalerChangeEvent(HorizontalPodAutoscalerEvent, Kubernete
 
     def get_horizontalpodautoscaler(self) -> Optional[Union[v1HorizontalPodAutoscaler,v2beta1HorizontalPodAutoscaler,v2beta2HorizontalPodAutoscaler]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class NodeAttributes(ExecutionEventBaseParams):
@@ -412,6 +563,15 @@ class NodeEvent(KubernetesResourceEvent):
             return None
         return NodeEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class NodeChangeEvent(NodeEvent, KubernetesAnyChangeEvent):
@@ -420,6 +580,14 @@ class NodeChangeEvent(NodeEvent, KubernetesAnyChangeEvent):
 
     def get_node(self) -> Optional[Union[v1Node,v2beta1Node,v2beta2Node]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class ClusterRoleAttributes(ExecutionEventBaseParams):
@@ -444,6 +612,15 @@ class ClusterRoleEvent(KubernetesResourceEvent):
             return None
         return ClusterRoleEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class ClusterRoleChangeEvent(ClusterRoleEvent, KubernetesAnyChangeEvent):
@@ -452,6 +629,14 @@ class ClusterRoleChangeEvent(ClusterRoleEvent, KubernetesAnyChangeEvent):
 
     def get_clusterrole(self) -> Optional[Union[v1ClusterRole,v2beta1ClusterRole,v2beta2ClusterRole]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class ClusterRoleBindingAttributes(ExecutionEventBaseParams):
@@ -476,6 +661,15 @@ class ClusterRoleBindingEvent(KubernetesResourceEvent):
             return None
         return ClusterRoleBindingEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class ClusterRoleBindingChangeEvent(ClusterRoleBindingEvent, KubernetesAnyChangeEvent):
@@ -484,6 +678,14 @@ class ClusterRoleBindingChangeEvent(ClusterRoleBindingEvent, KubernetesAnyChange
 
     def get_clusterrolebinding(self) -> Optional[Union[v1ClusterRoleBinding,v2beta1ClusterRoleBinding,v2beta2ClusterRoleBinding]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class JobAttributes(ExecutionEventBaseParams):
@@ -508,6 +710,15 @@ class JobEvent(KubernetesResourceEvent):
             return None
         return JobEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class JobChangeEvent(JobEvent, KubernetesAnyChangeEvent):
@@ -516,6 +727,14 @@ class JobChangeEvent(JobEvent, KubernetesAnyChangeEvent):
 
     def get_job(self) -> Optional[RobustaJob]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class NamespaceAttributes(ExecutionEventBaseParams):
@@ -540,6 +759,15 @@ class NamespaceEvent(KubernetesResourceEvent):
             return None
         return NamespaceEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class NamespaceChangeEvent(NamespaceEvent, KubernetesAnyChangeEvent):
@@ -548,6 +776,14 @@ class NamespaceChangeEvent(NamespaceEvent, KubernetesAnyChangeEvent):
 
     def get_namespace(self) -> Optional[Union[v1Namespace,v2beta1Namespace,v2beta2Namespace]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class ServiceAccountAttributes(ExecutionEventBaseParams):
@@ -572,6 +808,15 @@ class ServiceAccountEvent(KubernetesResourceEvent):
             return None
         return ServiceAccountEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class ServiceAccountChangeEvent(ServiceAccountEvent, KubernetesAnyChangeEvent):
@@ -580,6 +825,14 @@ class ServiceAccountChangeEvent(ServiceAccountEvent, KubernetesAnyChangeEvent):
 
     def get_serviceaccount(self) -> Optional[Union[v1ServiceAccount,v2beta1ServiceAccount,v2beta2ServiceAccount]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class PersistentVolumeAttributes(ExecutionEventBaseParams):
@@ -604,6 +857,15 @@ class PersistentVolumeEvent(KubernetesResourceEvent):
             return None
         return PersistentVolumeEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class PersistentVolumeChangeEvent(PersistentVolumeEvent, KubernetesAnyChangeEvent):
@@ -612,6 +874,14 @@ class PersistentVolumeChangeEvent(PersistentVolumeEvent, KubernetesAnyChangeEven
 
     def get_persistentvolume(self) -> Optional[Union[v1PersistentVolume,v2beta1PersistentVolume,v2beta2PersistentVolume]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 class ConfigMapAttributes(ExecutionEventBaseParams):
@@ -636,6 +906,15 @@ class ConfigMapEvent(KubernetesResourceEvent):
             return None
         return ConfigMapEvent(obj=obj, named_sinks=params.named_sinks)
 
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self._obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self._obj.kind),
+            namespace=self._obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self._obj)
+        )
+
+
 
 @dataclass
 class ConfigMapChangeEvent(ConfigMapEvent, KubernetesAnyChangeEvent):
@@ -644,6 +923,14 @@ class ConfigMapChangeEvent(ConfigMapEvent, KubernetesAnyChangeEvent):
 
     def get_configmap(self) -> Optional[Union[v1ConfigMap,v2beta1ConfigMap,v2beta2ConfigMap]]:
         return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
+        )
 
 
 

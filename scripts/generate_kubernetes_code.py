@@ -62,6 +62,9 @@ def autogenerate_events(f: TextIO):
         from typing import Union, Optional, List
         from ..base_event import K8sBaseChangeEvent
         from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
+        from ....core.reporting.base import FindingSubject
+        from ....core.reporting.consts import FindingSubjectType, FindingSource
+        from ....core.reporting.finding_subjects import KubeObjFindingSubject
         from ..custom_models import {CUSTOM_SUBCLASSES_NAMES_STR}
         """
         )
@@ -159,6 +162,18 @@ def autogenerate_events(f: TextIO):
             def get_resource(self) -> Optional[{f"Union[{','.join(all_resources)}]"}]:
                 return self._obj
 
+            def get_subject(self) -> FindingSubject:
+                return FindingSubject(
+                    name=self._obj.metadata.name,
+                    subject_type=FindingSubjectType.from_kind(self._obj.kind),
+                    namespace=self._obj.metadata.namespace,
+                    node=KubeObjFindingSubject.get_node_name(self._obj)
+                )
+        
+            @classmethod
+            def get_source(cls) -> FindingSource:
+                return FindingSource.KUBERNETES_API_SERVER
+
             @staticmethod
             def from_params(params: ResourceAttributes) -> Optional["KubernetesResourceEvent"]:
                 try:
@@ -226,6 +241,15 @@ def autogenerate_events(f: TextIO):
                         logging.error(f"Could not load {resource} {{params}}", exc_info=True)
                         return None
                     return {resource}Event(obj=obj, named_sinks=params.named_sinks)
+                
+                def get_subject(self) -> FindingSubject:
+                    return FindingSubject(
+                        name=self._obj.metadata.name,
+                        subject_type=FindingSubjectType.from_kind(self._obj.kind),
+                        namespace=self._obj.metadata.namespace,
+                        node=KubeObjFindingSubject.get_node_name(self._obj)
+                    )
+
 
 
             @dataclass
@@ -235,6 +259,14 @@ def autogenerate_events(f: TextIO):
 
                 def get_{resource.lower()}(self) -> Optional[{model_class_str}]:
                     return self.obj
+
+                def get_subject(self) -> FindingSubject:
+                    return FindingSubject(
+                        name=self.obj.metadata.name,
+                        subject_type=FindingSubjectType.from_kind(self.obj.kind),
+                        namespace=self.obj.metadata.namespace,
+                        node=KubeObjFindingSubject.get_node_name(self.obj)
+                    )
 
 
             """

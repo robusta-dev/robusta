@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from ...core.reporting import Finding
+from ...core.reporting import Finding, FindingSource
 from ...core.model.events import ExecutionBaseEvent
 
 
@@ -13,3 +13,8 @@ class ScheduledExecutionEvent(ExecutionBaseEvent):
             title="General scheduled task",
             aggregation_key="General scheduled task",
         )
+
+    @classmethod
+    def get_source(cls) -> FindingSource:
+        return FindingSource.SCHEDULER
+
