@@ -58,7 +58,7 @@ def create_finding(event: ExecutionBaseEvent, params: FindingFields):
 
     All messages from Robusta are represented as a Finding object.
 
-    This action lets create a Finding that Robusta sends.
+    This action creates a Finding that Robusta sends, with the specified fields.
 
     """
     subject = event.get_subject()
