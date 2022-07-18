@@ -2,7 +2,6 @@ from robusta.api import *
 
 from datetime import datetime
 
-from .node_enrichments import create_node_graph_enrichment
 
 @action
 def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherParams):
