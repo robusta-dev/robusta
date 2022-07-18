@@ -165,3 +165,10 @@ class PrometheusKubernetesAlert(
             ends_at=ends_at,
             add_silence_url=True
         )
+
+    def get_subject(self) -> FindingSubject:
+        return self.get_alert_subject()
+
+    @classmethod
+    def get_source(cls) -> FindingSource:
+        return FindingSource.PROMETHEUS

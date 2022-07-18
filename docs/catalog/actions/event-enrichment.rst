@@ -53,6 +53,13 @@ These actions can add context to any deployment-related event, be it from ``on_p
 
 .. robusta-action:: playbooks.robusta_playbooks.event_enrichments.deployment_events_enricher
 
+Job Enrichers
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These actions can add context to any job-related event, be it from ``on_prometheus_alert`` or ``on_job_update``.
+
+.. robusta-action:: playbooks.robusta_playbooks.job_actions.job_events_enricher
+
 Kubernetes Resource Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

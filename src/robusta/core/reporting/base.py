@@ -22,6 +22,21 @@ class FindingSeverity(Enum):
     MEDIUM = 3
     HIGH = 4
 
+    @staticmethod
+    def from_severity(severity: str) -> "FindingSeverity":
+        if severity == "DEBUG":
+            return FindingSeverity.DEBUG
+        elif severity == "INFO":
+            return FindingSeverity.INFO
+        elif severity == "LOW":
+            return FindingSeverity.LOW
+        elif severity == "MEDIUM":
+            return FindingSeverity.MEDIUM
+        elif severity == "HIGH":
+            return FindingSeverity.HIGH
+
+        raise Exception(f"Unknown severity {severity}")
+
 
 class Enrichment:
     # These is the actual enrichment data

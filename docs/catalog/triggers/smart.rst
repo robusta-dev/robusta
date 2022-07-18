@@ -38,6 +38,28 @@ Trigger parameters:
 * ``rate_limit``: Limit firing to once every `rate_limit` seconds
 
 
+Job Failure
+^^^^^^^^^^^^^^^^^^^
+
+.. _on_job_failure:
+
+* ``on_job_failure``
+
+This trigger will fire when the Job status is updated to "failed".
+
+
+.. code-block:: yaml
+
+    customPlaybooks:
+    - triggers:
+      - on_job_failure:
+          namespace_prefix: robusta
+      actions:
+      - create_finding:
+          title: "Job $name on namespace $namespace failed"
+          aggregation_key: "Job Failure"
+      - job_events_enricher: { }
+
 
 .. note::
 

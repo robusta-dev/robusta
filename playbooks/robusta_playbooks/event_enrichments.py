@@ -1,11 +1,6 @@
 from robusta.api import *
 
 
-class EventEnricherParams(ActionParams):
-    max_events: int = 8
-    included_types: List[str] = ["Warning", "Normal"]
-
-
 class ExtendedEventEnricherParams(EventEnricherParams):
     """
     :var dependent_pod_mode: when True, instead of fetching events for the deployment itself, fetch events for pods in the deployment.
