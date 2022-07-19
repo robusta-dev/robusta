@@ -2,6 +2,10 @@
 playbook_repos:
 {{ toYaml .Values.playbookRepos | indent 2 }}
 
+{{- if and (eq (len .Values.sinksConfig) 0) (and (not .Values.slackApiKey) (not .Values.robustaApiKey)) }}
+{{- fail "At least one sink must be defined!" }}
+{{- end }}
+
 {{- if or .Values.slackApiKey .Values.robustaApiKey }}
 {{- /* support old values files, prior to chart version 0.8.9 */}}
 sinks_config:
