@@ -19,7 +19,7 @@ class GetKubernetesResourcesParams(ActionParams):
 
 
 @action
-def get_k8s_resource(event: ExecutionBaseEvent, action_params: GetKubernetesResourcesParams):
+def get_k8s_resource_yaml(event: ExecutionBaseEvent, action_params: GetKubernetesResourcesParams):
     """
     Export Kubernetes resources from the cluster as the yaml file.
     Expects the kind of resource, its name and namespace. If namespace
@@ -48,7 +48,5 @@ def get_k8s_resource(event: ExecutionBaseEvent, action_params: GetKubernetesReso
         else:
             logging.error(f"A following error occurred: {str(exc)}")
     except Exception as exc:
-        if "resource loader not found" in str(exc):
-            logging.error(f"{resource_kind} is not supported resource kind")
-        else:
-            logging.exception(exc)
+        logging.error("Unexpected error occurred!")
+        logging.exception(exc)
