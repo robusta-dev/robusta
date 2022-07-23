@@ -12,6 +12,7 @@ from threading import Thread
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from pydantic import BaseModel
 
 from ..core.playbooks.playbook_utils import to_safe_str
 from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
@@ -34,6 +35,12 @@ RECEIVER_ENABLE_WEBSOCKET_TRACING = json.loads(
 INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = int(
     os.environ.get("INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC", 3)
 )
+
+
+class ValidationResponse(BaseModel):
+    http_code: int = 200
+    error_code: Optional[int] = None
+    error_msg: Optional[str] = None
 
 
 class ActionRequestReceiver:
@@ -105,12 +112,16 @@ class ActionRequestReceiver:
     ):
         logging.info(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
         sync_response = action_request.request_id != ""  # if request_id is set, we need to write back the response
-        if not self.__validate_request(action_request, validate_timestamp):
+        validation_response = self.__validate_request(action_request, validate_timestamp)
+        if validation_response.http_code != 200:
             req_json = action_request.json(exclude={"body"})
             body_json = action_request.body.json(exclude={"action_params"})  # action params already printed above
             logging.error(f"Failed to validate action request {req_json} {body_json}")
             if sync_response:
-                self.ws.send(data=json.dumps(self.__sync_response(401, action_request.request_id, "")))
+                self.ws.send(data=json.dumps(self.__sync_response(
+                    status_code=validation_response.http_code,
+                    request_id=action_request.request_id,
+                    data=validation_response.dict(exclude={"http_code"}))))
             return
 
         response = self.event_handler.run_external_action(
@@ -189,7 +200,7 @@ class ActionRequestReceiver:
         )
         ws.send(json.dumps(open_payload))
 
-    def __validate_request(self, action_request: ExternalActionRequest, validate_timestamp: bool) -> bool:
+    def __validate_request(self, action_request: ExternalActionRequest, validate_timestamp: bool) -> ValidationResponse:
         """
             Two auth protocols are supported:
             1. signature - Signing the body using the signing_key should match the signature
@@ -209,50 +220,53 @@ class ActionRequestReceiver:
             logging.error(
                 f"Rejecting incoming request because it's too old. Cannot verify request {action_request}"
             )
-            return False
+            return ValidationResponse(http_code=500, error_code=4500, error_msg="Illegal timestamp")
 
         signing_key = self.event_handler.get_global_config().get("signing_key")
         body = action_request.body
         if not signing_key:
             logging.error(f"Signing key not available. Cannot verify request {body}")
-            return False
+            return ValidationResponse(http_code=500, error_code=4501, error_msg="No signing key")
 
         # First auth protocol option, based on signature only
         signature = action_request.signature
         if signature:
             generated_signature = sign_action_request(body, signing_key)
-            return hmac.compare_digest(generated_signature, signature)
+            if hmac.compare_digest(generated_signature, signature):
+                return ValidationResponse()
+            else:
+                return ValidationResponse(http_code=500, error_code=4502,  error_msg="Signature missmatch")
 
         # Second auth protocol option, based on public key
         partial_auth_a = action_request.partial_auth_a
         partial_auth_b = action_request.partial_auth_b
         if not partial_auth_a or not partial_auth_b:
             logging.error(f"Insufficient authentication data. Cannot verify request {body}")
-            return False
+            return ValidationResponse(http_code=500, error_code=4503, error_msg="Missing auth input")
 
         private_key = self.auth_provider.get_private_rsa_key()
         if not private_key:
             logging.error(f"Private RSA key missing. Cannot validate request for {body}")
-            return False
+            return ValidationResponse(http_code=500, error_code=4504, error_msg="Missing private key")
 
         a_valid, key_a = self.__extract_key_and_validate(partial_auth_a, private_key, body)
         b_valid, key_b = self.__extract_key_and_validate(partial_auth_b, private_key, body)
 
         if not a_valid or not b_valid:
             logging.error(f"Cloud not validate partial auth for {body}")
-            return False
+            return ValidationResponse(http_code=401, error_code=4505, error_msg="Auth validation failed")
 
         try:
             signing_key_uuid = UUID(signing_key)
         except Exception:
             logging.error(f"Wrong signing key format. Cannot validate parital auth for {body}")
-            return False
+            return ValidationResponse(http_code=500, error_code=4506, error_msg="Bad signing key")
 
         if (key_a.int ^ key_b.int) != signing_key_uuid.int:
             logging.error(f"Partial auth keys combination mismatch for {body}")
-            return False
+            return ValidationResponse(http_code=401, error_code=4507, error_msg="Key validation failed")
 
-        return True
+        return ValidationResponse()
 
     @classmethod
     def __extract_key_and_validate(

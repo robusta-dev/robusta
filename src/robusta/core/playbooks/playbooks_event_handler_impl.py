@@ -130,11 +130,11 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
     ) -> Optional[Dict[str, Any]]:
         action_def = self.registry.get_actions().get_action(action_name)
         if not action_def:
-            return self.__error_resp(f"External action not found {action_name}")
+            return self.__error_resp(f"External action not found {action_name}", 4603)
 
         if not action_def.from_params_func:
             return self.__error_resp(
-                f"Action {action_name} cannot run using external event"
+                f"Action {action_name} cannot run using external event", 4604
             )
 
         if not no_sinks and sinks:
@@ -151,14 +151,14 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 f"Failed to create execution instance for"
                 f" {action_name} {action_def.from_params_parameter_class}"
                 f" {action_params} {traceback.format_exc()}"
-            )
+            , 4605)
 
         execution_event = action_def.from_params_func(instantiation_params)
         if not execution_event:
             return self.__error_resp(
                 f"Failed to create execution event for "
                 f"{action_name} {action_params}"
-            )
+            , 4606)
 
         playbook_action = PlaybookAction(
             action_name=action_name, action_params=action_params
@@ -166,9 +166,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         return self.run_actions(execution_event, [playbook_action], sync_response, no_sinks)
 
     @classmethod
-    def __error_resp(cls, msg: str) -> dict:
+    def __error_resp(cls, msg: str, error_code: int) -> dict:
         logging.error(msg)
-        return {"success": False, "msg": msg}
+        return {"success": False, "msg": msg, error_code: error_code}
 
     def __run_playbook_actions(
         self,
@@ -189,12 +189,12 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 not registered_action
             ):  # Might happen if manually trying to trigger incorrect action
                 msg = f"action {action.action_name} not found. Skipping for event {type(execution_event)}"
-                execution_event.response = self.__error_resp(msg)
+                execution_event.response = self.__error_resp(msg, 4600)
                 continue
 
             if not isinstance(execution_event, registered_action.event_type):
                 msg = f"Action {action.action_name} requires {registered_action.event_type}"
-                execution_event.response = self.__error_resp(msg)
+                execution_event.response = self.__error_resp(msg, 4601)
                 continue
 
             if not registered_action.params_type:
@@ -212,7 +212,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         f"using {to_safe_str(action_params)} for running {action.action_name} "
                         f"exc={traceback.format_exc()}"
                     )
-                    execution_event.response = self.__error_resp(msg)
+                    execution_event.response = self.__error_resp(msg, 4602)
                     continue
 
                 try:
