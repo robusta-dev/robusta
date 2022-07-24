@@ -151,6 +151,8 @@ Next Steps
 
    Project Home <https://home.robusta.dev/?from=docs>
 
+`Edit this page in GitHub <https://github.com/robusta-dev/robusta/edit/master/docs/index.rst>`_
+
 .. toctree::
    :maxdepth: 4
    :caption: About Robusta
