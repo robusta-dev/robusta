@@ -7,6 +7,7 @@ on:
   push:
     paths:
       - 'docs/**'
+      - 'playbooks/**'
       - .github/workflows/deploy-docs.yaml
 
 jobs:

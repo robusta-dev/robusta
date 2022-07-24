@@ -17,6 +17,7 @@ class ProcessType(Enum):
     PYTHON = "python"
     JAVA = "java"
 
+
 class ProcessFinder:
     """
     Find the processes in a Kubernetes pod which match certain filters.
@@ -35,16 +36,18 @@ class ProcessFinder:
             self.all_processes, filters, process_type
         )
 
-    def get_match_or_report_error(
-        self, finding: Finding, retrigger_text: str, retrigger_action: Callable, debug_action: Callable
-    ) -> Optional[Process]:
+    def get_multi_match_or_report_error(
+        self,
+        finding: Finding,
+        retrigger_text: str,
+        retrigger_action: Callable,
+        debug_action: Callable,
+    ) -> Optional[List[Process]]:
         """
-        Returns the single-matching process. If more than one process matches, blocks will be added to the Finding
-        to report the error and optionally allow re-triggering the action with a chosen process.
+        Returns a list of all matching process or reports an error to the user. For errors, the Finding is updated so that
+        the user will be shown a list of processes to choose from.
         """
-        if self.has_exactly_one_match():
-            return self.get_exact_match()
-        elif len(self.matching_processes) == 0:
+        if len(self.matching_processes) == 0:
             finding.add_enrichment(
                 [MarkdownBlock(f"No matching processes. The processes in the pod are:")]
                 + self.__get_error_blocks(
@@ -52,7 +55,28 @@ class ProcessFinder:
                 )
             )
             return None
-        elif len(self.matching_processes) > 1:
+        return self.matching_processes
+
+    def get_match_or_report_error(
+        self,
+        finding: Finding,
+        retrigger_text: str,
+        retrigger_action: Callable,
+        debug_action: Callable,
+    ) -> Optional[Process]:
+        """
+        Returns a single matching process or reports an error to the user. For errors, the Finding is updated so that
+        the user will be shown a list of processes to choose from.
+        """
+        processes = self.get_multi_match_or_report_error(
+            finding, retrigger_text, retrigger_action, debug_action
+        )
+        if processes is None:
+            return None
+        elif len(processes) == 1:
+            return processes[0]
+        # more than one match
+        else:
             finding.add_enrichment(
                 [
                     MarkdownBlock(
@@ -60,7 +84,10 @@ class ProcessFinder:
                     )
                 ]
                 + self.__get_error_blocks(
-                    self.matching_processes, retrigger_text, retrigger_action, debug_action
+                    self.matching_processes,
+                    retrigger_text,
+                    retrigger_action,
+                    debug_action,
                 )
             )
             return None
@@ -73,13 +100,13 @@ class ProcessFinder:
 
     def get_pids(self) -> List[int]:
         """
-         Returns all relevant pids
+        Returns all relevant pids
         """
         return [p.pid for p in self.matching_processes]
 
     def get_lowest_relevant_pid(self) -> int:
         """
-         Returns the lowest pid which is most likely the parent process
+        Returns the lowest pid which is most likely the parent process
         """
         return min([p.pid for p in self.matching_processes])
 
@@ -114,7 +141,11 @@ class ProcessFinder:
         return [pid_to_process[filters.pid]]
 
     def __get_error_blocks(
-        self, processes: List[Process], text: str, action: Callable, debug_action: Callable
+        self,
+        processes: List[Process],
+        text: str,
+        action: Callable,
+        debug_action: Callable,
     ) -> List[BaseBlock]:
         blocks = [
             TableBlock(
