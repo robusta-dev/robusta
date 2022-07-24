@@ -37,6 +37,30 @@ Trigger parameters:
 * ``restart_count``: Fire only after the specified number of restarts
 * ``rate_limit``: Limit firing to once every `rate_limit` seconds
 
+Pod OOMKilled
+^^^^^^^^^^^^^^^^^^^
+
+.. _on_pod_oom_killed:
+
+* ``on_pod_oom_killed``
+
+This trigger will fire when a Pod is OOMKilled.
+
+
+.. code-block:: yaml
+
+    customPlaybooks:
+    - triggers:
+      - on_pod_oom_killed: {}
+      actions:
+      - pod_graph_enricher:
+          resource_type: Memory
+          display_limits: true
+
+
+Trigger parameters:
+
+* ``rate_limit``: Limit firing to once every `rate_limit` seconds
 
 Job Failure
 ^^^^^^^^^^^^^^^^^^^
