@@ -24,6 +24,7 @@ from ..core.reporting.action_requests import (
     sign_action_request, PartialAuth,
 )
 from ..utils.auth_provider import AuthProvider
+from ..utils.error_codes import ErrorCodes
 
 WEBSOCKET_RELAY_ADDRESS = os.environ.get(
     "WEBSOCKET_RELAY_ADDRESS", "wss://relay.robusta.dev"
@@ -220,13 +221,17 @@ class ActionRequestReceiver:
             logging.error(
                 f"Rejecting incoming request because it's too old. Cannot verify request {action_request}"
             )
-            return ValidationResponse(http_code=500, error_code=4500, error_msg="Illegal timestamp")
+            return ValidationResponse(http_code=500,
+                                      error_code=ErrorCodes.ILLEGAL_TIMESTAMP.value,
+                                      error_msg="Illegal timestamp")
 
         signing_key = self.event_handler.get_global_config().get("signing_key")
         body = action_request.body
         if not signing_key:
             logging.error(f"Signing key not available. Cannot verify request {body}")
-            return ValidationResponse(http_code=500, error_code=4501, error_msg="No signing key")
+            return ValidationResponse(http_code=500,
+                                      error_code=ErrorCodes.NO_SIGNING_KEY.value,
+                                      error_msg="No signing key")
 
         # First auth protocol option, based on signature only
         signature = action_request.signature
@@ -235,36 +240,48 @@ class ActionRequestReceiver:
             if hmac.compare_digest(generated_signature, signature):
                 return ValidationResponse()
             else:
-                return ValidationResponse(http_code=500, error_code=4502,  error_msg="Signature missmatch")
+                return ValidationResponse(http_code=500,
+                                          error_code=ErrorCodes.SIGNATURE_MISMATCH.value,
+                                          error_msg="Signature mismatch")
 
         # Second auth protocol option, based on public key
         partial_auth_a = action_request.partial_auth_a
         partial_auth_b = action_request.partial_auth_b
         if not partial_auth_a or not partial_auth_b:
             logging.error(f"Insufficient authentication data. Cannot verify request {body}")
-            return ValidationResponse(http_code=500, error_code=4503, error_msg="Missing auth input")
+            return ValidationResponse(http_code=500,
+                                      error_code=ErrorCodes.MISSING_AUTH_INPUT.value,
+                                      error_msg="Missing auth input")
 
         private_key = self.auth_provider.get_private_rsa_key()
         if not private_key:
             logging.error(f"Private RSA key missing. Cannot validate request for {body}")
-            return ValidationResponse(http_code=500, error_code=4504, error_msg="Missing private key")
+            return ValidationResponse(http_code=500,
+                                      error_code=ErrorCodes.MISSING_PRIVATE_KEY.value,
+                                      error_msg="Missing private key")
 
         a_valid, key_a = self.__extract_key_and_validate(partial_auth_a, private_key, body)
         b_valid, key_b = self.__extract_key_and_validate(partial_auth_b, private_key, body)
 
         if not a_valid or not b_valid:
             logging.error(f"Cloud not validate partial auth for {body}")
-            return ValidationResponse(http_code=401, error_code=4505, error_msg="Auth validation failed")
+            return ValidationResponse(http_code=401,
+                                      error_code=ErrorCodes.AUTH_VALIDATION_FAILED.value,
+                                      error_msg="Auth validation failed")
 
         try:
             signing_key_uuid = UUID(signing_key)
         except Exception:
             logging.error(f"Wrong signing key format. Cannot validate parital auth for {body}")
-            return ValidationResponse(http_code=500, error_code=4506, error_msg="Bad signing key")
+            return ValidationResponse(http_code=500,
+                                      error_code=ErrorCodes.BAD_SIGNING_KEY.value,
+                                      error_msg="Bad signing key")
 
         if (key_a.int ^ key_b.int) != signing_key_uuid.int:
             logging.error(f"Partial auth keys combination mismatch for {body}")
-            return ValidationResponse(http_code=401, error_code=4507, error_msg="Key validation failed")
+            return ValidationResponse(http_code=401,
+                                      error_code=ErrorCodes.KEY_VALIDATION_FAILED.value,
+                                      error_msg="Key validation failed")
 
         return ValidationResponse()
 
