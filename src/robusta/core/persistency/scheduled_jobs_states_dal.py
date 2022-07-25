@@ -21,9 +21,13 @@ class SchedulerDal:
         self.__init_scheduler_dal()
 
     def __load_config_map(self) -> ConfigMap:
-        return ConfigMap.readNamespacedConfigMap(
-            JOBS_CONFIGMAP_NAME, CONFIGMAP_NAMESPACE
-        ).obj
+        try:
+            return ConfigMap.readNamespacedConfigMap(
+                JOBS_CONFIGMAP_NAME, CONFIGMAP_NAMESPACE
+            ).obj
+        except:
+            logging.error(f"Kubernetes ConfigMap {CONFIGMAP_NAMESPACE}/{JOBS_CONFIGMAP_NAME} was not found")
+            return None
 
     def __init_scheduler_dal(self):
         try:
@@ -77,6 +81,9 @@ class SchedulerDal:
             self.mutex.release()
 
     def list_scheduled_jobs(self) -> List[ScheduledJob]:
+        if self.__load_config_map() is None:
+            return []
+
         return [
             self.get_scheduled_job(job_id)
             for job_id in self.__load_config_map().data.keys()
