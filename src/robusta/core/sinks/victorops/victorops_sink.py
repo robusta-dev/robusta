@@ -5,7 +5,6 @@ from robusta.core.reporting.blocks import (
     JsonBlock,
     KubernetesDiffBlock,
     TableBlock,
-    
 )
 from .victorops_sink_params import VictoropsConfigWrapper
 from ...reporting.base import Finding, BaseBlock
@@ -31,9 +30,7 @@ class VictoropsSink(SinkBase):
                 ] = finding.get_prometheus_silence_url(self.cluster_name)
 
         # custom fields
-        json_dict[
-            "Resource"
-        ] = f"{finding.subject.namespace}/{finding.subject.subject_type.value}/{finding.subject.name}"
+        json_dict["Resource"] = finding.subject.name
         json_dict["Source"] = self.cluster_name
         json_dict["Namespace"] = finding.subject.namespace
         json_dict["Node"] = finding.subject.node
@@ -74,5 +71,5 @@ class VictoropsSink(SinkBase):
                     block.diffs,
                 )
             )
-           
+
         return ""
