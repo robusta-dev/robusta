@@ -4,7 +4,6 @@ from ..sink_base_params import SinkBaseParams
 
 class VictoropsSinkParams(SinkBaseParams):
     url: str
-    #add message type 
 
 
 class VictoropsConfigWrapper(SinkConfigBase):
