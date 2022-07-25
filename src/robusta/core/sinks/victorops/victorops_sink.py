@@ -70,7 +70,7 @@ class VictoropsSink(SinkBase):
         elif isinstance(block, KubernetesDiffBlock):
             return "\n".join(
                 map(
-                    lambda diff: f"*{diff.path}*: {diff.other_value} ==> {diff.value}",
+                    lambda diff: f"{diff.path}: {diff.other_value} ==> {diff.value}",
                     block.diffs,
                 )
             )
