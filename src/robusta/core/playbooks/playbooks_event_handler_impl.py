@@ -261,8 +261,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 try:
                     sink = self.registry.get_sinks().sinks.get(sink_name)
                     if not sink:
+                        sink_names = [sink.sink_name for sink in self.registry.get_sinks().sinks.values()]
                         logging.error(
-                            f"sink {sink_name} not found. Skipping event finding {finding}"
+                            f"sink {sink_name} not found in sinks: {sink_names}. Skipping event finding {finding}"
                         )
                         continue
 
