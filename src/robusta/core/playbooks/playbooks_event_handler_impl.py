@@ -36,9 +36,14 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 trigger_event, playbook.triggers, playbook.get_id()
             )
             if fired_trigger:
-                execution_event = fired_trigger.build_execution_event(
-                    trigger_event, sink_findings
-                )
+                execution_event = None
+                try:
+                    execution_event = fired_trigger.build_execution_event(
+                        trigger_event, sink_findings
+                    )
+                except Exception:
+                    logging.error(f"Failed to build execution event for {trigger_event.get_event_name()}")
+
                 if execution_event:  # might not exist for unsupported k8s types
                     execution_event.named_sinks = (
                         playbook.sinks

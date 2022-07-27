@@ -123,8 +123,11 @@ class PrometheusAlertTrigger(BaseTrigger):
                     f"Successfully loaded Kubernetes resource {resource_name} for alert {execution_event.alert_name}"
                 )
             except Exception as e:
+                reason = getattr(e, "reason", "NA")
+                status = getattr(e, "status", 0)
                 logging.info(
-                    f"Error loading kubernetes {mapping.attribute_name} {namespace}/{resource_name}. {execution_event.alert}. error: {e}"
+                    f"Error loading kubernetes {mapping.attribute_name} {namespace}/{resource_name}. "
+                    f"reason: {reason} status: {status}"
                 )
 
         node_name = labels.get("node")
