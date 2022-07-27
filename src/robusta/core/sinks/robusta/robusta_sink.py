@@ -324,18 +324,18 @@ class RobustaSink(SinkBase):
             logging.error(f"Failed to run events history thread")
 
     def __discover_cluster(self):
-        logging.info("Cluster discovery initialized")
+        logging.info(f"Cluster discovery initialized, tid={threading.currentThread().ident}")
         self.__run_events_history_thread()
         while self.__active:
-            logging.info("About to get cluster status")
+            logging.info("RobustaSink About to get cluster status")
             self.__periodic_cluster_status()
-            logging.info("About to get cluster services")
+            logging.info("RobustaSink About to get cluster services")
             self.__discover_services()
-            logging.info("About to get cluster nodes")
+            logging.info("RobustaSink About to get cluster nodes")
             self.__discover_nodes()
-            logging.info("sleeping")
+            logging.info("RobustaSink sleeping")
             time.sleep(self.__discovery_period_sec)
-            logging.info("awake")
+            logging.info("RobustaSink awake")
 
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
 
@@ -353,4 +353,4 @@ class RobustaSink(SinkBase):
             logging.info("about to update cluster status")
             self.__update_cluster_status()
         else:
-            logging.info(f"Not sending cluster status, last sent time {self.last_send_time}")
+            logging.info(f"RobustaSink Not sending cluster status, last sent time {self.last_send_time}")
