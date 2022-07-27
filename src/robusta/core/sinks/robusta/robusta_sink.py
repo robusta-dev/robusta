@@ -71,6 +71,9 @@ class RobustaSink(SinkBase):
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
 
+    def __exit__(self, *args):
+        logging.error(f"Robusta sink closing\nTraceback:\n{traceback.format_stack()}")
+
     def __assert_node_cache_initialized(self):
         if not self.__nodes_cache:
             logging.info("Initializing nodes cache")
@@ -324,10 +327,15 @@ class RobustaSink(SinkBase):
         logging.info("Cluster discovery initialized")
         self.__run_events_history_thread()
         while self.__active:
+            logging.info("About to get cluster status")
             self.__periodic_cluster_status()
+            logging.info("About to get cluster services")
             self.__discover_services()
+            logging.info("About to get cluster nodes")
             self.__discover_nodes()
+            logging.info("sleeping")
             time.sleep(self.__discovery_period_sec)
+            logging.info("awake")
 
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
 
@@ -342,4 +350,7 @@ class RobustaSink(SinkBase):
 
         if time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC or first_alert:
             self.last_send_time = time.time()
+            logging.info("about to update cluster status")
             self.__update_cluster_status()
+        else:
+            logging.info(f"Not sending cluster status, last sent time {self.last_send_time}")
