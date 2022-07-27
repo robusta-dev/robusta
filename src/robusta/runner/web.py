@@ -14,6 +14,9 @@ from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from ..integrations.prometheus.models import AlertManagerEvent
 from ..core.model.env_vars import NUM_EVENT_THREADS, TRACE_INCOMING_REQUESTS
 from ..utils.task_queue import TaskQueue, QueueMetrics
+import tempfile
+import faulthandler
+import time
 
 app = Flask(__name__)
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
@@ -84,6 +87,7 @@ class Web:
                 action_name=data["action_name"],
                 action_params=data.get("action_params", None),
                 sinks=data.get("sinks", None),
+                sync_response=True
             )
         )
 
@@ -92,6 +96,26 @@ class Web:
     def handle_playbooks_reload():
         Web.loader.reload("reload request")
         return jsonify(success=True)
+
+    @staticmethod
+    @app.route("/api/stacktrace", methods=["POST"])
+    def handle_stacktrace():
+        data = request.get_json()
+        times = data.get("times", 10)
+        sleep_dur = data.get("sleep_duration_s", 1)
+        stacktraces=[]
+        for _ in range(times):
+            stacktrace = Web.get_stacktrace()
+            stacktraces.append({"time": time.time(), "trace": stacktrace})
+            time.sleep(sleep_dur)
+        return jsonify(stacktraces)
+
+    @staticmethod
+    def get_stacktrace():
+        with tempfile.TemporaryFile() as tmp:
+            faulthandler.dump_traceback(file=tmp, all_threads=True)
+            tmp.seek(0)
+            return tmp.read().decode("utf-8")
 
     @staticmethod
     def _trace_incoming(api: str, incoming_request):
