@@ -219,6 +219,7 @@ runner:
     limits:
       cpu: ~
   additional_env_vars: []
+  additional_env_froms: []
   tolerations: []
   annotations: {}
 
