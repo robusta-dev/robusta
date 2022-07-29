@@ -117,16 +117,7 @@ class PrometheusKubernetesAlert(
         name: Optional[str] = "Unresolved"
         namespace: Optional[str] = self.label_namespace
         node_name: Optional[str] = None
-        if self.pod:
-            subject_type = FindingSubjectType.TYPE_POD
-            name = self.pod.metadata.name
-            namespace = self.pod.metadata.namespace
-            node_name = self.pod.spec.nodeName
-        elif self.job:
-            subject_type = FindingSubjectType.TYPE_JOB
-            name = self.job.metadata.name
-            namespace = self.job.metadata.namespace
-        elif self.deployment:
+        if self.deployment:
             subject_type = FindingSubjectType.TYPE_DEPLOYMENT
             name = self.deployment.metadata.name
             namespace = self.deployment.metadata.namespace
@@ -142,6 +133,15 @@ class PrometheusKubernetesAlert(
             subject_type = FindingSubjectType.TYPE_NODE
             name = self.node.metadata.name
             node_name = self.node.metadata.name
+        elif self.pod:
+            subject_type = FindingSubjectType.TYPE_POD
+            name = self.pod.metadata.name
+            namespace = self.pod.metadata.namespace
+            node_name = self.pod.spec.nodeName
+        elif self.job:
+            subject_type = FindingSubjectType.TYPE_JOB
+            name = self.job.metadata.name
+            namespace = self.job.metadata.namespace
 
         return FindingSubject(name, subject_type, namespace, node_name)
 
@@ -165,3 +165,10 @@ class PrometheusKubernetesAlert(
             ends_at=ends_at,
             add_silence_url=True
         )
+
+    def get_subject(self) -> FindingSubject:
+        return self.get_alert_subject()
+
+    @classmethod
+    def get_source(cls) -> FindingSource:
+        return FindingSource.PROMETHEUS

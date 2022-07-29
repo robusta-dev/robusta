@@ -17,6 +17,7 @@ class FindingSource(Enum):
     PROMETHEUS = "prometheus"
     MANUAL = "manual"
     CALLBACK = "callback"
+    SCHEDULER = "scheduler"
 
 
 # Finding subject types

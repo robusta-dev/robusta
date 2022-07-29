@@ -3,6 +3,7 @@
 src/build/
 playground/
 deployment/
+values/
 src/dist/
 *.egg/
 *.egg-info/

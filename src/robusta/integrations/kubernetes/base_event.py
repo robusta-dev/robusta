@@ -3,7 +3,7 @@ from typing import Optional
 from dataclasses import dataclass
 from hikaru.meta import HikaruDocumentBase
 
-from ...core.reporting import Finding
+from ...core.reporting import Finding, FindingSource
 from ...core.model.k8s_operation_type import K8sOperationType
 from ...core.model.events import ExecutionBaseEvent
 
@@ -35,3 +35,8 @@ class K8sBaseChangeEvent(ExecutionBaseEvent):
             title=title,
             aggregation_key="Generic Change",
         )
+
+    @classmethod
+    def get_source(cls) -> FindingSource:
+        return FindingSource.KUBERNETES_API_SERVER
+

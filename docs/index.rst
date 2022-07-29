@@ -144,7 +144,7 @@ Next Steps
 
 .. [#f1] These alerts should cause no noise on a healthy cluster. If they're noisy in your env, let us know and we'll fix it.
 
-.. [#f2] This is the only component that isn't open source and it's completely optional. An on-prem version is in development too.
+.. [#f2] This is the only component that isn't open source and it's completely optional. For self-hosting the UI, see :ref:`Self hosting`
 
 .. toctree::
    :hidden:
@@ -192,6 +192,13 @@ Next Steps
    user-guide/robusta-cli
    user-guide/trigger-action-binding
    advanced/index
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Self Hosting
+   :hidden:
+
+   user-guide/self-hosting
 
 .. toctree::
    :maxdepth: 4

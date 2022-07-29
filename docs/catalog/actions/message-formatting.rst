@@ -1,7 +1,12 @@
 Message Formatting
 ########################
 
-These actions are useful for customising the output of existing actions
+These actions are useful for creating notifications or customising the output of existing actions
+
+Create finding
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. robusta-action:: playbooks.robusta_playbooks.common_actions.create_finding on_job_failure
 
 Finding attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

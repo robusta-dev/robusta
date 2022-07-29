@@ -1,7 +1,8 @@
 from enum import Enum
-
-from hikaru.model import Pod
+from typing import Optional
+from hikaru.model import Pod, ContainerState, ContainerStatus
 from pydantic import BaseModel
+from ...integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
 
 k8s_memory_factors = {
     "K": 1000,
@@ -85,3 +86,51 @@ def pod_resources(pod: Pod, resource_attribute: ResourceAttributes) -> PodResour
         cpu=pod_cpu_req,
         memory=pod_mem_req,
     )
+
+
+def pod_most_recent_oom_killed_state(pod: Pod, only_current_state: bool = False) -> Optional[ContainerState]:
+    if not pod.status:
+        return None
+    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+    all_oom_kills = [
+        get_oom_killed_state(container_status, only_current_state)
+        for container_status in all_statuses
+        if get_oom_killed_state(container_status, only_current_state)
+    ]
+    if not all_oom_kills:
+        return None
+    if len(all_oom_kills) == 1:
+        return all_oom_kills[0]
+    most_recent_oomkill_time = max(map(get_oom_kill_time, all_oom_kills))
+    for state in all_oom_kills:
+        if get_oom_kill_time(state) == most_recent_oomkill_time:
+            return state
+
+
+def get_oom_kill_time(state: ContainerState) -> float:
+    if not state.terminated or not state.terminated.finishedAt:
+        return 0
+    return parse_kubernetes_datetime_to_ms(state.terminated.finishedAt)
+
+
+def get_oom_killed_state(
+    c_status: ContainerStatus, only_current_state: bool = False
+) -> Optional[ContainerState]:
+    # Check if the container OOMKilled by inspecting the state field
+    if is_state_in_oom_status(c_status.state):
+        return c_status.state
+
+    # Check if the container OOMKilled by inspecting the lastState field
+    if is_state_in_oom_status(c_status.lastState) and not only_current_state:
+        return c_status.lastState
+
+    # OOMKilled state not found
+    return None
+
+
+def is_state_in_oom_status(state: ContainerState):
+    if not state:
+        return False
+    if not state.terminated:
+        return False
+    return state.terminated.reason == "OOMKilled"
