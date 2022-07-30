@@ -11,6 +11,9 @@ class ScheduledTriggerEvent(TriggerEvent):
     def get_event_name(self) -> str:
         return ScheduledTriggerEvent.__name__
 
+    def get_event_description(self) -> str:
+        return self.get_event_name()
+
 
 class ScheduledTrigger(BaseTrigger):
     def get_trigger_event(self):

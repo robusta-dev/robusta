@@ -17,6 +17,11 @@ class PrometheusTriggerEvent(TriggerEvent):
     def get_event_name(self) -> str:
         return PrometheusTriggerEvent.__name__
 
+    def get_event_description(self) -> str:
+        alert_name = self.alert.labels.get("alertname", "NA")
+        alert_severity = self.alert.labels.get("severity", "NA")
+        return f"PrometheusAlert-{alert_name}-{alert_severity}"
+
 
 class ResourceMapping(NamedTuple):
     hikaru_class: Union[
