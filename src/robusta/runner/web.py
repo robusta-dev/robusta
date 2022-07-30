@@ -87,6 +87,7 @@ class Web:
                 action_name=data["action_name"],
                 action_params=data.get("action_params", None),
                 sinks=data.get("sinks", None),
+                sync_response=True
             )
         )
 
