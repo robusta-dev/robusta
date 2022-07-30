@@ -1,6 +1,7 @@
 import logging
 import os
 from collections import defaultdict
+from datetime import datetime
 from enum import Enum
 from time import sleep
 import sentry_sdk
@@ -43,10 +44,11 @@ class TelemetryService:
         self.__thread = threading.Thread(target=self.__log_periodic)
         self.__thread.start()
 
-
     def __log_periodic(self):
-        while(True):
+        while True:
             try:
+                sleep(600)  # initial delay
+                start_t = datetime.now()
                 tele = self.registry.get_telemetry()
             
                 current_nodes: NodeList = NodeList.listNode().obj
@@ -56,15 +58,15 @@ class TelemetryService:
 
                 tele.sinks_info = defaultdict(lambda: SinkInfo())
 
+                logging.info(f"Stats collection duration: {datetime.now() - start_t}")
                 sleep(self.periodic_time_sec)
             except Exception as e:
                 logging.error(f"Failed to run periodic telemetry update {e}", exc_info=True)
                 pass
 
-
     def __log(self, data: Telemetry):
         r = requests.post(self.endpoint, data=data.json(), headers={'Content-Type': 'application/json'})
-        if(r.status_code != 201):
+        if r.status_code != 201:
             logging.error(f"Failed to log telemetry data")
 
         return r

@@ -14,6 +14,7 @@ tinycss = "^0.4"
 cssselect = "^1.1.0"
 rsa = "^4.8"
 humanize = "^3.13.1"
+kubernetes = "^12.0.1"
 
 [tool.poetry.dev-dependencies]
 robusta-cli = "^0.8.9"

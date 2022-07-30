@@ -153,19 +153,23 @@ class RobustaSink(SinkBase):
     def __discover_services(self):
         try:
             current_services = Deployment.listDeploymentForAllNamespaces().obj.items
+            logging.info("list deployments done")
             current_services.extend(
                 StatefulSetList.listStatefulSetForAllNamespaces().obj.items
             )
+            logging.info("list statefulsets done")
             current_services.extend(
                 DaemonSetList.listDaemonSetForAllNamespaces().obj.items
             )
-            current_services.extend(
-                [
-                    rs
-                    for rs in ReplicaSetList.listReplicaSetForAllNamespaces().obj.items
-                    if not rs.metadata.ownerReferences
-                ]
-            )
+            logging.info("list daemonsets done")
+            # current_services.extend(
+            #     [
+            #         rs
+            #         for rs in ReplicaSetList.listReplicaSetForAllNamespaces().obj.items
+            #         if not rs.metadata.ownerReferences
+            #     ]
+            # )
+            logging.info("list replicasets skipped")
             current_services.extend(
                 [
                     pod
@@ -173,6 +177,7 @@ class RobustaSink(SinkBase):
                     if not pod.metadata.ownerReferences
                 ]
             )
+            logging.info("list pods done")
             self.__publish_new_services(current_services)
         except Exception as e:
             logging.error(

@@ -2,9 +2,11 @@ from collections import defaultdict
 from pydantic.main import BaseModel, Optional
 from typing import Dict
 
+
 class SinkInfo(BaseModel):
     type: str = 'None'
     findings_count: int = 0
+
 
 class Telemetry(BaseModel):
     account_id: str = ""
