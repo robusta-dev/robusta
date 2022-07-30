@@ -22,7 +22,7 @@ This demo shows:
 
 ## Running it
 
-1. Run `kubectl apply -f ./oomkill_demo/pod_oomkill.yaml`
+1. Run `kubectl apply -f ./oomkill_demo/oomkill_demo.yaml`
 2. Check your Slack channel for a notification about the crashing pod. The message includes details you need to debug the OOM
 
 ## Value Demonstrated
