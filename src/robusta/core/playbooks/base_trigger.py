@@ -14,6 +14,10 @@ class TriggerEvent(BaseModel):
         """Return trigger event name"""
         return ""
 
+    def get_event_description(self) -> str:
+        """Returns a description of the concrete event"""
+        return "NA"
+
 
 class BaseTrigger(DocumentedModel):
     def get_trigger_event(self) -> str:
