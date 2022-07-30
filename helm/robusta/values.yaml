@@ -219,6 +219,7 @@ runner:
     limits:
       cpu: ~
   additional_env_vars: []
+  additional_env_froms: []
   tolerations: []
   annotations: {}
 
@@ -289,4 +290,5 @@ kube-prometheus-stack:
         cpu: 10m
 
 rsa: ~
+
 
