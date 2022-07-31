@@ -4,6 +4,7 @@ from robusta.core.reporting.blocks import (
     ListBlock,
     JsonBlock,
     KubernetesDiffBlock,
+    MarkdownBlock,
     TableBlock,
 )
 from .victorops_sink_params import VictoropsConfigWrapper
@@ -49,7 +50,11 @@ class VictoropsSink(SinkBase):
 
         for enrichment in finding.enrichments:
             for block in enrichment.blocks:
-                message_lines += self.__to_unformatted_text(block)
+                text = self.__to_unformatted_text(block)
+                if not text:
+                    continue
+
+                message_lines += text + "\n\n"
 
         json_dict["state_message"] = message_lines
 
@@ -62,6 +67,8 @@ class VictoropsSink(SinkBase):
             return block.to_table_string()
         elif isinstance(block, ListBlock):
             return "\n".join(block.items)
+        elif isinstance(block, MarkdownBlock):
+            return block.text
         elif isinstance(block, JsonBlock):
             return block.json_str
         elif isinstance(block, KubernetesDiffBlock):
