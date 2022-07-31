@@ -1,4 +1,6 @@
 # TODO: move the python playbooks into their own subpackage and put each playbook in its own file
+import logging
+
 import humanize
 from robusta.api import *
 from typing import List
@@ -197,6 +199,15 @@ class DebuggerParams(ProcessParams):
     port: int = 5678
 
 
+class StackTraceParams(DebuggerParams):
+    """
+    :var traces_amount: the amount of traces to do.
+    :var sleep_duration_s: the sleep time inbetween traces.
+    """
+
+    traces_amount: int = 1
+    sleep_duration_s: int = 0
+
 def get_example_launch_json(params: DebuggerParams):
     return {
         "version": "0.2.0",
@@ -250,7 +261,7 @@ def get_debugger_warnings(data):
 
 
 @action
-def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
+def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     """
     Prints a stack track of a python process and child threads
 
@@ -267,6 +278,10 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
     if not pid:
         logging.info(f"debugger_stack_trace - no relevant pids")
 
+    if params.traces_amount < 1 or params.sleep_duration_s < 0:
+        logging.error(f"debugger_stack_trace - invalid params, "
+                     f"traces_amount must be greater than 1 and sleep_duration_s must be greater than 0")
+
     # if params pid is set, this will be returned, if not we return the parent process
     finding = Finding(
         title=f"Stacktrace on pid {pid}:",
@@ -277,19 +292,29 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         failure=False,
     )
     event.add_finding(finding)
-    cmd = f"debug-toolkit stack-trace {pid}"
+    cmd = f"debug-toolkit stack-trace {pid} --amount={params.traces_amount} --sleep-duration-s={params.sleep_duration_s}"
     output = RobustaPod.exec_in_debugger_pod(
         pod.metadata.name,
         pod.spec.nodeName,
         cmd,
     )
     blocks = []
-    for thread_output in output.split("\n\n"):
-        if thread_output.startswith("Current thread"):
-            # this is the thread we are getting the stack trace from, not relevant for debugging
-            continue
-        if thread_output:
-            blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
+    try:
+        output_json = json.loads(output)
+        if len(output_json) == 1:
+            single_stack_trace = output_json[0]["trace"]
+            for thread_output in single_stack_trace.split("\n\n"):
+                if thread_output.startswith("Current thread"):
+                    # this is the thread we are getting the stack trace from, not relevant for debugging
+                    continue
+                if thread_output:
+                    blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
+        else:
+            clean_file_output = json.dumps(output_json, indent=4, sort_keys=True)
+            blocks.append(FileBlock(f"debugger_stack_trace_{params.pid}.txt", clean_file_output.encode()))
+    except ValueError:  # includes simplejson.decoder.JSONDecodeError
+        logging.error(f"failed to decode output")
+        blocks.append(MarkdownBlock(f"command raw output: {output}"))
     finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
 
 
