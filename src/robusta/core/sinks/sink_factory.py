@@ -10,6 +10,8 @@ from .datadog.datadog_sink_params import DataDogSinkConfigWrapper
 from .kafka.kafka_sink_params import KafkaSinkConfigWrapper
 from .msteams.msteams_sink_params import MsTeamsSinkConfigWrapper
 from .robusta.robusta_sink_params import RobustaSinkConfigWrapper
+from .discord.discord_sink_params import DiscordSinkConfigWrapper
+from .discord.discord_sink import DiscordSink
 from .opsgenie.opsgenie_sink import OpsGenieSink
 from .opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
 from .telegram.telegram_sink import TelegramSink
@@ -37,5 +39,7 @@ class SinkFactory:
             return TelegramSink(sink_config, registry)
         elif isinstance(sink_config, WebhookSinkConfigWrapper):
             return WebhookSink(sink_config, registry)
+        elif isinstance(sink_config, DiscordSinkConfigWrapper):
+            return DiscordSink(sink_config, registry)
         else:
             raise Exception(f"Sink not supported {type(sink_config)}")

@@ -11,6 +11,7 @@ from ..sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrapper
 from ..sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper
 from ..sinks.slack.slack_sink_params import SlackSinkConfigWrapper
 from ..sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
+from ..sinks.discord.discord_sink_params import DiscordSinkConfigWrapper
 
 
 class PlaybookRepo(BaseModel):
@@ -22,7 +23,7 @@ class PlaybookRepo(BaseModel):
 
 
 class RunnerConfig(BaseModel):
-    playbook_repos: Dict[str, PlaybookRepo]
+    playbook_repos: Dict[str, PlaybookRepo] = {}
     sinks_config: Optional[
         List[
             Union[
@@ -34,6 +35,7 @@ class RunnerConfig(BaseModel):
                 OpsGenieSinkConfigWrapper,
                 TelegramSinkConfigWrapper,
                 WebhookSinkConfigWrapper,
+                DiscordSinkConfigWrapper,
             ]
         ]
     ]
