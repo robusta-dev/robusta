@@ -16,6 +16,7 @@ The following sinks are supported:
 * :ref:`OpsGenie` - send playbooks results to the OpsGenie alerts API
 * :ref:`Telegram` - send playbooks results to Telegram group or private conversation
 * :ref:`Webhook` - send playbooks results to a webhook
+* :ref:`VictorOps` - send playbooks results to the VictorOps alerts API
 
 **Need support for something not listed here?** `Tell us and we'll add it to the code. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
 
@@ -60,3 +61,4 @@ if it has the field `default: true` in the YAML.
    ms-teams
    webhook
    Opsgenie
+   VictorOps
