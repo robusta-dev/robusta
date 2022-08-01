@@ -3,7 +3,6 @@ from typing import Tuple
 from ...core.reporting.base import *
 from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
-import re
 from ...core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
@@ -115,8 +114,8 @@ class DiscordSender:
         if not block.diffs:
             return []
 
-        slack_blocks = []
-        slack_blocks.extend(
+        _blocks = []
+        _blocks.extend(
             self.__to_discord(
                 ListBlock(
                     [
@@ -128,7 +127,7 @@ class DiscordSender:
             )
         )
 
-        return slack_blocks
+        return _blocks
 
     def __to_discord(self, block: BaseBlock, sink_name: str) -> List[Union[DiscordBlock, Tuple]]:
         if isinstance(block, MarkdownBlock):
@@ -209,7 +208,7 @@ class DiscordSender:
             attachment_blocks.extend(self.__to_discord(block, sink_name))
 
         logging.debug(
-            f"--sending to slack--\n"
+            f"--sending to discord--\n"
             f"title:{title}\n"
             f"blocks: {output_blocks}\n"
             f"attachment_blocks: {report_attachment_blocks}\n"
@@ -228,7 +227,6 @@ class DiscordSender:
                 }, files=attachment_blocks)
                 response.raise_for_status()
         except Exception as e:
-            logging.exception(e)
             logging.error(
                 f"""error sending message to discord\ne={e}\ntext={message}\n
                 blocks={output_blocks}\nattachment_blocks={attachment_blocks}\nmsg={discord_msg}"""
@@ -262,7 +260,7 @@ class DiscordSender:
             attachment_blocks.extend(
                 add_pngs_for_all_svgs([block for block in enrichment.blocks if isinstance(block, FileBlock)]))
 
-        # wide tables aren't displayed properly on slack. looks better in a text file
+        # wide tables aren't displayed properly on discord. looks better in a text file
         table_blocks = [b for b in blocks if isinstance(b, TableBlock)]
         for table_block in table_blocks:
             table_content = table_block.to_table_string()
