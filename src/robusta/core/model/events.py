@@ -7,8 +7,9 @@ from dataclasses import dataclass, field
 
 from pydantic import BaseModel
 
+from ..reporting import FindingSubjectType, FindingSource
 from ...integrations.scheduled.playbook_scheduler import PlaybooksScheduler
-from ..reporting.base import Finding, BaseBlock, FindingSeverity
+from ..reporting.base import Finding, BaseBlock, FindingSeverity, FindingSubject
 
 
 class EventType(Enum):
@@ -104,3 +105,14 @@ class ExecutionBaseEvent:
     @staticmethod
     def from_params(params: ExecutionEventBaseParams) -> Optional["ExecutionBaseEvent"]:
         return ExecutionBaseEvent(named_sinks=params.named_sinks)
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name="Unresolved",
+            subject_type=FindingSubjectType.TYPE_NONE
+        )
+
+    @classmethod
+    def get_source(cls) -> FindingSource:
+        return FindingSource.NONE
+

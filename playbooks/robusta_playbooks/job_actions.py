@@ -99,3 +99,30 @@ def __get_alert_env_vars(event: PrometheusKubernetesAlert) -> List[EnvVar]:
         alert_env_vars.append(EnvVar(name="ALERT_OBJ_NODE", value=alert_subject.node))
 
     return alert_env_vars
+
+
+@action
+def job_events_enricher(event: JobEvent, params: EventEnricherParams):
+    """
+    Given a Kubernetes job, fetch related events in the near past
+    """
+    job = event.get_job()
+    if not job:
+        logging.error(
+            f"cannot run job_events_enricher on alert with no job object: {event}"
+        )
+        return
+
+    events_table_block = get_resource_events_table(
+        "*Job events:*",
+        job.kind,
+        job.metadata.name,
+        job.metadata.namespace,
+        included_types=params.included_types,
+        max_events=params.max_events,
+    )
+    if events_table_block:
+        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+
+
+

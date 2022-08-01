@@ -81,6 +81,9 @@ These triggers fire on very specific events:
 * on_kubernetes_warning_event_create - when a Kubernetes event of level WARNING is created
 * on_kubernetes_warning_event_update - when a Kubernetes event of level WARNING is modified
 * on_kubernetes_warning_event_delete - when a Kubernetes event of level WARNING is deleted
+* on_pod_crash_loop - when there is a crashing pod
+* on_pod_oom_killed - when a pod is OOMKilled
+
 
 This trigger supports an exclusion and inclusion filters on the event's reason and message.
 

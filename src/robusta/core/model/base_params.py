@@ -102,6 +102,13 @@ class ResourceGraphEnricherParams(PrometheusParams):
     graph_duration_minutes: int = 60
 
 
+class PodResourceGraphEnricherParams(ResourceGraphEnricherParams):
+    """
+    :var display_limits: displays on the graph the pod limit for the resource if true (only CPU and Memory are supported)
+    """
+    display_limits: bool = False
+
+
 class AlertResourceGraphEnricherParams(ResourceGraphEnricherParams):
     """
     :var item_type: one of: Pod, Node (see ResourceChartItemType)
@@ -148,3 +155,8 @@ class ProcessParams(ActionParams):
     process_substring: str = ""
     pid: int = None
     interactive: bool = True
+
+
+class EventEnricherParams(ActionParams):
+    max_events: int = 8
+    included_types: List[str] = ["Warning", "Normal"]

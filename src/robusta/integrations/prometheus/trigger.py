@@ -17,6 +17,11 @@ class PrometheusTriggerEvent(TriggerEvent):
     def get_event_name(self) -> str:
         return PrometheusTriggerEvent.__name__
 
+    def get_event_description(self) -> str:
+        alert_name = self.alert.labels.get("alertname", "NA")
+        alert_severity = self.alert.labels.get("severity", "NA")
+        return f"PrometheusAlert-{alert_name}-{alert_severity}"
+
 
 class ResourceMapping(NamedTuple):
     hikaru_class: Union[
@@ -123,8 +128,11 @@ class PrometheusAlertTrigger(BaseTrigger):
                     f"Successfully loaded Kubernetes resource {resource_name} for alert {execution_event.alert_name}"
                 )
             except Exception as e:
+                reason = getattr(e, "reason", "NA")
+                status = getattr(e, "status", 0)
                 logging.info(
-                    f"Error loading kubernetes {mapping.attribute_name} {namespace}/{resource_name}. {execution_event.alert}. error: {e}"
+                    f"Error loading kubernetes {mapping.attribute_name} {namespace}/{resource_name}. "
+                    f"reason: {reason} status: {status}"
                 )
 
         node_name = labels.get("node")

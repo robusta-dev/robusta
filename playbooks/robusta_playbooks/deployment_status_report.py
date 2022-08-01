@@ -28,7 +28,7 @@ class ReportParams(ActionParams):
 def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams):
     """
     Rendering from a grafana dashboard.
-    Make sure to set 'grafanaRenderer:enableContainer' to 'true' in the values yaml to use this action.
+    Make sure to set 'grafanaRenderer.enableContainer' to 'true' in the values yaml to use this action.
     """
     finding = Finding(
         title=action_params.report_name,
@@ -71,6 +71,8 @@ def deployment_status_report(event: DeploymentChangeEvent, action_params: Report
     Collect predefined grafana panels screenshots, after a deployment change.
     The report will be generated in intervals, as configured in the 'delays' parameter.
     When the report is ready, it will be sent to the configured sinks.
+
+    Make sure to set 'grafanaRenderer.enableContainer' to 'true' in the values yaml to use this action.
     """
     if event.operation == K8sOperationType.DELETE:
         return
