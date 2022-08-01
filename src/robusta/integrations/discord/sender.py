@@ -21,7 +21,7 @@ SEVERITY_COLOR_MAP = {
 }
 MAX_BLOCK_CHARS = 2000
 MAX_FIELD_CHARS = 1024
-
+BLANK_CHAR = "\u200b"
 
 class DiscordDescriptionBlock(BaseBlock):
     """
@@ -71,14 +71,14 @@ class DiscordSender:
 
     @staticmethod
     def __extract_markdown_name(block: MarkdownBlock):
-        title = '-'
+        title = BLANK_CHAR
         text = block.text
         regex = re.compile(r"\*.+\*")
         match = re.match(regex, block.text)
         if match:
             title = text[match.span()[0]:match.span()[1]]
             text = text[match.span()[1]:]
-        return title, DiscordSender.__transform_markdown_links(text)
+        return title, DiscordSender.__transform_markdown_links(text) or BLANK_CHAR
 
     @staticmethod
     def __transform_markdown_links(text: str):
@@ -136,8 +136,8 @@ class DiscordSender:
             name, value = self.__extract_markdown_name(block)
             return [
                 {
-                    "name": name,
-                    "value": self.apply_length_limit(value)
+                    "name": name or BLANK_CHAR,
+                    "value": self.apply_length_limit(value) or BLANK_CHAR
                 }
             ]
         elif isinstance(block, FileBlock):
