@@ -14,10 +14,25 @@ Get your discord webhook url
 
 1. Open the Discord channel you want to receive Robusta event notifications.
 2. From the channel menu, select Edit channel.
+
+    .. image:: /images/discord_edit_channel.png
+      :width: 400
+      :align: center
+
 3. Select Integrations.
 4. If there are no existing webhooks, select Create Webhook. Otherwise, select View Webhooks then New Webhook.
+
+    .. image:: /images/discord_create_webhook.png
+      :width: 1000
+      :align: center
+
 5. Optional. You can enter the name of the bot and the avatar to post the message, but Robusta will change them if allowed.
 6. Copy the URL from the WEBHOOK URL field.
+
+    .. image:: /images/discord_copy_webhook_url.png
+      :width: 1000
+      :align: center
+
 7. Select Save.
 
 Configuring the Discord sink
