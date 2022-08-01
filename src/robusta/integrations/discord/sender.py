@@ -1,7 +1,4 @@
-# import logging
-
 import requests
-import tempfile
 from typing import Tuple
 from ...core.reporting.base import *
 from ...core.reporting.blocks import *
@@ -261,7 +258,6 @@ class DiscordSender:
             blocks.append(DiscordFieldBlock(name="Description", value=finding.description))
 
         for enrichment in finding.enrichments:
-            logging.info(enrichment.blocks)
             blocks.extend(enrichment.blocks)
 
         # wide tables aren't displayed properly on slack. looks better in a text file
