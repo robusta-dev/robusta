@@ -2,6 +2,7 @@ import os
 import uuid
 import pytz
 
+ROBUSTA_LOGO_URL = os.environ.get("ROBUSTA_LOGO_URL", "https://platform.robusta.dev/android-chrome-512x512.png")
 PLAYBOOKS_ROOT = os.environ.get("PLAYBOOKS_ROOT", "/etc/robusta/playbooks/")
 # should be the same as the one in out Dockerfile
 DEFAULT_PLAYBOOKS_ROOT = os.environ.get("DEFAULT_PLAYBOOKS_ROOT", os.path.join(PLAYBOOKS_ROOT, "defaults"))

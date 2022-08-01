@@ -3,7 +3,7 @@ from typing import Tuple
 from ...core.reporting.base import *
 from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
-from ...core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT
+from ...core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT, ROBUSTA_LOGO_URL
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 DiscordBlock = Dict[str, Any]
@@ -97,7 +97,7 @@ class DiscordSender:
         fields = [block for block in discord_blocks if 'value' in block]
         discord_msg = {
             "username": "Robusta",
-            "avatar_url": "https://platform.robusta.dev/android-chrome-512x512.png",
+            "avatar_url": ROBUSTA_LOGO_URL,
             "embeds": [
                 *[_add_color_to_block(block, msg_color) for block in discord_blocks if "description" in block]
             ],
@@ -221,7 +221,7 @@ class DiscordSender:
             if attachment_blocks:
                 response = requests.post(self.url, data={
                     "username": discord_msg['username'],
-                    "avatar_url": discord_msg['avatar_url'],
+                    "avatar_url": ROBUSTA_LOGO_URL,
                 }, files=attachment_blocks)
                 response.raise_for_status()
         except Exception as e:
