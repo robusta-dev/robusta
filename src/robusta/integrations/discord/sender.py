@@ -182,19 +182,21 @@ class DiscordSender:
     def __send_blocks_to_discord(
             self,
             report_blocks: List[BaseBlock],
-            report_attachment_blocks: List[BaseBlock],
             title: str,
             sink_name: str,
             severity: FindingSeverity,
     ):
         msg_color = SEVERITY_COLOR_MAP.get(severity, "")
-        file_blocks = report_attachment_blocks
-        file_blocks.extend(add_pngs_for_all_svgs(
-            [b for b in report_blocks if isinstance(b, FileBlock)]
-        ))
-        other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
-        message = self.apply_length_limit(title)
+        # Process attachment blocks
+        file_blocks = add_pngs_for_all_svgs(
+            [b for b in report_blocks if isinstance(b, FileBlock)]
+        )
+        attachment_blocks = []
+        for block in file_blocks:
+            attachment_blocks.extend(self.__to_discord(block, sink_name))
+
+        other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
         output_blocks = []
         header_block = {}
@@ -203,16 +205,12 @@ class DiscordSender:
             header_block = self.__to_discord(HeaderBlock(title), sink_name)[0]
         for block in other_blocks:
             output_blocks.extend(self.__to_discord(block, sink_name))
-        attachment_blocks = []
-        for block in file_blocks:
-            attachment_blocks.extend(self.__to_discord(block, sink_name))
 
         logging.debug(
             f"--sending to discord--\n"
             f"title:{title}\n"
             f"blocks: {output_blocks}\n"
-            f"attachment_blocks: {report_attachment_blocks}\n"
-            f"message:{message}"
+            f"attachment_blocks: {attachment_blocks}\n"
         )
 
         discord_msg = self.__format_final_message(output_blocks, header_block, msg_color)
@@ -228,7 +226,7 @@ class DiscordSender:
                 response.raise_for_status()
         except Exception as e:
             logging.error(
-                f"""error sending message to discord\ne={e}\ntext={message}\n
+                f"""error sending message to discord\ne={e}\n
                 blocks={output_blocks}\nattachment_blocks={attachment_blocks}\nmsg={discord_msg}"""
             )
         else:
@@ -241,7 +239,6 @@ class DiscordSender:
             platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
-        attachment_blocks: List[BaseBlock] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
             actions = f"[:mag_right: Investigate]({finding.investigate_uri})"
             if finding.add_silence_url:
@@ -256,9 +253,7 @@ class DiscordSender:
             blocks.append(DiscordFieldBlock(name="Description", value=finding.description))
 
         for enrichment in finding.enrichments:
-            blocks.extend([block for block in enrichment.blocks if not isinstance(block, FileBlock)])
-            attachment_blocks.extend(
-                add_pngs_for_all_svgs([block for block in enrichment.blocks if isinstance(block, FileBlock)]))
+            blocks.extend(enrichment.blocks)
 
         # wide tables aren't displayed properly on discord. looks better in a text file
         table_blocks = [b for b in blocks if isinstance(b, TableBlock)]
@@ -272,14 +267,13 @@ class DiscordSender:
                 table_name = (
                     table_block.table_name if table_block.table_name else "data"
                 )
-                attachment_blocks.append(
+                blocks.remove(table_block)
+                blocks.append(
                     FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8"))
                 )
-                blocks.remove(table_block)
 
         self.__send_blocks_to_discord(
             blocks,
-            attachment_blocks,
             finding.title,
             sink_name,
             finding.severity,
