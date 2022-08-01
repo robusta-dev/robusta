@@ -22,30 +22,3 @@ def get_kind_yamls(event: ExecutionBaseEvent, params: KindYamlParams):
         aggregation_key="Manifest report",
     ))
     event.add_enrichment([FileBlock(f"{params.kind}.yaml", yaml.dump(json.loads(response.data)).encode())])
-
-
-class PodStatusParams(ActionParams):
-    """
-    :var status: query pods by this status
-    """
-    status: str
-
-
-@action
-def list_pods_by_status(event: ExecutionBaseEvent, params: PodStatusParams):
-    pods: PodList = Pod.listPodForAllNamespaces(field_selector=f"status.phase={params.status}").obj
-    event.add_finding(Finding(
-        title=f"Pod list for status {params.status}",
-        aggregation_key="Pod status report",
-    ))
-    if pods.items:
-        event.add_enrichment([
-            TableBlock(
-                table_name="pods list",
-                headers=["name", "namespace"],
-                rows=[[pod.metadata.name, pod.metadata.namespace] for pod in pods.items]
-            )
-        ])
-    else:
-        event.add_enrichment([MarkdownBlock(f"No pods with status {params.status}")])
-

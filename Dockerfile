@@ -33,6 +33,8 @@ COPY src/ /app/src
 RUN pip3 install .
 # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
 RUN pip3 install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
+RUN echo 'patching k8s client: /usr/local/lib/python3.9/site-packages/kubernetes/client/configuration.py'
+COPY patch/configuration.py /usr/local/lib/python3.9/site-packages/kubernetes/client/
 
 COPY playbooks/ /etc/robusta/playbooks/defaults
 

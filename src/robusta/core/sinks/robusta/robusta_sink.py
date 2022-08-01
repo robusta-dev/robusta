@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import os
 import time
 import threading
 import traceback
@@ -162,14 +163,18 @@ class RobustaSink(SinkBase):
                 DaemonSetList.listDaemonSetForAllNamespaces().obj.items
             )
             logging.info("list daemonsets done")
-            # current_services.extend(
-            #     [
-            #         rs
-            #         for rs in ReplicaSetList.listReplicaSetForAllNamespaces().obj.items
-            #         if not rs.metadata.ownerReferences
-            #     ]
-            # )
-            logging.info("list replicasets skipped")
+            if bool(os.environ.get("REPLICA_SET_DISCOVERY", False)):
+                current_services.extend(
+                    [
+                        rs
+                        for rs in ReplicaSetList.listReplicaSetForAllNamespaces().obj.items
+                        if not rs.metadata.ownerReferences
+                    ]
+                )
+                logging.info("list replicasets done")
+            else:
+                logging.info("list replicasets skipped")
+
             current_services.extend(
                 [
                     pod
