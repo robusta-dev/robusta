@@ -206,14 +206,15 @@ class DiscordSender:
         for block in other_blocks:
             output_blocks.extend(self.__to_discord(block, sink_name))
 
+        discord_msg = self.__format_final_message(output_blocks, header_block, msg_color)
+
         logging.debug(
             f"--sending to discord--\n"
             f"title:{title}\n"
             f"blocks: {output_blocks}\n"
+            f"discord_msg: {discord_msg}\n"
             f"attachment_blocks: {attachment_blocks}\n"
         )
-
-        discord_msg = self.__format_final_message(output_blocks, header_block, msg_color)
 
         try:
             response = requests.post(self.url, json=discord_msg)
