@@ -116,12 +116,14 @@ class ProcessFinder:
     def __get_error_blocks(
         self, processes: List[Process], text: str, action: Callable, debug_action: Callable
     ) -> List[BaseBlock]:
-        blocks = [
-            TableBlock(
+        blocks = []
+        if not processes:
+            return blocks
+        blocks.append(TableBlock(
                 [[p.pid, p.exe, " ".join(p.cmdline)] for p in processes],
                 ["pid", "exe", "cmdline"],
-            ),
-        ]
+            )
+        )
         if self.filters.interactive:
             choices = {}
             for proc in processes:

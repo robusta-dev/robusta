@@ -1,3 +1,4 @@
+import copy
 import logging
 import uuid
 from collections import defaultdict
@@ -81,16 +82,19 @@ class ExecutionBaseEvent:
                 )
                 self.sink_findings[sink].append(sink_finding)
 
-            self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations)
+            self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations, True)
 
-    def add_finding(self, finding: Finding):
+    def add_finding(self, finding: Finding, suppress_warning: bool = False):
+        first = True  # no need to clone the finding on the first sink. Use the orig finding
         for sink in self.named_sinks:
-            if len(self.sink_findings[sink]) > 0:
+            if (len(self.sink_findings[sink]) > 0) and not suppress_warning:
                 logging.warning(
                     f"Overriding active finding for {sink}. new finding: {finding}"
                 )
-
+            if not first:
+                finding = copy.deepcopy(finding)
             self.sink_findings[sink].insert(0, finding)
+            first = False
 
     def override_finding_attributes(self, title: str = "", description: str = "", severity: FindingSeverity = None):
         for sink in self.named_sinks:

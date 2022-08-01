@@ -159,7 +159,6 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    event.add_finding(finding)
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     process = process_finder.get_match_or_report_error(
         finding, "Profile", python_memory, python_process_inspector
@@ -187,6 +186,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         MarkdownBlock(f"*Other unfreed memory:* {snapshot.other_data.to_markdown()}")
     )
     finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
+    event.add_finding(finding)
 
 
 class DebuggerParams(ProcessParams):
@@ -276,7 +276,6 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    event.add_finding(finding)
     cmd = f"debug-toolkit stack-trace {pid}"
     output = RobustaPod.exec_in_debugger_pod(
         pod.metadata.name,
@@ -291,6 +290,7 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         if thread_output:
             blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
     finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
+    event.add_finding(finding)
 
 
 @action
@@ -312,7 +312,6 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    event.add_finding(finding)
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     relevant_processes_pids = process_finder.get_pids()
@@ -320,12 +319,10 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
-        return
-
-    finding.add_enrichment(
-        [MarkdownBlock(f"Please select an advanced debugging choice:")]
-    )
-    if params.interactive:
+    elif params.interactive:
+        finding.add_enrichment(
+            [MarkdownBlock(f"Please select an advanced debugging choice:")]
+        )
         choices = {}
         for proc_pid in relevant_processes_pids:
             updated_params = params.copy()
@@ -344,6 +341,8 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
                 ),
             ]
         )
+    event.add_finding(finding)
+
 
 
 @action
@@ -377,13 +376,13 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    event.add_finding(finding)
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     process = process_finder.get_match_or_report_error(
         finding, "Debug", python_debugger, python_process_inspector
     )
     if process is None:
+        event.add_finding(finding)
         return
 
     cmd = f"debug-toolkit debugger {process.pid} --port {params.port}"
@@ -424,3 +423,5 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     logging.info(
         "Done! See instructions for connecting to the debugger in Slack or Robusta UI"
     )
+    event.add_finding(finding)
+

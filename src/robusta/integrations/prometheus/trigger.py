@@ -118,7 +118,7 @@ class PrometheusAlertTrigger(BaseTrigger):
         for mapping in MAPPINGS:
             try:
                 resource_name = labels.get(mapping.prometheus_label, None)
-                if not resource_name:
+                if not resource_name or "kube-state-metrics" in resource_name:
                     continue
                 resource = mapping.hikaru_class().read(
                     name=resource_name, namespace=namespace
