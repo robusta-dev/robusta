@@ -16,7 +16,8 @@ from .telegram.telegram_sink import TelegramSink
 from .telegram.telegram_sink_params import TelegramSinkConfigWrapper
 from .webhook.webhook_sink import WebhookSink
 from .webhook.webhook_sink_params import WebhookSinkConfigWrapper
-
+from .victorops.victorops_sink import VictoropsSink
+from .victorops.victorops_sink_params import VictoropsConfigWrapper
 
 class SinkFactory:
     @classmethod
@@ -37,5 +38,7 @@ class SinkFactory:
             return TelegramSink(sink_config, registry)
         elif isinstance(sink_config, WebhookSinkConfigWrapper):
             return WebhookSink(sink_config, registry)
+        elif isinstance(sink_config, VictoropsConfigWrapper):
+            return VictoropsSink(sink_config, registry)
         else:
             raise Exception(f"Sink not supported {type(sink_config)}")
