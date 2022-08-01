@@ -258,7 +258,9 @@ class DiscordSender:
             blocks.append(DiscordFieldBlock(name="Description", value=finding.description))
 
         for enrichment in finding.enrichments:
-            blocks.extend(enrichment.blocks)
+            blocks.extend([block for block in enrichment.blocks if not isinstance(block, FileBlock)])
+            attachment_blocks.extend(
+                add_pngs_for_all_svgs([block for block in enrichment.blocks if isinstance(block, FileBlock)]))
 
         # wide tables aren't displayed properly on slack. looks better in a text file
         table_blocks = [b for b in blocks if isinstance(b, TableBlock)]
