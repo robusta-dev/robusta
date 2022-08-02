@@ -59,7 +59,8 @@ def pod_oom_killer_enricher(
     if node:
         allocatable_memory = PodResources.parse_mem(node.status.allocatable.get("memory", "0Mi"))
         capacity_memory = PodResources.parse_mem(node.status.capacity.get("memory", "0Mi"))
-        node_label = ("Node allocated memory", f"{(capacity_memory - allocatable_memory) * 100 / capacity_memory}% out of {allocatable_memory}MB allocatable")
+        allocated_precent = (capacity_memory - allocatable_memory) * 100 / capacity_memory
+        node_label = ("Node allocated memory", f"{allocated_precent:.2f}% out of {allocatable_memory}MB allocatable")
         labels.append(node_label)
     else:
         logging.warning(
@@ -77,7 +78,7 @@ def pod_oom_killer_enricher(
         memory_limit = "No limit" if not limits else f"{limits}MB limit"
         memory_requests = "No request" if not requests else f"{requests}MB request"
         labels.append(("Container memory", f"{memory_requests}, {memory_limit}"))
-        oom_killed_status = oomkilled_container.container.state
+        oom_killed_status = oomkilled_container.state
         if oom_killed_status.terminated.startedAt:
             labels.append(("Container started at", oom_killed_status.terminated.startedAt))
         if oom_killed_status.terminated.finishedAt:

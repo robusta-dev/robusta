@@ -10,7 +10,7 @@ from .error_event_trigger import (
 )
 from .job_failed_trigger import JobFailedTrigger
 from .pod_crash_loop_trigger import PodCrashLoopTrigger
-from .pod_oom_killed_trigger import ContainerOOMKilledTrigger
+from .container_oom_killed_trigger import ContainerOOMKilledTrigger
 
 
 class CustomTriggers(BaseModel):
