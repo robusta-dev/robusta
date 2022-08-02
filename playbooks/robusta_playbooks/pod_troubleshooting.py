@@ -310,8 +310,8 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
                 if thread_output:
                     blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
         else:
-            clean_file_output = json.dumps(output_json, indent=4, sort_keys=True).replace('\\n', '        \n')
-            blocks.append(FileBlock(f"debugger_stack_trace_{params.pid}.txt", clean_file_output.encode()))
+            clean_file_output = json.dumps(output_json, indent=4, sort_keys=True).replace('\\n', '\t\t\t\n')
+            blocks.append(FileBlock(f"debugger_stack_trace_{pid}.txt", clean_file_output.encode()))
     except ValueError:  # includes simplejson.decoder.JSONDecodeError
         logging.error(f"failed to decode output")
         blocks.append(MarkdownBlock(f"```\n{output}\n```"))
