@@ -29,7 +29,7 @@ class PodContainer:
         self.container = PodContainer.get_pod_container_by_name(pod, container_name)
 
     def get_limits_and_requests_for_container(self):
-        requests = self.container.object_at_path(ResourceAttributes.requests)
+        requests = self.get_container_memory_resource(ResourceAttributes.requests)
         limits = self.get_container_memory_resource(ResourceAttributes.limits)
         return requests, limits
 
