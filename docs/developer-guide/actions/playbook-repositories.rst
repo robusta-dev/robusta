@@ -26,7 +26,7 @@ An example ``pyproject.toml`` would be:
     authors = ["USER NAME <myuser@users.noreply.github.com>"]
 
     [tool.poetry.dependencies]
-    # if you playbook requires additional dependencies, add it here
+    # if your playbook requires additional dependencies, add them here
     #some-dependency = "^1.2.3"
 
     [tool.poetry.dev-dependencies]

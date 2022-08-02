@@ -35,6 +35,9 @@ NODE_MEMORY_THRESHOLD = 0.95
 def pod_oom_killer_enricher(
     event: PodEvent,
 ):
+    """
+    Retrieves pod and node information for an OOMKilled pod
+    """
     pod = event.get_pod()
     if not pod:
         logging.error(f"cannot run pod_oom_killer_enricher on event with no pod: {event}")
