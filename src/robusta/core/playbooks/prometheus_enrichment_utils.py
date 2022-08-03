@@ -139,7 +139,8 @@ def create_resource_enrichment(
     item_type: ResourceChartItemType,
     graph_duration_minutes: int,
     prometheus_url: Optional[str] = None,
-    lines: Optional[List[XAxisLine]] = []
+    lines: Optional[List[XAxisLine]] = [],
+    title_override: Optional[str] = None,
 ) -> FileBlock:
     ChartOptions = namedtuple('ChartOptions', ['query', 'values_format'])
     combinations = {
@@ -178,13 +179,15 @@ def create_resource_enrichment(
     if not chosen_combination:
         raise AttributeError(f'The following combination for resource chart is not supported: {combination}')
     values_format_text = 'Utilization' if chosen_combination.values_format == ChartValuesFormat.Percentage else 'Usage'
+    title = title_override if title_override else \
+        f'{resource_type.name} {values_format_text} for this {item_type.name.lower()}'
     graph_enrichment = create_graph_enrichment(
         starts_at,
         labels,
         chosen_combination.query,
         prometheus_url=prometheus_url,
         graph_duration_minutes=graph_duration_minutes,
-        graph_title=f'{resource_type.name} {values_format_text} for this {item_type.name.lower()}',
+        graph_title=title,
         chart_values_format=chosen_combination.values_format,
         lines=lines
     )
