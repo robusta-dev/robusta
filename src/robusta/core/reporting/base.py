@@ -36,6 +36,14 @@ class FindingSeverity(Enum):
             return FindingSeverity.HIGH
 
         raise Exception(f"Unknown severity {severity}")
+    
+    def to_emoji(self) -> str:
+        if self == FindingSeverity.DEBUG: return "🔵"
+        elif self == FindingSeverity.INFO: return "🟢"
+        elif self == FindingSeverity.LOW: return "🟡"
+        elif self == FindingSeverity.MEDIUM: return "🟠" 
+        elif self ==  FindingSeverity.HIGH: return "🔴"
+
 
 
 class Enrichment:
