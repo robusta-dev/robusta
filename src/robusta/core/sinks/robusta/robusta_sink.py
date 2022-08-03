@@ -7,25 +7,21 @@ import traceback
 from collections import defaultdict
 
 from hikaru.model import (
-    Deployment,
-    StatefulSetList,
-    DaemonSetList,
-    ReplicaSetList,
-    Node,
-    NodeList,
     Taint,
     NodeCondition,
-    PodList,
-    Pod,
 )
 from typing import List, Dict
 
-from ....integrations.kubernetes.custom_models import extract_image_list
+from kubernetes import client
+from kubernetes.client import V1DeploymentList, V1ObjectMeta, V1StatefulSetList, V1DaemonSetList, \
+    V1ReplicaSetList, V1PodList, V1NodeList, V1Node
+
+from ...discovery.utils import extract_containers_images, k8s_pod_requests
 from ....runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from ...model.env_vars import DISCOVERY_PERIOD_SEC, CLUSTER_STATUS_PERIOD_SEC
 from ...model.nodes import NodeInfo
-from ...model.pods import PodResources, pod_requests
+from ...model.pods import PodResources
 from ...model.services import ServiceInfo
 from ...reporting.base import Finding
 from .dal.supabase_dal import SupabaseDal
@@ -92,16 +88,9 @@ class RobustaSink(SinkBase):
         cache_key = service_info.get_service_key()
         return self.__services_cache.get(cache_key) is not None
 
-    def __publish_new_services(self, active_services: List):
+    def __publish_new_services(self, active_services: List[ServiceInfo]):
         active_services_keys = set()
-        for service in active_services:
-            service_info = ServiceInfo(
-                name=service.metadata.name,
-                namespace=service.metadata.namespace,
-                service_type=service.kind,
-                images=extract_image_list(service),
-                labels=service.metadata.labels,
-            )
+        for service_info in active_services:
             cache_key = service_info.get_service_key()
             active_services_keys.add(cache_key)
             cached_service = self.__services_cache.get(cache_key)
@@ -147,30 +136,55 @@ class RobustaSink(SinkBase):
                 f"Error getting events history {e}\n" f"{traceback.format_exc()}"
             )
 
+    @staticmethod
+    def __create_service_info(meta: V1ObjectMeta, kind: str, images: List[str]) -> ServiceInfo:
+        return ServiceInfo(
+            name=meta.name,
+            namespace=meta.namespace,
+            service_type=kind,
+            images=images,
+            labels=meta.labels or {},
+        )
+
     def __discover_services(self):
         try:
-            current_services = Deployment.listDeploymentForAllNamespaces().obj.items
-            current_services.extend(
-                StatefulSetList.listStatefulSetForAllNamespaces().obj.items
-            )
-            current_services.extend(
-                DaemonSetList.listDaemonSetForAllNamespaces().obj.items
-            )
-            current_services.extend(
-                [
-                    rs
-                    for rs in ReplicaSetList.listReplicaSetForAllNamespaces().obj.items
-                    if not rs.metadata.ownerReferences
-                ]
-            )
-            current_services.extend(
-                [
-                    pod
-                    for pod in Pod.listPodForAllNamespaces().obj.items
-                    if not pod.metadata.ownerReferences
-                ]
-            )
-            self.__publish_new_services(current_services)
+            active_services: List[ServiceInfo] = []
+            deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces()
+            active_services.extend([
+                self.__create_service_info(
+                    deployment.metadata, "Deployment", extract_containers_images(deployment))
+                for deployment in deployments.items
+            ])
+
+            statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces()
+            active_services.extend([
+                self.__create_service_info(
+                    statefulset.metadata, "StatefulSet", extract_containers_images(statefulset))
+                for statefulset in statefulsets.items
+            ])
+
+            daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces()
+            active_services.extend([
+                self.__create_service_info(
+                    daemonset.metadata, "DaemonSet", extract_containers_images(daemonset))
+                for daemonset in daemonsets.items
+            ])
+
+            replicasets: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces()
+            active_services.extend([
+                self.__create_service_info(
+                    replicaset.metadata, "ReplicaSet", extract_containers_images(replicaset))
+                for replicaset in replicasets.items if not replicaset.metadata.owner_references
+            ])
+
+            pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces()
+            active_services.extend([
+                self.__create_service_info(
+                    pod.metadata, "Pod", extract_containers_images(pod))
+                for pod in pods.items if not pod.metadata.owner_references
+            ])
+
+            self.__publish_new_services(active_services)
         except Exception as e:
             logging.error(
                 f"Failed to run periodic service discovery for {self.sink_name}",
@@ -194,16 +208,16 @@ class RobustaSink(SinkBase):
         )
 
     @classmethod
-    def __to_node_info(cls, node: Node) -> Dict:
-        node_info = node.status.nodeInfo.to_dict() if node.status.nodeInfo else {}
-        node_info["labels"] = node.metadata.labels
-        node_info["annotations"] = node.metadata.annotations
+    def __to_node_info(cls, node: V1Node) -> Dict:
+        node_info = node.status.node_info.to_dict() if node.status.node_info else {}
+        node_info["labels"] = node.metadata.labels or {}
+        node_info["annotations"] = node.metadata.annotations or {}
         node_info["addresses"] = [addr.address for addr in node.status.addresses]
         return node_info
 
     @classmethod
     def __from_api_server_node(
-        cls, api_server_node: Node, pod_requests_list: List[PodResources]
+        cls, api_server_node: V1Node, pod_requests_list: List[PodResources]
     ) -> NodeInfo:
         addresses = api_server_node.status.addresses
         external_addresses = [
@@ -214,13 +228,14 @@ class RobustaSink(SinkBase):
             address for address in addresses if "internalip" in address.type.lower()
         ]
         internal_ip = ",".join([addr.address for addr in internal_addresses])
+        node_taints = api_server_node.spec.taints or []
         taints = ",".join(
-            [cls.__to_taint_str(taint) for taint in api_server_node.spec.taints]
+            [cls.__to_taint_str(taint) for taint in node_taints]
         )
 
         return NodeInfo(
             name=api_server_node.metadata.name,
-            node_creation_time=api_server_node.metadata.creationTimestamp,
+            node_creation_time=str(api_server_node.metadata.creation_timestamp),
             internal_ip=internal_ip,
             external_ip=external_ip,
             taints=taints,
@@ -247,7 +262,7 @@ class RobustaSink(SinkBase):
         )
 
     def __publish_new_nodes(
-        self, current_nodes: NodeList, node_requests: Dict[str, List[PodResources]]
+        self, current_nodes: V1NodeList, node_requests: Dict[str, List[PodResources]]
     ):
         # convert to map
         curr_nodes = {}
@@ -276,15 +291,15 @@ class RobustaSink(SinkBase):
     def __discover_nodes(self):
         try:
             self.__assert_node_cache_initialized()
-            current_nodes: NodeList = NodeList.listNode().obj
+            current_nodes: V1NodeList = client.CoreV1Api().list_node()
             node_requests = defaultdict(list)
             for status in ["Running", "Unknown", "Pending"]:
-                pods: PodList = Pod.listPodForAllNamespaces(
+                pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces(
                     field_selector=f"status.phase={status}"
-                ).obj
+                )
                 for pod in pods.items:
-                    if pod.spec.nodeName:
-                        node_requests[pod.spec.nodeName].append(pod_requests(pod))
+                    if pod.spec.node_name:
+                        node_requests[pod.spec.node_name].append(k8s_pod_requests(pod))
 
             self.__publish_new_nodes(current_nodes, node_requests)
         except Exception as e:
