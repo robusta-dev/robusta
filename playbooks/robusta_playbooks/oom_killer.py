@@ -30,6 +30,19 @@ CONTAINER_MEMORY_THRESHOLD = 0.92
 # report the corresponding node as the reason for the OOMKill.
 NODE_MEMORY_THRESHOLD = 0.95
 
+@action
+def oomkilled_container_graph_enricher(event: PodEvent, params: ResourceGraphEnricherParams):
+    """
+    Get a graph of a specific resource for this pod. Note: "Disk" Resource is not supported.
+    """
+    pod = event.get_pod()
+    if not pod:
+        logging.error(f"cannot run pod_oom_killer_enricher on event with no pod: {event}")
+        return
+    oomkilled_container = pod_most_recent_oom_killed_container(pod)
+    container_graph = create_container_graph(params, pod, oomkilled_container.container, show_limit=True )
+    event.add_enrichment([container_graph])
+
 
 @action
 def pod_oom_killer_enricher(
@@ -73,7 +86,7 @@ def pod_oom_killer_enricher(
             f"could not find OOMKilled status in pod {pod.metadata.name}"
         )
     else:
-        requests, limits = oomkilled_container.get_limits_and_requests_for_container()
+        requests, limits = PodContainer.get_memory_limits_and_requests_for_container(oomkilled_container.container)
         labels.append(("Container name", oomkilled_container.container.name))
         memory_limit = "No limit" if not limits else f"{limits}MB limit"
         memory_requests = "No request" if not requests else f"{requests}MB request"

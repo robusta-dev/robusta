@@ -164,6 +164,14 @@ def create_resource_enrichment(
             query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})) != 0))',
             values_format=ChartValuesFormat.Percentage
         ),
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
+            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod", container=~"$container"})',
+            values_format=ChartValuesFormat.Plain
+        ),
+        (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
+            query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container=~"$container", image!=""})',
+            values_format=ChartValuesFormat.Bytes
+        ),
     }
     combination = (resource_type, item_type)
     chosen_combination = combinations[combination]
