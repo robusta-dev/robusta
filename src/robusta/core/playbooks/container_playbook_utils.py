@@ -1,7 +1,7 @@
 from datetime import datetime
 from hikaru.model import Pod, Container
 
-from .prometheus_enrichment_utils import get_node_internal_ip, create_resource_enrichment
+from .prometheus_enrichment_utils import create_resource_enrichment
 from ..model.base_params import ResourceGraphEnricherParams, ResourceChartResourceType, ResourceChartItemType
 from ..model.pods import PodContainer
 from .prometheus_enrichment_utils import XAxisLine
