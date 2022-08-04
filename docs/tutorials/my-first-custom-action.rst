@@ -158,7 +158,7 @@ Let’s name our action ``report_scheduling_failure``, and write everything in a
         def _report_failed_scheduling(event: EventEvent, pod_name: str, message: str):
             custom_message = ""
             if "affinity/selector" in message:
-                custom_message = "Your pode has a node 'selector' configured, which means it can't just run on any node. For more info, see: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector"
+                custom_message = "Your pod has a node 'selector' configured, which means it can't just run on any node. For more info, see: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector"
 
             # this is how you send data to slack or other destinations
 
