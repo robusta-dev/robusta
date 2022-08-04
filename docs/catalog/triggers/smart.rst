@@ -77,7 +77,7 @@ Container OOMKilled
 
 * ``on_container_oom_killed``
 
-This trigger will fire when a Pod is OOMKilled.
+This trigger will fire when a Container is OOMKilled.
 
 
 .. code-block:: yaml
@@ -90,9 +90,8 @@ This trigger will fire when a Pod is OOMKilled.
             - name_prefix: "oomkilled-container"
               namespace: "default"
       actions:
-      - pod_graph_enricher:
+      - oomkilled_container_graph_enricher:
           resource_type: Memory
-          display_limits: true
 
 
 Trigger parameters:
