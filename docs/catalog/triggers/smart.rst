@@ -54,8 +54,8 @@ This trigger will fire when a Pod is OOMKilled.
       - on_pod_oom_killed:
           rate_limit: 900
           ignore_selectors:
-            - pod_name_prefix: "oomkilled-pod"
-              container_name_prefix: "bad-container-name"
+            - name_prefix: "oomkilled-pod"
+              namespace: "default"
       actions:
       - pod_graph_enricher:
           resource_type: Memory
@@ -65,10 +65,44 @@ This trigger will fire when a Pod is OOMKilled.
 Trigger parameters:
 
 * ``rate_limit``: Limit firing to once every `rate_limit` seconds
-* ``ignore_selectors``: A list of pod name prefixes and/or container name prefixes that this trigger will ignore. 
-    * All containers that start with `container_name_prefix` on pods that start with `pod_name_prefix` will be ignored for this trigger.
-    * If A `pod_name_prefix` is defined without a `container_name_prefix` than all pods with that prefix will be ignored for this trigger.
-    * If A `container_name_prefix` is defined without a `pod_name_prefix` than all containers on all pods with that prefix will be ignored for this trigger.
+* ``ignore_selectors``: A list of pod name prefixes and/or namespaces that this trigger will ignore.
+    * All pods that start with `name_prefix` in namespace `namespace` will be ignored for this trigger.
+    * If A `name_prefix` is defined without a `namespace` than all pods with that prefix will be ignored for this trigger.
+    * If A `namespace` is defined without a `name_prefix` than all pods in that namespace will be ignored for this trigger.
+
+Container OOMKilled
+^^^^^^^^^^^^^^^^^^^
+
+.. _on_container_oom_killed:
+
+* ``on_container_oom_killed``
+
+This trigger will fire when a Pod is OOMKilled.
+
+
+.. code-block:: yaml
+
+    customPlaybooks:
+    - triggers:
+      - on_container_oom_killed:
+          rate_limit: 900
+          ignore_selectors:
+            - name_prefix: "oomkilled-container"
+              namespace: "default"
+      actions:
+      - pod_graph_enricher:
+          resource_type: Memory
+          display_limits: true
+
+
+Trigger parameters:
+
+* ``rate_limit``: Limit firing to once every `rate_limit` seconds
+* ``ignore_selectors``: A list of container name prefixes and/or namespaces that this trigger will ignore.
+    * All containers that start with `name_prefix` in namespace `namespace` will be ignored for this trigger.
+    * If A `name_prefix` is defined without a `namespace` than all containers with that prefix will be ignored for this trigger.
+    * If A `namespace` is defined without a `name_prefix` than all containers in that namespace will be ignored for this trigger.
+
 Job Failure
 ^^^^^^^^^^^^^^^^^^^
 
