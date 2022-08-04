@@ -40,9 +40,9 @@ Trigger parameters:
 Pod OOMKilled
 ^^^^^^^^^^^^^^^^^^^
 
-.. _on_container_oom_killed:
+.. _on_pod_oom_killed:
 
-* ``on_container_oom_killed``
+* ``on_pod_oom_killed``
 
 This trigger will fire when a container is OOMKilled.
 
@@ -51,7 +51,7 @@ This trigger will fire when a container is OOMKilled.
 
     customPlaybooks:
     - triggers:
-      - on_container_oom_killed: {}
+      - on_pod_oom_killed: {}
       actions:
       - pod_graph_enricher:
           resource_type: Memory

@@ -60,8 +60,11 @@ builtinPlaybooks:
 
 # playbooks for non-prometheus based monitoring that use prometheus for enrichment
 - triggers:
-  - on_container_oom_killed:
+  - on_pod_oom_killed:
       rate_limit: 900
+      ignore_selectors:
+        - pod_name_prefix: "oom-kill-by-pod"
+          container_name_prefix: "memory-eater"
   actions:
   - pod_oom_killer_enricher: {}
   - oomkilled_container_graph_enricher:

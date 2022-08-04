@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 from hikaru.model import Pod, ContainerState, ContainerStatus, Container
 from pydantic import BaseModel
 from ...integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
@@ -127,10 +127,12 @@ def pod_resources(pod: Pod, resource_attribute: ResourceAttributes) -> PodResour
     )
 
 
-def pod_most_recent_oom_killed_container(pod: Pod, only_current_state: bool = False) -> Optional[PodContainer]:
+def pod_most_recent_oom_killed_container(pod: Pod, containers: List[Container] = None, only_current_state: bool = False) -> Optional[PodContainer]:
     if not pod.status:
         return None
-    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+    all_statuses = containers
+    if not containers:
+        all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
     all_oom_kills = [
         get_oom_killed_container(pod, container_status, only_current_state)
         for container_status in all_statuses
