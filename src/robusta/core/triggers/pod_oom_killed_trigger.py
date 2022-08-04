@@ -61,7 +61,7 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
                 if selector["pod_name_prefix"] and not pod.metadata.name.startswith(selector["pod_name_prefix"]):
                     #this selector isnt the current pod
                     continue
-                if not selector["container_name_prefix"]:
+                if not selector["pod_name_prefix"] and not selector["container_name_prefix"]:
                     # this selector is for all containers on this pod
                     return False
                 containers = [container for container in containers if not container.name.startswith(selector["container_name_prefix"])]
