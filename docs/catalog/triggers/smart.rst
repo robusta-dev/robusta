@@ -44,7 +44,7 @@ Pod OOMKilled
 
 * ``on_pod_oom_killed``
 
-This trigger will fire when a container is OOMKilled.
+This trigger will fire when a Pod is OOMKilled.
 
 
 .. code-block:: yaml
