@@ -14,13 +14,12 @@ from pydantic import BaseModel
 
 class IgnoreSelector(BaseModel):
     """
-    :var pod_name_prefix: the name prefix for the pods to ignore containers that's name start with container_name_prefix
-    , if no container_name_prefix is defined than all containers are ignored pods with this prefix
-    :var container_name_prefix: the name prefix for the containers to ignore that are on pods that start with pod_name_prefix
+    :var name_prefix: the name prefix for the pods to ignore containers that's name start with name_prefix
+    :var namespace: the name prefix for the containers to ignore that are on pods that start with pod_name_prefix
     , if no pod_name_prefix is defined than all containers with this prefix are ignored on any pod
     """
-    pod_name_prefix: str = None
-    container_name_prefix: str = None
+    name_prefix: str = None
+    namespace: str = None
 
 
 class PodOOMKilledTrigger(PodUpdateTrigger):
