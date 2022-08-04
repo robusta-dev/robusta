@@ -51,7 +51,11 @@ This trigger will fire when a container is OOMKilled.
 
     customPlaybooks:
     - triggers:
-      - on_pod_oom_killed: {}
+      - on_pod_oom_killed:
+          rate_limit: 900
+          ignore_selectors:
+            - pod_name_prefix: "oomkilled-pod"
+              container_name_prefix: "bad-container-name"
       actions:
       - pod_graph_enricher:
           resource_type: Memory
@@ -61,7 +65,10 @@ This trigger will fire when a container is OOMKilled.
 Trigger parameters:
 
 * ``rate_limit``: Limit firing to once every `rate_limit` seconds
-
+* ``ignore_selectors``: A list of pod name prefixes and/or container name prefixes that this trigger will ignore. 
+    * All containers that start with `container_name_prefix` on pods that start with `pod_name_prefix` will be ignored for this trigger.
+    * If A `pod_name_prefix` is defined without a `container_name_prefix` than all pods with that prefix will be ignored for this trigger.
+    * If A `container_name_prefix` is defined without a `pod_name_prefix` than all containers on all pods with that prefix will be ignored for this trigger.
 Job Failure
 ^^^^^^^^^^^^^^^^^^^
 
