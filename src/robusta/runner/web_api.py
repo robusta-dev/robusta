@@ -1,6 +1,5 @@
 import logging
 import time
-
 import requests
 
 
@@ -29,9 +28,9 @@ class WebApi:
                     f"Failed to run manual action \naction_name:{action_name}\n"
                     f"Reason: {response.reason}\nStatus Code{status_code}"
                 )
-                time.sleep(timeout_delay)
             except Exception as e:
-                logging.error(f"Error sending manual action request {e}")
-                time.sleep(timeout_delay)
+                logging.error(f"Error sending manual action request", exc_info=True)
+
+            time.sleep(timeout_delay)
 
         return status_code
