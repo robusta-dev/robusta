@@ -1,19 +1,24 @@
 Custom Automations
 ######################################################
 
+.. note::
+
+    It is recommended to read :ref:`Automation Basics` before starting this guide.
+
 In previous tutorials, we configured automations. We used builtin actions and configured them in YAML.
 
 In this tutorial, we will write a custom action in Python code.
 
 For educational purposes, we'll automate the investigation of a short and made-up (but realistic) error scenario.
 
-.. note::
-
-    It is recommended to read :ref:`Automation Basics` before starting this guide.
-
 The scenario
 ---------------------------------------
-You want to create a new pod with the ``ngnix`` image.
+
+.. note::
+
+    It is recommended to follow along the described scenario and run all the commands on a test cluster.
+
+Let's imagine that you want to create and deploy a new pod with the ``ngnix`` image.
 
 Being the smart person that you are, you decide to save time by copy-pasting an existing YAML file. You change the pod name and image to ngnix.
 
@@ -69,10 +74,10 @@ Wait, what does it mean? 😖 (Hint: Check the YAML config for the spoiler)
 
 After searching online for some time, you find out that the YAML file you copied had a “nodeSelector” with the key-value "spoiler: alert", which means that it can only be scheduled on nodes (machines) that have this configuration 🤦‍♂️.
 
-From the docs:
+From the `docs <https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector>`_:
 
 .. pull-quote::
-    nodeSelector is the simplest recommended form of node selection constraint. nodeSelector is a field of PodSpec. It specifies a map of key-value pairs. For the pod to be eligible to run on a node, **the node must have each of the indicated key-value pairs as labels** (it can have additional labels as well). The most common usage is one key-value pair.
+    You can constrain a Pod so that it is restricted to run on particular node(s), or to prefer to run on particular nodes. There are several ways to do this and the recommended approaches all use label selectors to facilitate the selection. **Often, you do not need to set any such constraints** ...
 
 So you comment out those lines, run kubectl apply again, and all is well.
 
@@ -94,14 +99,14 @@ So you comment out those lines, run kubectl apply again, and all is well.
 
 Wouldn't it be nice if we could automate the detection of issues like this?
 
+.. note::
+    Make sure to clean up the pod from this section by running ``kubectl delete pod nginx``
+
 Automating the detection with a Robusta Playbook
 --------------------------------------------------
 
 What we need to do?
 ---------------------
-
-.. note::
-    Make sure to clean up the pod from the last section by running ``kubectl delete pod nginx``
 
 A playbook consists of two things:
 
@@ -137,48 +142,64 @@ Let’s name our action ``report_scheduling_failure``, and write everything in a
 
 .. code-block:: python
 
-    from robusta.api import *
+        from robusta.api import *
 
-    @action
-    def report_scheduling_failure(event: EventEvent):
-        actual_event = event.get_event()
+        @action
+        def report_scheduling_failure(event: EventEvent): # We use EventEvent to get the event object.
+            actual_event = event.get_event()
 
-        print(f"This print will be shown in the robusta logs={actual_event}")
+            print(f"This print will be shown in the robusta logs={actual_event}")
 
-        if actual_event.type.casefold() == f'Warning'.casefold() and \
-            actual_event.reason.casefold() == f'FailedScheduling'.casefold() and \
-            actual_event.involvedObject.kind.casefold() == f'Pod'.casefold():
-            _report_failed_scheduling(event, actual_event.involvedObject.name, actual_event.message)
+            if actual_event.type.casefold() == f'Warning'.casefold() and \
+                actual_event.reason.casefold() == f'FailedScheduling'.casefold() and \
+                actual_event.involvedObject.kind.casefold() == f'Pod'.casefold():
+                _report_failed_scheduling(event, actual_event.involvedObject.name, actual_event.message)
 
-    def _report_failed_scheduling(event: EventEvent, pod_name: str, message: str):
-        # this is how you send data to slack or other destinations
-        event.add_enrichment([
-            MarkdownBlock(f"Failed to schedule a pod named '{pod_name}', error: {message}"),
-        ])
+        def _report_failed_scheduling(event: EventEvent, pod_name: str, message: str):
+            custom_message = ""
+            if "affinity/selector" in message:
+                custom_message = "Your pod has a node 'selector' configured, which means it can't just run on any node. For more info, see: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector"
+
+            # this is how you send data to slack or other destinations
+
+            # Note - is it sometimes better to create a Finding object instead of calling event.add_enrichment, but this is out of the scope of this tutorial
+
+            event.add_enrichment([
+                MarkdownBlock(f"Failed to schedule a pod named '{pod_name}'!\nerror: {message}\n\n{custom_message}"),
+            ])
 
 Before we proceed, we need to enable local playbook repositories in Robusta.
 
 Follow this quick guide to learn how to package your python file for Robusta: :ref:`Custom playbook repositories`
 
-Use this useful debugging commands to make sure your action ( ``report_scheduling_failure``) is loaded:
-
-.. code-block:: bash
-
-    robusta logs # get robusta logs, see errors
-    robusta playbooks list-dirs  # get see if you custom action package was loaded
-
-Let’s push the new action to Robusta, and then test it by triggering the action manually immediately.
+Let’s push the new action to Robusta
 
 .. code-block:: bash
 
     robusta playbooks push <PATH_TO_LOCAL_PLAYBOOK_FOLDER>
-    robusta playbooks trigger report_scheduling_failure name=robusta-runner-8cd69f7cb-g5bkb namespace=default seconds=5
 
-Check our slack channel:
+Use this useful debugging commands to make sure your action ( ``report_scheduling_failure``) is loaded:
 
-.. image:: /images/example_report_scheduling_failure.png
+.. code-block:: bash
 
-Connection the trigger to the action - a Playbook is born!
+    $ robusta logs # get robusta logs, see errors, see our playbook loaded
+
+    ...
+    2022-08-03 10:53:14.116 INFO     importing actions from my_playbook_repo.report_scheduling_failure
+    ...
+
+    $ robusta playbooks list-dirs  # get see if you custom action package was loaded
+
+    ======================================================================
+    Listing playbooks directories
+    ======================================================================
+    ======================================================================
+    Stored playbooks directories:
+     robusta-pending-pod-playbook
+
+    ======================================================================
+
+Connecting the trigger to the action - a **playbook** is born!
 -------------------------------------------------------------
 
 We need to add a custom playbook that this action it in the generated_values.yaml.
@@ -197,33 +218,67 @@ We need to add a custom playbook that this action it in the generated_values.yam
     # This enables loading custom playbooks
     playbooksPersistentVolume: true
 
-.. note::
-    If you haven't already, make sure to clean up the pod from the last section by running ``kubectl delete pod nginx``
-
 Time to update Robusta’s config with the new generated_config.yaml:
 
 .. code-block:: bash
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
-    robusta playbooks list # see all the playbooks. Run it after a few minutes
 
-After a minute or two Robusta will be ready.
-
-Let’s push the new action to Robusta:
+After a minute or two Robusta will be ready. Let's run this command to see that the new playbook is loaded:
 
 .. code-block:: bash
 
-    robusta playbooks push <PATH_TO_PLAYBOOK_FOLDER>
+    $ robusta logs # get robusta logs, see no errors
+    ...
+    ...
+    $ robusta playbooks list # see all the playbooks. Run it after a few minutes
+    ...
+    --------------------------------------
+    triggers:
+    - on_event_create: {}
 
-After a minute or two Robusta will be ready.
+    actions:
+    - report_scheduling_failure: {}
+
+    --------------------------------------
+    ...
 
 Great!
 
-Run the scenario from the first section again (creating a bad bad configuration), and you should see this in your slack:
+.. note::
+    If you haven't already, make sure to clean up the pod from the last section by running ``kubectl delete pod nginx``
 
-Check our slack channel:
 
-.. image:: /images/example_report_scheduling_failure.png
+Now for the final check, let's deploy the mis-configured pod again:
+
+.. code-block:: yaml
+
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: nginx
+      labels:
+        env: test
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        imagePullPolicy: IfNotPresent
+      nodeSelector:
+        spoiler: alert
+
+And start the pod by running the following command:
+
+.. code-block:: bash
+
+    $ kubectl apply -f nginx-pod.yaml
+    pod/nginx created
+
+Now, Check out the Slack channel (sink), for example:
+
+.. admonition:: Example Slack Message
+
+    .. image:: /images/example_report_scheduling_failure.png
 
 Cleaning up
 --------------
