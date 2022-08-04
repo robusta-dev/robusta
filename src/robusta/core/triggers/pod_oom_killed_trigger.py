@@ -71,10 +71,6 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
                     # this selector is for all containers on this pod
                     return False
                 containers = [container for container in containers if not container.name.startswith(selector["container_name_prefix"])]
-        mem_eater = [container for container in containers if
-                         container.name.startswith('memory-eater')]
-        if len(mem_eater) > 0:
-            logging.info("bad")
         oom_killed = pod_most_recent_oom_killed_container(pod, containers=containers, only_current_state=True)
 
         if not oom_killed or not oom_killed.state:
