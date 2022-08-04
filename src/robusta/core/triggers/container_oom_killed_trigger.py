@@ -54,27 +54,31 @@ class ContainerOOMKilledTrigger(PodUpdateTrigger):
         containers = pod.status.containerStatuses + pod.status.initContainerStatuses
         if self.ignore_selectors:
             for selector in self.ignore_selectors:
-                if selector["pod_name_prefix"] and not pod.metadata.name.startswith(selector["pod_name_prefix"]):
-                    #this selector isnt the current pod
+                namespace = None if "namespace" not in selector else selector["namespace"]
+                name_prefix = None if "name_prefix" not in selector else selector["name_prefix"]
+
+                if not namespace and not name_prefix:
+                    # bad config
                     continue
-                if not selector["pod_name_prefix"] and not selector["container_name_prefix"]:
-                    # this selector is for all containers on this pod
+                namespace_match = namespace and namespace == pod.metadata.namespace
+                if namespace and not namespace_match:
+                    #this selector isnt the current namespace
+                    continue
+                if namespace_match and not name_prefix:
+                    # this selector is for all containers on this namespace
                     return False
-                containers = [container for container in containers if not container.name.startswith(selector["container_name_prefix"])]
+                # either namespace_match or namespace isnt defined for this name_prefix
+                containers = [container for container in containers if not container.name.startswith(name_prefix)]
         oom_killed = pod_most_recent_oom_killed_container(pod, containers=containers, only_current_state=True)
 
         if not oom_killed or not oom_killed.state:
             return False
 
         # Perform a rate limit for this pod according to the rate_limit parameter
-        name = (
-            pod.metadata.ownerReferences[0].name
-            if pod.metadata.ownerReferences
-            else pod.metadata.name
-        )
+        name = f"{pod.metadata.name}:{oom_killed.container.name}"
         namespace = pod.metadata.namespace
         return RateLimiter.mark_and_test(
-            f"PodOOMKilledTrigger_{playbook_id}",
+            f"ContainerOOMKilledTrigger_{playbook_id}",
             namespace + ":" + name,
             self.rate_limit,
         )

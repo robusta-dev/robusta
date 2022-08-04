@@ -60,17 +60,27 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
             return False
 
         pod = exec_event.get_pod()
-        containers = pod.status.containerStatuses + pod.status.initContainerStatuses
         if self.ignore_selectors:
             for selector in self.ignore_selectors:
-                if selector["pod_name_prefix"] and not pod.metadata.name.startswith(selector["pod_name_prefix"]):
-                    #this selector isnt the current pod
+                namespace = None if "namespace" not in selector else selector["namespace"]
+                name_prefix = None if "name_prefix" not in selector else selector["name_prefix"]
+                if not namespace and not name_prefix:
+                    logging.info("case 4")
+                    # bad config
                     continue
-                if not selector["pod_name_prefix"] and not selector["container_name_prefix"]:
-                    # this selector is for all containers on this pod
+                namespace_match = namespace and namespace == pod.metadata.namespace
+                name_prefix_match = name_prefix and pod.metadata.name.startswith(name_prefix)
+                if namespace and not namespace_match:
+                    #this selector isnt the current namespace
+                    continue
+                if name_prefix_match and (namespace_match or not namespace):
+                    # Pod name Matched + (namespace match or no namespace defined)
                     return False
-                containers = [container for container in containers if not container.name.startswith(selector["container_name_prefix"])]
-        oom_killed = pod_most_recent_oom_killed_container(pod, containers=containers, only_current_state=True)
+                if namespace_match and not name_prefix:
+                    # Namespace Match and no pod name specified
+                    return False
+
+        oom_killed = pod_most_recent_oom_killed_container(pod, only_current_state=True)
 
         if not oom_killed or not oom_killed.state:
             return False
