@@ -3,29 +3,15 @@ import json
 import logging
 import time
 import threading
-import traceback
-from collections import defaultdict
-
-from hikaru.model import (
-    Deployment,
-    StatefulSetList,
-    DaemonSetList,
-    ReplicaSetList,
-    Node,
-    NodeList,
-    Taint,
-    NodeCondition,
-    PodList,
-    Pod,
-)
 from typing import List, Dict
+from kubernetes.client import V1ObjectMeta, V1NodeList, V1Node, V1NodeCondition, V1Taint
 
-from ....integrations.kubernetes.custom_models import extract_image_list
+from ...discovery.discovery import Discovery
 from ....runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from ...model.env_vars import DISCOVERY_PERIOD_SEC, CLUSTER_STATUS_PERIOD_SEC
 from ...model.nodes import NodeInfo
-from ...model.pods import PodResources, pod_requests
+from ...model.pods import PodResources
 from ...model.services import ServiceInfo
 from ...reporting.base import Finding
 from .dal.supabase_dal import SupabaseDal
@@ -71,6 +57,12 @@ class RobustaSink(SinkBase):
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
 
+    def __assert_services_cache_initialized(self):
+        if not self.__services_cache:
+            logging.info("Initializing services cache")
+            for service in self.dal.get_active_services():
+                self.__services_cache[service.get_service_key()] = service
+
     def __assert_node_cache_initialized(self):
         if not self.__nodes_cache:
             logging.info("Initializing nodes cache")
@@ -92,16 +84,9 @@ class RobustaSink(SinkBase):
         cache_key = service_info.get_service_key()
         return self.__services_cache.get(cache_key) is not None
 
-    def __publish_new_services(self, active_services: List):
+    def __publish_new_services(self, active_services: List[ServiceInfo]):
         active_services_keys = set()
-        for service in active_services:
-            service_info = ServiceInfo(
-                name=service.metadata.name,
-                namespace=service.metadata.namespace,
-                service_type=service.kind,
-                images=extract_image_list(service),
-                labels=service.metadata.labels,
-            )
+        for service_info in active_services:
             cache_key = service_info.get_service_key()
             active_services_keys.add(cache_key)
             cached_service = self.__services_cache.get(cache_key)
@@ -130,8 +115,6 @@ class RobustaSink(SinkBase):
     def __get_events_history(self):
         try:
             logging.info("Getting events history")
-            # we will need the services in cache before the event history is run to guess service name
-            self.__discover_services()
             response = WebApi.run_manual_action(
                 action_name="event_history",
                 sinks=[self.sink_name],
@@ -142,47 +125,43 @@ class RobustaSink(SinkBase):
                 logging.error("Error running 'event_history'.")
             else:
                 logging.info("Cluster historical data sent.")
-        except Exception as e:
+        except Exception:
             logging.error(
-                f"Error getting events history {e}\n" f"{traceback.format_exc()}"
+                f"Error getting events history", exc_info=True
             )
 
-    def __discover_services(self):
+    @staticmethod
+    def __create_service_info(meta: V1ObjectMeta, kind: str, images: List[str]) -> ServiceInfo:
+        return ServiceInfo(
+            name=meta.name,
+            namespace=meta.namespace,
+            service_type=kind,
+            images=images,
+            labels=meta.labels or {},
+        )
+
+    def __discover_resources(self):
+        # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
         try:
-            current_services = Deployment.listDeploymentForAllNamespaces().obj.items
-            current_services.extend(
-                StatefulSetList.listStatefulSetForAllNamespaces().obj.items
-            )
-            current_services.extend(
-                DaemonSetList.listDaemonSetForAllNamespaces().obj.items
-            )
-            current_services.extend(
-                [
-                    rs
-                    for rs in ReplicaSetList.listReplicaSetForAllNamespaces().obj.items
-                    if not rs.metadata.ownerReferences
-                ]
-            )
-            current_services.extend(
-                [
-                    pod
-                    for pod in Pod.listPodForAllNamespaces().obj.items
-                    if not pod.metadata.ownerReferences
-                ]
-            )
-            self.__publish_new_services(current_services)
-        except Exception as e:
+            (active_services, current_nodes, node_requests) = Discovery.discover_resources()
+
+            self.__assert_services_cache_initialized()
+            self.__publish_new_services(active_services)
+            if current_nodes:
+                self.__assert_node_cache_initialized()
+                self.__publish_new_nodes(current_nodes, node_requests)
+        except Exception:
             logging.error(
-                f"Failed to run periodic service discovery for {self.sink_name}",
+                f"Failed to run publish discovery for {self.sink_name}",
                 exc_info=True,
             )
 
     @classmethod
-    def __to_taint_str(cls, taint: Taint) -> str:
+    def __to_taint_str(cls, taint: V1Taint) -> str:
         return f"{taint.key}={taint.value}:{taint.effect}"
 
     @classmethod
-    def __to_active_conditions_str(cls, conditions: List[NodeCondition]) -> str:
+    def __to_active_conditions_str(cls, conditions: List[V1NodeCondition]) -> str:
         if not conditions:
             return ""
         return ",".join(
@@ -194,16 +173,16 @@ class RobustaSink(SinkBase):
         )
 
     @classmethod
-    def __to_node_info(cls, node: Node) -> Dict:
-        node_info = node.status.nodeInfo.to_dict() if node.status.nodeInfo else {}
-        node_info["labels"] = node.metadata.labels
-        node_info["annotations"] = node.metadata.annotations
+    def __to_node_info(cls, node: V1Node) -> Dict:
+        node_info = node.status.node_info.to_dict() if node.status.node_info else {}
+        node_info["labels"] = node.metadata.labels or {}
+        node_info["annotations"] = node.metadata.annotations or {}
         node_info["addresses"] = [addr.address for addr in node.status.addresses]
         return node_info
 
     @classmethod
     def __from_api_server_node(
-        cls, api_server_node: Node, pod_requests_list: List[PodResources]
+        cls, api_server_node: V1Node, pod_requests_list: List[PodResources]
     ) -> NodeInfo:
         addresses = api_server_node.status.addresses
         external_addresses = [
@@ -214,13 +193,14 @@ class RobustaSink(SinkBase):
             address for address in addresses if "internalip" in address.type.lower()
         ]
         internal_ip = ",".join([addr.address for addr in internal_addresses])
+        node_taints = api_server_node.spec.taints or []
         taints = ",".join(
-            [cls.__to_taint_str(taint) for taint in api_server_node.spec.taints]
+            [cls.__to_taint_str(taint) for taint in node_taints]
         )
 
         return NodeInfo(
             name=api_server_node.metadata.name,
-            node_creation_time=api_server_node.metadata.creationTimestamp,
+            node_creation_time=str(api_server_node.metadata.creation_timestamp),
             internal_ip=internal_ip,
             external_ip=external_ip,
             taints=taints,
@@ -247,7 +227,7 @@ class RobustaSink(SinkBase):
         )
 
     def __publish_new_nodes(
-        self, current_nodes: NodeList, node_requests: Dict[str, List[PodResources]]
+        self, current_nodes: V1NodeList, node_requests: Dict[str, List[PodResources]]
     ):
         # convert to map
         curr_nodes = {}
@@ -273,26 +253,6 @@ class RobustaSink(SinkBase):
                 self.dal.publish_node(updated_node)
                 self.__nodes_cache[node_name] = updated_node
 
-    def __discover_nodes(self):
-        try:
-            self.__assert_node_cache_initialized()
-            current_nodes: NodeList = NodeList.listNode().obj
-            node_requests = defaultdict(list)
-            for status in ["Running", "Unknown", "Pending"]:
-                pods: PodList = Pod.listPodForAllNamespaces(
-                    field_selector=f"status.phase={status}"
-                ).obj
-                for pod in pods.items:
-                    if pod.spec.nodeName:
-                        node_requests[pod.spec.nodeName].append(pod_requests(pod))
-
-            self.__publish_new_nodes(current_nodes, node_requests)
-        except Exception as e:
-            logging.error(
-                f"Failed to run periodic nodes discovery for {self.sink_name}",
-                exc_info=True,
-            )
-
     def __update_cluster_status(self):
         try:
             cluster_status = ClusterStatus(
@@ -309,25 +269,31 @@ class RobustaSink(SinkBase):
                 exc_info=True,
             )
 
-    def __run_events_history_thread(self):
+    def __should_run_history(self) -> bool:
         try:
-            # here to prevent a race between checking and writing findings from robusta sink
-            if self.dal.has_cluster_findings():
+            has_findings = self.dal.has_cluster_findings()
+            if has_findings:
                 logging.info("Cluster already has historical data, No history pulled.")
-                return
-            thread = threading.Thread(target=self.__get_events_history)
-            thread.start()
+            return not has_findings
         except:
-            logging.error(f"Failed to run events history thread")
+            logging.error(f"Failed to check run history condition", exc_info=True)
+            return False
 
     def __discover_cluster(self):
         logging.info("Cluster discovery initialized")
-        self.__run_events_history_thread()
+        get_history = self.__should_run_history()
         while self.__active:
+            start_t = time.time()
             self.__periodic_cluster_status()
-            self.__discover_services()
-            self.__discover_nodes()
-            time.sleep(self.__discovery_period_sec)
+            self.__discover_resources()
+            if get_history:
+                self.__get_events_history()
+                get_history = False
+            duration = round(time.time() - start_t)
+            # for small cluster duration is discovery_period_sec. For bigger clusters, up to 5 min
+            sleep_dur = min(max(self.__discovery_period_sec, 3 * duration), 300)
+            logging.debug(f"Discovery duration: {duration} next discovery in {sleep_dur}")
+            time.sleep(sleep_dur)
 
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
 
