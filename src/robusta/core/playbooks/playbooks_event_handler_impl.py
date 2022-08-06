@@ -174,7 +174,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
     @classmethod
     def __error_resp(cls, msg: str, error_code: int) -> dict:
         logging.error(msg)
-        return {"success": False, "msg": msg, error_code: error_code}
+        return {"success": False, "msg": msg, "error_code": error_code}
 
     def __run_playbook_actions(
         self,

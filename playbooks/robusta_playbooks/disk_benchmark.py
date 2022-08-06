@@ -99,7 +99,7 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
             aggregation_key="disk_benchmark",
         )
         finding.add_enrichment([MarkdownBlock(text=benchmark_results)])
-
+        event.add_finding(finding)
     finally:
         pvc.deleteNamespacedPersistentVolumeClaim(
             name=action_params.pvc_name, namespace=action_params.namespace

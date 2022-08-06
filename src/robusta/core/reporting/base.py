@@ -147,6 +147,7 @@ class Finding(Filterable):
         self.fingerprint = fingerprint
         self.starts_at = starts_at if starts_at else datetime.now()
         self.ends_at = ends_at
+        self.dirty = False
 
 
     @property
@@ -163,7 +164,10 @@ class Finding(Filterable):
             "name": str(self.subject.name),
         }
 
-    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
+    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None, suppress_warning: bool = False):
+        if self.dirty and not suppress_warning:
+            logging.warning("Updating a finding after it was added to the event is not allowed!")
+
         if not enrichment_blocks:
             return
         if annotations is None:
