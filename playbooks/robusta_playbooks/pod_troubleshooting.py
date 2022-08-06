@@ -164,6 +164,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         finding, "Profile", python_memory, python_process_inspector
     )
     if process is None:
+        event.add_finding(finding)
         return
 
     cmd = f"debug-toolkit memory --seconds={params.seconds} {process.pid}"
@@ -319,7 +320,7 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
-    elif params.interactive:
+    else:
         finding.add_enrichment(
             [MarkdownBlock(f"Please select an advanced debugging choice:")]
         )

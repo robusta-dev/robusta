@@ -17,6 +17,7 @@ class ProcessType(Enum):
     PYTHON = "python"
     JAVA = "java"
 
+
 class ProcessFinder:
     """
     Find the processes in a Kubernetes pod which match certain filters.
@@ -116,14 +117,14 @@ class ProcessFinder:
     def __get_error_blocks(
         self, processes: List[Process], text: str, action: Callable, debug_action: Callable
     ) -> List[BaseBlock]:
-        blocks = []
         if not processes:
-            return blocks
-        blocks.append(TableBlock(
-                [[p.pid, p.exe, " ".join(p.cmdline)] for p in processes],
-                ["pid", "exe", "cmdline"],
-            )
-        )
+            return [MarkdownBlock("No processes")]
+        blocks = [
+            TableBlock(
+                    [[p.pid, p.exe, " ".join(p.cmdline)] for p in processes],
+                    ["pid", "exe", "cmdline"],
+                )
+        ]
         if self.filters.interactive:
             choices = {}
             for proc in processes:

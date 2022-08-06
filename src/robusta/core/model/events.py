@@ -85,6 +85,7 @@ class ExecutionBaseEvent:
             self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations, True)
 
     def add_finding(self, finding: Finding, suppress_warning: bool = False):
+        finding.dirty = True  # Warn if new enrichments are added to this finding directly
         first = True  # no need to clone the finding on the first sink. Use the orig finding
         for sink in self.named_sinks:
             if (len(self.sink_findings[sink]) > 0) and not suppress_warning:
