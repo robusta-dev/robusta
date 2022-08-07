@@ -301,18 +301,33 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     blocks = []
     try:
         output_json = json.loads(output)
-        if len(output_json) == 1:
+        if len(output_json) == 1 and output_json[0]["status"] == "success":
+            # print single stack trace directly to finding
             single_stack_trace = output_json[0]["trace"]
             for thread_output in single_stack_trace.split("\n\n"):
                 if thread_output.startswith("Current thread"):
                     # this is the thread we are getting the stack trace from, not relevant for debugging
                     continue
-                if thread_output:
+                if thread_output and output_json[0]["status"].lower() == "success":
                     blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
+        if len(output_json) <= 1 and output_json[0]["status"].lower() != "success":
+            # no stack traces returned or only one with error
+            logging.error(
+                f'Failed to get stack trace, debugger error {output_json[0]["error"]} at {output_json[0]["trace"]}')
+            blocks.append(MarkdownBlock(f"Error while getting python stack trace."))
         else:
-            clean_file_output = json.dumps(output_json, indent=4, sort_keys=True).replace('\\n', '\t\t\t\n')
+            # print multiple stack traces to file
+            clean_output = []
+            for trace_object in output_json:
+                if trace_object["status"] != "success":
+                    # the full python stack trace of the error will appear here
+                    logging.error(f'Failed to get stack trace, debugger error {trace_object["error"]} at {trace_object["trace"]}')
+                    clean_output.append({"time": trace_object["time"], "status": "Error: Failed to get stack trace."})
+                else:
+                    clean_output.append(trace_object)
+            clean_file_output = json.dumps(clean_output, indent=4, sort_keys=True).replace('\\n', '\n')
             blocks.append(FileBlock(f"debugger_stack_trace_{pid}.txt", clean_file_output.encode()))
-    except ValueError:  # includes simplejson.decoder.JSONDecodeError
+    except ValueError:  # includes simplejson.decoder.JSONDecodeError, could still be valid output
         logging.error(f"failed to decode output")
         blocks.append(MarkdownBlock(f"```\n{output}\n```"))
     finding.add_enrichment(blocks)
