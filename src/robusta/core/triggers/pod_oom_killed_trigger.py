@@ -12,13 +12,13 @@ from ...utils.rate_limiter import RateLimiter
 from pydantic import BaseModel
 
 
-class IgnoreSelector(BaseModel):
+class Exclude(BaseModel):
     """
     :var name_prefix: the name prefix for the pods to ignore containers that's name start with name_prefix
     :var namespace: the name prefix for the containers to ignore that are on pods that start with pod_name_prefix
     , if no pod_name_prefix is defined than all containers with this prefix are ignored on any pod
     """
-    name_prefix: str = None
+    name: str = None
     namespace: str = None
 
 
@@ -28,7 +28,7 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
     """
 
     rate_limit: int = 0
-    ignore_selectors: List[IgnoreSelector] = None
+    exclude: List[Exclude] = None
 
     def __init__(
             self,
@@ -36,7 +36,7 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
             namespace_prefix: str = None,
             labels_selector: str = None,
             rate_limit: int = 0,
-            ignore_selectors: List[IgnoreSelector] = None
+            exclude: List[Exclude] = None
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -44,7 +44,7 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
             labels_selector=labels_selector,
         )
         self.rate_limit = rate_limit
-        self.ignore_selectors = ignore_selectors
+        self.exclude = exclude
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         should_fire = super().should_fire(event, playbook_id)
@@ -60,12 +60,11 @@ class PodOOMKilledTrigger(PodUpdateTrigger):
             return False
 
         pod = exec_event.get_pod()
-        if self.ignore_selectors:
-            for selector in self.ignore_selectors:
+        if self.exclude:
+            for selector in self.exclude:
                 namespace = None if "namespace" not in selector else selector["namespace"]
-                name_prefix = None if "name_prefix" not in selector else selector["name_prefix"]
+                name_prefix = None if "name" not in selector else selector["name"]
                 if not namespace and not name_prefix:
-                    logging.info("case 4")
                     # bad config
                     continue
                 namespace_match = namespace and namespace == pod.metadata.namespace
