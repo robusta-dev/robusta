@@ -207,7 +207,7 @@ class StackTraceParams(DebuggerParams):
     """
 
     traces_amount: int = 1
-    sleep_duration_s: int = 0
+    sleep_duration_s: int = 1
 
 def get_example_launch_json(params: DebuggerParams):
     return {
