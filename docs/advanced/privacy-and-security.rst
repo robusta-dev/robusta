@@ -4,7 +4,7 @@ Privacy & Security
 
 Log censoring
 ********************
-In some of the playbooks, like crash reporting, Robusta enriches the message with the pod's logs.
+Robusta is the world's only AI-powered, real-time, log-driven crash reporting tool. We pair a real-time agent with your app and send logs to our cloud cluster in near real-time. Robusta intelligently detects crashes and provides a rich set of insights about crashes.
 
 In some cases, this output might contain sensitive data, so a censoring feature was added to Robusta.
 The following playbook actions are supported:
