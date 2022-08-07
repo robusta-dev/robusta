@@ -1,6 +1,9 @@
 import logging
 from typing import List
 
+from hikaru.model import Pod
+
+from .oom_killed_trigger_base import OOMKilledTriggerBase
 from .pod_oom_killed_trigger import Exclude
 from ..model.pods import pod_most_recent_oom_killed_container
 from ...core.playbooks.base_trigger import TriggerEvent
@@ -13,14 +16,7 @@ from ...utils.rate_limiter import RateLimiter
 from pydantic import BaseModel
 
 
-class ContainerOOMKilledTrigger(PodUpdateTrigger):
-    """
-    :var rate_limit: Limit firing to once every `rate_limit` seconds
-    """
-
-    rate_limit: int = 0
-    exclude: List[Exclude] = None
-
+class ContainerOOMKilledTrigger(OOMKilledTriggerBase):
     def __init__(
             self,
             name_prefix: str = None,
@@ -33,52 +29,32 @@ class ContainerOOMKilledTrigger(PodUpdateTrigger):
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
+            rate_limit=rate_limit,
+            exclude=exclude,
         )
-        self.rate_limit = rate_limit
-        self.exclude = exclude
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
-        should_fire = super().should_fire(event, playbook_id)
-        if not should_fire:
-            return should_fire
+        return super().should_fire(event, playbook_id)
 
-        if not isinstance(event, K8sTriggerEvent):
-            return False
-
-        exec_event = self.build_execution_event(event, {})
-
-        if not isinstance(exec_event, PodChangeEvent):
-            return False
-
-        pod = exec_event.get_pod()
+    def get_oomkilled_containers(self, pod: Pod):
         containers = pod.status.containerStatuses + pod.status.initContainerStatuses
-        if self.exclude:
-            for selector in self.exclude:
-                namespace = None if "namespace" not in selector else selector["namespace"]
-                name = None if "name" not in selector else selector["name"]
+        if not self.exclude:
+            return containers
+        for selector in self.exclude:
+            namespace = None if "namespace" not in selector else selector["namespace"]
+            name = None if "name" not in selector else selector["name"]
 
-                if not namespace and not name:
-                    # bad config
-                    continue
-                namespace_match = namespace and namespace == pod.metadata.namespace
-                if namespace and not namespace_match:
-                    #this selector isnt the current namespace
-                    continue
-                if namespace_match and not name:
-                    # this selector is for all containers on this namespace
-                    return False
-                # either namespace_match or namespace isnt defined for this name
-                containers = [container for container in containers if not container.name.startswith(name)]
-        oom_killed = pod_most_recent_oom_killed_container(pod, containers=containers, only_current_state=True)
-
-        if not oom_killed or not oom_killed.state:
-            return False
-
-        # Perform a rate limit for this pod according to the rate_limit parameter
-        name = f"{pod.metadata.name}:{oom_killed.container.name}"
-        namespace = pod.metadata.namespace
-        return RateLimiter.mark_and_test(
-            f"ContainerOOMKilledTrigger_{playbook_id}",
-            namespace + ":" + name,
-            self.rate_limit,
-        )
+            if not namespace and not name:
+                # bad config
+                continue
+            namespace_match = namespace and namespace == pod.metadata.namespace
+            if namespace and not namespace_match:
+                # this selector isnt the current namespace
+                continue
+            if namespace_match and not name:
+                # this selector is for all containers on this namespace
+                return False
+            # either namespace_match or namespace isnt defined for this name
+            containers = [container for container in containers if not container.name.startswith(name)]
+        # pod not excluded
+        return containers
