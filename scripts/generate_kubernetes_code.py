@@ -153,21 +153,21 @@ def autogenerate_events(f: TextIO):
 
         @dataclass
         class KubernetesResourceEvent(ExecutionBaseEvent):
-            _obj: Optional[{f"Union[{','.join(all_resources)}]"}] = None
+            obj: Optional[{f"Union[{','.join(all_resources)}]"}] = None
 
             def __init__(self, obj: {f"Union[{','.join(all_resources)}]"}, named_sinks: List[str]):
                 super().__init__(named_sinks=named_sinks)
-                self._obj = obj
+                self.obj = obj
             
             def get_resource(self) -> Optional[{f"Union[{','.join(all_resources)}]"}]:
-                return self._obj
+                return self.obj
 
             def get_subject(self) -> FindingSubject:
                 return FindingSubject(
-                    name=self._obj.metadata.name,
-                    subject_type=FindingSubjectType.from_kind(self._obj.kind),
-                    namespace=self._obj.metadata.namespace,
-                    node=KubeObjFindingSubject.get_node_name(self._obj)
+                    name=self.obj.metadata.name,
+                    subject_type=FindingSubjectType.from_kind(self.obj.kind),
+                    namespace=self.obj.metadata.namespace,
+                    node=KubeObjFindingSubject.get_node_name(self.obj)
                 )
         
             @classmethod
@@ -231,7 +231,7 @@ def autogenerate_events(f: TextIO):
                     super().__init__(obj=obj, named_sinks=named_sinks)
                 
                 def get_{resource.lower()}(self) -> Optional[{get_model_class(resource)}]:
-                    return self._obj
+                    return self.obj
 
                 @staticmethod
                 def from_params(params: {resource}Attributes) -> Optional["{resource}Event"]:
@@ -244,10 +244,10 @@ def autogenerate_events(f: TextIO):
                 
                 def get_subject(self) -> FindingSubject:
                     return FindingSubject(
-                        name=self._obj.metadata.name,
-                        subject_type=FindingSubjectType.from_kind(self._obj.kind),
-                        namespace=self._obj.metadata.namespace,
-                        node=KubeObjFindingSubject.get_node_name(self._obj)
+                        name=self.obj.metadata.name,
+                        subject_type=FindingSubjectType.from_kind(self.obj.kind),
+                        namespace=self.obj.metadata.namespace,
+                        node=KubeObjFindingSubject.get_node_name(self.obj)
                     )
 
 
