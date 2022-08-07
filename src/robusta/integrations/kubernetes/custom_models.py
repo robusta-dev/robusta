@@ -14,7 +14,7 @@ from .templates import get_deployment_yaml
 S = TypeVar("S")
 T = TypeVar("T")
 PYTHON_DEBUGGER_IMAGE = (
-    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:debug-stack"
+    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.3"
 )
 JAVA_DEBUGGER_IMAGE = (
     "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:v1"
