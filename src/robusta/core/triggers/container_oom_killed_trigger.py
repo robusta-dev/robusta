@@ -26,7 +26,7 @@ class ContainerOOMKilledTrigger(OOMKilledTriggerBase):
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         return super().should_fire(event, playbook_id)
 
-    def get_oomkilled_containers(self, pod: Pod):
+    def get_relevant_oomkilled_containers(self, pod: Pod):
         containers = pod.status.containerStatuses + pod.status.initContainerStatuses
         if not self.exclude:
             return containers

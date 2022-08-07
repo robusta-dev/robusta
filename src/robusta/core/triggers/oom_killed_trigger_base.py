@@ -44,7 +44,7 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
         self.exclude = exclude
 
     @abstractmethod
-    def get_oomkilled_containers(self, pod: Pod):
+    def get_relevant_oomkilled_containers(self, pod: Pod):
         return []
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
@@ -62,7 +62,7 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
 
         pod = exec_event.get_pod()
 
-        containers = self.get_oomkilled_containers(pod)
+        containers = self.get_relevant_oomkilled_containers(pod)
 
         if len(containers) == 0:
             return False
