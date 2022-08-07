@@ -1,4 +1,3 @@
-import logging
 from typing import List
 from abc import abstractmethod
 
@@ -16,11 +15,6 @@ from pydantic import BaseModel
 
 
 class Exclude(BaseModel):
-    """
-    :var name_prefix: the name prefix for the pods to ignore containers that's name start with name_prefix
-    :var namespace: the name prefix for the containers to ignore that are on pods that start with pod_name_prefix
-    , if no pod_name_prefix is defined than all containers with this prefix are ignored on any pod
-    """
     name: str = None
     namespace: str = None
 
@@ -85,7 +79,6 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
             else pod.metadata.name
         )
         namespace = pod.metadata.namespace
-        logging.error(f" test {self.__class__.__name__}")
         return RateLimiter.mark_and_test(
             f"{self.__class__.__name__}_{playbook_id}",
             namespace + ":" + name,
