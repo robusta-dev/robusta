@@ -301,7 +301,14 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     blocks = []
     try:
         output_json = json.loads(output)
-        if len(output_json) == 1 and output_json[0]["status"] == "success":
+        if len(output_json) == 0 or (len(output_json) == 1 and output_json[0]["status"].lower() != "success"):
+            # no stack traces returned or only one with error
+            error_message = 'Failed to get python stack trace'
+            if len(output_json) == 1:
+                error_message += f', debugger error {output_json[0]["error"]} at {output_json[0]["trace"]}'
+            logging.error(error_message)
+            blocks.append(MarkdownBlock(f"Error while getting python stack trace."))
+        elif len(output_json) == 1 and output_json[0]["status"] == "success":
             # print single stack trace directly to finding
             single_stack_trace = output_json[0]["trace"]
             for thread_output in single_stack_trace.split("\n\n"):
@@ -310,11 +317,6 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
                     continue
                 if thread_output and output_json[0]["status"].lower() == "success":
                     blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
-        if len(output_json) <= 1 and output_json[0]["status"].lower() != "success":
-            # no stack traces returned or only one with error
-            logging.error(
-                f'Failed to get stack trace, debugger error {output_json[0]["error"]} at {output_json[0]["trace"]}')
-            blocks.append(MarkdownBlock(f"Error while getting python stack trace."))
         else:
             # print multiple stack traces to file
             clean_output = []
