@@ -6,6 +6,25 @@ from robusta.api import *
 from typing import List
 
 
+class StackTraceObject:
+    """
+    :var time: timestamp of trace.
+    :var status: success if succeeded in getting stack traces
+    :var error: the exception object from the debugger
+    :var trace: on success the stack traces of all threads, on error the stack trace of the exception
+    """
+    time: float
+    status: str
+    error: str
+    trace: str
+
+    def __init__(self, json_object):
+        self.time = float(json_object.get('time'))
+        self.status = json_object.get('status')
+        self.error = json_object.get('error', '')
+        self.trace = json_object.get('trace')
+
+
 class StartProfilingParams(ActionParams):
     """
     :var seconds: Profiling duration.
@@ -277,11 +296,13 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     pid = process_finder.get_lowest_relevant_pid()
 
     if not pid:
-        logging.info(f"debugger_stack_trace - no relevant pids")
+        logging.error(f"debugger_stack_trace - no relevant pids")
+        return
 
     if params.traces_amount < 1 or params.sleep_duration_s < 0:
         logging.error(f"debugger_stack_trace - invalid params, "
                      f"traces_amount must be greater than 1 and sleep_duration_s must be greater than 0")
+        return
 
     # if params pid is set, this will be returned, if not we return the parent process
     finding = Finding(
@@ -301,37 +322,43 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     blocks = []
     try:
         output_json = json.loads(output)
-        if len(output_json) == 0 or (len(output_json) == 1 and output_json[0]["status"].lower() != "success"):
+        SUCCESS_STATUS = "success"
+        first_stack_trace_obj = StackTraceObject(output_json[0]) if len(output_json) >= 1 else None
+        if len(output_json) == 0 or (len(output_json) == 1 and
+                                     first_stack_trace_obj.status != SUCCESS_STATUS):
             # no stack traces returned or only one with error
             error_message = 'Failed to get python stack trace'
             if len(output_json) == 1:
-                error_message += f', debugger error {output_json[0]["error"]} at {output_json[0]["trace"]}'
+                error_message += f', debugger error {first_stack_trace_obj.error} at ' \
+                                 f'{first_stack_trace_obj.trace}'
             logging.error(error_message)
             blocks.append(MarkdownBlock(f"Error while getting python stack trace."))
-        elif len(output_json) == 1 and output_json[0]["status"] == "success":
+        elif len(output_json) == 1 and first_stack_trace_obj.status == SUCCESS_STATUS:
             # print single stack trace directly to finding
-            single_stack_trace = output_json[0]["trace"]
-            for thread_output in single_stack_trace.split("\n\n"):
+            for thread_output in first_stack_trace_obj.trace.split("\n\n"):
                 if thread_output.startswith("Current thread"):
                     # this is the thread we are getting the stack trace from, not relevant for debugging
                     continue
-                if thread_output and output_json[0]["status"].lower() == "success":
+                # not printing extra blank lines
+                if thread_output:
                     blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
         else:
             # print multiple stack traces to file
             clean_output = []
-            for trace_object in output_json:
-                if trace_object["status"] != "success":
+            for trace_object_json in output_json:
+                trace_object = StackTraceObject(trace_object_json)
+                if trace_object.status != SUCCESS_STATUS:
                     # the full python stack trace of the error will appear here
-                    logging.error(f'Failed to get stack trace, debugger error {trace_object["error"]} at {trace_object["trace"]}')
-                    clean_output.append({"time": trace_object["time"], "status": "Error: Failed to get stack trace."})
+                    logging.error(f'Failed to get stack trace, debugger error {trace_object.error} at {trace_object.trace}')
+                    clean_output.append({"time": trace_object.time, "status": "Error: Failed to get stack trace."})
                 else:
-                    clean_output.append(trace_object)
+                    clean_output.append(trace_object_json)
             clean_file_output = json.dumps(clean_output, indent=4, sort_keys=True).replace('\\n', '\n')
             blocks.append(FileBlock(f"debugger_stack_trace_{pid}.txt", clean_file_output.encode()))
-    except ValueError:  # includes simplejson.decoder.JSONDecodeError, could still be valid output
+    except ValueError:  # includes simplejson.decoder.JSONDecodeError
         logging.error(f"failed to decode output")
-        blocks.append(MarkdownBlock(f"```\n{output}\n```"))
+        blocks.append(MarkdownBlock(f"Failed to processess stack trace(s)"))
+
     finding.add_enrichment(blocks)
     event.add_finding(finding)
 
