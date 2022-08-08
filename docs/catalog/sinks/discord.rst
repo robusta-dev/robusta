@@ -26,14 +26,13 @@ Get your discord webhook url
       :width: 1000
       :align: center
 
-5. Optional. You can enter the name of the bot and the avatar to post the message, but Robusta will change them if allowed.
-6. Copy the URL from the WEBHOOK URL field.
+5. Copy the URL from the WEBHOOK URL field.
 
     .. image:: /images/discord_copy_webhook_url.png
       :width: 1000
       :align: center
 
-7. Select Save.
+6. Select Save.
 
 Configuring the Discord sink
 ------------------------------------------------
@@ -48,4 +47,8 @@ Now we're ready to configure the Discord sink.
             name: personal_discord_sink
             url: <YOUR WEBHOOK URL>
 
-You should now get playbooks results in Discord!
+You should now get playbooks results in Discord! Example is shown below:
+
+    .. image:: /images/discord_example.png
+      :width: 1000
+      :align: center

@@ -1,11 +1,13 @@
-import requests
 from typing import Tuple
+
+import requests
+
+from ...core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT, ROBUSTA_LOGO_URL
 from ...core.reporting.base import *
 from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
-from ...core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT, ROBUSTA_LOGO_URL
+from ...core.sinks.transformer import Transformer
 
-ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 DiscordBlock = Dict[str, Any]
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
@@ -19,9 +21,10 @@ SEVERITY_COLOR_MAP = {
     FindingSeverity.LOW: "16632664",
     FindingSeverity.INFO: "7909721",
 }
-MAX_BLOCK_CHARS = 2000
-MAX_FIELD_CHARS = 1024
-BLANK_CHAR = "\u200b"
+MAX_BLOCK_CHARS = 2048  # Max allowed characters for discord per one embed
+MAX_FIELD_CHARS = 1024  # Max allowed characters for discord per one 'field type' embed
+BLANK_CHAR = "\u200b"  # Discord does not allow us to send empty strings, so we use blank char instead
+
 
 class DiscordDescriptionBlock(BaseBlock):
     """
@@ -39,7 +42,7 @@ class DiscordFieldBlock(BaseBlock):
     inline: bool
 
     def __init__(self, name: str, value: str, inline: bool = False):
-        value = DiscordSender.apply_length_limit(value)
+        value = Transformer.apply_length_limit(value, MAX_FIELD_CHARS)
         super().__init__(name=name, value=value, inline=inline)
 
 
@@ -58,16 +61,9 @@ class DiscordSender:
         self.cluster_name = cluster_name
 
     @classmethod
-    def __add_log_level_icon(cls, title: str, severity: FindingSeverity) -> str:
+    def __add_severity_icon(cls, title: str, severity: FindingSeverity) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
         return f"{icon} {severity.name} - {title}"
-
-    @staticmethod
-    def apply_length_limit(msg: str, max_length: int = MAX_FIELD_CHARS):
-        if len(msg) <= max_length:
-            return msg
-        truncator = "..."
-        return msg[: max_length - len(truncator)] + truncator
 
     @staticmethod
     def __extract_markdown_name(block: MarkdownBlock):
@@ -82,14 +78,7 @@ class DiscordSender:
 
     @staticmethod
     def __transform_markdown_links(text: str):
-        regex = re.compile(r"<.+>")
-        finds = re.findall(regex, text)
-        for find in finds:
-            cropped_url = find.replace("<", "").replace(">", "")
-            url, url_text = cropped_url.split("|")
-            new_url = f"[{url_text}]({url})"
-            text = text.replace(find, new_url)
-        return text
+        return Transformer.to_github_markdown(text, add_angular_brackets=False)
 
     @staticmethod
     def __format_final_message(discord_blocks: List[DiscordBlock],
@@ -104,7 +93,7 @@ class DiscordSender:
             **_add_color_to_block(header_block, msg_color)
         }
         if fields:
-            discord_msg['embeds'].append({"fields": fields, "color": msg_color})
+            discord_msg["embeds"].append({"fields": fields, "color": msg_color})
         return discord_msg
 
     def __to_discord_diff(
@@ -137,7 +126,7 @@ class DiscordSender:
             return [
                 {
                     "name": name or BLANK_CHAR,
-                    "value": self.apply_length_limit(value) or BLANK_CHAR
+                    "value": Transformer.apply_length_limit(value, MAX_FIELD_CHARS) or BLANK_CHAR
                 }
             ]
         elif isinstance(block, FileBlock):
@@ -147,26 +136,26 @@ class DiscordSender:
                 {
                     "name": block.name,
                     "value": block.value,
-                    'inline': block.inline
+                    "inline": block.inline
                 }
             ]
         elif isinstance(block, HeaderBlock):
             return [
                 {
-                    "content": self.apply_length_limit(block.text, 150),
+                    "content": Transformer.apply_length_limit(block.text, 150),
                 }
             ]
         elif isinstance(block, DiscordDescriptionBlock):
             return [
                 {
-                    "description": self.apply_length_limit(block.description),
+                    "description": Transformer.apply_length_limit(block.description, MAX_BLOCK_CHARS),
                 }
             ]
         elif isinstance(block, TableBlock):
             return self.__to_discord(
                 DiscordFieldBlock(
                     name=block.table_name,
-                    value=block.to_markdown(max_chars=MAX_BLOCK_CHARS, apply_table_name=False).text
+                    value=block.to_markdown(max_chars=MAX_BLOCK_CHARS, add_table_header=False).text
                 ), sink_name
             )
         elif isinstance(block, ListBlock):
@@ -174,7 +163,7 @@ class DiscordSender:
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_discord_diff(block, sink_name)
         else:
-            logging.error(
+            logging.warning(
                 f"cannot convert block of type {type(block)} to discord format block: {block}"
             )
             return []  # no reason to crash the entire report
@@ -201,7 +190,7 @@ class DiscordSender:
         output_blocks = []
         header_block = {}
         if title:
-            title = self.__add_log_level_icon(title, severity)
+            title = self.__add_severity_icon(title, severity)
             header_block = self.__to_discord(HeaderBlock(title), sink_name)[0]
         for block in other_blocks:
             output_blocks.extend(self.__to_discord(block, sink_name))
@@ -221,7 +210,7 @@ class DiscordSender:
             response.raise_for_status()
             if attachment_blocks:
                 response = requests.post(self.url, data={
-                    "username": discord_msg['username'],
+                    "username": discord_msg["username"],
                     "avatar_url": ROBUSTA_LOGO_URL,
                 }, files=attachment_blocks)
                 response.raise_for_status()

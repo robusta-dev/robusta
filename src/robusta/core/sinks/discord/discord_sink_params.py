@@ -4,7 +4,6 @@ from ..sink_base_params import SinkBaseParams
 
 class DiscordSinkParams(SinkBaseParams):
     url: str
-    size_limit: int = 2000
 
 
 class DiscordSinkConfigWrapper(SinkConfigBase):
