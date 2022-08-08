@@ -130,7 +130,7 @@ html_css_files = [
 ]
 
 html_js_files = [
-    'posthog.js'
+    'analytics.js'
 ]
 
 html_favicon = "_static/favicon.png"
