@@ -20,6 +20,8 @@ from .webhook.webhook_sink import WebhookSink
 from .webhook.webhook_sink_params import WebhookSinkConfigWrapper
 from .victorops.victorops_sink import VictoropsSink
 from .victorops.victorops_sink_params import VictoropsConfigWrapper
+from .mattermost.mattermost_sink import MattermostSink
+from .mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
 
 class SinkFactory:
     @classmethod
@@ -44,5 +46,7 @@ class SinkFactory:
             return VictoropsSink(sink_config, registry)
         elif isinstance(sink_config, DiscordSinkConfigWrapper):
             return DiscordSink(sink_config, registry)
+        elif isinstance(sink_config, MattermostSinkConfigWrapper):
+            return MattermostSink(sink_config, registry)
         else:
             raise Exception(f"Sink not supported {type(sink_config)}")

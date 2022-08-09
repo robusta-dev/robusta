@@ -3,14 +3,14 @@ import os.path
 from inspect import getmembers
 import manhole
 
-from .telemetry_service import TelemetryService, TelemetryLevel
-from .log_init import logging, init_logging
-from .web import Web
-from ..core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
-from .. import api as robusta_api
-from .config_loader import ConfigLoader
-from ..model.config import Registry
-from ..core.model.env_vars import ROBUSTA_TELEMETRY_ENDPOINT, SEND_ADDITIONAL_TELEMETRY, \
+from robusta.runner.telemetry_service import TelemetryService, TelemetryLevel
+from robusta.runner.log_init import logging, init_logging
+from robusta.runner.web import Web
+from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
+from robusta import api as robusta_api
+from robusta.runner.config_loader import ConfigLoader
+from robusta.model.config import Registry
+from robusta.core.model.env_vars import ROBUSTA_TELEMETRY_ENDPOINT, SEND_ADDITIONAL_TELEMETRY, \
  ENABLE_TELEMETRY, TELEMETRY_PERIODIC_SEC
 
 def main():

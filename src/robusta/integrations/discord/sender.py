@@ -7,6 +7,7 @@ from ...core.reporting.base import *
 from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
 from ...core.sinks.transformer import Transformer
+from itertools import chain
 
 DiscordBlock = Dict[str, Any]
 SEVERITY_EMOJI_MAP = {
@@ -77,7 +78,7 @@ class DiscordSender:
         return title, DiscordSender.__transform_markdown_links(text) or BLANK_CHAR
 
     @staticmethod
-    def __transform_markdown_links(text: str):
+    def __transform_markdown_links(text: str) -> str:
         return Transformer.to_github_markdown(text, add_angular_brackets=False)
 
     @staticmethod
@@ -99,21 +100,14 @@ class DiscordSender:
     def __to_discord_diff(
             self, block: KubernetesDiffBlock, sink_name: str
     ) -> List[DiscordBlock]:
-        # this can happen when a block.old=None or block.new=None - e.g. the resource was added or deleted
-        if not block.diffs:
-            return []
 
-        _blocks = []
-        _blocks.extend(
-            self.__to_discord(
-                ListBlock(
-                    [
-                        f"*{d.formatted_path}*: {d.other_value} :arrow_right: {d.value}"
-                        for d in block.diffs
-                    ]
-                ),
-                sink_name,
-            )
+        transformed_blocks = Transformer.to_markdown_diff(block, use_emoji_sign=True)
+
+        _blocks = list(
+            chain(*[
+                self.__to_discord(transformed_block, sink_name)
+                for transformed_block in transformed_blocks
+            ])
         )
 
         return _blocks

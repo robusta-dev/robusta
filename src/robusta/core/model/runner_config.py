@@ -13,6 +13,7 @@ from ..sinks.slack.slack_sink_params import SlackSinkConfigWrapper
 from ..sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
 from ..sinks.victorops.victorops_sink_params import VictoropsConfigWrapper
 from ..sinks.discord.discord_sink_params import DiscordSinkConfigWrapper
+from ..sinks.mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
 
 
 class PlaybookRepo(BaseModel):
@@ -37,7 +38,8 @@ class RunnerConfig(BaseModel):
                 TelegramSinkConfigWrapper,
                 WebhookSinkConfigWrapper,
                 VictoropsConfigWrapper,
-                DiscordSinkConfigWrapper
+                DiscordSinkConfigWrapper,
+                MattermostSinkConfigWrapper
             ]
         ]
     ]
