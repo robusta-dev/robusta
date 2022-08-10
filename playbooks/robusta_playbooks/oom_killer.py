@@ -40,6 +40,10 @@ def oomkilled_container_graph_enricher(event: PodEvent, params: ResourceGraphEnr
         logging.error(f"cannot run pod_oom_killer_enricher on event with no pod: {event}")
         return
     oomkilled_container = pod_most_recent_oom_killed_container(pod)
+    if not oomkilled_container:
+        logging.error(f"Unable to find oomkilled container")
+        return
+
     container_graph = create_container_graph(params, pod, oomkilled_container.container, show_limit=True )
     event.add_enrichment([container_graph])
 
