@@ -7,8 +7,8 @@ class MattermostSinkParams(SinkBaseParams):
 
 
 class MattermostSinkConfigWrapper(SinkConfigBase):
-    discord_sink: MattermostSinkParams
+    mattermost_sink: MattermostSinkParams
 
     def get_params(self) -> SinkBaseParams:
-        return self.discord_sink
+        return self.mattermost_sink
 

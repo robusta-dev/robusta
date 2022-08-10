@@ -1,29 +1,30 @@
 from itertools import chain
 
 import requests
+import base64
 
-from ...core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT, ROBUSTA_LOGO_URL
+from ...core.model.env_vars import ROBUSTA_LOGO_URL
 from ...core.reporting.base import *
 from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
 from ...core.sinks.transformer import Transformer
 
+extension_regex = re.compile(r"\.[a-z]+$")
 MattermostBlock = Dict[str, Any]
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
-    FindingSeverity.MEDIUM: ":orange_circle:",
-    FindingSeverity.LOW: ":yellow_circle:",
-    FindingSeverity.INFO: ":green_circle:",
+    FindingSeverity.MEDIUM: ":large_orange_circle:",
+    FindingSeverity.LOW: ":large_yellow_circle:",
+    FindingSeverity.INFO: ":large_green_circle:",
 }
 SEVERITY_COLOR_MAP = {
-    FindingSeverity.HIGH: "14495556",
-    FindingSeverity.MEDIUM: "16027661",
-    FindingSeverity.LOW: "16632664",
-    FindingSeverity.INFO: "7909721",
+    FindingSeverity.HIGH: "#d11818",
+    FindingSeverity.MEDIUM: "#e48301",
+    FindingSeverity.LOW: "#ffdc06",
+    FindingSeverity.INFO: "#05aa01",
 }
-MAX_BLOCK_CHARS = 2048  # Max allowed characters for discord per one embed
-MAX_FIELD_CHARS = 1024  # Max allowed characters for discord per one 'field type' embed
-BLANK_CHAR = "\u200b"  # Discord does not allow us to send empty strings, so we use blank char instead
+SUPPORTED_IMAGES_FORMATS = ['png', 'gif', 'jpg', 'jpeg', 'bmp']
+MAX_BLOCK_CHARS = 16383  # Max allowed characters for mattermost
 
 
 class MattermostSender:
@@ -43,20 +44,31 @@ class MattermostSender:
 
     @staticmethod
     def __format_final_message(mattermost_blocks: List[str],
-                               header_block: str, msg_color: Union[str, int]) -> Dict:
+                               header_block: str, attachment_blocks: List[str],
+                               msg_color: str) -> Dict:
+        attachments = [{
+            "title": header_block,
+            "text": "\n".join(mattermost_blocks),
+            "color": msg_color
+        }]
+        attachments.extend([{"image_url": attachment, "color": msg_color} for attachment in attachment_blocks])
         return {
             "username": "Robusta",
             "icon_url": ROBUSTA_LOGO_URL,
-            "title": header_block,
-            "color": msg_color,
-            "text": "\n".join(mattermost_blocks)
+            "attachments": attachments
         }
 
     def __to_mattermost(self, block: BaseBlock, sink_name: str) -> Optional[str]:
         if isinstance(block, MarkdownBlock):
             return Transformer.to_github_markdown(block.text)
-        # elif isinstance(block, FileBlock):
-        #     return [(block.filename, (block.filename, block.contents))]
+        elif isinstance(block, FileBlock):
+            extension = re.findall(extension_regex, block.filename)
+            if not extension:
+                return ""
+            extension = extension[0][1:]
+            if extension not in SUPPORTED_IMAGES_FORMATS:
+                return ""
+            return f"data:image/{extension};base64,{base64.b64encode(block.contents).decode('utf-8')}"
         elif isinstance(block, HeaderBlock):
             return Transformer.apply_length_limit(block.text, 150)
         elif isinstance(block, TableBlock):
@@ -67,7 +79,7 @@ class MattermostSender:
             return self.__to_mattermost_diff(block, sink_name)
         else:
             logging.warning(
-                f"cannot convert block of type {type(block)} to discord format block: {block}"
+                f"cannot convert block of type {type(block)} to mattermost format block: {block}"
             )
             return ""  # no reason to crash the entire report
 
@@ -101,7 +113,9 @@ class MattermostSender:
         )
         attachment_blocks = []
         for block in file_blocks:
-            attachment_blocks.extend(self.__to_mattermost(block, sink_name))
+            transformed_block = self.__to_mattermost(block, sink_name)
+            if transformed_block:
+                attachment_blocks.append(transformed_block)
 
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
@@ -109,11 +123,11 @@ class MattermostSender:
         header_block = {}
         if title:
             title = self.__add_severity_icon(title, severity)
-            header_block = self.__to_mattermost(HeaderBlock(title), sink_name)[0]
+            header_block = self.__to_mattermost(HeaderBlock(title), sink_name)
         for block in other_blocks:
-            output_blocks.extend(self.__to_mattermost(block, sink_name))
+            output_blocks.append(self.__to_mattermost(block, sink_name))
 
-        msg = self.__format_final_message(output_blocks, header_block, msg_color)
+        msg = self.__format_final_message(output_blocks, header_block, attachment_blocks, msg_color)
 
         logging.debug(
             f"--sending to mattermost--\n"
@@ -134,7 +148,7 @@ class MattermostSender:
         else:
             logging.debug(f"Message was delivered successfully")
 
-    def send_finding_to_discord(
+    def send_finding_to_mattermost(
             self,
             finding: Finding,
             sink_name: str,
@@ -156,23 +170,6 @@ class MattermostSender:
 
         for enrichment in finding.enrichments:
             blocks.extend(enrichment.blocks)
-
-        # wide tables aren't displayed properly on discord. looks better in a text file
-        table_blocks = [b for b in blocks if isinstance(b, TableBlock)]
-        for table_block in table_blocks:
-            table_content = table_block.to_table_string()
-            max_table_size = MAX_FIELD_CHARS - 6  # add code markdown characters
-            if len(table_block.headers) > DISCORD_TABLE_COLUMNS_LIMIT or len(table_content) > max_table_size:
-                table_content = table_block.to_table_string(
-                    table_max_width=250
-                )  # bigger max width for file
-                table_name = (
-                    table_block.table_name if table_block.table_name else "data"
-                )
-                blocks.remove(table_block)
-                blocks.append(
-                    FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8"))
-                )
 
         self.__send_blocks_to_mattermost(
             blocks,
