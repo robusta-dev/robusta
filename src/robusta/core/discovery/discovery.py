@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 from typing import List, Dict, Optional
+
 from kubernetes import client
 from kubernetes.client import V1Deployment, V1DaemonSet, V1StatefulSet, V1Job, V1Pod, V1ResourceRequirements, \
     V1DeploymentList, V1ObjectMeta, V1StatefulSetList, V1DaemonSetList, \
@@ -14,13 +15,18 @@ from ...core.model.pods import PodResources, ResourceAttributes, ContainerResour
 class Discovery:
 
     @staticmethod
-    def __create_service_info(meta: V1ObjectMeta, kind: str, images: List[str]) -> ServiceInfo:
+    def __create_service_info(meta: V1ObjectMeta, kind: str, images: List[str],
+                              containers: List[V1Container], volumes: List[V1Volume]) -> ServiceInfo:
+        container_info = [ ContainerInfo.get_container_info(container) for container in containers] if containers else []
+        volume_names = [ volume.name for volume in volumes] if volumes else []
         return ServiceInfo(
             name=meta.name,
             namespace=meta.namespace,
             service_type=kind,
             images=images,
             labels=meta.labels or {},
+            containers=container_info,
+            volumes=volume_names
         )
 
     @staticmethod
@@ -33,28 +39,37 @@ class Discovery:
             deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    deployment.metadata, "Deployment", extract_containers_images(deployment))
+                    deployment.metadata, "Deployment", extract_containers_images(deployment), deployment.spec.template.spec.containers,
+                deployment.spec.template.spec.volumes)
                 for deployment in deployments.items
             ])
 
             statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    statefulset.metadata, "StatefulSet", extract_containers_images(statefulset))
+                    statefulset.metadata, "StatefulSet", extract_containers_images(statefulset),
+                statefulset.spec.template.spec.containers,
+                statefulset.spec.template.spec.volumes)
                 for statefulset in statefulsets.items
             ])
 
             daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    daemonset.metadata, "DaemonSet", extract_containers_images(daemonset))
+                    daemonset.metadata, "DaemonSet", extract_containers_images(daemonset),
+                    daemonset.spec.template.spec.containers,
+                    daemonset.spec.template.spec.volumes
+                )
                 for daemonset in daemonsets.items
             ])
 
             replicasets: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    replicaset.metadata, "ReplicaSet", extract_containers_images(replicaset))
+                    replicaset.metadata, "ReplicaSet", extract_containers_images(replicaset),
+                    replicaset.spec.template.spec.containers,
+                    replicaset.spec.template.spec.volumes
+                )
                 for replicaset in replicasets.items if not replicaset.metadata.owner_references
             ])
 
@@ -62,7 +77,10 @@ class Discovery:
             pod_items = pods.items
             active_services.extend([
                 Discovery.__create_service_info(
-                    pod.metadata, "Pod", extract_containers_images(pod))
+                    pod.metadata, "Pod", extract_containers_images(pod),
+                    pod.spec.containers,
+                    pod.spec.volumes
+                )
                 for pod in pod_items if not pod.metadata.owner_references
             ])
         except Exception:

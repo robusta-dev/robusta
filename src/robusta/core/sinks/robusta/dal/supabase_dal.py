@@ -131,6 +131,7 @@ class SupabaseDal:
             "images": service.images,
             "labels": service.labels,
             "service_key": service.get_service_key(),
+            "config": service.get_service_json(),
             "update_time": "now()",
         }
 

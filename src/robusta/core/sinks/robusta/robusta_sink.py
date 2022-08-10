@@ -130,15 +130,6 @@ class RobustaSink(SinkBase):
                 f"Error getting events history", exc_info=True
             )
 
-    @staticmethod
-    def __create_service_info(meta: V1ObjectMeta, kind: str, images: List[str]) -> ServiceInfo:
-        return ServiceInfo(
-            name=meta.name,
-            namespace=meta.namespace,
-            service_type=kind,
-            images=images,
-            labels=meta.labels or {},
-        )
 
     def __discover_resources(self):
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
