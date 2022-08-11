@@ -59,8 +59,6 @@ def pod_oom_killer_enricher(
     if not pod:
         logging.error(f"cannot run pod_oom_killer_enricher on event with no pod: {event}")
         return
-    resource_requests = pod_requests(pod)
-    resource_limits = pod_limits(pod)
 
     finding = Finding(
         title=f"Pod {pod.metadata.name} in namespace {pod.metadata.namespace} OOMKilled results",
@@ -102,7 +100,7 @@ def pod_oom_killer_enricher(
             labels.append(("Container finished at", oom_killed_status.terminated.finishedAt))
     table_block = TableBlock(
         [[k, v] for (k, v) in labels],
-        ["label", "value"],
+        ["field", "value"],
         table_name="*Pod and Node OOMKilled data*",
     )
     finding.add_enrichment([table_block])
@@ -225,12 +223,11 @@ class OomKillsExtractor:
         for c_status in pod.status.containerStatuses:
             # Ignore pods that were not oom killed
             container = get_oom_killed_container(c_status)
-            state = container.state
-            if state is None:
+            if not container or not container.state:
                 continue
 
             # Ignore old oom kills
-            dt = parse_kubernetes_datetime_to_ms(state.terminated.finishedAt)
+            dt = parse_kubernetes_datetime_to_ms(container.state.terminated.finishedAt)
             oom_kill_from = datetime.fromtimestamp(dt / 1000)
             now = datetime.now()
             if now - oom_kill_from > new_oom_kills_duration:

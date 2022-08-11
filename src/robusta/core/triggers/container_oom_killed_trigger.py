@@ -1,6 +1,6 @@
 from typing import List
 
-from hikaru.model import Pod
+from hikaru.model import Pod, ContainerStatus
 
 from .oom_killed_trigger_base import OOMKilledTriggerBase, Exclude
 from ...core.playbooks.base_trigger import TriggerEvent
@@ -23,28 +23,6 @@ class ContainerOOMKilledTrigger(OOMKilledTriggerBase):
             exclude=exclude,
         )
 
-    def should_fire(self, event: TriggerEvent, playbook_id: str):
-        return super().should_fire(event, playbook_id)
-
-    def get_relevant_oomkilled_containers(self, pod: Pod):
-        containers = pod.status.containerStatuses + pod.status.initContainerStatuses
-        if not self.exclude:
-            return containers
-        for selector in self.exclude:
-            namespace = None if "namespace" not in selector else selector["namespace"]
-            name = None if "name" not in selector else selector["name"]
-
-            if not namespace and not name:
-                # bad config
-                continue
-            namespace_match = namespace and namespace == pod.metadata.namespace
-            if namespace and not namespace_match:
-                # this selector isnt the current namespace
-                continue
-            if namespace_match and not name:
-                # this selector is for all containers on this namespace
-                return False
-            # either namespace_match or namespace isnt defined for this name
-            containers = [container for container in containers if not container.name.startswith(name)]
-        # pod not excluded
-        return containers
+    def get_relevant_oomkilled_container_statuses(self, pod: Pod) -> List[ContainerStatus]:
+        statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+        return [status for status in statuses if not self.is_name_namespace_excluded(status.name, pod.metadata.namespace)]
