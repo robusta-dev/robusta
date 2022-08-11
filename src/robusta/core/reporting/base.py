@@ -147,7 +147,7 @@ class Finding(Filterable):
         self.fingerprint = fingerprint
         self.starts_at = starts_at if starts_at else datetime.now()
         self.ends_at = ends_at
-
+        self.dirty = False
 
     @property
     def attribute_map(self) -> Dict[str, str]:
@@ -163,7 +163,10 @@ class Finding(Filterable):
             "name": str(self.subject.name),
         }
 
-    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
+    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None, suppress_warning: bool = False):
+        if self.dirty and not suppress_warning:
+            logging.warning("Updating a finding after it was added to the event is not allowed!")
+
         if not enrichment_blocks:
             return
         if annotations is None:
@@ -173,20 +176,19 @@ class Finding(Filterable):
     def __str__(self):
         return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
 
-    def get_prometheus_silence_url(self, cluster_id: str) -> Dict[str,str]:
-        labels: Dict[str,str] = {}
-        labels["alertname"] = self.aggregation_key
-        labels["cluster"] = cluster_id
+    def get_prometheus_silence_url(self, cluster_id: str) -> str:
+        labels: Dict[str, str] = {
+            "alertname": self.aggregation_key,
+            "cluster": cluster_id
+        }
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
 
-        kind : str = self.subject.subject_type.value
+        kind: str = self.subject.subject_type.value
         if kind and self.subject.name:
             labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
-        
+
         uri = get(f"{ROBUSTA_UI_DOMAIN}/silences/create", labels)
         return uri.url
-
-
