@@ -1,9 +1,11 @@
 from ..sink_config import SinkConfigBase
 from ..sink_base_params import SinkBaseParams
+from typing import Optional
 
 
 class MattermostSinkParams(SinkBaseParams):
     url: str
+    channel: Optional[str]
 
 
 class MattermostSinkConfigWrapper(SinkConfigBase):
@@ -11,4 +13,3 @@ class MattermostSinkConfigWrapper(SinkConfigBase):
 
     def get_params(self) -> SinkBaseParams:
         return self.mattermost_sink
-

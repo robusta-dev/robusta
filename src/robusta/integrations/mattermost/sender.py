@@ -29,21 +29,21 @@ MAX_BLOCK_CHARS = 16383  # Max allowed characters for mattermost
 
 class MattermostSender:
     def __init__(
-            self, url: str, cluster_name: str
+            self, url: str, cluster_name: str, channel: Optional[str]
     ):
         """
         Set the Mattermost webhook url.
         """
         self.url = url
         self.cluster_name = cluster_name
+        self.channel = channel
 
     @classmethod
     def __add_severity_icon(cls, title: str, severity: FindingSeverity) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
         return f"{icon} {severity.name} - {title}"
 
-    @staticmethod
-    def __format_final_message(mattermost_blocks: List[str],
+    def __format_final_message(self, mattermost_blocks: List[str],
                                header_block: str, attachment_blocks: List[str],
                                msg_color: str) -> Dict:
         attachments = [{
@@ -52,11 +52,15 @@ class MattermostSender:
             "color": msg_color
         }]
         attachments.extend([{"image_url": attachment, "color": msg_color} for attachment in attachment_blocks])
-        return {
+        msg = {
             "username": "Robusta",
             "icon_url": ROBUSTA_LOGO_URL,
             "attachments": attachments
         }
+        if self.channel:
+            msg['channel'] = self.channel
+
+        return msg
 
     def __to_mattermost(self, block: BaseBlock, sink_name: str) -> Optional[str]:
         if isinstance(block, MarkdownBlock):

@@ -9,9 +9,11 @@ class MattermostSink(SinkBase):
         super().__init__(sink_config.mattermost_sink, registry)
 
         self.url = sink_config.mattermost_sink.url
+        self.channel = sink_config.mattermost_sink.channel
         self.sender = MattermostSender(
             self.url,
-            self.cluster_name
+            self.cluster_name,
+            self.channel
         )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
