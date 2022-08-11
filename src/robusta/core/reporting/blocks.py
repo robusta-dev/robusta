@@ -283,8 +283,9 @@ class TableBlock(BaseBlock):
         # This is just to assert all row column values are strings. Tabulate might fail on other types
         return [list(map(lambda column_value: str(column_value), row)) for row in rows]
 
-    def to_markdown(self, max_chars=None) -> MarkdownBlock:
+    def to_markdown(self, max_chars=None, add_table_header: bool = True) -> MarkdownBlock:
         table_header = f"{self.table_name}\n" if self.table_name else ""
+        table_header = "" if not add_table_header else table_header
         prefix = f"{table_header}```\n"
         suffix = f"\n```"
         table_contents = self.to_table_string()

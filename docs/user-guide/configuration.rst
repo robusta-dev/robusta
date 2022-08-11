@@ -184,6 +184,9 @@ Here is a full example showing how to configure all possible sinks:
         name: telegram_sink
         bot_token: your bot token
         chat_id: your chat id
+    - discord_sink:
+        name: discord_sink
+        url: discord_webhook_url
     - webhook_sink:
         name: webhook_sink
         url: "https://my-webhook-service.com/robusta-alerts"

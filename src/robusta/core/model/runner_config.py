@@ -12,6 +12,7 @@ from ..sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper
 from ..sinks.slack.slack_sink_params import SlackSinkConfigWrapper
 from ..sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
 from ..sinks.victorops.victorops_sink_params import VictoropsConfigWrapper
+from ..sinks.discord.discord_sink_params import DiscordSinkConfigWrapper
 
 
 class PlaybookRepo(BaseModel):
@@ -35,7 +36,8 @@ class RunnerConfig(BaseModel):
                 OpsGenieSinkConfigWrapper,
                 TelegramSinkConfigWrapper,
                 WebhookSinkConfigWrapper,
-                VictoropsConfigWrapper
+                VictoropsConfigWrapper,
+                DiscordSinkConfigWrapper
             ]
         ]
     ]
