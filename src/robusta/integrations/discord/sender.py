@@ -8,7 +8,6 @@ from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
 from ...core.sinks.transformer import Transformer
 
-DiscordBlock = Dict[str, Any]
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
     FindingSeverity.MEDIUM: ":orange_circle:",
@@ -26,14 +25,32 @@ MAX_FIELD_CHARS = 1024  # Max allowed characters for discord per one 'field type
 BLANK_CHAR = "\u200b"  # Discord does not allow us to send empty strings, so we use blank char instead
 
 
-class DiscordDescriptionBlock(BaseBlock):
+class DiscordBlock(BaseBlock):
+    def to_msg(self) -> Dict:
+        return {}
+
+
+class DiscordDescriptionBlock(DiscordBlock):
     """
     Discord description block
     """
     description: str
 
+    def to_msg(self) -> Dict:
+        return {"description": Transformer.apply_length_limit(self.description, MAX_BLOCK_CHARS)}
 
-class DiscordFieldBlock(BaseBlock):
+
+class DiscordHeaderBlock(DiscordBlock):
+    """
+    Discord description block
+    """
+    content: str
+
+    def to_msg(self) -> Dict:
+        return {"content": self.content}
+
+
+class DiscordFieldBlock(DiscordBlock):
     """
     Discord field block
     """
@@ -45,8 +62,15 @@ class DiscordFieldBlock(BaseBlock):
         value = Transformer.apply_length_limit(value, MAX_FIELD_CHARS)
         super().__init__(name=name, value=value, inline=inline)
 
+    def to_msg(self) -> Dict:
+        return {
+            "name": self.name,
+            "value": self.value,
+            "inline": self.inline
+        }
 
-def _add_color_to_block(block: DiscordBlock, msg_color: str):
+
+def _add_color_to_block(block: Dict, msg_color: str):
     return {**block, "color": msg_color}
 
 
@@ -82,13 +106,15 @@ class DiscordSender:
 
     @staticmethod
     def __format_final_message(discord_blocks: List[DiscordBlock],
-                               header_block: DiscordBlock, msg_color: Union[str, int]) -> Dict:
-        fields = [block for block in discord_blocks if 'value' in block]
+                               msg_color: Union[str, int]) -> Dict:
+        header_block = next((block.to_msg() for block in discord_blocks if isinstance(block, DiscordHeaderBlock)), {})
+        fields = [block.to_msg() for block in discord_blocks if isinstance(block, DiscordFieldBlock)]
         discord_msg = {
             "username": "Robusta",
             "avatar_url": ROBUSTA_LOGO_URL,
             "embeds": [
-                *[_add_color_to_block(block, msg_color) for block in discord_blocks if "description" in block]
+                *[_add_color_to_block(block.to_msg(), msg_color) for block in discord_blocks
+                  if isinstance(block, DiscordDescriptionBlock)]
             ],
             **_add_color_to_block(header_block, msg_color)
         }
@@ -123,33 +149,31 @@ class DiscordSender:
             if not block.text:
                 return []
             name, value = self.__extract_markdown_name(block)
-            return [
-                {
-                    "name": name or BLANK_CHAR,
-                    "value": Transformer.apply_length_limit(value, MAX_FIELD_CHARS) or BLANK_CHAR
-                }
-            ]
+            return [DiscordFieldBlock(
+                name=name or BLANK_CHAR,
+                value=Transformer.apply_length_limit(value, MAX_FIELD_CHARS) or BLANK_CHAR
+            )]
         elif isinstance(block, FileBlock):
             return [(block.filename, (block.filename, block.contents))]
         elif isinstance(block, DiscordFieldBlock):
             return [
-                {
-                    "name": block.name,
-                    "value": block.value,
-                    "inline": block.inline
-                }
+                DiscordFieldBlock(
+                    name=block.name,
+                    value=block.value,
+                    inline=block.inline
+                )
             ]
         elif isinstance(block, HeaderBlock):
             return [
-                {
-                    "content": Transformer.apply_length_limit(block.text, 150),
-                }
+                DiscordHeaderBlock(
+                    content=Transformer.apply_length_limit(block.text, 150),
+                )
             ]
         elif isinstance(block, DiscordDescriptionBlock):
             return [
-                {
-                    "description": Transformer.apply_length_limit(block.description, MAX_BLOCK_CHARS),
-                }
+                DiscordDescriptionBlock(
+                    description=Transformer.apply_length_limit(block.description, MAX_BLOCK_CHARS),
+                )
             ]
         elif isinstance(block, TableBlock):
             return self.__to_discord(
@@ -188,14 +212,13 @@ class DiscordSender:
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
         output_blocks = []
-        header_block = {}
         if title:
             title = self.__add_severity_icon(title, severity)
-            header_block = self.__to_discord(HeaderBlock(title), sink_name)[0]
+            output_blocks.extend(self.__to_discord(HeaderBlock(title), sink_name))
         for block in other_blocks:
             output_blocks.extend(self.__to_discord(block, sink_name))
 
-        discord_msg = self.__format_final_message(output_blocks, header_block, msg_color)
+        discord_msg = self.__format_final_message(output_blocks, msg_color)
 
         logging.debug(
             f"--sending to discord--\n"
