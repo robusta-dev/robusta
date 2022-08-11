@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from abc import abstractmethod
 
 from hikaru.model import Pod, ContainerStatus
@@ -33,7 +33,7 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
             namespace_prefix: str = None,
             labels_selector: str = None,
             rate_limit: int = 0,
-            exclude: List[Exclude] = None,
+            exclude: List[Dict] = None,
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -42,7 +42,7 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
         )
         self.rate_limit = rate_limit
         # pydantic not automatically converting exclude, exclude here is just a list of dicts according to runtime
-        self.exclude = [Exclude(**excluded) for excluded in exclude]
+        self.exclude = [Exclude(**excluded) for excluded in exclude] if exclude else []
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         should_fire = super().should_fire(event, playbook_id)
@@ -84,9 +84,6 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
 
     def is_name_namespace_excluded(self, name: str, namespace: str) -> bool:
         for selector in self.exclude:
-            if not selector.namespace and not selector.name:
-                # bad config
-                return False
             namespace_excluded = self.__is_excluded(selector.namespace, namespace, False)
             name_excluded = self.__is_excluded(selector.name, name, True)
             # match
