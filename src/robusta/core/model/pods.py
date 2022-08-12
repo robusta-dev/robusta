@@ -1,6 +1,6 @@
 from enum import Enum
-from typing import Optional
-from hikaru.model import Pod, ContainerState, ContainerStatus
+from typing import Optional, List
+from hikaru.model import Pod, ContainerState, ContainerStatus, Container
 from pydantic import BaseModel
 from ...integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
 
@@ -16,6 +16,48 @@ k8s_memory_factors = {
     "Pi": 1024*1024*1024*1024,
     "Ei": 1024*1024*1024*1024*1024
 }
+
+ResourceAttributes = Enum("ResourceAttributes", "requests limits")
+
+class ContainerResources(BaseModel):
+    cpu: float = 0
+    memory: int = 0
+
+class PodContainer:
+    state: ContainerState
+    container: Container
+
+    def __init__(self, pod: Pod, state: ContainerState, container_name: str):
+        self.state = state
+        self.container = PodContainer.get_pod_container_by_name(pod, container_name)
+
+    @staticmethod
+    def get_memory_limits_and_requests_for_container(container: Container):
+        requests = PodContainer.get_container_memory_resource(container, ResourceAttributes.requests)
+        limits = PodContainer.get_container_memory_resource(container, ResourceAttributes.limits)
+        return requests.memory, limits.memory
+
+    @staticmethod
+    def get_container_memory_resource(container: Container, resource_type: ResourceAttributes):
+        try:
+            requests = container.object_at_path(["resources", resource_type.name])
+            mem_req = PodResources.parse_mem(
+                requests.get("memory", "0Mi")
+            )
+            cpu_req = PodResources.parse_cpu(
+                requests.get("cpu", 0.0)
+            )
+            return ContainerResources(cpu=cpu_req, memory=mem_req)
+        except Exception:
+            # no resources on container, object_at_path throws error
+            return ContainerResources()
+
+    @staticmethod
+    def get_pod_container_by_name(pod: Pod, container_name: str) -> Optional[Container]:
+        for container in pod.spec.containers:
+            if container_name == container.name:
+                return container
+        return None
 
 
 class PodResources(BaseModel):
@@ -53,9 +95,6 @@ def pod_restarts(pod: Pod) -> int:
     return sum([status.restartCount for status in pod.status.containerStatuses])
 
 
-ResourceAttributes = Enum("ResourceAttributes", "requests limits")
-
-
 def pod_requests(pod: Pod) -> PodResources:
     return pod_resources(pod, ResourceAttributes.requests)
 
@@ -88,41 +127,41 @@ def pod_resources(pod: Pod, resource_attribute: ResourceAttributes) -> PodResour
     )
 
 
-def pod_most_recent_oom_killed_state(pod: Pod, only_current_state: bool = False) -> Optional[ContainerState]:
+def find_most_recent_oom_killed_container(pod: Pod, container_statuses: List[ContainerStatus], only_current_state: bool = False) -> Optional[PodContainer]:
+    latest_oom_kill_container = None
+    for container_status in container_statuses:
+        oom_killed_container = get_oom_killed_container(pod, container_status, only_current_state)
+        if not latest_oom_kill_container or get_oom_kill_time(oom_killed_container) > get_oom_kill_time(latest_oom_kill_container):
+            latest_oom_kill_container = oom_killed_container
+    return latest_oom_kill_container
+
+
+def pod_most_recent_oom_killed_container(pod: Pod, only_current_state: bool = False) -> Optional[PodContainer]:
     if not pod.status:
         return None
-    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
-    all_oom_kills = [
-        get_oom_killed_state(container_status, only_current_state)
-        for container_status in all_statuses
-        if get_oom_killed_state(container_status, only_current_state)
-    ]
-    if not all_oom_kills:
-        return None
-    if len(all_oom_kills) == 1:
-        return all_oom_kills[0]
-    most_recent_oomkill_time = max(map(get_oom_kill_time, all_oom_kills))
-    for state in all_oom_kills:
-        if get_oom_kill_time(state) == most_recent_oomkill_time:
-            return state
+    all_container_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+    return find_most_recent_oom_killed_container(pod, container_statuses=all_container_statuses, only_current_state=only_current_state)
 
 
-def get_oom_kill_time(state: ContainerState) -> float:
+def get_oom_kill_time(container: PodContainer) -> float:
+    if not container:
+        return 0
+    state = container.state
     if not state.terminated or not state.terminated.finishedAt:
         return 0
     return parse_kubernetes_datetime_to_ms(state.terminated.finishedAt)
 
 
-def get_oom_killed_state(
-    c_status: ContainerStatus, only_current_state: bool = False
-) -> Optional[ContainerState]:
+def get_oom_killed_container(pod: Pod,
+                             c_status: ContainerStatus,
+                             only_current_state: bool = False) -> Optional[PodContainer]:
     # Check if the container OOMKilled by inspecting the state field
     if is_state_in_oom_status(c_status.state):
-        return c_status.state
+        return PodContainer(pod, c_status.state, c_status.name)
 
     # Check if the container OOMKilled by inspecting the lastState field
     if is_state_in_oom_status(c_status.lastState) and not only_current_state:
-        return c_status.lastState
+        return PodContainer(pod, c_status.lastState, c_status.name)
 
     # OOMKilled state not found
     return None
