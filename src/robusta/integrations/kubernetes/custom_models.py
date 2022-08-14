@@ -6,6 +6,7 @@ import hikaru
 import json
 import yaml
 from hikaru.model import *  # *-import is necessary for hikaru subclasses to work
+from kubernetes.client import V1Container, V1Volume
 from pydantic import BaseModel
 from ...core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
 from .api_client_utils import *
@@ -90,7 +91,7 @@ def extract_images(k8s_obj: HikaruDocumentBase) -> Optional[Dict[str, str]]:
     return name_to_version
 
 
-def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
+def extract_containers_list(k8s_obj: HikaruDocumentBase) -> List[V1Container]:
     containers_paths = [
         [
             "spec",
@@ -100,13 +101,39 @@ def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
         ],  # deployment, replica set, daemon set, stateful set, job
         ["spec", "containers"],  # pod
     ]
-    images = []
     for path in containers_paths:
         try:
-            for container in k8s_obj.object_at_path(path):
-                images.append(container.image)
+            return k8s_obj.object_at_path(path)
         except Exception:  # Path not found on object, not a real error
             pass
+    return []
+
+
+def extract_volumes_list(k8s_obj: HikaruDocumentBase) -> List[V1Volume]:
+    containers_paths = [
+        [
+            "spec",
+            "template",
+            "spec",
+            "volumes",
+        ],  # deployment, replica set, daemon set, stateful set, job
+        ["spec", "volumes"],  # pod
+    ]
+    for path in containers_paths:
+        try:
+            return k8s_obj.object_at_path(path)
+        except Exception:  # Path not found on object, not a real error
+            pass
+    return []
+
+
+def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
+    images = []
+    try:
+        for container in extract_containers_list(k8s_obj):
+            images.append(container.image)
+    except Exception:  # Path not found on object, not a real error
+        pass
 
     return images
 

@@ -2,6 +2,9 @@ from robusta.api import *
 from robusta.core.discovery.top_service_resolver import TopServiceResolver, TopLevelResource
 from robusta.core.playbooks.common import get_events_list, get_event_timestamp
 
+from src.robusta.core.model.services import ContainerInfo, VolumeInfo
+from src.robusta.integrations.kubernetes.custom_models import extract_containers_list, extract_volumes_list
+
 
 @action
 def cluster_discovery_updates(event: KubernetesAnyChangeEvent):

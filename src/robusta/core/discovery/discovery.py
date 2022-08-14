@@ -15,7 +15,7 @@ from ...core.model.pods import PodResources, ResourceAttributes, ContainerResour
 class Discovery:
 
     @staticmethod
-    def __create_service_info(meta: V1ObjectMeta, kind: str, images: List[str],
+    def __create_service_info(meta: V1ObjectMeta, kind: str,
                               containers: List[V1Container], volumes: List[V1Volume]) -> ServiceInfo:
         container_info = [ ContainerInfo.get_container_info(container) for container in containers] if containers else []
         volume_names = [ VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
@@ -23,7 +23,6 @@ class Discovery:
             name=meta.name,
             namespace=meta.namespace,
             service_type=kind,
-            images=images,
             labels=meta.labels or {},
             containers=container_info,
             volumes=volume_names
@@ -39,7 +38,7 @@ class Discovery:
             deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    deployment.metadata, "Deployment", extract_containers_images(deployment), deployment.spec.template.spec.containers,
+                    deployment.metadata, "Deployment", deployment.spec.template.spec.containers,
                 deployment.spec.template.spec.volumes)
                 for deployment in deployments.items
             ])
@@ -47,7 +46,7 @@ class Discovery:
             statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    statefulset.metadata, "StatefulSet", extract_containers_images(statefulset),
+                    statefulset.metadata, "StatefulSet",
                 statefulset.spec.template.spec.containers,
                 statefulset.spec.template.spec.volumes)
                 for statefulset in statefulsets.items
@@ -56,7 +55,7 @@ class Discovery:
             daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    daemonset.metadata, "DaemonSet", extract_containers_images(daemonset),
+                    daemonset.metadata, "DaemonSet",
                     daemonset.spec.template.spec.containers,
                     daemonset.spec.template.spec.volumes
                 )
@@ -66,7 +65,7 @@ class Discovery:
             replicasets: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    replicaset.metadata, "ReplicaSet", extract_containers_images(replicaset),
+                    replicaset.metadata, "ReplicaSet",
                     replicaset.spec.template.spec.containers,
                     replicaset.spec.template.spec.volumes
                 )
@@ -77,7 +76,7 @@ class Discovery:
             pod_items = pods.items
             active_services.extend([
                 Discovery.__create_service_info(
-                    pod.metadata, "Pod", extract_containers_images(pod),
+                    pod.metadata, "Pod",
                     pod.spec.containers,
                     pod.spec.volumes
                 )
@@ -125,25 +124,6 @@ class Discovery:
 
 
 # This section below contains utility related to k8s python api objects (rather than hikaru)
-def extract_containers_images(resource) -> List[str]:
-    """Extract images from k8s python api object (not hikaru)"""
-    try:
-        containers = []
-        if isinstance(resource, V1Deployment) \
-                or isinstance(resource, V1DaemonSet) \
-                or isinstance(resource, V1DaemonSet) \
-                or isinstance(resource, V1StatefulSet) \
-                or isinstance(resource, V1Job):
-            containers = resource.spec.template.spec.containers
-        elif isinstance(resource, V1Pod):
-            containers = resource.spec.containers
-
-        return [container.image for container in containers]
-    except Exception:  # may fail if one of the attributes is None
-        logging.error(f"Failed to extract container images {resource}", exc_info=True)
-    return []
-
-
 def k8s_pod_requests(pod: V1Pod) -> PodResources:
     """Extract requests from k8s python api pod (not hikaru)"""
     return __pod_resources(pod, ResourceAttributes.requests)

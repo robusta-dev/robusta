@@ -85,8 +85,11 @@ class VolumeInfo(BaseModel):
     @staticmethod
     def get_volume_info(volume: V1Volume):
         claim_name = ""
-        if volume.persistent_volume_claim and volume.persistent_volume_claim.claim_name:
-            claim_name = volume.persistent_volume_claim.claim_name
+        pvc_name_path = ["persistent_volume_claim", "claim_name"],  # pod
+        try:
+            claim_name = volume.object_at_path(pvc_name_path)
+        except Exception:  # Path not found on object, not a real error
+            pass
         return VolumeInfo(name=volume.name, pvc_name=claim_name)
 
 
@@ -96,7 +99,6 @@ class ServiceInfo(BaseModel):
     namespace: str
     classification: str = "None"
     deleted: bool = False
-    images: List[str]
     labels: Dict[str, str]
     containers: Optional[List[ContainerInfo]]
     volumes: Optional[List[VolumeInfo]]
@@ -107,7 +109,16 @@ class ServiceInfo(BaseModel):
     def get_service_json(self):
         containers_json = [container.json() for container in self.containers] if self.containers else []
         volumes_json = [volumes.json() for volumes in self.volumes] if self.volumes else []
-        return {"images": self.images, "labels": self.labels, "containers": containers_json, "volumes": volumes_json}
+        return {"labels": self.labels, "containers": containers_json, "volumes": volumes_json}
+
+    @staticmethod
+    def parse_labels(service_json):
+        if not service_json:
+            return []
+        labels = service_json.get("labels")
+        if not labels:
+            return []
+        return labels
 
     @staticmethod
     def parse_containers(service_json):
@@ -115,7 +126,7 @@ class ServiceInfo(BaseModel):
         if not service_json:
             return return_containers
         containers = service_json.get("containers")
-        if not service_json:
+        if not containers:
             return return_containers
         for container_json in containers:
             try:
@@ -131,7 +142,7 @@ class ServiceInfo(BaseModel):
         if not service_json:
             return return_volumes
         volumes = service_json.get("volumes")
-        if not service_json:
+        if not volumes:
             return return_volumes
         for volume_json in volumes:
             try:
@@ -151,7 +162,6 @@ class ServiceInfo(BaseModel):
                 and self.namespace == other.namespace
                 and self.classification == other.classification
                 and self.deleted == other.deleted
-                and sorted(self.images) == sorted(other.images)
                 and sorted(self.containers, key=lambda x: x.name) == sorted(other.containers, key=lambda x: x.name)
                 and sorted(self.volumes, key=lambda x: x.name) == sorted(other.volumes, key=lambda x: x.name)
                 and len(self.labels.keys()) == len(other.labels.keys())

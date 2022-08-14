@@ -128,7 +128,6 @@ class SupabaseDal:
             "cluster": self.cluster,
             "account_id": self.account_id,
             "deleted": service.deleted,
-            "images": service.images,
             "labels": service.labels,
             "service_key": service.get_service_key(),
             "config": service.get_service_json(),
@@ -153,7 +152,7 @@ class SupabaseDal:
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
             self.client.table(SERVICES_TABLE)
-            .select("name", "type", "namespace", "classification", "images", "labels", "config")
+            .select("name", "type", "namespace", "classification", "config")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -171,8 +170,7 @@ class SupabaseDal:
                 service_type=service["type"],
                 namespace=service["namespace"],
                 classification=service["classification"],
-                images=service["images"] if service["images"] is not None else [],
-                labels=service["labels"] if service["labels"] is not None else {},
+                labels=ServiceInfo.parse_labels(service.get("config")),
                 containers=ServiceInfo.parse_containers(service.get("config")),
                 volumes=ServiceInfo.parse_volumes(service.get("config"))
             )
