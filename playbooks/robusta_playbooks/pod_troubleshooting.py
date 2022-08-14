@@ -6,23 +6,17 @@ from robusta.api import *
 from typing import List
 
 
-class StackTraceObject:
+class StackTraceObject(BaseModel):
     """
     :var time: timestamp of trace.
     :var status: success if succeeded in getting stack traces
     :var error: the exception object from the debugger
     :var trace: on success the stack traces of all threads, on error the stack trace of the exception
     """
-    time: float
-    status: str
-    error: str
-    trace: str
-
-    def __init__(self, json_object):
-        self.time = float(json_object.get('time'))
-        self.status = json_object.get('status')
-        self.error = json_object.get('error', '')
-        self.trace = json_object.get('trace')
+    time: float = None
+    status: str = None
+    error: str = None
+    trace: str = None
 
 
 class StartProfilingParams(ActionParams):
@@ -323,7 +317,7 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     try:
         output_json = json.loads(output)
         SUCCESS_STATUS = "success"
-        first_stack_trace_obj = StackTraceObject(output_json[0]) if len(output_json) >= 1 else None
+        first_stack_trace_obj = StackTraceObject(**output_json[0]) if len(output_json) >= 1 else None
         if len(output_json) == 0 or (len(output_json) == 1 and
                                      first_stack_trace_obj.status != SUCCESS_STATUS):
             # no stack traces returned or only one with error
@@ -346,7 +340,7 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
             # print multiple stack traces to file
             clean_output = []
             for trace_object_json in output_json:
-                trace_object = StackTraceObject(trace_object_json)
+                trace_object = StackTraceObject(**trace_object_json)
                 if trace_object.status != SUCCESS_STATUS:
                     # the full python stack trace of the error will appear here
                     logging.error(f'Failed to get stack trace, debugger error {trace_object.error} at {trace_object.trace}')
