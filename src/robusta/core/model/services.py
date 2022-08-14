@@ -17,9 +17,6 @@ class EnvVar(BaseModel):
     name: str
     value: str
 
-    def get_json(self):
-        return {"name": self.name, "value": self.value}
-
     def __eq__(self, other):
         if not isinstance(other, EnvVar):
             return NotImplemented
@@ -29,9 +26,6 @@ class EnvVar(BaseModel):
 class Resources(BaseModel):
     limits: Dict[str, str]
     requests: Dict[str, str]
-
-    def get_json(self):
-        return {"limits": self.limits, "requests": self.requests}
 
     def __eq__(self, other):
         if not isinstance(other, Resources):
@@ -52,10 +46,6 @@ class ContainerInfo(BaseModel):
                 self.name == other.name
                 and self.image == other.image
                 and self.resources == other.resources)
-
-    def get_json(self):
-        env_json = [env_var.get_json() for env_var in self.env] if self.env else []
-        return {"name": self.name, "image": self.image, "resources": self.resources.get_json(), "env": env_json}
 
     @staticmethod
     def container_info_from_json(image_json):
@@ -92,12 +82,6 @@ class VolumeInfo(BaseModel):
                 self.name == other.name
                 and self.pvc_name == other.pvc_name)
 
-    def get_json(self):
-        volume_info_json = {"name": self.name}
-        if self.pvc_name:
-            volume_info_json["pvc_name"] = self.pvc_name
-        return volume_info_json
-
     @staticmethod
     def get_volume_info(volume: V1Volume):
         claim_name = ""
@@ -121,8 +105,8 @@ class ServiceInfo(BaseModel):
         return f"{self.namespace}/{self.service_type}/{self.name}"
 
     def get_service_json(self):
-        containers_json = [container.get_json() for container in self.containers] if self.containers else []
-        volumes_json = [volumes.get_json() for volumes in self.volumes] if self.volumes else []
+        containers_json = [container.json() for container in self.containers] if self.containers else []
+        volumes_json = [volumes.json() for volumes in self.volumes] if self.volumes else []
         return {"images": self.images, "labels": self.labels, "containers": containers_json, "volumes": volumes_json}
 
     @staticmethod
@@ -135,9 +119,10 @@ class ServiceInfo(BaseModel):
             return return_containers
         for container_json in containers:
             try:
-                return_containers.append(ContainerInfo(**container_json))
-            except:
-                logging.error(f"Failed to parse container {container_json}")
+                container_json2 = json.loads(container_json)
+                return_containers.append(ContainerInfo(**container_json2))
+            except Exception as e:
+                logging.error(f"Failed to parse container {container_json}", exc_info=True)
         return return_containers
 
     @staticmethod
@@ -150,9 +135,10 @@ class ServiceInfo(BaseModel):
             return return_volumes
         for volume_json in volumes:
             try:
-                return_volumes.append(VolumeInfo(**volume_json))
-            except:
-                logging.error(f"Failed to parse volume {volume_json}")
+                volume_json2 = json.loads(volume_json)
+                return_volumes.append(VolumeInfo(**volume_json2))
+            except Exception as e:
+                logging.error(f"Failed to parse volume {volume_json}", exc_info=True)
         return return_volumes
 
     def __eq__(self, other):
