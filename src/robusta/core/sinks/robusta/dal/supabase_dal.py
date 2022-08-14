@@ -173,7 +173,8 @@ class SupabaseDal:
                 classification=service["classification"],
                 images=service["images"] if service["images"] is not None else [],
                 labels=service["labels"] if service["labels"] is not None else {},
-                containers=ServiceInfo.parse_containers(service.get("config"))
+                containers=ServiceInfo.parse_containers(service.get("config")),
+                volumes=ServiceInfo.parse_volumes(service.get("config"))
             )
             for service in res.get("data")
         ]
