@@ -1,6 +1,6 @@
 import logging
 from http import HTTPStatus
-from typing import List, Dict
+from typing import List, Dict, Optional, Tuple
 from urllib.parse import urlparse
 
 from ..common.requests import process_request, HttpMethod
@@ -37,19 +37,18 @@ class MattermostClient:
         headers["Authorization"] = f"Bearer {self.token}"
         return process_request(url, method, headers=headers, **kwargs)
 
-    def _get_full_mattermost_url(self, endpoint, *args):
+    def _get_full_mattermost_url(self, endpoint: str) -> str:
         return "/".join([
             f"{self.schema}:",
             "",
             self.client_url,
             _API_PREFIX,
-            endpoint,
-            *args
+            endpoint
         ])
 
-    def get_token_owner_id(self):
-        endpoint = "users/tokens"
-        url = self._get_full_mattermost_url(endpoint, self.token_id)
+    def get_token_owner_id(self) -> Optional[str]:
+        endpoint = f"users/tokens/{self.token_id}"
+        url = self._get_full_mattermost_url(endpoint)
         response = self._send_mattermost_request(url, HttpMethod.GET)
         if response.status_code != HTTPStatus.OK:
             logging.warning("Cannot get owner token, probably bot has not enough permissions")
@@ -57,9 +56,9 @@ class MattermostClient:
         response_data = response.json()
         return response_data.get("user_id")
 
-    def update_bot_settings(self, bot_id):
-        endpoint = "bots"
-        url = self._get_full_mattermost_url(endpoint, bot_id)
+    def update_bot_settings(self, bot_id: str):
+        endpoint = f"bots/{bot_id}"
+        url = self._get_full_mattermost_url(endpoint)
         response = self._send_mattermost_request(url, HttpMethod.PUT, json={
             "username": "robusta",
             "display_name": "Robusta"
@@ -68,7 +67,7 @@ class MattermostClient:
             logging.warning("Cannot update bot settings, probably bot has not enough permissions")
         self.update_bot_logo(bot_id)
 
-    def update_bot_logo(self, bot_id):
+    def update_bot_logo(self, bot_id: str):
         endpoint = f"users/{bot_id}/image"
         img_data = process_request(ROBUSTA_LOGO_URL, HttpMethod.GET).content
         url = self._get_full_mattermost_url(endpoint)
@@ -76,7 +75,7 @@ class MattermostClient:
         if response.status_code != HTTPStatus.OK:
             logging.warning("Cannot update bot logo, probably bot has not enough permissions")
 
-    def _init_setup(self, channel_name):
+    def _init_setup(self, channel_name: str):
         bot_id = self.get_token_owner_id()
         self.channel_id = self.get_channel_id(channel_name)
         if not self.channel_id:
@@ -85,7 +84,7 @@ class MattermostClient:
             self.bot_id = bot_id
             self.update_bot_settings(bot_id)
 
-    def get_channel_id(self, channel_name):
+    def get_channel_id(self, channel_name: str) -> Optional[str]:
         endpoint = "channels/search"
         url = self._get_full_mattermost_url(endpoint)
         response = self._send_mattermost_request(url, HttpMethod.POST, json={
@@ -97,7 +96,7 @@ class MattermostClient:
                 return None
             return response[0].get("id")
 
-    def post_message(self, title, msg_attachments: List[Dict], file_attachments=None):
+    def post_message(self, title, msg_attachments: List[Dict], file_attachments: Optional[List[Tuple]] = None):
         if not self.channel_id:
             logging.warning("No channel found, messages won't be sent")
             return
@@ -116,7 +115,7 @@ class MattermostClient:
         if response.status_code != HTTPStatus.CREATED:
             logging.error("Couldn't deliver mattermost bot message")
 
-    def upload_files(self, files):
+    def upload_files(self, files: List[Tuple]):
         endpoint = "files"
         file_ids = []
         url = self._get_full_mattermost_url(endpoint)
