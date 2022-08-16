@@ -1,0 +1,30 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: compare2
+  labels:
+    name: compare2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: compare2
+  labels:
+    mylabel: hello2
+    otherlabel: same-hello
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 1 # tells deployment to run 1 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.13.0
+        ports:
+        - containerPort: 80

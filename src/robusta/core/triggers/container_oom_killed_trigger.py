@@ -6,7 +6,7 @@ from .oom_killed_trigger_base import OOMKilledTriggerBase, Exclude
 from ...core.playbooks.base_trigger import TriggerEvent
 
 
-class PodOOMKilledTrigger(OOMKilledTriggerBase):
+class ContainerOOMKilledTrigger(OOMKilledTriggerBase):
     def __init__(
             self,
             name_prefix: str = None,
@@ -24,7 +24,5 @@ class PodOOMKilledTrigger(OOMKilledTriggerBase):
         )
 
     def get_relevant_oomkilled_container_statuses(self, pod: Pod) -> List[ContainerStatus]:
-        if self.is_name_namespace_excluded(pod.metadata.name, pod.metadata.namespace):
-            return []
-        # pod not excluded
-        return pod.status.containerStatuses + pod.status.initContainerStatuses
+        statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+        return [status for status in statuses if not self.is_name_namespace_excluded(status.name, pod.metadata.namespace)]

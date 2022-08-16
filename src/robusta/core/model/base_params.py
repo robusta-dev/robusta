@@ -19,6 +19,7 @@ class ResourceChartItemType(Enum):
     """
     Pod = auto()
     Node = auto()
+    Container = auto()
 
 
 class ResourceChartResourceType(Enum):
