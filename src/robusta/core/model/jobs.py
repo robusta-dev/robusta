@@ -93,7 +93,7 @@ class JobInfo(BaseModel):
     job_data: JobData
 
     def get_service_key(self) -> str:
-        return f"{self.namespace}/{SERVICE_TYPE_JOB}/{self.name}"
+        return f"{self.namespace}/{self.type}/{self.name}"
 
     def __eq__(self, other):
         if not isinstance(other, JobInfo):

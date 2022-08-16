@@ -146,7 +146,8 @@ class SupabaseDal:
                 f"Failed to persist services {services} error: {res.get('data')}"
             )
             self.handle_supabase_error()
-            raise Exception("publish service failed")
+            status_code = res.get("status_code")
+            raise Exception(f"publish service failed. status: {status_code}")
 
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
@@ -248,7 +249,8 @@ class SupabaseDal:
                 f"Failed to persist node {nodes} error: {res.get('data')}"
             )
             self.handle_supabase_error()
-            raise Exception("publish node failed")
+            status_code = res.get("status_code")
+            raise Exception(f"publish nodes failed. status: {status_code}")
 
     def get_active_jobs(self) -> List[JobInfo]:
         res = (
@@ -288,7 +290,8 @@ class SupabaseDal:
                 f"Failed to persist jobs {jobs} error: {res.get('data')}"
             )
             self.handle_supabase_error()
-            raise Exception("publish jobs failed")
+            status_code = res.get("status_code")
+            raise Exception(f"publish jobs failed. status: {status_code}")
 
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
