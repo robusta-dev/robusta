@@ -3,7 +3,7 @@ from ..sink_base_params import SinkBaseParams
 from typing import Optional
 from pydantic import validator
 
-_SUPPORTED_SCHEMAS = ['http', 'https']
+_SUPPORTED_SCHEMAS = ["http", "https"]
 
 
 class MattermostSinkParams(SinkBaseParams):
@@ -11,7 +11,7 @@ class MattermostSinkParams(SinkBaseParams):
     token: str
     token_id: str
     channel: str
-    http_schema: Optional[str] = 'https'
+    http_schema: Optional[str] = "https"
 
     @validator("http_schema")
     def set_http_schema(cls, schema):

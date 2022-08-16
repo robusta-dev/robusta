@@ -34,7 +34,7 @@ class MattermostClient:
 
     def _send_mattermost_request(self, url: str, method: HttpMethod, **kwargs):
         headers = kwargs.pop("headers", {})
-        headers['Authorization'] = f"Bearer {self.token}"
+        headers["Authorization"] = f"Bearer {self.token}"
         return process_request(url, method, headers=headers, **kwargs)
 
     def _get_full_mattermost_url(self, endpoint, *args):
@@ -86,7 +86,7 @@ class MattermostClient:
             self.update_bot_settings(bot_id)
 
     def get_channel_id(self, channel_name):
-        endpoint = 'channels/search'
+        endpoint = "channels/search"
         url = self._get_full_mattermost_url(endpoint)
         response = self._send_mattermost_request(url, HttpMethod.POST, json={
             "term": channel_name

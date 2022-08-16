@@ -21,7 +21,7 @@ SEVERITY_COLOR_MAP = {
     FindingSeverity.LOW: "#ffdc06",
     FindingSeverity.INFO: "#05aa01",
 }
-SUPPORTED_IMAGES_FORMATS = ['png', 'gif', 'jpg', 'jpeg', 'bmp']
+
 MAX_BLOCK_CHARS = 16383  # Max allowed characters for mattermost
 
 
