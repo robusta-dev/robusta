@@ -29,8 +29,8 @@ class EnvVar(BaseModel):
 
 
 class Resources(BaseModel):
-    limits: Optional[Dict[str, str]]
-    requests: Optional[Dict[str, str]]
+    limits: Dict[str, str]
+    requests: Dict[str, str]
 
     def __eq__(self, other):
         if not isinstance(other, Resources):
@@ -64,7 +64,7 @@ class ContainerInfo(BaseModel):
 
 class VolumeInfo(BaseModel):
     name: str
-    persistent_volume_claim: Optional[Dict[str,str]]
+    persistent_volume_claim: Optional[Dict[str, str]]
 
     def __eq__(self, other):
         if not isinstance(other, VolumeInfo):
@@ -72,6 +72,13 @@ class VolumeInfo(BaseModel):
         return (
                 self.name == other.name
                 and dict_equal(self.persistent_volume_claim, other.persistent_volume_claim))
+
+    def to_json(self):
+        # this is needed to not show the field 'persistent_volume_claim' where it is not defined
+        return_json = {"name": self.name}
+        if self.persistent_volume_claim:
+            return_json["persistent_volume_claim"] = self.persistent_volume_claim
+        return return_json
 
     @staticmethod
     def get_volume_info(volume: V1Volume):
@@ -91,15 +98,15 @@ class ServiceInfo(BaseModel):
     classification: str = "None"
     deleted: bool = False
     labels: Dict[str, str]
-    containers: Optional[List[ContainerInfo]]
-    volumes: Optional[List[VolumeInfo]]
+    containers: List[ContainerInfo]
+    volumes: List[VolumeInfo]
 
     def get_service_key(self) -> str:
         return f"{self.namespace}/{self.service_type}/{self.name}"
 
     def get_service_json(self):
         containers_json = [container.dict() for container in self.containers] if self.containers else []
-        volumes_json = [volumes.dict() for volumes in self.volumes] if self.volumes else []
+        volumes_json = [volumes.to_json() for volumes in self.volumes] if self.volumes else []
         return {"labels": self.labels, "containers": containers_json, "volumes": volumes_json}
 
     @staticmethod
