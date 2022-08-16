@@ -49,9 +49,7 @@ def process_request(url: str, method: HttpMethod, **kwargs) \
         response = http_method(url, **kwargs)
         response.raise_for_status()
     except requests.RequestException as e:
+        response = e.response
         logging.error(f"Error while {method.name} request to {url}")
-        logging.error(f"Response code: {response.status_code}")
-        logging.error(f"Request body: {response.request.body}")
-        logging.error(json.dumps(response.json()))
-        logging.exception(e)
+        logging.error(json.dumps(response.json()), exc_info=True)
     return response

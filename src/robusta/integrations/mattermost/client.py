@@ -1,30 +1,36 @@
 import logging
 from http import HTTPStatus
-from typing import Optional, List, Dict
+from typing import List, Dict
+from urllib.parse import urlparse
 
 from ..common.requests import process_request, HttpMethod
 from ...core.model.env_vars import ROBUSTA_LOGO_URL
 
-_SUPPORTED_SCHEMAS = ['http', 'https']
 _API_PREFIX = "api/v4"
 
 
 class MattermostClient:
+    channel_id: str
+    bot_id: str
+
     def __init__(
-            self, url: str, token: str, token_id: str, channel_id: str, schema: Optional[str]
+            self, url: str, token: str, token_id: str, channel_name: str, schema: str
     ):
         """
         Set the Mattermost webhook url.
         """
-        self.client_url = url.split(":")[-1].lstrip("/").rstrip("/")
+        parsed_url = urlparse(url)
+        # if netloc is empty string, the url was provided without schema
+        if not parsed_url.netloc:
+            self.client_url = urlparse("//" + url.split("//")[-1]).netloc
+            self.schema = schema
+        else:
+            self.client_url = parsed_url.netloc
+            self.schema = parsed_url.scheme
+
         self.token = token
         self.token_id = token_id
-        self.channel_id = channel_id
-        schema = schema or "https"
-        if schema not in _SUPPORTED_SCHEMAS:
-            raise AttributeError(f"{schema} is not supported schema, should be one of following: {_SUPPORTED_SCHEMAS}")
-        self.schema = schema
-        self._init_setup()
+        self._init_setup(channel_name)
 
     def _send_mattermost_request(self, url: str, method: HttpMethod, **kwargs):
         headers = kwargs.pop("headers", {})
@@ -70,12 +76,31 @@ class MattermostClient:
         if response.status_code != HTTPStatus.OK:
             logging.warning("Cannot update bot logo, probably bot has not enough permissions")
 
-    def _init_setup(self):
+    def _init_setup(self, channel_name):
         bot_id = self.get_token_owner_id()
+        self.channel_id = self.get_channel_id(channel_name)
+        if not self.channel_id:
+            logging.warning("No channel found, messages won't be sent")
         if bot_id:
+            self.bot_id = bot_id
             self.update_bot_settings(bot_id)
 
+    def get_channel_id(self, channel_name):
+        endpoint = 'channels/search'
+        url = self._get_full_mattermost_url(endpoint)
+        response = self._send_mattermost_request(url, HttpMethod.POST, json={
+            "term": channel_name
+        })
+        if response.status_code == HTTPStatus.OK:
+            response = response.json()
+            if not len(response):
+                return None
+            return response[0].get("id")
+
     def post_message(self, title, msg_attachments: List[Dict], file_attachments=None):
+        if not self.channel_id:
+            logging.warning("No channel found, messages won't be sent")
+            return
         file_attachments = file_attachments or []
         file_attachments = self.upload_files(file_attachments)
         endpoint = "posts"

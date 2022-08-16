@@ -47,26 +47,6 @@ Get your mattermost webhook url
       :width: 600
       :align: center
 
-6. Now we need to get the channel id we want to send the messages to. Please follow the images to find out how to get the channel id
-
-|
-
-    .. image:: /images/add_mattermost_bot_7.png
-      :width: 400
-      :align: center
-
-|
-
-    .. image:: /images/add_mattermost_bot_8.png
-      :width: 400
-      :align: center
-
-|
-
-    .. image:: /images/add_mattermost_bot_9.png
-      :width: 400
-      :align: center
-
 
 Configuring the Mattermost sink
 ------------------------------------------------
@@ -82,8 +62,8 @@ Now we're ready to configure the Mattermost sink.
             url: <YOUR MATTERMOST URL> (can be find out from url bar in browser, e.g. namespace.cloud.mattermost.com)
             token: <YOUR BOT TOKEN> (the token we copied the first after bot creation)
             token_id: <YOUR BOT TOKEN ID> (the token id visible in bot panel)
-            channel: <YOUR CHANNEL ID> (the channel id you want to send messages to)
-            http_schema: <http/https> [OPTIONAL, HTTPS default] (if you want to send requests over HTTP or HTTPS)
+            channel: <YOUR CHANNEL NAME> (the channel name you want to send messages to - either display name or channel name divided by hyphen (e.g. channel-name))
+            http_schema: <http/https> [OPTIONAL, HTTPS default] (if you want to send requests over HTTP or HTTPS, if url passed with schema, it overrides the one provided in params)
 
 You should now get playbooks results in Mattermost! Example is shown below:
 
