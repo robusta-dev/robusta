@@ -82,12 +82,8 @@ class VolumeInfo(BaseModel):
 
     @staticmethod
     def get_volume_info(volume: V1Volume):
-        pvc_name_path = ["persistent_volume_claim", "claim_name"],  # pod
-        try:
-            claim_name = volume.object_at_path(pvc_name_path)
-            VolumeInfo(name=volume.name, persistent_volume_claim={"claim_name": claim_name})
-        except Exception:  # Path not found on object, not a real error, no claim name
-            pass
+        if volume.persistent_volume_claim and volume.persistent_volume_claim.claim_name:
+            VolumeInfo(name=volume.name, persistent_volume_claim={"claim_name": volume.persistent_volume_claim.claim_name})
         return VolumeInfo(name=volume.name)
 
 
