@@ -7,6 +7,11 @@ from typing import List, Dict, Optional
 
 
 def dict_equal(x, y):
+    if not x and not y:
+        return True
+    if not x or not y:
+        # only one of them is none
+        return False
     if len(x) != len(y):
         return False
     shared_items = {k: x[k] for k in x if k in y and x[k] == y[k]}
@@ -24,8 +29,8 @@ class EnvVar(BaseModel):
 
 
 class Resources(BaseModel):
-    limits: Dict[str, str]
-    requests: Dict[str, str]
+    limits: Optional[Dict[str, str]]
+    requests: Optional[Dict[str, str]]
 
     def __eq__(self, other):
         if not isinstance(other, Resources):
@@ -48,20 +53,6 @@ class ContainerInfo(BaseModel):
                 and self.resources == other.resources)
 
     @staticmethod
-    def container_info_from_json(image_json):
-        env = [EnvVar(name=env.get("name"), value=env.get("value"))
-               for env in image_json.get("env")
-               if env.get("name") and env.get("value")] \
-            if image_json.get("env") else []
-        resources = Resources(limits={}, requests={})
-        if image_json.get("resources"):
-            limits = image_json.get("resources").get("limits") if image_json.get("resources").get("limits") else {}
-            requests = image_json.get("resources").get("requests") if image_json.get("resources").get(
-                "requests") else {}
-            resources = Resources(limits=limits, requests=requests)
-        return ContainerInfo(name=image_json.get("name"), image=image_json.get("image"), env=env, resources=resources)
-
-    @staticmethod
     def get_container_info(container: V1Container):
         env = [EnvVar(name=env.name, value=env.value) for env in container.env if
                env.name and env.value] if container.env else []
@@ -73,24 +64,24 @@ class ContainerInfo(BaseModel):
 
 class VolumeInfo(BaseModel):
     name: str
-    pvc_name: Optional[str]
+    persistent_volume_claim: Optional[Dict[str,str]]
 
     def __eq__(self, other):
         if not isinstance(other, VolumeInfo):
             return NotImplemented
         return (
                 self.name == other.name
-                and self.pvc_name == other.pvc_name)
+                and dict_equal(self.persistent_volume_claim, other.persistent_volume_claim))
 
     @staticmethod
     def get_volume_info(volume: V1Volume):
-        claim_name = ""
         pvc_name_path = ["persistent_volume_claim", "claim_name"],  # pod
         try:
             claim_name = volume.object_at_path(pvc_name_path)
-        except Exception:  # Path not found on object, not a real error
+            VolumeInfo(name=volume.name, persistent_volume_claim={"claim_name": claim_name})
+        except Exception:  # Path not found on object, not a real error, no claim name
             pass
-        return VolumeInfo(name=volume.name, pvc_name=claim_name)
+        return VolumeInfo(name=volume.name)
 
 
 class ServiceInfo(BaseModel):
@@ -107,8 +98,8 @@ class ServiceInfo(BaseModel):
         return f"{self.namespace}/{self.service_type}/{self.name}"
 
     def get_service_json(self):
-        containers_json = [container.json() for container in self.containers] if self.containers else []
-        volumes_json = [volumes.json() for volumes in self.volumes] if self.volumes else []
+        containers_json = [container.dict() for container in self.containers] if self.containers else []
+        volumes_json = [volumes.dict() for volumes in self.volumes] if self.volumes else []
         return {"labels": self.labels, "containers": containers_json, "volumes": volumes_json}
 
     @staticmethod
@@ -130,8 +121,7 @@ class ServiceInfo(BaseModel):
             return return_containers
         for container_json in containers:
             try:
-                container_json2 = json.loads(container_json)
-                return_containers.append(ContainerInfo(**container_json2))
+                return_containers.append(ContainerInfo(**container_json))
             except Exception as e:
                 logging.error(f"Failed to parse container {container_json}", exc_info=True)
         return return_containers
@@ -146,8 +136,7 @@ class ServiceInfo(BaseModel):
             return return_volumes
         for volume_json in volumes:
             try:
-                volume_json2 = json.loads(volume_json)
-                return_volumes.append(VolumeInfo(**volume_json2))
+                return_volumes.append(VolumeInfo(**volume_json))
             except Exception as e:
                 logging.error(f"Failed to parse volume {volume_json}", exc_info=True)
         return return_volumes
