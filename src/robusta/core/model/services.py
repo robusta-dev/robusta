@@ -82,8 +82,8 @@ class VolumeInfo(BaseModel):
 
     @staticmethod
     def get_volume_info(volume: V1Volume):
-        if volume.persistent_volume_claim and volume.persistent_volume_claim.claim_name:
-            VolumeInfo(name=volume.name, persistent_volume_claim={"claim_name": volume.persistent_volume_claim.claim_name})
+        if hasattr(volume, 'persistent_volume_claim') and hasattr(volume.persistent_volume_claim, 'claim_name'):
+            return VolumeInfo(name=volume.name, persistent_volume_claim={"claim_name": volume.persistent_volume_claim.claim_name})
         return VolumeInfo(name=volume.name)
 
 
