@@ -2,18 +2,23 @@ from .mattermost_sink_params import MattermostSinkConfigWrapper
 from ..sink_base import SinkBase
 from ...reporting.base import Finding
 from ....integrations.mattermost.sender import MattermostSender
+from ....integrations.mattermost.client import MattermostClient
 
 
 class MattermostSink(SinkBase):
     def __init__(self, sink_config: MattermostSinkConfigWrapper, registry):
         super().__init__(sink_config.mattermost_sink, registry)
 
-        self.url = sink_config.mattermost_sink.url
-        self.channel = sink_config.mattermost_sink.channel
+        client = MattermostClient(
+            url=sink_config.mattermost_sink.url,
+            channel_id=sink_config.mattermost_sink.channel,
+            token=sink_config.mattermost_sink.token,
+            token_id=sink_config.mattermost_sink.token_id,
+            schema=sink_config.mattermost_sink.http_schema
+        )
         self.sender = MattermostSender(
-            self.url,
-            self.cluster_name,
-            self.channel
+            cluster_name=self.cluster_name,
+            client=client
         )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):

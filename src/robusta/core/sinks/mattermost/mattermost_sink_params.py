@@ -5,7 +5,10 @@ from typing import Optional
 
 class MattermostSinkParams(SinkBaseParams):
     url: str
-    channel: Optional[str]
+    token: str
+    token_id: str
+    channel: str
+    http_schema: Optional[str]
 
 
 class MattermostSinkConfigWrapper(SinkConfigBase):

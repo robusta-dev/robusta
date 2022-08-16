@@ -1,9 +1,7 @@
 from itertools import chain
+from typing import Tuple
 
-import requests
-import base64
-
-from ...core.model.env_vars import ROBUSTA_LOGO_URL
+from .client import MattermostClient
 from ...core.reporting.base import *
 from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
@@ -29,50 +27,32 @@ MAX_BLOCK_CHARS = 16383  # Max allowed characters for mattermost
 
 class MattermostSender:
     def __init__(
-            self, url: str, cluster_name: str, channel: Optional[str]
+            self, cluster_name: str, client: MattermostClient
     ):
         """
         Set the Mattermost webhook url.
         """
-        self.url = url
         self.cluster_name = cluster_name
-        self.channel = channel
+        self.client = client
 
     @classmethod
     def __add_severity_icon(cls, title: str, severity: FindingSeverity) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
         return f"{icon} {severity.name} - {title}"
 
-    def __format_final_message(self, mattermost_blocks: List[str],
-                               header_block: str, attachment_blocks: List[str],
-                               msg_color: str) -> Dict:
-        attachments = [{
-            "title": header_block,
+    @classmethod
+    def __format_msg_attachments(cls, mattermost_blocks: List[str],
+                                 msg_color: str) -> List[Dict]:
+        return [{
             "text": "\n".join(mattermost_blocks),
             "color": msg_color
         }]
-        attachments.extend([{"image_url": attachment, "color": msg_color} for attachment in attachment_blocks])
-        msg = {
-            "username": "Robusta",
-            "icon_url": ROBUSTA_LOGO_URL,
-            "attachments": attachments
-        }
-        if self.channel:
-            msg['channel'] = self.channel
 
-        return msg
-
-    def __to_mattermost(self, block: BaseBlock, sink_name: str) -> Optional[str]:
+    def __to_mattermost(self, block: BaseBlock, sink_name: str) -> Union[str, Tuple]:
         if isinstance(block, MarkdownBlock):
             return Transformer.to_github_markdown(block.text)
         elif isinstance(block, FileBlock):
-            extension = re.findall(extension_regex, block.filename)
-            if not extension:
-                return ""
-            extension = extension[0][1:]
-            if extension not in SUPPORTED_IMAGES_FORMATS:
-                return ""
-            return f"data:image/{extension};base64,{base64.b64encode(block.contents).decode('utf-8')}"
+            return block.filename, block.contents
         elif isinstance(block, HeaderBlock):
             return Transformer.apply_length_limit(block.text, 150)
         elif isinstance(block, TableBlock):
@@ -115,11 +95,9 @@ class MattermostSender:
         file_blocks = add_pngs_for_all_svgs(
             [b for b in report_blocks if isinstance(b, FileBlock)]
         )
-        attachment_blocks = []
+        file_attachments = []
         for block in file_blocks:
-            transformed_block = self.__to_mattermost(block, sink_name)
-            if transformed_block:
-                attachment_blocks.append(transformed_block)
+            file_attachments.append(self.__to_mattermost(block, sink_name))
 
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
@@ -131,26 +109,17 @@ class MattermostSender:
         for block in other_blocks:
             output_blocks.append(self.__to_mattermost(block, sink_name))
 
-        msg = self.__format_final_message(output_blocks, header_block, attachment_blocks, msg_color)
+        attachments = self.__format_msg_attachments(output_blocks, msg_color)
 
         logging.debug(
             f"--sending to mattermost--\n"
             f"title:{title}\n"
             f"blocks: {output_blocks}\n"
-            f"msg: {msg}\n"
-            f"attachment_blocks: {attachment_blocks}\n"
+            f"msg: {attachments}\n"
+            f"file_attachments: {file_attachments}\n"
         )
 
-        try:
-            response = requests.post(self.url, json=msg)
-            response.raise_for_status()
-        except Exception as e:
-            logging.error(
-                f"""error sending message to mattermost\ne={e}\n
-                blocks={output_blocks}\nattachment_blocks={attachment_blocks}\nmsg={msg}"""
-            )
-        else:
-            logging.debug(f"Message was delivered successfully")
+        self.client.post_message(header_block, attachments, file_attachments)
 
     def send_finding_to_mattermost(
             self,

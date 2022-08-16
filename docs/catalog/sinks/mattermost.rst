@@ -3,57 +3,70 @@ Mattermost
 
 Robusta can send playbook results to Mattermost.
 
-To configure the Mattermost sink we will need the Mattermost webhook url
+To configure the Mattermost sink we will need the Mattermost bot settings
 
 .. note::
 
     2-way interactivity (``CallbackBlock``) isn't implemented yet.
 
-    Files attachments are not supported by Mattermost webhook yet.
 
 Get your mattermost webhook url
 ------------------------------------------------
 
-1. First, go to **Main Menu > Integrations > Incoming Webhook**.
+1. First, go to **Main Menu > Integrations > Bot Accounts**.
 
-    .. image:: /images/add_mattermost_sink.png
+    .. image:: /images/add_mattermost_bot.png
       :width: 400
       :align: center
 
-2. If you don’t have the Integrations option in your Main Menu, incoming webhooks may not be enabled on your Mattermost server or may be disabled for non-admins. They can be enabled by a System Admin from System Console > Integrations > Integration Management. Then continue with the steps below.
+2. If you don’t have the Integrations option in your Main Menu, bot accounts may not be enabled on your Mattermost server or may be disabled for non-admins. They can be enabled by a System Admin from System Console > Integrations > Integration Management. Then continue with the steps below.
 
-3. Select **Add Incoming Webhook** and add name and description for the webhook. The description can be up to 500 characters.
+3. Select **Add Bot Account** and add name and description for the bot. Those will be overridden by robusta when the sink is initialised, but we need to provide some values to create the bot.
 
-    .. image:: /images/add_mattermost_sink_2.png
+    .. image:: /images/add_mattermost_bot_2.png
+      :width: 600
+      :align: center
+
+    .. image:: /images/add_mattermost_bot_3.png
+      :width: 600
+      :align: center
+
+    .. image:: /images/add_mattermost_bot_4.png
+      :width: 600
+      :align: center
+
+4. Copy the token value of the bot - it will be used to send all the messages to the channel.
+
+    .. image:: /images/add_mattermost_bot_5.png
+      :width: 600
+      :align: center
+
+5. Copy the token id as well - it should be provided in sink variables.
+
+    .. image:: /images/add_mattermost_bot_6.png
+      :width: 600
+      :align: center
+
+6. Now we need to get the channel id we want to send the messages to. Please follow the images to find out how to get the channel id
+
+|
+
+    .. image:: /images/add_mattermost_bot_7.png
       :width: 400
       :align: center
 
-4. Select the channel to receive webhook payloads, then click Add to create the webhook.
+|
 
-.. note::
-
-    **Enable integrations to override usernames** and **Enable integrations to override profile picture icons**
-    must be set to true. Enable them from System Console > Integrations > Integration Management,
-    or ask your System Admin to do so. If not enabled, the icon of the creator of the webhook URL is used to post messages.
-
-
-Enabling override usernames and profile picture
-***************************************
-
-1. First, go to **Main Menu > Integrations > System Console**. (It may not be enabled on your Mattermost server or may be disabled for non-admins.)
-
-    .. image:: /images/admin_console_mattermost.png
+    .. image:: /images/add_mattermost_bot_8.png
       :width: 400
       :align: center
 
-2. Select **Integration Management** from menu on the left.
+|
 
-3. Check both **Enable integrations to override usernames** and **Enable integrations to override profile picture icons**
-    to true.
-
-    .. image:: /images/admin_console_mattermost_2.png
+    .. image:: /images/add_mattermost_bot_9.png
       :width: 400
       :align: center
+
 
 Configuring the Mattermost sink
 ------------------------------------------------
@@ -66,8 +79,11 @@ Now we're ready to configure the Mattermost sink.
         sinks_config:
         - mattermost_sink:
             name: personal_mattermost_sink
-            url: <YOUR WEBHOOK URL>
-            channel: <YOUR WEBHOOK CHANNEL> [OPTIONAL]
+            url: <YOUR MATTERMOST URL> (can be find out from url bar in browser, e.g. namespace.cloud.mattermost.com)
+            token: <YOUR BOT TOKEN> (the token we copied the first after bot creation)
+            token_id: <YOUR BOT TOKEN ID> (the token id visible in bot panel)
+            channel: <YOUR CHANNEL ID> (the channel id you want to send messages to)
+            http_schema: <http/https> [OPTIONAL, HTTPS default] (if you want to send requests over HTTP or HTTPS)
 
 You should now get playbooks results in Mattermost! Example is shown below:
 
