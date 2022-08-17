@@ -4,10 +4,11 @@ from typing import List, Dict, Optional
 from kubernetes import client
 from kubernetes.client import V1Deployment, V1DaemonSet, V1StatefulSet, V1Job, V1Pod, V1ResourceRequirements, \
     V1DeploymentList, V1ObjectMeta, V1StatefulSetList, V1DaemonSetList, \
-    V1ReplicaSetList, V1PodList, V1NodeList
+    V1ReplicaSetList, V1PodList, V1NodeList, V1JobList, V1Container
 
+from ..model.jobs import JobInfo
 from ...core.model.services import ServiceInfo
-from ...core.model.pods import PodResources, ResourceAttributes
+from ...core.model.pods import PodResources, ResourceAttributes, ContainerResources
 
 
 class Discovery:
@@ -23,7 +24,7 @@ class Discovery:
         )
 
     @staticmethod
-    def discover_resources() -> (List[ServiceInfo], Optional[V1NodeList], Dict):
+    def discover_resources() -> (List[ServiceInfo], Optional[V1NodeList], Dict, List[JobInfo]):
 
         pod_items = []  # pods are used for both micro services and node discover
         active_services: List[ServiceInfo] = []
@@ -85,7 +86,24 @@ class Discovery:
                 f"Failed to run periodic nodes discovery",
                 exc_info=True,
             )
-        return active_services, current_nodes, node_requests
+
+        # discover jobs
+        active_jobs: List[JobInfo] = []
+        try:
+            current_jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces()
+            for job in current_jobs.items:
+                job_labels: Dict[str, str] = job.spec.selector.match_labels
+                job_pods = [
+                    pod.metadata.name for pod in pod_items
+                    if job_labels.items() <= (pod.metadata.labels or {}).items()
+                ]
+                active_jobs.append(JobInfo.from_api_server(job, job_pods))
+        except Exception:
+            logging.error(
+                f"Failed to run periodic jobs discovery",
+                exc_info=True,
+            )
+        return active_services, current_nodes, node_requests, active_jobs
 
 
 # This section below contains utility related to k8s python api objects (rather than hikaru)
@@ -114,21 +132,39 @@ def k8s_pod_requests(pod: V1Pod) -> PodResources:
 
 
 def __pod_resources(pod: V1Pod, resource_attribute: ResourceAttributes) -> PodResources:
-    pod_cpu_req: float = 0.0
-    pod_mem_req: int = 0
-    for container in pod.spec.containers:
-        resources: V1ResourceRequirements = container.resources
-        if resources:
-            resource_spec = getattr(resources, resource_attribute.name) or {}  # requests or limits
-            pod_cpu_req += PodResources.parse_cpu(
-                resource_spec.get("cpu", 0.0)
-            )
-            pod_mem_req += PodResources.parse_mem(
-                resource_spec.get("memory", "0Mi")
-            )
-
+    containers_resources = containers_resources_sum(pod.spec.containers, resource_attribute)
     return PodResources(
         pod_name=pod.metadata.name,
-        cpu=pod_cpu_req,
-        memory=pod_mem_req,
+        cpu=containers_resources.cpu,
+        memory=containers_resources.memory,
     )
+
+
+def containers_resources_sum(
+        containers: List[V1Container], resource_attribute: ResourceAttributes
+) -> ContainerResources:
+    cpu_sum: float = 0.0
+    mem_sum: int = 0
+    for container in containers:
+        resources = container_resources(container, resource_attribute)
+        cpu_sum += resources.cpu
+        mem_sum += resources.memory
+
+    return ContainerResources(cpu=cpu_sum, memory=mem_sum)
+
+
+def container_resources(container: V1Container, resource_attribute: ResourceAttributes) -> ContainerResources:
+    container_cpu: float = 0.0
+    container_mem: int = 0
+
+    resources: V1ResourceRequirements = container.resources
+    if resources:
+        resource_spec = getattr(resources, resource_attribute.name) or {}  # requests or limits
+        container_cpu = PodResources.parse_cpu(
+            resource_spec.get("cpu", 0.0)
+        )
+        container_mem = PodResources.parse_mem(
+            resource_spec.get("memory", "0Mi")
+        )
+
+    return ContainerResources(cpu=container_cpu, memory=container_mem)

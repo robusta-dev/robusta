@@ -19,9 +19,11 @@ k8s_memory_factors = {
 
 ResourceAttributes = Enum("ResourceAttributes", "requests limits")
 
+
 class ContainerResources(BaseModel):
     cpu: float = 0
     memory: int = 0
+
 
 class PodContainer:
     state: ContainerState
@@ -32,22 +34,22 @@ class PodContainer:
         self.container = PodContainer.get_pod_container_by_name(pod, container_name)
 
     @staticmethod
-    def get_memory_limits_and_requests_for_container(container: Container):
-        requests = PodContainer.get_container_memory_resource(container, ResourceAttributes.requests)
-        limits = PodContainer.get_container_memory_resource(container, ResourceAttributes.limits)
+    def get_memory_resources(container: Container) -> (int, int):
+        requests = PodContainer.get_resources(container, ResourceAttributes.requests)
+        limits = PodContainer.get_resources(container, ResourceAttributes.limits)
         return requests.memory, limits.memory
 
     @staticmethod
-    def get_container_memory_resource(container: Container, resource_type: ResourceAttributes):
+    def get_resources(container: Container, resource_type: ResourceAttributes) -> ContainerResources:
         try:
             requests = container.object_at_path(["resources", resource_type.name])
-            mem_req = PodResources.parse_mem(
+            mem = PodResources.parse_mem(
                 requests.get("memory", "0Mi")
             )
-            cpu_req = PodResources.parse_cpu(
+            cpu = PodResources.parse_cpu(
                 requests.get("cpu", 0.0)
             )
-            return ContainerResources(cpu=cpu_req, memory=mem_req)
+            return ContainerResources(cpu=cpu, memory=mem)
         except Exception:
             # no resources on container, object_at_path throws error
             return ContainerResources()

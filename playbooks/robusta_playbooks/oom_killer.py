@@ -88,7 +88,7 @@ def pod_oom_killer_enricher(
             f"could not find OOMKilled status in pod {pod.metadata.name}"
         )
     else:
-        requests, limits = PodContainer.get_memory_limits_and_requests_for_container(oomkilled_container.container)
+        requests, limits = PodContainer.get_memory_resources(oomkilled_container.container)
         labels.append(("Container name", oomkilled_container.container.name))
         memory_limit = "No limit" if not limits else f"{limits}MB limit"
         memory_requests = "No request" if not requests else f"{requests}MB request"

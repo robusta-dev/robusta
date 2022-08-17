@@ -16,7 +16,7 @@ def create_container_graph(params: ResourceGraphEnricherParams, pod: Pod, contai
     start_at = datetime.now()
     limit_lines = []
     if show_limit:
-        requests, limits = PodContainer.get_memory_limits_and_requests_for_container(container)
+        requests, limits = PodContainer.get_memory_resources(container)
         if params.resource_type == "Memory" and limits > 0:
             memory_limit_in_bytes = limits*1024*1024
             limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
