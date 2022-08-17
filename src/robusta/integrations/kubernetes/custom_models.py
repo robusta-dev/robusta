@@ -6,7 +6,6 @@ import hikaru
 import json
 import yaml
 from hikaru.model import *  # *-import is necessary for hikaru subclasses to work
-from kubernetes.client import V1Container, V1Volume
 from pydantic import BaseModel
 from ...core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
 from .api_client_utils import *
@@ -108,6 +107,7 @@ def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
                 images.append(container.image)
         except Exception:  # Path not found on object, not a real error
             pass
+    return images
 
 
 def does_daemonset_have_toleration(ds: DaemonSet, toleration_key: str) -> bool:
