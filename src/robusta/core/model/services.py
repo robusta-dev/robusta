@@ -6,36 +6,14 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 
 
-def dict_equal(x, y):
-    if not x and not y:
-        return True
-    if not x or not y:
-        # only one of them is none
-        return False
-    if len(x) != len(y):
-        return False
-    shared_items = {k: x[k] for k in x if k in y and x[k] == y[k]}
-    return len(x) == len(shared_items)
-
-
 class EnvVar(BaseModel):
     name: str
     value: str
-
-    def __eq__(self, other):
-        if not isinstance(other, EnvVar):
-            return NotImplemented
-        return self.name == other.name and self.value == other.value
 
 
 class Resources(BaseModel):
     limits: Dict[str, str]
     requests: Dict[str, str]
-
-    def __eq__(self, other):
-        if not isinstance(other, Resources):
-            return NotImplemented
-        return dict_equal(self.limits, other.limits) and dict_equal(self.requests, other.requests)
 
 
 class ContainerInfo(BaseModel):
@@ -44,13 +22,6 @@ class ContainerInfo(BaseModel):
     env: List[EnvVar]
     resources: Resources
 
-    def __eq__(self, other):
-        if not isinstance(other, ContainerInfo):
-            return NotImplemented
-        return (
-                self.name == other.name
-                and self.image == other.image
-                and self.resources == other.resources)
 
     @staticmethod
     def get_container_info(container: V1Container):
@@ -66,19 +37,6 @@ class VolumeInfo(BaseModel):
     name: str
     persistent_volume_claim: Optional[Dict[str, str]]
 
-    def __eq__(self, other):
-        if not isinstance(other, VolumeInfo):
-            return NotImplemented
-        return (
-                self.name == other.name
-                and dict_equal(self.persistent_volume_claim, other.persistent_volume_claim))
-
-    def to_json(self):
-        # this is needed to not show the field 'persistent_volume_claim' where it is not defined
-        return_json = {"name": self.name}
-        if self.persistent_volume_claim:
-            return_json["persistent_volume_claim"] = self.persistent_volume_claim
-        return return_json
 
     @staticmethod
     def get_volume_info(volume: V1Volume):
@@ -87,62 +45,22 @@ class VolumeInfo(BaseModel):
         return VolumeInfo(name=volume.name)
 
 
+class ServiceConfig(BaseModel):
+    labels: Dict[str, str]
+    containers: List[ContainerInfo]
+    volumes: List[VolumeInfo]
+
+
 class ServiceInfo(BaseModel):
     name: str
     service_type: str
     namespace: str
     classification: str = "None"
     deleted: bool = False
-    labels: Dict[str, str]
-    containers: List[ContainerInfo]
-    volumes: List[VolumeInfo]
+    service_config: ServiceConfig
 
     def get_service_key(self) -> str:
         return f"{self.namespace}/{self.service_type}/{self.name}"
-
-    def get_service_json(self):
-        containers_json = [container.dict() for container in self.containers] if self.containers else []
-        volumes_json = [volumes.to_json() for volumes in self.volumes] if self.volumes else []
-        return {"labels": self.labels, "containers": containers_json, "volumes": volumes_json}
-
-    @staticmethod
-    def parse_labels(service_json):
-        if not service_json:
-            return []
-        labels = service_json.get("labels")
-        if not labels:
-            return []
-        return labels
-
-    @staticmethod
-    def parse_containers(service_json):
-        return_containers = []
-        if not service_json:
-            return return_containers
-        containers = service_json.get("containers")
-        if not containers:
-            return return_containers
-        for container_json in containers:
-            try:
-                return_containers.append(ContainerInfo(**container_json))
-            except Exception as e:
-                logging.error(f"Failed to parse container {container_json}", exc_info=True)
-        return return_containers
-
-    @staticmethod
-    def parse_volumes(service_json):
-        return_volumes = []
-        if not service_json:
-            return return_volumes
-        volumes = service_json.get("volumes")
-        if not volumes:
-            return return_volumes
-        for volume_json in volumes:
-            try:
-                return_volumes.append(VolumeInfo(**volume_json))
-            except Exception as e:
-                logging.error(f"Failed to parse volume {volume_json}", exc_info=True)
-        return return_volumes
 
     def __eq__(self, other):
         if not isinstance(other, ServiceInfo):

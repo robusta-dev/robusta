@@ -128,9 +128,8 @@ class SupabaseDal:
             "cluster": self.cluster,
             "account_id": self.account_id,
             "deleted": service.deleted,
-            "labels": service.labels,
             "service_key": service.get_service_key(),
-            "config": service.get_service_json(),
+            "config": service.service_config.dict(),
             "update_time": "now()",
         }
 
@@ -170,9 +169,7 @@ class SupabaseDal:
                 service_type=service["type"],
                 namespace=service["namespace"],
                 classification=service["classification"],
-                labels=ServiceInfo.parse_labels(service.get("config")),
-                containers=ServiceInfo.parse_containers(service.get("config")),
-                volumes=ServiceInfo.parse_volumes(service.get("config"))
+                service_config=service.get("config")
             )
             for service in res.get("data")
         ]

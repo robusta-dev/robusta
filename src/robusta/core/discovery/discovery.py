@@ -18,14 +18,13 @@ class Discovery:
     def __create_service_info(meta: V1ObjectMeta, kind: str,
                               containers: List[V1Container], volumes: List[V1Volume]) -> ServiceInfo:
         container_info = [ ContainerInfo.get_container_info(container) for container in containers] if containers else []
-        volume_names = [ VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
+        volumes_info = [ VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
+        config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
         return ServiceInfo(
             name=meta.name,
             namespace=meta.namespace,
             service_type=kind,
-            labels=meta.labels or {},
-            containers=container_info,
-            volumes=volume_names
+            service_config=config
         )
 
     @staticmethod
