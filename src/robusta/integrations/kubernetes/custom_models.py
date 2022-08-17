@@ -107,6 +107,7 @@ def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
                 images.append(container.image)
         except Exception:  # Path not found on object, not a real error
             pass
+
     return images
 
 
