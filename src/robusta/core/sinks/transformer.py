@@ -37,6 +37,24 @@ class Transformer:
         truncator = truncator or "..."
         return msg[: max_length - len(truncator)] + truncator
 
+    @staticmethod
+    def to_markdown_diff(block: KubernetesDiffBlock, use_emoji_sign: bool = False) -> List[ListBlock]:
+        # this can happen when a block.old=None or block.new=None - e.g. the resource was added or deleted
+        if not block.diffs:
+            return []
+
+        divider = ":arrow_right:" if use_emoji_sign else "==>"
+        _blocks = []
+        _blocks.extend(
+            ListBlock(
+                [
+                    f"*{d.formatted_path}*: {d.other_value} {divider} {d.value}"
+                    for d in block.diffs
+                ]
+            )
+        )
+
+        return _blocks
 
     @staticmethod
     def get_markdown_links(markdown_data: str) -> List[str]:
