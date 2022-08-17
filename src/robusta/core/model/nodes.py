@@ -27,7 +27,7 @@ class NodeInfo(BaseModel):
         if not isinstance(other, NodeInfo):
             return NotImplemented
 
-        ignored_fields = ["deleted"]
+        ignored_fields = ["deleted", "node_creation_time"]  # ignore node_creation_time because of dates format
         filtered_self = {k: v for k, v in self.dict().items() if k not in ignored_fields}
         filtered_other = {k: v for k, v in other.dict().items() if k not in ignored_fields}
         return filtered_self == filtered_other

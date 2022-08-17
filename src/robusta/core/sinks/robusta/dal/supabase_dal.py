@@ -2,12 +2,12 @@ import json
 import logging
 import threading
 import time
-import traceback
 from typing import List, Dict, Any
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
 from .model_conversion import ModelConversion
 from ....model.cluster_status import ClusterStatus
+from ....model.jobs import JobInfo
 from ....model.nodes import NodeInfo
 from ....model.services import ServiceInfo
 from ....reporting.base import Finding
@@ -19,6 +19,7 @@ NODES_TABLE = "Nodes"
 EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
 CLUSTERS_STATUS_TABLE = "ClustersStatus"
+JOBS_TABLE = "Jobs"
 
 
 class RobustaAuthClient(SupabaseAuthClient):
@@ -133,16 +134,20 @@ class SupabaseDal:
             "update_time": "now()",
         }
 
-    def persist_service(self, service: ServiceInfo):
-        db_service = self.to_service(service)
+    def persist_services(self, services: List[ServiceInfo]):
+        if not services:
+            return
+        db_services = [self.to_service(service) for service in services]
         res = (
-            self.client.table(SERVICES_TABLE).insert(db_service, upsert=True).execute()
+            self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()
         )
         if res.get("status_code") not in [200, 201]:
             logging.error(
-                f"Failed to persist service {service} error: {res.get('data')}"
+                f"Failed to persist services {services} error: {res.get('data')}"
             )
             self.handle_supabase_error()
+            status_code = res.get("status_code")
+            raise Exception(f"publish service failed. status: {status_code}")
 
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
@@ -231,16 +236,62 @@ class SupabaseDal:
         db_node["updated_at"] = "now()"
         return db_node
 
-    def publish_node(self, node: NodeInfo):
-        db_node = self.__to_db_node(node)
+    def publish_nodes(self, nodes: List[NodeInfo]):
+        if not nodes:
+            return
+
+        db_nodes = [self.__to_db_node(node) for node in nodes]
         res = (
-            self.client.table(NODES_TABLE).insert(db_node, upsert=True).execute()
+            self.client.table(NODES_TABLE).insert(db_nodes, upsert=True).execute()
         )
         if res.get("status_code") not in [200, 201]:
             logging.error(
-                f"Failed to persist node {node} error: {res.get('data')}"
+                f"Failed to persist node {nodes} error: {res.get('data')}"
             )
             self.handle_supabase_error()
+            status_code = res.get("status_code")
+            raise Exception(f"publish nodes failed. status: {status_code}")
+
+    def get_active_jobs(self) -> List[JobInfo]:
+        res = (
+            self.client.table(JOBS_TABLE)
+            .select("*")
+            .filter("account_id", "eq", self.account_id)
+            .filter("cluster_id", "eq", self.cluster)
+            .filter("deleted", "eq", False)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to get existing jobs (supabase) error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+        return [JobInfo.from_db_row(job) for job in res.get("data")]
+
+    def __to_db_job(self, job: JobInfo) -> Dict[Any, Any]:
+        db_job = job.dict()
+        db_job["account_id"] = self.account_id
+        db_job["cluster_id"] = self.cluster
+        db_job["service_key"] = job.get_service_key()
+        db_job["updated_at"] = "now()"
+        return db_job
+
+    def publish_jobs(self, jobs: List[JobInfo]):
+        if not jobs:
+            return
+
+        db_jobs = [self.__to_db_job(job) for job in jobs]
+        res = (
+            self.client.table(JOBS_TABLE).insert(db_jobs, upsert=True).execute()
+        )
+        if res.get("status_code") not in [200, 201]:
+            logging.error(
+                f"Failed to persist jobs {jobs} error: {res.get('data')}"
+            )
+            self.handle_supabase_error()
+            status_code = res.get("status_code")
+            raise Exception(f"publish jobs failed. status: {status_code}")
 
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
@@ -261,7 +312,7 @@ class SupabaseDal:
 
     def to_db_cluster_status(self, data: ClusterStatus) -> Dict[str, Any]:
         db_cluster_status = data.dict()
-        if data.last_alert_at is  None:
+        if data.last_alert_at is None:
             del db_cluster_status["last_alert_at"]
             
         db_cluster_status["updated_at"] = "now()"    
