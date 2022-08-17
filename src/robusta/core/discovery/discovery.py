@@ -38,8 +38,7 @@ class Discovery:
             deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    deployment.metadata, "Deployment", deployment.spec.template.spec.containers,
-                deployment.spec.template.spec.volumes)
+                    deployment.metadata, "Deployment", extract_containers(deployment), extract_volumes(deployment))
                 for deployment in deployments.items
             ])
 
@@ -47,8 +46,8 @@ class Discovery:
             active_services.extend([
                 Discovery.__create_service_info(
                     statefulset.metadata, "StatefulSet",
-                statefulset.spec.template.spec.containers,
-                statefulset.spec.template.spec.volumes)
+                extract_containers(statefulset),
+                extract_volumes(statefulset))
                 for statefulset in statefulsets.items
             ])
 
@@ -56,8 +55,8 @@ class Discovery:
             active_services.extend([
                 Discovery.__create_service_info(
                     daemonset.metadata, "DaemonSet",
-                    daemonset.spec.template.spec.containers,
-                    daemonset.spec.template.spec.volumes
+                    extract_containers(daemonset),
+                    extract_volumes(daemonset)
                 )
                 for daemonset in daemonsets.items
             ])
@@ -66,8 +65,8 @@ class Discovery:
             active_services.extend([
                 Discovery.__create_service_info(
                     replicaset.metadata, "ReplicaSet",
-                    replicaset.spec.template.spec.containers,
-                    replicaset.spec.template.spec.volumes
+                    extract_containers(replicaset),
+                    extract_volumes(replicaset)
                 )
                 for replicaset in replicasets.items if not replicaset.metadata.owner_references
             ])
@@ -77,8 +76,8 @@ class Discovery:
             active_services.extend([
                 Discovery.__create_service_info(
                     pod.metadata, "Pod",
-                    pod.spec.containers,
-                    pod.spec.volumes
+                    extract_containers(pod),
+                    extract_volumes(pod)
                 )
                 for pod in pod_items if not pod.metadata.owner_references
             ])
@@ -124,6 +123,42 @@ class Discovery:
 
 
 # This section below contains utility related to k8s python api objects (rather than hikaru)
+def extract_containers(resource) -> List[V1Container]:
+    """Extract containers from k8s python api object (not hikaru)"""
+    try:
+        containers = []
+        if isinstance(resource, V1Deployment) \
+                or isinstance(resource, V1DaemonSet) \
+                or isinstance(resource, V1DaemonSet) \
+                or isinstance(resource, V1StatefulSet) \
+                or isinstance(resource, V1Job):
+            containers = resource.spec.template.spec.containers
+        elif isinstance(resource, V1Pod):
+            containers = resource.spec.containers
+
+        return containers
+    except Exception:  # may fail if one of the attributes is None
+        logging.error(f"Failed to extract containers from {resource}", exc_info=True)
+    return []
+
+
+def extract_volumes(resource) -> List[V1Volume]:
+    """Extract volumes from k8s python api object (not hikaru)"""
+    try:
+        volumes = []
+        if isinstance(resource, V1Deployment) \
+                or isinstance(resource, V1DaemonSet) \
+                or isinstance(resource, V1DaemonSet) \
+                or isinstance(resource, V1StatefulSet) \
+                or isinstance(resource, V1Job):
+            volumes = resource.spec.template.spec.volumes
+        elif isinstance(resource, V1Pod):
+            volumes = resource.spec.volumes
+        return volumes
+    except Exception:  # may fail if one of the attributes is None
+        logging.error(f"Failed to extract volumes from {resource}", exc_info=True)
+    return []
+
 def k8s_pod_requests(pod: V1Pod) -> PodResources:
     """Extract requests from k8s python api pod (not hikaru)"""
     return __pod_resources(pod, ResourceAttributes.requests)
