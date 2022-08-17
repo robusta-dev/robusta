@@ -28,6 +28,7 @@ deploy:
 portForward:
 - resourceType: deployment
   resourceName: robusta-runner
+  namespace: default
   port: 5000
   localPort: 5000
 
