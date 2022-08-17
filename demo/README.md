@@ -4,7 +4,7 @@ Here are demo scenarios you can use to evaluate Robusta.dev. Each demo can be ru
 
 ## Running it
 
-1. Run the script `./crash_pod_demo/crashpod_demo.sh`
+1. Run `cd ./crash_pod_demo && ./crashpod_demo.sh`
 2. Press enter to deliberately break the `crashpod` deployment and make it crash
 3. Check your Slack channel for a notication about the crashing pod. The message includes the pod's logs!
 4. Click the "Investigate button" to open Robusta's UI
