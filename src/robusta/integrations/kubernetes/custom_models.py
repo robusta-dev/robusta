@@ -91,7 +91,7 @@ def extract_images(k8s_obj: HikaruDocumentBase) -> Optional[Dict[str, str]]:
     return name_to_version
 
 
-def extract_containers_list(k8s_obj: HikaruDocumentBase) -> List[V1Container]:
+def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
     containers_paths = [
         [
             "spec",
@@ -101,41 +101,13 @@ def extract_containers_list(k8s_obj: HikaruDocumentBase) -> List[V1Container]:
         ],  # deployment, replica set, daemon set, stateful set, job
         ["spec", "containers"],  # pod
     ]
-    for path in containers_paths:
-        try:
-            return k8s_obj.object_at_path(path)
-        except Exception:  # Path not found on object, not a real error
-            pass
-    return []
-
-
-def extract_volumes_list(k8s_obj: HikaruDocumentBase) -> List[V1Volume]:
-    containers_paths = [
-        [
-            "spec",
-            "template",
-            "spec",
-            "volumes",
-        ],  # deployment, replica set, daemon set, stateful set, job
-        ["spec", "volumes"],  # pod
-    ]
-    for path in containers_paths:
-        try:
-            return k8s_obj.object_at_path(path)
-        except Exception:  # Path not found on object, not a real error
-            pass
-    return []
-
-
-def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
     images = []
-    try:
-        for container in extract_containers_list(k8s_obj):
-            images.append(container.image)
-    except Exception:  # Path not found on object, not a real error
-        pass
-
-    return images
+    for path in containers_paths:
+        try:
+            for container in k8s_obj.object_at_path(path):
+                images.append(container.image)
+        except Exception:  # Path not found on object, not a real error
+            pass
 
 
 def does_daemonset_have_toleration(ds: DaemonSet, toleration_key: str) -> bool:

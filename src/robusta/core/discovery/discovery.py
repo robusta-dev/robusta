@@ -5,10 +5,10 @@ from typing import List, Dict, Optional
 from kubernetes import client
 from kubernetes.client import V1Deployment, V1DaemonSet, V1StatefulSet, V1Job, V1Pod, V1ResourceRequirements, \
     V1DeploymentList, V1ObjectMeta, V1StatefulSetList, V1DaemonSetList, \
-    V1ReplicaSetList, V1PodList, V1NodeList, V1JobList, V1Container
+    V1ReplicaSetList, V1PodList, V1NodeList, V1JobList, V1Container, V1Volume
 
 from ..model.jobs import JobInfo
-from ...core.model.services import ServiceInfo
+from ...core.model.services import ServiceInfo, ContainerInfo, VolumeInfo, ServiceConfig
 from ...core.model.pods import PodResources, ResourceAttributes, ContainerResources
 
 
