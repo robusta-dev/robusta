@@ -1,9 +1,8 @@
-from ..sink_config import SinkConfigBase
-from ..sink_base_params import SinkBaseParams
-from typing import Optional
 from pydantic import validator
+from urllib.parse import urlparse
 
-_SUPPORTED_SCHEMAS = ["http", "https"]
+from ..sink_base_params import SinkBaseParams
+from ..sink_config import SinkConfigBase
 
 
 class MattermostSinkParams(SinkBaseParams):
@@ -11,13 +10,14 @@ class MattermostSinkParams(SinkBaseParams):
     token: str
     token_id: str
     channel: str
-    http_schema: Optional[str] = "https"
 
-    @validator("http_schema")
-    def set_http_schema(cls, schema):
-        if schema not in _SUPPORTED_SCHEMAS:
-            raise AttributeError(f"{schema} is not supported schema, should be one of following: {_SUPPORTED_SCHEMAS}")
-        return schema
+    @validator("url")
+    def set_http_schema(cls, url):
+        parsed_url = urlparse(url)
+        # if netloc is empty string, the url was provided without schema
+        if not parsed_url.netloc:
+            raise AttributeError(f"{url} does not contain the schema!")
+        return url
 
 
 class MattermostSinkConfigWrapper(SinkConfigBase):

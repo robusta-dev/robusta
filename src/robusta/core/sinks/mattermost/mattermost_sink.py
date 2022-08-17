@@ -13,8 +13,7 @@ class MattermostSink(SinkBase):
             url=sink_config.mattermost_sink.url,
             channel_name=sink_config.mattermost_sink.channel,
             token=sink_config.mattermost_sink.token,
-            token_id=sink_config.mattermost_sink.token_id,
-            schema=sink_config.mattermost_sink.http_schema
+            token_id=sink_config.mattermost_sink.token_id
         )
         self.sender = MattermostSender(
             cluster_name=self.cluster_name,

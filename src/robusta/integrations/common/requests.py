@@ -1,6 +1,8 @@
 import json
+from http import HTTPStatus
 
 import requests
+
 from ...core.reporting.base import *
 
 
@@ -28,6 +30,13 @@ def map_type_to_method(http_type: HttpMethod):
         raise ValueError("Wrong http method provided!")
 
 
+def check_response_succeed(response):
+    return response and response.status_code in [
+        HTTPStatus.OK,
+        HTTPStatus.CREATED,
+    ]
+
+
 def process_request(url: str, method: HttpMethod, **kwargs) \
         -> requests.Response:
     """
@@ -51,5 +60,8 @@ def process_request(url: str, method: HttpMethod, **kwargs) \
     except requests.RequestException as e:
         response = e.response
         logging.error(f"Error while {method.name} request to {url}")
-        logging.error(json.dumps(response.json()), exc_info=True)
+        logging.exception(e)
+        if response:
+            logging.error(json.dumps(response.json()), exc_info=True)
+
     return response

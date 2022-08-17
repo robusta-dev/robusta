@@ -59,11 +59,10 @@ Now we're ready to configure the Mattermost sink.
         sinks_config:
         - mattermost_sink:
             name: personal_mattermost_sink
-            url: <YOUR MATTERMOST URL> (can be find out from url bar in browser, e.g. namespace.cloud.mattermost.com)
+            url: <YOUR MATTERMOST URL> (can be find out from url bar in browser, e.g. https://namespace.cloud.mattermost.com)
             token: <YOUR BOT TOKEN> (the token we copied the first after bot creation)
             token_id: <YOUR BOT TOKEN ID> (the token id visible in bot panel)
             channel: <YOUR CHANNEL NAME> (the channel name you want to send messages to - either display name or channel name divided by hyphen (e.g. channel-name))
-            http_schema: <http/https> [OPTIONAL, HTTPS default] (if you want to send requests over HTTP or HTTPS, if url passed with schema, it overrides the one provided in params)
 
 You should now get playbooks results in Mattermost! Example is shown below:
 
