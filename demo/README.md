@@ -4,7 +4,7 @@ Here are demo scenarios you can use to evaluate Robusta.dev. Each demo can be ru
 
 ## Running it
 
-1. Run `cd ./crash_pod_demo && ./crashpod_demo.sh`
+1. Run `cd ./crash_pod_demo && ./crashpod_demo.sh && cd ..`
 2. Press enter to deliberately break the `crashpod` deployment and make it crash
 3. Check your Slack channel for a notication about the crashing pod. The message includes the pod's logs!
 4. Click the "Investigate button" to open Robusta's UI
@@ -22,12 +22,11 @@ Here are demo scenarios you can use to evaluate Robusta.dev. Each demo can be ru
 
 1. Run `kubectl apply -f ./oomkill_demo/oomkill_demo.yaml`
 2. Check your Slack channel for a notification about the Kubernetes pod which got OOMKilled. The message includes details you need to debug the out of memory error.
+3. Cleanup the demo with `kubectl delete -f ./oomkill_demo/oomkill_demo.yaml`
 
 ## Value Demonstrated
 
-This demo shows that Robusta has built-in knowledge about very specific errors in your cluster, including out of memory errors, or OOM Kills. 
-
-Robusta automatically gathers the right data you need to debug each issue.
+Robusta shows relevant data for each alert. In this specific case, Robusta shows relevant memory graphs for OOM Kills.
 
 This lets you fix issues faster with more confidence.
 
