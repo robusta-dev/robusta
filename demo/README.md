@@ -18,20 +18,44 @@ This demo shows:
 2. Notifications contain the exact data you need to debug
 3. You see more troubleshooting data in the Robusta UI, including recent changes to Kubernetes objects
 
-# OOM Kill Demo
+# OOM Kill (Out of Memory Kill) Demo
 
 ## Running it
 
 1. Run `kubectl apply -f ./oomkill_demo/oomkill_demo.yaml`
-2. Check your Slack channel for a notification about the crashing pod. The message includes details you need to debug the OOM
+2. Check your Slack channel for a notification about the Kubernetes pod which got OOMKilled. The message includes details you need to debug the out of memory error.
 
 ## Value Demonstrated
 
-This demo shows that Robusta has built-in knowledge about very specific errors in your cluster, including OOM Kills. 
+This demo shows that Robusta has built-in knowledge about very specific errors in your cluster, including out of memory errors, or OOM Kills. 
 
 Robusta automatically gathers the right data you need to debug each issue.
 
 This lets you fix issues faster with more confidence.
+
+# Debugging Pending Pods
+
+## Running it
+
+1. Run `kubectl apply -f pending_pods` 
+2. Wait 15 minutes and then check your Slack channel for a notification about the pending pod. The message includes Kubernetes events which tell you *why* the pod can't be scheduled to any of the existing nodes
+
+Note: By default, Robusta only alerts after a pod is pending for 15 minutes. In a busy Kubernetes cluster with autoscaling, it's normal and OK if pods are pending for short periods of time while clusters scale up!
+
+## Value Demonstrated
+
+Robusta tells you *why* pods are pending. E.g. if a pod is pending because there isn't enough CPU in the cluster, Robusta will tell you so! If the issue is not enough memory thenRobusta will tell you that instead. This works by pulling in the relevant Kubernetes events automatically, just like you would see in `kubectl get events` if you filtered for the relevant pods.
+
+# ImagePullBackOff
+
+## Running it
+
+1. Run `kubectl apply -f image_pull_backoff
+2. Look at your Slack channel or the Robusta UI for a message about the ImagePullBackoff
+
+## Value Demonstrated
+
+Robusta identifies ImagePullBackoffs and also helps you differentiate between the different reasons (e.g. wrong image vs nonexistent tag)
 
 # Namespace Comparison
 
