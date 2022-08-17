@@ -61,7 +61,8 @@ Robusta identifies ImagePullBackoffs and also helps you differentiate between th
 ## Running it
 
 1. Run `kubectl apply -f namespace_comparison_demo` 
-2. Open the Robusta UI and click on the "Comparison" page
+2. Open the Robusta UI and wait about 60 seconds for the new services to appear
+2. In the Robusta UI click on the "Comparison" page
 3. Perform a comparison between the `compare1` and `compare2` namespaces
 4. Clean up the demo by running `kubectl delete -f namespace_comparison_demo`
 
@@ -71,7 +72,7 @@ You can identify drift between multiple clusters or namespaces.
 
 This is useful for two scenarios:
 
-1. When you are running multiple copies of an application and need to instantly know what version is running where
+1. When you are running multiple copies of an application. You can map out which versions are running and where.
 2. When a bug occurs in one environment but not another. You can see exactly how those environments differ.
 
 # Other
