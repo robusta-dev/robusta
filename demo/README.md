@@ -12,10 +12,8 @@ Here are demo scenarios you can use to evaluate Robusta.dev. Each demo can be ru
 
 ## Value Demonstrated
 
-This demo shows:
-
 1. You can get Slack notifications about issues in your cluster 
-2. Notifications contain the exact data you need to debug
+2. Notifications contain the exact data you need to diagnose the issue
 3. You see more troubleshooting data in the Robusta UI, including recent changes to Kubernetes objects
 
 # OOM Kill (Out of Memory Kill) Demo
