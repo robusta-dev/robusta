@@ -22,7 +22,7 @@ Here are demo scenarios you can use to evaluate Robusta.dev. Each demo can be ru
 
 1. Run `kubectl apply -f ./oomkill_demo/oomkill_demo.yaml`
 2. Check your Slack channel for a notification about the Kubernetes pod which got OOMKilled. The message includes details you need to debug the out of memory error.
-3. Cleanup the demo with `kubectl delete -f ./oomkill_demo/oomkill_demo.yaml`
+3. Clean up the demo with `kubectl delete -f ./oomkill_demo/oomkill_demo.yaml`
 
 ## Value Demonstrated
 
@@ -36,6 +36,7 @@ This lets you fix issues faster with more confidence.
 
 1. Run `kubectl apply -f pending_pods` 
 2. Wait 15 minutes and then check your Slack channel for a notification about the pending pod. The message includes Kubernetes events which tell you *why* the pod can't be scheduled to any of the existing nodes
+3. Clean up the demo by running `kubectl delete -f pending_pods`
 
 Note: By default, Robusta only alerts after a pod is pending for 15 minutes. In a busy Kubernetes cluster with autoscaling, it's normal and OK if pods are pending for short periods of time while clusters scale up!
 
@@ -47,8 +48,9 @@ Robusta tells you *why* pods are pending. E.g. if a pod is pending because there
 
 ## Running it
 
-1. Run `kubectl apply -f image_pull_backoff
+1. Run `kubectl apply -f image_pull_backoff`
 2. Look at your Slack channel or the Robusta UI for a message about the ImagePullBackoff
+3. Clean up the demo by running `kubectl delete -f image_pull_backoff`
 
 ## Value Demonstrated
 
@@ -61,6 +63,7 @@ Robusta identifies ImagePullBackoffs and also helps you differentiate between th
 1. Run `kubectl apply -f namespace_comparison_demo` 
 2. Open the Robusta UI and click on the "Comparison" page
 3. Perform a comparison between the `compare1` and `compare2` namespaces
+4. Clean up the demo by running `kubectl delete -f namespace_comparison_demo`
 
 ## Value Demonstrated
 
