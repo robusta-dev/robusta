@@ -44,7 +44,7 @@ class ContainerInfo(BaseModel):
         return self.name == other.name \
                and self.image == other.image \
                and self.resources == other.resources \
-               and sorted(self.env, key=lambda x: x.name) == sorted(self.env, key=lambda x: x.name)
+               and sorted(self.env, key=lambda x: x.name) == sorted(other.env, key=lambda x: x.name)
 
 
 class VolumeInfo(BaseModel):
@@ -68,9 +68,9 @@ class ServiceConfig(BaseModel):
             return NotImplemented
 
         # pydantic comparison bug of nested lists and dicts not in the same order
-        return sorted(self.containers, key=lambda x: x.name) == sorted(self.containers, key=lambda x: x.name) \
-               and sorted(self.volumes, key=lambda x: x.name) == sorted(self.volumes, key=lambda x: x.name) \
-               and sorted(self.labels, key=lambda x: x.name) == sorted(self.labels, key=lambda x: x.name)
+        return sorted(self.containers, key=lambda x: x.name) == sorted(other.containers, key=lambda x: x.name) \
+               and sorted(self.volumes, key=lambda x: x.name) == sorted(other.volumes, key=lambda x: x.name) \
+               and sorted(self.labels, key=lambda x: x.name) == sorted(other.labels, key=lambda x: x.name)
 
 
 class ServiceInfo(BaseModel):
