@@ -11,6 +11,9 @@ from .telemetry import SinkInfo
 
 from hikaru.model import NodeList
 
+from ..utils.pod_discovery import PodDiscovery
+
+
 class TelemetryLevel(Enum):
     NONE = 0,
     USAGE = 1,
@@ -50,7 +53,7 @@ class TelemetryService:
             
                 current_nodes: NodeList = NodeList.listNode().obj
                 tele.nodes_count = len(current_nodes.items)
-
+                tele.pod_metrics = PodDiscovery.get_metrics()
                 self.__log(tele)
 
                 tele.sinks_info = defaultdict(lambda: SinkInfo())

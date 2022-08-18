@@ -339,9 +339,11 @@ class RobustaSink(SinkBase):
             logging.error(f"Failed to check run history condition", exc_info=True)
             return False
 
+
     def __discover_cluster(self):
         logging.info("Cluster discovery initialized")
         get_history = self.__should_run_history()
+
         while self.__active:
             start_t = time.time()
             self.__periodic_cluster_status()

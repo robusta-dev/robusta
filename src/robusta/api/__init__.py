@@ -30,6 +30,7 @@ from ..integrations.prometheus.utils import PrometheusDiscovery
 from ..core.persistency.in_memory import get_persistent_data
 from ..utils.parsing import load_json
 from ..utils.rate_limiter import RateLimiter
+from ..utils.pod_discovery import PodDiscovery
 from ..utils.common import *
 from ..utils.function_hashes import action_hash
 from ..runner.object_updater import *
