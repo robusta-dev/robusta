@@ -79,7 +79,7 @@ class ServiceInfo(BaseModel):
     namespace: str
     classification: str = "None"
     deleted: bool = False
-    service_config: ServiceConfig
+    service_config: Optional[ServiceConfig]
 
     def get_service_key(self) -> str:
         return f"{self.namespace}/{self.service_type}/{self.name}"
