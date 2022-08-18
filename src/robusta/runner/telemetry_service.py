@@ -53,7 +53,7 @@ class TelemetryService:
             
                 current_nodes: NodeList = NodeList.listNode().obj
                 tele.nodes_count = len(current_nodes.items)
-                tele.pod_metrics = PodDiscovery.get_metrics()
+                tele.pod_metrics = PodDiscovery.get_robusta_metrics()
                 self.__log(tele)
 
                 tele.sinks_info = defaultdict(lambda: SinkInfo())
