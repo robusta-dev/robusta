@@ -11,3 +11,4 @@ spec:
     imagePullPolicy: IfNotPresent
   nodeSelector:
     label: alwaysPending
+
