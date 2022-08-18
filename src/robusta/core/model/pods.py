@@ -6,6 +6,9 @@ from pydantic import BaseModel
 from ...integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
 
 k8s_memory_factors = {
+    "m": 1 / 1000,  # milli
+    "u": 1 / (1000 * 1000),  # micro
+    "n": 1 / (1000 * 1000 * 1000),  # nano
     "K": 1000,
     "M": 1000*1000,
     "G": 1000*1000*1000,
@@ -16,12 +19,6 @@ k8s_memory_factors = {
     "Gi": 1024*1024*1024,
     "Pi": 1024*1024*1024*1024,
     "Ei": 1024*1024*1024*1024*1024
-}
-
-k8s_micro_memory_factors = {
-    "m": 1/1000,             # milli
-    "u": 1/(1000*1000),      # micro
-    "n": 1/(1000*1000*1000), # nano
 }
 
 ResourceAttributes = Enum("ResourceAttributes", "requests limits")
@@ -91,22 +88,18 @@ class PodResources(BaseModel):
 
     @staticmethod
     def get_number_of_bytes_from_kubernetes_mem_spec(mem_spec: str) -> int:
-        if len(mem_spec) > 2 and mem_spec[-2:] in k8s_memory_factors:
-            return int(mem_spec[:-2]) * k8s_memory_factors[mem_spec[-2:]]
+        try:
+            if len(mem_spec) > 2 and mem_spec[-2:] in k8s_memory_factors:
+                return int(mem_spec[:-2]) * k8s_memory_factors[mem_spec[-2:]]
 
-        if len(mem_spec) > 1 and mem_spec[-1] in k8s_memory_factors:
-            return int(mem_spec[:-1]) * k8s_memory_factors[mem_spec[-1]]
+            if len(mem_spec) > 1 and mem_spec[-1] in k8s_memory_factors:
+                return int(mem_spec[:-1]) * k8s_memory_factors[mem_spec[-1]]
 
-        if len(mem_spec) > 1 and mem_spec[-1] in k8s_micro_memory_factors:
-            # this can be legal even though its odd i.e. 100000000000m = 100M
-            logging.warning(f"A memory resource was spec-ed with {mem_spec}"
-                            f", while kubernetes allows spec with 'm' 'u' and 'n'"
-                            f" please verify that you intended to use these measurements."
-                            f" They are milli, micro and nano respectively.")
-            return int(int(mem_spec[:-1]) * k8s_micro_memory_factors[mem_spec[-1]])
+            raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)
 
-        raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)
-
+        except Exception as e: # could be a valueError with mem_spec
+            logging.error(f"error parsing memory {mem_spec}", exc_info=True)
+        return 0
 
 def pod_restarts(pod: Pod) -> int:
     return sum([status.restartCount for status in pod.status.containerStatuses])

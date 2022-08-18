@@ -5,6 +5,7 @@ from prometheus_api_client import PrometheusConnect
 
 from ..prometheus.utils import PrometheusDiscovery
 from ...core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+from ...core.model.pods import k8s_memory_factors
 
 
 class MemoryAnalyzer:
@@ -93,20 +94,6 @@ class MemoryAnalyzer:
         )
 
         return results
-
-
-k8s_memory_factors = {
-    "K": 1000,
-    "M": 1000*1000,
-    "G": 1000*1000*1000,
-    "P": 1000*1000*1000*1000,
-    "E": 1000*1000*1000*1000*1000,
-    "Ki": 1024,
-    "Mi": 1024*1024,
-    "Gi": 1024*1024*1024,
-    "Pi": 1024*1024*1024*1024,
-    "Ei": 1024*1024*1024*1024*1024
-}
 
 
 class K8sMemoryTransformer:
