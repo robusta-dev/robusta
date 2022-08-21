@@ -42,6 +42,13 @@ Installing the cli
 
             ./robusta version
 
+        * Inorder to get the latest version of the docker image run:
+
+        .. code-block:: bash
+            :name: docker-cli-upgrade
+
+            ./robusta upgrade-cli
+
         .. admonition:: Common Errors
             :class: warning
 
