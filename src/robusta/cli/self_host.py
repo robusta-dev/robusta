@@ -1,8 +1,11 @@
+from typing import Any
 from pydantic import BaseModel
 import secrets
 import string
 import traceback
 import typer
+import yaml
+import jwt as JWT
 
 
 def gen_secret(length: int) -> str:
@@ -11,22 +14,70 @@ def gen_secret(length: int) -> str:
     )
 
 
-# PROVIDER: str = ""
-# STATIC_IP_NAME: relay-test
+def write_values_file(output_path: str, values: dict[str, Any]):
+    with open(output_path, "w") as output_file:
+        yaml.safe_dump(values, output_file, sort_keys=False)
+        typer.secho(
+            f"Saved configuration to {output_path} - save this file for future use!",
+            fg="red",
+        )
 
 
-class Domains(BaseModel):
-    relay_api: str = ""
-    relay_ws: str = ""
-    ui: str = ""
-    supabase: str = ""
+class RobustaUI(BaseModel):
+    RELAY_HOST: str = ""
+    SUPABASE_URL: str = ""
+    SUPABASE_KEY: str = ""
+
+    def __init__(self, domain: str, anon_key: str):
+        super().__init__(
+            RELAY_HOST=f"https://api.{domain}",
+            SUPABASE_URL=f"https://db.{domain}",
+            SUPABASE_KEY=anon_key,
+        )
 
 
-class Supabase(BaseModel):
+class RobustaRelay(BaseModel):
+    domain: str = ""
+    storePassword: str = gen_secret(12)
+    storeUser: str = "apiuser-robustarelay@robusta.dev"
+    storeUrl: str = ""
+    # anon key
+    storeApiKey: str = ""
+    slackClientId: str = "your-client-id"
+    slackClientSecret: str = "your-client-secret"
+    slackSigningSecret: str = "your-signing-secret"
+    syncActionAllowedOrigins: str = ""
+    provider: str = "none"
+
+    def __init__(self, domain: str, anon_key: str, provider: str):
+        super().__init__(
+            domain=domain,
+            storeUrl=f"https://db.{domain}",
+            syncActionAllowedOrigins=f"https://platform.{domain}",
+            storeApiKey=anon_key,
+            provider=provider,
+        )
+
+
+class SelfHostValues(BaseModel):
+    DOMAIN: str = ""
+    PROVIDER: str = ""
+    ##SUPABASE
     JWT_SECRET: str = gen_secret(32)
     JWT_EXPIRY: int = 3600
-    ANON_KEY: str = ""
-    SERVICE_ROLE_KEY: str = ""
+    ANON_KEY: str = JWT.encode(
+        {"role": "anon", "iss": "supabase", "iat": 1661029200, "exp": 1818795600},
+        JWT_SECRET,
+    )
+    SERVICE_ROLE_KEY: str = JWT.encode(
+        {
+            "role": "service_role",
+            "iss": "supabase",
+            "iat": 1661029200,
+            "exp": 1818795600,
+        },
+        JWT_SECRET,
+    )
     SUPABASE_URL: str = ""  # Internal URL
     PUBLIC_REST_URL: str = ""  ## Studio Public REST endpoint - replace this if you intend to use Studio outside of localhost
 
@@ -59,34 +110,27 @@ class Supabase(BaseModel):
     KONG_HTTP_PORT: int = 8000
     KONG_HTTPS_PORT: int = 8443
 
-
-class RobustaUI(BaseModel):
-    SUPABASE_URL: str = ""
-    RELAY_HOST: str = ""
-    # anon key
-    SUPABASE_KEY: str = ""
+    enableRelay: bool = True
+    enableRobustaUI: bool = True
 
 
-class RobustaRelay(BaseModel):
-    domain: str = ""
-    storePassword: str = ""
-    storeUser: str = "apiuser-robustarelay@robusta.dev"
-    storeUrl: str = "https://db.remediate.dev"
-    # anon key
-    storeApiKey: str = ""
-    slackClientId: str = "your-client-id"
-    slackClientSecret: str = "your-client-secret"
-    slackSigningSecret: str = "your-signing-secret"
-    syncActionAllowedOrigins: str = "https://platform.remediate.dev"
-    provider: str = ""
+def gen_gke(domain: str):
+    values = SelfHostValues()
+    values.PROVIDER = "gke"
+    values.DOMAIN = domain
+
+    relayValues = RobustaRelay(domain=domain, anon_key=values.ANON_KEY, provider="gke")
+    uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY)
+
+    values = values.dict()
+    values["robusta-ui"] = uiValues.dict()
+    values["robusta-relay"] = relayValues.dict()
+    write_values_file("self_host_values.yaml", values)
 
 
-def gen_gke():
-    typer.echo("gke")
+def gen_none(domain: str):
 
-
-def gen_none():
-    typer.echo("none")
+    typer.echo("asdasd")
 
 
 gen_provider_callbacks = {"": gen_none, "none": gen_none, "gke": gen_gke}
@@ -99,20 +143,21 @@ app = typer.Typer()
 def gen_config(
     provider: str = typer.Option(
         "",
-        help="Cloud host provider",
+        help="Cloud host provider.",
     ),
+    domain: str = typer.Option("", help="domain used to route the self host services."),
     debug: bool = typer.Option(False),
 ):
     """Create self host configuration file"""
 
     try:
-        gen_provider_callbacks[provider]()
+        gen_provider_callbacks[provider](domain)
     except KeyError:
         typer.secho(
             f'Invalid provider {provider}. options are "", "gke"',
             fg=typer.colors.RED,
         )
     except Exception:
-        typer.echo(f"unexpected error,")
+        typer.echo(f"unexpected error")
         if debug:
             typer.secho(traceback.format_exc())

@@ -975,6 +975,20 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "pyjwt"
+version = "2.4.0"
+description = "JSON Web Token implementation in Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+crypto = ["cryptography (>=3.3.1)"]
+dev = ["sphinx", "sphinx-rtd-theme", "zope-interface", "cryptography (>=3.3.1)", "pytest (>=6.0.0,<7.0.0)", "coverage[toml] (==5.0.4)", "mypy", "pre-commit"]
+docs = ["sphinx", "sphinx-rtd-theme", "zope-interface"]
+tests = ["pytest (>=6.0.0,<7.0.0)", "coverage[toml] (==5.0.4)"]
+
+[[package]]
 name = "pymsteams"
 version = "0.1.16"
 description = "Format messages and post to Microsoft Teams."
@@ -1701,7 +1715,7 @@ all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-excepti
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "1cc6d00763b78da23b2d6460a2ec2c665c749a0227d05f4f9c566622604d273c"
+content-hash = "7953467802ab359aca060ecdc1fb4907813bf2a56ee0de5470326e284f95a6ce"
 
 [metadata.files]
 alabaster = [
@@ -2336,6 +2350,7 @@ pygments = [
     {file = "Pygments-2.12.0-py3-none-any.whl", hash = "sha256:dc9c10fb40944260f6ed4c688ece0cd2048414940f1cea51b8b226318411c519"},
     {file = "Pygments-2.12.0.tar.gz", hash = "sha256:5eb116118f9612ff1ee89ac96437bb6b49e8f04d8a13b514ba26f620208e26eb"},
 ]
+pyjwt = []
 pymsteams = [
     {file = "pymsteams-0.1.16.tar.gz", hash = "sha256:721399d96f9b79c1adb8f4c78512fba9fd73578399a2b13e51684c35a162bd06"},
 ]
