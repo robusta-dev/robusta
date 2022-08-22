@@ -3,6 +3,7 @@ import os.path
 from inspect import getmembers
 import manhole
 
+from ..patch.patch import create_monkey_patches
 from .telemetry_service import TelemetryService, TelemetryLevel
 from .log_init import logging, init_logging
 from .web import Web
@@ -15,6 +16,7 @@ from ..core.model.env_vars import ROBUSTA_TELEMETRY_ENDPOINT, SEND_ADDITIONAL_TE
 
 def main():
     init_logging()
+    create_monkey_patches()
     registry = Registry()
     event_handler = PlaybooksEventHandlerImpl(registry)
     loader = ConfigLoader(registry, event_handler)
