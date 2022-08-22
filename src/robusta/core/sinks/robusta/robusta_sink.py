@@ -7,6 +7,7 @@ from typing import List, Dict
 from kubernetes.client import V1ObjectMeta, V1NodeList, V1Node, V1NodeCondition, V1Taint
 
 from ...discovery.discovery import Discovery
+from ...model.jobs import JobInfo
 from ....runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from ...model.env_vars import DISCOVERY_PERIOD_SEC, CLUSTER_STATUS_PERIOD_SEC
@@ -16,7 +17,7 @@ from ...model.services import ServiceInfo
 from ...reporting.base import Finding
 from .dal.supabase_dal import SupabaseDal
 from ..sink_base import SinkBase
-from ...discovery.top_service_resolver import TopServiceResolver
+from ...discovery.top_service_resolver import TopServiceResolver, TopLevelResource
 from ...model.cluster_status import ClusterStatus
 
 
@@ -54,6 +55,7 @@ class RobustaSink(SinkBase):
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
+        self.__jobs_cache: Dict[str, JobInfo] = {}
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
 
@@ -69,48 +71,46 @@ class RobustaSink(SinkBase):
             for node in self.dal.get_active_nodes():
                 self.__nodes_cache[node.name] = node
 
+    def __assert_jobs_cache_initialized(self):
+        if not self.__jobs_cache:
+            logging.info("Initializing jobs cache")
+            for job in self.dal.get_active_jobs():
+                self.__jobs_cache[job.get_service_key()] = job
+
+    def __reset_caches(self):
+        self.__services_cache: Dict[str, ServiceInfo] = {}
+        self.__nodes_cache: Dict[str, NodeInfo] = {}
+        self.__jobs_cache: Dict[str, JobInfo] = {}
+
     def stop(self):
         self.__active = False
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.dal.persist_finding(finding)
 
-    # service discovery impl
-    def __publish_service(self, service_info: ServiceInfo):
-        logging.debug(f"publishing to {self.sink_name} service {service_info} ")
-        self.dal.persist_service(service_info)
-
-    def __is_cached(self, service_info: ServiceInfo):
-        cache_key = service_info.get_service_key()
-        return self.__services_cache.get(cache_key) is not None
-
     def __publish_new_services(self, active_services: List[ServiceInfo]):
-        active_services_keys = set()
-        for service_info in active_services:
-            cache_key = service_info.get_service_key()
-            active_services_keys.add(cache_key)
-            cached_service = self.__services_cache.get(cache_key)
-            if not cached_service or cached_service != service_info:
-                self.__publish_service(service_info)
-                self.__services_cache[cache_key] = service_info
+        # convert to map
+        curr_services = {}
+        for service in active_services:
+            curr_services[service.get_service_key()] = service
 
-        # delete cached services that aren't active anymore
+        # handle deleted services
         cache_keys = list(self.__services_cache.keys())
+        updated_services: List[ServiceInfo] = []
         for service_key in cache_keys:
-            if service_key not in active_services_keys:
+            if not curr_services.get(service_key):  # service doesn't exist any more, delete it
+                self.__services_cache[service_key].deleted = True
+                updated_services.append(self.__services_cache[service_key])
                 del self.__services_cache[service_key]
 
-        # handle delete services
-        persisted_services = self.dal.get_active_services()
-        deleted_services = [
-            service for service in persisted_services if not self.__is_cached(service)
-        ]
-        for deleted_service in deleted_services:
-            deleted_service.deleted = True
-            self.__publish_service(deleted_service)
+        # new or changed services
+        for service_key in curr_services.keys():
+            current_service = curr_services[service_key]
+            if self.__services_cache.get(service_key) != current_service:  # service not in the cache, or changed
+                updated_services.append(current_service)
+                self.__services_cache[service_key] = current_service
 
-        # save the cached services in the resolver.
-        TopServiceResolver.store_cached_services(list(self.__services_cache.values()))
+        self.dal.persist_services(updated_services)
 
     def __get_events_history(self):
         try:
@@ -130,27 +130,44 @@ class RobustaSink(SinkBase):
                 f"Error getting events history", exc_info=True
             )
 
-    @staticmethod
-    def __create_service_info(meta: V1ObjectMeta, kind: str, images: List[str]) -> ServiceInfo:
-        return ServiceInfo(
-            name=meta.name,
-            namespace=meta.namespace,
-            service_type=kind,
-            images=images,
-            labels=meta.labels or {},
-        )
 
     def __discover_resources(self):
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
         try:
-            (active_services, current_nodes, node_requests) = Discovery.discover_resources()
+            (active_services, current_nodes, node_requests, active_jobs) = Discovery.discover_resources()
 
             self.__assert_services_cache_initialized()
             self.__publish_new_services(active_services)
             if current_nodes:
                 self.__assert_node_cache_initialized()
                 self.__publish_new_nodes(current_nodes, node_requests)
+
+            self.__assert_jobs_cache_initialized()
+            self.__publish_new_jobs(active_jobs)
+
+            # save the cached services for the resolver.
+            resources: List[TopLevelResource] = [
+                TopLevelResource(
+                    name=service.name,
+                    namespace=service.namespace,
+                    resource_type=service.service_type
+                )
+                for service in self.__services_cache.values()
+            ]
+            # save the cached jobs for the resolver.
+            resources.extend([
+                TopLevelResource(
+                    name=job.name,
+                    namespace=job.namespace,
+                    resource_type=job.type
+                )
+                for job in self.__jobs_cache.values()
+            ])
+            TopServiceResolver.store_cached_resources(resources)
+
         except Exception:
+            # we had an error during discovery. Reset caches to align the data with the storage
+            self.__reset_caches()
             logging.error(
                 f"Failed to run publish discovery for {self.sink_name}",
                 exc_info=True,
@@ -235,11 +252,12 @@ class RobustaSink(SinkBase):
             curr_nodes[node.metadata.name] = node
 
         # handle deleted nodes
+        updated_nodes: List[NodeInfo] = []
         cache_keys = list(self.__nodes_cache.keys())
         for node_name in cache_keys:
             if not curr_nodes.get(node_name):  # node doesn't exist any more, delete it
                 self.__nodes_cache[node_name].deleted = True
-                self.dal.publish_node(self.__nodes_cache[node_name])
+                updated_nodes.append(self.__nodes_cache[node_name])
                 del self.__nodes_cache[node_name]
 
         # new or changed nodes
@@ -250,8 +268,34 @@ class RobustaSink(SinkBase):
             if (
                 self.__nodes_cache.get(node_name) != updated_node
             ):  # node not in the cache, or changed
-                self.dal.publish_node(updated_node)
+                updated_nodes.append(updated_node)
                 self.__nodes_cache[node_name] = updated_node
+
+        self.dal.publish_nodes(updated_nodes)
+
+    def __publish_new_jobs(self, active_jobs: List[JobInfo]):
+        # convert to map
+        curr_jobs = {}
+        for job in active_jobs:
+            curr_jobs[job.get_service_key()] = job
+
+        # handle deleted jobs
+        cache_keys = list(self.__jobs_cache.keys())
+        updated_jobs: List[JobInfo] = []
+        for job_key in cache_keys:
+            if not curr_jobs.get(job_key):  # job doesn't exist any more, delete it
+                self.__jobs_cache[job_key].deleted = True
+                updated_jobs.append(self.__jobs_cache[job_key])
+                del self.__jobs_cache[job_key]
+
+        # new or changed jobs
+        for job_key in curr_jobs.keys():
+            current_job = curr_jobs[job_key]
+            if self.__jobs_cache.get(job_key) != current_job:  # job not in the cache, or changed
+                updated_jobs.append(current_job)
+                self.__jobs_cache[job_key] = current_job
+
+        self.dal.publish_jobs(updated_jobs)
 
     def __update_cluster_status(self):
         try:
