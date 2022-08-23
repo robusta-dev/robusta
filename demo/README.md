@@ -30,6 +30,22 @@ Robusta shows relevant data for each alert. In this specific case, Robusta shows
 
 This lets you fix issues faster with more confidence.
 
+# CPU Throttling Demo (CPUThrottlingHigh alert)
+
+## Running it
+
+1. Run `kubectl apply -f ./cpu_throttling/`
+2. Wait 15 minutes and then check your Slack channel for a notification about CPU throttling. The message includes a **dynamic** explanation about why it occurred and how to fix it.
+3. Clean up the demo with `kubectl delete -f ./cpu_throttling`
+
+**Note: To avoid noisy alerts about temporary and minor throttling, Robusta only alerts after CPU throttling occurs for at least 15 minutes.**
+
+## Value Demonstrated
+
+Robusta automatically investigates common Kubernetes issues and tells you why they occur.
+
+Note: Robusta's explanations are **dynamic** and depend on the real reason an issue is occurring! If you had CPU throttling on a pod without CPU limits then you would have received **different** advice as the situation is different.
+
 # Debugging Pending Pods
 
 ## Running it
@@ -38,7 +54,7 @@ This lets you fix issues faster with more confidence.
 2. Wait 15 minutes and then check your Slack channel for a notification about the pending pod. The message includes Kubernetes events which tell you *why* the pod can't be scheduled to any of the existing nodes
 3. Clean up the demo by running `kubectl delete -f pending_pods`
 
-Note: By default, Robusta only alerts after a pod is pending for 15 minutes. In a busy Kubernetes cluster with autoscaling, it's normal and OK if pods are pending for short periods of time while clusters scale up!
+**Note: By default, Robusta only alerts after a pod is pending for 15 minutes.** In a busy Kubernetes cluster with autoscaling, it's normal and OK if pods are pending for short periods of time while clusters scale up!
 
 ## Value Demonstrated
 
