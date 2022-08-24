@@ -1,4 +1,5 @@
 import logging
+from concurrent.futures.process import ProcessPoolExecutor
 from typing import NamedTuple, Union, Type, List, Optional, Dict
 from pydantic.main import BaseModel
 from hikaru.model.rel_1_16 import *
@@ -6,6 +7,7 @@ from hikaru.model.rel_1_16 import *
 from .models import PrometheusKubernetesAlert, PrometheusAlert
 from ..helper import exact_match, prefix_match
 from ..kubernetes.custom_models import RobustaPod, RobustaDeployment, RobustaJob
+from ...core.model.env_vars import ALERT_BUILDER_WORKERS
 from ...core.playbooks.base_trigger import BaseTrigger, TriggerEvent
 from ...core.reporting.base import Finding
 from ...core.model.events import ExecutionBaseEvent
@@ -77,8 +79,25 @@ class PrometheusAlertTrigger(BaseTrigger):
 
         return True
 
-    @classmethod
-    def __find_node_by_ip(cls, ip) -> Optional[Node]:
+    def build_execution_event(
+        self, event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]]
+    ) -> Optional[ExecutionBaseEvent]:
+        return AlertEventBuilder.build_event(event, sink_findings)
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return PrometheusKubernetesAlert
+
+
+class PrometheusAlertTriggers(BaseModel):
+    on_prometheus_alert: Optional[PrometheusAlertTrigger]
+
+
+class AlertEventBuilder:
+    executor = ProcessPoolExecutor(max_workers=ALERT_BUILDER_WORKERS)
+
+    @staticmethod
+    def __find_node_by_ip(ip) -> Optional[Node]:
         nodes: NodeList = NodeList.listNode().obj
         for node in nodes.items:
             addresses = [a.address for a in node.status.addresses]
@@ -87,22 +106,23 @@ class PrometheusAlertTrigger(BaseTrigger):
                 return node
         return None
 
-    @classmethod
-    def __load_node(cls, alert: PrometheusAlert, node_name: str) -> Optional[Node]:
+    @staticmethod
+    def __load_node(alert: PrometheusAlert, node_name: str) -> Optional[Node]:
         node = None
         try:
             # sometimes we get an IP:PORT instead of the node name. handle that case
             if ":" in node_name:
-                node = cls.__find_node_by_ip(node_name.split(":")[0])
+                node = AlertEventBuilder.__find_node_by_ip(node_name.split(":")[0])
             else:
                 node = Node().read(name=node_name)
         except Exception as e:
             logging.info(f"Error loading Node kubernetes object {alert}. error: {e}")
-
         return node
 
-    def build_execution_event(
-        self, event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]]
+    @staticmethod
+    def _build_event_task(
+            event: PrometheusTriggerEvent,
+            sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
         labels = event.alert.labels
         execution_event = PrometheusKubernetesAlert(
@@ -137,7 +157,7 @@ class PrometheusAlertTrigger(BaseTrigger):
 
         node_name = labels.get("node")
         if node_name:
-            execution_event.node = self.__load_node(execution_event.alert, node_name)
+            execution_event.node = AlertEventBuilder.__load_node(execution_event.alert, node_name)
 
         # we handle nodes differently than other resources
         node_name = labels.get("instance", None)
@@ -147,14 +167,14 @@ class PrometheusAlertTrigger(BaseTrigger):
         # when the job_name is kube-state-metrics "instance" refers to the IP of kube-state-metrics not the node
         # If the alert has pod, the 'instance' attribute contains the pod ip
         if not execution_event.node and node_name and job_name != "kube-state-metrics":
-            execution_event.node = self.__load_node(execution_event.alert, node_name)
+            execution_event.node = AlertEventBuilder.__load_node(execution_event.alert, node_name)
 
         return execution_event
 
     @staticmethod
-    def get_execution_event_type() -> type:
-        return PrometheusKubernetesAlert
-
-
-class PrometheusAlertTriggers(BaseModel):
-    on_prometheus_alert: Optional[PrometheusAlertTrigger]
+    def build_event(
+            event: PrometheusTriggerEvent,
+            sink_findings: Dict[str, List[Finding]]
+    ) -> Optional[ExecutionBaseEvent]:
+        future = AlertEventBuilder.executor.submit(AlertEventBuilder._build_event_task, event, sink_findings)
+        return future.result()
