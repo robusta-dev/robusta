@@ -222,7 +222,7 @@ class OomKillsExtractor:
         oom_kills: List[OomKill] = []
         for c_status in pod.status.containerStatuses:
             # Ignore pods that were not oom killed
-            container = get_oom_killed_container(c_status)
+            container = get_oom_killed_container(pod, c_status)
             if not container or not container.state:
                 continue
 
