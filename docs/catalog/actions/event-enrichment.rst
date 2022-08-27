@@ -35,7 +35,11 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_graph_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_node_graph_enricher
+
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.pod_ps
+
+.. robusta-action:: playbooks.robusta_playbooks.oom_killer.pod_oom_killer_enricher
 
 Daemonset Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^

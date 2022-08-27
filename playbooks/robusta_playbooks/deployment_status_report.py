@@ -47,11 +47,13 @@ def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams
             )
             finding.add_enrichment([FileBlock("panel.png", image.content)])
     except requests.exceptions.ConnectionError:
-        event.add_enrichment([
+        finding.add_enrichment([
             MarkdownBlock(
-            f"Connection to grafana-renderer container was refused. Make sure to set 'grafanaRenderer:enableContainer' to 'true' in the values yaml"
-        )])
-        return
+                f"Connection to grafana-renderer container was refused. "
+                f"Make sure to set 'grafanaRenderer:enableContainer' to 'true' in the values yaml"
+            )
+        ])
+
     event.add_finding(finding)
 
 

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crashpod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crashpod
+  template:
+    metadata:
+      labels:
+        app: crashpod
+    spec:
+      containers:
+      - name: crashpod
+        image: bash
+        command: ["/bin/sh"]
+        args: ["-c", "if [[ -z \"${DEPLOY_ENV}\" ]]; then echo Environment variable DEPLOY_ENV is undefined ; else while true; do echo hello; sleep 10;done; fi"]

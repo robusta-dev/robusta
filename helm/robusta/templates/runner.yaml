@@ -61,6 +61,9 @@ spec:
         - secretRef:
             name: robusta-runner-secret
             optional: true
+        {{- if .Values.runner.additional_env_froms }}
+        {{ toYaml .Values.runner.additional_env_froms | nindent 8 }}
+        {{- end }}
         volumeMounts:
           - name: auth-config-secret
             mountPath: /etc/robusta/auth

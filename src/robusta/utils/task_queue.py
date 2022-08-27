@@ -65,6 +65,11 @@ class TaskQueue(Queue):
         while True:
             item, args, kwargs = self.get()
             start_time = time.time()
-            item(*args, **kwargs)
+
+            try:
+                item(*args, **kwargs)
+            except Exception:
+                logging.error("Task worker error", exc_info=True)
+
             self.metrics.on_processed(self.name, time.time() - start_time)
             self.task_done()

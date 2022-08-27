@@ -61,12 +61,11 @@ def create_pvc_snapshot(event: ExecutionBaseEvent, params: VolumeSnapshotParams)
         plural="volumesnapshots",
         body=snapshot_body,
     )
-    event.add_finding(
-        Finding(
+    finding = Finding(
             title=f"Created VolumeSnapshot {snapshot_name}",
             aggregation_key="volume_snapshot",
             finding_type=FindingType.REPORT,
             failure=False,
         )
-    )
-    event.add_enrichment([MarkdownBlock(f"Successfully created snapshot")])
+    finding.add_enrichment([MarkdownBlock(f"Successfully created snapshot")])
+    event.add_finding(finding)

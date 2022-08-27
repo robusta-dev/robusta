@@ -34,6 +34,9 @@ class K8sTriggerEvent(TriggerEvent):
     def get_event_name(self) -> str:
         return K8sTriggerEvent.__name__
 
+    def get_event_description(self) -> str:
+        return f"{self.k8s_payload.operation}-{self.k8s_payload.kind}-{self.k8s_payload.apiVersion}"
+
 
 class K8sBaseTrigger(BaseTrigger):
     kind: str

@@ -76,6 +76,7 @@ def alert_on_hpa_reached_limit(
             action_params=ScaleHPAParams(
                 max_replicas=new_max_replicas_suggestion,
             ),
+            kubernetes_object=hpa,
         )
     }
     finding = Finding(

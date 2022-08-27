@@ -9,7 +9,7 @@ Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1
 
     `Ask us on Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
 
-We will now configure Robusta in you cluster.
+We will now configure Robusta in your cluster.
 For this we need to install Robusta, and also connect at least one destination ("sink"), and at least one source ("triggers").
 
 .. image:: ./images/robusta_motion_graphics_transparent.gif

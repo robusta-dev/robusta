@@ -30,17 +30,35 @@ CONTAINER_MEMORY_THRESHOLD = 0.92
 # report the corresponding node as the reason for the OOMKill.
 NODE_MEMORY_THRESHOLD = 0.95
 
+@action
+def oomkilled_container_graph_enricher(event: PodEvent, params: ResourceGraphEnricherParams):
+    """
+    Get a graph of a specific resource for this pod. Note: "Disk" Resource is not supported.
+    """
+    pod = event.get_pod()
+    if not pod:
+        logging.error(f"cannot run pod_oom_killer_enricher on event with no pod: {event}")
+        return
+    oomkilled_container = pod_most_recent_oom_killed_container(pod)
+    if not oomkilled_container:
+        logging.error(f"Unable to find oomkilled container")
+        return
+
+    container_graph = create_container_graph(params, pod, oomkilled_container.container, show_limit=True )
+    event.add_enrichment([container_graph])
+
 
 @action
 def pod_oom_killer_enricher(
     event: PodEvent,
 ):
+    """
+    Retrieves pod and node information for an OOMKilled pod
+    """
     pod = event.get_pod()
     if not pod:
         logging.error(f"cannot run pod_oom_killer_enricher on event with no pod: {event}")
         return
-    resource_requests = pod_requests(pod)
-    resource_limits = pod_limits(pod)
 
     finding = Finding(
         title=f"Pod {pod.metadata.name} in namespace {pod.metadata.namespace} OOMKilled results",
@@ -48,43 +66,41 @@ def pod_oom_killer_enricher(
         severity=FindingSeverity.HIGH
     )
 
-    labels = [("Pod", pod.metadata.name), ("Namespace", pod.metadata.namespace),
-              ("Memory limit", "None" if not resource_limits.memory else f"{resource_limits.memory}MB"),
-              ("Memory requests", "None" if not resource_requests.memory else f"{resource_requests.memory}MB"),
+    labels = [("Pod", pod.metadata.name),
+              ("Namespace", pod.metadata.namespace),
               ("Node Name", pod.spec.nodeName),
               ]
     node: Node = Node.readNode(pod.spec.nodeName).obj
     if node:
         allocatable_memory = PodResources.parse_mem(node.status.allocatable.get("memory", "0Mi"))
         capacity_memory = PodResources.parse_mem(node.status.capacity.get("memory", "0Mi"))
-        node_labels = [("Node memory allocatable", f"{allocatable_memory}MB"),
-              ("Node memory capacity", f"{capacity_memory}MB"),
-              ("Node memory allocated precent", f"{(capacity_memory - allocatable_memory) * 100 / capacity_memory}%")]
-        labels.extend(node_labels)
+        allocated_precent = (capacity_memory - allocatable_memory) * 100 / capacity_memory
+        node_label = ("Node allocated memory", f"{allocated_precent:.2f}% out of {allocatable_memory}MB allocatable")
+        labels.append(node_label)
     else:
         logging.warning(
             f"Node {pod.spec.nodeName} not found for OOMKilled pod {pod.metadata.name}"
         )
 
-    oom_killed_status = pod_most_recent_oom_killed_state(pod)
-    if not oom_killed_status:
+    oomkilled_container = pod_most_recent_oom_killed_container(pod)
+    if not oomkilled_container or not oomkilled_container.state:
         logging.error(
             f"could not find OOMKilled status in pod {pod.metadata.name}"
         )
     else:
+        requests, limits = PodContainer.get_memory_resources(oomkilled_container.container)
+        labels.append(("Container name", oomkilled_container.container.name))
+        memory_limit = "No limit" if not limits else f"{limits}MB limit"
+        memory_requests = "No request" if not requests else f"{requests}MB request"
+        labels.append(("Container memory", f"{memory_requests}, {memory_limit}"))
+        oom_killed_status = oomkilled_container.state
         if oom_killed_status.terminated.startedAt:
-            labels.append(("Container started at",oom_killed_status.terminated.startedAt))
+            labels.append(("Container started at", oom_killed_status.terminated.startedAt))
         if oom_killed_status.terminated.finishedAt:
             labels.append(("Container finished at", oom_killed_status.terminated.finishedAt))
-        if oom_killed_status.terminated.startedAt and oom_killed_status.terminated.finishedAt:
-            started_at = parse_kubernetes_datetime_to_ms(oom_killed_status.terminated.startedAt)
-            finished_at = parse_kubernetes_datetime_to_ms(oom_killed_status.terminated.finishedAt)
-            pod_start = datetime.fromtimestamp(started_at / 1000)
-            oom_kill_from = datetime.fromtimestamp(finished_at / 1000)
-            labels.append(("Container runtime", oom_kill_from - pod_start))
     table_block = TableBlock(
         [[k, v] for (k, v) in labels],
-        ["label", "value"],
+        ["field", "value"],
         table_name="*Pod and Node OOMKilled data*",
     )
     finding.add_enrichment([table_block])
@@ -206,12 +222,12 @@ class OomKillsExtractor:
         oom_kills: List[OomKill] = []
         for c_status in pod.status.containerStatuses:
             # Ignore pods that were not oom killed
-            state = get_oom_killed_state(c_status)
-            if state is None:
+            container = get_oom_killed_container(pod, c_status)
+            if not container or not container.state:
                 continue
 
             # Ignore old oom kills
-            dt = parse_kubernetes_datetime_to_ms(state.terminated.finishedAt)
+            dt = parse_kubernetes_datetime_to_ms(container.state.terminated.finishedAt)
             oom_kill_from = datetime.fromtimestamp(dt / 1000)
             now = datetime.now()
             if now - oom_kill_from > new_oom_kills_duration:
