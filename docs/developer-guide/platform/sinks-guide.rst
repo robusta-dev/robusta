@@ -1,47 +1,47 @@
-How to implement a custom Robusta sink
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Implement a custom sink
+################################
 
 What Are Robusta Sinks?
---------------
+--------------------------
 
-`Sinks <https://docs.robusta.dev/master/catalog/sinks/index.htm>`_
+:ref:`Sinks <Sinks>`
 are the destinations to which Robusta sends data. For example, when sending Robusta messages
 to Slack, Robusta uses a Slack sink.
 
 Internally, Robusta generates
-`Findings <https://docs.robusta.dev/master/developer-guide/actions/findings-api.html>`_, or messages,
+:ref:`Findings <Creating Findings>`, or messages,
 which are then formatted by each sink in an appropriate manner. For example,
 a link might be formatted one way for Slack (e.g. markdown) and in another format
 for another destination (e.g. HTML).
 
 Before reading this tutorial, make sure you are familiar with the
-`Findings API <https://docs.robusta.dev/master/developer-guide/actions/findings-api.html>`_.
+:ref:`Findings API <Creating Findings>`
 It contains explanations of the types of findings your sink will have to process.
 
 Implementation details
---------------
+--------------------------
 
-Sinks are located under the directory **src/robusta/core/sinks**.
+Sinks are located under the directory `src/robusta/core/sinks <https://github.com/robusta-dev/robusta/tree/master/src/robusta/core/sinks>`_.
 
 There are two necessary things you must provide when implementing a new sink:
 
 1. The sink itself.
 2. The sink’s configuration.
 
-You can use helper classes and methods defined in **src/robusta/integrations**.
+You can use helper classes and methods defined in `src/robusta/integrations <https://github.com/robusta-dev/robusta/tree/master/src/robusta/integrations>`_.
 
-To start with, create a new Python module inside the **src/robusta/core/sinks**
+To start with, create a new Python module inside the `src/robusta/core/sinks <https://github.com/robusta-dev/robusta/tree/master/src/robusta/core/sinks>`_
 folder that will contain all your sink’s source code.
 
 Implementing The Sink Configuration Class
---------------
+--------------------------------------------
 
 There are two configuration classes we need to provide so our new sink can work properly.
 Those are the “sink config” and “sink config wrapper” classes.
 
 Let’s take a look at Robusta’s Mattermost sink as an example.
 
-The relevant classes can be found at **src/robusta/core/sinks/mattermost/mattermost_sink_params.py**
+The relevant classes can be found at `src/robusta/core/sinks/mattermost/mattermost_sink_params.py <https://github.com/robusta-dev/robusta/tree/master/src/robusta/core/sinks/mattermost/mattermost_sink_params.py>`_
 
 The class :code:`MattermostSinkParams` contains all the parameters our sink has.
 In this example, we have *url*, *token*, *token_id*, and *channel* parameters.
@@ -59,14 +59,14 @@ Accordingly, you should create two configuration classes for your new sink.
 These classes must inherit from :code:`SinkBaseParams` and :code:`SinkConfigBase` accordingly.
 
 Sink Implementation
---------------
+--------------------
 
 Now we will implement the sink itself.
 
 All sinks inherit from the :code:`SinkBase` class so they can be integrated with Robusta.
 The main logic for the sink is located in the :code:`write_finding method`. It accepts two parameters:
 *finding*, which is the
-`Finding <https://docs.robusta.dev/master/developer-guide/actions/findings-api.html>`_
+:ref:`Findings <Creating Findings>`
 instance, and the *platform_enabled* boolean value.
 The *platform_enabled* value indicates whether the Robusta platform sink is enabled in the
 configuration, which allows us to add special buttons like  “Silence” and “Investigate”
@@ -95,7 +95,7 @@ You can connect to destinations however you choose. For example, you could even 
 database connection if you wanted to.
 
 Connecting the Sink to Robusta
---------------
+---------------------------------
 
 Once you have completed your sink’s implementation, you must add it to Robusta so it is recognized. To do so, you need to add your Sink definition to several places:
 

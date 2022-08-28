@@ -202,4 +202,3 @@ Next Steps
 
    developer-guide/actions/index
    developer-guide/platform/index
-   developer-guide/sinks-guide
