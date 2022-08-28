@@ -42,7 +42,6 @@ Standard Installation
         .. tab-item:: Docker
             :name: docker-cli-tab
 
-            Robusta CLI and Kubectl are included in the image. Any file generated in the image will be copied to your current directory.
             For **Windows** please use `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
 
             * Download robusta script and give it executable permissions:
