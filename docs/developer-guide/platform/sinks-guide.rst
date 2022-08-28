@@ -49,11 +49,35 @@ Robusta uses Pydantic for validation This guarantees that all the required param
 present to set up our sink. (You can also provide additional validation if needed, just like
 the *url* parameter in the Mattermost sink).
 
+.. code-block:: python
+
+        class MattermostSinkParams(SinkBaseParams):
+            url: str
+            token: str
+            token_id: str
+            channel: str
+
+            @validator("url")
+            def set_http_schema(cls, url):
+                parsed_url = urlparse(url)
+                # if netloc is empty string, the url was provided without schema
+                if not parsed_url.netloc:
+                    raise AttributeError(f"{url} does not contain the schema!")
+                return url
+
 The :code:`MattermostSinkConfigWrapper` has nothing but the attribute to store
 our sink configuration. It defines exactly how the sink’s configuration should look in your
 Robusta YAML file. (E.g, if you renamed *mattermost_sink* in :code:`MattermostSinkConfigWrapper` to
 *mattermost_cool_sink*, then Robusta’s YAML configuration would need to contain a
 *mattermost_cool_sink* key to recognize the sink).
+
+.. code-block:: python
+
+    class MattermostSinkConfigWrapper(SinkConfigBase):
+        mattermost_sink: MattermostSinkParams
+
+        def get_params(self) -> SinkBaseParams:
+            return self.mattermost_sink
 
 Accordingly, you should create two configuration classes for your new sink.
 These classes must inherit from :code:`SinkBaseParams` and :code:`SinkConfigBase` accordingly.
