@@ -1,3 +1,4 @@
+import logging
 from typing import Union, List, Dict, get_type_hints
 from dataclasses import is_dataclass, InitVar
 from inspect import signature, getmodule
@@ -17,10 +18,16 @@ NoneType = type(None)
 
 
 def create_monkey_patches():
-    print("Creating hikaru monkey patches")
+    # The 2 patched Hikaru methods are very expensive CPU wise. We patched them, and using cached attributes
+    # on the hikaru class, so that we perform the expensive procedure only once
+    logging.info("Creating hikaru monkey patches")
     HikaruBase.get_empty_instance = get_empty_instance
     HikaruBase._get_hints = _get_hints
-    print("Creating yaml monkey patch")
+    # The YAML method below is searching the file system for plugins, each time a parser is created
+    # We create many parser, and this is very inefficient.
+    # The plugins doesn't change during program execution.
+    # We added caching to search for the plugins only once
+    logging.info("Creating yaml monkey patch")
     YAML.official_plug_ins = official_plug_ins
 
 
@@ -37,6 +44,7 @@ def get_empty_instance(cls):
         all collection attrs set to an appropriate empty collection
     """
     kw_args = {}
+    # The 3 lines below are added, to use cached arguments to create the empty class instance
     cached_args = getattr(cls, "cached_args", None)
     if cached_args:
         return cls(**cached_args)
@@ -101,12 +109,14 @@ def get_empty_instance(cls):
                                           f" {cls.__name__}. Please file a"
                                           f" bug report.")  # pragma: no cover
     new_inst = cls(**kw_args)
+    # Caching the empty instance creation args, to use next time we want to create an empty instance
     cls.cached_args = kw_args
     return new_inst
 
 
 @classmethod
 def _get_hints(cls) -> dict:
+    # The 3 lines below are added, to use cached hints
     cached_hints = getattr(cls, "cached_hints", None)
     if cached_hints:
         return cached_hints
@@ -117,6 +127,6 @@ def _get_hints(cls) -> dict:
     for c in mro:
         if is_dataclass(c):
             hints.update(get_type_hints(c, globs))
-
+    # Caching the class hints for later use
     cls.cached_hints = hints
     return hints
