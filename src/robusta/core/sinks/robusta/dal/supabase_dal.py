@@ -129,7 +129,7 @@ class SupabaseDal:
             "account_id": self.account_id,
             "deleted": service.deleted,
             "service_key": service.get_service_key(),
-            "config": service.service_config.dict(),
+            "config": service.service_config.dict() if service.service_config else None,
             "update_time": "now()",
         }
 

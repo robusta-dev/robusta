@@ -14,6 +14,7 @@ from ..model.config import Registry
 from ..core.model.env_vars import ROBUSTA_TELEMETRY_ENDPOINT, SEND_ADDITIONAL_TELEMETRY, \
  ENABLE_TELEMETRY, TELEMETRY_PERIODIC_SEC
 
+
 def main():
     init_logging()
     create_monkey_patches()
