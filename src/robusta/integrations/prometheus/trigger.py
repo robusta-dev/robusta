@@ -96,8 +96,8 @@ class PrometheusAlertTriggers(BaseModel):
 class AlertEventBuilder:
     executor = ProcessPoolExecutor(max_workers=ALERT_BUILDER_WORKERS)
 
-    @staticmethod
-    def __find_node_by_ip(ip) -> Optional[Node]:
+    @classmethod
+    def __find_node_by_ip(cls, ip) -> Optional[Node]:
         nodes: NodeList = NodeList.listNode().obj
         for node in nodes.items:
             addresses = [a.address for a in node.status.addresses]
@@ -106,13 +106,13 @@ class AlertEventBuilder:
                 return node
         return None
 
-    @staticmethod
-    def __load_node(alert: PrometheusAlert, node_name: str) -> Optional[Node]:
+    @classmethod
+    def __load_node(cls, alert: PrometheusAlert, node_name: str) -> Optional[Node]:
         node = None
         try:
             # sometimes we get an IP:PORT instead of the node name. handle that case
             if ":" in node_name:
-                node = AlertEventBuilder.__find_node_by_ip(node_name.split(":")[0])
+                node = cls.__find_node_by_ip(node_name.split(":")[0])
             else:
                 node = Node().read(name=node_name)
         except Exception as e:
