@@ -4,13 +4,55 @@ CLI Commands
 
 Installing the cli
 ---------------------
-The robusta cli is installed via pip:
+.. tab-set::
 
-.. code-block::
+    .. tab-item:: PIP
+        :name: pip-cli-tab
 
-    pip install robusta-cli
+        .. code-block:: bash
+            :name: pip
 
-.. warning:: If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
+            pip install -U robusta-cli --no-cache
+
+        .. admonition:: Common Errors
+            :class: warning
+
+            * Python 3.7 or higher is required
+            * If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
+            * Errors about *tiller* mean you are running Helm 2, not Helm 3
+
+    .. tab-item:: Docker
+        :name: docker-cli-tab
+
+        Robusta CLI and Kubectl are included in the image. Any file generated in the image will be copied to your current directory.
+        For **Windows** please use `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
+
+        * Download robusta script and give it executable permissions:
+
+        .. code-block:: bash
+            :name: docker-cli-download
+
+            curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
+            chmod +x robusta
+
+        * Use the script, for example:
+
+        .. code-block:: bash
+            :name: docker-cli-example
+
+            ./robusta version
+
+        * Inorder to get the latest version of the docker image run:
+
+        .. code-block:: bash
+            :name: docker-cli-upgrade
+
+            ./robusta upgrade-cli
+
+        .. admonition:: Common Errors
+            :class: warning
+
+            * Docker daemon is required. 
 
 Using the cli
 ---------------------
