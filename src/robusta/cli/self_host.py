@@ -77,6 +77,7 @@ class RobustaRelay(BaseModel):
 
 
 class SelfHostValues(BaseModel):
+    STATIC_IP_NAME: str = "robusta-platform-ip"
     DOMAIN: str = ""
     PROVIDER: str = ""
     # SUPABASE
