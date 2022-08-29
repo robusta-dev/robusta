@@ -1,10 +1,12 @@
-from typing import Any
-from pydantic import BaseModel
 import secrets
 import string
 import traceback
 import typer
 import yaml
+import json
+from typing import Any
+from pydantic import BaseModel
+from backend_profile import BackendProfile
 import jwt as JWT
 
 
@@ -14,11 +16,23 @@ def gen_secret(length: int) -> str:
     )
 
 
-def write_values_file(output_path: str, values: dict[str, Any]):
-    with open(output_path, "w") as output_file:
+def write_values_files(
+    values_path: str,
+    backendconfig_path: str,
+    values: dict[str, Any],
+    backendProfile: BackendProfile,
+):
+    with open(values_path, "w") as output_file:
         yaml.safe_dump(values, output_file, sort_keys=False)
         typer.secho(
-            f"Saved configuration to {output_path} - save this file for future use!",
+            f"Saved configuration to {values_path} - save this file for future use!",
+            fg="red",
+        )
+
+    with open(backendconfig_path, "w") as output_file:
+        json.dump(backendProfile, output_file)
+        typer.secho(
+            f"Saved configuration to {backendconfig_path} - save this file for future use!",
             fg="red",
         )
 
@@ -27,6 +41,7 @@ class RobustaUI(BaseModel):
     RELAY_HOST: str = ""
     SUPABASE_URL: str = ""
     SUPABASE_KEY: str = ""
+    service = {"nodePort": 30311}  # platform.domain
 
     def __init__(self, domain: str, anon_key: str):
         super().__init__(
@@ -41,13 +56,14 @@ class RobustaRelay(BaseModel):
     storePassword: str = gen_secret(12)
     storeUser: str = "apiuser-robustarelay@robusta.dev"
     storeUrl: str = ""
-    # anon key
-    storeApiKey: str = ""
+    storeApiKey: str = ""  # anon key
     slackClientId: str = "your-client-id"
     slackClientSecret: str = "your-client-secret"
     slackSigningSecret: str = "your-signing-secret"
     syncActionAllowedOrigins: str = ""
-    provider: str = "none"
+    provider: str = ""
+    apiNodePort: int = 30313  # api.domain
+    wsNodePort: int = 30314  # relay.domain
 
     def __init__(self, domain: str, anon_key: str, provider: str):
         super().__init__(
@@ -62,7 +78,7 @@ class RobustaRelay(BaseModel):
 class SelfHostValues(BaseModel):
     DOMAIN: str = ""
     PROVIDER: str = ""
-    ##SUPABASE
+    # SUPABASE
     JWT_SECRET: str = gen_secret(32)
     JWT_EXPIRY: int = 3600
     ANON_KEY: str = JWT.encode(
@@ -81,7 +97,7 @@ class SelfHostValues(BaseModel):
     SUPABASE_URL: str = ""  # Internal URL
     PUBLIC_REST_URL: str = ""  ## Studio Public REST endpoint - replace this if you intend to use Studio outside of localhost
 
-    ## POSTGRES
+    # POSTGRES
     POSTGRES_PORT: int = 5432
     POSTGRES_STORAGE: str = "50Gi"
     POSTGRES_PASSWORD: str = gen_secret(12)
@@ -89,10 +105,8 @@ class SelfHostValues(BaseModel):
     SITE_URL: str = "https://platform.remediate.dev"  # callback target should point to the dash board
     ADDITIONAL_REDIRECT_URLS: str = ""
 
-    ## AUTH
-
     DISABLE_SIGNUP: bool = False
-    ## Email auth
+    # Email auth
     ENABLE_EMAIL_SIGNUP: bool = True
     ENABLE_EMAIL_AUTOCONFIRM: bool = True
     SMTP_ADMIN_EMAIL: str = ""
@@ -102,38 +116,17 @@ class SelfHostValues(BaseModel):
     SMTP_PASS: str = ""
     SMTP_SENDER_NAME: str = ""
 
-    ## Phone auth
+    # Phone auth
     ENABLE_PHONE_SIGNUP: bool = False
     ENABLE_PHONE_AUTOCONFIRM: bool = False
 
-    ## KONG API endpoint ports
+    # KONG API endpoint ports
     KONG_HTTP_PORT: int = 8000
+    KONG_HTTP_NODE_PORT: int = 30312  # db.domain
     KONG_HTTPS_PORT: int = 8443
 
     enableRelay: bool = True
     enableRobustaUI: bool = True
-
-
-def gen_gke(domain: str):
-    values = SelfHostValues()
-    values.PROVIDER = "gke"
-    values.DOMAIN = domain
-
-    relayValues = RobustaRelay(domain=domain, anon_key=values.ANON_KEY, provider="gke")
-    uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY)
-
-    values = values.dict()
-    values["robusta-ui"] = uiValues.dict()
-    values["robusta-relay"] = relayValues.dict()
-    write_values_file("self_host_values.yaml", values)
-
-
-def gen_none(domain: str):
-
-    typer.echo("asdasd")
-
-
-gen_provider_callbacks = {"": gen_none, "none": gen_none, "gke": gen_gke}
 
 
 app = typer.Typer()
@@ -150,14 +143,25 @@ def gen_config(
 ):
     """Create self host configuration file"""
 
-    try:
-        gen_provider_callbacks[provider](domain)
-    except KeyError:
+    if provider not in {"", "gke"}:
         typer.secho(
             f'Invalid provider {provider}. options are "", "gke"',
             fg=typer.colors.RED,
         )
-    except Exception:
-        typer.echo(f"unexpected error")
-        if debug:
-            typer.secho(traceback.format_exc())
+        return
+
+    values = SelfHostValues(PROVIDER=provider, DOMAIN=domain)
+
+    relayValues = RobustaRelay(
+        domain=domain, anon_key=values.ANON_KEY, provider=provider
+    )
+    uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY)
+
+    values = values.dict()
+    values["robusta-ui"] = uiValues.dict()
+    values["robusta-relay"] = relayValues.dict()
+
+    backendProfile = BackendProfile.fromDomain(domain=domain)
+    write_values_files(
+        "self_host_values.yaml", "robusta_cli_config.json", values, backendProfile
+    )
