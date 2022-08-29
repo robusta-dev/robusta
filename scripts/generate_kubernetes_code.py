@@ -20,6 +20,7 @@ KUBERNETES_RESOURCES = [
     "Namespace",
     "ServiceAccount",
     "PersistentVolume",
+    "ConfigMap",
 ]
 KUBERNETES_RESOURCES_STR = ",".join(KUBERNETES_RESOURCES)
 NON_NAMESPACED_RESOURCES = ["Node", "ClusterRole", "ClusterRoleBinding", "Namespace", "PersistentVolume"]
@@ -61,6 +62,9 @@ def autogenerate_events(f: TextIO):
         from typing import Union, Optional, List
         from ..base_event import K8sBaseChangeEvent
         from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
+        from ....core.reporting.base import FindingSubject
+        from ....core.reporting.consts import FindingSubjectType, FindingSource
+        from ....core.reporting.finding_subjects import KubeObjFindingSubject
         from ..custom_models import {CUSTOM_SUBCLASSES_NAMES_STR}
         """
         )
@@ -149,14 +153,26 @@ def autogenerate_events(f: TextIO):
 
         @dataclass
         class KubernetesResourceEvent(ExecutionBaseEvent):
-            _obj: Optional[{f"Union[{','.join(all_resources)}]"}] = None
+            obj: Optional[{f"Union[{','.join(all_resources)}]"}] = None
 
             def __init__(self, obj: {f"Union[{','.join(all_resources)}]"}, named_sinks: List[str]):
                 super().__init__(named_sinks=named_sinks)
-                self._obj = obj
+                self.obj = obj
             
             def get_resource(self) -> Optional[{f"Union[{','.join(all_resources)}]"}]:
-                return self._obj
+                return self.obj
+
+            def get_subject(self) -> FindingSubject:
+                return FindingSubject(
+                    name=self.obj.metadata.name,
+                    subject_type=FindingSubjectType.from_kind(self.obj.kind),
+                    namespace=self.obj.metadata.namespace,
+                    node=KubeObjFindingSubject.get_node_name(self.obj)
+                )
+        
+            @classmethod
+            def get_source(cls) -> FindingSource:
+                return FindingSource.KUBERNETES_API_SERVER
 
             @staticmethod
             def from_params(params: ResourceAttributes) -> Optional["KubernetesResourceEvent"]:
@@ -215,7 +231,7 @@ def autogenerate_events(f: TextIO):
                     super().__init__(obj=obj, named_sinks=named_sinks)
                 
                 def get_{resource.lower()}(self) -> Optional[{get_model_class(resource)}]:
-                    return self._obj
+                    return self.obj
 
                 @staticmethod
                 def from_params(params: {resource}Attributes) -> Optional["{resource}Event"]:
@@ -225,6 +241,15 @@ def autogenerate_events(f: TextIO):
                         logging.error(f"Could not load {resource} {{params}}", exc_info=True)
                         return None
                     return {resource}Event(obj=obj, named_sinks=params.named_sinks)
+                
+                def get_subject(self) -> FindingSubject:
+                    return FindingSubject(
+                        name=self.obj.metadata.name,
+                        subject_type=FindingSubjectType.from_kind(self.obj.kind),
+                        namespace=self.obj.metadata.namespace,
+                        node=KubeObjFindingSubject.get_node_name(self.obj)
+                    )
+
 
 
             @dataclass
@@ -234,6 +259,14 @@ def autogenerate_events(f: TextIO):
 
                 def get_{resource.lower()}(self) -> Optional[{model_class_str}]:
                     return self.obj
+
+                def get_subject(self) -> FindingSubject:
+                    return FindingSubject(
+                        name=self.obj.metadata.name,
+                        subject_type=FindingSubjectType.from_kind(self.obj.kind),
+                        namespace=self.obj.metadata.namespace,
+                        node=KubeObjFindingSubject.get_node_name(self.obj)
+                    )
 
 
             """

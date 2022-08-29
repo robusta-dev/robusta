@@ -11,6 +11,10 @@ from datetime import datetime, timedelta
 import humanize
 
 
+class XAxisLine(BaseModel):
+    label: str
+    value: float
+
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
     labels = defaultdict(lambda: "<missing>")
     labels.update(provided_labels)
@@ -35,7 +39,8 @@ def create_chart_from_prometheus_query(
         include_x_axis: bool,
         graph_duration_minutes: int,
         chart_title: Optional[str] = None,
-        values_format: Optional[ChartValuesFormat] = None
+        values_format: Optional[ChartValuesFormat] = None,
+        lines: Optional[List[XAxisLine]] = []
 ):
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
@@ -82,13 +87,22 @@ def create_chart_from_prometheus_query(
     else:
         chart.title = promql_query
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
+    # TODO: change min_time time before  Jan 19 3001
+    min_time = 32536799999
+    max_time = 0
     for series in result:
         label = "\n".join([v for v in series["metric"].values()])
         values = [
             (timestamp, round(float(val), FLOAT_PRECISION_LIMIT))
             for (timestamp, val) in series["values"]
         ]
+        times = [timestamp for (timestamp, _) in series["values"]]
+        min_time = min(min_time, min(times))
+        max_time = max(max_time, max(times))
         chart.add(label, values)
+    for line in lines:
+        value = [(min_time, line.value), (max_time, line.value)]
+        chart.add(line.label, value)
     return chart
 
 
@@ -99,7 +113,9 @@ def create_graph_enrichment(
         prometheus_url: Optional[str],
         graph_duration_minutes: int,
         graph_title: Optional[str],
-        chart_values_format: Optional[ChartValuesFormat]) -> FileBlock:
+        chart_values_format: Optional[ChartValuesFormat],
+        lines: Optional[List[XAxisLine]] = []
+        ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
         prometheus_url,
@@ -108,7 +124,8 @@ def create_graph_enrichment(
         include_x_axis=True,
         graph_duration_minutes=graph_duration_minutes,
         chart_title=graph_title,
-        values_format=chart_values_format
+        values_format=chart_values_format,
+        lines=lines
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
@@ -122,6 +139,8 @@ def create_resource_enrichment(
     item_type: ResourceChartItemType,
     graph_duration_minutes: int,
     prometheus_url: Optional[str] = None,
+    lines: Optional[List[XAxisLine]] = [],
+    title_override: Optional[str] = None,
 ) -> FileBlock:
     ChartOptions = namedtuple('ChartOptions', ['query', 'values_format'])
     combinations = {
@@ -146,19 +165,30 @@ def create_resource_enrichment(
             query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})) != 0))',
             values_format=ChartValuesFormat.Percentage
         ),
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
+            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod", container=~"$container"})',
+            values_format=ChartValuesFormat.Plain
+        ),
+        (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
+            query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container=~"$container", image!=""})',
+            values_format=ChartValuesFormat.Bytes
+        ),
     }
     combination = (resource_type, item_type)
     chosen_combination = combinations[combination]
     if not chosen_combination:
         raise AttributeError(f'The following combination for resource chart is not supported: {combination}')
     values_format_text = 'Utilization' if chosen_combination.values_format == ChartValuesFormat.Percentage else 'Usage'
+    title = title_override if title_override else \
+        f'{resource_type.name} {values_format_text} for this {item_type.name.lower()}'
     graph_enrichment = create_graph_enrichment(
         starts_at,
         labels,
         chosen_combination.query,
         prometheus_url=prometheus_url,
         graph_duration_minutes=graph_duration_minutes,
-        graph_title=f'{resource_type.name} {values_format_text} for this {item_type.name.lower()}',
-        chart_values_format=chosen_combination.values_format
+        graph_title=title,
+        chart_values_format=chosen_combination.values_format,
+        lines=lines
     )
     return graph_enrichment

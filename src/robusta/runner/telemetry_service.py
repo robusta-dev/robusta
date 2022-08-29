@@ -43,7 +43,6 @@ class TelemetryService:
         self.__thread = threading.Thread(target=self.__log_periodic)
         self.__thread.start()
 
-
     def __log_periodic(self):
         while(True):
             try:
@@ -55,11 +54,11 @@ class TelemetryService:
                 self.__log(tele)
 
                 tele.sinks_info = defaultdict(lambda: SinkInfo())
-
-                sleep(self.periodic_time_sec)
             except Exception as e:
                 logging.error(f"Failed to run periodic telemetry update {e}", exc_info=True)
-                pass
+
+            sleep(self.periodic_time_sec)
+
 
 
     def __log(self, data: Telemetry):

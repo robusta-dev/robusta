@@ -105,7 +105,8 @@ Every automation has three parts:
         Where to send the result
         (Slack, etc)
 
-Automations run via webhook so if they fail it wont bring down your environment.
+.. image:: ./images/robusta_motion_graphics_transparent.gif
+   :align: center
 
 Writing your own automations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -143,7 +144,7 @@ Next Steps
 
 .. [#f1] These alerts should cause no noise on a healthy cluster. If they're noisy in your env, let us know and we'll fix it.
 
-.. [#f2] This is the only component that isn't open source and it's completely optional. An on-prem version is in development too.
+.. [#f2] This is the only component that isn't open source and it's completely optional. For self-hosting the UI, see :ref:`Self hosting`
 
 .. toctree::
    :hidden:
@@ -159,6 +160,8 @@ Next Steps
    architecture
    coverage
    community
+   oss-vs-saas
+
 
 .. toctree::
    :maxdepth: 4

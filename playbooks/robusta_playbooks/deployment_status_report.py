@@ -26,21 +26,34 @@ class ReportParams(ActionParams):
 
 @action
 def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams):
+    """
+    Rendering from a grafana dashboard.
+    Make sure to set 'grafanaRenderer.enableContainer' to 'true' in the values yaml to use this action.
+    """
     finding = Finding(
         title=action_params.report_name,
         aggregation_key="report_rendering_task",
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    for panel_url in action_params.reports_panel_urls:
-        image: requests.models.Response = requests.post(
-            GRAFANA_RENDERER_URL,
-            data={
-                "apiKey": action_params.grafana_api_key.get_secret_value(),
-                "panelUrl": panel_url,
-            },
-        )
-        finding.add_enrichment([FileBlock("panel.png", image.content)])
+    try:
+        for panel_url in action_params.reports_panel_urls:
+            image: requests.models.Response = requests.post(
+                GRAFANA_RENDERER_URL,
+                data={
+                    "apiKey": action_params.grafana_api_key.get_secret_value(),
+                    "panelUrl": panel_url,
+                },
+            )
+            finding.add_enrichment([FileBlock("panel.png", image.content)])
+    except requests.exceptions.ConnectionError:
+        finding.add_enrichment([
+            MarkdownBlock(
+                f"Connection to grafana-renderer container was refused. "
+                f"Make sure to set 'grafanaRenderer:enableContainer' to 'true' in the values yaml"
+            )
+        ])
+
     event.add_finding(finding)
 
 
@@ -60,6 +73,8 @@ def deployment_status_report(event: DeploymentChangeEvent, action_params: Report
     Collect predefined grafana panels screenshots, after a deployment change.
     The report will be generated in intervals, as configured in the 'delays' parameter.
     When the report is ready, it will be sent to the configured sinks.
+
+    Make sure to set 'grafanaRenderer.enableContainer' to 'true' in the values yaml to use this action.
     """
     if event.operation == K8sOperationType.DELETE:
         return

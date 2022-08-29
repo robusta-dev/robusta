@@ -148,6 +148,17 @@ class KubernetesDiffBlock(BaseBlock):
             num_modifications=num_modifications,
         )
 
+    def get_description(self):
+        if self.old is None:
+            return "Resource created"
+        elif self.new is None:
+            return "Resource deleted"
+        else:
+            return (
+                f"Updates to significant fields: {self.num_additions} additions, {self.num_deletions} deletions, "
+                f"{self.num_modifications} changes."
+            )
+
     @staticmethod
     def _obj_to_content(obj: Optional[HikaruDocumentBase]):
         if obj is None:
@@ -272,8 +283,9 @@ class TableBlock(BaseBlock):
         # This is just to assert all row column values are strings. Tabulate might fail on other types
         return [list(map(lambda column_value: str(column_value), row)) for row in rows]
 
-    def to_markdown(self, max_chars=None) -> MarkdownBlock:
+    def to_markdown(self, max_chars=None, add_table_header: bool = True) -> MarkdownBlock:
         table_header = f"{self.table_name}\n" if self.table_name else ""
+        table_header = "" if not add_table_header else table_header
         prefix = f"{table_header}```\n"
         suffix = f"\n```"
         table_contents = self.to_table_string()

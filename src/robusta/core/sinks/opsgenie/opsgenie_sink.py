@@ -60,7 +60,11 @@ class OpsGenieSink(SinkBase):
     def __to_description(self, finding: Finding, platform_enabled: bool) -> str:
         description = ""
         if platform_enabled:
-            description = f"<a href=\"{finding.investigate_uri}\">Investigate</a>\n"
+            description = f"<a href=\"{finding.investigate_uri}\">🔎 Investigate</a>"
+            if finding.add_silence_url:
+                description = f"{description}  <a href=\"{finding.get_prometheus_silence_url(self.cluster_name)}\">🔕 Silence</a>"
+            
+            description = f"{description}\n"
 
         return f"{description}{self.__enrichments_as_text(finding.enrichments)}"
 

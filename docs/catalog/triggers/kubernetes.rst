@@ -81,6 +81,42 @@ These triggers fire on very specific events:
 * on_kubernetes_warning_event_create - when a Kubernetes event of level WARNING is created
 * on_kubernetes_warning_event_update - when a Kubernetes event of level WARNING is modified
 * on_kubernetes_warning_event_delete - when a Kubernetes event of level WARNING is deleted
+* on_pod_crash_loop - when there is a crashing pod
+* on_pod_oom_killed - when a pod is OOMKilled
+* on_container_oom_killed - when a container is OOMKilled
+
+
+This trigger supports an exclusion and inclusion filters on the event's reason and message.
+
+You can exclude some of the warning events:
+
+.. code-block:: yaml
+
+   - triggers:
+     - on_kubernetes_warning_event_create:
+         exclude: ["NodeSysctlChange", "TooManyPods"]
+     actions:
+     - add_deployment_lines_to_grafana:
+         grafana_url: ....
+
+Or, to include only a specific event:
+
+.. code-block:: yaml
+
+   - triggers:
+     - on_kubernetes_warning_event_create:
+         include: ["ImagePullBackOff"]
+     actions:
+     - add_deployment_lines_to_grafana:
+         grafana_url: ....
+
+You can even use both, if you find a use case for which that makes sense.
+
+The exclusion list is evaluated before the inclusion list.
+
+Both filters are optional, and the matching is case insensitive.
+
+If the inclusion list is empty, the inclusion filter is ignored.
 
 See :ref:`Smart Triggers` for additional higher level triggers.
 

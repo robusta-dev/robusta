@@ -22,6 +22,6 @@ robusta-forwarder
 robusta-runner
     Executes playbooks
 
-.. image:: ./images/arch.png
+.. image:: ./images/arch-1/arch-1.png
    :width: 600
    :align: center

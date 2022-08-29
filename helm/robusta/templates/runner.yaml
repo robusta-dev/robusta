@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-runner
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Release.Name }}-runner
 spec:
@@ -30,6 +31,8 @@ spec:
             value: /etc/robusta/config/active_playbooks.yaml
           - name: ENABLE_MANHOLE
             value: "true"
+          - name: RELEASE_NAME
+            value: {{ .Release.Name | quote }}
           - name: ENABLE_COLORED_LOGS
             value: "true"
           - name: PROMETHEUS_ENABLED
@@ -58,6 +61,9 @@ spec:
         - secretRef:
             name: robusta-runner-secret
             optional: true
+        {{- if .Values.runner.additional_env_froms }}
+        {{ toYaml .Values.runner.additional_env_froms | nindent 8 }}
+        {{- end }}
         volumeMounts:
           - name: auth-config-secret
             mountPath: /etc/robusta/auth
@@ -78,6 +84,7 @@ spec:
           limits:
             memory: {{ .Values.runner.resources.requests.memory | quote }}
             {{ if .Values.runner.resources.limits.cpu }}cpu: {{ .Values.runner.resources.limits.cpu | quote }}{{ end }}
+      {{- if .Values.grafanaRenderer.enableContainer }}
       - name: grafana-renderer
         image: {{ .Values.grafanaRenderer.image }}
         imagePullPolicy: {{ .Values.grafanaRenderer.imagePullPolicy }}
@@ -94,6 +101,7 @@ spec:
           limits:
             memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}
             {{ if .Values.grafanaRenderer.resources.limits.cpu }}cpu: {{ .Values.grafanaRenderer.resources.limits.cpu | quote }}{{ end }}
+      {{- end }}
       volumes:
         - name: playbooks-config-secret
           secret:
@@ -123,6 +131,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: persistent-playbooks-pv-claim
+  namespace: {{ .Release.Namespace }}
 spec:
   accessModes:
   - ReadWriteOnce
@@ -135,6 +144,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Release.Name }}-runner
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Release.Name }}-runner
 spec:
@@ -169,6 +179,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: robusta-runner-secret
+  namespace: {{ .Release.Namespace }}
 type: Opaque
 stringData:
   SENTRY_DSN: {{ .Values.runner.sentry_dsn }}

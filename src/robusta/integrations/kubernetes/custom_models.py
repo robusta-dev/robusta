@@ -7,15 +7,14 @@ import json
 import yaml
 from hikaru.model import *  # *-import is necessary for hikaru subclasses to work
 from pydantic import BaseModel
-
-from ...core.model.env_vars import INSTALLATION_NAMESPACE
+from ...core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
 from .api_client_utils import *
 from .templates import get_deployment_yaml
 
 S = TypeVar("S")
 T = TypeVar("T")
 PYTHON_DEBUGGER_IMAGE = (
-    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.3"
+    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.4"
 )
 JAVA_DEBUGGER_IMAGE = (
     "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:v1"
@@ -48,6 +47,15 @@ def build_selector_query(selector: LabelSelector) -> str:
         _get_match_expression_filter(expression) for expression in selector.matchExpressions
     ])
     return ",".join(label_filters)
+
+
+def list_pods_using_selector(namespace: str, selector: LabelSelector, field_selector: str = None) -> List[Pod]:
+    labels_selector = build_selector_query(selector)
+    return PodList.listNamespacedPod(
+        namespace=namespace,
+        label_selector=labels_selector,
+        field_selector=field_selector,
+    ).obj.items
 
 
 def _get_image_name_and_tag(image: str) -> (str, str):
@@ -217,6 +225,7 @@ class RobustaPod(Pod):
                 namespace=INSTALLATION_NAMESPACE,
             ),
             spec=PodSpec(
+                serviceAccountName=f"{RELEASE_NAME}-runner-service-account",
                 hostPID=True,
                 nodeName=node_name,
                 restartPolicy="OnFailure",

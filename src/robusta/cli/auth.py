@@ -1,5 +1,4 @@
 import base64
-import json
 import subprocess
 import traceback
 import uuid
@@ -9,13 +8,14 @@ from dpath.util import get
 import requests
 import typer
 import yaml
+import re
 from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, PublicFormat, NoEncryption
 from cryptography.hazmat.primitives.asymmetric import rsa
 from pydantic import BaseModel
 
 from .backend_profile import backend_profile
 from .playbooks_cmd import NAMESPACE_EXPLANATION, get_playbooks_config
-from .utils import namespace_to_kubectl
+from .utils import namespace_to_kubectl, exec_in_robusta_runner_output
 
 AUTH_SECRET_NAME = "robusta-auth-config-secret"
 app = typer.Typer()
@@ -84,6 +84,11 @@ def store_server_token(token_details: TokenDetails, debug: bool = False) -> bool
         return False
 
 
+def _get_signing_key_from_env_variable(namespace: Optional[str], env_var_name: str) -> str:
+    return str(exec_in_robusta_runner_output(f'echo "${env_var_name}"', namespace), 'utf-8').strip()
+
+
+@app.command(name="web-connect")
 @app.command()
 def gen_token(
     account_id: str = typer.Option(
@@ -123,14 +128,22 @@ def gen_token(
         return
 
     try:
-        signing_key = uuid.UUID(signing_key)
+        env_match = re.fullmatch(r"\{\{\s*env\.(\S+)\s*}}", signing_key)
+        if env_match:
+            env_var_name = env_match.group(1)
+            typer.secho(f"Fetching secret key from an env var named: {env_var_name}")
+            signing_key = _get_signing_key_from_env_variable(namespace, env_var_name)
+            if not signing_key:
+                typer.secho(f"Could not find an env var named {env_var_name}", fg="red")
+                return
+        signing_key_uuid = uuid.UUID(signing_key)
     except Exception:
         typer.secho("Bad format for signing_key. Please run `robusta update-config` to generate a new valid"
                     " signing_key for your account.", fg="red")
         return
 
     client_enc_key = uuid.uuid4()
-    server_enc_key = uuid.UUID(int=(signing_key.int ^ client_enc_key.int))
+    server_enc_key = uuid.UUID(int=(signing_key_uuid.int ^ client_enc_key.int))
     key_id = str(uuid.uuid4())
 
     token_response = TokenDetails(

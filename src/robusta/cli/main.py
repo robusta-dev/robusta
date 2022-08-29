@@ -5,12 +5,12 @@ import subprocess
 import time
 import uuid
 import click_spinner
-from distutils.version import StrictVersion
+
 from typing import Optional, List, Union, Dict
-from zipfile import ZipFile
+
 import traceback
 
-import sys
+from .utils import get_runner_pod
 import typer
 import yaml
 from kubernetes import config
@@ -172,8 +172,11 @@ def gen_config(
         )
     if is_small_cluster is None:
         is_small_cluster = typer.confirm(
-            "Are you running a mini cluster? (Like minikube or kind)"
+            "Are you running a local Kubernetes cluster? (Like minikube, colima, or kind)"
         )
+
+    # Configure sinks
+    typer.secho(f"""Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""", fg=typer.colors.CYAN, bold=True)
 
     sinks_config: List[
         Union[
@@ -182,7 +185,7 @@ def gen_config(
     ] = []
     slack_workspace = "N/A"
     if not slack_api_key and typer.confirm(
-        "Do you want to configure slack integration? This is HIGHLY recommended.",
+        "Configure Slack integration? This is HIGHLY recommended.",
         default=True,
     ):
         slack_api_key, slack_workspace = get_slack_key()
@@ -210,7 +213,7 @@ def gen_config(
         slack_integration_configured = True
 
     if msteams_webhook is None and typer.confirm(
-        "Do you want to configure MsTeams integration ?",
+        "Configure MsTeams integration?",
         default=False,
     ):
         msteams_webhook = typer.prompt(
@@ -233,7 +236,7 @@ def gen_config(
     # asking the question
     if robusta_api_key is None:
         if typer.confirm(
-            "Would you like to use Robusta UI? This is HIGHLY recommended.",
+            "Configure Robusta UI sink? This is HIGHLY recommended.",
             default=True,
         ):
             robusta_api_key = get_ui_key()
@@ -268,8 +271,11 @@ def gen_config(
                 typer.secho(traceback.format_exc())
 
     if enable_prometheus_stack is None:
+        typer.echo(
+            f"""Robusta can use {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)} as an alert source.""")
+
         enable_prometheus_stack = typer.confirm(
-            "If you haven't installed Prometheus yet, Robusta can install a pre-configured Prometheus. Would you like to do so?"
+            f"""If you haven't installed it yet, Robusta can install a pre-configured {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)}.\nWould you like to do so?"""
         )
 
     if disable_cloud_routing is None:
@@ -366,7 +372,7 @@ def update_config(
             values.globalConfig.signing_key = str(uuid.uuid4())
 
         write_values_file("updated_values.yaml", values)
-        typer.secho("Run `helm upgrade robusta -f ./updated_values.yaml`", fg="green")
+        typer.secho("Run `helm upgrade robusta robusta/robusta -f ./updated_values.yaml`", fg="green")
 
 
 @app.command()
@@ -413,16 +419,23 @@ def logs(
     ),
     tail: int = typer.Option(None, help="Lines of recent log file to display."),
     context: str = typer.Option(None, help="The name of the kubeconfig context to use"),
+    resource_name: str = typer.Option(None, help="Robusta Runner deployment or pod name")
 ):
     """Fetch Robusta runner logs"""
     stream = "-f" if f else ""
     since = f"--since={since}" if since else ""
     tail = f"--tail={tail}" if tail else ""
     context = f"--context={context}" if context else ""
-    subprocess.check_call(
-        f"kubectl logs {stream} {namespace_to_kubectl(namespace)} deployment/robusta-runner -c runner {since} {tail} {context}",
-        shell=True,
-    )
+    resource_name =  resource_name if resource_name else get_runner_pod(namespace)
+    try:
+        subprocess.check_call(
+            f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
+            shell=True
+        )
+    except Exception as e:
+        log_title("Robusta-runner pod not found. use help for more options.", color="red")
+
+
 
 
 if __name__ == "__main__":

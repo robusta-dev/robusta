@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: robusta-auth-config-secret
+  namespace: {{ .Release.Namespace }}
 type: Opaque
 data:
   prv: {{ .Values.rsa.prv | b64enc }}

@@ -12,7 +12,7 @@ robusta = "robusta.cli.main:app"
 
 [tool.poetry.dependencies]
 python = "^3.7.1"
-typer = "^0.3.2"
+typer = "^0.4.1"
 colorlog = "^5.0.1"
 pydantic = "^1.8.1"
 kubernetes = "^12.0.1"
@@ -20,7 +20,7 @@ hikaru = "^0.5.1-beta.0"
 click-spinner = "^0.1.10"
 pymsteams = "^0.1.16"
 supabase-py = { version = "^0.0.2", optional = true}
-tabulate = { version = "^0.8.9" }
+tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.7.0" }
 Flask = { version = "^1.1.2", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
@@ -36,6 +36,7 @@ websocket-client = "^1.3.2"
 prometheus-client = "^0.12.0"
 pyyaml = "^6.0"
 pytz = "^2021.3"
+poetry-core = "1.1.0a7"
 docutils="^0.17.0"
 sentry-sdk = { version = "^1.5.2", optional = true }
 opsgenie-sdk = "^2.1.5"
@@ -74,7 +75,7 @@ rsa = "^4.8"
 markupsafe = "2.0.1"
 
 [tool.poetry.extras]
-all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk"]
+all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk", "poetry-core"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

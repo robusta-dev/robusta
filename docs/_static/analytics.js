@@ -9,6 +9,11 @@ function setupCopyListener() {
   }));
 }
 
+function trackEvent(event, properties) {
+  posthog.capture(event, properties)
+  analytics.track(event, properties)
+}
+
 function reportCopy(baseElement) {
   // don’t track users who ask not to be tracked
   if (navigator.doNotTrack === "1") {
@@ -19,9 +24,8 @@ function reportCopy(baseElement) {
     const path = window.location.pathname;
     const page = path.split("/").pop();
     if (page && page.endsWith('html')) {
-      posthog.capture('copied from a codeblock on: ' + page);
+      trackEvent('copied from a codeblock on: ' + page)
     }
-    const message = 'copied from codeblock: ' + id_element.getAttribute('id');
-    posthog.capture(message);
+    trackEvent('copied from codeblock: ' + id_element.getAttribute('id'))
   }
 }

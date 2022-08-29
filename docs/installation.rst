@@ -9,25 +9,60 @@ Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1
 
     `Ask us on Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
 
+We will now configure Robusta in your cluster.
+For this we need to install Robusta, and also connect at least one destination ("sink"), and at least one source ("triggers").
+
+.. image:: ./images/robusta_motion_graphics_transparent.gif
+   :align: center
 
 Standard Installation
 ------------------------------
 
-1. Download the Helm chart and install Robusta-CLI:
+1.  To configure robusta, the Robusta CLI is required. Choose one of the installation methods below.
 
-.. code-block:: bash
-   :name: cb-helm-and-pip
+.. admonition:: Installation Methods
 
-   helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-   pip install -U robusta-cli --no-cache
-   
+    .. tab-set::
 
-.. admonition:: Common Errors
-    :class: warning
+        .. tab-item:: PIP
+            :name: pip-cli-tab
 
-    * Python 3.7 or higher is required
-    * If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
-    * Errors about *tiller* mean you are running Helm 2, not Helm 3
+            .. code-block:: bash
+                :name: pip
+
+                pip install -U robusta-cli --no-cache
+
+            .. admonition:: Common Errors
+                :class: warning
+
+                * Python 3.7 or higher is required
+                * If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
+                * Errors about *tiller* mean you are running Helm 2, not Helm 3
+
+        .. tab-item:: Docker
+            :name: docker-cli-tab
+
+            For **Windows** please use `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
+
+            * Download robusta script and give it executable permissions:
+
+            .. code-block:: bash
+                :name: docker-cli-download
+
+                curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
+                chmod +x robusta
+
+            * Use the script, for example:
+
+            .. code-block:: bash
+                :name: docker-cli-example
+
+                ./robusta version
+
+            .. admonition:: Common Errors
+                :class: warning
+
+                * Docker daemon is required. 
 
 2. Generate a Robusta configuration. This will setup Slack and other integrations. We **highly recommend** enabling the cloud UI so you can see all features in action.
 
@@ -36,13 +71,19 @@ Standard Installation
 
     robusta gen-config
 
+.. admonition:: Robusta not in PATH
+    :class: warning
+
+    if you get "``command not found: robusta``", see :ref:`Common errors <Common Errors>`
+
 3. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
 
-4. Install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
+4. Download the Helm chart and Install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
 
 .. code-block:: bash
    :name: cb-helm-install-robusta
 
+    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
     helm install robusta robusta/robusta -f ./generated_values.yaml
 
 5. Verify that Robusta is running two pods and there are no errors in the logs:
@@ -56,7 +97,7 @@ Standard Installation
 Seeing Robusta in action
 ------------------------------
 
-By default, Robusta sends Slack notifications when Kubernetes pods crash.
+By default, Robusta sends notifications when Kubernetes pods crash.
 
 1. Create a crashing pod:
 
@@ -82,7 +123,9 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
     .. image:: /images/crash-report.png
 
 
-4. Clean up the crashing pod:
+4. Open the `Robusta UI <https://platform.robusta.dev/>`_ (if you enabled it) and look for the same message there.
+
+5. Clean up the crashing pod:
 
 .. code-block:: bash
    :name: cb-delete-crashpod
@@ -92,9 +135,8 @@ By default, Robusta sends Slack notifications when Kubernetes pods crash.
 Next Steps
 ---------------------------------
 
-1. Explore the `Robusta UI <https://platform.robusta.dev/>`_
-2. Define your :ref:`first automation <Automation Basics>`
-3. Add your first :ref:`Prometheus enrichment <Alert Enrichment>`
+1. Define your :ref:`first automation <Automation Basics>`
+2. Add your first :ref:`Prometheus enrichment <Alert Enrichment>`
 
 .. rubric:: Footnotes
 
