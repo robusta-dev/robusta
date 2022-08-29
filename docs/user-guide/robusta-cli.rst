@@ -29,7 +29,7 @@ Installing the cli
         * Download robusta script and give it executable permissions:
 
         .. code-block:: bash
-            :name: docker-cli-download
+            :name: cb-docker-cli-download-cli-page
 
             curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
             chmod +x robusta
@@ -37,14 +37,14 @@ Installing the cli
         * Use the script, for example:
 
         .. code-block:: bash
-            :name: docker-cli-example
+            :name: cb-docker-cli-example-cli-page
 
             ./robusta version
 
         * In order to upgrade the cli run:
 
         .. code-block:: bash
-            :name: docker-cli-upgrade
+            :name: cb-docker-cli-upgrade-cli-page
 
             ./robusta upgrade-cli
 
