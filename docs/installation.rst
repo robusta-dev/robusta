@@ -47,7 +47,7 @@ Standard Installation
             * Download robusta script and give it executable permissions:
 
             .. code-block:: bash
-                :name: docker-cli-download
+                :name: cb-docker-cli-download
 
                 curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
                 chmod +x robusta
@@ -55,7 +55,7 @@ Standard Installation
             * Use the script, for example:
 
             .. code-block:: bash
-                :name: docker-cli-example
+                :name: cb-docker-cli-example
 
                 ./robusta version
 
