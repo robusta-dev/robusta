@@ -8,18 +8,17 @@ Prerequisites
 
 * Have a self_host_values.yaml configuration file.
 
-
 Set up the app template json
 ---------------------------------
 
 We’ll use a template to create a Robusta app.
 
-* Copy the template to a file and replace all instances of **MY_DOMAIN** in the template with your self hosted domain.
+* Copy the template to a file and replace all instances of **MY_DOMAIN** in the template with your domain.
 
-you can also find MY_DOMAIN in your self_host_values.yaml file under DOMAIN.
+You can also find MY_DOMAIN in your self_host_values.yaml file under DOMAIN.
 
 .. code-block:: json
-   :name: slack-app-json
+   :name: cb-slack-app-json
 
     {
         "display_information": {
@@ -67,9 +66,8 @@ Build and Install the Slack app
 #. Choose JSON format (step 2), and paste your copy of the app template into the form.
 #. Select create (step 3)
 #. Go to your app page -> Basic Information
-#. Find Install your app and install it to the relevant workspace.
-#. Go to Display Information and add our :download:`App icon </_static/app-logo.png>`
-
+#. Find ``Install your app`` and install it to the relevant workspace.
+#. Go to ``Display Information`` and add our :download:`App icon </_static/app-logo.png>`
 
 Adjust your self_host_values.yaml file 
 --------------------------------------
@@ -77,6 +75,6 @@ Adjust your self_host_values.yaml file
 In this part we will update the self_host_values.yaml file to use your app credentials.
 
 #. Go to your app page -> Basic Information
-#. In the App Credentials section find: Client ID, Client Secret and Signing Secret.
+#. In the App Credentials section find: ``Client ID``, ``Client Secret`` and ``Signing Secret``.
 #. Open the self_host_values.yaml file
-#. replace slackClientId, slackClientSecret and slackSigningSecret respectively.
+#. replace ``slackClientId``, ``slackClientSecret`` and ``slackSigningSecret`` respectively.

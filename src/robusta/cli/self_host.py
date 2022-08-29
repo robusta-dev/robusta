@@ -1,12 +1,11 @@
 import secrets
 import string
-import traceback
 import typer
 import yaml
 import json
 from typing import Any
 from pydantic import BaseModel
-from backend_profile import BackendProfile
+from .backend_profile import BackendProfile
 import jwt as JWT
 
 
@@ -30,7 +29,9 @@ def write_values_files(
         )
 
     with open(backendconfig_path, "w") as output_file:
-        json.dump(backendProfile, output_file)
+        json.dump(
+            backendProfile.dict(exclude={"custom_profile"}), output_file, indent=1
+        )
         typer.secho(
             f"Saved configuration to {backendconfig_path} - save this file for future use!",
             fg="red",
@@ -94,7 +95,7 @@ class SelfHostValues(BaseModel):
         },
         JWT_SECRET,
     )
-    SUPABASE_URL: str = ""  # Internal URL
+    SUPABASE_URL: str = "http://kong:8000"  # Internal URL
     PUBLIC_REST_URL: str = ""  ## Studio Public REST endpoint - replace this if you intend to use Studio outside of localhost
 
     # POSTGRES
@@ -102,7 +103,7 @@ class SelfHostValues(BaseModel):
     POSTGRES_STORAGE: str = "50Gi"
     POSTGRES_PASSWORD: str = gen_secret(12)
 
-    SITE_URL: str = "https://platform.remediate.dev"  # callback target should point to the dash board
+    SITE_URL: str = ""  # callback target should point to the dash board
     ADDITIONAL_REDIRECT_URLS: str = ""
 
     DISABLE_SIGNUP: bool = False
@@ -150,7 +151,12 @@ def gen_config(
         )
         return
 
-    values = SelfHostValues(PROVIDER=provider, DOMAIN=domain)
+    values = SelfHostValues(
+        PROVIDER=provider,
+        DOMAIN=domain,
+        SITE_URL=f"https://platform.{domain}",
+        PUBLIC_REST_URL=f"https://db.{domain}/rest/v1/",
+    )
 
     relayValues = RobustaRelay(
         domain=domain, anon_key=values.ANON_KEY, provider=provider
