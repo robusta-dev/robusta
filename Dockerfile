@@ -1,6 +1,7 @@
 # see https://pythonspeed.com/articles/alpine-docker-python/ for the reason we don't use alpine
 FROM python:3.9-slim
 RUN apt-get update \
+    && dpkg --add-architecture arm64 \
     && apt-get install -y --no-install-recommends git ssh socat wget curl libcairo2 python3-dev libffi-dev socat \
     && apt-get purge -y --auto-remove \
     && rm -rf /var/lib/apt/lists/*
@@ -14,7 +15,7 @@ ENV ENV_TYPE=DEV
 # we install the project requirements and install the app in separate stages to optimize docker layer caching
 RUN mkdir /app
 RUN pip3 install --upgrade pip
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.2.0b1 
+RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.2.0b1
 RUN /root/.local/bin/poetry config virtualenvs.create false
 COPY pyproject.toml poetry.lock /app/
 WORKDIR /app
