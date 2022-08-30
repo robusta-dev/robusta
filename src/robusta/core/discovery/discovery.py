@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 from typing import List, Dict, Optional
+from concurrent.futures.process import ProcessPoolExecutor
 
 from kubernetes import client
 from kubernetes.client import V1Deployment, V1DaemonSet, V1StatefulSet, V1Job, V1Pod, V1ResourceRequirements, \
@@ -12,13 +13,27 @@ from ...core.model.services import ServiceInfo, ContainerInfo, VolumeInfo, Servi
 from ...core.model.pods import PodResources, ResourceAttributes, ContainerResources
 
 
+class DiscoveryResults:
+    def __init__(self,
+                 services: List[ServiceInfo] = None,
+                 nodes: Optional[V1NodeList] = None,
+                 node_requests: Dict = None,
+                 jobs: List[JobInfo] = None
+                 ):
+        self.services: List[ServiceInfo] = services
+        self.nodes: Optional[V1NodeList] = nodes
+        self.node_requests: Dict = node_requests
+        self.jobs: List[JobInfo] = jobs
+
+
 class Discovery:
+    executor = ProcessPoolExecutor(max_workers=1)  # always 1 discovery process
 
     @staticmethod
     def __create_service_info(meta: V1ObjectMeta, kind: str,
                               containers: List[V1Container], volumes: List[V1Volume]) -> ServiceInfo:
-        container_info = [ ContainerInfo.get_container_info(container) for container in containers] if containers else []
-        volumes_info = [ VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
+        container_info = [ContainerInfo.get_container_info(container) for container in containers] if containers else []
+        volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
         config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
         return ServiceInfo(
             name=meta.name,
@@ -28,8 +43,7 @@ class Discovery:
         )
 
     @staticmethod
-    def discover_resources() -> (List[ServiceInfo], Optional[V1NodeList], Dict, List[JobInfo]):
-
+    def discovery_process() -> DiscoveryResults:
         pod_items = []  # pods are used for both micro services and node discover
         active_services: List[ServiceInfo] = []
         # discover micro services
@@ -40,16 +54,14 @@ class Discovery:
                     deployment.metadata, "Deployment", extract_containers(deployment), extract_volumes(deployment))
                 for deployment in deployments.items
             ])
-
             statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
                     statefulset.metadata, "StatefulSet",
-                extract_containers(statefulset),
-                extract_volumes(statefulset))
+                    extract_containers(statefulset),
+                    extract_volumes(statefulset))
                 for statefulset in statefulsets.items
             ])
-
             daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
@@ -59,7 +71,6 @@ class Discovery:
                 )
                 for daemonset in daemonsets.items
             ])
-
             replicasets: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
@@ -118,7 +129,17 @@ class Discovery:
                 f"Failed to run periodic jobs discovery",
                 exc_info=True,
             )
-        return active_services, current_nodes, node_requests, active_jobs
+        return DiscoveryResults(
+            services=active_services,
+            nodes=current_nodes,
+            node_requests=node_requests,
+            jobs=active_jobs
+        )
+
+    @staticmethod
+    def discover_resources() -> DiscoveryResults:
+        future = Discovery.executor.submit(Discovery.discovery_process)
+        return future.result()
 
 
 # This section below contains utility related to k8s python api objects (rather than hikaru)
