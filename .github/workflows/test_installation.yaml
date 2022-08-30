@@ -14,7 +14,6 @@ jobs:
         - name: Build and install package
           run: |
             curl -sSL https://install.python-poetry.org | python3 -
-            source $HOME/.poetry/env
             poetry build
             pip3 install ./dist/robusta_cli-0.0.0-py3-none-any.whl
         - name: Upload robusta package artifact
