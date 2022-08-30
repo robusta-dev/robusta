@@ -46,6 +46,9 @@ The main cli commands are:
 ``robusta demo``
     Deploy a crashing pod to Kubernetes to demo Robusta features
 
+``robusta demo-alert``
+    Fire an alert on Prometheus AlertManager.
+
 Additional CLI Commands
 ---------------------------
 
