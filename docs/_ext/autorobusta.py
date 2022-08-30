@@ -253,7 +253,7 @@ class RobustaActionDirective(SphinxDirective):
         trigger_params = json.loads(self.options.get("trigger-params", "{}"))
 
         example_yaml = generator.generate_example_config(
-            action_definition.func, recommended_trigger, trigger_params
+            action_definition.func, recommended_trigger
         )
         params_cls = action_definition.params_type
         params_cls_path = ""

@@ -7,6 +7,7 @@ Wow, if you've reached here you're a super-pro. Did you know we're hiring?
    :maxdepth: 1
 
    dev-setup.rst
+   local-runner
    coding-conventions
    docs-contributions
    sinks-guide
