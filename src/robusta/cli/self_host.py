@@ -54,7 +54,7 @@ class RobustaUI(BaseModel):
 
 class RobustaRelay(BaseModel):
     domain: str = ""
-    storePassword: str = gen_secret(12)
+    storePassword: str = ""
     storeUser: str = "apiuser-robustarelay@robusta.dev"
     storeUrl: str = ""
     storeApiKey: str = ""  # anon key
@@ -66,18 +66,21 @@ class RobustaRelay(BaseModel):
     apiNodePort: int = 30313  # api.domain
     wsNodePort: int = 30314  # relay.domain
 
-    def __init__(self, domain: str, anon_key: str, provider: str):
+    def __init__(self, domain: str, anon_key: str, provider: str, storePW: str):
         super().__init__(
             domain=domain,
             storeUrl=f"https://db.{domain}",
             syncActionAllowedOrigins=f"https://platform.{domain}",
             storeApiKey=anon_key,
             provider=provider,
+            storePassword=storePW,
         )
 
 
 class SelfHostValues(BaseModel):
     STATIC_IP_NAME: str = "robusta-platform-ip"
+    RELAY_PASSWORD: str = gen_secret(12)
+    RELAY_USER: str = "apiuser-robustarelay@robusta.dev"
     DOMAIN: str = ""
     PROVIDER: str = ""
     # SUPABASE
@@ -141,7 +144,6 @@ def gen_config(
         help="Cloud host provider.",
     ),
     domain: str = typer.Option("", help="domain used to route the self host services."),
-    debug: bool = typer.Option(False),
 ):
     """Create self host configuration file"""
 
@@ -160,8 +162,12 @@ def gen_config(
     )
 
     relayValues = RobustaRelay(
-        domain=domain, anon_key=values.ANON_KEY, provider=provider
+        domain=domain,
+        anon_key=values.ANON_KEY,
+        provider=provider,
+        storePW=values.RELAY_PASSWORD,
     )
+
     uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY)
 
     values = values.dict()
