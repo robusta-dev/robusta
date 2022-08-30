@@ -13,7 +13,7 @@ jobs:
             python-version: 3.9
         - name: Build and install package
           run: |
-            curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+            curl -sSL https://install.python-poetry.org | python3 -
             source $HOME/.poetry/env
             poetry build
             pip3 install ./dist/robusta_cli-0.0.0-py3-none-any.whl
