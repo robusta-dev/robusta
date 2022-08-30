@@ -1,19 +1,14 @@
 Welcome to Robusta
 ================================
 
-Robusta is an open source platform for Kubernetes troubleshooting. It sits on top of your monitoring stack
-(Prometheus, Elasticsearch, etc.) and tells you why alerts occurred and how to fix them.
+Robusta is a popular platform for Kubernetes monitoring and observability. It monitors what matters and shows you *why* alerts fired, what happened at the same time, and how to get things back to normal fast.
 
-Robusta has three main parts, all open source:
+Robusta pulls together data from Prometheus, the Kubernetes API Server, and more. (See `comparison with bare-bones Prometheus <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_.)
 
-1. An automations engine for Kubernetes
-2. Builtin automations to enrich and fix common alerts
-3. Manual troubleshooting tools for everything else
+Some data Robusta gathers is trivial - for example, pod logs. Other data is complex - for example, `Java heap dumps <https://home.robusta.dev/java>`_.
+In all cases, Robusta makes data *accessible* by showing it to the right people, exactly when they need it, in the most convenient place possible. (Slack, MS Teams, etc.)
 
-There are additional *optional* components:
-
-4. `An all-in-one bundle with Robusta, the Prometheus Operator, and default Kubernetes alerts <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_ [#f1]_
-5. `A web UI to see all alerts, changes, and events in your cluster. <http://home.robusta.dev/ui?from=docs>`_ [#f2]_
+Robusta is `open source <https://github.com/robusta-dev/robusta>`_.
 
 Example Use Cases
 ~~~~~~~~~~~~~~~~~~
@@ -61,11 +56,9 @@ Example Use Cases
 How it works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Robusta automates everything that happens **after** you deploy your application.
+The core of Robusta is an automations engine, somewhat like Zapier/IFTTT for DevOps.
 
-It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt automations and not just "build your own".
-
-For example, the following automation sends logs to Slack when an alert fires for crashing pods:
+For example, you can enrich an alert with pod logs (``kubectl logs``) and forward it to Slack:
 
 .. code-block:: yaml
 
@@ -133,18 +126,25 @@ Many automations are included, but you can also write your own in Python.
                 FileBlock("crashing-pod.log", pod_logs)
             ])
 
+Why Robusta
+~~~~~~~~~~~~
+
+Everyone has a lot of observability data, but making sense of it requires deep knowledge.
+
+It needs to be easier to do **the right thing** when receiving an alert. Specifically:
+
+1. It should be easier to investigate an alert then ignore it
+2. It should never take more than 5 minutes to understand *why* an alert fired
+3. Silencing false positives should take one click
+
+By harnessing runbook automation and **community knowledge** we are building a rulebook of all common Kubernetes issues, root causes, and fixes.
+
 Next Steps
 ~~~~~~~~~~~~
 
 :ref:`Ready to install Robusta? Get started! <installation>`
 
 `Star us on GitHub to receive updates. <https://github.com/robusta-dev/robusta/>`_
-
-.. rubric:: Footnotes
-
-.. [#f1] These alerts should cause no noise on a healthy cluster. If they're noisy in your env, let us know and we'll fix it.
-
-.. [#f2] This is the only component that isn't open source and it's completely optional. For self-hosting the UI, see :ref:`Self hosting`
 
 .. toctree::
    :hidden:
