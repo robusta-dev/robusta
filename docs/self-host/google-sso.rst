@@ -14,7 +14,7 @@ Integration
 
 To enable Google Authentication in the Robusta UI, you need to set up a Google OAuth application and add the application credentials to your self_host_values.yaml file.
 
-Creae the OAuth consent screen
+Create the OAuth consent screen
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Go to `OAuth consent screen <https://console.cloud.google.com/apis/credentials/consent>`_ . Make sure you are in the right project.

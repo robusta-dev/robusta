@@ -51,7 +51,7 @@ Usually it involves creating an “A Record”.
 4. api.MY_DOMAIN
 
 DNS Troubleshooting
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 | To validate the routing, ping the sub-domains and make sure you see the GKE global static IP.
 | For example:
@@ -106,15 +106,14 @@ Integartions
 
 Now that your values file is ready, here are a couple of guides we'd recommend you check out.
 
-* `Google SSO integration <https://helm.sh/docs/intro/install/>`_
-* `Slack integration <https://helm.sh/docs/intro/install/>`_
-
+* :ref:`Google SSO integration <Login With Google>`
+* :ref:`Slack integration <Create a Slack application>`
 
 Troubleshooting
----------------
+----------------
 
 GKE Managed certificate 
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Robusta platform uses GKE Google-managed SSL certificate which takes approximately 30~ min to activate. 
 
@@ -122,7 +121,7 @@ Robusta platform uses GKE Google-managed SSL certificate which takes approximate
 * Make sure the certificate Status is Active and you see your 4 sub-domains with an Active status as well.
 
 Load balancer
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 The load balancer depends on the managed certificate to run proprly.
 
 * Go to `GKE Load Balancers <https://console.cloud.google.com/net-services/loadbalancing/list/loadBalancers/>`_ find the ``robusta-platform`` load balacer.
@@ -140,7 +139,7 @@ Run:
 Make sure ``robusta-ui``, ``platform-relay``, ``kong``, ``auth``, ``meta`` and ``rest`` are in running state.
 
 Login to the UI
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 Go to ``https://platform.MY_DOMAIN`` and sign up. Then try to log in.
 

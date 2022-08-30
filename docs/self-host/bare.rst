@@ -43,7 +43,7 @@ NodePorts are in the 30000-32767 range usually. First, get the node ports:
 .. code-block:: bash
     :name: cb-self-managed-get-node-ports
 
-    kubectl get svc --all-namespaces robusta-ui kong platform-relay platform-relay-ws
+    kubectl get svc robusta-ui kong platform-relay platform-relay-ws
 
 route each subdomain to ExposedIP:NodePort for the following services:
 
@@ -88,14 +88,14 @@ Integartions
 
 Here are a couple of guides we'd recommend you check out.
 
-* `Google SSO integration <https://helm.sh/docs/intro/install/>`_
-* `Slack integration <https://helm.sh/docs/intro/install/>`_
+* :ref:`Google SSO integration <Login With Google>`
+* :ref:`Slack integration <Create a Slack application>`
 
 Troubleshooting
 ---------------
 
 Deployments
-^^^^^^^^^^^
+^^^^^^^^^^^^
 
 Run:
 
@@ -107,11 +107,11 @@ Run:
 Make sure ``robusta-ui``, ``platform-relay``, ``kong``, ``auth``, ``meta`` and ``rest`` are in running state.
 
 Login to the UI
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 Go to ``https://platform.MY_DOMAIN`` and sign up. Then try to log in.
 
 Support
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 For further help contact us on `Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or `support@robusta.dev <mailto:support@robusta.dev>`_

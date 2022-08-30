@@ -1,5 +1,5 @@
 Create a Slack application
-#########################
+#############################
 
 You need a custom Slack application for your organization so your self hosted Robusta can send alerts to Slack.
 
