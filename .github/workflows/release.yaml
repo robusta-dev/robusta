@@ -74,7 +74,7 @@ jobs:
 
     - name: Prepare pypi dist
       run: |
-        pip3 install poetry==1.2.0b1
+        pip3 install poetry
         poetry config virtualenvs.create false
         bash -c "pip3 install --requirement <(poetry export --dev --format requirements.txt --without-hashes)"
         poetry publish --build -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_PASS }}
