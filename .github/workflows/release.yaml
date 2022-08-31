@@ -43,6 +43,15 @@ jobs:
         sed -i 's/0.0.0/${{env.RELEASE_VER}}/g' src/robusta/_version.py pyproject.toml helm/robusta/Chart.yaml helm/robusta/values.yaml
         sed -i 's/0.0.1/${{env.RELEASE_VER}}/g' helm/robusta/Chart.yaml
 
+    # Set up the buildx to run build for multiple platforms
+    - name: Docker Setup Buildx
+      uses: docker/setup-buildx-action@v2.0.0
+      with:
+        config-inline: |
+          [worker.oci]
+            enabled = true
+            platforms = [ "linux/amd64", "linux/arm64" ]
+
     # see https://github.com/GoogleContainerTools/skaffold/issues/4842
     - name: Cache skaffold image builds & config
       uses: actions/cache@v2
