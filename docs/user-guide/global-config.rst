@@ -34,7 +34,7 @@ any action or trigger which expects a parameter with the same name.
 
 
 Mandatory global config
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
 Robusta expects several ``globalConfig`` parameters with specific names:
 

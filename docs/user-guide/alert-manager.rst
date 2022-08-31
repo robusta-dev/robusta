@@ -96,3 +96,26 @@ If AlertManager is located outside of your Kubernetes cluster then a few more st
 
 The `TOKEN` format is: `ACCOUNT_ID SIGNING_KEY`
 
+
+Alerts silencing
+-----------------------------------------
+
+Robusta enables silencing AlertManager alerts directly from your notification channels (Sinks)
+
+By default, Robusta finds the AlertManager running on your cluster, and use it to create silences
+
+Some users use the AlertManager embedded in Grafana
+
+To create the silences using that AlertManager, add the following configuration to the ``globalConfig`` section in your ``generated_values.yaml`` file:
+
+.. admonition:: generated_values.yaml
+
+    .. code-block:: yaml
+
+        globalConfig:
+          grafana_api_key: <YOUR GRAFANA EDITOR API KEY>
+          alertmanager_flavor: grafana
+
+    .. note::
+
+      The Grafana api key must have ``Editor`` permission in order to create silences
