@@ -10,10 +10,13 @@ from typing import Optional, List, Union, Dict
 
 import traceback
 
+from hikaru.model import Job, ObjectMeta, JobSpec, PodTemplateSpec, PodSpec, Container
+
+from robusta.integrations.prometheus.utils import AlertManagerDiscovery
 from .utils import get_runner_pod
 import typer
 import yaml
-from kubernetes import config
+from kubernetes import config, client
 from pydantic import BaseModel, Extra
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
@@ -33,9 +36,9 @@ from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key, get_ui_key
 from .auth import app as auth_commands
 from .slack_verification import verify_slack_channel
-from .slack_feedback_message import SlackFeedbackMessagesSender, SlackFeedbackConfig
+from .slack_feedback_message import SlackFeedbackMessagesSender
 from .playbooks_cmd import app as playbooks_commands
-from .utils import log_title, replace_in_file, namespace_to_kubectl
+from .utils import log_title, namespace_to_kubectl
 
 FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
 RUNNER_CONFIG_FOR_SMALL_CLUSTERS = "512Mi"
@@ -426,7 +429,7 @@ def logs(
     since = f"--since={since}" if since else ""
     tail = f"--tail={tail}" if tail else ""
     context = f"--context={context}" if context else ""
-    resource_name =  resource_name if resource_name else get_runner_pod(namespace)
+    resource_name = resource_name if resource_name else get_runner_pod(namespace)
     try:
         subprocess.check_call(
             f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
@@ -436,6 +439,107 @@ def logs(
         log_title("Robusta-runner pod not found. use help for more options.", color="red")
 
 
+@app.command()
+def demo_alert(
+    alertmanager_url: str = typer.Option(
+        None,
+        help="Alertmanager in cluster url. For example: http://alertmanager.monitoring.svc.cluster.local:9093",
+    ),
+    namespaces: List[str] = typer.Option(
+        ["robusta", "default"],
+        help="List of namespaces, to select the alert pod from",
+    ),
+    alert: str = typer.Option(
+        "KubePodNotReady",
+        help="Created alert name",
+    ),
+    labels: str = typer.Option(
+        None,
+        help="Additional alert labels. Comma separated list. For example: env=prod,team=infra ",
+    ),
+    kube_config: str = typer.Option(
+        None,
+        help="Kube config file path override."
+    )
+):
+    """
+        Create a demo alert on AlertManager.
+        The alert pod is selected randomly from the pods in the current namespace
+    """
+    config.load_kube_config(kube_config)
+    if not alertmanager_url:
+        # search cluster alertmanager by known alertmanager labels
+        alertmanager_url = AlertManagerDiscovery.find_alert_manager_url()
+        if not alertmanager_url:
+            typer.secho("Alertmanager service could not be auto-discovered. "
+                        "Please use the --alertmanager_url parameter", fg="red")
+            return
+
+        pod = None
+        for namespace in namespaces:
+            pods = client.CoreV1Api().list_namespaced_pod(namespace)
+            if pods.items:
+                pod = pods.items[0]
+                break
+
+        if not pod:
+            typer.secho(f"Could not find any pod on namespace {namespaces}"
+                        f"Please use the --namespaces parameter to specify a namespace with pods", fg="red")
+            return
+
+        alert_labels = {
+            "alertname": alert,
+            "severity": "critical",
+            "pod": pod.metadata.name,
+            "namespace": pod.metadata.namespace
+        }
+        if labels:
+            for label in labels.split(","):
+                label_key = label.split("=")[0].strip()
+                label_value = label.split("=")[1].strip()
+                alert_labels[label_key] = label_value
+
+        demo_alerts = [
+            {
+                "status": "firing",
+                "labels": alert_labels,
+                "annotations": {
+                    "summary": "This is a demo alert manager alert created by Robusta",
+                    "description": "Nothing wrong here. This alert will be resolved soon"},
+            }]
+
+        command = [
+            "curl", "-X", "POST", f"{alertmanager_url}/api/v1/alerts", "-H", "Content-Type: application/json",
+            "-d", f"{json.dumps(demo_alerts)}"
+        ]
+
+        job: Job = Job(
+            metadata=ObjectMeta(
+                name=f"alert-job-{random.randint(0, 10000)}",
+                namespace=pod.metadata.namespace,
+            ),
+            spec=JobSpec(
+                template=PodTemplateSpec(
+                    spec=PodSpec(
+                        containers=[
+                            Container(
+                                name="alert-curl",
+                                image="curlimages/curl",
+                                command=command,
+                            )
+                        ],
+                        restartPolicy="Never"
+                    ),
+                ),
+
+                completions=1,
+                ttlSecondsAfterFinished=0,  # delete immediately when finished
+            )
+        )
+        job.create()
+        typer.secho(f"Created Alertmanager alert: alert-name: {alert} pod: {pod.metadata.name} "
+                    f"namespace: {pod.metadata.namespace}", fg="green")
+        typer.echo("\n")
 
 
 if __name__ == "__main__":

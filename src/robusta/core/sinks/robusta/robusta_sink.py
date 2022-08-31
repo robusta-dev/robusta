@@ -214,7 +214,7 @@ class RobustaSink(SinkBase):
     def __from_api_server_node(
         cls, api_server_node: V1Node, pod_requests_list: List[PodResources]
     ) -> NodeInfo:
-        addresses = api_server_node.status.addresses
+        addresses = api_server_node.status.addresses or []
         external_addresses = [
             address for address in addresses if "externalip" in address.type.lower()
         ]

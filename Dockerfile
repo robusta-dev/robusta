@@ -15,7 +15,7 @@ ENV ENV_TYPE=DEV
 # we install the project requirements and install the app in separate stages to optimize docker layer caching
 RUN mkdir /app
 RUN pip3 install --upgrade pip
-RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.2.0b1 
+RUN curl -sSL https://install.python-poetry.org | python3 -
 RUN /root/.local/bin/poetry config virtualenvs.create false
 COPY pyproject.toml poetry.lock /app/
 WORKDIR /app
