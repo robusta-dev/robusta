@@ -54,7 +54,7 @@ jobs:
           fixed-
 
     - name: Build with skaffold
-      run: ./skaffold build --file-output=container-ids.json --tag='${{env.RELEASE_VER}}'
+      run: ./skaffold build --prodile arm --file-output=container-ids.json --tag='${{env.RELEASE_VER}}'
 
     - name: Save artifact with tags of built containers
       uses: actions/upload-artifact@v2
