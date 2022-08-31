@@ -1,4 +1,3 @@
-from robusta.integrations.prometheus.utils import AlertManagerDiscovery
 from robusta.api import *
 
 
@@ -41,8 +40,9 @@ class BaseSilenceParams(ActionParams):
     """
     :var alertmanager_url: Alternative Alert Manager url to send requests.
     """
-
+    alertmanager_flavor: str = None
     alertmanager_url: Optional[str]
+    grafana_api_key: str = None
 
 
 class DeleteSilenceParams(BaseSilenceParams):
@@ -73,17 +73,13 @@ class AddSilenceParams(BaseSilenceParams):
 
 @action
 def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
-    alertmanager_url = (
-        params.alertmanager_url
-        if params.alertmanager_url
-        else AlertManagerDiscovery.find_alert_manager_url()
-    )
+    alertmanager_url = _get_alertmanager_url(params)
     if alertmanager_url is None:
         return
 
     response = requests.get(
-        f"{alertmanager_url}/api/v2/silences",
-        headers={"Content-type": "application/json"},
+        f"{alertmanager_url}{_get_url_path(SilenceOperation.LIST, params)}",
+        headers=_gen_headers(params),
     )
 
     response.raise_for_status()
@@ -106,28 +102,25 @@ def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
 
 @action
 def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
-    alertmanager_url = (
-        params.alertmanager_url
-        if params.alertmanager_url
-        else AlertManagerDiscovery.find_alert_manager_url()
-    )
+    alertmanager_url = _get_alertmanager_url(params)
     if alertmanager_url is None:
         return
 
     res = requests.post(
-        f"{alertmanager_url}/api/v2/silences",
+        f"{alertmanager_url}{_get_url_path(SilenceOperation.CREATE, params)}",
         data=params.json(),
-        headers={"Content-type": "application/json"},
+        headers=_gen_headers(params),
     )
 
     res.raise_for_status()
-    if not res.json()["silenceID"]:
+    silence_id = res.json().get("silenceID") or res.json().get("id")  # on grafana alertmanager the 'id' is returned
+    if not silence_id:
         return
 
     event.add_enrichment(
         [
             TableBlock(
-                rows=[[res.json()["silenceID"]]],
+                rows=[[silence_id]],
                 headers=["id"],
                 table_name="New Silence",
             ),
@@ -137,17 +130,13 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
 
 @action
 def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
-    alertmanager_url = (
-        params.alertmanager_url
-        if params.alertmanager_url
-        else AlertManagerDiscovery.find_alert_manager_url()
-    )
+    alertmanager_url = _get_alertmanager_url(params)
     if alertmanager_url is None:
         return
 
     res = requests.delete(
-        f"{alertmanager_url}/api/v2/silence/{params.id}",
-        headers={"Content-type": "application/json"},
+        f"{alertmanager_url}{_get_url_path(SilenceOperation.DELETE, params)}/{params.id}",
+        headers=_gen_headers(params),
     )
 
     res.raise_for_status()
@@ -160,3 +149,35 @@ def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
             ),
         ]
     )
+
+
+SilenceOperation = Enum("SilenceOperation", "CREATE DELETE LIST")
+
+
+def _gen_headers(params: BaseSilenceParams) -> Dict:
+    headers = {"Content-type": "application/json"}
+    if params.grafana_api_key:
+        headers.update({"Authorization": "Bearer {0}".format(params.grafana_api_key)})
+    return headers
+
+
+def _get_url_path(operation: SilenceOperation, params: BaseSilenceParams) -> str:
+    prefix = ""
+    if "grafana" == params.alertmanager_flavor:
+        prefix = "/api/alertmanager/grafana"
+
+    if operation == SilenceOperation.DELETE:
+        return f"{prefix}/api/v2/silence"
+    else:
+        return f"{prefix}/api/v2/silences"
+
+
+def _get_alertmanager_url(params: BaseSilenceParams) -> str:
+    if params.alertmanager_url:
+        return params.alertmanager_url
+
+    if "grafana" == params.alertmanager_flavor:
+        return ServiceDiscovery.find_url(selectors=["app.kubernetes.io/name=grafana"],
+                                         error_msg="Failed to find grafana url")
+
+    return AlertManagerDiscovery.find_alert_manager_url()
