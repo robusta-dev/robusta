@@ -17,3 +17,8 @@ alerts from the kubernetes-mixin project.
 
 Our alerting will likely diverge more over time as we take advantage of more Robusta features.
 
+See also
+^^^^^^^^^
+
+* :ref:`Robusta architecture <Architecture>`
+* `Comparison of Robusta and a bare-bones Prometheus stack without Robusta <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_
