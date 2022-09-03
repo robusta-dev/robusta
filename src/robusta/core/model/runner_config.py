@@ -12,6 +12,7 @@ from ..sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper
 from ..sinks.slack.slack_sink_params import SlackSinkConfigWrapper
 from ..sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
 from ..sinks.victorops.victorops_sink_params import VictoropsConfigWrapper
+from ..sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from ..sinks.discord.discord_sink_params import DiscordSinkConfigWrapper
 from ..sinks.mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
 
@@ -38,6 +39,7 @@ class RunnerConfig(BaseModel):
                 TelegramSinkConfigWrapper,
                 WebhookSinkConfigWrapper,
                 VictoropsConfigWrapper,
+                PagerdutyConfigWrapper,
                 DiscordSinkConfigWrapper,
                 MattermostSinkConfigWrapper
             ]
