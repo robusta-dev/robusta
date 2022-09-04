@@ -443,7 +443,10 @@ def logs(
 def demo_alert(
     alertmanager_url: str = typer.Option(
         None,
-        help="Alertmanager in cluster url. For example: http://alertmanager.monitoring.svc.cluster.local:9093",
+        help="Alertmanager in cluster url. "
+             "By default, Robusta will auto-discover the AlertManager running in your cluster. "
+             "Use this parameter to override the AlertManager url."
+             "For example: http://alertmanager.monitoring.svc.cluster.local:9093",
     ),
     namespaces: List[str] = typer.Option(
         ["robusta", "default"],

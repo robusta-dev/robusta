@@ -22,6 +22,8 @@ The following sinks are supported:
 
 **Need support for something not listed here?** `Tell us and we'll add it to the code. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
 
+See :ref:`Defining additional sinks` for more details
+
 Sending Findings to Specific Sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 A sink can be configured to receive only certain findings. For example, you can send notifications to different Slack channels depending on the namespace:

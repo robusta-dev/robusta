@@ -44,8 +44,10 @@ Here is a full example showing how to configure all possible sinks:
         name: webhook_sink
         url: "https://my-webhook-service.com/robusta-alerts"
 
+More information about all that available Sinks can be found :ref:`here <Sinks>`
+
 Sink matchers
-^^^^^^^^^^^^^
+---------------
 
 Sinks can be configured to only report certain findings. If a finding matches more than one sink, it
 will be sent to each one.
