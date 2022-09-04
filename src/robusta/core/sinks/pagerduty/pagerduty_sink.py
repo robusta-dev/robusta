@@ -79,7 +79,7 @@ class PagerdutySink(SinkBase):
 
                 message_lines += text + "\n\n"
         
-        custom_details["state_message"] = message_lines        
+        custom_details["state_message"] = message_lines
 
         body = {
             "payload": {
@@ -91,7 +91,7 @@ class PagerdutySink(SinkBase):
             },
             "routing_key": self.api_key,            
             "event_action": PagerdutySink.__to_pagerduty_status_type(finding.title),
-            "dedup_key": finding.aggregation_key
+            "dedup_key": finding.fingerprint
         }
         
         headers = {"Content-Type": "application/json"}
