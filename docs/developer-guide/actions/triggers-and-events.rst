@@ -56,8 +56,8 @@ Who is compatible with who
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here is the Robusta event hierarchy:
 
-.. image:: ../../images/event-inheritance.png
-  :align: center
+.. raw:: html
+    :file: ../../images/Event_Hierarchy/events_hierarchy_diagram.txt
 
 ..
     this is a sphinx comment
