@@ -28,7 +28,7 @@ Standard Installation
             :name: pip-cli-tab
 
             .. code-block:: bash
-                :name: pip
+                :name: cb-pip-install
 
                 pip install -U robusta-cli --no-cache
 
