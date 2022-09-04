@@ -17,3 +17,16 @@ Configuring the PagerDuty sink
                 name: main_pagerduty_sink
                 api_key: <api key> # e.g. f653634653463678fadas43534506
                 url: <url> # e.g.  https://events.pagerduty.com/v2/enqueue/
+**Example Output:**
+
+.. admonition:: Typically you'll send alerts from Robusta to PagerDuty and not deployment changes. We're showing a non-typical example with deployment changes because it helps compare the format with other sinks.
+
+    .. image:: /images/deployment-babysitter-pagerduty.png
+      :width: 1000
+      :align: center
+
+.. admonition:: Alerts from Robusta to PagerDuty
+
+    .. image:: /images/alert-on-crashing-pod-pagerduty.png
+      :width: 1117
+      :align: center
