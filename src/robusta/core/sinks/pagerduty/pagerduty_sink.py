@@ -37,14 +37,13 @@ class PagerdutySink(SinkBase):
         else:
             return "critical"
         
-    def __to_pagerduty_status_type(status: str):
-        # must be one of [trigger, acknowledge or resolve]        
-        if status == "firing":
-            return "trigger"
-        elif status == "resolved":
-            return "resolve"   
+    def __to_pagerduty_status_type(title: str):
+        # very dirty implementation, I am deeply sorry
+        # must be one of [trigger, acknowledge or resolve]
+        if title.startswith('[RESOLVED]'):
+            return "resolve"
         else:
-            return "trigger"    
+            return "trigger"
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         custom_details: dict = {}
@@ -81,32 +80,22 @@ class PagerdutySink(SinkBase):
                 message_lines += text + "\n\n"
         
         custom_details["state_message"] = message_lines        
-  
-        print(f"severity, {PagerdutySink.__to_pagerduty_severity_type(finding.severity)} ")        
-        print(f"source, {finding.source} ")        
-        print(f"finding_type, {finding.finding_type} ")        
-        #print(f"event_action, {finding.finding_type} ")
-        #trigger acknowledge resolve
-        
-        #TODO: spec replicas change screenshot
-        #TODO: ask Robusta dev-s about firing/resolved status (event_action in PagerDuty) access
-        
-        
+
         body = {
             "payload": {
                 "summary": finding.title,        
-                "severity":PagerdutySink.__to_pagerduty_severity_type(finding.severity),
-                "source": str(finding.source),                                
-                "class": str(finding.finding_type),
+                "severity": PagerdutySink.__to_pagerduty_severity_type(finding.severity),
+                "source": str(finding.source.name),                                
+                "class": str(finding.finding_type.name),
                 "custom_details": custom_details,
             },
             "routing_key": self.api_key,            
-            "event_action": "trigger"
+            "event_action": PagerdutySink.__to_pagerduty_status_type(finding.title),
+            "dedup_key": finding.aggregation_key
         }
         
         headers = {"Content-Type": "application/json"}
-        response = requests.post(self.url, json=body, headers=headers)
-        print(f"response, {response} ")        
+        response = requests.post(self.url, json=body, headers=headers)        
 
     def __to_unformatted_text(cls, block: BaseBlock) -> str:
         if isinstance(block, HeaderBlock):
