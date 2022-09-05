@@ -19,6 +19,18 @@ jobs:
           run: |
             kubectl config get-contexts
 
+        # Set up the buildx to run build for multiple platforms
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@c5ffa2a61740d9877bd1f40899a87c8ec93b0d9f
+
+        - name: Docker Setup Buildx
+          uses: docker/setup-buildx-action@bea6a01aa40b4d58b0382d47e1c4a70137af67b1
+          with:
+            config-inline: |
+              [worker.oci]
+                enabled = true
+                platforms = [ "linux/amd64", "linux/arm64" ]
+
         # install robusta so that we can run tests on it
         - name: Install Robusta
           run: |
@@ -43,7 +55,7 @@ jobs:
         - name: Build with skaffold
           run: |
             echo 'building with tag test-${{ github.sha }}'
-            ./skaffold build --push=false --file-output=container-ids.json --tag='test-${{ github.sha }}'
+            ./skaffold build --profile arm --push=false --file-output=container-ids.json --tag='test-${{ github.sha }}'
             kind load docker-image --name chart-testing 'us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:test-${{ github.sha }}'
 
         #  update helm chart to use the image we just built
