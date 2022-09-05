@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 
 from .pods import ContainerResources, ResourceAttributes
-from ...core.discovery import discovery
+from ...core.discovery import utils
 
 SERVICE_TYPE_JOB = "Job"
 
@@ -17,8 +17,8 @@ class JobContainer(BaseModel):
 
     @staticmethod
     def from_api_server(container: V1Container) -> "JobContainer":
-        requests: ContainerResources = discovery.container_resources(container, ResourceAttributes.requests)
-        limits: ContainerResources = discovery.container_resources(container, ResourceAttributes.limits)
+        requests: ContainerResources = utils.container_resources(container, ResourceAttributes.requests)
+        limits: ContainerResources = utils.container_resources(container, ResourceAttributes.limits)
         return JobContainer(
             image=container.image,
             cpu_req=requests.cpu,
@@ -127,7 +127,7 @@ class JobInfo(BaseModel):
     @staticmethod
     def from_api_server(job: V1Job, pods: List[str]) -> "JobInfo":
         containers = job.spec.template.spec.containers
-        requests: ContainerResources = discovery.containers_resources_sum(containers, ResourceAttributes.requests)
+        requests: ContainerResources = utils.containers_resources_sum(containers, ResourceAttributes.requests)
         status = JobStatus.from_api_server(job)
         job_data = JobData.from_api_server(job, pods)
         return JobInfo(
