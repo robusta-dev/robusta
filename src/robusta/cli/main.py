@@ -79,7 +79,7 @@ class HelmValues(BaseModel, extra=Extra.allow):
             SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper
         ]
     ]
-    clusterName: str
+    clusterName: Optional[str]
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
@@ -95,24 +95,6 @@ class HelmValues(BaseModel, extra=Extra.allow):
         self.grafanaRenderer = PodConfigs.gen_config(
             GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS
         )
-
-
-def guess_cluster_name(context):
-    with click_spinner.spinner():
-        try:
-            all_contexts, current_context = config.list_kube_config_contexts()
-            if context is not None:
-                for i in range(len(all_contexts)):
-                    if all_contexts[i].get("name") == context:
-                        return all_contexts[i].get("context").get("cluster")
-                typer.echo(
-                    f" no context exists with the name '{context}', your current context is {current_context.get('cluster')}"
-                )
-            if current_context and current_context.get("name"):
-                return current_context.get("context").get("cluster")
-        except Exception:  # this happens, for example, if you don't have a kubeconfig file
-            typer.echo("Error reading kubeconfig to generate cluster name")
-        return f"cluster_{random.randint(0, 1000000)}"
 
 
 def get_slack_channel() -> str:
@@ -168,11 +150,6 @@ def gen_config(
     enable_crash_report: bool = typer.Option(None),
 ):
     """Create runtime configuration file"""
-    if cluster_name is None:
-        cluster_name = typer.prompt(
-            "Please specify a unique name for your cluster or press ENTER to use the default",
-            default=guess_cluster_name(context),
-        )
     if is_small_cluster is None:
         is_small_cluster = typer.confirm(
             "Are you running a local Kubernetes cluster? (Like minikube, colima, or kind)"
@@ -199,7 +176,7 @@ def gen_config(
     slack_integration_configured = False
     if slack_api_key and slack_channel:
         while not verify_slack_channel(
-            slack_api_key, cluster_name, slack_channel, slack_workspace, debug
+            slack_api_key, slack_channel, slack_workspace, debug
         ):
             slack_channel = get_slack_channel()
 
