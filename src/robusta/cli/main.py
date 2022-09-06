@@ -40,10 +40,6 @@ from .slack_feedback_message import SlackFeedbackMessagesSender
 from .playbooks_cmd import app as playbooks_commands
 from .utils import log_title, namespace_to_kubectl
 
-FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
-RUNNER_CONFIG_FOR_SMALL_CLUSTERS = "512Mi"
-GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
-
 
 app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
@@ -80,6 +76,7 @@ class HelmValues(BaseModel, extra=Extra.allow):
         ]
     ]
     clusterName: Optional[str]
+    isSmallCluster: Optional[bool]
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
@@ -88,13 +85,6 @@ class HelmValues(BaseModel, extra=Extra.allow):
     grafanaRenderer: Dict = None
     runner: Dict = None
     rsa: RSAKeyPair = None
-
-    def set_pod_configs_for_small_clusters(self):
-        self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
-        self.runner = PodConfigs.gen_config(RUNNER_CONFIG_FOR_SMALL_CLUSTERS)
-        self.grafanaRenderer = PodConfigs.gen_config(
-            GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS
-        )
 
 
 def get_slack_channel() -> str:
@@ -123,7 +113,10 @@ def gen_config(
         None,
         help="Cluster Name",
     ),
-    is_small_cluster: bool = typer.Option(None),
+    is_small_cluster: bool = typer.Option(
+        None,
+        help="Local/Small cluster",
+    ),
     slack_api_key: str = typer.Option(
         "",
         help="Slack API Key",
@@ -150,10 +143,6 @@ def gen_config(
     enable_crash_report: bool = typer.Option(None),
 ):
     """Create runtime configuration file"""
-    if is_small_cluster is None:
-        is_small_cluster = typer.confirm(
-            "Are you running a local Kubernetes cluster? (Like minikube, colima, or kind)"
-        )
 
     # Configure sinks
     typer.secho(f"""Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""", fg=typer.colors.CYAN, bold=True)
@@ -223,8 +212,6 @@ def gen_config(
         else:
             robusta_api_key = ""
 
-    typer.secho("Just a few more questions and we're done...\n", fg="green")
-
     account_id = str(uuid.uuid4())
     if robusta_api_key:  # if Robusta ui sink is defined, take the account id from it
         token = json.loads(base64.b64decode(robusta_api_key))
@@ -274,6 +261,7 @@ def gen_config(
 
     values = HelmValues(
         clusterName=cluster_name,
+        isSmallCluster=is_small_cluster,
         globalConfig=GlobalConfig(signing_key=signing_key, account_id=account_id),
         sinksConfig=sinks_config,
         enablePrometheusStack=enable_prometheus_stack,
@@ -281,10 +269,6 @@ def gen_config(
         enablePlatformPlaybooks=enable_platform_playbooks,
         rsa=gen_rsa_pair(),
     )
-
-    if is_small_cluster:
-        values.set_pod_configs_for_small_clusters()
-        values.playbooksPersistentVolumeSize = "128Mi"
 
     values.runner = {}
     values.runner["sendAdditionalTelemetry"] = enable_crash_report
