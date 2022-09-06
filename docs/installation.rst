@@ -95,15 +95,16 @@ Standard Installation
 
 2. Copy the cluster name from the current context and install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
 
-.. code-block:: bash
-   :name: cb-helm-get-current-context
+.. admonition:: Test clusters (e.g Kind, MiniCube, Colima)
+    :class: important
 
-    kubectl config current-context # get cluster name from current context
+    Test clusters tend to have fewer resources. To lower the resource requests of Robusta,
+    include ``--set isSmallCluster=true`` at the end of the install command.
 
 .. code-block:: bash
    :name: cb-helm-install-only-robusta
 
-    helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
+    helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> # --set isSmallCluster=true
 
 3. Verify that Robusta is running at least two pods and there are no errors in the logs:
 
@@ -153,24 +154,19 @@ By default, Robusta sends notifications when Kubernetes pods crash.
 Installing a second cluster
 ---------------------------------
 
-When installing a second cluster on the same account, there's no need to run ``robusta gen-config`` again. Just change ``clusterName`` when you install Robusta:
-
-.. code-block:: bash
-   :name: cb-helm-install-second-cluster
-
-    kubectl config current-context # get cluster name from current context
-    helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<NEW_CLUSTER_NAME>
+When installing a second cluster on the same account, there's no need to run ``robusta gen-config`` again.
+Just follow the :ref:`Standard Installation` instruction using the ``generated_values.yaml`` file you've already created.
 
 .. admonition:: Where is my generated_values.yaml?
 
     If you have lost your ``generated_values.yaml`` file, you can extract it from a cluster.
 
 
-    In that case, ``clusterName`` may be already in ``generated_values.yaml``. Make sure to remove it before installing on the new cluster.
+    In that case, ``clusterName`` and ``isSmallCluster`` may be already in ``generated_values.yaml``. Make sure to remove them before installing on the new cluster.
 
     .. code-block:: bash
 
-         helm get values -o yaml robusta | grep -v clusterName: > generated_values.yaml
+         helm get values -o yaml robusta | grep -v clusterName: | grep -v isSmallCluster: > generated_values.yaml
 
 
 Next Steps
