@@ -58,7 +58,7 @@ Here is the Robusta event hierarchy:
 
 
 
-.. image:: ../../images/Event_Hierarchy/events_hierarchy_diagram2.svg
+.. image:: ../../images/Event_Hierarchy/Event_Hierarchy_Diagram.drawio.svg
     :align: center
     
 
