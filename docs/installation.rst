@@ -66,10 +66,17 @@ Standard Installation
 
 2. Generate a Robusta configuration. This will setup Slack and other integrations. We **highly recommend** enabling the cloud UI so you can see all features in action.
 
+If you’d like to send Robusta messages to additional destinations (Discord, Telegram etc.). See `Sink configuration <https://docs.robusta.dev/master/catalog/sinks/index.html>`_.
+
 .. code-block:: bash
    :name: cb-robusta-gen-config
 
     robusta gen-config
+
+.. admonition:: Robusta on Minikube
+    :class: warning
+
+    We don't recommend installing Robusta on Minikube because of a recent issue with minikube. More details `here <https://github.com/kubernetes/minikube/issues/14806>`_. 
 
 .. admonition:: Robusta not in PATH
     :class: warning
