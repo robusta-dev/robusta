@@ -20,6 +20,7 @@ class PagerdutySink(SinkBase):
         self.url = sink_config.pagerduty_sink.url        
         self.api_key = sink_config.pagerduty_sink.api_key        
     
+    @staticmethod
     def __to_pagerduty_severity_type(severity: FindingSeverity):
         # must be one of [critical, error, warning, info]
         # Default Incident Urgency is interpreted as [HIGH, HIGH, LOW, LOW]
@@ -37,6 +38,7 @@ class PagerdutySink(SinkBase):
         else:
             return "critical"
         
+    @staticmethod
     def __to_pagerduty_status_type(title: str):
         # very dirty implementation, I am deeply sorry
         # must be one of [trigger, acknowledge or resolve]
@@ -56,14 +58,14 @@ class PagerdutySink(SinkBase):
                     "🔕 Silence"
                 ] = finding.get_prometheus_silence_url(self.cluster_name)
 
-        # custom fields
+        # custom fields that don't have an inherent meaning in PagerDuty itself:
         custom_details["Resource"] = finding.subject.name
-        custom_details["Source"] = self.cluster_name
+        custom_details["Cluster running Robusta"] = self.cluster_name
         custom_details["Namespace"] = finding.subject.namespace
-        custom_details["Node"] = finding.subject.node        
-        custom_details["Monitoring Tool"] = str(finding.source.name)
+        custom_details["Node"] = finding.subject.node
+        custom_details["Source of the Alert"] = str(finding.source.name)
         custom_details["Severity"] = PagerdutySink.__to_pagerduty_severity_type(finding.severity).upper()
-        custom_details["ID"] = finding.fingerprint
+        custom_details["Fingerprint ID"] = finding.fingerprint
         custom_details["Description"] = finding.description
         custom_details["Caption"] = f"{finding.severity.to_emoji()} {PagerdutySink.__to_pagerduty_severity_type(finding.severity)} - {finding.title}"
 
@@ -78,15 +80,17 @@ class PagerdutySink(SinkBase):
                     continue
 
                 message_lines += text + "\n\n"
-        
-        custom_details["state_message"] = message_lines
+
+        custom_details["state_message"] = message_lines                
 
         body = {
             "payload": {
                 "summary": finding.title,        
                 "severity": PagerdutySink.__to_pagerduty_severity_type(finding.severity),
-                "source": str(finding.source.name),                                
-                "class": str(finding.finding_type.name),
+                "source": self.cluster_name,
+                "component": str(finding.subject),
+                "group":finding.service_key,
+                "class": finding.aggregation_key,
                 "custom_details": custom_details,
             },
             "routing_key": self.api_key,            
@@ -95,9 +99,10 @@ class PagerdutySink(SinkBase):
         }
         
         headers = {"Content-Type": "application/json"}
-        response = requests.post(self.url, json=body, headers=headers)        
+        response = requests.post(self.url, json=body, headers=headers)           
 
-    def __to_unformatted_text(cls, block: BaseBlock) -> str:
+    @staticmethod
+    def __to_unformatted_text(block: BaseBlock) -> str:
         if isinstance(block, HeaderBlock):
             return block.text
         elif isinstance(block, TableBlock):
