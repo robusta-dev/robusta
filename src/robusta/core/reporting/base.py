@@ -37,14 +37,18 @@ class FindingSeverity(Enum):
             return FindingSeverity.HIGH
 
         raise Exception(f"Unknown severity {severity}")
-    
-    def to_emoji(self) -> str:
-        if self == FindingSeverity.DEBUG: return "🔵"
-        elif self == FindingSeverity.INFO: return "🟢"
-        elif self == FindingSeverity.LOW: return "🟡"
-        elif self == FindingSeverity.MEDIUM: return "🟠" 
-        elif self ==  FindingSeverity.HIGH: return "🔴"
 
+    def to_emoji(self) -> str:
+        if self == FindingSeverity.DEBUG:
+            return "🔵"
+        elif self == FindingSeverity.INFO:
+            return "🟢"
+        elif self == FindingSeverity.LOW:
+            return "🟡"
+        elif self == FindingSeverity.MEDIUM:
+            return "🟠"
+        elif self == FindingSeverity.HIGH:
+            return "🔴"
 
 
 class Enrichment:
@@ -71,7 +75,9 @@ class Filterable:
     def get_invalid_attributes(self, attributes: List[str]) -> List:
         return list(set(attributes) - set(self.attribute_map))
 
-    def attribute_matches(self, attribute: str, expression: Union[str, List[str]]) -> bool:
+    def attribute_matches(
+        self, attribute: str, expression: Union[str, List[str]]
+    ) -> bool:
         value = self.attribute_map[attribute]
         if isinstance(expression, str):
             return bool(re.match(expression, value))
@@ -103,6 +109,11 @@ class FindingSubject:
         self.namespace = namespace
         self.node = node
 
+    def __str__(self):
+        if self.namespace is not None:
+            return f"{self.namespace}/{self.subject_type.value}/{self.name}"
+        return f"{self.subject_type.value}/{self.name}"
+
 
 class Finding(Filterable):
     """
@@ -123,7 +134,7 @@ class Finding(Filterable):
         fingerprint: str = None,
         starts_at: datetime = None,
         ends_at: datetime = None,
-        add_silence_url: bool = False
+        add_silence_url: bool = False,
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
@@ -164,9 +175,16 @@ class Finding(Filterable):
             "name": str(self.subject.name),
         }
 
-    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None, suppress_warning: bool = False):
+    def add_enrichment(
+        self,
+        enrichment_blocks: List[BaseBlock],
+        annotations=None,
+        suppress_warning: bool = False,
+    ):
         if self.dirty and not suppress_warning:
-            logging.warning("Updating a finding after it was added to the event is not allowed!")
+            logging.warning(
+                "Updating a finding after it was added to the event is not allowed!"
+            )
 
         if not enrichment_blocks:
             return
@@ -180,7 +198,7 @@ class Finding(Filterable):
     def get_prometheus_silence_url(self, cluster_id: str) -> str:
         labels: Dict[str, str] = {
             "alertname": self.aggregation_key,
-            "cluster": cluster_id
+            "cluster": cluster_id,
         }
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace

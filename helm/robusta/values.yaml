@@ -126,6 +126,7 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
+      status: "all" # sometimes this enricher silences the alert, so we need to silence it regardless of status
   actions:
   - cpu_throttling_analysis_enricher: {}
   - alert_graph_enricher:
