@@ -73,10 +73,10 @@ If you’d like to send Robusta messages to additional destinations (Discord, Te
 
     robusta gen-config
 
-.. admonition:: Robusta runner ImagePullBackOff
+.. admonition:: Robusta on Minikube
     :class: warning
 
-    On minikube `robusta-runner` could remain in `ContainerCreating` state due to this `issue <https://github.com/kubernetes/minikube/issues/14806>`_. 
+    We don't recommend installing Robusta on Minikube because of a recent issue with minikube. More details `here <https://github.com/kubernetes/minikube/issues/14806>`_. 
 
 .. admonition:: Robusta not in PATH
     :class: warning
