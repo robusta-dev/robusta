@@ -42,6 +42,13 @@ profiles:
           buildCommand: ./build_on_apple_m1.sh
     local:
       concurrency: 0
+- name: arm
+  build:
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        custom:
+          buildCommand: ./build_with_arm.sh
 - name: gcloud-build
   build:
     googleCloudBuild:

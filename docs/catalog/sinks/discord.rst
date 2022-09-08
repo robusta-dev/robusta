@@ -3,7 +3,7 @@ Discord
 
 Robusta can send playbook results to Discord.
 
-To configure the Discord sink we will need the Discord webhook url
+To configure the Discord sink we will need the Discord *webhook url*
 
 .. note::
 
@@ -26,17 +26,19 @@ Get your discord webhook url
       :width: 1000
       :align: center
 
-5. Copy the URL from the WEBHOOK URL field.
+5. Copy the URL from the `Copy Webhook URL` field.
 
     .. image:: /images/discord_copy_webhook_url.png
       :width: 1000
       :align: center
 
-6. Select Save.
+6. Select Save in the bottom.
 
 Configuring the Discord sink
 ------------------------------------------------
 Now we're ready to configure the Discord sink.
+
+Edit your values.yaml (generated_values.yaml) file and add `discord_sink`. 
 
 .. admonition:: values.yaml
 
@@ -46,6 +48,13 @@ Now we're ready to configure the Discord sink.
         - discord_sink:
             name: personal_discord_sink
             url: <YOUR WEBHOOK URL>
+
+Save the file and run
+
+.. code-block:: bash
+   :name: add-discord-sink
+
+    helm upgrade robusta robusta/robusta --values=values.yaml
 
 You should now get playbooks results in Discord! Example is shown below:
 
