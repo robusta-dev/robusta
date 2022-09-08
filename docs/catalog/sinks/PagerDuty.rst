@@ -3,7 +3,7 @@ PagerDuty
 
 Robusta can send playbooks results to the PagerDuty alerts API.
 
-| To configure PagerDuty, a PagerDuty Integration API Key (string) and a PagerDuty Integration URL (url) is needed.
+| To configure PagerDuty, a PagerDuty Integration API Key (string) is needed.
 
 Configuring the PagerDuty sink
 ------------------------------------------------
@@ -16,7 +16,6 @@ Configuring the PagerDuty sink
             - pagerduty_sink:
                 name: main_pagerduty_sink
                 api_key: <api key> # e.g. f653634653463678fadas43534506
-                url: <url> # e.g.  https://events.pagerduty.com/v2/enqueue/
 **Example Output:**
 
 .. admonition:: Typically you'll send alerts from Robusta to PagerDuty and not deployment changes. We're showing a non-typical example with deployment changes because it helps compare the format with other sinks.

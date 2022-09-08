@@ -2,8 +2,7 @@ from ..sink_config import SinkConfigBase
 from ..sink_base_params import SinkBaseParams
 
 
-class PagerdutySinkParams(SinkBaseParams):
-    url: str   
+class PagerdutySinkParams(SinkBaseParams):    
     api_key: str 
 
 

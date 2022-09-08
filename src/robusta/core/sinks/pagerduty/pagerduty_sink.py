@@ -17,8 +17,8 @@ from ..sink_base import SinkBase
 class PagerdutySink(SinkBase):
     def __init__(self, sink_config: PagerdutyConfigWrapper, registry):
         super().__init__(sink_config.pagerduty_sink, registry)
-        self.url = sink_config.pagerduty_sink.url        
-        self.api_key = sink_config.pagerduty_sink.api_key        
+        self.url = "https://events.pagerduty.com/v2/enqueue/"
+        self.api_key = sink_config.pagerduty_sink.api_key
     
     @staticmethod
     def __to_pagerduty_severity_type(severity: FindingSeverity):
