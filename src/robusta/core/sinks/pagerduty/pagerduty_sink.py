@@ -1,3 +1,4 @@
+import logging
 import requests
 from robusta.core.reporting.blocks import (
     HeaderBlock,
@@ -19,7 +20,7 @@ class PagerdutySink(SinkBase):
         super().__init__(sink_config.pagerduty_sink, registry)
         self.url = "https://events.pagerduty.com/v2/enqueue/"
         self.api_key = sink_config.pagerduty_sink.api_key
-    
+
     @staticmethod
     def __to_pagerduty_severity_type(severity: FindingSeverity):
         # must be one of [critical, error, warning, info]
@@ -28,21 +29,21 @@ class PagerdutySink(SinkBase):
         if severity == FindingSeverity.HIGH:
             return "critical"
         elif severity == FindingSeverity.MEDIUM:
-            return "error"        
+            return "error"
         elif severity == FindingSeverity.LOW:
             return "warning"
         elif severity == FindingSeverity.INFO:
-            return "info"        
+            return "info"
         elif severity == FindingSeverity.DEBUG:
-            return "info"      
+            return "info"
         else:
             return "critical"
-        
+
     @staticmethod
     def __to_pagerduty_status_type(title: str):
         # very dirty implementation, I am deeply sorry
         # must be one of [trigger, acknowledge or resolve]
-        if title.startswith('[RESOLVED]'):
+        if title.startswith("[RESOLVED]"):
             return "resolve"
         else:
             return "trigger"
@@ -54,9 +55,9 @@ class PagerdutySink(SinkBase):
             custom_details["🔎 Investigate"] = finding.investigate_uri
 
             if finding.add_silence_url:
-                custom_details[
-                    "🔕 Silence"
-                ] = finding.get_prometheus_silence_url(self.cluster_name)
+                custom_details["🔕 Silence"] = finding.get_prometheus_silence_url(
+                    self.cluster_name
+                )
 
         # custom fields that don't have an inherent meaning in PagerDuty itself:
         custom_details["Resource"] = finding.subject.name
@@ -64,10 +65,14 @@ class PagerdutySink(SinkBase):
         custom_details["Namespace"] = finding.subject.namespace
         custom_details["Node"] = finding.subject.node
         custom_details["Source of the Alert"] = str(finding.source.name)
-        custom_details["Severity"] = PagerdutySink.__to_pagerduty_severity_type(finding.severity).upper()
+        custom_details["Severity"] = PagerdutySink.__to_pagerduty_severity_type(
+            finding.severity
+        ).upper()
         custom_details["Fingerprint ID"] = finding.fingerprint
         custom_details["Description"] = finding.description
-        custom_details["Caption"] = f"{finding.severity.to_emoji()} {PagerdutySink.__to_pagerduty_severity_type(finding.severity)} - {finding.title}"
+        custom_details[
+            "Caption"
+        ] = f"{finding.severity.to_emoji()} {PagerdutySink.__to_pagerduty_severity_type(finding.severity)} - {finding.title}"
 
         message_lines = ""
         if finding.description:
@@ -81,25 +86,31 @@ class PagerdutySink(SinkBase):
 
                 message_lines += text + "\n\n"
 
-        custom_details["state_message"] = message_lines                
+        custom_details["state_message"] = message_lines
 
         body = {
             "payload": {
-                "summary": finding.title,        
-                "severity": PagerdutySink.__to_pagerduty_severity_type(finding.severity),
+                "summary": finding.title,
+                "severity": PagerdutySink.__to_pagerduty_severity_type(
+                    finding.severity
+                ),
                 "source": self.cluster_name,
                 "component": str(finding.subject),
-                "group":finding.service_key,
+                "group": finding.service_key,
                 "class": finding.aggregation_key,
                 "custom_details": custom_details,
             },
-            "routing_key": self.api_key,            
+            "routing_key": self.api_key,
             "event_action": PagerdutySink.__to_pagerduty_status_type(finding.title),
-            "dedup_key": finding.fingerprint
+            "dedup_key": finding.fingerprint,
         }
-        
+
         headers = {"Content-Type": "application/json"}
-        response = requests.post(self.url, json=body, headers=headers)           
+        response = requests.post(self.url, json=body, headers=headers)
+        if not response.ok:
+            logging.error(
+                f"Error sending message to PagerDuty: {response.status_code}, {response.reason}, {response.text}"
+            )
 
     @staticmethod
     def __to_unformatted_text(block: BaseBlock) -> str:
