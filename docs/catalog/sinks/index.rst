@@ -17,6 +17,7 @@ The following sinks are supported:
 * :ref:`Telegram` - send playbooks results to Telegram group or private conversation
 * :ref:`Webhook` - send playbooks results to a webhook
 * :ref:`VictorOps` - send playbooks results to the VictorOps alerts API
+* :ref:`PagerDuty` - send playbooks results to the PagerDuty alerts API
 * :ref:`Discord` - send playbooks results to the Discord using webhook
 * :ref:`Mattermost` - send playbooks results to the Mattermost using webhook
 
@@ -68,3 +69,4 @@ if it has the field `default: true` in the YAML.
    webhook
    Opsgenie
    VictorOps
+   PagerDuty
