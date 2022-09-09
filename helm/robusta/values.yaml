@@ -181,7 +181,7 @@ platformPlaybooks:
 
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.12
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.13
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:
@@ -196,7 +196,7 @@ kubewatch:
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
   enableContainer: false
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:6
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:7
   imagePullPolicy: IfNotPresent
   resources:
     requests:

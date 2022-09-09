@@ -8,9 +8,9 @@ from kubernetes.client import V1Deployment, V1DaemonSet, V1StatefulSet, V1Job, V
     V1DeploymentList, V1ObjectMeta, V1StatefulSetList, V1DaemonSetList, \
     V1ReplicaSetList, V1PodList, V1NodeList, V1JobList, V1Container, V1Volume
 
+from . import utils
 from ..model.jobs import JobInfo
 from ...core.model.services import ServiceInfo, ContainerInfo, VolumeInfo, ServiceConfig
-from ...core.model.pods import PodResources, ResourceAttributes, ContainerResources
 
 
 class DiscoveryResults:
@@ -105,7 +105,7 @@ class Discovery:
             for pod in pod_items:
                 pod_status = pod.status.phase
                 if pod_status in ["Running", "Unknown", "Pending"] and pod.spec.node_name:
-                    node_requests[pod.spec.node_name].append(k8s_pod_requests(pod))
+                    node_requests[pod.spec.node_name].append(utils.k8s_pod_requests(pod))
 
         except Exception:
             logging.error(
@@ -178,46 +178,3 @@ def extract_volumes(resource) -> List[V1Volume]:
     except Exception:  # may fail if one of the attributes is None
         logging.error(f"Failed to extract volumes from {resource}", exc_info=True)
     return []
-
-def k8s_pod_requests(pod: V1Pod) -> PodResources:
-    """Extract requests from k8s python api pod (not hikaru)"""
-    return __pod_resources(pod, ResourceAttributes.requests)
-
-
-def __pod_resources(pod: V1Pod, resource_attribute: ResourceAttributes) -> PodResources:
-    containers_resources = containers_resources_sum(pod.spec.containers, resource_attribute)
-    return PodResources(
-        pod_name=pod.metadata.name,
-        cpu=containers_resources.cpu,
-        memory=containers_resources.memory,
-    )
-
-
-def containers_resources_sum(
-        containers: List[V1Container], resource_attribute: ResourceAttributes
-) -> ContainerResources:
-    cpu_sum: float = 0.0
-    mem_sum: int = 0
-    for container in containers:
-        resources = container_resources(container, resource_attribute)
-        cpu_sum += resources.cpu
-        mem_sum += resources.memory
-
-    return ContainerResources(cpu=cpu_sum, memory=mem_sum)
-
-
-def container_resources(container: V1Container, resource_attribute: ResourceAttributes) -> ContainerResources:
-    container_cpu: float = 0.0
-    container_mem: int = 0
-
-    resources: V1ResourceRequirements = container.resources
-    if resources:
-        resource_spec = getattr(resources, resource_attribute.name) or {}  # requests or limits
-        container_cpu = PodResources.parse_cpu(
-            resource_spec.get("cpu", 0.0)
-        )
-        container_mem = PodResources.parse_mem(
-            resource_spec.get("memory", "0Mi")
-        )
-
-    return ContainerResources(cpu=container_cpu, memory=container_mem)

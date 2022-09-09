@@ -43,6 +43,18 @@ jobs:
         sed -i 's/0.0.0/${{env.RELEASE_VER}}/g' src/robusta/_version.py pyproject.toml helm/robusta/Chart.yaml helm/robusta/values.yaml
         sed -i 's/0.0.1/${{env.RELEASE_VER}}/g' helm/robusta/Chart.yaml
 
+    # Set up the buildx to run build for multiple platforms
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@c5ffa2a61740d9877bd1f40899a87c8ec93b0d9f
+
+    - name: Docker Setup Buildx
+      uses: docker/setup-buildx-action@bea6a01aa40b4d58b0382d47e1c4a70137af67b1
+      with:
+        config-inline: |
+          [worker.oci]
+            enabled = true
+            platforms = [ "linux/amd64", "linux/arm64" ]
+
     # see https://github.com/GoogleContainerTools/skaffold/issues/4842
     - name: Cache skaffold image builds & config
       uses: actions/cache@v2
@@ -54,7 +66,7 @@ jobs:
           fixed-
 
     - name: Build with skaffold
-      run: ./skaffold build --file-output=container-ids.json --tag='${{env.RELEASE_VER}}'
+      run: ./skaffold build --profile arm --file-output=container-ids.json --tag='${{env.RELEASE_VER}}'
 
     - name: Save artifact with tags of built containers
       uses: actions/upload-artifact@v2

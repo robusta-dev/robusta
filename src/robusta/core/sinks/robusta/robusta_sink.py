@@ -3,7 +3,7 @@ import json
 import logging
 import time
 import threading
-from typing import List, Dict
+from typing import List, Dict, Optional
 from kubernetes.client import V1NodeList, V1Node, V1NodeCondition, V1Taint
 
 from ...discovery.discovery import Discovery, DiscoveryResults
@@ -55,7 +55,9 @@ class RobustaSink(SinkBase):
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
-        self.__jobs_cache: Dict[str, JobInfo] = {}
+        # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
+        # helps differentiate between no jobs, to not initialized
+        self.__jobs_cache: Optional[Dict[str, JobInfo]] = None
         self.__init_service_resolver()
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
@@ -100,15 +102,16 @@ class RobustaSink(SinkBase):
                 self.__nodes_cache[node.name] = node
 
     def __assert_jobs_cache_initialized(self):
-        if not self.__jobs_cache:
+        if self.__jobs_cache is None:
             logging.info("Initializing jobs cache")
+            self.__jobs_cache: Dict[str, JobInfo] = {}
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
 
     def __reset_caches(self):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
-        self.__jobs_cache: Dict[str, JobInfo] = {}
+        self.__jobs_cache = None
 
     def stop(self):
         self.__active = False

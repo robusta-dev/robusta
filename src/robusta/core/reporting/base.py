@@ -1,4 +1,5 @@
 import logging
+import urllib.parse
 import uuid
 import re
 from datetime import datetime
@@ -9,7 +10,7 @@ from typing import List, Dict, Union
 from ..model.env_vars import ROBUSTA_UI_DOMAIN
 from ..reporting.consts import FindingSubjectType, FindingSource, FindingType
 from ...core.discovery.top_service_resolver import TopServiceResolver
-from requests import get
+
 
 class BaseBlock(BaseModel):
     hidden: bool = False
@@ -184,11 +185,10 @@ class Finding(Filterable):
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
 
-        kind: str = self.subject.subject_type.value
+        kind: str = str(self.subject.subject_type.value)
         if kind and self.subject.name:
             labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
 
-        uri = get(f"{ROBUSTA_UI_DOMAIN}/silences/create", labels)
-        return uri.url
+        return f"{ROBUSTA_UI_DOMAIN}/silences/create?{urllib.parse.urlencode(labels)}"
