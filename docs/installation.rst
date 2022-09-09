@@ -15,7 +15,7 @@ For this we need to install Robusta, and also connect at least one destination (
 .. image:: ./images/robusta_motion_graphics_transparent.gif
    :align: center
 
-Creating the config file
+Standard Installation
 ------------------------------
 
 1.  To configure robusta, the Robusta CLI is required. Choose one of the installation methods below.
@@ -66,10 +66,17 @@ Creating the config file
 
 2. Generate a Robusta configuration. This will setup Slack and other integrations. We **highly recommend** enabling the cloud UI so you can see all features in action.
 
+If you’d like to send Robusta messages to additional destinations (Discord, Telegram etc.). See `Sink configuration <https://docs.robusta.dev/master/catalog/sinks/index.html>`_.
+
 .. code-block:: bash
    :name: cb-robusta-gen-config
 
     robusta gen-config
+
+.. admonition:: Robusta on Minikube
+    :class: warning
+
+    We don't recommend installing Robusta on Minikube because of a recent issue with minikube. More details `here <https://github.com/kubernetes/minikube/issues/14806>`_.
 
 .. admonition:: Robusta not in PATH
     :class: warning
@@ -78,40 +85,20 @@ Creating the config file
 
 3. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
 
-.. admonition:: Multiple clusters
-    :class: important
-
-    Use the same ``generated_values.yaml`` for all your clusters (dev, prod, etc..). There's no need to run gen-config again.
-
-Standard Installation
-------------------------------
-
-1. Download the Helm chart:
+4. Download the Helm chart and Install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
 
 .. code-block:: bash
-   :name: cb-helm-repo-add-update-robusta
+   :name: cb-helm-install-robusta
 
     helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
+    helm install robusta robusta/robusta -f ./generated_values.yaml
 
-2. Copy the cluster name from the current context and install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
-
-.. admonition:: Test clusters (e.g Kind, MiniCube, Colima)
-    :class: important
-
-    Test clusters tend to have fewer resources. To lower the resource requests of Robusta,
-    include ``--set isSmallCluster=true`` at the end of the install command.
-
-.. code-block:: bash
-   :name: cb-helm-install-only-robusta
-
-    helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> # --set isSmallCluster=true
-
-3. Verify that Robusta is running at least two pods and there are no errors in the logs:
+5. Verify that Robusta is running two pods and there are no errors in the logs:
 
 .. code-block:: bash
     :name: cb-get-pods-robusta-logs
 
-    kubectl get pods -A | grep robusta
+    kubectl get pods
     robusta logs
 
 Seeing Robusta in action
@@ -125,6 +112,7 @@ By default, Robusta sends notifications when Kubernetes pods crash.
    :name: cb-apply-crashpod
 
    kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw
+
 
 2. Verify that the pod is actually crashing:
 
@@ -151,24 +139,6 @@ By default, Robusta sends notifications when Kubernetes pods crash.
 
    kubectl delete deployment crashpod
 
-Installing a second cluster
----------------------------------
-
-When installing a second cluster on the same account, there's no need to run ``robusta gen-config`` again.
-Just follow the :ref:`Standard Installation` instruction using the ``generated_values.yaml`` file you've already created.
-
-.. admonition:: Where is my generated_values.yaml?
-
-    If you have lost your ``generated_values.yaml`` file, you can extract it from a cluster.
-
-
-    In that case, ``clusterName`` and ``isSmallCluster`` may be already in ``generated_values.yaml``. Make sure to remove them before installing on the new cluster.
-
-    .. code-block:: bash
-
-         helm get values -o yaml robusta | grep -v clusterName: | grep -v isSmallCluster: > generated_values.yaml
-
-
 Next Steps
 ---------------------------------
 
@@ -180,7 +150,6 @@ Next Steps
 .. [#f1] `See this great video on YouTube where a community member installs Robusta with a stopwatch. <https://www.youtube.com/watch?v=l_zaCaY_wls>`_ If you beat his time by more than 30% and document it, we'll send you a Robusta mug too.
 
 .. [#f2] AWS EKS, we're looking at you!
-
 
 Additional Installation Methods
 ---------------------------------
@@ -236,4 +205,11 @@ Additional Installation Methods
         oc adm policy add-scc-to-user anyuid -z robusta-runner-service-account
 
     It's possible to reduce the permissions more. Please feel free to open a PR suggesting something more minimal
+
+.. dropdown:: Installing a second cluster
+    :color: light
+
+    When installing a second cluster on the same account, there is no need to run ``robusta gen-config`` again.
+
+    Just change ``clusterName`` in values.yaml. It can have any value as long as it is unique between clusters.
 
