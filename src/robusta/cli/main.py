@@ -60,14 +60,6 @@ class GlobalConfig(BaseModel):
     account_id: str = ""
 
 
-class PodConfigs(Dict[str, Dict[str, Dict[str, str]]]):
-    __root__: Dict[str, Dict[str, Dict[str, str]]]
-
-    @classmethod
-    def gen_config(cls, memory_size: str) -> Dict:
-        return {"resources": {"requests": {"memory": memory_size}}}
-
-
 class HelmValues(BaseModel, extra=Extra.allow):
     globalConfig: GlobalConfig
     sinksConfig: List[
