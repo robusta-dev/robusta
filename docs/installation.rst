@@ -62,7 +62,7 @@ Standard Installation
             .. admonition:: Common Errors
                 :class: warning
 
-                * Docker daemon is required. 
+                * Docker daemon is required.
 
 2. Generate a Robusta configuration. This will setup Slack and other integrations. We **highly recommend** enabling the cloud UI so you can see all features in action.
 

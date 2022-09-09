@@ -40,10 +40,6 @@ from .slack_feedback_message import SlackFeedbackMessagesSender
 from .playbooks_cmd import app as playbooks_commands
 from .utils import log_title, namespace_to_kubectl
 
-FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
-RUNNER_CONFIG_FOR_SMALL_CLUSTERS = "512Mi"
-GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
-
 
 app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
@@ -64,14 +60,6 @@ class GlobalConfig(BaseModel):
     account_id: str = ""
 
 
-class PodConfigs(Dict[str, Dict[str, Dict[str, str]]]):
-    __root__: Dict[str, Dict[str, Dict[str, str]]]
-
-    @classmethod
-    def gen_config(cls, memory_size: str) -> Dict:
-        return {"resources": {"requests": {"memory": memory_size}}}
-
-
 class HelmValues(BaseModel, extra=Extra.allow):
     globalConfig: GlobalConfig
     sinksConfig: List[
@@ -79,7 +67,8 @@ class HelmValues(BaseModel, extra=Extra.allow):
             SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper
         ]
     ]
-    clusterName: str
+    clusterName: Optional[str]
+    isSmallCluster: Optional[bool]
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
@@ -88,31 +77,6 @@ class HelmValues(BaseModel, extra=Extra.allow):
     grafanaRenderer: Dict = None
     runner: Dict = None
     rsa: RSAKeyPair = None
-
-    def set_pod_configs_for_small_clusters(self):
-        self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
-        self.runner = PodConfigs.gen_config(RUNNER_CONFIG_FOR_SMALL_CLUSTERS)
-        self.grafanaRenderer = PodConfigs.gen_config(
-            GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS
-        )
-
-
-def guess_cluster_name(context):
-    with click_spinner.spinner():
-        try:
-            all_contexts, current_context = config.list_kube_config_contexts()
-            if context is not None:
-                for i in range(len(all_contexts)):
-                    if all_contexts[i].get("name") == context:
-                        return all_contexts[i].get("context").get("cluster")
-                typer.echo(
-                    f" no context exists with the name '{context}', your current context is {current_context.get('cluster')}"
-                )
-            if current_context and current_context.get("name"):
-                return current_context.get("context").get("cluster")
-        except Exception:  # this happens, for example, if you don't have a kubeconfig file
-            typer.echo("Error reading kubeconfig to generate cluster name")
-        return f"cluster_{random.randint(0, 1000000)}"
 
 
 def get_slack_channel() -> str:
@@ -141,7 +105,10 @@ def gen_config(
         None,
         help="Cluster Name",
     ),
-    is_small_cluster: bool = typer.Option(None),
+    is_small_cluster: bool = typer.Option(
+        None,
+        help="Local/Small cluster",
+    ),
     slack_api_key: str = typer.Option(
         "",
         help="Slack API Key",
@@ -168,15 +135,6 @@ def gen_config(
     enable_crash_report: bool = typer.Option(None),
 ):
     """Create runtime configuration file"""
-    if cluster_name is None:
-        cluster_name = typer.prompt(
-            "Please specify a unique name for your cluster or press ENTER to use the default",
-            default=guess_cluster_name(context),
-        )
-    if is_small_cluster is None:
-        is_small_cluster = typer.confirm(
-            "Are you running a local Kubernetes cluster? (Like minikube, colima, or kind)"
-        )
 
     # Configure sinks
     typer.secho(f"""Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""", fg=typer.colors.CYAN, bold=True)
@@ -199,7 +157,7 @@ def gen_config(
     slack_integration_configured = False
     if slack_api_key and slack_channel:
         while not verify_slack_channel(
-            slack_api_key, cluster_name, slack_channel, slack_workspace, debug
+            slack_api_key, slack_channel, slack_workspace, debug
         ):
             slack_channel = get_slack_channel()
 
@@ -245,8 +203,6 @@ def gen_config(
             robusta_api_key = get_ui_key()
         else:
             robusta_api_key = ""
-
-    typer.secho("Just a few more questions and we're done...\n", fg="green")
 
     account_id = str(uuid.uuid4())
     if robusta_api_key:  # if Robusta ui sink is defined, take the account id from it
@@ -297,6 +253,7 @@ def gen_config(
 
     values = HelmValues(
         clusterName=cluster_name,
+        isSmallCluster=is_small_cluster,
         globalConfig=GlobalConfig(signing_key=signing_key, account_id=account_id),
         sinksConfig=sinks_config,
         enablePrometheusStack=enable_prometheus_stack,
@@ -304,10 +261,6 @@ def gen_config(
         enablePlatformPlaybooks=enable_platform_playbooks,
         rsa=gen_rsa_pair(),
     )
-
-    if is_small_cluster:
-        values.set_pod_configs_for_small_clusters()
-        values.playbooksPersistentVolumeSize = "128Mi"
 
     values.runner = {}
     values.runner["sendAdditionalTelemetry"] = enable_crash_report
