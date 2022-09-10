@@ -95,7 +95,10 @@ class PodResources(BaseModel):
             if len(mem_spec) > 1 and mem_spec[-1] in k8s_memory_factors:
                 return int(mem_spec[:-1]) * k8s_memory_factors[mem_spec[-1]]
 
-            raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)
+            try:
+                return int(mem_spec)
+            except ValueError:
+                raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)
 
         except Exception as e: # could be a valueError with mem_spec
             logging.error(f"error parsing memory {mem_spec}", exc_info=True)
