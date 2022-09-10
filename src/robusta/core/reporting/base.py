@@ -110,6 +110,11 @@ class FindingSubject:
         self.namespace = namespace
         self.node = node
 
+    def __str__(self):
+        if self.namespace is not None:
+            return f"{self.namespace}/{self.subject_type.value}/{self.name}"
+        return f"{self.subject_type.value}/{self.name}"
+
 
 class Finding(Filterable):
     """
