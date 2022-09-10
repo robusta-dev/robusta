@@ -96,7 +96,7 @@ class PodResources(BaseModel):
                 return int(mem_spec[:-1]) * k8s_memory_factors[mem_spec[-1]]
 
             try:
-                return float(mem_spec)
+                return int(mem_spec)
             except ValueError:
                 raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)
 
