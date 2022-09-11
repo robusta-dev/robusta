@@ -5,7 +5,6 @@ import pydantic
 from robusta.api import *
 from robusta.integrations.resource_analysis.memory_analyzer import (
     MemoryAnalyzer,
-    K8sMemoryTransformer,
 )
 
 
@@ -221,8 +220,6 @@ class OomKillsExtractor:
         self.node = node
         self.oom_kill_reason_investigator = oom_kill_reason_investigator
 
-        self.memory_transformer = K8sMemoryTransformer()
-
     def extract_oom_kills(self) -> List[OomKill]:
         results: PodList = Pod.listPodForAllNamespaces(
             field_selector=f"spec.nodeName={self.node.metadata.name}"
@@ -329,7 +326,7 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
 
         memory_limit = oom_kill.memory_specs.limits
         max_memory_in_bytes = (
-            K8sMemoryTransformer.get_number_of_bytes_from_kubernetes_mem_spec(
+            PodResources.get_number_of_bytes_from_kubernetes_mem_spec(
                 memory_limit
             )
         )
