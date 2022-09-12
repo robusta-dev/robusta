@@ -83,7 +83,7 @@ Creating the config file
 
 3. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
 
-.. admonition:: Multiple clusters
+.. admonition:: Installing on multiple clusters
     :class: important
 
     Use the same ``generated_values.yaml`` for all your clusters (dev, prod, etc..). There's no need to run gen-config again.
@@ -91,7 +91,7 @@ Creating the config file
 Standard Installation
 ------------------------------
 
-1. Download the Helm chart:
+1. Add Robusta's chart repository:
 
 .. code-block:: bash
    :name: cb-helm-repo-add-update-robusta
@@ -100,7 +100,7 @@ Standard Installation
 
 2. Copy the cluster name from the current context and install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
 
-.. admonition:: Test clusters (e.g Kind, MiniCube, Colima)
+.. admonition:: Test clusters (e.g Kind, MiniKube, Colima)
     :class: important
 
     Test clusters tend to have fewer resources. To lower the resource requests of Robusta,
@@ -111,7 +111,7 @@ Standard Installation
 
     helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> # --set isSmallCluster=true
 
-3. Verify that Robusta is running at least two pods and there are no errors in the logs:
+3. Verify the two Robusta pods and running with no errors in the logs:
 
 .. code-block:: bash
     :name: cb-get-pods-robusta-logs
@@ -160,11 +160,17 @@ Installing a second cluster
 ---------------------------------
 
 When installing a second cluster on the same account, there's no need to run ``robusta gen-config`` again.
-Just follow the :ref:`Standard Installation` instruction using the ``generated_values.yaml`` file you've already created.
+
+Using your existing generated_values.yaml and the new clusterName run:
+
+.. code-block:: bash
+   :name: cb-helm-install-only-robusta
+
+    helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> # --set isSmallCluster=true
 
 .. admonition:: Where is my generated_values.yaml?
 
-    If you have lost your ``generated_values.yaml`` file, you can extract it from a cluster.
+    If you have lost your ``generated_values.yaml`` file, you can extract it from any cluster running Robusta.
 
 
     In that case, ``clusterName`` and ``isSmallCluster`` may be already in ``generated_values.yaml``. Make sure to remove them before installing on the new cluster.
