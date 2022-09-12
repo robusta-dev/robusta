@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import random
 import subprocess
 import time
@@ -137,7 +138,11 @@ def gen_config(
     """Create runtime configuration file"""
 
     # Configure sinks
-    typer.secho(f"""Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""", fg=typer.colors.CYAN, bold=True)
+    typer.secho(
+        f"""Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""",
+        fg=typer.colors.CYAN,
+        bold=True,
+    )
 
     sinks_config: List[
         Union[
@@ -231,7 +236,8 @@ def gen_config(
 
     if enable_prometheus_stack is None:
         typer.echo(
-            f"""Robusta can use {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)} as an alert source.""")
+            f"""Robusta can use {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)} as an alert source."""
+        )
 
         enable_prometheus_stack = typer.confirm(
             f"""If you haven't installed it yet, Robusta can install a pre-configured {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)}.\nWould you like to do so?"""
@@ -328,7 +334,10 @@ def update_config(
             values.globalConfig.signing_key = str(uuid.uuid4())
 
         write_values_file("updated_values.yaml", values)
-        typer.secho("Run `helm upgrade robusta robusta/robusta -f ./updated_values.yaml`", fg="green")
+        typer.secho(
+            "Run `helm upgrade robusta robusta/robusta -f ./updated_values.yaml`",
+            fg="green",
+        )
 
 
 @app.command()
@@ -375,7 +384,9 @@ def logs(
     ),
     tail: int = typer.Option(None, help="Lines of recent log file to display."),
     context: str = typer.Option(None, help="The name of the kubeconfig context to use"),
-    resource_name: str = typer.Option(None, help="Robusta Runner deployment or pod name")
+    resource_name: str = typer.Option(
+        None, help="Robusta Runner deployment or pod name"
+    ),
 ):
     """Fetch Robusta runner logs"""
     stream = "-f" if f else ""
@@ -386,10 +397,10 @@ def logs(
     try:
         subprocess.check_call(
             f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
-            shell=True
+            shell=True,
         )
     except Exception as e:
-        log_title("Robusta-runner pod not found. use help for more options.", color="red")
+        log_title("error fetching logs; see help for more options.", color="red")
 
 
 @app.command()
@@ -397,9 +408,9 @@ def demo_alert(
     alertmanager_url: str = typer.Option(
         None,
         help="Alertmanager in cluster url. "
-             "By default, Robusta will auto-discover the AlertManager running in your cluster. "
-             "Use this parameter to override the AlertManager url."
-             "For example: http://alertmanager.monitoring.svc.cluster.local:9093",
+        "By default, Robusta will auto-discover the AlertManager running in your cluster. "
+        "Use this parameter to override the AlertManager url."
+        "For example: http://alertmanager.monitoring.svc.cluster.local:9093",
     ),
     namespaces: List[str] = typer.Option(
         ["robusta", "default"],
@@ -413,22 +424,22 @@ def demo_alert(
         None,
         help="Additional alert labels. Comma separated list. For example: env=prod,team=infra ",
     ),
-    kube_config: str = typer.Option(
-        None,
-        help="Kube config file path override."
-    )
+    kube_config: str = typer.Option(None, help="Kube config file path override."),
 ):
     """
-        Create a demo alert on AlertManager.
-        The alert pod is selected randomly from the pods in the current namespace
+    Create a demo alert on AlertManager.
+    The alert pod is selected randomly from the pods in the current namespace
     """
     config.load_kube_config(kube_config)
     if not alertmanager_url:
         # search cluster alertmanager by known alertmanager labels
         alertmanager_url = AlertManagerDiscovery.find_alert_manager_url()
         if not alertmanager_url:
-            typer.secho("Alertmanager service could not be auto-discovered. "
-                        "Please use the --alertmanager_url parameter", fg="red")
+            typer.secho(
+                "Alertmanager service could not be auto-discovered. "
+                "Please use the --alertmanager_url parameter",
+                fg="red",
+            )
             return
 
         pod = None
@@ -439,15 +450,18 @@ def demo_alert(
                 break
 
         if not pod:
-            typer.secho(f"Could not find any pod on namespace {namespaces}"
-                        f"Please use the --namespaces parameter to specify a namespace with pods", fg="red")
+            typer.secho(
+                f"Could not find any pod on namespace {namespaces}"
+                f"Please use the --namespaces parameter to specify a namespace with pods",
+                fg="red",
+            )
             return
 
         alert_labels = {
             "alertname": alert,
             "severity": "critical",
             "pod": pod.metadata.name,
-            "namespace": pod.metadata.namespace
+            "namespace": pod.metadata.namespace,
         }
         if labels:
             for label in labels.split(","):
@@ -461,12 +475,20 @@ def demo_alert(
                 "labels": alert_labels,
                 "annotations": {
                     "summary": "This is a demo alert manager alert created by Robusta",
-                    "description": "Nothing wrong here. This alert will be resolved soon"},
-            }]
+                    "description": "Nothing wrong here. This alert will be resolved soon",
+                },
+            }
+        ]
 
         command = [
-            "curl", "-X", "POST", f"{alertmanager_url}/api/v1/alerts", "-H", "Content-Type: application/json",
-            "-d", f"{json.dumps(demo_alerts)}"
+            "curl",
+            "-X",
+            "POST",
+            f"{alertmanager_url}/api/v1/alerts",
+            "-H",
+            "Content-Type: application/json",
+            "-d",
+            f"{json.dumps(demo_alerts)}",
         ]
 
         job: Job = Job(
@@ -484,17 +506,19 @@ def demo_alert(
                                 command=command,
                             )
                         ],
-                        restartPolicy="Never"
+                        restartPolicy="Never",
                     ),
                 ),
-
                 completions=1,
                 ttlSecondsAfterFinished=0,  # delete immediately when finished
-            )
+            ),
         )
         job.create()
-        typer.secho(f"Created Alertmanager alert: alert-name: {alert} pod: {pod.metadata.name} "
-                    f"namespace: {pod.metadata.namespace}", fg="green")
+        typer.secho(
+            f"Created Alertmanager alert: alert-name: {alert} pod: {pod.metadata.name} "
+            f"namespace: {pod.metadata.namespace}",
+            fg="green",
+        )
         typer.echo("\n")
 
 
