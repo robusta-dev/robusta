@@ -35,9 +35,9 @@ spec:
         resources:
           requests:
             cpu: {{ .Values.kubewatch.resources.requests.cpu }}
-            memory: {{ .Values.kubewatch.resources.requests.memory | quote }}
+            memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else }}{{ .Values.kubewatch.resources.requests.memory | quote }}{{ end }}
           limits:
-            memory: {{ .Values.kubewatch.resources.requests.memory | quote }}
+            memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else }}{{ .Values.kubewatch.resources.requests.memory | quote }}{{ end }}
             {{ if .Values.kubewatch.resources.limits.cpu }}cpu: {{ .Values.kubewatch.resources.limits.cpu | quote }}{{ end }}
       volumes:
         - name:  robusta-kubewatch-config

@@ -89,13 +89,19 @@ class PodResources(BaseModel):
     @staticmethod
     def get_number_of_bytes_from_kubernetes_mem_spec(mem_spec: str) -> int:
         try:
+            if not mem_spec:
+                return 0
+
             if len(mem_spec) > 2 and mem_spec[-2:] in k8s_memory_factors:
                 return int(mem_spec[:-2]) * k8s_memory_factors[mem_spec[-2:]]
 
             if len(mem_spec) > 1 and mem_spec[-1] in k8s_memory_factors:
                 return int(mem_spec[:-1]) * k8s_memory_factors[mem_spec[-1]]
 
-            raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)
+            if mem_spec.isdigit():
+                return int(mem_spec)
+
+            return int(float(mem_spec))
 
         except Exception as e: # could be a valueError with mem_spec
             logging.error(f"error parsing memory {mem_spec}", exc_info=True)

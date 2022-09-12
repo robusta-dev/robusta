@@ -46,11 +46,11 @@ def exec_in_robusta_runner(
     return subprocess.check_call(cmd)
 
 
-def exec_in_robusta_runner_output(command: str, namespace: Optional[str]) -> Optional[bytes]:
+def exec_in_robusta_runner_output(
+    command: str, namespace: Optional[str]
+) -> Optional[bytes]:
     exec_cmd = _build_exec_command(command, namespace)
-    result = subprocess.check_output(
-        exec_cmd
-    )
+    result = subprocess.check_output(exec_cmd)
     return result
 
 
@@ -126,10 +126,13 @@ def get_package_name(playbooks_dir: str) -> str:
 
 
 def get_runner_pod(namespace: str) -> Optional[str]:
-    return subprocess.run(  
-        f'kubectl get pods {namespace_to_kubectl(namespace)} --selector="robustaComponent=runner" --no-headers -o custom-columns=":metadata.name"',
+    return subprocess.run(
+        f"kubectl get pods {namespace_to_kubectl(namespace)} "
+        f'--selector="robustaComponent=runner" '
+        f"--field-selector=status.phase==Running "
+        f"--no-headers "
+        f'-o custom-columns=":metadata.name"',
         shell=True,
         text=True,
         capture_output=True,
     ).stdout.strip()
-
