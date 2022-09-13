@@ -31,7 +31,7 @@ class AuthProvider:
                 logging.info(f"Loaded private key file {file_name}")
                 return private_key
         except Exception:
-            logging.error(f"Could not load private key file {file_name}")
+            logging.error(f"Could not load private key file {file_name}", exc_info=True)
 
         return None
 
@@ -43,6 +43,6 @@ class AuthProvider:
                 logging.info(f"Loaded public key file {file_name}")
                 return public_key
         except Exception:
-            logging.error(f"Could not load public key file {file_name}")
+            logging.error(f"Could not load public key file {file_name}", exc_info=True)
 
         return None
