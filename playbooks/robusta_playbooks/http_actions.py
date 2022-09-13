@@ -1,4 +1,3 @@
-import json
 from robusta.api import ActionParams, action, ExecutionBaseEvent, FileBlock, Finding, Optional, FindingSource, FindingType, MarkdownBlock
 from urllib.error import URLError, HTTPError
 import requests
@@ -44,6 +43,7 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
                     FileBlock(f"Response.txt: ", result.text.encode()),
                 ]
             )
+            event.add_finding(finding)
 
     except HTTPError as e:
         finding.title = f"{action_params.url} is un-reachable"
@@ -54,6 +54,7 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
                 ),
             ]
         )
+        event.add_finding(finding)
     except URLError as e:
         finding.title = f"{action_params.url} is un-reachable"
         finding.add_enrichment(
@@ -63,6 +64,7 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
                 ),
             ]
         )
+        event.add_finding(finding)
     except Exception as e:
         finding.title = f"{action_params.url} is un-reachable"
         finding.add_enrichment(
@@ -72,7 +74,6 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
                 ),
             ]
         )
-    if(action_params.get_response):
         event.add_finding(finding)
 
 
@@ -120,6 +121,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
 
                 ]
             )
+            event.add_finding(finding)
 
     except HTTPError as e:
         finding.title = f"{action_params.url} is un-reachable"
@@ -130,6 +132,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
                 ),
             ]
         )
+        event.add_finding(finding)
     except URLError as e:
         finding.title = f"{action_params.url} is un-reachable"
         finding.add_enrichment(
@@ -139,6 +142,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
                 ),
             ]
         )
+        event.add_finding(finding)
     except Exception as e:
         finding.title = f"{action_params.url} is un-reachable"
         finding.add_enrichment(
@@ -148,5 +152,4 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
                 ),
             ]
         )
-    if(action_params.get_response):
         event.add_finding(finding)
