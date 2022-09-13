@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 import urllib.parse
 import uuid
@@ -37,14 +38,24 @@ class FindingSeverity(Enum):
             return FindingSeverity.HIGH
 
         raise Exception(f"Unknown severity {severity}")
-    
-    def to_emoji(self) -> str:
-        if self == FindingSeverity.DEBUG: return "🔵"
-        elif self == FindingSeverity.INFO: return "🟢"
-        elif self == FindingSeverity.LOW: return "🟡"
-        elif self == FindingSeverity.MEDIUM: return "🟠" 
-        elif self ==  FindingSeverity.HIGH: return "🔴"
 
+    def to_emoji(self) -> str:
+        if self == FindingSeverity.DEBUG:
+            return "🔵"
+        elif self == FindingSeverity.INFO:
+            return "🟢"
+        elif self == FindingSeverity.LOW:
+            return "🟡"
+        elif self == FindingSeverity.MEDIUM:
+            return "🟠"
+        elif self == FindingSeverity.HIGH:
+            return "🔴"
+
+
+@dataclasses.dataclass
+class ExternalLink:
+    url: str
+    name: str = "See more"
 
 
 class Enrichment:
@@ -92,11 +103,11 @@ class Filterable:
 
 class FindingSubject:
     def __init__(
-        self,
-        name: str = None,
-        subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
-        namespace: str = None,
-        node: str = None,
+            self,
+            name: str = None,
+            subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
+            namespace: str = None,
+            node: str = None,
     ):
         self.name = name
         self.subject_type = subject_type
@@ -110,20 +121,20 @@ class Finding(Filterable):
     """
 
     def __init__(
-        self,
-        title: str,
-        aggregation_key: str,
-        severity: FindingSeverity = FindingSeverity.INFO,
-        source: FindingSource = FindingSource.NONE,
-        description: str = None,
-        subject: FindingSubject = FindingSubject(),
-        finding_type: FindingType = FindingType.ISSUE,
-        failure: bool = True,
-        creation_date: str = None,
-        fingerprint: str = None,
-        starts_at: datetime = None,
-        ends_at: datetime = None,
-        add_silence_url: bool = False
+            self,
+            title: str,
+            aggregation_key: str,
+            severity: FindingSeverity = FindingSeverity.INFO,
+            source: FindingSource = FindingSource.NONE,
+            description: str = None,
+            subject: FindingSubject = FindingSubject(),
+            finding_type: FindingType = FindingType.ISSUE,
+            failure: bool = True,
+            creation_date: str = None,
+            fingerprint: str = None,
+            starts_at: datetime = None,
+            ends_at: datetime = None,
+            add_silence_url: bool = False
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
@@ -136,6 +147,7 @@ class Finding(Filterable):
         self.category = None  # TODO fill real category
         self.subject = subject
         self.enrichments: List[Enrichment] = []
+        self.external_links: List[ExternalLink] = []
         self.service_key = TopServiceResolver.guess_service_key(
             name=subject.name, namespace=subject.namespace
         )
@@ -173,6 +185,12 @@ class Finding(Filterable):
         if annotations is None:
             annotations = {}
         self.enrichments.append(Enrichment(enrichment_blocks, annotations))
+
+    def add_external_link(self, external_link: ExternalLink, suppress_warning: bool = False):
+        if self.dirty and not suppress_warning:
+            logging.warning("Updating a finding after it was added to the event is not allowed!")
+
+        self.external_links.append(external_link)
 
     def __str__(self):
         return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"

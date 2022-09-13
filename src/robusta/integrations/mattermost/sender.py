@@ -132,6 +132,8 @@ class MattermostSender:
             actions = f"[:mag_right: Investigate]({finding.investigate_uri})"
             if finding.add_silence_url:
                 actions = f"{actions} [:no_bell: Silence]({finding.get_prometheus_silence_url(self.cluster_name)})"
+            for external_link in finding.external_links:
+                actions = f"{actions} [:clapper: {external_link.name}]({external_link.url})"
 
             blocks.append(MarkdownBlock(actions))
 

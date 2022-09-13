@@ -1,22 +1,13 @@
-from datetime import datetime, timedelta, tzinfo
+from datetime import timedelta, tzinfo
 from typing import Optional
 
-from prometheus_api_client import PrometheusConnect
-
-from ..prometheus.utils import PrometheusDiscovery
-from ...core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+from .prometheus_analyzer import PrometeusAnalyzer
 from ...core.model.pods import k8s_memory_factors
 
 
-class MemoryAnalyzer:
-    def __init__(self, prometheus_url: str, prometheus_tzinfo: tzinfo):
-        if prometheus_url is None or prometheus_url == "":
-            prometheus_url = PrometheusDiscovery.find_prometheus_url()
-
-        self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
-        self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
-
-        self.prometheus_tzinfo = prometheus_tzinfo
+class MemoryAnalyzer(PrometeusAnalyzer):
+    def __init__(self, prometheus_url: str, prometheus_tzinfo: Optional[tzinfo]):
+        super().__init__(prometheus_url, prometheus_tzinfo)
 
     def get_max_node_memory_usage_in_percentage(self, node_name: str, duration: timedelta) -> Optional[float]:
         """
@@ -30,7 +21,8 @@ class MemoryAnalyzer:
         )
         return max_memory_usage_in_percentage
 
-    def get_container_max_memory_usage_in_bytes(self, node_name: str, pod_name: str, container_name: str, duration: timedelta) -> float:
+    def get_container_max_memory_usage_in_bytes(self, node_name: str, pod_name: str, container_name: str,
+                                                duration: timedelta) -> float:
         """
         Returns the maximal memory usage (in bytes) for the given container, in the time range between now and now - duration.r
         """
@@ -69,7 +61,7 @@ class MemoryAnalyzer:
         )
 
     def _get_max_value_in_first_series_of_query(self, promql_query: str, duration: timedelta) -> Optional[float]:
-        results = self._query(promql_query, duration)
+        results = self._timed_query(promql_query, duration)
 
         if len(results) == 0:
             return None
@@ -79,21 +71,19 @@ class MemoryAnalyzer:
         max_value_in_series = max([float(val) for (timestamp, val) in series_values])
         return max_value_in_series
 
-    def _query(self, promql_query: str, duration: timedelta) -> list:
-        end_time = datetime.now(tz=self.prometheus_tzinfo)
-        start_time = end_time - duration
-        step = 1
-        results = self.prom.custom_query_range(
-            promql_query,
-            start_time,
-            end_time,
-            step,
-            {
-                "timeout": self.default_prometheus_params["timeout"]
-            }
-        )
+    def get_total_mem_requests(self):
+        """
+        Gets the total Memory requests for the cluster
+        :return: a float of total memory requested
+        """
+        return self._get_query_value(self._query("sum(namespace_memory:kube_pod_container_resource_requests:sum{})"))
 
-        return results
+    def get_total_mem_allocatable(self):
+        """
+        Gets the total Memory allocatable for the cluster
+        :return: a float of total memory allocatable
+        """
+        return self._get_query_value(self._query("sum(kube_node_status_allocatable{resource=\"memory\"})"))
 
 
 class K8sMemoryTransformer:
@@ -106,3 +96,35 @@ class K8sMemoryTransformer:
             return int(mem_spec[:-1]) * k8s_memory_factors[mem_spec[-1]]
 
         raise Exception("number of bytes could not be extracted from memory spec: " + mem_spec)
+
+
+# bytes pretty-printing
+UNITS_MAPPING = [
+    (1 << 50, ' PB'),
+    (1 << 40, ' TB'),
+    (1 << 30, ' GB'),
+    (1 << 20, ' MB'),
+    (1 << 10, ' KB'),
+    (1, (' byte', ' bytes')),
+]
+
+
+def pretty_size(total_bytes):
+    """Get human-readable file sizes.
+    simplified version of https://pypi.python.org/pypi/hurry.filesize/
+    """
+    factor, suffix = (None, None)
+    for factor, suffix in UNITS_MAPPING:
+        if total_bytes >= factor:
+            break
+    if not (factor or suffix):
+        return total_bytes
+    amount = round(total_bytes / factor, 2)
+
+    if isinstance(suffix, tuple):
+        singular, multiple = suffix
+        if amount == 1:
+            suffix = singular
+        else:
+            suffix = multiple
+    return str(amount) + suffix
