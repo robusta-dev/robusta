@@ -84,6 +84,16 @@ class PrometheusParams(ActionParams):
     prometheus_url: str = None
 
 
+class PrometheusQueryParams(PrometheusParams):
+    """
+    :var promql_query: the prometheusql query you want to run
+    :var graph_duration_minutes: the amount of minutes back you want results for
+
+    """
+    promql_query: str = None
+    graph_duration_minutes: int = 0
+
+
 class TimedPrometheusParams(PrometheusParams):
     """
     :var default_query_duration: Prometheus duration query in seconds, defaults to 600 seconds (10 minutes)
