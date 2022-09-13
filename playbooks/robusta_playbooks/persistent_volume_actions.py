@@ -1,6 +1,4 @@
-import json
-from robusta.api import action, PersistentVolumeEvent, PersistentVolumeClaim, FileBlock, RobustaPod, ObjectMeta, PodSpec, Volume, PersistentVolumeClaimVolumeSource, Container, VolumeMount, MarkdownBlock, Finding, FindingSource, FindingType
-from kubernetes import client
+from robusta.api import action, PodList, logging, PersistentVolumeEvent, PersistentVolumeClaim, FileBlock, RobustaPod, ObjectMeta, PodSpec, Volume, PersistentVolumeClaimVolumeSource, Container, VolumeMount, MarkdownBlock, Finding, FindingSource, FindingType
 
 
 @action
@@ -18,22 +16,27 @@ def volume_analysis(event: PersistentVolumeEvent):
         failure=False,
     )
 
+    if not event.get_persistentvolume():
+        logging.error(
+            f"VolumeAnalysis was called on event without Persistent Volume: {event}")
+        return
+
     # Get persistent volume data the object contains data related to PV like metadata etc
     pv = event.get_persistentvolume()
     pv_claimref = pv.spec.claimRef
+    reader_pod = None
 
     try:
 
-        if pv_claimref != None:
+        if pv_claimref is not None:
             # Do this if there is a PVC attached to PV
             pvc_obj = PersistentVolumeClaim.readNamespacedPersistentVolumeClaim(
                 name=pv_claimref.name, namespace=pv_claimref.namespace).obj
-            pod_obj = get_pod_related_to_pvc(pvc_obj, pv)
-            if (pod_obj != None):
+            pod = get_pod_related_to_pvc(pvc_obj, pv)
+
+            if pod is not None:
                 # Do this if a Pod is using PVC
 
-                pod = RobustaPod.find_pod(
-                    pod_obj.metadata.name, pod_obj.metadata.namespace)
                 volume_mount_name = None
 
                 # Find name of the mounted volume on pod
@@ -46,15 +49,14 @@ def volume_analysis(event: PersistentVolumeEvent):
                 container_found_flag = False
                 container_volume_mount = None
                 for container in pod.spec.containers:
-                    if (container_found_flag):
+                    if container_found_flag:
                         break
-                    if(container.volumeMounts):
-                        for volume_mount in container.volumeMounts:
-                            if volume_mount_name == volume_mount.name:
-                                container_volume_mount = volume_mount
-                                container_found_flag = True
-                                break
-                
+                    for volume_mount in container.volumeMounts:
+                        if volume_mount_name == volume_mount.name:
+                            container_volume_mount = volume_mount
+                            container_found_flag = True
+                            break
+
                 result = pod.exec(
                     f"ls -R {container_volume_mount.mountPath}/")
                 finding.title = f"Files present on persistent volume {pv.metadata.name} are: "
@@ -66,6 +68,7 @@ def volume_analysis(event: PersistentVolumeEvent):
 
                     ]
                 )
+
             else:
                 # Do this if no Pod is attached to PVC
                 reader_pod = persistent_volume_reader(persistent_volume=pv)
@@ -80,48 +83,25 @@ def volume_analysis(event: PersistentVolumeEvent):
 
                     ]
                 )
-                # delete the reader pod
-                reader_pod.delete()
-
         else:
             finding.add_enrichment(
                 [
                     MarkdownBlock(
-                        f"ERROR: Persistent volume named {pv.metadata.name} have no persistent volume claim."
+                        f"Persistent volume named {pv.metadata.name} have no persistent volume claim."
                     ),
                 ]
             )
 
-    except RuntimeError as e:
-        finding.add_enrichment(
-            [
-                MarkdownBlock(
-                    f"*RUNTIME ERROR*\n```\n{e}\n```"
-                ),
-            ]
-        )
-    except Exception as e:
-        body = json.loads(e.body)
-        if body['code'] == 404:
-            finding.add_enrichment(
-                [
-                    MarkdownBlock(
-                        f"ERROR: {body['message']} "
-                    ),
-                ]
-            )
-        else:
-            finding.add_enrichment(
-                [
-                    MarkdownBlock(
-                        f"*ERROR*\n```\n{body}\n```"
-                    ),
-                ]
-            )
+    finally:
+        # delete the reader pod
+        if reader_pod is not None:
+            reader_pod.delete()
 
     event.add_finding(finding)
 
 # returns a pod that mounts the given persistent volume
+
+
 def persistent_volume_reader(persistent_volume):
     reader_pod_spec = RobustaPod(
         apiVersion="v1",
@@ -159,12 +139,13 @@ def persistent_volume_reader(persistent_volume):
     return reader_pod
 
 # function to get pod data related to a pvc
+
+
 def get_pod_related_to_pvc(pvc_obj, pv_obj):
-    v1 = client.CoreV1Api()
+    pod_list = PodList.listNamespacedPod(pvc_obj.metadata.namespace).obj
     pod = None
-    pod_list = v1.list_namespaced_pod(pvc_obj.metadata.namespace)
     for pod in pod_list.items:
         for volume in pod.spec.volumes:
-            if volume.persistent_volume_claim:
-                if (volume.persistent_volume_claim.claim_name == pv_obj.spec.claimRef.name):
+            if volume.persistentVolumeClaim:
+                if volume.persistentVolumeClaim.claimName == pv_obj.spec.claimRef.name:
                     return pod
