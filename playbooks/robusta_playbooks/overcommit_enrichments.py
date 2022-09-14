@@ -17,16 +17,18 @@ def cpu_overcommited_enricher(alert: PrometheusKubernetesAlert, params: Promethe
     alert.add_enrichment(
         [
             MarkdownBlock(
-                f"*Details:* Currently the total of your pods requests is: {cpu_analyzer.get_total_cpu_requests()}, "
-                f"and total of allocatable CPU is: {cpu_analyzer.get_total_cpu_allocatable()}. If one of your nodes "
-                f"fails, there will be no enough resources to schedule some of the pods."
+                f"*Details:* Currently the total of your pods requests"
+                f" is: {round(cpu_analyzer.get_total_cpu_requests(), 2)}, "
+                f"and total of allocatable CPU is: {round(cpu_analyzer.get_total_cpu_allocatable(), 2)}."
+                f" If one of your nodes fails, there will be no enough resources to schedule some of the pods."
             ),
             MarkdownBlock(
                 "*Alert Explanation:* This alert doesn’t meant that the Unscheduled Pod has already appeared."
                 " It appeared to indicate that it is time to expand the cluster."
                 " See the attached video if you need more information."
             ),
-        ]
+        ],
+        annotations={SlackAnnotations.UNFURL: False}
     )
     alert.override_finding_attributes(description="The total CPU requests on your cluster is high. \n"
                                                   "In case of a single node failure, some of your pods"
@@ -60,7 +62,8 @@ def memory_overcommited_enricher(alert: PrometheusKubernetesAlert, params: Prome
                 " It appeared to indicate that it is time to expand the cluster."
                 " See the attached video if you need more information."
             ),
-        ]
+        ],
+        annotations={SlackAnnotations.UNFURL: False}
     )
     alert.override_finding_attributes(description="The total Memory requests on your cluster is high. \n"
                                                   "In case of a single node failure, some of your pods"
