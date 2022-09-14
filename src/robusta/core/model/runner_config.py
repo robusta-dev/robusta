@@ -56,7 +56,10 @@ class RunnerConfig(BaseModel):
     def _replace_env_var_in_playbook_repo(playbook_repo: PlaybookRepo):
         if not playbook_repo.key:
             return playbook_repo
-        playbook_repo.key = SecretStr(get_env_replacement(playbook_repo.key.get_secret_value()))
+        env_var_replacement = get_env_replacement(playbook_repo.key.get_secret_value())
+        if env_var_replacement:
+            playbook_repo.key = SecretStr(env_var_replacement)
+
         return playbook_repo
 
     @validator('global_config')
