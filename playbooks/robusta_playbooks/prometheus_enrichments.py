@@ -1,7 +1,14 @@
 from robusta.api import *
 
+
 @action
 def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams):
+    """
+        Enriches the finding with a prometheus query
+
+        for example prometheus queries and the different response formats see here:
+        https://prometheus.io/docs/prometheus/latest/querying/api/
+    """
     if not params.promql_query or not params.graph_duration_minutes:
         logging.error(f"invalid params for prometheus_enricher: {params}")
         return
