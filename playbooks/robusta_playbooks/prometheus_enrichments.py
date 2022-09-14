@@ -6,7 +6,9 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
     """
         Enriches the finding with a prometheus query
 
-        for example prometheus queries and the different response formats see here:
+        for example prometheus queries see here:
+        https://prometheus.io/docs/prometheus/latest/querying/examples/
+        for examples of the different response formats see here:
         https://prometheus.io/docs/prometheus/latest/querying/api/
     """
     if not params.promql_query or not params.graph_duration_minutes:
