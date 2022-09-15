@@ -19,7 +19,7 @@ REPO_LOCAL_BASE_DIR = os.path.join(
 SSH_ROOT_DIR = os.environ.get("SSH_ROOT_DIR", "/root/.ssh")
 
 GIT_SSH_PREFIX = "git@"
-GIT_HTTPS_PREFIX = "https://git"
+GIT_HTTPS_PREFIX = "https://"
 LOCAL_PATH_URL_PREFIX = "file://"
 
 
