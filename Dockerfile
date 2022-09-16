@@ -14,7 +14,7 @@ ENV ENV_TYPE=DEV
 
 # we install the project requirements and install the app in separate stages to optimize docker layer caching
 RUN mkdir /app
-RUN pip3 install --upgrade pip
+RUN pip3 install --no-cache-dir --upgrade pip
 RUN curl -sSL https://install.python-poetry.org | python3 -
 RUN /root/.local/bin/poetry config virtualenvs.create false
 COPY pyproject.toml poetry.lock /app/
@@ -23,7 +23,7 @@ WORKDIR /app
 # Install gcc to compile rumal.yaml.clib, wheel is missing.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc \
-    && pip3 install ruamel.yaml.clib \
+    && pip3 install --no-cache-dir ruamel.yaml.clib \
     && apt-get purge -y --auto-remove gcc \
     && rm -rf /var/lib/apt/lists/*
 
@@ -31,11 +31,11 @@ RUN /root/.local/bin/poetry install --no-root --extras "all"
 
 COPY src/ /app/src
 
-RUN pip3 install .
+RUN pip3 install --no-cache-dir .
 
 COPY playbooks/ /etc/robusta/playbooks/defaults
 
-RUN python3 -m pip install /etc/robusta/playbooks/defaults
+RUN python3 -m pip install --no-cache-dir /etc/robusta/playbooks/defaults
 
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
 CMD [ "python3", "-u", "-m", "robusta.runner.main"]
