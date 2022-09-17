@@ -100,7 +100,7 @@ Standard Installation
 
     helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
 
-2. Copy the cluster name from the current context and install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
+2. Specify your cluster's name and install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
 
 .. admonition:: Test clusters (e.g Kind, MiniKube, Colima)
     :class: important
