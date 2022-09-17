@@ -87,6 +87,16 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+      alert_name: KubeJobFailed
+  - on_prometheus_alert:
+      alert_name: KubeJobCompletion
+  actions:
+  - job_info_enricher: {}
+  - job_events_enricher: {}
+  - job_pod_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
       alert_name: KubeNodeNotReady
   actions:
   - node_allocatable_resources_enricher: {}

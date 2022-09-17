@@ -125,4 +125,108 @@ def job_events_enricher(event: JobEvent, params: EventEnricherParams):
         event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
 
 
+class JobPodEnricherParams(EventEnricherParams):
+    """
+    :var events: Add the events of the related pod
+    :var logs: Add the logs of the related pod
+    """
+    events: bool = True
+    logs: bool = True
 
+
+@action
+def job_pod_enricher(event: JobEvent, params: JobPodEnricherParams):
+    """
+    Given a Kubernetes job, get information about the latest job pod.
+
+    Used to get the related pod's events and/or logs
+    """
+    job = event.get_job()
+    if not job:
+        logging.error(
+            f"cannot run job_pod_enricher on alert with no job object: {event}"
+        )
+        return
+
+    pod = get_job_latest_pod(job)
+
+    if pod:
+        if params.events:
+            events_table_block = get_resource_events_table(
+                "*Job pod events:*",
+                pod.kind,
+                pod.metadata.name,
+                pod.metadata.namespace,
+                included_types=params.included_types,
+                max_events=params.max_events,
+            )
+            if events_table_block:
+                event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+
+        if params.logs:
+            log_data = pod.get_logs()
+            if log_data:
+                event.add_enrichment(
+                    [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
+                )
+
+
+@action
+def job_info_enricher(event: JobEvent):
+    """
+    Given a Kubernetes job, add information about the job, from the job spec and status.
+    """
+    job = event.get_job()
+    if not job:
+        logging.error(
+            f"cannot run job_info_enricher on alert with no job object: {event}"
+        )
+        return
+
+    job_status: JobStatus = job.status
+    job_spec: JobSpec = job.spec
+
+    end_time = job_status.completionTime if job_status.completionTime else "None"
+    succeeded = job_status.succeeded if job_status.succeeded else 0
+    failed = job_status.failed if job_status.failed else 0
+    job_rows: List[List[str, str]] = [
+        ["status", __job_status_str(job_status)],
+        ["completions", f"{succeeded}/{job_spec.completions}"],
+        ["failures", f"{failed}"],
+        ["backoffLimit", f"{job_spec.backoffLimit}"],
+        ["duration", f"{job_status.startTime} - {end_time}"],
+        ["containers", "------------------"]
+    ]
+    for container in job_spec.template.spec.containers:
+        container_requests = PodContainer.get_requests(container)
+        container_limits = PodContainer.get_limits(container)
+        job_rows.append(["name", container.name])
+        job_rows.append(["image", container.image])
+        job_rows.append(["cpu (request/limit)", __resources_str(container_requests.cpu, container_limits.cpu)])
+        job_rows.append(
+            ["memory MB (request/limit)", __resources_str(container_requests.memory, container_limits.memory)]
+        )
+
+    table_block = TableBlock(
+        job_rows,
+        ["description", "value"],
+        table_name="*Job information*",
+    )
+    event.add_enrichment([table_block])
+
+
+def __resources_str(request, limit) -> str:
+    req = f"{request}" if request else "None"
+    lim = f"{limit}" if limit else "None"
+    return f"{req}/{lim}"
+
+
+def __job_status_str(job_status: JobStatus) -> str:
+    if job_status.active:
+        return "Running"
+
+    for condition in job_status.conditions:
+        if condition.status == "True":
+            return condition.type
+
+    return "Unknown"
