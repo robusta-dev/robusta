@@ -43,6 +43,8 @@ def run_prometheus_query(
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
     prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
+    if not starts_at:
+        raise Exception("No start time specified for query.")
     if not end_time:
         end_time = datetime.now(tz=starts_at.tzinfo)
     alert_duration = end_time - starts_at
