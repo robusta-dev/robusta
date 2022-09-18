@@ -38,23 +38,19 @@ def run_prometheus_query(
         promql_query: str,
         starts_at: datetime,
         graph_duration_minutes: int,
+        end_time: datetime = None
 ):
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
     prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
-    end_time = datetime.now()
-    alert_duration = timedelta(minutes=0)
-    graph_duration = timedelta(minutes=0)
-    if starts_at:
+    if not end_time:
         end_time = datetime.now(tz=starts_at.tzinfo)
-        alert_duration = end_time - starts_at
-    if graph_duration_minutes:
-        graph_duration = timedelta(minutes=graph_duration_minutes)
-    if not alert_duration and not graph_duration:
-        raise Exception("Invalid prometheus query start time, either starts_at or graph_duration_minutes must be defined")
+    alert_duration = end_time - starts_at
+    graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
     start_time = end_time - max(alert_duration, graph_duration)
     resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
     increment = max(graph_duration.total_seconds() / resolution, 1.0)
+    logging.warning(f" resolution : {graph_duration.total_seconds()/ increment}, seconds {graph_duration.total_seconds()} inc {increment}")
     return prom.custom_query_range(
         promql_query,
         start_time,

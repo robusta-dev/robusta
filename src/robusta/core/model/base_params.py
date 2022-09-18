@@ -87,11 +87,17 @@ class PrometheusParams(ActionParams):
 class PrometheusQueryParams(PrometheusParams):
     """
     :var promql_query: the prometheusql query you want to run
-    :var graph_duration_minutes: the amount of minutes back you want results for
+    :var graph_duration_minutes: the amount of minutes back you want results for - this is not needed if starts_at is defined
+    :var starts_at: the start date/time for the query - this is not needed if graph_duration_minutes is defined
+    :var end_time: the end time for the query, if none is set than it defaults to now
+
+    both starts at and ends_at use format "%Y-%m-%d %H:%M:%S"
 
     """
     promql_query: str = None
     graph_duration_minutes: int = 0
+    starts_at: str = None
+    end_time: str = None
 
 
 class TimedPrometheusParams(PrometheusParams):
