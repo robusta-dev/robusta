@@ -150,25 +150,28 @@ def job_pod_enricher(event: JobEvent, params: JobPodEnricherParams):
 
     pod = get_job_latest_pod(job)
 
-    if pod:
-        if params.events:
-            events_table_block = get_resource_events_table(
-                "*Job pod events:*",
-                pod.kind,
-                pod.metadata.name,
-                pod.metadata.namespace,
-                included_types=params.included_types,
-                max_events=params.max_events,
-            )
-            if events_table_block:
-                event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+    if not pod:
+        logging.info(f"No pods for job {job.metadata.namespace}/{job.metadata.name}")
+        return
 
-        if params.logs:
-            log_data = pod.get_logs()
-            if log_data:
-                event.add_enrichment(
-                    [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
-                )
+    if params.events:
+        events_table_block = get_resource_events_table(
+            "*Job pod events:*",
+            pod.kind,
+            pod.metadata.name,
+            pod.metadata.namespace,
+            included_types=params.included_types,
+            max_events=params.max_events,
+        )
+        if events_table_block:
+            event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+
+    if params.logs:
+        log_data = pod.get_logs()
+        if log_data:
+            event.add_enrichment(
+                [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
+            )
 
 
 @action
@@ -189,15 +192,22 @@ def job_info_enricher(event: JobEvent):
     end_time = job_status.completionTime if job_status.completionTime else "None"
     succeeded = job_status.succeeded if job_status.succeeded else 0
     failed = job_status.failed if job_status.failed else 0
-    job_rows: List[List[str, str]] = [
-        ["status", __job_status_str(job_status)],
-        ["completions", f"{succeeded}/{job_spec.completions}"],
-        ["failures", f"{failed}"],
-        ["backoffLimit", f"{job_spec.backoffLimit}"],
-        ["duration", f"{job_status.startTime} - {end_time}"],
-        ["containers", "------------------"]
-    ]
-    for container in job_spec.template.spec.containers:
+    status, message = __job_status_str(job_status)
+    job_rows: List[List[str, str]] = [["status", status]]
+    if message:
+        job_rows.append(["message", message])
+
+    job_rows.extend(
+        [
+            ["completions", f"{succeeded}/{job_spec.completions}"],
+            ["failures", f"{failed}"],
+            ["backoffLimit", f"{job_spec.backoffLimit}"],
+            ["duration", f"{job_status.startTime} - {end_time}"],
+            ["containers", "------------------"]
+        ]
+    )
+    containers = job_spec.template.spec.initContainers + job_spec.template.spec.containers
+    for container in containers:
         container_requests = PodContainer.get_requests(container)
         container_limits = PodContainer.get_limits(container)
         job_rows.append(["name", container.name])
@@ -221,12 +231,12 @@ def __resources_str(request, limit) -> str:
     return f"{req}/{lim}"
 
 
-def __job_status_str(job_status: JobStatus) -> str:
+def __job_status_str(job_status: JobStatus) -> (str, str):
     if job_status.active:
-        return "Running"
+        return "Running", ""
 
     for condition in job_status.conditions:
         if condition.status == "True":
-            return condition.type
+            return condition.type, condition.message
 
-    return "Unknown"
+    return "Unknown", ""
