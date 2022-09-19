@@ -11,6 +11,7 @@ resource:
   node: true
   hpa: true
   clusterrole: true
+  clusterrolebinding: true
   serviceaccount: true
   persistentvolume: true
   namespace: true
