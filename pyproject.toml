@@ -49,7 +49,7 @@ watchgod = "^0.7"
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
 dulwich =  { version = "0.20.28", optional = true }
 cryptography = "^36.0.0"
-PyJWT = "^2.4.0"
+PyJWT = "2.4.0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
