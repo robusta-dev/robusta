@@ -1,7 +1,6 @@
 from collections import defaultdict
 from pydantic.main import BaseModel, Optional
 from typing import Dict, List
-from ..utils.pod_discovery import PodMetrics
 
 
 class SinkInfo(BaseModel):
@@ -18,6 +17,5 @@ class Telemetry(BaseModel):
     nodes_count: int = 0
     playbooks_count : int = 0
     prometheus_enabled: bool = False
-    pod_metrics: Optional[List[PodMetrics]]
     sinks_info: Dict[str, SinkInfo] = defaultdict(lambda: SinkInfo()) # refresh daily, sinks id -> sink info
 

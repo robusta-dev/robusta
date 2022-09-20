@@ -53,8 +53,13 @@ class TelemetryService:
             
                 current_nodes: NodeList = NodeList.listNode().obj
                 tele.nodes_count = len(current_nodes.items)
-                tele.pod_metrics = PodDiscovery.get_robusta_metrics()
-                self.__log(tele)
+                pod_metrics = PodDiscovery.get_robusta_metrics()
+                node_metrics = PodDiscovery.get_robusta_pod_node_metrics()
+                metadata = {
+                    "pod_metrics": pod_metrics.json(),
+                    "node_metrics": node_metrics.json(),
+                }
+                self.__log(tele, metadata)
 
                 tele.sinks_info = defaultdict(lambda: SinkInfo())
             except Exception as e:
@@ -64,8 +69,10 @@ class TelemetryService:
 
 
 
-    def __log(self, data: Telemetry):
-        r = requests.post(self.endpoint, data=data.json(), headers={'Content-Type': 'application/json'})
+    def __log(self, data: Telemetry, metadata):
+        data_json = data.json()
+        data_json["metadata"] = metadata
+        r = requests.post(self.endpoint, data=data_json, headers={'Content-Type': 'application/json'})
         if(r.status_code != 201):
             logging.error(f"Failed to log telemetry data")
 

@@ -5,6 +5,7 @@ from kubernetes.client.api import core_v1_api
 from hikaru.model import Pod, PodList
 from pydantic import BaseModel
 
+from .node_discovery import NodeMetrics, NodeDiscovery
 from ..core.model.env_vars import RELEASE_NAME
 
 
@@ -56,8 +57,9 @@ class PodDiscovery(BaseModel):
                     logging.info(f"metrics recieved for pod {pod.metadata.name} in namespace {pod.metadata.namespace}")
             except Exception as e:
                 # known possible exception kubernetes.client.exceptions.ApiException permissions issue
-                logging.error(f"Error getting metrics for pod {pod.metadata.name} in namespace {pod.metadata.namespace}",
-                              exc_info=True)
+                logging.error(
+                    f"Error getting metrics for pod {pod.metadata.name} in namespace {pod.metadata.namespace}",
+                    exc_info=True)
         return metrics
 
     @staticmethod
@@ -115,16 +117,16 @@ class PodDiscovery(BaseModel):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='object', #'PodMetrics',  # noqa: E501
+            response_type='object',  # 'PodMetrics',  # noqa: E501
             auth_settings=auth_settings,
             _preload_content=True,
             collection_formats=collection_formats)
 
     @staticmethod
     def find_relevant_pods():
-        selectors = [f"app={RELEASE_NAME}-runner",f"app={RELEASE_NAME}-forwarder",
+        selectors = [f"app={RELEASE_NAME}-runner", f"app={RELEASE_NAME}-forwarder",
                      "app=kube-prometheus-stack-prometheus",
-                     "app.kubernetes.io/name=prometheus",]
+                     "app.kubernetes.io/name=prometheus", ]
         return PodDiscovery.find_pod_with_selectors(selectors)
 
     @staticmethod
@@ -139,11 +141,20 @@ class PodDiscovery(BaseModel):
 
     @staticmethod
     def find_prometheus_pods():
-        selectors=[
+        selectors = [
             "app=kube-prometheus-stack-prometheus",
             "app.kubernetes.io/name=prometheus",
         ]
         return PodDiscovery.find_pod_with_selectors(selectors)
+
+    @staticmethod
+    def get_robusta_pod_node_metrics() -> List[NodeMetrics]:
+        node_names = []
+        runner_pod = PodDiscovery.find_runner_pod()
+        if runner_pod and runner_pod.items:
+            for pod in runner_pod.items:
+                node_names.append(pod.spec.nodeName)
+        return NodeDiscovery.get_node_metrics(node_names)
 
     @staticmethod
     def find_pod_with_selectors(selectors: List[str]) -> PodList:
