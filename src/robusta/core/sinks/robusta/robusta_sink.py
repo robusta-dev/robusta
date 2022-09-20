@@ -3,10 +3,10 @@ import json
 import logging
 import time
 import threading
-from typing import List, Dict
-from kubernetes.client import V1ObjectMeta, V1NodeList, V1Node, V1NodeCondition, V1Taint
+from typing import List, Dict, Optional
+from kubernetes.client import V1NodeList, V1Node, V1NodeCondition, V1Taint
 
-from ...discovery.discovery import Discovery
+from ...discovery.discovery import Discovery, DiscoveryResults
 from ...model.jobs import JobInfo
 from ....runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
@@ -55,9 +55,39 @@ class RobustaSink(SinkBase):
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
-        self.__jobs_cache: Dict[str, JobInfo] = {}
+        # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
+        # helps differentiate between no jobs, to not initialized
+        self.__jobs_cache: Optional[Dict[str, JobInfo]] = None
+        self.__init_service_resolver()
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
+
+    def __init_service_resolver(self):
+        """
+            Init service resolver from the service stored in storage.
+            If it's a cluster with long discovery, it enables resolution for issues before the first discovery ended
+        """
+        try:
+            logging.info("Initializing TopServiceResolver")
+            RobustaSink.__save_resolver_resources(self.dal.get_active_services(), self.dal.get_active_jobs())
+        except Exception:
+            logging.error("Failed to initialize TopServiceResolver", exc_info=True)
+
+    @staticmethod
+    def __save_resolver_resources(services: List[ServiceInfo], jobs: List[JobInfo]):
+        resources: List[TopLevelResource] = []
+        resources.extend([TopLevelResource(
+            name=service.name,
+            namespace=service.namespace,
+            resource_type=service.service_type
+        ) for service in services])
+
+        resources.extend([TopLevelResource(
+            name=job.name,
+            namespace=job.namespace,
+            resource_type=job.type
+        ) for job in jobs])
+        TopServiceResolver.store_cached_resources(resources)
 
     def __assert_services_cache_initialized(self):
         if not self.__services_cache:
@@ -72,15 +102,16 @@ class RobustaSink(SinkBase):
                 self.__nodes_cache[node.name] = node
 
     def __assert_jobs_cache_initialized(self):
-        if not self.__jobs_cache:
+        if self.__jobs_cache is None:
             logging.info("Initializing jobs cache")
+            self.__jobs_cache: Dict[str, JobInfo] = {}
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
 
     def __reset_caches(self):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
-        self.__jobs_cache: Dict[str, JobInfo] = {}
+        self.__jobs_cache = None
 
     def stop(self):
         self.__active = False
@@ -130,49 +161,25 @@ class RobustaSink(SinkBase):
                 f"Error getting events history", exc_info=True
             )
 
-    @staticmethod
-    def __create_service_info(meta: V1ObjectMeta, kind: str, images: List[str]) -> ServiceInfo:
-        return ServiceInfo(
-            name=meta.name,
-            namespace=meta.namespace,
-            service_type=kind,
-            images=images,
-            labels=meta.labels or {},
-        )
-
     def __discover_resources(self):
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
         try:
-            (active_services, current_nodes, node_requests, active_jobs) = Discovery.discover_resources()
+            results: DiscoveryResults = Discovery.discover_resources()
 
             self.__assert_services_cache_initialized()
-            self.__publish_new_services(active_services)
-            if current_nodes:
+            self.__publish_new_services(results.services)
+            if results.nodes:
                 self.__assert_node_cache_initialized()
-                self.__publish_new_nodes(current_nodes, node_requests)
+                self.__publish_new_nodes(results.nodes, results.node_requests)
 
             self.__assert_jobs_cache_initialized()
-            self.__publish_new_jobs(active_jobs)
+            self.__publish_new_jobs(results.jobs)
 
             # save the cached services for the resolver.
-            resources: List[TopLevelResource] = [
-                TopLevelResource(
-                    name=service.name,
-                    namespace=service.namespace,
-                    resource_type=service.service_type
-                )
-                for service in self.__services_cache.values()
-            ]
-            # save the cached jobs for the resolver.
-            resources.extend([
-                TopLevelResource(
-                    name=job.name,
-                    namespace=job.namespace,
-                    resource_type=job.type
-                )
-                for job in self.__jobs_cache.values()
-            ])
-            TopServiceResolver.store_cached_resources(resources)
+            RobustaSink.__save_resolver_resources(
+                list(self.__services_cache.values()),
+                list(self.__jobs_cache.values())
+            )
 
         except Exception:
             # we had an error during discovery. Reset caches to align the data with the storage
@@ -210,7 +217,7 @@ class RobustaSink(SinkBase):
     def __from_api_server_node(
         cls, api_server_node: V1Node, pod_requests_list: List[PodResources]
     ) -> NodeInfo:
-        addresses = api_server_node.status.addresses
+        addresses = api_server_node.status.addresses or []
         external_addresses = [
             address for address in addresses if "externalip" in address.type.lower()
         ]

@@ -41,6 +41,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event = fired_trigger.build_execution_event(
                         trigger_event, sink_findings
                     )
+                    # sink_findings needs to be shared between playbooks.
+                    # build_execution_event returns a different instance because it's running in a child process
+                    execution_event.sink_findings = sink_findings
                 except Exception:
                     logging.error(f"Failed to build execution event for {trigger_event.get_event_description()}")
 

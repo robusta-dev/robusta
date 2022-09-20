@@ -87,6 +87,16 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+      alert_name: KubeJobFailed
+  - on_prometheus_alert:
+      alert_name: KubeJobCompletion
+  actions:
+  - job_info_enricher: {}
+  - job_events_enricher: {}
+  - job_pod_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
       alert_name: KubeNodeNotReady
   actions:
   - node_allocatable_resources_enricher: {}
@@ -126,6 +136,7 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
+      status: "all" # sometimes this enricher silences the alert, so we need to silence it regardless of status
   actions:
   - cpu_throttling_analysis_enricher: {}
   - alert_graph_enricher:
@@ -170,18 +181,10 @@ platformPlaybooks:
     - resource_babysitter: {}
   sinks:
     - "robusta_ui_sink"
-- triggers:
-    - on_configmap_all_changes: {}
-  actions:
-    - resource_babysitter:
-        fields_to_monitor: ["ConfigMap.data"]
-        ignored_namespaces: ["kube-system"] # kube-system configmaps updated a lot (spammy)
-  sinks:
-    - "robusta_ui_sink"
 
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.12
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.0
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:
@@ -196,7 +199,7 @@ kubewatch:
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
   enableContainer: false
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:6
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:7
   imagePullPolicy: IfNotPresent
   resources:
     requests:

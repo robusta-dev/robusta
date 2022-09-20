@@ -1,10 +1,22 @@
 from robusta.api import *
 
 
+def _get_templating_labels(event: ExecutionBaseEvent) -> Dict:
+    subject = event.get_subject()
+    labels = defaultdict(lambda: "<missing>")
+    labels.update({
+        "name": subject.name,
+        "kind": subject.subject_type,
+        "namespace": subject.namespace if subject.namespace else "<missing>",
+        "node": subject.node if subject.node else "<missing>",
+    })
+    return labels
+
+
 class FindingOverrides(ActionParams):
     """
-    :var title: Overriding finding title.
-    :var description: Overriding finding description.
+    :var title: Overriding finding title. Title can be templated with name/namespace/kind/node of the resource, if applicable
+    :var description: Overriding finding description. Description can be templated with name/namespace/kind/node of the resource, if applicable
     :var severity: Overriding finding severity. Allowed values: DEBUG, INFO, LOW, MEDIUM, HIGH
     :example severity: DEBUG
     """
@@ -30,7 +42,13 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
     severity: Optional[FindingSeverity] = (
         FindingSeverity[params.severity] if params.severity else None
     )
-    event.override_finding_attributes(params.title, params.description, severity)
+
+    labels = _get_templating_labels(event)
+
+    title: str = Template(params.title).safe_substitute(labels)
+    description: str = Template(params.description).safe_substitute(labels) if params.description else None
+
+    event.override_finding_attributes(title, description, severity)
 
 
 class FindingFields(ActionParams):
@@ -61,19 +79,13 @@ def create_finding(event: ExecutionBaseEvent, params: FindingFields):
     This action creates a Finding that Robusta sends, with the specified fields.
 
     """
-    subject = event.get_subject()
-    labels = defaultdict(lambda: "<missing>")
-    labels.update({
-        "name": subject.name,
-        "kind": subject.subject_type,
-        "namespace": subject.namespace if subject.namespace else "<missing>",
-        "node": subject.node if subject.node else "<missing>",
-    })
+    labels = _get_templating_labels(event)
 
     event.add_finding(Finding(
         title=Template(params.title).safe_substitute(labels),
         description=Template(params.description).safe_substitute(labels) if params.description else None,
         aggregation_key=params.aggregation_key,
         severity=FindingSeverity.from_severity(params.severity),
+        subject=event.get_subject(),
         source=event.get_source(),
     ))

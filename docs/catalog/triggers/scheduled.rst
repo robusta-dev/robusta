@@ -24,13 +24,13 @@ Dynamic delay
 ----------------------
 
 These triggers run with a different delay between each invocation. For example, the following will run 3 times with
-a delay of 10 seconds the first time, 20 the second, and 25 the third.
+a delay of 150 seconds the first time, 160 the second, and 170 the third.
 
 .. code-block:: yaml
 
     triggers:
     - on_schedule:
         dynamic_delay_repeat:
-          delay_periods: [10, 20, 25]
+          delay_periods: [150, 160, 170]
 
 The first delay cannot be less than 120 seconds. If you define less, 120 seconds will be used instead.

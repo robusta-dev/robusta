@@ -5,8 +5,8 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 SLACK_WELCOME_MESSAGE_TITLE = ":large_green_circle: INFO - Welcome to Robusta"
-SLACK_WELCOME_MESSAGE_HEADER_WITH_CLUSTER_NAME = (
-    "You have signed up for Slack Monitoring on cluster: '{}'."
+SLACK_WELCOME_MESSAGE_HEADER = (
+    "You've just signed up for Slack monitoring! "
 )
 SLACK_WELCOME_THANK_YOU_MESSAGE = "Thank you for using Robusta.dev"
 SLACK_WELCOME_SUPPORT_MESSAGE = (
@@ -17,13 +17,12 @@ SLACK_WELCOME_SUPPORT_MESSAGE = (
 
 def verify_slack_channel(
     slack_api_key: str,
-    cluster_name: str,
     channel_name: str,
     workspace: str,
     debug: bool,
 ) -> bool:
     try:
-        output_welcome_message_blocks = __gen_robusta_test_welcome_message(cluster_name)
+        output_welcome_message_blocks = __gen_robusta_test_welcome_message()
         slack_client = WebClient(token=slack_api_key)
         slack_client.chat_postMessage(
             channel=channel_name,
@@ -62,7 +61,7 @@ def verify_slack_channel(
     return False
 
 
-def __gen_robusta_test_welcome_message(cluster_name: str):
+def __gen_robusta_test_welcome_message():
     return [
         {
             "type": "header",
@@ -76,9 +75,7 @@ def __gen_robusta_test_welcome_message(cluster_name: str):
             "type": "header",
             "text": {
                 "type": "plain_text",
-                "text": SLACK_WELCOME_MESSAGE_HEADER_WITH_CLUSTER_NAME.format(
-                    cluster_name
-                ),
+                "text": SLACK_WELCOME_MESSAGE_HEADER,
                 "emoji": True,
             },
         },

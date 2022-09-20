@@ -17,10 +17,13 @@ The following sinks are supported:
 * :ref:`Telegram` - send playbooks results to Telegram group or private conversation
 * :ref:`Webhook` - send playbooks results to a webhook
 * :ref:`VictorOps` - send playbooks results to the VictorOps alerts API
+* :ref:`PagerDuty` - send playbooks results to the PagerDuty alerts API
 * :ref:`Discord` - send playbooks results to the Discord using webhook
 * :ref:`Mattermost` - send playbooks results to the Mattermost using webhook
 
 **Need support for something not listed here?** `Tell us and we'll add it to the code. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
+
+See :ref:`Defining additional sinks` for more details
 
 Sending Findings to Specific Sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -66,3 +69,4 @@ if it has the field `default: true` in the YAML.
    webhook
    Opsgenie
    VictorOps
+   PagerDuty

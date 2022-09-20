@@ -200,7 +200,7 @@ Use this useful debugging commands to make sure your action ( ``report_schedulin
     ======================================================================
 
 Connecting the trigger to the action - a **playbook** is born!
--------------------------------------------------------------
+---------------------------------------------------------------
 
 We need to add a custom playbook that this action it in the generated_values.yaml.
 
