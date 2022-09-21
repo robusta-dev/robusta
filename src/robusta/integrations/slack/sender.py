@@ -265,8 +265,8 @@ class SlackSender:
             if finding.add_silence_url:
                 actions = f"{actions} <{finding.get_prometheus_silence_url(self.cluster_name)}|:no_bell: Silence>"
 
-            for external_link in finding.external_links:
-                actions = f"{actions} <{external_link.url}|:clapper: {external_link.name}>"
+            for video_link in finding.video_links:
+                actions = f"{actions} <{video_link.url}|:clapper: {video_link.name}>"
 
             blocks.append(MarkdownBlock(text=actions))
 

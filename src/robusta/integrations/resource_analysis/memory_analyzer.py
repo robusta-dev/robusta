@@ -1,12 +1,12 @@
 from datetime import timedelta, tzinfo
 from typing import Optional
 
-from .prometheus_analyzer import PrometeusAnalyzer
+from .prometheus_analyzer import PrometheusAnalyzer
 from ...core.model.pods import k8s_memory_factors
 
 
-class MemoryAnalyzer(PrometeusAnalyzer):
-    def __init__(self, prometheus_url: str, prometheus_tzinfo: Optional[tzinfo]):
+class MemoryAnalyzer(PrometheusAnalyzer):
+    def __init__(self, prometheus_url: str, prometheus_tzinfo: Optional[tzinfo] = None):
         super().__init__(prometheus_url, prometheus_tzinfo)
 
     def get_max_node_memory_usage_in_percentage(self, node_name: str, duration: timedelta) -> Optional[float]:
@@ -71,19 +71,22 @@ class MemoryAnalyzer(PrometeusAnalyzer):
         max_value_in_series = max([float(val) for (timestamp, val) in series_values])
         return max_value_in_series
 
-    def get_total_mem_requests(self):
+    def get_total_mem_requests(self, duration: timedelta = timedelta(minutes=10)):
         """
         Gets the total Memory requests for the cluster
         :return: a float of total memory requested
         """
-        return self._get_query_value(self._query("sum(namespace_memory:kube_pod_container_resource_requests:sum{})"))
+        query = f"sum(avg_over_time(namespace_memory:kube_pod_container_resource_requests" \
+                f":sum{{}}[{duration.seconds}s]))"
+        return self._get_query_value(self._query(query))
 
-    def get_total_mem_allocatable(self):
+    def get_total_mem_allocatable(self, duration: timedelta = timedelta(minutes=10)):
         """
         Gets the total Memory allocatable for the cluster
         :return: a float of total memory allocatable
         """
-        return self._get_query_value(self._query("sum(kube_node_status_allocatable{resource=\"memory\"})"))
+        query = f"sum(avg_over_time(kube_node_status_allocatable{{resource=\"memory\"}}[{duration.seconds}s]))"
+        return self._get_query_value(self._query(query))
 
 
 class K8sMemoryTransformer:
@@ -121,6 +124,7 @@ def pretty_size(total_bytes):
         return total_bytes
     amount = round(total_bytes / factor, 2)
 
+    # Handling mapping for tuples (in case we want to add more options to the UNITS_MAPPING)
     if isinstance(suffix, tuple):
         singular, multiple = suffix
         if amount == 1:

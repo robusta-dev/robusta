@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from ..reporting import FindingSubjectType, FindingSource
 from ...integrations.scheduled.playbook_scheduler import PlaybooksScheduler
-from ..reporting.base import Finding, BaseBlock, FindingSeverity, FindingSubject, ExternalLink
+from ..reporting.base import Finding, BaseBlock, FindingSeverity, FindingSubject, VideoLink
 
 
 class EventType(Enum):
@@ -68,7 +68,7 @@ class ExecutionBaseEvent:
             title="Robusta notification", aggregation_key="Generic finding key"
         )
 
-    def __ensure_sinks_have_findings(self):
+    def __prepare_sinks_findings(self):
         finding_id: uuid = uuid.uuid4()
         for sink in self.named_sinks:
             if len(self.sink_findings[sink]) == 0:
@@ -78,20 +78,20 @@ class ExecutionBaseEvent:
                 )
                 self.sink_findings[sink].append(sink_finding)
 
-    def add_external_link(
+    def add_video_link(
             self,
-            external_link: ExternalLink
+            video_link: VideoLink
     ):
-        self.__ensure_sinks_have_findings()
+        self.__prepare_sinks_findings()
         for sink in self.named_sinks:
-            self.sink_findings[sink][0].add_external_link(external_link, True)
+            self.sink_findings[sink][0].add_video_link(video_link, True)
 
     def add_enrichment(
         self,
         enrichment_blocks: List[BaseBlock],
         annotations=None,
     ):
-        self.__ensure_sinks_have_findings()
+        self.__prepare_sinks_findings()
         for sink in self.named_sinks:
             self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations, True)
 

@@ -29,13 +29,13 @@ class MsTeamsMsg:
     def write_title_and_desc(self, platform_enabled: bool, finding: "Finding", cluster_name:str):
         block = MsTeamsTextBlock(text=f"{finding.severity} - {finding.title}", font_size='extraLarge')
         self.__write_to_entire_msg([block])
-        silence_url = finding.get_prometheus_silence_url(cluster_name)
         if platform_enabled:  # add link to the Robusta ui, if it's configured
+            silence_url = finding.get_prometheus_silence_url(cluster_name)
             actions = f"[🔎 Investigate]({finding.investigate_uri})"
             if finding.add_silence_url:
                 actions = f"{actions}  [🔕 Silence]({silence_url})"
-            for external_link in finding.external_links:
-                actions = f"{actions} [🎬 {external_link.name}]({external_link.url})"
+            for video_link in finding.video_links:
+                actions = f"{actions} [🎬 {video_link.name}]({video_link.url})"
             self.__write_to_entire_msg([MsTeamsTextBlock(text=actions)])
 
         self.__write_to_entire_msg([MsTeamsTextBlock(text=f"**Source:** *{cluster_name}*")])

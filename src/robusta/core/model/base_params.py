@@ -39,6 +39,15 @@ class ActionParams(DocumentedModel):
     pass
 
 
+class VideoEnricherParams(ActionParams):
+    """
+    :var url: Url to the external video that should be added to a finding
+    """
+
+    url: str
+    name: Optional[str]
+
+
 class RateLimitParams(ActionParams):
     """
     :var rate_limit: Rate limit the execution of this action (Seconds).
