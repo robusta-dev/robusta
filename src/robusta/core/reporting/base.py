@@ -3,6 +3,7 @@ import logging
 import urllib.parse
 import uuid
 import re
+import json
 from datetime import datetime
 from enum import Enum
 from pydantic.main import BaseModel
@@ -55,6 +56,10 @@ class FindingSeverity(Enum):
 class VideoLink(BaseModel):
     url: str
     name: str = "See more"
+
+    def to_json(self):
+        return json.dumps(self, default=lambda o: o.__dict__,
+                          sort_keys=True, indent=4)
 
 
 class Enrichment:
