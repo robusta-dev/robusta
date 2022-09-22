@@ -9,7 +9,7 @@ It used to return only the result and not the resultType leading for less safe a
 """
 
 def custom_query_range(
-    self, query: str, start_time: datetime, end_time: datetime, step: str, params: dict = None
+    prometheus_base_url: str, query: str, start_time: datetime, end_time: datetime, step: str, params: dict = None
 ):
     """
     Send a query_range to a Prometheus Host.
@@ -27,17 +27,20 @@ def custom_query_range(
         (RequestException) Raises an exception in case of a connection error
         (PrometheusApiClientException) Raises in case of non 200 response status code
     """
+    if not prometheus_base_url:
+        prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
+    prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
     start = round(start_time.timestamp())
     end = round(end_time.timestamp())
     params = params or {}
     data = None
     query = str(query)
     # using the query_range API to get raw data
-    response = self._session.get(
-        "{0}/api/v1/query_range".format(self.url),
+    response = prom._session.get(
+        "{0}/api/v1/query_range".format(prom.url),
         params={**{"query": query, "start": start, "end": end, "step": step}, **params},
-        verify=self.ssl_verification,
-        headers=self.headers,
+        verify=prom.ssl_verification,
+        headers=prom.headers,
     )
     if response.status_code == 200:
         data = response.json()["data"]["result"]
