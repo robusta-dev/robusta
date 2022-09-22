@@ -1,5 +1,5 @@
 from robusta.api import *
-
+from robusta.core.reporting.blocks import PrometheusBlock
 
 def parse_timestamp_string(date_string: str) -> datetime:
     try:
@@ -25,20 +25,12 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
     starts_at = parse_timestamp_string(params.starts_at)
     end_time = parse_timestamp_string(params.end_time)
     if not starts_at and params.graph_duration_minutes:
-        starts_at = datetime.now() - timedelta(minutes=params.graph_duration_minutes)
+        starts_at = datetime.utcnow() - timedelta(minutes=params.graph_duration_minutes)
     if (params.starts_at and not starts_at) or (params.end_time and not end_time):
         logging.error(f"unparsable time params for prometheus_enricher starts_at: '{params.starts_at}' ends_at: '{params.ends_at}'")
         return
 
-    result = run_prometheus_query(prometheus_base_url=params.prometheus_url, promql_query=params.promql_query, starts_at=starts_at, graph_duration_minutes=params.graph_duration_minutes, end_time=end_time)
-    # we return the whole result list (instead of the first element) since some queries can have multiple results,
-    # for example the "up" query returns an object for each service,
-    # whereas querying resources usually returns one json object in the list
-    json_str = json.dumps(
-        {
-            "data": result
-        }
-    )
+    prom_result= run_prometheus_query(prometheus_base_url=params.prometheus_url, promql_query=params.promql_query, starts_at=starts_at, ends_at=end_time)
     event.add_enrichment(
-        [JsonBlock(json_str)],
+        [PrometheusBlock(data=prom_result, query=params.promql_query)],
     )

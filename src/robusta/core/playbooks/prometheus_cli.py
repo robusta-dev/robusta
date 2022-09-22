@@ -10,7 +10,7 @@ It used to return only the result and not the resultType leading for less safe a
 
 def custom_query_range(
     prometheus_base_url: str, query: str, start_time: datetime, end_time: datetime, step: str, params: dict = None
-):
+) -> PrometheusQueryResult:
     """
     Send a query_range to a Prometheus Host.
     This method takes as input a string which will be sent as a query to
@@ -19,7 +19,7 @@ def custom_query_range(
         at https://prometheus.io/docs/prometheus/latest/querying/examples/
     :param start_time: (datetime) A datetime object that specifies the query range start time.
     :param end_time: (datetime) A datetime object that specifies the query range end time.
-    :param step: (str) Query resolution step width in duration format or float number of seconds
+    :param step: (str) Query resolution step width in duration format or float number of seconds - i.e 100s, 3d, 2w, 170.3
     :param params: (dict) Optional dictionary containing GET parameters to be
         sent along with the API request, such as "timeout"
     :returns: (dict) A dict of metric data received in response of the query sent
@@ -33,7 +33,7 @@ def custom_query_range(
     start = round(start_time.timestamp())
     end = round(end_time.timestamp())
     params = params or {}
-    data = None
+    prometheus_result = None
     query = str(query)
     # using the query_range API to get raw data
     response = prom._session.get(
@@ -43,9 +43,9 @@ def custom_query_range(
         headers=prom.headers,
     )
     if response.status_code == 200:
-        data = response.json()["data"]["result"]
+        prometheus_result = PrometheusQueryResult(data=response.json()["data"])
     else:
         raise PrometheusApiClientException(
             "HTTP Status Code {} ({!r})".format(response.status_code, response.content)
         )
-    return data
+    return prometheus_result

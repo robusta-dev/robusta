@@ -16,6 +16,7 @@ from tabulate import tabulate
 from .custom_rendering import render_value
 from .base import BaseBlock
 from ..model.env_vars import PRINTED_TABLE_MAX_WIDTH
+from ..model.prometheus import PrometheusQueryResult
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
@@ -366,3 +367,22 @@ class CallbackBlock(BaseBlock):
         :param choices: a dict mapping between each the text on each button to the action it triggers
         """
         super().__init__(choices=choices)
+
+
+class PrometheusBlock(BaseBlock):
+    """
+    Formatted prometheus query results with metadata
+    """
+
+    data: PrometheusQueryResult
+    metadata: Dict[str, str]
+
+    def __init__(self, data: PrometheusQueryResult, query: str = None):
+        """
+        :param data: the PrometheusQueryResult generated created from a prometheus query
+        :param query: the Prometheus query run
+        """
+        metadata = {}
+        if query:
+            metadata["query"] = query
+        super().__init__(data=data, metadata=metadata)

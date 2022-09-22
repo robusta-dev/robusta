@@ -4,8 +4,7 @@ from collections import defaultdict, namedtuple
 
 import pygal
 from pygal.style import DarkColorizedStyle as ChosenStyle
-from prometheus_api_client import PrometheusConnect
-
+from .prometheus_cli import custom_query_range
 from string import Template
 from datetime import datetime, timedelta
 import humanize
@@ -37,27 +36,19 @@ def run_prometheus_query(
         prometheus_base_url: str,
         promql_query: str,
         starts_at: datetime,
-        graph_duration_minutes: int,
-        end_time: datetime = None
-):
-    if not prometheus_base_url:
-        prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
-    prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
-    if not starts_at:
-        raise Exception("No start time specified for query.")
-    if not end_time:
-        end_time = datetime.now(tz=starts_at.tzinfo)
-    alert_duration = end_time - starts_at
-    graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
-    start_time = end_time - max(alert_duration, graph_duration)
+        ends_at: datetime
+) -> PrometheusQueryResult:
+    if not starts_at or not ends_at:
+        raise Exception("Invalid timerange specified for the prometheus query.")
+    query_duration =  ends_at - starts_at
     resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
-    increment = max(graph_duration.total_seconds() / resolution, 1.0)
-    logging.warning(f" resolution : {graph_duration.total_seconds()/ increment}, seconds {graph_duration.total_seconds()} inc {increment}")
-    return prom.custom_query_range(
+    increment = max(query_duration.total_seconds() / resolution, 1.0)
+    return custom_query_range(
+        prometheus_base_url,
         promql_query,
-        start_time,
-        end_time,
-        increment,
+        starts_at,
+        ends_at,
+        str(increment),
         {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
     )
 
@@ -65,15 +56,24 @@ def run_prometheus_query(
 def create_chart_from_prometheus_query(
         prometheus_base_url: str,
         promql_query: str,
-        starts_at: datetime,
+        alert_starts_at: datetime,
         include_x_axis: bool,
-        graph_duration_minutes: int,
+        graph_duration_minutes: int = 0,
         chart_title: Optional[str] = None,
         values_format: Optional[ChartValuesFormat] = None,
         lines: Optional[List[XAxisLine]] = []
 ):
-    result = run_prometheus_query(prometheus_base_url, promql_query, starts_at, graph_duration_minutes)
-
+    if not alert_starts_at:
+        ends_at = datetime.utcnow()
+        starts_at = ends_at - timedelta(minutes=graph_duration_minutes)
+    else:
+        ends_at = datetime.now(tz=alert_starts_at.tzinfo)
+        alert_duration = ends_at - alert_starts_at
+        graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
+        starts_at = ends_at - graph_duration
+    prometheus_query_result = run_prometheus_query(prometheus_base_url, promql_query, starts_at, ends_at)
+    if prometheus_query_result.result_type != "matrix":
+        raise Exception(f"Unsupported query result for robusta chart, Type received: {prometheus_query_result.result_type}, type supported 'matrix'")
     chart = pygal.XY(
         show_dots=True,
         style=ChosenStyle,
@@ -105,13 +105,13 @@ def create_chart_from_prometheus_query(
     # TODO: change min_time time before  Jan 19 3001
     min_time = 32536799999
     max_time = 0
-    for series in result:
-        label = "\n".join([v for v in series["metric"].values()])
+    for prometheus_matrix in prometheus_query_result.matrix_result:
+        label = "\n".join([v for v in prometheus_matrix.metric.values()])
         values = [
-            (timestamp, round(float(val), FLOAT_PRECISION_LIMIT))
-            for (timestamp, val) in series["values"]
+            (scalar_value.timestamp, round(float(scalar_value.value), FLOAT_PRECISION_LIMIT))
+            for scalar_value in prometheus_matrix.values
         ]
-        times = [timestamp for (timestamp, _) in series["values"]]
+        times = [scalar_value.timestamp for scalar_value in prometheus_matrix.values]
         min_time = min(min_time, min(times))
         max_time = max(max_time, max(times))
         chart.add(label, values)
