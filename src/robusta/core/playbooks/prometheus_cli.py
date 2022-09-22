@@ -8,6 +8,8 @@ git repo: https://github.com/4n4nd/prometheus-api-client-python
 It used to return only the result and not the resultType leading for less safe and clear code
 """
 
+#TODO: Replace this with our own prometheus client that handles return types and errors better
+
 def custom_query_range(
     prometheus_base_url: str, query: str, start_time: datetime, end_time: datetime, step: str, params: dict = None
 ) -> PrometheusQueryResult:

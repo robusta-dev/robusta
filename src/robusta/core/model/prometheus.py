@@ -5,11 +5,11 @@ from typing import List, Dict, Optional
 
 
 """
-    Known returned string fields for PrometheusMetric
+    Known commonly returned string fields for PrometheusMetric
     __name__: the name of the outer function in prometheus 
     Known Optional string fields for PrometheusMetric
     [container, created_by_kind, created_by_name, endpoint, host_ip, host_network, instance, job, namespace, node, pod,
-    pod_ip,,service, uid]
+    pod_ip, service, uid, ...]
 """
 PrometheusMetric = Dict[str, str]
 
@@ -22,9 +22,9 @@ class PrometheusScalarValue(BaseModel):
     timestamp: float
     value: str
 
-    RawScalarValue = list  # List[float, str]
+    RawScalarList = list  # List[float, str]
 
-    def __init__(self, raw_scalar: RawScalarValue):
+    def __init__(self, raw_scalar: RawScalarList):
         if len(raw_scalar) != 2:
             raise Exception(f"Invalid prometheus scalar value {raw_scalar}")
         timestamp = float(raw_scalar[0])
@@ -37,18 +37,30 @@ class PrometheusVector(BaseModel):
     metric: PrometheusMetric
     value: PrometheusScalarValue
 
+    def __init__(self, **kwargs):
+        raw_value = kwargs.pop("value", None)
+        if not raw_value:
+            raise Exception("value missing")
+        value = PrometheusScalarValue(raw_value)
+        super().__init__(value=value, **kwargs)
+
 
 class PrometheusMatrix(BaseModel):
     metric: PrometheusMetric
-    values: List[PrometheusScalarValue]
+    timestamps: List[float]
+    values: List[str]
 
     def __init__(self, **kwargs):
-        metric = kwargs.pop("metric", {})
         raw_values = kwargs.pop("values", None)
         if not raw_values:
             raise Exception("values missing")
-        values = [PrometheusScalarValue(raw_value) for raw_value in raw_values]
-        super().__init__(metric=metric, values=values)
+        timestamps = []
+        values = []
+        for raw_value in raw_values:
+            prometheus_scalar_value = PrometheusScalarValue(raw_value)
+            timestamps.append(prometheus_scalar_value.timestamp)
+            values.append(prometheus_scalar_value.value)
+        super().__init__(timestamps=timestamps, values=values, **kwargs)
 
 
 class PrometheusQueryResult(BaseModel):
@@ -63,7 +75,6 @@ class PrometheusQueryResult(BaseModel):
     string_result: Optional[str]
 
     def __init__(self, data):
-        logging.warning(f"{data}")
         result = data.get("result", None)
         result_type = data.get("resultType", None)
         vector_result = None
@@ -76,8 +87,8 @@ class PrometheusQueryResult(BaseModel):
             raise Exception("result object missing")
         elif result_type == "string":
             string_result = str(result)
-        elif result_type == "scalar":
-            scalar_result = PrometheusScalarValue(**result)
+        elif result_type == "scalar" and isinstance(result, list):
+            scalar_result = PrometheusScalarValue(result)
         elif result_type == "vector" and isinstance(result, list):
             vector_result = [PrometheusVector(**vector_result) for vector_result in result]
         elif result_type == "matrix" and isinstance(result, list):

@@ -40,7 +40,7 @@ def run_prometheus_query(
 ) -> PrometheusQueryResult:
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
-    query_duration =  ends_at - starts_at
+    query_duration = ends_at - starts_at
     resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
     increment = max(query_duration.total_seconds() / resolution, 1.0)
     return custom_query_range(
