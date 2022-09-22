@@ -83,7 +83,7 @@ class PrometheusQueryResult(BaseModel):
         string_result = None
         if not result_type:
             raise Exception("resultType missing")
-        elif not result:
+        if result is None:
             raise Exception("result object missing")
         elif result_type == "string":
             string_result = str(result)
