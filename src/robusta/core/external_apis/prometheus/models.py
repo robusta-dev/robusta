@@ -68,8 +68,8 @@ class PrometheusQueryResult(BaseModel):
     """
         This class is the returned object for prometheus queries
         :var result_type:  can be of type "vector", "matrix", "scalar", "string" depending on the query
-        :var vector_result:  a list of vector formats of the query result, if the var result_type is "vector"
-        :var series_list_result:  a list of series formats of the query result, if the var result_type is "matrix"
+        :var vector_result:  a formatted vector list from the query result, if the var result_type is "vector"
+        :var series_list_result:  a formatted series list from the query result, if the var result_type is "matrix"
         :var scalar_result:  scalar object of the query result, if the var result_type is "scalar"
         :var string_result:  a string of the query result, if the var result_type is "string"
 
