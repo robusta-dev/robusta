@@ -84,7 +84,7 @@ builtinPlaybooks:
   actions:
   - cpu_overcommited_enricher: {}
   - external_video_enricher:
-      url: https://www.youtube.com/watch?v=Ei8tXaTJi98
+      url: https://bit.ly/overcommit-cpu
       name: CPU Overcommited
 
 - triggers:
@@ -93,7 +93,7 @@ builtinPlaybooks:
   actions:
   - memory_overcommited_enricher: {}
   - external_video_enricher:
-      url: https://www.youtube.com/watch?v=Ei8tXaTJi98
+      url: https://bit.ly/memory-overcommit
       name: Memory Overcommited
 
 - triggers:
