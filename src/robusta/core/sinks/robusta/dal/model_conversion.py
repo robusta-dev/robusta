@@ -34,7 +34,7 @@ class ModelConversion:
             "service_key": finding.service_key,
             "cluster": cluster_id,
             "account_id": account_id,
-            "video_links": [link.to_json() for link in video_links],
+            "video_links": [link.json() for link in video_links],
             "starts_at": datetime_to_db_str(finding.starts_at),
             "updated_at": datetime_to_db_str(datetime.now())
         }

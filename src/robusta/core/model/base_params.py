@@ -84,6 +84,15 @@ class PrometheusParams(ActionParams):
     prometheus_url: str = None
 
 
+class TimedPrometheusParams(PrometheusParams):
+    """
+    :var default_query_duration: Prometheus duration query in seconds, defaults to 600 seconds (10 minutes)
+    :example default_query_duration: 900
+    """
+
+    default_query_duration: int = 600
+
+
 class CustomGraphEnricherParams(PrometheusParams):
     """
     :var promql_query: Promql query. You can use $pod, $node and $node_internal_ip to template (see example). For more information, see https://prometheus.io/docs/prometheus/latest/querying/basics/
