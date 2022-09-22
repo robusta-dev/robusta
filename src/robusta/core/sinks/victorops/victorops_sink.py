@@ -30,6 +30,11 @@ class VictoropsSink(SinkBase):
                     "vo_annotate.u.🔕 Silence"
                 ] = finding.get_prometheus_silence_url(self.cluster_name)
 
+            for video_link in finding.video_links:
+                json_dict[
+                    f"vo_annotate.u.🎬 {video_link.name}"
+                ] = video_link.url
+
         # custom fields
         json_dict["Resource"] = finding.subject.name
         json_dict["Source"] = self.cluster_name

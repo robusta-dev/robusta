@@ -39,6 +39,15 @@ class ActionParams(DocumentedModel):
     pass
 
 
+class VideoEnricherParams(ActionParams):
+    """
+    :var url: Url to the external video that should be added to a finding
+    """
+
+    url: str
+    name: Optional[str]
+
+
 class RateLimitParams(ActionParams):
     """
     :var rate_limit: Rate limit the execution of this action (Seconds).
@@ -73,6 +82,15 @@ class PrometheusParams(ActionParams):
     """
 
     prometheus_url: str = None
+
+
+class TimedPrometheusParams(PrometheusParams):
+    """
+    :var default_query_duration: Prometheus duration query in seconds, defaults to 600 seconds (10 minutes)
+    :example default_query_duration: 900
+    """
+
+    default_query_duration: int = 600
 
 
 class CustomGraphEnricherParams(PrometheusParams):

@@ -52,6 +52,11 @@ class FindingSeverity(Enum):
             return "🔴"
 
 
+class VideoLink(BaseModel):
+    url: str
+    name: str = "See more"
+
+
 class Enrichment:
     # These is the actual enrichment data
     blocks: List[BaseBlock] = []
@@ -149,6 +154,7 @@ class Finding(Filterable):
         self.category = None  # TODO fill real category
         self.subject = subject
         self.enrichments: List[Enrichment] = []
+        self.video_links: List[VideoLink] = []
         self.service_key = TopServiceResolver.guess_service_key(
             name=subject.name, namespace=subject.namespace
         )
@@ -197,6 +203,12 @@ class Finding(Filterable):
         if annotations is None:
             annotations = {}
         self.enrichments.append(Enrichment(enrichment_blocks, annotations))
+
+    def add_video_link(self, video_link: VideoLink, suppress_warning: bool = False):
+        if self.dirty and not suppress_warning:
+            logging.warning("Updating a finding after it was added to the event is not allowed!")
+
+        self.video_links.append(video_link)
 
     def __str__(self):
         return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"

@@ -26,20 +26,22 @@ class MsTeamsMsg:
         self.text_file_containers = []
         self.webhook_url = webhook_url
 
-    def write_title_and_desc(self, title: str, description: str, severity: str,
-                             platform_enabled: bool, investigate_uri: str, add_silence_url: bool, silence_url: str,  cluster_name: str):
-        block = MsTeamsTextBlock(text=f"{severity} - {title}", font_size='extraLarge')
+    def write_title_and_desc(self, platform_enabled: bool, finding: "Finding", cluster_name:str):
+        block = MsTeamsTextBlock(text=f"{finding.severity} - {finding.title}", font_size='extraLarge')
         self.__write_to_entire_msg([block])
         if platform_enabled:  # add link to the Robusta ui, if it's configured
-            actions = f"[🔎 Investigate]({investigate_uri})"
-            if add_silence_url:
+            silence_url = finding.get_prometheus_silence_url(cluster_name)
+            actions = f"[🔎 Investigate]({finding.investigate_uri})"
+            if finding.add_silence_url:
                 actions = f"{actions}  [🔕 Silence]({silence_url})"
+            for video_link in finding.video_links:
+                actions = f"{actions} [🎬 {video_link.name}]({video_link.url})"
             self.__write_to_entire_msg([MsTeamsTextBlock(text=actions)])
 
         self.__write_to_entire_msg([MsTeamsTextBlock(text=f"**Source:** *{cluster_name}*")])
 
-        if description is not None:
-            block = MsTeamsTextBlock(text=description)
+        if finding.description is not None:
+            block = MsTeamsTextBlock(text=finding.description)
             self.__write_to_entire_msg([block])
 
     def write_current_section(self):
