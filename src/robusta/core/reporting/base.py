@@ -1,9 +1,8 @@
-import dataclasses
+import hashlib
 import logging
 import urllib.parse
 import uuid
 import re
-import json
 from datetime import datetime
 from enum import Enum
 from pydantic.main import BaseModel
@@ -82,7 +81,9 @@ class Filterable:
     def get_invalid_attributes(self, attributes: List[str]) -> List:
         return list(set(attributes) - set(self.attribute_map))
 
-    def attribute_matches(self, attribute: str, expression: Union[str, List[str]]) -> bool:
+    def attribute_matches(
+        self, attribute: str, expression: Union[str, List[str]]
+    ) -> bool:
         value = self.attribute_map[attribute]
         if isinstance(expression, str):
             return bool(re.match(expression, value))
@@ -103,16 +104,21 @@ class Filterable:
 
 class FindingSubject:
     def __init__(
-            self,
-            name: str = None,
-            subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
-            namespace: str = None,
-            node: str = None,
+        self,
+        name: str = None,
+        subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
+        namespace: str = None,
+        node: str = None,
     ):
         self.name = name
         self.subject_type = subject_type
         self.namespace = namespace
         self.node = node
+
+    def __str__(self):
+        if self.namespace is not None:
+            return f"{self.namespace}/{self.subject_type.value}/{self.name}"
+        return f"{self.subject_type.value}/{self.name}"
 
 
 class Finding(Filterable):
@@ -121,20 +127,21 @@ class Finding(Filterable):
     """
 
     def __init__(
-            self,
-            title: str,
-            aggregation_key: str,
-            severity: FindingSeverity = FindingSeverity.INFO,
-            source: FindingSource = FindingSource.NONE,
-            description: str = None,
-            subject: FindingSubject = FindingSubject(),
-            finding_type: FindingType = FindingType.ISSUE,
-            failure: bool = True,
-            creation_date: str = None,
-            fingerprint: str = None,
-            starts_at: datetime = None,
-            ends_at: datetime = None,
-            add_silence_url: bool = False
+        self,
+        title: str,
+        aggregation_key: str,
+        severity: FindingSeverity = FindingSeverity.INFO,
+        source: FindingSource = FindingSource.NONE,
+        description: str = None,
+        # TODO: this is bug-prone - see https://towardsdatascience.com/python-pitfall-mutable-default-arguments-9385e8265422
+        subject: FindingSubject = FindingSubject(),
+        finding_type: FindingType = FindingType.ISSUE,
+        failure: bool = True,
+        creation_date: str = None,
+        fingerprint: str = None,
+        starts_at: datetime = None,
+        ends_at: datetime = None,
+        add_silence_url: bool = False,
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
@@ -157,7 +164,11 @@ class Finding(Filterable):
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
         self.add_silence_url = add_silence_url
         self.creation_date = creation_date
-        self.fingerprint = fingerprint
+        self.fingerprint = (
+            fingerprint
+            if fingerprint
+            else self.__calculate_fingerprint(subject, source, aggregation_key)
+        )
         self.starts_at = starts_at if starts_at else datetime.now()
         self.ends_at = ends_at
         self.dirty = False
@@ -176,9 +187,16 @@ class Finding(Filterable):
             "name": str(self.subject.name),
         }
 
-    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None, suppress_warning: bool = False):
+    def add_enrichment(
+        self,
+        enrichment_blocks: List[BaseBlock],
+        annotations=None,
+        suppress_warning: bool = False,
+    ):
         if self.dirty and not suppress_warning:
-            logging.warning("Updating a finding after it was added to the event is not allowed!")
+            logging.warning(
+                "Updating a finding after it was added to the event is not allowed!"
+            )
 
         if not enrichment_blocks:
             return
@@ -198,7 +216,7 @@ class Finding(Filterable):
     def get_prometheus_silence_url(self, cluster_id: str) -> str:
         labels: Dict[str, str] = {
             "alertname": self.aggregation_key,
-            "cluster": cluster_id
+            "cluster": cluster_id,
         }
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
@@ -210,3 +228,16 @@ class Finding(Filterable):
         labels["referer"] = "sink"
 
         return f"{ROBUSTA_UI_DOMAIN}/silences/create?{urllib.parse.urlencode(labels)}"
+
+    @staticmethod
+    def __calculate_fingerprint(
+        subject: FindingSubject, source: FindingSource, aggregation_key: str
+    ) -> str:
+        # some sinks require a unique fingerprint, typically used for two reasons:
+        # 1. de-dupe the same alert if it fires twice
+        # 2. update an existing alert and change its status from firing to resolved
+        #
+        # if we have a fingerprint available from the trigger (e.g. alertmanager) then use that
+        # if not, generate with logic similar to alertmanager
+        s = f"{subject.subject_type},{subject.name},{subject.namespace},{subject.node},{source.value}{aggregation_key}"
+        return hashlib.sha256(s.encode()).hexdigest()

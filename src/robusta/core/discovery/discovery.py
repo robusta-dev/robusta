@@ -138,8 +138,17 @@ class Discovery:
 
     @staticmethod
     def discover_resources() -> DiscoveryResults:
-        future = Discovery.executor.submit(Discovery.discovery_process)
-        return future.result()
+        try:
+            future = Discovery.executor.submit(Discovery.discovery_process)
+            return future.result()
+        except Exception as e:
+            # We've seen this and believe the process is killed due to oom kill
+            # The process pool becomes not usable, so re-creating it
+            logging.error("Discovery process internal error")
+            Discovery.executor.shutdown()
+            Discovery.executor = ProcessPoolExecutor(max_workers=1)
+            logging.info("Initialized new discovery pool")
+            raise e
 
 
 # This section below contains utility related to k8s python api objects (rather than hikaru)

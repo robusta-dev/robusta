@@ -58,3 +58,10 @@ profiles:
         context: .
         docker:
           dockerfile: Dockerfile
+- name: release
+  build:
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        custom:
+          buildCommand: ./build_release.sh

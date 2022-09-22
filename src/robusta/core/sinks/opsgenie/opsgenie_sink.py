@@ -16,7 +16,7 @@ PRIORITY_MAP = {
     FindingSeverity.INFO: "P5",
     FindingSeverity.LOW: "P4",
     FindingSeverity.MEDIUM: "P3",
-    FindingSeverity.HIGH: "P1"
+    FindingSeverity.HIGH: "P1",
 }
 
 
@@ -29,40 +29,67 @@ class OpsGenieSink(SinkBase):
         self.tags = sink_config.opsgenie_sink.tags
 
         self.conf = opsgenie_sdk.configuration.Configuration()
-        self.conf.api_key['Authorization'] = self.api_key
+        self.conf.api_key["Authorization"] = self.api_key
 
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
         self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
 
-    def write_finding(self, finding: Finding, platform_enabled: bool):
+    def __close_alert(self, finding: Finding):
+        body = opsgenie_sdk.CloseAlertPayload(
+            user="Robusta",
+            note="Robusta Finding Resolved",
+            source="Robusta Opsgenie Sink",
+        )
+        try:
+            close_response = self.alert_api.close_alert(
+                identifier=finding.fingerprint,
+                close_alert_payload=body,
+                identifier_type="alias",
+            )
+        except opsgenie_sdk.ApiException as err:
+            logging.error(
+                f"Error closing opsGenie alert {finding} {err}", exc_info=True
+            )
+
+    def __open_alert(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
         self.tags.insert(0, self.cluster_name)
         body = opsgenie_sdk.CreateAlertPayload(
             source="Robusta",
             message=finding.title,
             description=description,
-            alias=finding.title,
-            responders=[
-                {
-                    "name": team,
-                    "type": "team"
-                } for team in self.teams
-            ],
+            alias=finding.fingerprint,
+            responders=[{"name": team, "type": "team"} for team in self.teams],
+            details={
+                "Resource": finding.subject.name,
+                "Cluster": self.cluster_name,
+                "Namespace": finding.subject.namespace,
+                "Node": finding.subject.node,
+                "Source": str(finding.source.name),
+            },
             tags=self.tags,
             entity=finding.service_key,
-            priority=PRIORITY_MAP.get(finding.severity, "P3")
+            priority=PRIORITY_MAP.get(finding.severity, "P3"),
         )
         try:
             self.alert_api.create_alert(create_alert_payload=body)
         except opsgenie_sdk.ApiException as err:
-            logging.error(f"Error creating opsGenie alert {finding} {err}", exc_info=True)
+            logging.error(
+                f"Error creating opsGenie alert {finding} {err}", exc_info=True
+            )
+
+    def write_finding(self, finding: Finding, platform_enabled: bool):
+        if finding.title.startswith("[RESOLVED]"):
+            self.__close_alert(finding)
+        else:
+            self.__open_alert(finding, platform_enabled)
 
     def __to_description(self, finding: Finding, platform_enabled: bool) -> str:
         description = ""
         if platform_enabled:
-            description = f"<a href=\"{finding.investigate_uri}\">🔎 Investigate</a>"
+            description = f'<a href="{finding.investigate_uri}">🔎 Investigate</a>'
             if finding.add_silence_url:
-                description = f"{description}  <a href=\"{finding.get_prometheus_silence_url(self.cluster_name)}\">🔕 Silence</a>"
+                description = f'{description}  <a href="{finding.get_prometheus_silence_url(self.cluster_name)}">🔕 Silence</a>'
 
             for video_link in finding.video_links:
                 description = f"{description}  <a href=\"{video_link.url}\">🎬 {video_link.name}</a>"
@@ -76,4 +103,3 @@ class OpsGenieSink(SinkBase):
             Transformer.to_html(enrichment.blocks) for enrichment in enrichments
         ]
         return "---\n".join(text_arr)
-

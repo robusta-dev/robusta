@@ -65,6 +65,10 @@ These actions can add context to any job-related event, be it from ``on_promethe
 
 .. robusta-action:: playbooks.robusta_playbooks.job_actions.job_events_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.job_actions.job_info_enricher
+
+.. robusta-action:: playbooks.robusta_playbooks.job_actions.job_pod_enricher
+
 Kubernetes Resource Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

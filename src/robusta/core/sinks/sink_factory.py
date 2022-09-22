@@ -20,6 +20,8 @@ from .webhook.webhook_sink import WebhookSink
 from .webhook.webhook_sink_params import WebhookSinkConfigWrapper
 from .victorops.victorops_sink import VictoropsSink
 from .victorops.victorops_sink_params import VictoropsConfigWrapper
+from .pagerduty.pagerduty_sink import PagerdutySink
+from .pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from .mattermost.mattermost_sink import MattermostSink
 from .mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
 
@@ -44,6 +46,8 @@ class SinkFactory:
             return WebhookSink(sink_config, registry)
         elif isinstance(sink_config, VictoropsConfigWrapper):
             return VictoropsSink(sink_config, registry)
+        elif isinstance(sink_config, PagerdutyConfigWrapper):
+            return PagerdutySink(sink_config, registry)
         elif isinstance(sink_config, DiscordSinkConfigWrapper):
             return DiscordSink(sink_config, registry)
         elif isinstance(sink_config, MattermostSinkConfigWrapper):
