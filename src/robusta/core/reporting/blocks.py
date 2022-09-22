@@ -382,7 +382,7 @@ class PrometheusBlock(BaseBlock):
         :param data: the PrometheusQueryResult generated created from a prometheus query
         :param query: the Prometheus query run
         """
-        metadata = {}
+        metadata = {"query-result-version": "1.0"}
         if query:
             metadata["query"] = query
         super().__init__(data=data, metadata=metadata)
