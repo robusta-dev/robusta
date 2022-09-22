@@ -1,5 +1,5 @@
-from typing import List, Optional
-from pydantic import SecretStr
+from typing import List, Optional, Union
+from pydantic import SecretStr, BaseModel
 from ...utils.documented_pydantic import DocumentedModel
 from enum import Enum, auto
 
@@ -84,6 +84,15 @@ class PrometheusParams(ActionParams):
     prometheus_url: str = None
 
 
+class PrometheusDuration(BaseModel):
+    duration_minutes: int
+
+
+class PrometheusDateRange(BaseModel):
+    starts_at: str
+    ends_at: str
+
+
 class PrometheusQueryParams(PrometheusParams):
     """
     :var promql_query: the prometheusql query you want to run
@@ -95,9 +104,7 @@ class PrometheusQueryParams(PrometheusParams):
 
     """
     promql_query: str = None
-    graph_duration_minutes: int = 0
-    starts_at: str = None
-    end_time: str = None
+    duration: Union[PrometheusDateRange, PrometheusDuration]
 
 
 class TimedPrometheusParams(PrometheusParams):
