@@ -4,7 +4,7 @@ from collections import defaultdict, namedtuple
 
 import pygal
 from pygal.style import DarkColorizedStyle as ChosenStyle
-from .prometheus_cli import custom_query_range
+from ..external_apis.prometheus.prometheus_cli import custom_query_range
 from string import Template
 from datetime import datetime, timedelta
 import humanize
@@ -40,6 +40,8 @@ def run_prometheus_query(
 ) -> PrometheusQueryResult:
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
+    if not prometheus_base_url:
+        prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
     query_duration = ends_at - starts_at
     resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
     increment = max(query_duration.total_seconds() / resolution, 1.0)
@@ -105,15 +107,15 @@ def create_chart_from_prometheus_query(
     # TODO: change min_time time before  Jan 19 3001
     min_time = 32536799999
     max_time = 0
-    for prometheus_matrix in prometheus_query_result.matrix_result:
-        label = "\n".join([v for v in prometheus_matrix.metric.values()])
-        values = [
-            (scalar_value.timestamp, round(float(scalar_value.value), FLOAT_PRECISION_LIMIT))
-            for scalar_value in prometheus_matrix.values
-        ]
-        times = [scalar_value.timestamp for scalar_value in prometheus_matrix.values]
-        min_time = min(min_time, min(times))
-        max_time = max(max_time, max(times))
+    for series in prometheus_query_result.series_list_result:
+        label = "\n".join([v for v in series.metric.values()])
+        values = []
+        for index in range(len(series.values)):
+            timestamp = series.timestamps[index]
+            value = round(float(series.values[index]), FLOAT_PRECISION_LIMIT)
+            values.append((timestamp, value))
+        min_time = min(min_time, min(series.timestamps))
+        max_time = max(max_time, max(series.timestamps))
         chart.add(label, values)
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]

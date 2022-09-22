@@ -5,9 +5,9 @@ from typing import List, Dict, Optional
 
 
 """
-    Known commonly returned string fields for PrometheusMetric
+    Known commonly returned keys in dictionary 'metric':
     __name__: the name of the outer function in prometheus 
-    Known Optional string fields for PrometheusMetric
+   Other keys dictionary 'metric' sometimes contains:
     [container, created_by_kind, created_by_name, endpoint, host_ip, host_network, instance, job, namespace, node, pod,
     pod_ip, service, uid, ...]
 """
@@ -15,20 +15,21 @@ PrometheusMetric = Dict[str, str]
 
 
 class PrometheusScalarValue(BaseModel):
-    """
-        While usually this is a list of size 2 in the form of [float_timestamp, str_returned_value]
-        the list size and return value types are not guaranteed
-    """
+
     timestamp: float
     value: str
 
-    RawScalarList = list  # List[float, str]
+    def __init__(self, raw_scalar_list: list):
+        """
+            :var raw_scalar:  is the list prometheus returns as a scalar value from its queries
 
-    def __init__(self, raw_scalar: RawScalarList):
-        if len(raw_scalar) != 2:
-            raise Exception(f"Invalid prometheus scalar value {raw_scalar}")
-        timestamp = float(raw_scalar[0])
-        value = str(raw_scalar[1])
+            While usually this is a list of size 2 in the form of [float_timestamp, str_returned_value]
+            the list size and return value types are not guaranteed
+        """
+        if len(raw_scalar_list) != 2:
+            raise Exception(f"Invalid prometheus scalar value {raw_scalar_list}")
+        timestamp = float(raw_scalar_list[0])
+        value = str(raw_scalar_list[1])
         super().__init__(timestamp=timestamp, value=value)
 
 
@@ -45,7 +46,7 @@ class PrometheusVector(BaseModel):
         super().__init__(value=value, **kwargs)
 
 
-class PrometheusMatrix(BaseModel):
+class PrometheusSeries(BaseModel):
     metric: PrometheusMetric
     timestamps: List[float]
     values: List[str]
@@ -65,12 +66,19 @@ class PrometheusMatrix(BaseModel):
 
 class PrometheusQueryResult(BaseModel):
     """
-        var: result_type can be of type "vector", "matrix", "scalar", "string" depending on the query
-        If there is an issue with the return types not fitting this schema an exception will be thrown
+        This class is the returned object for prometheus queries
+        :var result_type:  can be of type "vector", "matrix", "scalar", "string" depending on the query
+        :var vector_result:  a list of vector formats of the query result, if the var result_type is "vector"
+        :var series_list_result:  a list of series formats of the query result, if the var result_type is "matrix"
+        :var scalar_result:  scalar object of the query result, if the var result_type is "scalar"
+        :var string_result:  a string of the query result, if the var result_type is "string"
+
+        :raises:
+            (Exception) Raises an Exception in the case that there is an issue with the resultType and result not matching
     """
     result_type: str
     vector_result: Optional[List[PrometheusVector]]
-    matrix_result: Optional[List[PrometheusMatrix]]
+    series_list_result: Optional[List[PrometheusSeries]]
     scalar_result: Optional[PrometheusScalarValue]
     string_result: Optional[str]
 
@@ -78,7 +86,7 @@ class PrometheusQueryResult(BaseModel):
         result = data.get("result", None)
         result_type = data.get("resultType", None)
         vector_result = None
-        matrix_result = None
+        series_list_result = None
         scalar_result = None
         string_result = None
         if not result_type:
@@ -92,12 +100,12 @@ class PrometheusQueryResult(BaseModel):
         elif result_type == "vector" and isinstance(result, list):
             vector_result = [PrometheusVector(**vector_result) for vector_result in result]
         elif result_type == "matrix" and isinstance(result, list):
-            matrix_result = [PrometheusMatrix(**matrix_result) for matrix_result in result]
+            series_list_result = [PrometheusSeries(**series_list_result) for series_list_result in result]
         else:
             raise Exception("result or returnType is invalid")
 
         super().__init__(result_type=result_type,
                          vector_result=vector_result,
-                         matrix_result=matrix_result,
+                         series_list_result=series_list_result,
                          scalar_result=scalar_result,
                          string_result=string_result)

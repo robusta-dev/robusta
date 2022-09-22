@@ -1,4 +1,4 @@
-from robusta.api import *
+from .models import PrometheusQueryResult
 from datetime import datetime
 from prometheus_api_client import PrometheusConnect, PrometheusApiClientException
 
@@ -29,8 +29,6 @@ def custom_query_range(
         (RequestException) Raises an exception in case of a connection error
         (PrometheusApiClientException) Raises in case of non 200 response status code
     """
-    if not prometheus_base_url:
-        prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
     prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
     start = round(start_time.timestamp())
     end = round(end_time.timestamp())
