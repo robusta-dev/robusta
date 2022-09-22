@@ -12,7 +12,7 @@ def parse_timestamp_string(date_string: str) -> Optional[datetime]:
         return None
 
 
-def get_times_from_duration(duration: Union[PrometheusDateRange, PrometheusDuration]) -> (Optional[datetime], Optional[datetime]):
+def parse_duration(duration: Union[PrometheusDateRange, PrometheusDuration]) -> (Optional[datetime], Optional[datetime]):
     if isinstance(duration, PrometheusDateRange):
         return parse_timestamp_string(duration.starts_at), parse_timestamp_string(duration.ends_at)
     elif isinstance(duration, PrometheusDuration):
