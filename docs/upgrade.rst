@@ -13,19 +13,20 @@ This will upgrade Robusta while preserving any custom settings:
 .. code-block:: bash
 
     helm repo update
-    helm upgrade robusta robusta/robusta --values=values.yaml
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 We recommend running the above command exactly as written.
 
 .. _values-file:
 
-.. admonition:: Where is my values.yaml?
+.. admonition:: Where is my generated_values.yaml?
 
-    If you have lost your ``values.yaml`` file, you can extract it from the cluster:
+    If you have lost your ``generated_values.yaml`` file, you can extract it from the cluster:
 
     .. code-block:: bash
 
-         helm get values -o yaml robusta
+         helm get values -o yaml robusta > generated_values.yaml
+
 
 Verify that Robusta is running and there are no errors in the logs:
 
@@ -81,11 +82,11 @@ From versions lower than 0.9.1 to latest
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.55.0/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.55.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
 
-4. Update helm chart and upgrade Robusta (:ref:`where is my values.yaml <values-file>`):
+4. Update helm chart and upgrade Robusta (:ref:`where is my generated_values.yaml <values-file>`):
 
 .. code-block:: bash
 
-    helm repo update && helm upgrade robusta robusta/robusta -f ./values.yaml
+    helm repo update && helm upgrade robusta robusta/robusta -f ./generated_values.yaml
 
 5. Verify that Robusta is running and there are no errors in the logs:
 

@@ -1,23 +1,28 @@
 import logging
 from typing import List
+
+from ...core.model.env_vars import SERVICE_CACHE_TTL_SEC
 from ...utils.service_discovery import find_service_url
+from cachetools import TTLCache
 
 
 class ServiceDiscovery:
-    service_url = None
+    cache: TTLCache = TTLCache(maxsize=1, ttl=SERVICE_CACHE_TTL_SEC)
 
     @classmethod
     def find_url(cls, selectors: List[str], error_msg: str):
         """
         Try to autodiscover the url of an in-cluster service
         """
-        if cls.service_url:
-            return cls.service_url
+        cache_key = ",".join(selectors)
+        cached_value = cls.cache.get(cache_key)
+        if cached_value:
+            return cached_value
 
         for label_selector in selectors:
             service_url = find_service_url(label_selector)
             if service_url:
-                cls.service_url = service_url
+                cls.cache[cache_key] = service_url
                 return service_url
 
         logging.error(error_msg)
@@ -43,6 +48,12 @@ class AlertManagerDiscovery(ServiceDiscovery):
             selectors=[
                 "operated-alertmanager=true",
                 "app.kubernetes.io/name=alertmanager",
+                "app=kube-prometheus-stack-alertmanager",
+                "app=alertmanager",
+                "app=prometheus,component=alertmanager",
+                "app=rancher-monitoring-alertmanager",
+                "app=prometheus-operator-alertmanager",
+                "app=prometheus-alertmanager"
             ],
             error_msg="Alert manager url could not be found. Add 'alertmanager_url' under global_config",
         )

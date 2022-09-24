@@ -51,7 +51,11 @@ This trigger will fire when a Pod is OOMKilled.
 
     customPlaybooks:
     - triggers:
-      - on_pod_oom_killed: {}
+      - on_pod_oom_killed:
+          rate_limit: 900
+          exclude:
+            - name: "oomkilled-pod"
+              namespace: "default"
       actions:
       - pod_graph_enricher:
           resource_type: Memory
@@ -61,6 +65,42 @@ This trigger will fire when a Pod is OOMKilled.
 Trigger parameters:
 
 * ``rate_limit``: Limit firing to once every `rate_limit` seconds
+* ``exclude``: A list of pod name prefixes and/or namespaces that this trigger will ignore.
+    * All pods that start with `name` in namespace `namespace` will be ignored for this trigger.
+    * If A `name` is defined without a `namespace` than all pods with that name prefix will be ignored for this trigger.
+    * If A `namespace` is defined without a `name` than all pods in that namespace will be ignored for this trigger.
+
+Container OOMKilled
+^^^^^^^^^^^^^^^^^^^
+
+.. _on_container_oom_killed:
+
+* ``on_container_oom_killed``
+
+This trigger will fire when a Container is OOMKilled.
+
+
+.. code-block:: yaml
+
+    customPlaybooks:
+    - triggers:
+      - on_container_oom_killed:
+          rate_limit: 900
+          exclude:
+            - name: "oomkilled-container"
+              namespace: "default"
+      actions:
+      - oomkilled_container_graph_enricher:
+          resource_type: Memory
+
+
+Trigger parameters:
+
+* ``rate_limit``: Limit firing to once every `rate_limit` seconds
+* ``exclude``: A list of container name prefixes and/or namespaces that this trigger will ignore.
+    * All containers that start with `name` in namespace `namespace` will be ignored for this trigger.
+    * If A `name` is defined without a `namespace` than all containers with that name prefix will be ignored for this trigger.
+    * If A `namespace` is defined without a `name` than all containers in that namespace will be ignored for this trigger.
 
 Job Failure
 ^^^^^^^^^^^^^^^^^^^

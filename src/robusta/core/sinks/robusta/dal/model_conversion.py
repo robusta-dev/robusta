@@ -16,6 +16,7 @@ class ModelConversion:
 
     @staticmethod
     def to_finding_json(account_id: str, cluster_id: str, finding: Finding):
+        video_links = finding.video_links or []
         finding_json = {
             "id": str(finding.id),
             "title": finding.title,
@@ -33,6 +34,7 @@ class ModelConversion:
             "service_key": finding.service_key,
             "cluster": cluster_id,
             "account_id": account_id,
+            "video_links": [link.json() for link in video_links],
             "starts_at": datetime_to_db_str(finding.starts_at),
             "updated_at": datetime_to_db_str(datetime.now())
         }

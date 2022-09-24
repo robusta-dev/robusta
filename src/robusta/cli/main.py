@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import random
 import subprocess
 import time
@@ -10,10 +11,13 @@ from typing import Optional, List, Union, Dict
 
 import traceback
 
+from hikaru.model import Job, ObjectMeta, JobSpec, PodTemplateSpec, PodSpec, Container
+
+from robusta.integrations.prometheus.utils import AlertManagerDiscovery
 from .utils import get_runner_pod
 import typer
 import yaml
-from kubernetes import config
+from kubernetes import config, client
 from pydantic import BaseModel, Extra
 
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
@@ -33,13 +37,9 @@ from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key, get_ui_key
 from .auth import app as auth_commands
 from .slack_verification import verify_slack_channel
-from .slack_feedback_message import SlackFeedbackMessagesSender, SlackFeedbackConfig
+from .slack_feedback_message import SlackFeedbackMessagesSender
 from .playbooks_cmd import app as playbooks_commands
-from .utils import log_title, replace_in_file, namespace_to_kubectl
-
-FORWARDER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
-RUNNER_CONFIG_FOR_SMALL_CLUSTERS = "512Mi"
-GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS = "64Mi"
+from .utils import log_title, namespace_to_kubectl
 
 
 app = typer.Typer()
@@ -61,14 +61,6 @@ class GlobalConfig(BaseModel):
     account_id: str = ""
 
 
-class PodConfigs(Dict[str, Dict[str, Dict[str, str]]]):
-    __root__: Dict[str, Dict[str, Dict[str, str]]]
-
-    @classmethod
-    def gen_config(cls, memory_size: str) -> Dict:
-        return {"resources": {"requests": {"memory": memory_size}}}
-
-
 class HelmValues(BaseModel, extra=Extra.allow):
     globalConfig: GlobalConfig
     sinksConfig: List[
@@ -76,7 +68,8 @@ class HelmValues(BaseModel, extra=Extra.allow):
             SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper
         ]
     ]
-    clusterName: str
+    clusterName: Optional[str]
+    isSmallCluster: Optional[bool]
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
@@ -85,31 +78,6 @@ class HelmValues(BaseModel, extra=Extra.allow):
     grafanaRenderer: Dict = None
     runner: Dict = None
     rsa: RSAKeyPair = None
-
-    def set_pod_configs_for_small_clusters(self):
-        self.kubewatch = PodConfigs.gen_config(FORWARDER_CONFIG_FOR_SMALL_CLUSTERS)
-        self.runner = PodConfigs.gen_config(RUNNER_CONFIG_FOR_SMALL_CLUSTERS)
-        self.grafanaRenderer = PodConfigs.gen_config(
-            GRAFANA_RENDERER_CONFIG_FOR_SMALL_CLUSTERS
-        )
-
-
-def guess_cluster_name(context):
-    with click_spinner.spinner():
-        try:
-            all_contexts, current_context = config.list_kube_config_contexts()
-            if context is not None:
-                for i in range(len(all_contexts)):
-                    if all_contexts[i].get("name") == context:
-                        return all_contexts[i].get("context").get("cluster")
-                typer.echo(
-                    f" no context exists with the name '{context}', your current context is {current_context.get('cluster')}"
-                )
-            if current_context and current_context.get("name"):
-                return current_context.get("context").get("cluster")
-        except Exception:  # this happens, for example, if you don't have a kubeconfig file
-            typer.echo("Error reading kubeconfig to generate cluster name")
-        return f"cluster_{random.randint(0, 1000000)}"
 
 
 def get_slack_channel() -> str:
@@ -138,7 +106,10 @@ def gen_config(
         None,
         help="Cluster Name",
     ),
-    is_small_cluster: bool = typer.Option(None),
+    is_small_cluster: bool = typer.Option(
+        None,
+        help="Local/Small cluster",
+    ),
     slack_api_key: str = typer.Option(
         "",
         help="Slack API Key",
@@ -165,18 +136,13 @@ def gen_config(
     enable_crash_report: bool = typer.Option(None),
 ):
     """Create runtime configuration file"""
-    if cluster_name is None:
-        cluster_name = typer.prompt(
-            "Please specify a unique name for your cluster or press ENTER to use the default",
-            default=guess_cluster_name(context),
-        )
-    if is_small_cluster is None:
-        is_small_cluster = typer.confirm(
-            "Are you running a local Kubernetes cluster? (Like minikube, colima, or kind)"
-        )
 
     # Configure sinks
-    typer.secho(f"""Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""", fg=typer.colors.CYAN, bold=True)
+    typer.secho(
+        f"""Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""",
+        fg=typer.colors.CYAN,
+        bold=True,
+    )
 
     sinks_config: List[
         Union[
@@ -196,7 +162,7 @@ def gen_config(
     slack_integration_configured = False
     if slack_api_key and slack_channel:
         while not verify_slack_channel(
-            slack_api_key, cluster_name, slack_channel, slack_workspace, debug
+            slack_api_key, slack_channel, slack_workspace, debug
         ):
             slack_channel = get_slack_channel()
 
@@ -243,8 +209,6 @@ def gen_config(
         else:
             robusta_api_key = ""
 
-    typer.secho("Just a few more questions and we're done...\n", fg="green")
-
     account_id = str(uuid.uuid4())
     if robusta_api_key:  # if Robusta ui sink is defined, take the account id from it
         token = json.loads(base64.b64decode(robusta_api_key))
@@ -272,7 +236,8 @@ def gen_config(
 
     if enable_prometheus_stack is None:
         typer.echo(
-            f"""Robusta can use {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)} as an alert source.""")
+            f"""Robusta can use {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)} as an alert source."""
+        )
 
         enable_prometheus_stack = typer.confirm(
             f"""If you haven't installed it yet, Robusta can install a pre-configured {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)}.\nWould you like to do so?"""
@@ -294,6 +259,7 @@ def gen_config(
 
     values = HelmValues(
         clusterName=cluster_name,
+        isSmallCluster=is_small_cluster,
         globalConfig=GlobalConfig(signing_key=signing_key, account_id=account_id),
         sinksConfig=sinks_config,
         enablePrometheusStack=enable_prometheus_stack,
@@ -301,10 +267,6 @@ def gen_config(
         enablePlatformPlaybooks=enable_platform_playbooks,
         rsa=gen_rsa_pair(),
     )
-
-    if is_small_cluster:
-        values.set_pod_configs_for_small_clusters()
-        values.playbooksPersistentVolumeSize = "128Mi"
 
     values.runner = {}
     values.runner["sendAdditionalTelemetry"] = enable_crash_report
@@ -372,7 +334,10 @@ def update_config(
             values.globalConfig.signing_key = str(uuid.uuid4())
 
         write_values_file("updated_values.yaml", values)
-        typer.secho("Run `helm upgrade robusta robusta/robusta -f ./updated_values.yaml`", fg="green")
+        typer.secho(
+            "Run `helm upgrade robusta robusta/robusta -f ./updated_values.yaml`",
+            fg="green",
+        )
 
 
 @app.command()
@@ -419,23 +384,142 @@ def logs(
     ),
     tail: int = typer.Option(None, help="Lines of recent log file to display."),
     context: str = typer.Option(None, help="The name of the kubeconfig context to use"),
-    resource_name: str = typer.Option(None, help="Robusta Runner deployment or pod name")
+    resource_name: str = typer.Option(
+        None, help="Robusta Runner deployment or pod name"
+    ),
 ):
     """Fetch Robusta runner logs"""
     stream = "-f" if f else ""
     since = f"--since={since}" if since else ""
     tail = f"--tail={tail}" if tail else ""
     context = f"--context={context}" if context else ""
-    resource_name =  resource_name if resource_name else get_runner_pod(namespace)
+    resource_name = resource_name if resource_name else get_runner_pod(namespace)
     try:
         subprocess.check_call(
             f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
-            shell=True
+            shell=True,
         )
     except Exception as e:
-        log_title("Robusta-runner pod not found. use help for more options.", color="red")
+        log_title("error fetching logs; see help for more options.", color="red")
 
 
+@app.command()
+def demo_alert(
+    alertmanager_url: str = typer.Option(
+        None,
+        help="Alertmanager in cluster url. "
+        "By default, Robusta will auto-discover the AlertManager running in your cluster. "
+        "Use this parameter to override the AlertManager url."
+        "For example: http://alertmanager.monitoring.svc.cluster.local:9093",
+    ),
+    namespaces: List[str] = typer.Option(
+        ["robusta", "default"],
+        help="List of namespaces, to select the alert pod from",
+    ),
+    alert: str = typer.Option(
+        "KubePodNotReady",
+        help="Created alert name",
+    ),
+    labels: str = typer.Option(
+        None,
+        help="Additional alert labels. Comma separated list. For example: env=prod,team=infra ",
+    ),
+    kube_config: str = typer.Option(None, help="Kube config file path override."),
+):
+    """
+    Create a demo alert on AlertManager.
+    The alert pod is selected randomly from the pods in the current namespace
+    """
+    config.load_kube_config(kube_config)
+    if not alertmanager_url:
+        # search cluster alertmanager by known alertmanager labels
+        alertmanager_url = AlertManagerDiscovery.find_alert_manager_url()
+        if not alertmanager_url:
+            typer.secho(
+                "Alertmanager service could not be auto-discovered. "
+                "Please use the --alertmanager_url parameter",
+                fg="red",
+            )
+            return
+
+        pod = None
+        for namespace in namespaces:
+            pods = client.CoreV1Api().list_namespaced_pod(namespace)
+            if pods.items:
+                pod = pods.items[0]
+                break
+
+        if not pod:
+            typer.secho(
+                f"Could not find any pod on namespace {namespaces}"
+                f"Please use the --namespaces parameter to specify a namespace with pods",
+                fg="red",
+            )
+            return
+
+        alert_labels = {
+            "alertname": alert,
+            "severity": "critical",
+            "pod": pod.metadata.name,
+            "namespace": pod.metadata.namespace,
+        }
+        if labels:
+            for label in labels.split(","):
+                label_key = label.split("=")[0].strip()
+                label_value = label.split("=")[1].strip()
+                alert_labels[label_key] = label_value
+
+        demo_alerts = [
+            {
+                "status": "firing",
+                "labels": alert_labels,
+                "annotations": {
+                    "summary": "This is a demo alert manager alert created by Robusta",
+                    "description": "Nothing wrong here. This alert will be resolved soon",
+                },
+            }
+        ]
+
+        command = [
+            "curl",
+            "-X",
+            "POST",
+            f"{alertmanager_url}/api/v1/alerts",
+            "-H",
+            "Content-Type: application/json",
+            "-d",
+            f"{json.dumps(demo_alerts)}",
+        ]
+
+        job: Job = Job(
+            metadata=ObjectMeta(
+                name=f"alert-job-{random.randint(0, 10000)}",
+                namespace=pod.metadata.namespace,
+            ),
+            spec=JobSpec(
+                template=PodTemplateSpec(
+                    spec=PodSpec(
+                        containers=[
+                            Container(
+                                name="alert-curl",
+                                image="curlimages/curl",
+                                command=command,
+                            )
+                        ],
+                        restartPolicy="Never",
+                    ),
+                ),
+                completions=1,
+                ttlSecondsAfterFinished=0,  # delete immediately when finished
+            ),
+        )
+        job.create()
+        typer.secho(
+            f"Created Alertmanager alert: alert-name: {alert} pod: {pod.metadata.name} "
+            f"namespace: {pod.metadata.namespace}",
+            fg="green",
+        )
+        typer.echo("\n")
 
 
 if __name__ == "__main__":

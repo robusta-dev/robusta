@@ -160,6 +160,8 @@ Next Steps
    architecture
    coverage
    community
+   oss-vs-saas
+
 
 .. toctree::
    :maxdepth: 4
@@ -192,13 +194,6 @@ Next Steps
    user-guide/robusta-cli
    user-guide/trigger-action-binding
    advanced/index
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Self Hosting
-   :hidden:
-
-   user-guide/self-hosting
 
 .. toctree::
    :maxdepth: 4

@@ -277,7 +277,7 @@ class ActionRequestReceiver:
                                       error_code=ErrorCodes.BAD_SIGNING_KEY.value,
                                       error_msg="Bad signing key")
 
-        if (key_a.int ^ key_b.int) != signing_key_uuid.int:
+        if not hmac.compare_digest(str(key_a.int ^ key_b.int), str(signing_key_uuid.int)):
             logging.error(f"Partial auth keys combination mismatch for {body}")
             return ValidationResponse(http_code=401,
                                       error_code=ErrorCodes.KEY_VALIDATION_FAILED.value,

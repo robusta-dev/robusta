@@ -61,6 +61,9 @@ spec:
         - secretRef:
             name: robusta-runner-secret
             optional: true
+        {{- if .Values.runner.additional_env_froms }}
+        {{ toYaml .Values.runner.additional_env_froms | nindent 8 }}
+        {{- end }}
         volumeMounts:
           - name: auth-config-secret
             mountPath: /etc/robusta/auth
@@ -77,9 +80,9 @@ spec:
         resources:
           requests:
             cpu: {{ .Values.runner.resources.requests.cpu }}
-            memory: {{ .Values.runner.resources.requests.memory | quote }}
+            memory: {{ if .Values.isSmallCluster }}"512Mi"{{ else }}{{ .Values.runner.resources.requests.memory | quote }}{{ end }}
           limits:
-            memory: {{ .Values.runner.resources.requests.memory | quote }}
+            memory: {{ if .Values.isSmallCluster }}"512Mi"{{ else }}{{ .Values.runner.resources.requests.memory | quote }}{{ end }}
             {{ if .Values.runner.resources.limits.cpu }}cpu: {{ .Values.runner.resources.limits.cpu | quote }}{{ end }}
       {{- if .Values.grafanaRenderer.enableContainer }}
       - name: grafana-renderer
@@ -94,9 +97,9 @@ spec:
         resources:
           requests:
             cpu: {{ .Values.grafanaRenderer.resources.requests.cpu }}
-            memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}
+            memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else }}{{ .Values.grafanaRenderer.resources.requests.memory | quote }}{{ end }}
           limits:
-            memory: {{ .Values.grafanaRenderer.resources.requests.memory | quote }}
+            memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else }}{{ .Values.grafanaRenderer.resources.requests.memory | quote }}{{ end }}
             {{ if .Values.grafanaRenderer.resources.limits.cpu }}cpu: {{ .Values.grafanaRenderer.resources.limits.cpu | quote }}{{ end }}
       {{- end }}
       volumes:
@@ -134,7 +137,7 @@ spec:
   - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.playbooksPersistentVolumeSize }}
+      storage: {{ if .Values.isSmallCluster }}"512Mi"{{ else }}{{ .Values.playbooksPersistentVolumeSize }}{{ end }}
 {{- end }}
 ---
 apiVersion: v1

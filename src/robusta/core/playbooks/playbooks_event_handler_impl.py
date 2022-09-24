@@ -41,8 +41,11 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event = fired_trigger.build_execution_event(
                         trigger_event, sink_findings
                     )
+                    # sink_findings needs to be shared between playbooks.
+                    # build_execution_event returns a different instance because it's running in a child process
+                    execution_event.sink_findings = sink_findings
                 except Exception:
-                    logging.error(f"Failed to build execution event for {trigger_event.get_event_name()}")
+                    logging.error(f"Failed to build execution event for {trigger_event.get_event_description()}")
 
                 if execution_event:  # might not exist for unsupported k8s types
                     execution_event.named_sinks = (
@@ -174,7 +177,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
     @classmethod
     def __error_resp(cls, msg: str, error_code: int) -> dict:
         logging.error(msg)
-        return {"success": False, "msg": msg, error_code: error_code}
+        return {"success": False, "msg": msg, "error_code": error_code}
 
     def __run_playbook_actions(
         self,

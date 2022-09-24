@@ -5,7 +5,7 @@
     </a>
 </p>
   <h2>Robusta</h2>
-    <h3>A troubleshooting and automations platform for Kubernetes</h3>
+    <h3>A monitoring, troubleshooting, and automations platform for Kubernetes</h3>
    <a href="https://docs.robusta.dev/master/"><strong>Explore the docs »</strong></a>
   <p>
 

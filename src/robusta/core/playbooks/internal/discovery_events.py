@@ -1,7 +1,5 @@
 from robusta.api import *
-from robusta.core.model.services import ServiceInfo
-from robusta.core.discovery.top_service_resolver import TopServiceResolver
-
+from robusta.core.discovery.top_service_resolver import TopServiceResolver, TopLevelResource
 from robusta.core.playbooks.common import get_events_list, get_event_timestamp
 
 
@@ -10,16 +8,14 @@ def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
     if (
         event.operation in [K8sOperationType.CREATE, K8sOperationType.UPDATE]
         and event.obj.kind
-        in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Pod"]
+        in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Pod", "Job"]
         and not event.obj.metadata.ownerReferences
     ):
-        TopServiceResolver.add_cached_service(
-            ServiceInfo(
+        TopServiceResolver.add_cached_resource(
+            TopLevelResource(
                 name=event.obj.metadata.name,
-                service_type=event.obj.kind,
+                resource_type=event.obj.kind,
                 namespace=event.obj.metadata.namespace,
-                images=extract_image_list(event.obj),
-                labels=event.obj.metadata.labels,
             )
         )
 
@@ -45,7 +41,7 @@ def event_history(event: ExecutionBaseEvent):
         )
         if events_table:
             finding.add_enrichment([events_table])
-            event.add_finding(finding)
+            event.add_finding(finding, True)
         reported_obj_history_list.append(warning_event_key)
 
 

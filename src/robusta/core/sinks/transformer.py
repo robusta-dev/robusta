@@ -2,13 +2,59 @@ import re
 import urllib.parse
 
 import markdown2
-from typing import List
+from typing import List, Optional
 
 from ...core.reporting import MarkdownBlock, BaseBlock, DividerBlock, JsonBlock, KubernetesDiffBlock, HeaderBlock, \
     ListBlock, TableBlock, tabulate
 
 
 class Transformer:
+
+    @staticmethod
+    def apply_length_limit(msg: str, max_length: int, truncator: Optional[str] = None) -> str:
+        """
+        Method that crops the string if it is bigger than max_length provided.
+        Args:
+            msg: The string that needs to be truncated.
+            max_length: Max length of the string allowed
+            truncator: truncator string that will be appended, if max length is exceeded.
+
+        Examples:
+
+            >>> print(Transformer.apply_length_limit('1234567890', 9))
+            123456...
+
+            >>> print(Transformer.apply_length_limit('1234567890', 9, "."))
+            12345678.
+
+        Returns:
+            Croped string with truncator appended at the end if length is exceeded.
+            The original string otherwise
+
+        """
+        if len(msg) <= max_length:
+            return msg
+        truncator = truncator or "..."
+        return msg[: max_length - len(truncator)] + truncator
+
+    @staticmethod
+    def to_markdown_diff(block: KubernetesDiffBlock, use_emoji_sign: bool = False) -> List[ListBlock]:
+        # this can happen when a block.old=None or block.new=None - e.g. the resource was added or deleted
+        if not block.diffs:
+            return []
+
+        divider = ":arrow_right:" if use_emoji_sign else "==>"
+        _blocks = []
+        _blocks.extend(
+            ListBlock(
+                [
+                    f"*{d.formatted_path}*: {d.other_value} {divider} {d.value}"
+                    for d in block.diffs
+                ]
+            )
+        )
+
+        return _blocks
 
     @staticmethod
     def get_markdown_links(markdown_data: str) -> List[str]:

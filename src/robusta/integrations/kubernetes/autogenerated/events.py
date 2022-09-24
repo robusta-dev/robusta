@@ -105,21 +105,21 @@ class ResourceAttributes(ExecutionEventBaseParams):
 
 @dataclass
 class KubernetesResourceEvent(ExecutionBaseEvent):
-    _obj: Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,ConfigMap]] = None
+    obj: Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,ConfigMap]] = None
 
     def __init__(self, obj: Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,ConfigMap], named_sinks: List[str]):
         super().__init__(named_sinks=named_sinks)
-        self._obj = obj
+        self.obj = obj
 
     def get_resource(self) -> Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,ConfigMap]]:
-        return self._obj
+        return self.obj
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
     @classmethod
@@ -160,7 +160,7 @@ class PodEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_pod(self) -> Optional[RobustaPod]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: PodAttributes) -> Optional["PodEvent"]:
@@ -173,10 +173,10 @@ class PodEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -209,7 +209,7 @@ class ReplicaSetEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_replicaset(self) -> Optional[ReplicaSet]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: ReplicaSetAttributes) -> Optional["ReplicaSetEvent"]:
@@ -222,10 +222,10 @@ class ReplicaSetEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -258,7 +258,7 @@ class DaemonSetEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_daemonset(self) -> Optional[DaemonSet]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: DaemonSetAttributes) -> Optional["DaemonSetEvent"]:
@@ -271,10 +271,10 @@ class DaemonSetEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -307,7 +307,7 @@ class DeploymentEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_deployment(self) -> Optional[RobustaDeployment]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: DeploymentAttributes) -> Optional["DeploymentEvent"]:
@@ -320,10 +320,10 @@ class DeploymentEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -356,7 +356,7 @@ class StatefulSetEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_statefulset(self) -> Optional[StatefulSet]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: StatefulSetAttributes) -> Optional["StatefulSetEvent"]:
@@ -369,10 +369,10 @@ class StatefulSetEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -405,7 +405,7 @@ class ServiceEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_service(self) -> Optional[Service]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: ServiceAttributes) -> Optional["ServiceEvent"]:
@@ -418,10 +418,10 @@ class ServiceEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -454,7 +454,7 @@ class EventEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_event(self) -> Optional[Event]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: EventAttributes) -> Optional["EventEvent"]:
@@ -467,10 +467,10 @@ class EventEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -503,7 +503,7 @@ class HorizontalPodAutoscalerEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_horizontalpodautoscaler(self) -> Optional[HorizontalPodAutoscaler]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: HorizontalPodAutoscalerAttributes) -> Optional["HorizontalPodAutoscalerEvent"]:
@@ -516,10 +516,10 @@ class HorizontalPodAutoscalerEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -552,7 +552,7 @@ class NodeEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_node(self) -> Optional[Node]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: NodeAttributes) -> Optional["NodeEvent"]:
@@ -565,10 +565,10 @@ class NodeEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -601,7 +601,7 @@ class ClusterRoleEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_clusterrole(self) -> Optional[ClusterRole]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: ClusterRoleAttributes) -> Optional["ClusterRoleEvent"]:
@@ -614,10 +614,10 @@ class ClusterRoleEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -650,7 +650,7 @@ class ClusterRoleBindingEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_clusterrolebinding(self) -> Optional[ClusterRoleBinding]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: ClusterRoleBindingAttributes) -> Optional["ClusterRoleBindingEvent"]:
@@ -663,10 +663,10 @@ class ClusterRoleBindingEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -699,7 +699,7 @@ class JobEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_job(self) -> Optional[RobustaJob]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: JobAttributes) -> Optional["JobEvent"]:
@@ -712,10 +712,10 @@ class JobEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -748,7 +748,7 @@ class NamespaceEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_namespace(self) -> Optional[Namespace]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: NamespaceAttributes) -> Optional["NamespaceEvent"]:
@@ -761,10 +761,10 @@ class NamespaceEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -797,7 +797,7 @@ class ServiceAccountEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_serviceaccount(self) -> Optional[ServiceAccount]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: ServiceAccountAttributes) -> Optional["ServiceAccountEvent"]:
@@ -810,10 +810,10 @@ class ServiceAccountEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -846,7 +846,7 @@ class PersistentVolumeEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_persistentvolume(self) -> Optional[PersistentVolume]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: PersistentVolumeAttributes) -> Optional["PersistentVolumeEvent"]:
@@ -859,10 +859,10 @@ class PersistentVolumeEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 
@@ -895,7 +895,7 @@ class ConfigMapEvent(KubernetesResourceEvent):
         super().__init__(obj=obj, named_sinks=named_sinks)
 
     def get_configmap(self) -> Optional[ConfigMap]:
-        return self._obj
+        return self.obj
 
     @staticmethod
     def from_params(params: ConfigMapAttributes) -> Optional["ConfigMapEvent"]:
@@ -908,10 +908,10 @@ class ConfigMapEvent(KubernetesResourceEvent):
 
     def get_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self._obj.metadata.name,
-            subject_type=FindingSubjectType.from_kind(self._obj.kind),
-            namespace=self._obj.metadata.namespace,
-            node=KubeObjFindingSubject.get_node_name(self._obj)
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj)
         )
 
 

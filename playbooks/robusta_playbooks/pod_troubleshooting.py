@@ -1,7 +1,22 @@
 # TODO: move the python playbooks into their own subpackage and put each playbook in its own file
+import logging
+
 import humanize
 from robusta.api import *
 from typing import List
+
+
+class StackTraceObject(BaseModel):
+    """
+    :var time: timestamp of trace.
+    :var status: success if succeeded in getting stack traces
+    :var error: the exception object from the debugger
+    :var trace: on success the stack traces of all threads, on error the stack trace of the exception
+    """
+    time: float = None
+    status: str = None
+    error: str = None
+    trace: str = None
 
 
 class StartProfilingParams(ActionParams):
@@ -159,12 +174,12 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    event.add_finding(finding)
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     process = process_finder.get_match_or_report_error(
         finding, "Profile", python_memory, python_process_inspector
     )
     if process is None:
+        event.add_finding(finding)
         return
 
     cmd = f"debug-toolkit memory --seconds={params.seconds} {process.pid}"
@@ -187,6 +202,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         MarkdownBlock(f"*Other unfreed memory:* {snapshot.other_data.to_markdown()}")
     )
     finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
+    event.add_finding(finding)
 
 
 class DebuggerParams(ProcessParams):
@@ -196,6 +212,15 @@ class DebuggerParams(ProcessParams):
 
     port: int = 5678
 
+
+class StackTraceParams(DebuggerParams):
+    """
+    :var traces_amount: the amount of traces to do.
+    :var sleep_duration_s: the sleep time inbetween traces.
+    """
+
+    traces_amount: int = 1
+    sleep_duration_s: int = 1
 
 def get_example_launch_json(params: DebuggerParams):
     return {
@@ -250,7 +275,7 @@ def get_debugger_warnings(data):
 
 
 @action
-def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
+def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     """
     Prints a stack track of a python process and child threads
 
@@ -265,7 +290,13 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
     pid = process_finder.get_lowest_relevant_pid()
 
     if not pid:
-        logging.info(f"debugger_stack_trace - no relevant pids")
+        logging.error(f"debugger_stack_trace - no relevant pids")
+        return
+
+    if params.traces_amount < 1 or params.sleep_duration_s < 0:
+        logging.error(f"debugger_stack_trace - invalid params, "
+                     f"traces_amount must be greater than 1 and sleep_duration_s must be greater than 0")
+        return
 
     # if params pid is set, this will be returned, if not we return the parent process
     finding = Finding(
@@ -276,21 +307,54 @@ def debugger_stack_trace(event: PodEvent, params: DebuggerParams):
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    event.add_finding(finding)
-    cmd = f"debug-toolkit stack-trace {pid}"
+    cmd = f"debug-toolkit stack-trace {pid} --amount={params.traces_amount} --sleep-duration-s={params.sleep_duration_s}"
     output = RobustaPod.exec_in_debugger_pod(
         pod.metadata.name,
         pod.spec.nodeName,
         cmd,
     )
     blocks = []
-    for thread_output in output.split("\n\n"):
-        if thread_output.startswith("Current thread"):
-            # this is the thread we are getting the stack trace from, not relevant for debugging
-            continue
-        if thread_output:
-            blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
-    finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
+    try:
+        output_json = json.loads(output)
+        SUCCESS_STATUS = "success"
+        first_stack_trace_obj = StackTraceObject(**output_json[0]) if len(output_json) >= 1 else None
+        if len(output_json) == 0 or (len(output_json) == 1 and
+                                     first_stack_trace_obj.status != SUCCESS_STATUS):
+            # no stack traces returned or only one with error
+            error_message = 'Failed to get python stack trace'
+            if len(output_json) == 1:
+                error_message += f', debugger error {first_stack_trace_obj.error} at ' \
+                                 f'{first_stack_trace_obj.trace}'
+            logging.error(error_message)
+            blocks.append(MarkdownBlock(f"Error while getting python stack trace."))
+        elif len(output_json) == 1 and first_stack_trace_obj.status == SUCCESS_STATUS:
+            # print single stack trace directly to finding
+            for thread_output in first_stack_trace_obj.trace.split("\n\n"):
+                if thread_output.startswith("Current thread"):
+                    # this is the thread we are getting the stack trace from, not relevant for debugging
+                    continue
+                # not printing extra blank lines
+                if thread_output:
+                    blocks.append(MarkdownBlock(f"```\n{thread_output}\n```"))
+        else:
+            # print multiple stack traces to file
+            clean_output = []
+            for trace_object_json in output_json:
+                trace_object = StackTraceObject(**trace_object_json)
+                if trace_object.status != SUCCESS_STATUS:
+                    # the full python stack trace of the error will appear here
+                    logging.error(f'Failed to get stack trace, debugger error {trace_object.error} at {trace_object.trace}')
+                    clean_output.append({"time": trace_object.time, "status": "Error: Failed to get stack trace."})
+                else:
+                    clean_output.append(trace_object_json)
+            clean_file_output = json.dumps(clean_output, indent=4, sort_keys=True).replace('\\n', '\n')
+            blocks.append(FileBlock(f"debugger_stack_trace_{pid}.txt", clean_file_output.encode()))
+    except ValueError:  # includes simplejson.decoder.JSONDecodeError
+        logging.error(f"failed to decode output")
+        blocks.append(MarkdownBlock(f"Failed to processess stack trace(s)"))
+
+    finding.add_enrichment(blocks)
+    event.add_finding(finding)
 
 
 @action
@@ -312,7 +376,6 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    event.add_finding(finding)
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     relevant_processes_pids = process_finder.get_pids()
@@ -320,12 +383,10 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
-        return
-
-    finding.add_enrichment(
-        [MarkdownBlock(f"Please select an advanced debugging choice:")]
-    )
-    if params.interactive:
+    else:
+        finding.add_enrichment(
+            [MarkdownBlock(f"Please select an advanced debugging choice:")]
+        )
         choices = {}
         for proc_pid in relevant_processes_pids:
             updated_params = params.copy()
@@ -344,6 +405,8 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
                 ),
             ]
         )
+    event.add_finding(finding)
+
 
 
 @action
@@ -377,13 +440,13 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    event.add_finding(finding)
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     process = process_finder.get_match_or_report_error(
         finding, "Debug", python_debugger, python_process_inspector
     )
     if process is None:
+        event.add_finding(finding)
         return
 
     cmd = f"debug-toolkit debugger {process.pid} --port {params.port}"
@@ -424,3 +487,5 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     logging.info(
         "Done! See instructions for connecting to the debugger in Slack or Robusta UI"
     )
+    event.add_finding(finding)
+

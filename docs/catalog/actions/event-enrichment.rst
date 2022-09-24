@@ -32,6 +32,7 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 .. robusta-action:: playbooks.robusta_playbooks.event_enrichments.pod_events_enricher
 
 .. robusta-action:: playbooks.robusta_playbooks.bash_enrichments.pod_bash_enricher
+    :trigger-params: {"alert_name": "ExampleLowDiskAlert"}
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_enrichments.pod_graph_enricher
 
@@ -63,6 +64,10 @@ Job Enrichers
 These actions can add context to any job-related event, be it from ``on_prometheus_alert`` or ``on_job_update``.
 
 .. robusta-action:: playbooks.robusta_playbooks.job_actions.job_events_enricher
+
+.. robusta-action:: playbooks.robusta_playbooks.job_actions.job_info_enricher
+
+.. robusta-action:: playbooks.robusta_playbooks.job_actions.job_pod_enricher
 
 Kubernetes Resource Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

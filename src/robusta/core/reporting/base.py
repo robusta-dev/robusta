@@ -1,4 +1,6 @@
+import hashlib
 import logging
+import urllib.parse
 import uuid
 import re
 from datetime import datetime
@@ -9,7 +11,7 @@ from typing import List, Dict, Union
 from ..model.env_vars import ROBUSTA_UI_DOMAIN
 from ..reporting.consts import FindingSubjectType, FindingSource, FindingType
 from ...core.discovery.top_service_resolver import TopServiceResolver
-from requests import get
+
 
 class BaseBlock(BaseModel):
     hidden: bool = False
@@ -37,6 +39,23 @@ class FindingSeverity(Enum):
 
         raise Exception(f"Unknown severity {severity}")
 
+    def to_emoji(self) -> str:
+        if self == FindingSeverity.DEBUG:
+            return "🔵"
+        elif self == FindingSeverity.INFO:
+            return "🟢"
+        elif self == FindingSeverity.LOW:
+            return "🟡"
+        elif self == FindingSeverity.MEDIUM:
+            return "🟠"
+        elif self == FindingSeverity.HIGH:
+            return "🔴"
+
+
+class VideoLink(BaseModel):
+    url: str
+    name: str = "See more"
+
 
 class Enrichment:
     # These is the actual enrichment data
@@ -62,7 +81,9 @@ class Filterable:
     def get_invalid_attributes(self, attributes: List[str]) -> List:
         return list(set(attributes) - set(self.attribute_map))
 
-    def attribute_matches(self, attribute: str, expression: Union[str, List[str]]) -> bool:
+    def attribute_matches(
+        self, attribute: str, expression: Union[str, List[str]]
+    ) -> bool:
         value = self.attribute_map[attribute]
         if isinstance(expression, str):
             return bool(re.match(expression, value))
@@ -94,6 +115,11 @@ class FindingSubject:
         self.namespace = namespace
         self.node = node
 
+    def __str__(self):
+        if self.namespace is not None:
+            return f"{self.namespace}/{self.subject_type.value}/{self.name}"
+        return f"{self.subject_type.value}/{self.name}"
+
 
 class Finding(Filterable):
     """
@@ -107,6 +133,7 @@ class Finding(Filterable):
         severity: FindingSeverity = FindingSeverity.INFO,
         source: FindingSource = FindingSource.NONE,
         description: str = None,
+        # TODO: this is bug-prone - see https://towardsdatascience.com/python-pitfall-mutable-default-arguments-9385e8265422
         subject: FindingSubject = FindingSubject(),
         finding_type: FindingType = FindingType.ISSUE,
         failure: bool = True,
@@ -114,7 +141,7 @@ class Finding(Filterable):
         fingerprint: str = None,
         starts_at: datetime = None,
         ends_at: datetime = None,
-        add_silence_url: bool = False
+        add_silence_url: bool = False,
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
@@ -127,6 +154,7 @@ class Finding(Filterable):
         self.category = None  # TODO fill real category
         self.subject = subject
         self.enrichments: List[Enrichment] = []
+        self.video_links: List[VideoLink] = []
         self.service_key = TopServiceResolver.guess_service_key(
             name=subject.name, namespace=subject.namespace
         )
@@ -136,10 +164,14 @@ class Finding(Filterable):
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
         self.add_silence_url = add_silence_url
         self.creation_date = creation_date
-        self.fingerprint = fingerprint
+        self.fingerprint = (
+            fingerprint
+            if fingerprint
+            else self.__calculate_fingerprint(subject, source, aggregation_key)
+        )
         self.starts_at = starts_at if starts_at else datetime.now()
         self.ends_at = ends_at
-
+        self.dirty = False
 
     @property
     def attribute_map(self) -> Dict[str, str]:
@@ -155,30 +187,57 @@ class Finding(Filterable):
             "name": str(self.subject.name),
         }
 
-    def add_enrichment(self, enrichment_blocks: List[BaseBlock], annotations=None):
+    def add_enrichment(
+        self,
+        enrichment_blocks: List[BaseBlock],
+        annotations=None,
+        suppress_warning: bool = False,
+    ):
+        if self.dirty and not suppress_warning:
+            logging.warning(
+                "Updating a finding after it was added to the event is not allowed!"
+            )
+
         if not enrichment_blocks:
             return
         if annotations is None:
             annotations = {}
         self.enrichments.append(Enrichment(enrichment_blocks, annotations))
 
+    def add_video_link(self, video_link: VideoLink, suppress_warning: bool = False):
+        if self.dirty and not suppress_warning:
+            logging.warning("Updating a finding after it was added to the event is not allowed!")
+
+        self.video_links.append(video_link)
+
     def __str__(self):
         return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
 
-    def get_prometheus_silence_url(self, cluster_id: str) -> Dict[str,str]:
-        labels: Dict[str,str] = {}
-        labels["alertname"] = self.aggregation_key
-        labels["cluster"] = cluster_id
+    def get_prometheus_silence_url(self, cluster_id: str) -> str:
+        labels: Dict[str, str] = {
+            "alertname": self.aggregation_key,
+            "cluster": cluster_id,
+        }
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
 
-        kind : str = self.subject.subject_type.value
+        kind: str = str(self.subject.subject_type.value)
         if kind and self.subject.name:
             labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
-        
-        uri = get(f"{ROBUSTA_UI_DOMAIN}/silences/create", labels)
-        return uri.url
 
+        return f"{ROBUSTA_UI_DOMAIN}/silences/create?{urllib.parse.urlencode(labels)}"
 
+    @staticmethod
+    def __calculate_fingerprint(
+        subject: FindingSubject, source: FindingSource, aggregation_key: str
+    ) -> str:
+        # some sinks require a unique fingerprint, typically used for two reasons:
+        # 1. de-dupe the same alert if it fires twice
+        # 2. update an existing alert and change its status from firing to resolved
+        #
+        # if we have a fingerprint available from the trigger (e.g. alertmanager) then use that
+        # if not, generate with logic similar to alertmanager
+        s = f"{subject.subject_type},{subject.name},{subject.namespace},{subject.node},{source.value}{aggregation_key}"
+        return hashlib.sha256(s.encode()).hexdigest()

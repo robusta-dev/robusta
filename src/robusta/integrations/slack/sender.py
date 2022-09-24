@@ -5,13 +5,12 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 from ...core.model.env_vars import SLACK_TABLE_COLUMNS_LIMIT
-from ...core.model.events import *
 from ...core.reporting.blocks import *
 from ...core.reporting.base import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
 from ...core.reporting.callbacks import ExternalActionRequestBuilder
 from ...core.reporting.consts import SlackAnnotations
-
+from ...core.sinks.transformer import Transformer
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 SlackBlock = Dict[str, Any]
@@ -26,7 +25,7 @@ MAX_BLOCK_CHARS = 3000
 
 class SlackSender:
     def __init__(
-        self, slack_token: str, account_id: str, cluster_name: str, signing_key: str
+            self, slack_token: str, account_id: str, cluster_name: str, signing_key: str
     ):
         """
         Connect to Slack and verify that the Slack token is valid.
@@ -44,7 +43,7 @@ class SlackSender:
             raise e
 
     def __get_action_block_for_choices(
-        self, sink: str, choices: Dict[str, CallbackChoice] = None
+            self, sink: str, choices: Dict[str, CallbackChoice] = None
     ):
         if choices is None:
             return []
@@ -73,15 +72,8 @@ class SlackSender:
 
         return [{"type": "actions", "elements": buttons}]
 
-    @staticmethod
-    def __apply_length_limit(msg: str, max_length: int = MAX_BLOCK_CHARS):
-        if len(msg) <= max_length:
-            return msg
-        truncator = "..."
-        return msg[: max_length - len(truncator)] + truncator
-
     def __to_slack_diff(
-        self, block: KubernetesDiffBlock, sink_name: str
+            self, block: KubernetesDiffBlock, sink_name: str
     ) -> List[SlackBlock]:
         # this can happen when a block.old=None or block.new=None - e.g. the resource was added or deleted
         if not block.diffs:
@@ -111,7 +103,7 @@ class SlackSender:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": SlackSender.__apply_length_limit(block.text),
+                        "text": Transformer.apply_length_limit(block.text, MAX_BLOCK_CHARS),
                     },
                 }
             ]
@@ -125,7 +117,7 @@ class SlackSender:
                     "type": "header",
                     "text": {
                         "type": "plain_text",
-                        "text": SlackSender.__apply_length_limit(block.text, 150),
+                        "text": Transformer.apply_length_limit(block.text, 150),
                         "emoji": True,
                     },
                 }
@@ -176,7 +168,7 @@ class SlackSender:
         if len(message) == 0:
             return "empty-message"  # blank messages aren't allowed
 
-        return SlackSender.__apply_length_limit(message)
+        return Transformer.apply_length_limit(message, MAX_BLOCK_CHARS)
 
     @classmethod
     def __add_slack_severity(cls, title: str, severity: FindingSeverity) -> str:
@@ -184,14 +176,14 @@ class SlackSender:
         return f"{icon} {severity.name} - {title}"
 
     def __send_blocks_to_slack(
-        self,
-        report_blocks: List[BaseBlock],
-        report_attachment_blocks: List[BaseBlock],
-        title: str,
-        slack_channel: str,
-        unfurl: bool,
-        sink_name: str,
-        severity: FindingSeverity,
+            self,
+            report_blocks: List[BaseBlock],
+            report_attachment_blocks: List[BaseBlock],
+            title: str,
+            slack_channel: str,
+            unfurl: bool,
+            sink_name: str,
+            severity: FindingSeverity,
     ):
         file_blocks = add_pngs_for_all_svgs(
             [b for b in report_blocks if isinstance(b, FileBlock)]
@@ -259,11 +251,11 @@ class SlackSender:
             )
 
     def send_finding_to_slack(
-        self,
-        finding: Finding,
-        slack_channel: str,
-        sink_name: str,
-        platform_enabled: bool,
+            self,
+            finding: Finding,
+            slack_channel: str,
+            sink_name: str,
+            platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
@@ -272,6 +264,9 @@ class SlackSender:
 
             if finding.add_silence_url:
                 actions = f"{actions} <{finding.get_prometheus_silence_url(self.cluster_name)}|:no_bell: Silence>"
+
+            for video_link in finding.video_links:
+                actions = f"{actions} <{video_link.url}|:clapper: {video_link.name}>"
 
             blocks.append(MarkdownBlock(text=actions))
 

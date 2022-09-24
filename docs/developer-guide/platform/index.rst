@@ -9,3 +9,4 @@ Wow, if you've reached here you're a super-pro. Did you know we're hiring?
    dev-setup.rst
    coding-conventions
    docs-contributions
+   sinks-guide

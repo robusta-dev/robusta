@@ -37,7 +37,9 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
         ERROR_MESSAGE = f"No relevant processes found for java debugging."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
+        event.add_finding(finding)
         return
+
     finding.add_enrichment(
         [
             TableBlock(
@@ -108,6 +110,7 @@ def run_jdk_command_on_pid(
             error_message = f"{aggregation_key} - pid not found for event: {event}"
             logging.info(error_message)
             finding.add_enrichment([MarkdownBlock(error_message)])
+            event.add_finding(finding)
             return
         params.pid = process.pid
 
