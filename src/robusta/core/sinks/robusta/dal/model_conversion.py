@@ -8,7 +8,7 @@ from typing import Dict, Any
 from ...transformer import Transformer
 from ....reporting.callbacks import ExternalActionRequestBuilder
 from .....core.reporting import Finding, Enrichment, MarkdownBlock, logging, CallbackBlock, KubernetesDiffBlock, \
-    HeaderBlock, ListBlock, TableBlock, FileBlock, DividerBlock
+    HeaderBlock, ListBlock, TableBlock, FileBlock, DividerBlock, PrometheusBlock
 from .....utils.parsing import datetime_to_db_str
 
 
@@ -83,6 +83,8 @@ class ModelConversion:
                 structured_data.append({"type": "header", "data": block.text})
             elif isinstance(block, ListBlock):
                 structured_data.append({"type": "list", "data": block.items})
+            elif isinstance(block, PrometheusBlock):
+                structured_data.append({"type": "prometheus", "data": block.data.json(), "metadata": block.metadata})
             elif isinstance(block, TableBlock):
                 if block.table_name:
                     structured_data.append({
