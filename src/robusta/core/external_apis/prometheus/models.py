@@ -1,13 +1,12 @@
-import logging
-
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 
 
 """
-    Known commonly returned keys in dictionary 'metric':
+    The Metric object is defined in prometheus as a dictionary so no specific labels are guaranteed
+    Known commonly returned labels in dictionary 'metric':
     __name__: the name of the outer function in prometheus 
-   Other keys dictionary 'metric' sometimes contains:
+   Other labels 'metric' sometimes contains:
     [container, created_by_kind, created_by_name, endpoint, host_ip, host_network, instance, job, namespace, node, pod,
     pod_ip, service, uid, ...]
 """
@@ -37,13 +36,6 @@ class PrometheusVector(BaseModel):
 
     metric: PrometheusMetric
     value: PrometheusScalarValue
-
-    def __init__(self, **kwargs):
-        raw_value = kwargs.pop("value", None)
-        if not raw_value:
-            raise Exception("value missing")
-        value = PrometheusScalarValue(raw_value)
-        super().__init__(value=value, **kwargs)
 
 
 class PrometheusSeries(BaseModel):

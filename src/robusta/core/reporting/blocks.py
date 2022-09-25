@@ -377,12 +377,13 @@ class PrometheusBlock(BaseBlock):
     data: PrometheusQueryResult
     metadata: Dict[str, str]
 
-    def __init__(self, data: PrometheusQueryResult, query: str = None):
+    def __init__(self, data: PrometheusQueryResult, query: str):
         """
         :param data: the PrometheusQueryResult generated created from a prometheus query
         :param query: the Prometheus query run
         """
-        metadata = {"query-result-version": "1.0"}
-        if query:
-            metadata["query"] = query
+        metadata = {
+            "query-result-version": "1.0",
+            "query": query
+        }
         super().__init__(data=data, metadata=metadata)

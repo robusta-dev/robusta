@@ -31,12 +31,12 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
         for example prometheus queries see here:
         https://prometheus.io/docs/prometheus/latest/querying/examples/
     """
+    # verifies params.promql_query is not an empty string ""
     if not params.promql_query:
-        logging.error(f"Invalid or missing parameter, prometheus_enricher requires a promql query.")
-        return
+        raise Exception(f"Invalid request, prometheus_enricher requires a promql query.")
     starts_at, ends_at = parse_duration(params.duration)
     if not starts_at or not ends_at:
-        logging.error(f"Invalid duration params, verify the times are of format '%Y-%m-%d %H:%M:%S %Z'")
+        raise Exception(f"Invalid request, verify the duration times are of format '%Y-%m-%d %H:%M:%S %Z'")
         return
 
     prometheus_result = run_prometheus_query(prometheus_base_url=params.prometheus_url, promql_query=params.promql_query, starts_at=starts_at, ends_at=ends_at)

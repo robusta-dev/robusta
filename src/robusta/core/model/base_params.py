@@ -109,7 +109,7 @@ class PrometheusQueryParams(PrometheusParams):
     :var duration: the duration of the query
 
     """
-    promql_query: str = None
+    promql_query: str
     duration: Union[PrometheusDateRange, PrometheusDuration]
 
 
