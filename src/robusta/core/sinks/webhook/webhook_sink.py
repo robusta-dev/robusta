@@ -20,7 +20,7 @@ class WebhookSink(SinkBase):
     def write_finding(self, finding: Finding, platform_enabled: bool):
         message_lines: List[str] = [finding.title]
         if platform_enabled:
-            message_lines.append(f"Investigate: {finding.investigate_uri}")
+            message_lines.append(f"Investigate: {finding.get_investigate_uri(self.account_id, self.cluster_name)}")
 
             if finding.add_silence_url:
                 message_lines.append(f"Silence: {finding.get_prometheus_silence_url(self.cluster_name)}")
