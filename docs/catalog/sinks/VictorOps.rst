@@ -21,7 +21,7 @@ Configuring the VictorOps sink
 Save the file and run
 
 .. code-block:: bash
-   :name: add-msteams-sink
+   :name: add-victorops-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 

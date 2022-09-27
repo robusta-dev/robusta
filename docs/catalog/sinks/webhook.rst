@@ -15,7 +15,7 @@ Robusta can send playbooks results to a webhook.
 Save the file and run
 
 .. code-block:: bash
-   :name: add-msteams-sink
+   :name: add-webhook-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 

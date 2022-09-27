@@ -41,7 +41,7 @@ Now we're ready to configure the Telegram sink.
 Save the file and run
 
 .. code-block:: bash
-   :name: add-msteams-sink
+   :name: add-telegram-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
     
