@@ -8,7 +8,7 @@ To configure OpsGenie, We need an OpsGenie API key. It can be configured using t
 Configuring the OpsGenie sink
 ------------------------------------------------
 
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -21,6 +21,13 @@ Configuring the OpsGenie sink
             - "sre"
             tags:
             - "prod a"
+            
+Save the file and run
+
+.. code-block:: bash
+   :name: add-msteams-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 **Example Output:**
 

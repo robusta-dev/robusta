@@ -38,9 +38,7 @@ Configuring the Discord sink
 ------------------------------------------------
 Now we're ready to configure the Discord sink.
 
-Edit your values.yaml (generated_values.yaml) file and add `discord_sink`. 
-
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -54,7 +52,7 @@ Save the file and run
 .. code-block:: bash
    :name: add-discord-sink
 
-    helm upgrade robusta robusta/robusta --values=values.yaml
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 You should now get playbooks results in Discord! Example is shown below:
 

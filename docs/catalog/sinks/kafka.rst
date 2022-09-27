@@ -6,7 +6,7 @@ Robusta can send playbook results to a Kafka topic.
 Configuring the Kafka sink
 ------------------------------------------------
 
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -15,6 +15,13 @@ Configuring the Kafka sink
             name: kafka_sink
             kafka_url: "localhost:9092"
             topic: "robusta-playbooks"
+            
+Save the file and run
+
+.. code-block:: bash
+   :name: add-kafka-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 
 **Example Output:**

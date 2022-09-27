@@ -3,7 +3,7 @@ Webhook
 
 Robusta can send playbooks results to a webhook.
 
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -11,6 +11,13 @@ Robusta can send playbooks results to a webhook.
         - webhook_sink:
             name: webhook_sink
             url: "https://my-webhook-service.com/robusta-alerts"
+            
+Save the file and run
+
+.. code-block:: bash
+   :name: add-msteams-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 **Example Output:**
 

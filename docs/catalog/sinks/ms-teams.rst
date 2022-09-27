@@ -8,7 +8,7 @@ To configure a MS teams sink we need a webhook URL for the target teams channel.
 Configuring the MS teams sink
 ------------------------------------------------
 
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -16,6 +16,13 @@ Configuring the MS teams sink
         - ms_teams_sink:
             name: main_ms_teams_sink
             webhook_url: teams channel incoming webhook  # see video below
+
+Save the file and run
+
+.. code-block:: bash
+   :name: add-msteams-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 **Example Output:**
 
