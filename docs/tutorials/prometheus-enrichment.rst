@@ -15,7 +15,7 @@ The best way to do so, is to answer "YES" in the Robusta installation to using t
 Enriching alerts
 -----------------
 
-The base configuration in ``values.yaml`` forwards all Prometheus alerts:
+The base configuration in ``generated_values.yaml`` forwards all Prometheus alerts:
 
 .. code-block:: yaml
 
