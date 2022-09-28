@@ -20,7 +20,7 @@ Configuring the MS teams sink
 Save the file and run
 
 .. code-block:: bash
-   :name: add-msteams-sink
+   :name: cb-add-msteams-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 

@@ -19,7 +19,7 @@ Configuring the Kafka sink
 Save the file and run
 
 .. code-block:: bash
-   :name: add-kafka-sink
+   :name: cb-add-kafka-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 

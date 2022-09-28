@@ -25,7 +25,7 @@ Configuring the OpsGenie sink
 Save the file and run
 
 .. code-block:: bash
-   :name: add-opsgenie-sink
+   :name: cb-add-opsgenie-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 

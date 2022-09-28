@@ -20,7 +20,7 @@ Configuring the PagerDuty sink
 Save the file and run
 
 .. code-block:: bash
-   :name: add-pagerduty-sink
+   :name: cb-add-pagerduty-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 **Example Output:**

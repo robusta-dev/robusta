@@ -50,7 +50,7 @@ Now we're ready to configure the Discord sink.
 Save the file and run
 
 .. code-block:: bash
-   :name: add-discord-sink
+   :name: cb-add-discord-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 

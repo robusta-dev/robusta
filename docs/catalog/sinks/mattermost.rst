@@ -67,7 +67,7 @@ Now we're ready to configure the Mattermost sink.
 Save the file and run
 
 .. code-block:: bash
-   :name: add-mattermost-sink
+   :name: cb-add-mattermost-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 

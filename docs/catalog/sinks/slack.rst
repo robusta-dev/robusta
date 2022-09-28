@@ -26,7 +26,7 @@ You can also generate a key by running ``robusta integrations slack`` and settin
 Save the file and run
 
 .. code-block:: bash
-   :name: add-slack-sink
+   :name: cb-add-slack-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
