@@ -156,9 +156,10 @@ class Finding(Filterable):
         self.subject = subject
         self.enrichments: List[Enrichment] = []
         self.video_links: List[VideoLink] = []
-        self.service_key = TopServiceResolver.guess_service_key(
+        self.service = TopServiceResolver.guess_cached_resource(
             name=subject.name, namespace=subject.namespace
         )
+        self.service_key = self.service.get_resource_key() if self.service else ""
         uri_path = (
             f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
         )
@@ -188,16 +189,21 @@ class Finding(Filterable):
             "name": str(self.subject.name),
         }
 
+    def _map_service_to_uri(self):
+        if not self.service:
+            return "graphs"
+        if self.service.resource_type.lower() == "job":
+            return "jobs"
+        return "services"
+
     def get_investigate_uri(self, account_id: str, cluster_name: Optional[str] = None):
-        uri_path = (
-            "services" if self.service_key else "graphs"
-        )
+        uri_path = self._map_service_to_uri()
         params = {
             "account": account_id,
             "clusters": f"[\"{cluster_name}\"]" if cluster_name else None,
             "namespaces": f"[\"{self.subject.namespace}\"]" if self.subject.namespace else None,
-            "kind": self.service_key.split("/")[1] if self.service_key else None,
-            "name": self.service_key.split("/")[-1] if self.service_key else None,
+            "kind": self.service.resource_type if self.service else None,
+            "name": self.service.name if self.service else None,
             "names": f"[\"{self.aggregation_key}\"]" if self.aggregation_key else None
         }
         params = {k: v for k, v in params.items() if v is not None}
