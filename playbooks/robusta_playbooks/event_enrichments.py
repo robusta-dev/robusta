@@ -84,7 +84,7 @@ def pod_events_enricher(event: PodEvent, params: EventEnricherParams):
 
 @action
 def deployment_events_enricher(
-    event: DeploymentEvent, params: ExtendedEventEnricherParams
+        event: DeploymentEvent, params: ExtendedEventEnricherParams
 ):
     """
     Given a deployment, fetch related events in the near past.
@@ -128,3 +128,14 @@ def deployment_events_enricher(
         )
         if events_table_block:
             event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+
+
+@action
+def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherParams):
+    """
+    Attaches a video links to the finding
+    """
+    event.add_video_link(VideoLink(
+        url=params.url,
+        name=params.name
+    ))

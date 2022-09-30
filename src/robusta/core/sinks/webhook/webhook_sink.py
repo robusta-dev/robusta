@@ -25,6 +25,9 @@ class WebhookSink(SinkBase):
             if finding.add_silence_url:
                 message_lines.append(f"Silence: {finding.get_prometheus_silence_url(self.cluster_name)}")
 
+            for video_link in finding.video_links:
+                message_lines.append(f"{video_link.name}: {video_link.url}")
+
         message_lines.append(f"Source: {self.cluster_name}")
         message_lines.append(finding.description)
 

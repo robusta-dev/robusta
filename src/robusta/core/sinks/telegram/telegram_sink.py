@@ -21,7 +21,9 @@ SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: u"\U0001F534",
 }
 INVESTIGATE_ICON = u"\U0001F50E"
-SILENCE_ICON =	u"\U0001F515"
+SILENCE_ICON = u"\U0001F515"
+VIDEO_ICON = u"\U0001F3AC"
+
 
 class TelegramSink(SinkBase):
     def __init__(self, sink_config: TelegramSinkConfigWrapper, registry):
@@ -56,7 +58,9 @@ class TelegramSink(SinkBase):
             message_content += f"[{INVESTIGATE_ICON} Investigate]({finding.investigate_uri}) "
             if finding.add_silence_url:
                 message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(self.cluster_name)})"
-            
+
+            for video_link in finding.video_links:
+                message_content = f"[{VIDEO_ICON} {video_link.name}]({video_link.url})"
             message_content += "\n\n"
 
         blocks = [MarkdownBlock(text=f"*Source:* `{self.cluster_name}`\n\n")]
@@ -79,10 +83,9 @@ class TelegramSink(SinkBase):
     @classmethod
     def __is_telegram_text_block(cls, block: BaseBlock) -> bool:
         # enrichments text tables are too big for mobile device
-        return not ( isinstance(block, FileBlock) or isinstance(block, TableBlock) )
+        return not (isinstance(block, FileBlock) or isinstance(block, TableBlock))
 
     @classmethod
     def __build_telegram_title(cls, title: str, severity: FindingSeverity) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
         return f"{icon} **{severity.name} - {title}**\n\n"
-

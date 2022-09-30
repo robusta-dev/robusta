@@ -4,8 +4,7 @@ from collections import defaultdict, namedtuple
 
 import pygal
 from pygal.style import DarkColorizedStyle as ChosenStyle
-from prometheus_api_client import PrometheusConnect
-
+from ..external_apis.prometheus.prometheus_cli import custom_query_range
 from string import Template
 from datetime import datetime, timedelta
 import humanize
@@ -14,6 +13,7 @@ import humanize
 class XAxisLine(BaseModel):
     label: str
     value: float
+
 
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
     labels = defaultdict(lambda: "<missing>")
@@ -32,33 +32,50 @@ def get_node_internal_ip(node: Node) -> str:
     return internal_ip
 
 
-def create_chart_from_prometheus_query(
+def run_prometheus_query(
         prometheus_base_url: str,
         promql_query: str,
         starts_at: datetime,
+        ends_at: datetime
+) -> PrometheusQueryResult:
+    if not starts_at or not ends_at:
+        raise Exception("Invalid timerange specified for the prometheus query.")
+    if not prometheus_base_url:
+        prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
+    query_duration = ends_at - starts_at
+    resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
+    increment = max(query_duration.total_seconds() / resolution, 1.0)
+    return custom_query_range(
+        prometheus_base_url,
+        promql_query,
+        starts_at,
+        ends_at,
+        str(increment),
+        {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
+    )
+
+
+def create_chart_from_prometheus_query(
+        prometheus_base_url: str,
+        promql_query: str,
+        alert_starts_at: datetime,
         include_x_axis: bool,
-        graph_duration_minutes: int,
+        graph_duration_minutes: int = 0,
         chart_title: Optional[str] = None,
         values_format: Optional[ChartValuesFormat] = None,
         lines: Optional[List[XAxisLine]] = []
 ):
-    if not prometheus_base_url:
-        prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
-    prom = PrometheusConnect(url=prometheus_base_url, disable_ssl=True)
-    end_time = datetime.now(tz=starts_at.tzinfo)
-    alert_duration = end_time - starts_at
-    graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
-    start_time = end_time - graph_duration
-    resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
-    increment = max(graph_duration.total_seconds() / resolution, 1.0)
-    result = prom.custom_query_range(
-        promql_query,
-        start_time,
-        end_time,
-        increment,
-        {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
-    )
-
+    if not alert_starts_at:
+        ends_at = datetime.utcnow()
+        starts_at = ends_at - timedelta(minutes=graph_duration_minutes)
+    else:
+        ends_at = datetime.now(tz=alert_starts_at.tzinfo)
+        alert_duration = ends_at - alert_starts_at
+        graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
+        starts_at = ends_at - graph_duration
+    prometheus_query_result = run_prometheus_query(prometheus_base_url, promql_query, starts_at, ends_at)
+    if prometheus_query_result.result_type != "matrix":
+        raise Exception(f"Unsupported query result for robusta chart, Type received: {prometheus_query_result.result_type}, type supported 'matrix'")
     chart = pygal.XY(
         show_dots=True,
         style=ChosenStyle,
@@ -77,7 +94,7 @@ def create_chart_from_prometheus_query(
     value_formatters = {
         ChartValuesFormat.Plain: lambda val: str(val),
         ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
-        ChartValuesFormat.Percentage: lambda val: f'{(100*val):.1f}%'
+        ChartValuesFormat.Percentage: lambda val: f'{(100 * val):.1f}%'
     }
     chart_values_format = values_format if values_format else ChartValuesFormat.Plain
     chart.value_formatter = value_formatters[chart_values_format]
@@ -90,15 +107,15 @@ def create_chart_from_prometheus_query(
     # TODO: change min_time time before  Jan 19 3001
     min_time = 32536799999
     max_time = 0
-    for series in result:
-        label = "\n".join([v for v in series["metric"].values()])
-        values = [
-            (timestamp, round(float(val), FLOAT_PRECISION_LIMIT))
-            for (timestamp, val) in series["values"]
-        ]
-        times = [timestamp for (timestamp, _) in series["values"]]
-        min_time = min(min_time, min(times))
-        max_time = max(max_time, max(times))
+    for series in prometheus_query_result.series_list_result:
+        label = "\n".join([v for v in series.metric.values()])
+        values = []
+        for index in range(len(series.values)):
+            timestamp = series.timestamps[index]
+            value = round(float(series.values[index]), FLOAT_PRECISION_LIMIT)
+            values.append((timestamp, value))
+        min_time = min(min_time, min(series.timestamps))
+        max_time = max(max_time, max(series.timestamps))
         chart.add(label, values)
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
@@ -115,7 +132,7 @@ def create_graph_enrichment(
         graph_title: Optional[str],
         chart_values_format: Optional[ChartValuesFormat],
         lines: Optional[List[XAxisLine]] = []
-        ) -> FileBlock:
+) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
         prometheus_url,
@@ -133,14 +150,14 @@ def create_graph_enrichment(
 
 
 def create_resource_enrichment(
-    starts_at: datetime,
-    labels: Dict[Any, Any],
-    resource_type: ResourceChartResourceType,
-    item_type: ResourceChartItemType,
-    graph_duration_minutes: int,
-    prometheus_url: Optional[str] = None,
-    lines: Optional[List[XAxisLine]] = [],
-    title_override: Optional[str] = None,
+        starts_at: datetime,
+        labels: Dict[Any, Any],
+        resource_type: ResourceChartResourceType,
+        item_type: ResourceChartItemType,
+        graph_duration_minutes: int,
+        prometheus_url: Optional[str] = None,
+        lines: Optional[List[XAxisLine]] = [],
+        title_override: Optional[str] = None,
 ) -> FileBlock:
     ChartOptions = namedtuple('ChartOptions', ['query', 'values_format'])
     combinations = {

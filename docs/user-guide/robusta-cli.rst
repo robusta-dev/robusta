@@ -58,7 +58,7 @@ Using the cli
 The main cli commands are:
 
 ``robusta gen-config``
-    :ref:`Generate a values.yaml file for installing Robusta <Installation>`.
+    :ref:`Generate a Helm values file for installing Robusta <Installation>`.
 
 ``robusta integrations slack``
     :ref:`Generate a Slack API key for Robusta <Slack>`.

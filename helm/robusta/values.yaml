@@ -80,6 +80,24 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+      alert_name: KubeCPUOvercommit
+  actions:
+  - cpu_overcommited_enricher: {}
+  - external_video_enricher:
+      url: https://bit.ly/overcommit-cpu
+      name: CPU Overcommited
+
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeMemoryOvercommit
+  actions:
+  - memory_overcommited_enricher: {}
+  - external_video_enricher:
+      url: https://bit.ly/memory-overcommit
+      name: Memory Overcommited
+
+- triggers:
+  - on_prometheus_alert:
       alert_name: KubePodNotReady
   actions:
   - logs_enricher: {}
