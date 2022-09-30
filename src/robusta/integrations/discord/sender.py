@@ -251,6 +251,8 @@ class DiscordSender:
             if finding.add_silence_url:
                 actions = f"{actions} [:no_bell: Silence]({finding.get_prometheus_silence_url(self.cluster_name)})"
 
+            for video_link in finding.video_links:
+                actions = f"{actions} [:clapper: {video_link.name}]({video_link.url})"
             blocks.append(DiscordDescriptionBlock(description=actions))
 
         blocks.append(DiscordFieldBlock(name=f"Source", value=f"`{self.cluster_name}`"))

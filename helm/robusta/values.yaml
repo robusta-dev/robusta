@@ -80,10 +80,38 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+      alert_name: KubeCPUOvercommit
+  actions:
+  - cpu_overcommited_enricher: {}
+  - external_video_enricher:
+      url: https://bit.ly/overcommit-cpu
+      name: CPU Overcommited
+
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeMemoryOvercommit
+  actions:
+  - memory_overcommited_enricher: {}
+  - external_video_enricher:
+      url: https://bit.ly/memory-overcommit
+      name: Memory Overcommited
+
+- triggers:
+  - on_prometheus_alert:
       alert_name: KubePodNotReady
   actions:
   - logs_enricher: {}
   - pod_events_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeJobFailed
+  - on_prometheus_alert:
+      alert_name: KubeJobCompletion
+  actions:
+  - job_info_enricher: {}
+  - job_events_enricher: {}
+  - job_pod_enricher: {}
 
 - triggers:
   - on_prometheus_alert:
@@ -171,18 +199,10 @@ platformPlaybooks:
     - resource_babysitter: {}
   sinks:
     - "robusta_ui_sink"
-- triggers:
-    - on_configmap_all_changes: {}
-  actions:
-    - resource_babysitter:
-        fields_to_monitor: ["ConfigMap.data"]
-        ignored_namespaces: ["kube-system"] # kube-system configmaps updated a lot (spammy)
-  sinks:
-    - "robusta_ui_sink"
 
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v1.13
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.0
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:

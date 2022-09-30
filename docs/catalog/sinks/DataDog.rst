@@ -8,7 +8,7 @@ To configure datadog sink, we need a DataDog API key. The API key can be retriev
 Configuring the Datadog sink
 ------------------------------------------------
 
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -16,6 +16,13 @@ Configuring the Datadog sink
         - datadog_sink:
             name: datadog_sink
             api_key: "datadog api key"
+
+Save the file and run
+
+.. code-block:: bash
+   :name: cb-add-discord-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 
 **Example Output:**

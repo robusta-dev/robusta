@@ -220,12 +220,15 @@ class ConfigLoader:
                 # custom playbooks
                 if os.path.exists(CUSTOM_PLAYBOOKS_ROOT):
                     for custom_playbooks_location in os.listdir(CUSTOM_PLAYBOOKS_ROOT):
-                        location = os.path.join(
-                            CUSTOM_PLAYBOOKS_ROOT, custom_playbooks_location
-                        )
-                        runner_config.playbook_repos[
-                            self.__get_package_name(location)
-                        ] = PlaybookRepo(url=f"file://{location}")
+                        try:
+                            location = os.path.join(
+                                CUSTOM_PLAYBOOKS_ROOT, custom_playbooks_location
+                            )
+                            runner_config.playbook_repos[
+                                self.__get_package_name(location)
+                            ] = PlaybookRepo(url=f"file://{location}")
+                        except Exception:  # This may happen because of the lost+found directory
+                            logging.warning(f"Skipping custom actions directory {custom_playbooks_location}")
                 else:
                     logging.info(
                         f"No custom playbooks defined at {CUSTOM_PLAYBOOKS_ROOT}"

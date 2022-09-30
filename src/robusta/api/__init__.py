@@ -10,7 +10,7 @@ from ..core.reporting.custom_rendering import *
 from ..core.schedule.model import *
 from ..core.model.env_vars import *
 from ..core.model.k8s_operation_type import *
-
+from ..core.external_apis.prometheus.models import PrometheusQueryResult
 from ..core.reporting import *
 from ..core.reporting.action_requests import *
 
@@ -26,6 +26,8 @@ from ..integrations.scheduled.playbook_scheduler_manager_impl import *
 from ..integrations.git.git_repo import *
 from ..integrations.argocd.argocd_client import *
 from ..integrations.resource_analysis.node_cpu_analyzer import NodeCpuAnalyzer
+from ..integrations.resource_analysis.cpu_analyzer import CpuAnalyzer
+from ..integrations.resource_analysis.memory_analyzer import MemoryAnalyzer, pretty_size
 from ..integrations.prometheus.utils import PrometheusDiscovery
 from ..core.persistency.in_memory import get_persistent_data
 from ..utils.parsing import load_json
@@ -34,6 +36,7 @@ from ..utils.common import *
 from ..utils.function_hashes import action_hash
 from ..runner.object_updater import *
 from ..core.playbooks.trigger import *
+from ..core.playbooks.job_utils import *
 from ..core.playbooks.node_playbook_utils import *
 from ..core.playbooks.container_playbook_utils import *
 from ..core.playbooks.actions_registry import action

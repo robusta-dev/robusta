@@ -44,6 +44,14 @@ class PodContainer:
         return requests.memory, limits.memory
 
     @staticmethod
+    def get_requests(container: Container) -> ContainerResources:
+        return PodContainer.get_resources(container, ResourceAttributes.requests)
+
+    @staticmethod
+    def get_limits(container: Container) -> ContainerResources:
+        return PodContainer.get_resources(container, ResourceAttributes.limits)
+
+    @staticmethod
     def get_resources(container: Container, resource_type: ResourceAttributes) -> ContainerResources:
         try:
             requests = container.object_at_path(["resources", resource_type.name])

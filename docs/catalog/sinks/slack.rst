@@ -12,7 +12,7 @@ Slack app <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_.
 
 You can also generate a key by running ``robusta integrations slack`` and setting the following Helm values:
 
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -23,13 +23,19 @@ You can also generate a key by running ``robusta integrations slack`` and settin
             api_key: MY SLACK KEY
             slack_channel: MY SLACK CHANNEL
 
+Save the file and run
+
+.. code-block:: bash
+   :name: cb-add-slack-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
 This method is recommended as it supports multiple Kubernetes clusters and is easy to setup. Outgoing messages
 are sent directly to Slack. Incoming messages are routed through Robusta servers to the appropriate cluster.
 
 .. note::
 
-    You can change the slack_channel at any time in values.yaml. No need to re-run ``robusta integrations slack``.
+    You can change the slack_channel at any time in ``generated_values.yaml``. No need to re-run ``robusta integrations slack``.
 
 
 Not Recommended: Creating your own Slack app

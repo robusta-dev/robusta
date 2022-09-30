@@ -100,7 +100,7 @@ Standard Installation
 
     helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
 
-2. Copy the cluster name from the current context and install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
+2. Specify your cluster's name and install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
 
 .. admonition:: Test clusters (e.g Kind, MiniKube, Colima)
     :class: important
@@ -207,7 +207,7 @@ Additional Installation Methods
 .. dropdown:: Installing without the Robusta CLI
     :color: light
 
-    Using the cli is totally optional. If you prefer, you can skip the CLI and fetch the default ``values.yaml``:
+    Using the cli is totally optional. If you prefer, you can skip the CLI and fetch the default **Helm values** from the helm chart:
 
     .. code-block:: bash
         :name: cb-helm-repo-add-show-values
@@ -218,7 +218,7 @@ Additional Installation Methods
 
     Most values are documented in the :ref:`Configuration Guide`
 
-    Do not use the ``values.yaml`` file in the GitHub repo. It has some empty placeholders which are replaced during
+    Do not use ``helm/robusta/values.yaml`` in the GitHub repo. It has some empty placeholders which are replaced during
     our release process.
 
 .. dropdown:: Installing in a different namespace
