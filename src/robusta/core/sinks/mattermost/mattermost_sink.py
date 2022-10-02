@@ -17,6 +17,7 @@ class MattermostSink(SinkBase):
         )
         self.sender = MattermostSender(
             cluster_name=self.cluster_name,
+            account_id=self.account_id,
             client=client
         )
 

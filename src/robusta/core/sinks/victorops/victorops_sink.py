@@ -23,7 +23,7 @@ class VictoropsSink(SinkBase):
         json_dict: dict = {}
 
         if platform_enabled:
-            json_dict["vo_annotate.u.🔎 Investigate"] = finding.investigate_uri
+            json_dict["vo_annotate.u.🔎 Investigate"] = finding.get_investigate_uri(self.account_id, self.cluster_name)
 
             if finding.add_silence_url:
                 json_dict[
