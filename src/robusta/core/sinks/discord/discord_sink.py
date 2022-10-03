@@ -11,6 +11,7 @@ class DiscordSink(SinkBase):
         self.url = sink_config.discord_sink.url
         self.sender = DiscordSender(
             self.url,
+            self.account_id,
             self.cluster_name
         )
 
