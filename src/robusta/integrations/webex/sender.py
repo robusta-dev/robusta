@@ -1,98 +1,111 @@
-from email.mime import image
 from ...core.reporting.base import Finding, FindingSeverity
 from ...core.reporting.utils import is_image, convert_svg_to_png, SVG_SUFFIX, PNG_SUFFIX
-from ...core.reporting.blocks import MarkdownBlock, BaseBlock, FileBlock, TableBlock, CallbackBlock, List
+from ...core.reporting.blocks import (
+    MarkdownBlock,
+    BaseBlock,
+    FileBlock,
+    TableBlock,
+    List,
+)
 from ...core.sinks.transformer import Transformer
+
+from PIL import Image
+from io import BytesIO
 from webexteamssdk import WebexTeamsAPI
 from fpdf import FPDF
 import os
 
 
-INVESTIGATE_ICON = u"\U0001F50E"
-SILENCE_ICON = u"\U0001F515"
+INVESTIGATE_ICON = "\U0001F50E"
+SILENCE_ICON = "\U0001F515"
 
 MAX_BLOCK_CHARS = 7439
 
+ADAPTIVE_CARD_VERSION = "1.2"
+ADAPTIVE_CARD_SCHEMA = "http://adaptivecards.io/schemas/adaptive-card.json"
+ATTACHMENT_CONTENT_TYPE = "application/vnd.microsoft.card.adaptive"
+
+CARD_TYPES = {
+    1: "AdaptiveCard",
+}
+FILE_TYPES = {1: "PHOTO", 2: "DOCUMENT"}
+
 
 class WebexSender:
-    def __init__(
-        self, bot_access_token: str, room_id: str, cluster_name: str
-    ):
+
+    """
+    Send findings to webex.
+    Parse different findings to show on Webex UI
+    """
+
+    def __init__(self, bot_access_token: str, room_id: str, cluster_name: str):
         self.cluster_name = cluster_name
         self.room_id = room_id
-        self.client = WebexTeamsAPI(access_token=bot_access_token)
-        self.adaptive_card_version = "1.2"
-        self.adaptive_card_schema = "http://adaptivecards.io/schemas/adaptive-card.json"
+        self.client = WebexTeamsAPI(
+            access_token=bot_access_token
+        )  # Create a client using webexteamssdk
 
     def send_finding_to_webex(self, finding: Finding, platform_enabled: bool):
         message, table_blocks, file_blocks, description = self._seperate_blocks(
-            finding, platform_enabled)
+            finding, platform_enabled
+        )
 
         pdf = None
         if file_blocks:
+
             pdf = self._create_pdf(file_blocks)
 
-        if table_blocks:
-            if pdf:
-                pdf.output("file.pdf", "F")
-                self.client.messages.create(
-                    roomId=self.room_id, markdown=message, attachments=[{
-                        "contentType": "application/vnd.microsoft.card.adaptive",
-                        "content": self._createAdaptiveCard(message, table_blocks, description)
-                    }],)
-                self.client.messages.create(
-                    roomId=self.room_id, files=["file.pdf"])
-                os.remove("file.pdf")
-            else:
-                self.client.messages.create(
-                    roomId=self.room_id, markdown=message, attachments=[{
-                        "contentType": "application/vnd.microsoft.card.adaptive",
-                        "content": self._createAdaptiveCard(message, table_blocks, description)
-                    }],)
-        else:
-            if pdf:
-                pdf.output("file.pdf", "F")
-                self.client.messages.create(
-                    roomId=self.room_id, markdown=message, files=["file.pdf"])
-                os.remove("file.pdf")
-            else:
-                self.client.messages.create(
-                    roomId=self.room_id, markdown=message)
+        adaptive_card = self._createAdaptiveCard(
+            message_content=message, table_blocks=table_blocks, description=description
+        )
 
-    def _createAdaptiveCard(self, message_content, table_blocks, description):
+        attachment = [
+            {
+                "contentType": ATTACHMENT_CONTENT_TYPE,
+                "content": adaptive_card,
+            }
+        ]
+        
+        #Here text="." is added because Webex API throws error to add text/file/markdown
+        self.client.messages.create(
+            roomId=self.room_id, text=".", attachments=attachment
+        )
+
+        if pdf:
+            #Sending pdf to webex 
+            filename = "finding.pdf"
+            pdf.output(filename, "F")
+            self.client.messages.create(roomId=self.room_id, files=[filename])
+            os.remove(filename)
+
+    def _createAdaptiveCard(
+        self, message_content, table_blocks: List[TableBlock], description
+    ):
 
         # https://learn.microsoft.com/en-us/adaptive-cards/
+        #metadata for adaptive cards
         adaptive_card = {
-            "type": "AdaptiveCard",
-            "$schema": self.adaptive_card_schema,
-            "version": self.adaptive_card_version
+            "type": CARD_TYPES[1],
+            "$schema": ADAPTIVE_CARD_SCHEMA,
+            "version": ADAPTIVE_CARD_VERSION,
         }
 
+        #Creating a container from message_content and description of finding for adaptive card
         message_content_container = {
             "type": "Container",
             "items": [
-                    {
-                        "type": "TextBlock",
-                        "text": message_content,
-                    },
-                {
-                        "type": "TextBlock",
-                        "text": description,
-                        "wrap": "true"
-                }
-            ]
+                {"type": "TextBlock", "text": message_content, "wrap": "true"},
+                {"type": "TextBlock", "text": description, "wrap": "true"},
+            ],
         }
         adaptive_card["body"] = [message_content_container]
+
+        #Parsing table blocks for adaptive card
         if table_blocks:
             for block in table_blocks:
                 container = {
                     "type": "Container",
-                    "items": [
-                            {
-                                "type": "ColumnSet",
-                                "columns": []
-                            }
-                    ]
+                    "items": [{"type": "ColumnSet", "columns": []}],
                 }
                 for header in block.headers:
                     container["items"][0]["columns"].append(
@@ -100,126 +113,141 @@ class WebexSender:
                             "type": "Column",
                             "width": "stretch",
                             "items": [
-                                    {
-                                        "type": "TextBlock",
-                                        "text": header,
-                                        "wrap": "true"
-                                    }
-                            ]
+                                {"type": "TextBlock", "text": header, "wrap": "true"}
+                            ],
                         }
                     )
+                #seperating each row to add below headers of column
                 rows = block.render_rows()
                 for row in rows:
-                    row_json = {
-                        "type": "ColumnSet",
-                        "columns": []
-                    }
+                    row_json = {"type": "ColumnSet", "columns": []}
                     for text in row:
                         row_json["columns"].append(
                             {
                                 "type": "Column",
                                 "width": "stretch",
                                 "items": [
-                                        {
-                                            "type": "TextBlock",
-                                            "text": text,
-                                            "wrap": "true"
-                                        }
-                                ]
+                                    {"type": "TextBlock", "text": text, "wrap": "true"}
+                                ],
                             }
                         )
                     container["items"].append(row_json)
                 adaptive_card["body"].append(container)
 
-            return adaptive_card
+        return adaptive_card
 
     def _seperate_blocks(self, finding: Finding, platform_enabled: bool):
         table_blocks: List[TableBlock] = []
         file_blocks: List[FileBlock] = []
-        callback_blocks: List[CallbackBlock] = []
         description = None
 
-        message_content = self.__build_webex_title(
-            finding.title, finding.severity)
+        message_content = self._create_message_content(
+            finding, platform_enabled, self.cluster_name
+        )
 
-        if platform_enabled:
-            message_content += f"[{INVESTIGATE_ICON} Investigate]({finding.investigate_uri}) "
-            if finding.add_silence_url:
-                message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(self.cluster_name)})"
+        blocks = [MarkdownBlock(text=f"*Source:* _{self.cluster_name}_\n\n")]
 
-            message_content += "\n\n"
+        # Seperate blocks into *Other* Blocks, TableBlocks and FileBlocks
+        for enrichment in finding.enrichments:
+            blocks.extend(
+                [
+                    block
+                    for block in enrichment.blocks
+                    if self.__is_webex_text_block(block)
+                ]
+            )
+            table_blocks.extend(
+                [block for block in enrichment.blocks if isinstance(block, TableBlock)]
+            )
+            file_blocks.extend(
+                [block for block in enrichment.blocks if isinstance(block, FileBlock)]
+            )
 
-            blocks = [MarkdownBlock(
-                text=f"*Source:* _{self.cluster_name}_\n\n")]
+        # first add finding description block
+        if finding.description:
+            if table_blocks:
+                description = finding.description
+            else:
+                blocks.append(MarkdownBlock(finding.description))
 
-            # Seperate blocks
-            for enrichment in finding.enrichments:
-                blocks.extend(
-                    [block for block in enrichment.blocks if self.__is_webex_text_block(block)])
-                table_blocks.extend(
-                    [block for block in enrichment.blocks if isinstance(block, TableBlock)])
-                file_blocks.extend(
-                    [block for block in enrichment.blocks if isinstance(block, FileBlock)])
-                callback_blocks.extend(
-                    [block for block in enrichment.blocks if isinstance(block, CallbackBlock)])
+        # Convert *Other* blocks to markdown
+        for block in blocks:
+            block_text = Transformer.to_standard_markdown([block])
+            if (
+                len(block_text) + len(message_content) >= MAX_BLOCK_CHARS
+            ):  # webex message size limit
+                break
+            message_content += block_text + "\n"
 
-            # first add finding description block
-            if finding.description:
-                if table_blocks:
-                    description = finding.description
-                else:
-                    blocks.append(MarkdownBlock(finding.description))
-
-            for block in blocks:
-                block_text = Transformer.to_standard_markdown([block])
-                if len(block_text) + len(message_content) >= MAX_BLOCK_CHARS:  # webex message size limit
-                    break
-                message_content += block_text + "\n"
-
-            return message_content, table_blocks, file_blocks, description
+        return message_content, table_blocks, file_blocks, description
 
     def _create_pdf(self, file_blocks: List[FileBlock]):
-        pdf = FPDF()
+        # Webex allows for only one file attachment per message
+        # Creating 1 PDF from all fileblocks can help reduce number of msgs sent to webex.
+
+        pdf = FPDF(unit="mm")
         pdf.set_font("Arial", size=15)
+
         for blocks in file_blocks:
-            # Add a page
-            pdf.add_page()
-            file_type = "Photo" if is_image(blocks.filename) else "Document"
-            if file_type is "Document":
-                # insert the texts in pdf
+            file_type = FILE_TYPES[1] if is_image(blocks.filename) else FILE_TYPES[2]
+
+            # parse file according to file type
+            if file_type is FILE_TYPES[2]:
+                pdf.add_page()
                 contents = blocks.contents.decode("utf-8")
-                # create a cell
-                pdf.cell(200, 10, txt=f"{blocks.filename}\n",
-                         ln=1, align='C')
+                # create a cell for filename of the text file
+                pdf.cell(200, 10, txt=f"{blocks.filename}\n", ln=1, align="C")
+
+                # Write to PDF from finding file content
                 for text in contents:
-                    pdf.write(5, text)
-                pdf.write(5, "\n\n\n")
+                    # here is 1 height of each cell
+                    pdf.write(1, text)
+
+                # Adding next line to seperate fileblocks
+                pdf.write(1, "\n\n\n")
+
             else:
                 file_name = blocks.filename
                 image_content = blocks.contents
+
+                # Convent SVG file to PNG
                 if file_name.endswith(SVG_SUFFIX):
                     image_content = convert_svg_to_png(image_content)
                     file_name = file_name.replace(SVG_SUFFIX, PNG_SUFFIX)
-                pdf.cell(200, 10, txt=f"{file_name}\n",
-                         ln=1, align='C')
-                binary_file = open(file_name, "wb")
-                # Write bytes to file
-                binary_file.write(image_content)
 
-                # Close file
-                binary_file.close()
+                # create Image object from the image bytes
+                image = Image.open(BytesIO(image_content))
 
-                pdf.image(file_name, w=100)
-                os.remove(file_name)
-                pdf.write(5, "\n\n\n")
+                # adding page to PDF according to size of image
+                width, height = image.size
+                width, height = float(width * 0.264583), float(height * 0.264583)
+                pdf.add_page(format=(width, height))
+                # Adding image to (x,y):(0,0)
+                pdf.image(image, 0, 0, width, height)
 
         return pdf
 
-    @ classmethod
-    def __is_webex_text_block(cls, block: BaseBlock) -> bool:
-        return not (isinstance(block, FileBlock) or isinstance(block, TableBlock) or isinstance(block, CallbackBlock))
+    @classmethod
+    def _create_message_content(
+        self, finding: Finding, platform_enabled: bool, cluster_name: str
+    ):
+        message_content = self.__build_webex_title(finding.title, finding.severity)
 
-    @ classmethod
+        if platform_enabled:
+            message_content += (
+                f"[{INVESTIGATE_ICON} Investigate]({finding.investigate_uri}) "
+            )
+            if finding.add_silence_url:
+                message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(cluster_name)})"
+
+            message_content += "\n\n"
+        return message_content
+
+    @classmethod
+    def __is_webex_text_block(cls, block: BaseBlock) -> bool:
+        return not (isinstance(block, FileBlock) or isinstance(block, TableBlock))
+
+    @classmethod
     def __build_webex_title(cls, title: str, severity: FindingSeverity) -> str:
         icon = FindingSeverity.to_emoji(severity)
         return f"{icon} **{severity.name} - {title}**\n\n"

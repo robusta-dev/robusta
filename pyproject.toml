@@ -43,7 +43,7 @@ opsgenie-sdk = "^2.1.5"
 markdown2 = "^2.4.2"
 toml = "^0.10.2"
 watchgod = "^0.7"
-fpdf = "^1.7.2"
+fpdf2 = "^2.5.7"
 
 # we're freezing a specific version here because the latest version doesn't have prebuilt wheels on pypi
 # and therefore requires gcc to install which we'd like to avoid
