@@ -9,7 +9,7 @@ To demonstrate how Robusta automations work, we will configure an automation tha
 
     This tutorial explains how that feature works under the hood.
 
-1. Add the following to your ``values.yaml``:
+1. Add the following to your ``generated_values.yaml``:
 
 .. code-block:: yaml
 

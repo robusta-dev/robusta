@@ -260,10 +260,13 @@ class SlackSender:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
-            actions = f"<{finding.investigate_uri}|:mag_right: Investigate>"
+            actions = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|:mag_right: Investigate>"
 
             if finding.add_silence_url:
                 actions = f"{actions} <{finding.get_prometheus_silence_url(self.cluster_name)}|:no_bell: Silence>"
+
+            for video_link in finding.video_links:
+                actions = f"{actions} <{video_link.url}|:clapper: {video_link.name}>"
 
             blocks.append(MarkdownBlock(text=actions))
 

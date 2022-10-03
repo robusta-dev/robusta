@@ -8,7 +8,7 @@ Robusta can send playbooks results to the PagerDuty alerts API.
 Configuring the PagerDuty sink
 ------------------------------------------------
 
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -16,6 +16,13 @@ Configuring the PagerDuty sink
             - pagerduty_sink:
                 name: main_pagerduty_sink
                 api_key: <api key> # e.g. f653634653463678fadas43534506
+                
+Save the file and run
+
+.. code-block:: bash
+   :name: cb-add-pagerduty-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
 **Example Output:**
 
 .. admonition:: Typically you'll send alerts from Robusta to PagerDuty and not deployment changes. We're showing a non-typical example with deployment changes because it helps compare the format with other sinks.
