@@ -27,6 +27,23 @@ sys.path.insert(0, str(Path(__file__).parent.parent))  # so we can import the pl
 
 # -- General configuration ------------------------------------------------
 
+# extensions = [
+#     "sphinx.ext.autodoc",
+#     "sphinx.ext.graphviz",
+#     "sphinx.ext.inheritance_diagram",
+#     "sphinx.ext.autosummary",
+#     "sphinxcontrib.mermaid",
+#     "sphinx.ext.napoleon",
+#     "sphinx_autodoc_typehints",
+#     "sphinx.ext.autosectionlabel",
+#     "sphinx.ext.viewcode",
+#     "sphinx_copybutton",
+#     "sphinx_design",
+#     "sphinxcontrib.images",
+#     "autorobusta",
+#     "sphinx_immaterial",
+# ]
+
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.graphviz",
@@ -41,8 +58,8 @@ extensions = [
     "sphinx_design",
     "sphinxcontrib.images",
     "autorobusta",
+    "sphinx_material"
 ]
-
 # for sphinx.ext.inheritance_diagram
 # inheritance_graph_attrs = dict(rankdir="TB", size='""')
 
@@ -81,9 +98,9 @@ copyright = "2021, Robusta"
 author = "Natan Yellin"
 
 # The short X.Y version.
-version = "DOCS_VERSION_PLACEHOLDER"
+# version = "DOCS_VERSION_PLACEHOLDER" 
 # The full version, including alpha/beta/rc tags.
-release = "DOCS_RELEASE_PLACEHOLDER"
+# release = "DOCS_RELEASE_PLACEHOLDER"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -100,24 +117,65 @@ pygments_dark_style = "witchhazel.WitchHazelStyle"
 todo_include_todos = False
 
 # html_theme_path = [furo.get_pygments_stylesheet()]
-html_theme = "furo"
+# html_theme = "sphinx_immaterial"
+html_theme = "sphinx_material"
+
 html_theme_options = {
-    "announcement": "Want to work at an Open Source Company? We're hiring in Israel and remote! Explore <a href=\"https://home.robusta.dev/jobs/\">open roles</a>.",
-    "sidebar_hide_name": True,
-    "light_logo": "logo.png",
-    "dark_logo": "logo-dark.png",
-    "light_css_variables": {
-        # for branding purposes this should really be #d9534f, but it doesn't look as good
-        "color-brand-primary": "#7253ed",
-        "color-brand-content": "#7253ed",
-    },
-    "dark_css_variables": {
-        "color-announcement-background": "#433e56",
-        # "color-brand-primary": "#7C4DFF",
-        # "color-brand-content": "#7C4DFF",
-        # "color-sidebar-link-text": "black",
-    },
+    # "announcement": "Want to work at an Open Source Company? We're hiring in Israel and remote! Explore <a href=\"https://home.robusta.dev/jobs/\">open roles</a>.",
+    # "sidebar_hide_name": True,
+    # "light_logo": "logo.png",
+    # "dark_logo": "logo-dark.png",
+    # "light_css_variables": {
+    #     # for branding purposes this should really be #d9534f, but it doesn't look as good
+    #     "color-brand-primary": "#7253ed",
+    #     "color-brand-content": "#7253ed",
+    # },
+    # "dark_css_variables": {
+    #     "color-announcement-background": "#433e56",
+    #     # "color-brand-primary": "#7C4DFF",
+    #     # "color-brand-content": "#7C4DFF",
+    #     # "color-sidebar-link-text": "black",
+    # },
+
+      # Set the name of the project to appear in the navigation.
+    'base_url': 'https://docs.robusta.dev/master/',
+    'repo_url': 'https://github.com/robusta-dev/robusta',
+    'repo_name': 'Robusta',
+    'html_minify': True,
+    'css_minify': True,
+    'nav_title': 'Robusta Docs',
+    # 'logo_icon': './images/logo.png',
+    'globaltoc_depth': 3,
+     "nav_links": [
+        {"href": "index", "internal": True, "title": "Home"},
+        {"href": "", "internal": True, "title": "Get started"},
+        {
+            "href": "",
+            "internal": True,
+            "title": "Configuration",
+        },
+        {
+            "href": "",
+            "internal": True,
+            "title": "Architecture",
+        },
+        {
+            "href": "",
+            "internal": True,
+            "title": "Automations",
+        },
+        {
+            "href": "",
+            "internal": True,
+            "title": "Help",
+        },
+    ],
 }
+
+html_sidebars = {
+    "**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]
+}
+
 # html_title = ""
 
 # Add any paths that contain custom static files (such as style sheets) here,
