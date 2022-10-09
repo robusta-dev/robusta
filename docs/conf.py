@@ -58,7 +58,7 @@ extensions = [
     "sphinx_design",
     "sphinxcontrib.images",
     "autorobusta",
-    "sphinx_material"
+    "sphinx_immaterial",
 ]
 # for sphinx.ext.inheritance_diagram
 # inheritance_graph_attrs = dict(rankdir="TB", size='""')
@@ -98,7 +98,7 @@ copyright = "2021, Robusta"
 author = "Natan Yellin"
 
 # The short X.Y version.
-# version = "DOCS_VERSION_PLACEHOLDER" 
+# version = "DOCS_VERSION_PLACEHOLDER"
 # The full version, including alpha/beta/rc tags.
 # release = "DOCS_RELEASE_PLACEHOLDER"
 
@@ -117,8 +117,8 @@ pygments_dark_style = "witchhazel.WitchHazelStyle"
 todo_include_todos = False
 
 # html_theme_path = [furo.get_pygments_stylesheet()]
-# html_theme = "sphinx_immaterial"
-html_theme = "sphinx_material"
+html_theme = "sphinx_immaterial"
+# html_theme = "sphinx_material"
 
 html_theme_options = {
     # "announcement": "Want to work at an Open Source Company? We're hiring in Israel and remote! Explore <a href=\"https://home.robusta.dev/jobs/\">open roles</a>.",
@@ -136,17 +136,16 @@ html_theme_options = {
     #     # "color-brand-content": "#7C4DFF",
     #     # "color-sidebar-link-text": "black",
     # },
-
-      # Set the name of the project to appear in the navigation.
-    'base_url': 'https://docs.robusta.dev/master/',
-    'repo_url': 'https://github.com/robusta-dev/robusta',
-    'repo_name': 'Robusta',
-    'html_minify': True,
-    'css_minify': True,
-    'nav_title': 'Robusta Docs',
+    # Set the name of the project to appear in the navigation.
+    "base_url": "https://docs.robusta.dev/master/",
+    "repo_url": "https://github.com/robusta-dev/robusta",
+    "repo_name": "Robusta",
+    "html_minify": True,
+    "css_minify": True,
+    "nav_title": "Robusta Docs",
     # 'logo_icon': './images/logo.png',
-    'globaltoc_depth': 3,
-     "nav_links": [
+    "globaltoc_depth": 3,
+    "nav_links": [
         {"href": "index", "internal": True, "title": "Home"},
         {"href": "", "internal": True, "title": "Get started"},
         {
@@ -187,9 +186,7 @@ html_css_files = [
     "custom.css",
 ]
 
-html_js_files = [
-    'analytics.js'
-]
+html_js_files = ["analytics.js"]
 
 html_favicon = "_static/favicon.png"
 

@@ -92,6 +92,8 @@ class PydanticModelDirective(SphinxDirective):
         for field in fields:
             desc = sphinx.addnodes.desc()
             node.append(desc)
+            desc["domain"] = "robusta"
+            desc["objtype"] = "model"
             desc.extend(cls.__document_field_signature(field, show_optionality))
             desc.extend(
                 cls.__document_field_content(field, show_code, show_optionality)
