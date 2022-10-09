@@ -306,6 +306,96 @@ def gen_config(
 
 
 @app.command()
+def convert_to_gitops_config(
+        existing_values: str = typer.Option(
+            ...,
+            help="Existing values.yaml file name. You can run `helm get values` to get it from the cluster.",
+        ),
+        namespace: str = typer.Option(
+            ...,
+            help="Namespace",
+        ),
+):
+    with open(existing_values, "r") as existing_values_file:
+        values: HelmValues = HelmValues(**yaml.safe_load(existing_values_file))
+
+    def to_base64_str(value):
+        return base64.b64encode(value.encode('utf-8')).decode("utf-8")
+
+    my_robusta_secrets_file_name = 'my_robusta_secrets'
+
+    secrets_to_add = []
+
+    def add_runner_env_var(name_in_secret, value):
+        base64_value = to_base64_str(value)
+        secrets_to_add.append((name_in_secret, base64_value))
+        env_var_name = name_in_secret.replace('-', '_').upper()
+        if 'additional_env_vars' not in values.runner:
+            values.runner['additional_env_vars'] = []
+        values.runner['additional_env_vars'].append(
+            {
+                'name': env_var_name,
+                'valueFrom':
+                    {
+                        'secretKeyRef':
+                            {
+                                'name': my_robusta_secrets_file_name,
+                                'key': name_in_secret
+                            }
+                    }
+            }
+        )
+
+        return "{{env."+env_var_name+"}}"
+
+    values.globalConfig.signing_key = add_runner_env_var('globalConfig-signing_key', values.globalConfig.signing_key)
+    values.globalConfig.account_id = add_runner_env_var('globalConfig-account_id', values.globalConfig.account_id)
+
+    for sink in values.sinksConfig:
+        if type(sink) == SlackSinkConfigWrapper:
+            sink.slack_sink.api_key = add_runner_env_var(
+                f'sinksConfig-{sink.slack_sink.name}-api_key', sink.slack_sink.api_key)
+        elif type(sink) == RobustaSinkConfigWrapper:
+            sink.robusta_sink.token = add_runner_env_var(
+                f'sinksConfig-{sink.robusta_sink.name}-token', sink.robusta_sink.token)
+            pass
+        elif type(sink) == MsTeamsSinkConfigWrapper:
+            sink.ms_teams_sink.webhook_url = add_runner_env_var(
+                f'sinksConfig-{sink.ms_teams_sink.name}-webhook_url', sink.ms_teams_sink.webhook_url)
+
+    my_robusta_secrets = f"""apiVersion: v1
+kind: Secret
+metadata:
+  name: robusta-auth-config-secret
+  namespace: {namespace}
+type: Opaque
+data:
+"""
+    with open(my_robusta_secrets_file_name+'.yaml', 'w') as my_robusta_secrets_file:
+        my_robusta_secrets_file.write(my_robusta_secrets)
+        formatted_secrets = [f'  {name_in_secret}: {base64_value}\n' for (name_in_secret, base64_value) in secrets_to_add]
+        my_robusta_secrets_file.writelines(formatted_secrets)
+
+    pub = to_base64_str(values.rsa.pub)
+    prv = to_base64_str(values.rsa.prv)
+
+    values.rsa = None
+    auth_secret = f"""apiVersion: v1
+kind: Secret
+metadata:
+  name: robusta-auth-config-secret
+  namespace: {namespace}
+type: Opaque
+data:
+  prv: {prv}
+  pub: {pub}
+"""
+    with open('robusta-auth-config-secret.yaml', 'w') as auth_secret_file:
+        auth_secret_file.write(auth_secret)
+    write_values_file("gitops_values.yaml", values)
+
+
+@app.command()
 def update_config(
     existing_values: str = typer.Option(
         ...,
