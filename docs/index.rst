@@ -146,14 +146,14 @@ Next Steps
 
 .. [#f2] This is the only component that isn't open source and it's completely optional. For self-hosting the UI, see :ref:`Self hosting`
 
-.. toctree::
-   :hidden:
 
-   Project Home <https://home.robusta.dev/?from=docs>
+.. toctree::
+    :hidden:
+    Project Home <https://home.robusta.dev/?from=docs>
 
 .. toctree::
    :maxdepth: 4
-   :caption: About Robusta
+   :caption: Getting Started
    :hidden:
 
    Overview <self>
@@ -165,7 +165,7 @@ Next Steps
 
 .. toctree::
    :maxdepth: 4
-   :caption: Tutorials
+   :caption: Configuration
    :hidden:
 
    installation
@@ -181,7 +181,7 @@ Next Steps
 
 .. toctree::
    :maxdepth: 4
-   :caption: Reference
+   :caption: Architecture
    :hidden:
 
    upgrade
@@ -197,7 +197,7 @@ Next Steps
 
 .. toctree::
    :maxdepth: 4
-   :caption: Developer Guide
+   :caption: Automation
    :hidden:
 
    developer-guide/actions/index
