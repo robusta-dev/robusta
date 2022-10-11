@@ -114,7 +114,7 @@ html_theme_options = {
         {
             "media": "(prefers-color-scheme: light)",
             "scheme": "default",
-            "primary": "deep-purple",
+            "primary": "teal",
             "accent": "light-blue",
             "toggle": {
                 "icon": "material/weather-night",
