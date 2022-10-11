@@ -16,7 +16,6 @@ from fpdf import FPDF
 import os
 from enum import Enum
 
-
 INVESTIGATE_ICON = "🔍"
 SILENCE_ICON = "🔕"
 
@@ -26,10 +25,8 @@ ADAPTIVE_CARD_VERSION = "1.2"
 ADAPTIVE_CARD_SCHEMA = "http://adaptivecards.io/schemas/adaptive-card.json"
 ATTACHMENT_CONTENT_TYPE = "application/vnd.microsoft.card.adaptive"
 
-
 class CardTypes(Enum):
     ADAPTIVE_CARD = "AdaptiveCard"
-
 
 class FileTypes(Enum):
     PHOTO = "PHOTO"
@@ -78,6 +75,7 @@ class WebexSender:
 
         if pdf:
             # Sending pdf to webex
+
             filename = "finding.pdf"
             pdf.output(filename, "F")
             self.client.messages.create(roomId=self.room_id, files=[filename])
@@ -122,6 +120,7 @@ class WebexSender:
                             ],
                         }
                     )
+
                 # seperating each row to add below headers of column
                 rows = block.render_rows()
                 for row in rows:
