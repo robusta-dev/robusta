@@ -148,7 +148,9 @@ Next Steps
 
 
 .. toctree::
-    :hidden:
+   :hidden:
+   :caption: Home
+
     Project Home <https://home.robusta.dev/?from=docs>
 
 .. toctree::
@@ -156,11 +158,9 @@ Next Steps
    :caption: Getting Started
    :hidden:
 
-   Overview <self>
-   architecture
+   installation
    coverage
-   community
-   oss-vs-saas
+   
 
 
 .. toctree::
@@ -168,13 +168,18 @@ Next Steps
    :caption: Configuration
    :hidden:
 
-   installation
+
+   user-guide
+   advanced/index
+   upgrade
    tutorials/configuring-automations
    tutorials/prometheus-enrichment
    tutorials/my-first-custom-action
    tutorials/python-profiling
    tutorials/java-troubleshooting
    tutorials/more-tutorials
+   developer-guide/actions/index
+   developer-guide/platform/index
 
 ..
    tutorials/alert-correlation
@@ -183,22 +188,26 @@ Next Steps
    :maxdepth: 4
    :caption: Architecture
    :hidden:
+    
+   Overview <self>
+   architecture
+   oss-vs-saas
 
-   upgrade
-   common-errors
-   user-guide/configuration
-   user-guide/flow-control
-   catalog/triggers/index
-   catalog/actions/index
-   catalog/sinks/index
-   user-guide/robusta-cli
-   user-guide/trigger-action-binding
-   advanced/index
+
 
 .. toctree::
    :maxdepth: 4
    :caption: Automation
    :hidden:
 
-   developer-guide/actions/index
-   developer-guide/platform/index
+   catalog/triggers/index
+   catalog/actions/index
+   catalog/sinks/index
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Help
+   :hidden:
+
+   common-errors
+   community
