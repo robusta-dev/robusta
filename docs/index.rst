@@ -149,6 +149,7 @@ Next Steps
 
 .. toctree::
     :hidden:
+
     Project Home <https://home.robusta.dev/?from=docs>
 
 .. toctree::
