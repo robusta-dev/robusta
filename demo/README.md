@@ -20,7 +20,7 @@ Here are demo scenarios you can use to evaluate Robusta.dev. Each demo can be ru
 
 ## Running it
 
-1. Run `kubectl apply -f ./oomkill_demo/oomkill_demo.yaml`
+1. Run `kubectl apply -f ./oomkill_demo/oomkill_job.yaml`
 2. Check your Slack channel for a notification about the Kubernetes pod which got OOMKilled. The message includes details you need to debug the out of memory error.
 3. Clean up the demo with `kubectl delete -f ./oomkill_demo/oomkill_demo.yaml`
 

@@ -3,7 +3,7 @@ Writing Playbook Actions
 
 So you're ready to extend Robusta with a custom action. Exciting stuff.
 
-:ref:`Start with the basics <The Basics>` and speak to us on `Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ for
+:ref:`Start with the basics <The Basics>` and speak to us on `Slack <https://bit.ly/robusta-slack>`_ for
 questions or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues>`_
 
 
