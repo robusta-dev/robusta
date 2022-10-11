@@ -9,7 +9,7 @@ As an alternative, we can pull secret values from Kubernetes secrets.
 
 First, define an environment variable that is taken from a Kubernetes secret.
 
-In your ``values.yaml`` file add:
+In your ``generated_values.yaml`` file add:
 
 .. code-block:: yaml
 

@@ -8,7 +8,7 @@ from typing import Dict, Any
 from ...transformer import Transformer
 from ....reporting.callbacks import ExternalActionRequestBuilder
 from .....core.reporting import Finding, Enrichment, MarkdownBlock, logging, CallbackBlock, KubernetesDiffBlock, \
-    HeaderBlock, ListBlock, TableBlock, FileBlock, DividerBlock
+    HeaderBlock, ListBlock, TableBlock, FileBlock, DividerBlock, PrometheusBlock
 from .....utils.parsing import datetime_to_db_str
 
 
@@ -16,7 +16,6 @@ class ModelConversion:
 
     @staticmethod
     def to_finding_json(account_id: str, cluster_id: str, finding: Finding):
-        video_links = finding.video_links or []
         finding_json = {
             "id": str(finding.id),
             "title": finding.title,
@@ -34,7 +33,7 @@ class ModelConversion:
             "service_key": finding.service_key,
             "cluster": cluster_id,
             "account_id": account_id,
-            "video_links": [link.json() for link in video_links],
+            "video_links": [link.dict() for link in finding.video_links],
             "starts_at": datetime_to_db_str(finding.starts_at),
             "updated_at": datetime_to_db_str(datetime.now())
         }
@@ -84,6 +83,8 @@ class ModelConversion:
                 structured_data.append({"type": "header", "data": block.text})
             elif isinstance(block, ListBlock):
                 structured_data.append({"type": "list", "data": block.items})
+            elif isinstance(block, PrometheusBlock):
+                structured_data.append({"type": "prometheus", "data": block.data.json(), "metadata": block.metadata})
             elif isinstance(block, TableBlock):
                 if block.table_name:
                     structured_data.append({

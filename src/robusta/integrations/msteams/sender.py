@@ -41,7 +41,7 @@ class MsTeamsSender:
             )
 
     @classmethod
-    def __split_block_to_files_and_all_the_rest(cls, enrichment : Enrichment):
+    def __split_block_to_files_and_all_the_rest(cls, enrichment: Enrichment):
         files_blocks = []
         other_blocks = []
 
@@ -53,10 +53,11 @@ class MsTeamsSender:
         return files_blocks, other_blocks
 
     @classmethod
-    def send_finding_to_ms_teams(cls, webhook_url: str, finding: Finding, platform_enabled: bool, cluster_name: str):
+    def send_finding_to_ms_teams(cls, webhook_url: str, finding: Finding, platform_enabled: bool, cluster_name: str,
+                                 account_id: str):
         msg = MsTeamsMsg(webhook_url)
-        msg.write_title_and_desc(platform_enabled, finding, cluster_name)
-        
+        msg.write_title_and_desc(platform_enabled, finding, cluster_name, account_id)
+
         for enrichment in finding.enrichments:
             files_blocks, other_blocks = cls.__split_block_to_files_and_all_the_rest(enrichment)
             for block in other_blocks:

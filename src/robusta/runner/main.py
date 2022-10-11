@@ -6,6 +6,7 @@ import manhole
 from ..patch.patch import create_monkey_patches
 from .telemetry_service import TelemetryService, TelemetryLevel
 from .log_init import logging, init_logging
+from .ssl_utils import add_custom_certificate
 from .web import Web
 from ..core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
 from .. import api as robusta_api
@@ -17,6 +18,9 @@ from ..core.model.env_vars import ROBUSTA_TELEMETRY_ENDPOINT, SEND_ADDITIONAL_TE
 
 def main():
     init_logging()
+    if add_custom_certificate(os.environ.get("CERTIFICATE", "")):
+        logging.info("added custom certificate")
+
     create_monkey_patches()
     registry = Registry()
     event_handler = PlaybooksEventHandlerImpl(registry)

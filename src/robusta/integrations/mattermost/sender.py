@@ -27,12 +27,16 @@ MAX_BLOCK_CHARS = 16383  # Max allowed characters for mattermost
 
 class MattermostSender:
     def __init__(
-            self, cluster_name: str, client: MattermostClient
+            self,
+            cluster_name: str,
+            account_id: str,
+            client: MattermostClient
     ):
         """
         Set the Mattermost webhook url.
         """
         self.cluster_name = cluster_name
+        self.account_id = account_id
         self.client = client
 
     @classmethod
@@ -129,7 +133,7 @@ class MattermostSender:
     ):
         blocks: List[BaseBlock] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
-            actions = f"[:mag_right: Investigate]({finding.investigate_uri})"
+            actions = f"[:mag_right: Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)})"
             if finding.add_silence_url:
                 actions = f"{actions} [:no_bell: Silence]({finding.get_prometheus_silence_url(self.cluster_name)})"
             for video_link in finding.video_links:

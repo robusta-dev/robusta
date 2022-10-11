@@ -25,7 +25,7 @@ Configuring the Telegram sink
 ------------------------------------------------
 Now we're ready to configure the Telegram sink.
 
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -34,9 +34,15 @@ Now we're ready to configure the Telegram sink.
             name: personal_telegram sink
             bot_token: <YOUR BOT TOKEN>
             chat_id: <CHAT ID>
-
 .. note::
 
     If you don't want Robusta to send file attachments, set ``send_files`` to ``False`` under your Telegram sink. (True by default)
 
+Save the file and run
+
+.. code-block:: bash
+   :name: cb-add-telegram-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
+    
 You should now get playbooks results in Telegram!
