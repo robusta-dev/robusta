@@ -14,3 +14,32 @@ Blogs
 Videos
 -----------
 * `Twitter challenge - Robusta.dev on 10 nodes <https://www.youtube.com/watch?v=l_zaCaY_wls>`_ by `Nuno Captain Corsair <https://twitter.com/nunixtech>`_
+
+ Adding a grid isnt working 
+ ^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 
+.. grid:: 3
+
+    .. grid-item-card:: Triggers
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: catalog/triggers/index
+        :link-type: doc
+
+        When to run
+        (on alerts, logs, changes, etc)
+
+    .. grid-item-card::  Actions
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: catalog/actions/index
+        :link-type: doc
+
+        What to do
+        (over 50 builtin actions)
+
+    .. grid-item-card::  Sinks
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: catalog/sinks/index
+        :link-type: doc
+
+        Where to send the result
+        (Slack, etc)
