@@ -10,7 +10,20 @@ Pre-requisites:
 
 2. A Working setup of `ArgoCD <https://argo-cd.readthedocs.io/en/stable/>`_ or another similar continuous delivery tool for Kubernetes. (We'll assume ArgoCD from now on as it is the most popular)
 
+Options
+----
+
 There are a few options to mange Robusta with ArgoCD.
+
+1. Directly add the ``generated_value.yaml`` to argo cd:
+    - ``generated_values.yaml`` file will be saved directly in ArgoCD
+
+2. Commit your ``generated_value.yaml`` file to git:
+    - A git repo needs to be created to store ``generated_value.yaml`` (or add it to existing one)
+    - You'll have to :ref:`create Kubernetes secrets <Configuration secrets>` for robusta keys
+    - Requires more advanced ArgoCD functions to combine the robusta helm chart with the external ``generated_value.yaml`` file
+
+We'll describe the simpler option here. We're currently working on a guide for the more advanced option, contact us if you have questions.
 
 Directly add the helm charts + values (simplest option)
 ----
