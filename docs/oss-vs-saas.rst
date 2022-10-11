@@ -45,4 +45,4 @@ Instead of using the cloud backend services, the Robusta OSS project will be dir
 
 Installing the self-hosted UI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To install the Robusta self hosted instance, please contact support@robusta.dev, or post in the #support channel of `our Slack community <https://join.slack.com/t/robustacommunity/shared_invite/zt-18x24hrz4-1SQQCSa~AF9LgTYFwA6cag>`_.
+To install the Robusta self hosted instance, please contact support@robusta.dev, or post in the #support channel of `our Slack community <https://bit.ly/robusta-slack>`_.
