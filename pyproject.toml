@@ -70,6 +70,7 @@ cssselect = "^1.1.0"
 pygal = "^3.0.0"
 tinycss = "^0.4"
 rsa = "^4.8"
+sphinxcontrib-details-directive = "^0.1.0"
 sphinx-immaterial = "^0.9.1"
 
 # There is a bug in jinga2 and markupsafe (explicitly markupsafe 2.1.1)

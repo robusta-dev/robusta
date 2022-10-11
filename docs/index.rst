@@ -113,8 +113,7 @@ Writing your own automations
 
 Many automations are included, but you can also write your own in Python.
 
-.. dropdown:: View example action (Python)
-    :color: light
+.. details:: View example action (Python)
 
     .. code-block:: python
 

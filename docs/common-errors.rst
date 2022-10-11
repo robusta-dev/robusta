@@ -5,8 +5,7 @@ This list contains some common errors we have encountered over time. If you can'
 please contact support@robusta.dev or go to `our slack channel <https://robustacommunity.slack.com/ssb/redirect>`_.
 
 
-.. dropdown:: Robusta CLI is not in path
-    :color: light
+.. details:: Robusta CLI is not in path
 
     1. Determine where the Robusta-cli binary file is installed  
 
@@ -35,8 +34,7 @@ please contact support@robusta.dev or go to `our slack channel <https://robustac
 
       another solution is to run a command (e.g gen-config) directly with python: ``python3 -m robusta.cli.main gen-config``
 
-.. dropdown:: CLI SSL certificate issue
-    :color: light
+.. details:: CLI SSL certificate issue
 
     This error may suggest a python certificate package is missing in your system.
     Try running the script located at:

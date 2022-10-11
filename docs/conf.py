@@ -42,6 +42,7 @@ extensions = [
     "sphinxcontrib.images",
     "autorobusta",
     "sphinx_immaterial",
+    "sphinxcontrib.details.directive",
 ]
 # for sphinx.ext.inheritance_diagram
 # inheritance_graph_attrs = dict(rankdir="TB", size='""')

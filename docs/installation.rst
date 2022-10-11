@@ -198,14 +198,12 @@ Next Steps
 Additional Installation Methods
 ---------------------------------
 
-.. dropdown:: Installing with GitOps
-    :color: light
+.. details:: Installing with GitOps
 
     Follow the instructions above to generate ``generated_values.yaml``. Commit it to git and use ArgoCD or
     your favorite tool to install.
 
-.. dropdown:: Installing without the Robusta CLI
-    :color: light
+.. details:: Installing without the Robusta CLI
 
     Using the cli is totally optional. If you prefer, you can skip the CLI and fetch the default **Helm values** from the helm chart:
 
@@ -221,8 +219,7 @@ Additional Installation Methods
     Do not use ``helm/robusta/values.yaml`` in the GitHub repo. It has some empty placeholders which are replaced during
     our release process.
 
-.. dropdown:: Installing in a different namespace
-    :color: light
+.. details:: Installing in a different namespace
 
     Create a namespace ``robusta`` and install robusta in the new namespace using:
 
@@ -238,8 +235,7 @@ Additional Installation Methods
 
         kubectl get pods -n robusta
 
-.. dropdown:: Installing on OpenShift
-    :color: light
+.. details:: Installing on OpenShift
 
     You will need to run one additional command:
 
