@@ -14,10 +14,10 @@ from io import BytesIO
 from webexteamssdk import WebexTeamsAPI
 from fpdf import FPDF
 import os
+from enum import Enum
 
-
-INVESTIGATE_ICON = "\U0001F50E"
-SILENCE_ICON = "\U0001F515"
+INVESTIGATE_ICON = "🔍"
+SILENCE_ICON = "🔕"
 
 MAX_BLOCK_CHARS = 7439
 
@@ -25,10 +25,12 @@ ADAPTIVE_CARD_VERSION = "1.2"
 ADAPTIVE_CARD_SCHEMA = "http://adaptivecards.io/schemas/adaptive-card.json"
 ATTACHMENT_CONTENT_TYPE = "application/vnd.microsoft.card.adaptive"
 
-CARD_TYPES = {
-    1: "AdaptiveCard",
-}
-FILE_TYPES = {1: "PHOTO", 2: "DOCUMENT"}
+class CardTypes(Enum):
+    ADAPTIVE_CARD = "AdaptiveCard"
+
+class FileTypes(Enum):
+    PHOTO = "PHOTO"
+    DOCUMENT = "DOCUMENT"
 
 
 class WebexSender:
@@ -65,14 +67,15 @@ class WebexSender:
                 "content": adaptive_card,
             }
         ]
-        
-        #Here text="." is added because Webex API throws error to add text/file/markdown
+
+        # Here text="." is added because Webex API throws error to add text/file/markdown
         self.client.messages.create(
             roomId=self.room_id, text=".", attachments=attachment
         )
 
         if pdf:
-            #Sending pdf to webex 
+            # Sending pdf to webex
+
             filename = "finding.pdf"
             pdf.output(filename, "F")
             self.client.messages.create(roomId=self.room_id, files=[filename])
@@ -83,14 +86,14 @@ class WebexSender:
     ):
 
         # https://learn.microsoft.com/en-us/adaptive-cards/
-        #metadata for adaptive cards
+        # metadata for adaptive cards
         adaptive_card = {
-            "type": CARD_TYPES[1],
+            "type": CardTypes.ADAPTIVE_CARD,
             "$schema": ADAPTIVE_CARD_SCHEMA,
             "version": ADAPTIVE_CARD_VERSION,
         }
 
-        #Creating a container from message_content and description of finding for adaptive card
+        # Creating a container from message_content and description of finding for adaptive card
         message_content_container = {
             "type": "Container",
             "items": [
@@ -100,7 +103,7 @@ class WebexSender:
         }
         adaptive_card["body"] = [message_content_container]
 
-        #Parsing table blocks for adaptive card
+        # Parsing table blocks for adaptive card
         if table_blocks:
             for block in table_blocks:
                 container = {
@@ -117,7 +120,8 @@ class WebexSender:
                             ],
                         }
                     )
-                #seperating each row to add below headers of column
+
+                # seperating each row to add below headers of column
                 rows = block.render_rows()
                 for row in rows:
                     row_json = {"type": "ColumnSet", "columns": []}
@@ -189,7 +193,9 @@ class WebexSender:
         pdf.set_font("Arial", size=15)
 
         for blocks in file_blocks:
-            file_type = FILE_TYPES[1] if is_image(blocks.filename) else FILE_TYPES[2]
+            file_type = (
+                FileTypes.PHOTO if is_image(blocks.filename) else FileTypes.DOCUMENT
+            )
 
             # parse file according to file type
             if file_type is FILE_TYPES[2]:
