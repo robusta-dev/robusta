@@ -147,10 +147,12 @@ Next Steps
 
 
 .. toctree::
-   :hidden:
+   :maxdepth: 4
    :caption: Home
+   :hidden:
 
-    Project Home <https://home.robusta.dev/?from=docs>
+   home
+
 
 .. toctree::
    :maxdepth: 4

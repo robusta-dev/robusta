@@ -100,9 +100,7 @@ pygments_dark_style = "witchhazel.WitchHazelStyle"
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-# html_theme_path = [furo.get_pygments_stylesheet()]
 html_theme = "sphinx_immaterial"
-# html_theme = "sphinx_material"
 
 html_theme_options = {
     "icon": {
