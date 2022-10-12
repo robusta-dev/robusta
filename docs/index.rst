@@ -200,7 +200,7 @@ Next Steps
    :maxdepth: 4
    :caption: Automation
    :hidden:
-
+    
    catalog/triggers/index
    catalog/actions/index
    catalog/sinks/index
