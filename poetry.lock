@@ -1370,7 +1370,7 @@ theme_sbt = ["sphinx-book-theme (>=0.1.2,<0.2.0)"]
 
 [[package]]
 name = "sphinx-immaterial"
-version = "0.9.1.post1.dev0"
+version = "0.9.1"
 description = "Adaptation of mkdocs-material theme for the Sphinx documentation system"
 category = "dev"
 optional = false
