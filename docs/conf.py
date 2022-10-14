@@ -25,6 +25,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / Path("_ext")))
 sys.path.insert(0, str(Path(__file__).parent.parent))  # so we can import the playbooks
 
+# -- Custom Sidebar -------------------------------------------------------
+
+
+
 # -- General configuration ------------------------------------------------
 
 extensions = [
@@ -102,6 +106,8 @@ todo_include_todos = False
 
 html_theme = "sphinx_immaterial"
 
+html_logo = "images/logo_docs.svg"
+
 html_theme_options = {
     "icon": {
         "repo": "fontawesome/brands/github",
@@ -113,7 +119,7 @@ html_theme_options = {
         {
             "media": "(prefers-color-scheme: light)",
             "scheme": "default",
-            "primary": "teal",
+            "primary": "robusta",
             "accent": "light-blue",
             "toggle": {
                 "icon": "material/weather-night",
@@ -123,7 +129,7 @@ html_theme_options = {
         {
             "media": "(prefers-color-scheme: dark)",
             "scheme": "slate",
-            "primary": "deep-purple",
+            "primary": "robusta-dark",
             "accent": "light-blue",
             "toggle": {
                 "icon": "material/weather-sunny",
@@ -132,17 +138,10 @@ html_theme_options = {
         },
     ],
     "features": [
-        # "navigation.expand",
+        "navigation.instant",
+        "navigation.top",
         "navigation.tabs",
         "navigation.tabs.sticky",
-        # "toc.integrate",
-        "navigation.sections",
-        "navigation.indexes",
-        # "navigation.instant",
-        # "header.autohide",
-        "navigation.top",
-        # "navigation.tracking",
-        # "search.highlight",
         "search.share",
         "toc.follow",
         "toc.sticky",

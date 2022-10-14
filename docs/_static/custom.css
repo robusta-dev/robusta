@@ -13,3 +13,21 @@ h2, h3 {
 .sd-bg-light {
     background-color: #ebebeb !important;
 }
+
+.md-header__button.md-logo {
+    flex-grow: 1;
+}
+
+.md-header__button.md-logo img {
+    
+}
+
+/* .md-nav__item--section>.md-nav__link .md-nav__icon {
+    display: block !important;
+} */
+
+/* .md-nav--primary .md-nav__title .md-nav__icon, .md-nav__toggle~.md-nav {
+    display: block !important;
+} */
+
+/* .md-nav__current-nested */
