@@ -146,6 +146,7 @@ html_theme_options = {
         "toc.follow",
         "toc.sticky",
     ],
+    "globaltoc_collapse": False,
     "social": [
         {
             "icon": "fontawesome/brands/github",
