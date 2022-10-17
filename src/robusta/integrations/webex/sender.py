@@ -15,7 +15,6 @@ from webexteamssdk import WebexTeamsAPI
 import os
 from enum import Enum
 
-
 INVESTIGATE_ICON = "🔍"
 SILENCE_ICON = "🔕"
 
@@ -25,10 +24,8 @@ ADAPTIVE_CARD_VERSION = "1.2"
 ADAPTIVE_CARD_SCHEMA = "http://adaptivecards.io/schemas/adaptive-card.json"
 ATTACHMENT_CONTENT_TYPE = "application/vnd.microsoft.card.adaptive"
 
-
 class CardTypes(Enum):
     ADAPTIVE_CARD = "AdaptiveCard"
-
 
 class FileTypes(Enum):
     PHOTO = "PHOTO"
@@ -192,7 +189,6 @@ class WebexSender:
     def _send_files(self, files: List[FileBlock]):
         # Webex allows for only one file attachment per message
         # This function sends the files individually to webex
-
         for blocks in files:
             file_type = (
                 FileTypes.PHOTO if is_image(blocks.filename) else FileTypes.DOCUMENT
