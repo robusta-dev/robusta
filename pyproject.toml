@@ -43,7 +43,7 @@ opsgenie-sdk = "^2.1.5"
 markdown2 = "^2.4.2"
 toml = "^0.10.2"
 watchgod = "^0.7"
-fpdf2 = "^2.5.7"
+webexteamssdk = "^1.6.1"
 
 # we're freezing a specific version here because the latest version doesn't have prebuilt wheels on pypi
 # and therefore requires gcc to install which we'd like to avoid
@@ -71,7 +71,6 @@ cssselect = "^1.1.0"
 pygal = "^3.0.0"
 tinycss = "^0.4"
 rsa = "^4.8"
-webexteamssdk = "^1.6.1"
 
 # There is a bug in jinga2 and markupsafe (explicitly markupsafe 2.1.1)
 markupsafe = "2.0.1"
