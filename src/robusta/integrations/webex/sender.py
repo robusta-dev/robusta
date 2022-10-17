@@ -24,10 +24,8 @@ ADAPTIVE_CARD_VERSION = "1.2"
 ADAPTIVE_CARD_SCHEMA = "http://adaptivecards.io/schemas/adaptive-card.json"
 ATTACHMENT_CONTENT_TYPE = "application/vnd.microsoft.card.adaptive"
 
-
 class CardTypes(Enum):
     ADAPTIVE_CARD = "AdaptiveCard"
-
 
 class FileTypes(Enum):
     PHOTO = "PHOTO"
@@ -71,6 +69,7 @@ class WebexSender:
         if file_blocks:
             self._send_files(file_blocks)
 
+
     def _createAdaptiveCardBody(
         self, message_content, table_blocks: List[TableBlock], description
     ):
@@ -81,6 +80,7 @@ class WebexSender:
         body.append(message_content_json)
         if table_blocks:
             table_blocks_json = self._createTableBlockJSON(table_blocks, body)
+
 
         return body
 
@@ -118,6 +118,7 @@ class WebexSender:
             body.append(container)
 
     def _createMessageContentJSON(self, message_content, description):
+
         message_content_container = {
             "type": "Container",
             "items": [
