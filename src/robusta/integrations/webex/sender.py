@@ -24,8 +24,10 @@ ADAPTIVE_CARD_VERSION = "1.2"
 ADAPTIVE_CARD_SCHEMA = "http://adaptivecards.io/schemas/adaptive-card.json"
 ATTACHMENT_CONTENT_TYPE = "application/vnd.microsoft.card.adaptive"
 
+
 class CardTypes(Enum):
     ADAPTIVE_CARD = "AdaptiveCard"
+
 
 class FileTypes(Enum):
     PHOTO = "PHOTO"
