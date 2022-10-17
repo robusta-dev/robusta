@@ -12,7 +12,6 @@ from ...core.sinks.transformer import Transformer
 from PIL import Image
 from io import BytesIO
 from webexteamssdk import WebexTeamsAPI
-from fpdf import FPDF
 import os
 from enum import Enum
 
@@ -51,15 +50,10 @@ class WebexSender:
         message, table_blocks, file_blocks, description = self._seperate_blocks(
             finding, platform_enabled
         )
-
-        pdf = None
-        if file_blocks:
-
-            pdf = self._create_pdf(file_blocks)
-
-        adaptive_card = self._createAdaptiveCard(
-            message_content=message, table_blocks=table_blocks, description=description
+        adaptive_card_body = self._createAdaptiveCardBody(
+            message, table_blocks, description
         )
+        adaptive_card = self._createAdaptiveCard(adaptive_card_body)
 
         attachment = [
             {
@@ -72,28 +66,59 @@ class WebexSender:
         self.client.messages.create(
             roomId=self.room_id, text=".", attachments=attachment
         )
+        if file_blocks:
+            self._send_files(file_blocks)
 
-        if pdf:
-            # Sending pdf to webex
 
-            filename = "finding.pdf"
-            pdf.output(filename, "F")
-            self.client.messages.create(roomId=self.room_id, files=[filename])
-            os.remove(filename)
-
-    def _createAdaptiveCard(
+    def _createAdaptiveCardBody(
         self, message_content, table_blocks: List[TableBlock], description
     ):
+        body = []
+        message_content_json = self._createMessageContentJSON(
+            message_content, description
+        )
+        body.append(message_content_json)
+        if table_blocks:
+            table_blocks_json = self._createTableBlockJSON(table_blocks, body)
 
-        # https://learn.microsoft.com/en-us/adaptive-cards/
-        # metadata for adaptive cards
-        adaptive_card = {
-            "type": CardTypes.ADAPTIVE_CARD,
-            "$schema": ADAPTIVE_CARD_SCHEMA,
-            "version": ADAPTIVE_CARD_VERSION,
-        }
 
-        # Creating a container from message_content and description of finding for adaptive card
+        return body
+
+    def _createTableBlockJSON(self, table_blocks: List[TableBlock], body: list):
+        for block in table_blocks:
+            container = {
+                "type": "Container",
+                "items": [{"type": "ColumnSet", "columns": []}],
+            }
+            for header in block.headers:
+                container["items"][0]["columns"].append(
+                    {
+                        "type": "Column",
+                        "width": "stretch",
+                        "items": [
+                            {"type": "TextBlock", "text": header, "wrap": "true"}
+                        ],
+                    }
+                )
+            # seperating each row to add below headers of column
+            rows = block.render_rows()
+            for row in rows:
+                row_json = {"type": "ColumnSet", "columns": []}
+                for text in row:
+                    row_json["columns"].append(
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {"type": "TextBlock", "text": text, "wrap": "true"}
+                            ],
+                        }
+                    )
+                container["items"].append(row_json)
+            body.append(container)
+
+    def _createMessageContentJSON(self, message_content, description):
+
         message_content_container = {
             "type": "Container",
             "items": [
@@ -101,42 +126,21 @@ class WebexSender:
                 {"type": "TextBlock", "text": description, "wrap": "true"},
             ],
         }
-        adaptive_card["body"] = [message_content_container]
+        return message_content_container
 
-        # Parsing table blocks for adaptive card
-        if table_blocks:
-            for block in table_blocks:
-                container = {
-                    "type": "Container",
-                    "items": [{"type": "ColumnSet", "columns": []}],
-                }
-                for header in block.headers:
-                    container["items"][0]["columns"].append(
-                        {
-                            "type": "Column",
-                            "width": "stretch",
-                            "items": [
-                                {"type": "TextBlock", "text": header, "wrap": "true"}
-                            ],
-                        }
-                    )
+    def _createAdaptiveCard(self, blocks):
 
-                # seperating each row to add below headers of column
-                rows = block.render_rows()
-                for row in rows:
-                    row_json = {"type": "ColumnSet", "columns": []}
-                    for text in row:
-                        row_json["columns"].append(
-                            {
-                                "type": "Column",
-                                "width": "stretch",
-                                "items": [
-                                    {"type": "TextBlock", "text": text, "wrap": "true"}
-                                ],
-                            }
-                        )
-                    container["items"].append(row_json)
-                adaptive_card["body"].append(container)
+        # https://learn.microsoft.com/en-us/adaptive-cards/
+        # metadata for adaptive cards
+        adaptive_card = {
+            "type": CardTypes.ADAPTIVE_CARD.value,
+            "$schema": ADAPTIVE_CARD_SCHEMA,
+            "version": ADAPTIVE_CARD_VERSION,
+        }
+
+        # Creating a container from message_content and description of finding for adaptive card
+
+        adaptive_card["body"] = blocks
 
         return adaptive_card
 
@@ -185,33 +189,25 @@ class WebexSender:
 
         return message_content, table_blocks, file_blocks, description
 
-    def _create_pdf(self, file_blocks: List[FileBlock]):
+    def _send_files(self, files: List[FileBlock]):
         # Webex allows for only one file attachment per message
-        # Creating 1 PDF from all fileblocks can help reduce number of msgs sent to webex.
-
-        pdf = FPDF(unit="mm")
-        pdf.set_font("Arial", size=15)
-
-        for blocks in file_blocks:
+        # This function sends the files individually to webex
+        for blocks in files:
             file_type = (
                 FileTypes.PHOTO if is_image(blocks.filename) else FileTypes.DOCUMENT
             )
+            if file_type is FileTypes.DOCUMENT:
 
-            # parse file according to file type
-            if file_type is FILE_TYPES[2]:
-                pdf.add_page()
-                contents = blocks.contents.decode("utf-8")
-                # create a cell for filename of the text file
-                pdf.cell(200, 10, txt=f"{blocks.filename}\n", ln=1, align="C")
+                file = open(blocks.filename, "wb")
+                file.write(blocks.contents)
+                file.close()
 
-                # Write to PDF from finding file content
-                for text in contents:
-                    # here is 1 height of each cell
-                    pdf.write(1, text)
+                self.client.messages.create(
+                    roomId=self.room_id,
+                    files=[blocks.filename],
+                )
 
-                # Adding next line to seperate fileblocks
-                pdf.write(1, "\n\n\n")
-
+                os.remove(blocks.filename)
             else:
                 file_name = blocks.filename
                 image_content = blocks.contents
@@ -223,15 +219,13 @@ class WebexSender:
 
                 # create Image object from the image bytes
                 image = Image.open(BytesIO(image_content))
+                image.save(file_name)
+                self.client.messages.create(
+                    roomId=self.room_id,
+                    files=[file_name],
+                )
 
-                # adding page to PDF according to size of image
-                width, height = image.size
-                width, height = float(width * 0.264583), float(height * 0.264583)
-                pdf.add_page(format=(width, height))
-                # Adding image to (x,y):(0,0)
-                pdf.image(image, 0, 0, width, height)
-
-        return pdf
+                os.remove(file_name)
 
     @classmethod
     def _create_message_content(
@@ -247,6 +241,7 @@ class WebexSender:
                 message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(cluster_name)})"
 
             message_content += "\n\n"
+
         return message_content
 
     @classmethod
