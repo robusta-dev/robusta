@@ -17,7 +17,6 @@ Welcome to Robusta
    installation
    using-robusta/index
    coverage
-   
 
 
 .. toctree::
@@ -26,15 +25,11 @@ Welcome to Robusta
    :hidden:
 
 
-   user-guide
-   advanced/index
+   user-guide/index
    upgrade
    tutorials/configuring-automations
    tutorials/prometheus-enrichment
    tutorials/my-first-custom-action
-   tutorials/python-profiling
-   tutorials/java-troubleshooting
-   tutorials/more-tutorials
 
 
 ..
@@ -48,6 +43,8 @@ Welcome to Robusta
    Overview <self>
    architecture
    oss-vs-saas
+   Robusta UI Triggers <advanced/robusta-ui-triggers>
+   Privacy & Security <advanced/privacy-and-security>
 
 
 
@@ -59,6 +56,8 @@ Welcome to Robusta
    catalog/triggers/index
    catalog/actions/index
    catalog/sinks/index
+   catalog/trigger-action
+   popular-automations/index
 
 .. toctree::
    :maxdepth: 4
@@ -74,8 +73,7 @@ Welcome to Robusta
    :caption: Help
    :hidden:
 
-   common-errors
-   community
+   help
 
 Robusta is an open source platform for Kubernetes troubleshooting. It sits on top of your monitoring stack
 (Prometheus, Elasticsearch, etc.) and tells you why alerts occurred and how to fix them.
