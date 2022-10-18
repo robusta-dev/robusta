@@ -80,8 +80,8 @@ class ServiceInfo(BaseModel):
     classification: str = "None"
     deleted: bool = False
     service_config: Optional[ServiceConfig]
-    ready_pods: int
-    total_pods: int
+    ready_pods: int = 0
+    total_pods: int = 0
 
     def get_service_key(self) -> str:
         return f"{self.namespace}/{self.service_type}/{self.name}"
