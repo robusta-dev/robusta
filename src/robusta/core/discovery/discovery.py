@@ -31,7 +31,9 @@ class Discovery:
 
     @staticmethod
     def __create_service_info(meta: V1ObjectMeta, kind: str,
-                              containers: List[V1Container], volumes: List[V1Volume]) -> ServiceInfo:
+                              containers: List[V1Container], volumes: List[V1Volume],
+                              total_pods: int = 0, ready_pods: int = 0
+                              ) -> ServiceInfo:
         container_info = [ContainerInfo.get_container_info(container) for container in containers] if containers else []
         volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
         config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
@@ -39,7 +41,9 @@ class Discovery:
             name=meta.name,
             namespace=meta.namespace,
             service_type=kind,
-            service_config=config
+            service_config=config,
+            ready_pods=ready_pods,
+            total_pods=total_pods
         )
 
     @staticmethod
@@ -51,7 +55,9 @@ class Discovery:
             deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    deployment.metadata, "Deployment", extract_containers(deployment), extract_volumes(deployment))
+                    deployment.metadata, "Deployment", extract_containers(deployment), extract_volumes(deployment),
+                    deployment.status.replicas,
+                    deployment.status.ready_replicas)
                 for deployment in deployments.items
             ])
             statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces()
@@ -59,7 +65,9 @@ class Discovery:
                 Discovery.__create_service_info(
                     statefulset.metadata, "StatefulSet",
                     extract_containers(statefulset),
-                    extract_volumes(statefulset))
+                    extract_volumes(statefulset),
+                    statefulset.status.replicas,
+                    statefulset.status.ready_replicas)
                 for statefulset in statefulsets.items
             ])
             daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces()
@@ -67,7 +75,9 @@ class Discovery:
                 Discovery.__create_service_info(
                     daemonset.metadata, "DaemonSet",
                     extract_containers(daemonset),
-                    extract_volumes(daemonset)
+                    extract_volumes(daemonset),
+                    daemonset.status.desired_number_scheduled,
+                    daemonset.status.numberReady
                 )
                 for daemonset in daemonsets.items
             ])
@@ -76,7 +86,9 @@ class Discovery:
                 Discovery.__create_service_info(
                     replicaset.metadata, "ReplicaSet",
                     extract_containers(replicaset),
-                    extract_volumes(replicaset)
+                    extract_volumes(replicaset),
+                    replicaset.status.replicas,
+                    replicaset.status.ready_replicas
                 )
                 for replicaset in replicasets.items if not replicaset.metadata.owner_references
             ])
@@ -87,7 +99,9 @@ class Discovery:
                 Discovery.__create_service_info(
                     pod.metadata, "Pod",
                     extract_containers(pod),
-                    extract_volumes(pod)
+                    extract_volumes(pod),
+                    1,
+                    is_pod_ready(pod)
                 )
                 for pod in pod_items if not pod.metadata.owner_references
             ])
@@ -169,6 +183,13 @@ def extract_containers(resource) -> List[V1Container]:
     except Exception:  # may fail if one of the attributes is None
         logging.error(f"Failed to extract containers from {resource}", exc_info=True)
     return []
+
+
+def is_pod_ready(pod: V1Pod) -> bool:
+    for condition in pod.status.conditions:
+        if condition.type == "Ready":
+            return condition.status.lower() == 'true'
+    return False
 
 
 def extract_volumes(resource) -> List[V1Volume]:
