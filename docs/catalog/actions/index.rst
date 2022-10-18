@@ -1,7 +1,6 @@
 Actions
 ==========
 
-
 .. toctree::
    :maxdepth: 1
    :hidden:
@@ -16,8 +15,7 @@ Actions
    message-formatting
 
 
-actions
+BuiltIn Actions
 -----------------------
 
-content blah blah
 

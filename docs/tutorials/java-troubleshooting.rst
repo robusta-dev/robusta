@@ -1,5 +1,5 @@
 Java jmap and stack
-######################################################
+==================================
 
 In this tutorial, you will use Robusta to troubleshoot a java application running on Kubernetes.
 
@@ -17,7 +17,7 @@ The following is currently supported:
   <div style="position: relative; padding-bottom: 62.5%; height: 0;"><iframe src="https://www.youtube.com/embed/DaxgfLp14vE" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
 
 Doing it
----------------------------------------
+^^^^^^^^^^^^^
 
 You need a Java application to debug. To create a demo application on your cluster run:
 
@@ -47,7 +47,7 @@ As an example, here is jmap output showing the application's memory usage:
   :align: center
 
 Learn more
-------------------
+^^^^^^^^^^^^^^
 
 * :ref:`Java Troubleshooting Actions`
 * :ref:`Manual Triggers`
