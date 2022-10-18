@@ -19,15 +19,42 @@ h2, h3 {
 }
 
 .md-header__button.md-logo img {
-    
+    height: 32px !important;
 }
 
-/* .md-nav__item--section>.md-nav__link .md-nav__icon {
-    display: block !important;
-} */
+.md-source__fact--version,
+.md-source__fact--forks {
+    display: none;
+}
 
-/* .md-nav--primary .md-nav__title .md-nav__icon, .md-nav__toggle~.md-nav {
-    display: block !important;
-} */
+.md-source__fact:nth-child(1n+2):before {
+    margin-left: 0 !important;
+}
 
-/* .md-nav__current-nested */
+.md-tabs__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.md-tabs__community {
+    display: block;
+    max-width: 11.3rem;
+    width: 11.7rem;
+}
+
+.md-tabs__community a {
+    display: flex;
+    align-items: center;
+}
+
+.md-tabs__community svg {
+    width: 30px;
+    fill: #fff;
+}
+
+.md-tabs__community span:nth-of-type(2) {
+    display: block;
+    margin-left: 5px;
+    font-size: 16px;
+}
