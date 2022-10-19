@@ -1,11 +1,9 @@
 Actions
 ==========
 
-Builtin actions
-^^^^^^^^^^^^^^^^^
-
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    event-enrichment
    remediation
@@ -15,3 +13,9 @@ Builtin actions
    java-troubleshooting
    miscellaneous
    message-formatting
+
+
+BuiltIn Actions
+-----------------------
+
+

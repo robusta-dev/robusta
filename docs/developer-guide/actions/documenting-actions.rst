@@ -1,4 +1,4 @@
-Sphinx Documentation
+Playbook Documentation
 ################################
 
 The Robusta documentation is written using `Sphinx <https://www.sphinx-doc.org/en/master/>`_.

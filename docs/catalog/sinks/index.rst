@@ -1,6 +1,22 @@
 Sinks
 ======
 
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+   slack
+   telegram
+   discord
+   kafka
+   DataDog
+   ms-teams
+   mattermost
+   webhook
+   Opsgenie
+   VictorOps
+   PagerDuty
+
 Playbooks results (findings) can be sent to one or more sinks (destinations). Findings will be automatically formatted in a way
 that makes sense for each sink.
 
@@ -55,18 +71,3 @@ Default sinks
 If a playbook doesn't specify a sink then output will be sent to the default sinks. A sink is considered default
 if it has the field `default: true` in the YAML.
 
-.. toctree::
-   :hidden:
-   :maxdepth: 1
-
-   slack
-   telegram
-   discord
-   kafka
-   DataDog
-   ms-teams
-   mattermost
-   webhook
-   Opsgenie
-   VictorOps
-   PagerDuty

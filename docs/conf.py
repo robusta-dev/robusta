@@ -106,7 +106,7 @@ todo_include_todos = False
 
 html_theme = "sphinx_immaterial"
 
-html_logo = "images/logo_docs.svg"
+html_logo = "images/logo_docs_big.svg"
 
 html_theme_options = {
     "icon": {
@@ -114,6 +114,7 @@ html_theme_options = {
     },
     "repo_url": "https://github.com/robusta-dev/robusta",
     "repo_name": "Robusta",
+    "repo_type": "github",  
     "edit_uri": "tree/docsimmaterial/docs",   ##### Modify to the Master Branch ###########
     "palette": [
         {
@@ -122,7 +123,7 @@ html_theme_options = {
             "primary": "robusta",
             "accent": "light-blue",
             "toggle": {
-                "icon": "material/weather-night",
+                "icon": "material/toggle-switch-off-outline",
                 "name": "Switch to dark mode",
             },
         },
@@ -132,9 +133,9 @@ html_theme_options = {
             "primary": "robusta-dark",
             "accent": "light-blue",
             "toggle": {
-                "icon": "material/weather-sunny",
+                "icon": "material/toggle-switch",
                 "name": "Switch to light mode",
-            },
+            },  
         },
     ],
     "features": [
@@ -146,6 +147,7 @@ html_theme_options = {
         "toc.follow",
         "toc.sticky",
     ],
+    "globaltoc_collapse": False,
     "social": [
         {
             "icon": "fontawesome/brands/github",
@@ -184,9 +186,7 @@ html_css_files = [
 
 html_js_files = ["analytics.js"]
 
-html_favicon = "_static/favicon.png"
-
-# html_logo = "_static/logo.png"
+html_favicon = "_static/faviconNew.svg"
 
 
 def setup(app):

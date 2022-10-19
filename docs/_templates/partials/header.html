@@ -27,26 +27,6 @@
       {% include ".icons/material/menu" ~ ".svg" %}
     </label>
 
-    <!-- Header title -->
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis">
-            {{ shorttitle }}
-          </span>
-        </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            {% if page and page.meta and page.meta.title %}
-              {{ page.meta.title }}
-            {% else %}
-              {{ page.title }}
-            {% endif %}
-          </span>
-        </div>
-      </div>
-    </div>
-
     <!-- Color palette -->
     {% if not config.theme.palette is mapping %}
       <form class="md-header__option" data-md-component="palette">
