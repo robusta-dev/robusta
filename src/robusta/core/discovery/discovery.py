@@ -32,7 +32,7 @@ class Discovery:
     @staticmethod
     def __create_service_info(meta: V1ObjectMeta, kind: str,
                               containers: List[V1Container], volumes: List[V1Volume],
-                              total_pods: int = 0, ready_pods: int = 0
+                              total_pods: int, ready_pods: int
                               ) -> ServiceInfo:
         container_info = [ContainerInfo.get_container_info(container) for container in containers] if containers else []
         volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
@@ -56,7 +56,7 @@ class Discovery:
             active_services.extend([
                 Discovery.__create_service_info(
                     deployment.metadata, "Deployment", extract_containers(deployment), extract_volumes(deployment),
-                    deployment.status.replicas,
+                    extract_total_pods(deployment),
                     extract_ready_pods(deployment))
                 for deployment in deployments.items
             ])
@@ -66,7 +66,7 @@ class Discovery:
                     statefulset.metadata, "StatefulSet",
                     extract_containers(statefulset),
                     extract_volumes(statefulset),
-                    statefulset.status.replicas,
+                    extract_total_pods(statefulset),
                     extract_ready_pods(statefulset))
                 for statefulset in statefulsets.items
             ])
@@ -76,7 +76,7 @@ class Discovery:
                     daemonset.metadata, "DaemonSet",
                     extract_containers(daemonset),
                     extract_volumes(daemonset),
-                    daemonset.status.desired_number_scheduled,
+                    extract_total_pods(daemonset),
                     extract_ready_pods(daemonset)
                 )
                 for daemonset in daemonsets.items
@@ -87,7 +87,7 @@ class Discovery:
                     replicaset.metadata, "ReplicaSet",
                     extract_containers(replicaset),
                     extract_volumes(replicaset),
-                    replicaset.status.replicas,
+                    extract_total_pods(replicaset),
                     extract_ready_pods(replicaset)
                 )
                 for replicaset in replicasets.items if not replicaset.metadata.owner_references
@@ -100,7 +100,7 @@ class Discovery:
                     pod.metadata, "Pod",
                     extract_containers(pod),
                     extract_volumes(pod),
-                    1,
+                    extract_total_pods(pod),
                     extract_ready_pods(pod)
                 )
                 for pod in pod_items if not pod.metadata.owner_references
@@ -205,6 +205,19 @@ def extract_ready_pods(resource) -> int:
     except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
         logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
     return 0
+
+
+def extract_total_pods(resource) -> int:
+    if isinstance(resource, V1Deployment) \
+            or isinstance(resource, V1StatefulSet) \
+            or isinstance(resource, V1Job):
+        return resource.status.replicas
+    elif isinstance(resource, V1DaemonSet):
+        return resource.status.desired_number_scheduled
+    elif isinstance(resource, V1Pod):
+        return 1
+    return 0
+
 
 def extract_volumes(resource) -> List[V1Volume]:
     """Extract volumes from k8s python api object (not hikaru)"""
