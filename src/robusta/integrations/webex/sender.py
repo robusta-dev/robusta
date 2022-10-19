@@ -1,5 +1,5 @@
 from ...core.reporting.base import Finding, FindingSeverity
-from ...core.reporting.utils import is_image, convert_svg_to_png, SVG_SUFFIX, PNG_SUFFIX
+from ...core.reporting.utils import add_pngs_for_all_svgs, SVG_SUFFIX
 from ...core.reporting.blocks import (
     MarkdownBlock,
     BaseBlock,
@@ -9,11 +9,9 @@ from ...core.reporting.blocks import (
 )
 from ...core.sinks.transformer import Transformer
 
-from PIL import Image
-from io import BytesIO
 from webexteamssdk import WebexTeamsAPI
-import os
 from enum import Enum
+import tempfile
 
 INVESTIGATE_ICON = "🔍"
 SILENCE_ICON = "🔕"
@@ -24,12 +22,9 @@ ADAPTIVE_CARD_VERSION = "1.2"
 ADAPTIVE_CARD_SCHEMA = "http://adaptivecards.io/schemas/adaptive-card.json"
 ATTACHMENT_CONTENT_TYPE = "application/vnd.microsoft.card.adaptive"
 
+
 class CardTypes(Enum):
     ADAPTIVE_CARD = "AdaptiveCard"
-
-class FileTypes(Enum):
-    PHOTO = "PHOTO"
-    DOCUMENT = "DOCUMENT"
 
 
 class WebexSender:
@@ -47,7 +42,7 @@ class WebexSender:
         )  # Create a client using webexteamssdk
 
     def send_finding_to_webex(self, finding: Finding, platform_enabled: bool):
-        message, table_blocks, file_blocks, description = self._seperate_blocks(
+        message, table_blocks, file_blocks, description = self._separate_blocks(
             finding, platform_enabled
         )
         adaptive_card_body = self._createAdaptiveCardBody(
@@ -69,7 +64,6 @@ class WebexSender:
         if file_blocks:
             self._send_files(file_blocks)
 
-
     def _createAdaptiveCardBody(
         self, message_content, table_blocks: List[TableBlock], description
     ):
@@ -80,7 +74,6 @@ class WebexSender:
         body.append(message_content_json)
         if table_blocks:
             table_blocks_json = self._createTableBlockJSON(table_blocks, body)
-
 
         return body
 
@@ -139,12 +132,11 @@ class WebexSender:
         }
 
         # Creating a container from message_content and description of finding for adaptive card
-
         adaptive_card["body"] = blocks
 
         return adaptive_card
 
-    def _seperate_blocks(self, finding: Finding, platform_enabled: bool):
+    def _separate_blocks(self, finding: Finding, platform_enabled: bool):
         table_blocks: List[TableBlock] = []
         file_blocks: List[FileBlock] = []
         description = None
@@ -168,7 +160,13 @@ class WebexSender:
                 [block for block in enrichment.blocks if isinstance(block, TableBlock)]
             )
             file_blocks.extend(
-                [block for block in enrichment.blocks if isinstance(block, FileBlock)]
+                add_pngs_for_all_svgs(
+                    [
+                        block
+                        for block in enrichment.blocks
+                        if isinstance(block, FileBlock)
+                    ]
+                )
             )
 
         # first add finding description block
@@ -192,40 +190,17 @@ class WebexSender:
     def _send_files(self, files: List[FileBlock]):
         # Webex allows for only one file attachment per message
         # This function sends the files individually to webex
-        for blocks in files:
-            file_type = (
-                FileTypes.PHOTO if is_image(blocks.filename) else FileTypes.DOCUMENT
-            )
-            if file_type is FileTypes.DOCUMENT:
-
-                file = open(blocks.filename, "wb")
-                file.write(blocks.contents)
-                file.close()
-
-                self.client.messages.create(
-                    roomId=self.room_id,
-                    files=[blocks.filename],
-                )
-
-                os.remove(blocks.filename)
-            else:
-                file_name = blocks.filename
-                image_content = blocks.contents
-
-                # Convent SVG file to PNG
-                if file_name.endswith(SVG_SUFFIX):
-                    image_content = convert_svg_to_png(image_content)
-                    file_name = file_name.replace(SVG_SUFFIX, PNG_SUFFIX)
-
-                # create Image object from the image bytes
-                image = Image.open(BytesIO(image_content))
-                image.save(file_name)
-                self.client.messages.create(
-                    roomId=self.room_id,
-                    files=[file_name],
-                )
-
-                os.remove(file_name)
+        for block in files:
+            suffix = "." + block.filename.split(".")[1]
+            if suffix != SVG_SUFFIX:
+                with tempfile.NamedTemporaryFile(suffix=suffix, delete=True) as f:
+                    f.write(block.contents)
+                    f.flush()
+                    self.client.messages.create(
+                        roomId=self.room_id,
+                        files=[f.name],
+                    )
+                    f.close()  # File is deleted when closed
 
     @classmethod
     def _create_message_content(
