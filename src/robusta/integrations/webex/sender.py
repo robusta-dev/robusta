@@ -132,7 +132,6 @@ class WebexSender:
         }
 
         # Creating a container from message_content and description of finding for adaptive card
-
         adaptive_card["body"] = blocks
 
         return adaptive_card
