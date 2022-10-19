@@ -53,6 +53,23 @@ class FindingSeverity(Enum):
             return "🔴"
 
 
+class FindingStatus(Enum):
+    FIRING = 0
+    RESOLVED = 1
+
+    def to_color_hex(self) -> str:
+        if self == FindingStatus.RESOLVED:
+            return "#00B302"
+        elif self == FindingStatus.FIRING:
+            return "#EF311F"
+
+    def to_emoji(self) -> str:
+        if self == FindingStatus.RESOLVED:
+            return "✅"
+        elif self == FindingStatus.FIRING:
+            return "🔥"
+
+
 class VideoLink(BaseModel):
     url: str
     name: str = "See more"
