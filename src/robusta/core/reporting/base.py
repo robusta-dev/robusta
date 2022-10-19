@@ -60,14 +60,14 @@ class FindingStatus(Enum):
     def to_color_hex(self) -> str:
         if self == FindingStatus.RESOLVED:
             return "#00B302"
-        elif self == FindingStatus.FIRING:
-            return "#EF311F"
+
+        return "#EF311F"
 
     def to_emoji(self) -> str:
         if self == FindingStatus.RESOLVED:
             return "✅"
-        elif self == FindingStatus.FIRING:
-            return "🔥"
+
+        return "🔥"
 
 
 class VideoLink(BaseModel):

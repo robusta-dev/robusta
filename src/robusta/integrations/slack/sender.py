@@ -267,7 +267,7 @@ class SlackSender:
                 f"error sending message to slack\ne={e}\ntext={message}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
 
-    def create_finding_header(
+    def __create_finding_header(
         self, finding: Finding, status: FindingStatus, platform_enabled: bool
     ) -> MarkdownBlock:
 
@@ -276,11 +276,17 @@ class SlackSender:
         if platform_enabled:
             title = f"<{finding.investigate_uri}|*{title}*>"
 
-        return MarkdownBlock(
-            f"{status.to_emoji()} `{status.name.lower()}` {sev.to_emoji()} `{sev.name.lower()}` {title}"
+        status_str: str = (
+            f"{status.to_emoji()} `{status.name.lower()}`"
+            if finding.add_silence_url
+            else ""
         )
 
-    def create_links(self, finding: Finding):
+        return MarkdownBlock(
+            f"{status_str} {sev.to_emoji()} `{sev.name.lower()}` {title}"
+        )
+
+    def __create_links(self, finding: Finding):
 
         links: List[LinkProp] = []
         links.append(
@@ -319,7 +325,9 @@ class SlackSender:
             else FindingStatus.FIRING
         )
         if finding.title:
-            blocks.append(self.create_finding_header(finding, status, platform_enabled))
+            blocks.append(
+                self.__create_finding_header(finding, status, platform_enabled)
+            )
 
         blocks.append(MarkdownBlock(text=f"Source: `{self.cluster_name}`"))
         if finding.description:
@@ -337,7 +345,7 @@ class SlackSender:
                 blocks.extend(enrichment.blocks)
 
         if platform_enabled:
-            blocks.append(self.create_links(finding))
+            blocks.append(self.__create_links(finding))
         blocks.append(DividerBlock())
 
         if len(attachment_blocks):
