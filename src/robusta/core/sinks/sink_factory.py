@@ -24,6 +24,9 @@ from .pagerduty.pagerduty_sink import PagerdutySink
 from .pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from .mattermost.mattermost_sink import MattermostSink
 from .mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
+from .webex.webex_sink import WebexSink
+from .webex.webex_sink_params import WebexSinkConfigWrapper
+
 
 class SinkFactory:
     @classmethod
@@ -52,5 +55,7 @@ class SinkFactory:
             return DiscordSink(sink_config, registry)
         elif isinstance(sink_config, MattermostSinkConfigWrapper):
             return MattermostSink(sink_config, registry)
+        elif isinstance(sink_config, WebexSinkConfigWrapper):
+            return WebexSink(sink_config, registry)
         else:
             raise Exception(f"Sink not supported {type(sink_config)}")
