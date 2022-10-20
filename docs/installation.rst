@@ -12,9 +12,6 @@ Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1
 We will now configure Robusta in your cluster.
 For this we need to install Robusta, and also connect at least one destination ("sink"), and at least one source ("triggers").
 
-.. image:: ./images/robusta_motion_graphics_transparent.gif
-   :align: center
-
 Creating the config file
 ------------------------------
 
@@ -157,29 +154,6 @@ By default, Robusta sends notifications when Kubernetes pods crash.
    :name: cb-delete-crashpod
 
    kubectl delete deployment crashpod
-
-Installing a second cluster
----------------------------------
-
-When installing a second cluster on the same account, there's no need to run ``robusta gen-config`` again.
-
-Using your existing generated_values.yaml and the new clusterName run:
-
-.. code-block:: bash
-   :name: cb-helm-install-only-robusta
-
-    helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> # --set isSmallCluster=true
-
-.. admonition:: Where is my generated_values.yaml?
-
-    If you have lost your ``generated_values.yaml`` file, you can extract it from any cluster running Robusta.
-
-
-    In that case, ``clusterName`` and ``isSmallCluster`` may be already in ``generated_values.yaml``. Make sure to remove them before installing on the new cluster.
-
-    .. code-block:: bash
-
-         helm get values -o yaml robusta | grep -v clusterName: | grep -v isSmallCluster: > generated_values.yaml
 
 
 Next Steps

@@ -14,10 +14,16 @@ Welcome to Robusta
    :caption: Getting Started
    :hidden:
    
+   gettingstarted-index
    installation
-   using-robusta/index
-   coverage
-
+   tutorials/argocd-installation
+   tutorials/add-more-clusters
+   using-robusta/trackchanges
+   using-robusta/enrich-alerts
+   Remediate Alerts <using-robusta/remediatealerts>
+   Route Alerts <using-robusta/routealerts>
+   Blogs & Videos <tutorials/blogs-videos>
+   
 
 .. toctree::
    :maxdepth: 4
@@ -25,8 +31,15 @@ Welcome to Robusta
    :hidden:
 
 
-   user-guide/index
+   user-guide/defining-playbook
+   user-guide/global-config
+   user-guide/sink-configuration
+   user-guide/additional-playbooks
+   user-guide/Secrets <configuration-secrets>
+   user-guide/alert-manager
+   user-guide/embeded-prometheus
    upgrade
+   uninstall
    tutorials/configuring-automations
    tutorials/prometheus-enrichment
    tutorials/my-first-custom-action
@@ -45,6 +58,7 @@ Welcome to Robusta
    oss-vs-saas
    Robusta UI Triggers <advanced/robusta-ui-triggers>
    Privacy & Security <advanced/privacy-and-security>
+   coverage
 
 
 
@@ -56,7 +70,6 @@ Welcome to Robusta
    catalog/triggers/index
    catalog/actions/index
    catalog/sinks/index
-   catalog/trigger-action
    popular-automations/index
 
 .. toctree::

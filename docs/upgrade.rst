@@ -1,4 +1,4 @@
-Upgrade and Uninstall
+Upgrade
 ######################
 
 Robusta is installed with Helm, so Robusta upgrades are just Helm upgrades. Uninstalls are just Helm uninstalls.
@@ -95,11 +95,3 @@ From versions lower than 0.9.1 to latest
     robusta logs
 
 
-Helm Uninstall
-------------------------------
-
-This will uninstall Robusta:
-
-.. code-block:: bash
-
-    helm uninstall robusta
