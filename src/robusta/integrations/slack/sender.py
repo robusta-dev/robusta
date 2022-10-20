@@ -1,4 +1,3 @@
-import json
 import logging
 import tempfile
 from slack_sdk import WebClient
@@ -13,19 +12,14 @@ from ...core.reporting.consts import SlackAnnotations
 from ...core.sinks.transformer import Transformer
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
+ACTION_LINK = "link"
 SlackBlock = Dict[str, Any]
-SEVERITY_EMOJI_MAP = {
-    FindingSeverity.HIGH: ":red_circle:",
-    FindingSeverity.MEDIUM: ":large_orange_circle:",
-    FindingSeverity.LOW: ":large_yellow_circle:",
-    FindingSeverity.INFO: ":large_green_circle:",
-}
 MAX_BLOCK_CHARS = 3000
 
 
 class SlackSender:
     def __init__(
-            self, slack_token: str, account_id: str, cluster_name: str, signing_key: str
+        self, slack_token: str, account_id: str, cluster_name: str, signing_key: str
     ):
         """
         Connect to Slack and verify that the Slack token is valid.
@@ -43,7 +37,7 @@ class SlackSender:
             raise e
 
     def __get_action_block_for_choices(
-            self, sink: str, choices: Dict[str, CallbackChoice] = None
+        self, sink: str, choices: Dict[str, CallbackChoice] = None
     ):
         if choices is None:
             return []
@@ -72,8 +66,28 @@ class SlackSender:
 
         return [{"type": "actions", "elements": buttons}]
 
+    def __to_slack_links(self, links: List[LinkProp]) -> List[SlackBlock]:
+        if len(links) == 0:
+            return []
+
+        buttons = []
+        for i, link in enumerate(links):
+            buttons.append(
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": link.text,
+                    },
+                    "action_id": f"{ACTION_LINK}_{i}",
+                    "url": link.url,
+                }
+            )
+
+        return [{"type": "actions", "elements": buttons}]
+
     def __to_slack_diff(
-            self, block: KubernetesDiffBlock, sink_name: str
+        self, block: KubernetesDiffBlock, sink_name: str
     ) -> List[SlackBlock]:
         # this can happen when a block.old=None or block.new=None - e.g. the resource was added or deleted
         if not block.diffs:
@@ -94,19 +108,38 @@ class SlackSender:
 
         return slack_blocks
 
+    def __to_slack_markdown(self, block: MarkdownBlock) -> List[SlackBlock]:
+        if not block.text:
+            return []
+
+        return [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": Transformer.apply_length_limit(block.text, MAX_BLOCK_CHARS),
+                },
+            }
+        ]
+
+    def __to_slack_table(self, block: TableBlock):
+        # temp workaround untill new blocks will be added to support these.
+        if "alert labels" in block.table_name.lower() and len(block.headers) == 2:
+            table_str = "\n".join(f"▪️ {row[0]} `{row[1]}`" for row in block.rows)
+            table_str = f"{block.table_name} \n{table_str}"
+            return self.__to_slack_markdown(MarkdownBlock(table_str))
+        elif "pod events" in block.table_name.lower() and len(block.headers) == 4:
+            table_str = "\n".join(
+                f"`{row[0]}` *{row[1]}* {row[2]} 🔶 {row[3]}" for row in block.rows
+            )
+            table_str = f"{block.table_name} \n{table_str}"
+            return self.__to_slack_markdown(MarkdownBlock(table_str))
+
+        return self.__to_slack_markdown(block.to_markdown())
+
     def __to_slack(self, block: BaseBlock, sink_name: str) -> List[SlackBlock]:
         if isinstance(block, MarkdownBlock):
-            if not block.text:
-                return []
-            return [
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": Transformer.apply_length_limit(block.text, MAX_BLOCK_CHARS),
-                    },
-                }
-            ]
+            return self.__to_slack_markdown(block)
         elif isinstance(block, DividerBlock):
             return [{"type": "divider"}]
         elif isinstance(block, FileBlock):
@@ -123,15 +156,15 @@ class SlackSender:
                 }
             ]
         elif isinstance(block, TableBlock):
-            return self.__to_slack(
-                block.to_markdown(max_chars=MAX_BLOCK_CHARS), sink_name
-            )
+            return self.__to_slack_table(block)
         elif isinstance(block, ListBlock):
-            return self.__to_slack(block.to_markdown(), sink_name)
+            return self.__to_slack_markdown(block.to_markdown())
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_slack_diff(block, sink_name)
         elif isinstance(block, CallbackBlock):
             return self.__get_action_block_for_choices(sink_name, block.choices)
+        elif isinstance(block, LinksBlock):
+            return self.__to_slack_links(block.links)
         else:
             logging.error(
                 f"cannot convert block of type {type(block)} to slack format block: {block}"
@@ -170,20 +203,15 @@ class SlackSender:
 
         return Transformer.apply_length_limit(message, MAX_BLOCK_CHARS)
 
-    @classmethod
-    def __add_slack_severity(cls, title: str, severity: FindingSeverity) -> str:
-        icon = SEVERITY_EMOJI_MAP.get(severity, "")
-        return f"{icon} {severity.name} - {title}"
-
     def __send_blocks_to_slack(
-            self,
-            report_blocks: List[BaseBlock],
-            report_attachment_blocks: List[BaseBlock],
-            title: str,
-            slack_channel: str,
-            unfurl: bool,
-            sink_name: str,
-            severity: FindingSeverity,
+        self,
+        report_blocks: List[BaseBlock],
+        report_attachment_blocks: List[BaseBlock],
+        title: str,
+        slack_channel: str,
+        unfurl: bool,
+        sink_name: str,
+        status: FindingStatus,
     ):
         file_blocks = add_pngs_for_all_svgs(
             [b for b in report_blocks if isinstance(b, FileBlock)]
@@ -204,13 +232,8 @@ class SlackSender:
                     FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8"))
                 )
                 other_blocks.remove(table_block)
-
         message = self.prepare_slack_text(title, file_blocks)
-
         output_blocks = []
-        if title:
-            title = self.__add_slack_severity(title, severity)
-            output_blocks.extend(self.__to_slack(HeaderBlock(title), sink_name))
         for block in other_blocks:
             output_blocks.extend(self.__to_slack(block, sink_name))
         attachment_blocks = []
@@ -226,53 +249,87 @@ class SlackSender:
         )
 
         try:
-            if attachment_blocks:
-                self.slack_client.chat_postMessage(
-                    channel=slack_channel,
-                    text=message,
-                    blocks=output_blocks,
-                    display_as_bot=True,
-                    attachments=[{"blocks": attachment_blocks}],
-                    unfurl_links=unfurl,
-                    unfurl_media=unfurl,
-                )
-            else:
-                self.slack_client.chat_postMessage(
-                    channel=slack_channel,
-                    text=message,
-                    blocks=output_blocks,
-                    display_as_bot=True,
-                    unfurl_links=unfurl,
-                    unfurl_media=unfurl,
-                )
+            self.slack_client.chat_postMessage(
+                channel=slack_channel,
+                text=message,
+                blocks=output_blocks,
+                display_as_bot=True,
+                attachments=[
+                    {"color": status.to_color_hex(), "blocks": attachment_blocks}
+                ]
+                if attachment_blocks
+                else None,
+                unfurl_links=unfurl,
+                unfurl_media=unfurl,
+            )
         except Exception as e:
             logging.error(
-                f"error sending message to slack\ne={e}\ntext={message}\nblocks={output_blocks}\nattachment_blocks={attachment_blocks}"
+                f"error sending message to slack\ne={e}\ntext={message}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
 
+    def __create_finding_header(
+        self, finding: Finding, status: FindingStatus, platform_enabled: bool
+    ) -> MarkdownBlock:
+
+        title = finding.title.removeprefix("[RESOLVED] ")
+        sev = finding.severity
+        if platform_enabled:
+            title = f"<{finding.investigate_uri}|*{title}*>"
+
+        status_str: str = (
+            f"{status.to_emoji()} `{status.name.lower()}`"
+            if finding.add_silence_url
+            else ""
+        )
+
+        return MarkdownBlock(
+            f"{status_str} {sev.to_emoji()} `{sev.name.lower()}` {title}"
+        )
+
+    def __create_links(self, finding: Finding):
+
+        links: List[LinkProp] = []
+        links.append(
+            LinkProp(
+                text=f"Investigate 🔎",
+                url=finding.get_investigate_uri(self.account_id, self.cluster_name),
+            )
+        )
+
+        if finding.add_silence_url:
+            links.append(
+                LinkProp(
+                    text=f"Silence 🔕",
+                    url=finding.get_prometheus_silence_url(self.cluster_name),
+                )
+            )
+
+        for video_link in finding.video_links:
+            links.append(LinkProp(text=f"{video_link.name} 🎬", url=video_link.url))
+
+        return LinksBlock(links=links)
+
     def send_finding_to_slack(
-            self,
-            finding: Finding,
-            slack_channel: str,
-            sink_name: str,
-            platform_enabled: bool,
+        self,
+        finding: Finding,
+        slack_channel: str,
+        sink_name: str,
+        platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
-        if platform_enabled:  # add link to the robusta ui, if it's configured
-            actions = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|:mag_right: Investigate>"
 
-            if finding.add_silence_url:
-                actions = f"{actions} <{finding.get_prometheus_silence_url(self.cluster_name)}|:no_bell: Silence>"
+        status: FindingStatus = (
+            FindingStatus.RESOLVED
+            if finding.title.startswith("[RESOLVED]")
+            else FindingStatus.FIRING
+        )
+        if finding.title:
+            blocks.append(
+                self.__create_finding_header(finding, status, platform_enabled)
+            )
 
-            for video_link in finding.video_links:
-                actions = f"{actions} <{video_link.url}|:clapper: {video_link.name}>"
-
-            blocks.append(MarkdownBlock(text=actions))
-
-        blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
-
-        # first add finding description block
+        blocks.append(MarkdownBlock(text=f"Source: `{self.cluster_name}`"))
         if finding.description:
             blocks.append(MarkdownBlock(finding.description))
 
@@ -287,6 +344,13 @@ class SlackSender:
             else:
                 blocks.extend(enrichment.blocks)
 
+        if platform_enabled:
+            blocks.append(self.__create_links(finding))
+        blocks.append(DividerBlock())
+
+        if len(attachment_blocks):
+            attachment_blocks.append(DividerBlock())
+
         self.__send_blocks_to_slack(
             blocks,
             attachment_blocks,
@@ -294,5 +358,5 @@ class SlackSender:
             slack_channel,
             unfurl,
             sink_name,
-            finding.severity,
+            status,
         )
