@@ -22,7 +22,7 @@ Welcome to Robusta
    using-robusta/enrich-alerts
    Remediate Alerts <using-robusta/remediatealerts>
    Route Alerts <using-robusta/routealerts>
-   Blogs & Videos <tutorials/blogs-videos>
+   More tutorials <tutorials/blogs-videos>
    
 
 .. toctree::
