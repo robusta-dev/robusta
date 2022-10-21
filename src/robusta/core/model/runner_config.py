@@ -15,7 +15,7 @@ from ..sinks.victorops.victorops_sink_params import VictoropsConfigWrapper
 from ..sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from ..sinks.discord.discord_sink_params import DiscordSinkConfigWrapper
 from ..sinks.mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
-
+from ..sinks.webex.webex_sink_params import WebexSinkConfigWrapper
 
 class PlaybookRepo(BaseModel):
     url: str
@@ -41,7 +41,8 @@ class RunnerConfig(BaseModel):
                 VictoropsConfigWrapper,
                 PagerdutyConfigWrapper,
                 DiscordSinkConfigWrapper,
-                MattermostSinkConfigWrapper
+                MattermostSinkConfigWrapper,
+                WebexSinkConfigWrapper
             ]
         ]
     ]
