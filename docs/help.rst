@@ -6,12 +6,21 @@ Help
 
 Ask for help, or just say hi!
 
-1. `Slack <https://bit.ly/robusta-slack>`_ - **link only works on desktop**
-2. `GitHub Issues <https://github.com/robusta-dev/robusta/issues>`_
+.. grid:: 5
+   :gutter: 3
+
+   .. grid-item-card:: :octicon:`comment-discussion;1em;` Slack    
+      :class-card: sd-bg-light sd-bg-text-light
+      :link: https://bit.ly/robusta-slack
+
+
+   .. grid-item-card:: :octicon:`mark-github;1em;` Github Issue
+      :class-card: sd-bg-light sd-bg-text-light
+      :link: https://github.com/robusta-dev/robusta/issues
 
 Commercial Support
 ^^^^^^^^^^^^^^^^^^^
-We offer several affordable plans. Contact support@robusta.dev for details. 
+Contact support@robusta.dev for details. 
 
 
 Common Errors

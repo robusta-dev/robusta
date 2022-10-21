@@ -16,7 +16,7 @@ Welcome to Robusta
    
    gettingstarted-index
    installation
-   tutorials/argocd-installation
+   Install with ArgoCD <tutorials/argocd-installation>
    tutorials/add-more-clusters
    using-robusta/trackchanges
    using-robusta/enrich-alerts

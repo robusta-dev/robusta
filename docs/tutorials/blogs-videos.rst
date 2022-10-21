@@ -1,12 +1,5 @@
-Kubernetes Kommunity
-^^^^^^^^^^^^^^^^^^^^
-
-Our free videos on Kubernetes are fairly popular. They are extremely short (under five minutes) and mildly entertaining.
-
-See `Kubernetes Kommunity for details <https://home.robusta.dev/learning/>`_
-
-
-Here are more tutorials from our awesome community:
+More tutorials
+^^^^^^^^^^^^^^^^^^
 
 Blogs
 -----------

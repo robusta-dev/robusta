@@ -1,9 +1,11 @@
+:hide-toc:
 QuickStart
 ================
 
 Installation
 ^^^^^^^^^^^^^^^^
-.. grid:: 3
+.. grid:: 1 1 2 3
+    :gutter: 3
 
     .. grid-item-card:: :octicon:`book;1em;` Installation
         :class-card: sd-bg-light sd-bg-text-light
@@ -17,40 +19,41 @@ Installation
         :link: tutorials/argocd-installation
         :link-type: doc
 
-        Get notified when 
+        Use GitOps to manage Robusta
 
     .. grid-item-card::  :octicon:`book;1em;` Add more clusters
         :class-card: sd-bg-light sd-bg-text-light
         :link: tutorials/add-more-clusters
         :link-type: doc
 
-        Send alerts from multiple clusters to same account 
+        Connect multiple clusters to the same account 
 
 Using Robusta 
 ^^^^^^^^^^^^^^^^^^^^^^
 
 .. grid:: 3
+    :gutter: 3
 
     .. grid-item-card:: :octicon:`book;1em;` Track Kubernetes Changes
         :class-card: sd-bg-light sd-bg-text-light
         :link: installation
         :link-type: doc
 
-        Install Robusta with Helm
+        Get notified in your favorite app
 
     .. grid-item-card::  :octicon:`book;1em;`  Enrich Prometheus Alerts
         :class-card: sd-bg-light sd-bg-text-light
         :link: tutorials/argocd-installation
         :link-type: doc
 
-        Get notified when 
+        Better alerts, correlated with logs and graphs
 
     .. grid-item-card:: :octicon:`book;1em;`  Remediate Alerts
         :class-card: sd-bg-light sd-bg-text-light
         :link: tutorials/add-more-clusters
         :link-type: doc
 
-        Send alerts from multiple clusters to same account
+        Automatically fix issues with runbook automation
 
 .. grid:: 3
 
@@ -59,5 +62,5 @@ Using Robusta
         :link: tutorials/add-more-clusters
         :link-type: doc
 
-        Send alerts from multiple clusters to same account 
+        Split notifications for dev and ops, or by priority
     

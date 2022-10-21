@@ -3,7 +3,7 @@ Installation
 
 The standard installation uses `Helm 3 <https://helm.sh/docs/intro/install/>`_ and the robusta-cli, but :ref:`alternative methods <Additional Installation Methods>` are described below.
 
-Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1]_. You can also install on minikube or KIND. :ref:`Uninstalling <Helm Uninstall>`  takes one command, so go ahead and try!
+Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster. You can also install on minikube or KIND. :ref:`Uninstalling <Helm Uninstall>`  takes one command, so go ahead and try!
 
 .. admonition:: Have questions?
 
@@ -97,7 +97,7 @@ Standard Installation
 
     helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
 
-2. Specify your cluster's name and install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
+2. Specify your cluster's name and install Robusta using Helm. On some clusters this can take a while, so don't panic if it appears stuck:
 
 .. admonition:: Test clusters (e.g Kind, MiniKube, Colima)
     :class: important
@@ -161,12 +161,6 @@ Next Steps
 
 1. Define your :ref:`first automation <Automation Basics>`
 2. Add your first :ref:`Prometheus enrichment <Alert Enrichment>`
-
-.. rubric:: Footnotes
-
-.. [#f1] `See this great video on YouTube where a community member installs Robusta with a stopwatch. <https://www.youtube.com/watch?v=l_zaCaY_wls>`_ If you beat his time by more than 30% and document it, we'll send you a Robusta mug too.
-
-.. [#f2] AWS EKS, we're looking at you!
 
 
 Additional Installation Methods

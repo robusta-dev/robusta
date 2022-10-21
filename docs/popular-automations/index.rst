@@ -5,6 +5,7 @@ Popular Automations
    :maxdepth: 1
 
 
+
    Auto Remediation <autoremediation>
    Alert Enrichment <alertenrichment>
    Notification Routing <notifications>
@@ -33,7 +34,6 @@ Popular Automations
 ..       :link: notifications
 ..       :link-type: doc
 
-
 ..    .. grid-item-card:: :octicon:`cpu;1em;` Change Tracking
 ..       :class-card: sd-bg-light sd-bg-text-light
 ..       :link: changetracking
@@ -42,14 +42,16 @@ Popular Automations
 
 ..  .. grid-item-card:: :octicon:`cpu;1em;` Python Profiling
 ..      :class-card: sd-bg-light sd-bg-text-light
-..      :link: tutorials/python-profiling
+..      :link: /tutorials/python-profiling
 ..      :link-type: doc
 
 
 ..  .. grid-item-card:: :octicon:`cpu;1em;` Java jmap and stack
 ..      :class-card: sd-bg-light sd-bg-text-light
-..      :link: tutorials/java-troubleshooting
+..      :link: /tutorials/java-troubleshooting
 ..      :link-type: doc
+
+
 
 
 

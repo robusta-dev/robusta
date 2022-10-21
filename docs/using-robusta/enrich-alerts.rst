@@ -1,81 +1,90 @@
 Enrich Prometheus alerts
-##################################
+##############################
 
-To demonstrate how Robusta automations work, we will configure an automation that sends Slack messages when deployments change.
+In this tutorial we will continue learning about Robusta automations. This time we will configure automations that enrich and remediate Prometheus alerts.
 
-.. note::
+Robusta comes with many Prometheus enrichments that work out of the box. In this tutorial you will add an additional custom enrichment.
 
-    If you use the `Robusta UI <https://home.robusta.dev/ui/>`_, changes like this are already tracked in the UI by default.
+Pre-requisites
+---------------------------------
 
-    This tutorial explains how that feature works under the hood.
+Before you can enrich prometheus alerts, you must forward Prometheus alerts to Robusta.
 
-1. Add the following to your ``generated_values.yaml``:
+The best way to do so, is to answer "YES" in the Robusta installation to using the bundled Prometheus. If you did **not** do so, see :ref:`Sending Alerts to Robusta` for alernatives.
+
+Enriching alerts
+-----------------
+
+The base configuration in ``generated_values.yaml`` forwards all Prometheus alerts:
 
 .. code-block:: yaml
 
-    customPlaybooks:
-    - triggers:
-        - on_deployment_update: {}
-      actions:
-        - resource_babysitter:
-            omitted_fields: []
-            fields_to_monitor: ["spec.replicas"]
+   builtinPlaybooks:
+   - triggers:
+     - on_prometheus_alert: {}
+     actions:
+     - default_enricher: {}
+
+On top of this there are additional enrichments for specific alerts. (See :ref:`Insights Coverage`)
+
+You can also define your own enrichments using ``customPlaybooks``:
+
+.. code-block:: yaml
+
+   customPlaybooks:
+   - triggers:
+     - on_prometheus_alert:
+         alert_name: HostHighCpuLoad
+     actions:
+     - node_bash_enricher:
+         bash_command: ps aux
+
+In practice, you wont need to configure much. The default enrichments are good and will only improve with time.
+
+.. warning::
+
+    Note that adding an enricher to a specific alert, doesn't stop other enrichers from running.
+
+    Enrichers will run by the order they appear in the values file.
+
+    If for some reason, you would like to stop processing after some enricher, you can use the ``stop`` playbook parameter:
+
+    .. code-block:: yaml
+
+       customPlaybooks:
+       - triggers:
+         - on_prometheus_alert:
+             alert_name: HostHighCpuLoad
+         actions:
+         - node_cpu_enricher: {}
+         stop: True
+       - triggers:
+         - on_prometheus_alert: {}
+         actions:
+         - some_other_action: {}
+
+    Using this configuration, the ``some_other_action`` wont run for the ``HostHighCpuLoad`` alert.
 
 
-2. Perform an upgrade with Helm to apply the new configuration
+Silencing alerts
+------------------
 
-.. code-block:: bash
+Silencers are actions which prevent alerts from being sent to sinks.
 
-    helm upgrade robusta robusta/robusta --values=generated_values.yaml
+We can silence `KubePodCrashLooping` alerts in the first ten minutes after a node (re)starts:
 
+.. code-block:: yaml
 
-Seeing the automation in action
-----------------------------------
-
-1. Scale one of your deployments:
-
-.. code-block:: python
-
-   kubectl scale --replicas NEW_REPLICAS_COUNT deployments/DEPLOYMENT_NAME
-
-2. Check the slack channel you configured when installing Robusta:
-
-.. image:: ../images/replicas_change.png
-  :width: 600
-  :align: center
-
-If you setup the `Robusta UI <https://home.robusta.dev/ui/>`_, it will appear in the timeline of all alerts and changes:
-
-.. image:: ../images/ui-timeline.png
-  :width: 600
-  :align: center
-
-You can click to see the diff:
-
-.. image:: ../images/ui-diff.png
-  :width: 600
-  :align: center
+   customPlaybooks:
+   - triggers:
+     - on_prometheus_alert:
+         alert_name: KubePodCrashLooping
+     actions:
+     - node_restart_silencer:
+         post_restart_silence: 600 # seconds
 
 
-How the automation works
-----------------------------------
-Every automation has three parts.
+Fixing alerts
+---------------
 
-triggers:
-    We chose ``on_deployment_update`` which runs whenever Kubernetes Deployments are updated
-
-actions:
-    We chose :ref:`Resource babysitter` which is a builtin action. That action has a parameter ``fields_to_monitor``.
-
-sinks:
-    We didn't configure any sinks, so output is sent to the default sink. This is usually Slack and/or the `Robusta UI <https://home.robusta.dev/ui/>`_.
-
-Further customization
-------------------------
-Try changing the configuration to monitors changes to a deployment's image tag.
-
-Cleanup
-------------------------
-If you use the `Robusta UI <https://home.robusta.dev/ui/>`_, you should disable the automation you configured in this tutorial to prevent duplicates.
-
-A similar automation is already configured by default.
+This part of the tutorial is coming soon. For now, experiment with Robusta on Prometheus alerts listed in :ref:`Insights Coverage`

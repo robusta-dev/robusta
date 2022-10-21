@@ -1,4 +1,4 @@
-ArgoCD installation
+Install with ArgoCD
 ==============================
 
 Using GitOps tool to manage Kubernetes configuration files in a declarative way is preferred by many Kubernetes users,

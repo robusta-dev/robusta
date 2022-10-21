@@ -24,7 +24,7 @@ Supported sinks
 ^^^^^^^^^^^^^^^^^^^^^
 The following sinks are supported:
 
-.. grid:: 2
+.. grid:: 3
     :gutter: 3
 
     .. grid-item-card:: :octicon:`cpu;1em;` Slack
