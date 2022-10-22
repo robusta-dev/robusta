@@ -22,9 +22,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      showgrid="false"
-     inkscape:zoom="6.0746901"
-     inkscape:cx="112.43372"
-     inkscape:cy="53.994524"
+     inkscape:zoom="3.0373451"
+     inkscape:cx="136.63248"
+     inkscape:cy="-18.437155"
      inkscape:window-width="1465"
      inkscape:window-height="752"
      inkscape:window-x="324"
@@ -33,21 +33,14 @@
      inkscape:current-layer="svg22"
      showguides="true">
     <sodipodi:guide
-       position="142.55871,9.3811276"
+       position="245.41102,90.529371"
        orientation="0,-1"
        id="guide298"
        inkscape:locked="false" />
   </sodipodi:namedview>
-  <rect
-     style="fill:#2bbfb2;stroke-width:0.854173;stroke-linecap:round;stroke-linejoin:round"
-     id="rect296"
-     width="329.62665"
-     height="114.44758"
-     x="-34.573303"
-     y="-30.764772"
-     ry="4.0890684" />
   <g
-     id="g901">
+     id="g901"
+     transform="matrix(0.98705093,0,0,0.98705093,1.3978417,0.25898121)">
     <g
        clip-path="url(#clip0_2_56)"
        id="g11">
