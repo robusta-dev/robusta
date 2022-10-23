@@ -1,31 +1,31 @@
-Upgrade
+Upgrade and Uninstall
 ######################
 
 Robusta is installed with Helm, so Robusta upgrades are just Helm upgrades. Uninstalls are just Helm uninstalls.
 
-.. warning:: Upgrading an existing release with bundled Prometheus Stack might require manual actions. :ref:`Read here <Upgrading with bundled Prometheus Stack>`
+Upgrading Robusta
+^^^^^^^^^^^^^^^^^^^^^
+To preserve your existing settings, you'll need the ``generated_values.yaml`` file that you
+originally installed Robusta with.
 
-Helm Upgrade
-------------------------------
+.. admonition:: Where is my generated_values.yaml?
 
-This will upgrade Robusta while preserving any custom settings:
+    If you have lost your ``generated_values.yaml`` file, you can extract it from any cluster Robusta is installed on:
+
+    .. code-block:: bash
+
+         helm get values -o yaml robusta > generated_values.yaml
+
+Once you've located your ``generated_values.yaml`` file, run the following command:
 
 .. code-block:: bash
 
     helm repo update
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-We recommend running the above command exactly as written.
+We recommend running the above command exactly as written and **not** running ``helm upgrade --reuse-values`` `as it doesn't respect changes to default values. <https://medium.com/@kcatstack/understand-helm-upgrade-flags-reset-values-reuse-values-6e58ac8f127e>`_
 
-.. _values-file:
-
-.. admonition:: Where is my generated_values.yaml?
-
-    If you have lost your ``generated_values.yaml`` file, you can extract it from the cluster:
-
-    .. code-block:: bash
-
-         helm get values -o yaml robusta > generated_values.yaml
+.. warning:: Some upgrades require extra steps. If your ``generated_values.yaml`` contains the setting ``enablePrometheusStack: true`` then :ref:`read here <Upgrading with bundled Prometheus Stack>`
 
 
 Verify that Robusta is running and there are no errors in the logs:
@@ -34,10 +34,6 @@ Verify that Robusta is running and there are no errors in the logs:
 
     robusta logs
 
-Notes
-^^^^^^^^^^^^^^^^^^^^^^^^
-1. We do **not** recommend running ``helm upgrade --reuse-values`` `as it doesn't update default values changed in the chart.
-<https://medium.com/@kcatstack/understand-helm-upgrade-flags-reset-values-reuse-values-6e58ac8f127e>`_
 
 2. To install a Robusta pre-release, run ``helm upgrade`` with the ``--devel`` flag.
 
