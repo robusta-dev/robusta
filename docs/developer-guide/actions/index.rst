@@ -1,4 +1,4 @@
-Writing Playbook Actions
+Writing Playbook actions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 So you're ready to extend Robusta with a custom action. Exciting stuff.

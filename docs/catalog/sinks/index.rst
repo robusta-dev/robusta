@@ -17,8 +17,9 @@ Sinks
    Opsgenie
    VictorOps
    PagerDuty
+   webex
 
-Playbooks results (findings) can be sent to one or more sinks (destinations). Findings will be automatically formatted in a way
+Playbooks results (findings), can be sent to one or more sinks (destinations). Findings will be automatically formatted in a way
 that makes sense for each sink.
 
 Supported sinks
@@ -85,6 +86,10 @@ The following sinks are supported:
     .. grid-item-card:: :octicon:`cpu;1em;` PagerDuty
         :class-card: sd-bg-light sd-bg-text-light
         :link: PagerDuty
+        :link-type: doc
+    .. grid-item-card:: :octicon:`cpu;1em;` Webex
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: webex
         :link-type: doc
 
 

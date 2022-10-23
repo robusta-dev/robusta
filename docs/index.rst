@@ -14,7 +14,7 @@ Overview
    :caption: Getting Started
    :hidden:
    
-   gettingstarted-index
+   Overview <gettingstarted-index>
    Install with Helm <installation>
    Install with ArgoCD <tutorials/argocd-installation>
    tutorials/add-more-clusters
@@ -38,11 +38,7 @@ Overview
    user-guide/Secrets <configuration-secrets>
    user-guide/alert-manager
    user-guide/embeded-prometheus
-   upgrade
-   uninstall
-   tutorials/configuring-automations
-   tutorials/prometheus-enrichment
-   tutorials/my-first-custom-action
+   Upgrade & Uninstall <upgrade>
 
 
 ..
@@ -75,6 +71,8 @@ Overview
    :caption: Extending
    :hidden:
 
+   tutorials/overview
+   tutorials/my-first-custom-action
    Write Python Automations <developer-guide/actions/index>
    Modify Robusta Core <developer-guide/platform/index>
    Docs Contributions <developer-guide/platform/docs-contributions>

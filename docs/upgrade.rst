@@ -42,7 +42,7 @@ Notes
 2. To install a Robusta pre-release, run ``helm upgrade`` with the ``--devel`` flag.
 
 Upgrading with bundled Prometheus Stack
-----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you didn't install Robusta's bundled Prometheus Stack then you can :ref:`upgrade at ease <Helm Upgrade>`. Otherwise, keep reading.
 
@@ -95,3 +95,11 @@ From versions lower than 0.9.1 to latest
     robusta logs
 
 
+Uninstall
+--------------
+
+This will uninstall Robusta:
+
+.. code-block:: bash
+
+    helm uninstall robusta
