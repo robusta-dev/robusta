@@ -1,9 +1,9 @@
 Install with Helm
 ##################
 
-This tutorial installs Robusta using `Helm 3 <https://helm.sh/docs/intro/install/>`_. You can also :ref:`Install with ArgoCD` or using :ref:`other installation methods <Additional Installation Methods>`.
+This tutorial installs Robusta using `Helm 3 <https://helm.sh/docs/intro/install/>`_. You can also :ref:`Install with ArgoCD`.
 
-Installing Robusta takes about 90 seconds on a 10 node cluster. If you'd like to test before installing in production, we recommend using KIND. You can also uninstall at any time with a single :ref:`Helm command <Helm Uninstall>`.
+Installing Robusta takes about 90 seconds on a 10 node cluster. If you'd like to test before installing in production, we recommend using KIND. You can uninstall at any time with a single :ref:`Helm command <Helm Uninstall>`.
 
 .. admonition:: Have questions?
 
@@ -12,9 +12,9 @@ Installing Robusta takes about 90 seconds on a 10 node cluster. If you'd like to
 Generate a config
 -----------------------------------
 
-Robusta needs some settings to work. For example, if you integrate Slack then Robusta needs an API key. These settings are stored as a Helm values file.
+Robusta needs some settings to work. For example, if you use Slack then Robusta needs an API key. These settings are configured as Helm values.
 
-We'll generate the values file using the ``robusta`` cli tool. There are two ways to install this tool: using ``pip`` or using a Docker container with the ``robusta`` cli already inside. We recommend using pip.
+We'll generate the Helm values using the ``robusta`` cli tool. There are two ways to install this tool: using ``pip`` or using a Docker container with the ``robusta`` cli already inside. We recommend using pip.
 
 .. tab-set::
 
@@ -69,12 +69,12 @@ We'll generate the values file using the ``robusta`` cli tool. There are two way
 
             On Windows you can use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
 
-You now have a ``generated_values.yaml`` file with Robusta settings. You can customize this more later (for example, to `add integrations <https://docs.robusta.dev/master/catalog/sinks/index.html>`_ like Discord). For now, lets install Robusta and see it in action.
+You now have a ``generated_values.yaml`` file with a Robusta config. You can customize this more later (for example, to `add integrations <https://docs.robusta.dev/master/catalog/sinks/index.html>`_ like Discord). For now, lets install Robusta and see it in action.
 
 Install
 ------------------------------
 
-We'll now install Robusta with helm and the ``generated_values.yaml`` you just created.
+Using the ``generated_values.yaml`` you just created, we'll install Robusta with Helm.
 
 Add Robusta's chart repository:
 
@@ -93,7 +93,7 @@ Specify your cluster's name and run ``helm install``. On some clusters this can 
 .. admonition:: Using test clusters
     :class: important
 
-    Test clusters like Kind and Colima tend to have fewer resources. Lower the resource requests of Robusta by including ``--set isSmallCluster=true``.
+    Test clusters like Kind and Colima tend to have fewer resources. You can lower the resource usage of Robusta by including ``--set isSmallCluster=true``. You should leave this setting out on production clusters.
 
     Don't install Robusta on minkube. There is a known issue.
 
