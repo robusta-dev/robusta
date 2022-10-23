@@ -2,19 +2,20 @@
 Overview
 ==========================
 
-Robusta is configured using Helm values. This section documents all the important values. 
-All possible values can be found by running:
+Robusta is configured using Helm values. This section documents the important values.
+
+All possible values for Robusta can be listed like so:
 
 .. code-block:: yaml
 
     helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
     helm show values robusta/robusta
 
-.. admonition:: values.yaml on GitHub
+.. admonition:: Do not use the values.yaml file on GitHub
     :class: warning
 
-    Do not use ``helm/robusta/values.yaml`` in the GitHub repo. It has some empty placeholders which are replaced during
-    our release process.
+    It's tempting to look at ``helm/robusta/values.yaml`` in our GitHub repo for reference.
+    This is the wrong file to use. It has empty placeholders that are filled in during our build process.
 
 Most used settings
 ^^^^^^^^^^^^^^^^^^
