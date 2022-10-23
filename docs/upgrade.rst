@@ -1,7 +1,7 @@
 Upgrade and Uninstall
 ######################
 
-Robusta is installed with Helm, so Robusta upgrades are just Helm upgrades. Uninstalls are just Helm uninstalls.
+Robusta is :ref:`installed with Helm <Install with Helm>`, so Robusta upgrades are just Helm upgrades. Uninstalls are just Helm uninstalls.
 
 Upgrading Robusta
 ^^^^^^^^^^^^^^^^^^^^^

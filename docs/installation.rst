@@ -3,7 +3,7 @@ Install with Helm
 
 This tutorial installs Robusta using `Helm 3 <https://helm.sh/docs/intro/install/>`_. You can also :ref:`Install with ArgoCD`.
 
-Installing Robusta takes about 90 seconds on a 10 node cluster. If you'd like to test before installing in production, we recommend using KIND. You can uninstall at any time with a single :ref:`Helm command <Helm Uninstall>`.
+Installing Robusta takes about 90 seconds on a 10 node cluster. If you'd like to install on a test cluster, we recommend using KIND. You can :ref:`upgrade or uninstall <Upgrade and Uninstall>` at any time using Helm.
 
 .. admonition:: Have questions?
 
