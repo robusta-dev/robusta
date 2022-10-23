@@ -1,4 +1,4 @@
-Installation
+Install with Helm
 ##################
 
 The standard installation uses `Helm 3 <https://helm.sh/docs/intro/install/>`_ and the robusta-cli, but :ref:`alternative methods <Additional Installation Methods>` are described below.
@@ -12,7 +12,7 @@ Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster. You
 We will now configure Robusta in your cluster.
 For this we need to install Robusta, and also connect at least one destination ("sink"), and at least one source ("triggers").
 
-Creating the config file
+Creating the values file
 ------------------------------
 
 1.  To configure robusta, the Robusta CLI is required. Choose one of the installation methods below.

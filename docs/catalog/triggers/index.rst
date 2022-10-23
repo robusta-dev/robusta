@@ -1,3 +1,4 @@
+:hide-toc:
 Triggers
 ==========
 
@@ -18,7 +19,7 @@ You can trigger Robusta automations on all of the following events:
    ElasticSearch <elasticsearch>
 
 
-.. grid:: 2
+.. grid:: 1 1 2 2
     :gutter: 3
 
     .. grid-item-card:: :octicon:`cpu;1em;` ElasticSearch

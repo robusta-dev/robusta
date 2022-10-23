@@ -1,3 +1,4 @@
+:hide-toc:
 Sinks
 ======
 
@@ -24,7 +25,7 @@ Supported sinks
 ^^^^^^^^^^^^^^^^^^^^^
 The following sinks are supported:
 
-.. grid:: 3
+.. grid:: 1 1 2 3
     :gutter: 3
 
     .. grid-item-card:: :octicon:`cpu;1em;` Slack

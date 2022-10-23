@@ -1,3 +1,4 @@
+:hide-toc:
 Actions
 ==========
 
@@ -18,7 +19,7 @@ Actions
 BuiltIn Actions
 -----------------------
 
-.. grid:: 2
+.. grid:: 1 1 2 2
     :gutter: 3
 
     .. grid-item-card:: :octicon:`cpu;1em;` Event enrichment

@@ -1,31 +1,82 @@
 Install with ArgoCD
 ==============================
 
-Using GitOps tool to manage Kubernetes configuration files in a declarative way is preferred by many Kubernetes users,
-as it combines well with Kubernetes principles.
+This tutorial covers installing Robusta with ArgoCD. You can also install Robusta directly with Helm.   
 
 Pre-requisites: 
 
-1. Robusta configuration (``generated_values.yaml``), created in :ref:`Installation <Installation>`.
+1. A Working setup of `ArgoCD <https://argo-cd.readthedocs.io/en/stable/>`_.
+2. A values file. Follow the steps below
 
-2. A Working setup of `ArgoCD <https://argo-cd.readthedocs.io/en/stable/>`_ or another similar continuous delivery tool for Kubernetes. (We'll assume ArgoCD from now on as it is the most popular)
+Creating the values file
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Options
-^^^^^^^^^^^^^
+1.  To configure robusta, the Robusta CLI is required. Choose one of the installation methods below.
 
-There are a few options to mange Robusta with ArgoCD.
+.. admonition:: Installation Methods
 
-1. Directly add the ``generated_value.yaml`` to argo cd:
-    - ``generated_values.yaml`` file will be saved directly in ArgoCD
+    .. tab-set::
 
-2. Commit your ``generated_value.yaml`` file to git:
-    - A git repo needs to be created to store ``generated_value.yaml`` (or add it to existing one)
-    - You'll have to :ref:`create Kubernetes secrets <Configuration secrets>` for robusta keys
-    - Requires more advanced ArgoCD functions to combine the robusta helm chart with the external ``generated_value.yaml`` file
+        .. tab-item:: PIP
+            :name: pip-cli-tab
 
-We'll describe the simpler option here. We're currently working on a guide for the more advanced option, contact us if you have questions.
+            .. code-block:: bash
+                :name: cb-pip-install
 
-Directly add the helm charts + values (simplest option)
+                pip install -U robusta-cli --no-cache
+
+            .. admonition:: Common Errors
+                :class: warning
+
+                * Python 3.7 or higher is required
+                * If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
+                * Errors about *tiller* mean you are running Helm 2, not Helm 3
+
+        .. tab-item:: Docker
+            :name: docker-cli-tab
+
+            For **Windows** please use `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
+
+            * Download robusta script and give it executable permissions:
+
+            .. code-block:: bash
+                :name: cb-docker-cli-download
+
+                curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
+                chmod +x robusta
+
+            * Use the script, for example:
+
+            .. code-block:: bash
+                :name: cb-docker-cli-example
+
+                ./robusta version
+
+            .. admonition:: Common Errors
+                :class: warning
+
+                * Docker daemon is required.
+
+2. Generate a Robusta configuration. This will setup Slack and other integrations. We **highly recommend** enabling the cloud UI so you can see all features in action.
+
+If you’d like to send Robusta messages to additional destinations (Discord, Telegram etc.). See `Sink configuration <https://docs.robusta.dev/master/catalog/sinks/index.html>`_.
+
+.. Options
+.. ^^^^^^^^^^^^^
+
+.. There are a few options to mange Robusta with ArgoCD.
+
+.. 1. Directly add the ``generated_value.yaml`` to argo cd:
+..     - ``generated_values.yaml`` file will be saved directly in ArgoCD
+
+.. 2. Commit your ``generated_value.yaml`` file to git:
+..     - A git repo needs to be created to store ``generated_value.yaml`` (or add it to existing one)
+..     - You'll have to :ref:`create Kubernetes secrets <Configuration secrets>` for robusta keys
+..     - Requires more advanced ArgoCD functions to combine the robusta helm chart with the external ``generated_value.yaml`` file
+
+.. We'll describe the simpler option here. We're currently working on a guide for the more advanced option, contact us if you have questions.
+
+Add the helm charts + values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 First, edit your generated_values.yaml files so it will be ready for ArgoCD, by adding ``clusterName: <YOUR-CLUSTER-NAME>`` at the top, if not already present.

@@ -15,7 +15,8 @@ Robusta is an open source platform for Kubernetes troubleshooting. It sits on to
 Learn about Robusta
 ^^^^^^^^^^^^^^^^^^
 
-.. grid:: 4
+.. grid:: 1 1 2 4
+    :gutter: 3
 
     .. grid-item-card:: :octicon:`info;1em;` Architecture
         :class-card: sd-bg-light sd-bg-text-light

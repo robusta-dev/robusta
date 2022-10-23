@@ -1,4 +1,4 @@
-Welcome to Robusta
+Overview
 ================================
 
 .. toctree::
@@ -15,7 +15,7 @@ Welcome to Robusta
    :hidden:
    
    gettingstarted-index
-   installation
+   Install with Helm <installation>
    Install with ArgoCD <tutorials/argocd-installation>
    tutorials/add-more-clusters
    using-robusta/trackchanges
@@ -30,7 +30,7 @@ Welcome to Robusta
    :caption: Configuration
    :hidden:
 
-
+   user-guide/overview
    user-guide/defining-playbook
    user-guide/global-config
    user-guide/sink-configuration
@@ -54,11 +54,9 @@ Welcome to Robusta
    :hidden:
     
    Overview <self>
-   architecture
    oss-vs-saas
    Robusta UI Triggers <advanced/robusta-ui-triggers>
    Privacy & Security <advanced/privacy-and-security>
-   coverage
 
 
 
@@ -67,10 +65,10 @@ Welcome to Robusta
    :caption: Automation
    :hidden:
 
+   catalog/overview
    catalog/triggers/index
    catalog/actions/index
    catalog/sinks/index
-   popular-automations/index
 
 .. toctree::
    :maxdepth: 4
@@ -88,8 +86,6 @@ Welcome to Robusta
 
    help
 
-Robusta is an open source platform for Kubernetes troubleshooting. It sits on top of your monitoring stack
-(Prometheus, Elasticsearch, etc.) and tells you why alerts occurred and how to fix them.
 
 Robusta has three main parts, all open source:
 
@@ -102,98 +98,92 @@ There are additional *optional* components:
 4. `An all-in-one bundle with Robusta, the Prometheus Operator, and default Kubernetes alerts <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_ [#f1]_
 5. `A web UI to see all alerts, changes, and events in your cluster. <http://home.robusta.dev/ui?from=docs>`_ [#f2]_
 
-Example Use Cases
-~~~~~~~~~~~~~~~~~~
+Standard Architecture
+^^^^^^^^^^^^^^^^^^^^^^^
 
-.. tab-set::
+Robusta is installed and managed with Helm.
 
-    .. tab-item:: Crashing pods
+Automations engine
+^^^^^^^^^^^^^^^^^^^^^^
+The main component of Robusta is the automation engine, which runs in-cluster as two Kubernetes deployments
 
-        .. admonition:: Monitor crashing pods and send their logs to Slack
+robusta-forwarder
+    Connects to the APIServer and monitors Kubernetes changes. Forwards them to robusta-runner.
 
-            .. image:: /images/crash-report2.png
-                :width: 700
-                :align: center
+robusta-runner
+    Executes playbooks
 
-    .. tab-item:: Event Correlation
-
-        .. admonition:: Show application updates in Grafana to correlate them with error spikes
-
-            .. image:: /images/grafana-deployment-enrichment.png
-              :width: 400
-              :align: center
-
-    .. tab-item:: Remediate alerts
-
-        .. admonition:: Temporarily increase the HPA maximum so you can go back to sleep
-
-            .. image:: /images/alert_on_hpa_reached_limit1.png
-                :width: 600
-                :align: center
-
-    .. tab-item:: Debug Pods
-
-        .. admonition:: Attach the VSCode debugger to a running Python pod without tearing your hair out
-
-            .. image:: /images/python-debugger.png
-              :width: 600
-              :align: center
-
-            .. code-block:: bash
-
-                 robusta playbooks trigger python_debugger name=podname namespace=default
-
-            See :ref:`Python debugger` for more details
-
-How it works
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Robusta automates everything that happens **after** you deploy your application.
-
-It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt automations and not just "build your own".
-
-For example, the following automation sends logs to Slack when an alert fires for crashing pods:
-
-.. code-block:: yaml
-
-    triggers:
-      - on_prometheus_alert:
-          alert_name: KubePodCrashLooping
-    actions:
-      - logs_enricher: {}
-    sinks:
-      - slack
-
-Every automation has three parts:
-
-.. grid:: 3
-
-    .. grid-item-card:: Triggers
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: catalog/triggers/index
-        :link-type: doc
-
-        When to run
-        (on alerts, logs, changes, etc)
-
-    .. grid-item-card::  Actions
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: catalog/actions/index
-        :link-type: doc
-
-        What to do
-        (over 50 builtin actions)
-
-    .. grid-item-card::  Sinks
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: catalog/sinks/index
-        :link-type: doc
-
-        Where to send the result
-        (Slack, etc)
-
-.. image:: ./images/robusta_motion_graphics_transparent.gif
+.. image:: ./images/arch-1/arch-1.png
+   :width: 600
    :align: center
+
+Bundled Prometheus stack (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Robusta includes an optional :ref:`embedded Prometheus stack`, preconfigured with alerts for Kubernetes according to best practices.
+
+If you already use *kube-prometheus-stack*, you can :ref:`point it at Robusta<Sending Alerts to Robusta>` instead.
+
+Web UI (optional)
+^^^^^^^^^^^^^^^^^^^^^^
+There is a `web UI <http://home.robusta.dev/ui?from=docs>`_ [#f1]_ which provides a single pane of glass to monitor
+all your alerts and pods across multiple clusters.
+
+CLI (optional)
+^^^^^^^^^^^^^^^^
+The :ref:`robusta cli <CLI Commands>` has two main uses:
+
+1. Making it easier to install Robusta by autogenerating Helm values
+2. Manually triggering Robusta troubleshooting workflows (e.g. to grab a heap dump from any Java pod)
+
+It also has features useful for developing Robusta itself.
+
+See also
+^^^^^^^^^
+
+* `Comparison of Robusta and a bare-bones Prometheus stack without Robusta <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_
+.. Example Use Cases
+.. ~~~~~~~~~~~~~~~~~~
+
+.. .. tab-set::
+
+..     .. tab-item:: Crashing pods
+
+..         .. admonition:: Monitor crashing pods and send their logs to Slack
+
+..             .. image:: /images/crash-report2.png
+..                 :width: 700
+..                 :align: center
+
+..     .. tab-item:: Event Correlation
+
+..         .. admonition:: Show application updates in Grafana to correlate them with error spikes
+
+..             .. image:: /images/grafana-deployment-enrichment.png
+..               :width: 400
+..               :align: center
+
+..     .. tab-item:: Remediate alerts
+
+..         .. admonition:: Temporarily increase the HPA maximum so you can go back to sleep
+
+..             .. image:: /images/alert_on_hpa_reached_limit1.png
+..                 :width: 600
+..                 :align: center
+
+..     .. tab-item:: Debug Pods
+
+..         .. admonition:: Attach the VSCode debugger to a running Python pod without tearing your hair out
+
+..             .. image:: /images/python-debugger.png
+..               :width: 600
+..               :align: center
+
+..             .. code-block:: bash
+
+..                  robusta playbooks trigger python_debugger name=podname namespace=default
+
+..             See :ref:`Python debugger` for more details
+
 
 Writing your own automations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -7,12 +7,12 @@ Installation
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`book;1em;` Installation
+    .. grid-item-card:: :octicon:`book;1em;` Install with Helm
         :class-card: sd-bg-light sd-bg-text-light
         :link: installation
         :link-type: doc
 
-        Install Robusta with Helm
+        Generate a values file and install Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` Install with ArgoCD
         :class-card: sd-bg-light sd-bg-text-light
@@ -31,7 +31,7 @@ Installation
 Using Robusta 
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. grid:: 3
+.. grid:: 1 1 2 3
     :gutter: 3
 
     .. grid-item-card:: :octicon:`book;1em;` Track Kubernetes Changes
@@ -55,7 +55,7 @@ Using Robusta
 
         Automatically fix issues with runbook automation
 
-.. grid:: 3
+.. grid:: 1 1 2 3
 
     .. grid-item-card:: :octicon:`book;1em;` Route Alerts
         :class-card: sd-bg-light sd-bg-text-light
