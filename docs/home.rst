@@ -3,8 +3,9 @@
 
 Welcome to Robusta Docs
 ===================
-Robusta is an open source platform for Kubernetes troubleshooting. It sits on top of your monitoring stack (Prometheus, Elasticsearch, etc.) and tells you why alerts occurred and how to fix them.
+Robusta is an open source platform for Kubernetes monitoring and runbook automation. It can be installed as full monitoring stack or an add-on for Prometheus and other tools.
 
+Robusta watches your cluster, identifies problems, and gathers observability data about the cause. It also support writing automatic remediations.
 
 .. button-ref:: gettingstarted-index
     :color: primary
@@ -23,7 +24,7 @@ Learn about Robusta
         :link: /developer-guide/actions/index
         :link-type: doc
 
-        Technicals of how everything works
+        Technical details of how everything works
 
     .. grid-item-card:: :octicon:`book;1em;` Track Kubernetes Changes
         :class-card: sd-bg-light sd-bg-text-light
