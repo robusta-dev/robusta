@@ -1,116 +1,103 @@
 Install with Helm
 ##################
 
-The standard installation uses `Helm 3 <https://helm.sh/docs/intro/install/>`_ and the robusta-cli, but :ref:`alternative methods <Additional Installation Methods>` are described below.
+This tutorial installs Robusta using `Helm 3 <https://helm.sh/docs/intro/install/>`_. You can also :ref:`Install with ArgoCD` or using :ref:`other installation methods <Additional Installation Methods>`.
 
-Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster. You can also install on minikube or KIND. :ref:`Uninstalling <Helm Uninstall>`  takes one command, so go ahead and try!
+Installing Robusta takes about 90 seconds on a 10 node cluster. If you'd like to test before installing in production, we recommend using KIND. You can also uninstall at any time with a single :ref:`Helm command <Helm Uninstall>`.
 
 .. admonition:: Have questions?
 
     `Ask us on Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
 
-We will now configure Robusta in your cluster.
-For this we need to install Robusta, and also connect at least one destination ("sink"), and at least one source ("triggers").
+Generate a config
+-----------------------------------
 
-Creating the values file
+Robusta needs some settings to work. For example, if you integrate Slack then Robusta needs an API key. These settings are stored as a Helm values file.
+
+We'll generate the values file using the ``robusta`` cli tool. There are two ways to install this tool: using ``pip`` or using a Docker container with the ``robusta`` cli already inside. We recommend using pip.
+
+.. tab-set::
+
+    .. tab-item:: pip
+        :name: pip-cli-tab
+
+        Install the ``robusta`` cli tool with ``pip``:
+
+        .. code-block:: bash
+            :name: cb-pip-install
+
+            pip install -U robusta-cli --no-cache
+
+        Run the ``robusta`` cli tool to generate a Helm values file:
+
+        .. code-block:: bash
+           :name: cb-robusta-gen-config
+
+            robusta gen-config
+
+        .. admonition:: System Requirements
+            :class: warning
+
+            Python 3.7 or higher is required.
+
+            On systems with both Python 2 and Python 3, make sure you run ``pip3``
+
+            You also must have Python's script directory in your PATH. When this is not the case, errors like ``command not found: robusta`` occur. See :ref:`Common Errors` to fix this.
+
+    .. tab-item:: docker
+        :name: docker-cli-tab
+
+        Download the robusta script and grant execute permissions:
+
+        .. code-block:: bash
+            :name: cb-docker-cli-download
+
+            curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
+            chmod +x robusta
+
+        Run the ``robusta`` cli tool to generate a Helm values file:
+
+        .. code-block:: bash
+            :name: cb-docker-cli-example
+
+            ./robusta version
+
+        .. admonition:: System Requirements
+            :class: warning
+
+            A Docker daemon and bash are required.
+
+            On Windows you can use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
+
+You now have a ``generated_values.yaml`` file with Robusta settings. You can customize this more later (for example, to `add integrations <https://docs.robusta.dev/master/catalog/sinks/index.html>`_ like Discord). For now, lets install Robusta and see it in action.
+
+Install
 ------------------------------
 
-1.  To configure robusta, the Robusta CLI is required. Choose one of the installation methods below.
+We'll now install Robusta with helm and the ``generated_values.yaml`` you just created.
 
-.. admonition:: Installation Methods
-
-    .. tab-set::
-
-        .. tab-item:: PIP
-            :name: pip-cli-tab
-
-            .. code-block:: bash
-                :name: cb-pip-install
-
-                pip install -U robusta-cli --no-cache
-
-            .. admonition:: Common Errors
-                :class: warning
-
-                * Python 3.7 or higher is required
-                * If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
-                * Errors about *tiller* mean you are running Helm 2, not Helm 3
-
-        .. tab-item:: Docker
-            :name: docker-cli-tab
-
-            For **Windows** please use `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
-
-            * Download robusta script and give it executable permissions:
-
-            .. code-block:: bash
-                :name: cb-docker-cli-download
-
-                curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
-                chmod +x robusta
-
-            * Use the script, for example:
-
-            .. code-block:: bash
-                :name: cb-docker-cli-example
-
-                ./robusta version
-
-            .. admonition:: Common Errors
-                :class: warning
-
-                * Docker daemon is required.
-
-2. Generate a Robusta configuration. This will setup Slack and other integrations. We **highly recommend** enabling the cloud UI so you can see all features in action.
-
-If you’d like to send Robusta messages to additional destinations (Discord, Telegram etc.). See `Sink configuration <https://docs.robusta.dev/master/catalog/sinks/index.html>`_.
-
-.. code-block:: bash
-   :name: cb-robusta-gen-config
-
-    robusta gen-config
-
-.. admonition:: Robusta on Minikube
-    :class: warning
-
-    We don't recommend installing Robusta on Minikube because of a recent issue with minikube. More details `here <https://github.com/kubernetes/minikube/issues/14806>`_. 
-
-.. admonition:: Robusta not in PATH
-    :class: warning
-
-    if you get "``command not found: robusta``", see :ref:`Common errors <Common Errors>`
-
-3. Save ``generated_values.yaml``, somewhere safe. This is your Helm ``values.yaml`` file.
-
-.. admonition:: Installing on multiple clusters
-    :class: important
-
-    Use the same ``generated_values.yaml`` for all your clusters (dev, prod, etc..). There's no need to run gen-config again.
-
-Standard Installation
-------------------------------
-
-1. Add Robusta's chart repository:
+Add Robusta's chart repository:
 
 .. code-block:: bash
    :name: cb-helm-repo-add-update-robusta
 
     helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
 
-2. Specify your cluster's name and install Robusta using Helm. On some clusters this can take a while, so don't panic if it appears stuck:
-
-.. admonition:: Test clusters (e.g Kind, MiniKube, Colima)
-    :class: important
-
-    Test clusters tend to have fewer resources. To lower the resource requests of Robusta,
-    include ``--set isSmallCluster=true`` at the end of the install command.
+Specify your cluster's name and run ``helm install``. On some clusters this can take a while, so don't panic if it appears stuck:
 
 .. code-block:: bash
    :name: cb-helm-install-only-robusta
 
     helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> # --set isSmallCluster=true
 
-3. Verify the two Robusta pods and running with no errors in the logs:
+.. admonition:: Using test clusters
+    :class: important
+
+    Test clusters like Kind and Colima tend to have fewer resources. Lower the resource requests of Robusta by including ``--set isSmallCluster=true``.
+
+    Don't install Robusta on minkube. There is a known issue.
+
+Verify that two Robusta pods are running and there are no errors:
 
 .. code-block:: bash
     :name: cb-get-pods-robusta-logs
@@ -118,19 +105,17 @@ Standard Installation
     kubectl get pods -A | grep robusta
     robusta logs
 
-Seeing Robusta in action
+See in action
 ------------------------------
 
-By default, Robusta sends notifications when Kubernetes pods crash.
-
-1. Create a crashing pod:
+Let's deploy a crashing pod. Robusta will identify the problem and notify us:
 
 .. code-block:: bash
    :name: cb-apply-crashpod
 
    kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw
 
-2. Verify that the pod is actually crashing:
+Verify that the pod is actually crashing:
 
 .. code-block:: bash
    :name: cb-verify-crash-pod-crashing
@@ -139,16 +124,16 @@ By default, Robusta sends notifications when Kubernetes pods crash.
    NAME                            READY   STATUS             RESTARTS   AGE
    crashpod-64d8fbfd-s2dvn         0/1     CrashLoopBackOff   1          7s
 
-3. Once the pod has reached two restarts, check your Slack channel for a message about the crashing pod.
+Once the pod has reached two restarts, you'll get notified in the app you integrated Robusta with:
 
 .. admonition:: Example Slack Message
 
     .. image:: /images/crash-report.png
 
 
-4. Open the `Robusta UI <https://platform.robusta.dev/>`_ (if you enabled it) and look for the same message there.
+Now open the `Robusta UI <https://platform.robusta.dev/>`_ (if you enabled it) and look for the same message there.
 
-5. Clean up the crashing pod:
+Finally, clean up the crashing pod:
 
 .. code-block:: bash
    :name: cb-delete-crashpod
@@ -159,17 +144,22 @@ By default, Robusta sends notifications when Kubernetes pods crash.
 Next Steps
 ---------------------------------
 
-1. Define your :ref:`first automation <Automation Basics>`
-2. Add your first :ref:`Prometheus enrichment <Alert Enrichment>`
+1. Learn to :ref:`track Kubernetes changes with Robusta <Automation Basics>`
+2. Learn to :ref:`improve Prometheus alerts with Robusta <Alert Enrichment>`
 
 
-Additional Installation Methods
+Appendix
 ---------------------------------
+
+Other installation methods
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. details:: Installing with GitOps
 
-    Follow the instructions above to generate ``generated_values.yaml``. Commit it to git and use ArgoCD or
-    your favorite tool to install.
+    For ArgoCD, we have a :ref:`dedicated tutorial <Install with ArgoCD>`.
+
+    For other tools, use the instructions above to generate ``generated_values.yaml``. Commit it to git and use
+    your GitOps tool to install.
 
 .. details:: Installing without the Robusta CLI
 

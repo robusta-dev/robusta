@@ -3,11 +3,6 @@ Install with ArgoCD
 
 This tutorial covers installing Robusta with ArgoCD. You can also install Robusta directly with Helm.   
 
-Pre-requisites: 
-
-1. A Working setup of `ArgoCD <https://argo-cd.readthedocs.io/en/stable/>`_.
-2. A values file. Follow the steps below
-
 Creating the values file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

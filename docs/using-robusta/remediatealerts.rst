@@ -1,3 +1,3 @@
-Remediate Alertes
+Remediate Alerts
 ===================
 TODO
