@@ -28,14 +28,18 @@ Most used settings
         :link: global-config
         :link-type: doc
 
+        Define reusable parameters for all playbooks
         
     .. grid-item-card:: :octicon:`book;1em;` Loading additional playbooks
         :class-card: sd-bg-light sd-bg-text-light
         :link: additional-playbooks
         :link-type: doc
 
+        Import playbooks from GIT sources using HTTPS or SSH
    
     .. grid-item-card:: :octicon:`book;1em;` Sending alerts to Robusta
         :class-card: sd-bg-light sd-bg-text-light
         :link: alert-manager
         :link-type: doc
+
+        Use non Robusta embeded prometheus

@@ -1,60 +1,69 @@
 Install with ArgoCD
 ==============================
 
-This tutorial covers installing Robusta with ArgoCD. You can also install Robusta directly with Helm.   
+This tutorial covers installing Robusta with `ArgoCD <https://argoproj.github.io/cd>`_. You can also install Robusta directly :ref:`with Helm <Install with Helm>`.   
 
-Creating the values file
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Generate a config
+-----------------------------------
 
-1.  To configure robusta, the Robusta CLI is required. Choose one of the installation methods below.
+Robusta needs some settings to work. For example, if you use Slack then Robusta needs an API key. These settings are configured as Helm values.
 
-.. admonition:: Installation Methods
+We'll generate the Helm values using the ``robusta`` cli tool. There are two ways to install this tool: using ``pip`` or using a Docker container with the ``robusta`` cli already inside. We recommend using pip.
 
-    .. tab-set::
+.. tab-set::    
 
-        .. tab-item:: PIP
-            :name: pip-cli-tab
+    .. tab-item:: pip
+        :name: pip-cli-tab
 
-            .. code-block:: bash
-                :name: cb-pip-install
+        Install the ``robusta`` cli tool with ``pip``:
 
-                pip install -U robusta-cli --no-cache
+        .. code-block:: bash
+            :name: cb-pip-install
 
-            .. admonition:: Common Errors
-                :class: warning
+            pip install -U robusta-cli --no-cache
 
-                * Python 3.7 or higher is required
-                * If you are using a system such as macOS that includes both Python 2 and Python 3, run pip3 instead of pip.
-                * Errors about *tiller* mean you are running Helm 2, not Helm 3
+        Run the ``robusta`` cli tool to generate a Helm values file:
 
-        .. tab-item:: Docker
-            :name: docker-cli-tab
+        .. code-block:: bash
+           :name: cb-robusta-gen-config
 
-            For **Windows** please use `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
+            robusta gen-config
 
-            * Download robusta script and give it executable permissions:
+        .. admonition:: System Requirements
+            :class: warning
 
-            .. code-block:: bash
-                :name: cb-docker-cli-download
+            Python 3.7 or higher is required.
 
-                curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
-                chmod +x robusta
+            On systems with both Python 2 and Python 3, make sure you run ``pip3``
 
-            * Use the script, for example:
+            You also must have Python's script directory in your PATH. When this is not the case, errors like ``command not found: robusta`` occur. See :ref:`Common Errors` to fix this.
 
-            .. code-block:: bash
-                :name: cb-docker-cli-example
+    .. tab-item:: docker
+        :name: docker-cli-tab
 
-                ./robusta version
+        Download the robusta script and grant execute permissions:
 
-            .. admonition:: Common Errors
-                :class: warning
+        .. code-block:: bash
+            :name: cb-docker-cli-download
 
-                * Docker daemon is required.
+            curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
+            chmod +x robusta
 
-2. Generate a Robusta configuration. This will setup Slack and other integrations. We **highly recommend** enabling the cloud UI so you can see all features in action.
+        Run the ``robusta`` cli tool to generate a Helm values file:
 
-If you’d like to send Robusta messages to additional destinations (Discord, Telegram etc.). See `Sink configuration <https://docs.robusta.dev/master/catalog/sinks/index.html>`_.
+        .. code-block:: bash
+            :name: cb-docker-cli-example
+
+            ./robusta version
+
+        .. admonition:: System Requirements
+            :class: warning
+
+            A Docker daemon and bash are required.
+
+            On Windows you can use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
+
+You now have a ``generated_values.yaml`` file with a Robusta config. You can customize this more later (for example, to `add integrations <https://docs.robusta.dev/master/catalog/sinks/index.html>`_ like Discord). For now, lets install Robusta and see it in action.
 
 .. Options
 .. ^^^^^^^^^^^^^
@@ -71,35 +80,17 @@ If you’d like to send Robusta messages to additional destinations (Discord, Te
 
 .. We'll describe the simpler option here. We're currently working on a guide for the more advanced option, contact us if you have questions.
 
-Add the helm charts + values
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Reuse a config
+-------------------
+You don't have to create a new ``generated_values.yaml`` everytime you install Robusta on a new cluster. 
 
-First, edit your generated_values.yaml files so it will be ready for ArgoCD, by adding ``clusterName: <YOUR-CLUSTER-NAME>`` at the top, if not already present.
-Example:
+Change the value of ``clusterName:`` in ``generated_values.yaml`` file to a new one and use it as your config. Ex: ``clusterName: new_cluster_name``. 
 
-.. code-block:: yaml
 
-    clusterName: my_cluster_name # <- This is the line to be added
-    globalConfig:
-      signing_key: xxxxxx
-      account_id: xxxxxx
-    sinksConfig:
-    - slack_sink:
-        name: main_slack_sink
-        slack_channel: robusta-staging-alerts
-        api_key: xxxxxx
-    - robusta_sink:
-        name: robusta_ui_sink
-        token: xxxxxx
-    enablePrometheusStack: true
-    enablePlatformPlaybooks: true
-    runner:
-      sendAdditionalTelemetry: true
-    rsa:
-      prv: xxxxxx
-      pub: xxxxxx
+Install
+--------------------------------
 
-To add robusta to ArgoCD, use the instructions `here <https://argo-cd.readthedocs.io/en/stable/getting_started/#creating-apps-via-ui/>`_, and fill the following:
+To setup Robusta with ArgoCD, create a ``NEW APP`` and fill the following:
 
 1. General
     - Application name: Your choice (e.g "robusta")
