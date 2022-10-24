@@ -20,7 +20,7 @@ For example, the following automation sends logs to Slack when an alert fires fo
 
 Every automation has three parts:
 
-.. grid:: 3
+.. grid:: 1 1 2 3
 
     .. grid-item-card:: Triggers
         :class-card: sd-bg-light sd-bg-text-light
