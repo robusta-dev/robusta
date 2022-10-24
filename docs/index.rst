@@ -51,6 +51,7 @@
    :hidden:
     
    Overview <home>
+   Components <components>
    oss-vs-saas
    Robusta UI Triggers <advanced/robusta-ui-triggers>
    Privacy & Security <advanced/privacy-and-security>
