@@ -37,19 +37,21 @@ Verify that Robusta is running and there are no errors in the logs:
 
 2. To install a Robusta pre-release, run ``helm upgrade`` with the ``--devel`` flag.
 
-Upgrading with bundled Prometheus Stack
+Manual Upgrade Instructions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you didn't install Robusta's bundled Prometheus Stack then you can :ref:`upgrade at ease <Helm Upgrade>`. Otherwise, keep reading.
+In some scenarios, manual actions are required in addition to running ``helm upgrade``.
+
+If you're upgrading from a Robusta version lower than 0.9.1 **and** you're using the setting ``enablePrometheusStack`` than this applies to you. Otherwise, just upgrade as described above.
 
 Why do I need to manually upgrade?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 
-Robusta uses kube-prometheus-stack, which creates custom resources also known as `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_ on installation.     
-With Helm v3, CRDs are not updated or removed by default and should be manually handled. Consult also the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_. 
+Robusta uses kube-prometheus-stack, which creates custom resources known as `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_.
+With Helm v3, CRDs are not updated or removed by default and should be manually handled. Consult also the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_.
 
-From versions lower than 0.9.1 to latest
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Upgrading from versions lower than 0.9.1
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Determine Robusta's version by running the following:
 
