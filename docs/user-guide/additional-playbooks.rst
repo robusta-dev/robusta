@@ -1,4 +1,4 @@
-Loading additional playbooks
+External playbook repositories
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Playbook actions are loaded into Robusta using the ``playbookRepos`` Helm value.

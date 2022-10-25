@@ -32,14 +32,15 @@
    :hidden:
 
    user-guide/overview
-   user-guide/defining-playbook
    user-guide/global-config
-   user-guide/sink-configuration
+   user-guide/defining-playbooks
+   user-guide/sinks-configuration
    user-guide/additional-playbooks
-   user-guide/Secrets <configuration-secrets>
+   Secrets <user-guide/configuration-secrets>
    user-guide/alert-manager
-   user-guide/embeded-prometheus
    Upgrade & Uninstall <upgrade>
+   user-guide/embedded-prometheus
+
 
 
 ..

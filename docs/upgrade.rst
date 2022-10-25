@@ -94,7 +94,7 @@ Upgrading from versions lower than 0.9.1
 
 
 Uninstall
---------------
+^^^^^^^^^^^^^
 
 This will uninstall Robusta:
 
