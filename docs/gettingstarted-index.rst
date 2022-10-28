@@ -36,21 +36,21 @@ Using Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` Track Kubernetes Changes
         :class-card: sd-bg-light sd-bg-text-light
-        :link: installation
+        :link: using-robusta/trackchanges
         :link-type: doc
 
         Get notified in your favorite app
 
     .. grid-item-card::  :octicon:`book;1em;`  Enrich Prometheus Alerts
         :class-card: sd-bg-light sd-bg-text-light
-        :link: tutorials/argocd-installation
+        :link: using-robusta/enrich-alerts
         :link-type: doc
 
         Better alerts, correlated with logs and graphs
 
     .. grid-item-card:: :octicon:`book;1em;`  Remediate Alerts
         :class-card: sd-bg-light sd-bg-text-light
-        :link: tutorials/add-more-clusters
+        :link: using-robusta/remediatealerts
         :link-type: doc
 
         Automatically fix issues with runbook automation
@@ -59,7 +59,7 @@ Using Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` Route Alerts
         :class-card: sd-bg-light sd-bg-text-light
-        :link: tutorials/add-more-clusters
+        :link: using-robusta/routealerts
         :link-type: doc
 
         Split notifications for dev and ops, or by priority
