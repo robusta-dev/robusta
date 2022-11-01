@@ -16,7 +16,7 @@ WORKDIR /app
 # Install gcc to compile rumal.yaml.clib, wheel is missing.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc \
-    && pip3 install --no-cache-dir ruamel.yaml.clib \
+    && pip3 install --no-cache-dir ruamel.yaml.clib==0.2.6 \
     && apt-get purge -y --auto-remove gcc \
     && rm -rf /var/lib/apt/lists/*
 

@@ -124,13 +124,13 @@ class SlackSender:
 
     def __to_slack_table(self, block: TableBlock):
         # temp workaround untill new blocks will be added to support these.
-        if "alert labels" in block.table_name.lower() and len(block.headers) == 2:
-            table_str = "\n".join(f"▪️ {row[0]} `{row[1]}`" for row in block.rows)
+        if len(block.headers) == 2:
+            table_str = "\n".join([f"● {row[0]} `{row[1]}`" for row in block.rows])
             table_str = f"{block.table_name} \n{table_str}"
             return self.__to_slack_markdown(MarkdownBlock(table_str))
         elif "pod events" in block.table_name.lower() and len(block.headers) == 4:
             table_str = "\n".join(
-                f"`{row[0]}` *{row[1]}* {row[2]} 🔶 {row[3]}" for row in block.rows
+                [f"`{row[0]}` *{row[1]}* {row[2]} 🔶 {row[3]}" for row in block.rows]
             )
             table_str = f"{block.table_name} \n{table_str}"
             return self.__to_slack_markdown(MarkdownBlock(table_str))
