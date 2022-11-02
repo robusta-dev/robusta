@@ -19,12 +19,11 @@ Sinks
    PagerDuty
    webex
 
-Playbooks results (findings), can be sent to one or more sinks (destinations). Findings will be automatically formatted in a way
-that makes sense for each sink.
+Messages from Robusta can be sent to one or more sinks, or destinations.
 
 Supported sinks
 ^^^^^^^^^^^^^^^^^^^^^
-The following sinks are supported:
+The following sinks work out of the box:
 
 .. grid:: 1 1 2 3
     :gutter: 3

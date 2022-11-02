@@ -3,7 +3,7 @@ Install with Helm
 
 This tutorial installs Robusta using `Helm 3 <https://helm.sh/docs/intro/install/>`_. You can also :ref:`Install with ArgoCD`.
 
-Installing Robusta takes about 90 seconds on a 10 node cluster. If you'd like to install on a test cluster, we recommend using KIND. You can :ref:`upgrade or uninstall <Upgrade and Uninstall>` at any time using Helm.
+Installing Robusta takes about 90 seconds on a 10 node cluster. For test clusters, we recommend KIND. You can :ref:`upgrade or uninstall <Upgrade and Uninstall>` at any time using Helm.
 
 .. admonition:: Have questions?
 
@@ -14,7 +14,7 @@ Generate a config
 
 Robusta needs some settings to work. For example, if you use Slack then Robusta needs an API key. These settings are configured as Helm values.
 
-We'll generate the Helm values using the ``robusta`` cli tool. There are two ways to install this tool: using ``pip`` or using a Docker container with the ``robusta`` cli already inside. We recommend using pip.
+We'll generate the Helm values using the ``robusta`` cli tool. There are two ways to install this tool: using ``pip`` or using a Docker container with the ``robusta`` cli already inside. We recommend pip.
 
 .. tab-set::
 

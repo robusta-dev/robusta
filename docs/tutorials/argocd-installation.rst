@@ -1,14 +1,14 @@
 Install with ArgoCD
 ==============================
 
-This tutorial covers installing Robusta with `ArgoCD <https://argoproj.github.io/cd>`_. You can also install Robusta directly :ref:`with Helm <Install with Helm>`.   
+This tutorial installs Robusta with `ArgoCD <https://argoproj.github.io/cd>`_. You can also install :ref:`with Helm <Install with Helm>`.
 
 Generate a config
 -----------------------------------
 
 Robusta needs some settings to work. For example, if you use Slack then Robusta needs an API key. These settings are configured as Helm values.
 
-We'll generate the Helm values using the ``robusta`` cli tool. There are two ways to install this tool: using ``pip`` or using a Docker container with the ``robusta`` cli already inside. We recommend using pip.
+We'll generate the Helm values using the ``robusta`` cli tool. There are two ways to install this tool: using ``pip`` or using a Docker container with the ``robusta`` cli already inside. We recommend pip.
 
 .. tab-set::    
 
@@ -84,47 +84,66 @@ Reuse a config
 -------------------
 You don't have to create a new ``generated_values.yaml`` everytime you install Robusta on a new cluster. 
 
-Change the value of ``clusterName:`` in ``generated_values.yaml`` file to a new one and use it as your config. Ex: ``clusterName: new_cluster_name``. 
-
+Once you've created ``generated_values.yaml`` once, you should use that file for all clusters. Just change the value of ``clusterName`` for each cluster to something descriptive.
 
 Install
 --------------------------------
 
-To setup Robusta with ArgoCD, create a ``NEW APP`` and fill the following:
+To setup Robusta with ArgoCD, create a ``NEW APP`` and fill in the following settings.
 
-1. General
-    - Application name: Your choice (e.g "robusta")
-    - Project name: Your choice (e.g "default")
-    - Sync Policy: Your choice (recommended to start with Manual and change it later)
-2. Source
-    - Repository URL: https://robusta-charts.storage.googleapis.com
-    - Chart: robusta
-    - Change the dropdown box from "GIT" to "HELM"
-    - Version: Choose the most stable robusta version, "-alpha" versions are not recommended.
+``General`` settings
+^^^^^^^^^^^^^^^^^
+
+- Application name: Your choice (e.g "robusta")
+- Project name: Your choice (e.g "default")
+- Sync Policy: Your choice (recommended to start with ``Manual``)
+
+``Source`` settings
+^^^^^^^^^^^^^^^^^^^
+
+- Repository URL: https://robusta-charts.storage.googleapis.com
+- Chart: robusta
+- Change the dropdown box from "GIT" to "HELM"
+- Version: Choose the most stable robusta version, "-alpha" versions are not recommended.
+
+``Destination`` settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- To install robusta in the same cluster as ArgoCD, use the default https://kubernetes.default.svc option
+- Namespace: Your choice ("default" or "robusta" is recommended)
+
+Here is a screenshot of all settings so far:
 
 .. image:: /images/argo_cd_ui_robusta.png
    :align: center
 
-3. Destination
-    - To install robusta in the same cluster as ArgoCD, use the default https://kubernetes.default.svc option
-    - Namespace: Your choice ("default" or "robusta" is recommended)
-4. Change the "Directory" category to "Helm" by clicking the dropdown box
-    - Do **not** use the "values files" option
-    - Copy paste the generated_values.yaml file content that you've prepared into the "values" box.
+
+``Directory`` settings
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Change the "Directory" category to "Helm" by clicking the dropdown box.
+
+Then paste the contents of ``generated_values.yaml`` into the ``values`` option.
+
+.. warning::
+
+    Make sure you fill in ``values``, not ``values files``
 
 .. image:: /images/argo_cd_ui_robusta_helm_values.png
    :align: center
 
-Then:
-    1. Press the **create** button.
-    2. Choose **all** and press the **sync** button.  
-    3. run ``robusta logs`` and make sure there is no error.
+Finish installing
+^^^^^^^^^^^^^^^^^
+Click the **create** button. Then choose **all** and press the **sync** button.
+
+Finally, run ``robusta logs`` from your cli and make sure there is no error.
+
 .. image:: /images/argocd_sync_all.png
    :align: center
 
 .. admonition:: Sync fails
     :class: warning
 
-    On some versions of Robusta, if you set ``enablePrometheusStack: true``, the sync might fail with ``CustomResourceDefinition.apiextensions.k8s.io “prometheuses.monitoring.coreos.com” is invalid: metadata.annotations: Too long: must have at most 262144 bytes``.
+    On some Robusta versions, the sync might fail with ``CustomResourceDefinition.apiextensions.k8s.io “prometheuses.monitoring.coreos.com” is invalid: metadata.annotations: Too long: must have at most 262144 bytes``.
 
     To solve it, use the workaround proposed `here <https://github.com/prometheus-community/helm-charts/issues/1500#issuecomment-1132907207>`_
