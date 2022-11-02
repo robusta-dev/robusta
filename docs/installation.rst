@@ -1,18 +1,18 @@
 Install with Helm
 ##################
 
-This tutorial installs Robusta using `Helm 3 <https://helm.sh/docs/intro/install/>`_. You can also :ref:`Install with ArgoCD`.
+Installing Robusta takes about 90 seconds on a 10 node cluster. For test clusters, we recommend KIND. You can :ref:`upgrade or uninstall <Upgrade and Uninstall>` at any time.
 
-Installing Robusta takes about 90 seconds on a 10 node cluster. For test clusters, we recommend KIND. You can :ref:`upgrade or uninstall <Upgrade and Uninstall>` at any time using Helm.
+This tutorial uses `Helm 3 <https://helm.sh/docs/intro/install/>`_. You can also :ref:`Install with ArgoCD`.
 
 .. admonition:: Have questions?
 
-    `Ask us on Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
+    `Ask on Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
 
 Generate a config
 -----------------------------------
 
-Robusta needs some settings to work. For example, if you use Slack then Robusta needs an API key. These settings are configured as Helm values.
+Robusta needs settings to work. For example, if you use Slack then Robusta needs an API key. These settings are configured as Helm values.
 
 We'll generate the Helm values using the ``robusta`` cli tool. There are two ways to install this tool: using ``pip`` or using a Docker container with the ``robusta`` cli already inside. We recommend pip.
 
@@ -71,10 +71,8 @@ We'll generate the Helm values using the ``robusta`` cli tool. There are two way
 
 You now have a ``generated_values.yaml`` file with a Robusta config. You can customize this more later (for example, to `add integrations <https://docs.robusta.dev/master/catalog/sinks/index.html>`_ like Discord). For now, lets install Robusta and see it in action.
 
-Install
+Run helm
 ------------------------------
-
-Using the ``generated_values.yaml`` you just created, we'll install Robusta with Helm.
 
 Add Robusta's chart repository:
 

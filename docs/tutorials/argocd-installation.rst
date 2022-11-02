@@ -6,7 +6,7 @@ This tutorial installs Robusta with `ArgoCD <https://argoproj.github.io/cd>`_. Y
 Generate a config
 -----------------------------------
 
-Robusta needs some settings to work. For example, if you use Slack then Robusta needs an API key. These settings are configured as Helm values.
+Robusta needs settings to work. For example, if you use Slack then Robusta needs an API key. These settings are configured as Helm values.
 
 We'll generate the Helm values using the ``robusta`` cli tool. There are two ways to install this tool: using ``pip`` or using a Docker container with the ``robusta`` cli already inside. We recommend pip.
 
