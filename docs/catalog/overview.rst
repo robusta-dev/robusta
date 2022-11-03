@@ -2,11 +2,19 @@
 Overview
 ======================
 
-Robusta automates everything that happens **after** you deploy your application.
+Robusta is a Kubernetes monitoring platform with **strong automation capabilities**.
 
-It is somewhat like Zapier/IFTTT for devops, with an emphasis on prebuilt automations and not just "build your own".
+Automations have three main use cases:
 
-For example, the following automation sends logs to Slack when an alert fires for crashing pods:
+* Listening to the Kubernetes API Server and generating alerts
+* Gathering observability data when alerts fire - e.g. logs, graphs, thread dumps
+* Automatically remediating alerts with runbook automation
+
+Conceptually, the automations engine is similar to Zapier/IFTTT but built for devops scenarios and defined in YAML. Automations are event-triggered.
+
+Examples
+------------------
+Lets take a Prometheus alert for crashing pods and automate the process of fetching pod logs. The result will be sent to Slack.
 
 .. code-block:: yaml
 
@@ -17,6 +25,9 @@ For example, the following automation sends logs to Slack when an alert fires fo
       - logs_enricher: {}
     sinks:
       - slack
+
+How Automations Work
+----------------------
 
 Every automation has three parts:
 
@@ -45,3 +56,8 @@ Every automation has three parts:
 
         Where to send the result
         (Slack, etc)
+
+Built-in automations
+-----------------------
+Robusta includes pre-defined automations that gather observability data about common errors.
+
