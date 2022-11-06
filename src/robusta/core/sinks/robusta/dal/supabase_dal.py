@@ -130,6 +130,8 @@ class SupabaseDal:
             "deleted": service.deleted,
             "service_key": service.get_service_key(),
             "config": service.service_config.dict() if service.service_config else None,
+            "total_pods": service.total_pods,
+            "ready_pods": service.ready_pods,
             "update_time": "now()",
         }
 

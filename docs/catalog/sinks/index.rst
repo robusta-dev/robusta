@@ -14,6 +14,7 @@ Sinks
    ms-teams
    mattermost
    webhook
+   webex
    Opsgenie
    VictorOps
    PagerDuty

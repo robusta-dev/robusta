@@ -7,7 +7,7 @@ This tutorial uses `Helm 3 <https://helm.sh/docs/intro/install/>`_. You can also
 
 .. admonition:: Have questions?
 
-    `Ask on Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
+    `Ask on Slack <https://bit.ly/robusta-slack>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
 
 Generate a config
 -----------------------------------

@@ -15,4 +15,4 @@ jobs:
       - name: Run poetry lock
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
-        # disable poetry lock --check until poetry 1.2 stable release.
+          poetry lock --check
