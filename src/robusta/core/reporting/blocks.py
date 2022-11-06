@@ -369,6 +369,19 @@ class CallbackBlock(BaseBlock):
         super().__init__(choices=choices)
 
 
+class LinkProp(BaseModel):
+    text: str
+    url: str
+
+
+class LinksBlock(BaseBlock):
+    """
+    A set of links
+    """
+
+    links: list[LinkProp] = []
+
+
 class PrometheusBlock(BaseBlock):
     """
     Formatted prometheus query results with metadata
