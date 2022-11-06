@@ -4,6 +4,7 @@ from dataclasses import is_dataclass, InitVar
 from inspect import signature, getmodule
 from hikaru import HikaruDocumentBase, HikaruBase
 from ruamel.yaml import YAML
+from kubernetes.client.models.v1_container_image import V1ContainerImage
 
 try:
     from typing import get_args, get_origin
@@ -29,7 +30,14 @@ def create_monkey_patches():
     # We added caching to search for the plugins only once
     logging.info("Creating yaml monkey patch")
     YAML.official_plug_ins = official_plug_ins
+    # The patched method is due to a bug in containerd that allows for containerImages to have no names
+    # which causes the kubernetes python api to throw an exception
+    logging.info("Creating kubernetes container monkey patch")
+    V1ContainerImage.names = V1ContainerImage.names.setter(names)
 
+
+def names(self, names):
+    self._names = names
 
 def official_plug_ins(self):
     return []
