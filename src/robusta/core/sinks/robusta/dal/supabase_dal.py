@@ -308,10 +308,10 @@ class SupabaseDal:
         status_code = res.get("status_code")
         if status_code != 204:
             logging.error(
-                f"Failed to delete jobs {job} error: {res.get('data')}"
+                f"Failed to delete job {job} error: {res.get('data')}"
             )
             self.handle_supabase_error()
-            raise Exception(f"remove deleted job jobs failed. status: {status_code}")
+            raise Exception(f"remove deleted job failed. status: {status_code}")
 
 
     @staticmethod
