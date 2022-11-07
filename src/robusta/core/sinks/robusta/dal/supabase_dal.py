@@ -322,10 +322,17 @@ class SupabaseDal:
         url: str = str(supabase_request_obj.session.base_url).rstrip("/")
         query: str = str(supabase_request_obj.session.params)
         response = requests.delete(f"{url}?{query}", headers=supabase_request_obj.session.headers)
+        response_data = ''
+        try:
+            response_data = response.json()
+        except Exception: # this can be okay if no data is expected
+            logging.warning(f"Failed to parse delete response data")
+
         return {
-            "data": '' if response.status_code == 204 else response.json(),
+            "data": response_data,
             "status_code": response.status_code,
         }
+
 
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
