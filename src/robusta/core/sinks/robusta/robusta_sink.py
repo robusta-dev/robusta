@@ -291,13 +291,11 @@ class RobustaSink(SinkBase):
 
     def __safe_delete_job(self, job_key):
         try:
-            #TODO: REMOVE LOG
-            logging.info(f"Deleting job {self.__jobs_cache[job_key]}")
             self.__jobs_cache[job_key].deleted = True
             self.dal.remove_deleted_job(self.__jobs_cache[job_key])
             del self.__jobs_cache[job_key]
         except Exception:
-            logging.error(f"Failed to delete job {self.__jobs_cache[job_key]}", exc_info=True)
+            logging.error(f"Failed to delete job with service key {job_key}", exc_info=True)
 
     def __publish_new_jobs(self, active_jobs: List[JobInfo]):
         # convert to map

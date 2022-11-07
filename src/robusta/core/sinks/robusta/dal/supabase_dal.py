@@ -4,6 +4,8 @@ import threading
 import time
 from typing import List, Dict, Any
 from supabase_py.lib.auth_client import SupabaseAuthClient
+from postgrest_py.request_builder import QueryRequestBuilder
+import requests
 
 from .model_conversion import ModelConversion
 from ....model.cluster_status import ClusterStatus
@@ -299,19 +301,32 @@ class SupabaseDal:
             return
 
         res = (
-            self.client.table(JOBS_TABLE).delete()
+            self.__delete_patch(self.client.table(JOBS_TABLE).delete()
                 .eq("account_id", self.account_id)
                 .eq("cluster_id", self.cluster)
-                .eq("service_key", job.get_service_key())
-                .execute()
-        )
-        if res.get("status_code") not in [200, 201]:
+                .eq("service_key", job.get_service_key())))
+        status_code = res.get("status_code")
+        if status_code != 204:
             logging.error(
                 f"Failed to delete jobs {job} error: {res.get('data')}"
             )
             self.handle_supabase_error()
-            status_code = res.get("status_code")
-            raise Exception(f"remove_deleted_job jobs failed. status: {status_code}")
+            raise Exception(f"remove deleted job jobs failed. status: {status_code}")
+
+
+    @staticmethod
+    def __delete_patch(supabase_request_obj: QueryRequestBuilder) -> Dict[str, Any]:
+        """
+            supabase_py's QueryBuilder has a bug for delete where the response 204 (no content)
+            is attempted to be converted to a json, which throws an error every time
+        """
+        url: str = str(supabase_request_obj.session.base_url).rstrip("/")
+        query: str = str(supabase_request_obj.session.params)
+        response = requests.delete(f"{url}?{query}", headers=supabase_request_obj.session.headers)
+        return {
+            "data": '' if response.status_code == 204 else response.json(),
+            "status_code": response.status_code,
+        }
 
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
