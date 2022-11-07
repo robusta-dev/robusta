@@ -261,12 +261,12 @@ class Finding(Filterable):
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
 
-        kind: str = str(self.subject.subject_type.value)
+        kind: Optional[str] = self.subject.subject_type.value
         if kind and self.subject.name:
             labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
-
+        # New label added here should be added to the UI silence create whitelist as well.
         return f"{ROBUSTA_UI_DOMAIN}/silences/create?{urllib.parse.urlencode(labels)}"
 
     @staticmethod
