@@ -283,8 +283,7 @@ class SupabaseDal:
         if not jobs:
             return
 
-        db_jobs = [self.__to_db_job(job) for job in jobs if job.deleted == False]
-
+        db_jobs = [self.__to_db_job(job) for job in jobs]
         res = (
             self.client.table(JOBS_TABLE).insert(db_jobs, upsert=True).execute()
         )
