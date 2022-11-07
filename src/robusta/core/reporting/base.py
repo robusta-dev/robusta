@@ -18,6 +18,12 @@ class BaseBlock(BaseModel):
     hidden: bool = False
 
 
+class Emojis(Enum):
+    Explain = "📘"
+    Recommend = "🛠"
+    Alert = "🚨"
+
+
 class FindingSeverity(Enum):
     DEBUG = 0
     INFO = 1

@@ -125,13 +125,16 @@ class SlackSender:
     def __to_slack_table(self, block: TableBlock):
         # temp workaround untill new blocks will be added to support these.
         if len(block.headers) == 2:
-            table_str = "\n".join([f"● {row[0]} `{row[1]}`" for row in block.rows])
-            table_str = f"{block.table_name} \n{table_str}"
-            return self.__to_slack_markdown(MarkdownBlock(table_str))
-        elif "pod events" in block.table_name.lower() and len(block.headers) == 4:
-            table_str = "\n".join(
-                [f"`{row[0]}` *{row[1]}* {row[2]} 🔶 {row[3]}" for row in block.rows]
-            )
+            table_rows: List[str] = []
+            for row in block.rows:
+                if "-------" in row[1]: # special care for table subheader
+                    subheader: str = row[0]
+                    table_rows.append(f"--- {subheader.capitalize()} ---")
+                    continue
+
+                table_rows.append(f"● {row[0]} `{row[1]}`")
+
+            table_str = "\n".join(table_rows)
             table_str = f"{block.table_name} \n{table_str}"
             return self.__to_slack_markdown(MarkdownBlock(table_str))
 
@@ -219,19 +222,9 @@ class SlackSender:
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
         # wide tables aren't displayed properly on slack. looks better in a text file
-        table_blocks = [b for b in other_blocks if isinstance(b, TableBlock)]
-        for table_block in table_blocks:
-            if len(table_block.headers) > SLACK_TABLE_COLUMNS_LIMIT:
-                table_name = (
-                    table_block.table_name if table_block.table_name else "data"
-                )
-                table_content = table_block.to_table_string(
-                    table_max_width=250
-                )  # bigger max width for file
-                file_blocks.append(
-                    FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8"))
-                )
-                other_blocks.remove(table_block)
+        file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
+        file_blocks.extend(Transformer.tableblock_to_fileblocks(report_attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
+
         message = self.prepare_slack_text(title, file_blocks)
         output_blocks = []
         for block in other_blocks:
@@ -329,9 +322,12 @@ class SlackSender:
                 self.__create_finding_header(finding, status, platform_enabled)
             )
 
-        blocks.append(MarkdownBlock(text=f"Source: `{self.cluster_name}`"))
+        if platform_enabled:
+            blocks.append(self.__create_links(finding))
+
+        blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
         if finding.description:
-            blocks.append(MarkdownBlock(finding.description))
+            blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
 
         unfurl = True
         for enrichment in finding.enrichments:
@@ -344,8 +340,6 @@ class SlackSender:
             else:
                 blocks.extend(enrichment.blocks)
 
-        if platform_enabled:
-            blocks.append(self.__create_links(finding))
         blocks.append(DividerBlock())
 
         if len(attachment_blocks):
