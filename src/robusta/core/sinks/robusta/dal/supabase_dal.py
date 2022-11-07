@@ -281,7 +281,8 @@ class SupabaseDal:
         if not jobs:
             return
 
-        db_jobs = [self.__to_db_job(job) for job in jobs]
+        db_jobs = [self.__to_db_job(job) for job in jobs if job.deleted == False]
+
         res = (
             self.client.table(JOBS_TABLE).insert(db_jobs, upsert=True).execute()
         )
@@ -292,6 +293,25 @@ class SupabaseDal:
             self.handle_supabase_error()
             status_code = res.get("status_code")
             raise Exception(f"publish jobs failed. status: {status_code}")
+
+    def remove_deleted_job(self, job : JobInfo):
+        if not job:
+            return
+
+        res = (
+            self.client.table(JOBS_TABLE).delete()
+                .eq("account_id", self.account_id)
+                .eq("cluster_id", self.cluster)
+                .eq("service_key", job.get_service_key())
+                .execute()
+        )
+        if res.get("status_code") not in [200, 201]:
+            logging.error(
+                f"Failed to delete jobs {job} error: {res.get('data')}"
+            )
+            self.handle_supabase_error()
+            status_code = res.get("status_code")
+            raise Exception(f"remove_deleted_job jobs failed. status: {status_code}")
 
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:

@@ -289,6 +289,16 @@ class RobustaSink(SinkBase):
 
         self.dal.publish_nodes(updated_nodes)
 
+    def __safe_delete_job(self, job_key):
+        try:
+            #TODO: REMOVE LOG
+            logging.info(f"Deleting job {self.__jobs_cache[job_key]}")
+            self.__jobs_cache[job_key].deleted = True
+            self.dal.remove_deleted_job(self.__jobs_cache[job_key])
+            del self.__jobs_cache[job_key]
+        except Exception:
+            logging.error(f"Failed to delete job {self.__jobs_cache[job_key]}", exc_info=True)
+
     def __publish_new_jobs(self, active_jobs: List[JobInfo]):
         # convert to map
         curr_jobs = {}
@@ -300,9 +310,7 @@ class RobustaSink(SinkBase):
         updated_jobs: List[JobInfo] = []
         for job_key in cache_keys:
             if not curr_jobs.get(job_key):  # job doesn't exist any more, delete it
-                self.__jobs_cache[job_key].deleted = True
-                updated_jobs.append(self.__jobs_cache[job_key])
-                del self.__jobs_cache[job_key]
+                self.__safe_delete_job(job_key)
 
         # new or changed jobs
         for job_key in curr_jobs.keys():
