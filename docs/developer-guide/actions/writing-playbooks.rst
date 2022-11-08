@@ -99,7 +99,7 @@ For example:
        block_list.append(MarkdownBlock(exec_result))
        event.add_enrichment(block_list)
 
-We can now define the ``bash_command`` parameter in ``values.yaml``:
+We can now define the ``bash_command`` parameter in ``generated_values.yaml``:
 
 .. code-block:: yaml
 

@@ -9,7 +9,7 @@ Robusta can send playbooks results to the VictorOps alerts API.
 Configuring the VictorOps sink
 ------------------------------------------------
 
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -17,6 +17,14 @@ Configuring the VictorOps sink
             - victorops_sink:
                 name: main_victorops_sink
                 url: <REST endpoint> # e.g. https://alert.victorops.com/integrations/generic/20131114/alert/4a6a87eb-fca9-4117-931a-c842277ea90a/$routing_key
+
+Save the file and run
+
+.. code-block:: bash
+   :name: cb-add-victorops-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
+
 **Example Output:**
 
 .. admonition:: Typically you'll send alerts from Robusta to VictorOps and not deployment changes. We're showing a non-typical example with deployment changes because it helps compare the format with other sinks.

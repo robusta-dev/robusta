@@ -20,6 +20,7 @@ The following sinks are supported:
 * :ref:`PagerDuty` - send playbooks results to the PagerDuty alerts API
 * :ref:`Discord` - send playbooks results to the Discord using webhook
 * :ref:`Mattermost` - send playbooks results to the Mattermost using webhook
+* :ref:`Webex` - send playbooks results to the Webex using webhook
 
 **Need support for something not listed here?** `Tell us and we'll add it to the code. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
 
@@ -67,6 +68,7 @@ if it has the field `default: true` in the YAML.
    ms-teams
    mattermost
    webhook
+   webex
    Opsgenie
    VictorOps
    PagerDuty

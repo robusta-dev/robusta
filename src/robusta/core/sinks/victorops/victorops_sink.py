@@ -23,12 +23,17 @@ class VictoropsSink(SinkBase):
         json_dict: dict = {}
 
         if platform_enabled:
-            json_dict["vo_annotate.u.🔎 Investigate"] = finding.investigate_uri
+            json_dict["vo_annotate.u.🔎 Investigate"] = finding.get_investigate_uri(self.account_id, self.cluster_name)
 
             if finding.add_silence_url:
                 json_dict[
                     "vo_annotate.u.🔕 Silence"
                 ] = finding.get_prometheus_silence_url(self.cluster_name)
+
+            for video_link in finding.video_links:
+                json_dict[
+                    f"vo_annotate.u.🎬 {video_link.name}"
+                ] = video_link.url
 
         # custom fields
         json_dict["Resource"] = finding.subject.name

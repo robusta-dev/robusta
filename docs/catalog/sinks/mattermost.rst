@@ -52,7 +52,7 @@ Configuring the Mattermost sink
 ------------------------------------------------
 Now we're ready to configure the Mattermost sink.
 
-.. admonition:: values.yaml
+.. admonition:: Add this to your generated_values.yaml
 
     .. code-block:: yaml
 
@@ -64,8 +64,24 @@ Now we're ready to configure the Mattermost sink.
             token_id: <YOUR BOT TOKEN ID> (the token id visible in bot panel)
             channel: <YOUR CHANNEL NAME> (the channel name you want to send messages to - either display name or channel name divided by hyphen (e.g. channel-name))
 
+Save the file and run
+
+.. code-block:: bash
+   :name: cb-add-mattermost-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
+
 You should now get playbooks results in Mattermost! Example is shown below:
 
     .. image:: /images/mattermost_sink_example.png
       :width: 1000
       :align: center
+
+Mattermost configuration tutorial
+---------------------------------
+
+See video below:
+
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/4b8b2f9bd49b49f08a9853e4a8a5aa44" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>

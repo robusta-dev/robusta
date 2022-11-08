@@ -77,13 +77,17 @@ def _add_color_to_block(block: Dict, msg_color: str):
 
 class DiscordSender:
     def __init__(
-            self, url: str, cluster_name: str
+            self,
+            url: str,
+            account_id: str,
+            cluster_name: str
     ):
         """
         Set the Discord webhook url.
         """
         self.url = url
         self.cluster_name = cluster_name
+        self.account_id = account_id
 
     @classmethod
     def __add_severity_icon(cls, title: str, severity: FindingSeverity) -> str:
@@ -247,10 +251,12 @@ class DiscordSender:
     ):
         blocks: List[BaseBlock] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
-            actions = f"[:mag_right: Investigate]({finding.investigate_uri})"
+            actions = f"[:mag_right: Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)})"
             if finding.add_silence_url:
                 actions = f"{actions} [:no_bell: Silence]({finding.get_prometheus_silence_url(self.cluster_name)})"
 
+            for video_link in finding.video_links:
+                actions = f"{actions} [:clapper: {video_link.name}]({video_link.url})"
             blocks.append(DiscordDescriptionBlock(description=actions))
 
         blocks.append(DiscordFieldBlock(name=f"Source", value=f"`{self.cluster_name}`"))

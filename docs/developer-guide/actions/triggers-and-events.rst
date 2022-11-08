@@ -1,7 +1,7 @@
 Events and Triggers
 =====================
 
-When configuring Robusta as a user, you define :ref:`triggers <Triggers>` in ``values.yaml`` but when writing playbook
+When configuring Robusta as a user, you define :ref:`triggers <Triggers>` in ``generated_values.yaml`` but when writing playbook
 actions you deal with events.
 
 The basic idea is that **triggers** generate **event** objects and those events are passed to **action** functions.

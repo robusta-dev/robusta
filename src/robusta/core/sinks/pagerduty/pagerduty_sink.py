@@ -52,7 +52,7 @@ class PagerdutySink(SinkBase):
         custom_details: dict = {}
 
         if platform_enabled:
-            custom_details["🔎 Investigate"] = finding.investigate_uri
+            custom_details["🔎 Investigate"] = finding.get_investigate_uri(self.account_id, self.cluster_name)
 
             if finding.add_silence_url:
                 custom_details["🔕 Silence"] = finding.get_prometheus_silence_url(

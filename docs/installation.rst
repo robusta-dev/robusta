@@ -7,7 +7,7 @@ Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1
 
 .. admonition:: Have questions?
 
-    `Ask us on Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
+    `Ask us on Slack <https://bit.ly/robusta-slack>`_ or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=other.md&title=Installation%20Question>`_
 
 We will now configure Robusta in your cluster.
 For this we need to install Robusta, and also connect at least one destination ("sink"), and at least one source ("triggers").
@@ -207,7 +207,7 @@ Additional Installation Methods
 .. dropdown:: Installing without the Robusta CLI
     :color: light
 
-    Using the cli is totally optional. If you prefer, you can skip the CLI and fetch the default ``values.yaml``:
+    Using the cli is totally optional. If you prefer, you can skip the CLI and fetch the default **Helm values** from the helm chart:
 
     .. code-block:: bash
         :name: cb-helm-repo-add-show-values
@@ -218,7 +218,7 @@ Additional Installation Methods
 
     Most values are documented in the :ref:`Configuration Guide`
 
-    Do not use the ``values.yaml`` file in the GitHub repo. It has some empty placeholders which are replaced during
+    Do not use ``helm/robusta/values.yaml`` in the GitHub repo. It has some empty placeholders which are replaced during
     our release process.
 
 .. dropdown:: Installing in a different namespace
