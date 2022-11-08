@@ -12,8 +12,8 @@ Robusta has three main parts, all open source:
 
 There are additional *optional* components:
 
-4. `An all-in-one bundle with Robusta, the Prometheus Operator, and default Kubernetes alerts <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_ [#f1]_
-5. `A web UI to see all alerts, changes, and events in your cluster. <http://home.robusta.dev/ui?from=docs>`_ [#f2]_
+4. An :ref:`all-in-one bundle <Embedded Prometheus Stack>` with Robusta, the Prometheus Operator, and `default Kubernetes alerts <https://home.robusta.dev/features/builtin-alerts>`_
+5. `A web UI to see all alerts, changes, and events in your cluster. <https://home.robusta.dev/features/multi-cluster-observability>`_
 
 Example Use Cases
 ~~~~~~~~~~~~~~~~~~
@@ -139,12 +139,6 @@ Next Steps
 :ref:`Ready to install Robusta? Get started! <installation>`
 
 `Star us on GitHub to receive updates. <https://github.com/robusta-dev/robusta/>`_
-
-.. rubric:: Footnotes
-
-.. [#f1] These alerts should cause no noise on a healthy cluster. If they're noisy in your env, let us know and we'll fix it.
-
-.. [#f2] This is the only component that isn't open source and it's completely optional. For self-hosting the UI, see :ref:`Self hosting`
 
 .. toctree::
    :hidden:
