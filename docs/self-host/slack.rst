@@ -57,7 +57,7 @@ You can also find MY_DOMAIN in your self_host_values.yaml file under DOMAIN.
     }
    
 Build and Install the Slack app
---------------
+--------------------------------
 
 #. Go to `Slack apps <https://api.slack.com/apps/>`_ 
 #. Click create new app (on top right corner).
@@ -69,7 +69,7 @@ Build and Install the Slack app
 #. Find ``Install your app`` and install it to the relevant workspace.
 #. Go to ``Display Information`` and add our :download:`App icon </_static/app-logo.png>`
 
-Adjust your self_host_values.yaml file 
+Use the created app credentials
 --------------------------------------
 
 In this part we will update the self_host_values.yaml file to use your app credentials.

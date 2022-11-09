@@ -57,4 +57,4 @@ Fill ``Client ID`` and ``Client Secret`` from the previous step and add the foll
 Support
 ^^^^^^^^^^^^^^^
 
-For further help contact us on `Slack <https://join.slack.com/t/robustacommunity/shared_invite/zt-10rkepc5s-FnXKvGjrBmiTkKdrgDr~wg>`_ or `support@robusta.dev <mailto:support@robusta.dev>`_
+For further help contact us on `Slack <https://bit.ly/robusta-slack>`_ or `support@robusta.dev <mailto:support@robusta.dev>`_
