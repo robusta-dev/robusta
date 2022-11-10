@@ -3,7 +3,6 @@ from typing import Union, List, Dict, get_type_hints, Optional
 from dataclasses import is_dataclass, InitVar
 from inspect import signature, getmodule
 from hikaru import HikaruDocumentBase, HikaruBase
-from hikaru.model import ContainerImage
 from ruamel.yaml import YAML
 from kubernetes.client.models.v1_container_image import V1ContainerImage
 
