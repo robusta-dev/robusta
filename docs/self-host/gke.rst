@@ -80,7 +80,7 @@ You can now install the Robusta platform into your cluster using `Helm <https://
 
     helm install robusta-platform robusta-platform/robusta-platform -f values.yaml
 
-**It will take the Robusta platform approximately 30~ min to activate due to GKE Google-managed SSL certificate.**
+**It will take the Robusta platform approximately 30 min to activate due to Google's SSL certificate provisioning process.**
 check the :ref:`Troubleshooting <Troubleshooting>` section for more info.
 
 Configure Robusta CLI to use your backend configuration.
