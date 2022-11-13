@@ -107,9 +107,6 @@ def run_jdk_command_on_pid(
             finding, cmd, retrigger_action, java_process_inspector
         )
         if process is None:
-            error_message = f"{aggregation_key} - pid not found for event: {event}"
-            logging.info(error_message)
-            finding.add_enrichment([MarkdownBlock(error_message)])
             event.add_finding(finding)
             return
         params.pid = process.pid

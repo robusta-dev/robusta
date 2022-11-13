@@ -118,6 +118,10 @@ html_theme_options = {
         # "color-sidebar-link-text": "black",
     },
 }
+
+copybutton_prompt_text = r"$ "
+
+
 # html_title = ""
 
 # Add any paths that contain custom static files (such as style sheets) here,
