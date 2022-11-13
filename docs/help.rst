@@ -27,7 +27,7 @@ Common Errors
 ^^^^^^^^^^^^^
 
 This list contains some common errors we have encountered over time. If you can't find your answer here,
-please contact support@robusta.dev or go to `our slack channel <https://robustacommunity.slack.com/ssb/redirect>`_.
+please contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-slack>`_.
 
 
 .. details:: Robusta CLI is not in path

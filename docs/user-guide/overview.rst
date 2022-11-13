@@ -15,7 +15,7 @@ All possible values for Robusta can be listed like so:
     :class: warning
 
     It's tempting to look at ``helm/robusta/values.yaml`` in our GitHub repo for reference.
-    This is the wrong file to use. It has empty placeholders that are filled in during our build process.
+    This is the wrong file to use, as it has empty placeholders that are filled in for releases.
 
 Most used settings
 ^^^^^^^^^^^^^^^^^^
