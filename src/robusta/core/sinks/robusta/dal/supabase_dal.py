@@ -305,7 +305,8 @@ class SupabaseDal:
                 .eq("cluster_id", self.cluster)
                 .eq("service_key", job.get_service_key())))
         status_code = res.get("status_code")
-        if status_code != 204:
+        valid_deleted_statuses = [204, 200, 202]
+        if status_code not in valid_deleted_statuses:
             logging.error(
                 f"Failed to delete job {job} error: {res.get('data')}"
             )
