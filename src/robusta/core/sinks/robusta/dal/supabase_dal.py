@@ -4,6 +4,8 @@ import threading
 import time
 from typing import List, Dict, Any
 from supabase_py.lib.auth_client import SupabaseAuthClient
+from postgrest_py.request_builder import QueryRequestBuilder
+import requests
 
 from .model_conversion import ModelConversion
 from ....model.cluster_status import ClusterStatus
@@ -292,6 +294,46 @@ class SupabaseDal:
             self.handle_supabase_error()
             status_code = res.get("status_code")
             raise Exception(f"publish jobs failed. status: {status_code}")
+
+    def remove_deleted_job(self, job : JobInfo):
+        if not job:
+            return
+
+        res = (
+            self.__delete_patch(self.client.table(JOBS_TABLE).delete()
+                .eq("account_id", self.account_id)
+                .eq("cluster_id", self.cluster)
+                .eq("service_key", job.get_service_key())))
+        status_code = res.get("status_code")
+        valid_deleted_statuses = [204, 200, 202]
+        if status_code not in valid_deleted_statuses:
+            logging.error(
+                f"Failed to delete job {job} error: {res.get('data')}"
+            )
+            self.handle_supabase_error()
+            raise Exception(f"remove deleted job failed. status: {status_code}")
+
+
+    @staticmethod
+    def __delete_patch(supabase_request_obj: QueryRequestBuilder) -> Dict[str, Any]:
+        """
+            supabase_py's QueryBuilder has a bug for delete where the response 204 (no content)
+            is attempted to be converted to a json, which throws an error every time
+        """
+        url: str = str(supabase_request_obj.session.base_url).rstrip("/")
+        query: str = str(supabase_request_obj.session.params)
+        response = requests.delete(f"{url}?{query}", headers=supabase_request_obj.session.headers)
+        response_data = ''
+        try:
+            response_data = response.json()
+        except Exception: # this can be okay if no data is expected
+            logging.warning(f"Failed to parse delete response data")
+
+        return {
+            "data": response_data,
+            "status_code": response.status_code,
+        }
+
 
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
