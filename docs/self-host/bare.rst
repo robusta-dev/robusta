@@ -9,8 +9,8 @@ To follow the installation, make sure you have:
 * `Helm 3 <https://helm.sh/docs/intro/install/>`_ 
 * :ref:`Robusta CLI <CLI Commands>`
 
-Installation
--------------
+On Prem Guide 
+---------------
 
 In this guide we are going to deploy the Robusta platform into your cluster.
 We will then set DNS to the Robusta platform NodePort Services.  

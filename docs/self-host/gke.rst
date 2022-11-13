@@ -10,7 +10,7 @@ To follow the installation, make sure you have:
 * :ref:`Robusta CLI <CLI Commands>`
 * `Google Cloud CLI <https://cloud.google.com/sdk/docs/install-sdk>`_
 
-Installation
+GCP Guide
 ------------------------------
 
 Set up a GKE global static IP 
