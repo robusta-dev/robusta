@@ -3,10 +3,18 @@ import string
 import typer
 import yaml
 import json
-from typing import Any
+import jwt as JWT
+import time
+from typing import Any, Final
 from pydantic import BaseModel
 from .backend_profile import BackendProfile
-import jwt as JWT
+
+
+ISSUER: Final[str] = "supabase"
+
+
+def issued_at() -> int:
+    return int(time.time())
 
 
 def gen_secret(length: int) -> str:
@@ -39,9 +47,9 @@ def write_values_files(
 
 
 class RobustaUI(BaseModel):
-    RELAY_HOST: str = ""
-    SUPABASE_URL: str = ""
-    SUPABASE_KEY: str = ""
+    RELAY_HOST: str
+    SUPABASE_URL: str
+    SUPABASE_KEY: str
     service = {"nodePort": 30311}  # platform.domain
 
     def __init__(self, domain: str, anon_key: str):
@@ -53,16 +61,16 @@ class RobustaUI(BaseModel):
 
 
 class RobustaRelay(BaseModel):
-    domain: str = ""
-    storePassword: str = ""
+    domain: str
+    storePassword: str
     storeUser: str = "apiuser-robustarelay@robusta.dev"
-    storeUrl: str = ""
-    storeApiKey: str = ""  # anon key
+    storeUrl: str
+    storeApiKey: str  # anon key
     slackClientId: str = "your-client-id"
     slackClientSecret: str = "your-client-secret"
     slackSigningSecret: str = "your-signing-secret"
-    syncActionAllowedOrigins: str = ""
-    provider: str = ""
+    syncActionAllowedOrigins: str
+    provider: str
     apiNodePort: int = 30313  # api.domain
     wsNodePort: int = 30314  # relay.domain
 
@@ -81,49 +89,33 @@ class SelfHostValues(BaseModel):
     STATIC_IP_NAME: str = "robusta-platform-ip"
     RELAY_PASSWORD: str = gen_secret(12)
     RELAY_USER: str = "apiuser-robustarelay@robusta.dev"
-    DOMAIN: str = ""
-    PROVIDER: str = ""
+    DOMAIN: str
+    PROVIDER: str
     # SUPABASE
     JWT_SECRET: str = gen_secret(32)
-    JWT_EXPIRY: int = 3600
     ANON_KEY: str = JWT.encode(
-        {"role": "anon", "iss": "supabase", "iat": 1661029200, "exp": 1818795600},
+        {"role": "anon", "iss": ISSUER, "iat": issued_at()},
         JWT_SECRET,
     )
     SERVICE_ROLE_KEY: str = JWT.encode(
         {
             "role": "service_role",
-            "iss": "supabase",
-            "iat": 1661029200,
-            "exp": 1818795600,
+            "iss": ISSUER,
+            "iat": issued_at(),
         },
         JWT_SECRET,
     )
     SUPABASE_URL: str = "http://kong:8000"  # Internal URL
-    PUBLIC_REST_URL: str = ""  ## Studio Public REST endpoint - replace this if you intend to use Studio outside of localhost
+    PUBLIC_REST_URL: str  ## Studio Public REST endpoint - replace this if you intend to use Studio outside of localhost
 
     # POSTGRES
     POSTGRES_PORT: int = 5432
-    POSTGRES_STORAGE: str = "50Gi"
+    POSTGRES_STORAGE: str = "100Gi"
     POSTGRES_PASSWORD: str = gen_secret(12)
+    STORAGE_CLASS_NAME: str = "standard"
 
-    SITE_URL: str = ""  # callback target should point to the dash board
+    SITE_URL: str  # callback target should point to the dash board
     ADDITIONAL_REDIRECT_URLS: str = ""
-
-    DISABLE_SIGNUP: bool = False
-    # Email auth
-    ENABLE_EMAIL_SIGNUP: bool = True
-    ENABLE_EMAIL_AUTOCONFIRM: bool = True
-    SMTP_ADMIN_EMAIL: str = ""
-    SMTP_HOST: str = ""
-    SMTP_PORT: int = 2500
-    SMTP_USER: str = ""
-    SMTP_PASS: str = ""
-    SMTP_SENDER_NAME: str = ""
-
-    # Phone auth
-    ENABLE_PHONE_SIGNUP: bool = False
-    ENABLE_PHONE_AUTOCONFIRM: bool = False
 
     # KONG API endpoint ports
     KONG_HTTP_PORT: int = 8000
@@ -140,16 +132,31 @@ app = typer.Typer()
 @app.command()
 def gen_config(
     provider: str = typer.Option(
-        "",
-        help="Cloud host provider.",
+        ...,
+        help='Cloud host provider. options are "on-prem", "gke"',
     ),
-    domain: str = typer.Option("", help="domain used to route the self host services."),
+    domain: str = typer.Option(..., help="domain used to route the on-prem services."),
+    storage_class_name: str = typer.Option(
+        "standard", help="database PVC storageClassName."
+    ),
+    platform_nport: int = typer.Option(
+        30311, help="node port for the Robusta dashboard."
+    ),
+    db_nport: int = typer.Option(30312, help="node port Robusta database."),
+    api_nport: int = typer.Option(30313, help="node port for Robusta API."),
+    ws_nport: int = typer.Option(30314, help="node port for Robusta websocket."),
 ):
-    """Create self host configuration file"""
-
-    if provider not in {"", "gke"}:
+    """Create self host configuration files"""
+    if provider not in {"on-prem", "gke"}:
         typer.secho(
-            f'Invalid provider {provider}. options are "", "gke"',
+            f'Invalid provider {provider}. options are "on-prem", "gke"',
+            fg=typer.colors.RED,
+        )
+        return
+
+    if not domain:
+        typer.secho(
+            f"Missing required argument domain",
             fg=typer.colors.RED,
         )
         return
@@ -159,7 +166,9 @@ def gen_config(
         DOMAIN=domain,
         SITE_URL=f"https://platform.{domain}",
         PUBLIC_REST_URL=f"https://db.{domain}/rest/v1/",
+        STORAGE_CLASS_NAME=storage_class_name,
     )
+    values.KONG_HTTP_NODE_PORT = db_nport
 
     relayValues = RobustaRelay(
         domain=domain,
@@ -167,8 +176,11 @@ def gen_config(
         provider=provider,
         storePW=values.RELAY_PASSWORD,
     )
+    relayValues.apiNodePort = api_nport
+    relayValues.wsNodePort = ws_nport
 
     uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY)
+    uiValues.service["nodePort"] = platform_nport
 
     values = values.dict()
     values["robusta-ui"] = uiValues.dict()
