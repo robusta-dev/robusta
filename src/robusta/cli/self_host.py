@@ -5,7 +5,7 @@ import yaml
 import json
 import jwt as JWT
 import time
-from typing import Any
+from typing import Any, Dict
 from pydantic import BaseModel
 from .backend_profile import BackendProfile
 
@@ -26,7 +26,7 @@ def gen_secret(length: int) -> str:
 def write_values_files(
     values_path: str,
     backendconfig_path: str,
-    values: dict[str, Any],
+    values: Dict[str, Any],
     backendProfile: BackendProfile,
 ):
     with open(values_path, "w") as output_file:
