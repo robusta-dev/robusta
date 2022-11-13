@@ -38,7 +38,7 @@ def create_monkey_patches():
 
 def names(self, names):
     if names:
-    self._names = names
+        self._names = names
     else:
         self._names = ['']
 
