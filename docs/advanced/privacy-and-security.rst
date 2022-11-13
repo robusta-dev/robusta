@@ -1,6 +1,26 @@
 Privacy & Security
 ############################
 
+Data
+********************
+
+Robusta OSS doesn't store information in a database in your cluster.
+Instead, technical information is sent directly to the defined sinks (destinations).
+
+Everything is configurable: you choose exactly what is sent.
+
+The sinks receive the following:
+
+- Prometheus alerts, including enrichments: e.g charts of the Prometheus metric that caused the alert to fire
+- Kubernetes API server warning events
+- Pod crash-logs: Robusta doesn't collect logs 24/7. Only when there's an issue where logs might be helpful
+
+**Robusta SaaS UI** behaves like a special kind of sink (destination).
+
+In addition to the above information, it also receives:
+
+- Change tracking information: When a deployment yaml is updated, shows the diff
+- Basic information on nodes/jobs/deployments in your cluster
 
 Log censoring
 ********************
