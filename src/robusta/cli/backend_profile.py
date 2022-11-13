@@ -17,12 +17,23 @@ class BackendProfile(BaseModel):
     robusta_store_token_url: str = ""
     custom_profile: bool = False
 
+    @classmethod
+    def fromDomain(cls, domain: str):
+        return cls(
+            robusta_cloud_api_host=f"https://api.{domain}",
+            robusta_ui_domain=f"https://platform.{domain}",
+            robusta_relay_ws_address=f"wss://relay.{domain}",
+            robusta_relay_external_actions_url=f"https://api.{domain}/integrations/generic/actions",
+            robusta_telemetry_endpoint=f"https://api.{domain}/telemetry",
+            robusta_store_token_url=f"https://api.{domain}/auth/server/tokens",
+        )
+
 
 # default values
 backend_profile = BackendProfile(
     robusta_cloud_api_host="https://api.robusta.dev",
     robusta_ui_domain="https://platform.robusta.dev",
-    robusta_store_token_url="https://api.robusta.dev/auth/server/tokens"
+    robusta_store_token_url="https://api.robusta.dev/auth/server/tokens",
 )
 
 if ROBUSTA_BACKEND_PROFILE:

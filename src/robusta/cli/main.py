@@ -36,6 +36,7 @@ from .eula import handle_eula
 from robusta._version import __version__
 from .integrations_cmd import app as integrations_commands, get_slack_key, get_ui_key
 from .auth import app as auth_commands
+from .self_host import app as self_host_commands
 from .slack_verification import verify_slack_channel
 from .slack_feedback_message import SlackFeedbackMessagesSender
 from .playbooks_cmd import app as playbooks_commands
@@ -48,6 +49,7 @@ app.add_typer(
     integrations_commands, name="integrations", help="Integrations commands menu"
 )
 app.add_typer(auth_commands, name="auth", help="Authentication commands menu")
+app.add_typer(self_host_commands, name="self-host", help="Self-host commands menu")
 
 
 def get_runner_url(runner_version=None):
