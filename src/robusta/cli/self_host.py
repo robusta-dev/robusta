@@ -5,12 +5,12 @@ import yaml
 import json
 import jwt as JWT
 import time
-from typing import Any, Final
+from typing import Any
 from pydantic import BaseModel
 from .backend_profile import BackendProfile
 
 
-ISSUER: Final[str] = "supabase"
+ISSUER: str = "supabase"
 
 
 def issued_at() -> int:
