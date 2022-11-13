@@ -60,14 +60,20 @@ TEAMS_IMAGE_WIDTH = os.environ.get("TEAMS_IMAGE_WIDTH", "700px")
 
 ROBUSTA_UI_DOMAIN = os.environ.get("ROBUSTA_UI_DOMAIN", "https://platform.robusta.dev")
 
-ROBUSTA_TELEMETRY_ENDPOINT = os.environ.get("ROBUSTA_TELEMETRY_ENDPOINT", "https://api.robusta.dev/telemetry")
+ROBUSTA_TELEMETRY_ENDPOINT = os.environ.get(
+    "ROBUSTA_TELEMETRY_ENDPOINT", "https://api.robusta.dev/telemetry"
+)
 ENABLE_TELEMETRY = os.environ.get("ENABLE_TELEMETRY", "true").lower() == "true"
-SEND_ADDITIONAL_TELEMETRY = os.environ.get("SEND_ADDITIONAL_TELEMETRY", "false").lower() == "true"
+SEND_ADDITIONAL_TELEMETRY = (
+    os.environ.get("SEND_ADDITIONAL_TELEMETRY", "false").lower() == "true"
+)
 RELEASE_NAME = os.environ.get("RELEASE_NAME", "robusta")
 
-TELEMETRY_PERIODIC_SEC = int(os.environ.get("TELEMETRY_PERIODIC_SEC", 60 * 60 * 24))  # 24H
+TELEMETRY_PERIODIC_SEC = int(
+    os.environ.get("TELEMETRY_PERIODIC_SEC", 60 * 60 * 24)
+)  # 24H
 
-SLACK_TABLE_COLUMNS_LIMIT = int(os.environ.get("SLACK_TABLE_COLUMNS_LIMIT", 4))
+SLACK_TABLE_COLUMNS_LIMIT = int(os.environ.get("SLACK_TABLE_COLUMNS_LIMIT", 3))
 DISCORD_TABLE_COLUMNS_LIMIT = int(os.environ.get("DISCORD_TABLE_COLUMNS_LIMIT", 4))
 RSA_KEYS_PATH = os.environ.get("RSA_KEYS_PATH", "/etc/robusta/auth")
 
