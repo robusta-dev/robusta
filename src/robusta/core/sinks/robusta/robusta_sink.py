@@ -291,6 +291,7 @@ class RobustaSink(SinkBase):
 
     def __safe_delete_job(self, job_key):
         try:
+            # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
             self.__jobs_cache[job_key].deleted = True
             self.dal.remove_deleted_job(self.__jobs_cache[job_key])
             del self.__jobs_cache[job_key]
