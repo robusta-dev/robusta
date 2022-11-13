@@ -1,5 +1,4 @@
 from robusta.api import *
-from src.robusta.core.reporting.base import Emojis
 
 
 @action
