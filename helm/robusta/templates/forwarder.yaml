@@ -32,6 +32,12 @@ spec:
         volumeMounts:
           - name: robusta-kubewatch-config
             mountPath: /config
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {}
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsUser: 1000    
         resources:
           requests:
             cpu: {{ .Values.kubewatch.resources.requests.cpu }}
