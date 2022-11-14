@@ -62,7 +62,6 @@ class SinksRegistry:
         # create new sinks, or update existing if changed
         for sink_config in new_sinks_config:
             try:
-                is_global_config_changed = new_sinks[sink_config.get_name()].is_global_config_changed()
                 # temporary workaround to skip the default and unconfigured robusta token
                 if (
                     isinstance(sink_config, RobustaSinkConfigWrapper)
@@ -78,9 +77,11 @@ class SinksRegistry:
                     )
                 elif (
                     sink_config.get_params() != new_sinks[sink_config.get_name()].params or
-                    is_global_config_changed
+                    new_sinks[sink_config.get_name()].is_global_config_changed()
                 ):
-                    config_change_msg = "due to global config change" if is_global_config_changed else "due to param change"
+                    config_change_msg = "due to global config change" \
+                        if new_sinks[sink_config.get_name()].is_global_config_changed() \
+                        else "due to param change"
                     logging.info(
                         f"Updating {type(sink_config)} sink named {sink_config.get_name()} {config_change_msg}"
                     )
