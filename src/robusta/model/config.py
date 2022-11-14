@@ -76,10 +76,14 @@ class SinksRegistry:
                         sink_config, registry
                     )
                 elif (
-                    sink_config.get_params() != new_sinks[sink_config.get_name()].params
+                    sink_config.get_params() != new_sinks[sink_config.get_name()].params or
+                    new_sinks[sink_config.get_name()].is_global_config_changed()
                 ):
+                    config_change_msg = "due to global config change" \
+                        if new_sinks[sink_config.get_name()].is_global_config_changed() \
+                        else "due to param change"
                     logging.info(
-                        f"Updating {type(sink_config)} sink named {sink_config.get_name()}"
+                        f"Updating {type(sink_config)} sink named {sink_config.get_name()} {config_change_msg}"
                     )
                     new_sinks[sink_config.get_name()].stop()
                     new_sinks[sink_config.get_name()] = SinkFactory.create_sink(
