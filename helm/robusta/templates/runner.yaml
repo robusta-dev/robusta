@@ -25,7 +25,11 @@ spec:
         image: {{ .Values.runner.image }}
         imagePullPolicy: {{ .Values.runner.imagePullPolicy }}
         securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {}
           privileged: false
+          readOnlyRootFilesystem: false
+          runAsUser: 1000
         env:
           - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml
