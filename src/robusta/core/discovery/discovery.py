@@ -132,11 +132,20 @@ class Discovery:
         try:
             current_jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces()
             for job in current_jobs.items:
-                job_labels: Dict[str, str] = job.spec.selector.match_labels
-                job_pods = [
-                    pod.metadata.name for pod in pod_items
-                    if job_labels.items() <= (pod.metadata.labels or {}).items()
-                ]
+                job_pods = []
+                job_labels = {}
+                if job.spec.selector:
+                    job_labels = job.spec.selector.match_labels
+                elif job.metadata.labels:
+                    job_name = job.metadata.labels.get("job-name", None)
+                    if job_name:
+                        job_labels = {"job-name": job_name}
+
+                if job_labels:  # add job pods only if we found a valid selector
+                    job_pods = [
+                        pod.metadata.name for pod in pod_items
+                        if job_labels.items() <= (pod.metadata.labels or {}).items()
+                    ]
                 active_jobs.append(JobInfo.from_api_server(job, job_pods))
         except Exception:
             logging.error(

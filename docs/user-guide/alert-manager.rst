@@ -1,8 +1,9 @@
 Sending Alerts to Robusta
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-| For Robusta to improve Prometheus alerts, it has to see those alerts.
-| To set it up, you'll have to configure an AlertManager ``receiver`` and a ``route`` that routes alerts to that ``receiver``
+For Robusta to improve Prometheus alerts, it has to see those alerts.
+
+To set it up, you'll have to configure an AlertManager ``receiver`` and a ``route`` that routes alerts to that ``receiver`` in your existing prometheus setup.
 
 The setup depends on how you installed Prometheus.
 
@@ -13,6 +14,8 @@ If you installed Robusta's :ref:`Embedded Prometheus Stack` then no configuratio
 
 AlertManager receiver and route definition
 --------------------------------------------
+
+Add this snippet to your Prometheus AlertManager **values.yaml** file. 
 
 .. admonition:: Robusta receiver and route
 
