@@ -1,7 +1,8 @@
 from typing import List, Optional
 from hikaru.model import Job, PodList
 
-from ...integrations.kubernetes.custom_models import RobustaPod
+from ...integrations.kubernetes.custom_models import RobustaPod, build_selector_query
+
 CONTROLLER_UID = "controller-uid"
 
 
@@ -13,8 +14,11 @@ def get_job_selector(job: Job) -> Optional[str]:
     controller_uid = job_labels.get(CONTROLLER_UID, None)
     if controller_uid:
         return f"{CONTROLLER_UID}={controller_uid}"
-    elif job.spec.selector and job.spec.selector.matchLabels:
-        return ",".join(f"{k}={v}" for (k,v) in job.spec.selector.matchLabels.items())
+
+    if job.spec.selector:
+        selector = build_selector_query(job.spec.selector)
+        if selector:
+            return selector
 
     job_name = job_labels.get("job-name", None)
     if not job_name:

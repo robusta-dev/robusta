@@ -144,8 +144,13 @@ class Discovery:
                 if job_labels:  # add job pods only if we found a valid selector
                     job_pods = [
                         pod.metadata.name for pod in pod_items
-                        if job_labels.items() <= (pod.metadata.labels or {}).items()
+                        if (
+                                (job.metadata.namespace == pod.metadata.namespace)
+                                and
+                                (job_labels.items() <= (pod.metadata.labels or {}).items())
+                        )
                     ]
+
                 active_jobs.append(JobInfo.from_api_server(job, job_pods))
         except Exception:
             logging.error(
