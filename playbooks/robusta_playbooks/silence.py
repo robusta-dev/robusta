@@ -73,16 +73,16 @@ class AddSilenceParams(BaseSilenceParams):
 
 @action
 def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
-    alertmanager_url = _get_alertmanager_url(params)
-    if alertmanager_url is None:
-        return
+    try:
+        alertmanager_url = _get_alertmanager_url(params)
 
-    response = requests.get(
-        f"{alertmanager_url}{_get_url_path(SilenceOperation.LIST, params)}",
-        headers=_gen_headers(params),
-    )
+        response = requests.get(
+            f"{alertmanager_url}{_get_url_path(SilenceOperation.LIST, params)}",
+            headers=_gen_headers(params),
+        )
+    except Exception as e:
+        raise ActionException(ErrorCodes.ALERTMANAGER_REQUEST) from e
 
-    response.raise_for_status()
 
     silence_list = [(Silence(**silence).to_list()) for silence in response.json()]
     if len(silence_list) == 0:
@@ -102,20 +102,22 @@ def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
 
 @action
 def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
-    alertmanager_url = _get_alertmanager_url(params)
-    if alertmanager_url is None:
-        return
 
-    res = requests.post(
-        f"{alertmanager_url}{_get_url_path(SilenceOperation.CREATE, params)}",
-        data=params.json(),
-        headers=_gen_headers(params),
-    )
+    try:
+        alertmanager_url = _get_alertmanager_url(params)
 
-    res.raise_for_status()
+        res = requests.post(
+            f"{alertmanager_url}{_get_url_path(SilenceOperation.CREATE, params)}",
+            data=params.json(),
+            headers=_gen_headers(params),
+        )
+    except Exception as e:
+        raise ActionException(ErrorCodes.ALERTMANAGER_REQUEST) from e
+
+
     silence_id = res.json().get("silenceID") or res.json().get("id")  # on grafana alertmanager the 'id' is returned
     if not silence_id:
-        return
+        raise ActionException(ErrorCodes.ADD_SILENCE_FAILED)
 
     event.add_enrichment(
         [
@@ -130,16 +132,17 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
 
 @action
 def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
-    alertmanager_url = _get_alertmanager_url(params)
-    if alertmanager_url is None:
-        return
 
-    res = requests.delete(
-        f"{alertmanager_url}{_get_url_path(SilenceOperation.DELETE, params)}/{params.id}",
-        headers=_gen_headers(params),
-    )
+    try:
+        alertmanager_url = _get_alertmanager_url(params)
 
-    res.raise_for_status()
+        res = requests.delete(
+            f"{alertmanager_url}{_get_url_path(SilenceOperation.DELETE, params)}/{params.id}",
+            headers=_gen_headers(params),
+        )
+    except Exception as e:
+        raise ActionException(ErrorCodes.ALERTMANAGER_REQUEST) from e
+
     event.add_enrichment(
         [
             TableBlock(

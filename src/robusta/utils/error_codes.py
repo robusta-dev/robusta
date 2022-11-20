@@ -1,4 +1,6 @@
 from enum import Enum
+from typing import Optional
+
 
 
 class ErrorCodes(Enum):
@@ -20,3 +22,17 @@ class ErrorCodes(Enum):
     EVENT_INSTANTIATION_FAILED = 4606
 
 
+    ALERTMANAGER_REQUEST = 5000
+    ADD_SILENCE_FAILED = 5001
+
+    ACTION_UNEXPECTED_ERROR = 5003
+    RESOURCE_NOT_SUPPORTED = 5004
+    RESOURCE_NOT_FOUND = 5005
+    
+
+
+class ActionException(Exception):
+    def __init__(self, error : ErrorCodes, msg: Optional[str] = None):
+        self.msg : Optional[str] = msg
+        self.code : int = error.value
+        self.type : str = error.name
