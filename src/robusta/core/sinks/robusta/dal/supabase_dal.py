@@ -155,7 +155,7 @@ class SupabaseDal:
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
             self.client.table(SERVICES_TABLE)
-            .select("name", "type", "namespace", "classification", "config")
+            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -173,7 +173,9 @@ class SupabaseDal:
                 service_type=service["type"],
                 namespace=service["namespace"],
                 classification=service["classification"],
-                service_config=service.get("config")
+                service_config=service.get("config"),
+                ready_pods=service["ready_pods"],
+                total_pods=service["total_pods"]
             )
             for service in res.get("data")
         ]
