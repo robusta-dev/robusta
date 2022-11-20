@@ -214,7 +214,7 @@ def extract_ready_pods(resource) -> int:
         elif isinstance(resource, V1DaemonSet):
             return 0 if not resource.status.number_ready else resource.status.number_ready
         elif isinstance(resource, V1Pod):
-            return is_pod_ready(resource)
+            return 1 if is_pod_ready(resource) else 0
         return 0
     except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
         logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
