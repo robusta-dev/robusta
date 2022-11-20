@@ -226,9 +226,9 @@ def extract_total_pods(resource) -> int:
         if isinstance(resource, V1Deployment) \
                 or isinstance(resource, V1StatefulSet) \
                 or isinstance(resource, V1Job):
-            return resource.status.replicas
+            return 0 if not resource.status.replicas else resource.status.replicas
         elif isinstance(resource, V1DaemonSet):
-            return resource.status.desired_number_scheduled
+            return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
         elif isinstance(resource, V1Pod):
             return 1
         return 0
