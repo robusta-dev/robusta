@@ -228,13 +228,13 @@ def extract_total_pods(resource) -> int:
                 or isinstance(resource, V1Job):
             return 1 if not resource.status.replicas else resource.status.replicas
         elif isinstance(resource, V1DaemonSet):
-            return 1 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
+            return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
         elif isinstance(resource, V1Pod):
             return 1
         return 0
     except Exception:
         logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
-    return 0
+    return 1
 
 def extract_volumes(resource) -> List[V1Volume]:
     """Extract volumes from k8s python api object (not hikaru)"""
