@@ -20,7 +20,7 @@ Development guides
 
     .. grid-item-card:: :octicon:`cpu;1em;` Privacy & Security
         :class-card: sd-bg-light sd-bg-text-light
-        :link: /developer-guide/platform/docs-contributions
+        :link: privacy-and-security
         :link-type: doc
 
         Protect sensitive data and keep the logs clean
@@ -34,7 +34,7 @@ Development guides
         
     .. grid-item-card:: :octicon:`cpu;1em;` Components
         :class-card: sd-bg-light sd-bg-text-light
-        :link: /developer-guide/actions/index
+        :link: components
         :link-type: doc
 
         Learn how Robusta works from the inside

@@ -63,6 +63,32 @@ We'll generate the Helm values using the ``robusta`` cli tool. There are two way
 
             On Windows you can use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
 
+
+Edit your generated_values.yaml files so it will be ready for ArgoCD, by adding ``clusterName: <YOUR-CLUSTER-NAME>`` at the top, if not already present.
+Example:
+
+.. code-block:: yaml
+    
+    clusterName: my_cluster_name # <- This is the line to be added
+    globalConfig:
+      signing_key: xxxxxx
+      account_id: xxxxxx
+    sinksConfig:
+    - slack_sink:
+        name: main_slack_sink
+        slack_channel: robusta-staging-alerts
+        api_key: xxxxxx
+    - robusta_sink:
+        name: robusta_ui_sink
+        token: xxxxxx
+    enablePrometheusStack: true
+    enablePlatformPlaybooks: true
+    runner:
+      sendAdditionalTelemetry: true
+    rsa:
+      prv: xxxxxx
+      pub: xxxxxx
+
 You now have a ``generated_values.yaml`` file with a Robusta config. You can customize this more later (for example, to `add integrations <https://docs.robusta.dev/master/catalog/sinks/index.html>`_ like Discord). For now, lets install Robusta and see it in action.
 
 .. Options
@@ -79,6 +105,7 @@ You now have a ``generated_values.yaml`` file with a Robusta config. You can cus
 ..     - Requires more advanced ArgoCD functions to combine the robusta helm chart with the external ``generated_value.yaml`` file
 
 .. We'll describe the simpler option here. We're currently working on a guide for the more advanced option, contact us if you have questions.
+
 
 Reuse a config
 -------------------

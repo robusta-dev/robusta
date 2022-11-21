@@ -54,7 +54,7 @@ Prometheus Operator
 If you are using a Prometheus Operator that was **not** installed with Robusta, you should define a `manually-managed secret <https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md#manually-managed-secret>`_
 that sends alerts to Robusta by webhook.
 
-Follow the `instructions in the Prometheus Operator documentation <https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md#manually-managed-secret>`_, using the above configuration for alertmanager.yaml.
+Follow the `instructions in the Prometheus Operator documentation <https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/configuration/alerting.md#manually-managed-secret>`_, using the above configuration for alertmanager.yaml.
 
 An alternative is to configure an AlertmanagerConfig CRD, but this is **not** recommended as it `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
 

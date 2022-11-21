@@ -110,7 +110,7 @@ Interested? Learn more about Robusta
 
 * [Architecture](https://docs.robusta.dev/master/architecture.html)
 * [Upgrade and Uninstall](https://docs.robusta.dev/master/upgrade.html)
-* [Configuration Guide](https://docs.robusta.dev/master/user-guide/configuration.html)
+* [Configuration Guide](https://docs.robusta.dev/master/configuration/configuration.html)
 * [Triggers](https://docs.robusta.dev/master/catalog/triggers/index.html)
 
 [Full documentation »](https://docs.robusta.dev/master/index.html)

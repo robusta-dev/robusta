@@ -31,15 +31,15 @@
    :caption: Configuration
    :hidden:
 
-   user-guide/overview
-   user-guide/global-config
-   user-guide/defining-playbooks
-   user-guide/sinks-configuration
-   user-guide/additional-playbooks
-   Secrets <user-guide/configuration-secrets>
-   user-guide/alert-manager
+   configuration/overview
+   configuration/global-config
+   configuration/defining-playbooks
+   configuration/sinks-configuration
+   configuration/additional-playbooks
+   Secrets <configuration/configuration-secrets>
+   configuration/alert-manager
    Upgrade & Uninstall <upgrade>
-   user-guide/embedded-prometheus
+   configuration/embedded-prometheus
 
 
 
@@ -51,11 +51,11 @@
    :caption: Architecture
    :hidden:
     
-   Overview <home>
-   Components <components>
-   oss-vs-saas
-   Robusta UI Triggers <advanced/robusta-ui-triggers>
-   Privacy & Security <advanced/privacy-and-security>
+   Overview <architecture/index>
+   Components <architecture/components>
+   architecture/oss-vs-saas
+   Robusta UI Triggers <architecture/robusta-ui-triggers>
+   Privacy & Security <architecture/privacy-and-security>
 
 
 
@@ -108,7 +108,7 @@ Learn about Robusta
     :gutter: 3
 
     .. grid-item-card:: :octicon:`info;1em;` Architecture
-        :link: /developer-guide/actions/index
+        :link: architecture/index
         :link-type: doc
 
         Technical details of how everything works
