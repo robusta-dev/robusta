@@ -233,25 +233,43 @@ class ActionRequestReceiver:
                                       error_code=ErrorCodes.NO_SIGNING_KEY.value,
                                       error_msg="No signing key")
 
+        signing_key = self.event_handler.get_global_config().get("signing_key")
         # First auth protocol option, based on signature only
         signature = action_request.signature
         if signature:
-            generated_signature = sign_action_request(body, signing_key)
-            if hmac.compare_digest(generated_signature, signature):
-                return ValidationResponse()
-            else:
-                return ValidationResponse(http_code=500,
-                                          error_code=ErrorCodes.SIGNATURE_MISMATCH.value,
-                                          error_msg="Signature mismatch")
+            return self.validate_action_request_signature(action_request, signing_key)
 
         # Second auth protocol option, based on public key
+        if action_request.partial_auth_a and action_request.partial_auth_b:
+            return self.validate_with_private_key(action_request, signing_key)
+
+        # Light action protocol option, authenticated in relay
+        return self.validate_light_action(action_request)
+
+    def validate_light_action(self, action_request: ExternalActionRequest) -> ValidationResponse:
+        light_actions = self.event_handler.get_light_actions()
+        if action_request.body.action_name not in light_actions:
+            return ValidationResponse(http_code=500,
+                                      error_code=ErrorCodes.UNAUTHORIZED_LIGHT_ACTION.value,
+                                      error_msg="Unauthorized action requested")
+        return ValidationResponse()
+
+
+    def validate_action_request_signature(self, action_request: ExternalActionRequest, signing_key: str) -> ValidationResponse:
+        signature = action_request.signature
+        body = action_request.body
+        generated_signature = sign_action_request(body, signing_key)
+        if hmac.compare_digest(generated_signature, signature):
+            return ValidationResponse()
+        else:
+            return ValidationResponse(http_code=500,
+                                      error_code=ErrorCodes.SIGNATURE_MISMATCH.value,
+                                      error_msg="Signature mismatch")
+
+    def validate_with_private_key(self, action_request: ExternalActionRequest, signing_key: str) -> ValidationResponse:
+        body = action_request.body
         partial_auth_a = action_request.partial_auth_a
         partial_auth_b = action_request.partial_auth_b
-        if not partial_auth_a or not partial_auth_b:
-            logging.error(f"Insufficient authentication data. Cannot verify request {body}")
-            return ValidationResponse(http_code=500,
-                                      error_code=ErrorCodes.MISSING_AUTH_INPUT.value,
-                                      error_msg="Missing auth input")
 
         private_key = self.auth_provider.get_private_rsa_key()
         if not private_key:
