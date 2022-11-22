@@ -23,4 +23,4 @@ To use this feature on multiple clusters, make sure you install Robusta with the
     - :code:`rsa`
 
 | These values are inside the :code:`generated_values.yaml` file you use when you run :code:`helm install robusta...`
-| See `Installation Guide <https://docs.robusta.dev/master/installation.html>`_ for more details.
+| See `Installation Guide <https://docs.robusta.dev/master/getting-started/installation.html>`_ for more details.

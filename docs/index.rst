@@ -15,15 +15,15 @@
    :caption: Getting Started
    :hidden:
    
-   Overview <gettingstarted-index>
-   Install with Helm <installation>
-   Install with ArgoCD <tutorials/argocd-installation>
-   tutorials/add-more-clusters
-   using-robusta/trackchanges
-   using-robusta/enrich-alerts
-   Remediate Alerts <using-robusta/remediatealerts>
-   Route Alerts <using-robusta/routealerts>
-   More tutorials <tutorials/blogs-videos>
+   Overview <getting-started/index>
+   Install with Helm <getting-started/installation>
+   Install with ArgoCD <getting-started/argocd-installation>
+   getting-started/add-more-clusters
+   getting-started/trackchanges
+   getting-started/enrich-alerts
+   Remediate Alerts <getting-started/remediatealerts>
+   Route Alerts <getting-started/routealerts>
+   More tutorials <getting-started/more-tutorials>
    
 
 .. toctree::
@@ -31,15 +31,15 @@
    :caption: Configuration
    :hidden:
 
-   user-guide/overview
-   user-guide/global-config
-   user-guide/defining-playbooks
-   user-guide/sinks-configuration
-   user-guide/additional-playbooks
-   Secrets <user-guide/configuration-secrets>
-   user-guide/alert-manager
+   configuration/overview
+   configuration/global-config
+   configuration/defining-playbooks
+   configuration/sinks-configuration
+   configuration/additional-playbooks
+   Secrets <configuration/configuration-secrets>
+   configuration/alert-manager
    Upgrade & Uninstall <upgrade>
-   user-guide/embedded-prometheus
+   configuration/embedded-prometheus
 
 
 
@@ -51,11 +51,11 @@
    :caption: Architecture
    :hidden:
     
-   Overview <home>
-   Components <components>
-   oss-vs-saas
-   Robusta UI Triggers <advanced/robusta-ui-triggers>
-   Privacy & Security <advanced/privacy-and-security>
+   Overview <architecture/index>
+   Components <architecture/components>
+   architecture/oss-vs-saas
+   Robusta UI Triggers <architecture/robusta-ui-triggers>
+   Privacy & Security <architecture/privacy-and-security>
 
 
 
@@ -65,20 +65,20 @@
    :hidden:
 
    catalog/overview
-   catalog/triggers/index
-   catalog/actions/index
-   catalog/sinks/index
+   automation/triggers/index
+   automation/actions/index
+   automation/sinks/index
 
 .. toctree::
    :maxdepth: 4
    :caption: Extending
    :hidden:
 
-   tutorials/overview
+   extending/overview
    tutorials/my-first-custom-action
-   Write Python automations <developer-guide/actions/index>
-   Modify Robusta core <developer-guide/platform/index>
-   Docs Contributions <developer-guide/platform/docs-contributions>
+   Write Python automations <extending/actions/index>
+   Modify Robusta core <extending/platform/index>
+   Docs Contributions <extending/platform/docs-contributions>
 
 .. toctree::
    :maxdepth: 4
@@ -95,7 +95,7 @@ Robusta is an open source platform for Kubernetes monitoring and runbook automat
 
 Robusta watches your cluster, identifies problems, and gathers observability data about the cause. It also supports automatic remediation.
 
-.. button-ref:: gettingstarted-index
+.. button-ref:: getting-started/index
     :color: primary
     :outline:
 
@@ -108,19 +108,19 @@ Learn about Robusta
     :gutter: 3
 
     .. grid-item-card:: :octicon:`info;1em;` Architecture
-        :link: /developer-guide/actions/index
+        :link: architecture/index
         :link-type: doc
 
         Technical details of how everything works
 
     .. grid-item-card:: :octicon:`book;1em;` Track Kubernetes Changes
-        :link: /using-robusta/trackchanges
+        :link: /getting-started/trackchanges
         :link-type: doc
 
         Get notified when something changes in your cluster
 
     .. grid-item-card:: :octicon:`info;1em;` Supported Sinks
-        :link: /catalog/sinks/index
+        :link: /automation/sinks/index
         :link-type: doc
 
         See all the integrations you can send data to 

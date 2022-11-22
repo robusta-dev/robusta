@@ -12,7 +12,7 @@ Developement guides
 
     .. grid-item-card:: :octicon:`cpu;1em;` Implement a custom sink
         :class-card: sd-bg-light sd-bg-text-light
-        :link: /developer-guide/platform/sinks-guide
+        :link: /extending/platform/sinks-guide
         :link-type: doc
 
         Add a new destination for your alerts
@@ -20,7 +20,7 @@ Developement guides
         
     .. grid-item-card:: :octicon:`cpu;1em;` Custom playbook repositories
         :class-card: sd-bg-light sd-bg-text-light
-        :link: /developer-guide/actions/index
+        :link: /extending/actions/index
         :link-type: doc
 
         Create your own playbook repositories
@@ -28,7 +28,7 @@ Developement guides
    
     .. grid-item-card:: :octicon:`cpu;1em;` Docs contributions
         :class-card: sd-bg-light sd-bg-text-light
-        :link: /developer-guide/platform/docs-contributions
+        :link: /extending/platform/docs-contributions
         :link-type: doc
 
         Learn to setup a local docs developement environment

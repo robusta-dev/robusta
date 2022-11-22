@@ -18,7 +18,6 @@ Sinks
    Opsgenie
    VictorOps
    PagerDuty
-   webex
 
 Messages from Robusta can be sent to one or more sinks, or destinations.
 

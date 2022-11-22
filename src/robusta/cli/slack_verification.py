@@ -40,7 +40,7 @@ def verify_slack_channel(
                 f"The channel {channel_name_styled} was not found on Slack workspace {workspace}.\n"
                 f"Please verify that the channel exists.\n"
                 f"If this is a private channel, verify the Robusta app was added to the channel."
-                f"(See https://docs.robusta.dev/master/catalog/sinks/slack.html#sending-robusta-notifications-to-a-private-channel)"
+                f"(See https://docs.robusta.dev/master/automation/sinks/slack.html#sending-robusta-notifications-to-a-private-channel)"
             )
         return False
     except URLError as e:

@@ -7,7 +7,7 @@ def volume_analysis(event: PersistentVolumeEvent):
     This action shows you the files present on your persistent volume
     """
     function_name = "volume_analysis"
-    # https://docs.robusta.dev/master/developer-guide/actions/findings-api.html
+    # https://docs.robusta.dev/master/extending/actions/findings-api.html
     finding = Finding(
         title=f"Persistent Volume content",
         source=FindingSource.MANUAL,

@@ -3,7 +3,7 @@ Welcome to Robusta Docs
 Robusta is an open source platform for Kubernetes troubleshooting. It sits on top of your monitoring stack (Prometheus, Elasticsearch, etc.) and tells you why alerts occurred and how to fix them.
 
 
-.. button-link:: /installation.html
+.. button-link:: /getting-started/installation.html
     :color: primary
     :outline:
 
@@ -16,14 +16,14 @@ Learn about Robusta
 
     .. grid-item-card:: Architecture
         :class-card: sd-bg-light sd-bg-text-light
-        :link: /developer-guide/actions/index
+        :link: /extending/actions/index
         :link-type: doc
 
         Technicals of how everything works
 
     .. grid-item-card::  Actions
         :class-card: sd-bg-light sd-bg-text-light
-        :link: /catalog/actions/index
+        :link: /automation/actions/index
         :link-type: doc
 
         What to do
@@ -31,7 +31,7 @@ Learn about Robusta
 
     .. grid-item-card::  Sinks
         :class-card: sd-bg-light sd-bg-text-light
-        :link: /catalog/sinks/index
+        :link: /automation/sinks/index
         :link-type: doc
 
         Find out about where to send your Alerts

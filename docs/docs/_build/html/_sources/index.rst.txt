@@ -83,7 +83,7 @@ Every automation has three parts:
 
     .. grid-item-card:: Triggers
         :class-card: sd-bg-light sd-bg-text-light
-        :link: catalog/triggers/index
+        :link: automation/triggers/index
         :link-type: doc
 
         When to run
@@ -91,7 +91,7 @@ Every automation has three parts:
 
     .. grid-item-card::  Actions
         :class-card: sd-bg-light sd-bg-text-light
-        :link: catalog/actions/index
+        :link: automation/actions/index
         :link-type: doc
 
         What to do
@@ -99,7 +99,7 @@ Every automation has three parts:
 
     .. grid-item-card::  Sinks
         :class-card: sd-bg-light sd-bg-text-light
-        :link: catalog/sinks/index
+        :link: automation/sinks/index
         :link-type: doc
 
         Where to send the result
@@ -178,9 +178,9 @@ Next Steps
    tutorials/my-first-custom-action
    tutorials/python-profiling
    tutorials/java-troubleshooting
-   tutorials/more-tutorials
-   developer-guide/actions/index
-   developer-guide/platform/index
+   getting-started/more-tutorials
+   extending/actions/index
+   extending/platform/index
 
 ..
    tutorials/alert-correlation
@@ -201,9 +201,9 @@ Next Steps
    :caption: Automation
    :hidden:
 
-   catalog/triggers/index
-   catalog/actions/index
-   catalog/sinks/index
+   automation/triggers/index
+   automation/actions/index
+   automation/sinks/index
 
 .. toctree::
    :maxdepth: 4
