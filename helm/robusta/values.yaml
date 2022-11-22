@@ -23,7 +23,7 @@ globalConfig:
   signing_key: ""
 
 # safe actions to enable authenticated users to run
-lightActions: ["related_pods", "prometheus_enricher", "add_silence", "delete_pods", "logs_enricher"]
+lightActions: ["related_pods", "prometheus_enricher", "add_silence", "delete_pod", "logs_enricher"]
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
