@@ -42,7 +42,14 @@ class PlaybooksEventHandler(Protocol):
     def get_global_config(
         self,
     ) -> dict:
-        """Return runner global config"""
+
+        pass
+
+    @abstractmethod
+    def get_light_actions(
+        self,
+    ) -> List[str]:
+        """Returns configured light actions"""
         pass
 
     @abstractmethod
