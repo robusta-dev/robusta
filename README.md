@@ -72,13 +72,13 @@ sinks:
 
 ![](./docs/images/alert_on_hpa_reached_limit1.png)
 
-**Take manual troubleshooting actions, like [attaching a debugger to a python pod](https://docs.robusta.dev/master/catalog/actions/python-troubleshooting.html#python-debugger):**
+**Take manual troubleshooting actions, like [attaching a debugger to a python pod](https://docs.robusta.dev/master/automation/actions/python-troubleshooting.html#python-debugger):**
 
 ```commandline
 robusta playbooks trigger python_debugger name=mypod namespace=default
 ```
 
-[Over 50 built-in automations »](https://docs.robusta.dev/master/catalog/actions/index.html)
+[Over 50 built-in automations »](https://docs.robusta.dev/master/automation/actions/index.html)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -101,7 +101,7 @@ helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo
 helm install robusta robusta/robusta -f ./generated_values.yaml
 ```
 
-[Detailed instructions »](https://docs.robusta.dev/master/installation.html)
+[Detailed instructions »](https://docs.robusta.dev/master/getting-started/installation.html)
 
 <!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
 
@@ -109,9 +109,9 @@ helm install robusta robusta/robusta -f ./generated_values.yaml
 Interested? Learn more about Robusta
 
 * [Architecture](https://docs.robusta.dev/master/architecture.html)
-* [Upgrade and Uninstall](https://docs.robusta.dev/master/upgrade.html)
+* [Upgrade and Uninstall](https://docs.robusta.dev/master/configuration/upgrade.html)
 * [Configuration Guide](https://docs.robusta.dev/master/configuration/configuration.html)
-* [Triggers](https://docs.robusta.dev/master/catalog/triggers/index.html)
+* [Triggers](https://docs.robusta.dev/master/automation/triggers/index.html)
 
 [Full documentation »](https://docs.robusta.dev/master/index.html)
 <p align="right">(<a href="#top">back to top</a>)</p>

@@ -96,4 +96,4 @@ It is best to define this in a `global config <https://docs.robusta.dev/master/u
           regex: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
 | These values are inside the :code:`generated-values.yaml` file you use when you run :code:`helm install robusta...`
-| See `Installation Guide <https://docs.robusta.dev/master/installation.html>`_ for more details.
+| See `Installation Guide <https://docs.robusta.dev/master/getting-started/installation.html>`_ for more details.

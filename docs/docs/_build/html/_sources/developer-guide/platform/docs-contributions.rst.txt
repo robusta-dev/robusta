@@ -29,7 +29,7 @@ Prerequisites to be present on your local machine:
 
 * `Python <https://www.python.org/downloads/>`_
 * `Poetry <https://python-poetry.org/docs/>`_
-* `Sphinx <https://www.sphinx-doc.org/en/master/usage/installation.html>`_
+* `Sphinx <https://www.sphinx-doc.org/en/master/usage/getting-started/installation.html>`_
 
 First download Robusta(`source code <https://github.com/robusta-dev/robusta.git>`_):
 
@@ -58,6 +58,6 @@ Troubleshooting
 
 1. ``poetry: command not found`` - Make sure you have `Poetry <https://python-poetry.org/docs/>`_ installed and run ``source $HOME/.poetry/env`` in Linux environments to set the poetry environment variables.
 
-2. ``sphinx-build: command not found`` - Make sure you have `Sphinx <https://www.sphinx-doc.org/en/master/usage/installation.html>`_ installed.
+2. ``sphinx-build: command not found`` - Make sure you have `Sphinx <https://www.sphinx-doc.org/en/master/usage/getting-started/installation.html>`_ installed.
 
 3. ``OSError: [Errno 98] Address already in use`` - Use the ``--port <Number>`` argument, with a port of your choice. Example: ``./docs_autobuild.sh --port 8822``

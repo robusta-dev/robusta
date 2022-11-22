@@ -263,7 +263,7 @@
 
 
   <li class="md-tabs__item">
-    <a href="catalog/triggers/index.html" class="md-tabs__link">
+    <a href="automation/triggers/index.html" class="md-tabs__link">
       <span class="md-ellipsis">Automation</span>
     </a>
   </li>
@@ -681,7 +681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="tutorials/more-tutorials.html" class="md-nav__link">
+      <a href="getting-started/more-tutorials.html" class="md-nav__link">
         <span class="md-ellipsis">More tutorials</span>
       </a>
     </li>
@@ -696,7 +696,7 @@
   
   
     <li class="md-nav__item">
-      <a href="developer-guide/actions/index.html" class="md-nav__link">
+      <a href="extending/actions/index.html" class="md-nav__link">
         <span class="md-ellipsis">Writing Playbook Actions</span>
       </a>
     </li>
@@ -711,7 +711,7 @@
   
   
     <li class="md-nav__item">
-      <a href="developer-guide/platform/index.html" class="md-nav__link">
+      <a href="extending/platform/index.html" class="md-nav__link">
         <span class="md-ellipsis">Robusta Engine Development</span>
       </a>
     </li>
@@ -839,7 +839,7 @@
   
   
     <li class="md-nav__item">
-      <a href="catalog/triggers/index.html" class="md-nav__link">
+      <a href="automation/triggers/index.html" class="md-nav__link">
         <span class="md-ellipsis">Triggers</span>
       </a>
     </li>
@@ -854,7 +854,7 @@
   
   
     <li class="md-nav__item">
-      <a href="catalog/actions/index.html" class="md-nav__link">
+      <a href="automation/actions/index.html" class="md-nav__link">
         <span class="md-ellipsis">Actions</span>
       </a>
     </li>
@@ -869,7 +869,7 @@
   
   
     <li class="md-nav__item">
-      <a href="catalog/sinks/index.html" class="md-nav__link">
+      <a href="automation/sinks/index.html" class="md-nav__link">
         <span class="md-ellipsis">Sinks</span>
       </a>
     </li>
@@ -1046,7 +1046,7 @@
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset" role="main">
                 
-  <a href="https://github.com/robusta-dev/robusta/tree/docsimmaterial/docs/installation.rst" title="Edit this page" class="md-content__button md-icon">
+  <a href="https://github.com/robusta-dev/robusta/tree/docsimmaterial/docs/getting-started/installation.rst" title="Edit this page" class="md-content__button md-icon">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
   </a>
 
@@ -1123,7 +1123,7 @@ chmod +x robusta
 <ol class="arabic simple" start="2">
 <li><p>Generate a Robusta configuration. This will setup Slack and other integrations. We <strong>highly recommend</strong> enabling the cloud UI so you can see all features in action.</p></li>
 </ol>
-<p>If you’d like to send Robusta messages to additional destinations (Discord, Telegram etc.). See <a class="reference external" href="https://docs.robusta.dev/master/catalog/sinks/index.html">Sink configuration</a>.</p>
+<p>If you’d like to send Robusta messages to additional destinations (Discord, Telegram etc.). See <a class="reference external" href="https://docs.robusta.dev/master/automation/sinks/index.html">Sink configuration</a>.</p>
 <div class="highlight-bash notranslate" id="cb-robusta-gen-config"><div class="highlight"><pre><span></span><code> robusta gen-config
 </code></pre></div>
 </div>
@@ -1133,7 +1133,7 @@ chmod +x robusta
 </div>
 <div class="warning admonition">
 <p class="admonition-title">Robusta not in PATH</p>
-<p>if you get &quot;<code class="docutils literal notranslate"><span class="pre">command</span> <span class="pre">not</span> <span class="pre">found:</span> <span class="pre">robusta</span></code>&quot;, see <a class="reference internal" href="developer-guide/platform/dev-setup.html#common-errors"><span class="std std-ref">Common errors</span></a></p>
+<p>if you get &quot;<code class="docutils literal notranslate"><span class="pre">command</span> <span class="pre">not</span> <span class="pre">found:</span> <span class="pre">robusta</span></code>&quot;, see <a class="reference internal" href="extending/platform/dev-setup.html#common-errors"><span class="std std-ref">Common errors</span></a></p>
 </div>
 <ol class="arabic simple" start="3">
 <li><p>Save <code class="docutils literal notranslate"><span class="pre">generated_values.yaml</span></code>, somewhere safe. This is your Helm <code class="docutils literal notranslate"><span class="pre">values.yaml</span></code> file.</p></li>

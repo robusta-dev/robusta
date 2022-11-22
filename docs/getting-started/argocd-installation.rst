@@ -89,7 +89,7 @@ Example:
       prv: xxxxxx
       pub: xxxxxx
 
-You now have a ``generated_values.yaml`` file with a Robusta config. You can customize this more later (for example, to `add integrations <https://docs.robusta.dev/master/catalog/sinks/index.html>`_ like Discord). For now, lets install Robusta and see it in action.
+You now have a ``generated_values.yaml`` file with a Robusta config. You can customize this more later (for example, to `add integrations <https://docs.robusta.dev/master/automation/sinks/index.html>`_ like Discord). For now, lets install Robusta and see it in action.
 
 .. Options
 .. ^^^^^^^^^^^^^

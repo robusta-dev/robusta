@@ -225,7 +225,7 @@
 
 
   <li class="md-tabs__item">
-    <a href="../installation.html" class="md-tabs__link">
+    <a href="../getting-started/installation.html" class="md-tabs__link">
       <span class="md-ellipsis">Getting Started</span>
     </a>
   </li>
@@ -263,7 +263,7 @@
 
 
   <li class="md-tabs__item">
-    <a href="../catalog/triggers/index.html" class="md-tabs__link">
+    <a href="../automation/triggers/index.html" class="md-tabs__link">
       <span class="md-ellipsis">Automation</span>
     </a>
   </li>
@@ -415,7 +415,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../installation.html" class="md-nav__link">
+      <a href="../getting-started/installation.html" class="md-nav__link">
         <span class="md-ellipsis">Installation</span>
       </a>
     </li>
@@ -496,7 +496,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../upgrade.html" class="md-nav__link">
+      <a href="../configuration/upgrade.html" class="md-nav__link">
         <span class="md-ellipsis">Upgrade and Uninstall</span>
       </a>
     </li>
@@ -690,7 +690,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../developer-guide/actions/index.html" class="md-nav__link">
+      <a href="../extending/actions/index.html" class="md-nav__link">
         <span class="md-ellipsis">Writing Playbook Actions</span>
       </a>
     </li>
@@ -705,7 +705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../developer-guide/platform/index.html" class="md-nav__link">
+      <a href="../extending/platform/index.html" class="md-nav__link">
         <span class="md-ellipsis">Robusta Engine Development</span>
       </a>
     </li>
@@ -833,7 +833,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../catalog/triggers/index.html" class="md-nav__link">
+      <a href="../automation/triggers/index.html" class="md-nav__link">
         <span class="md-ellipsis">Triggers</span>
       </a>
     </li>
@@ -848,7 +848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../catalog/actions/index.html" class="md-nav__link">
+      <a href="../automation/actions/index.html" class="md-nav__link">
         <span class="md-ellipsis">Actions</span>
       </a>
     </li>
@@ -863,7 +863,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../catalog/sinks/index.html" class="md-nav__link">
+      <a href="../automation/sinks/index.html" class="md-nav__link">
         <span class="md-ellipsis">Sinks</span>
       </a>
     </li>
@@ -1136,14 +1136,14 @@ We can think of two triggers that may fit:</p>
 <li><p>Creation of a new pod (because we create a new pod, ‘ngnix’)</p></li>
 <li><p>A Kubernetes Event is fired (because we ran kubectl get event to find out the scheduling error)</p></li>
 </ul>
-<p>Let’s look at the Trigger section about <a class="reference internal" href="../catalog/triggers/kubernetes.html#kubernetes-api-server"><span class="std std-ref">Kubernetes (API Server)</span></a>, and try to find out triggers for both.
+<p>Let’s look at the Trigger section about <a class="reference internal" href="../automation/triggers/kubernetes.html#kubernetes-api-server"><span class="std std-ref">Kubernetes (API Server)</span></a>, and try to find out triggers for both.
 Go ahead and try to find them!</p>
 <p>Okay! We find <code class="docutils literal notranslate"><span class="pre">on_pod_create</span></code> and <code class="docutils literal notranslate"><span class="pre">on_event_create</span></code></p>
 <p>We'll use <code class="docutils literal notranslate"><span class="pre">on_event_create</span></code> in this tutorial because it will be easier to identify scheduling issues by looking at the event.</p>
 <h2 id="writing-the-action">Writing the action<a class="headerlink" href="#writing-the-action" title="Permalink to this headline">¶</a></h2>
-<p>Now we need to write code that checks this event and reports it. To find the correct event class that matches our trigger <code class="docutils literal notranslate"><span class="pre">on_event_create</span></code>. please take a look at <a class="reference internal" href="../developer-guide/actions/triggers-and-events.html#events-and-triggers"><span class="std std-ref">Events and Triggers</span></a>.</p>
+<p>Now we need to write code that checks this event and reports it. To find the correct event class that matches our trigger <code class="docutils literal notranslate"><span class="pre">on_event_create</span></code>. please take a look at <a class="reference internal" href="../extending/actions/triggers-and-events.html#events-and-triggers"><span class="std std-ref">Events and Triggers</span></a>.</p>
 <p>Okay! We find out it’s <code class="docutils literal notranslate"><span class="pre">EventEvent</span></code>!</p>
-<p>So we need to get the information, check for the scenario, and then report it (for more information about reporting it see <a class="reference internal" href="../developer-guide/actions/findings-api.html#creating-findings"><span class="std std-ref">Creating Findings</span></a>)</p>
+<p>So we need to get the information, check for the scenario, and then report it (for more information about reporting it see <a class="reference internal" href="../extending/actions/findings-api.html#creating-findings"><span class="std std-ref">Creating Findings</span></a>)</p>
 <p>Let’s name our action <code class="docutils literal notranslate"><span class="pre">report_scheduling_failure</span></code>, and write everything in a python file:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">robusta.api</span> <span class="kn">import</span> <span class="o">*</span>
 
@@ -1173,7 +1173,7 @@ Go ahead and try to find them!</p>
 </code></pre></div>
 </div>
 <p>Before we proceed, we need to enable local playbook repositories in Robusta.</p>
-<p>Follow this quick guide to learn how to package your python file for Robusta: <a class="reference internal" href="../developer-guide/actions/playbook-repositories.html#custom-playbook-repositories"><span class="std std-ref">Custom playbook repositories</span></a></p>
+<p>Follow this quick guide to learn how to package your python file for Robusta: <a class="reference internal" href="../extending/actions/playbook-repositories.html#custom-playbook-repositories"><span class="std std-ref">Custom playbook repositories</span></a></p>
 <p>Let’s push the new action to Robusta</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code>robusta playbooks push &lt;PATH_TO_LOCAL_PLAYBOOK_FOLDER&gt;
 </code></pre></div>

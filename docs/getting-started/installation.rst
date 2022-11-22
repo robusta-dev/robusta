@@ -60,7 +60,7 @@ We'll generate the Helm values using the ``robusta`` cli tool. There are two way
         .. code-block:: bash
             :name: cb-docker-cli-example
 
-            ./robusta version
+            ./robusta gen-config
 
         .. admonition:: System Requirements
             :class: warning
@@ -69,7 +69,7 @@ We'll generate the Helm values using the ``robusta`` cli tool. There are two way
 
             On Windows you can use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
 
-You now have a ``generated_values.yaml`` file with a Robusta config. You can customize this more later (for example, to `add integrations <https://docs.robusta.dev/master/catalog/sinks/index.html>`_ like Discord). For now, lets install Robusta and see it in action.
+You now have a ``generated_values.yaml`` file with a Robusta config. You can customize this more later (for example, to `add integrations <https://docs.robusta.dev/master/automation/sinks/index.html>`_ like Discord). For now, lets install Robusta and see it in action.
 
 Run helm
 ------------------------------
