@@ -111,7 +111,14 @@ class ActionRequestReceiver:
     def __exec_external_request(
         self, action_request: ExternalActionRequest, validate_timestamp: bool
     ):
-        logging.info(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
+        if action_request.signature:
+            action_type = "signed"
+        elif action_request.partial_auth_a or action_request.partial_auth_b:
+            action_type = "two auth"
+        else:
+            action_type = "light"
+        logging.info(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} "
+                     f"type: {action_type}")
         sync_response = action_request.request_id != ""  # if request_id is set, we need to write back the response
         validation_response = self.__validate_request(action_request, validate_timestamp)
         if validation_response.http_code != 200:
@@ -226,26 +233,19 @@ class ActionRequestReceiver:
                                       error_msg="Illegal timestamp")
 
         signing_key = self.event_handler.get_global_config().get("signing_key")
-        body = action_request.body
         if not signing_key:
-            logging.error(f"Signing key not available. Cannot verify request {body}")
+            logging.error(f"Signing key not available. Cannot verify request {action_request.body}")
             return ValidationResponse(http_code=500,
                                       error_code=ErrorCodes.NO_SIGNING_KEY.value,
                                       error_msg="No signing key")
 
-        signing_key = self.event_handler.get_global_config().get("signing_key")
-        signature = action_request.signature
-
-        if signature:
+        if action_request.signature:
             # First auth protocol option, based on signature only
-            logging.info(f"signature auth action received: {action_request.body.action_name}")
             return self.validate_action_request_signature(action_request, signing_key)
         elif action_request.partial_auth_a or action_request.partial_auth_b:
             # Second auth protocol option, based on public key
-            logging.info(f"two part auth action received: {action_request.body.action_name}")
             return self.validate_with_private_key(action_request, signing_key)
         else: # Light action protocol option, authenticated in relay
-            logging.info(f"light action received: {action_request.body.action_name}")
             return self.validate_light_action(action_request)
 
     def validate_light_action(self, action_request: ExternalActionRequest) -> ValidationResponse:
