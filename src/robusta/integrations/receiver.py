@@ -240,7 +240,7 @@ class ActionRequestReceiver:
             return self.validate_action_request_signature(action_request, signing_key)
 
         # Second auth protocol option, based on public key
-        if action_request.partial_auth_a and action_request.partial_auth_b:
+        if action_request.partial_auth_a or action_request.partial_auth_b:
             return self.validate_with_private_key(action_request, signing_key)
 
         # Light action protocol option, authenticated in relay
