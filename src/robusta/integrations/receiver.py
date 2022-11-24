@@ -254,7 +254,6 @@ class ActionRequestReceiver:
                                       error_msg="Unauthorized action requested")
         return ValidationResponse()
 
-
     def validate_action_request_signature(self, action_request: ExternalActionRequest, signing_key: str) -> ValidationResponse:
         signature = action_request.signature
         body = action_request.body
@@ -270,6 +269,11 @@ class ActionRequestReceiver:
         body = action_request.body
         partial_auth_a = action_request.partial_auth_a
         partial_auth_b = action_request.partial_auth_b
+        if not partial_auth_a or not partial_auth_b:
+            logging.error(f"Insufficient authentication data. Cannot verify request {body}")
+            return ValidationResponse(http_code=500,
+                                      error_code=ErrorCodes.MISSING_AUTH_INPUT.value,
+                                      error_msg="Missing auth input")
 
         private_key = self.auth_provider.get_private_rsa_key()
         if not private_key:
