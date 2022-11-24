@@ -234,17 +234,19 @@ class ActionRequestReceiver:
                                       error_msg="No signing key")
 
         signing_key = self.event_handler.get_global_config().get("signing_key")
-        # First auth protocol option, based on signature only
         signature = action_request.signature
+
         if signature:
+            # First auth protocol option, based on signature only
+            logging.info(f"signature auth action received: {action_request.body.action_name}")
             return self.validate_action_request_signature(action_request, signing_key)
-
-        # Second auth protocol option, based on public key
-        if action_request.partial_auth_a or action_request.partial_auth_b:
+        elif action_request.partial_auth_a or action_request.partial_auth_b:
+            # Second auth protocol option, based on public key
+            logging.info(f"two part auth action received: {action_request.body.action_name}")
             return self.validate_with_private_key(action_request, signing_key)
-
-        # Light action protocol option, authenticated in relay
-        return self.validate_light_action(action_request)
+        else: # Light action protocol option, authenticated in relay
+            logging.info(f"light action received: {action_request.body.action_name}")
+            return self.validate_light_action(action_request)
 
     def validate_light_action(self, action_request: ExternalActionRequest) -> ValidationResponse:
         light_actions = self.event_handler.get_light_actions()
@@ -254,11 +256,10 @@ class ActionRequestReceiver:
                                       error_msg="Unauthorized action requested")
         return ValidationResponse()
 
-    def validate_action_request_signature(self, action_request: ExternalActionRequest, signing_key: str) -> ValidationResponse:
-        signature = action_request.signature
-        body = action_request.body
-        generated_signature = sign_action_request(body, signing_key)
-        if hmac.compare_digest(generated_signature, signature):
+    @staticmethod
+    def validate_action_request_signature(action_request: ExternalActionRequest, signing_key: str) -> ValidationResponse:
+        generated_signature = sign_action_request(action_request.body, signing_key)
+        if hmac.compare_digest(generated_signature, action_request.signature):
             return ValidationResponse()
         else:
             return ValidationResponse(http_code=500,
