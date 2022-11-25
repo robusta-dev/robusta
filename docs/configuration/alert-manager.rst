@@ -59,13 +59,13 @@ Follow the `instructions in the Prometheus Operator documentation <https://githu
 An alternative is to configure an AlertmanagerConfig CRD, but this is **not** recommended as it `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
 
 Other In-Cluster Prometheus Installations
-------------------------------------------
+---------------------------------------------------
 If you installed Prometheus in some other way, you will need to manually edit the `AlertManager configuration <https://prometheus.io/docs/alerting/latest/configuration/>`_ and add the above configuration.
 
 This file should be saved in different locations depending on your AlertManager setup.
 
 Out-of-cluster Prometheus Installations
------------------------------------------
+----------------------------------------------------
 
 If AlertManager is located outside of your Kubernetes cluster then a few more steps are necessary:
 

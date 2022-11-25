@@ -20,5 +20,5 @@ Our alerting will likely diverge more over time as we take advantage of more Rob
 See also
 ^^^^^^^^^^^^^^
 
-* :ref:`Robusta architecture <Architecture>`
+* :ref:`Robusta architecture <Standard Architecture>`
 * `Comparison of Robusta and a bare-bones Prometheus stack without Robusta <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_

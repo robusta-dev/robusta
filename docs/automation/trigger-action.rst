@@ -1,2 +1,0 @@
-Trigger Action Compatibily
-==========================

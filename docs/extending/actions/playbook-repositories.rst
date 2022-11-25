@@ -47,7 +47,7 @@ Loading your own playbook repository
 
 You can load your playbook in one of two ways:
 
-1. From a git repository, :ref:`as described in the configuration guide <Loading additional playbooks>`
+1. From a git repository, :ref:`as described in the configuration guide <Loading your own playbook repository>`
 2. Using ``robusta playbooks push``
 
 We'll describe the second option which is convenient for development. It allows deploying playbooks rapidly while you

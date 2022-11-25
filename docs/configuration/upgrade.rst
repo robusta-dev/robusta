@@ -25,8 +25,6 @@ Once you've located your ``generated_values.yaml`` file, run the following comma
 
 We recommend running the above command exactly as written and **not** running ``helm upgrade --reuse-values`` `as it doesn't respect changes to default values. <https://medium.com/@kcatstack/understand-helm-upgrade-flags-reset-values-reuse-values-6e58ac8f127e>`_
 
-.. warning:: Some upgrades require extra steps. If your ``generated_values.yaml`` contains the setting ``enablePrometheusStack: true`` then :ref:`read here <Upgrading with bundled Prometheus Stack>`
-
 
 Verify that Robusta is running and there are no errors in the logs:
 
@@ -80,7 +78,7 @@ Upgrading from versions lower than 0.9.1
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.55.0/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.55.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
 
-4. Update helm chart and upgrade Robusta (:ref:`where is my generated_values.yaml <values-file>`):
+4. Update helm chart and upgrade Robusta (:ref:`where is my generated_values.yaml <Where is my generated_values.yaml?>`):
 
 .. code-block:: bash
 

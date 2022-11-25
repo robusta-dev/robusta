@@ -45,7 +45,6 @@ To censor logs, you'll have to define a `python regex <https://www.w3schools.com
 Here is an example configuration, input and output:
 
 Configuration:
-
 .. code-block:: yaml
 
     - logs_enricher:
@@ -61,7 +60,6 @@ Input:
 .. code-block:: yaml
 
     # Input (actual pod log):
-
     2022-07-28 08:24:45.283 INFO     user's uuid: '193836d9-9cce-4df9-a454-c2edcf2e80e5'
     2022-07-28 08:35:00.762 INFO     Successfully loaded some critical module
     2022-07-28 08:35:01.090 INFO     using my secret port 114, ip: ['172.18.0.3']

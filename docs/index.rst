@@ -32,7 +32,6 @@
    :hidden:
 
    configuration/overview
-   configuration/configuration
    configuration/global-config
    configuration/defining-playbooks
    configuration/sinks-configuration
@@ -44,6 +43,8 @@
    Robusta CLI <configuration/robusta-cli>
    configuration/flow-control
    configuration/trigger-action-binding
+   tutorials/prometheus-enrichment
+   coverage
 
 
 
@@ -70,6 +71,7 @@
    :hidden:
 
    automation/overview
+   automation/automation-basics
    automation/triggers/index
    automation/actions/index
    automation/sinks/index

@@ -173,7 +173,7 @@ Next Steps
    user-guide
    advanced/index
    upgrade
-   tutorials/configuring-automations
+   tutorials/automation-basics
    tutorials/prometheus-enrichment
    extending/actions/my-first-custom-action
    tutorials/python-profiling
