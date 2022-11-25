@@ -40,7 +40,7 @@ In addition to the backend services, an installation of the base Robusta OSS pro
 Instead of using the cloud backend services, the Robusta OSS project will be directed to the self hosted backend instance.
 
 
-.. image:: ./images/self_host_diagram.png
+.. image:: ../images/self_host_diagram.png
    :align: center
 
 Installing the self-hosted UI

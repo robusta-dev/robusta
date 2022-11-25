@@ -16,7 +16,7 @@ robusta-forwarder
 robusta-runner
     Executes playbooks
 
-.. image:: ./images/arch-1/arch-1.png
+.. image:: ../images/arch-1/arch-1.png
    :width: 600
    :align: center
 
@@ -24,11 +24,11 @@ Bundled Prometheus stack (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Robusta includes an optional :ref:`embedded Prometheus stack`, preconfigured with alerts for Kubernetes according to best practices.
 
-If you already use *kube-prometheus-stack*, you can :ref:`point it at Robusta<Sending Alerts to Robusta>` instead.
+If you already use *kube-prometheus-stack*, you can :ref:`point it at Robusta <Sending Alerts to Robusta>` instead.
 
 Web UI (optional)
 ^^^^^^^^^^^^^^^^^^^^^^
-There is a `web UI <http://home.robusta.dev/ui?from=docs>`_ [#f1]_ which provides a single pane of glass to monitor
+There is a `web UI <http://home.robusta.dev/ui?from=docs>`_ which provides a single pane of glass to monitor
 all your alerts and pods across multiple clusters.
 
 CLI (optional)
@@ -44,6 +44,7 @@ See also
 ^^^^^^^^^
 
 * `Comparison of Robusta and a bare-bones Prometheus stack without Robusta <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_
+
 .. Example Use Cases
 .. ~~~~~~~~~~~~~~~~~~
 
@@ -118,9 +119,3 @@ Next Steps
 :ref:`Ready to install Robusta? Get started! <installation>`
 
 `Star us on GitHub to receive updates. <https://github.com/robusta-dev/robusta/>`_
-
-.. rubric:: Footnotes
-
-.. [#f1] These alerts should cause no noise on a healthy cluster. If they're noisy in your env, let us know and we'll fix it.
-
-.. [#f2] This is the only component that isn't open source and it's completely optional. For self-hosting the UI, see :ref:`Self hosting` 

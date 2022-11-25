@@ -32,14 +32,19 @@
    :hidden:
 
    configuration/overview
+   configuration/configuration
    configuration/global-config
    configuration/defining-playbooks
    configuration/sinks-configuration
    configuration/additional-playbooks
    Secrets <configuration/configuration-secrets>
    configuration/alert-manager
-   Upgrade & Uninstall <upgrade>
+   Upgrade & Uninstall <configuration/upgrade>
    configuration/embedded-prometheus
+   Robusta CLI <configuration/robusta-cli>
+   configuration/flow-control
+   configuration/trigger-action-binding
+
 
 
 
@@ -64,10 +69,11 @@
    :caption: Automation
    :hidden:
 
-   catalog/overview
+   automation/overview
    automation/triggers/index
    automation/actions/index
    automation/sinks/index
+   popular-automations/index
 
 .. toctree::
    :maxdepth: 4
@@ -75,7 +81,7 @@
    :hidden:
 
    extending/overview
-   tutorials/my-first-custom-action
+   extending/actions/my-first-custom-action
    Write Python automations <extending/actions/index>
    Modify Robusta core <extending/platform/index>
    Docs Contributions <extending/platform/docs-contributions>
@@ -90,7 +96,7 @@
 
 
 Welcome to Robusta Docs
-===================
+=============================
 Robusta is an open source platform for Kubernetes monitoring and runbook automation. It can be installed as a full monitoring stack or an add-on for Prometheus and other tools.
 
 Robusta watches your cluster, identifies problems, and gathers observability data about the cause. It also supports automatic remediation.
@@ -102,7 +108,7 @@ Robusta watches your cluster, identifies problems, and gathers observability dat
     Get Started →
 
 Learn about Robusta
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. grid:: 1 1 2 4
     :gutter: 3

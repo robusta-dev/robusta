@@ -30,7 +30,7 @@ To demonstrate how Robusta automations work, we will configure an automation tha
 
 
 Seeing the automation in action
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Scale one of your deployments:
 
@@ -58,7 +58,7 @@ You can click to see the diff:
 
 
 How the automation works
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Every automation has three parts.
 
 triggers:
@@ -71,11 +71,11 @@ sinks:
     We didn't configure any sinks, so output is sent to the default sink. This is usually Slack and/or the `Robusta UI <https://home.robusta.dev/ui/>`_.
 
 Further customization
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Try changing the configuration to monitors changes to a deployment's image tag.
 
 Cleanup
-^^^^^^^^^^
+^^^^^^^^^^^^
 If you use the `Robusta UI <https://home.robusta.dev/ui/>`_, you should disable the automation you configured in this tutorial to prevent duplicates.
 
 A similar automation is already configured by default.

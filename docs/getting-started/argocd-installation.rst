@@ -54,7 +54,7 @@ We'll generate the Helm values using the ``robusta`` cli tool. There are two way
         .. code-block:: bash
             :name: cb-docker-cli-example
 
-            ./robusta version
+            ./robusta gen-config
 
         .. admonition:: System Requirements
             :class: warning
@@ -64,12 +64,14 @@ We'll generate the Helm values using the ``robusta`` cli tool. There are two way
             On Windows you can use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
 
 
-Edit your generated_values.yaml files so it will be ready for ArgoCD, by adding ``clusterName: <YOUR-CLUSTER-NAME>`` at the top, if not already present.
+Edit your generated_values.yaml files so it will be ready for ArgoCD, by adding ``clusterName: <YOUR-CLUSTER-NAME>`` at the top, if not already present. Test clusters like Kind and Colima tend to have fewer resources. You can lower the resource usage of Robusta by including ``isSmallCluster: true``. On production it is recommended to leave it as ``isSmallCluster: false``.
+
 Example:
 
 .. code-block:: yaml
     
     clusterName: my_cluster_name # <- This is the line to be added
+    isSmallCluster: false #optional & setting this to true lowers the resource requests of Robusta.
     globalConfig:
       signing_key: xxxxxx
       account_id: xxxxxx
@@ -119,14 +121,14 @@ Install
 To setup Robusta with ArgoCD, create a ``NEW APP`` and fill in the following settings.
 
 ``General`` settings
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Application name: Your choice (e.g "robusta")
 - Project name: Your choice (e.g "default")
 - Sync Policy: Your choice (recommended to start with ``Manual``)
 
 ``Source`` settings
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Repository URL: https://robusta-charts.storage.googleapis.com
 - Chart: robusta

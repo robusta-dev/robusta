@@ -175,7 +175,7 @@ Next Steps
    upgrade
    tutorials/configuring-automations
    tutorials/prometheus-enrichment
-   tutorials/my-first-custom-action
+   extending/actions/my-first-custom-action
    tutorials/python-profiling
    tutorials/java-troubleshooting
    getting-started/more-tutorials
