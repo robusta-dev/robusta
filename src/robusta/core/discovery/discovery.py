@@ -214,7 +214,7 @@ def extract_ready_pods(resource) -> int:
         elif isinstance(resource, V1DaemonSet):
             return 0 if not resource.status.number_ready else resource.status.number_ready
         elif isinstance(resource, V1Pod):
-            return is_pod_ready(resource)
+            return 1 if is_pod_ready(resource) else 0
         return 0
     except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
         logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
@@ -222,16 +222,19 @@ def extract_ready_pods(resource) -> int:
 
 
 def extract_total_pods(resource) -> int:
-    if isinstance(resource, V1Deployment) \
-            or isinstance(resource, V1StatefulSet) \
-            or isinstance(resource, V1Job):
-        return resource.status.replicas
-    elif isinstance(resource, V1DaemonSet):
-        return resource.status.desired_number_scheduled
-    elif isinstance(resource, V1Pod):
-        return 1
-    return 0
-
+    try:
+        if isinstance(resource, V1Deployment) \
+                or isinstance(resource, V1StatefulSet) \
+                or isinstance(resource, V1Job):
+            return 1 if not resource.status.replicas else resource.status.replicas
+        elif isinstance(resource, V1DaemonSet):
+            return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
+        elif isinstance(resource, V1Pod):
+            return 1
+        return 0
+    except Exception:
+        logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
+    return 1
 
 def extract_volumes(resource) -> List[V1Volume]:
     """Extract volumes from k8s python api object (not hikaru)"""
