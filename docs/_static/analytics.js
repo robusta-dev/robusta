@@ -13,14 +13,7 @@ function setupCopyListener() {
 }
 
 function trackPageViewEvent() {
-  const pageUrl = window.location.href;
-  trackEvent('DocsPageview', {'pageUrl': pageUrl});
-  if (pageUrl.endsWith('/installation.html')) {
-    trackEvent('InstallationPageview', {'pageUrl': pageUrl});
-  }
-  if (pageUrl.endsWith('/argocd-installation.html')) {
-    trackEvent('ArgoCDInstallationPageview', {'pageUrl': pageUrl});
-  }
+  trackEvent('DocsPageview', {'pageUrl': window.location.href});
 }
 
 function trackEvent(event, properties) {
@@ -28,6 +21,7 @@ function trackEvent(event, properties) {
   analytics.track(event, properties)
 }
 
+// noinspection DuplicatedCode
 function reportCopy(baseElement) {
   // don’t track users who ask not to be tracked
   if (navigator.doNotTrack === "1") {
