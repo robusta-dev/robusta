@@ -42,7 +42,7 @@ class PlaybooksEventHandler(Protocol):
     def get_global_config(
         self,
     ) -> dict:
-
+        """Return runner global config"""
         pass
 
     @abstractmethod
