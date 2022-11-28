@@ -134,7 +134,7 @@ html_css_files = [
 ]
 
 html_js_files = [
-    # 'analytics.js' we include it in base.html
+    'analytics.js'
 ]
 
 html_favicon = "_static/favicon.png"
