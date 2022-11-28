@@ -85,11 +85,10 @@ It is best to define this in a `global config <https://docs.robusta.dev/master/u
 .. code-block:: yaml
 
     globalConfig: # Note: no need to specify logs_enricher or report_crash_loop by name here.
-      # ...
       regex_replacement_style: SAME_LENGTH_ASTERISKS
       regex_replacer_patterns:
         - name: MySecretPort
-          regex: "my secret port \d+"
+          regex: "my secret port \\d+"
         - name: UUID
           regex: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
