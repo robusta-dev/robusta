@@ -112,12 +112,32 @@ h2, h3 {
     opacity: 1;
 }
 
-.md-typeset a {
-    color: var(--md-typeset-a-color) !important;
+.md-typeset {
+    color: var(--sd-color-black);
+    font-size: 0.9rem;
+}
+
+.sd-card-body {
+    color: #1E2941;
 }
 
 .sd-btn-outline-primary {
     border-color: var(--md-primary-fg-color) !important;
-    color: var(--md-typeset-a-color) !important;
+    background-color: var(--md-primary-fg-color) !important;
+    color: var(--md-primary-bg-color) !important;
 }
 
+.sd-btn-outline-primary:active,
+.sd-btn-outline-primary:focus,
+.sd-btn-outline-primary:hover {
+    border-color: var(--md-primary-fg-color) !important;
+    background-color: transparent !important;
+    color: var(--md-primary-fg-color) !important;
+}
+
+.md-content__inner.md-typeset .sd-btn {
+    margin-top: 34px;
+    padding: 22px 28px;
+    font-size: 24px;
+    font-weight: 800;
+}
