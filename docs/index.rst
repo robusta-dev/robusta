@@ -32,16 +32,15 @@
    :hidden:
 
    configuration/overview
-   configuration/global-config
+   Connecting sinks <configuration/sinks-configuration>
    configuration/defining-playbooks
-   configuration/sinks-configuration
    configuration/additional-playbooks
-   Secrets <configuration/configuration-secrets>
+   Reulsing comon settings <configuration/global-config>
+   Handling Secrets <configuration/configuration-secrets>
    configuration/alert-manager
    Upgrade & Uninstall <configuration/upgrade>
    configuration/embedded-prometheus
    Robusta CLI <configuration/robusta-cli>
-   configuration/flow-control
    configuration/trigger-action-binding
    tutorials/prometheus-enrichment
    coverage
@@ -60,6 +59,7 @@
    Overview <architecture/index>
    Components <architecture/components>
    architecture/oss-vs-saas
+   How playbooks work <configuration/flow-control>
    Robusta UI Triggers <architecture/robusta-ui-triggers>
    Privacy & Security <architecture/privacy-and-security>
 
