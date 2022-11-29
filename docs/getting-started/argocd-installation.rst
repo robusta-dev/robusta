@@ -1,9 +1,3 @@
-.. raw:: html
-
-    <script>
-            trackEvent('ArgoCDInstallationPageview', {'pageUrl': window.location.href});
-    </script>
-    
 Install with ArgoCD
 ==============================
 
