@@ -1,3 +1,5 @@
+
+// noinspection DuplicatedCode
 function setupCopyListener() {
   let codeCells = document.querySelectorAll("pre[id^=codecell]");
   codeCells.forEach(element => element.addEventListener('copy', (event) => {
@@ -9,11 +11,16 @@ function setupCopyListener() {
   }));
 }
 
+function trackPageViewEvent() {
+  trackEvent('DocsPageview', {'pageUrl': window.location.href});
+}
+
 function trackEvent(event, properties) {
   posthog.capture(event, properties)
   analytics.track(event, properties)
 }
 
+// noinspection DuplicatedCode
 function reportCopy(baseElement) {
   // don’t track users who ask not to be tracked
   if (navigator.doNotTrack === "1") {
