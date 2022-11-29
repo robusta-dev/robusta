@@ -185,7 +185,9 @@ html_css_files = [
     "custom.css",
 ]
 
-html_js_files = ["analytics.js"]
+html_js_files = [
+    # "analytics.js" we include it in base.html
+]
 
 html_favicon = "_static/faviconNew.svg"
 

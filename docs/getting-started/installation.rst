@@ -1,3 +1,8 @@
+.. raw:: html
+
+    <script>
+            trackEvent('InstallationPageview', {'pageUrl': window.location.href});
+    </script>
 Install with Helm
 ##################
 
