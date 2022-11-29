@@ -1,6 +1,3 @@
-
-
-// noinspection DuplicatedCode
 function setupCopyListener() {
   let codeCells = document.querySelectorAll("pre[id^=codecell]");
   codeCells.forEach(element => element.addEventListener('copy', (event) => {
@@ -10,17 +7,6 @@ function setupCopyListener() {
   copyButtons.forEach(element => element.addEventListener('click', (event) => {
     reportCopy(element);
   }));
-}
-
-function trackPageViewEvent() {
-  const pageUrl = window.location.href;
-  trackEvent('DocsPageview', {'pageUrl': pageUrl});
-  if (pageUrl.endsWith('/installation.html')) {
-    trackEvent('InstallationPageview', {'pageUrl': pageUrl});
-  }
-  if (pageUrl.endsWith('/argocd-installation.html')) {
-    trackEvent('ArgoCDInstallationPageview', {'pageUrl': pageUrl});
-  }
 }
 
 function trackEvent(event, properties) {
