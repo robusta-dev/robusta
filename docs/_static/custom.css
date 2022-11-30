@@ -141,3 +141,29 @@ h2, h3 {
     font-size: 24px;
     font-weight: 800;
 }
+
+.sd-card {
+    border: 3px solid var(--md-primary-fg-color) !important;
+}
+
+.sd-card.sd-bg-light {
+    border: 3px solid var(--md-primary-fg-color--light) !important;
+    background-color: var(--md-primary-fg-color--light) !important;
+}
+
+.sd-card:hover {
+    background-color: var(--md-primary-fg-color) !important;
+}
+
+.sd-card:hover .sd-card-body {
+    color: var(--md-primary-bg-color) !important;
+}
+
+.sd-card.sd-bg-light:hover {
+    border: 3px solid var(--md-primary-fg-color) !important;
+}
+
+.sd-tab-set>input:checked + label {
+    border-color: var(--md-primary-fg-color) !important;
+    color: var(--md-primary-fg-color) !important;
+}
