@@ -117,6 +117,37 @@ h2, h3 {
     font-size: 0.9rem;
 }
 
+.md-typeset a {
+    font-weight: 600;
+}
+
+.md-typeset :-webkit-any(.admonition,details):-webkit-any(.warning,.caution,.attention),
+.md-typeset :is(.admonition,details):is(.warning,.caution,.attention),
+.md-typeset :-webkit-any(.admonition,details):-webkit-any(.tip,.hint,.important),
+.md-typeset :is(.admonition,details):is(.tip,.hint,.important),
+.md-typeset :-webkit-any(.admonition,details),
+.md-typeset :is(.admonition,details) {
+    border-color: #3A73ED;
+}
+
+.md-typeset :-webkit-any(.warning,.caution,.attention)>:-webkit-any(.admonition-title,summary),
+.md-typeset :is(.warning,.caution,.attention)>:is(.admonition-title,summary),
+.md-typeset :-webkit-any(.tip,.hint,.important)>:-webkit-any(.admonition-title,summary)
+.md-typeset :is(.tip,.hint,.important)>:is(.admonition-title,summary),
+.md-typeset :-webkit-any(.admonition-title,summary),
+.md-typeset :is(.admonition-title,summary) {
+    background: rgba(58, 115, 237, 0.2) !important;
+}
+
+.md-typeset :-webkit-any(.warning,.caution,.attention)>:-webkit-any(.admonition-title,summary):before,
+.md-typeset :is(.warning,.caution,.attention)>:is(.admonition-title,summary):before,
+.md-typeset :-webkit-any(.tip,.hint,.important)>:-webkit-any(.admonition-title,summary):before,
+.md-typeset :is(.tip,.hint,.important)>:is(.admonition-title,summary):before,
+.md-typeset :-webkit-any(.admonition-title,summary):before,
+.md-typeset :is(.admonition-title,summary):before {
+    background-color: #3A73ED;
+}
+
 .sd-card-body {
     color: #1E2941;
 }
@@ -166,4 +197,21 @@ h2, h3 {
 .sd-tab-set>input:checked + label {
     border-color: var(--md-primary-fg-color) !important;
     color: var(--md-primary-fg-color) !important;
+}
+
+.sd-tab-set>input:not(:checked)+label:hover {
+    border-color: transparent !important;
+    color: var(--md-primary-fg-color) !important;
+}
+
+.sd-card-title {
+    margin-bottom: 0;
+}
+
+.sd-card-title + .sd-card-text {
+    margin-top: 0.5rem;
+}
+
+.highlight code {
+    color: var(--md-primary-fg-color);
 }
