@@ -55,10 +55,7 @@ class PagerdutySink(SinkBase):
             custom_details["🔎 Investigate"] = finding.get_investigate_uri(self.account_id, self.cluster_name)
 
             if finding.add_silence_url:
-                custom_details["🔕 Silence"] = finding.get_prometheus_silence_url(
-                    self.cluster_name
-                )
-
+                custom_details["🔕 Silence"] = finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
         # custom fields that don't have an inherent meaning in PagerDuty itself:
         custom_details["Resource"] = finding.subject.name
         custom_details["Cluster running Robusta"] = self.cluster_name
