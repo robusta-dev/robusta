@@ -10,12 +10,12 @@ h2, h3 {
     border-bottom: 2px solid whitesmoke;
 }
 
-.sd-bg-light {
-    background-color: #ebebeb !important;
-}
-
 .md-header__button.md-logo {
     flex-grow: 1;
+}
+
+.md-header__button:hover {
+    opacity: 1;
 }
 
 .md-header__button.md-logo img {
@@ -45,15 +45,11 @@ h2, h3 {
     display: block;
     max-width: 11.3rem;
     width: 11.7rem;
-    color: rgba(15, 26, 47, 0.5);
+    color: var(--md-color-details);
 }
 
 .md-tabs__community:hover {
-    color: rgba(15, 26, 47, 1);
-}
-
-.md-tabs__community:hover svg {
-    fill: rgba(15, 26, 47, 1);
+    color: var(--md-color-details-active);
 }
 
 .md-tabs__community a {
@@ -61,9 +57,16 @@ h2, h3 {
     align-items: center;
 }
 
+
 .md-tabs__community svg {
     width: 30px;
-    fill: rgba(15, 26, 47, 0.5);
+    fill: var(--md-color-details);
+}
+
+.md-tabs__community:active svg,
+.md-tabs__community:focus svg,
+.md-tabs__community:hover svg {
+    fill: var(--md-color-details-active);
 }
 
 .md-tabs__community span:nth-of-type(2) {
@@ -77,43 +80,91 @@ h2, h3 {
 }
 
 .md-header__option {
-    color: rgba(15, 26, 47, 0.5);
+    color: var(--md-color-details);
 }
 
 .md-header__option:hover {
-    color: rgba(15, 26, 47, 1);
+    color: var(--md-color-details-active);
 }
 
 .md-source {
-    color: rgba(15, 26, 47, 0.5);
+    opacity: 1;
+    color: var(--md-color-details);
 }
 
 .md-source:hover {
-    color: rgba(15, 26, 47, 1);
+    opacity: 1;
+    color: var(--md-color-details-active);
+}
+
+.md-source__facts {
+    opacity: 1;
 }
 
 .md-search__form {
-    background-color: rgba(15, 26, 47, 0.5);
+    background-color: var(--md-color-details);
 }
 
 .md-search__form:hover {
-    background-color: rgba(15, 26, 47, 1);
+    background-color: var(--md-color-details-active);
+}
+
+.md-search__options > * {
+    color: var(--md-color-details);
+}
+
+.md-search__input {
+    color: var(--md-color-details);
+}
+
+.md-search__input::-webkit-input-placeholder {
+    color: var(--md-color-details-placeholder);
+}
+
+.md-search__input::-moz-placeholder {
+    color: var(--md-color-details-placeholder);
+}
+
+.md-search__input:-moz-placeholder {
+    color: var(--md-color-details-placeholder);
+}
+
+.md-search__input:-ms-input-placeholder {
+    color: var(--md-color-details-placeholder);
+}
+
+.md-search__input:hover::-webkit-input-placeholder {
+    color: var(--md-color-details-placeholder);
+}
+
+.md-search__input:hover::-moz-placeholder {
+    color: var(--md-color-details-placeholder);
+}
+
+.md-search__input:hover:-moz-placeholder {
+    color: var(--md-color-details-placeholder);
+}
+
+.md-search__input:hover:-ms-input-placeholder {
+    color: var(--md-color-details-placeholder);
+}
+
+.md-search__input + .md-search__icon {
+    color: var(--md-color-details-search);
 }
 
 .md-tabs__link {
-    color: rgba(15, 26, 47, 1);
-    opacity: 0.5;
+    color: var(--md-color-nav);
 }
 
 .md-tabs__link--active,
 .md-tabs__link:focus,
 .md-tabs__link:hover {
-    color: rgba(15, 26, 47, 1);
-    opacity: 1;
+    color: var(--md-color-nav-active);
 }
 
 .md-typeset {
-    color: var(--sd-color-black);
+    /* color: var(--sd-color-black); */
     font-size: 0.9rem;
 }
 
@@ -148,10 +199,6 @@ h2, h3 {
     background-color: #3A73ED;
 }
 
-.sd-card-body {
-    color: #1E2941;
-}
-
 .sd-btn-outline-primary {
     border-color: var(--md-primary-fg-color) !important;
     background-color: var(--md-primary-fg-color) !important;
@@ -174,24 +221,31 @@ h2, h3 {
 }
 
 .sd-card {
-    border: 3px solid var(--md-primary-fg-color) !important;
-}
-
-.sd-card.sd-bg-light {
-    border: 3px solid var(--md-primary-fg-color--light) !important;
-    background-color: var(--md-primary-fg-color--light) !important;
+    border: 3px solid var(--md-color-card-border) !important;
+    background-color: var(--md-color-card-background) !important;
 }
 
 .sd-card:hover {
-    background-color: var(--md-primary-fg-color) !important;
+    background-color: var(--md-color-card-hover) !important;
 }
 
-.sd-card:hover .sd-card-body {
-    color: var(--md-primary-bg-color) !important;
+.sd-card.sd-bg-light {
+    border: 3px solid var(--md-color-card-light-border) !important;
+    background-color: var(--md-color-card-light-background) !important;
 }
 
 .sd-card.sd-bg-light:hover {
-    border: 3px solid var(--md-primary-fg-color) !important;
+    border: 3px solid var(--md-color-card-light-hover) !important;
+    background-color: var(--md-color-card-light-hover) !important;
+}
+
+.sd-card .sd-card-body {
+    color: #1E2941;
+}
+
+
+.sd-card:hover .sd-card-body {
+    color: var(--md-primary-bg-color) !important;
 }
 
 .sd-tab-set>input:checked + label {

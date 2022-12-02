@@ -1403,7 +1403,7 @@ theme-sbt = ["sphinx-book-theme (>=0.1.2,<0.2.0)"]
 
 [[package]]
 name = "sphinx-immaterial"
-version = "0.0.post1.dev169"
+version = "0.0.post1.dev182"
 description = "Adaptation of mkdocs-material theme for the Sphinx documentation system"
 category = "dev"
 optional = false
@@ -1429,7 +1429,7 @@ keys = ["pymdown-extensions"]
 type = "git"
 url = "https://github.com/robusta-dev/robusta-immaterial.git"
 reference = "HEAD"
-resolved_reference = "093dc071115a0db08ff60f61ab56ce0fa62d97be"
+resolved_reference = "873d244977eba7dfec8ac4a67be0a68490fc05e2"
 
 [[package]]
 name = "sphinxcontrib-applehelp"
