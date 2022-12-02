@@ -106,7 +106,7 @@ todo_include_todos = False
 
 html_theme = "sphinx_immaterial"
 
-html_logo = "images/logo_docs_big.svg"
+html_logo = "_static/logo_default.svg"
 
 html_theme_options = {
     "icon": {
@@ -121,9 +121,9 @@ html_theme_options = {
             "media": "(prefers-color-scheme: light)",
             "scheme": "default",
             "primary": "robusta",
-            "accent": "light-blue",
+            "accent": "robusta",
             "toggle": {
-                "icon": "material/toggle-switch-off-outline",
+                "icon": "material/weather-night",
                 "name": "Switch to dark mode",
             },
         },
@@ -131,9 +131,9 @@ html_theme_options = {
             "media": "(prefers-color-scheme: dark)",
             "scheme": "slate",
             "primary": "robusta-dark",
-            "accent": "light-blue",
+            "accent": "robusta-dark",
             "toggle": {
-                "icon": "material/toggle-switch",
+                "icon": "material/weather-sunny",
                 "name": "Switch to light mode",
             },  
         },
@@ -166,8 +166,6 @@ html_theme_options = {
             "link": "https://www.linkedin.com/company/robusta-dev/",
         },
     ],
-    
-
 }
 
 html_sidebars = {
