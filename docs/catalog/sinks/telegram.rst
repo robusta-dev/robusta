@@ -29,7 +29,7 @@ Now we're ready to configure the Telegram sink.
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
         - telegram_sink:
             name: personal_telegram sink
             bot_token: <YOUR BOT TOKEN>

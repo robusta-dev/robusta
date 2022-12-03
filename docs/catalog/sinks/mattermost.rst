@@ -56,7 +56,7 @@ Now we're ready to configure the Mattermost sink.
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
         - mattermost_sink:
             name: personal_mattermost_sink
             url: <YOUR MATTERMOST URL> (can be find out from url bar in browser, e.g. https://namespace.cloud.mattermost.com)

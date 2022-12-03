@@ -12,11 +12,11 @@ Configuring the PagerDuty sink
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
             - pagerduty_sink:
                 name: main_pagerduty_sink
                 api_key: <api key> # e.g. f653634653463678fadas43534506
-                
+
 Save the file and run
 
 .. code-block:: bash

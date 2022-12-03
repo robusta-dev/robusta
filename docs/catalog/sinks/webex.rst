@@ -53,7 +53,7 @@ Now we're ready to configure the webex sink.
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
         - webex_sink:
             name: personal_webex_sink
             bot_access_token: <YOUR BOT ACCESS TOKEN>

@@ -12,7 +12,7 @@ Configuring the Datadog sink
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
         - datadog_sink:
             name: datadog_sink
             api_key: "datadog api key"
@@ -30,4 +30,3 @@ Save the file and run
     .. image:: /images/deployment-babysitter-datadog.png
       :width: 1000
       :align: center
- 

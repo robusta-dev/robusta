@@ -10,12 +10,12 @@ Configuring the Kafka sink
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
         - kafka_sink:
             name: kafka_sink
             kafka_url: "localhost:9092"
             topic: "robusta-playbooks"
-            
+
 Save the file and run
 
 .. code-block:: bash
