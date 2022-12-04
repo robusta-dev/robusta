@@ -1,7 +1,6 @@
 import textwrap
 
 import pygal
-from pygal.style import DarkStyle as ChosenStyle
 from robusta.api import *
 
 
@@ -32,7 +31,7 @@ def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
         set(per_pod_usage_unbounded.keys()).union(per_pod_request.keys())
     )
 
-    treemap = pygal.Treemap(style=ChosenStyle)
+    treemap = pygal.Treemap(style=charts_style)
     treemap.title = f"CPU Usage on Node {node.metadata.name}"
     treemap.value_formatter = lambda x: f"{int(x * 100)}%"
     treemap.add("Non-container usage", [non_container_cpu_usage])
@@ -41,7 +40,7 @@ def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
         treemap.add(pod_name, [cpu_usage])
 
     MISSING_VALUE = -0.001
-    bar_chart = pygal.Bar(x_label_rotation=-40, style=ChosenStyle)
+    bar_chart = pygal.Bar(x_label_rotation=-40, style=charts_style)
     bar_chart.title = f"Actual Vs Requested vCPUs on Node {node.metadata.name}"
     bar_chart.x_labels = all_pod_names
     bar_chart.value_formatter = (
