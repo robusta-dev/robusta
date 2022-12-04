@@ -267,7 +267,7 @@ class SlackSender:
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
         if platform_enabled:
-            title = f"<{finding.investigate_uri}|*{title}*>"
+            title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
 
         status_str: str = (
             f"{status.to_emoji()} `{status.name.lower()}`"
@@ -293,7 +293,7 @@ class SlackSender:
             links.append(
                 LinkProp(
                     text=f"Silence 🔕",
-                    url=finding.get_prometheus_silence_url(self.cluster_name),
+                    url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
                 )
             )
 
