@@ -12,6 +12,7 @@ class WebexSink(SinkBase):
             bot_access_token=sink_config.webex_sink.bot_access_token,
             room_id=sink_config.webex_sink.room_id,
             cluster_name=self.cluster_name,
+            webex_params=self.params
         )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
