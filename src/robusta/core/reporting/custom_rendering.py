@@ -18,7 +18,7 @@ def render_value(renderer: RendererType, value):
 
 
 charts_style = Style(
-    background='transparent',
+    background='#F2F2F2',
     plot_background='#F2F2F2',
     value_background = 'rgba(229, 229, 229, 1)',
     foreground='#9EAEB0',
