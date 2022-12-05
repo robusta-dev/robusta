@@ -43,7 +43,7 @@ def run_prometheus_query(
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
     query_duration = ends_at - starts_at
-    resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
+    resolution = get_resolution_from_duration(query_duration)
     increment = max(query_duration.total_seconds() / resolution, 1.0)
     return custom_query_range(
         prometheus_base_url,
@@ -53,6 +53,18 @@ def run_prometheus_query(
         str(increment),
         {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
     )
+
+
+def get_resolution_from_duration(duration: timedelta) -> int:
+    # TODO: Come up with some constants
+    if duration < timedelta(hours=1):
+        return 150
+    elif duration < timedelta(days=1):
+        return 200
+    elif duration < timedelta(weeks=1):
+        return 300
+    else:
+        return 500
 
 
 def create_chart_from_prometheus_query(
