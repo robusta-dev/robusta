@@ -6,6 +6,7 @@ from robusta.core.playbooks.playbook_utils import replace_env_vars_values
 
 class SinkBaseParams(BaseModel):
     name: str
+    send_svg: bool = False
     default: bool = True
     match: dict = {}
 
