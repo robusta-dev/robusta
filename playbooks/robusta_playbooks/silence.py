@@ -1,5 +1,6 @@
 from robusta.api import *
 
+# ref to api https://github.com/prometheus/alertmanager/blob/main/api/v2/openapi.yaml
 
 class Matcher(BaseModel):
     # https://github.com/prometheus/alertmanager/blob/main/api/v2/models/matcher.go
@@ -73,15 +74,17 @@ class AddSilenceParams(BaseSilenceParams):
 
 @action
 def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
-    try:
-        alertmanager_url = _get_alertmanager_url(params)
+    alertmanager_url = _get_alertmanager_url(params)
+    if not alertmanager_url:
+        raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
 
+    try:
         response = requests.get(
             f"{alertmanager_url}{_get_url_path(SilenceOperation.LIST, params)}",
             headers=_gen_headers(params),
         )
     except Exception as e:
-        raise ActionException(ErrorCodes.ALERTMANAGER_REQUEST) from e
+        raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
 
 
     silence_list = [(Silence(**silence).to_list()) for silence in response.json()]
@@ -102,17 +105,18 @@ def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
 
 @action
 def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
+    alertmanager_url = _get_alertmanager_url(params)
+    if not alertmanager_url:
+        raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
 
     try:
-        alertmanager_url = _get_alertmanager_url(params)
-
         res = requests.post(
             f"{alertmanager_url}{_get_url_path(SilenceOperation.CREATE, params)}",
             data=params.json(),
             headers=_gen_headers(params),
         )
     except Exception as e:
-        raise ActionException(ErrorCodes.ALERTMANAGER_REQUEST) from e
+        raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
 
 
     silence_id = res.json().get("silenceID") or res.json().get("id")  # on grafana alertmanager the 'id' is returned
@@ -132,6 +136,9 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
 
 @action
 def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
+    alertmanager_url = _get_alertmanager_url(params)
+    if not alertmanager_url:
+        raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
 
     try:
         alertmanager_url = _get_alertmanager_url(params)
@@ -141,7 +148,7 @@ def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
             headers=_gen_headers(params),
         )
     except Exception as e:
-        raise ActionException(ErrorCodes.ALERTMANAGER_REQUEST) from e
+        raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
 
     event.add_enrichment(
         [
