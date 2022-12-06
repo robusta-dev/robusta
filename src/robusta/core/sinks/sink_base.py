@@ -10,8 +10,8 @@ class SinkBase:
         self.registry = registry
         global_config = self.registry.get_global_config()
 
-        self.account_id = global_config.get("account_id", "")
-        self.cluster_name = global_config.get("cluster_name", "")
+        self.account_id : str = global_config.get("account_id", "")
+        self.cluster_name : str = global_config.get("cluster_name", "")
         self.signing_key = global_config.get("signing_key", "")
 
     def is_global_config_changed(self):

@@ -259,10 +259,11 @@ class Finding(Filterable):
     def __str__(self):
         return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
 
-    def get_prometheus_silence_url(self, cluster_id: str) -> str:
+    def get_prometheus_silence_url(self, account_id: str, cluster_name: str) -> str:
         labels: Dict[str, str] = {
             "alertname": self.aggregation_key,
-            "cluster": cluster_id,
+            "cluster": cluster_name,
+            "account": account_id
         }
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
