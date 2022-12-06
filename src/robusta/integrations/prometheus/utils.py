@@ -5,11 +5,10 @@ from ...core.model.env_vars import SERVICE_CACHE_TTL_SEC
 from ...core.exceptions import PrometheusNotFound
 from ...utils.service_discovery import find_service_url
 from cachetools import TTLCache
-from prometheus_api_client import PrometheusConnect
 from requests.exceptions import ConnectionError
 
 
-def check_prometheus_connection(prom: PrometheusConnect, params: dict = None):
+def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
     params = params or {}
     try:
         prometheus_connected = prom.check_prometheus_connection(params)
