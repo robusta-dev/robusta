@@ -31,6 +31,9 @@ class OpsGenieSink(SinkBase):
         self.conf = opsgenie_sdk.configuration.Configuration()
         self.conf.api_key["Authorization"] = self.api_key
 
+        if sink_config.opsgenie_sink.host is not None:
+            self.conf.host = sink_config.opsgenie_sink.host
+
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
         self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
 
