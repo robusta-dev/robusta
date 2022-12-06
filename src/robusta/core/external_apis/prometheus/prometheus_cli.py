@@ -1,5 +1,6 @@
 from .models import PrometheusQueryResult
 from datetime import datetime
+from robusta.integrations.prometheus.utils import check_prometheus_connection
 from prometheus_api_client import PrometheusConnect, PrometheusApiClientException
 
 """
@@ -8,10 +9,11 @@ git repo: https://github.com/4n4nd/prometheus-api-client-python
 It used to return only the result and not the resultType leading for less safe and clear code
 """
 
-#TODO: Replace this with our own prometheus client that handles return types and errors better
+
+# TODO: Replace this with our own prometheus client that handles return types and errors better
 
 def custom_query_range(
-    prometheus_base_url: str, query: str, start_time: datetime, end_time: datetime, step: str, params: dict = None
+        prometheus_base_url: str, query: str, start_time: datetime, end_time: datetime, step: str, params: dict = None
 ) -> PrometheusQueryResult:
     """
     Send a query_range to a Prometheus Host.
@@ -33,6 +35,9 @@ def custom_query_range(
     start = round(start_time.timestamp())
     end = round(end_time.timestamp())
     params = params or {}
+
+    check_prometheus_connection(prom, params)
+
     prometheus_result = None
     query = str(query)
     # using the query_range API to get raw data
