@@ -1,5 +1,6 @@
-from pydantic.main import BaseModel
 from typing import Dict
+
+from pydantic.main import BaseModel
 
 
 class NodeInfo(BaseModel):
