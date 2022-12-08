@@ -22,8 +22,10 @@ app = typer.Typer()
 
 
 class RSAKeyPair(BaseModel):
-    prv: str
-    pub: str
+    prv: str = "none"
+    pub: str = "none"
+    private: str = "none"
+    public: str = "none"
 
 
 def gen_rsa_pair() -> RSAKeyPair:
@@ -41,8 +43,8 @@ def gen_rsa_pair() -> RSAKeyPair:
     )
 
     return RSAKeyPair(
-        pub=public_key.decode('utf-8'),
-        prv=pem.decode('utf-8')
+        public=base64.b64encode(public_key),
+        private=base64.b64encode(pem)
     )
 
 
