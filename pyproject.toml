@@ -11,6 +11,11 @@ packages = [
 line-length = 120
 target-version = ['py37']
 
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+
 [tool.poetry.scripts]
 robusta = "robusta.cli.main:app"
 

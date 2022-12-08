@@ -1,11 +1,12 @@
-from pydantic import BaseModel
-from typing import Dict, Optional, Type, List
-
-from ..model.events import ExecutionBaseEvent
-from ...utils.documented_pydantic import DocumentedModel
-from ..model.k8s_operation_type import K8sOperationType
-from ..reporting.base import Finding
 import abc
+from typing import Dict, List, Optional, Type
+
+from pydantic import BaseModel
+
+from robusta.core.model.events import ExecutionBaseEvent
+from robusta.core.model.k8s_operation_type import K8sOperationType
+from robusta.core.reporting.base import Finding
+from robusta.utils.documented_pydantic import DocumentedModel
 
 
 class TriggerEvent(BaseModel):

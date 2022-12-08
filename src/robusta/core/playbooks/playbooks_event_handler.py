@@ -1,10 +1,10 @@
 from abc import abstractmethod
 from typing import Optional, Dict, Any, List, Protocol
 
-from ...model.playbook_action import PlaybookAction
-from ...core.model.events import ExecutionBaseEvent
-from ...core.playbooks.base_trigger import TriggerEvent
-from ...runner.telemetry import Telemetry
+from robusta.model.playbook_action import PlaybookAction
+from robusta.core.model.events import ExecutionBaseEvent
+from robusta.core.playbooks.base_trigger import TriggerEvent
+from robusta.runner.telemetry import Telemetry
 
 
 class PlaybooksEventHandler(Protocol):
@@ -33,7 +33,7 @@ class PlaybooksEventHandler(Protocol):
         action_params: Optional[dict],
         sinks: Optional[List[str]],
         sync_response: bool = False,
-        no_sinks: bool = False
+        no_sinks: bool = False,
     ) -> Optional[Dict[str, Any]]:
         """Execute an external action"""
         pass

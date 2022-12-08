@@ -1,17 +1,12 @@
+import logging
 import os
 import threading
-import time, logging
+import time
 from collections import defaultdict
-
 from typing import List
 
-from ...core.persistency.scheduled_jobs_states_dal import SchedulerDal
-from ...core.schedule.model import (
-    JobStatus,
-    ScheduledJob,
-    DynamicDelayRepeat,
-    SchedulingInfo,
-)
+from robusta.core.persistency.scheduled_jobs_states_dal import SchedulerDal
+from robusta.core.schedule.model import DynamicDelayRepeat, JobStatus, ScheduledJob, SchedulingInfo
 
 # this initial delay is important for when the robusta-runner version is updated
 # at the same time a scheduled playbook is added to the configuration
@@ -50,18 +45,12 @@ class Scheduler:
             self.dal.save_scheduled_job(job)
             saved_job = job
         elif saved_job.state.job_status == JobStatus.DONE:
-            logging.info(
-                f"Scheduled job already done. Skipping scheduling. job {saved_job.job_id}"
-            )
+            logging.info(f"Scheduled job already done. Skipping scheduling. job {saved_job.job_id}")
             return
 
         next_delay = self.__calc_job_delay_for_next_run(saved_job)
-        logging.info(
-            f"scheduling job {saved_job.job_id} params {saved_job.scheduling_params} will run in {next_delay}"
-        )
-        self.__schedule_job_internal(
-            next_delay, saved_job.job_id, self.__on_task_execution, {"job": saved_job}
-        )
+        logging.info(f"scheduling job {saved_job.job_id} params {saved_job.scheduling_params} will run in {next_delay}")
+        self.__schedule_job_internal(next_delay, saved_job.job_id, self.__on_task_execution, {"job": saved_job})
 
     def list_scheduled_jobs(self) -> List[ScheduledJob]:
         return self.dal.list_scheduled_jobs()
@@ -120,9 +109,7 @@ class Scheduler:
         else:
             self.dal.save_scheduled_job(job)
         del self.scheduled_jobs[job.job_id]
-        logging.info(
-            f"Scheduled job done. job_id {job.job_id} executions {job.state.exec_count}"
-        )
+        logging.info(f"Scheduled job done. job_id {job.job_id} executions {job.state.exec_count}")
 
     def __schedule_job_internal(self, delay, job_id, func, kwargs):
         job = threading.Timer(delay, func, kwargs=kwargs)

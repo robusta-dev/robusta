@@ -1,7 +1,8 @@
 from typing import List, Optional
+
 from hikaru.model import Job, PodList
 
-from ...integrations.kubernetes.custom_models import RobustaPod, build_selector_query
+from robusta.integrations.kubernetes.custom_models import RobustaPod, build_selector_query
 
 CONTROLLER_UID = "controller-uid"
 
@@ -36,8 +37,7 @@ def get_job_latest_pod(job: Job) -> Optional[RobustaPod]:
         return None
 
     pod_list: List[RobustaPod] = PodList.listNamespacedPod(
-        namespace=job.metadata.namespace,
-        label_selector=job_selector
+        namespace=job.metadata.namespace, label_selector=job_selector
     ).obj.items
     pod_list.sort(key=lambda pod: pod.status.startTime, reverse=True)
     return pod_list[0] if pod_list else None

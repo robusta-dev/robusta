@@ -1,8 +1,7 @@
 import logging
 from typing import List
 
-from .blocks import *
-
+from robusta.core.reporting.blocks import *
 
 JPG_SUFFIX = ".jpg"
 PNG_SUFFIX = ".png"

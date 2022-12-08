@@ -1,11 +1,11 @@
 import inspect
-from typing import Callable, Optional, Dict, Type
+from typing import Callable, Dict, Optional, Type
 
 from pydantic.main import BaseModel
 
-from ..model.base_params import ActionParams
-from ..model.events import ExecutionBaseEvent, ExecutionEventBaseParams
-from ...utils.decorators import doublewrap
+from robusta.core.model.base_params import ActionParams
+from robusta.core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
+from robusta.utils.decorators import doublewrap
 
 
 class NotAnActionException(Exception):
@@ -36,20 +36,14 @@ class Action:
         self.params_type = self.__get_action_params_type(func)
         self.from_params_func = None
         self.from_params_parameter_class = None
-        if vars(self.event_type).get(
-            "from_params"
-        ):  # execution event has 'from_params'
+        if vars(self.event_type).get("from_params"):  # execution event has 'from_params'
             self.from_params_func = getattr(self.event_type, "from_params")
             from_params_signature = inspect.signature(self.from_params_func)
-            self.from_params_parameter_class = list(
-                from_params_signature.parameters.values()
-            )[0].annotation
+            self.from_params_parameter_class = list(from_params_signature.parameters.values())[0].annotation
 
     @staticmethod
     def is_action(func):
-        return (
-            inspect.isfunction(func) and getattr(func, "_action_name", None) is not None
-        )
+        return inspect.isfunction(func) and getattr(func, "_action_name", None) is not None
 
     @staticmethod
     def __get_action_event_type(func: Callable):
@@ -66,9 +60,7 @@ class Action:
         func_params = iter(inspect.signature(func).parameters.values())
         event_type = next(func_params).annotation
         if not issubclass(event_type, ExecutionBaseEvent):
-            raise Exception(
-                f"Illegal action first parameter {event_type}. Must extend ExecutionBaseEvent"
-            )
+            raise Exception(f"Illegal action first parameter {event_type}. Must extend ExecutionBaseEvent")
         return event_type
 
     @staticmethod
@@ -90,9 +82,7 @@ class Action:
             return None
         params_cls = action_params.annotation
         if not issubclass(params_cls, BaseModel):
-            raise Exception(
-                f"Illegal action second parameter {params_cls}. Action params must extend BaseModel"
-            )
+            raise Exception(f"Illegal action second parameter {params_cls}. Action params must extend BaseModel")
         return params_cls
 
 

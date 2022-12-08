@@ -1,4 +1,3 @@
-import logging
 import threading
 import time
 from collections import defaultdict
@@ -6,7 +5,7 @@ from typing import List, Optional
 
 from pydantic.main import BaseModel
 
-from ..model.env_vars import RESOURCE_UPDATES_CACHE_TTL_SEC
+from robusta.core.model.env_vars import RESOURCE_UPDATES_CACHE_TTL_SEC
 
 
 class TopLevelResource(BaseModel):
@@ -42,15 +41,10 @@ class TopServiceResolver:
             recent_updates_keys = list(cls.__recent_resource_updates.keys())
             for resource_key in recent_updates_keys:
                 recent_update = cls.__recent_resource_updates[resource_key]
-                if (
-                        time.time() - recent_update.event_time
-                        > RESOURCE_UPDATES_CACHE_TTL_SEC
-                ):
+                if time.time() - recent_update.event_time > RESOURCE_UPDATES_CACHE_TTL_SEC:
                     del cls.__recent_resource_updates[resource_key]
                 else:
-                    new_store[recent_update.resource.namespace].append(
-                        recent_update.resource
-                    )
+                    new_store[recent_update.resource.namespace].append(recent_update.resource)
 
         cls.__namespace_to_resource = new_store
 

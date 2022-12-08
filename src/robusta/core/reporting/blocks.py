@@ -5,7 +5,7 @@
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
 from copy import deepcopy
-from typing import List, Callable, Dict, Any, Iterable, Sequence, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 import hikaru
 from hikaru import DiffDetail, DiffType
@@ -13,10 +13,10 @@ from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
 from tabulate import tabulate
 
-from .custom_rendering import render_value
-from .base import BaseBlock
-from ..model.env_vars import PRINTED_TABLE_MAX_WIDTH
-from ..external_apis.prometheus.models import PrometheusQueryResult
+from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
+from robusta.core.model.env_vars import PRINTED_TABLE_MAX_WIDTH
+from robusta.core.reporting.base import BaseBlock
+from robusta.core.reporting.custom_rendering import render_value
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
 
@@ -127,17 +127,11 @@ class KubernetesDiffBlock(BaseBlock):
         :param old: the old version of the object
         :param new: the new version of the object
         """
-        num_additions = len(
-            [d for d in interesting_diffs if d.diff_type == DiffType.ADDED]
-        )
-        num_deletions = len(
-            [d for d in interesting_diffs if d.diff_type == DiffType.REMOVED]
-        )
+        num_additions = len([d for d in interesting_diffs if d.diff_type == DiffType.ADDED])
+        num_deletions = len([d for d in interesting_diffs if d.diff_type == DiffType.REMOVED])
         num_modifications = len(interesting_diffs) - num_additions - num_deletions
 
-        resource_name = self._obj_to_name(old, name, namespace) or self._obj_to_name(
-            new, name, namespace
-        )
+        resource_name = self._obj_to_name(old, name, namespace) or self._obj_to_name(new, name, namespace)
 
         super().__init__(
             diffs=interesting_diffs,
@@ -227,9 +221,7 @@ class TableBlock(BaseBlock):
         )
 
     @classmethod
-    def __calc_max_width(
-        cls, headers, rendered_rows, table_max_width: int
-    ) -> List[int]:
+    def __calc_max_width(cls, headers, rendered_rows, table_max_width: int) -> List[int]:
         # We need to make sure the total table width, doesn't exceed the max width,
         # otherwise, the table is printed corrupted
         columns_max_widths = [len(header) for header in headers]
@@ -237,20 +229,15 @@ class TableBlock(BaseBlock):
             for idx, val in enumerate(row):
                 columns_max_widths[idx] = max(len(str(val)), columns_max_widths[idx])
 
-        if (
-            sum(columns_max_widths) > table_max_width
-        ):  # We want to limit the widest column
+        if sum(columns_max_widths) > table_max_width:  # We want to limit the widest column
             largest_width = max(columns_max_widths)
             widest_column_idx = columns_max_widths.index(largest_width)
             diff = sum(columns_max_widths) - table_max_width
             columns_max_widths[widest_column_idx] = largest_width - diff
-            if (
-                columns_max_widths[widest_column_idx] < 0
-            ):  # in case the diff is bigger than the largest column
+            if columns_max_widths[widest_column_idx] < 0:  # in case the diff is bigger than the largest column
                 # just divide equally
                 columns_max_widths = [
-                    int(table_max_width / len(columns_max_widths))
-                    for i in range(0, len(columns_max_widths))
+                    int(table_max_width / len(columns_max_widths)) for i in range(0, len(columns_max_widths))
                 ]
 
         return columns_max_widths
@@ -298,9 +285,7 @@ class TableBlock(BaseBlock):
 
     def to_table_string(self, table_max_width: int = PRINTED_TABLE_MAX_WIDTH) -> str:
         rendered_rows = self.__to_strings_rows(self.render_rows())
-        col_max_width = self.__calc_max_width(
-            self.headers, rendered_rows, table_max_width
-        )
+        col_max_width = self.__calc_max_width(self.headers, rendered_rows, table_max_width)
         return tabulate(
             rendered_rows,
             headers=self.headers,
@@ -336,10 +321,7 @@ class KubernetesFieldsBlock(TableBlock):
         :param explanations: an explanation for each field. for example {"metadata.name": "the pods name"}
         """
         if explanations:
-            rows = [
-                [f, k8s_obj.object_at_path(f.split(".")), explanations.get(f, "")]
-                for f in fields
-            ]
+            rows = [[f, k8s_obj.object_at_path(f.split(".")), explanations.get(f, "")] for f in fields]
             super().__init__(rows=rows, headers=["field", "value", "explanation"])
         else:
             rows = [[f, k8s_obj.object_at_path(f.split("."))] for f in fields]
@@ -395,8 +377,5 @@ class PrometheusBlock(BaseBlock):
         :param data: the PrometheusQueryResult generated created from a prometheus query
         :param query: the Prometheus query run
         """
-        metadata = {
-            "query-result-version": "1.0",
-            "query": query
-        }
+        metadata = {"query-result-version": "1.0", "query": query}
         super().__init__(data=data, metadata=metadata)

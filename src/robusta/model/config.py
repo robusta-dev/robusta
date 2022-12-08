@@ -2,7 +2,10 @@ import logging
 from collections import defaultdict
 from typing import List, Dict, Optional
 
-from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
+from ..core.sinks.robusta.robusta_sink_params import (
+    RobustaSinkConfigWrapper,
+    RobustaSinkParams,
+)
 from ..core.sinks.sink_config import SinkConfigBase
 from ..core.sinks.sink_factory import SinkFactory
 from ..integrations.scheduled.playbook_scheduler_manager import (
@@ -19,9 +22,7 @@ from ..runner.telemetry import Telemetry
 from ..core.model.env_vars import RUNNER_VERSION, PROMETHEUS_ENABLED
 
 
-
 class SinksRegistry:
-
     def __init__(self, sinks: Dict[str, SinkBase]):
         self.sinks = sinks
         self.default_sinks = [sink.sink_name for sink in sinks.values() if sink.default]
@@ -29,7 +30,11 @@ class SinksRegistry:
             logging.warning(
                 f"No default sinks defined. By default, actions results are ignored."
             )
-        platform_sinks = [sink for sink in sinks.values() if isinstance(sink.params, RobustaSinkParams)]
+        platform_sinks = [
+            sink
+            for sink in sinks.values()
+            if isinstance(sink.params, RobustaSinkParams)
+        ]
         self.platform_enabled = len(platform_sinks) > 0
 
     def get_sink_by_name(self, sink_name: str) -> Optional[SinkBase]:
@@ -43,9 +48,9 @@ class SinksRegistry:
         cls,
         new_sinks_config: List[SinkConfigBase],
         existing_sinks: Dict[str, SinkBase],
-        registry
+        registry,
     ) -> Dict[str, SinkBase]:
-    
+
         new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
         # remove deleted sinks
         deleted_sink_names = [
@@ -76,12 +81,14 @@ class SinksRegistry:
                         sink_config, registry
                     )
                 elif (
-                    sink_config.get_params() != new_sinks[sink_config.get_name()].params or
-                    new_sinks[sink_config.get_name()].is_global_config_changed()
+                    sink_config.get_params() != new_sinks[sink_config.get_name()].params
+                    or new_sinks[sink_config.get_name()].is_global_config_changed()
                 ):
-                    config_change_msg = "due to global config change" \
-                        if new_sinks[sink_config.get_name()].is_global_config_changed() \
+                    config_change_msg = (
+                        "due to global config change"
+                        if new_sinks[sink_config.get_name()].is_global_config_changed()
                         else "due to param change"
+                    )
                     logging.info(
                         f"Updating {type(sink_config)} sink named {sink_config.get_name()} {config_change_msg}"
                     )
@@ -181,7 +188,7 @@ class Registry:
     _global_config = dict()
     _telemetry: Telemetry = Telemetry(
         runner_version=RUNNER_VERSION,
-        prometheus_enabled=PROMETHEUS_ENABLED, 
+        prometheus_enabled=PROMETHEUS_ENABLED,
     )
 
     def set_actions(self, actions: ActionsRegistry):
@@ -213,12 +220,12 @@ class Registry:
 
     def get_receiver(self) -> ActionRequestReceiver:
         return self._receiver
-    
+
     def get_telemetry(self) -> Telemetry:
         return self._telemetry
 
-    def set_global_config(self, config : Dict ):
+    def set_global_config(self, config: Dict):
         self.global_config = config
-    
+
     def get_global_config(self) -> Dict:
         return self.global_config
