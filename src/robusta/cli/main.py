@@ -16,7 +16,6 @@ from kubernetes import client, config
 from pydantic import BaseModel, Extra
 
 from robusta._version import __version__
-
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
 from robusta.cli.auth import RSAKeyPair
 from robusta.cli.auth import app as auth_commands
