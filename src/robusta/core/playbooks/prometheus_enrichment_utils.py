@@ -1,9 +1,11 @@
 from collections import defaultdict, namedtuple
 from datetime import datetime, timedelta
 from string import Template
+from typing import Any, Dict, List, Optional
 
 import humanize
 import pygal
+from pydantic import BaseModel
 from pygal.style import DarkColorizedStyle as ChosenStyle
 
 from robusta.api import *
