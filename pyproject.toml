@@ -7,6 +7,10 @@ packages = [
     { include = "robusta", from = "src"},
 ]
 
+[tool.black]
+line-length = 120
+target-version = ['py37']
+
 [tool.poetry.scripts]
 robusta = "robusta.cli.main:app"
 
