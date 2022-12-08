@@ -1,4 +1,5 @@
 from kubernetes import client
+
 from robusta.api import *
 
 
@@ -62,10 +63,10 @@ def create_pvc_snapshot(event: ExecutionBaseEvent, params: VolumeSnapshotParams)
         body=snapshot_body,
     )
     finding = Finding(
-            title=f"Created VolumeSnapshot {snapshot_name}",
-            aggregation_key="volume_snapshot",
-            finding_type=FindingType.REPORT,
-            failure=False,
-        )
+        title=f"Created VolumeSnapshot {snapshot_name}",
+        aggregation_key="volume_snapshot",
+        finding_type=FindingType.REPORT,
+        failure=False,
+    )
     finding.add_enrichment([MarkdownBlock(f"Successfully created snapshot")])
     event.add_finding(finding)

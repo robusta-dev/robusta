@@ -1,7 +1,7 @@
-from .webex_sink_params import WebexSinkConfigWrapper
-from ..sink_base import SinkBase
-from ...reporting.base import Finding
-from ....integrations.webex.sender import WebexSender
+from robusta.core.reporting.base import Finding
+from robusta.core.sinks.sink_base import SinkBase
+from robusta.core.sinks.webex.webex_sink_params import WebexSinkConfigWrapper
+from robusta.integrations.webex.sender import WebexSender
 
 
 class WebexSink(SinkBase):

@@ -1,5 +1,5 @@
-from .base import *
-from .blocks import *
+from robusta.core.reporting.base import *
+from robusta.core.reporting.blocks import *
 
 __all__ = [
     "BaseBlock",

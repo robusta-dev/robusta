@@ -4,12 +4,14 @@ from robusta.api import *
 def _get_templating_labels(event: ExecutionBaseEvent) -> Dict:
     subject = event.get_subject()
     labels = defaultdict(lambda: "<missing>")
-    labels.update({
-        "name": subject.name,
-        "kind": subject.subject_type,
-        "namespace": subject.namespace if subject.namespace else "<missing>",
-        "node": subject.node if subject.node else "<missing>",
-    })
+    labels.update(
+        {
+            "name": subject.name,
+            "kind": subject.subject_type,
+            "namespace": subject.namespace if subject.namespace else "<missing>",
+            "node": subject.node if subject.node else "<missing>",
+        }
+    )
     return labels
 
 
@@ -39,9 +41,7 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
     It must be placed as the last action in the playbook configuration, to override the attributes created by previous
     actions
     """
-    severity: Optional[FindingSeverity] = (
-        FindingSeverity[params.severity] if params.severity else None
-    )
+    severity: Optional[FindingSeverity] = FindingSeverity[params.severity] if params.severity else None
 
     labels = _get_templating_labels(event)
 
@@ -81,11 +81,13 @@ def create_finding(event: ExecutionBaseEvent, params: FindingFields):
     """
     labels = _get_templating_labels(event)
 
-    event.add_finding(Finding(
-        title=Template(params.title).safe_substitute(labels),
-        description=Template(params.description).safe_substitute(labels) if params.description else None,
-        aggregation_key=params.aggregation_key,
-        severity=FindingSeverity.from_severity(params.severity),
-        subject=event.get_subject(),
-        source=event.get_source(),
-    ))
+    event.add_finding(
+        Finding(
+            title=Template(params.title).safe_substitute(labels),
+            description=Template(params.description).safe_substitute(labels) if params.description else None,
+            aggregation_key=params.aggregation_key,
+            severity=FindingSeverity.from_severity(params.severity),
+            subject=event.get_subject(),
+            source=event.get_source(),
+        )
+    )

@@ -1,8 +1,10 @@
-import kubernetes
 import logging
+
+import kubernetes
 from kubernetes import config
-from tests.utils.kubernetes_utils import create_sleeping_deployment
+
 from robusta.api import *
+from tests.utils.kubernetes_utils import create_sleeping_deployment
 
 
 def test_upload():

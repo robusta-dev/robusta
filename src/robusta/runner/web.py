@@ -1,19 +1,17 @@
 import logging
 from datetime import datetime
-from flask import Flask, request, jsonify
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
-from prometheus_client import make_wsgi_app
 
-from .config_loader import ConfigLoader
-from ..integrations.prometheus.trigger import PrometheusTriggerEvent
-from ..integrations.kubernetes.base_triggers import (
-    IncomingK8sEventPayload,
-    K8sTriggerEvent,
-)
-from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
-from ..integrations.prometheus.models import AlertManagerEvent
-from ..core.model.env_vars import NUM_EVENT_THREADS, TRACE_INCOMING_REQUESTS
-from ..utils.task_queue import TaskQueue, QueueMetrics
+from flask import Flask, jsonify, request
+from prometheus_client import make_wsgi_app
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+
+from robusta.core.model.env_vars import NUM_EVENT_THREADS, TRACE_INCOMING_REQUESTS
+from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
+from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
+from robusta.integrations.prometheus.models import AlertManagerEvent
+from robusta.integrations.prometheus.trigger import PrometheusTriggerEvent
+from robusta.runner.config_loader import ConfigLoader
+from robusta.utils.task_queue import QueueMetrics, TaskQueue
 
 app = Flask(__name__)
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {"/metrics": make_wsgi_app()})
@@ -26,19 +24,13 @@ class Web:
     metrics: QueueMetrics
     loader: ConfigLoader
 
-
     @staticmethod
     def init(event_handler: PlaybooksEventHandler, loader: ConfigLoader):
         Web.metrics = QueueMetrics()
-        Web.api_server_queue = TaskQueue(
-            name="api server queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics
-        )
-        Web.alerts_queue = TaskQueue(
-            name="alerts queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics
-        )
+        Web.api_server_queue = TaskQueue(name="api server queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics)
+        Web.alerts_queue = TaskQueue(name="alerts queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics)
         Web.event_handler = event_handler
         Web.loader = loader
-
 
     @staticmethod
     def run():
@@ -51,10 +43,8 @@ class Web:
         Web._trace_incoming("alerts", req_json)
         alert_manager_event = AlertManagerEvent(**req_json)
         for alert in alert_manager_event.alerts:
-            Web.alerts_queue.add_task(
-                Web.event_handler.handle_trigger, PrometheusTriggerEvent(alert=alert)
-            )
-        
+            Web.alerts_queue.add_task(Web.event_handler.handle_trigger, PrometheusTriggerEvent(alert=alert))
+
         Web.event_handler.get_telemetry().last_alert_at = str(datetime.now())
         return jsonify(success=True)
 
@@ -64,9 +54,7 @@ class Web:
         data = request.get_json()["data"]
         Web._trace_incoming("api server", data)
         k8s_payload = IncomingK8sEventPayload(**data)
-        Web.api_server_queue.add_task(
-            Web.event_handler.handle_trigger, K8sTriggerEvent(k8s_payload=k8s_payload)
-        )
+        Web.api_server_queue.add_task(Web.event_handler.handle_trigger, K8sTriggerEvent(k8s_payload=k8s_payload))
         return jsonify(success=True)
 
     @staticmethod
@@ -96,10 +84,9 @@ class Web:
     @staticmethod
     def _trace_incoming(api: str, incoming_request):
         """
-            Used for Robusta development purposes
-            Sometimes, it's useful to view incoming requests payload, whether it's AlertManager alerts,
-            API server events or any other data source
+        Used for Robusta development purposes
+        Sometimes, it's useful to view incoming requests payload, whether it's AlertManager alerts,
+        API server events or any other data source
         """
         if TRACE_INCOMING_REQUESTS:
             logging.info(f"{api}: {incoming_request}")
-

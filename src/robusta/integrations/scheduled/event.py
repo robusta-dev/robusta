@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from ...core.reporting import Finding, FindingSource
-from ...core.model.events import ExecutionBaseEvent
+from robusta.core.model.events import ExecutionBaseEvent
+from robusta.core.reporting import Finding, FindingSource
 
 
 @dataclass
@@ -17,4 +17,3 @@ class ScheduledExecutionEvent(ExecutionBaseEvent):
     @classmethod
     def get_source(cls) -> FindingSource:
         return FindingSource.SCHEDULER
-

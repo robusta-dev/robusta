@@ -35,16 +35,12 @@ skipped_kinds: List[str] = [
 ]
 
 
-def obj_diff(
-    spec: HikaruBase, old_spec: HikaruBase, ignored_changes: List[str]
-) -> bool:
+def obj_diff(spec: HikaruBase, old_spec: HikaruBase, ignored_changes: List[str]) -> bool:
     if old_spec is None:
         return True
 
     all_diffs = spec.diff(old_spec)
-    filtered_diffs = list(
-        filter(lambda x: not is_matching_diff(x, ignored_changes), all_diffs)
-    )
+    filtered_diffs = list(filter(lambda x: not is_matching_diff(x, ignored_changes), all_diffs))
     return len(filtered_diffs) > 0
 
 
@@ -71,9 +67,7 @@ def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditPar
     path = f"{git_safe_name(action_params.cluster_name)}/{git_safe_name(namespace)}"
 
     if event.operation == K8sOperationType.DELETE:
-        git_repo.delete_push(
-            path, name, f"Delete {path}/{name}", action_params.cluster_name
-        )
+        git_repo.delete_push(path, name, f"Delete {path}/{name}", action_params.cluster_name)
     elif event.operation == K8sOperationType.CREATE:
         obj_yaml = hikaru.get_yaml(event.obj.spec)
         git_repo.commit_push(
@@ -85,9 +79,7 @@ def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditPar
         )
     else:  # update
         old_spec = event.old_obj.spec if event.old_obj else None
-        if obj_diff(
-            event.obj.spec, old_spec, action_params.ignored_changes
-        ):  # we have a change in the spec
+        if obj_diff(event.obj.spec, old_spec, action_params.ignored_changes):  # we have a change in the spec
             git_repo.commit_push(
                 hikaru.get_yaml(event.obj.spec),
                 path,

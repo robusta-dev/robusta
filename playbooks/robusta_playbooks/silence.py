@@ -40,6 +40,7 @@ class BaseSilenceParams(ActionParams):
     """
     :var alertmanager_url: Alternative Alert Manager url to send requests.
     """
+
     alertmanager_flavor: str = None
     alertmanager_url: Optional[str]
     grafana_api_key: str = None
@@ -177,7 +178,8 @@ def _get_alertmanager_url(params: BaseSilenceParams) -> str:
         return params.alertmanager_url
 
     if "grafana" == params.alertmanager_flavor:
-        return ServiceDiscovery.find_url(selectors=["app.kubernetes.io/name=grafana"],
-                                         error_msg="Failed to find grafana url")
+        return ServiceDiscovery.find_url(
+            selectors=["app.kubernetes.io/name=grafana"], error_msg="Failed to find grafana url"
+        )
 
     return AlertManagerDiscovery.find_alert_manager_url()

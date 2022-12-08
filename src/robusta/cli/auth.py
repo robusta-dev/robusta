@@ -1,21 +1,22 @@
 import base64
+import re
 import subprocess
 import traceback
 import uuid
 from typing import Optional
+
 import click_spinner
-from dpath.util import get
 import requests
 import typer
 import yaml
-import re
-from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, PublicFormat, NoEncryption
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat, PublicFormat
+from dpath.util import get
 from pydantic import BaseModel
 
-from .backend_profile import backend_profile
-from .playbooks_cmd import NAMESPACE_EXPLANATION, get_playbooks_config
-from .utils import namespace_to_kubectl, exec_in_robusta_runner_output
+from robusta.cli.backend_profile import backend_profile
+from robusta.cli.playbooks_cmd import NAMESPACE_EXPLANATION, get_playbooks_config
+from robusta.cli.utils import exec_in_robusta_runner_output, namespace_to_kubectl
 
 AUTH_SECRET_NAME = "robusta-auth-config-secret"
 app = typer.Typer()
@@ -35,15 +36,10 @@ def gen_rsa_pair() -> RSAKeyPair:
 
     # get private key in PEM container format
     pem = key.private_bytes(
-        encoding=Encoding.PEM,
-        format=PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=NoEncryption()
+        encoding=Encoding.PEM, format=PrivateFormat.TraditionalOpenSSL, encryption_algorithm=NoEncryption()
     )
 
-    return RSAKeyPair(
-        pub=public_key.decode('utf-8'),
-        prv=pem.decode('utf-8')
-    )
+    return RSAKeyPair(pub=public_key.decode("utf-8"), prv=pem.decode("utf-8"))
 
 
 def get_existing_auth_config(namespace: str) -> Optional[RSAKeyPair]:
@@ -58,7 +54,7 @@ def get_existing_auth_config(namespace: str) -> Optional[RSAKeyPair]:
     auth_secret = yaml.safe_load(secret_content)
     return RSAKeyPair(
         prv=base64.b64decode(auth_secret["data"]["prv"]).decode(),
-        pub=base64.b64decode(auth_secret["data"]["pub"]).decode()
+        pub=base64.b64decode(auth_secret["data"]["pub"]).decode(),
     )
 
 
@@ -85,7 +81,7 @@ def store_server_token(token_details: TokenDetails, debug: bool = False) -> bool
 
 
 def _get_signing_key_from_env_variable(namespace: Optional[str], env_var_name: str) -> str:
-    return str(exec_in_robusta_runner_output(f'echo "${env_var_name}"', namespace), 'utf-8').strip()
+    return str(exec_in_robusta_runner_output(f'echo "${env_var_name}"', namespace), "utf-8").strip()
 
 
 @app.command(name="web-connect")
@@ -115,8 +111,11 @@ def gen_token(
         auth_config = get_existing_auth_config(namespace)
 
     if not auth_config:
-        typer.secho("\nRSA auth isn't configured. "
-                    "Please update Robusta and run `robusta update-config` to configure it. Aborting!", fg="red")
+        typer.secho(
+            "\nRSA auth isn't configured. "
+            "Please update Robusta and run `robusta update-config` to configure it. Aborting!",
+            fg="red",
+        )
         return
 
     playbooks_config = get_playbooks_config(namespace)
@@ -138,8 +137,11 @@ def gen_token(
                 return
         signing_key_uuid = uuid.UUID(signing_key)
     except Exception:
-        typer.secho("Bad format for signing_key. Please run `robusta update-config` to generate a new valid"
-                    " signing_key for your account.", fg="red")
+        typer.secho(
+            "Bad format for signing_key. Please run `robusta update-config` to generate a new valid"
+            " signing_key for your account.",
+            fg="red",
+        )
         return
 
     client_enc_key = uuid.uuid4()

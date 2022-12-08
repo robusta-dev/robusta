@@ -1,6 +1,7 @@
-from robusta.api import *
-from typing import List
 import traceback
+from typing import List
+
+from robusta.api import *
 
 
 class JavaParams(ProcessParams):
@@ -43,17 +44,12 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
     finding.add_enrichment(
         [
             TableBlock(
-                [
-                    [proc.pid, proc.exe, " ".join(proc.cmdline)]
-                    for proc in process_finder.matching_processes
-                ],
+                [[proc.pid, proc.exe, " ".join(proc.cmdline)] for proc in process_finder.matching_processes],
                 ["pid", "exe", "cmdline"],
             )
         ]
     )
-    finding = add_jdk_choices_to_finding(
-        finding, params, process_finder.get_pids(), pod
-    )
+    finding = add_jdk_choices_to_finding(finding, params, process_finder.get_pids(), pod)
     event.add_finding(finding)
 
 
@@ -103,9 +99,7 @@ def run_jdk_command_on_pid(
 
     if not params.pid:
         process_finder = ProcessFinder(pod, params, ProcessType.JAVA)
-        process = process_finder.get_match_or_report_error(
-            finding, cmd, retrigger_action, java_process_inspector
-        )
+        process = process_finder.get_match_or_report_error(finding, cmd, retrigger_action, java_process_inspector)
         if process is None:
             event.add_finding(finding)
             return
@@ -135,14 +129,10 @@ def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod, override_jtk_image: 
             java_toolkit_cmd,
             override_jtk_image=override_jtk_image,
         )
-    return RobustaPod.exec_in_java_pod(
-        pod.metadata.name, pod.spec.nodeName, java_toolkit_cmd
-    )
+    return RobustaPod.exec_in_java_pod(pod.metadata.name, pod.spec.nodeName, java_toolkit_cmd)
 
 
-def add_jdk_choices_to_finding(
-    finding: Finding, params: JavaParams, pids: List[int], pod: RobustaPod
-) -> Finding:
+def add_jdk_choices_to_finding(finding: Finding, params: JavaParams, pids: List[int], pod: RobustaPod) -> Finding:
     finding.add_enrichment([MarkdownBlock(f"Please select a Java troubleshooting choice:")])
     choices = {}
     for pid in pids:
@@ -163,9 +153,7 @@ def add_jdk_choices_to_finding(
     finding.add_enrichment(
         [
             CallbackBlock(choices),
-            MarkdownBlock(
-                "*After clicking a button please wait up to 120 seconds for a response*"
-            ),
+            MarkdownBlock("*After clicking a button please wait up to 120 seconds for a response*"),
         ]
     )
     return finding

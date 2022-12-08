@@ -22,9 +22,7 @@ def event_report(event: EventChangeEvent):
         title=f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
         description=event.obj.message,
         source=FindingSource.KUBERNETES_API_SERVER,
-        severity=FindingSeverity.INFO
-        if event.obj.type == "Normal"
-        else FindingSeverity.DEBUG,
+        severity=FindingSeverity.INFO if event.obj.type == "Normal" else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
         aggregation_key=f"Kubernetes {event.obj.type} Event",
         subject=FindingSubject(
@@ -43,9 +41,7 @@ def event_resource_events(event: EventChangeEvent):
     Given a Kubernetes event, gather all other events on the same resource in the near past
     """
     if not event.get_event():
-        logging.error(
-            f"cannot run event_resource_events on alert with no events object: {event}"
-        )
+        logging.error(f"cannot run event_resource_events on alert with no events object: {event}")
         return
     obj = event.obj.involvedObject
     events_table = get_resource_events_table(
@@ -65,9 +61,7 @@ def pod_events_enricher(event: PodEvent, params: EventEnricherParams):
     """
     pod = event.get_pod()
     if not pod:
-        logging.error(
-            f"cannot run pod_events_enricher on alert with no pod object: {event}"
-        )
+        logging.error(f"cannot run pod_events_enricher on alert with no pod object: {event}")
         return
 
     events_table_block = get_resource_events_table(
@@ -83,9 +77,7 @@ def pod_events_enricher(event: PodEvent, params: EventEnricherParams):
 
 
 @action
-def deployment_events_enricher(
-        event: DeploymentEvent, params: ExtendedEventEnricherParams
-):
+def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnricherParams):
     """
     Given a deployment, fetch related events in the near past.
 
@@ -93,15 +85,13 @@ def deployment_events_enricher(
     """
     dep = event.get_deployment()
     if not dep:
-        logging.error(
-            f"cannot run deployment_events_enricher on alert with no deployment object: {event}"
-        )
+        logging.error(f"cannot run deployment_events_enricher on alert with no deployment object: {event}")
         return
 
     if params.dependent_pod_mode:
         pods = list_pods_using_selector(dep.metadata.namespace, dep.spec.selector, "status.phase!=Running")
         if pods:
-            selected_pods = pods if len(pods) <= params.max_pods else pods[:params.max_pods]
+            selected_pods = pods if len(pods) <= params.max_pods else pods[: params.max_pods]
             for pod in selected_pods:
                 events_table_block = get_resource_events_table(
                     f"*Pod events for {pod.metadata.name}:*",
@@ -115,9 +105,7 @@ def deployment_events_enricher(
                     event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
     else:
         pods = list_pods_using_selector(dep.metadata.namespace, dep.spec.selector, "status.phase=Running")
-        event.add_enrichment(
-            [MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({len(pods)})*")]
-        )
+        event.add_enrichment([MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({len(pods)})*")])
         events_table_block = get_resource_events_table(
             "*Deployment events:*",
             dep.kind,
@@ -135,7 +123,4 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
     """
     Attaches a video links to the finding
     """
-    event.add_video_link(VideoLink(
-        url=params.url,
-        name=params.name
-    ))
+    event.add_video_link(VideoLink(url=params.url, name=params.name))

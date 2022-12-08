@@ -1,21 +1,19 @@
 import hashlib
 import logging
 import os
+import re
 import shutil
 import subprocess
 import textwrap
 import threading
-from collections import defaultdict, namedtuple
 import traceback
-import re
-from typing import List, Dict
+from collections import defaultdict, namedtuple
+from typing import Dict, List
 
-from ...core.model.env_vars import GIT_MAX_RETRIES
+from robusta.core.model.env_vars import GIT_MAX_RETRIES
 
 GIT_DIR_NAME = "robusta-git"
-REPO_LOCAL_BASE_DIR = os.path.join(
-    os.environ.get("REPO_LOCAL_BASE_DIR", "/app"), GIT_DIR_NAME
-)
+REPO_LOCAL_BASE_DIR = os.path.join(os.environ.get("REPO_LOCAL_BASE_DIR", "/app"), GIT_DIR_NAME)
 SSH_ROOT_DIR = os.environ.get("SSH_ROOT_DIR", "/root/.ssh")
 
 GIT_SSH_PREFIX = "git@"
@@ -118,9 +116,7 @@ class GitRepo:
             env=self.env,
         )
         if result.returncode:
-            logging.error(
-                f"running command {cmd} failed with returncode={result.returncode}"
-            )
+            logging.error(f"running command {cmd} failed with returncode={result.returncode}")
             logging.error(f"stdout={result.stdout.decode()}")
             logging.error(f"stderr={result.stderr.decode()}")
             raise Exception(f"Error running git command: {cmd}")
@@ -133,19 +129,11 @@ class GitRepo:
                 logging.info(f"Deleting local repo before init {self.repo_local_path}")
                 shutil.rmtree(self.repo_local_path)
 
-            logging.info(
-                f"Cloning git repo {self.git_repo_url}. repo name {self.repo_name}"
-            )
+            logging.info(f"Cloning git repo {self.git_repo_url}. repo name {self.repo_name}")
             os.makedirs(self.repo_local_path, exist_ok=True)
-            self.__exec_git_cmd(
-                ["git", "clone", self.git_repo_url, self.repo_local_path]
-            )
-            self.__exec_git_cmd(
-                ["git", "config", "--global", "user.email", "runner@robusta.dev"]
-            )
-            self.__exec_git_cmd(
-                ["git", "config", "--global", "user.name", "Robusta Runner"]
-            )
+            self.__exec_git_cmd(["git", "clone", self.git_repo_url, self.repo_local_path])
+            self.__exec_git_cmd(["git", "config", "--global", "user.email", "runner@robusta.dev"])
+            self.__exec_git_cmd(["git", "config", "--global", "user.name", "Robusta Runner"])
 
     def commit(
         self,
@@ -198,9 +186,7 @@ class GitRepo:
                         self.pull_rebase()
                     else:
                         GitRepoManager.remove_git_repo(self.git_repo_url)
-                        logging.error(
-                            f"Push failed {self.repo_local_path}", exc_info=True
-                        )
+                        logging.error(f"Push failed {self.repo_local_path}", exc_info=True)
                         raise e
 
     def pull_rebase(self):
@@ -211,9 +197,7 @@ class GitRepo:
         cluster_changes = defaultdict(list)
         with self.repo_lock:
             self.pull_rebase()
-            log = self.__exec_git_cmd(
-                ["git", "log", f"--since='{since_minutes} minutes'"]
-            )
+            log = self.__exec_git_cmd(["git", "log", f"--since='{since_minutes} minutes'"])
             commit_date = ""
             for line in log.split("\n"):
                 line = line.strip()
@@ -229,9 +213,7 @@ class GitRepo:
                     else:
                         cluster = "Unknown"
                         commit_message = line
-                    cluster_changes[cluster].append(
-                        SingleChange(commit_date, commit_message)
-                    )
+                    cluster_changes[cluster].append(SingleChange(commit_date, commit_message))
 
             return cluster_changes
 
@@ -273,9 +255,7 @@ class GitRepo:
                 GitRepoManager.remove_git_repo(self.git_repo_url)
                 raise e
 
-    def delete_push(
-        self, file_path: str, file_name, commit_message: str, cluster_name: str
-    ):
+    def delete_push(self, file_path: str, file_name, commit_message: str, cluster_name: str):
         with self.repo_lock:
             self.delete(file_path, file_name, commit_message, cluster_name)
             self.push()

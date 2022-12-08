@@ -1,6 +1,6 @@
-from robusta.api import *
-
 from datetime import datetime
+
+from robusta.api import *
 
 
 @action
@@ -24,7 +24,7 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
             limit_line = XAxisLine(label="CPU Limit", value=resource_limits.cpu)
             limit_lines = [limit_line]
         elif params.resource_type == "Memory" and resource_limits.memory > 0:
-            memory_limit_in_bytes = resource_limits.memory*1024*1024
+            memory_limit_in_bytes = resource_limits.memory * 1024 * 1024
             limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
             limit_lines = [limit_line]
     graph_enrichment = create_resource_enrichment(
@@ -34,7 +34,7 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
         ResourceChartItemType.Pod,
         prometheus_url=params.prometheus_url,
         graph_duration_minutes=params.graph_duration_minutes,
-        lines=limit_lines
+        lines=limit_lines,
     )
     pod_event.add_enrichment([graph_enrichment])
 
@@ -50,9 +50,7 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
         return
     node: Node = Node.readNode(pod.spec.nodeName).obj
     if not node:
-        logging.warning(
-            f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}"
-        )
+        logging.warning(f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}")
         return
     graph_enrichment = create_node_graph_enrichment(params, node)
     pod_event.add_enrichment([graph_enrichment])

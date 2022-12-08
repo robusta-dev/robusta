@@ -1,13 +1,12 @@
 import logging
 import time
+
 import requests
 
 
 class WebApi:
     @staticmethod
-    def run_manual_action(
-        action_name: str, action_params=None, sinks=None, retries=1, timeout_delay=1
-    ):
+    def run_manual_action(action_name: str, action_params=None, sinks=None, retries=1, timeout_delay=1):
         if sinks is None:
             sinks = []
         if action_params is None:

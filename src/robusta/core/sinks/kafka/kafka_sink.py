@@ -1,19 +1,18 @@
 import json
 import logging
+
 from kafka import KafkaProducer
 
-from .kafka_sink_params import KafkaSinkConfigWrapper
-from ...reporting.blocks import KubernetesDiffBlock, JsonBlock
-from ...reporting.base import Finding, Enrichment
-from ..sink_base import SinkBase
+from robusta.core.reporting.base import Enrichment, Finding
+from robusta.core.reporting.blocks import JsonBlock, KubernetesDiffBlock
+from robusta.core.sinks.kafka.kafka_sink_params import KafkaSinkConfigWrapper
+from robusta.core.sinks.sink_base import SinkBase
 
 
 class KafkaSink(SinkBase):
     def __init__(self, sink_config: KafkaSinkConfigWrapper, registry):
         super().__init__(sink_config.kafka_sink, registry)
-        self.producer = KafkaProducer(
-            bootstrap_servers=sink_config.kafka_sink.kafka_url
-        )
+        self.producer = KafkaProducer(bootstrap_servers=sink_config.kafka_sink.kafka_url)
         self.topic = sink_config.kafka_sink.topic
 
     def write_finding(self, finding: Finding, platform_enabled: bool):

@@ -1,9 +1,10 @@
 import logging
 from typing import List
 
-from ...core.model.env_vars import SERVICE_CACHE_TTL_SEC
-from ...utils.service_discovery import find_service_url
 from cachetools import TTLCache
+
+from robusta.core.model.env_vars import SERVICE_CACHE_TTL_SEC
+from robusta.utils.service_discovery import find_service_url
 
 
 class ServiceDiscovery:
@@ -36,7 +37,7 @@ class PrometheusDiscovery(ServiceDiscovery):
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
                 "app.kubernetes.io/name=prometheus",
-                "app=prometheus-prometheus"
+                "app=prometheus-prometheus",
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
         )
@@ -54,7 +55,7 @@ class AlertManagerDiscovery(ServiceDiscovery):
                 "app=prometheus,component=alertmanager",
                 "app=rancher-monitoring-alertmanager",
                 "app=prometheus-operator-alertmanager",
-                "app=prometheus-alertmanager"
+                "app=prometheus-alertmanager",
             ],
             error_msg="Alert manager url could not be found. Add 'alertmanager_url' under global_config",
         )

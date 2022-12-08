@@ -1,16 +1,17 @@
 import logging
 from concurrent.futures.process import ProcessPoolExecutor
-from typing import NamedTuple, Union, Type, List, Optional, Dict
-from pydantic.main import BaseModel
-from hikaru.model.rel_1_16 import *
+from typing import Dict, List, NamedTuple, Optional, Type, Union
 
-from .models import PrometheusKubernetesAlert, PrometheusAlert
-from ..helper import exact_match, prefix_match
-from ..kubernetes.custom_models import RobustaPod, RobustaDeployment, RobustaJob
-from ...core.model.env_vars import ALERT_BUILDER_WORKERS
-from ...core.playbooks.base_trigger import BaseTrigger, TriggerEvent
-from ...core.reporting.base import Finding
-from ...core.model.events import ExecutionBaseEvent
+from hikaru.model.rel_1_16 import *
+from pydantic.main import BaseModel
+
+from robusta.core.model.env_vars import ALERT_BUILDER_WORKERS
+from robusta.core.model.events import ExecutionBaseEvent
+from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
+from robusta.core.reporting.base import Finding
+from robusta.integrations.helper import exact_match, prefix_match
+from robusta.integrations.kubernetes.custom_models import RobustaDeployment, RobustaJob, RobustaPod
+from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKubernetesAlert
 
 
 class PrometheusTriggerEvent(TriggerEvent):
@@ -26,10 +27,7 @@ class PrometheusTriggerEvent(TriggerEvent):
 
 
 class ResourceMapping(NamedTuple):
-    hikaru_class: Union[
-        Type[RobustaPod], Type[RobustaDeployment], Type[Job], Type[DaemonSet],
-        Type[StatefulSet]
-    ]
+    hikaru_class: Union[Type[RobustaPod], Type[RobustaDeployment], Type[Job], Type[DaemonSet], Type[StatefulSet]]
     attribute_name: str
     prometheus_label: str
 
@@ -121,8 +119,7 @@ class AlertEventBuilder:
 
     @staticmethod
     def _build_event_task(
-            event: PrometheusTriggerEvent,
-            sink_findings: Dict[str, List[Finding]]
+        event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
         labels = event.alert.labels
         execution_event = PrometheusKubernetesAlert(
@@ -130,7 +127,7 @@ class AlertEventBuilder:
             alert=event.alert,
             alert_name=labels["alertname"],
             alert_severity=labels.get("severity"),
-            label_namespace=labels.get("namespace", None)
+            label_namespace=labels.get("namespace", None),
         )
 
         namespace = labels.get("namespace", "default")
@@ -140,9 +137,7 @@ class AlertEventBuilder:
                 resource_name = labels.get(mapping.prometheus_label, None)
                 if not resource_name or "kube-state-metrics" in resource_name:
                     continue
-                resource = mapping.hikaru_class().read(
-                    name=resource_name, namespace=namespace
-                )
+                resource = mapping.hikaru_class().read(name=resource_name, namespace=namespace)
                 setattr(execution_event, mapping.attribute_name, resource)
                 logging.info(
                     f"Successfully loaded Kubernetes resource {resource_name} for alert {execution_event.alert_name}"
@@ -161,9 +156,7 @@ class AlertEventBuilder:
 
         # we handle nodes differently than other resources
         node_name = labels.get("instance", None)
-        job_name = labels.get(
-            "job", None
-        )  # a prometheus "job" not a kubernetes "job" resource
+        job_name = labels.get("job", None)  # a prometheus "job" not a kubernetes "job" resource
         # when the job_name is kube-state-metrics "instance" refers to the IP of kube-state-metrics not the node
         # If the alert has pod, the 'instance' attribute contains the pod ip
         if not execution_event.node and node_name and job_name != "kube-state-metrics":
@@ -173,8 +166,7 @@ class AlertEventBuilder:
 
     @staticmethod
     def build_event(
-            event: PrometheusTriggerEvent,
-            sink_findings: Dict[str, List[Finding]]
+        event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
         future = AlertEventBuilder.executor.submit(AlertEventBuilder._build_event_task, event, sink_findings)
         return future.result()

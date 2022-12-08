@@ -3,12 +3,12 @@ import shlex
 import subprocess
 import time
 from contextlib import contextmanager
-from typing import Optional, List
+from typing import List, Optional
 
 import click_spinner
+import requests
 import toml
 import typer
-import requests
 from dpath.util import get
 
 PLAYBOOKS_DIR = "playbooks/"
@@ -46,9 +46,7 @@ def exec_in_robusta_runner(
     return subprocess.check_call(cmd)
 
 
-def exec_in_robusta_runner_output(
-    command: str, namespace: Optional[str]
-) -> Optional[bytes]:
+def exec_in_robusta_runner_output(command: str, namespace: Optional[str]) -> Optional[bytes]:
     exec_cmd = _build_exec_command(command, namespace)
     result = subprocess.check_output(exec_cmd)
     return result
@@ -87,9 +85,7 @@ def replace_in_file(path, original, replacement):
     with open(path) as r:
         text = r.read()
         if original not in text:
-            raise Exception(
-                f"Cannot replace text {original} in file {path} because it was not found"
-            )
+            raise Exception(f"Cannot replace text {original} in file {path} because it was not found")
         text = text.replace(original, replacement)
     with open(path, "w") as w:
         w.write(text)

@@ -1,8 +1,10 @@
 from collections import OrderedDict
+
 from hikaru.model import Node
 from prometheus_api_client import PrometheusConnect
-from ..prometheus.utils import PrometheusDiscovery
-from ...core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+
+from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+from robusta.integrations.prometheus.utils import PrometheusDiscovery
 
 
 class NodeCpuAnalyzer:
@@ -12,11 +14,7 @@ class NodeCpuAnalyzer:
     def __init__(self, node: Node, prometheus_url: str, range_size="5m"):
         self.node = node
         self.range_size = range_size
-        self.internal_ip = next(
-            addr.address
-            for addr in self.node.status.addresses
-            if addr.type == "InternalIP"
-        )
+        self.internal_ip = next(addr.address for addr in self.node.status.addresses if addr.type == "InternalIP")
         if prometheus_url is None:
             prometheus_url = PrometheusDiscovery.find_prometheus_url()
 
@@ -57,9 +55,7 @@ class NodeCpuAnalyzer:
         :param normalize_by_cpu_count: should we divide by the number of cpus so that the result is in the range 0-1 regardless of cpu count?
         :return: a dict of {[pod_name] : [cpu_usage in the 0-1 range] }
         """
-        query = self._build_query_for_containerized_cpu_usage(
-            False, normalize_by_cpu_count
-        )
+        query = self._build_query_for_containerized_cpu_usage(False, normalize_by_cpu_count)
         result = self.prom.custom_query(query, params=self.default_prometheus_params)
         pod_value_pairs = [(r["metric"]["pod"], float(r["value"][1])) for r in result]
         pod_value_pairs = [(k, v) for (k, v) in pod_value_pairs if v >= threshold]
@@ -87,9 +83,7 @@ class NodeCpuAnalyzer:
 
         if normalized_by_cpu_count:
             # we divide by the number of machine_cpu_cores to return a result in th 0-1 range regardless of cpu count
-            normalization = (
-                f'/ scalar(sum (machine_cpu_cores{{node="{self.node.metadata.name}"}}))'
-            )
+            normalization = f'/ scalar(sum (machine_cpu_cores{{node="{self.node.metadata.name}"}}))'
         else:
             normalization = ""
 

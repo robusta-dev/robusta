@@ -1,9 +1,11 @@
 import inspect
 import json
 import logging
+
 from pydantic import BaseModel
 from pydantic.fields import ModelField
-from .docs import Docstring, DocstringField
+
+from robusta.utils.docs import Docstring, DocstringField
 
 
 class DocumentedModel(BaseModel):
@@ -42,9 +44,7 @@ class DocumentedModel(BaseModel):
 
             f: ModelField = cls.__fields__[doc_field.field_target]
             if doc_field.field_type == "example":
-                f.field_info.extra["example"] = cls.__parse_example(
-                    doc_field.field_value
-                )
+                f.field_info.extra["example"] = cls.__parse_example(doc_field.field_value)
             if doc_field.field_type == "var":
                 if f.field_info.description:
                     logging.warning(

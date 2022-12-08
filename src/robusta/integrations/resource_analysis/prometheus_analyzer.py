@@ -1,10 +1,11 @@
 import logging
 from datetime import datetime, timedelta, tzinfo
 from typing import Optional, Union
+
 from prometheus_api_client import PrometheusConnect
 
-from ..prometheus.utils import PrometheusDiscovery
-from ...core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+from robusta.integrations.prometheus.utils import PrometheusDiscovery
 
 
 class PrometheusAnalyzer:
@@ -23,10 +24,7 @@ class PrometheusAnalyzer:
         return self._non_timed_query(promql_query)
 
     def _non_timed_query(self, promql_query: str) -> list:
-        results = self.prom.custom_query(
-            promql_query,
-            self.default_prometheus_params
-        )
+        results = self.prom.custom_query(promql_query, self.default_prometheus_params)
         return results
 
     def _get_query_value(self, results: Optional[list], offset: int = 0) -> Optional[float]:
@@ -46,12 +44,6 @@ class PrometheusAnalyzer:
         start_time = end_time - duration
         step = kwargs.get("step", "1")
         results = self.prom.custom_query_range(
-            promql_query,
-            start_time,
-            end_time,
-            step,
-            {
-                "timeout": self.default_prometheus_params["timeout"]
-            }
+            promql_query, start_time, end_time, step, {"timeout": self.default_prometheus_params["timeout"]}
         )
         return results

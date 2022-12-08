@@ -24,11 +24,13 @@ def cpu_overcommited_enricher(alert: PrometheusKubernetesAlert, params: TimedPro
                 f"{round(cpu_total, 2)}."
             ),
         ],
-        annotations={SlackAnnotations.UNFURL: False}
+        annotations={SlackAnnotations.UNFURL: False},
     )
-    alert.override_finding_attributes(description="Your cluster is currently OK, but if a single node "
-                                                  "fails then some pods might not be scheduled."
-                                                  " Add more CPU to your cluster to increase resilience.")
+    alert.override_finding_attributes(
+        description="Your cluster is currently OK, but if a single node "
+        "fails then some pods might not be scheduled."
+        " Add more CPU to your cluster to increase resilience."
+    )
 
 
 @action
@@ -52,8 +54,10 @@ def memory_overcommited_enricher(alert: PrometheusKubernetesAlert, params: Timed
                 f"{pretty_size(mem_total)}."
             ),
         ],
-        annotations={SlackAnnotations.UNFURL: False}
+        annotations={SlackAnnotations.UNFURL: False},
     )
-    alert.override_finding_attributes(description="Your cluster is currently OK, but if a single node "
-                                                  "fails then some pods might not be scheduled. Add more Memory"
-                                                  " to your cluster to increase resilience.")
+    alert.override_finding_attributes(
+        description="Your cluster is currently OK, but if a single node "
+        "fails then some pods might not be scheduled. Add more Memory"
+        " to your cluster to increase resilience."
+    )

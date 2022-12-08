@@ -1,7 +1,7 @@
 from typing import List
 
-from .msteams_base import MsTeamsBase
-from .msteams_action import MsTeamsAction
+from robusta.integrations.msteams.msteams_elements.msteams_action import MsTeamsAction
+from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
 
 
 class MsTeamsColumn(MsTeamsBase):
@@ -10,10 +10,7 @@ class MsTeamsColumn(MsTeamsBase):
         super().__init__(self.__column_set())
 
     def __column_set(self) -> map:
-        return {
-            "type": "ColumnSet",
-            "columns": self.column_list
-        }
+        return {"type": "ColumnSet", "columns": self.column_list}
 
     def add_column(
         self,

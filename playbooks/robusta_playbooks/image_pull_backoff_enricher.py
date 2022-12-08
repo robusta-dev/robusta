@@ -1,6 +1,7 @@
 import enum
 import json
 from enum import Flag
+
 from robusta.api import *
 
 
@@ -8,8 +9,7 @@ def get_image_pull_backoff_container_statuses(status: PodStatus) -> [ContainerSt
     return [
         container_status
         for container_status in status.containerStatuses
-        if container_status.state.waiting is not None
-        and container_status.state.waiting.reason == "ImagePullBackOff"
+        if container_status.state.waiting is not None and container_status.state.waiting.reason == "ImagePullBackOff"
     ]
 
 
@@ -29,19 +29,13 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
         return
 
     # Check if image pull backoffs occurred. Terminate if not
-    image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(
-        pod.status
-    )
+    image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(pod.status)
     if len(image_pull_backoff_container_statuses) == 0:
         return
 
     # Extract pod name and namespace
     pod_name = pod.metadata.name
-    replicaset_name = (
-        pod.metadata.ownerReferences[0].name
-        if pod.metadata.ownerReferences
-        else pod.metadata.name
-    )
+    replicaset_name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name
     namespace = pod.metadata.namespace
 
     # Perform a rate limit for this pod according to the rate_limit parameter
@@ -105,11 +99,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
                     ]
                 )
         else:
-            blocks.append(
-                MarkdownBlock(
-                    f"*Error message:* {container_status.name}:\n{error_message}"
-                )
-            )
+            blocks.append(MarkdownBlock(f"*Error message:* {container_status.name}:\n{error_message}"))
 
     # Create and return a finding with the calculated blocks
     finding = Finding(
@@ -155,8 +145,7 @@ class ImagePullBackoffInvestigator:
                 "pull access denied, repository does not exist or may require authorization: server message: "
                 "insufficient_scope: authorization failed"
             ),
-            "reason": ImagePullBackoffReason.NotAuthorized
-            | ImagePullBackoffReason.ImageDoesntExist,
+            "reason": ImagePullBackoffReason.NotAuthorized | ImagePullBackoffReason.ImageDoesntExist,
         },
         {
             "err_template": (
@@ -171,8 +160,7 @@ class ImagePullBackoffInvestigator:
                 "Error response from daemon: pull access denied for .*?, "
                 "repository does not exist or may require 'docker login': denied: requested access to the resource is denied"
             ),
-            "reason": ImagePullBackoffReason.NotAuthorized
-            | ImagePullBackoffReason.ImageDoesntExist,
+            "reason": ImagePullBackoffReason.NotAuthorized | ImagePullBackoffReason.ImageDoesntExist,
         },
         {
             "err_template": "Error response from daemon: manifest for .*? not found: manifest unknown: manifest unknown",
@@ -187,8 +175,7 @@ class ImagePullBackoffInvestigator:
         },
         {
             "err_template": 'Error response from daemon: manifest for .*? not found: manifest unknown: Failed to fetch ".*?"',
-            "reason": ImagePullBackoffReason.ImageDoesntExist
-            | ImagePullBackoffReason.TagNotFound,
+            "reason": ImagePullBackoffReason.ImageDoesntExist | ImagePullBackoffReason.TagNotFound,
         },
     ]
 
@@ -200,13 +187,9 @@ class ImagePullBackoffInvestigator:
             self.namespace, field_selector=f"involvedObject.name={self.pod_name}"
         ).obj
 
-    def investigate(
-        self, container_status: ContainerStatus
-    ) -> Optional[ImagePullOffInvestigation]:
+    def investigate(self, container_status: ContainerStatus) -> Optional[ImagePullOffInvestigation]:
         for pod_event in self.pod_events.items:
-            error_message = self.get_kubelet_image_pull_error_from_event(
-                pod_event, container_status.image
-            )
+            error_message = self.get_kubelet_image_pull_error_from_event(pod_event, container_status.image)
             logging.info(f"for {pod_event} got message: {error_message}")
             if error_message is None:
                 continue
@@ -219,9 +202,7 @@ class ImagePullBackoffInvestigator:
         return None
 
     @staticmethod
-    def get_kubelet_image_pull_error_from_event(
-        pod_event: Event, image_name: str
-    ) -> Optional[str]:
+    def get_kubelet_image_pull_error_from_event(pod_event: Event, image_name: str) -> Optional[str]:
         if pod_event.type != "Warning":
             return None
 
@@ -242,9 +223,7 @@ class ImagePullBackoffInvestigator:
 
         return None
 
-    def get_reason_from_kubelet_image_pull_error(
-        self, kubelet_image_pull_error: str
-    ) -> ImagePullBackoffReason:
+    def get_reason_from_kubelet_image_pull_error(self, kubelet_image_pull_error: str) -> ImagePullBackoffReason:
         for config in self.configs:
             err_template = config["err_template"]
             reason = config["reason"]

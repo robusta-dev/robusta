@@ -2,19 +2,20 @@ import json
 import logging
 import threading
 import time
-from typing import List, Dict, Any
-from supabase_py.lib.auth_client import SupabaseAuthClient
-from postgrest_py.request_builder import QueryRequestBuilder
-import requests
+from typing import Any, Dict, List
 
-from .model_conversion import ModelConversion
-from ....model.cluster_status import ClusterStatus
-from ....model.jobs import JobInfo
-from ....model.nodes import NodeInfo
-from ....model.services import ServiceInfo
-from ....reporting.base import Finding
-from ....model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
+import requests
+from postgrest_py.request_builder import QueryRequestBuilder
 from supabase_py import Client
+from supabase_py.lib.auth_client import SupabaseAuthClient
+
+from robusta.core.model.cluster_status import ClusterStatus
+from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
+from robusta.core.model.jobs import JobInfo
+from robusta.core.model.nodes import NodeInfo
+from robusta.core.model.services import ServiceInfo
+from robusta.core.reporting.base import Finding
+from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -97,14 +98,16 @@ class SupabaseDal:
         for enrichment in finding.enrichments:
             res = (
                 self.client.table(EVIDENCE_TABLE)
-                .insert(ModelConversion.to_evidence_json(
-                    account_id=self.account_id,
-                    cluster_id=self.cluster,
-                    sink_name=self.sink_name,
-                    signing_key=self.signing_key,
-                    finding_id=finding.id,
-                    enrichment=enrichment
-                ))
+                .insert(
+                    ModelConversion.to_evidence_json(
+                        account_id=self.account_id,
+                        cluster_id=self.cluster,
+                        sink_name=self.sink_name,
+                        signing_key=self.signing_key,
+                        finding_id=finding.id,
+                        enrichment=enrichment,
+                    )
+                )
                 .execute()
             )
             if res.get("status_code") != 201:
@@ -112,13 +115,13 @@ class SupabaseDal:
                     f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"
                 )
 
-        res = self.client.table(ISSUES_TABLE).insert(
-            ModelConversion.to_finding_json(self.account_id, self.cluster, finding)
-        ).execute()
+        res = (
+            self.client.table(ISSUES_TABLE)
+            .insert(ModelConversion.to_finding_json(self.account_id, self.cluster, finding))
+            .execute()
+        )
         if res.get("status_code") != 201:
-            logging.error(
-                f"Failed to persist finding {finding.id} error: {res.get('data')}"
-            )
+            logging.error(f"Failed to persist finding {finding.id} error: {res.get('data')}")
             self.handle_supabase_error()
 
     def to_service(self, service: ServiceInfo) -> Dict[Any, Any]:
@@ -141,13 +144,9 @@ class SupabaseDal:
         if not services:
             return
         db_services = [self.to_service(service) for service in services]
-        res = (
-            self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()
-        )
+        res = self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()
         if res.get("status_code") not in [200, 201]:
-            logging.error(
-                f"Failed to persist services {services} error: {res.get('data')}"
-            )
+            logging.error(f"Failed to persist services {services} error: {res.get('data')}")
             self.handle_supabase_error()
             status_code = res.get("status_code")
             raise Exception(f"publish service failed. status: {status_code}")
@@ -175,7 +174,7 @@ class SupabaseDal:
                 classification=service["classification"],
                 service_config=service.get("config"),
                 ready_pods=service["ready_pods"],
-                total_pods=service["total_pods"]
+                total_pods=service["total_pods"],
             )
             for service in res.get("data")
         ]
@@ -183,7 +182,7 @@ class SupabaseDal:
     def has_cluster_findings(self) -> bool:
         res = (
             self.client.table(ISSUES_TABLE)
-            .select('*')
+            .select("*")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .limit(1)
@@ -245,13 +244,9 @@ class SupabaseDal:
             return
 
         db_nodes = [self.__to_db_node(node) for node in nodes]
-        res = (
-            self.client.table(NODES_TABLE).insert(db_nodes, upsert=True).execute()
-        )
+        res = self.client.table(NODES_TABLE).insert(db_nodes, upsert=True).execute()
         if res.get("status_code") not in [200, 201]:
-            logging.error(
-                f"Failed to persist node {nodes} error: {res.get('data')}"
-            )
+            logging.error(f"Failed to persist node {nodes} error: {res.get('data')}")
             self.handle_supabase_error()
             status_code = res.get("status_code")
             raise Exception(f"publish nodes failed. status: {status_code}")
@@ -286,56 +281,50 @@ class SupabaseDal:
             return
 
         db_jobs = [self.__to_db_job(job) for job in jobs]
-        res = (
-            self.client.table(JOBS_TABLE).insert(db_jobs, upsert=True).execute()
-        )
+        res = self.client.table(JOBS_TABLE).insert(db_jobs, upsert=True).execute()
         if res.get("status_code") not in [200, 201]:
-            logging.error(
-                f"Failed to persist jobs {jobs} error: {res.get('data')}"
-            )
+            logging.error(f"Failed to persist jobs {jobs} error: {res.get('data')}")
             self.handle_supabase_error()
             status_code = res.get("status_code")
             raise Exception(f"publish jobs failed. status: {status_code}")
 
-    def remove_deleted_job(self, job : JobInfo):
+    def remove_deleted_job(self, job: JobInfo):
         if not job:
             return
 
-        res = (
-            self.__delete_patch(self.client.table(JOBS_TABLE).delete()
-                .eq("account_id", self.account_id)
-                .eq("cluster_id", self.cluster)
-                .eq("service_key", job.get_service_key())))
+        res = self.__delete_patch(
+            self.client.table(JOBS_TABLE)
+            .delete()
+            .eq("account_id", self.account_id)
+            .eq("cluster_id", self.cluster)
+            .eq("service_key", job.get_service_key())
+        )
         status_code = res.get("status_code")
         valid_deleted_statuses = [204, 200, 202]
         if status_code not in valid_deleted_statuses:
-            logging.error(
-                f"Failed to delete job {job} error: {res.get('data')}"
-            )
+            logging.error(f"Failed to delete job {job} error: {res.get('data')}")
             self.handle_supabase_error()
             raise Exception(f"remove deleted job failed. status: {status_code}")
-
 
     @staticmethod
     def __delete_patch(supabase_request_obj: QueryRequestBuilder) -> Dict[str, Any]:
         """
-            supabase_py's QueryBuilder has a bug for delete where the response 204 (no content)
-            is attempted to be converted to a json, which throws an error every time
+        supabase_py's QueryBuilder has a bug for delete where the response 204 (no content)
+        is attempted to be converted to a json, which throws an error every time
         """
         url: str = str(supabase_request_obj.session.base_url).rstrip("/")
         query: str = str(supabase_request_obj.session.params)
         response = requests.delete(f"{url}?{query}", headers=supabase_request_obj.session.headers)
-        response_data = ''
+        response_data = ""
         try:
             response_data = response.json()
-        except Exception: # this can be okay if no data is expected
+        except Exception:  # this can be okay if no data is expected
             logging.warning(f"Failed to parse delete response data")
 
         return {
             "data": response_data,
             "status_code": response.status_code,
         }
-
 
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
@@ -358,17 +347,17 @@ class SupabaseDal:
         db_cluster_status = data.dict()
         if data.last_alert_at is None:
             del db_cluster_status["last_alert_at"]
-            
-        db_cluster_status["updated_at"] = "now()"    
-        logging.info(f"cluster status {db_cluster_status}")        
+
+        db_cluster_status["updated_at"] = "now()"
+        logging.info(f"cluster status {db_cluster_status}")
         return db_cluster_status
 
     def publish_cluster_status(self, cluster_status: ClusterStatus):
         res = (
-            self.client.table(CLUSTERS_STATUS_TABLE).insert(self.to_db_cluster_status(cluster_status), upsert=True).execute()
+            self.client.table(CLUSTERS_STATUS_TABLE)
+            .insert(self.to_db_cluster_status(cluster_status), upsert=True)
+            .execute()
         )
         if res.get("status_code") not in [200, 201]:
-            logging.error(
-                f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {res.get('data')}"
-            )
+            logging.error(f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {res.get('data')}")
             self.handle_supabase_error()

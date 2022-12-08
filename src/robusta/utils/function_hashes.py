@@ -1,5 +1,5 @@
-import inspect
 import hashlib
+import inspect
 
 # this returns a hash that will change if the function's definition changes
 # this is desirable because it lets you warn users if a playbook is called with parameters that

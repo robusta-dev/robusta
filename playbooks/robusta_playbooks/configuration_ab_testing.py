@@ -12,6 +12,7 @@ class ConfigurationSet(ActionParams):
         "spec.template.spec.containers[0].resources.requests.cpu": 250m,
         "spec.template.spec.containers[0].resources.requests.memory": 128Mi
     """
+
     config_set_name: str
     config_items: Dict[str, str] = {}
 
@@ -24,6 +25,7 @@ class ABTestingParams(GrafanaParams):
     :var namespace: The namespace of the tested resource.
     :var configuration_sets: List of test configurations.
     """
+
     api_version: str = "v1"
     kind: str
     name: str
@@ -55,9 +57,7 @@ def config_ab_testing(event: ScheduledExecutionEvent, action_params: ABTestingPa
          For example, you can change resources.requests.cpu, if that attribute already exists in the deployment.
     """
     if len(action_params.configuration_sets) < event.recurrence:
-        logging.error(
-            f"No matching configuration set for recurrence {event.recurrence}"
-        )
+        logging.error(f"No matching configuration set for recurrence {event.recurrence}")
         return
 
     next_config_set = action_params.configuration_sets[event.recurrence]
@@ -79,9 +79,5 @@ def config_ab_testing(event: ScheduledExecutionEvent, action_params: ABTestingPa
     for attribute_name, attribute_value in next_config_set.config_items.items():
         grafana_message += f"{attribute_name} : {attribute_value}<br>"
     grafana_message += "</pre>"
-    grafana = Grafana(
-        action_params.grafana_api_key.get_secret_value(), action_params.grafana_url
-    )
-    grafana.add_line_to_dashboard(
-        action_params.grafana_dashboard_uid, grafana_message, tags=["AB Testing"]
-    )
+    grafana = Grafana(action_params.grafana_api_key.get_secret_value(), action_params.grafana_url)
+    grafana.add_line_to_dashboard(action_params.grafana_dashboard_uid, grafana_message, tags=["AB Testing"])

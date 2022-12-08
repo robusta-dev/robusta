@@ -1,7 +1,7 @@
 from typing import List
 
-from ..sink_config import SinkConfigBase
-from ..sink_base_params import SinkBaseParams
+from robusta.core.sinks.sink_base_params import SinkBaseParams
+from robusta.core.sinks.sink_config import SinkConfigBase
 
 
 class OpsGenieSinkParams(SinkBaseParams):
@@ -15,4 +15,3 @@ class OpsGenieSinkConfigWrapper(SinkConfigBase):
 
     def get_params(self) -> SinkBaseParams:
         return self.opsgenie_sink
-

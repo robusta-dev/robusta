@@ -2,6 +2,7 @@ import asyncio
 import logging
 import threading
 import time
+
 from watchgod import watch
 
 WAIT_SEC = 2

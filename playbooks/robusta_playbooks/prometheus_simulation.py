@@ -24,9 +24,7 @@ class PrometheusAlertParams(ActionParams):
 
 
 @action
-def prometheus_alert(
-    event: ExecutionBaseEvent, prometheus_event_data: PrometheusAlertParams
-):
+def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: PrometheusAlertParams):
     """
     Simulate Prometheus alert sent to the Robusta runner.
     Can be used for testing, when implementing actions triggered by Prometheus alerts.
@@ -78,9 +76,7 @@ class AlertManagerEventParams(ActionParams):
 
 
 @action
-def handle_alertmanager_event(
-    event: ExecutionBaseEvent, alert_manager_event: AlertManagerEventParams
-):
+def handle_alertmanager_event(event: ExecutionBaseEvent, alert_manager_event: AlertManagerEventParams):
     """
     Handle alert manager event, as a Robusta action.
     """

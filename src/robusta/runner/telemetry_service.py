@@ -1,29 +1,26 @@
 import logging
 import os
+import threading
 from collections import defaultdict
 from enum import Enum
 from time import sleep
-import sentry_sdk
-import requests
-import threading
-from ..model.config import Registry, Telemetry
-from .telemetry import SinkInfo
 
+import requests
+import sentry_sdk
 from hikaru.model import NodeList
 
-class TelemetryLevel(Enum):
-    NONE = 0,
-    USAGE = 1,
-    ERROR = 2 
+from robusta.model.config import Registry, Telemetry
+from robusta.runner.telemetry import SinkInfo
 
-class TelemetryService: 
-    def __init__(
-        self,
-        telemetry_level: TelemetryLevel,
-        endpoint: str,
-        periodic_time_sec: float,
-        registry : Registry
-    ):
+
+class TelemetryLevel(Enum):
+    NONE = (0,)
+    USAGE = (1,)
+    ERROR = 2
+
+
+class TelemetryService:
+    def __init__(self, telemetry_level: TelemetryLevel, endpoint: str, periodic_time_sec: float, registry: Registry):
         self.telemetry_level = telemetry_level
         self.endpoint = endpoint
         self.registry = registry
@@ -44,10 +41,10 @@ class TelemetryService:
         self.__thread.start()
 
     def __log_periodic(self):
-        while(True):
+        while True:
             try:
                 tele = self.registry.get_telemetry()
-            
+
                 current_nodes: NodeList = NodeList.listNode().obj
                 tele.nodes_count = len(current_nodes.items)
 
@@ -59,11 +56,9 @@ class TelemetryService:
 
             sleep(self.periodic_time_sec)
 
-
-
     def __log(self, data: Telemetry):
-        r = requests.post(self.endpoint, data=data.json(), headers={'Content-Type': 'application/json'})
-        if(r.status_code != 201):
+        r = requests.post(self.endpoint, data=data.json(), headers={"Content-Type": "application/json"})
+        if r.status_code != 201:
             logging.error(f"Failed to log telemetry data")
 
         return r

@@ -16,9 +16,7 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
     if pod.metadata.name.startswith("metrics-server-") and pod.has_toleration(
         "components.gke.io/gke-managed-components"
     ):
-        logging.info(
-            "ignoring cpu throttling for GKE because there is nothing you can do about it"
-        )
+        logging.info("ignoring cpu throttling for GKE because there is nothing you can do about it")
         event.stop_processing = True
 
     elif pod.metadata.name.startswith("metrics-server-") and pod.has_cpu_limit():

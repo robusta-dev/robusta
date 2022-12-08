@@ -24,9 +24,7 @@ def scale_hpa_callback(event: HorizontalPodAutoscalerEvent, params: ScaleHPAPara
         return
 
     hpa.spec.maxReplicas = params.max_replicas
-    hpa.replaceNamespacedHorizontalPodAutoscaler(
-        hpa.metadata.name, hpa.metadata.namespace
-    )
+    hpa.replaceNamespacedHorizontalPodAutoscaler(hpa.metadata.name, hpa.metadata.namespace)
     finding = Finding(
         title=f"Max replicas for HPA *{hpa.metadata.name}* "
         f"in namespace *{hpa.metadata.namespace}* updated to: *{params.max_replicas}*",
@@ -46,15 +44,11 @@ class HPALimitParams(ActionParams):
 
 
 @action
-def alert_on_hpa_reached_limit(
-    event: HorizontalPodAutoscalerChangeEvent, action_params: HPALimitParams
-):
+def alert_on_hpa_reached_limit(event: HorizontalPodAutoscalerChangeEvent, action_params: HPALimitParams):
     """
     Notify when the HPA reaches its maximum replicas and allow fixing it.
     """
-    logging.info(
-        f"running alert_on_hpa_reached_limit: {event.obj.metadata.name} ns: {event.obj.metadata.namespace}"
-    )
+    logging.info(f"running alert_on_hpa_reached_limit: {event.obj.metadata.name} ns: {event.obj.metadata.namespace}")
 
     hpa = event.obj
     if hpa.status.currentReplicas == event.old_obj.status.currentReplicas:
@@ -67,9 +61,7 @@ def alert_on_hpa_reached_limit(
         hpa.status.currentCPUUtilizationPercentage
         / (hpa.status.currentReplicas if hpa.status.currentReplicas > 0 else 1)
     )
-    new_max_replicas_suggestion = ceil(
-        (action_params.increase_pct + 100) * hpa.spec.maxReplicas / 100
-    )
+    new_max_replicas_suggestion = ceil((action_params.increase_pct + 100) * hpa.spec.maxReplicas / 100)
     choices = {
         f"Update HPA max replicas to: {new_max_replicas_suggestion}": CallbackChoice(
             action=scale_hpa_callback,
@@ -88,9 +80,7 @@ def alert_on_hpa_reached_limit(
 
     finding.add_enrichment(
         [
-            MarkdownBlock(
-                f"Current avg cpu utilization: *{avg_cpu} %*        -- (usage vs requested)"
-            ),
+            MarkdownBlock(f"Current avg cpu utilization: *{avg_cpu} %*        -- (usage vs requested)"),
             CallbackBlock(choices),
         ]
     )

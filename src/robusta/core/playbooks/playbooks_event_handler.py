@@ -1,9 +1,9 @@
 from abc import abstractmethod
-from typing import Optional, Dict, Any, List, Protocol
+from typing import Any, Dict, List, Optional, Protocol
 
-from robusta.model.playbook_action import PlaybookAction
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.base_trigger import TriggerEvent
+from robusta.model.playbook_action import PlaybookAction
 from robusta.runner.telemetry import Telemetry
 
 

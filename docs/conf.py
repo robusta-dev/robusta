@@ -102,7 +102,7 @@ todo_include_todos = False
 # html_theme_path = [furo.get_pygments_stylesheet()]
 html_theme = "furo"
 html_theme_options = {
-    "announcement": "Want to work at an Open Source Company? We're hiring in Israel and remote! Explore <a href=\"https://home.robusta.dev/jobs/\">open roles</a>.",
+    "announcement": 'Want to work at an Open Source Company? We\'re hiring in Israel and remote! Explore <a href="https://home.robusta.dev/jobs/">open roles</a>.',
     "sidebar_hide_name": True,
     "light_logo": "logo.png",
     "dark_logo": "logo-dark.png",
@@ -133,9 +133,7 @@ html_css_files = [
     "custom.css",
 ]
 
-html_js_files = [
-    'analytics.js'
-]
+html_js_files = ["analytics.js"]
 
 html_favicon = "_static/favicon.png"
 

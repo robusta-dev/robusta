@@ -1,6 +1,7 @@
 import requests
 import typer
-from .backend_profile import backend_profile
+
+from robusta.cli.backend_profile import backend_profile
 
 
 def handle_eula(account_id, robusta_api_key, cloud_routing_enabled):
@@ -10,9 +11,7 @@ def handle_eula(account_id, robusta_api_key, cloud_routing_enabled):
 
     while True:
         eula_url = f"{backend_profile.robusta_cloud_api_host}/eula.html"
-        typer.echo(
-            f"Please read and approve our End User License Agreement: {eula_url}"
-        )
+        typer.echo(f"Please read and approve our End User License Agreement: {eula_url}")
         eula_approved = typer.confirm("Do you accept our End User License Agreement?")
 
         if eula_approved:

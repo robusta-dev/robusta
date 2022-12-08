@@ -1,7 +1,9 @@
 import os
-import pytest
 from pathlib import Path
-from .config import CONFIG
+
+import pytest
+
+from tests.config import CONFIG
 from tests.utils.robusta_utils import RobustaController
 from tests.utils.slack_utils import SlackChannel
 

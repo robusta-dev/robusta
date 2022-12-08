@@ -1,12 +1,12 @@
+import logging
 import os
 import re
 import subprocess
 import time
-import logging
+from pathlib import Path
 from typing import Optional
 
 import kubernetes
-from pathlib import Path
 from hikaru.model import Namespace
 
 
@@ -101,13 +101,9 @@ class RobustaController:
         if os.name == "nt":
             shell = True
 
-        result = subprocess.run(
-            cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell
-        )
+        result = subprocess.run(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell)
         if result.returncode:
-            logging.error(
-                f"running command {cmd} failed with returncode={result.returncode}"
-            )
+            logging.error(f"running command {cmd} failed with returncode={result.returncode}")
             logging.error(f"stdout={result.stdout.decode()}")
             logging.error(f"stderr={result.stderr.decode()}")
             raise Exception(f"Error running robusta cli command: {cmd}")

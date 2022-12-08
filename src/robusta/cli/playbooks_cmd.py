@@ -5,29 +5,26 @@ import subprocess
 import tempfile
 import time
 import traceback
-import click_spinner
-import click
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
+import click
+import click_spinner
+import typer
 import yaml
 
-import typer
-
-from ..cli.utils import (
-    log_title,
-    fetch_runner_logs,
-    exec_in_robusta_runner,
-    namespace_to_kubectl,
+from robusta.cli.utils import (
     PLAYBOOKS_DIR,
+    exec_in_robusta_runner,
+    fetch_runner_logs,
     get_package_name,
-	get_runner_pod
+    get_runner_pod,
+    log_title,
+    namespace_to_kubectl,
 )
 
 PLAYBOOKS_MOUNT_LOCATION = "/etc/robusta/playbooks/storage"
 
-NAMESPACE_EXPLANATION = (
-    "Installation namespace. If none use the namespace currently active with kubectl."
-)
+NAMESPACE_EXPLANATION = "Installation namespace. If none use the namespace currently active with kubectl."
 CONFIG_SECRET_NAME = "robusta-playbooks-config-secret"
 
 app = typer.Typer()
@@ -94,9 +91,7 @@ def push(
             f"{runner_pod}:{PLAYBOOKS_MOUNT_LOCATION}/{dir_name} -c runner",
             shell=True,
         )
-        time.sleep(
-            5
-        )  # wait five seconds for the runner to actually reload the playbooks
+        time.sleep(5)  # wait five seconds for the runner to actually reload the playbooks
     log_title("Loaded custom playbooks code!")
 
 
@@ -124,9 +119,7 @@ def configure(
             f'--overwrite "playbooks-last-modified={time.time()}"',
             shell=True,
         )
-        time.sleep(
-            5
-        )  # wait five seconds for the runner to actually reload the playbooks
+        time.sleep(5)  # wait five seconds for the runner to actually reload the playbooks
     log_title("Deployed playbooks!")
 
 
@@ -291,9 +284,7 @@ def edit_config(
         configure(config_file=fname, namespace=namespace)
 
 
-def _post_in_runner_pod(
-    namespace: str, api_path: str, req_body: Dict, req_name: str, dry_run: bool = False
-):
+def _post_in_runner_pod(namespace: str, api_path: str, req_body: Dict, req_name: str, dry_run: bool = False):
     with fetch_runner_logs(namespace=namespace):
         cmd = (
             f"curl -X POST http://localhost:5000/api/{api_path} "

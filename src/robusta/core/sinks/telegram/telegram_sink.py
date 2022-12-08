@@ -1,28 +1,21 @@
 from tabulate import tabulate
 
-from .telegram_client import TelegramClient
-from .telegram_sink_params import TelegramSinkConfigWrapper
-from ..transformer import Transformer
-from ...reporting.blocks import (
-    MarkdownBlock,
-    TableBlock,
-    FileBlock,
-)
-from ...reporting.base import (
-    Finding,
-    FindingSeverity, BaseBlock,
-)
-from ..sink_base import SinkBase
+from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity
+from robusta.core.reporting.blocks import FileBlock, MarkdownBlock, TableBlock
+from robusta.core.sinks.sink_base import SinkBase
+from robusta.core.sinks.telegram.telegram_client import TelegramClient
+from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkConfigWrapper
+from robusta.core.sinks.transformer import Transformer
 
 SEVERITY_EMOJI_MAP = {
-    FindingSeverity.INFO: u"\U0001F7E2",
-    FindingSeverity.LOW: u"\U0001F7E1",
-    FindingSeverity.MEDIUM: u"\U0001F7E0",
-    FindingSeverity.HIGH: u"\U0001F534",
+    FindingSeverity.INFO: "\U0001F7E2",
+    FindingSeverity.LOW: "\U0001F7E1",
+    FindingSeverity.MEDIUM: "\U0001F7E0",
+    FindingSeverity.HIGH: "\U0001F534",
 }
-INVESTIGATE_ICON = u"\U0001F50E"
-SILENCE_ICON = u"\U0001F515"
-VIDEO_ICON = u"\U0001F3AC"
+INVESTIGATE_ICON = "\U0001F50E"
+SILENCE_ICON = "\U0001F515"
+VIDEO_ICON = "\U0001F3AC"
 
 
 class TelegramSink(SinkBase):
@@ -46,16 +39,15 @@ class TelegramSink(SinkBase):
                 for block in table_blocks:
                     table_text = tabulate(block.render_rows(), headers=block.headers, tablefmt="presto")
                     table_name = block.table_name if block.table_name else "table"
-                    self.client.send_file(
-                        file_name=f"{table_name}.txt",
-                        contents=table_text.encode("utf-8")
-                    )
+                    self.client.send_file(file_name=f"{table_name}.txt", contents=table_text.encode("utf-8"))
 
     def __get_message_text(self, finding: Finding, platform_enabled: bool):
         message_content = self.__build_telegram_title(finding.title, finding.severity)
 
         if platform_enabled:
-            message_content += f"[{INVESTIGATE_ICON} Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)}) "
+            message_content += (
+                f"[{INVESTIGATE_ICON} Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)}) "
+            )
             if finding.add_silence_url:
                 message_content += f"[{SILENCE_ICON} Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
 

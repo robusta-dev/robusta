@@ -1,1 +1,1 @@
-from .sender import *
+from robusta.integrations.slack.sender import *

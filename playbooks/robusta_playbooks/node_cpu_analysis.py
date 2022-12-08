@@ -2,6 +2,7 @@ import textwrap
 
 import pygal
 from pygal.style import DarkStyle as ChosenStyle
+
 from robusta.api import *
 
 
@@ -24,13 +25,9 @@ def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
     total_container_cpu_usage = analyzer.get_total_containerized_cpu_usage()
     non_container_cpu_usage = total_cpu_usage - total_container_cpu_usage
     per_pod_usage_normalized = analyzer.get_per_pod_cpu_usage()
-    per_pod_usage_unbounded = analyzer.get_per_pod_cpu_usage(
-        threshold=threshold, normalize_by_cpu_count=False
-    )
+    per_pod_usage_unbounded = analyzer.get_per_pod_cpu_usage(threshold=threshold, normalize_by_cpu_count=False)
     per_pod_request = analyzer.get_per_pod_cpu_request()
-    all_pod_names = list(
-        set(per_pod_usage_unbounded.keys()).union(per_pod_request.keys())
-    )
+    all_pod_names = list(set(per_pod_usage_unbounded.keys()).union(per_pod_request.keys()))
 
     treemap = pygal.Treemap(style=ChosenStyle)
     treemap.title = f"CPU Usage on Node {node.metadata.name}"
@@ -44,9 +41,7 @@ def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
     bar_chart = pygal.Bar(x_label_rotation=-40, style=ChosenStyle)
     bar_chart.title = f"Actual Vs Requested vCPUs on Node {node.metadata.name}"
     bar_chart.x_labels = all_pod_names
-    bar_chart.value_formatter = (
-        lambda x: f"{x:.2f} vCPU" if x != MISSING_VALUE else "no data"
-    )
+    bar_chart.value_formatter = lambda x: f"{x:.2f} vCPU" if x != MISSING_VALUE else "no data"
     bar_chart.add(
         "Actual CPU Usage",
         [
@@ -59,10 +54,7 @@ def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
     )
     bar_chart.add(
         "CPU Request",
-        [
-            round(per_pod_request.get(pod_name, MISSING_VALUE), FLOAT_PRECISION_LIMIT)
-            for pod_name in all_pod_names
-        ],
+        [round(per_pod_request.get(pod_name, MISSING_VALUE), FLOAT_PRECISION_LIMIT) for pod_name in all_pod_names],
     )
 
     event.add_enrichment(
@@ -88,13 +80,7 @@ def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
             MarkdownBlock(
                 f"*Pods with CPU > {threshold * 100:0.1f}* (all numbers between 0-100% regardless of CPU count)"
             ),
-            ListBlock(
-                [
-                    f"{k}: *{v * 100:0.1f}%*"
-                    for (k, v) in per_pod_usage_normalized.items()
-                    if v >= threshold
-                ]
-            ),
+            ListBlock([f"{k}: *{v * 100:0.1f}%*" for (k, v) in per_pod_usage_normalized.items() if v >= threshold]),
             FileBlock("treemap.svg", treemap.render()),
             FileBlock("usage_vs_requested.svg", bar_chart.render()),
         ]

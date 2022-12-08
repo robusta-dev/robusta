@@ -1,6 +1,7 @@
-from robusta.api import *
 import hikaru.model
 import kubernetes.client.exceptions
+
+from robusta.api import *
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet"]
 
@@ -43,9 +44,7 @@ def related_pods(event: KubernetesResourceEvent):
         pods = [resource]
     else:
         selector = build_selector_query(resource.spec.selector)
-        pods = PodList.listNamespacedPod(
-            namespace=resource.metadata.namespace, label_selector=selector
-        ).obj.items
+        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
 
     rows = [to_pod_row(pod, event.get_context().cluster_name) for pod in pods]
 
