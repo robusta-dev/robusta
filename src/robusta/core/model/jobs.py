@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 
-from kubernetes.client import V1Container, V1Job, V1JobSpec, V1JobStatus, V1PodSpec, V1Toleration
+from kubernetes.client import V1Container, V1Job, V1JobSpec, V1JobStatus, V1PodSpec
 from pydantic import BaseModel
 
 from robusta.core.discovery import utils

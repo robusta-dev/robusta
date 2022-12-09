@@ -32,14 +32,14 @@ def main():
     loader = ConfigLoader(registry, event_handler)
 
     if ENABLE_TELEMETRY:
-        telemetry_service = TelemetryService(
+        TelemetryService(
             telemetry_level=TelemetryLevel.ERROR if SEND_ADDITIONAL_TELEMETRY else TelemetryLevel.USAGE,
             endpoint=ROBUSTA_TELEMETRY_ENDPOINT,
             periodic_time_sec=TELEMETRY_PERIODIC_SEC,
             registry=registry,
         )
     else:
-        logging.info(f"Telemetry is disabled.")
+        logging.info("Telemetry is disabled.")
 
     if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
         manhole.install(locals=dict(getmembers(robusta_api)))

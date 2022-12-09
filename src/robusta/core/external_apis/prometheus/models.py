@@ -5,7 +5,7 @@ from pydantic import BaseModel
 """
     The Metric object is defined in prometheus as a dictionary so no specific labels are guaranteed
     Known commonly returned labels in dictionary 'metric':
-    __name__: the name of the outer function in prometheus 
+    __name__: the name of the outer function in prometheus
     Other labels 'metric' sometimes contains:
     [container, created_by_kind, created_by_name, endpoint, host_ip, host_network, instance, job, namespace, node, pod,
     pod_ip, service, uid, ...]

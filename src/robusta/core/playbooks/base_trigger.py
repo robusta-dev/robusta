@@ -4,7 +4,6 @@ from typing import Dict, List, Optional, Type
 from pydantic import BaseModel
 
 from robusta.core.model.events import ExecutionBaseEvent
-from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding
 from robusta.utils.documented_pydantic import DocumentedModel
 

@@ -38,7 +38,7 @@ class OpsGenieSink(SinkBase):
             source="Robusta Opsgenie Sink",
         )
         try:
-            close_response = self.alert_api.close_alert(
+            self.alert_api.close_alert(
                 identifier=finding.fingerprint,
                 close_alert_payload=body,
                 identifier_type="alias",

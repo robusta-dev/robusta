@@ -26,9 +26,7 @@ class ExternalActionRequestBuilder(BaseModel):
             raise Exception(f"{choice.action} is not a function that was decorated with @action")
 
         if not signing_key:
-            raise Exception(
-                f"Cannot create callback request with no signing key. Configure signing_key in globalConfig"
-            )
+            raise Exception("Cannot create callback request with no signing key. Configure signing_key in globalConfig")
         action_params = {} if choice.action_params is None else choice.action_params.dict()
         if choice.kubernetes_object:
             action_params["kind"] = choice.kubernetes_object.kind

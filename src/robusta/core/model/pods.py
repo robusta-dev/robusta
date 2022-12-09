@@ -110,7 +110,7 @@ class PodResources(BaseModel):
 
             return int(float(mem_spec))
 
-        except Exception as e:  # could be a valueError with mem_spec
+        except Exception:  # could be a valueError with mem_spec
             logging.error(f"error parsing memory {mem_spec}", exc_info=True)
         return 0
 

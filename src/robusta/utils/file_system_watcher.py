@@ -38,7 +38,7 @@ class FileSystemWatcher:
                 self.change_detected = False
                 try:
                     self.reload_configuration(self.path_to_watch)
-                except Exception as e:  # in case we have an error while trying to reload, we want the watch thread to stay alive
+                except Exception:  # in case we have an error while trying to reload, we want the watch thread to stay alive
                     logging.exception("failed to reload configuration")
 
     def stop_watcher(self):

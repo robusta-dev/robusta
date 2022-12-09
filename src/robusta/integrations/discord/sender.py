@@ -228,7 +228,7 @@ class DiscordSender:
                 blocks={output_blocks}\nattachment_blocks={attachment_blocks}\nmsg={discord_msg}"""
             )
         else:
-            logging.debug(f"Message was delivered successfully")
+            logging.debug("Message was delivered successfully")
 
     def send_finding_to_discord(
         self,
@@ -246,7 +246,7 @@ class DiscordSender:
                 actions = f"{actions} [:clapper: {video_link.name}]({video_link.url})"
             blocks.append(DiscordDescriptionBlock(description=actions))
 
-        blocks.append(DiscordFieldBlock(name=f"Source", value=f"`{self.cluster_name}`"))
+        blocks.append(DiscordFieldBlock(name="Source", value=f"`{self.cluster_name}`"))
 
         # first add finding description block
         if finding.description:

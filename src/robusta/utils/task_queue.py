@@ -1,7 +1,7 @@
 import logging
 import time
 from queue import Full, Queue
-from threading import Lock, Thread
+from threading import Thread
 
 import prometheus_client
 

@@ -103,7 +103,7 @@ class SelfHostValues(BaseModel):
         JWT_SECRET,
     )
     SUPABASE_URL: str = "http://kong:8000"  # Internal URL
-    PUBLIC_REST_URL: str  ## Studio Public REST endpoint - replace this if you intend to use Studio outside of localhost
+    PUBLIC_REST_URL: str  # Studio Public REST endpoint - replace this if you intend to use Studio outside of localhost
 
     # POSTGRES
     POSTGRES_PORT: int = 5432
@@ -149,7 +149,7 @@ def gen_config(
 
     if not domain:
         typer.secho(
-            f"Missing required argument domain",
+            "Missing required argument domain",
             fg=typer.colors.RED,
         )
         return

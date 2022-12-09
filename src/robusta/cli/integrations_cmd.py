@@ -1,4 +1,3 @@
-import base64
 import os
 import textwrap
 import time
@@ -7,7 +6,6 @@ from collections import namedtuple
 
 import requests
 import typer
-from pydantic import BaseModel
 
 from robusta.cli.backend_profile import backend_profile
 from robusta.cli.utils import log_title

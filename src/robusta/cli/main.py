@@ -1,6 +1,5 @@
 import base64
 import json
-import logging
 import random
 import subprocess
 import time
@@ -8,7 +7,6 @@ import traceback
 import uuid
 from typing import Dict, List, Optional, Union
 
-import click_spinner
 import typer
 import yaml
 from hikaru.model import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec
@@ -126,7 +124,7 @@ def gen_config(
 
     # Configure sinks
     typer.secho(
-        f"""Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""",
+        """Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""",
         fg=typer.colors.CYAN,
         bold=True,
     )
@@ -207,7 +205,7 @@ def gen_config(
             slack_feedback_heads_up_message = SlackFeedbackMessagesSender(
                 slack_api_key, slack_channel, account_id, debug
             ).schedule_feedback_messages()
-        except Exception as e:
+        except Exception:
             if debug:
                 typer.secho(traceback.format_exc())
 
@@ -274,7 +272,7 @@ def gen_config(
         )
     else:
         typer.secho(
-            f"Finish installing with Helm (see the Robusta docs). By the way, you're missing out on the UI! See https://home.robusta.dev/ui/\n",
+            "Finish installing with Helm (see the Robusta docs). By the way, you're missing out on the UI! See https://home.robusta.dev/ui/\n",
             fg="green",
         )
 
@@ -306,7 +304,7 @@ def update_config(
 
         try:
             uuid.UUID(values.globalConfig.signing_key)
-        except:
+        except ValueError:
             typer.secho("Invalid signing key. Generating a new one", fg="green")
             values.globalConfig.signing_key = str(uuid.uuid4())
 
@@ -341,7 +339,7 @@ def demo():
     subprocess.check_call(f"kubectl apply -f {CRASHPOD_YAML}", shell=True)
     log_title("In ~30 seconds you should receive a slack notification on a crashing pod")
     time.sleep(60)
-    subprocess.check_call(f"kubectl delete deployment crashpod", shell=True)
+    subprocess.check_call("kubectl delete deployment crashpod", shell=True)
     log_title("Done!")
 
 
@@ -368,7 +366,7 @@ def logs(
             f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
             shell=True,
         )
-    except Exception as e:
+    except Exception:
         log_title("error fetching logs; see help for more options.", color="red")
 
 

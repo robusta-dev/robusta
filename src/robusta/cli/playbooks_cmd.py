@@ -163,7 +163,7 @@ def pull(
             f"{runner_pod}:{PLAYBOOKS_MOUNT_LOCATION}/ -c runner {playbooks_directory}",
             shell=True,
         )
-    except Exception as e:
+    except Exception:
         typer.echo(f"Failed to pull deployed playbooks {traceback.format_exc()}")
 
 
@@ -175,7 +175,7 @@ def list_dirs(
     ),
 ):
     """List stored playbooks directories"""
-    log_title(f"Listing playbooks directories ")
+    log_title("Listing playbooks directories ")
 
     try:
         runner_pod = get_runner_pod(namespace)
@@ -191,7 +191,7 @@ def list_dirs(
 
         log_title(f"Stored playbooks directories: \n { ls_res.decode('utf-8')}")
 
-    except Exception as e:
+    except Exception:
         typer.echo(f"Failed to list deployed playbooks {traceback.format_exc()}")
 
 
@@ -226,7 +226,7 @@ def delete(
             shell=True,
         )
 
-    except Exception as e:
+    except Exception:
         typer.echo(f"Failed to delete deployed playbooks {traceback.format_exc()}")
 
 
@@ -245,14 +245,14 @@ def list_(
     ),
 ):  # not named list as that would shadow the builtin list function
     """list current active playbooks"""
-    typer.echo(f"Getting deployed playbooks list...")
+    typer.echo("Getting deployed playbooks list...")
     with click_spinner.spinner():
         playbooks_config = get_playbooks_config(namespace)
 
     active_playbooks_file = playbooks_config["data"]["active_playbooks.yaml"]
     active_playbooks_yaml = yaml.safe_load(active_playbooks_file)
     for playbook in active_playbooks_yaml["active_playbooks"]:
-        typer.secho(f"--------------------------------------", fg="blue")
+        typer.secho("--------------------------------------", fg="blue")
         print_yaml_if_not_none("sinks", playbook)
         print_yaml_if_not_none("triggers", playbook)
         print_yaml_if_not_none("actions", playbook)

@@ -22,7 +22,7 @@ class SinksRegistry:
         self.sinks = sinks
         self.default_sinks = [sink.sink_name for sink in sinks.values() if sink.default]
         if not self.default_sinks:
-            logging.warning(f"No default sinks defined. By default, actions results are ignored.")
+            logging.warning("No default sinks defined. By default, actions results are ignored.")
         platform_sinks = [sink for sink in sinks.values() if isinstance(sink.params, RobustaSinkParams)]
         self.platform_enabled = len(platform_sinks) > 0
 

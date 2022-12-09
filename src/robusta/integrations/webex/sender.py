@@ -57,7 +57,7 @@ class WebexSender:
         message_content_json = self._createMessageContentJSON(message_content, description)
         body.append(message_content_json)
         if table_blocks:
-            table_blocks_json = self._createTableBlockJSON(table_blocks, body)
+            self._createTableBlockJSON(table_blocks, body)
 
         return body
 

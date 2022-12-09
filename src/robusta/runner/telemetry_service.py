@@ -28,10 +28,10 @@ class TelemetryService:
 
         sentry_dsn = os.environ.get("SENTRY_DSN", "")
         if self.telemetry_level == TelemetryLevel.ERROR and sentry_dsn:
-            logging.info(f"Telemetry set to include error info, Thank you for helping us improve Robusta.")
+            logging.info("Telemetry set to include error info, Thank you for helping us improve Robusta.")
             try:
                 sentry_sdk.init(sentry_dsn, traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", 0.5)))
-                global_config = account_id = self.registry.get_global_config()
+                global_config = self.registry.get_global_config()
                 sentry_sdk.set_user({"id": global_config.get("account_id", "")})
                 sentry_sdk.set_tag("cluster_id", global_config.get("cluster_name", ""))
             except Exception as e:
@@ -59,6 +59,6 @@ class TelemetryService:
     def __log(self, data: Telemetry):
         r = requests.post(self.endpoint, data=data.json(), headers={"Content-Type": "application/json"})
         if r.status_code != 201:
-            logging.error(f"Failed to log telemetry data")
+            logging.error("Failed to log telemetry data")
 
         return r

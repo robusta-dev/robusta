@@ -1,5 +1,4 @@
 import json
-import time
 from enum import Enum, auto
 from typing import Dict, List, Type, TypeVar
 
@@ -14,10 +13,12 @@ from robusta.integrations.kubernetes.templates import get_deployment_yaml
 
 S = TypeVar("S")
 T = TypeVar("T")
+
+# TODO: import these from the python-tools project
 PYTHON_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.5"
 JAVA_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:v1.1"
 
-# TODO: import these from the python-tools project
+
 class Process(BaseModel):
     pid: int
     exe: str

@@ -7,7 +7,7 @@ import subprocess
 import sys
 import threading
 from inspect import getmembers
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import yaml
 
@@ -130,7 +130,7 @@ class ConfigLoader:
                     playbook_package = self.__get_package_name(local_path=local_path)
 
                 playbook_packages.append(playbook_package)
-            except Exception as e:
+            except Exception:
                 logging.error(f"Failed to add playbooks repo {playbook_package}", exc_info=True)
 
         for package_name in playbook_packages:
@@ -149,7 +149,7 @@ class ConfigLoader:
                 playbook_actions = getmembers(m, Action.is_action)
                 for (action_name, action_func) in playbook_actions:
                     actions_registry.add_action(action_func)
-            except Exception as e:
+            except Exception:
                 logging.error(f"failed to module {playbooks_module}", exc_info=True)
 
     def __reload_playbook_packages(self, change_name):
@@ -220,9 +220,9 @@ class ConfigLoader:
                 ).hexdigest()
 
                 self.__reload_receiver()
-            except Exception as e:
+            except Exception:
                 logging.error(
-                    f"unknown error reloading playbooks. will try again when they next change",
+                    "unknown error reloading playbooks. will try again when they next change",
                     exc_info=True,
                 )
 

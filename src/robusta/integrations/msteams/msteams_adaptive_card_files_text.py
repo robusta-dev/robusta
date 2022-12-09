@@ -9,13 +9,13 @@ from robusta.integrations.msteams.msteams_elements.msteams_text_block import MsT
 
 """
 there are 3 elements for each text file":
-1. row that contains 'open file-name' , and 'close file-name' buttons. 
+1. row that contains 'open file-name' , and 'close file-name' buttons.
    the open is visible and the close is invisible at init stage
 2. container that contains the last lines of the file - invisible at the init stage
 3. row that contains 'close file-name' buttons, invisible at init stage
 
-when a open button is pressed for specific file, the close file for the current file become visible, 
-and also the container presenting the file text. for all the other files, the 'open file-name' buttons 
+when a open button is pressed for specific file, the close file for the current file become visible,
+and also the container presenting the file text. for all the other files, the 'open file-name' buttons
 become visible and all the other buttons become invisible
 
 no point in creating object for each file since it will only hold a few variables such as the file name

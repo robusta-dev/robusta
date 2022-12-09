@@ -5,7 +5,7 @@
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
 from copy import deepcopy
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import hikaru
 from hikaru import DiffDetail, DiffType
@@ -256,8 +256,8 @@ class TableBlock(BaseBlock):
         lines = contents.splitlines()
         length_so_far = 0
         lines_to_include = 0
-        for l in lines:
-            new_length = length_so_far + len("\n") + len(l)
+        for line in lines:
+            new_length = length_so_far + len("\n") + len(line)
             if new_length > max_chars:
                 break
             else:
@@ -275,7 +275,7 @@ class TableBlock(BaseBlock):
         table_header = f"{self.table_name}\n" if self.table_name else ""
         table_header = "" if not add_table_header else table_header
         prefix = f"{table_header}```\n"
-        suffix = f"\n```"
+        suffix = "\n```"
         table_contents = self.to_table_string()
         if max_chars is not None:
             max_chars = max_chars - len(prefix) - len(suffix)

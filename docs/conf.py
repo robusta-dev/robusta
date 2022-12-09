@@ -56,9 +56,9 @@ autodoc_mock_imports = ["prometheus_api_client"]
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
-    #'special-members': '__init__',
+    # 'special-members': '__init__',
     "undoc-members": True,
-    #'exclude-members': '__weakref__'
+    # 'exclude-members': '__weakref__'
 }
 autoclass_content = "both"
 add_module_names = False

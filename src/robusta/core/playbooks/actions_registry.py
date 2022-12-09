@@ -3,7 +3,6 @@ from typing import Callable, Dict, Optional, Type
 
 from pydantic.main import BaseModel
 
-from robusta.core.model.base_params import ActionParams
 from robusta.core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
 from robusta.utils.decorators import doublewrap
 

@@ -6,7 +6,7 @@ import logging
 import os
 import time
 from threading import Thread
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 from uuid import UUID
 
 import websocket
@@ -93,7 +93,7 @@ class ActionRequestReceiver:
             time.sleep(INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC)
 
     def stop(self):
-        logging.info(f"Stopping incoming receiver")
+        logging.info("Stopping incoming receiver")
         self.active = False
         self.ws.close()
 

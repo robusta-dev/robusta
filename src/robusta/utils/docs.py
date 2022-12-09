@@ -1,4 +1,3 @@
-from typing import List
 from xml.etree import ElementTree
 
 from docutils.core import publish_doctree

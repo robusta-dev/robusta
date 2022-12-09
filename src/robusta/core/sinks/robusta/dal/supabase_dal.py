@@ -319,7 +319,7 @@ class SupabaseDal:
         try:
             response_data = response.json()
         except Exception:  # this can be okay if no data is expected
-            logging.warning(f"Failed to parse delete response data")
+            logging.warning("Failed to parse delete response data")
 
         return {
             "data": response_data,
@@ -340,8 +340,8 @@ class SupabaseDal:
         # https://github.com/supabase/gotrue-py/issues/9
         try:
             self.sign_in()
-        except Exception as e:
-            logging.error(f"Failed to sign in on error", exc_info=True)
+        except Exception:
+            logging.error("Failed to sign in on error", exc_info=True)
 
     def to_db_cluster_status(self, data: ClusterStatus) -> Dict[str, Any]:
         db_cluster_status = data.dict()

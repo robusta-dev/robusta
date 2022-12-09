@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import textwrap
 import threading
-import traceback
 from collections import defaultdict, namedtuple
 from typing import Dict, List
 

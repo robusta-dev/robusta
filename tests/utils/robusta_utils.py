@@ -3,11 +3,7 @@ import os
 import re
 import subprocess
 import time
-from pathlib import Path
 from typing import Optional
-
-import kubernetes
-from hikaru.model import Namespace
 
 
 class RobustaController:
@@ -55,7 +51,7 @@ class RobustaController:
             time.sleep(5)
         details = self._run_cmd(["kubectl", "describe", "pods"])
         logging.error(f"robusta runner did not start. logs={logs}; details={details}")
-        raise Exception(f"robusta runner did not start")
+        raise Exception("robusta runner did not start")
 
     def get_logs(self):
         return self._run_cmd(

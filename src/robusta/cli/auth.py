@@ -74,7 +74,7 @@ def store_server_token(token_details: TokenDetails, debug: bool = False) -> bool
             typer.secho(f"Failed to store server token. status-code {response.status_code} text {response.text}")
 
         return response.status_code == 201
-    except Exception as e:
+    except Exception:
         if debug:
             typer.secho(f"Error trying to store server token. {traceback.format_exc()}")
         return False
@@ -163,5 +163,5 @@ def gen_token(
     # client response is the same, only with a different enc_key
     token_response.enc_key = str(client_enc_key)
 
-    typer.secho(f"Token created successfully. Submit it in the Robusta UI", fg="green")
+    typer.secho("Token created successfully. Submit it in the Robusta UI", fg="green")
     typer.secho(base64.b64encode(token_response.json(exclude={"session_token"}).encode("utf-8")).decode())

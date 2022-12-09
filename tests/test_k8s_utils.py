@@ -1,6 +1,5 @@
 import logging
 
-import kubernetes
 from kubernetes import config
 
 from robusta.api import *

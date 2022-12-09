@@ -157,7 +157,7 @@ class RobustaSink(SinkBase):
             else:
                 logging.info("Cluster historical data sent.")
         except Exception:
-            logging.error(f"Error getting events history", exc_info=True)
+            logging.error("Error getting events history", exc_info=True)
 
     def __discover_resources(self):
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
@@ -303,7 +303,7 @@ class RobustaSink(SinkBase):
             )
 
             self.dal.publish_cluster_status(cluster_status)
-        except Exception as e:
+        except Exception:
             logging.exception(
                 f"Failed to run periodic update cluster status for {self.sink_name}",
                 exc_info=True,
@@ -315,8 +315,8 @@ class RobustaSink(SinkBase):
             if has_findings:
                 logging.info("Cluster already has historical data, No history pulled.")
             return not has_findings
-        except:
-            logging.error(f"Failed to check run history condition", exc_info=True)
+        except Exception:
+            logging.error("Failed to check run history condition", exc_info=True)
             return False
 
     def __discover_cluster(self):

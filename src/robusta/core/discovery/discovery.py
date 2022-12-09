@@ -17,7 +17,6 @@ from kubernetes.client import (
     V1Pod,
     V1PodList,
     V1ReplicaSetList,
-    V1ResourceRequirements,
     V1StatefulSet,
     V1StatefulSetList,
     V1Volume,
@@ -148,7 +147,7 @@ class Discovery:
             )
         except Exception:
             logging.error(
-                f"Failed to run periodic service discovery",
+                "Failed to run periodic service discovery",
                 exc_info=True,
             )
 
@@ -164,7 +163,7 @@ class Discovery:
 
         except Exception:
             logging.error(
-                f"Failed to run periodic nodes discovery",
+                "Failed to run periodic nodes discovery",
                 exc_info=True,
             )
 
@@ -195,7 +194,7 @@ class Discovery:
                 active_jobs.append(JobInfo.from_api_server(job, job_pods))
         except Exception:
             logging.error(
-                f"Failed to run periodic jobs discovery",
+                "Failed to run periodic jobs discovery",
                 exc_info=True,
             )
         return DiscoveryResults(

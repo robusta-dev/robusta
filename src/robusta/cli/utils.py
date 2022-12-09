@@ -40,7 +40,7 @@ def exec_in_robusta_runner(
     for _ in range(tries - 1):
         try:
             return subprocess.check_call(exec_cmd)
-        except Exception as e:
+        except Exception:
             typer.secho(f"error: {error_msg}", fg="red")
             time.sleep(time_between_attempts)
     return subprocess.check_call(cmd)
@@ -109,7 +109,7 @@ def fetch_runner_logs(namespace: Optional[str], all_logs=False):
                     f"kubectl logs {namespace_to_kubectl(namespace)} {get_runner_pod(namespace)} -c runner --since={int(time.time() - start + 1)}s",
                     shell=True,
                 )
-        except:
+        except Exception:
             log_title("Cannot fetch logs. robusta-runner not found", color="red")
             return
 

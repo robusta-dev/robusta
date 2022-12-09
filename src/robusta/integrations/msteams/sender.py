@@ -32,7 +32,7 @@ class MsTeamsSender:
         elif isinstance(block, KubernetesDiffBlock):
             msg.diff(block)
         elif isinstance(block, CallbackBlock):
-            logging.error(f"CallbackBlock not supported for msteams")
+            logging.error("CallbackBlock not supported for msteams")
         else:
             logging.error(f"cannot convert block of type {type(block)} to msteams format block: {block}")
 

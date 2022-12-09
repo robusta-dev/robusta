@@ -27,7 +27,7 @@ def convert_svg_to_png(svg: bytes) -> Optional[bytes]:
 
     try:
         return cairosvg.svg2png(bytestring=svg)
-    except Exception as e:
+    except Exception:
         logging.error(f"error converting svg to png; svg={svg}")
         return None
 

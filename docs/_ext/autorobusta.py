@@ -17,7 +17,6 @@ from PIL import Image
 from pydantic import BaseModel
 from pydantic.fields import ModelField
 from sphinx.application import Sphinx
-from sphinx.ext.autodoc.directive import DummyOptionSpec
 from sphinx.util import nested_parse_with_titles
 from sphinx.util.docutils import SphinxDirective
 
@@ -122,7 +121,7 @@ class PydanticModelDirective(SphinxDirective):
 
         if typing.get_origin(field.type_) == typing.Union:
             possible_types = get_possible_types(field.type_)
-            paragraph = nodes.paragraph(text=f"each entry is one of the following:")
+            paragraph = nodes.paragraph(text="each entry is one of the following:")
             content.append(paragraph)
             for t in possible_types:
                 if isinstance(None, t):
@@ -130,7 +129,7 @@ class PydanticModelDirective(SphinxDirective):
                 content.extend(cls.__document_model(t, show_code, show_optionality))
 
         elif issubclass(field.type_, BaseModel):
-            paragraph = nodes.paragraph(text=f"each entry contains:")
+            paragraph = nodes.paragraph(text="each entry contains:")
             content.append(paragraph)
             # when documenting an inner model, we always show "required"/"optional" inline
             content.extend(cls.__document_model(field.type_, show_code, show_optionality))
@@ -238,15 +237,15 @@ class RobustaActionDirective(SphinxDirective):
         if params_cls is not None:
             params_cls_path = f"{params_cls.__module__}.{params_cls.__name__}"
 
-        code = self.__get_source_code(action_definition.func)
+        # code = self.__get_source_code(action_definition.func)
         description = self.__get_description(action_definition)
         triggers = self.__get_triggers(generator.get_supported_triggers(action_definition), recommended_trigger)
         cli_trigger = generator.get_manual_trigger_cmd(action_definition)
 
-        indented_code = "\n".join(" " * 32 + l for l in code)
-        indented_description = "\n".join(" " * 28 + l for l in description.split("\n"))
-        indented_example = "\n".join(" " * 32 + l for l in example_yaml.split("\n"))
-        indented_triggers = "\n".join(" " * 24 + l for l in triggers)
+        # indented_code = "\n".join(" " * 32 + line for line in code)
+        indented_description = "\n".join(" " * 28 + line for line in description.split("\n"))
+        indented_example = "\n".join(" " * 32 + line for line in example_yaml.split("\n"))
+        indented_triggers = "\n".join(" " * 24 + line for line in triggers)
 
         reference_label = self.options.get("reference-label", action_definition.action_name)
         manual_trigger_only = "manual-trigger-only" in self.options
@@ -262,8 +261,8 @@ class RobustaActionDirective(SphinxDirective):
             """
 
         if manual_trigger_only:
-            example_config = f"""\
-                        
+            example_config = """\
+
                         This action is typically used via manual triggers and **not** predefined YAML triggers. An example config is not shown because it is not relevant for this action.
                         """
         else:
@@ -279,22 +278,22 @@ class RobustaActionDirective(SphinxDirective):
         content = textwrap.dedent(
             f"""\
             .. _{reference_label}:
-            
+
             {to_name(action_definition.action_name)}
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             .. admonition:: Playbook Action: {action_definition.action_name}
-            
+
                 .. tab-set::
-            
+
                     .. tab-item:: Description\n\n{indented_description}\n\n
-                    
+
                     .. tab-item:: Example Config\n\n{example_config}
 
                     .. tab-item:: Parameters
-                        
+
                         {".. pydantic-model:: " + params_cls_path if params_cls_path else "**No action parameters**"}
-                       
+
                     .. tab-item:: Supported Triggers\n\n{indented_triggers}\n
                         {indented_cli_trigger_example}
             """
@@ -363,7 +362,7 @@ class RobustaActionDirective(SphinxDirective):
         if docs:
             description += docs + "\n\n"
         if self.content:
-            description += "\n".join(l for l in self.content)
+            description += "\n".join(line for line in self.content)
         if not description:
             description += "*No description*"
 
@@ -379,12 +378,12 @@ class RobustaActionDirective(SphinxDirective):
 
             description += textwrap.dedent(
                 f"""
-                
+
                 .. thumbnail:: {relative_path}
                     :align: center
                     :width: {width}
                     :height: {height}
-                
+
                 """
             )
 

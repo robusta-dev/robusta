@@ -5,7 +5,7 @@ import logging
 from pydantic import BaseModel
 from pydantic.fields import ModelField
 
-from robusta.utils.docs import Docstring, DocstringField
+from robusta.utils.docs import Docstring
 
 
 class DocumentedModel(BaseModel):

@@ -43,7 +43,7 @@ def wait_until(read_function, predicate_function, timeout_sec: float, backoff_wa
             resp = read_function()
             if predicate_function(resp):
                 return resp
-        except ApiException as e:
+        except ApiException:
             logging.error(f"failed calling read_function {traceback.format_exc()}")
 
         time.sleep(backoff_wait_sec)
@@ -82,7 +82,7 @@ def wait_for_pod_status(name, namespace, status: str, timeout_sec: float, backof
                 logging.debug(f"reached {pod_details}")
                 return status
 
-        except ApiException as e:
+        except ApiException:
             logging.error(f"failed to get pod status {name} {namespace} {traceback.format_exc()}")
 
         time.sleep(backoff_wait_sec)
@@ -180,7 +180,6 @@ def exec_commands(name, exec_command, namespace="default", container=None):
     logging.debug(
         f"Executing command name: {name} command: {exec_command} namespace: {namespace} container: {container}"
     )
-    response_stdout = None
 
     # verify pod state before connecting
     pod_status = wait_for_pod_status(name, namespace, RUNNING_STATE, 90, 0.2)  # TODO config
@@ -242,5 +241,5 @@ def parse_kubernetes_datetime_to_ms(k8s_datetime: str) -> float:
     """
     try:
         return parse_kubernetes_datetime(k8s_datetime).timestamp() * 1000
-    except:
+    except ValueError:
         return parse_kubernetes_datetime_with_ms(k8s_datetime).timestamp() * 1000

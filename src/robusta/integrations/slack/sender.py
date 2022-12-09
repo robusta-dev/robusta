@@ -258,7 +258,7 @@ class SlackSender:
         links: List[LinkProp] = []
         links.append(
             LinkProp(
-                text=f"Investigate 🔎",
+                text="Investigate 🔎",
                 url=finding.get_investigate_uri(self.account_id, self.cluster_name),
             )
         )
@@ -266,7 +266,7 @@ class SlackSender:
         if finding.add_silence_url:
             links.append(
                 LinkProp(
-                    text=f"Silence 🔕",
+                    text="Silence 🔕",
                     url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
                 )
             )

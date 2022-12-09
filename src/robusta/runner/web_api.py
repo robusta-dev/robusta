@@ -30,8 +30,8 @@ class WebApi:
                     f"Failed to run manual action \naction_name:{action_name}\n"
                     f"Reason: {response.reason}\nStatus Code{status_code}"
                 )
-            except Exception as e:
-                logging.error(f"Error sending manual action request", exc_info=True)
+            except Exception:
+                logging.error("Error sending manual action request", exc_info=True)
 
             time.sleep(timeout_delay)
 
