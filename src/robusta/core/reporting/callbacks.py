@@ -47,6 +47,3 @@ class ExternalActionRequestBuilder(BaseModel):
             body=body,
             signature=sign_action_request(body, signing_key),
         )
-
-
-__all__ = ["ExternalActionRequestBuilder"]

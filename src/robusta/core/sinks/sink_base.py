@@ -30,6 +30,3 @@ class SinkBase:
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         raise NotImplementedError(f"write_finding not implemented for sink {self.sink_name}")
-
-
-__all__ = ["SinkBase"]

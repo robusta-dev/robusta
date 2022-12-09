@@ -13,6 +13,3 @@ class SinkConfigBase(BaseModel):
     @abc.abstractmethod
     def get_params(self) -> SinkBaseParams:
         """get sink params"""
-
-
-__all__ = ["SinkConfigBase"]
