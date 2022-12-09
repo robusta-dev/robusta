@@ -81,6 +81,10 @@ cssselect = "^1.1.0"
 pygal = "^3.0.0"
 tinycss = "^0.4"
 rsa = "^4.8"
+flake8 = "5.0.4"
+black = "21.5b2"
+mypy = "0.991"
+isort = "5.10.1"
 
 # There is a bug in jinga2 and markupsafe (explicitly markupsafe 2.1.1)
 markupsafe = "2.0.1"

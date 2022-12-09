@@ -16,7 +16,6 @@ from kubernetes import client, config
 from pydantic import BaseModel, Extra
 
 from robusta._version import __version__
-# TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
 from robusta.cli.auth import RSAKeyPair
 from robusta.cli.auth import app as auth_commands
 from robusta.cli.auth import gen_rsa_pair
@@ -33,6 +32,9 @@ from robusta.core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrap
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta.integrations.prometheus.utils import AlertManagerDiscovery
+
+# TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
+
 
 app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")

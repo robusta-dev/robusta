@@ -1,6 +1,32 @@
 repos:
-  - repo: https://github.com/psf/black
-    rev: 21.6b0 # Replace by any tag/version: https://github.com/psf/black/tags
+  - repo: https://github.com/ambv/black
+    rev: 22.3.0
     hooks:
       - id: black
-        language_version: python3 # Should be a command that runs python3.6+
+        language_version: python3.7
+        args: [--config=pyproject.toml]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.3.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+
+  # - repo: https://github.com/pycqa/flake8
+  #   rev: 5.0.4
+  #   hooks:
+  #     - id: flake8
+  #       args: [--config=.flake8]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.6.3
+    hooks:
+      - id: isort
+        args: [--settings-path=pyproject.toml, --check-only]
+
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v0.790
+  #   hooks:
+  #     - id: mypy
+  #       language: system
+  #       args: [--config-file=mypy.ini]
