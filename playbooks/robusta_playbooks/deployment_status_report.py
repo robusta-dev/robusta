@@ -1,7 +1,23 @@
+import logging
+from typing import List
+
 import requests
 from pydantic import SecretStr
 
-from robusta.api import *
+from robusta.api import (
+    GRAFANA_RENDERER_URL,
+    ActionParams,
+    DeploymentChangeEvent,
+    DynamicDelayRepeat,
+    ExecutionBaseEvent,
+    FileBlock,
+    Finding,
+    FindingType,
+    K8sOperationType,
+    MarkdownBlock,
+    action,
+    is_matching_diff,
+)
 
 
 class ReportParams(ActionParams):
@@ -50,8 +66,8 @@ def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams
         finding.add_enrichment(
             [
                 MarkdownBlock(
-                    f"Connection to grafana-renderer container was refused. "
-                    f"Make sure to set 'grafanaRenderer:enableContainer' to 'true' in the values yaml"
+                    "Connection to grafana-renderer container was refused. "
+                    "Make sure to set 'grafanaRenderer:enableContainer' to 'true' in the values yaml"
                 )
             ]
         )

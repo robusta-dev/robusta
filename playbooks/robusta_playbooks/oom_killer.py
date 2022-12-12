@@ -1,8 +1,30 @@
-from datetime import timedelta
+import abc
+import logging
+from datetime import datetime, timedelta
+from typing import List, Optional
 
 import pydantic
+from hikaru.model import Node, Pod, PodList, ResourceRequirements
 
-from robusta.api import *
+from robusta.api import (
+    ActionParams,
+    Finding,
+    FindingSeverity,
+    PodContainer,
+    PodEvent,
+    PodFindingSubject,
+    PodResources,
+    PrometheusAlert,
+    PrometheusKubernetesAlert,
+    RendererType,
+    ResourceGraphEnricherParams,
+    TableBlock,
+    action,
+    create_container_graph,
+    get_oom_killed_container,
+    parse_kubernetes_datetime_to_ms,
+    pod_most_recent_oom_killed_container,
+)
 from robusta.integrations.resource_analysis.memory_analyzer import MemoryAnalyzer
 
 
@@ -39,7 +61,7 @@ def oomkilled_container_graph_enricher(event: PodEvent, params: ResourceGraphEnr
         return
     oomkilled_container = pod_most_recent_oom_killed_container(pod)
     if not oomkilled_container:
-        logging.error(f"Unable to find oomkilled container")
+        logging.error("Unable to find oomkilled container")
         return
 
     container_graph = create_container_graph(params, pod, oomkilled_container.container, show_limit=True)
@@ -70,7 +92,7 @@ def pod_oom_killer_enricher(
         ("Namespace", pod.metadata.namespace),
         ("Node Name", pod.spec.nodeName),
     ]
-    node: Node = Node.readNode(pod.spec.nodeName).obj
+    node: Node = Node.readNode(pod.spec.nodeName).obj  # type: ignore
     if node:
         allocatable_memory = PodResources.parse_mem(node.status.allocatable.get("memory", "0Mi"))
         capacity_memory = PodResources.parse_mem(node.status.capacity.get("memory", "0Mi"))
@@ -174,7 +196,7 @@ class OomKill(pydantic.BaseModel):
 
 # This class is used only because the OomKillsExtractor should appear before KubernetesOomKillReasonInvestigator, but still know its interface.
 class OomKillReasonInvestigator(metaclass=abc.ABCMeta):
-    @abstractmethod
+    @abc.abstractmethod
     def get_reason(self, oom_kill: OomKill) -> str:
         return ""
 
@@ -261,7 +283,7 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
         self.memory_analyzer = MemoryAnalyzer(params.prometheus_url, alert.startsAt.tzinfo)
         self.node = node
         self.node_reason_calculated = False
-        self.node_reason = None
+        self.node_reason: Optional[str] = None
 
     def get_reason(self, oom_kill: OomKill) -> str:
         container_reason = self.get_busy_container_reason(oom_kill)
@@ -276,7 +298,7 @@ class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
         if self.node_reason is not None:
             return self.node_reason
 
-        return f"reason not found"
+        return "reason not found"
 
     def get_busy_container_reason(self, oom_kill: OomKill):
         duration = timedelta(seconds=self.config.metrics_duration_in_secs)

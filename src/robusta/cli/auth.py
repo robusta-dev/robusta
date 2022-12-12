@@ -91,10 +91,7 @@ def gen_token(
         ...,
         help="Robusta account id",
     ),
-    user_id: str = typer.Option(
-        ...,
-        help="User id for which the token is created",
-    ),
+    user_id: str = typer.Option(..., help="User id for which the token is created"),
     session_token: str = typer.Option(
         ...,
         help="User session token. Created for an authenticated user via the Robusta UI",

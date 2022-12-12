@@ -1,5 +1,6 @@
 import logging
 import tempfile
+from typing import Any, Dict
 
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError

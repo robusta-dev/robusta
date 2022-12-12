@@ -3,6 +3,7 @@ import textwrap
 import time
 import uuid
 from collections import namedtuple
+from typing import Tuple
 
 import requests
 import typer
@@ -39,7 +40,7 @@ def _get_slack_key_once() -> SlackApiKey:
     return slack_api_key
 
 
-def get_slack_key() -> (str, str):
+def get_slack_key() -> Tuple[str, str]:
     slack_api_key = _get_slack_key_once()
     if not slack_api_key or not slack_api_key.team_name:
         return slack_api_key.key, ""
@@ -81,7 +82,7 @@ def get_ui_key() -> str:
             return robusta_api_key
 
         typer.secho(
-            f"Sorry, something didn't work out. The response was {res.content}\n"
+            f"Sorry, something didn't work out. The response was {res.content!r}\n"
             f"If you need help, email support@robusta.dev",
             fg="red",
         )

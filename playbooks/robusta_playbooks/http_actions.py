@@ -52,7 +52,7 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
             finding.title = f"Response received from {action_params.url} "
             finding.add_enrichment(
                 [
-                    FileBlock(f"Response.txt: ", result.text.encode()),
+                    FileBlock("Response.txt: ", result.text.encode()),
                 ]
             )
             event.add_finding(finding)
@@ -92,7 +92,7 @@ class HTTP_POST(ActionParams):
     """
 
     url: str
-    data: dict = None
+    data: dict = None  # type: ignore
     get_response: Optional[bool] = False
 
 
@@ -121,7 +121,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
             finding.title = f"Response received from {action_params.url} "
             finding.add_enrichment(
                 [
-                    FileBlock(f"Response.txt: ", result.text.encode()),
+                    FileBlock("Response.txt: ", result.text.encode()),
                 ]
             )
             event.add_finding(finding)

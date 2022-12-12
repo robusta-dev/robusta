@@ -1,9 +1,13 @@
-from robusta.api import *
+from collections import defaultdict
+from string import Template
+from typing import Dict, Optional
+
+from robusta.api import ActionParams, ExecutionBaseEvent, Finding, FindingSeverity, action
 
 
 def _get_templating_labels(event: ExecutionBaseEvent) -> Dict:
     subject = event.get_subject()
-    labels = defaultdict(lambda: "<missing>")
+    labels: Dict[str, str] = defaultdict(lambda: "<missing>")
     labels.update(
         {
             "name": subject.name,
@@ -45,8 +49,8 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
 
     labels = _get_templating_labels(event)
 
-    title: str = Template(params.title).safe_substitute(labels)
-    description: str = Template(params.description).safe_substitute(labels) if params.description else None
+    title = Template(params.title).safe_substitute(labels) if params.title is not None else ""
+    description = Template(params.description).safe_substitute(labels) if params.description is not None else ""
 
     event.override_finding_attributes(title, description, severity)
 

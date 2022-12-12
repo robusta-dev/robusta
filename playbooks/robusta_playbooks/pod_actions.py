@@ -1,4 +1,6 @@
-from robusta.api import *
+import logging
+
+from robusta.api import PodEvent, action
 
 
 @action

@@ -1,9 +1,21 @@
+import logging
 import textwrap
 
 import pygal
 from pygal.style import DarkStyle as ChosenStyle
 
-from robusta.api import *
+from robusta.api import (
+    FLOAT_PRECISION_LIMIT,
+    DividerBlock,
+    FileBlock,
+    HeaderBlock,
+    ListBlock,
+    MarkdownBlock,
+    NodeCpuAnalyzer,
+    NodeEvent,
+    PrometheusParams,
+    action,
+)
 
 
 @action
@@ -61,19 +73,19 @@ def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
         [
             HeaderBlock("Node CPU Analysis"),
             MarkdownBlock(
-                f"_*Quick explanation:* High CPU typically occurs if you define pod CPU "
-                f"requests incorrectly and Kubernetes schedules too many pods on one node. "
-                f"If this is the case, update your pod CPU requests to more accurate numbers"
-                f"using guidance from the attached graphs_"
+                "_*Quick explanation:* High CPU typically occurs if you define pod CPU "
+                "requests incorrectly and Kubernetes schedules too many pods on one node. "
+                "If this is the case, update your pod CPU requests to more accurate numbers"
+                "using guidance from the attached graphs_"
             ),
             DividerBlock(),
             MarkdownBlock(
                 textwrap.dedent(
                     f"""\
-                                        *Total CPU usage on node:* {int(total_cpu_usage * 100)}%
-                                        *Container CPU usage on node:* {int(total_container_cpu_usage * 100)}%
-                                        *Non-container CPU usage on node:* {int(non_container_cpu_usage * 100)}%
-                                        """
+                    *Total CPU usage on node:* {int(total_cpu_usage * 100)}%
+                    *Container CPU usage on node:* {int(total_container_cpu_usage * 100)}%
+                    *Non-container CPU usage on node:* {int(non_container_cpu_usage * 100)}%
+                    """
                 )
             ),
             DividerBlock(),

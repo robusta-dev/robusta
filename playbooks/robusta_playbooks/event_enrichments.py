@@ -1,4 +1,26 @@
-from robusta.api import *
+import logging
+
+from robusta.api import (
+    DeploymentEvent,
+    EventChangeEvent,
+    EventEnricherParams,
+    ExecutionBaseEvent,
+    Finding,
+    FindingSeverity,
+    FindingSource,
+    FindingSubject,
+    FindingSubjectType,
+    FindingType,
+    KubeObjFindingSubject,
+    MarkdownBlock,
+    PodEvent,
+    SlackAnnotations,
+    VideoEnricherParams,
+    VideoLink,
+    action,
+    get_resource_events_table,
+    list_pods_using_selector,
+)
 
 
 class ExtendedEventEnricherParams(EventEnricherParams):
@@ -45,7 +67,7 @@ def event_resource_events(event: EventChangeEvent):
         return
     obj = event.obj.involvedObject
     events_table = get_resource_events_table(
-        f"*Related Events*",
+        "*Related Events*",
         obj.kind,
         obj.name,
         obj.namespace,

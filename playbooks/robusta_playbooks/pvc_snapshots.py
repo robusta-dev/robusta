@@ -1,6 +1,11 @@
+import time
+from datetime import datetime
+
+from hikaru.meta import KubernetesException
+from hikaru.model import PersistentVolumeClaim
 from kubernetes import client
 
-from robusta.api import *
+from robusta.api import ActionParams, ExecutionBaseEvent, Finding, FindingType, MarkdownBlock, action
 
 
 class VolumeSnapshotParams(ActionParams):
@@ -68,5 +73,5 @@ def create_pvc_snapshot(event: ExecutionBaseEvent, params: VolumeSnapshotParams)
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    finding.add_enrichment([MarkdownBlock(f"Successfully created snapshot")])
+    finding.add_enrichment([MarkdownBlock("Successfully created snapshot")])
     event.add_finding(finding)

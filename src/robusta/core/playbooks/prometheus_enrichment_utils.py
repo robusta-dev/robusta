@@ -8,7 +8,17 @@ import pygal
 from pydantic import BaseModel
 from pygal.style import DarkColorizedStyle as ChosenStyle
 
-from robusta.api import *
+from robusta.api import (
+    FLOAT_PRECISION_LIMIT,
+    PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
+    ChartValuesFormat,
+    FileBlock,
+    Node,
+    PrometheusDiscovery,
+    PrometheusQueryResult,
+    ResourceChartItemType,
+    ResourceChartResourceType,
+)
 from robusta.core.external_apis.prometheus.prometheus_cli import custom_query_range
 
 
@@ -18,7 +28,7 @@ class XAxisLine(BaseModel):
 
 
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
-    labels = defaultdict(lambda: "<missing>")
+    labels: Dict[Any, Any] = defaultdict(lambda: "<missing>")
     labels.update(provided_labels)
     template = Template(promql_query_template)
     promql_query = template.safe_substitute(labels)
@@ -112,6 +122,8 @@ def create_chart_from_prometheus_query(
         min_time = min(min_time, min(series.timestamps))
         max_time = max(max_time, max(series.timestamps))
         chart.add(label, values)
+
+    assert lines is not None
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
         chart.add(line.label, value)
@@ -130,7 +142,7 @@ def create_graph_enrichment(
 ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
-        prometheus_url,
+        prometheus_url,  # TODO
         promql_query,
         start_at,
         include_x_axis=True,

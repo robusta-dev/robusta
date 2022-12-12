@@ -14,8 +14,8 @@ from robusta.runner.telemetry import SinkInfo
 
 
 class TelemetryLevel(Enum):
-    NONE = (0,)
-    USAGE = (1,)
+    NONE = 0
+    USAGE = 1
     ERROR = 2
 
 

@@ -1,13 +1,40 @@
 import logging
-import re
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from string import Template
-from urllib.parse import unquote_plus, urlparse
+from typing import Any, Dict, List, Optional
 
 import requests
+from hikaru.model import Node
 
-from robusta.api import *
+from robusta.api import (
+    ActionParams,
+    AlertResourceGraphEnricherParams,
+    CallbackBlock,
+    CallbackChoice,
+    ChartValuesFormat,
+    CustomGraphEnricherParams,
+    ExecutionBaseEvent,
+    FileBlock,
+    Finding,
+    FindingSource,
+    ListBlock,
+    MarkdownBlock,
+    NamedRegexPattern,
+    PodEvent,
+    PrometheusKubernetesAlert,
+    PrometheusParams,
+    RegexReplacementStyle,
+    ResourceChartItemType,
+    ResourceChartResourceType,
+    SlackAnnotations,
+    TableBlock,
+    action,
+    create_chart_from_prometheus_query,
+    create_graph_enrichment,
+    create_resource_enrichment,
+    get_node_internal_ip,
+)
 
 
 class SeverityParams(ActionParams):
@@ -122,7 +149,11 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     """
     promql_query = alert.get_prometheus_query()
     chart = create_chart_from_prometheus_query(
-        params.prometheus_url, promql_query, alert.alert.startsAt, include_x_axis=False, graph_duration_minutes=60
+        params.prometheus_url,
+        promql_query,
+        alert.alert.startsAt,
+        include_x_axis=False,
+        graph_duration_minutes=60,
     )
     alert.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
 
@@ -193,7 +224,7 @@ def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
     The template can include all markdown directives supported by Slack.
     Note that Slack markdown links use a different format than GitHub.
     """
-    labels = defaultdict(lambda: "<missing>")
+    labels: Dict[str, Any] = defaultdict(lambda: "<missing>")
     labels.update(alert.alert.labels)
     template = Template(params.template)
     alert.add_enrichment(

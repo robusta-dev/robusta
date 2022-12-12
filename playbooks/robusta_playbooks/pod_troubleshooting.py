@@ -1,10 +1,34 @@
 # TODO: move the python playbooks into their own subpackage and put each playbook in its own file
+import json
 import logging
+import textwrap
 from typing import List
 
 import humanize
+from pydantic import BaseModel
 
-from robusta.api import *
+from robusta.api import (
+    ActionParams,
+    CallbackBlock,
+    CallbackChoice,
+    DividerBlock,
+    FileBlock,
+    Finding,
+    FindingSource,
+    FindingType,
+    HeaderBlock,
+    MarkdownBlock,
+    PodEvent,
+    PodFindingSubject,
+    ProcessFinder,
+    ProcessParams,
+    ProcessType,
+    RobustaPod,
+    SlackAnnotations,
+    TableBlock,
+    action,
+    load_json,
+)
 
 
 class StackTraceObject(BaseModel):
@@ -15,10 +39,10 @@ class StackTraceObject(BaseModel):
     :var trace: on success the stack traces of all threads, on error the stack trace of the exception
     """
 
-    time: float = None
-    status: str = None
-    error: str = None
-    trace: str = None
+    time: float = None  # type: ignore
+    status: str = None  # type: ignore
+    error: str = None  # type: ignore
+    trace: str = None  # type: ignore
 
 
 class StartProfilingParams(ActionParams):
@@ -240,13 +264,13 @@ def get_loaded_module_info(data):
 
     return (
         textwrap.dedent(
-            f"""\
-        These are the remote module paths
-        
-        Use this list to guess the right value for `remoteRoot` in launch.json
-        
-        When setting breakpoints, VSCode determines the remote filename by replacing `localRoot` with `remoteRoot` in the filename  
-        %s"""
+            """\
+            These are the remote module paths
+
+            Use this list to guess the right value for `remoteRoot` in launch.json
+
+            When setting breakpoints, VSCode determines the remote filename by replacing `localRoot` with `remoteRoot` in the filename
+            %s"""
         )
         % (output,)
     )
@@ -275,13 +299,13 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     pid = process_finder.get_lowest_relevant_pid()
 
     if not pid:
-        logging.error(f"debugger_stack_trace - no relevant pids")
+        logging.error("debugger_stack_trace - no relevant pids")
         return
 
     if params.traces_amount < 1 or params.sleep_duration_s < 0:
         logging.error(
-            f"debugger_stack_trace - invalid params, "
-            f"traces_amount must be greater than 1 and sleep_duration_s must be greater than 0"
+            "debugger_stack_trace - invalid params, "
+            "traces_amount must be greater than 1 and sleep_duration_s must be greater than 0"
         )
         return
 
@@ -307,16 +331,16 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
         output_json = json.loads(output)
         SUCCESS_STATUS = "success"
         first_stack_trace_obj = StackTraceObject(**output_json[0]) if len(output_json) >= 1 else None
-        if len(output_json) == 0 or (len(output_json) == 1 and first_stack_trace_obj.status != SUCCESS_STATUS):
+        if len(output_json) == 0 or (len(output_json) == 1 and first_stack_trace_obj.status != SUCCESS_STATUS):  # type: ignore
             # no stack traces returned or only one with error
             error_message = "Failed to get python stack trace"
             if len(output_json) == 1:
-                error_message += f", debugger error {first_stack_trace_obj.error} at " f"{first_stack_trace_obj.trace}"
+                error_message += f", debugger error {first_stack_trace_obj.error} at " f"{first_stack_trace_obj.trace}"  # type: ignore
             logging.error(error_message)
-            blocks.append(MarkdownBlock(f"Error while getting python stack trace."))
-        elif len(output_json) == 1 and first_stack_trace_obj.status == SUCCESS_STATUS:
+            blocks.append(MarkdownBlock("Error while getting python stack trace."))
+        elif len(output_json) == 1 and first_stack_trace_obj.status == SUCCESS_STATUS:  # type: ignore
             # print single stack trace directly to finding
-            for thread_output in first_stack_trace_obj.trace.split("\n\n"):
+            for thread_output in first_stack_trace_obj.trace.split("\n\n"):  # type: ignore
                 if thread_output.startswith("Current thread"):
                     # this is the thread we are getting the stack trace from, not relevant for debugging
                     continue
@@ -339,8 +363,8 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
             clean_file_output = json.dumps(clean_output, indent=4, sort_keys=True).replace("\\n", "\n")
             blocks.append(FileBlock(f"debugger_stack_trace_{pid}.txt", clean_file_output.encode()))
     except ValueError:  # includes simplejson.decoder.JSONDecodeError
-        logging.error(f"failed to decode output")
-        blocks.append(MarkdownBlock(f"Failed to processess stack trace(s)"))
+        logging.error("failed to decode output")
+        blocks.append(MarkdownBlock("Failed to processess stack trace(s)"))
 
     finding.add_enrichment(blocks)
     event.add_finding(finding)
@@ -369,11 +393,11 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     relevant_processes_pids = process_finder.get_pids()
     if not relevant_processes_pids:
-        ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
+        ERROR_MESSAGE = "No relevant processes found for advanced debugging."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
     else:
-        finding.add_enrichment([MarkdownBlock(f"Please select an advanced debugging choice:")])
+        finding.add_enrichment([MarkdownBlock("Please select an advanced debugging choice:")])
         choices = {}
         for proc_pid in relevant_processes_pids:
             updated_params = params.copy()

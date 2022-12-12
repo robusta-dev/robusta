@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from prometheus_api_client import PrometheusApiClientException, PrometheusConnect
 
@@ -14,7 +15,12 @@ It used to return only the result and not the resultType leading for less safe a
 
 
 def custom_query_range(
-    prometheus_base_url: str, query: str, start_time: datetime, end_time: datetime, step: str, params: dict = None
+    prometheus_base_url: str,
+    query: str,
+    start_time: datetime,
+    end_time: datetime,
+    step: str,
+    params: Optional[Dict[str, Any]] = None,
 ) -> PrometheusQueryResult:
     """
     Send a query_range to a Prometheus Host.

@@ -1,6 +1,18 @@
+import re
+from typing import List
+
+import hikaru
+from hikaru.meta import HikaruBase
 from pydantic import SecretStr
 
-from robusta.api import *
+from robusta.api import (
+    ActionParams,
+    GitRepoManager,
+    K8sOperationType,
+    KubernetesAnyChangeEvent,
+    action,
+    is_matching_diff,
+)
 
 
 class GitAuditParams(ActionParams):

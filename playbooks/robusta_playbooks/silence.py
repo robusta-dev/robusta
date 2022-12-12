@@ -1,4 +1,21 @@
-from robusta.api import *
+import json
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional
+from uuid import UUID
+
+import requests
+from pydantic import BaseModel
+
+from robusta.api import (
+    ActionParams,
+    AlertManagerDiscovery,
+    ExecutionBaseEvent,
+    MarkdownBlock,
+    ServiceDiscovery,
+    TableBlock,
+    action,
+)
 
 
 class Matcher(BaseModel):
@@ -41,9 +58,9 @@ class BaseSilenceParams(ActionParams):
     :var alertmanager_url: Alternative Alert Manager url to send requests.
     """
 
-    alertmanager_flavor: str = None
+    alertmanager_flavor: str = None  # type: ignore
     alertmanager_url: Optional[str]
-    grafana_api_key: str = None
+    grafana_api_key: str = None  # type: ignore
 
 
 class DeleteSilenceParams(BaseSilenceParams):

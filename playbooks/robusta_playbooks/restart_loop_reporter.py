@@ -1,11 +1,29 @@
 import logging
+from typing import List, Optional
 
-from robusta.api import *
+from hikaru.model import ContainerStatus, PodStatus
+
+from robusta.api import (
+    ActionParams,
+    BaseBlock,
+    FileBlock,
+    Finding,
+    FindingSeverity,
+    FindingSource,
+    MarkdownBlock,
+    NamedRegexPattern,
+    PodEvent,
+    PodFindingSubject,
+    RateLimiter,
+    RateLimitParams,
+    RegexReplacementStyle,
+    action,
+)
 
 
 def _send_crash_report(
     event: PodEvent,
-    crashed_container_statuses: [ContainerStatus],
+    crashed_container_statuses: List[ContainerStatus],
     action_name: str,
     regex_replacer_patterns: Optional[NamedRegexPattern] = None,
     regex_replacement_style: Optional[RegexReplacementStyle] = None,
@@ -92,11 +110,11 @@ class RestartLoopParams(RateLimitParams):
     :var restart_reason: Limit restart loops for this specific reason. If omitted, all restart reasons will be included.
     """
 
-    restart_reason: str = None
+    restart_reason: str = None  # type: ignore
 
 
 # deprecated
-def get_crashing_containers(status: PodStatus, config: RestartLoopParams) -> [ContainerStatus]:
+def get_crashing_containers(status: PodStatus, config: RestartLoopParams) -> List[ContainerStatus]:
     all_statuses = status.containerStatuses + status.initContainerStatuses
     return [
         container_status

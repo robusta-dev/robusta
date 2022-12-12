@@ -1,7 +1,7 @@
 import threading
 import time
 from collections import defaultdict
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic.main import BaseModel
 
@@ -23,8 +23,8 @@ class CachedResourceInfo(BaseModel):
 
 
 class TopServiceResolver:
-    __recent_resource_updates = {}
-    __namespace_to_resource = defaultdict(list)
+    __recent_resource_updates: Dict[str, CachedResourceInfo] = {}
+    __namespace_to_resource: Dict[str, List[TopLevelResource]] = defaultdict(list)
     __cached_updates_lock = threading.Lock()
 
     @classmethod

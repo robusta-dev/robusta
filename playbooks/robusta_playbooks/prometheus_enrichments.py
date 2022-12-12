@@ -1,4 +1,15 @@
-from robusta.api import *
+import logging
+from datetime import datetime, timedelta
+from typing import Optional, Tuple, Union
+
+from robusta.api import (
+    ExecutionBaseEvent,
+    PrometheusDateRange,
+    PrometheusDuration,
+    PrometheusQueryParams,
+    action,
+    run_prometheus_query,
+)
 from robusta.core.reporting.blocks import PrometheusBlock
 
 
@@ -14,7 +25,7 @@ def parse_timestamp_string(date_string: str) -> Optional[datetime]:
 
 def parse_duration(
     duration: Union[PrometheusDateRange, PrometheusDuration]
-) -> (Optional[datetime], Optional[datetime]):
+) -> Tuple[Optional[datetime], Optional[datetime]]:
     if isinstance(duration, PrometheusDateRange):
         return parse_timestamp_string(duration.starts_at), parse_timestamp_string(duration.ends_at)
     elif isinstance(duration, PrometheusDuration):
@@ -35,10 +46,10 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
     """
     # verifies params.promql_query is not an empty string ""
     if not params.promql_query:
-        raise Exception(f"Invalid request, prometheus_enricher requires a promql query.")
+        raise Exception("Invalid request, prometheus_enricher requires a promql query.")
     starts_at, ends_at = parse_duration(params.duration)
     if not starts_at or not ends_at:
-        raise Exception(f"Invalid request, verify the duration times are of format '%Y-%m-%d %H:%M:%S %Z'")
+        raise Exception("Invalid request, verify the duration times are of format '%Y-%m-%d %H:%M:%S %Z'")
         return
 
     prometheus_result = run_prometheus_query(

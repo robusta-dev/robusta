@@ -27,7 +27,7 @@ def volume_analysis(event: PersistentVolumeEvent):
     function_name = "volume_analysis"
     # https://docs.robusta.dev/master/developer-guide/actions/findings-api.html
     finding = Finding(
-        title=f"Persistent Volume content",
+        title="Persistent Volume content",
         source=FindingSource.MANUAL,
         aggregation_key=function_name,
         finding_type=FindingType.REPORT,
@@ -75,11 +75,11 @@ def volume_analysis(event: PersistentVolumeEvent):
                             container_found_flag = True
                             break
 
-                result = pod.exec(f"ls -R {container_volume_mount.mountPath}/")
+                result = pod.exec(f"ls -R {container_volume_mount.mountPath}/")  # type: ignore
                 finding.title = f"Files present on persistent volume {pv.metadata.name} are: "
                 finding.add_enrichment(
                     [
-                        FileBlock(f"Data.txt: ", result.encode()),
+                        FileBlock("Data.txt: ", result.encode()),
                     ]
                 )
 
@@ -90,7 +90,7 @@ def volume_analysis(event: PersistentVolumeEvent):
                 finding.title = f"Files present on persistent volume {pv.metadata.name} are: "
                 finding.add_enrichment(
                     [
-                        FileBlock(f"Data.txt: ", result.encode()),
+                        FileBlock("Data.txt: ", result.encode()),
                     ]
                 )
         else:

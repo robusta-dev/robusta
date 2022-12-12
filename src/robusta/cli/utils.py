@@ -121,7 +121,7 @@ def get_package_name(playbooks_dir: str) -> str:
         return get(parsed, "tool/poetry/name", default="")
 
 
-def get_runner_pod(namespace: str) -> Optional[str]:
+def get_runner_pod(namespace: Optional[str]) -> str:
     return subprocess.run(
         f"kubectl get pods {namespace_to_kubectl(namespace)} "
         f'--selector="robustaComponent=runner" '

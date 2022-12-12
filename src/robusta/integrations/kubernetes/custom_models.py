@@ -54,7 +54,7 @@ def list_pods_using_selector(namespace: str, selector: LabelSelector, field_sele
     ).obj.items
 
 
-def _get_image_name_and_tag(image: str) -> (str, str):
+def _get_image_name_and_tag(image: str) -> Tuple[str, str]:
     if ":" in image:
         image_name, image_tag = image.split(":", maxsplit=1)
         return image_name, image_tag

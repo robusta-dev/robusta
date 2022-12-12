@@ -1,7 +1,23 @@
-import hikaru.model
-import kubernetes.client.exceptions
+import logging
+from typing import List
 
-from robusta.api import *
+import hikaru
+import kubernetes.client.exceptions
+from hikaru.model import PodList
+
+from robusta.api import (
+    FileBlock,
+    KubernetesResourceEvent,
+    MarkdownBlock,
+    Pod,
+    ResourceLoader,
+    TableBlock,
+    action,
+    build_selector_query,
+    pod_limits,
+    pod_requests,
+    pod_restarts,
+)
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet"]
 
@@ -81,7 +97,7 @@ def get_resource_yaml(event: KubernetesResourceEvent):
     """
     resource = event.get_resource()
     if not resource:
-        logging.error(f"resource not found...")
+        logging.error("resource not found...")
         return
 
     resource_kind = resource.kind

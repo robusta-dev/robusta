@@ -1,4 +1,25 @@
-from robusta.api import *
+import logging
+from typing import List, Tuple
+
+from hikaru.model import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec
+
+from robusta.api import (
+    ActionParams,
+    EnvVar,
+    EventEnricherParams,
+    FileBlock,
+    JobEvent,
+    JobStatus,
+    MarkdownBlock,
+    PodContainer,
+    PrometheusKubernetesAlert,
+    SlackAnnotations,
+    TableBlock,
+    action,
+    get_job_latest_pod,
+    get_resource_events_table,
+    to_kubernetes_name,
+)
 
 
 class JobParams(ActionParams):
@@ -23,12 +44,12 @@ class JobParams(ActionParams):
     command: List[str]
     name: str = "robusta-action-job"
     namespace: str = "default"
-    service_account: str = None
+    service_account: str = None  # type: ignore
     restart_policy: str = "OnFailure"
-    job_ttl_after_finished: int = None
+    job_ttl_after_finished: int = None  # type: ignore
     notify: bool = False
-    backoff_limit: int = None
-    active_deadline_seconds: int = None
+    backoff_limit: int = None  # type: ignore
+    active_deadline_seconds: int = None  # type: ignore
 
 
 @action
@@ -184,7 +205,7 @@ def job_info_enricher(event: JobEvent):
     succeeded = job_status.succeeded if job_status.succeeded else 0
     failed = job_status.failed if job_status.failed else 0
     status, message = __job_status_str(job_status)
-    job_rows: List[List[str, str]] = [["status", status]]
+    job_rows: List[List[str]] = [["status", status]]
     if message:
         job_rows.append(["message", message])
 
@@ -222,7 +243,7 @@ def __resources_str(request, limit) -> str:
     return f"{req}/{lim}"
 
 
-def __job_status_str(job_status: JobStatus) -> (str, str):
+def __job_status_str(job_status: JobStatus) -> Tuple[str, str]:
     if job_status.active:
         return "Running", ""
 

@@ -1,7 +1,24 @@
+import logging
 import traceback
-from typing import List
+from typing import Callable, List
 
-from robusta.api import *
+from robusta.api import (
+    CallbackBlock,
+    CallbackChoice,
+    FileBlock,
+    Finding,
+    FindingSource,
+    FindingType,
+    MarkdownBlock,
+    PodEvent,
+    PodFindingSubject,
+    ProcessFinder,
+    ProcessParams,
+    ProcessType,
+    RobustaPod,
+    TableBlock,
+    action,
+)
 
 
 class JavaParams(ProcessParams):
@@ -9,7 +26,7 @@ class JavaParams(ProcessParams):
     :var jtk_image: the java-toolkit image to use for debugging
     """
 
-    jtk_image: str = None
+    jtk_image: str = None  # type: ignore
 
 
 @action
@@ -22,7 +39,7 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
         logging.info(f"Java debugging - pod not found for event: {event}")
         return
     if not params.interactive:
-        logging.info(f"unable to support non interactive jdk events")
+        logging.info("unable to support non interactive jdk events")
         return
 
     finding = Finding(
@@ -35,7 +52,7 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
     )
     process_finder = ProcessFinder(pod, params, ProcessType.JAVA)
     if not process_finder.matching_processes:
-        ERROR_MESSAGE = f"No relevant processes found for java debugging."
+        ERROR_MESSAGE = "No relevant processes found for java debugging."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
         event.add_finding(finding)
@@ -133,7 +150,7 @@ def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod, override_jtk_image: 
 
 
 def add_jdk_choices_to_finding(finding: Finding, params: JavaParams, pids: List[int], pod: RobustaPod) -> Finding:
-    finding.add_enrichment([MarkdownBlock(f"Please select a Java troubleshooting choice:")])
+    finding.add_enrichment([MarkdownBlock("Please select a Java troubleshooting choice:")])
     choices = {}
     for pid in pids:
         logging.info(f"jdk_choices_in_finding_for_pid {pid}")

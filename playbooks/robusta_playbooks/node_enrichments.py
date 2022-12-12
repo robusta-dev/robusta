@@ -1,6 +1,22 @@
-from datetime import datetime
+import logging
+from typing import List
 
-from robusta.api import *
+from hikaru import Pod, PodList
+
+from robusta.api import (
+    BaseBlock,
+    Finding,
+    FindingSeverity,
+    FindingSource,
+    KubeObjFindingSubject,
+    KubernetesDiffBlock,
+    NodeChangeEvent,
+    NodeEvent,
+    ResourceGraphEnricherParams,
+    TableBlock,
+    action,
+    create_node_graph_enrichment,
+)
 
 
 def pod_row(pod: Pod) -> List[str]:
@@ -73,7 +89,7 @@ def node_status_enricher(event: NodeEvent):
             TableBlock(
                 [[c.type, c.status] for c in event.get_node().status.conditions],
                 headers=["Type", "Status"],
-                table_name=f"*Node status details:*",
+                table_name="*Node status details:*",
             ),
         ]
     )
@@ -92,11 +108,8 @@ def node_health_watcher(event: NodeChangeEvent):
     if len(new_condition) != 1 or len(old_condition) != 1:
         logging.warning(f"more than one Ready condition. new={new_condition} old={old_condition}")
 
-    new_condition = new_condition[0]
-    old_condition = old_condition[0]
-
-    currently_ready = "true" in new_condition.status.lower()
-    previously_ready = "true" in old_condition.status.lower()
+    currently_ready = "true" in new_condition[0].status.lower()
+    previously_ready = "true" in old_condition[0].status.lower()
 
     if currently_ready and not previously_ready:
         logging.info(f"node changed back to healthy: old={event.old_obj} new={event.obj}")

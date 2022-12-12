@@ -175,9 +175,9 @@ def gen_config(
     uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY)
     uiValues.service["nodePort"] = platform_nport
 
-    values = values.dict()
-    values["robusta-ui"] = uiValues.dict()
-    values["robusta-relay"] = relayValues.dict()
+    values_dict = values.dict()
+    values_dict["robusta-ui"] = uiValues.dict()
+    values_dict["robusta-relay"] = relayValues.dict()
 
     backendProfile = BackendProfile.fromDomain(domain=domain)
-    write_values_files("self_host_values.yaml", "robusta_cli_config.json", values, backendProfile)
+    write_values_files("self_host_values.yaml", "robusta_cli_config.json", values_dict, backendProfile)

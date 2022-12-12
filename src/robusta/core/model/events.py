@@ -41,7 +41,8 @@ class ExecutionBaseEvent:
     sink_findings: Dict[str, List[Finding]] = field(default_factory=lambda: defaultdict(list))
     # Target sinks for this execution event. Each playbook may have a different list of target sinks.
     named_sinks: Optional[List[str]] = None
-    response: Dict[str, Any] = None  # Response returned to caller. For admission or manual triggers for example
+    #  Response returned to caller. For admission or manual triggers for example
+    response: Dict[str, Any] = None  # type: ignore
     stop_processing: bool = False
     _scheduler: Optional[PlaybooksScheduler] = None
     _context: Optional[ExecutionContext] = None

@@ -1,6 +1,11 @@
 # TODO: turn this into a bot that prints statistics/a graph of changes at the end of the day/week
 # on what changed the most
-from robusta.api import *
+import logging
+from typing import Dict
+
+from pydantic import BaseModel
+
+from robusta.api import DeploymentEvent, Finding, FindingType, action, get_persistent_data
 
 
 class DeploymentChangeCounter(BaseModel):

@@ -1,11 +1,28 @@
 import enum
 import json
+import logging
+import re
 from enum import Flag
+from typing import List, Optional
 
-from robusta.api import *
+from hikaru.model import ContainerStatus, Event, EventList, PodStatus
+
+from robusta.api import (
+    BaseBlock,
+    Finding,
+    FindingSeverity,
+    FindingSource,
+    HeaderBlock,
+    MarkdownBlock,
+    PodEvent,
+    PodFindingSubject,
+    RateLimiter,
+    RateLimitParams,
+    action,
+)
 
 
-def get_image_pull_backoff_container_statuses(status: PodStatus) -> [ContainerStatus]:
+def get_image_pull_backoff_container_statuses(status: PodStatus) -> List[ContainerStatus]:
     return [
         container_status
         for container_status in status.containerStatuses
@@ -14,7 +31,7 @@ def get_image_pull_backoff_container_statuses(status: PodStatus) -> [ContainerSt
 
 
 def decompose_flag(flag: Flag) -> List[Flag]:
-    members, _ = enum._decompose(flag.__class__, flag._value_)
+    members, _ = enum._decompose(flag.__class__, flag._value_)  # type: ignore
     return members
 
 
@@ -227,7 +244,7 @@ class ImagePullBackoffInvestigator:
         for config in self.configs:
             err_template = config["err_template"]
             reason = config["reason"]
-            if re.fullmatch(err_template, kubelet_image_pull_error) is not None:
-                return reason
+            if re.fullmatch(err_template, kubelet_image_pull_error) is not None:  # type: ignore
+                return reason  # type: ignore
 
         return ImagePullBackoffReason.Unknown
