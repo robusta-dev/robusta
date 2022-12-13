@@ -8,8 +8,15 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
-from robusta.core.reporting import FindingSource, FindingSubjectType
-from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity, FindingSubject, VideoLink
+from robusta.core.reporting.base import (
+    BaseBlock,
+    Finding,
+    FindingSeverity,
+    FindingSource,
+    FindingSubject,
+    FindingSubjectType,
+    VideoLink,
+)
 from robusta.integrations.scheduled.playbook_scheduler import PlaybooksScheduler
 
 

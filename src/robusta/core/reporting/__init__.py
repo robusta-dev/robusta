@@ -5,8 +5,10 @@ from robusta.core.reporting.base import (
     Filterable,
     Finding,
     FindingSeverity,
+    FindingSource,
     FindingStatus,
     FindingSubject,
+    FindingSubjectType,
     VideoLink,
 )
 from robusta.core.reporting.blocks import (
@@ -29,7 +31,9 @@ __all__ = [
     "FindingSeverity",
     "FindingStatus",
     "VideoLink",
+    "FindingSource",
     "Enrichment",
+    "FindingSubjectType",
     "Filterable",
     "FindingSubject",
     "Finding",

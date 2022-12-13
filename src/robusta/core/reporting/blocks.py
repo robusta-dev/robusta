@@ -361,7 +361,7 @@ class LinksBlock(BaseBlock):
     A set of links
     """
 
-    links: list[LinkProp] = []
+    links: List[LinkProp] = []
 
 
 class PrometheusBlock(BaseBlock):
