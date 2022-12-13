@@ -27,12 +27,11 @@ try:
 except config.config_exception.ConfigException as e:
     logging.warning(f"Running without kube-config! e={e}")
 
-
 default_exec_command = ["/bin/sh", "-c"]
 
 
 def wait_until(
-    read_function, predicate_function, timeout_sec: float, backoff_wait_sec: float
+        read_function, predicate_function, timeout_sec: float, backoff_wait_sec: float
 ):
     """
     repeatedly calls predicate_function(read_function)) until predicate_function returns True or we timeout
@@ -72,7 +71,7 @@ def wait_until_job_complete(job: Job, timeout):
 
 # TODO: refactor to use wait_until function
 def wait_for_pod_status(
-    name, namespace, status: str, timeout_sec: float, backoff_wait_sec: float
+        name, namespace, status: str, timeout_sec: float, backoff_wait_sec: float
 ) -> str:
     pod_details = f"pod status: {name} {namespace} {status} {timeout_sec}"
     logging.debug(f"waiting for {pod_details}")
@@ -105,7 +104,7 @@ def exec_shell_command(name, shell_command: str, namespace="default", container=
 
 
 def upload_file(
-    name: str, destination: str, contents: bytes, namespace="default", container=None
+        name: str, destination: str, contents: bytes, namespace="default", container=None
 ):
     core_v1 = core_v1_api.CoreV1Api()
     resp = stream(
@@ -142,12 +141,12 @@ def upload_file(
 
 
 def get_pod_logs(
-    name,
-    namespace="default",
-    container="",
-    previous=None,
-    tail_lines=None,
-    since_seconds=None,
+        name,
+        namespace="default",
+        container="",
+        previous=None,
+        tail_lines=None,
+        since_seconds=None,
 ):
     resp = None
     try:
@@ -170,6 +169,28 @@ def get_pod_logs(
             resp = ""
 
     logging.debug(f"get logs {resp}")
+    return resp
+
+
+def list_available_services(
+        namespace="default",
+):
+    resp = None
+    try:
+        core_v1 = core_v1_api.CoreV1Api()
+        resp = core_v1.list_namespaced_service(
+            namespace,
+            _preload_content=False  # If this flag is not used, double quotes in json objects in stdout are converted
+            # by the kubernetes client to single quotes, which makes json.loads() fail.
+            # We therefore use this flag in order to get the raw bytes and decode the output
+        ).data.decode("utf-8")
+
+    except ApiException as e:
+        if e.status != 404:
+            logging.exception(f"failed to get services in {namespace} namespace")
+            resp = ""
+
+    logging.debug(f"list available services {resp}")
     return resp
 
 
