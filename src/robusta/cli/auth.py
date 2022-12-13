@@ -22,10 +22,10 @@ app = typer.Typer()
 
 
 class RSAKeyPair(BaseModel):
-    prv: str = "none"
-    pub: str = "none"
-    private: str = "none"
-    public: str = "none"
+    prv: str = None
+    pub: str = None
+    private: str = None
+    public: str = None
 
 
 def gen_rsa_pair() -> RSAKeyPair:
