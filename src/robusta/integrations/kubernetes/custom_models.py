@@ -1,14 +1,48 @@
 import json
+import logging
+import re
 from enum import Enum, auto
-from typing import Dict, List, Type, TypeVar
+from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
 import hikaru
 import yaml
-from hikaru.model import *  # *-import is necessary for hikaru subclasses to work
+from hikaru.model import (
+    Capabilities,
+    Container,
+    DaemonSet,
+    Deployment,
+    EnvVar,
+    Event,
+    EventList,
+    HikaruDocumentBase,
+    HostPathVolumeSource,
+    Job,
+    JobSpec,
+    LabelSelector,
+    LabelSelectorRequirement,
+    Node,
+    ObjectMeta,
+    Pod,
+    PodList,
+    PodSpec,
+    PodTemplateSpec,
+    SecurityContext,
+    Volume,
+    VolumeMount,
+)
 from pydantic import BaseModel
 
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
-from robusta.integrations.kubernetes.api_client_utils import *
+from robusta.integrations.kubernetes.api_client_utils import (
+    SUCCEEDED_STATE,
+    exec_shell_command,
+    get_pod_logs,
+    prepare_pod_command,
+    to_kubernetes_name,
+    upload_file,
+    wait_for_pod_status,
+    wait_until_job_complete,
+)
 from robusta.integrations.kubernetes.templates import get_deployment_yaml
 
 S = TypeVar("S")

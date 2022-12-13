@@ -1,6 +1,14 @@
 import uuid
 
-from hikaru.model.rel_1_16 import *
+from hikaru.model.rel_1_16 import (
+    Container,
+    Deployment,
+    DeploymentSpec,
+    LabelSelector,
+    ObjectMeta,
+    PodSpec,
+    PodTemplateSpec,
+)
 from kubernetes.client import ApiClient
 
 

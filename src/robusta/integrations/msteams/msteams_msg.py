@@ -4,8 +4,16 @@ from typing import List
 
 import requests
 
-from robusta.core.reporting import FileBlock, HeaderBlock, KubernetesDiffBlock, ListBlock, MarkdownBlock, TableBlock
-from robusta.core.reporting.base import *
+from robusta.core.reporting import (
+    FileBlock,
+    Finding,
+    FindingSeverity,
+    HeaderBlock,
+    KubernetesDiffBlock,
+    ListBlock,
+    MarkdownBlock,
+    TableBlock,
+)
 from robusta.integrations.msteams.msteams_adaptive_card_files import MsTeamsAdaptiveCardFiles
 from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
 from robusta.integrations.msteams.msteams_elements.msteams_card import MsTeamsCard

@@ -2,11 +2,12 @@ import base64
 import os
 import tempfile
 import uuid
+from typing import List
 
 from cairosvg import svg2png
 from PIL import Image
 
-from robusta.core.reporting.blocks import *
+from robusta.core.reporting.blocks import FileBlock
 from robusta.core.reporting.utils import JPG_SUFFIX, PNG_SUFFIX, file_suffix_match, is_image
 from robusta.integrations.msteams.msteams_elements.msteams_images import MsTeamsImages
 

@@ -1,8 +1,9 @@
 import logging
+import time
 
 from kubernetes import config
 
-from robusta.api import *
+from robusta.api import RobustaPod
 from tests.utils.kubernetes_utils import create_sleeping_deployment
 
 

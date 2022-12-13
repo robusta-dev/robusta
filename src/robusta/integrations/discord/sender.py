@@ -1,11 +1,22 @@
+import logging
+import re
 from itertools import chain
-from typing import Tuple
+from typing import Dict, List, Tuple, Union
 
 import requests
 
 from robusta.core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT, ROBUSTA_LOGO_URL
-from robusta.core.reporting.base import *
-from robusta.core.reporting.blocks import *
+from robusta.core.reporting import (
+    BaseBlock,
+    FileBlock,
+    Finding,
+    FindingSeverity,
+    HeaderBlock,
+    KubernetesDiffBlock,
+    ListBlock,
+    MarkdownBlock,
+    TableBlock,
+)
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.transformer import Transformer
 

@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from robusta.api import *
+from robusta.api import Finding, MarkdownBlock, SlackSender, TableBlock
 from tests.config import CONFIG
 from tests.utils.slack_utils import SlackChannel
 

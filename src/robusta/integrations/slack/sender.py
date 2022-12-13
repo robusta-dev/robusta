@@ -1,13 +1,26 @@
 import logging
 import tempfile
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 from robusta.core.model.env_vars import SLACK_TABLE_COLUMNS_LIMIT
-from robusta.core.reporting.base import *
-from robusta.core.reporting.blocks import *
+from robusta.core.reporting.base import Emojis, Finding, FindingStatus
+from robusta.core.reporting.blocks import (
+    BaseBlock,
+    CallbackBlock,
+    CallbackChoice,
+    DividerBlock,
+    FileBlock,
+    HeaderBlock,
+    KubernetesDiffBlock,
+    LinkProp,
+    LinksBlock,
+    ListBlock,
+    MarkdownBlock,
+    TableBlock,
+)
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import SlackAnnotations
 from robusta.core.reporting.utils import add_pngs_for_all_svgs

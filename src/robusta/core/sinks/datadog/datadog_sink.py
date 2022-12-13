@@ -4,7 +4,7 @@ from typing import List
 
 from datadog_api_client.v1 import ApiClient, ApiException, Configuration
 from datadog_api_client.v1.api import events_api
-from datadog_api_client.v1.models import *
+from datadog_api_client.v1.models import EventAlertType, EventCreateRequest
 from tabulate import tabulate
 
 from robusta.core.reporting.base import Enrichment, Finding, FindingSeverity

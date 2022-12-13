@@ -1,9 +1,9 @@
 import json
+import logging
+from enum import Enum
 from http import HTTPStatus
 
 import requests
-
-from robusta.core.reporting.base import *
 
 
 class HttpMethod(Enum):

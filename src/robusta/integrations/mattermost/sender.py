@@ -1,8 +1,18 @@
+import logging
+import re
 from itertools import chain
-from typing import Tuple
+from typing import Any, Dict, List, Tuple, Union
 
-from robusta.core.reporting.base import *
-from robusta.core.reporting.blocks import *
+from robusta.core.reporting.base import Finding, FindingSeverity
+from robusta.core.reporting.blocks import (
+    BaseBlock,
+    FileBlock,
+    HeaderBlock,
+    KubernetesDiffBlock,
+    ListBlock,
+    MarkdownBlock,
+    TableBlock,
+)
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.transformer import Transformer
 from robusta.integrations.mattermost.client import MattermostClient
