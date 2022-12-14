@@ -28,7 +28,7 @@ class VictoropsSink(SinkBase):
             if finding.add_silence_url:
                 json_dict[
                     "vo_annotate.u.🔕 Silence"
-                ] = finding.get_prometheus_silence_url(self.cluster_name)
+                ] = finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
 
             for video_link in finding.video_links:
                 json_dict[

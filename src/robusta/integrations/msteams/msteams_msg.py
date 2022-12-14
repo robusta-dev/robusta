@@ -33,7 +33,7 @@ class MsTeamsMsg:
         block = MsTeamsTextBlock(text=f"{severity.to_emoji()} {severity.name} - {finding.title}", font_size='extraLarge')
         self.__write_to_entire_msg([block])
         if platform_enabled:  # add link to the Robusta ui, if it's configured
-            silence_url = finding.get_prometheus_silence_url(cluster_name)
+            silence_url = finding.get_prometheus_silence_url(account_id, cluster_name)
             actions = f"[🔎 Investigate]({finding.get_investigate_uri(account_id, cluster_name)})"
             if finding.add_silence_url:
                 actions = f"{actions}  [🔕 Silence]({silence_url})"
