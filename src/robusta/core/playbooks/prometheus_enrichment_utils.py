@@ -5,21 +5,15 @@ from typing import Any, Dict, List, Optional
 
 import humanize
 import pygal
+from hikaru.model import Node
 from pydantic import BaseModel
 from pygal.style import DarkColorizedStyle as ChosenStyle
 
-from robusta.api import (
-    FLOAT_PRECISION_LIMIT,
-    PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
-    ChartValuesFormat,
-    FileBlock,
-    Node,
-    PrometheusDiscovery,
-    PrometheusQueryResult,
-    ResourceChartItemType,
-    ResourceChartResourceType,
-)
 from robusta.core.external_apis.prometheus.prometheus_cli import custom_query_range
+from robusta.core.model.base_params import ChartValuesFormat, ResourceChartItemType, ResourceChartResourceType
+from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+from robusta.core.reporting.blocks import FileBlock
+from robusta.integrations.prometheus.utils import PrometheusDiscovery, PrometheusQueryResult
 
 
 class XAxisLine(BaseModel):
