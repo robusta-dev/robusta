@@ -1,7 +1,7 @@
 name: Release Docker CLI image
 on:
-  - push
-  - pull_request
+  release:
+    types: [published]
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROD_PROJECT }}
@@ -48,11 +48,11 @@ jobs:
             enabled = true
             platforms = [ "linux/amd64", "linux/arm64" ]
 
-    - name: Build with skaffold
+    - name: Build and push
       run: |-
         docker buildx build \
         --platform linux/arm64,linux/amd64 \
-        --tag us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli:${{ github.event.pull_request.base.ref }} \
+        --tag us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli:${{env.RELEASE_VER}} \
         --push \
         --file cli.Dockerfile \
         .
