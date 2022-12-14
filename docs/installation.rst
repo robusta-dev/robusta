@@ -113,6 +113,11 @@ Standard Installation
 
     helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> # --set isSmallCluster=true
 
+    
+.. note::
+
+      You can provide configuration values as Kubernete secrets. See `Configuration secrets <https://docs.robusta.dev/master/user-guide/configuration-secrets.html>`_ guide.
+
 3. Verify the two Robusta pods and running with no errors in the logs:
 
 .. code-block:: bash
