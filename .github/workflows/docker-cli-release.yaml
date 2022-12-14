@@ -3,7 +3,6 @@ on:
   - push
   - pull_request
 
-
 env:
   PROJECT_ID: ${{ secrets.GKE_PROD_PROJECT }}
   RELEASE_VER : ${{ github.event.release.tag_name }}
@@ -50,11 +49,11 @@ jobs:
             platforms = [ "linux/amd64", "linux/arm64" ]
 
     - name: Build with skaffold
-      run: >
-        docker buildx build
-        --platform linux/arm64,linux/amd64 
-        --tag $IMAGE 'us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli:${{ github.event.pull_request.base.ref }}'
-        --push 
+      run: |-
+        docker buildx build \
+        --platform linux/arm64,linux/amd64 \
+        --tag us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli:${{ github.event.pull_request.base.ref }} \
+        --push \
         --file cli.Dockerfile
       
 
