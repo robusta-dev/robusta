@@ -54,7 +54,8 @@ jobs:
         --platform linux/arm64,linux/amd64 \
         --tag us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli:${{ github.event.pull_request.base.ref }} \
         --push \
-        --file cli.Dockerfile
+        --file cli.Dockerfile \
+        .
       
 
 
