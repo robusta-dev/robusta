@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Dict, Optional, Type
+from typing import Callable, Dict, List, Optional, Tuple, Type, cast
 
 from pydantic.main import BaseModel
 
@@ -96,12 +96,12 @@ class ActionsRegistry:
 
     def get_external_actions(
         self,
-    ) -> [(str, Type[ExecutionEventBaseParams], Optional[Type[BaseModel]])]:
+    ) -> List[Tuple[str, Type[ExecutionEventBaseParams], Optional[Type[BaseModel]]]]:
         """Should be used to prepare calling schema for each action"""
         return [
             (
                 action_def.action_name,
-                action_def.from_params_parameter_class,
+                cast(Type[ExecutionEventBaseParams], action_def.from_params_parameter_class),
                 action_def.params_type,
             )
             for action_def in self._actions.values()

@@ -71,7 +71,7 @@ class ExecutionBaseEvent:
         return Finding(title="Robusta notification", aggregation_key="Generic finding key")
 
     def __prepare_sinks_findings(self):
-        finding_id: uuid = uuid.uuid4()
+        finding_id: uuid.UUID = uuid.uuid4()
         for sink in self.named_sinks:
             if len(self.sink_findings[sink]) == 0:
                 sink_finding = self.create_default_finding()

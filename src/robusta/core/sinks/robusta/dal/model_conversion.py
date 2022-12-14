@@ -61,7 +61,12 @@ class ModelConversion:
 
     @staticmethod
     def to_evidence_json(
-        account_id: str, cluster_id: str, sink_name: str, signing_key: str, finding_id: uuid, enrichment: Enrichment
+        account_id: str,
+        cluster_id: str,
+        sink_name: str,
+        signing_key: str,
+        finding_id: uuid.UUID,
+        enrichment: Enrichment,
     ) -> Dict[Any, Any]:
         structured_data = []
         for block in enrichment.blocks:

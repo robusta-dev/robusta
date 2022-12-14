@@ -166,7 +166,7 @@ class Finding(Filterable):
         ends_at: datetime = None,
         add_silence_url: bool = False,
     ) -> None:
-        self.id: uuid = uuid.uuid4()
+        self.id: uuid.UUID = uuid.uuid4()
         self.title = title
         self.finding_type = finding_type
         self.failure = failure
