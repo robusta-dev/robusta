@@ -9,11 +9,11 @@ from hikaru.model import Node
 from pydantic import BaseModel
 from pygal.style import DarkColorizedStyle as ChosenStyle
 
-from robusta.core.external_apis.prometheus.prometheus_cli import custom_query_range
+from robusta.core.external_apis.prometheus.prometheus_cli import PrometheusQueryResult, custom_query_range
 from robusta.core.model.base_params import ChartValuesFormat, ResourceChartItemType, ResourceChartResourceType
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 from robusta.core.reporting.blocks import FileBlock
-from robusta.integrations.prometheus.utils import PrometheusDiscovery, PrometheusQueryResult
+from robusta.integrations.prometheus.utils import PrometheusDiscovery
 
 
 class XAxisLine(BaseModel):

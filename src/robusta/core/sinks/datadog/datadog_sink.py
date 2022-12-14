@@ -2,10 +2,30 @@ import logging
 import time
 from typing import List
 
-from datadog_api_client.v1 import ApiClient, ApiException, Configuration
-from datadog_api_client.v1.api import events_api
-from datadog_api_client.v1.models import EventAlertType, EventCreateRequest
-from tabulate import tabulate
+try:
+    from datadog_api_client.v1 import ApiClient, ApiException, Configuration
+    from datadog_api_client.v1.api import events_api
+    from datadog_api_client.v1.models import EventAlertType, EventCreateRequest
+except ImportError:
+
+    def lazy_import_error(self, *args, **kwargs):
+        raise ImportError("datadog-api-client is not installed")
+
+    Configuration = lazy_import_error
+    EventCreateRequest = lazy_import_error
+    EventAlertType = lazy_import_error
+    events_api = lazy_import_error
+    ApiClient = lazy_import_error
+    ApiException = lazy_import_error
+
+
+try:
+    from tabulate import tabulate
+except ImportError:
+
+    def tabulate(*args, **kwargs):
+        raise ImportError("Please install tabulate to use the TableBlock")
+
 
 from robusta.core.reporting.base import Enrichment, Finding, FindingSeverity
 from robusta.core.reporting.blocks import (

@@ -2,7 +2,13 @@ import logging
 from datetime import datetime
 from typing import List
 
-from grafana_api.grafana_face import GrafanaFace
+try:
+    from grafana_api.grafana_face import GrafanaFace
+except ImportError:
+
+    def GrafanaFace(*args, **kwargs):
+        raise ImportError("grafana-api is not installed")
+
 
 from robusta.core.model.env_vars import GRAFANA_READ_TIMEOUT
 from robusta.utils.service_discovery import find_service_url

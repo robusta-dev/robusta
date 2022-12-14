@@ -11,7 +11,14 @@ import hikaru
 from hikaru import DiffDetail, DiffType
 from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
-from tabulate import tabulate
+
+try:
+    from tabulate import tabulate
+except ImportError:
+
+    def tabulate(*args, **kwargs):
+        raise ImportError("Please install tabulate to use the TableBlock")
+
 
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.core.model.env_vars import PRINTED_TABLE_MAX_WIDTH

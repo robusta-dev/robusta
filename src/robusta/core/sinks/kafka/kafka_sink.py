@@ -1,7 +1,13 @@
 import json
 import logging
 
-from kafka import KafkaProducer
+try:
+    from kafka import KafkaProducer
+except ImportError:
+
+    def KafkaProducer(self, *args, **kwargs):
+        raise ImportError("kafka-python is not installed")
+
 
 from robusta.core.reporting.base import Enrichment, Finding
 from robusta.core.reporting.blocks import JsonBlock, KubernetesDiffBlock

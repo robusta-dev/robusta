@@ -1,5 +1,5 @@
-from abc import abstractmethod
-from typing import Any, Dict, List, Optional, Protocol
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
 
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.base_trigger import TriggerEvent
@@ -7,7 +7,7 @@ from robusta.model.playbook_action import PlaybookAction
 from robusta.runner.telemetry import Telemetry
 
 
-class PlaybooksEventHandler(Protocol):
+class PlaybooksEventHandler(ABC):
     """Interface for handling trigger events and running playbook actions"""
 
     @abstractmethod
@@ -39,15 +39,11 @@ class PlaybooksEventHandler(Protocol):
         pass
 
     @abstractmethod
-    def get_global_config(
-        self,
-    ) -> dict:
+    def get_global_config(self) -> dict:
         """Return runner global config"""
         pass
 
     @abstractmethod
-    def get_telemetry(
-        self,
-    ) -> Telemetry:
+    def get_telemetry(self) -> Telemetry:
         """Return runner telemetry"""
         pass

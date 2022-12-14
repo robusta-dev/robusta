@@ -6,30 +6,7 @@ from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
 import hikaru
 import yaml
-from hikaru.model import (
-    Capabilities,
-    Container,
-    DaemonSet,
-    Deployment,
-    EnvVar,
-    Event,
-    EventList,
-    HikaruDocumentBase,
-    HostPathVolumeSource,
-    Job,
-    JobSpec,
-    LabelSelector,
-    LabelSelectorRequirement,
-    Node,
-    ObjectMeta,
-    Pod,
-    PodList,
-    PodSpec,
-    PodTemplateSpec,
-    SecurityContext,
-    Volume,
-    VolumeMount,
-)
+from hikaru.model import *  # * import is necessary for hikaru subclasses to work
 from pydantic import BaseModel
 
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME

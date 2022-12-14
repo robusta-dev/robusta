@@ -4,6 +4,14 @@ from typing import List, Optional
 
 import markdown2
 
+try:
+    from tabulate import tabulate
+except ImportError:
+
+    def tabulate(*args, **kwargs):
+        raise ImportError("Please install tabulate to use the TableBlock")
+
+
 from robusta.core.reporting import (
     BaseBlock,
     DividerBlock,
@@ -14,7 +22,6 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
-    tabulate,
 )
 
 
