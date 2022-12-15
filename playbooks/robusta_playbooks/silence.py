@@ -118,6 +118,8 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
     except Exception as e:
         raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
 
+    if not res.ok:
+        raise ActionException(ErrorCodes.ADD_SILENCE_FAILED, msg=f"Add silence failed: {res.text}")
 
     silence_id = res.json().get("silenceID") or res.json().get("id")  # on grafana alertmanager the 'id' is returned
     if not silence_id:

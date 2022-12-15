@@ -35,6 +35,7 @@ class ErrorCodes(Enum):
 
 class ActionException(Exception):
     def __init__(self, error : ErrorCodes, msg: Optional[str] = None):
+        super().__init__(msg)
         self.msg : Optional[str] = msg
         self.code : int = error.value
         self.type : str = error.name

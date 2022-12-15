@@ -229,21 +229,16 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             try:
                 registered_action.func(execution_event, params) if action_with_params else registered_action.func(execution_event)
             except ActionException as e:
-                logging.exception(
-                    f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}")
+                msg = e.msg if e.msg else f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}"
+                logging.error(msg)
                 execution_event.response = self.__error_resp(e.type, e.code, log=False)
-                execution_event.add_enrichment(
-                [
-                        MarkdownBlock(
-                            text=e.msg if e.msg else f"Error {e.type} while processing {action.action_name}"
-                        )
-                    ]
-                )
             except Exception:
-                logging.exception(
-                    f"Failed to execute action {action.action_name} {to_safe_str(action_params)}")
-                error = ErrorCodes.ACTION_UNEXPECTED_ERROR
-                execution_event.response = self.__error_resp(error.name, error.value, log=False)
+                logging.error(f"Failed to execute action {action.action_name} {to_safe_str(action_params)}")
+                execution_event.response = self.__error_resp(
+                     ErrorCodes.ACTION_UNEXPECTED_ERROR.name,
+                     ErrorCodes.ACTION_UNEXPECTED_ERROR.value,
+                     log=False
+                     )
                 execution_event.add_enrichment(
                     [
                         MarkdownBlock(
