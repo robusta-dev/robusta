@@ -1,15 +1,31 @@
 Track Kubernetes changes
 =============================
 
-To demonstrate how Robusta automations work, we will configure an automation that sends Slack messages when deployments change.
+Introduction
+---------------
+In this tutorial, we will track changes to Kubernetes objects using Robusta. You will learn how to:
 
-.. note::
+* Specify which Kubernetes object to track
+* Filter out noisy changes and only track certain YAML fields
+* Notify about changes in Slack, MSTeams, and more
+* Send a diff of exactly what changed in your cluster
 
-    If you use the `Robusta UI <https://home.robusta.dev/ui/>`_, changes like this are already tracked in the UI by default.
+Why Track Kubernetes Changes?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    This tutorial explains how that feature works under the hood.
+Change tracking is useful in medium and large sized organizations, where multiple teams deploy to the same cluster.
+Some use cases:
 
-1. Add the following to your ``generated_values.yaml``:
+* **DevOps and Platform Teams:** Track all changes to Ingresses and other sensitive cluster resources.
+* **Developers:** Get notified each time your application is deployed to production.
+* **Security and DevSecOps:** TODO
+
+Step by step guide
+---------------------
+
+1. Install Robusta
+
+2. Add the following Helm values to ``generated_values.yaml``:
 
 .. code-block:: yaml
 
@@ -21,44 +37,28 @@ To demonstrate how Robusta automations work, we will configure an automation tha
             omitted_fields: []
             fields_to_monitor: ["spec.replicas"]
 
-
-2. Perform an upgrade with Helm to apply the new configuration
+3. Upgrade Robusta's configuration with Helm:
 
 .. code-block:: bash
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-
-Seeing the automation in action
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-1. Scale one of your deployments:
+4. Test it by scaling a deployment that exists in your cluster: (TODO: provide yaml and better demo)
 
 .. code-block:: python
 
    kubectl scale --replicas NEW_REPLICAS_COUNT deployments/DEPLOYMENT_NAME
 
-2. Check the slack channel you configured when installing Robusta:
+If everything was configured correctly, a Robusta notification will arrive, showing exactly what changed in the deployment:
 
 .. image:: ../images/replicas_change.png
   :width: 600
   :align: center
 
-If you setup the `Robusta UI <https://home.robusta.dev/ui/>`_, it will appear in the timeline of all alerts and changes:
+As you can see, the notification includes precise details on what changed.
 
-.. image:: ../images/ui-timeline.png
-  :width: 600
-  :align: center
-
-You can click to see the diff:
-
-.. image:: ../images/ui-diff.png
-  :width: 600
-  :align: center
-
-
-How the automation works
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+How it works
+----------------
 Every automation has three parts.
 
 triggers:
@@ -71,11 +71,11 @@ sinks:
     We didn't configure any sinks, so output is sent to the default sink. This is usually Slack and/or the `Robusta UI <https://home.robusta.dev/ui/>`_.
 
 Further customization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 Try changing the configuration to monitors changes to a deployment's image tag.
 
-Cleanup
-^^^^^^^^^^^^
-If you use the `Robusta UI <https://home.robusta.dev/ui/>`_, you should disable the automation you configured in this tutorial to prevent duplicates.
+TODO: hint
 
-A similar automation is already configured by default.
+Cleanup
+^^^^^^^^^^
+Remove the Robusta configuration you added and run an update.
