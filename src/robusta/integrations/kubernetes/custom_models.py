@@ -14,7 +14,7 @@ from .templates import get_deployment_yaml
 S = TypeVar("S")
 T = TypeVar("T")
 PYTHON_DEBUGGER_IMAGE = (
-    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.5"
+    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v5.0"
 )
 JAVA_DEBUGGER_IMAGE = (
     "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:v1.1"
@@ -287,11 +287,16 @@ class RobustaPod(Pod):
                 debugger.metadata.name, debugger.metadata.namespace
             )
 
+    @staticmethod
+    def extract_container_id(status: ContainerStatus) -> str:
+        return status.containerID.replace("docker://", "")
+
     def get_processes(self) -> List[Process]:
+        container_ids = " ".join([self.extract_container_id(s) for s in self.status.containerStatuses])
         output = RobustaPod.exec_in_debugger_pod(
             self.metadata.name,
             self.spec.nodeName,
-            f"debug-toolkit pod-ps {self.metadata.uid}",
+            f"debug-toolkit pod-ps {self.metadata.name} {container_ids}",
         )
         processes = ProcessList(**json.loads(output))
         return processes.processes
