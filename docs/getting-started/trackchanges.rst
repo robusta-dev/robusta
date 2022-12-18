@@ -13,8 +13,7 @@ In this tutorial, we will track changes to Kubernetes objects using Robusta. You
 Why Track Kubernetes Changes?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Change tracking is useful in medium and large sized organizations, where multiple teams deploy to the same cluster.
-Some use cases:
+Change tracking is useful in organizations where multiple teams deploy to the same cluster. Some use cases:
 
 * **DevOps and Platform Teams:** Track all changes to Ingresses and other sensitive cluster resources.
 * **Developers:** Get notified each time your application is deployed to production.
