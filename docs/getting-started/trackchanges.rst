@@ -71,7 +71,7 @@ sinks:
     We didn't configure any sinks, so output is sent to the default sink. This is usually Slack and/or the `Robusta UI <https://home.robusta.dev/ui/>`_.
 
 Further customization
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 Try changing the configuration to monitors changes to a deployment's image tag.
 
 TODO: hint
