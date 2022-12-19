@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from ...core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
 from .api_client_utils import *
 from .templates import get_deployment_yaml
+from ...utils.parsing import load_json
 
 S = TypeVar("S")
 T = TypeVar("T")
@@ -289,16 +290,17 @@ class RobustaPod(Pod):
 
     @staticmethod
     def extract_container_id(status: ContainerStatus) -> str:
-        return status.containerID.replace("docker://", "")
+        runtime, container_id = status.containerID.split("://")
+        return container_id
 
     def get_processes(self) -> List[Process]:
         container_ids = " ".join([self.extract_container_id(s) for s in self.status.containerStatuses])
         output = RobustaPod.exec_in_debugger_pod(
             self.metadata.name,
             self.spec.nodeName,
-            f"debug-toolkit pod-ps {self.metadata.name} {container_ids}",
+            f"debug-toolkit pod-ps {self.metadata.uid} {container_ids}",
         )
-        processes = ProcessList(**json.loads(output))
+        processes = ProcessList(**load_json(output))
         return processes.processes
 
     def get_images(self) -> Dict[str, str]:
