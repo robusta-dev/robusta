@@ -1,3 +1,4 @@
+:hide-navigation:
 :hide-toc:
 Overview
 ================
