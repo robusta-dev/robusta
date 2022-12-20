@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Optional
 
 from hikaru.model import Node
 from prometheus_api_client import PrometheusConnect
@@ -11,12 +12,18 @@ class NodeCpuAnalyzer:
 
     # TODO: perhaps we should handle this more elegantly by first loading all the data into a pandas dataframe
     # and then slicing it different ways
-    def __init__(self, node: Node, prometheus_url: str, range_size="5m"):
+    def __init__(self, node: Node, prometheus_url: Optional[str], range_size="5m"):
         self.node = node
         self.range_size = range_size
+
+        assert self.node.status is not None
+        assert self.node.status.addresses is not None
+
         self.internal_ip = next(addr.address for addr in self.node.status.addresses if addr.type == "InternalIP")
         if prometheus_url is None:
             prometheus_url = PrometheusDiscovery.find_prometheus_url()
+
+        assert prometheus_url is not None
 
         self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
         self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
@@ -26,6 +33,8 @@ class NodeCpuAnalyzer:
         Gets the total cpu usage for the node, including both containers and everything running on the host directly
         :return: a float between 0 and 1 representing the percentage of total cpus used
         """
+        assert self.node.metadata is not None
+
         if other_method:
             return self._query(
                 f'rate(container_cpu_usage_seconds_total{{node="{self.node.metadata.name}",pod="",id="/"}}[{self.range_size}]) '
@@ -80,6 +89,8 @@ class NodeCpuAnalyzer:
             grouping = ""
         else:
             grouping = "by (pod)"
+
+        assert self.node.metadata is not None
 
         if normalized_by_cpu_count:
             # we divide by the number of machine_cpu_cores to return a result in th 0-1 range regardless of cpu count

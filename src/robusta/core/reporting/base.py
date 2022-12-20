@@ -45,7 +45,7 @@ class FindingSeverity(Enum):
         elif severity == "HIGH":
             return FindingSeverity.HIGH
 
-        raise Exception(f"Unknown severity {severity}")
+        raise NotImplementedError(f"Unknown severity {severity}")
 
     def to_emoji(self) -> str:
         if self == FindingSeverity.DEBUG:
@@ -58,6 +58,8 @@ class FindingSeverity(Enum):
             return "🟠"
         elif self == FindingSeverity.HIGH:
             return "🔴"
+        else:
+            raise NotImplementedError(f"Unknown severity {self}")
 
 
 class FindingStatus(Enum):
@@ -128,10 +130,10 @@ class Filterable:
 class FindingSubject:
     def __init__(
         self,
-        name: str = None,
+        name: Optional[str] = None,
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
-        namespace: str = None,
-        node: str = None,
+        namespace: Optional[str] = None,
+        node: Optional[str] = None,
     ):
         self.name = name
         self.subject_type = subject_type
@@ -155,15 +157,15 @@ class Finding(Filterable):
         aggregation_key: str,
         severity: FindingSeverity = FindingSeverity.INFO,
         source: FindingSource = FindingSource.NONE,
-        description: str = None,
+        description: Optional[str] = None,
         # TODO: this is bug-prone - see https://towardsdatascience.com/python-pitfall-mutable-default-arguments-9385e8265422
         subject: FindingSubject = FindingSubject(),
         finding_type: FindingType = FindingType.ISSUE,
         failure: bool = True,
-        creation_date: str = None,
-        fingerprint: str = None,
-        starts_at: datetime = None,
-        ends_at: datetime = None,
+        creation_date: Optional[str] = None,
+        fingerprint: Optional[str] = None,
+        starts_at: Optional[datetime] = None,
+        ends_at: Optional[datetime] = None,
         add_silence_url: bool = False,
     ) -> None:
         self.id: uuid.UUID = uuid.uuid4()

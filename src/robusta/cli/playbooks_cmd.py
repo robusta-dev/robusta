@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import time
 import traceback
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import click
 import click_spinner
@@ -304,8 +304,8 @@ def _post_in_runner_pod(namespace: str, api_path: str, req_body: Dict, req_name:
 @app.command()
 def trigger(
     action_name: str,
-    param: Optional[List[str]] = typer.Argument(
-        None,
+    param: List[str] = typer.Argument(
+        [],
         help="data to send to action (can be used multiple times)",
         metavar="key=value",
     ),
@@ -320,6 +320,7 @@ def trigger(
 ):
     """trigger a manually run playbook"""
     log_title("Triggering action...")
+
     action_params = {}
     for p in param:
         (key, val) = p.split("=")

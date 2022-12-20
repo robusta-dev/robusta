@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, cast
 
 from kubernetes.client import V1Container, V1Job, V1JobSpec, V1JobStatus, V1PodSpec
 from pydantic import BaseModel
@@ -21,7 +21,7 @@ class JobContainer(BaseModel):
         requests: ContainerResources = utils.container_resources(container, ResourceAttributes.requests)
         limits: ContainerResources = utils.container_resources(container, ResourceAttributes.limits)
         return JobContainer(
-            image=container.image,
+            image=str(container.image),
             cpu_req=requests.cpu,
             cpu_limit=limits.cpu,
             mem_req=requests.memory,
@@ -43,7 +43,7 @@ class JobStatus(BaseModel):
 
     @staticmethod
     def from_api_server(job: V1Job) -> "JobStatus":
-        job_status: V1JobStatus = job.status
+        job_status = cast(V1JobStatus, job.status)
         job_conditions: List[JobCondition] = [
             JobCondition(type=condition.type, message=condition.message) for condition in (job_status.conditions or [])
         ]
@@ -66,11 +66,13 @@ class JobData(BaseModel):
 
     @staticmethod
     def from_api_server(job: V1Job, pods: List[str]) -> "JobData":
-        job_spec: V1JobSpec = job.spec
-        pod_spec: V1PodSpec = job_spec.template.spec
+        job_spec = cast(V1JobSpec, job.spec)
+        pod_spec = cast(V1PodSpec, job_spec.template.spec)
         pod_containers: List[JobContainer] = [
             JobContainer.from_api_server(container) for container in pod_spec.containers
         ]
+        assert job_spec.backoff_limit is not None
+        assert job.metadata is not None
         return JobData(
             backoff_limit=job_spec.backoff_limit,
             tolerations=[toleration.to_dict() for toleration in (pod_spec.tolerations or [])],
@@ -127,14 +129,15 @@ class JobInfo(BaseModel):
 
     @staticmethod
     def from_api_server(job: V1Job, pods: List[str]) -> "JobInfo":
-        containers = job.spec.template.spec.containers
+        containers = job.spec.template.spec.containers  # type: ignore
         requests: ContainerResources = utils.containers_resources_sum(containers, ResourceAttributes.requests)
         status = JobStatus.from_api_server(job)
         job_data = JobData.from_api_server(job, pods)
-        completions = job.spec.completions if job.spec.completions is not None else 1
+        completions = job.spec.completions if job.spec.completions is not None else 1  # type: ignore
+        assert job.metadata is not None
         return JobInfo(
-            name=job.metadata.name,
-            namespace=job.metadata.namespace,
+            name=str(job.metadata.name),
+            namespace=str(job.metadata.namespace),
             created_at=str(job.metadata.creation_timestamp),
             cpu_req=requests.cpu,
             mem_req=requests.memory,

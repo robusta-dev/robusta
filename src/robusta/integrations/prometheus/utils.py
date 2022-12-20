@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 from cachetools import TTLCache
 
@@ -11,7 +11,7 @@ class ServiceDiscovery:
     cache: TTLCache = TTLCache(maxsize=1, ttl=SERVICE_CACHE_TTL_SEC)
 
     @classmethod
-    def find_url(cls, selectors: List[str], error_msg: str):
+    def find_url(cls, selectors: List[str], error_msg: str) -> Optional[str]:
         """
         Try to autodiscover the url of an in-cluster service
         """

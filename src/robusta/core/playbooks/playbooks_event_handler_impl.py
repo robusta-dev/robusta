@@ -39,7 +39,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings)
                     # sink_findings needs to be shared between playbooks.
                     # build_execution_event returns a different instance because it's running in a child process
-                    execution_event.sink_findings = sink_findings
+                    execution_event.sink_findings = sink_findings  # type: ignore
                 except Exception:
                     logging.error(
                         f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}"
@@ -142,7 +142,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             else:
                 action_params = {"named_sinks": sinks}
         try:
-            instantiation_params = action_def.from_params_parameter_class(**action_params)
+            instantiation_params = action_def.from_params_parameter_class(**action_params)  # type: ignore
         except Exception:
             return self.__error_resp(
                 f"Failed to create execution instance for"
@@ -194,7 +194,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             else:
                 action_params = None
                 try:
-                    action_params = merge_global_params(self.get_global_config(), action.action_params)
+                    action_params = merge_global_params(self.get_global_config(), action.action_params)  # type: ignore
                     params = registered_action.params_type(**action_params)
                 except Exception:
                     msg = (
@@ -226,8 +226,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         playbook_id: str,
     ) -> Optional[BaseTrigger]:
         for trigger in playbook_triggers:
-            if trigger.get().should_fire(trigger_event, playbook_id):
-                return trigger.get()
+            trigger_ = trigger.get()
+            if trigger_.should_fire(trigger_event, playbook_id):
+                return trigger_
         return None
 
     def __handle_findings(self, execution_event: ExecutionBaseEvent):

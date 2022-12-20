@@ -19,18 +19,22 @@ from robusta.core.playbooks.common import get_event_timestamp, get_events_list
 
 @action
 def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
-    if (
-        event.operation in [K8sOperationType.CREATE, K8sOperationType.UPDATE]
-        and event.obj.kind in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Pod", "Job"]
-        and not event.obj.metadata.ownerReferences
-    ):
-        TopServiceResolver.add_cached_resource(
-            TopLevelResource(
-                name=event.obj.metadata.name,
-                resource_type=event.obj.kind,
-                namespace=event.obj.metadata.namespace,
+    if event.operation in [K8sOperationType.CREATE, K8sOperationType.UPDATE]:
+        assert event.obj is not None
+        assert event.obj.metadata is not None
+        if (
+            event.obj.kind in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Pod", "Job"]
+            and not event.obj.metadata.ownerReferences
+        ):
+            assert event.obj.metadata.namespace is not None
+            assert event.obj.metadata.name is not None
+            TopServiceResolver.add_cached_resource(
+                TopLevelResource(
+                    name=event.obj.metadata.name,
+                    resource_type=event.obj.kind,
+                    namespace=event.obj.metadata.namespace,
+                )
             )
-        )
 
 
 @action
@@ -46,6 +50,7 @@ def event_history(event: ExecutionBaseEvent):
             # if there were multiple warnings on the same object we dont want the history pulled multiple times
             continue
         finding = create_debug_event_finding(warning_event)
+        assert warning_event.involvedObject.kind is not None
         events_table = get_resource_events_table(
             "Resource events",
             warning_event.involvedObject.kind,
@@ -63,6 +68,7 @@ def create_debug_event_finding(event: Event):
     Create finding based on the kubernetes event
     """
     k8s_obj = event.involvedObject
+    assert k8s_obj.kind is not None
 
     finding = Finding(
         title=f"{event.reason} {event.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",

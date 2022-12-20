@@ -86,7 +86,7 @@ class PrometheusParams(ActionParams):
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     """
 
-    prometheus_url: str = None
+    prometheus_url: str = None  # type: ignore
 
 
 class PrometheusDuration(BaseModel):
@@ -188,7 +188,7 @@ class GrafanaParams(ActionParams):
 
     grafana_api_key: SecretStr
     grafana_dashboard_uid: str
-    grafana_url: str = None
+    grafana_url: str = None  # type: ignore
 
 
 class GrafanaAnnotationParams(GrafanaParams):
@@ -198,10 +198,10 @@ class GrafanaAnnotationParams(GrafanaParams):
     :var custom_tags: custom tags to add to the annotation
     """
 
-    grafana_dashboard_panel: str = None
-    cluster_name: str = None
-    cluster_zone: str = None
-    custom_tags: List[str] = None
+    grafana_dashboard_panel: str = None  # type: ignore
+    cluster_name: str = None  # type: ignore
+    cluster_zone: str = None  # type: ignore
+    custom_tags: List[str] = None  # type: ignore
 
 
 class ProcessParams(ActionParams):
@@ -212,7 +212,7 @@ class ProcessParams(ActionParams):
     """
 
     process_substring: str = ""
-    pid: int = None
+    pid: Optional[int] = None
     interactive: bool = True
 
 

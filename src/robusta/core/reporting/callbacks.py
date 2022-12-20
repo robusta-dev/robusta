@@ -37,7 +37,7 @@ class ExternalActionRequestBuilder(BaseModel):
         body = ActionRequestBody(
             account_id=account_id,
             cluster_name=cluster_name,
-            timestamp=time.time(),
+            timestamp=int(time.time()),
             action_name=choice.action.__name__,
             action_params=action_params,
             sinks=[sink],

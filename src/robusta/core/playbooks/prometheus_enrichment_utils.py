@@ -1,7 +1,7 @@
 from collections import defaultdict, namedtuple
 from datetime import datetime, timedelta
 from string import Template
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import humanize
 import pygal
@@ -30,17 +30,23 @@ def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_templat
 
 
 def get_node_internal_ip(node: Node) -> str:
+    assert node.status is not None
+    assert node.status.addresses is not None
     internal_ip = next(addr.address for addr in node.status.addresses if addr.type == "InternalIP")
     return internal_ip
 
 
 def run_prometheus_query(
-    prometheus_base_url: str, promql_query: str, starts_at: datetime, ends_at: datetime
+    prometheus_base_url: Optional[str], promql_query: str, starts_at: datetime, ends_at: datetime
 ) -> PrometheusQueryResult:
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
-    if not prometheus_base_url:
+
+    if prometheus_base_url is None:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
+
+    assert prometheus_base_url is not None
+
     query_duration = ends_at - starts_at
     resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
     increment = max(query_duration.total_seconds() / resolution, 1.0)
@@ -55,7 +61,7 @@ def run_prometheus_query(
 
 
 def create_chart_from_prometheus_query(
-    prometheus_base_url: str,
+    prometheus_base_url: Optional[str],
     promql_query: str,
     alert_starts_at: datetime,
     include_x_axis: bool,
@@ -106,6 +112,8 @@ def create_chart_from_prometheus_query(
     # TODO: change min_time time before  Jan 19 3001
     min_time = 32536799999
     max_time = 0
+
+    assert prometheus_query_result.series_list_result is not None
     for series in prometheus_query_result.series_list_result:
         label = "\n".join([v for v in series.metric.values()])
         values = []
@@ -136,7 +144,7 @@ def create_graph_enrichment(
 ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
-        prometheus_url,  # TODO
+        prometheus_url,
         promql_query,
         start_at,
         include_x_axis=True,
@@ -161,7 +169,7 @@ def create_resource_enrichment(
     title_override: Optional[str] = None,
 ) -> FileBlock:
     ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
-    combinations = {
+    combinations: Dict[Tuple[ResourceChartResourceType, ResourceChartItemType], Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
             query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod"})',
             values_format=ChartValuesFormat.Plain,
@@ -192,10 +200,11 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Bytes,
         ),
     }
-    combination = (resource_type, item_type)
-    chosen_combination = combinations[combination]
+    chosen_combination = combinations[resource_type, item_type]
     if not chosen_combination:
-        raise AttributeError(f"The following combination for resource chart is not supported: {combination}")
+        raise AttributeError(
+            f"The following combination for resource chart is not supported: {(resource_type, item_type)}"
+        )
     values_format_text = "Utilization" if chosen_combination.values_format == ChartValuesFormat.Percentage else "Usage"
     title = (
         title_override

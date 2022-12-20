@@ -1,5 +1,5 @@
 from datetime import timedelta, tzinfo
-from typing import Optional
+from typing import List, Optional, Tuple, Union
 
 from robusta.core.model.pods import k8s_memory_factors
 from robusta.integrations.resource_analysis.prometheus_analyzer import PrometheusAnalyzer
@@ -55,16 +55,18 @@ class MemoryAnalyzer(PrometheusAnalyzer):
         #   Therefore, there will always be exactly one id of the form /kubepods/* prefix for each container.
         #   See https://stackoverflow.com/questions/49035724/how-do-i-resolve-kubepods-besteffort-poduuid-to-a-pod-name for more information.
 
-        return self._get_max_value_in_first_series_of_query(
+        result = self._get_max_value_in_first_series_of_query(
             f'container_memory_usage_bytes{{node="{node_name}", pod="{pod_name}", image!="", '
             f'container!="POD", container="{container_name}", id=~"/kubepods/.*"}}',
             duration,
         )
+        assert result is not None
+        return result
 
     def _get_max_value_in_first_series_of_query(self, promql_query: str, duration: timedelta) -> Optional[float]:
         results = self._timed_query(promql_query, duration)
 
-        if len(results) == 0:
+        if results is None or len(results) == 0:
             return None
 
         series = results[0]
@@ -105,7 +107,7 @@ class K8sMemoryTransformer:
 
 
 # bytes pretty-printing
-UNITS_MAPPING = [
+UNITS_MAPPING: List[Tuple[int, Union[str, Tuple[str, str]]]] = [
     (1 << 50, " PB"),
     (1 << 40, " TB"),
     (1 << 30, " GB"),
@@ -115,7 +117,7 @@ UNITS_MAPPING = [
 ]
 
 
-def pretty_size(total_bytes):
+def pretty_size(total_bytes: int) -> str:
     """Get human-readable file sizes.
     simplified version of https://pypi.python.org/pypi/hurry.filesize/
     """
@@ -123,8 +125,10 @@ def pretty_size(total_bytes):
     for factor, suffix in UNITS_MAPPING:
         if total_bytes >= factor:
             break
-    if not (factor or suffix):
-        return total_bytes
+
+    if factor is None or suffix is None:
+        return str(total_bytes)
+
     amount = round(total_bytes / factor, 2)
 
     # Handling mapping for tuples (in case we want to add more options to the UNITS_MAPPING)

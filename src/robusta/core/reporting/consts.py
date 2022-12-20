@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 
 SYNC_RESPONSE_SINK = "robusta-synchronized-response-sink"
 
@@ -31,7 +32,7 @@ class FindingSubjectType(Enum):
     TYPE_STATEFULSET = "statefulset"
 
     @staticmethod
-    def from_kind(kind: str):
+    def from_kind(kind: Optional[str]):
         if kind == "deployment":
             return FindingSubjectType.TYPE_DEPLOYMENT
         elif kind == "node":
@@ -44,6 +45,7 @@ class FindingSubjectType(Enum):
             return FindingSubjectType.TYPE_DAEMONSET
         elif kind == "statefulset":
             return FindingSubjectType.TYPE_STATEFULSET
+
         return FindingSubjectType.TYPE_NONE
 
 

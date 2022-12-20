@@ -21,7 +21,7 @@ class TriggerEvent(BaseModel):
 
 class BaseTrigger(DocumentedModel):
     def get_trigger_event(self) -> str:
-        pass
+        raise NotImplementedError
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         return True
@@ -29,8 +29,8 @@ class BaseTrigger(DocumentedModel):
     def build_execution_event(
         self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     def get_execution_event_type() -> Type[ExecutionBaseEvent]:
-        pass
+        raise NotImplementedError

@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta, tzinfo
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from prometheus_api_client import PrometheusConnect
 
@@ -36,7 +36,7 @@ class PrometheusAnalyzer:
             return float(result)
         return result
 
-    def _timed_query(self, promql_query: str, duration: timedelta, **kwargs) -> Optional[Union[list, dict]]:
+    def _timed_query(self, promql_query: str, duration: timedelta, **kwargs: Any) -> Optional[Union[list, dict]]:
         if not self.prometheus_tzinfo:
             logging.warning("Prometheus Analyzer was created without tz info, impossible to perform timed queries")
             return None

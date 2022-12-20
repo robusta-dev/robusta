@@ -61,11 +61,11 @@ class HelmValues(BaseModel, extra=Extra.allow):
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
     # TODO: Discuss this None default value
-    playbooksPersistentVolumeSize: str = None
-    kubewatch: Dict = None
-    grafanaRenderer: Dict = None
-    runner: Dict = None
-    rsa: RSAKeyPair = None
+    playbooksPersistentVolumeSize: Optional[str] = None
+    kubewatch: Optional[Dict] = None
+    grafanaRenderer: Optional[Dict] = None
+    runner: Optional[Dict] = None
+    rsa: Optional[RSAKeyPair] = None
 
 
 def get_slack_channel() -> str:
@@ -359,12 +359,13 @@ def logs(
     """Fetch Robusta runner logs"""
     stream = "-f" if f else ""
     since = f"--since={since}" if since else ""
-    tail = f"--tail={tail}" if tail else ""
+    tail_ = f"--tail={tail}" if tail else ""
     context = f"--context={context}" if context else ""
     resource_name = resource_name if resource_name else get_runner_pod(namespace)
     try:
         subprocess.check_call(
-            f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
+            f"kubectl logs {stream} {namespace_to_kubectl(namespace)} "
+            f"{resource_name} -c runner {since} {tail_} {context}",
             shell=True,
         )
     except Exception:
@@ -373,7 +374,7 @@ def logs(
 
 @app.command()
 def demo_alert(
-    alertmanager_url: str = typer.Option(
+    alertmanager_url: Optional[str] = typer.Option(
         None,
         help="Alertmanager in cluster url. "
         "By default, Robusta will auto-discover the AlertManager running in your cluster. "
@@ -388,21 +389,21 @@ def demo_alert(
         "KubePodNotReady",
         help="Created alert name",
     ),
-    labels: str = typer.Option(
+    labels: Optional[str] = typer.Option(
         None,
         help="Additional alert labels. Comma separated list. For example: env=prod,team=infra ",
     ),
-    kube_config: str = typer.Option(None, help="Kube config file path override."),
+    kube_config: Optional[str] = typer.Option(None, help="Kube config file path override."),
 ):
     """
     Create a demo alert on AlertManager.
     The alert pod is selected randomly from the pods in the current namespace
     """
-    config.load_kube_config(kube_config)
-    if not alertmanager_url:
+    config.load_kube_config(kube_config)  # type: ignore
+    if alertmanager_url is None:
         # search cluster alertmanager by known alertmanager labels
         alertmanager_url = AlertManagerDiscovery.find_alert_manager_url()
-        if not alertmanager_url:
+        if alertmanager_url is None:
             typer.secho(
                 "Alertmanager service could not be auto-discovered. " "Please use the --alertmanager_url parameter",
                 fg="red",
@@ -416,7 +417,7 @@ def demo_alert(
                 pod = pods.items[0]
                 break
 
-        if not pod:
+        if pod is None:
             typer.secho(
                 f"Could not find any pod on namespace {namespaces}"
                 f"Please use the --namespaces parameter to specify a namespace with pods",
@@ -424,6 +425,7 @@ def demo_alert(
             )
             return
 
+        assert pod.metadata is not None
         alert_labels = {
             "alertname": alert,
             "severity": "critical",

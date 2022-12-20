@@ -3,9 +3,9 @@ import time
 from typing import List
 
 try:
-    from datadog_api_client.v1 import ApiClient, ApiException, Configuration
-    from datadog_api_client.v1.api import events_api
-    from datadog_api_client.v1.models import EventAlertType, EventCreateRequest
+    from datadog_api_client.v1 import ApiClient, ApiException, Configuration  # type: ignore
+    from datadog_api_client.v1.api import events_api  # type: ignore
+    from datadog_api_client.v1.models import EventAlertType, EventCreateRequest  # type: ignore
 except ImportError:
 
     def lazy_import_error(self, *args, **kwargs):
@@ -20,7 +20,7 @@ except ImportError:
 
 
 try:
-    from tabulate import tabulate
+    from tabulate import tabulate  # type: ignore
 except ImportError:
 
     def tabulate(*args, **kwargs):

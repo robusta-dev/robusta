@@ -22,6 +22,7 @@ from robusta.core.reporting.blocks import (
     KubernetesFieldsBlock,
     ListBlock,
     MarkdownBlock,
+    PrometheusBlock,
     TableBlock,
 )
 

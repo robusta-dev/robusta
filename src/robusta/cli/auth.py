@@ -3,7 +3,7 @@ import re
 import subprocess
 import traceback
 import uuid
-from typing import Optional
+from typing import Optional, cast
 
 import click_spinner
 import requests
@@ -122,6 +122,7 @@ def gen_token(
     if not signing_key:
         typer.secho("signing_key is not defined. Please update Robusta and run `robusta update-config`", fg="red")
         return
+    signing_key = cast(str, signing_key)
 
     try:
         env_match = re.fullmatch(r"\{\{\s*env\.(\S+)\s*}}", signing_key)

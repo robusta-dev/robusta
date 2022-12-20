@@ -6,7 +6,7 @@ import logging
 import os
 import time
 from threading import Thread
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 from uuid import UUID
 
 import websocket
@@ -130,6 +130,7 @@ class ActionRequestReceiver:
         )
 
         if sync_response:
+            assert response is not None
             http_code = 200 if response.get("success") else 500
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
 
@@ -254,6 +255,9 @@ class ActionRequestReceiver:
                 http_code=401, error_code=ErrorCodes.AUTH_VALIDATION_FAILED.value, error_msg="Auth validation failed"
             )
 
+        assert key_a is not None
+        assert key_b is not None
+
         try:
             signing_key_uuid = UUID(signing_key)
         except Exception:
@@ -273,7 +277,7 @@ class ActionRequestReceiver:
     @classmethod
     def __extract_key_and_validate(
         cls, encrypted: str, private_key: RSAPrivateKey, body: ActionRequestBody
-    ) -> (bool, Optional[UUID]):
+    ) -> Tuple[bool, Optional[UUID]]:
         try:
             plain = private_key.decrypt(
                 base64.b64decode(encrypted.encode("utf-8")),
