@@ -8,7 +8,7 @@ from kubernetes.client.models.v1_container_image import V1ContainerImage
 from ruamel.yaml import YAML
 
 try:
-    from typing import get_args, get_origin
+    from typing import get_args, get_origin  # type: ignore
 except ImportError:  # pragma: no cover
 
     def get_args(tp):

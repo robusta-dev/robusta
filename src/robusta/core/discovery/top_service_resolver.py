@@ -51,14 +51,14 @@ class TopServiceResolver:
     # TODO remove this guess function
     # temporary try to guess who the owner service is.
     @classmethod
-    def guess_service_key(cls, name: str, namespace: str) -> str:
+    def guess_service_key(cls, name: Optional[str], namespace: Optional[str]) -> str:
         resource = cls.guess_cached_resource(name, namespace)
-        return resource.get_resource_key() if resource else ""
+        return resource.get_resource_key() if resource is not None else ""
 
     # TODO remove this guess function
     # temporary try to guess who the owner service is.
     @classmethod
-    def guess_cached_resource(cls, name: str, namespace: str) -> Optional[TopLevelResource]:
+    def guess_cached_resource(cls, name: Optional[str], namespace: Optional[str]) -> Optional[TopLevelResource]:
         if name is None or namespace is None:
             return None
 

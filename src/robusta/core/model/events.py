@@ -57,13 +57,13 @@ class ExecutionBaseEvent:
     def set_context(self, context: ExecutionContext):
         self._context = context
 
-    def get_context(self) -> ExecutionContext:
+    def get_context(self) -> Optional[ExecutionContext]:
         return self._context
 
     def set_scheduler(self, scheduler: PlaybooksScheduler):
         self._scheduler = scheduler
 
-    def get_scheduler(self) -> PlaybooksScheduler:
+    def get_scheduler(self) -> Optional[PlaybooksScheduler]:
         return self._scheduler
 
     def create_default_finding(self) -> Finding:
@@ -72,6 +72,7 @@ class ExecutionBaseEvent:
 
     def __prepare_sinks_findings(self):
         finding_id: uuid.UUID = uuid.uuid4()
+        assert self.named_sinks is not None
         for sink in self.named_sinks:
             if len(self.sink_findings[sink]) == 0:
                 sink_finding = self.create_default_finding()
@@ -80,6 +81,7 @@ class ExecutionBaseEvent:
 
     def add_video_link(self, video_link: VideoLink):
         self.__prepare_sinks_findings()
+        assert self.named_sinks is not None
         for sink in self.named_sinks:
             self.sink_findings[sink][0].add_video_link(video_link, True)
 
@@ -89,12 +91,14 @@ class ExecutionBaseEvent:
         annotations=None,
     ):
         self.__prepare_sinks_findings()
+        assert self.named_sinks is not None
         for sink in self.named_sinks:
             self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations, True)
 
     def add_finding(self, finding: Finding, suppress_warning: bool = False):
         finding.dirty = True  # Warn if new enrichments are added to this finding directly
         first = True  # no need to clone the finding on the first sink. Use the orig finding
+        assert self.named_sinks is not None
         for sink in self.named_sinks:
             if (len(self.sink_findings[sink]) > 0) and not suppress_warning:
                 logging.warning(f"Overriding active finding for {sink}. new finding: {finding}")
@@ -104,8 +108,9 @@ class ExecutionBaseEvent:
             first = False
 
     def override_finding_attributes(
-        self, title: Optional[str], description: Optional[str], severity: FindingSeverity = None
+        self, title: str = "", description: str = "", severity: Optional[FindingSeverity] = None
     ):
+        assert self.named_sinks is not None
         for sink in self.named_sinks:
             for finding in self.sink_findings[sink]:
                 if title:

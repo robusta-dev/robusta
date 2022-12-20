@@ -19,7 +19,7 @@ INITIAL_SCHEDULE_DELAY_SEC = os.environ.get("INITIAL_SCHEDULE_DELAY_SEC", 120)
 class Scheduler:
     scheduled_jobs = defaultdict(None)
     registered_runnables = {}
-    dal = None
+    dal: SchedulerDal
 
     def register_task(self, runnable_name: str, func):
         self.registered_runnables[runnable_name] = func

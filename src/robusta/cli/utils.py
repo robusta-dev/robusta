@@ -3,7 +3,7 @@ import shlex
 import subprocess
 import time
 from contextlib import contextmanager
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import click_spinner
 import requests
@@ -32,7 +32,8 @@ def exec_in_robusta_runner(
     exec_cmd = _build_exec_command(cmd, namespace)
 
     if dry_run:
-        typer.echo(f"Run the following command:\n {shlex.join(exec_cmd)}")
+        # TODO: fix shlex.join for python 3.7 ?
+        typer.echo(f"Run the following command:\n {shlex.join(exec_cmd)}")  # type: ignore
         return
 
     typer.echo(f"running cmd: {cmd}")
@@ -46,7 +47,7 @@ def exec_in_robusta_runner(
     return subprocess.check_call(cmd)
 
 
-def exec_in_robusta_runner_output(command: str, namespace: Optional[str]) -> Optional[bytes]:
+def exec_in_robusta_runner_output(command: str, namespace: Optional[str]) -> bytes:
     exec_cmd = _build_exec_command(command, namespace)
     result = subprocess.check_output(exec_cmd)
     return result
@@ -118,7 +119,7 @@ def get_package_name(playbooks_dir: str) -> str:
     with open(os.path.join(playbooks_dir, "pyproject.toml"), "r") as pyproj_toml:
         data = pyproj_toml.read()
         parsed = toml.loads(data)
-        return get(parsed, "tool/poetry/name", default="")
+        return cast(str, get(parsed, "tool/poetry/name", default=""))
 
 
 def get_runner_pod(namespace: Optional[str]) -> str:

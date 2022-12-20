@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List
 
 try:
-    from grafana_api.grafana_face import GrafanaFace
+    from grafana_api.grafana_face import GrafanaFace  # type: ignore
 except ImportError:
 
     def GrafanaFace(*args, **kwargs):
@@ -23,6 +23,8 @@ class Grafana:
         """
         if grafana_url is None:
             grafana_url = find_service_url("app.kubernetes.io/name=grafana")
+            assert grafana_url is not None, "Could not find Grafana service"
+
         protocol_host = grafana_url.split("://")
         logging.debug(f"Grafana params: protocol - {protocol_host[0]} host - {protocol_host[1]}")
         self.grafana = GrafanaFace(

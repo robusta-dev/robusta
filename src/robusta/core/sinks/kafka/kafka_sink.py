@@ -2,10 +2,10 @@ import json
 import logging
 
 try:
-    from kafka import KafkaProducer
+    from kafka import KafkaProducer  # type: ignore
 except ImportError:
 
-    def KafkaProducer(self, *args, **kwargs):
+    def KafkaProducer(*args, **kwargs):
         raise ImportError("kafka-python is not installed")
 
 

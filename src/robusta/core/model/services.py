@@ -32,6 +32,8 @@ class ContainerInfo(BaseModel):
             if container.env
             else []
         )
+        assert container.resources is not None
+        assert container.image is not None
         limits = container.resources.limits if container.resources.limits else {}
         requests = container.resources.requests if container.resources.requests else {}
         resources = Resources(limits=limits, requests=requests)
@@ -51,11 +53,12 @@ class ContainerInfo(BaseModel):
 
 class VolumeInfo(BaseModel):
     name: str
-    persistent_volume_claim: Optional[Dict[str, str]]
+    persistent_volume_claim: Optional[Dict[str, str]] = None
 
     @staticmethod
     def get_volume_info(volume: V1Volume):
         if hasattr(volume, "persistent_volume_claim") and hasattr(volume.persistent_volume_claim, "claim_name"):
+            assert volume.persistent_volume_claim is not None
             return VolumeInfo(
                 name=volume.name, persistent_volume_claim={"claim_name": volume.persistent_volume_claim.claim_name}
             )
@@ -75,7 +78,7 @@ class ServiceConfig(BaseModel):
         return (
             sorted(self.containers, key=lambda x: x.name) == sorted(other.containers, key=lambda x: x.name)
             and sorted(self.volumes, key=lambda x: x.name) == sorted(other.volumes, key=lambda x: x.name)
-            and sorted(self.labels, key=lambda x: x.name) == sorted(other.labels, key=lambda x: x.name)
+            and sorted(self.labels, key=lambda x: x) == sorted(other.labels, key=lambda x: x)
         )
 
 

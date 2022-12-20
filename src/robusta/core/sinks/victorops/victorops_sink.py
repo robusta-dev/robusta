@@ -60,7 +60,8 @@ class VictoropsSink(SinkBase):
 
         requests.post(self.url, json=json_dict)
 
-    def __to_unformatted_text(cls, block: BaseBlock) -> str:
+    @staticmethod
+    def __to_unformatted_text(block: BaseBlock) -> str:
         if isinstance(block, HeaderBlock):
             return block.text
         elif isinstance(block, TableBlock):

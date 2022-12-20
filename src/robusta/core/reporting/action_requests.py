@@ -15,9 +15,9 @@ class ActionRequestBody(BaseModel):
     cluster_name: str
     action_name: str
     timestamp: int
-    action_params: dict = None
+    action_params: Optional[dict] = None
     sinks: Optional[List[str]] = None
-    origin: str = None
+    origin: Optional[str] = None
 
 
 class ExternalActionRequest(BaseModel):

@@ -1,4 +1,6 @@
-from pydantic.main import BaseModel, List, Optional
+from typing import List, Optional
+
+from pydantic.main import BaseModel
 
 
 class ClusterStatus(BaseModel):

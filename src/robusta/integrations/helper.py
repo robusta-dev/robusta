@@ -1,4 +1,7 @@
-def exact_match(expected, field_value) -> bool:
+from typing import Any, Optional
+
+
+def exact_match(expected: Optional[Any], field_value: Any) -> bool:
     if expected is None:
         return True
 
