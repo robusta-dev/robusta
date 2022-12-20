@@ -12,4 +12,4 @@ class SlackSink(SinkBase):
         self.slack_sender = SlackSender(self.api_key, self.account_id, self.cluster_name, self.signing_key)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
-        self.slack_sender.send_finding_to_slack(finding, self.slack_channel, self.sink_name, platform_enabled)
+        self.slack_sender.send_finding_to_slack(finding, self.params, platform_enabled)

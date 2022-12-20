@@ -7,6 +7,7 @@ from robusta.core.reporting.base import Finding, FindingSeverity
 from robusta.core.reporting.blocks import BaseBlock, FileBlock, List, MarkdownBlock, TableBlock
 from robusta.core.reporting.utils import SVG_SUFFIX, add_pngs_for_all_svgs
 from robusta.core.sinks.transformer import Transformer
+from robusta.core.sinks.webex.webex_sink_params import WebexSinkParams
 
 INVESTIGATE_ICON = "🔍"
 SILENCE_ICON = "🔕"
@@ -23,14 +24,16 @@ class CardTypes(Enum):
 
 
 class WebexSender:
-
     """
     Send findings to webex.
     Parse different findings to show on Webex UI
     """
 
-    def __init__(self, bot_access_token: str, room_id: str, account_id: str, cluster_name: str):
+    def __init__(
+        self, bot_access_token: str, room_id: str, cluster_name: str, account_id: str, webex_params: WebexSinkParams
+    ):
         self.cluster_name = cluster_name
+        self.webex_params = webex_params
         self.room_id = room_id
         self.account_id = account_id
         self.client = WebexTeamsAPI(access_token=bot_access_token)  # Create a client using webexteamssdk
@@ -132,6 +135,8 @@ class WebexSender:
             file_blocks.extend(
                 add_pngs_for_all_svgs([block for block in enrichment.blocks if isinstance(block, FileBlock)])
             )
+            if not self.webex_params.send_svg:
+                file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
 
         # first add finding description block
         if finding.description:

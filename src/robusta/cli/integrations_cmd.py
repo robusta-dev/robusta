@@ -64,7 +64,7 @@ def get_ui_key() -> str:
     while True:
         email = typer.prompt("Enter your Gmail/Google address. This will be used to login")
         email = email.strip()
-        account_name = typer.prompt("Choose your account name")
+        account_name = typer.prompt("Choose your account name (e.g your organization name)")
 
         res = requests.post(
             f"{backend_profile.robusta_cloud_api_host}/accounts/create",

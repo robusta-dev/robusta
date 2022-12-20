@@ -23,8 +23,10 @@ app = typer.Typer()
 
 
 class RSAKeyPair(BaseModel):
-    prv: str
-    pub: str
+    prv: str = None
+    pub: str = None
+    private: str = None
+    public: str = None
 
 
 def gen_rsa_pair() -> RSAKeyPair:
@@ -39,7 +41,7 @@ def gen_rsa_pair() -> RSAKeyPair:
         encoding=Encoding.PEM, format=PrivateFormat.TraditionalOpenSSL, encryption_algorithm=NoEncryption()
     )
 
-    return RSAKeyPair(pub=public_key.decode("utf-8"), prv=pem.decode("utf-8"))
+    return RSAKeyPair(public=base64.b64encode(public_key), private=base64.b64encode(pem))
 
 
 def get_existing_auth_config(namespace: str) -> Optional[RSAKeyPair]:

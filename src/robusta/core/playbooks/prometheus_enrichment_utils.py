@@ -7,12 +7,12 @@ import humanize
 import pygal
 from hikaru.model import Node
 from pydantic import BaseModel
-from pygal.style import DarkColorizedStyle as ChosenStyle
 
 from robusta.core.external_apis.prometheus.prometheus_cli import PrometheusQueryResult, custom_query_range
 from robusta.core.model.base_params import ChartValuesFormat, ResourceChartItemType, ResourceChartResourceType
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 from robusta.core.reporting.blocks import FileBlock
+from robusta.core.reporting.custom_rendering import charts_style
 from robusta.integrations.prometheus.utils import PrometheusDiscovery
 
 
@@ -79,7 +79,7 @@ def create_chart_from_prometheus_query(
         )
     chart = pygal.XY(
         show_dots=True,
-        style=ChosenStyle,
+        style=charts_style,
         truncate_legend=15,
         include_x_axis=include_x_axis,
         width=1280,

@@ -24,6 +24,7 @@ from robusta.core.reporting.blocks import (
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import SlackAnnotations
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
+from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
@@ -211,12 +212,14 @@ class SlackSender:
         report_blocks: List[BaseBlock],
         report_attachment_blocks: List[BaseBlock],
         title: str,
-        slack_channel: str,
+        sink_params: SlackSinkParams,
         unfurl: bool,
-        sink_name: str,
         status: FindingStatus,
     ):
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
+        if not sink_params.send_svg:
+            file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
+
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
         # wide tables aren't displayed properly on slack. looks better in a text file
@@ -226,10 +229,10 @@ class SlackSender:
         message = self.prepare_slack_text(title, file_blocks)
         output_blocks = []
         for block in other_blocks:
-            output_blocks.extend(self.__to_slack(block, sink_name))
+            output_blocks.extend(self.__to_slack(block, sink_params.name))
         attachment_blocks = []
         for block in report_attachment_blocks:
-            attachment_blocks.extend(self.__to_slack(block, sink_name))
+            attachment_blocks.extend(self.__to_slack(block, sink_params.name))
 
         logging.debug(
             f"--sending to slack--\n"
@@ -241,7 +244,7 @@ class SlackSender:
 
         try:
             self.slack_client.chat_postMessage(
-                channel=slack_channel,
+                channel=sink_params.slack_channel,
                 text=message,
                 blocks=output_blocks,
                 display_as_bot=True,
@@ -293,8 +296,7 @@ class SlackSender:
     def send_finding_to_slack(
         self,
         finding: Finding,
-        slack_channel: str,
-        sink_name: str,
+        sink_params: SlackSinkParams,
         platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
@@ -331,8 +333,7 @@ class SlackSender:
             blocks,
             attachment_blocks,
             finding.title,
-            slack_channel,
+            sink_params,
             unfurl,
-            sink_name,
             status,
         )

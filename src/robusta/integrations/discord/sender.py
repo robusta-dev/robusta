@@ -18,6 +18,7 @@ from robusta.core.reporting import (
     TableBlock,
 )
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
+from robusta.core.sinks.discord.discord_sink_params import DiscordSinkParams
 from robusta.core.sinks.transformer import Transformer
 
 SEVERITY_EMOJI_MAP = {
@@ -86,13 +87,14 @@ def _add_color_to_block(block: Dict, msg_color: str):
 
 
 class DiscordSender:
-    def __init__(self, url: str, account_id: str, cluster_name: str):
+    def __init__(self, url: str, account_id: str, cluster_name: str, discord_params: DiscordSinkParams):
         """
         Set the Discord webhook url.
         """
         self.url = url
         self.cluster_name = cluster_name
         self.account_id = account_id
+        self.discord_params = discord_params
 
     @classmethod
     def __add_severity_icon(cls, title: str, severity: FindingSeverity) -> str:
@@ -190,25 +192,27 @@ class DiscordSender:
         self,
         report_blocks: List[BaseBlock],
         title: str,
-        sink_name: str,
         severity: FindingSeverity,
     ):
         msg_color = SEVERITY_COLOR_MAP.get(severity, "")
 
         # Process attachment blocks
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
+        if not self.discord_params.send_svg:
+            file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
+
         attachment_blocks = []
         for block in file_blocks:
-            attachment_blocks.extend(self.__to_discord(block, sink_name))
+            attachment_blocks.extend(self.__to_discord(block, self.discord_params.name))
 
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
         output_blocks = []
         if title:
             title = self.__add_severity_icon(title, severity)
-            output_blocks.extend(self.__to_discord(HeaderBlock(title), sink_name))
+            output_blocks.extend(self.__to_discord(HeaderBlock(title), self.discord_params.name))
         for block in other_blocks:
-            output_blocks.extend(self.__to_discord(block, sink_name))
+            output_blocks.extend(self.__to_discord(block, self.discord_params.name))
 
         discord_msg = self.__format_final_message(output_blocks, msg_color)
 
@@ -244,7 +248,6 @@ class DiscordSender:
     def send_finding_to_discord(
         self,
         finding: Finding,
-        sink_name: str,
         platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
@@ -280,6 +283,5 @@ class DiscordSender:
         self.__send_blocks_to_discord(
             blocks,
             finding.title,
-            sink_name,
             finding.severity,
         )

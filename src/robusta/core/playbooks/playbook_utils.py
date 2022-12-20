@@ -57,5 +57,7 @@ def to_safe_str(action_params) -> str:
         return dict_params_safe_str(action_params)
     elif isinstance(action_params, BaseModel):
         return dict_params_safe_str(action_params.dict())
+    elif action_params is None:
+        return ""
     else:
         return f"Cannot stringify unknown params type {type(action_params)}"
