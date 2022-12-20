@@ -79,7 +79,7 @@ def create_chart_from_prometheus_query(
         )
     chart = pygal.XY(
         show_dots=True,
-        style=charts_style,
+        style=charts_style(),
         truncate_legend=15,
         include_x_axis=include_x_axis,
         width=1280,
