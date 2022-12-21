@@ -90,7 +90,6 @@ from robusta.core.playbooks.common import get_resource_events_table
 from robusta.core.playbooks.container_playbook_utils import create_container_graph
 from robusta.core.playbooks.job_utils import CONTROLLER_UID, get_job_latest_pod, get_job_selector
 from robusta.core.playbooks.node_playbook_utils import create_node_graph_enrichment
-from robusta.core.playbooks.prometheus_enrichment_utils import *
 from robusta.core.playbooks.prometheus_enrichment_utils import (
     XAxisLine,
     create_chart_from_prometheus_query,

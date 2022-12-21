@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 import uuid
 from datetime import datetime
 from typing import Any, Dict
@@ -16,7 +17,6 @@ from robusta.core.reporting import (
     MarkdownBlock,
     PrometheusBlock,
     TableBlock,
-    logging,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer
