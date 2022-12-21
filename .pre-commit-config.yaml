@@ -12,6 +12,11 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
 
+  - repo: https://github.com/MarcoGorelli/absolufy-imports
+    rev: v0.3.1
+    hooks:
+    -   id: absolufy-imports
+
   - repo: https://github.com/pycqa/flake8
     rev: 5.0.4
     hooks:
@@ -22,7 +27,7 @@ repos:
     rev: 5.6.3
     hooks:
       - id: isort
-        args: [--settings-path=pyproject.toml, --check-only]
+        args: [--settings-path=pyproject.toml]
 
   # - repo: https://github.com/pre-commit/mirrors-mypy
   #   rev: v0.790

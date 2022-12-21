@@ -9,7 +9,7 @@ class DiscordSink(SinkBase):
         super().__init__(sink_config.discord_sink, registry)
 
         self.url = sink_config.discord_sink.url
-        self.sender = DiscordSender(self.url, self.account_id, self.cluster_name)
+        self.sender = DiscordSender(self.url, self.account_id, self.cluster_name, self.params)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
-        self.sender.send_finding_to_discord(finding, self.sink_name, platform_enabled)
+        self.sender.send_finding_to_discord(finding, platform_enabled)

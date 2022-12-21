@@ -8,14 +8,18 @@ import requests
 from pydantic import BaseModel
 
 from robusta.api import (
+    ActionException,
     ActionParams,
     AlertManagerDiscovery,
+    ErrorCodes,
     ExecutionBaseEvent,
     MarkdownBlock,
     ServiceDiscovery,
     TableBlock,
     action,
 )
+
+# ref to api https://github.com/prometheus/alertmanager/blob/main/api/v2/openapi.yaml
 
 
 class Matcher(BaseModel):
@@ -92,15 +96,16 @@ class AddSilenceParams(BaseSilenceParams):
 @action
 def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
     alertmanager_url = _get_alertmanager_url(params)
-    if alertmanager_url is None:
-        return
+    if not alertmanager_url:
+        raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
 
-    response = requests.get(
-        f"{alertmanager_url}{_get_url_path(SilenceOperation.LIST, params)}",
-        headers=_gen_headers(params),
-    )
-
-    response.raise_for_status()
+    try:
+        response = requests.get(
+            f"{alertmanager_url}{_get_url_path(SilenceOperation.LIST, params)}",
+            headers=_gen_headers(params),
+        )
+    except Exception as e:
+        raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
 
     silence_list = [(Silence(**silence).to_list()) for silence in response.json()]
     if len(silence_list) == 0:
@@ -121,19 +126,24 @@ def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
 @action
 def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
     alertmanager_url = _get_alertmanager_url(params)
-    if alertmanager_url is None:
-        return
+    if not alertmanager_url:
+        raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
 
-    res = requests.post(
-        f"{alertmanager_url}{_get_url_path(SilenceOperation.CREATE, params)}",
-        data=params.json(),
-        headers=_gen_headers(params),
-    )
+    try:
+        res = requests.post(
+            f"{alertmanager_url}{_get_url_path(SilenceOperation.CREATE, params)}",
+            data=params.json(),
+            headers=_gen_headers(params),
+        )
+    except Exception as e:
+        raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
 
-    res.raise_for_status()
+    if not res.ok:
+        raise ActionException(ErrorCodes.ADD_SILENCE_FAILED, msg=f"Add silence failed: {res.text}")
+
     silence_id = res.json().get("silenceID") or res.json().get("id")  # on grafana alertmanager the 'id' is returned
     if not silence_id:
-        return
+        raise ActionException(ErrorCodes.ADD_SILENCE_FAILED)
 
     event.add_enrichment(
         [
@@ -149,15 +159,19 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
 @action
 def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
     alertmanager_url = _get_alertmanager_url(params)
-    if alertmanager_url is None:
-        return
+    if not alertmanager_url:
+        raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
 
-    res = requests.delete(
-        f"{alertmanager_url}{_get_url_path(SilenceOperation.DELETE, params)}/{params.id}",
-        headers=_gen_headers(params),
-    )
+    try:
+        alertmanager_url = _get_alertmanager_url(params)
 
-    res.raise_for_status()
+        requests.delete(
+            f"{alertmanager_url}{_get_url_path(SilenceOperation.DELETE, params)}/{params.id}",
+            headers=_gen_headers(params),
+        )
+    except Exception as e:
+        raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
+
     event.add_enrichment(
         [
             TableBlock(

@@ -48,5 +48,6 @@ __all__ = [
     "CallbackBlock",
     "KubernetesDiffBlock",
     "CallbackChoice",
+    "PrometheusBlock",
     "JsonBlock",
 ]
