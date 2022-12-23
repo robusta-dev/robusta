@@ -31,7 +31,8 @@ class RobustaAuthClient(SupabaseAuthClient):
         # _set_timeout isn't implemented in gotrue client. it's required for the jwt refresh token timer task
         # https://github.com/supabase/gotrue-py/blob/49c092e3a4a6d7bb5e1c08067a4c42cc2f74b5cc/gotrue/client.py#L242
         # callback, timeout_ms
-        threading.Timer(args[2] / 1000, args[1]).start()
+        # TODO: Why args[1] and args[2] are not specified in the function signature?
+        threading.Timer(args[2] / 1000, args[1]).start()  # type: ignore
 
 
 class RobustaClient(Client):
@@ -39,7 +40,7 @@ class RobustaClient(Client):
         auth = getattr(self, "auth", None)
         session = auth.current_session if auth else None
         if session and session["access_token"]:
-            access_token = auth.session()["access_token"]
+            access_token = auth.session()["access_token"]  # type: ignore
         else:
             access_token = self.supabase_key
 
@@ -98,7 +99,7 @@ class SupabaseDal:
         for enrichment in finding.enrichments:
             res = (
                 self.client.table(EVIDENCE_TABLE)
-                .insert(
+                .insert(  # type: ignore
                     ModelConversion.to_evidence_json(
                         account_id=self.account_id,
                         cluster_id=self.cluster,
@@ -117,7 +118,7 @@ class SupabaseDal:
 
         res = (
             self.client.table(ISSUES_TABLE)
-            .insert(ModelConversion.to_finding_json(self.account_id, self.cluster, finding))
+            .insert(ModelConversion.to_finding_json(self.account_id, self.cluster, finding))  # type: ignore
             .execute()
         )
         if res.get("status_code") != 201:
@@ -144,7 +145,7 @@ class SupabaseDal:
         if not services:
             return
         db_services = [self.to_service(service) for service in services]
-        res = self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()
+        res = self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()  # type: ignore
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist services {services} error: {res.get('data')}")
             self.handle_supabase_error()
@@ -154,7 +155,7 @@ class SupabaseDal:
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
             self.client.table(SERVICES_TABLE)
-            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods")
+            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods")  # type: ignore
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -182,7 +183,7 @@ class SupabaseDal:
     def has_cluster_findings(self) -> bool:
         res = (
             self.client.table(ISSUES_TABLE)
-            .select("*")
+            .select("*")  # type: ignore
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .limit(1)
@@ -199,7 +200,7 @@ class SupabaseDal:
     def get_active_nodes(self) -> List[NodeInfo]:
         res = (
             self.client.table(NODES_TABLE)
-            .select("*")
+            .select("*")  # type: ignore
             .filter("account_id", "eq", self.account_id)
             .filter("cluster_id", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -244,7 +245,7 @@ class SupabaseDal:
             return
 
         db_nodes = [self.__to_db_node(node) for node in nodes]
-        res = self.client.table(NODES_TABLE).insert(db_nodes, upsert=True).execute()
+        res = self.client.table(NODES_TABLE).insert(db_nodes, upsert=True).execute()  # type: ignore
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist node {nodes} error: {res.get('data')}")
             self.handle_supabase_error()
@@ -254,7 +255,7 @@ class SupabaseDal:
     def get_active_jobs(self) -> List[JobInfo]:
         res = (
             self.client.table(JOBS_TABLE)
-            .select("*")
+            .select("*")  # type: ignore
             .filter("account_id", "eq", self.account_id)
             .filter("cluster_id", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -281,7 +282,7 @@ class SupabaseDal:
             return
 
         db_jobs = [self.__to_db_job(job) for job in jobs]
-        res = self.client.table(JOBS_TABLE).insert(db_jobs, upsert=True).execute()
+        res = self.client.table(JOBS_TABLE).insert(db_jobs, upsert=True).execute()  # type: ignore
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist jobs {jobs} error: {res.get('data')}")
             self.handle_supabase_error()
@@ -294,7 +295,7 @@ class SupabaseDal:
 
         res = self.__delete_patch(
             self.client.table(JOBS_TABLE)
-            .delete()
+            .delete()  # type: ignore
             .eq("account_id", self.account_id)
             .eq("cluster_id", self.cluster)
             .eq("service_key", job.get_service_key())
@@ -355,7 +356,7 @@ class SupabaseDal:
     def publish_cluster_status(self, cluster_status: ClusterStatus):
         res = (
             self.client.table(CLUSTERS_STATUS_TABLE)
-            .insert(self.to_db_cluster_status(cluster_status), upsert=True)
+            .insert(self.to_db_cluster_status(cluster_status), upsert=True)  # type: ignore
             .execute()
         )
         if res.get("status_code") not in [200, 201]:

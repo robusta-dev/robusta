@@ -2,9 +2,11 @@ import logging
 from typing import List
 
 import opsgenie_sdk
+import opsgenie_sdk.api_client
+import opsgenie_sdk.configuration
 
 from robusta.core.reporting.base import Enrichment, Finding, FindingSeverity
-from robusta.core.sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
+from robusta.core.sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper, OpsGenieSinkParams
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.transformer import Transformer
 
@@ -17,7 +19,7 @@ PRIORITY_MAP = {
 }
 
 
-class OpsGenieSink(SinkBase):
+class OpsGenieSink(SinkBase[OpsGenieSinkParams]):
     def __init__(self, sink_config: OpsGenieSinkConfigWrapper, registry):
         super().__init__(sink_config.opsgenie_sink, registry)
 

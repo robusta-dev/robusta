@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Type
 
 from robusta.core.sinks.datadog import DataDogSink, DataDogSinkConfigWrapper
 from robusta.core.sinks.discord import DiscordSink, DiscordSinkConfigWrapper
@@ -18,7 +18,7 @@ from robusta.core.sinks.webhook import WebhookSink, WebhookSinkConfigWrapper
 
 
 class SinkFactory:
-    __sink_config_mapping: Dict[SinkConfigBase, SinkBase] = {
+    __sink_config_mapping: Dict[Type[SinkConfigBase], Type[SinkBase]] = {
         SlackSinkConfigWrapper: SlackSink,
         RobustaSinkConfigWrapper: RobustaSink,
         MsTeamsSinkConfigWrapper: MsTeamsSink,
@@ -39,4 +39,4 @@ class SinkFactory:
         SinkClass = cls.__sink_config_mapping.get(type(sink_config))
         if SinkClass is None:
             raise Exception(f"Sink not supported {type(sink_config)}")
-        return SinkClass(sink_config, registry)
+        return SinkClass(sink_config, registry)  # type: ignore

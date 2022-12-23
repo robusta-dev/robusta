@@ -7,7 +7,7 @@ import subprocess
 import sys
 import threading
 from inspect import getmembers
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 import yaml
 
@@ -233,7 +233,7 @@ class ConfigLoader:
         sinks_registry: SinksRegistry,
         actions_registry: ActionsRegistry,
         registry: Registry,
-    ) -> (SinksRegistry, PlaybooksRegistry):
+    ) -> Tuple[SinksRegistry, PlaybooksRegistry]:
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(runner_config.sinks_config, existing_sinks, registry)
         sinks_registry = SinksRegistry(new_sinks)

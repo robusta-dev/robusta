@@ -2,7 +2,7 @@ import copy
 import logging
 import traceback
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from robusta.core.model.events import ExecutionBaseEvent, ExecutionContext
 from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
@@ -190,13 +190,13 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(msg, ErrorCodes.EXECUTION_EVENT_MISMATCH.value)
                 continue
 
-            action_with_params: bool = registered_action.params_type
+            action_with_params = cast(bool, registered_action.params_type)
             action_params = None
             params = None
             if action_with_params:
                 try:
                     action_params = merge_global_params(self.get_global_config(), action.action_params)  # type: ignore
-                    params = registered_action.params_type(**action_params)
+                    params = registered_action.params_type(**action_params)  # type: ignore
                 except Exception:
                     msg = (
                         f"Failed to create {registered_action.params_type} "
@@ -235,7 +235,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         playbook_id: str,
     ) -> Optional[BaseTrigger]:
         for trigger in playbook_triggers:
-            trigger_ = trigger.get()
+            trigger_ = trigger.get()  # type: ignore
             if trigger_.should_fire(trigger_event, playbook_id):
                 return trigger_
         return None

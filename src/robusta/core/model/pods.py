@@ -33,10 +33,10 @@ class ContainerResources(BaseModel):
 
 
 class PodContainer:
-    state: ContainerState
+    state: Optional[ContainerState]
     container: Container
 
-    def __init__(self, pod: Pod, state: ContainerState, container_name: str):
+    def __init__(self, pod: Pod, state: Optional[ContainerState], container_name: str):
         self.state = state
         container = PodContainer.get_pod_container_by_name(pod, container_name)
         assert container is not None, "Container not found in pod"
@@ -156,11 +156,11 @@ def pod_resources(pod: Pod, resource_attribute: ResourceAttributes) -> PodResour
 def find_most_recent_oom_killed_container(
     pod: Pod, container_statuses: List[ContainerStatus], only_current_state: bool = False
 ) -> Optional[PodContainer]:
-    latest_oom_kill_container = None
+    latest_oom_kill_container: Optional[PodContainer] = None
     for container_status in container_statuses:
         oom_killed_container: PodContainer = get_oom_killed_container(pod, container_status, only_current_state)  # type: ignore
-        if latest_oom_kill_container is not None or get_oom_kill_time(oom_killed_container) > get_oom_kill_time(
-            latest_oom_kill_container
+        if latest_oom_kill_container is not None or (
+            get_oom_kill_time(oom_killed_container) > get_oom_kill_time(latest_oom_kill_container)  # type: ignore
         ):
             latest_oom_kill_container = oom_killed_container
     return latest_oom_kill_container
@@ -169,16 +169,18 @@ def find_most_recent_oom_killed_container(
 def pod_most_recent_oom_killed_container(pod: Pod, only_current_state: bool = False) -> Optional[PodContainer]:
     if not pod.status:
         return None
-    all_container_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+    all_container_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses  # type: ignore
     return find_most_recent_oom_killed_container(
         pod, container_statuses=all_container_statuses, only_current_state=only_current_state
     )
 
 
-def get_oom_kill_time(container: PodContainer) -> float:
+def get_oom_kill_time(container: Optional[PodContainer]) -> float:
     if not container:
         return 0
     state = container.state
+    assert state is not None
+
     if not state.terminated or not state.terminated.finishedAt:
         return 0
     return parse_kubernetes_datetime_to_ms(state.terminated.finishedAt)
@@ -199,7 +201,7 @@ def get_oom_killed_container(
     return None
 
 
-def is_state_in_oom_status(state: ContainerState):
+def is_state_in_oom_status(state: Optional[ContainerState]):
     if not state:
         return False
     if not state.terminated:

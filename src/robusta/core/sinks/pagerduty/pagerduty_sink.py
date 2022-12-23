@@ -11,11 +11,11 @@ from robusta.core.reporting.blocks import (
     MarkdownBlock,
     TableBlock,
 )
-from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
+from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper, PagerdutySinkParams
 from robusta.core.sinks.sink_base import SinkBase
 
 
-class PagerdutySink(SinkBase):
+class PagerdutySink(SinkBase[PagerdutySinkParams]):
     def __init__(self, sink_config: PagerdutyConfigWrapper, registry):
         super().__init__(sink_config.pagerduty_sink, registry)
         self.url = "https://events.pagerduty.com/v2/enqueue/"

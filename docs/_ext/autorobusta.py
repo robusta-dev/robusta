@@ -4,7 +4,7 @@ import pydoc
 import textwrap
 import typing
 from pathlib import Path
-from typing import List, Optional, Type
+from typing import Callable, List, Optional, Type, cast
 
 import pydantic.fields
 import sphinx.addnodes
@@ -17,8 +17,8 @@ from PIL import Image
 from pydantic import BaseModel
 from pydantic.fields import ModelField
 from sphinx.application import Sphinx
-from sphinx.util import nested_parse_with_titles
 from sphinx.util.docutils import SphinxDirective
+from sphinx.util.nodes import nested_parse_with_titles
 
 from robusta.api import Action
 from robusta.core.playbooks.generation import ExamplesGenerator, get_possible_types
@@ -56,6 +56,7 @@ class PydanticModelDirective(SphinxDirective):
         obj = pydoc.locate(objpath)
         if obj is None:
             raise Exception(f"Cannot document None: {objpath}")
+        obj = cast(type, obj)
         if not issubclass(obj, BaseModel):
             raise Exception(f"not a pydantic model: {obj}")
         return self.__document_model(obj, "show-code" in self.options, "show-optionality" in self.options)
@@ -119,7 +120,8 @@ class PydanticModelDirective(SphinxDirective):
         if show_code:
             content.extend(cls.__document_field_example(field))
 
-        if typing.get_origin(field.type_) == typing.Union:
+        # TODO: Will not work for 3.7
+        if typing.get_origin(field.type_) == typing.Union:  # type: ignore
             possible_types = get_possible_types(field.type_)
             paragraph = nodes.paragraph(text="each entry is one of the following:")
             content.append(paragraph)
@@ -148,7 +150,8 @@ class PydanticModelDirective(SphinxDirective):
 
     @staticmethod
     def __get_readable_field_type(field: pydantic.fields.ModelField):
-        if typing.get_origin(field.type_) == typing.Union:
+        # TODO: Will not work for 3.7
+        if typing.get_origin(field.type_) == typing.Union:  # type: ignore
             inner_type_name = "complex"
         else:
             inner_type_name = field.type_.__name__.lower()
@@ -222,6 +225,7 @@ class RobustaActionDirective(SphinxDirective):
         obj = pydoc.locate(objpath)
         if obj is None:
             raise Exception(f"Cannot document None: {objpath}")
+        obj = cast(Callable, obj)
         action_definition = Action(obj)
         return self.__generate_rst(action_definition, recommended_trigger)
 
