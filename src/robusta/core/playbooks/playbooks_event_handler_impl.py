@@ -197,7 +197,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             if action_with_params:
                 try:
                     action_params = merge_global_params(self.get_global_config(), action.action_params)  # type: ignore
-                    params = registered_action.params_type(**action_params)
+                    params = registered_action.params_type(**action_params)  # type: ignore
                 except Exception:
                     msg = (
                         f"Failed to create {registered_action.params_type} "
@@ -250,7 +250,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         playbook_id: str,
     ) -> Optional[BaseTrigger]:
         for trigger in playbook_triggers:
-            trigger_ = trigger.get()
+            trigger_ = trigger.get()  # type: ignore
             if trigger_.should_fire(trigger_event, playbook_id):
                 return trigger_
         return None

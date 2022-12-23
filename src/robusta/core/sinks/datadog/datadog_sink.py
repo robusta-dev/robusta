@@ -8,7 +8,7 @@ try:
     from datadog_api_client.v1.models import EventAlertType, EventCreateRequest  # type: ignore
 except ImportError:
 
-    def lazy_import_error(self, *args, **kwargs):
+    def lazy_import_error(*args, **kwargs):
         raise ImportError("datadog-api-client is not installed")
 
     Configuration = lazy_import_error
@@ -38,11 +38,11 @@ from robusta.core.reporting.blocks import (
     MarkdownBlock,
     TableBlock,
 )
-from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
+from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper, DataDogSinkParams
 from robusta.core.sinks.sink_base import SinkBase
 
 
-class DataDogSink(SinkBase):
+class DataDogSink(SinkBase[DataDogSinkParams]):
     def __init__(self, sink_config: DataDogSinkConfigWrapper, registry):
         super().__init__(sink_config.datadog_sink, registry)
 

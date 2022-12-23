@@ -169,7 +169,7 @@ class KubernetesDiffBlock(BaseBlock):
             return hikaru.get_yaml(obj)
 
     @staticmethod
-    def _obj_to_name(obj: Optional[HikaruDocumentBase], name: str, namespace: str = ""):
+    def _obj_to_name(obj: Optional[HikaruDocumentBase], name: str, namespace: Optional[str] = ""):
         if obj is None:
             return ""
 

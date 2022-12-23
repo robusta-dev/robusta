@@ -94,9 +94,9 @@ class JobData(BaseModel):
     @staticmethod
     def from_api_server(job: V1Job, pods: List[str]) -> "JobData":
         job_spec = cast(V1JobSpec, job.spec)
-        pod_spec = cast(V1PodSpec, job_spec.template.spec)
+        pod_spec = cast(V1PodSpec, job_spec.template.spec)  # type: ignore
         pod_containers: List[JobContainer] = [
-            JobContainer.from_api_server(container) for container in pod_spec.containers
+            JobContainer.from_api_server(container) for container in pod_spec.containers  # type: ignore
         ]
         assert job_spec.backoff_limit is not None
         assert job.metadata is not None

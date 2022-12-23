@@ -11,11 +11,14 @@ def get_job_selector(job: Job) -> Optional[str]:
     """
     First try to get by controller_uid, then by selectors, and if both not available by name
     """
+    assert job.metadata is not None
     job_labels = job.metadata.labels
+    assert job_labels is not None
     controller_uid = job_labels.get(CONTROLLER_UID, None)
     if controller_uid:
         return f"{CONTROLLER_UID}={controller_uid}"
 
+    assert job.spec is not None
     if job.spec.selector:
         selector = build_selector_query(job.spec.selector)
         if selector:

@@ -5,7 +5,7 @@ import subprocess
 import time
 import traceback
 import uuid
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, cast
 
 import typer
 import yaml
@@ -69,9 +69,12 @@ class HelmValues(BaseModel, extra=Extra.allow):
 
 def get_slack_channel() -> str:
     return (
-        typer.prompt(
-            "Which slack channel should I send notifications to? ",
-            prompt_suffix="#",
+        cast(
+            str,
+            typer.prompt(
+                "Which slack channel should I send notifications to? ",
+                prompt_suffix="#",
+            ),
         )
         .strip()
         .strip("#")
@@ -161,9 +164,13 @@ def gen_config(
         "Configure MsTeams integration?",
         default=False,
     ):
-        msteams_webhook = typer.prompt(
-            "Please insert your MsTeams webhook url. See https://docs.robusta.dev/master/catalog/sinks/ms-teams.html",
-            default=None,
+        msteams_webhook = cast(
+            str,
+            typer.prompt(
+                "Please insert your MsTeams webhook url. "
+                "See https://docs.robusta.dev/master/catalog/sinks/ms-teams.html",
+                default=None,
+            ),
         )
 
     if msteams_webhook:

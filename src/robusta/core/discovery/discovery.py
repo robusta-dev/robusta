@@ -84,7 +84,7 @@ class Discovery:
                         extract_total_pods(deployment),
                         extract_ready_pods(deployment),
                     )
-                    for deployment in deployments.items
+                    for deployment in deployments.items  # type: ignore
                 ]
             )
             statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces()
@@ -98,7 +98,7 @@ class Discovery:
                         extract_total_pods(statefulset),
                         extract_ready_pods(statefulset),
                     )
-                    for statefulset in statefulsets.items
+                    for statefulset in statefulsets.items  # type: ignore
                 ]
             )
             daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces()
@@ -112,7 +112,7 @@ class Discovery:
                         extract_total_pods(daemonset),
                         extract_ready_pods(daemonset),
                     )
-                    for daemonset in daemonsets.items
+                    for daemonset in daemonsets.items  # type: ignore
                 ]
             )
             replicasets: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces()
@@ -126,7 +126,7 @@ class Discovery:
                         extract_total_pods(replicaset),
                         extract_ready_pods(replicaset),
                     )
-                    for replicaset in replicasets.items
+                    for replicaset in replicasets.items  # type: ignore
                     if not cast(V1ObjectMeta, replicaset.metadata).owner_references
                 ]
             )
@@ -143,7 +143,7 @@ class Discovery:
                         extract_total_pods(pod),
                         extract_ready_pods(pod),
                     )
-                    for pod in pod_items
+                    for pod in pod_items  # type: ignore
                     if not cast(V1ObjectMeta, pod.metadata).owner_references and not is_pod_finished(pod)
                 ]
             )
@@ -158,7 +158,7 @@ class Discovery:
         node_requests = defaultdict(list)
         try:
             current_nodes = client.CoreV1Api().list_node()
-            for pod in pod_items:
+            for pod in pod_items:  # type: ignore
                 pod.status = cast(V1PodStatus, pod.status)
                 pod.spec = cast(V1PodSpec, pod.spec)
                 pod_status = pod.status.phase
@@ -175,7 +175,7 @@ class Discovery:
         active_jobs: List[JobInfo] = []
         try:
             current_jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces()
-            for job in current_jobs.items:
+            for job in current_jobs.items:  # type: ignore
                 job_pods: List[str] = []
                 job_labels = {}
 
@@ -192,7 +192,7 @@ class Discovery:
                 if job_labels:  # add job pods only if we found a valid selector
                     job_pods = [
                         pod.metadata.name  # type: ignore
-                        for pod in pod_items
+                        for pod in pod_items  # type: ignore
                         if (
                             (job.metadata.namespace == cast(V1ObjectMeta, pod.metadata).namespace)
                             and (job_labels.items() <= (cast(V1ObjectMeta, pod.metadata).labels or {}).items())

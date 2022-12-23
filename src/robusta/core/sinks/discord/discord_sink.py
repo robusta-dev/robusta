@@ -1,10 +1,10 @@
 from robusta.core.reporting.base import Finding
-from robusta.core.sinks.discord.discord_sink_params import DiscordSinkConfigWrapper
+from robusta.core.sinks.discord.discord_sink_params import DiscordSinkConfigWrapper, DiscordSinkParams
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.discord.sender import DiscordSender
 
 
-class DiscordSink(SinkBase):
+class DiscordSink(SinkBase[DiscordSinkParams]):
     def __init__(self, sink_config: DiscordSinkConfigWrapper, registry):
         super().__init__(sink_config.discord_sink, registry)
 
