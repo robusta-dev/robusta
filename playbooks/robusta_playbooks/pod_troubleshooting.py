@@ -3,6 +3,7 @@ import logging
 
 import humanize
 from robusta.api import *
+from robusta.utils.parsing import load_json
 from typing import List
 
 
@@ -315,7 +316,7 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     )
     blocks = []
     try:
-        output_json = json.loads(output)
+        output_json = load_json(output)
         SUCCESS_STATUS = "success"
         first_stack_trace_obj = StackTraceObject(**output_json[0]) if len(output_json) >= 1 else None
         if len(output_json) == 0 or (len(output_json) == 1 and
