@@ -16,7 +16,7 @@ from ...model.playbook_action import PlaybookAction
 from ...model.config import Registry
 from .trigger import Trigger
 from ...runner.telemetry import Telemetry
-from ...utils.error_codes import ErrorCodes
+from ...utils.error_codes import ActionException, ErrorCodes
 
 
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
@@ -175,8 +175,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         return self.run_actions(execution_event, [playbook_action], sync_response, no_sinks)
 
     @classmethod
-    def __error_resp(cls, msg: str, error_code: int) -> dict:
-        logging.error(msg)
+    def __error_resp(cls, msg: str, error_code: int, log: bool = True) -> dict:
+        if log:
+            logging.error(msg)
         return {"success": False, "msg": msg, "error_code": error_code}
 
     def __run_playbook_actions(
@@ -206,10 +207,11 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(msg, ErrorCodes.EXECUTION_EVENT_MISMATCH.value)
                 continue
 
-            if not registered_action.params_type:
-                registered_action.func(execution_event)
-            else:
-                action_params = None
+
+            action_with_params: bool = registered_action.params_type
+            action_params = None
+            params = None
+            if action_with_params:
                 try:
                     action_params = merge_global_params(
                         self.get_global_config(), action.action_params
@@ -224,20 +226,26 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event.response = self.__error_resp(msg, ErrorCodes.PARAMS_INSTANTIATION_FAILED.value)
                     continue
 
-                try:
-                    registered_action.func(execution_event, params)
-                except Exception:
-                    logging.error(
-                        f"Failed to execute action {action.action_name} {to_safe_str(action_params)}",
-                        exc_info=True,
-                    )
-                    execution_event.add_enrichment(
-                        [
-                            MarkdownBlock(
-                                text=f"Oops... Error processing {action.action_name}"
-                            )
-                        ]
-                    )
+            try:
+                registered_action.func(execution_event, params) if action_with_params else registered_action.func(execution_event)
+            except ActionException as e:
+                msg = e.msg if e.msg else f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}"
+                logging.error(msg)
+                execution_event.response = self.__error_resp(e.type, e.code, log=False)
+            except Exception:
+                logging.error(f"Failed to execute action {action.action_name} {to_safe_str(action_params)}")
+                execution_event.response = self.__error_resp(
+                     ErrorCodes.ACTION_UNEXPECTED_ERROR.name,
+                     ErrorCodes.ACTION_UNEXPECTED_ERROR.value,
+                     log=False
+                     )
+                execution_event.add_enrichment(
+                    [
+                        MarkdownBlock(
+                            text=f"Oops... Error processing {action.action_name}"
+                        )
+                    ]
+                )
 
         return execution_event.response
 
