@@ -103,7 +103,9 @@ class ExecutionBaseEvent:
             self.sink_findings[sink].insert(0, finding)
             first = False
 
-    def override_finding_attributes(self, title: str = "", description: str = "", severity: FindingSeverity = None):
+    def override_finding_attributes(
+        self, title: Optional[str], description: Optional[str], severity: FindingSeverity = None
+    ):
         for sink in self.named_sinks:
             for finding in self.sink_findings[sink]:
                 if title:

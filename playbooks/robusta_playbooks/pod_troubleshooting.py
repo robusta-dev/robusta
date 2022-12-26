@@ -27,8 +27,8 @@ from robusta.api import (
     SlackAnnotations,
     TableBlock,
     action,
-    load_json,
 )
+from robusta.utils.parsing import load_json
 
 
 class StackTraceObject(BaseModel):
@@ -328,7 +328,7 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     )
     blocks = []
     try:
-        output_json = json.loads(output)
+        output_json = load_json(output)
         SUCCESS_STATUS = "success"
         first_stack_trace_obj = StackTraceObject(**output_json[0]) if len(output_json) >= 1 else None
         if len(output_json) == 0 or (len(output_json) == 1 and first_stack_trace_obj.status != SUCCESS_STATUS):  # type: ignore

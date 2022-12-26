@@ -52,6 +52,12 @@ After you configured the ``receiver`` and ``route``, you can test it works prope
 
 You should see the demo alert, in the Robusta UI, Slack, or any other configured ``sink`` within a few minutes
 
+.. admonition:: "Alerts won't show up" UI notification
+    :class: warning
+
+    The notification is displayed until the first alert is sent from AlertManager to Robusta.
+
+
 Prometheus Operator
 -----------------------
 If you are using a Prometheus Operator that was **not** installed with Robusta, you should define a `manually-managed secret <https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md#manually-managed-secret>`_
