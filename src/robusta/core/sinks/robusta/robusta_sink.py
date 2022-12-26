@@ -16,7 +16,6 @@ from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
-from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.runner.web_api import WebApi
@@ -24,6 +23,8 @@ from robusta.runner.web_api import WebApi
 
 class RobustaSink(SinkBase):
     def __init__(self, sink_config: RobustaSinkConfigWrapper, registry):
+        from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
+
         super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
 
