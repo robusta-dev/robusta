@@ -116,7 +116,7 @@ Standard Installation
     
 .. note::
 
-      You can provide configuration values as Kubernete secrets. See `Configuration secrets <https://docs.robusta.dev/master/user-guide/configuration-secrets.html>`_ guide.
+      Sensitive configuration values can be stored in Kubernetes secrets. See `Configuration secrets <https://docs.robusta.dev/master/user-guide/configuration-secrets.html>`_ guide.
 
 3. Verify the two Robusta pods and running with no errors in the logs:
 

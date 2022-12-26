@@ -55,7 +55,8 @@ You should see the demo alert, in the Robusta UI, Slack, or any other configured
 .. admonition:: "Alerts won't show up" UI notification
     :class: warning
 
-    "Alerts won't show up because Prometheus is not connected to Robusta" will always be there even if the connection is configured correctly, until the first alert has been raised.
+    The notification is displayed until the first alert is sent from AlertManager to Robusta.
+
 
 Prometheus Operator
 -----------------------
