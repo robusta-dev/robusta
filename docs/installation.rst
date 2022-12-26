@@ -144,6 +144,11 @@ Standard Installation
         
         * With GKE Autopilot restrictions, some components must be disabled when installing Robusta bundled with Kube-prometehus-stack.
 
+    
+.. note::
+
+      Sensitive configuration values can be stored in Kubernetes secrets. See `Configuration secrets <https://docs.robusta.dev/master/user-guide/configuration-secrets.html>`_ guide.
+
 3. Verify the two Robusta pods and running with no errors in the logs:
 
 .. code-block:: bash
