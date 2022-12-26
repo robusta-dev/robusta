@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from hikaru import Pod, PodList
+from hikaru.model import Pod, PodList
 
 from robusta.api import (
     BaseBlock,
