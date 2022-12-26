@@ -4,7 +4,6 @@ import tempfile
 import uuid
 from typing import List
 
-from cairosvg import svg2png
 from PIL import Image
 
 from robusta.core.reporting.blocks import FileBlock
@@ -65,4 +64,6 @@ class MsTeamsAdaptiveCardFilesImage:
     # msteams cant read parsing of url to svg image
     @classmethod
     def __svg_convert_bytes_to_jpg(cls, svg_bytes: bytes):
+        from cairosvg import svg2png
+
         return cls.__png_convert_bytes_to_base_64_url(svg2png(bytestring=svg_bytes))
