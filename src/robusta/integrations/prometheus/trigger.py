@@ -1,6 +1,6 @@
 import logging
 from concurrent.futures.process import ProcessPoolExecutor
-from typing import Dict, List, NamedTuple, Optional, Type, Union
+from typing import Dict, List, NamedTuple, Optional, Type, Union, cast
 
 from hikaru.model.rel_1_16 import DaemonSet, Job, Node, NodeList, StatefulSet
 from pydantic.main import BaseModel
@@ -46,11 +46,11 @@ class PrometheusAlertTrigger(BaseTrigger):
     :var status: one of "firing", "resolved", or "all"
     """
 
-    alert_name: str = None
+    alert_name: Optional[str] = None
     status: str = "firing"
-    pod_name_prefix: str = None
-    namespace_prefix: str = None
-    instance_name_prefix: str = None
+    pod_name_prefix: Optional[str] = None
+    namespace_prefix: Optional[str] = None
+    instance_name_prefix: Optional[str] = None
 
     def get_trigger_event(self):
         return PrometheusTriggerEvent.__name__
@@ -96,8 +96,12 @@ class AlertEventBuilder:
 
     @classmethod
     def __find_node_by_ip(cls, ip) -> Optional[Node]:
-        nodes: NodeList = NodeList.listNode().obj
+        nodes = cast(NodeList, NodeList.listNode().obj)
         for node in nodes.items:
+            assert node.status is not None
+            assert node.status.addresses is not None
+            assert node.metadata is not None
+
             addresses = [a.address for a in node.status.addresses]
             logging.info(f"node {node.metadata.name} has addresses {addresses}")
             if ip in addresses:
@@ -133,8 +137,8 @@ class AlertEventBuilder:
         namespace = labels.get("namespace", "default")
 
         for mapping in MAPPINGS:
+            resource_name = labels.get(mapping.prometheus_label, None)
             try:
-                resource_name = labels.get(mapping.prometheus_label, None)
                 if not resource_name or "kube-state-metrics" in resource_name:
                     continue
                 resource = mapping.hikaru_class().read(name=resource_name, namespace=namespace)
@@ -152,7 +156,7 @@ class AlertEventBuilder:
 
         node_name = labels.get("node")
         if node_name:
-            execution_event.node = AlertEventBuilder.__load_node(execution_event.alert, node_name)
+            execution_event.node = AlertEventBuilder.__load_node(execution_event.alert, node_name)  # type: ignore
 
         # we handle nodes differently than other resources
         node_name = labels.get("instance", None)
@@ -160,7 +164,7 @@ class AlertEventBuilder:
         # when the job_name is kube-state-metrics "instance" refers to the IP of kube-state-metrics not the node
         # If the alert has pod, the 'instance' attribute contains the pod ip
         if not execution_event.node and node_name and job_name != "kube-state-metrics":
-            execution_event.node = AlertEventBuilder.__load_node(execution_event.alert, node_name)
+            execution_event.node = AlertEventBuilder.__load_node(execution_event.alert, node_name)  # type: ignore
 
         return execution_event
 

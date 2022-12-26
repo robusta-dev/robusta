@@ -81,6 +81,7 @@ class PrometheusKubernetesAlert(PodEvent, NodeEvent, DeploymentEvent, JobEvent, 
         return self.daemonset
 
     def get_title(self) -> str:
+        assert self.alert is not None
         annotations = self.alert.annotations
         if annotations.get("summary"):
             return f'{annotations["summary"]}'
@@ -91,10 +92,14 @@ class PrometheusKubernetesAlert(PodEvent, NodeEvent, DeploymentEvent, JobEvent, 
         """
         Gets the prometheus query that defines this alert.
         """
+        assert self.alert is not None
         url = urlparse(self.alert.generatorURL)
-        return re.match(r"g0.expr=(.*)&g0.tab=1", unquote_plus(url.query)).group(1)
+        match = re.match(r"g0.expr=(.*)&g0.tab=1", unquote_plus(url.query))
+        assert match is not None
+        return match.group(1)
 
     def get_description(self) -> str:
+        assert self.alert is not None
         annotations = self.alert.annotations
         clean_description = ""
         if annotations.get("description"):
@@ -109,27 +114,34 @@ class PrometheusKubernetesAlert(PodEvent, NodeEvent, DeploymentEvent, JobEvent, 
         node_name: Optional[str] = None
         if self.deployment:
             subject_type = FindingSubjectType.TYPE_DEPLOYMENT
+            assert self.deployment.metadata is not None
             name = self.deployment.metadata.name
             namespace = self.deployment.metadata.namespace
         elif self.daemonset:
             subject_type = FindingSubjectType.TYPE_DAEMONSET
+            assert self.daemonset.metadata is not None
             name = self.daemonset.metadata.name
             namespace = self.daemonset.metadata.namespace
         elif self.statefulset:
             subject_type = FindingSubjectType.TYPE_STATEFULSET
+            assert self.statefulset.metadata is not None
             name = self.statefulset.metadata.name
             namespace = self.statefulset.metadata.namespace
         elif self.node:
             subject_type = FindingSubjectType.TYPE_NODE
+            assert self.node.metadata is not None
             name = self.node.metadata.name
             node_name = self.node.metadata.name
         elif self.pod:
             subject_type = FindingSubjectType.TYPE_POD
+            assert self.pod.metadata is not None
+            assert self.pod.spec is not None
             name = self.pod.metadata.name
             namespace = self.pod.metadata.namespace
             node_name = self.pod.spec.nodeName
         elif self.job:
             subject_type = FindingSubjectType.TYPE_JOB
+            assert self.job.metadata is not None
             name = self.job.metadata.name
             namespace = self.job.metadata.namespace
 
@@ -137,6 +149,7 @@ class PrometheusKubernetesAlert(PodEvent, NodeEvent, DeploymentEvent, JobEvent, 
 
     def create_default_finding(self) -> Finding:
         alert_subject = self.get_alert_subject()
+        assert self.alert is not None
         status_message = "[RESOLVED] " if self.alert.status.lower() == "resolved" else ""
         title = f"{status_message}{self.get_title()}"
         # AlertManager sends 0001-01-01T00:00:00Z when there's no end date
@@ -145,8 +158,8 @@ class PrometheusKubernetesAlert(PodEvent, NodeEvent, DeploymentEvent, JobEvent, 
             title=title,
             description=self.get_description(),
             source=FindingSource.PROMETHEUS,
-            aggregation_key=self.alert_name,
-            severity=SEVERITY_MAP.get(self.alert.labels.get("severity"), FindingSeverity.INFO),
+            aggregation_key=self.alert_name,  # type: ignore
+            severity=SEVERITY_MAP.get(self.alert.labels.get("severity", "info"), FindingSeverity.INFO),
             subject=alert_subject,
             fingerprint=self.alert.fingerprint,
             starts_at=self.alert.startsAt,

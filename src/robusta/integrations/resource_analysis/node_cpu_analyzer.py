@@ -74,6 +74,7 @@ class NodeCpuAnalyzer:
         return pod_to_cpu
 
     def get_per_pod_cpu_request(self):
+        assert self.node.metadata is not None
         query = f'sum by (pod)(kube_pod_container_resource_requests_cpu_cores{{node="{self.node.metadata.name}"}})'
         result = self.prom.custom_query(query, params=self.default_prometheus_params)
         return dict((r["metric"]["pod"], float(r["value"][1])) for r in result)

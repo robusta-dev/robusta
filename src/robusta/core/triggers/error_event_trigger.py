@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 from robusta.core.playbooks.base_trigger import TriggerEvent
@@ -9,29 +9,29 @@ from robusta.utils.rate_limiter import RateLimiter
 
 class WarningEventTrigger(EventAllChangesTrigger):
     rate_limit: int = 3600
-    operations: List[str] = None
-    exclude: List[str] = None
-    include: List[str] = None
+    operations: Optional[List[str]] = None
+    exclude: List[str]
+    include: List[str]
 
     def __init__(
         self,
-        name_prefix: str = None,
-        namespace_prefix: str = None,
-        labels_selector: str = None,
+        name_prefix: Optional[str] = None,
+        namespace_prefix: Optional[str] = None,
+        labels_selector: Optional[str] = None,
         rate_limit: int = 3600,
-        operations: List[str] = None,
-        exclude: List[str] = (),
-        include: List[str] = (),
+        operations: Optional[List[str]] = None,
+        exclude: Optional[List[str]] = None,
+        include: Optional[List[str]] = None,
     ):
         super().__init__(
-            name_prefix=name_prefix,
-            namespace_prefix=namespace_prefix,
-            labels_selector=labels_selector,
+            name_prefix=name_prefix,  # type: ignore
+            namespace_prefix=namespace_prefix,  # type: ignore
+            labels_selector=labels_selector,  # type: ignore
         )
         self.rate_limit = rate_limit
         self.operations = operations
-        self.exclude = exclude
-        self.include = include
+        self.exclude = exclude or []
+        self.include = include or []
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         should_fire = super().should_fire(event, playbook_id)
@@ -49,10 +49,10 @@ class WarningEventTrigger(EventAllChangesTrigger):
         if not exec_event.obj or not exec_event.obj.involvedObject:
             return False
 
-        if exec_event.get_event().type != "Warning":
+        if exec_event.get_event().type != "Warning":  # type: ignore
             return False
 
-        if self.operations and exec_event.operation.value not in self.operations:
+        if self.operations and exec_event.operation.value not in self.operations:  # type: ignore
             return False
 
         event_content = f"{exec_event.obj.reason}{exec_event.obj.message}".lower()
@@ -73,7 +73,7 @@ class WarningEventTrigger(EventAllChangesTrigger):
         service_key = TopServiceResolver.guess_service_key(name=name, namespace=namespace)
         return RateLimiter.mark_and_test(
             f"WarningEventTrigger_{playbook_id}_{exec_event.obj.reason}",
-            service_key if service_key else namespace + ":" + name,
+            service_key if service_key else namespace + ":" + str(name),
             self.rate_limit,
         )
 
@@ -81,12 +81,12 @@ class WarningEventTrigger(EventAllChangesTrigger):
 class WarningEventCreateTrigger(WarningEventTrigger):
     def __init__(
         self,
-        name_prefix: str = None,
-        namespace_prefix: str = None,
-        labels_selector: str = None,
+        name_prefix: Optional[str] = None,
+        namespace_prefix: Optional[str] = None,
+        labels_selector: Optional[str] = None,
         rate_limit: int = 3600,
-        exclude: List[str] = (),
-        include: List[str] = (),
+        exclude: Optional[List[str]] = None,
+        include: Optional[List[str]] = None,
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -94,20 +94,20 @@ class WarningEventCreateTrigger(WarningEventTrigger):
             labels_selector=labels_selector,
             rate_limit=rate_limit,
             operations=["create"],
-            exclude=exclude,
-            include=include,
+            exclude=exclude or [],
+            include=include or [],
         )
 
 
 class WarningEventUpdateTrigger(WarningEventTrigger):
     def __init__(
         self,
-        name_prefix: str = None,
-        namespace_prefix: str = None,
-        labels_selector: str = None,
+        name_prefix: Optional[str] = None,
+        namespace_prefix: Optional[str] = None,
+        labels_selector: Optional[str] = None,
         rate_limit: int = 3600,
-        exclude: List[str] = (),
-        include: List[str] = (),
+        exclude: Optional[List[str]] = None,
+        include: Optional[List[str]] = None,
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -115,20 +115,20 @@ class WarningEventUpdateTrigger(WarningEventTrigger):
             labels_selector=labels_selector,
             rate_limit=rate_limit,
             operations=["update"],
-            exclude=exclude,
-            include=include,
+            exclude=exclude or [],
+            include=include or [],
         )
 
 
 class WarningEventDeleteTrigger(WarningEventTrigger):
     def __init__(
         self,
-        name_prefix: str = None,
-        namespace_prefix: str = None,
-        labels_selector: str = None,
+        name_prefix: Optional[str] = None,
+        namespace_prefix: Optional[str] = None,
+        labels_selector: Optional[str] = None,
         rate_limit: int = 3600,
-        exclude: List[str] = (),
-        include: List[str] = (),
+        exclude: Optional[List[str]] = None,
+        include: Optional[List[str]] = None,
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -136,6 +136,6 @@ class WarningEventDeleteTrigger(WarningEventTrigger):
             labels_selector=labels_selector,
             rate_limit=rate_limit,
             operations=["delete"],
-            exclude=exclude,
-            include=include,
+            exclude=exclude or [],
+            include=include or [],
         )

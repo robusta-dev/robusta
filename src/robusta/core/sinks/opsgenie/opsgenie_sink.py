@@ -34,7 +34,7 @@ class OpsGenieSink(SinkBase[OpsGenieSinkParams]):
             self.conf.host = sink_config.opsgenie_sink.host
 
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
-        self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
+        self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)  # type: ignore
 
     def __close_alert(self, finding: Finding):
         body = opsgenie_sdk.CloseAlertPayload(

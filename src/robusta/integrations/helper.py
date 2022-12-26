@@ -8,7 +8,7 @@ def exact_match(expected: Optional[Any], field_value: Any) -> bool:
     return expected == field_value
 
 
-def prefix_match(prefix: str, field_value: str) -> bool:
+def prefix_match(prefix: Optional[str], field_value: Optional[str]) -> bool:
     if not prefix:
         return True
 

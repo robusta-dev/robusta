@@ -126,7 +126,7 @@ class WebexSender:
 
         message_content = self._create_message_content(finding, platform_enabled)
 
-        blocks = [MarkdownBlock(text=f"*Source:* _{self.cluster_name}_\n\n")]
+        blocks: List[BaseBlock] = [MarkdownBlock(text=f"*Source:* _{self.cluster_name}_\n\n")]
 
         # Seperate blocks into *Other* Blocks, TableBlocks and FileBlocks
         for enrichment in finding.enrichments:

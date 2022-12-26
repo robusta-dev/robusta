@@ -29,9 +29,7 @@ repos:
       - id: isort
         args: [--settings-path=pyproject.toml]
 
-  # - repo: https://github.com/pre-commit/mirrors-mypy
-  #   rev: v0.790
-  #   hooks:
-  #     - id: mypy
-  #       language: system
-  #       args: [--config-file=mypy.ini]
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.284
+    hooks:
+    - id: pyright

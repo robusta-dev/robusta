@@ -17,13 +17,13 @@ class MsTeamsTable(MsTeamsBase):
         for index in range(len(headers)):
             single_column = [MsTeamsTextBlock(text=headers[index], weight="bolder")]
             single_column = single_column + self.__create_single_column_list(rows=rows, index=index)
-            column_element.add_column(items=single_column, width_stretch=True)
+            column_element.add_column(items=single_column, width_stretch=True)  # type: ignore
 
         return column_element
 
-    def __create_single_column_list(self, rows: List[List[str]], index: int) -> List[map]:
+    def __create_single_column_list(self, rows: List[List[str]], index: int) -> List[MsTeamsTextBlock]:
         first_row = True
-        column = []
+        column: List[MsTeamsTextBlock] = []
         for row in rows:
             column.append(MsTeamsTextBlock(text=row[index], separator=first_row))
             first_row = False

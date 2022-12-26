@@ -8,7 +8,7 @@ _API_PREFIX = "api/v4"
 
 
 class MattermostClient:
-    channel_id: str
+    channel_id: Optional[str]
     bot_id: str
     team_id: Optional[str]
 

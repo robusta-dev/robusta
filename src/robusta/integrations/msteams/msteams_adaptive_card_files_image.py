@@ -2,7 +2,7 @@ import base64
 import os
 import tempfile
 import uuid
-from typing import List
+from typing import Any, List, Union
 
 from robusta.core.reporting.blocks import FileBlock
 from robusta.core.reporting.utils import JPG_SUFFIX, PNG_SUFFIX, file_suffix_match, is_image
@@ -11,7 +11,7 @@ from robusta.integrations.msteams.msteams_elements.msteams_images import MsTeams
 
 class MsTeamsAdaptiveCardFilesImage:
     @classmethod
-    def create_files_for_presentation(cls, file_blocks: List[FileBlock]) -> map:
+    def create_files_for_presentation(cls, file_blocks: List[FileBlock]) -> Union[MsTeamsImages, List[Any]]:
         encoded_images = []
         image_file_blocks = [file_block for file_block in file_blocks if is_image(file_block.filename)]
         for image_file_block in image_file_blocks:
@@ -66,4 +66,4 @@ class MsTeamsAdaptiveCardFilesImage:
     def __svg_convert_bytes_to_jpg(cls, svg_bytes: bytes):
         from cairosvg import svg2png
 
-        return cls.__png_convert_bytes_to_base_64_url(svg2png(bytestring=svg_bytes))
+        return cls.__png_convert_bytes_to_base_64_url(svg2png(bytestring=svg_bytes))  # type: ignore
