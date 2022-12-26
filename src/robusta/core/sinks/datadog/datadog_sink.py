@@ -6,7 +6,7 @@ try:
     from datadog_api_client.v1 import ApiClient, ApiException, Configuration  # type: ignore
     from datadog_api_client.v1.api import events_api  # type: ignore
     from datadog_api_client.v1.models import EventAlertType, EventCreateRequest  # type: ignore
-except ImportError:
+except ImportError:  # pragma: no cover
 
     def lazy_import_error(*args, **kwargs):
         raise ImportError("datadog-api-client is not installed")

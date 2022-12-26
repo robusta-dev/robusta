@@ -98,7 +98,7 @@ class ProcessFinder:
     ) -> List[BaseBlock]:
         if not processes:
             return [MarkdownBlock("No processes")]
-        blocks = [
+        blocks: List[BaseBlock] = [
             TableBlock(
                 [[p.pid, p.exe, " ".join(p.cmdline)] for p in processes],
                 ["pid", "exe", "cmdline"],

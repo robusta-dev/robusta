@@ -1,7 +1,7 @@
 import logging
 from dataclasses import InitVar, is_dataclass
 from inspect import getmodule, signature
-from typing import Dict, List, Optional, Union, get_type_hints
+from typing import Dict, List, Optional, Tuple, Union, get_type_hints
 
 from hikaru import HikaruBase, HikaruDocumentBase
 from kubernetes.client.models.v1_container_image import V1ContainerImage
@@ -11,11 +11,11 @@ try:
     from typing import get_args, get_origin  # type: ignore
 except ImportError:  # pragma: no cover
 
-    def get_args(tp):
-        return tp.__args__ if hasattr(tp, "__args__") else ()
+    def get_args(tp) -> Tuple:
+        return getattr(tp, "__args__", ())
 
-    def get_origin(tp):
-        return tp.__origin__ if hasattr(tp, "__origin__") else None
+    def get_origin(tp) -> Tuple:
+        return getattr(tp, "__origin__", ())
 
 
 NoneType = type(None)
@@ -25,8 +25,8 @@ def create_monkey_patches():
     # The 2 patched Hikaru methods are very expensive CPU wise. We patched them, and using cached attributes
     # on the hikaru class, so that we perform the expensive procedure only once
     logging.info("Creating hikaru monkey patches")
-    HikaruBase.get_empty_instance = get_empty_instance
-    HikaruBase._get_hints = _get_hints
+    HikaruBase.get_empty_instance = get_empty_instance  # type: ignore
+    HikaruBase._get_hints = _get_hints  # type: ignore
     # The YAML method below is searching the file system for plugins, each time a parser is created
     # We create many parser, and this is very inefficient.
     # The plugins doesn't change during program execution.
@@ -125,7 +125,7 @@ def get_empty_instance(cls):
                 )  # pragma: no cover
     new_inst = cls(**kw_args)
     # Caching the empty instance creation args, to use next time we want to create an empty instance
-    cls.cached_args = kw_args
+    cls.cached_args = kw_args  # type: ignore
     return new_inst
 
 

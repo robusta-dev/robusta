@@ -1,3 +1,5 @@
+from typing import Optional
+
 from hikaru.model import Job
 
 from robusta.core.playbooks.base_trigger import TriggerEvent
@@ -12,14 +14,14 @@ class JobFailedTrigger(JobUpdateTrigger):
 
     def __init__(
         self,
-        name_prefix: str = None,
-        namespace_prefix: str = None,
-        labels_selector: str = None,
+        name_prefix: Optional[str] = None,
+        namespace_prefix: Optional[str] = None,
+        labels_selector: Optional[str] = None,
     ):
         super().__init__(
-            name_prefix=name_prefix,
-            namespace_prefix=namespace_prefix,
-            labels_selector=labels_selector,
+            name_prefix=name_prefix,  # type: ignore
+            namespace_prefix=namespace_prefix,  # type: ignore
+            labels_selector=labels_selector,  # type: ignore
         )
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
@@ -36,6 +38,9 @@ class JobFailedTrigger(JobUpdateTrigger):
             return False
 
         # fire if the job is firing now, but wasn't firing before (in case the job is updated after it failed)
+        assert exec_event.obj is not None
+        assert exec_event.old_obj is not None
+
         currently_failed = JobFailedTrigger.__is_job_failed(exec_event.obj)
         return currently_failed and not JobFailedTrigger.__is_job_failed(exec_event.old_obj)
 
@@ -44,5 +49,6 @@ class JobFailedTrigger(JobUpdateTrigger):
         if not job.status:
             return False
 
+        assert job.status.conditions is not None
         failed_conditions = [condition for condition in job.status.conditions if condition.type == "Failed"]
         return len(failed_conditions) > 0

@@ -116,11 +116,12 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
                     raise Exception(msg)
                 action.set_func_hash(get_function_hash(action_def.func))
                 if action_def.params_type:  # action has params
+                    assert action.action_params is not None
                     action.action_params = merge_global_params(global_config, action.action_params)
                     if getattr(action_def.params_type, "pre_deploy_func", None):
                         for trigger in playbook_def.triggers:
                             action_params = action_def.params_type(**action.action_params)
-                            action_params.pre_deploy_func(trigger.get())
+                            action_params.pre_deploy_func(trigger.get())  # type: ignore
 
                 # validate that the action can be triggered by all playbooks triggers
                 for trigger in playbook_def.triggers:
@@ -152,14 +153,14 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
 class Registry:
     _actions: ActionsRegistry = ActionsRegistry()
     _playbooks: PlaybooksRegistry = PlaybooksRegistry()
-    _sinks: SinksRegistry = None
+    _sinks: Optional[SinksRegistry] = None
     _scheduler = None
-    _receiver: ActionRequestReceiver = None
+    _receiver: Optional[ActionRequestReceiver] = None
     _global_config = dict()
     _telemetry: Telemetry = Telemetry(
         runner_version=RUNNER_VERSION,
         prometheus_enabled=PROMETHEUS_ENABLED,
-    )
+    )  # type: ignore
 
     def set_actions(self, actions: ActionsRegistry):
         self._actions = actions
@@ -177,19 +178,19 @@ class Registry:
         self._sinks = sinks
 
     def get_sinks(self) -> SinksRegistry:
-        return self._sinks
+        return self._sinks  # type: ignore
 
     def set_scheduler(self, scheduler: PlaybooksSchedulerManager):
         self._scheduler = scheduler
 
     def get_scheduler(self) -> PlaybooksSchedulerManager:
-        return self._scheduler
+        return self._scheduler  # type: ignore
 
     def set_receiver(self, receiver: ActionRequestReceiver):
         self._receiver = receiver
 
     def get_receiver(self) -> ActionRequestReceiver:
-        return self._receiver
+        return self._receiver  # type: ignore
 
     def get_telemetry(self) -> Telemetry:
         return self._telemetry

@@ -34,14 +34,14 @@ class FixedDelayRepeatTrigger(ScheduledTrigger):
     fixed_delay_repeat: Optional[FixedDelayRepeat]
 
     def get_params(self) -> Union[FixedDelayRepeat, DynamicDelayRepeat]:
-        return self.fixed_delay_repeat
+        return self.fixed_delay_repeat  # type: ignore
 
 
 class DynamicDelayRepeatTrigger(ScheduledTrigger):
     dynamic_delay_repeat: Optional[DynamicDelayRepeat]
 
     def get_params(self) -> Union[FixedDelayRepeat, DynamicDelayRepeat]:
-        return self.dynamic_delay_repeat
+        return self.dynamic_delay_repeat  # type: ignore
 
 
 class ScheduledTriggers(BaseModel):

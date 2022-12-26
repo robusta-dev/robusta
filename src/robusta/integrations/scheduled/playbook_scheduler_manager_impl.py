@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, List, Union, cast
+from typing import Callable, List, Optional, Union, cast
 
 from pydantic import BaseModel
 
@@ -18,7 +18,7 @@ SCHEDULED_INTEGRATION_TASK = "scheduled_integration_task"
 
 class ScheduledIntegrationParams(BaseModel):
     action_func_name: str
-    action_params: dict = None
+    action_params: Optional[dict] = None
     named_sinks: List[str] = []
 
 
@@ -62,7 +62,7 @@ class PlaybooksSchedulerManagerImpl(PlaybooksSchedulerManager):
         task_id: str,
         scheduling_params: Union[FixedDelayRepeat, DynamicDelayRepeat],
         named_sinks: List[str],
-        action_params=None,
+        action_params: Optional[BaseModel] = None,
         job_state: JobState = JobState(),
         replace_existing: bool = False,
         standalone_task: bool = False,
@@ -101,7 +101,7 @@ class PlaybooksSchedulerManagerImpl(PlaybooksSchedulerManager):
                     action_name=playbook_action.action_name,
                     playbook_id=playbook.get_id(),
                     scheduling_params=playbook_trigger.get_params(),
-                    named_sinks=playbook.sinks,
+                    named_sinks=playbook.sinks,  # type: ignore
                     action_params=playbook_action.action_params,
                 )
 

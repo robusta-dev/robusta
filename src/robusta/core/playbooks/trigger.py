@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import PrivateAttr
 
 from robusta.core.playbooks.base_trigger import BaseTrigger
@@ -13,7 +15,7 @@ class Trigger(K8sTriggers, PrometheusAlertTriggers, ScheduledTriggers, CustomTri
     def __init__(self, *args, **data):
         super().__init__(*args, **data)
         trigger_keys = [trigger for trigger in dir(self) if not trigger.startswith("_")]
-        triggers = []
+        triggers: List[BaseTrigger] = []
         for key in trigger_keys:
             trigger_def = getattr(self, key)
             if trigger_def is not None and isinstance(trigger_def, BaseTrigger):

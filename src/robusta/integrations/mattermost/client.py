@@ -8,7 +8,7 @@ _API_PREFIX = "api/v4"
 
 
 class MattermostClient:
-    channel_id: str
+    channel_id: Optional[str]
     bot_id: str
 
     def __init__(self, url: str, token: str, token_id: str, channel_name: str):

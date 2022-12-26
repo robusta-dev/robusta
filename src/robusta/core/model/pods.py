@@ -121,6 +121,7 @@ class PodResources(BaseModel):
 def pod_restarts(pod: Pod) -> int:
     assert pod.status is not None
     assert pod.status.containerStatuses is not None
+
     return sum([status.restartCount for status in pod.status.containerStatuses])
 
 

@@ -90,7 +90,7 @@ def example_from_schema(schema):
         # Combine schema examples
         example = {}
         for sub_schema in schema["allOf"]:
-            example.update(example_from_schema(sub_schema))
+            example.update(example_from_schema(sub_schema))  # type: ignore
         return example
 
     elif "enum" in schema:

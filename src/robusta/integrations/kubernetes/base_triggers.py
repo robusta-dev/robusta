@@ -40,10 +40,10 @@ class K8sTriggerEvent(TriggerEvent):
 
 class K8sBaseTrigger(BaseTrigger):
     kind: str
-    operation: K8sOperationType = None
-    name_prefix: str = None
-    namespace_prefix: str = None
-    labels_selector: str = None
+    operation: Optional[K8sOperationType] = None
+    name_prefix: Optional[str] = None
+    namespace_prefix: Optional[str] = None
+    labels_selector: Optional[str] = None
     _labels_map: Dict = PrivateAttr()
 
     def __init__(self, *args, **data):
@@ -93,7 +93,9 @@ class K8sBaseTrigger(BaseTrigger):
 
     @classmethod
     def __parse_kubernetes_objs(cls, k8s_payload: IncomingK8sEventPayload):
-        model_class = get_api_version(k8s_payload.apiVersion).get(k8s_payload.kind)
+        api_version = get_api_version(k8s_payload.apiVersion)
+        assert api_version is not None
+        model_class = api_version.get(k8s_payload.kind)
         if model_class is None:
             msg = (
                 f"classes for kind {k8s_payload.kind} cannot be found. skipping. description {k8s_payload.description}"

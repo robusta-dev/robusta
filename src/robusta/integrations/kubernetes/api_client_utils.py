@@ -57,10 +57,11 @@ def wait_until_job_complete(job: Job, timeout):
     """
 
     def is_job_complete(j: Job) -> bool:
+        assert j.status is not None
         return j.status.completionTime is not None or j.status.failed is not None
 
     return wait_until(
-        lambda: Job.readNamespacedJob(job.metadata.name, job.metadata.namespace).obj,
+        lambda: Job.readNamespacedJob(job.metadata.name, job.metadata.namespace).obj,  # type: ignore
         is_job_complete,
         timeout,
         5,
@@ -78,7 +79,7 @@ def wait_for_pod_status(name, namespace, status: str, timeout_sec: float, backof
             core_v1 = core_v1_api.CoreV1Api()
             resp = core_v1.read_namespaced_pod_status(name, namespace)
 
-            if resp.status.phase == status:
+            if resp.status.phase == status:  # type: ignore
                 logging.debug(f"reached {pod_details}")
                 return status
 

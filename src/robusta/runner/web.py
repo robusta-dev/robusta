@@ -41,7 +41,7 @@ class Web:
     def handle_alert_event():
         req_json = request.get_json()
         Web._trace_incoming("alerts", req_json)
-        alert_manager_event = AlertManagerEvent(**req_json)
+        alert_manager_event = AlertManagerEvent(**req_json)  # type: ignore
         for alert in alert_manager_event.alerts:
             Web.alerts_queue.add_task(Web.event_handler.handle_trigger, PrometheusTriggerEvent(alert=alert))
 
@@ -51,7 +51,7 @@ class Web:
     @staticmethod
     @app.route("/api/handle", methods=["POST"])
     def handle_api_server_event():
-        data = request.get_json()["data"]
+        data = request.get_json()["data"]  # type: ignore
         Web._trace_incoming("api server", data)
         k8s_payload = IncomingK8sEventPayload(**data)
         Web.api_server_queue.add_task(Web.event_handler.handle_trigger, K8sTriggerEvent(k8s_payload=k8s_payload))
@@ -61,6 +61,8 @@ class Web:
     @app.route("/api/trigger", methods=["POST"])
     def handle_manual_trigger():
         data = request.get_json()
+        assert data is not None
+
         Web._trace_incoming("trigger", data)
         if not data.get("action_name", None):
             msg = f"Illegal trigger request {data}"

@@ -11,7 +11,7 @@ from robusta.integrations.prometheus.utils import PrometheusDiscovery
 class PrometheusAnalyzer:
     def __init__(self, prometheus_url: str, prometheus_tzinfo: Optional[tzinfo]):
         if prometheus_url is None or prometheus_url == "":
-            prometheus_url = PrometheusDiscovery.find_prometheus_url()
+            prometheus_url = PrometheusDiscovery.find_prometheus_url()  # type: ignore
 
         self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
         self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
@@ -20,7 +20,7 @@ class PrometheusAnalyzer:
 
     def _query(self, promql_query: str, duration: Optional[timedelta] = None, **kwargs) -> list:
         if duration:
-            return self._timed_query(promql_query, duration, **kwargs)
+            return self._timed_query(promql_query, duration, **kwargs)  # type: ignore
         return self._non_timed_query(promql_query)
 
     def _non_timed_query(self, promql_query: str) -> list:
