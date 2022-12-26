@@ -4,8 +4,6 @@ import tempfile
 import uuid
 from typing import List
 
-from PIL import Image
-
 from robusta.core.reporting.blocks import FileBlock
 from robusta.core.reporting.utils import JPG_SUFFIX, PNG_SUFFIX, file_suffix_match, is_image
 from robusta.integrations.msteams.msteams_elements.msteams_images import MsTeamsImages
@@ -45,6 +43,8 @@ class MsTeamsAdaptiveCardFilesImage:
     # msteams cant read parsing of url to 'data:image/png;base64,...
     @classmethod
     def __png_convert_bytes_to_base_64_url(cls, png_bytes: bytes):
+        from PIL import Image
+
         png_file_path = cls.__get_tmp_file_path() + PNG_SUFFIX
         jpg_file_path = cls.__get_tmp_file_path() + JPG_SUFFIX
         with open(png_file_path, "wb") as f:
