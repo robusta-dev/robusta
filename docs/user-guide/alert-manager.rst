@@ -15,7 +15,7 @@ If you installed Robusta's :ref:`Embedded Prometheus Stack` then no configuratio
 AlertManager receiver and route definition
 --------------------------------------------
 
-Add this snippet to your Prometheus AlertManager **values.yaml** file. 
+Add this snippet to your Prometheus AlertManager **values.yaml** file.
 
 .. admonition:: Robusta receiver and route
 
@@ -51,6 +51,12 @@ After you configured the ``receiver`` and ``route``, you can test it works prope
     robusta demo-alert
 
 You should see the demo alert, in the Robusta UI, Slack, or any other configured ``sink`` within a few minutes
+
+.. admonition:: "Alerts won't show up" UI notification
+    :class: warning
+
+    The notification is displayed until the first alert is sent from AlertManager to Robusta.
+
 
 Prometheus Operator
 -----------------------

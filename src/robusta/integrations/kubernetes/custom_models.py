@@ -21,12 +21,12 @@ from robusta.integrations.kubernetes.api_client_utils import (
     wait_until_job_complete,
 )
 from robusta.integrations.kubernetes.templates import get_deployment_yaml
+from robusta.utils.parsing import load_json
 
 S = TypeVar("S")
 T = TypeVar("T")
 
-# TODO: import these from the python-tools project
-PYTHON_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.5"
+PYTHON_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v5.0"
 JAVA_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:v1.1"
 
 
@@ -289,13 +289,19 @@ class RobustaPod(Pod):
         finally:
             RobustaPod.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)
 
+    @staticmethod
+    def extract_container_id(status: ContainerStatus) -> str:
+        runtime, container_id = status.containerID.split("://")
+        return container_id
+
     def get_processes(self) -> List[Process]:
+        container_ids = " ".join([self.extract_container_id(s) for s in self.status.containerStatuses])
         output = RobustaPod.exec_in_debugger_pod(
             self.metadata.name,
             self.spec.nodeName,
-            f"debug-toolkit pod-ps {self.metadata.uid}",
+            f"debug-toolkit pod-ps {self.metadata.uid} {container_ids}",
         )
-        processes = ProcessList(**json.loads(output))
+        processes = ProcessList(**load_json(output))
         return processes.processes
 
     def get_images(self) -> Dict[str, str]:

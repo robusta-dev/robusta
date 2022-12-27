@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 function cleanup() {
     tput cnorm
@@ -37,6 +37,6 @@ if [[ "upgrade-cli" == "$COMMANDS" ]]; then
   echo 'Upgrade complete'
   docker run -it --rm --net host -v ${PWD}:/workingdir -w=/workingdir -v ~/.kube:/root/.kube us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli robusta version
   exit 0
-fi 
+fi
 
 docker run -it --rm --net host -v ${PWD}:/workingdir -w=/workingdir -v ~/.kube:/root/.kube us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli robusta $COMMANDS

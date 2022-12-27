@@ -11,7 +11,7 @@ def _get_templating_labels(event: ExecutionBaseEvent) -> Dict:
     labels.update(
         {
             "name": subject.name,
-            "kind": subject.subject_type,
+            "kind": subject.subject_type.value,
             "namespace": subject.namespace if subject.namespace else "<missing>",
             "node": subject.node if subject.node else "<missing>",
         }
@@ -25,6 +25,7 @@ class FindingOverrides(ActionParams):
     :var description: Overriding finding description. Description can be templated with name/namespace/kind/node of the resource, if applicable
     :var severity: Overriding finding severity. Allowed values: DEBUG, INFO, LOW, MEDIUM, HIGH
     :example severity: DEBUG
+    :example title: Resourece $kind/$namespace/$name is in trouble
     """
 
     title: Optional[str] = None
@@ -49,8 +50,8 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
 
     labels = _get_templating_labels(event)
 
-    title = Template(params.title).safe_substitute(labels) if params.title is not None else ""
-    description = Template(params.description).safe_substitute(labels) if params.description is not None else ""
+    title = Template(params.title).safe_substitute(labels) if params.title else None
+    description = Template(params.description).safe_substitute(labels) if params.description else None
 
     event.override_finding_attributes(title, description, severity)
 
