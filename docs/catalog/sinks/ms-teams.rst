@@ -12,7 +12,7 @@ Configuring the MS teams sink
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinkConfig:
         - ms_teams_sink:
             name: main_ms_teams_sink
             webhook_url: teams channel incoming webhook  # see video below

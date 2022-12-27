@@ -42,7 +42,7 @@ Now we're ready to configure the Discord sink.
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinkConfig:
         - discord_sink:
             name: personal_discord_sink
             url: <YOUR WEBHOOK URL>
