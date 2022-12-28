@@ -80,6 +80,8 @@ class JiraSender:
         self.cluster_name = cluster_name
         self.account_id = account_id
         self.params = params
+        print(self.params.dedups)
+        logging.info(self.params.dedups)
         self.client = JiraClient(self.params)
 
     def _markdown_to_jira(self, text):
@@ -231,6 +233,8 @@ class JiraSender:
                 labels.append(getattr(finding, attr))
             elif attr in finding.attribute_map:
                 labels.append(finding.attribute_map[attr])
+            elif attr == 'cluster_name':
+                labels.append(self.cluster_name)
 
         self.client.create_issue({
             "description": {
