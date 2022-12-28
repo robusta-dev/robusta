@@ -239,6 +239,12 @@ class ActionRequestReceiver:
                                       error_code=ErrorCodes.NO_SIGNING_KEY.value,
                                       error_msg="No signing key")
 
+        if self.is_signature_mismatch(action_request):
+            logging.error(f"A mismatched signature request was sent, {action_request.body}")
+            return ValidationResponse(http_code=500,
+                                      error_code=ErrorCodes.INVALID_SIGNATURE_MATCH_REQUEST.value,
+                                      error_msg="Invalid signature match request")
+
         if action_request.signature:
             # First auth protocol option, based on signature only
             return self.validate_action_request_signature(action_request, signing_key)
@@ -247,6 +253,16 @@ class ActionRequestReceiver:
             return self.validate_with_private_key(action_request, signing_key)
         else: # Light action protocol option, authenticated in relay
             return self.validate_light_action(action_request)
+
+    @staticmethod
+    def is_signature_mismatch(action_request: ExternalActionRequest) -> bool:
+        request_signed = action_request.signature or (action_request.partial_auth_a and action_request.partial_auth_b)
+        partially_signed = action_request.partial_auth_a and action_request.partial_auth_b
+
+        not_expected_sign_and_signed = not action_request.sign_action and (request_signed or partially_signed)
+        expected_sign_and_not_signed = action_request.sign_action and not request_signed
+
+        return not_expected_sign_and_signed or expected_sign_and_not_signed
 
     def validate_light_action(self, action_request: ExternalActionRequest) -> ValidationResponse:
         light_actions = self.event_handler.get_light_actions()

@@ -28,6 +28,7 @@ class ExternalActionRequest(BaseModel):
     request_id: str = ""        # If specified, should return a sync response using the specified request_id
     no_sinks: bool = False      # Indicates not to send to sinks at all. The request body has a sink list,
                                 # however an empty sink list means using the server default sinks
+    sign_action: bool = True    # Lets us know if the action was ment to be signed
 
 
 class PartialAuth(BaseModel):
