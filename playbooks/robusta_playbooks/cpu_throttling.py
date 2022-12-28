@@ -15,6 +15,8 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
         logging.error(f"cannot run CPUThrottlingAnalysis on event with no pod: {event}")
         return
 
+    assert pod.metadata is not None
+    assert pod.metadata.name is not None
     if pod.metadata.name.startswith("metrics-server-") and pod.has_toleration(
         "components.gke.io/gke-managed-components"
     ):
@@ -48,7 +50,7 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
                     "<https://github.com/robusta-dev/alert-explanations/wiki/CPUThrottlingHigh-"
                     "(Prometheus-Alert)|Learn more.>"
                 ),
-                MarkdownBlock( 
+                MarkdownBlock(
                     f"{Emojis.Recommend.value} *Robusta's Recommendation:* Remove this pod's CPU limit entirely. <https://home.robusta.dev/"
                     "blog/stop-using-cpu-limits/"
                     "|Using CPU limits is *not* a best "

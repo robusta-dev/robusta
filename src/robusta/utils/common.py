@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from hikaru import DiffDetail, HikaruBase
 
@@ -8,7 +8,7 @@ def is_matching_diff(diff_detail: DiffDetail, fields_to_monitor: List[str]) -> b
     return any(substring in diff_detail.formatted_path for substring in fields_to_monitor)
 
 
-def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):
+def duplicate_without_fields(obj: Optional[HikaruBase], omitted_fields: List[str]):
     """
     Duplicate a hikaru object, omitting the specified fields
 

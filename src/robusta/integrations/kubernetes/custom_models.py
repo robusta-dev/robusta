@@ -359,7 +359,7 @@ class RobustaPod(Pod):
 
 class RobustaDeployment(Deployment):
     @classmethod
-    def from_image(cls: Type[T], name, image="busybox", cmd=None) -> T:
+    def from_image(cls: Type[T], name: str, image="busybox", cmd=None) -> T:
         obj: RobustaDeployment = hikaru.from_dict(yaml.safe_load(get_deployment_yaml(name, image)), RobustaDeployment)
         obj.spec.template.spec.containers[0].command = prepare_pod_command(cmd)
         return obj

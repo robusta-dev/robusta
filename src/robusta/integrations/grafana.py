@@ -1,12 +1,12 @@
 import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 try:
     from grafana_api.grafana_face import GrafanaFace  # type: ignore
-except ImportError:
+except ImportError:  # pragma: no cover
 
-    def GrafanaFace(*args, **kwargs):
+    def GrafanaFace(*args, **kwargs) -> Any:
         raise ImportError("grafana-api is not installed")
 
 

@@ -37,6 +37,7 @@ def event_report(event: EventChangeEvent):
     """
     Create finding based on the kubernetes event
     """
+    assert event.obj is not None
     k8s_obj = event.obj.involvedObject
 
     # creating the finding before the rate limiter, to use the service key for rate limiting
@@ -65,7 +66,10 @@ def event_resource_events(event: EventChangeEvent):
     if not event.get_event():
         logging.error(f"cannot run event_resource_events on alert with no events object: {event}")
         return
+    assert event.obj is not None
+
     obj = event.obj.involvedObject
+    assert obj.kind is not None
     events_table = get_resource_events_table(
         "*Related Events*",
         obj.kind,
@@ -86,6 +90,8 @@ def pod_events_enricher(event: PodEvent, params: EventEnricherParams):
         logging.error(f"cannot run pod_events_enricher on alert with no pod object: {event}")
         return
 
+    assert pod.kind is not None
+    assert pod.metadata is not None
     events_table_block = get_resource_events_table(
         "*Pod events:*",
         pod.kind,
@@ -110,11 +116,16 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
         logging.error(f"cannot run deployment_events_enricher on alert with no deployment object: {event}")
         return
 
+    assert dep.metadata is not None
+    assert dep.metadata.namespace is not None
+    assert dep.spec is not None
+
     if params.dependent_pod_mode:
         pods = list_pods_using_selector(dep.metadata.namespace, dep.spec.selector, "status.phase!=Running")
         if pods:
             selected_pods = pods if len(pods) <= params.max_pods else pods[: params.max_pods]
             for pod in selected_pods:
+                assert pod.metadata is not None
                 events_table_block = get_resource_events_table(
                     f"*Pod events for {pod.metadata.name}:*",
                     "Pod",
@@ -128,6 +139,7 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
     else:
         pods = list_pods_using_selector(dep.metadata.namespace, dep.spec.selector, "status.phase=Running")
         event.add_enrichment([MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({len(pods)})*")])
+        assert dep.kind is not None
         events_table_block = get_resource_events_table(
             "*Deployment events:*",
             dep.kind,
@@ -145,4 +157,5 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
     """
     Attaches a video links to the finding
     """
+    assert params.name is not None
     event.add_video_link(VideoLink(url=params.url, name=params.name))
