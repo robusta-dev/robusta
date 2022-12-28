@@ -1,8 +1,7 @@
 # most of this file is documented at https://docs.robusta.dev/master/user-guide/configuration.html
 # if you have any questions, feel free to ask via github issues or Slack (see link on robusta.dev)
 
-# NOTE: Do not use this file to install Robusta. Check the Installation isntructions to generate your generated_values.yaml(Helm values file) using RobustaCLI. 
-# More details: https://docs.robusta.dev/master/installation.html
+# NOTE: Do not use this file to install Robusta. See the installation instructions instead https://docs.robusta.dev/master/installation.html
 
 # playbook repositories
 playbookRepos: {}
