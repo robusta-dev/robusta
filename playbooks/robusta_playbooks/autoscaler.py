@@ -35,6 +35,10 @@ def scale_hpa_callback(event: HorizontalPodAutoscalerEvent, params: ScaleHPAPara
         logging.info(f"scale_hpa_callback - no hpa on event: {event}")
         return
 
+    assert hpa.spec is not None
+    assert hpa.metadata is not None
+    assert hpa.metadata.name is not None
+    assert hpa.metadata.namespace is not None
     hpa.spec.maxReplicas = params.max_replicas
     hpa.replaceNamespacedHorizontalPodAutoscaler(hpa.metadata.name, hpa.metadata.namespace)
     finding = Finding(
@@ -60,17 +64,23 @@ def alert_on_hpa_reached_limit(event: HorizontalPodAutoscalerChangeEvent, action
     """
     Notify when the HPA reaches its maximum replicas and allow fixing it.
     """
+    assert event.obj is not None
+    assert event.obj.metadata is not None
     logging.info(f"running alert_on_hpa_reached_limit: {event.obj.metadata.name} ns: {event.obj.metadata.namespace}")
 
     hpa = event.obj
+    assert hpa.status is not None
+    assert event.old_obj is not None
+    assert event.old_obj.status is not None
     if hpa.status.currentReplicas == event.old_obj.status.currentReplicas:
         return  # run only when number of replicas change
 
+    assert hpa.spec is not None
     if hpa.status.desiredReplicas != hpa.spec.maxReplicas:
         return  # didn't reached max replicas limit
 
     avg_cpu = int(
-        hpa.status.currentCPUUtilizationPercentage
+        hpa.status.currentCPUUtilizationPercentage  # type: ignore
         / (hpa.status.currentReplicas if hpa.status.currentReplicas > 0 else 1)
     )
     new_max_replicas_suggestion = ceil((action_params.increase_pct + 100) * hpa.spec.maxReplicas / 100)

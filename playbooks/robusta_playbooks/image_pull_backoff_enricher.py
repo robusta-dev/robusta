@@ -3,7 +3,7 @@ import json
 import logging
 import re
 from enum import Flag
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from hikaru.model import ContainerStatus, Event, EventList, PodStatus
 
@@ -23,10 +23,13 @@ from robusta.api import (
 
 
 def get_image_pull_backoff_container_statuses(status: PodStatus) -> List[ContainerStatus]:
+    assert status.containerStatuses is not None
     return [
         container_status
         for container_status in status.containerStatuses
-        if container_status.state.waiting is not None and container_status.state.waiting.reason == "ImagePullBackOff"
+        if container_status.state is not None
+        and container_status.state.waiting is not None
+        and container_status.state.waiting.reason == "ImagePullBackOff"
     ]
 
 
@@ -45,15 +48,23 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
     if pod is None:
         return
 
+    assert pod.status is not None
+
     # Check if image pull backoffs occurred. Terminate if not
     image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(pod.status)
     if len(image_pull_backoff_container_statuses) == 0:
         return
 
+    assert pod.metadata is not None
+
     # Extract pod name and namespace
     pod_name = pod.metadata.name
     replicaset_name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name
     namespace = pod.metadata.namespace
+
+    assert pod_name is not None
+    assert namespace is not None
+    assert replicaset_name is not None
 
     # Perform a rate limit for this pod according to the rate_limit parameter
     if not RateLimiter.mark_and_test(
@@ -85,7 +96,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
                 {
                     "type": event.type,
                     "reason": event.reason,
-                    "source.component": event.source.component,
+                    "source.component": event.source.component,  # type: ignore
                     "message": event.message,
                 }
                 for event in investigator.pod_events.items
@@ -200,9 +211,10 @@ class ImagePullBackoffInvestigator:
         self.pod_name = pod_name
         self.namespace = namespace
 
-        self.pod_events: EventList = EventList.listNamespacedEvent(
-            self.namespace, field_selector=f"involvedObject.name={self.pod_name}"
-        ).obj
+        self.pod_events = cast(
+            EventList,
+            EventList.listNamespacedEvent(self.namespace, field_selector=f"involvedObject.name={self.pod_name}").obj,
+        )
 
     def investigate(self, container_status: ContainerStatus) -> Optional[ImagePullOffInvestigation]:
         for pod_event in self.pod_events.items:
@@ -226,6 +238,7 @@ class ImagePullBackoffInvestigator:
         if pod_event.reason != "Failed":
             return None
 
+        assert pod_event.source is not None
         if pod_event.source.component != "kubelet":
             return None
 
@@ -234,6 +247,7 @@ class ImagePullBackoffInvestigator:
             f'Failed to pull image "{image_name}": rpc error: code = NotFound desc = ',
         ]
 
+        assert pod_event.message is not None
         for prefix in prefixes:
             if pod_event.message.startswith(prefix):
                 return pod_event.message[len(prefix) :]

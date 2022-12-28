@@ -1,9 +1,9 @@
 import logging
-from typing import List
+from typing import List, cast
 
 import hikaru
 import kubernetes.client.exceptions
-from hikaru.model import PodList
+from hikaru.model import Pod, PodList
 
 from robusta.api import (
     ActionException,
@@ -11,7 +11,6 @@ from robusta.api import (
     FileBlock,
     KubernetesResourceEvent,
     MarkdownBlock,
-    Pod,
     ResourceLoader,
     TableBlock,
     action,
@@ -27,7 +26,12 @@ supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "Stateful
 def to_pod_row(pod: Pod, cluster_name: str) -> List:
     resource_requests = pod_requests(pod)
     resource_limits = pod_limits(pod)
-    addresses = ",".join([address.ip for address in pod.status.podIPs])
+
+    assert pod.status is not None
+    assert pod.status.podIPs is not None
+    assert pod.metadata is not None
+    assert pod.spec is not None
+    addresses = ",".join([str(address.ip) for address in pod.status.podIPs])
     return [
         pod.metadata.name,
         pod.metadata.namespace,
@@ -54,6 +58,7 @@ def related_pods(event: KubernetesResourceEvent):
     Supports Deployments, ReplicaSets, DaemonSets, StatefulSets and Pods
     """
     resource = event.get_resource()
+    assert resource is not None
     if resource.kind not in supported_resources:
         raise ActionException(
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}"
@@ -62,10 +67,10 @@ def related_pods(event: KubernetesResourceEvent):
     if resource.kind == "Pod":
         pods = [resource]
     else:
-        selector = build_selector_query(resource.spec.selector)
-        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
+        selector = build_selector_query(resource.spec.selector)  # type: ignore
+        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items  # type: ignore
 
-    rows = [to_pod_row(pod, event.get_context().cluster_name) for pod in pods]
+    rows = [to_pod_row(pod, event.get_context().cluster_name) for pod in pods]  # type: ignore
 
     event.add_enrichment(
         [
@@ -103,9 +108,11 @@ def get_resource_yaml(event: KubernetesResourceEvent):
         logging.error("resource not found...")
         return
 
-    resource_kind = resource.kind
-    namespace: str = resource.metadata.namespace
-    name: str = resource.metadata.name
+    assert resource.metadata is not None
+
+    resource_kind = cast(str, resource.kind)
+    namespace = cast(str, resource.metadata.namespace)
+    name = cast(str, resource.metadata.name)
 
     try:
         loaded_resource = ResourceLoader.read_resource(
@@ -113,7 +120,7 @@ def get_resource_yaml(event: KubernetesResourceEvent):
             namespace=namespace,
             name=name,
         ).obj
-        resource_yaml = hikaru.get_yaml(loaded_resource)
+        resource_yaml = hikaru.get_yaml(loaded_resource)  # type: ignore
 
         event.add_enrichment(
             [

@@ -76,6 +76,7 @@ def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams
 
 
 def has_matching_diff(event: DeploymentChangeEvent, fields_to_monitor: List[str]) -> bool:
+    assert event.obj is not None
     all_diffs = event.obj.diff(event.old_obj)
     for diff in all_diffs:
         if is_matching_diff(diff, fields_to_monitor):
@@ -99,8 +100,15 @@ def deployment_status_report(event: DeploymentChangeEvent, action_params: Report
         if not has_matching_diff(event, action_params.fields_to_monitor):
             return
 
+    assert event.obj is not None
+    assert event.obj.metadata is not None
+
     logging.info(f"Scheduling rendering report. deployment: {event.obj.metadata.name} delays: {action_params.delays}")
-    event.get_scheduler().schedule_action(
+    scheduler = event.get_scheduler()
+    assert scheduler is not None
+    assert event.named_sinks is not None
+
+    scheduler.schedule_action(
         action_func=report_rendering_task,
         task_id=f"deployment_status_report_{event.obj.metadata.name}_{event.obj.metadata.namespace}",
         scheduling_params=DynamicDelayRepeat(delay_periods=action_params.delays),

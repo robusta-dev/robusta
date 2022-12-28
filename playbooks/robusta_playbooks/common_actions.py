@@ -5,12 +5,12 @@ from typing import Dict, Optional
 from robusta.api import ActionParams, ExecutionBaseEvent, Finding, FindingSeverity, action
 
 
-def _get_templating_labels(event: ExecutionBaseEvent) -> Dict:
+def _get_templating_labels(event: ExecutionBaseEvent) -> Dict[str, str]:
     subject = event.get_subject()
     labels: Dict[str, str] = defaultdict(lambda: "<missing>")
     labels.update(
         {
-            "name": subject.name,
+            "name": str(subject.name),
             "kind": subject.subject_type.value,
             "namespace": subject.namespace if subject.namespace else "<missing>",
             "node": subject.node if subject.node else "<missing>",
@@ -86,6 +86,7 @@ def create_finding(event: ExecutionBaseEvent, params: FindingFields):
     """
     labels = _get_templating_labels(event)
 
+    assert params.severity is not None
     event.add_finding(
         Finding(
             title=Template(params.title).safe_substitute(labels),

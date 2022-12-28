@@ -204,7 +204,7 @@ def _get_url_path(operation: SilenceOperation, params: BaseSilenceParams) -> str
         return f"{prefix}/api/v2/silences"
 
 
-def _get_alertmanager_url(params: BaseSilenceParams) -> str:
+def _get_alertmanager_url(params: BaseSilenceParams) -> Optional[str]:
     if params.alertmanager_url:
         return params.alertmanager_url
 
