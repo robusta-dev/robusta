@@ -26,6 +26,8 @@ from .mattermost.mattermost_sink import MattermostSink
 from .mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
 from .webex.webex_sink import WebexSink
 from .webex.webex_sink_params import WebexSinkConfigWrapper
+from .jira.jira_sink import JiraSink
+from .jira.jira_sink_params import JiraSinkConfigWrapper
 
 
 class SinkFactory:
@@ -57,5 +59,7 @@ class SinkFactory:
             return MattermostSink(sink_config, registry)
         elif isinstance(sink_config, WebexSinkConfigWrapper):
             return WebexSink(sink_config, registry)
+        elif isinstance(sink_config, JiraSinkConfigWrapper):
+            return JiraSink(sink_config, registry)
         else:
             raise Exception(f"Sink not supported {type(sink_config)}")
