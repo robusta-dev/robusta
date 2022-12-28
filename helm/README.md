@@ -1,7 +1,7 @@
 # Robusta helm chart
 Robusta's helm chart is served from our gcp bucket.
 
-NOTE: **Don't use the Helm values file directly**. Check the [Installation instructions](https://docs.robusta.dev/master/getting-started/installation.html) 
+NOTE: **Don't use the Helm values file directly**. It has missing values that need to be filled in. Check the [Installation instructions](https://docs.robusta.dev/master/getting-started/installation.html)
 
 # Upload a new chart version
 If you want to upload a new chart version, follow these steps:
