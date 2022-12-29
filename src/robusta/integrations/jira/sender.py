@@ -19,9 +19,9 @@ SEVERITY_COLOR_MAP = {
     FindingSeverity.INFO: "#05aa01",
 }
 
-
-STRONG_MARK_REGEX = r"\*{1}[\w|\s\d%!><=\-:;@#$%^&()\.\,\]\[\\/\'\"]+\*{1}"
-ITALIAN_MARK_REGEX = r"(^|\s+)_{1}[\w|\s\d%!*><=\-:;@#$%^&()\.\,\]\[\\/\'\"]+_{1}(\s+|$)"
+STRONG_MARK_REGEX = r"\*{1}[\w|\s\d%!><=\-:;@#$%^&()\.\,\]\[\\\/'\"]+\*{1}"
+ITALIAN_MARK_REGEX = r"(^|\s+)_{1}[\w|\s\d%!*><=\-:;@#$%^&()\.\,\]\[\\\/'\"]+_{1}(\s+|$)"
+CODE_REGEX = r"`{1,3}[\w|\s\d%!*><=\-:;@#$%^&()\.\,\]\[\\\/'\"]+`{1,3}"
 
 
 def to_paragraph(txt, attrs=None):
@@ -46,6 +46,11 @@ def to_italian_text(txt, marks=None):
     return to_markdown_text(txt, ITALIAN_MARK_REGEX, marks, "_")
 
 
+def to_code_text(txt, marks=None):
+    marks = _union_lists((marks or []), [{"type": "code"}])
+    return to_markdown_text(txt, CODE_REGEX, marks, "```")
+
+
 def to_strong_text(txt, marks=None):
     marks = _union_lists((marks or []), [{"type": "strong"}])
     return to_markdown_text(txt, STRONG_MARK_REGEX, marks, "*")
@@ -66,6 +71,10 @@ MARKDOWN_MAPPER = {
     lambda x: re.search(ITALIAN_MARK_REGEX, x): {
         "split": lambda x: re.split(f"({ITALIAN_MARK_REGEX})", x),
         "replace": lambda x, marks=None: to_italian_text(x, marks)
+    },
+    lambda x: re.search(CODE_REGEX, x): {
+        "split": lambda x: re.split(f"({CODE_REGEX})", x),
+        "replace": lambda x, marks=None: to_code_text(x, marks)
     },
 }
 
