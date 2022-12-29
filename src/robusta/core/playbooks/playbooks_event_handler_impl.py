@@ -17,7 +17,7 @@ from ..sinks.robusta.dal.model_conversion import ModelConversion
 from ...model.config import Registry
 from ...model.playbook_action import PlaybookAction
 from ...runner.telemetry import Telemetry
-from ...utils.error_codes import ErrorCodes
+from ...utils.error_codes import ActionException, ErrorCodes
 
 
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
@@ -177,8 +177,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         return self.run_actions(execution_event, [playbook_action], sync_response, no_sinks)
 
     @classmethod
-    def __error_resp(cls, msg: str, error_code: int) -> dict:
-        logging.error(msg)
+    def __error_resp(cls, msg: str, error_code: int, log: bool = True) -> dict:
+        if log:
+            logging.error(msg)
         return {"success": False, "msg": msg, "error_code": error_code}
 
     def __run_playbook_actions(
@@ -208,10 +209,10 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(msg, ErrorCodes.EXECUTION_EVENT_MISMATCH.value)
                 continue
 
-            if not registered_action.params_type:
-                registered_action.func(execution_event)
-            else:
-                action_params = None
+            action_with_params: bool = registered_action.params_type
+            action_params = None
+            params = None
+            if action_with_params:
                 try:
                     action_params = merge_global_params(
                         self.get_global_config(), action.action_params
@@ -228,6 +229,10 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
                 try:
                     registered_action.func(execution_event, params)
+                except ActionException as e:
+                    msg = e.msg if e.msg else f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}"
+                    logging.error(msg)
+                    execution_event.response = self.__error_resp(e.type, e.code, log=False)
                 except PrometheusNotFound as e:
                     logging.error(str(e))
                     execution_event.add_enrichment(
@@ -242,9 +247,11 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         ]
                     )
                 except Exception:
-                    logging.error(
-                        f"Failed to execute action {action.action_name} {to_safe_str(action_params)}",
-                        exc_info=True,
+                    logging.error(f"Failed to execute action {action.action_name} {to_safe_str(action_params)}")
+                    execution_event.response = self.__error_resp(
+                        ErrorCodes.ACTION_UNEXPECTED_ERROR.name,
+                        ErrorCodes.ACTION_UNEXPECTED_ERROR.value,
+                        log=False
                     )
                     execution_event.add_enrichment(
                         [
@@ -253,7 +260,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                             )
                         ]
                     )
-
         return execution_event.response
 
     @classmethod
