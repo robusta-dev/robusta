@@ -1,6 +1,6 @@
 from .models import PrometheusQueryResult
 from datetime import datetime
-from robusta.integrations.prometheus.utils import check_prometheus_connection
+from ....integrations.prometheus.utils import check_prometheus_connection
 from prometheus_api_client import PrometheusConnect, PrometheusApiClientException
 
 """

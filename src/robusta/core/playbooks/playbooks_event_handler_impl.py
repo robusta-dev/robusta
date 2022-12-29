@@ -7,17 +7,17 @@ from typing import Any, Dict, Optional, List
 from .base_trigger import TriggerEvent, BaseTrigger
 from .playbook_utils import merge_global_params, to_safe_str
 from .playbooks_event_handler import PlaybooksEventHandler
+from .trigger import Trigger
+from ..exceptions import PrometheusNotFound
 from ..model.events import ExecutionBaseEvent, ExecutionContext
 from ..reporting import MarkdownBlock
 from ..reporting.base import Finding
 from ..reporting.consts import SYNC_RESPONSE_SINK
 from ..sinks.robusta.dal.model_conversion import ModelConversion
-from ...model.playbook_action import PlaybookAction
 from ...model.config import Registry
-from .trigger import Trigger
+from ...model.playbook_action import PlaybookAction
 from ...runner.telemetry import Telemetry
 from ...utils.error_codes import ErrorCodes
-from ..exceptions import PrometheusNotFound
 
 
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
@@ -233,9 +233,11 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event.add_enrichment(
                         [
                             MarkdownBlock(
-                                text=f"Robusta couldn't connect to the Prometheus client, check if the service is "
-                                     f"available. If your Prometheus was *not* installed by Robusta, check the docs"
-                                     f"page: https://docs.robusta.dev/master/user-guide/alert-manager.html#prometheus-operator"
+                                text="Robusta couldn't connect to the Prometheus client, check if the service is "
+                                     "available. If it is, please add to *globalConfig* in *generated_values.yaml* "
+                                     "the cluster *prometheus_url*. For example:\n"
+                                     "```globalConfig:\n"
+                                     "\tprometheus_url: http://prometheus-server.monitoring.svc.cluster.local:9090```"
                             )
                         ]
                     )
