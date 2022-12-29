@@ -17,7 +17,7 @@ from ..sinks.robusta.dal.model_conversion import ModelConversion
 from ...model.config import Registry
 from ...model.playbook_action import PlaybookAction
 from ...runner.telemetry import Telemetry
-from ...utils.error_codes import ErrorCodes
+from ...utils.error_codes import ActionException, ErrorCodes
 
 
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
@@ -47,7 +47,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event.sink_findings = sink_findings
                 except Exception:
                     logging.error(
-                        f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}")
+                        f"Failed to build execution event for {trigger_event.get_event_description()}, "
+                        f"Event: {trigger_event}")
 
                 if execution_event:  # might not exist for unsupported k8s types
                     execution_event.named_sinks = (
@@ -177,8 +178,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         return self.run_actions(execution_event, [playbook_action], sync_response, no_sinks)
 
     @classmethod
-    def __error_resp(cls, msg: str, error_code: int) -> dict:
-        logging.error(msg)
+    def __error_resp(cls, msg: str, error_code: int, log: bool = True) -> dict:
+        if log:
+            logging.error(msg)
         return {"success": False, "msg": msg, "error_code": error_code}
 
     def __run_playbook_actions(
@@ -208,10 +210,10 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(msg, ErrorCodes.EXECUTION_EVENT_MISMATCH.value)
                 continue
 
-            if not registered_action.params_type:
-                registered_action.func(execution_event)
-            else:
-                action_params = None
+            action_with_params: bool = registered_action.params_type
+            action_params = None
+            params = None
+            if action_with_params:
                 try:
                     action_params = merge_global_params(
                         self.get_global_config(), action.action_params
@@ -228,6 +230,10 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
                 try:
                     registered_action.func(execution_event, params)
+                except ActionException as e:
+                    msg = e.msg if e.msg else f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}"
+                    logging.error(msg)
+                    execution_event.response = self.__error_resp(e.type, e.code, log=False)
                 except PrometheusNotFound as e:
                     logging.error(str(e))
                     execution_event.add_enrichment(
@@ -253,7 +259,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                             )
                         ]
                     )
-
         return execution_event.response
 
     @classmethod
@@ -284,7 +289,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         )
                         continue
 
-                    # only write the finding if is matching against the sink matchers
+                    # only write the finding if it is matching against the sink matchers
                     if sink.accepts(finding):
                         # create deep copy, so that iterating on one sink enrichments won't affect the others
                         # Each sink has a different findings, but enrichments are shared

@@ -6,6 +6,7 @@ from ...core.reporting.base import *
 from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
 from ...core.sinks.transformer import Transformer
+from ...core.sinks.mattermost.mattermost_sink_params import MattermostSinkParams
 
 extension_regex = re.compile(r"\.[a-z]+$")
 MattermostBlock = Dict[str, Any]
@@ -30,7 +31,8 @@ class MattermostSender:
             self,
             cluster_name: str,
             account_id: str,
-            client: MattermostClient
+            client: MattermostClient,
+            sink_params: MattermostSinkParams
     ):
         """
         Set the Mattermost webhook url.
@@ -38,6 +40,7 @@ class MattermostSender:
         self.cluster_name = cluster_name
         self.account_id = account_id
         self.client = client
+        self.sink_params = sink_params
 
     @classmethod
     def __add_severity_icon(cls, title: str, severity: FindingSeverity) -> str:
@@ -90,7 +93,6 @@ class MattermostSender:
             self,
             report_blocks: List[BaseBlock],
             title: str,
-            sink_name: str,
             severity: FindingSeverity,
     ):
         msg_color = SEVERITY_COLOR_MAP.get(severity, "")
@@ -100,8 +102,11 @@ class MattermostSender:
             [b for b in report_blocks if isinstance(b, FileBlock)]
         )
         file_attachments = []
+        if not self.sink_params.send_svg:
+            file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
+
         for block in file_blocks:
-            file_attachments.append(self.__to_mattermost(block, sink_name))
+            file_attachments.append(self.__to_mattermost(block, self.sink_params.name))
 
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
@@ -109,9 +114,9 @@ class MattermostSender:
         header_block = {}
         if title:
             title = self.__add_severity_icon(title, severity)
-            header_block = self.__to_mattermost(HeaderBlock(title), sink_name)
+            header_block = self.__to_mattermost(HeaderBlock(title), self.sink_params.name)
         for block in other_blocks:
-            output_blocks.append(self.__to_mattermost(block, sink_name))
+            output_blocks.append(self.__to_mattermost(block, self.sink_params.name))
 
         attachments = self.__format_msg_attachments(output_blocks, msg_color)
 
@@ -128,7 +133,6 @@ class MattermostSender:
     def send_finding_to_mattermost(
             self,
             finding: Finding,
-            sink_name: str,
             platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
@@ -153,6 +157,5 @@ class MattermostSender:
         self.__send_blocks_to_mattermost(
             blocks,
             finding.title,
-            sink_name,
             finding.severity,
         )

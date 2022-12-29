@@ -12,10 +12,11 @@ class DiscordSink(SinkBase):
         self.sender = DiscordSender(
             self.url,
             self.account_id,
-            self.cluster_name
+            self.cluster_name,
+            self.params
         )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.sender.send_finding_to_discord(
-            finding, self.sink_name, platform_enabled
+            finding,  platform_enabled
         )
