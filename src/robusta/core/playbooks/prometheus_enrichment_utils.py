@@ -3,7 +3,6 @@ from robusta.api import *
 from collections import defaultdict, namedtuple
 
 import pygal
-from pygal.style import DarkColorizedStyle as ChosenStyle
 from ..external_apis.prometheus.prometheus_cli import custom_query_range
 from string import Template
 from datetime import datetime, timedelta
@@ -78,7 +77,7 @@ def create_chart_from_prometheus_query(
         raise Exception(f"Unsupported query result for robusta chart, Type received: {prometheus_query_result.result_type}, type supported 'matrix'")
     chart = pygal.XY(
         show_dots=True,
-        style=ChosenStyle,
+        style=charts_style,
         truncate_legend=15,
         include_x_axis=include_x_axis,
         width=1280,
