@@ -42,7 +42,7 @@ Now we're ready to configure the Discord sink.
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinkConfig:
         - discord_sink:
             name: personal_discord_sink
             url: <YOUR WEBHOOK URL>
@@ -59,3 +59,12 @@ You should now get playbooks results in Discord! Example is shown below:
     .. image:: /images/discord_example.png
       :width: 1000
       :align: center
+
+Discord configuration tutorial
+---------------------------------
+
+See video below:
+
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 62.5%; height: 0;"><iframe src="https://www.loom.com/embed/f74a448135ed4da28120c5e21def1df9" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>

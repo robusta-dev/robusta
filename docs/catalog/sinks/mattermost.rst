@@ -56,7 +56,7 @@ Now we're ready to configure the Mattermost sink.
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinkConfig:
         - mattermost_sink:
             name: personal_mattermost_sink
             url: <YOUR MATTERMOST URL> (can be find out from url bar in browser, e.g. https://namespace.cloud.mattermost.com)
@@ -76,3 +76,12 @@ You should now get playbooks results in Mattermost! Example is shown below:
     .. image:: /images/mattermost_sink_example.png
       :width: 1000
       :align: center
+
+Mattermost configuration tutorial
+---------------------------------
+
+See video below:
+
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/4b8b2f9bd49b49f08a9853e4a8a5aa44" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>

@@ -31,7 +31,9 @@ class Discovery:
 
     @staticmethod
     def __create_service_info(meta: V1ObjectMeta, kind: str,
-                              containers: List[V1Container], volumes: List[V1Volume]) -> ServiceInfo:
+                              containers: List[V1Container], volumes: List[V1Volume],
+                              total_pods: int, ready_pods: int
+                              ) -> ServiceInfo:
         container_info = [ContainerInfo.get_container_info(container) for container in containers] if containers else []
         volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
         config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
@@ -39,7 +41,9 @@ class Discovery:
             name=meta.name,
             namespace=meta.namespace,
             service_type=kind,
-            service_config=config
+            service_config=config,
+            ready_pods=ready_pods,
+            total_pods=total_pods
         )
 
     @staticmethod
@@ -51,7 +55,9 @@ class Discovery:
             deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces()
             active_services.extend([
                 Discovery.__create_service_info(
-                    deployment.metadata, "Deployment", extract_containers(deployment), extract_volumes(deployment))
+                    deployment.metadata, "Deployment", extract_containers(deployment), extract_volumes(deployment),
+                    extract_total_pods(deployment),
+                    extract_ready_pods(deployment))
                 for deployment in deployments.items
             ])
             statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces()
@@ -59,7 +65,9 @@ class Discovery:
                 Discovery.__create_service_info(
                     statefulset.metadata, "StatefulSet",
                     extract_containers(statefulset),
-                    extract_volumes(statefulset))
+                    extract_volumes(statefulset),
+                    extract_total_pods(statefulset),
+                    extract_ready_pods(statefulset))
                 for statefulset in statefulsets.items
             ])
             daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces()
@@ -67,7 +75,9 @@ class Discovery:
                 Discovery.__create_service_info(
                     daemonset.metadata, "DaemonSet",
                     extract_containers(daemonset),
-                    extract_volumes(daemonset)
+                    extract_volumes(daemonset),
+                    extract_total_pods(daemonset),
+                    extract_ready_pods(daemonset)
                 )
                 for daemonset in daemonsets.items
             ])
@@ -76,7 +86,9 @@ class Discovery:
                 Discovery.__create_service_info(
                     replicaset.metadata, "ReplicaSet",
                     extract_containers(replicaset),
-                    extract_volumes(replicaset)
+                    extract_volumes(replicaset),
+                    extract_total_pods(replicaset),
+                    extract_ready_pods(replicaset)
                 )
                 for replicaset in replicasets.items if not replicaset.metadata.owner_references
             ])
@@ -87,7 +99,9 @@ class Discovery:
                 Discovery.__create_service_info(
                     pod.metadata, "Pod",
                     extract_containers(pod),
-                    extract_volumes(pod)
+                    extract_volumes(pod),
+                    extract_total_pods(pod),
+                    extract_ready_pods(pod)
                 )
                 for pod in pod_items if not pod.metadata.owner_references
             ])
@@ -118,11 +132,25 @@ class Discovery:
         try:
             current_jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces()
             for job in current_jobs.items:
-                job_labels: Dict[str, str] = job.spec.selector.match_labels
-                job_pods = [
-                    pod.metadata.name for pod in pod_items
-                    if job_labels.items() <= (pod.metadata.labels or {}).items()
-                ]
+                job_pods = []
+                job_labels = {}
+                if job.spec.selector:
+                    job_labels = job.spec.selector.match_labels
+                elif job.metadata.labels:
+                    job_name = job.metadata.labels.get("job-name", None)
+                    if job_name:
+                        job_labels = {"job-name": job_name}
+
+                if job_labels:  # add job pods only if we found a valid selector
+                    job_pods = [
+                        pod.metadata.name for pod in pod_items
+                        if (
+                                (job.metadata.namespace == pod.metadata.namespace)
+                                and
+                                (job_labels.items() <= (pod.metadata.labels or {}).items())
+                        )
+                    ]
+
                 active_jobs.append(JobInfo.from_api_server(job, job_pods))
         except Exception:
             logging.error(
@@ -158,7 +186,6 @@ def extract_containers(resource) -> List[V1Container]:
         containers = []
         if isinstance(resource, V1Deployment) \
                 or isinstance(resource, V1DaemonSet) \
-                or isinstance(resource, V1DaemonSet) \
                 or isinstance(resource, V1StatefulSet) \
                 or isinstance(resource, V1Job):
             containers = resource.spec.template.spec.containers
@@ -171,12 +198,49 @@ def extract_containers(resource) -> List[V1Container]:
     return []
 
 
+def is_pod_ready(pod: V1Pod) -> bool:
+    for condition in pod.status.conditions:
+        if condition.type == "Ready":
+            return condition.status.lower() == 'true'
+    return False
+
+
+def extract_ready_pods(resource) -> int:
+    try:
+        if isinstance(resource, V1Deployment) \
+                or isinstance(resource, V1StatefulSet) \
+                or isinstance(resource, V1Job):
+            return 0 if not resource.status.ready_replicas else resource.status.ready_replicas
+        elif isinstance(resource, V1DaemonSet):
+            return 0 if not resource.status.number_ready else resource.status.number_ready
+        elif isinstance(resource, V1Pod):
+            return 1 if is_pod_ready(resource) else 0
+        return 0
+    except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
+        logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
+    return 0
+
+
+def extract_total_pods(resource) -> int:
+    try:
+        if isinstance(resource, V1Deployment) \
+                or isinstance(resource, V1StatefulSet) \
+                or isinstance(resource, V1Job):
+            return 1 if not resource.status.replicas else resource.status.replicas
+        elif isinstance(resource, V1DaemonSet):
+            return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
+        elif isinstance(resource, V1Pod):
+            return 1
+        return 0
+    except Exception:
+        logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
+    return 1
+
 def extract_volumes(resource) -> List[V1Volume]:
     """Extract volumes from k8s python api object (not hikaru)"""
     try:
         volumes = []
         if isinstance(resource, V1Deployment) \
-                or isinstance(resource, V1DaemonSet) \
                 or isinstance(resource, V1DaemonSet) \
                 or isinstance(resource, V1StatefulSet) \
                 or isinstance(resource, V1Job):

@@ -13,9 +13,9 @@ This will upgrade Robusta while preserving any custom settings:
 .. code-block:: bash
 
     helm repo update
-    helm upgrade robusta robusta/robusta --values=generated_values.yaml
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME>
 
-We recommend running the above command exactly as written.
+We recommend running the above command by changing nothing more than the "clusterName".
 
 .. _values-file:
 

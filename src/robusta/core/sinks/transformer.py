@@ -5,7 +5,7 @@ import markdown2
 from typing import List, Optional
 
 from ...core.reporting import MarkdownBlock, BaseBlock, DividerBlock, JsonBlock, KubernetesDiffBlock, HeaderBlock, \
-    ListBlock, TableBlock, tabulate
+    ListBlock, TableBlock, FileBlock, tabulate
 
 
 class Transformer:
@@ -158,3 +158,22 @@ class Transformer:
                     tabulate(rendered_rows, headers=block.headers, tablefmt="presto")
                 )
         return "\n".join(lines)
+
+    @staticmethod
+    def tableblock_to_fileblocks(blocks: List[BaseBlock], column_limit: int) -> List[FileBlock]:
+        file_blocks: List[FileBlock] = []
+        for table_block in [b for b in blocks if isinstance(b, TableBlock)]:
+            if len(table_block.headers) >= column_limit:
+                table_name = (
+                    table_block.table_name if table_block.table_name else "data"
+                )
+                table_content = table_block.to_table_string(
+                    table_max_width=250
+                )  # bigger max width for file
+                file_blocks.append(
+                    FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8"))
+                )
+                blocks.remove(table_block)
+
+        return file_blocks
+        

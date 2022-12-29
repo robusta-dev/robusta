@@ -20,7 +20,7 @@ Pricing
 ^^^^^^^^^^^^
 The Robusta OSS is and always will be free. It is MIT licensed.
 
-The Robusta UI is free for up to 50 nodes. For larger environments the price is $5/node and we have an extended free trial available. Just sign up and try it.
+The Robusta UI is free for up to 50 nodes. For larger environments the price is usage based, and we have an extended free trial available. Just sign up and try it.
 
 We also have enterprise plans if you need to self-host the UI in your own environment.
 

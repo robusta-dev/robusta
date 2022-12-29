@@ -36,6 +36,7 @@ class PrometheusDiscovery(ServiceDiscovery):
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
                 "app.kubernetes.io/name=prometheus",
+                "app=prometheus-prometheus"
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
         )

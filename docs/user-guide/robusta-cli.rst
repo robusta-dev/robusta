@@ -97,7 +97,7 @@ You can view additional commands with ``robusta --help``.
 
 These two commands are useful for changing Robusta configurations without doing a Helm re-deploy:
 
-``robusta edit-config``
+``robusta playbooks edit-config``
     Bypass helm and edit Robusta's configuration directly
 
 ``robusta playbooks configure``

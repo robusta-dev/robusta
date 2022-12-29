@@ -18,6 +18,12 @@ class BaseBlock(BaseModel):
     hidden: bool = False
 
 
+class Emojis(Enum):
+    Explain = "📘"
+    Recommend = "🛠"
+    Alert = "🚨"
+
+
 class FindingSeverity(Enum):
     DEBUG = 0
     INFO = 1
@@ -51,6 +57,23 @@ class FindingSeverity(Enum):
             return "🟠"
         elif self == FindingSeverity.HIGH:
             return "🔴"
+
+
+class FindingStatus(Enum):
+    FIRING = 0
+    RESOLVED = 1
+
+    def to_color_hex(self) -> str:
+        if self == FindingStatus.RESOLVED:
+            return "#00B302"
+
+        return "#EF311F"
+
+    def to_emoji(self) -> str:
+        if self == FindingStatus.RESOLVED:
+            return "✅"
+
+        return "🔥"
 
 
 class VideoLink(BaseModel):
@@ -236,20 +259,21 @@ class Finding(Filterable):
     def __str__(self):
         return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
 
-    def get_prometheus_silence_url(self, cluster_id: str) -> str:
+    def get_prometheus_silence_url(self, account_id: str, cluster_name: str) -> str:
         labels: Dict[str, str] = {
             "alertname": self.aggregation_key,
-            "cluster": cluster_id,
+            "cluster": cluster_name,
+            "account": account_id
         }
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
 
-        kind: str = str(self.subject.subject_type.value)
+        kind: Optional[str] = self.subject.subject_type.value
         if kind and self.subject.name:
             labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
-
+        # New label added here should be added to the UI silence create whitelist as well.
         return f"{ROBUSTA_UI_DOMAIN}/silences/create?{urllib.parse.urlencode(labels)}"
 
     @staticmethod

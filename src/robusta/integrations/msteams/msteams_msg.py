@@ -3,6 +3,8 @@ import logging
 import requests
 from typing import List
 
+from ...core.reporting.base import *
+
 from .msteams_elements.msteams_base import MsTeamsBase
 from .msteams_adaptive_card_files import MsTeamsAdaptiveCardFiles
 from .msteams_elements.msteams_table import MsTeamsTable
@@ -26,11 +28,12 @@ class MsTeamsMsg:
         self.text_file_containers = []
         self.webhook_url = webhook_url
 
-    def write_title_and_desc(self, platform_enabled: bool, finding: "Finding", cluster_name: str, account_id: str):
-        block = MsTeamsTextBlock(text=f"{finding.severity} - {finding.title}", font_size='extraLarge')
+    def write_title_and_desc(self, platform_enabled: bool, finding: Finding, cluster_name: str, account_id: str):
+        severity: FindingSeverity = finding.severity
+        block = MsTeamsTextBlock(text=f"{severity.to_emoji()} {severity.name} - {finding.title}", font_size='extraLarge')
         self.__write_to_entire_msg([block])
         if platform_enabled:  # add link to the Robusta ui, if it's configured
-            silence_url = finding.get_prometheus_silence_url(cluster_name)
+            silence_url = finding.get_prometheus_silence_url(account_id, cluster_name)
             actions = f"[🔎 Investigate]({finding.get_investigate_uri(account_id, cluster_name)})"
             if finding.add_silence_url:
                 actions = f"{actions}  [🔕 Silence]({silence_url})"
