@@ -19,6 +19,7 @@ The following sinks are supported:
 * :ref:`VictorOps` - send playbooks results to the VictorOps alerts API
 * :ref:`PagerDuty` - send playbooks results to the PagerDuty alerts API
 * :ref:`Discord` - send playbooks results to the Discord using webhook
+* :ref:`Jira` - send playbooks results to the Jira
 * :ref:`Mattermost` - send playbooks results to the Mattermost using webhook
 * :ref:`Webex` - send playbooks results to the Webex using webhook
 
@@ -64,6 +65,7 @@ if it has the field `default: true` in the YAML.
    telegram
    discord
    kafka
+   jira
    DataDog
    ms-teams
    mattermost
