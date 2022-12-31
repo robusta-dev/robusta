@@ -1,9 +1,10 @@
 import logging
 from datetime import datetime, timedelta, tzinfo
 from typing import Optional, Union
+
 from prometheus_api_client import PrometheusConnect
 
-from ..prometheus.utils import PrometheusDiscovery
+from ..prometheus.utils import PrometheusDiscovery, check_prometheus_connection
 from ...core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 
 
@@ -14,6 +15,8 @@ class PrometheusAnalyzer:
 
         self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
         self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+
+        check_prometheus_connection(self.prom, self.default_prometheus_params)
 
         self.prometheus_tzinfo = prometheus_tzinfo or datetime.now().astimezone().tzinfo
 

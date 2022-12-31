@@ -10,9 +10,10 @@ _API_PREFIX = "api/v4"
 class MattermostClient:
     channel_id: str
     bot_id: str
+    team_id: Optional[str]
 
     def __init__(
-            self, url: str, token: str, token_id: str, channel_name: str
+            self, url: str, token: str, token_id: str, channel_name: str, team: Optional[str]
     ):
         """
         Set the Mattermost webhook url.
@@ -20,7 +21,7 @@ class MattermostClient:
         self.client_url = url
         self.token = token
         self.token_id = token_id
-        self._init_setup(channel_name)
+        self._init_setup(channel_name, team)
 
     def _send_mattermost_request(self, url: str, method: HttpMethod, **kwargs):
         headers = kwargs.pop("headers", {})
@@ -63,8 +64,9 @@ class MattermostClient:
         if not check_response_succeed(response):
             logging.warning("Cannot update bot logo, probably bot has not enough permissions")
 
-    def _init_setup(self, channel_name: str):
+    def _init_setup(self, channel_name: str, team_name: Optional[str] = None):
         bot_id = self.get_token_owner_id()
+        self.team_id = self.get_team_id(team_name) if team_name else None
         self.channel_id = self.get_channel_id(channel_name)
         if not self.channel_id:
             logging.warning("No channel found, messages won't be sent")
@@ -75,14 +77,30 @@ class MattermostClient:
     def get_channel_id(self, channel_name: str) -> Optional[str]:
         endpoint = "channels/search"
         url = self._get_full_mattermost_url(endpoint)
-        response = self._send_mattermost_request(url, HttpMethod.POST, json={
+        payload = {
             "term": channel_name
-        })
+        }
+        if self.team_id:
+            payload['team_ids'] = [self.team_id]
+        response = self._send_mattermost_request(url, HttpMethod.POST, json=payload)
         if check_response_succeed(response):
             response = response.json()
             if not len(response):
                 return None
             return response[0].get("id")
+
+    def get_team_id(self, team_name: str) -> Optional[str]:
+        endpoint = "teams/search"
+        url = self._get_full_mattermost_url(endpoint)
+        response = self._send_mattermost_request(url, HttpMethod.POST, json={'term': team_name})
+        if check_response_succeed(response):
+            response = response.json()
+            if not len(response):
+                logging.warning("No team found, all channels will be searched")
+                return None
+            return response[0].get("id")
+        else:
+            logging.warning("There was an error finding a team, all channels will be searched")
 
     def post_message(self, title, msg_attachments: List[Dict], file_attachments: Optional[List[Tuple]] = None):
         if not self.channel_id:
