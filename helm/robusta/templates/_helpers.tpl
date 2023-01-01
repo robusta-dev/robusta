@@ -35,10 +35,8 @@ global_config:
 {{ toYaml .Values.globalConfig | indent 2 }}
   {{- end }}
 
-{{- if .Values.lightActions }}
 light_actions:
 {{ toYaml  .Values.lightActions | indent 2 }}
-{{- end }}
 
 active_playbooks:
 {{- if .Values.playbooks }}
