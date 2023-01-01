@@ -111,14 +111,7 @@ class ActionRequestReceiver:
     def __exec_external_request(
         self, action_request: ExternalActionRequest, validate_timestamp: bool
     ):
-        if action_request.signature:
-            action_type = "signed"
-        elif action_request.partial_auth_a or action_request.partial_auth_b:
-            action_type = "two auth"
-        else:
-            action_type = "light"
-        logging.info(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)} "
-                     f"type: {action_type}")
+        logging.info(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
         sync_response = action_request.request_id != ""  # if request_id is set, we need to write back the response
         validation_response = self.__validate_request(action_request, validate_timestamp)
         if validation_response.http_code != 200:
