@@ -29,8 +29,6 @@ spec:
         env:
           - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml
-          - name: ENABLE_MANHOLE
-            value: "true"
           - name: RELEASE_NAME
             value: {{ .Release.Name | quote }}
           - name: ENABLE_COLORED_LOGS

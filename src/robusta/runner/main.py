@@ -1,7 +1,5 @@
 import os
 import os.path
-from inspect import getmembers
-import manhole
 
 from ..patch.patch import create_monkey_patches
 from .telemetry_service import TelemetryService, TelemetryLevel
@@ -36,10 +34,6 @@ def main():
     else:
         logging.info(f"Telemetry is disabled.")
 
-    if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
-        manhole.install(locals=dict(getmembers(robusta_api)))
-
-    
     Web.init(event_handler, loader)
     Web.run()  # blocking
     loader.close()
