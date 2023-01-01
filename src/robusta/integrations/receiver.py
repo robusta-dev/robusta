@@ -232,13 +232,6 @@ class ActionRequestReceiver:
                                       error_code=ErrorCodes.NO_SIGNING_KEY.value,
                                       error_msg="No signing key")
 
-        # invalid request signature paramaters
-        if action_request.signature and (action_request.partial_auth_a or action_request.partial_auth_b):
-            logging.error(f"A mismatched signature request was sent, {action_request.body}")
-            return ValidationResponse(http_code=500,
-                                      error_code=ErrorCodes.INVALID_SIGNATURE_MATCH_REQUEST.value,
-                                      error_msg="Invalid signature match request")
-
         if action_request.signature:
             # First auth protocol option, based on signature only
             return self.validate_action_request_signature(action_request, signing_key)
