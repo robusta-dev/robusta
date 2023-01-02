@@ -14,7 +14,7 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert, params: TimedProm
         return
     res = list_available_services("kube-system")
     try:
-        res = json.loads(res)
+        res = json.loads(res)  # type: ignore
     except json.decoder.JSONDecodeError:
         res = {}
     items = res.get("items", [])

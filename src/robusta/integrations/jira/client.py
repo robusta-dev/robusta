@@ -90,7 +90,7 @@ class JiraClient:
             query.append(f"labels = '{label}'")
         query = " AND ".join(query)
         issues = self.list_issues(query)
-        if issues.get("total", 0) < 1:
+        if issues.get("total", 0) < 1:  # type: ignore
             return False
         return True
 
