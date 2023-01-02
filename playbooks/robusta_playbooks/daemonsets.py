@@ -1,18 +1,17 @@
 import logging
 import textwrap
 
+from hikaru.model import DaemonSet, Node, NodeList
+
 from robusta.api import (
     CallbackBlock,
     CallbackChoice,
-    DaemonSet,
     DaemonSetEvent,
     ExecutionBaseEvent,
     Finding,
     FindingSource,
     KubernetesFieldsBlock,
     MarkdownBlock,
-    Node,
-    NodeList,
     PrometheusKubernetesAlert,
     RobustaPod,
     action,

@@ -1,7 +1,7 @@
 import logging
 from typing import List, Tuple
 
-from hikaru.model import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec
+from hikaru.model import Container, Job, JobSpec, JobStatus, ObjectMeta, PodSpec, PodTemplateSpec
 
 from robusta.api import (
     ActionParams,
@@ -9,7 +9,6 @@ from robusta.api import (
     EventEnricherParams,
     FileBlock,
     JobEvent,
-    JobStatus,
     MarkdownBlock,
     PodContainer,
     PrometheusKubernetesAlert,
