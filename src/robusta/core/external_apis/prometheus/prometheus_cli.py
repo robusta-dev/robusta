@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 from prometheus_api_client import PrometheusApiClientException, PrometheusConnect  # type: ignore
 
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
+from robusta.integrations.prometheus.utils import check_prometheus_connection
 
 """
 This function is copied from the python package prometheus_api_client
@@ -42,6 +43,9 @@ def custom_query_range(
     start = round(start_time.timestamp())
     end = round(end_time.timestamp())
     params = params or {}
+
+    check_prometheus_connection(prom, params)
+
     prometheus_result = None
     query = str(query)
     # using the query_range API to get raw data

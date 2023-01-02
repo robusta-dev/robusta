@@ -324,13 +324,6 @@ def update_config(
 
 
 @app.command()
-def playground():
-    """Open a python playground - useful when writing playbooks"""
-    typer.echo("this command is temporarily disabled due to recent changes to python:3.8-slim")
-    # exec_in_robusta_runner("socat readline unix-connect:/tmp/manhole-1")
-
-
-@app.command()
 def version():
     """Show the version of the local robusta-cli"""
     if __version__ == "0.0.0":

@@ -5,7 +5,7 @@ from hikaru.model import Node
 from prometheus_api_client import PrometheusConnect
 
 from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
-from robusta.integrations.prometheus.utils import PrometheusDiscovery
+from robusta.integrations.prometheus.utils import PrometheusDiscovery, check_prometheus_connection
 
 
 class NodeCpuAnalyzer:
@@ -27,6 +27,7 @@ class NodeCpuAnalyzer:
 
         self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
         self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+        check_prometheus_connection(self.prom, self.default_prometheus_params)
 
     def get_total_cpu_usage(self, other_method=False):
         """

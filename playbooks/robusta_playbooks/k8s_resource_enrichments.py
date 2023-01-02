@@ -3,7 +3,7 @@ from typing import List
 
 import hikaru
 import kubernetes.client.exceptions
-from hikaru.model import PodList
+from hikaru.model import Pod, PodList
 
 from robusta.api import (
     ActionException,
@@ -11,7 +11,6 @@ from robusta.api import (
     FileBlock,
     KubernetesResourceEvent,
     MarkdownBlock,
-    Pod,
     ResourceLoader,
     TableBlock,
     action,

@@ -5,7 +5,7 @@ from typing import Any, Optional, Union
 from prometheus_api_client import PrometheusConnect
 
 from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
-from robusta.integrations.prometheus.utils import PrometheusDiscovery
+from robusta.integrations.prometheus.utils import PrometheusDiscovery, check_prometheus_connection
 
 
 class PrometheusAnalyzer:
@@ -15,6 +15,8 @@ class PrometheusAnalyzer:
 
         self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
         self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+
+        check_prometheus_connection(self.prom, self.default_prometheus_params)
 
         self.prometheus_tzinfo = prometheus_tzinfo or datetime.now().astimezone().tzinfo
 

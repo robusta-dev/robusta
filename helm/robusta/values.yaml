@@ -1,6 +1,8 @@
 # most of this file is documented at https://docs.robusta.dev/master/user-guide/configuration.html
 # if you have any questions, feel free to ask via github issues or Slack (see link on robusta.dev)
 
+# NOTE: Do not use this file to install Robusta. It has missing values that need to be filled in. See the installation instructions instead https://docs.robusta.dev/master/installation.html
+
 # playbook repositories
 playbookRepos: {}
 
@@ -95,6 +97,12 @@ builtinPlaybooks:
   - external_video_enricher:
       url: https://bit.ly/memory-overcommit
       name: Memory Overcommited
+
+- triggers:
+  - on_prometheus_alert:
+      alert_name: TargetDown
+  actions:
+  - target_down_dns_enricher: {}
 
 - triggers:
   - on_prometheus_alert:

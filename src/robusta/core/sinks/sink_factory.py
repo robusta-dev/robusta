@@ -2,6 +2,7 @@ from typing import Dict, Type
 
 from robusta.core.sinks.datadog import DataDogSink, DataDogSinkConfigWrapper
 from robusta.core.sinks.discord import DiscordSink, DiscordSinkConfigWrapper
+from robusta.core.sinks.jira import JiraSink, JiraSinkConfigWrapper
 from robusta.core.sinks.kafka import KafkaSink, KafkaSinkConfigWrapper
 from robusta.core.sinks.mattermost import MattermostSink, MattermostSinkConfigWrapper
 from robusta.core.sinks.msteams import MsTeamsSink, MsTeamsSinkConfigWrapper
@@ -32,6 +33,7 @@ class SinkFactory:
         PagerdutyConfigWrapper: PagerdutySink,
         MattermostSinkConfigWrapper: MattermostSink,
         WebexSinkConfigWrapper: WebexSink,
+        JiraSinkConfigWrapper: JiraSink,
     }
 
     @classmethod

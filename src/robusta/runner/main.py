@@ -1,10 +1,6 @@
 import os
 import os.path
-from inspect import getmembers
 
-import manhole
-
-from robusta import api as robusta_api
 from robusta.core.model.env_vars import (
     ENABLE_TELEMETRY,
     ROBUSTA_TELEMETRY_ENDPOINT,
@@ -40,9 +36,6 @@ def main():
         )
     else:
         logging.info("Telemetry is disabled.")
-
-    if os.environ.get("ENABLE_MANHOLE", "false").lower() == "true":
-        manhole.install(locals=dict(getmembers(robusta_api)))
 
     Web.init(event_handler, loader)
     Web.run()  # blocking

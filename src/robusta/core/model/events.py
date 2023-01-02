@@ -108,7 +108,7 @@ class ExecutionBaseEvent:
             first = False
 
     def override_finding_attributes(
-        self, title: str = "", description: str = "", severity: Optional[FindingSeverity] = None
+        self, title: Optional[str] = None, description: Optional[str] = None, severity: Optional[FindingSeverity] = None
     ):
         assert self.named_sinks is not None
         for sink in self.named_sinks:

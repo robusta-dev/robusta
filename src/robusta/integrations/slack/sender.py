@@ -134,7 +134,7 @@ class SlackSender:
         if len(block.headers) == 2:
             table_rows: List[str] = []
             for row in block.rows:
-                if "-------" in row[1]:  # special care for table subheader
+                if "-------" in str(row[1]):  # special care for table subheader
                     subheader: str = row[0]
                     table_rows.append(f"--- {subheader.capitalize()} ---")
                     continue
