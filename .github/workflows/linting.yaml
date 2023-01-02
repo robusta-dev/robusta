@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Run flake8
         run: |
-          python -m flake8 .
+          poetry run flake8 .
 
   black:
     needs: install_all
@@ -35,7 +35,7 @@ jobs:
     steps:
       - name: Run black
         run: |
-          python -m black --check .
+          poetry run black --check .
 
   isort:
     needs: install_all
@@ -43,4 +43,4 @@ jobs:
     steps:
       - name: Run isort
         run: |
-          python -m isort --check .
+          poetry run isort --check .
