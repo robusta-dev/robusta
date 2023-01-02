@@ -1,9 +1,6 @@
 name: Linting
 
-on:
-  push:
-    paths:
-      - '*.py'
+on: [push, pull_request]
 
 jobs:
   install_all:
