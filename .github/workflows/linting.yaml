@@ -1,0 +1,70 @@
+name: Linting
+
+on: [push, pull_request]
+
+jobs:
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      # install robusta so that we can run tests on it
+      - name: Install Robusta
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          poetry config virtualenvs.create false
+          poetry install --extras "all"
+          # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
+          pip install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
+
+      - name: Run flake8
+        run: |
+          poetry run flake8 .
+
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      # install robusta so that we can run tests on it
+      - name: Install Robusta
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          poetry config virtualenvs.create false
+          poetry install --extras "all"
+          # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
+          pip install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
+
+      - name: Run black
+        run: |
+          poetry run black --check .
+
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      # install robusta so that we can run tests on it
+      - name: Install Robusta
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          poetry config virtualenvs.create false
+          poetry install --extras "all"
+          # Install tabulate version that fixes column width wrapping. Cannot be added to pypi as a git dependency, so adding it here
+          pip install git+https://github.com/astanin/python-tabulate.git@b2c26bcb70e497f674b38aa7e29de12c0123708a#egg=tabulate
+
+      - name: Run isort
+        run: |
+          poetry run isort --check .
