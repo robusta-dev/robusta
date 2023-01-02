@@ -25,22 +25,22 @@ jobs:
     needs: install_all
     runs-on: ubuntu-latest
     steps:
-      - name: Lint
+      - name: Run flake8
         run: |
-          flake8 .
+          python -m flake8 .
 
   black:
     needs: install_all
     runs-on: ubuntu-latest
     steps:
-      - name: Lint
+      - name: Run black
         run: |
-          black --check .
+          python -m black --check .
 
   isort:
     needs: install_all
     runs-on: ubuntu-latest
     steps:
-      - name: Lint
+      - name: Run isort
         run: |
-          isort --check .
+          python -m isort --check .
