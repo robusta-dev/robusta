@@ -1,10 +1,25 @@
 import logging
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from cachetools import TTLCache
+from requests.exceptions import ConnectionError
 
+from robusta.core.exceptions import PrometheusNotFound
 from robusta.core.model.env_vars import SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
+
+if TYPE_CHECKING:
+    from prometheus_api_client import PrometheusConnect
+
+
+def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
+    params = params or {}
+    try:
+        prometheus_connected = prom.check_prometheus_connection(params)
+        if not prometheus_connected:
+            raise PrometheusNotFound(f"No Prometheus found under {prom.url}")
+    except ConnectionError:
+        raise PrometheusNotFound(f"Couldn't connect to Prometheus found under {prom.url}")
 
 
 class ServiceDiscovery:

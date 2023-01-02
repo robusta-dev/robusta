@@ -4,6 +4,7 @@ import traceback
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
+from robusta.core.exceptions import PrometheusNotFound
 from robusta.core.model.events import ExecutionBaseEvent, ExecutionContext
 from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
 from robusta.core.playbooks.playbook_utils import merge_global_params, to_safe_str
@@ -154,7 +155,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         execution_event = action_def.from_params_func(instantiation_params)
         if not execution_event:
             return self.__error_resp(
-                f"Failed to create execution event for " f"{action_name} {action_params}",
+                f"Failed to create execution event for {action_name} {action_params}",
                 ErrorCodes.EVENT_INSTANTIATION_FAILED.value,
             )
 
@@ -206,25 +207,40 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event.response = self.__error_resp(msg, ErrorCodes.PARAMS_INSTANTIATION_FAILED.value)
                     continue
 
-            try:
-                registered_action.func(execution_event, params) if action_with_params else registered_action.func(
-                    execution_event
-                )
-            except ActionException as e:
-                msg = (
-                    e.msg
-                    if e.msg
-                    else f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}"
-                )
-                logging.error(msg)
-                execution_event.response = self.__error_resp(e.type, e.code, log=False)
-            except Exception:
-                logging.error(f"Failed to execute action {action.action_name} {to_safe_str(action_params)}")
-                execution_event.response = self.__error_resp(
-                    ErrorCodes.ACTION_UNEXPECTED_ERROR.name, ErrorCodes.ACTION_UNEXPECTED_ERROR.value, log=False
-                )
-                execution_event.add_enrichment([MarkdownBlock(text=f"Oops... Error processing {action.action_name}")])
-
+                try:
+                    registered_action.func(execution_event, params)
+                except ActionException as e:
+                    msg = (
+                        e.msg
+                        if e.msg
+                        else (
+                            f"Action Exception {e.type} while processing "
+                            f"{action.action_name} {to_safe_str(action_params)}"
+                        )
+                    )
+                    logging.error(msg)
+                    execution_event.response = self.__error_resp(e.type, e.code, log=False)
+                except PrometheusNotFound as e:
+                    logging.error(str(e))
+                    execution_event.add_enrichment(
+                        [
+                            MarkdownBlock(
+                                text="Robusta couldn't connect to the Prometheus client, check if the service is "
+                                "available. If it is, please add to *globalConfig* in *generated_values.yaml* "
+                                "the cluster *prometheus_url*. For example:\n"
+                                "```globalConfig:\n"
+                                "\tprometheus_url: http://prometheus-server.monitoring.svc.cluster.local:9090```"
+                            )
+                        ]
+                    )
+                except Exception:
+                    logging.error(f"Failed to execute action {action.action_name} {to_safe_str(action_params)}")
+                    execution_event.response = self.__error_resp(
+                        ErrorCodes.ACTION_UNEXPECTED_ERROR.name, ErrorCodes.ACTION_UNEXPECTED_ERROR.value, log=False
+                    )
+                    execution_event.add_enrichment(
+                        [MarkdownBlock(text=f"Oops... Error processing {action.action_name}")]
+                    )
         return execution_event.response
 
     @classmethod
