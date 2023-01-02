@@ -100,6 +100,12 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+      alert_name: TargetDown
+  actions:
+  - target_down_dns_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
       alert_name: KubePodNotReady
   actions:
   - logs_enricher: {}

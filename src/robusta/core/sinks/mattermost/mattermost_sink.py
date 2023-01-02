@@ -14,6 +14,7 @@ class MattermostSink(SinkBase):
             channel_name=sink_config.mattermost_sink.channel,
             token=sink_config.mattermost_sink.token,
             token_id=sink_config.mattermost_sink.token_id,
+            team=sink_config.mattermost_sink.team,
         )
         self.sender = MattermostSender(
             cluster_name=self.cluster_name, account_id=self.account_id, client=client, sink_params=self.params

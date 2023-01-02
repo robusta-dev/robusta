@@ -26,7 +26,6 @@ try:
 except config.config_exception.ConfigException as e:
     logging.warning(f"Running without kube-config! e={e}")
 
-
 default_exec_command = ["/bin/sh", "-c"]
 
 
@@ -161,6 +160,28 @@ def get_pod_logs(
             resp = ""
 
     logging.debug(f"get logs {resp}")
+    return resp
+
+
+def list_available_services(
+    namespace="default",
+):
+    resp = None
+    try:
+        core_v1 = core_v1_api.CoreV1Api()
+        resp = core_v1.list_namespaced_service(
+            namespace,
+            _preload_content=False  # If this flag is not used, double quotes in json objects in stdout are converted
+            # by the kubernetes client to single quotes, which makes json.loads() fail.
+            # We therefore use this flag in order to get the raw bytes and decode the output
+        ).data.decode("utf-8")
+
+    except ApiException as e:
+        if e.status != 404:
+            logging.exception(f"failed to get services in {namespace} namespace")
+            resp = ""
+
+    logging.debug(f"list available services {resp}")
     return resp
 
 

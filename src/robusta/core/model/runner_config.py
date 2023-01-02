@@ -5,6 +5,7 @@ from pydantic import BaseModel, SecretStr, validator
 from robusta.core.playbooks.playbook_utils import get_env_replacement, replace_env_vars_values
 from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
 from robusta.core.sinks.discord.discord_sink_params import DiscordSinkConfigWrapper
+from robusta.core.sinks.jira.jira_sink_params import JiraSinkConfigWrapper
 from robusta.core.sinks.kafka.kafka_sink_params import KafkaSinkConfigWrapper
 from robusta.core.sinks.mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
 from robusta.core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrapper
@@ -43,6 +44,7 @@ class RunnerConfig(BaseModel):
                 DiscordSinkConfigWrapper,
                 MattermostSinkConfigWrapper,
                 WebexSinkConfigWrapper,
+                JiraSinkConfigWrapper,
             ]
         ]
     ]
