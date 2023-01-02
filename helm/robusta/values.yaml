@@ -52,7 +52,6 @@ lightActions:
 - python_memory
 - debugger_stack_trace
 - python_process_inspector
-- python_debugger
 - prometheus_alert
 - create_pvc_snapshot
 - http_stress_test
