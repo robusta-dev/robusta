@@ -1,3 +1,4 @@
+from typing import Optional
 from urllib.error import HTTPError, URLError
 
 import requests
@@ -10,7 +11,6 @@ from robusta.api import (
     FindingSource,
     FindingType,
     MarkdownBlock,
-    Optional,
     action,
 )
 

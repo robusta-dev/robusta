@@ -5,7 +5,7 @@ import urllib.parse
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Sequence, Union
 from urllib.parse import urlencode
 
 from pydantic.main import BaseModel
@@ -86,11 +86,11 @@ class VideoLink(BaseModel):
 
 class Enrichment:
     # These is the actual enrichment data
-    blocks: List[BaseBlock] = []
+    blocks: Sequence[BaseBlock] = []
     # General purpose rendering flags, that can be used by specific sinks
     annotations: Dict[str, str] = {}
 
-    def __init__(self, blocks: List[BaseBlock], annotations=None):
+    def __init__(self, blocks: Sequence[BaseBlock], annotations=None):
         if annotations is None:
             annotations = {}
         self.blocks = blocks
@@ -230,7 +230,7 @@ class Finding(Filterable):
 
     def add_enrichment(
         self,
-        enrichment_blocks: List[BaseBlock],
+        enrichment_blocks: Sequence[BaseBlock],
         annotations=None,
         suppress_warning: bool = False,
     ):

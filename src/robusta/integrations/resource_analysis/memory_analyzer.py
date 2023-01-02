@@ -117,7 +117,7 @@ UNITS_MAPPING: List[Tuple[int, Union[str, Tuple[str, str]]]] = [
 ]
 
 
-def pretty_size(total_bytes: int) -> str:
+def pretty_size(total_bytes: Union[int, float]) -> str:
     """Get human-readable file sizes.
     simplified version of https://pypi.python.org/pypi/hurry.filesize/
     """

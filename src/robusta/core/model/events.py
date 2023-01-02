@@ -4,19 +4,12 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 from pydantic import BaseModel
 
-from robusta.core.reporting.base import (
-    BaseBlock,
-    Finding,
-    FindingSeverity,
-    FindingSource,
-    FindingSubject,
-    FindingSubjectType,
-    VideoLink,
-)
+from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity, FindingSubject, VideoLink
+from robusta.core.reporting.consts import FindingSource, FindingSubjectType
 from robusta.integrations.scheduled.playbook_scheduler import PlaybooksScheduler
 
 
@@ -87,7 +80,7 @@ class ExecutionBaseEvent:
 
     def add_enrichment(
         self,
-        enrichment_blocks: List[BaseBlock],
+        enrichment_blocks: Sequence[BaseBlock],
         annotations=None,
     ):
         self.__prepare_sinks_findings()

@@ -46,6 +46,7 @@ class ABTestingParams(GrafanaParams):
     def pre_deploy_func(self, trigger: BaseTrigger):
         if not isinstance(trigger, FixedDelayRepeatTrigger):
             return
+        assert trigger.fixed_delay_repeat is not None
         trigger.fixed_delay_repeat.repeat = len(self.configuration_sets)
 
 
@@ -72,7 +73,9 @@ def config_ab_testing(event: ScheduledExecutionEvent, action_params: ABTestingPa
         return
 
     next_config_set = action_params.configuration_sets[event.recurrence]
-    object_class = get_api_version(action_params.api_version).get(action_params.kind)
+    api_version = get_api_version(action_params.api_version)
+    assert api_version is not None
+    object_class = api_version.get(action_params.kind)
     if object_class is None:
         logging.error(f"No matching tested kind {action_params.kind}")
         return

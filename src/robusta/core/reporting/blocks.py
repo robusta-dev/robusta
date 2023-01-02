@@ -5,7 +5,7 @@
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import hikaru
 from hikaru import DiffDetail, DiffType
@@ -66,7 +66,7 @@ class FileBlock(BaseBlock):
     filename: str
     contents: bytes
 
-    def __init__(self, filename: str, contents: bytes):
+    def __init__(self, filename: str, contents: Union[bytes, str]):
         """
         :param filename: the file's name
         :param contents: the file's contents
@@ -115,7 +115,7 @@ class KubernetesDiffBlock(BaseBlock):
     diffs: List[DiffDetail]
     old: Optional[str]
     new: Optional[str]
-    resource_name: Optional[str]
+    resource_name: str
     num_additions: Optional[int]
     num_deletions: Optional[int]
     num_modifications: Optional[int]
@@ -332,8 +332,8 @@ class KubernetesFieldsBlock(TableBlock):
 
 class CallbackChoice(BaseModel):
     action: Callable
-    action_params: Optional[BaseModel]
-    kubernetes_object: Optional[Any]
+    action_params: Optional[BaseModel] = None
+    kubernetes_object: Optional[Any] = None
 
     class Config:
         arbitrary_types_allowed = True

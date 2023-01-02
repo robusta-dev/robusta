@@ -5,7 +5,9 @@
 # * https://github.com/wagoodman/diff2HtmlCompare
 # * https://github.com/GerHobbelt/google-diff-match-patch
 import logging
-from typing import List
+from typing import List, cast
+
+from hikaru import HikaruDocumentBase
 
 from robusta.api import (
     ActionParams,
@@ -49,6 +51,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
     Track changes to a k8s resource.
     Send the diff as a finding
     """
+    assert event.obj is not None
     if not event.obj.metadata:  # shouldn't happen, just to be on the safe side
         logging.warning(f"resource_babysitter skipping resource with no meta - {event.obj}")
         return
@@ -57,8 +60,8 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         return
 
     filtered_diffs = []
-    obj = duplicate_without_fields(event.obj, config.omitted_fields)
-    old_obj = duplicate_without_fields(event.old_obj, config.omitted_fields)
+    obj = cast(HikaruDocumentBase, duplicate_without_fields(event.obj, config.omitted_fields))
+    old_obj = cast(HikaruDocumentBase, duplicate_without_fields(event.old_obj, config.omitted_fields))
 
     if event.operation == K8sOperationType.UPDATE:
         all_diffs = obj.diff(old_obj)
@@ -75,6 +78,9 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
     should_get_subject_node_name = isinstance(event, NodeChangeEvent)
     # we take it from the original event, in case metadata is omitted
     meta = event.obj.metadata
+    assert meta.name is not None
+    assert event.operation is not None
+
     diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj, meta.name, meta.namespace)
     finding = Finding(
         title=f"{diff_block.resource_name} {event.operation.value}d",
@@ -83,7 +89,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         finding_type=FindingType.CONF_CHANGE,
         failure=False,
         aggregation_key="ConfigurationChange/KubernetesResource/Change",
-        subject=KubeObjFindingSubject(event.obj, should_add_node_name=should_get_subject_node_name),
+        subject=KubeObjFindingSubject(event.obj, should_add_node_name=should_get_subject_node_name),  # type: ignore
     )
     finding.add_enrichment([diff_block])
     event.add_finding(finding)
