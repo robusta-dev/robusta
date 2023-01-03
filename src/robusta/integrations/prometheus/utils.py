@@ -2,8 +2,20 @@ import logging
 from typing import List
 
 from ...core.model.env_vars import SERVICE_CACHE_TTL_SEC
+from ...core.exceptions import PrometheusNotFound
 from ...utils.service_discovery import find_service_url
 from cachetools import TTLCache
+from requests.exceptions import ConnectionError
+
+
+def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
+    params = params or {}
+    try:
+        prometheus_connected = prom.check_prometheus_connection(params)
+        if not prometheus_connected:
+            raise PrometheusNotFound(f"No Prometheus found under {prom.url}")
+    except ConnectionError:
+        raise PrometheusNotFound(f"Couldn't connect to Prometheus found under {prom.url}")
 
 
 class ServiceDiscovery:
@@ -36,6 +48,7 @@ class PrometheusDiscovery(ServiceDiscovery):
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
                 "app.kubernetes.io/name=prometheus",
+                "app=prometheus-prometheus"
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
         )

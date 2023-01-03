@@ -7,6 +7,7 @@ from ...core.reporting.base import *
 from ...core.reporting.blocks import *
 from ...core.reporting.utils import add_pngs_for_all_svgs
 from ...core.sinks.transformer import Transformer
+from ...core.sinks.discord.discord_sink_params import DiscordSinkParams
 from itertools import chain
 
 SEVERITY_EMOJI_MAP = {
@@ -80,7 +81,8 @@ class DiscordSender:
             self,
             url: str,
             account_id: str,
-            cluster_name: str
+            cluster_name: str,
+            discord_params: DiscordSinkParams
     ):
         """
         Set the Discord webhook url.
@@ -88,6 +90,7 @@ class DiscordSender:
         self.url = url
         self.cluster_name = cluster_name
         self.account_id = account_id
+        self.discord_params = discord_params
 
     @classmethod
     def __add_severity_icon(cls, title: str, severity: FindingSeverity) -> str:
@@ -194,7 +197,6 @@ class DiscordSender:
             self,
             report_blocks: List[BaseBlock],
             title: str,
-            sink_name: str,
             severity: FindingSeverity,
     ):
         msg_color = SEVERITY_COLOR_MAP.get(severity, "")
@@ -203,18 +205,21 @@ class DiscordSender:
         file_blocks = add_pngs_for_all_svgs(
             [b for b in report_blocks if isinstance(b, FileBlock)]
         )
+        if not self.discord_params.send_svg:
+            file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
+
         attachment_blocks = []
         for block in file_blocks:
-            attachment_blocks.extend(self.__to_discord(block, sink_name))
+            attachment_blocks.extend(self.__to_discord(block, self.discord_params.name))
 
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
         output_blocks = []
         if title:
             title = self.__add_severity_icon(title, severity)
-            output_blocks.extend(self.__to_discord(HeaderBlock(title), sink_name))
+            output_blocks.extend(self.__to_discord(HeaderBlock(title), self.discord_params.name))
         for block in other_blocks:
-            output_blocks.extend(self.__to_discord(block, sink_name))
+            output_blocks.extend(self.__to_discord(block, self.discord_params.name))
 
         discord_msg = self.__format_final_message(output_blocks, msg_color)
 
@@ -246,14 +251,13 @@ class DiscordSender:
     def send_finding_to_discord(
             self,
             finding: Finding,
-            sink_name: str,
             platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
             actions = f"[:mag_right: Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)})"
             if finding.add_silence_url:
-                actions = f"{actions} [:no_bell: Silence]({finding.get_prometheus_silence_url(self.cluster_name)})"
+                actions = f"{actions} [:no_bell: Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
 
             for video_link in finding.video_links:
                 actions = f"{actions} [:clapper: {video_link.name}]({video_link.url})"
@@ -288,6 +292,5 @@ class DiscordSender:
         self.__send_blocks_to_discord(
             blocks,
             finding.title,
-            sink_name,
             finding.severity,
         )

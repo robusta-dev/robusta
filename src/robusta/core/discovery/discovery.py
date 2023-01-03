@@ -132,11 +132,25 @@ class Discovery:
         try:
             current_jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces()
             for job in current_jobs.items:
-                job_labels: Dict[str, str] = job.spec.selector.match_labels
-                job_pods = [
-                    pod.metadata.name for pod in pod_items
-                    if job_labels.items() <= (pod.metadata.labels or {}).items()
-                ]
+                job_pods = []
+                job_labels = {}
+                if job.spec.selector:
+                    job_labels = job.spec.selector.match_labels
+                elif job.metadata.labels:
+                    job_name = job.metadata.labels.get("job-name", None)
+                    if job_name:
+                        job_labels = {"job-name": job_name}
+
+                if job_labels:  # add job pods only if we found a valid selector
+                    job_pods = [
+                        pod.metadata.name for pod in pod_items
+                        if (
+                                (job.metadata.namespace == pod.metadata.namespace)
+                                and
+                                (job_labels.items() <= (pod.metadata.labels or {}).items())
+                        )
+                    ]
+
                 active_jobs.append(JobInfo.from_api_server(job, job_pods))
         except Exception:
             logging.error(
@@ -200,7 +214,7 @@ def extract_ready_pods(resource) -> int:
         elif isinstance(resource, V1DaemonSet):
             return 0 if not resource.status.number_ready else resource.status.number_ready
         elif isinstance(resource, V1Pod):
-            return is_pod_ready(resource)
+            return 1 if is_pod_ready(resource) else 0
         return 0
     except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
         logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
@@ -208,16 +222,19 @@ def extract_ready_pods(resource) -> int:
 
 
 def extract_total_pods(resource) -> int:
-    if isinstance(resource, V1Deployment) \
-            or isinstance(resource, V1StatefulSet) \
-            or isinstance(resource, V1Job):
-        return resource.status.replicas
-    elif isinstance(resource, V1DaemonSet):
-        return resource.status.desired_number_scheduled
-    elif isinstance(resource, V1Pod):
-        return 1
-    return 0
-
+    try:
+        if isinstance(resource, V1Deployment) \
+                or isinstance(resource, V1StatefulSet) \
+                or isinstance(resource, V1Job):
+            return 1 if not resource.status.replicas else resource.status.replicas
+        elif isinstance(resource, V1DaemonSet):
+            return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
+        elif isinstance(resource, V1Pod):
+            return 1
+        return 0
+    except Exception:
+        logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
+    return 1
 
 def extract_volumes(resource) -> List[V1Volume]:
     """Extract volumes from k8s python api object (not hikaru)"""

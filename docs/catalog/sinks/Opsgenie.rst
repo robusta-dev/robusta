@@ -12,7 +12,7 @@ Configuring the OpsGenie sink
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinkConfig:
         - opsgenie_sink:
             name: ops_genie_sink
             api_key: OpsGenie integration API key  # configured from OpsGenie team integration

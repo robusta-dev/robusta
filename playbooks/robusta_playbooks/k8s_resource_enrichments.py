@@ -36,8 +36,7 @@ def related_pods(event: KubernetesResourceEvent):
     """
     resource = event.get_resource()
     if resource.kind not in supported_resources:
-        logging.error(f"Related pods is not supported for resource {resource.kind}")
-        return
+        raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}")
 
     if resource.kind == "Pod":
         pods = [resource]

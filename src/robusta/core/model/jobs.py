@@ -130,13 +130,14 @@ class JobInfo(BaseModel):
         requests: ContainerResources = utils.containers_resources_sum(containers, ResourceAttributes.requests)
         status = JobStatus.from_api_server(job)
         job_data = JobData.from_api_server(job, pods)
+        completions = job.spec.completions if job.spec.completions is not None else 1
         return JobInfo(
             name=job.metadata.name,
             namespace=job.metadata.namespace,
             created_at=str(job.metadata.creation_timestamp),
             cpu_req=requests.cpu,
             mem_req=requests.memory,
-            completions=job.spec.completions,
+            completions=completions,
             status=status,
             job_data=job_data
         )

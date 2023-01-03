@@ -40,6 +40,14 @@ Here is a full example showing how to configure all possible sinks:
     - discord_sink:
         name: discord_sink
         url: discord_webhook_url
+    - jira_sink:
+        name: personal_jira_sink
+        url: https://workspace.atlassian.net
+        username: username
+        api_key: api_key
+        dedups: (OPTIONAL)
+            - fingerprint
+        project_name: project_name
     - webhook_sink:
         name: webhook_sink
         url: "https://my-webhook-service.com/robusta-alerts"

@@ -31,6 +31,9 @@ class OpsGenieSink(SinkBase):
         self.conf = opsgenie_sdk.configuration.Configuration()
         self.conf.api_key["Authorization"] = self.api_key
 
+        if sink_config.opsgenie_sink.host is not None:
+            self.conf.host = sink_config.opsgenie_sink.host
+
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
         self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
 
@@ -89,7 +92,7 @@ class OpsGenieSink(SinkBase):
         if platform_enabled:
             description = f'<a href="{finding.get_investigate_uri(self.account_id, self.cluster_name)}">🔎 Investigate</a>'
             if finding.add_silence_url:
-                description = f'{description}  <a href="{finding.get_prometheus_silence_url(self.cluster_name)}">🔕 Silence</a>'
+                description = f'{description}  <a href="{finding.get_prometheus_silence_url(self.account_id, self.cluster_name)}">🔕 Silence</a>'
 
             for video_link in finding.video_links:
                 description = f"{description}  <a href=\"{video_link.url}\">🎬 {video_link.name}</a>"

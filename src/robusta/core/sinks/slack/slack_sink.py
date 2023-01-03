@@ -19,5 +19,5 @@ class SlackSink(SinkBase):
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.slack_sender.send_finding_to_slack(
-            finding, self.slack_channel, self.sink_name, platform_enabled
+            finding, self.params, platform_enabled
         )
