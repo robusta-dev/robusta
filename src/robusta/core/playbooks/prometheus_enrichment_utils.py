@@ -1,6 +1,7 @@
 from robusta.api import *
 
 from collections import defaultdict, namedtuple
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import pygal
 from pygal.style import DarkColorizedStyle as ChosenStyle
@@ -55,16 +56,20 @@ def run_prometheus_query(
     )
 
 
+_DEFAULT_RESOLUTION = 500
+_RESOLUTION_DATA: Dict[timedelta, Union[int, Callable[[timedelta], int]]] = {
+    timedelta(hours=1): 150,
+    timedelta(days=1): 200,
+    timedelta(weeks=1): 300,
+    # timedelta(days=30): lambda duration: int(duration.total_seconds() / 60),
+}
+
+
 def get_resolution_from_duration(duration: timedelta) -> int:
-    # TODO: Come up with some constants
-    if duration < timedelta(hours=1):
-        return 150
-    elif duration < timedelta(days=1):
-        return 200
-    elif duration < timedelta(weeks=1):
-        return 300
-    else:
-        return 500
+    for time_delta, resolution in sorted(_RESOLUTION_DATA.items(), key=lambda x: x[0]):
+        if duration <= time_delta:
+            return resolution if isinstance(resolution, int) else resolution(duration)
+    return _DEFAULT_RESOLUTION
 
 
 def create_chart_from_prometheus_query(
