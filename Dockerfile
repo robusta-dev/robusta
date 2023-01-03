@@ -27,6 +27,7 @@ COPY src/ /app/src
 RUN /root/.local/bin/poetry install --no-dev --extras "all" 
     
 COPY playbooks/ /etc/robusta/playbooks/defaults
+RUN ls -R /etc/robusta/playbooks/defaults 
 RUN python3 -m pip install --no-cache-dir /etc/robusta/playbooks/defaults
 
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
