@@ -57,13 +57,15 @@ please contact support@robusta.dev or go to `our slack channel <https://bit.ly/r
 
     .. note::
 
-      another solution is to run a command (e.g gen-config) directly with python: ``python3 -m robusta.cli.main gen-config``
+      If you prefer not to update PATH, you can use Python's ``-m`` flag
 
-.. details:: CLI SSL certificate issue
+      ``python3 -m robusta.cli.main gen-config``
 
-    This error may suggest a python certificate package is missing in your system.
-    Try running the script located at:
-    /Applications/Python 3.9/Install Certificates.command
+.. details:: SSL certificate issues on Mac OS when using the cli
+
+    This implies a python package with certificates is missing on your system.
+
+    To fix it, run ``/Applications/Python 3.9/Install Certificates.command``
 
     For more info see:
     https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
