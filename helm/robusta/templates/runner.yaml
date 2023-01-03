@@ -39,6 +39,8 @@ spec:
             value: "true"
           - name: PROMETHEUS_ENABLED
             value: {{ .Values.enablePrometheusStack | quote}}
+          - name: AUTO_DELETE
+            value: {{ .Values.runner.autoDelete | quote }}
           - name: SEND_ADDITIONAL_TELEMETRY
             value: {{ .Values.runner.sendAdditionalTelemetry | quote }}
           - name: LOG_LEVEL

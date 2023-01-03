@@ -40,6 +40,8 @@ PROMETHEUS_REQUEST_TIMEOUT_SECONDS = float(
 )
 PROMETHEUS_ENABLED = os.environ.get("PROMETHEUS_ENABLED", "false").lower() == "true"
 
+AUTO_DELETE : bool = os.environ.get("AUTO_DELETE", "false").lower() == "true"
+
 INCOMING_REQUEST_TIME_WINDOW_SECONDS = int(
     os.environ.get("INCOMING_REQUEST_TIME_WINDOW_SECONDS", 3600)
 )

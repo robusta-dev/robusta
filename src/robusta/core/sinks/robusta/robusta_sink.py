@@ -10,7 +10,7 @@ from ...discovery.discovery import Discovery, DiscoveryResults
 from ...model.jobs import JobInfo
 from ....runner.web_api import WebApi
 from .robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
-from ...model.env_vars import DISCOVERY_PERIOD_SEC, CLUSTER_STATUS_PERIOD_SEC
+from ...model.env_vars import DISCOVERY_PERIOD_SEC, CLUSTER_STATUS_PERIOD_SEC, AUTO_DELETE
 from ...model.nodes import NodeInfo
 from ...model.pods import PodResources
 from ...model.services import ServiceInfo
@@ -328,6 +328,7 @@ class RobustaSink(SinkBase):
                 last_alert_at=self.registry.get_telemetry().last_alert_at,
                 account_id=self.account_id,
                 light_actions=self.registry.get_light_actions(),
+                auto_delete=AUTO_DELETE
             )
 
             self.dal.publish_cluster_status(cluster_status)

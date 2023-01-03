@@ -1,4 +1,5 @@
-from pydantic.main import BaseModel, Optional, List
+from pydantic.main import BaseModel, List
+from typing import Optional
 
 
 class ClusterStatus(BaseModel):
@@ -7,3 +8,4 @@ class ClusterStatus(BaseModel):
     version: str
     last_alert_at: Optional[str]  # ts
     light_actions: List[str]
+    auto_delete: bool # cluster data will be removed automatically when cluster is not communicating
