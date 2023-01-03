@@ -174,6 +174,7 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
 
 class Registry:
     _actions: ActionsRegistry = ActionsRegistry()
+    _light_actions: List[str] = []
     _playbooks: PlaybooksRegistry = PlaybooksRegistry()
     _sinks: SinksRegistry = None
     _scheduler = None
@@ -183,6 +184,12 @@ class Registry:
         runner_version=RUNNER_VERSION,
         prometheus_enabled=PROMETHEUS_ENABLED, 
     )
+
+    def set_light_actions(self, light_actions: List[str]):
+        self._light_actions = light_actions
+
+    def get_light_actions(self) -> List[str]:
+        return self._light_actions
 
     def set_actions(self, actions: ActionsRegistry):
         self._actions = actions
