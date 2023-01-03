@@ -24,7 +24,6 @@ tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.7.0" }
 Flask = { version = "^1.1.2", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
-manhole =  { version = "^1.8.0", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
 better-exceptions = { version =  "^0.3.3", optional = true }
 CairoSVG = { version = "^2.5.2", optional = true }
@@ -77,7 +76,7 @@ rsa = "^4.8"
 markupsafe = "2.0.1"
 
 [tool.poetry.extras]
-all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk", "poetry-core"]
+all = ["Flask", "grafana-api", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk", "poetry-core"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

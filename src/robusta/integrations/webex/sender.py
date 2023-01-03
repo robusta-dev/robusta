@@ -8,6 +8,7 @@ from ...core.reporting.blocks import (
     List,
 )
 from ...core.sinks.transformer import Transformer
+from ...core.sinks.webex.webex_sink_params import WebexSinkParams
 
 from webexteamssdk import WebexTeamsAPI
 from enum import Enum
@@ -28,14 +29,15 @@ class CardTypes(Enum):
 
 
 class WebexSender:
-
     """
     Send findings to webex.
     Parse different findings to show on Webex UI
     """
 
-    def __init__(self, bot_access_token: str, room_id: str, account_id: str, cluster_name: str):
+    def __init__(self, bot_access_token: str, room_id: str, cluster_name: str, account_id: str,
+                 webex_params: WebexSinkParams):
         self.cluster_name = cluster_name
+        self.webex_params = webex_params
         self.room_id = room_id
         self.account_id = account_id
         self.client = WebexTeamsAPI(
@@ -66,7 +68,7 @@ class WebexSender:
             self._send_files(file_blocks)
 
     def _createAdaptiveCardBody(
-        self, message_content, table_blocks: List[TableBlock], description
+            self, message_content, table_blocks: List[TableBlock], description
     ):
         body = []
         message_content_json = self._createMessageContentJSON(
@@ -169,6 +171,8 @@ class WebexSender:
                     ]
                 )
             )
+            if not self.webex_params.send_svg:
+                file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
 
         # first add finding description block
         if finding.description:
@@ -181,7 +185,7 @@ class WebexSender:
         for block in blocks:
             block_text = Transformer.to_standard_markdown([block])
             if (
-                len(block_text) + len(message_content) >= MAX_BLOCK_CHARS
+                    len(block_text) + len(message_content) >= MAX_BLOCK_CHARS
             ):  # webex message size limit
                 break
             message_content += block_text + "\n"
@@ -203,10 +207,7 @@ class WebexSender:
                     )
                     f.close()  # File is deleted when closed
 
-
-    def _create_message_content(
-        self, finding: Finding, platform_enabled: bool
-    ):
+    def _create_message_content(self, finding: Finding, platform_enabled: bool):
         message_content = self.__build_webex_title(finding.title, finding.severity)
 
         if platform_enabled:

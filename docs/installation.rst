@@ -3,7 +3,7 @@ Installation
 
 The standard installation uses `Helm 3 <https://helm.sh/docs/intro/install/>`_ and the robusta-cli, but :ref:`alternative methods <Additional Installation Methods>` are described below.
 
-Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1]_. You can also install on minikube or KIND. :ref:`Uninstalling <Helm Uninstall>`  takes one command, so go ahead and try!
+Configuring and installing Robusta takes 97.68 seconds on a 10 node cluster [#f1]_. You can also install on Colima or KIND. :ref:`Uninstalling <Helm Uninstall>`  takes one command, so go ahead and try!
 
 .. admonition:: Have questions?
 
@@ -102,16 +102,52 @@ Standard Installation
 
 2. Specify your cluster's name and install Robusta using Helm. On some clusters this can take a while [#f2]_, so don't panic if it appears stuck:
 
-.. admonition:: Test clusters (e.g Kind, MiniKube, Colima)
-    :class: important
+.. tab-set::
 
-    Test clusters tend to have fewer resources. To lower the resource requests of Robusta,
-    include ``--set isSmallCluster=true`` at the end of the install command.
+    .. tab-item:: Standard
+        :name: install-standard
 
-.. code-block:: bash
-   :name: cb-helm-install-only-robusta
+        .. code-block:: bash
+            :name: cb-helm-install-only-robusta
 
-    helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> # --set isSmallCluster=true
+            helm install robusta robusta/robusta -f ./generated_values.yaml \
+                --set clusterName=<YOUR_CLUSTER_NAME>
+
+    .. tab-item:: Test clusters (e.g Kind, Colima)
+        :name: install-test-clusters
+
+        .. code-block:: bash
+            :name: cb-helm-install-test-clusters
+
+            helm install robusta robusta/robusta -f ./generated_values.yaml \
+                --set clusterName=<YOUR_CLUSTER_NAME> \
+                --set isSmallCluster=true
+
+        * Test clusters tend to have fewer resources. To lower the resource requests of Robusta, ``--set isSmallCluster=true`` is included.
+
+    .. tab-item:: GKE Autopilot
+        :name: install-gke-autopilot
+
+        .. code-block:: bash
+            :name: cb-helm-install-gke-autopilot
+
+            helm install robusta robusta/robusta -f ./generated_values.yaml \
+                --set clusterName=<YOUR_CLUSTER_NAME> \
+                --set kube-prometheus-stack.coreDns.enabled=false \
+                --set kube-prometheus-stack.kubeControllerManager.enabled=false \
+                --set kube-prometheus-stack.kubeDns.enabled=false \
+                --set kube-prometheus-stack.kubeEtcd.enabled=false \
+                --set kube-prometheus-stack.kubeProxy.enabled=false \
+                --set kube-prometheus-stack.kubeScheduler.enabled=false \
+                --set kube-prometheus-stack.nodeExporter.enabled=false \
+                --set kube-prometheus-stack.prometheusOperator.kubeletService.enabled=false
+        
+        * With GKE Autopilot restrictions, some components must be disabled when installing Robusta bundled with Kube-prometehus-stack.
+
+    
+.. note::
+
+      Sensitive configuration values can be stored in Kubernetes secrets. See `Configuration secrets <https://docs.robusta.dev/master/user-guide/configuration-secrets.html>`_ guide.
 
 3. Verify the two Robusta pods and running with no errors in the logs:
 
@@ -166,7 +202,7 @@ When installing a second cluster on the same account, there's no need to run ``r
 Using your existing generated_values.yaml and the new clusterName run:
 
 .. code-block:: bash
-   :name: cb-helm-install-only-robusta
+   :name: cb-helm-install-second-robusta
 
     helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> # --set isSmallCluster=true
 
