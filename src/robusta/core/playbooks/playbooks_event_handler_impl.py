@@ -209,7 +209,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(msg, ErrorCodes.EXECUTION_EVENT_MISMATCH.value)
                 continue
 
-            action_with_params: bool = registered_action.params_type
+            action_with_params: bool = registered_action.params_type is not None
             action_params = None
             params = None
             if action_with_params:
@@ -227,8 +227,10 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event.response = self.__error_resp(msg, ErrorCodes.PARAMS_INSTANTIATION_FAILED.value)
                     continue
             try:
-                registered_action.func(execution_event, params) if action_with_params else registered_action.func(
-                    execution_event)
+                if action_with_params:
+                    registered_action.func(execution_event, params)
+                else:
+                    registered_action.func(execution_event)
             except ActionException as e:
                 msg = e.msg if e.msg else f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}"
                 logging.error(msg)
