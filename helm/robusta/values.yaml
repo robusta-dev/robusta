@@ -54,7 +54,6 @@ lightActions:
 - python_process_inspector
 - prometheus_alert
 - create_pvc_snapshot
-- http_stress_test
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
