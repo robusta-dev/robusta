@@ -36,7 +36,6 @@ lightActions:
 - job_events_enricher
 - job_pod_enricher
 - get_resource_yaml
-- incluster_ping
 - node_cpu_enricher
 - node_disk_analyzer
 - node_running_pods_enricher
