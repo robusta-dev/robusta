@@ -1,5 +1,5 @@
 Track Kubernetes changes
-=============================
+############################################
 
 Introduction
 ---------------
@@ -50,7 +50,7 @@ Step by step guide
 
 If everything was configured correctly, a Robusta notification will arrive, showing exactly what changed in the deployment:
 
-.. image:: ../images/replicas_change.png
+.. image:: /images/replicas_change.png
   :width: 600
   :align: center
 

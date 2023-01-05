@@ -115,7 +115,7 @@ html_theme_options = {
     "repo_url": "https://github.com/robusta-dev/robusta",
     "repo_name": "Robusta",
     "repo_type": "github",  
-    "edit_uri": "tree/docsimmaterial/docs",   ##### Modify to the Master Branch ###########
+    "edit_uri": "tree/structure/docs",   ##### Modify to the Master Branch ###########
     "palette": [
         {
             "media": "(prefers-color-scheme: light)",

@@ -1,5 +1,5 @@
 Add more clusters
-=================
+#####################
 
 Install the Robusta helm chart on each cluster. You should use the same ``generated_values.yaml``, changing the **clusterName** option for each cluster.
 

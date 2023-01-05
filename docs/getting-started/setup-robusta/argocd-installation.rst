@@ -1,5 +1,5 @@
 Install with ArgoCD
-==============================
+#################################
 
 This tutorial installs Robusta with `ArgoCD <https://argoproj.github.io/cd>`_. You can also install :ref:`with Helm <Install with Helm>`.
 

@@ -16,15 +16,10 @@
    :hidden:
    
    Overview <getting-started/index>
-   Install with Helm <getting-started/installation>
-   Install with ArgoCD <getting-started/argocd-installation>
-   getting-started/add-more-clusters
-   getting-started/trackchanges
-   getting-started/enrich-alerts
-   Remediate Alerts <getting-started/remediatealerts>
-   Route Alerts <getting-started/routealerts>
+   getting-started/setup-robusta/index
+   getting-started/use-robusta/index
    More tutorials <getting-started/more-tutorials>
-   
+
 
 .. toctree::
    :maxdepth: 4
@@ -45,9 +40,6 @@
    tutorials/prometheus-enrichment
    coverage
 
-
-
-
 ..
    tutorials/alert-correlation
 
@@ -62,7 +54,6 @@
    How playbooks work <configuration/flow-control>
    Robusta UI Triggers <architecture/robusta-ui-triggers>
    Privacy & Security <architecture/privacy-and-security>
-
 
 
 .. toctree::
@@ -120,7 +111,7 @@ Learn about Robusta
         Technical details of how everything works
 
     .. grid-item-card:: Track Changes
-        :link: /getting-started/trackchanges
+        :link: /getting-started/use-robusta/trackchanges
         :link-type: doc
 
         Get notified when something changes in your cluster
