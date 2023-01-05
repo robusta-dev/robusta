@@ -62,6 +62,16 @@ class JobData(BaseModel):
     labels: Optional[Dict[str, str]]
     containers: List[JobContainer]
     pods: Optional[List[str]]
+    parents: Optional[List[str]]
+
+    @staticmethod
+    def _get_job_parents(job: V1Job) -> List[str]:
+        try:
+            if not job.metadata or not job.metadata.owner_references:
+                return []
+            return [owner_reference.name for owner_reference in job.metadata.owner_references]
+        except Exception:
+            return []
 
     @staticmethod
     def from_api_server(job: V1Job, pods: List[str]) -> "JobData":
@@ -76,7 +86,8 @@ class JobData(BaseModel):
             node_selector=pod_spec.node_selector,
             labels=job.metadata.labels,
             containers=pod_containers,
-            pods=pods
+            pods=pods,
+            parents=JobData._get_job_parents(job)
         )
 
 
