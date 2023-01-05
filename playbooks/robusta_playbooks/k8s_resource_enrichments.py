@@ -39,7 +39,8 @@ def related_pods(event: KubernetesResourceEvent):
         raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}")
 
     if resource.kind == "Job":
-        pods = get_job_all_pods(resource)
+        job_pods = get_job_all_pods(resource)
+        pods = job_pods if job_pods else []
     elif resource.kind == "Pod":
         pods = [resource]
     else:
