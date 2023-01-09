@@ -1,3 +1,4 @@
+:hide-toc:
 Using Robusta 
 ^^^^^^^^^^^^^^^^^^^^^^
 .. toctree::
