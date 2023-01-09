@@ -1,5 +1,4 @@
 from robusta.api import *
-from robusta.integrations.kubernetes.api_client_utils import list_available_services
 
 
 @action

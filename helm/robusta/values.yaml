@@ -22,6 +22,38 @@ globalConfig:
   account_id: ""
   signing_key: ""
 
+# safe actions to enable authenticated users to run
+lightActions:
+- related_pods
+- prometheus_enricher
+- add_silence
+- delete_pod
+- delete_silence
+- get_silences
+- logs_enricher
+- pod_events_enricher
+- deployment_events_enricher
+- job_events_enricher
+- job_pod_enricher
+- get_resource_yaml
+- node_cpu_enricher
+- node_disk_analyzer
+- node_running_pods_enricher
+- node_allocatable_resources_enricher
+- node_status_enricher
+- node_graph_enricher
+- oomkilled_container_graph_enricher
+- pod_oom_killer_enricher
+- oom_killer_enricher
+- volume_analysis
+- python_profiler
+- pod_ps
+- python_memory
+- debugger_stack_trace
+- python_process_inspector
+- prometheus_alert
+- create_pvc_snapshot
+
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
 enableServiceMonitors: false

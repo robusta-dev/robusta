@@ -248,7 +248,7 @@ class ConfigLoader:
                 GitRepoManager.clear_git_repos()
 
                 self.__reload_scheduler(playbooks_registry)
-
+                self.registry.set_light_actions(runner_config.light_actions)
                 self.registry.set_actions(action_registry)
                 self.registry.set_playbooks(playbooks_registry)
                 self.registry.set_sinks(sinks_registry)
