@@ -8,6 +8,7 @@ from ..external_apis.prometheus.prometheus_cli import custom_query_range
 from string import Template
 from datetime import datetime, timedelta
 import humanize
+import math
 
 
 class XAxisLine(BaseModel):
@@ -55,13 +56,14 @@ def run_prometheus_query(
     )
 
 
-_DEFAULT_RESOLUTION = 500
 _RESOLUTION_DATA: Dict[timedelta, Union[int, Callable[[timedelta], int]]] = {
-    timedelta(hours=1): 150,
-    timedelta(days=1): 200,
-    timedelta(weeks=1): 300,
-    # timedelta(days=30): lambda duration: int(duration.total_seconds() / 60),
+    timedelta(hours=1): 250,
+    # NOTE: 1 minute resolution, max 1440 points
+    timedelta(days=1): lambda duration: math.ceil(duration.total_seconds() / 60),
+    # NOTE: 5 minute resolution, max 2016 points
+    timedelta(weeks=1): lambda duration: math.ceil(duration.total_seconds() / (60 * 5)),
 }
+_DEFAULT_RESOLUTION = 3000
 
 
 def get_resolution_from_duration(duration: timedelta) -> int:
