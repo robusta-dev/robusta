@@ -51,7 +51,11 @@ class PrometheusDiscovery(ServiceDiscovery):
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
-                "app.kubernetes.io/name=prometheus",
+                "app=prometheus,component=server",
+                "app=prometheus-server",
+                "app=prometheus-operator-prometheus",
+                "app=prometheus-msteams",
+                "app=rancher-monitoring-prometheus",
                 "app=prometheus-prometheus",
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
@@ -63,14 +67,14 @@ class AlertManagerDiscovery(ServiceDiscovery):
     def find_alert_manager_url(cls):
         return super().find_url(
             selectors=[
+                "app=kube-prometheus-stack-alertmanager",
+                "app=prometheus,component=alertmanager",
+                "app=prometheus-operator-alertmanager",
+                "app=alertmanager",
+                "app=rancher-monitoring-alertmanager",
+                "app=prometheus-alertmanager",
                 "operated-alertmanager=true",
                 "app.kubernetes.io/name=alertmanager",
-                "app=kube-prometheus-stack-alertmanager",
-                "app=alertmanager",
-                "app=prometheus,component=alertmanager",
-                "app=rancher-monitoring-alertmanager",
-                "app=prometheus-operator-alertmanager",
-                "app=prometheus-alertmanager",
             ],
             error_msg="Alert manager url could not be found. Add 'alertmanager_url' under global_config",
         )

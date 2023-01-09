@@ -15,12 +15,13 @@ from robusta.api import (
     TableBlock,
     action,
     build_selector_query,
+    get_job_all_pods,
     pod_limits,
     pod_requests,
     pod_restarts,
 )
 
-supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet"]
+supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"]
 
 
 def to_pod_row(pod: Pod, cluster_name: str) -> List:
@@ -58,7 +59,10 @@ def related_pods(event: KubernetesResourceEvent):
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}"
         )
 
-    if resource.kind == "Pod":
+    if resource.kind == "Job":
+        job_pods = get_job_all_pods(resource)
+        pods = job_pods if job_pods else []
+    elif resource.kind == "Pod":
         pods = [resource]
     else:
         selector = build_selector_query(resource.spec.selector)

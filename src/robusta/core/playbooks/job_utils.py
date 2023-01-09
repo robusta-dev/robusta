@@ -28,7 +28,7 @@ def get_job_selector(job: Job) -> Optional[str]:
     return f"job-name={job_name}"
 
 
-def get_job_latest_pod(job: Job) -> Optional[RobustaPod]:
+def get_job_all_pods(job: Job) -> Optional[List[RobustaPod]]:
     if not job:
         return None
 
@@ -36,8 +36,12 @@ def get_job_latest_pod(job: Job) -> Optional[RobustaPod]:
     if not job_selector:
         return None
 
-    pod_list: List[RobustaPod] = PodList.listNamespacedPod(
-        namespace=job.metadata.namespace, label_selector=job_selector
-    ).obj.items
+    return PodList.listNamespacedPod(namespace=job.metadata.namespace, label_selector=job_selector).obj.items
+
+
+def get_job_latest_pod(job: Job) -> Optional[RobustaPod]:
+    pod_list: List[RobustaPod] = get_job_all_pods(job)
+    if not pod_list:
+        return None
     pod_list.sort(key=lambda pod: pod.status.startTime, reverse=True)
     return pod_list[0] if pod_list else None

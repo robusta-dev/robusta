@@ -27,7 +27,7 @@ S = TypeVar("S")
 T = TypeVar("T")
 
 PYTHON_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v5.0"
-JAVA_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:v1.1"
+JAVA_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:jattach"
 
 
 class Process(BaseModel):

@@ -48,6 +48,7 @@ class RunnerConfig(BaseModel):
             ]
         ]
     ]
+    light_actions: Optional[List[str]]
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDefinition]] = []
 

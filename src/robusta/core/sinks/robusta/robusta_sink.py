@@ -301,6 +301,7 @@ class RobustaSink(SinkBase):
                 version=self.registry.get_telemetry().runner_version,
                 last_alert_at=self.registry.get_telemetry().last_alert_at,
                 account_id=self.account_id,
+                light_actions=self.registry.get_light_actions(),
             )
 
             self.dal.publish_cluster_status(cluster_status)
