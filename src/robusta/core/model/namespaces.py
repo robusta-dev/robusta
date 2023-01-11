@@ -13,3 +13,11 @@ class NamespaceInfo(BaseModel):
             name=namespace.metadata.name,
             status=namespace.status.phase,
         )
+
+    @classmethod
+    def from_db_row(cls, namespace: dict) -> "NamespaceInfo":
+        return cls(
+            name=namespace["name"],
+            status=namespace["status"],
+            deleted=namespace["deleted"],
+        )

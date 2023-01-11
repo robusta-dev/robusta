@@ -383,6 +383,11 @@ class RobustaSink(SinkBase):
             self.last_send_time = time.time()
             self.__update_cluster_status()
 
+    def __assert_namespaces_cache_initialized(self):
+        if not self.__namespaces_cache:
+            logging.info("Initializing namespaces cache")
+            self.__namespaces_cache = {namespace.name: namespace for namespace in self.dal.get_active_namespaces()}
+
     def __publish_new_namespaces(self, namespaces: List[NamespaceInfo]):
         # convert to map
         curr_namespaces = {namespace.name: namespace for namespace in namespaces}

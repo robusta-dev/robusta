@@ -14,6 +14,7 @@ from ....model.nodes import NodeInfo
 from ....model.services import ServiceInfo
 from ....reporting.base import Finding
 from ....model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
+from robusta.core.model.namespaces import NamespaceInfo
 from supabase_py import Client
 
 SERVICES_TABLE = "Services"
@@ -373,3 +374,43 @@ class SupabaseDal:
                 f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {res.get('data')}"
             )
             self.handle_supabase_error()
+
+    def get_active_namespaces(self) -> List[NamespaceInfo]:
+        res = (
+            self.client.table(NAMESPACES_TABLE)
+            .select("*")
+            .filter("account_id", "eq", self.account_id)
+            .filter("cluster_id", "eq", self.cluster)
+            .filter("deleted", "eq", False)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to get existing namespaces (supabase) error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(f"get active namespaces failed. status: {res.get('status_code')}")
+
+        return [NamespaceInfo.from_db_row(namespace) for namespace in res.get("data")]
+
+    def __to_db_namespace(self, namespace: NamespaceInfo) -> Dict[Any, Any]:
+        db_job = namespace.dict()
+        db_job["account_id"] = self.account_id
+        db_job["cluster_id"] = self.cluster
+        db_job["updated_at"] = "now()"
+        return db_job
+
+    def publish_namespaces(self, namespaces: List[NamespaceInfo]):
+        if not namespaces:
+            return
+
+        db_namespaces = [self.__to_db_namespace(namespace) for namespace in namespaces]
+        res = (
+            self.client.table(NAMESPACES_TABLE).insert(db_namespaces, upsert=True).execute()
+        )
+        if res.get("status_code") not in [200, 201]:
+            logging.error(
+                f"Failed to persist namespaces {namespaces} error: {res.get('data')}"
+            )
+            self.handle_supabase_error()
+            status_code = res.get("status_code")
+            raise Exception(f"publish namespaces failed. status: {status_code}")
