@@ -22,6 +22,7 @@ EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
 CLUSTERS_STATUS_TABLE = "ClustersStatus"
 JOBS_TABLE = "Jobs"
+NAMESPACES_TABLE = "Namespaces"
 
 
 class RobustaAuthClient(SupabaseAuthClient):

@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 from typing import List, Dict, Optional
+from pydantic import BaseModel
 from concurrent.futures.process import ProcessPoolExecutor
 
 from kubernetes import client
@@ -11,19 +12,15 @@ from kubernetes.client import V1Deployment, V1DaemonSet, V1StatefulSet, V1Job, V
 from . import utils
 from ..model.jobs import JobInfo
 from ...core.model.services import ServiceInfo, ContainerInfo, VolumeInfo, ServiceConfig
+from robusta.core.model.namespaces import NamespaceInfo
 
 
-class DiscoveryResults:
-    def __init__(self,
-                 services: List[ServiceInfo] = None,
-                 nodes: Optional[V1NodeList] = None,
-                 node_requests: Dict = None,
-                 jobs: List[JobInfo] = None
-                 ):
-        self.services: List[ServiceInfo] = services
-        self.nodes: Optional[V1NodeList] = nodes
-        self.node_requests: Dict = node_requests
-        self.jobs: List[JobInfo] = jobs
+class DiscoveryResults(BaseModel):
+    services: List[ServiceInfo] = []
+    nodes: Optional[V1NodeList] = None
+    node_requests: Dict = {}
+    jobs: List[JobInfo] = []
+    namespaces: List[NamespaceInfo] = []
 
 
 class Discovery:
@@ -157,11 +154,26 @@ class Discovery:
                 f"Failed to run periodic jobs discovery",
                 exc_info=True,
             )
+
+        # discover namespaces
+        namespaces: List[NamespaceInfo] = []
+        try:
+            namespaces = [
+                NamespaceInfo.from_api_server(namespace)
+                for namespace in client.CoreV1Api().list_namespace().items
+            ]
+        except Exception:
+            logging.error(
+                "Failed to run periodic namespaces discovery",
+                exc_info=True,
+            )
+
         return DiscoveryResults(
             services=active_services,
             nodes=current_nodes,
             node_requests=node_requests,
-            jobs=active_jobs
+            jobs=active_jobs,
+            namespaces=namespaces,
         )
 
     @staticmethod
