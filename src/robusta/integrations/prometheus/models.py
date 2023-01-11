@@ -117,6 +117,7 @@ class PrometheusKubernetesAlert(
         name: Optional[str] = "Unresolved"
         namespace: Optional[str] = self.label_namespace
         node_name: Optional[str] = None
+        container: Optional[str] = self.alert.labels.get("container")
         if self.deployment:
             subject_type = FindingSubjectType.TYPE_DEPLOYMENT
             name = self.deployment.metadata.name
@@ -143,7 +144,7 @@ class PrometheusKubernetesAlert(
             name = self.job.metadata.name
             namespace = self.job.metadata.namespace
 
-        return FindingSubject(name, subject_type, namespace, node_name)
+        return FindingSubject(name, subject_type, namespace, node_name, container)
 
     def create_default_finding(self) -> Finding:
         alert_subject = self.get_alert_subject()
