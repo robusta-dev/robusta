@@ -214,10 +214,12 @@ def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
 
 class LogEnricherParams(ActionParams):
     """
+    :var container_name: Specific container to get logs from
     :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
     :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
     :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
     """
+    container_name: Optional[str]
     warn_on_missing_label: bool = False
     regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
     regex_replacement_style: Optional[str] = None
@@ -244,19 +246,42 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
             )
         return
 
-    regex_replacement_style = \
-        RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
-    log_data = pod.get_logs(
-        regex_replacer_patterns=params.regex_replacer_patterns,
-        regex_replacement_style=regex_replacement_style,
-        previous=params.previous
-    )
-    if not log_data:
-        return
+    containers : list[str] = []
+    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+    if params.container_name:
+        containers = [params.container_name]
+    elif event.get_subject().container:
+        # support alerts with a container label, make sure its related to this pod.
+        # for most prometheus alerts this is false.
+        containers = [        
+            container_status.name for container_status in all_statuses
+             if container_status.name == event.get_subject().container
+        ]
 
-    event.add_enrichment(
-        [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
-    )
+
+    if len(containers) == 0:
+        containers = [
+            container_status.name for container_status in all_statuses
+            if container_status.state.waiting is not None and container_status.restartCount >= 1
+        ]
+
+
+    for container in containers:
+
+        regex_replacement_style = \
+            RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
+        log_data = pod.get_logs(
+            container=container,
+            regex_replacer_patterns=params.regex_replacer_patterns,
+            regex_replacement_style=regex_replacement_style,
+            previous=params.previous
+        )
+        if not log_data:
+            continue
+
+        event.add_enrichment(
+            [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
+        )
 
 
 class SearchTermParams(ActionParams):
