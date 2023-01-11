@@ -4,15 +4,16 @@
         <img src="./logos/Robusta_readme.png" alt="Robusta.dev">
     </a>
 </p>
-  <h2>Monitor Kubernetes the Right Way</h2>
-    <h3>Connect your existing Prometheus and gain 360° observability*</h3>
-    *Prometheus recommended, but not required.
-  <p>
+  <h2>Keep your Kubernetes microservices up and running</h2>
+    <h3>Connect your existing Prometheus, gain 360° observability</h3>
+
+(Prometheus recommended, but not required)
 
   [![twitter robusta](https://img.shields.io/twitter/follow/RobustaDev?logo=twitter&color=blue&label=@RobustaDev&style=flat-square)](https://twitter.com/RobustaDev)
   [![slack robusta](https://img.shields.io/badge/Slack-Join-4A154B?style=flat-square&logo=slack&logoColor=white)](https://bit.ly/robusta-slack)
  <a href="https://www.linkedin.com/company/robusta-dev/"><img alt="LinkedIn" title="LinkedIn" src="https://img.shields.io/badge/-LinkedIn-blue?style=flat-square&logo=Linkedin&logoColor=white"/></a>
   <a href="https://www.youtube.com/channel/UCeLrAOI3anJAfO3BrYVB62Q"><img alt="Youtube" title="Youtube" src="https://img.shields.io/youtube/channel/subscribers/UCeLrAOI3anJAfO3BrYVB62Q?color=%23ff0000&label=Robusta%20Dev&logo=youtube&logoColor=%23ff0000&style=flat-square"/></a>
+
 </div>
 
 <div id="top"></div>
@@ -37,7 +38,7 @@
 </details>
 
 ## 💻 About the project
-Robusta is both an automations engine for Kubernetes, and a [full observability platform](https://home.robusta.dev/) built with that engine.
+Robusta is both an automations engine for Kubernetes, and a [multi-cluster observability platform](https://home.robusta.dev/).
 
 Robusta is commonly used alongside Prometheus, but other tools are supported too.
 
