@@ -398,7 +398,10 @@ class RobustaSink(SinkBase):
             if namespace_name not in curr_namespaces:
                 namespace.deleted = True
                 updated_namespaces.append(namespace)
-                del self.__namespaces_cache[namespace_name]
+
+        for update in updated_namespaces:
+            if update.deleted:
+                del self.__namespaces_cache[update.name]
 
         # new or changed namespaces
         for namespace_name, updated_namespace in curr_namespaces.items():
