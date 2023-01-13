@@ -22,6 +22,9 @@ class DiscoveryResults(BaseModel):
     jobs: List[JobInfo] = []
     namespaces: List[NamespaceInfo] = []
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class Discovery:
     executor = ProcessPoolExecutor(max_workers=1)  # always 1 discovery process

@@ -110,6 +110,11 @@ class RobustaSink(SinkBase):
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
 
+    def __assert_namespaces_cache_initialized(self):
+        if not self.__namespaces_cache:
+            logging.info("Initializing namespaces cache")
+            self.__namespaces_cache = {namespace.name: namespace for namespace in self.dal.get_active_namespaces()}
+
     def __reset_caches(self):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
@@ -383,25 +388,20 @@ class RobustaSink(SinkBase):
             self.last_send_time = time.time()
             self.__update_cluster_status()
 
-    def __assert_namespaces_cache_initialized(self):
-        if not self.__namespaces_cache:
-            logging.info("Initializing namespaces cache")
-            self.__namespaces_cache = {namespace.name: namespace for namespace in self.dal.get_active_namespaces()}
-
     def __publish_new_namespaces(self, namespaces: List[NamespaceInfo]):
         # convert to map
         curr_namespaces = {namespace.name: namespace for namespace in namespaces}
 
         # handle deleted namespaces
         updated_namespaces: List[NamespaceInfo] = []
-        for namespace_name, namespace in self.__namespaces_cache.values():
+        for namespace_name, namespace in self.__namespaces_cache.items():
             if namespace_name not in curr_namespaces:
                 namespace.deleted = True
                 updated_namespaces.append(namespace)
                 del self.__namespaces_cache[namespace_name]
 
         # new or changed namespaces
-        for namespace_name, updated_namespace in curr_namespaces.values():
+        for namespace_name, updated_namespace in curr_namespaces.items():
             if self.__namespaces_cache.get(namespace_name) != updated_namespace:
                 updated_namespaces.append(updated_namespace)
                 self.__namespaces_cache[namespace_name] = updated_namespace
