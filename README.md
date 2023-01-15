@@ -22,18 +22,16 @@
   <summary><h3 style="display:inline;">Table of Contents</h3></summary>
   <ol>
     <li>
-      <a href="#about-the-project">About the project</a>
+      <a href="#💻-about-the-project">💻 About the project</a>
     </li>
     <li>
-      <a href="#use-cases">Use cases</a>
+      <a href="#🛠️-how-it-works">🛠️ How it works</a>
     </li>
-    <li><a href="#examples">Examples</a></li>
-    <li><a href="#installing-robusta">Installing Robusta</a></li>
-    <li><a href="#documentation">Documentation</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#stay-up-to-date">Stay up to date</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
+    <li><a href="#📒-installing-robusta">📒 Installing Robusta</a></li>
+    <li><a href="#📝-documentation">📝 Documentation</a></li>
+    <li><a href="#✉️-contact">✉️ Contact</a></li>
+    <li><a href="#📑-license">📑 License</a></li>
+    <li><a href="#🕐-stay-up-to-date">🕐 Stay up to date</a></li>
   </ol>
 </details>
 
@@ -124,3 +122,4 @@ Robusta is distributed under the MIT License. See [LICENSE.md](https://github.co
 We add new features regularly. Stay up to date by watching us on GitHub.
 
 ![](./docs/images/star-repo.gif)
+<p align="right">(<a href="#top">back to top</a>)</p>
