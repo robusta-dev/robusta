@@ -22,16 +22,16 @@
   <summary><h3 style="display:inline;">Table of Contents</h3></summary>
   <ol>
     <li>
-      <a href="#💻-about-the-project">💻 About the project</a>
+      <a href="#-about-the-project">💻 About the project</a>
     </li>
     <li>
-      <a href="#🛠️-how-it-works">🛠️ How it works</a>
+      <a href="#-how-it-works">🛠️ How it works</a>
     </li>
-    <li><a href="#📒-installing-robusta">📒 Installing Robusta</a></li>
-    <li><a href="#📝-documentation">📝 Documentation</a></li>
-    <li><a href="#✉️-contact">✉️ Contact</a></li>
-    <li><a href="#📑-license">📑 License</a></li>
-    <li><a href="#🕐-stay-up-to-date">🕐 Stay up to date</a></li>
+    <li><a href="#-installing-robusta">📒 Installing Robusta</a></li>
+    <li><a href="#-documentation">📝 Documentation</a></li>
+    <li><a href="#-contact">✉️ Contact</a></li>
+    <li><a href="#-license">📑 License</a></li>
+    <li><a href="#-stay-up-to-date">🕐 Stay up to date</a></li>
   </ol>
 </details>
 
