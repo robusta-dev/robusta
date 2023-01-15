@@ -1,12 +1,14 @@
 from robusta.api import *
 
 from collections import defaultdict, namedtuple
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import pygal
 from ..external_apis.prometheus.prometheus_cli import custom_query_range
 from string import Template
 from datetime import datetime, timedelta
 import humanize
+import math
 
 
 class XAxisLine(BaseModel):
@@ -42,7 +44,7 @@ def run_prometheus_query(
     if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
     query_duration = ends_at - starts_at
-    resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
+    resolution = get_resolution_from_duration(query_duration)
     increment = max(query_duration.total_seconds() / resolution, 1.0)
     return custom_query_range(
         prometheus_base_url,
@@ -52,6 +54,23 @@ def run_prometheus_query(
         str(increment),
         {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
     )
+
+
+_RESOLUTION_DATA: Dict[timedelta, Union[int, Callable[[timedelta], int]]] = {
+    timedelta(hours=1): 250,
+    # NOTE: 1 minute resolution, max 1440 points
+    timedelta(days=1): lambda duration: math.ceil(duration.total_seconds() / 60),
+    # NOTE: 5 minute resolution, max 2016 points
+    timedelta(weeks=1): lambda duration: math.ceil(duration.total_seconds() / (60 * 5)),
+}
+_DEFAULT_RESOLUTION = 3000
+
+
+def get_resolution_from_duration(duration: timedelta) -> int:
+    for time_delta, resolution in sorted(_RESOLUTION_DATA.items(), key=lambda x: x[0]):
+        if duration <= time_delta:
+            return resolution if isinstance(resolution, int) else resolution(duration)
+    return _DEFAULT_RESOLUTION
 
 
 def create_chart_from_prometheus_query(
