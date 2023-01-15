@@ -107,7 +107,7 @@ class DataDogSink(SinkBase):
             source_type_name="Robusta",
             host=f"{resource.namespace}/{resource.subject_type.value}/{resource.name}",
             tags=[f"cluster:{self.cluster_name}"],
-            text=DataDogSink.__enrichments_as_text(finding.enrichments),
+            text=DataDogSink.__trim_str(DataDogSink.__enrichments_as_text(finding.enrichments), 3997),
             title=DataDogSink.__trim_str(finding.title, 97),
         )
 
