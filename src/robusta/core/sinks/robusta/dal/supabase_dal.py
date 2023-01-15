@@ -359,8 +359,12 @@ class SupabaseDal:
         if data.last_alert_at is None:
             del db_cluster_status["last_alert_at"]
             
-        db_cluster_status["updated_at"] = "now()"    
-        logging.info(f"cluster status {db_cluster_status}")        
+        db_cluster_status["updated_at"] = "now()"
+
+        log_cluster_status = db_cluster_status.copy()
+        log_cluster_status["light_actions"] = len(data.light_actions)
+        logging.info(f"cluster status {log_cluster_status}")
+
         return db_cluster_status
 
     def publish_cluster_status(self, cluster_status: ClusterStatus):
