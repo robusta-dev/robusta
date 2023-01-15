@@ -10,14 +10,15 @@ from pydantic import BaseModel
 from ...core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
 from .api_client_utils import *
 from .templates import get_deployment_yaml
+from ...utils.parsing import load_json
 
 S = TypeVar("S")
 T = TypeVar("T")
 PYTHON_DEBUGGER_IMAGE = (
-    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v4.5"
+    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v5.0"
 )
 JAVA_DEBUGGER_IMAGE = (
-    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:v1.1"
+    "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:jattach"
 )
 
 # TODO: import these from the python-tools project
@@ -287,13 +288,19 @@ class RobustaPod(Pod):
                 debugger.metadata.name, debugger.metadata.namespace
             )
 
+    @staticmethod
+    def extract_container_id(status: ContainerStatus) -> str:
+        runtime, container_id = status.containerID.split("://")
+        return container_id
+
     def get_processes(self) -> List[Process]:
+        container_ids = " ".join([self.extract_container_id(s) for s in self.status.containerStatuses])
         output = RobustaPod.exec_in_debugger_pod(
             self.metadata.name,
             self.spec.nodeName,
-            f"debug-toolkit pod-ps {self.metadata.uid}",
+            f"debug-toolkit pod-ps {self.metadata.uid} {container_ids}",
         )
-        processes = ProcessList(**json.loads(output))
+        processes = ProcessList(**load_json(output))
         return processes.processes
 
     def get_images(self) -> Dict[str, str]:

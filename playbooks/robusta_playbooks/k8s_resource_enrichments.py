@@ -2,7 +2,7 @@ from robusta.api import *
 import hikaru.model
 import kubernetes.client.exceptions
 
-supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet"]
+supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"]
 
 
 def to_pod_row(pod: Pod, cluster_name: str) -> List:
@@ -36,10 +36,12 @@ def related_pods(event: KubernetesResourceEvent):
     """
     resource = event.get_resource()
     if resource.kind not in supported_resources:
-        logging.error(f"Related pods is not supported for resource {resource.kind}")
-        return
+        raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}")
 
-    if resource.kind == "Pod":
+    if resource.kind == "Job":
+        job_pods = get_job_all_pods(resource)
+        pods = job_pods if job_pods else []
+    elif resource.kind == "Pod":
         pods = [resource]
     else:
         selector = build_selector_query(resource.spec.selector)

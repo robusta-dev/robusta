@@ -16,6 +16,7 @@ from ..sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from ..sinks.discord.discord_sink_params import DiscordSinkConfigWrapper
 from ..sinks.mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
 from ..sinks.webex.webex_sink_params import WebexSinkConfigWrapper
+from ..sinks.jira.jira_sink_params import JiraSinkConfigWrapper
 
 class PlaybookRepo(BaseModel):
     url: str
@@ -42,10 +43,12 @@ class RunnerConfig(BaseModel):
                 PagerdutyConfigWrapper,
                 DiscordSinkConfigWrapper,
                 MattermostSinkConfigWrapper,
-                WebexSinkConfigWrapper
+                WebexSinkConfigWrapper,
+                JiraSinkConfigWrapper
             ]
         ]
     ]
+    light_actions: Optional[List[str]]
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDefinition]] = []
 

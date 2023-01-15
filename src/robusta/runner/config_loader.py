@@ -172,7 +172,8 @@ class ConfigLoader:
         cls, actions_registry: ActionsRegistry, package_name: str
     ):
         logging.info(f"Importing actions package {package_name}")
-        pkg = importlib.import_module(package_name)
+        # Reload is required for modules that are already loaded
+        pkg = importlib.reload(importlib.import_module(package_name))
         playbooks_modules = [
             name for _, name, _ in pkgutil.walk_packages(path=pkg.__path__)
         ]
@@ -180,7 +181,8 @@ class ConfigLoader:
             try:
                 module_name = ".".join([package_name, playbooks_module])
                 logging.info(f"importing actions from {module_name}")
-                m = importlib.import_module(module_name)
+                # Reload is required for modules that are already loaded
+                m = importlib.reload(importlib.import_module(module_name))
                 playbook_actions = getmembers(m, Action.is_action)
                 for (action_name, action_func) in playbook_actions:
                     actions_registry.add_action(action_func)
@@ -248,7 +250,7 @@ class ConfigLoader:
                 GitRepoManager.clear_git_repos()
 
                 self.__reload_scheduler(playbooks_registry)
-
+                self.registry.set_light_actions(runner_config.light_actions)
                 self.registry.set_actions(action_registry)
                 self.registry.set_playbooks(playbooks_registry)
                 self.registry.set_sinks(sinks_registry)
