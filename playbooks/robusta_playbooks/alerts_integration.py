@@ -252,13 +252,12 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
         containers = [params.container_name]
     elif event.get_subject().container:
         # support alerts with a container label, make sure its related to this pod.
-        # for most prometheus alerts this is false.
         containers = [        
             container_status.name for container_status in all_statuses
              if container_status.name == event.get_subject().container
         ]
 
-
+    #If no container is specified, find containers in an unhealthy state. good for pending pods
     if len(containers) == 0:
         containers = [
             container_status.name for container_status in all_statuses
