@@ -249,7 +249,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     ]
                 )
             except Exception:
-                logging.error(f"Failed to execute action {action.action_name} {to_safe_str(action_params)}")
+                logging.error(f"Failed to execute action {action.action_name} {to_safe_str(action_params)}",
+                              exc_info=True)
                 execution_event.response = self.__error_resp(
                     ErrorCodes.ACTION_UNEXPECTED_ERROR.name,
                     ErrorCodes.ACTION_UNEXPECTED_ERROR.value,
