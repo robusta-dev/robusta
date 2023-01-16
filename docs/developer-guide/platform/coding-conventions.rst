@@ -35,4 +35,10 @@ To do so, install Robusta's dependencies with ``cd src/ && poetry install`` and 
 
 Data classes
 -------------------------------------
-Use `pydantic.BaseModel` instead of Python `dataclasses` when possible. Pydantic performs datavalidation whereas Python `dataclasses` just reduce boilerplate code like defining __init__()
+Use ``pydantic.BaseModel`` instead of Python ``dataclasses`` when possible. Pydantic performs datavalidation whereas Python ``dataclasses`` just reduce boilerplate code like defining __init__()
+
+Imports
+-------------------------------------
+Use absolute imports whenever possible. For example, instead of ``from . import foo``, use ``from robusta import foo``
+
+To help with that, pre-commit hook will automatically fix relative imports to absolute imports.
