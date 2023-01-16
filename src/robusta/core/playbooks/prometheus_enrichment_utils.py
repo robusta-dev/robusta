@@ -154,7 +154,7 @@ def create_graph_enrichment(
 ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
-        prometheus_url,  # TODO
+        prometheus_url,
         promql_query,
         start_at,
         include_x_axis=True,

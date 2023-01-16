@@ -60,7 +60,6 @@ class HelmValues(BaseModel, extra=Extra.allow):
     enablePrometheusStack: bool = False
     disableCloudRouting: bool = False
     enablePlatformPlaybooks: bool = False
-    # TODO: Discuss this None default value
     playbooksPersistentVolumeSize: str = None
     kubewatch: Dict = None
     grafanaRenderer: Dict = None
