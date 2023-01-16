@@ -57,8 +57,8 @@ You should see the demo alert, in the Robusta UI, Slack, or any other configured
 
     The notification is displayed until the first alert is sent from AlertManager to Robusta.
 
-Setting up custom services in Robusta
-------------------------------------
+Setting up a custom Prometheus, AlertManager, and Grafana
+--------------------------------------------------------------
 Add custom AlertManager, Grafana or Prometheus in ``generated_values.yaml``. 
 
 .. code-block:: yaml
