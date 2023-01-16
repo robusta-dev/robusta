@@ -15,7 +15,7 @@ For instructions on using those tools with your IDE, see:
 
 Linting
 ------------------------------------
-Robusta uses `Flake8 <https://flake8.pycqa.org/en/latest/>`_ and `PyRight <https://github.com/microsoft/pyright>`
+Robusta uses `Flake8 <https://flake8.pycqa.org/en/latest/>`_ and `PyRight <https://github.com/microsoft/pyright>`_
 for code linting and type checking. Please set up Flake8 and PyRight prior so that all your contributions to Robusta will be linted properly.
 
 For instructions on using Flake8 and PyRight tools with VSCode:
