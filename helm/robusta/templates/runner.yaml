@@ -20,6 +20,7 @@ spec:
       {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-runner-service-account
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
       containers:
       - name: runner
         image: {{ .Values.runner.image }}
