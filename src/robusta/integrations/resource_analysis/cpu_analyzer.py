@@ -1,7 +1,7 @@
 from datetime import timedelta, tzinfo
 from typing import Optional
 
-from .prometheus_analyzer import PrometheusAnalyzer
+from robusta.integrations.resource_analysis.prometheus_analyzer import PrometheusAnalyzer
 
 
 class CpuAnalyzer(PrometheusAnalyzer):
@@ -13,8 +13,9 @@ class CpuAnalyzer(PrometheusAnalyzer):
         Gets the total cpu requests for the cluster
         :return: a float the percentage of total cpus requested
         """
-        query = f"sum(avg_over_time(namespace_cpu:kube_pod_container_resource_requests" \
-                f":sum{{}}[{duration.seconds}s]))"
+        query = (
+            f"sum(avg_over_time(namespace_cpu:kube_pod_container_resource_requests" f":sum{{}}[{duration.seconds}s]))"
+        )
         return self._get_query_value(self._query(query))
 
     def get_total_cpu_allocatable(self, duration: timedelta = timedelta(minutes=10)):
@@ -22,5 +23,5 @@ class CpuAnalyzer(PrometheusAnalyzer):
         Gets the total cpu allocatable for the cluster
         :return: a float the percentage of total cpus allocatable
         """
-        query = f"sum(avg_over_time(kube_node_status_allocatable{{resource=\"cpu\"}}[{duration.seconds}s]))"
+        query = f'sum(avg_over_time(kube_node_status_allocatable{{resource="cpu"}}[{duration.seconds}s]))'
         return self._get_query_value(self._query(query))

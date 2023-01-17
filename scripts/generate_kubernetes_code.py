@@ -75,12 +75,8 @@ def autogenerate_events(f: TextIO):
         if resource in CUSTOM_SUBCLASSES:
             all_versioned_resources.add(get_model_class(resource))
         else:
-            version_resources = [
-                f"{version}{resource}" for version in KUBERNETES_VERSIONS
-            ]
-            all_versioned_resources = all_versioned_resources.union(
-                set(version_resources)
-            )
+            version_resources = [f"{version}{resource}" for version in KUBERNETES_VERSIONS]
+            all_versioned_resources = all_versioned_resources.union(set(version_resources))
     # without this, every time that we re-run the autogeneration, the order changes
     all_versioned_resources = sorted(list(all_versioned_resources))
 
@@ -91,7 +87,7 @@ def autogenerate_events(f: TextIO):
             f.write(
                 textwrap.dedent(
                     f"""\
-                from hikaru.model.rel_1_16.{version} import {resource} as {version}{resource}    
+                from hikaru.model.rel_1_16.{version} import {resource} as {version}{resource}
                 """
                 )
             )
@@ -123,14 +119,14 @@ def autogenerate_events(f: TextIO):
 
     f.write(
         textwrap.dedent(
-            f"""\
+            """\
         class ResourceLoader:
             @staticmethod
             def read_resource(kind: str, name: str, namespace: str = None) -> Response:
                 resource_mapper = LOADERS_MAPPINGS[kind.lower()]
                 if not resource_mapper:
                     raise Exception("resource loader not found")
-                
+
                 if resource_mapper[0]:  # namespaced resource
                     return resource_mapper[1](name=name, namespace=namespace)
                 else:
@@ -143,8 +139,8 @@ def autogenerate_events(f: TextIO):
     f.write(
         textwrap.dedent(
             f"""\
-            
-            
+
+
         class ResourceAttributes(ExecutionEventBaseParams):
             kind: str
             name: str
@@ -158,7 +154,7 @@ def autogenerate_events(f: TextIO):
             def __init__(self, obj: {f"Union[{','.join(all_resources)}]"}, named_sinks: List[str]):
                 super().__init__(named_sinks=named_sinks)
                 self.obj = obj
-            
+
             def get_resource(self) -> Optional[{f"Union[{','.join(all_resources)}]"}]:
                 return self.obj
 
@@ -169,7 +165,7 @@ def autogenerate_events(f: TextIO):
                     namespace=self.obj.metadata.namespace,
                     node=KubeObjFindingSubject.get_node_name(self.obj)
                 )
-        
+
             @classmethod
             def get_source(cls) -> FindingSource:
                 return FindingSource.KUBERNETES_API_SERVER
@@ -178,8 +174,8 @@ def autogenerate_events(f: TextIO):
             def from_params(params: ResourceAttributes) -> Optional["KubernetesResourceEvent"]:
                 try:
                     obj = ResourceLoader.read_resource(
-                        kind=params.kind, 
-                        name=params.name, 
+                        kind=params.kind,
+                        name=params.name,
                         namespace=params.namespace
                     ).obj
                 except Exception:
@@ -204,9 +200,7 @@ def autogenerate_events(f: TextIO):
         if resource in CUSTOM_SUBCLASSES:
             model_class_str = get_model_class(resource)
         else:
-            version_resources = [
-                f"{version}{resource}" for version in KUBERNETES_VERSIONS
-            ]
+            version_resources = [f"{version}{resource}" for version in KUBERNETES_VERSIONS]
             model_class_str = f"Union[{','.join(version_resources)}]"
 
         namespace_str = "" if resource in NON_NAMESPACED_RESOURCES else "namespace: str"
@@ -229,7 +223,7 @@ def autogenerate_events(f: TextIO):
             class {resource}Event(KubernetesResourceEvent):
                 def __init__(self, obj: {get_model_class(resource)}, named_sinks: List[str]):
                     super().__init__(obj=obj, named_sinks=named_sinks)
-                
+
                 def get_{resource.lower()}(self) -> Optional[{get_model_class(resource)}]:
                     return self.obj
 
@@ -241,7 +235,7 @@ def autogenerate_events(f: TextIO):
                         logging.error(f"Could not load {resource} {{params}}", exc_info=True)
                         return None
                     return {resource}Event(obj=obj, named_sinks=params.named_sinks)
-                
+
                 def get_subject(self) -> FindingSubject:
                     return FindingSubject(
                         name=self.obj.metadata.name,
@@ -312,14 +306,14 @@ def autogenerate_versioned_models(f: TextIO):
     f.write(f"VERSION_KIND_TO_MODEL_CLASS = {{\n    {mappers_str}\n}}\n")
     f.write(
         textwrap.dedent(
-            f"""\
+            """\
 
 
-        def get_api_version(apiVersion: str):
-            if "/" in apiVersion:
-                apiVersion = apiVersion.split("/")[1]
-            return VERSION_KIND_TO_MODEL_CLASS.get(apiVersion)
-        """
+                def get_api_version(apiVersion: str):
+                    if "/" in apiVersion:
+                        apiVersion = apiVersion.split("/")[1]
+                    return VERSION_KIND_TO_MODEL_CLASS.get(apiVersion)
+            """
         )
     )
 
@@ -357,9 +351,9 @@ def autogenerate_triggers(f: TextIO):
 
                 def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
                     super().__init__(
-                        kind=\"{resource}\", 
-                        operation={operation_type}, 
-                        name_prefix=name_prefix, 
+                        kind=\"{resource}\",
+                        operation={operation_type},
+                        name_prefix=name_prefix,
                         namespace_prefix=namespace_prefix,
                         labels_selector=labels_selector,
                     )
@@ -379,7 +373,7 @@ def autogenerate_triggers(f: TextIO):
                 ]
             )
 
-    f.write(f"# Kubernetes Any Triggers\n")
+    f.write("# Kubernetes Any Triggers\n")
     for trigger_name, operation_type in sorted(TRIGGER_TYPES.items()):
         f.write(
             textwrap.dedent(
@@ -388,9 +382,9 @@ def autogenerate_triggers(f: TextIO):
 
             def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
                 super().__init__(
-                    kind=\"Any\", 
-                    operation={operation_type}, 
-                    name_prefix=name_prefix, 
+                    kind=\"Any\",
+                    operation={operation_type},
+                    name_prefix=name_prefix,
                     namespace_prefix=namespace_prefix,
                     labels_selector=labels_selector,
                 )
@@ -421,23 +415,15 @@ def autogenerate_triggers(f: TextIO):
     )
 
     for trigger in sorted(triggers):
-        f.write(
-            textwrap.indent(f"{trigger[0]}: Optional[{trigger[1]}]\n", prefix="    ")
-        )
+        f.write(textwrap.indent(f"{trigger[0]}: Optional[{trigger[1]}]\n", prefix="    "))
 
 
 def main():
     root_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    output_dir = os.path.join(
-        root_dir, "src/robusta/integrations/kubernetes/autogenerated/"
-    )
+    output_dir = os.path.join(root_dir, "src/robusta/integrations/kubernetes/autogenerated/")
 
-    parser = argparse.ArgumentParser(
-        description="Autogenerate kubernetes models, events, and triggers"
-    )
-    parser.add_argument(
-        "-o", "--output", default=output_dir, type=str, help="output directory"
-    )
+    parser = argparse.ArgumentParser(description="Autogenerate kubernetes models, events, and triggers")
+    parser.add_argument("-o", "--output", default=output_dir, type=str, help="output directory")
     args = parser.parse_args()
 
     # generate versioned events and models

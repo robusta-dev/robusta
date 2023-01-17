@@ -1,18 +1,18 @@
 import logging
+
 import requests
+
+from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity
 from robusta.core.reporting.blocks import (
     HeaderBlock,
-    ListBlock,
     JsonBlock,
     KubernetesDiffBlock,
+    ListBlock,
     MarkdownBlock,
     TableBlock,
 )
-from .pagerduty_sink_params import PagerdutyConfigWrapper
-from ...reporting.base import Finding, BaseBlock, FindingSeverity
-
-
-from ..sink_base import SinkBase
+from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
+from robusta.core.sinks.sink_base import SinkBase
 
 
 class PagerdutySink(SinkBase):
@@ -62,9 +62,7 @@ class PagerdutySink(SinkBase):
         custom_details["Namespace"] = finding.subject.namespace
         custom_details["Node"] = finding.subject.node
         custom_details["Source of the Alert"] = str(finding.source.name)
-        custom_details["Severity"] = PagerdutySink.__to_pagerduty_severity_type(
-            finding.severity
-        ).upper()
+        custom_details["Severity"] = PagerdutySink.__to_pagerduty_severity_type(finding.severity).upper()
         custom_details["Fingerprint ID"] = finding.fingerprint
         custom_details["Description"] = finding.description
         custom_details[
@@ -88,9 +86,7 @@ class PagerdutySink(SinkBase):
         body = {
             "payload": {
                 "summary": finding.title,
-                "severity": PagerdutySink.__to_pagerduty_severity_type(
-                    finding.severity
-                ),
+                "severity": PagerdutySink.__to_pagerduty_severity_type(finding.severity),
                 "source": self.cluster_name,
                 "component": str(finding.subject),
                 "group": finding.service_key,

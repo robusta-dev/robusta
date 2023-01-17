@@ -1,14 +1,27 @@
-from robusta.api import *
-from robusta.core.discovery.top_service_resolver import TopServiceResolver, TopLevelResource
-from robusta.core.playbooks.common import get_events_list, get_event_timestamp
+from hikaru.model import Event
+
+from robusta.api import (
+    ExecutionBaseEvent,
+    Finding,
+    FindingSeverity,
+    FindingSource,
+    FindingSubject,
+    FindingSubjectType,
+    FindingType,
+    K8sOperationType,
+    KubernetesAnyChangeEvent,
+    action,
+    get_resource_events_table,
+)
+from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
+from robusta.core.playbooks.common import get_event_timestamp, get_events_list
 
 
 @action
 def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
     if (
         event.operation in [K8sOperationType.CREATE, K8sOperationType.UPDATE]
-        and event.obj.kind
-        in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Pod", "Job"]
+        and event.obj.kind in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Pod", "Job"]
         and not event.obj.metadata.ownerReferences
     ):
         TopServiceResolver.add_cached_resource(
@@ -65,9 +78,7 @@ def create_debug_event_finding(event: Event):
         ),
         creation_date=get_event_timestamp(event),
     )
-    finding.service_key = TopServiceResolver.guess_service_key(
-        name=k8s_obj.name, namespace=k8s_obj.namespace
-    )
+    finding.service_key = TopServiceResolver.guess_service_key(name=k8s_obj.name, namespace=k8s_obj.namespace)
     return finding
 
 

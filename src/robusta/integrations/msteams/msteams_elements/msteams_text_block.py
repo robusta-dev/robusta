@@ -1,5 +1,5 @@
-from .msteams_base import MsTeamsBase
-from ..msteams_mark_down_fix_url import MsTeamsMarkDownFixUrl
+from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
+from robusta.integrations.msteams.msteams_mark_down_fix_url import MsTeamsMarkDownFixUrl
 
 
 class MsTeamsTextBlock(MsTeamsBase):

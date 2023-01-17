@@ -1,10 +1,24 @@
-from robusta.api import *
+import json
+
+from robusta.api import (
+    Finding,
+    FindingSource,
+    FindingSubjectType,
+    FindingType,
+    Grafana,
+    GrafanaAnnotationParams,
+    JsonBlock,
+    KubeObjFindingSubject,
+    KubernetesAnyChangeEvent,
+    NodeChangeEvent,
+    PrometheusKubernetesAlert,
+    action,
+    extract_images,
+)
 
 
 @action
-def add_deployment_lines_to_grafana(
-    event: KubernetesAnyChangeEvent, action_params: GrafanaAnnotationParams
-):
+def add_deployment_lines_to_grafana(event: KubernetesAnyChangeEvent, action_params: GrafanaAnnotationParams):
     """
     Add annotations to Grafana when a Kubernetes resource is updated and the image tags change.
 
@@ -26,9 +40,7 @@ def add_deployment_lines_to_grafana(
             if new_images[name] != old_images[name]:
                 msg += f"image name:<pre>{name}</pre>new tag:<pre>{new_images[name]}</pre>old tag<pre>{old_images[name]}</pre><hr class='solid'>"
 
-    grafana = Grafana(
-        action_params.grafana_api_key.get_secret_value(), action_params.grafana_url
-    )
+    grafana = Grafana(action_params.grafana_api_key.get_secret_value(), action_params.grafana_url)
     tags = [
         event.obj.metadata.name,
         event.obj.metadata.namespace,
@@ -48,9 +60,7 @@ def add_deployment_lines_to_grafana(
 
 
 @action
-def add_alert_lines_to_grafana(
-    event: PrometheusKubernetesAlert, params: GrafanaAnnotationParams
-):
+def add_alert_lines_to_grafana(event: PrometheusKubernetesAlert, params: GrafanaAnnotationParams):
     grafana = Grafana(params.grafana_api_key.get_secret_value(), params.grafana_url)
 
     if event.get_description():
@@ -82,9 +92,7 @@ def report_image_changes(event: KubernetesAnyChangeEvent):
     msg = ""
     changed_properties = []
     if new_images.keys() != old_images.keys():
-        msg = (
-            f"number or names of images changed: new - {new_images} old - {old_images}"
-        )
+        msg = f"number or names of images changed: new - {new_images} old - {old_images}"
     else:
         for name in new_images:
             if new_images[name] != old_images[name]:

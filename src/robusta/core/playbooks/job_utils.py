@@ -1,7 +1,8 @@
 from typing import List, Optional
+
 from hikaru.model import Job, PodList
 
-from ...integrations.kubernetes.custom_models import RobustaPod, build_selector_query
+from robusta.integrations.kubernetes.custom_models import RobustaPod, build_selector_query
 
 CONTROLLER_UID = "controller-uid"
 
@@ -35,10 +36,7 @@ def get_job_all_pods(job: Job) -> Optional[List[RobustaPod]]:
     if not job_selector:
         return None
 
-    return PodList.listNamespacedPod(
-        namespace=job.metadata.namespace,
-        label_selector=job_selector
-    ).obj.items
+    return PodList.listNamespacedPod(namespace=job.metadata.namespace, label_selector=job_selector).obj.items
 
 
 def get_job_latest_pod(job: Job) -> Optional[RobustaPod]:

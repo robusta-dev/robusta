@@ -1,4 +1,28 @@
-from robusta.api import *
+import json
+import logging
+
+from hikaru.model import (
+    Container,
+    ObjectMeta,
+    PersistentVolumeClaim,
+    PersistentVolumeClaimSpec,
+    PersistentVolumeClaimVolumeSource,
+    PodSpec,
+    ResourceRequirements,
+    Volume,
+    VolumeMount,
+)
+
+from robusta.api import (
+    INSTALLATION_NAMESPACE,
+    ActionParams,
+    ExecutionBaseEvent,
+    Finding,
+    FindingType,
+    MarkdownBlock,
+    RobustaJob,
+    action,
+)
 
 
 class DiskBenchmarkParams(ActionParams):
@@ -9,6 +33,7 @@ class DiskBenchmarkParams(ActionParams):
     :var disk_size: The size of pvc used for the benchmark.
     :var storage_class_name: Pvc storage class, From the available cluster storage classes. standard/fast/etc.
     """
+
     pvc_name: str = "robusta-disk-benchmark"
     test_seconds: int = 20
     namespace: str = INSTALLATION_NAMESPACE
@@ -28,15 +53,11 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
     For more details: https://fio.readthedocs.io/en/latest/
     """
     pvc = PersistentVolumeClaim(
-        metadata=ObjectMeta(
-            name=action_params.pvc_name, namespace=action_params.namespace
-        ),
+        metadata=ObjectMeta(name=action_params.pvc_name, namespace=action_params.namespace),
         spec=PersistentVolumeClaimSpec(
             accessModes=["ReadWriteOnce"],
             storageClassName=action_params.storage_class_name,
-            resources=ResourceRequirements(
-                requests={"storage": action_params.disk_size}
-            ),
+            resources=ResourceRequirements(requests={"storage": action_params.disk_size}),
         ),
     )
     try:
@@ -49,9 +70,7 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
             volumes=[
                 Volume(
                     name=pv_name,
-                    persistentVolumeClaim=PersistentVolumeClaimVolumeSource(
-                        claimName=action_params.pvc_name
-                    ),
+                    persistentVolumeClaim=PersistentVolumeClaimVolumeSource(claimName=action_params.pvc_name),
                 )
             ],
             containers=[
@@ -76,19 +95,18 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
         )
 
         json_output = json.loads(
-            RobustaJob.run_simple_job_spec(
-                spec, name, 120 + action_params.test_seconds
-            ).replace("'", '"')
+            RobustaJob.run_simple_job_spec(spec, name, 120 + action_params.test_seconds).replace("'", '"')
         )
         job = json_output["jobs"][0]
 
-        benchmark_results =             \
-            f"\nfio benchmark:\n" \
-            f"Total Time: {action_params.test_seconds} Sec\n" \
-            f"Read Band Width: {format_float_per2(job['read']['bw'])} KB \n" \
-            f"Read IO Ops/Sec: {format_float_per2(job['read']['iops'])}\n" \
-            f"Write Band Width: {format_float_per2(job['write']['bw'])} KB \n"\
+        benchmark_results = (
+            f"\nfio benchmark:\n"
+            f"Total Time: {action_params.test_seconds} Sec\n"
+            f"Read Band Width: {format_float_per2(job['read']['bw'])} KB \n"
+            f"Read IO Ops/Sec: {format_float_per2(job['read']['iops'])}\n"
+            f"Write Band Width: {format_float_per2(job['write']['bw'])} KB \n"
             f"Write Ops/Sec: {format_float_per2(job['write']['iops'])}\n "
+        )
 
         logging.info(benchmark_results)
 
@@ -101,6 +119,4 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
         finding.add_enrichment([MarkdownBlock(text=benchmark_results)])
         event.add_finding(finding)
     finally:
-        pvc.deleteNamespacedPersistentVolumeClaim(
-            name=action_params.pvc_name, namespace=action_params.namespace
-        )
+        pvc.deleteNamespacedPersistentVolumeClaim(name=action_params.pvc_name, namespace=action_params.namespace)

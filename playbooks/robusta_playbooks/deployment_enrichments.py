@@ -1,4 +1,8 @@
-from robusta.api import *
+import logging
+from typing import List
+
+from robusta.api import BaseBlock, DeploymentEvent, MarkdownBlock, action
+
 
 # TODO: merge with node_status_enricher?
 @action
@@ -10,9 +14,7 @@ def deployment_status_enricher(event: DeploymentEvent):
     """
     deployment = event.get_deployment()
     if not deployment:
-        logging.error(
-            f"cannot run deployment_status_enricher on event with no deployment: {event}"
-        )
+        logging.error(f"cannot run deployment_status_enricher on event with no deployment: {event}")
         return
 
     block_list: List[BaseBlock] = []

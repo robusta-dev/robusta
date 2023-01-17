@@ -1,14 +1,15 @@
+import json
 import secrets
 import string
-import typer
-import yaml
-import json
-import jwt as JWT
 import time
 from typing import Any, Dict
-from pydantic import BaseModel
-from .backend_profile import BackendProfile
 
+import jwt as JWT
+import typer
+import yaml
+from pydantic import BaseModel
+
+from robusta.cli.backend_profile import BackendProfile
 
 ISSUER: str = "supabase"
 
@@ -18,9 +19,7 @@ def issued_at() -> int:
 
 
 def gen_secret(length: int) -> str:
-    return "".join(
-        secrets.choice(string.ascii_letters + string.digits) for _ in range(length)
-    )
+    return "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(length))
 
 
 def write_values_files(
@@ -37,9 +36,7 @@ def write_values_files(
         )
 
     with open(backendconfig_path, "w") as output_file:
-        json.dump(
-            backendProfile.dict(exclude={"custom_profile"}), output_file, indent=1
-        )
+        json.dump(backendProfile.dict(exclude={"custom_profile"}), output_file, indent=1)
         typer.secho(
             f"Saved configuration to {backendconfig_path} - save this file for future use!",
             fg="red",
@@ -106,7 +103,7 @@ class SelfHostValues(BaseModel):
         JWT_SECRET,
     )
     SUPABASE_URL: str = "http://kong:8000"  # Internal URL
-    PUBLIC_REST_URL: str  ## Studio Public REST endpoint - replace this if you intend to use Studio outside of localhost
+    PUBLIC_REST_URL: str  # Studio Public REST endpoint - replace this if you intend to use Studio outside of localhost
 
     # POSTGRES
     POSTGRES_PORT: int = 5432
@@ -136,12 +133,8 @@ def gen_config(
         help='Cloud host provider. options are "on-prem", "gke"',
     ),
     domain: str = typer.Option(..., help="domain used to route the on-prem services."),
-    storage_class_name: str = typer.Option(
-        "standard", help="database PVC storageClassName."
-    ),
-    platform_nport: int = typer.Option(
-        30311, help="node port for the Robusta dashboard."
-    ),
+    storage_class_name: str = typer.Option("standard", help="database PVC storageClassName."),
+    platform_nport: int = typer.Option(30311, help="node port for the Robusta dashboard."),
     db_nport: int = typer.Option(30312, help="node port Robusta database."),
     api_nport: int = typer.Option(30313, help="node port for Robusta API."),
     ws_nport: int = typer.Option(30314, help="node port for Robusta websocket."),
@@ -156,7 +149,7 @@ def gen_config(
 
     if not domain:
         typer.secho(
-            f"Missing required argument domain",
+            "Missing required argument domain",
             fg=typer.colors.RED,
         )
         return
@@ -182,11 +175,9 @@ def gen_config(
     uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY)
     uiValues.service["nodePort"] = platform_nport
 
-    values = values.dict()
-    values["robusta-ui"] = uiValues.dict()
-    values["robusta-relay"] = relayValues.dict()
+    values_dict = values.dict()
+    values_dict["robusta-ui"] = uiValues.dict()
+    values_dict["robusta-relay"] = relayValues.dict()
 
     backendProfile = BackendProfile.fromDomain(domain=domain)
-    write_values_files(
-        "self_host_values.yaml", "robusta_cli_config.json", values, backendProfile
-    )
+    write_values_files("self_host_values.yaml", "robusta_cli_config.json", values_dict, backendProfile)

@@ -1,7 +1,7 @@
-from hikaru.model import Pod, ObjectReference
+from hikaru.model import ObjectReference, Pod
 
-from .base import FindingSubject
-from .consts import FindingSubjectType
+from robusta.core.reporting.base import FindingSubject
+from robusta.core.reporting.consts import FindingSubjectType
 
 
 class KubeObjFindingSubject(FindingSubject):

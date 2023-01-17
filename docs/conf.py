@@ -56,9 +56,9 @@ autodoc_mock_imports = ["prometheus_api_client"]
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
-    #'special-members': '__init__',
+    # 'special-members': '__init__',
     "undoc-members": True,
-    #'exclude-members': '__weakref__'
+    # 'exclude-members': '__weakref__'
 }
 autoclass_content = "both"
 add_module_names = False
@@ -102,7 +102,7 @@ todo_include_todos = False
 # html_theme_path = [furo.get_pygments_stylesheet()]
 html_theme = "furo"
 html_theme_options = {
-    "announcement": "Want to work at an Open Source Company? We're hiring in Israel and remote! Explore <a href=\"https://home.robusta.dev/jobs/\">open roles</a>.",
+    "announcement": 'Want to work at an Open Source Company? We\'re hiring in Israel and remote! Explore <a href="https://home.robusta.dev/jobs/">open roles</a>.',
     "sidebar_hide_name": True,
     "light_logo": "logo.png",
     "dark_logo": "logo-dark.png",
@@ -133,9 +133,7 @@ html_css_files = [
     "custom.css",
 ]
 
-html_js_files = [
-    'analytics.js'
-]
+html_js_files = ["analytics.js"]
 
 html_favicon = "_static/favicon.png"
 

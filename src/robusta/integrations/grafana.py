@@ -1,11 +1,17 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import List
 
-from grafana_api.grafana_face import GrafanaFace
+try:
+    from grafana_api.grafana_face import GrafanaFace
+except ImportError:
 
-from ..core.model.env_vars import GRAFANA_READ_TIMEOUT
-from ..utils.service_discovery import find_service_url
+    def GrafanaFace(*args, **kwargs):
+        raise ImportError("grafana-api is not installed")
+
+
+from robusta.core.model.env_vars import GRAFANA_READ_TIMEOUT
+from robusta.utils.service_discovery import find_service_url
 
 
 class Grafana:
@@ -18,9 +24,7 @@ class Grafana:
         if grafana_url is None:
             grafana_url = find_service_url("app.kubernetes.io/name=grafana")
         protocol_host = grafana_url.split("://")
-        logging.debug(
-            f"Grafana params: protocol - {protocol_host[0]} host - {protocol_host[1]}"
-        )
+        logging.debug(f"Grafana params: protocol - {protocol_host[0]} host - {protocol_host[1]}")
         self.grafana = GrafanaFace(
             auth=api_key,
             protocol=protocol_host[0],

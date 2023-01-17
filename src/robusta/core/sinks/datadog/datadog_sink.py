@@ -1,30 +1,45 @@
 import logging
 import time
-
-from datadog_api_client.v1 import ApiClient, ApiException, Configuration
-from datadog_api_client.v1.api import events_api
-from datadog_api_client.v1.models import *
-
 from typing import List
-from tabulate import tabulate
 
-from .datadog_sink_params import DataDogSinkConfigWrapper
-from ...reporting.blocks import (
-    KubernetesDiffBlock,
-    JsonBlock,
-    MarkdownBlock,
+try:
+    from datadog_api_client.v1 import ApiClient, ApiException, Configuration
+    from datadog_api_client.v1.api import events_api
+    from datadog_api_client.v1.models import EventAlertType, EventCreateRequest
+except ImportError:
+
+    def lazy_import_error(self, *args, **kwargs):
+        raise ImportError("datadog-api-client is not installed")
+
+    Configuration = lazy_import_error
+    EventCreateRequest = lazy_import_error
+    EventAlertType = lazy_import_error
+    events_api = lazy_import_error
+    ApiClient = lazy_import_error
+    ApiException = lazy_import_error
+
+
+try:
+    from tabulate import tabulate
+except ImportError:
+
+    def tabulate(*args, **kwargs):
+        raise ImportError("Please install tabulate to use the TableBlock")
+
+
+from robusta.core.reporting.base import Enrichment, Finding, FindingSeverity
+from robusta.core.reporting.blocks import (
+    DividerBlock,
     FileBlock,
     HeaderBlock,
+    JsonBlock,
+    KubernetesDiffBlock,
     ListBlock,
+    MarkdownBlock,
     TableBlock,
-    DividerBlock,
 )
-from ...reporting.base import (
-    Finding,
-    Enrichment,
-    FindingSeverity,
-)
-from ..sink_base import SinkBase
+from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
+from robusta.core.sinks.sink_base import SinkBase
 
 
 class DataDogSink(SinkBase):
@@ -60,9 +75,7 @@ class DataDogSink(SinkBase):
                 lines.append(block.json_str)
             elif isinstance(block, KubernetesDiffBlock):
                 for diff in block.diffs:
-                    lines.append(
-                        f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}"
-                    )
+                    lines.append(f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}")
             elif isinstance(block, FileBlock):
                 last_dot_idx = block.filename.rindex(".")
                 file_type = block.filename[last_dot_idx + 1 :]
@@ -80,16 +93,12 @@ class DataDogSink(SinkBase):
                 if block.table_name:
                     lines.append(f"%%%\n{block.table_name}\n%%%")
                 rendered_rows = block.render_rows()
-                lines.append(
-                    tabulate(rendered_rows, headers=block.headers, tablefmt="presto")
-                )
+                lines.append(tabulate(rendered_rows, headers=block.headers, tablefmt="presto"))
         return "\n".join(lines)
 
     @staticmethod
     def __enrichments_as_text(enrichments: List[Enrichment]) -> str:
-        text_arr = [
-            DataDogSink.__enrichment_text(enrichment) for enrichment in enrichments
-        ]
+        text_arr = [DataDogSink.__enrichment_text(enrichment) for enrichment in enrichments]
         return "---\n".join(text_arr)
 
     @staticmethod
@@ -115,6 +124,4 @@ class DataDogSink(SinkBase):
             api_response = self.api_instance.create_event(body)
             logging.debug(f"datadog event api response {api_response}")
         except ApiException as e:
-            logging.error(
-                "Exception when calling datadog EventsApi->create_event: %s\n" % e
-            )
+            logging.error("Exception when calling datadog EventsApi->create_event: %s\n" % e)
