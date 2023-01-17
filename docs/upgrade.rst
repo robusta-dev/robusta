@@ -52,8 +52,8 @@ Why do I need to manually upgrade?
 Robusta uses kube-prometheus-stack, which creates custom resources also known as `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_ on installation.
 With Helm v3, CRDs are not updated or removed by default and should be manually handled. Consult also the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_.
 
-From versions lower than 0.10.8 to latest
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Upgrading from older versions (0.10.8 and below)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Determine Robusta's version by running the following:
 
