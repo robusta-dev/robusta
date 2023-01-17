@@ -7,7 +7,7 @@ import re
 from datetime import datetime
 from enum import Enum
 from pydantic.main import BaseModel
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Any
 
 from ..model.env_vars import ROBUSTA_UI_DOMAIN
 from ..reporting.consts import FindingSubjectType, FindingSource, FindingType
@@ -166,6 +166,7 @@ class Finding(Filterable):
             starts_at: datetime = None,
             ends_at: datetime = None,
             add_silence_url: bool = False,
+            alert_labels: Dict[Any, Any] = None
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
@@ -188,6 +189,7 @@ class Finding(Filterable):
         )
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
         self.add_silence_url = add_silence_url
+        self.alert_labels = alert_labels
         self.creation_date = creation_date
         self.fingerprint = (
             fingerprint
@@ -268,8 +270,14 @@ class Finding(Filterable):
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
 
+        if self.alert_labels and self.alert_labels.get("service"):
+            labels["service"] = self.alert_labels["service"]
+
+        # In prometheus job is related to the scrape target.
+        # Kubernetes jobs are stored in job_name.
         kind: Optional[str] = self.subject.subject_type.value
         if kind and self.subject.name:
+            kind = "job_name" if kind == "job" else kind
             labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
