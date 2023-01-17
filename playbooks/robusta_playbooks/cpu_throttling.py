@@ -44,7 +44,7 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
             [
                 MarkdownBlock(
                     f"{Emojis.Explain.value} *Alert Explanation:* This pod is throttled due to "
-                    "its CPU limit. This can occur even when CPU usage is far below the limit."
+                    "its CPU limit. This can occur even when CPU usage is far below the limit. "
                     "<https://github.com/robusta-dev/alert-explanations/wiki/CPUThrottlingHigh-"
                     "(Prometheus-Alert)|Learn more.>"
                 ),
