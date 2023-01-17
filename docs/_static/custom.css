@@ -167,7 +167,7 @@ h2, h3 {
 .md-typeset :is(.admonition,details):is(.tip,.hint,.important),
 .md-typeset :-webkit-any(.admonition,details),
 .md-typeset :is(.admonition,details) {
-    border-color: #3A73ED;
+    border-color: var(--md-color-warning-primary);
 }
 
 .md-typeset :-webkit-any(.warning,.caution,.attention)>:-webkit-any(.admonition-title,summary),
@@ -176,7 +176,7 @@ h2, h3 {
 .md-typeset :is(.tip,.hint,.important)>:is(.admonition-title,summary),
 .md-typeset :-webkit-any(.admonition-title,summary),
 .md-typeset :is(.admonition-title,summary) {
-    background: rgba(58, 115, 237, 0.2) !important;
+    background: var(--md-color-warning-secondary) !important;
 }
 
 .md-typeset :-webkit-any(.warning,.caution,.attention)>:-webkit-any(.admonition-title,summary):before,
@@ -185,7 +185,7 @@ h2, h3 {
 .md-typeset :is(.tip,.hint,.important)>:is(.admonition-title,summary):before,
 .md-typeset :-webkit-any(.admonition-title,summary):before,
 .md-typeset :is(.admonition-title,summary):before {
-    background-color: #3A73ED;
+    background-color: var(--md-color-warning-primary);
 }
 
 .sd-btn-outline-primary {
@@ -203,6 +203,7 @@ h2, h3 {
 }
 
 .md-content__inner.md-typeset .sd-btn {
+    border-width: 2px !important;
     margin-top: 34px;
     padding: 22px 28px;
     font-size: 24px;
@@ -262,4 +263,9 @@ h2, h3 {
 .highlight :-webkit-any(.nd,.ni,.nl,.nt),
 .highlight :is(.nd,.ni,.nl,.nt) {
     color: var(--md-default-fg-color);
+}
+
+/* Disable Dark Mode */
+[data-md-component="palette"] {
+    display: none;
 }

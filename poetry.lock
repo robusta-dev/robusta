@@ -1403,7 +1403,7 @@ theme-sbt = ["sphinx-book-theme (>=0.1.2,<0.2.0)"]
 
 [[package]]
 name = "sphinx-immaterial"
-version = "0.0.post1.dev182"
+version = "0.0.post1.dev191"
 description = "Adaptation of mkdocs-material theme for the Sphinx documentation system"
 category = "dev"
 optional = false
@@ -1429,7 +1429,7 @@ keys = ["pymdown-extensions"]
 type = "git"
 url = "https://github.com/robusta-dev/robusta-immaterial.git"
 reference = "HEAD"
-resolved_reference = "873d244977eba7dfec8ac4a67be0a68490fc05e2"
+resolved_reference = "8ce9f9ebe44bfb4e392aee5743259fbfbe7f75ed"
 
 [[package]]
 name = "sphinxcontrib-applehelp"
@@ -2137,6 +2137,7 @@ kubernetes = [
     {file = "kubernetes-12.0.1.tar.gz", hash = "sha256:ec52ea01d52e2ec3da255992f7e859f3a76f2bdb51cf65ba8cd71dfc309d8daa"},
 ]
 livereload = [
+    {file = "livereload-2.6.3-py2.py3-none-any.whl", hash = "sha256:ad4ac6f53b2d62bb6ce1a5e6e96f1f00976a32348afedcb4b6d68df2a1d346e4"},
     {file = "livereload-2.6.3.tar.gz", hash = "sha256:776f2f865e59fde56490a56bcc6773b6917366bce0c267c60ee8aaf1a0959869"},
 ]
 manhole = [
