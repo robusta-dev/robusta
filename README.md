@@ -16,6 +16,8 @@
 
 </div>
 
+<div id="top"></div>
+
 ## 💻 About the project
 Robusta is both an automations engine for Kubernetes, and a [multi-cluster observability platform](https://home.robusta.dev/).
 
