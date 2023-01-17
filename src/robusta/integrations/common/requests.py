@@ -1,9 +1,9 @@
 import json
+import logging
+from enum import Enum
 from http import HTTPStatus
 
 import requests
-
-from ...core.reporting.base import *
 
 
 class HttpMethod(Enum):
@@ -19,7 +19,7 @@ _MAPPER_TYPE_TO_METHOD = {
     HttpMethod.POST: requests.post,
     HttpMethod.PATCH: requests.patch,
     HttpMethod.DELETE: requests.delete,
-    HttpMethod.PUT: requests.put
+    HttpMethod.PUT: requests.put,
 }
 
 
@@ -37,8 +37,7 @@ def check_response_succeed(response):
     ]
 
 
-def process_request(url: str, method: HttpMethod, **kwargs) \
-        -> requests.Response:
+def process_request(url: str, method: HttpMethod, **kwargs) -> requests.Response:
     """
     Function to abort request if request to external
     uri was not successful or if there were any

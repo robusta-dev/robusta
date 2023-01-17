@@ -7,6 +7,15 @@ packages = [
     { include = "robusta", from = "src"},
 ]
 
+[tool.black]
+line-length = 120
+target-version = ['py37']
+
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+
 [tool.poetry.scripts]
 robusta = "robusta.cli.main:app"
 
@@ -71,6 +80,18 @@ cssselect = "^1.1.0"
 pygal = "^3.0.0"
 tinycss = "^0.4"
 rsa = "^4.8"
+flake8 = "5.0.4"
+black = "21.5b2"
+mypy = "0.991"
+isort = "5.10.1"
+absolufy-imports = "^0.3.1"
+types-pytz = "^2022.6.0.1"
+types-requests = "^2.28.11.5"
+types-cachetools = "^5.2.1"
+types-PyYAML = "^6.0.0"
+types-click-spinner = "^0.1.10"
+types-toml = "^0.10.2"
+types-tabulate = "^0.8.10"
 
 # There is a bug in jinga2 and markupsafe (explicitly markupsafe 2.1.1)
 markupsafe = "2.0.1"

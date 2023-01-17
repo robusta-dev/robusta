@@ -1,7 +1,8 @@
 from typing import List
-from kubernetes.client import V1ResourceRequirements, V1Container, V1Pod
 
-from ...core.model.pods import PodResources, ResourceAttributes, ContainerResources
+from kubernetes.client import V1Container, V1Pod, V1ResourceRequirements
+
+from robusta.core.model.pods import ContainerResources, PodResources, ResourceAttributes
 
 
 def k8s_pod_requests(pod: V1Pod) -> PodResources:
@@ -19,7 +20,7 @@ def __pod_resources(pod: V1Pod, resource_attribute: ResourceAttributes) -> PodRe
 
 
 def containers_resources_sum(
-        containers: List[V1Container], resource_attribute: ResourceAttributes
+    containers: List[V1Container], resource_attribute: ResourceAttributes
 ) -> ContainerResources:
     cpu_sum: float = 0.0
     mem_sum: int = 0
@@ -38,11 +39,7 @@ def container_resources(container: V1Container, resource_attribute: ResourceAttr
     resources: V1ResourceRequirements = container.resources
     if resources:
         resource_spec = getattr(resources, resource_attribute.name) or {}  # requests or limits
-        container_cpu = PodResources.parse_cpu(
-            resource_spec.get("cpu", 0.0)
-        )
-        container_mem = PodResources.parse_mem(
-            resource_spec.get("memory", "0Mi")
-        )
+        container_cpu = PodResources.parse_cpu(resource_spec.get("cpu", 0.0))
+        container_mem = PodResources.parse_mem(resource_spec.get("memory", "0Mi"))
 
     return ContainerResources(cpu=container_cpu, memory=container_mem)

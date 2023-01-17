@@ -1,53 +1,42 @@
 import base64
 import json
-import logging
 import random
 import subprocess
 import time
-import uuid
-import click_spinner
-
-from typing import Optional, List, Union, Dict
-
 import traceback
+import uuid
+from typing import Dict, List, Optional, Union
 
-from hikaru.model import Job, ObjectMeta, JobSpec, PodTemplateSpec, PodSpec, Container
-
-from robusta.integrations.prometheus.utils import AlertManagerDiscovery
-from .utils import get_runner_pod
 import typer
 import yaml
-from kubernetes import config, client
+from hikaru.model import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec
+from kubernetes import client, config
 from pydantic import BaseModel, Extra
 
-# TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
-from .auth import gen_rsa_pair, RSAKeyPair
-from .backend_profile import backend_profile
-from ..core.sinks.msteams.msteams_sink_params import (
-    MsTeamsSinkConfigWrapper,
-    MsTeamsSinkParams,
-)
-from ..core.sinks.robusta.robusta_sink_params import (
-    RobustaSinkConfigWrapper,
-    RobustaSinkParams,
-)
-from ..core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
-from .eula import handle_eula
 from robusta._version import __version__
-from .integrations_cmd import app as integrations_commands, get_slack_key, get_ui_key
-from .auth import app as auth_commands
-from .self_host import app as self_host_commands
-from .slack_verification import verify_slack_channel
-from .slack_feedback_message import SlackFeedbackMessagesSender
-from .playbooks_cmd import app as playbooks_commands
-from .utils import log_title, namespace_to_kubectl
+from robusta.cli.auth import RSAKeyPair
+from robusta.cli.auth import app as auth_commands
+from robusta.cli.auth import gen_rsa_pair
+from robusta.cli.backend_profile import backend_profile
+from robusta.cli.eula import handle_eula
+from robusta.cli.integrations_cmd import app as integrations_commands
+from robusta.cli.integrations_cmd import get_slack_key, get_ui_key
+from robusta.cli.playbooks_cmd import app as playbooks_commands
+from robusta.cli.self_host import app as self_host_commands
+from robusta.cli.slack_feedback_message import SlackFeedbackMessagesSender
+from robusta.cli.slack_verification import verify_slack_channel
+from robusta.cli.utils import get_runner_pod, log_title, namespace_to_kubectl
+from robusta.core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrapper, MsTeamsSinkParams
+from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
+from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
+from robusta.integrations.prometheus.utils import AlertManagerDiscovery
+
+# TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
 
 
 app = typer.Typer()
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
-app.add_typer(
-    integrations_commands, name="integrations", help="Integrations commands menu"
-)
+app.add_typer(integrations_commands, name="integrations", help="Integrations commands menu")
 app.add_typer(auth_commands, name="auth", help="Authentication commands menu")
 app.add_typer(self_host_commands, name="self-host", help="Self-host commands menu")
 
@@ -65,11 +54,7 @@ class GlobalConfig(BaseModel):
 
 class HelmValues(BaseModel, extra=Extra.allow):
     globalConfig: GlobalConfig
-    sinksConfig: List[
-        Union[
-            SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper
-        ]
-    ]
+    sinksConfig: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]]
     clusterName: Optional[str]
     isSmallCluster: Optional[bool]
     enablePrometheusStack: bool = False
@@ -127,9 +112,7 @@ def gen_config(
     robusta_api_key: str = typer.Option(None),
     enable_prometheus_stack: bool = typer.Option(None),
     disable_cloud_routing: bool = typer.Option(None),
-    output_path: str = typer.Option(
-        "./generated_values.yaml", help="Output path of generated Helm values"
-    ),
+    output_path: str = typer.Option("./generated_values.yaml", help="Output path of generated Helm values"),
     debug: bool = typer.Option(False),
     context: str = typer.Option(
         None,
@@ -141,16 +124,12 @@ def gen_config(
 
     # Configure sinks
     typer.secho(
-        f"""Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""",
+        """Robusta reports its findings to external destinations (we call them "sinks").\nWe'll define some of them now.\n""",
         fg=typer.colors.CYAN,
         bold=True,
     )
 
-    sinks_config: List[
-        Union[
-            SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper
-        ]
-    ] = []
+    sinks_config: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]] = []
     slack_workspace = "N/A"
     if not slack_api_key and typer.confirm(
         "Configure Slack integration? This is HIGHLY recommended.",
@@ -163,9 +142,7 @@ def gen_config(
 
     slack_integration_configured = False
     if slack_api_key and slack_channel:
-        while not verify_slack_channel(
-            slack_api_key, slack_channel, slack_workspace, debug
-        ):
+        while not verify_slack_channel(slack_api_key, slack_channel, slack_workspace, debug):
             slack_channel = get_slack_channel()
 
         sinks_config.append(
@@ -217,11 +194,7 @@ def gen_config(
         account_id = token.get("account_id", account_id)
 
         sinks_config.append(
-            RobustaSinkConfigWrapper(
-                robusta_sink=RobustaSinkParams(
-                    name="robusta_ui_sink", token=robusta_api_key
-                )
-            )
+            RobustaSinkConfigWrapper(robusta_sink=RobustaSinkParams(name="robusta_ui_sink", token=robusta_api_key))
         )
         enable_platform_playbooks = True
         disable_cloud_routing = False
@@ -232,7 +205,7 @@ def gen_config(
             slack_feedback_heads_up_message = SlackFeedbackMessagesSender(
                 slack_api_key, slack_channel, account_id, debug
             ).schedule_feedback_messages()
-        except Exception as e:
+        except Exception:
             if debug:
                 typer.secho(traceback.format_exc())
 
@@ -299,7 +272,7 @@ def gen_config(
         )
     else:
         typer.secho(
-            f"Finish installing with Helm (see the Robusta docs). By the way, you're missing out on the UI! See https://home.robusta.dev/ui/\n",
+            "Finish installing with Helm (see the Robusta docs). By the way, you're missing out on the UI! See https://home.robusta.dev/ui/\n",
             fg="green",
         )
 
@@ -331,7 +304,7 @@ def update_config(
 
         try:
             uuid.UUID(values.globalConfig.signing_key)
-        except:
+        except ValueError:
             typer.secho("Invalid signing key. Generating a new one", fg="green")
             values.globalConfig.signing_key = str(uuid.uuid4())
 
@@ -357,11 +330,9 @@ def demo():
     CRASHPOD_YAML = "https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw/crashpod.yaml"
     log_title("Deploying a crashing pod to kubernetes...")
     subprocess.check_call(f"kubectl apply -f {CRASHPOD_YAML}", shell=True)
-    log_title(
-        "In ~30 seconds you should receive a slack notification on a crashing pod"
-    )
+    log_title("In ~30 seconds you should receive a slack notification on a crashing pod")
     time.sleep(60)
-    subprocess.check_call(f"kubectl delete deployment crashpod", shell=True)
+    subprocess.check_call("kubectl delete deployment crashpod", shell=True)
     log_title("Done!")
 
 
@@ -372,14 +343,10 @@ def logs(
         help="Namespace",
     ),
     f: bool = typer.Option(False, "-f", show_default=False, help="Stream runner logs"),
-    since: str = typer.Option(
-        None, help="Only return logs newer than a relative duration like 5s, 2m, or 3h."
-    ),
+    since: str = typer.Option(None, help="Only return logs newer than a relative duration like 5s, 2m, or 3h."),
     tail: int = typer.Option(None, help="Lines of recent log file to display."),
     context: str = typer.Option(None, help="The name of the kubeconfig context to use"),
-    resource_name: str = typer.Option(
-        None, help="Robusta Runner deployment or pod name"
-    ),
+    resource_name: str = typer.Option(None, help="Robusta Runner deployment or pod name"),
 ):
     """Fetch Robusta runner logs"""
     stream = "-f" if f else ""
@@ -392,7 +359,7 @@ def logs(
             f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
             shell=True,
         )
-    except Exception as e:
+    except Exception:
         log_title("error fetching logs; see help for more options.", color="red")
 
 
@@ -429,8 +396,7 @@ def demo_alert(
         alertmanager_url = AlertManagerDiscovery.find_alert_manager_url()
         if not alertmanager_url:
             typer.secho(
-                "Alertmanager service could not be auto-discovered. "
-                "Please use the --alertmanager_url parameter",
+                "Alertmanager service could not be auto-discovered. " "Please use the --alertmanager_url parameter",
                 fg="red",
             )
             return

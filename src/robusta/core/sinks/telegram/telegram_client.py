@@ -1,8 +1,9 @@
 import logging
 import os
+
 import requests
 
-from ....core.reporting.utils import convert_svg_to_png, is_image, SVG_SUFFIX, PNG_SUFFIX
+from robusta.core.reporting.utils import PNG_SUFFIX, SVG_SUFFIX, convert_svg_to_png, is_image
 
 TELEGRAM_BASE_URL = os.environ.get("TELEGRAM_BASE_URL", "https://api.telegram.org")
 
@@ -18,7 +19,7 @@ class TelegramClient:
             "chat_id": self.chat_id,
             "disable_web_page_preview": disable_links_preview,
             "parse_mode": "Markdown",
-            "text": message
+            "text": message,
         }
         response = requests.post(url, json=message_json)
 
@@ -34,13 +35,10 @@ class TelegramClient:
             contents = convert_svg_to_png(contents)
             file_name = file_name.replace(SVG_SUFFIX, PNG_SUFFIX)
 
-        files = {
-            file_type.lower(): (file_name, contents)
-        }
+        files = {file_type.lower(): (file_name, contents)}
         response = requests.post(url, files=files)
 
         if response.status_code != 200:
             logging.error(
                 f"Failed to send telegram file: chat_id - {self.chat_id} reason - {response.reason} {response.text}"
             )
-

@@ -1,6 +1,6 @@
 import textwrap
 
-from ...core.model.env_vars import INSTALLATION_NAMESPACE
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
 
 
 def get_deployment_yaml(name, image="busybox"):

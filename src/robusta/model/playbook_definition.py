@@ -1,9 +1,10 @@
 import hashlib
-from typing import List, Any, Dict
-from pydantic import PrivateAttr, BaseModel
+from typing import Any, Dict, List
 
-from ..core.playbooks.trigger import Trigger
-from .playbook_action import PlaybookAction
+from pydantic import BaseModel, PrivateAttr
+
+from robusta.core.playbooks.trigger import Trigger
+from robusta.model.playbook_action import PlaybookAction
 
 
 class PlaybookDefinition(BaseModel):
@@ -22,9 +23,7 @@ class PlaybookDefinition(BaseModel):
                 raise Exception(f"Action must have a single name: {action.keys()}")
 
             (action_name, action_params) = next(iter(action.items()))
-            self._actions.append(
-                PlaybookAction(action_name=action_name, action_params=action_params)
-            )
+            self._actions.append(PlaybookAction(action_name=action_name, action_params=action_params))
 
     def get_actions(self) -> List[PlaybookAction]:
         return self._actions

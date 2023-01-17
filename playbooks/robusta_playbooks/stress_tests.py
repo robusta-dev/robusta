@@ -1,4 +1,13 @@
-from robusta.api import *
+from robusta.api import (
+    ActionParams,
+    ExecutionBaseEvent,
+    FileBlock,
+    Finding,
+    FindingSource,
+    FindingType,
+    RobustaJob,
+    action,
+)
 
 
 class StressTestParams(ActionParams):
@@ -17,9 +26,7 @@ def http_stress_test(event: ExecutionBaseEvent, action_params: StressTestParams)
     Run an http stress test and send the results
     """
     # TODO: remove timeout?
-    output = RobustaJob.run_simple_job(
-        "williamyeh/hey", f"/hey -n {action_params.n} {action_params.url}", 120
-    )
+    output = RobustaJob.run_simple_job("williamyeh/hey", f"/hey -n {action_params.n} {action_params.url}", 120)
     finding = Finding(
         title=f"Done running stress test with {action_params.n} http requests for url {action_params.url}",
         source=FindingSource.MANUAL,

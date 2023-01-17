@@ -1,6 +1,6 @@
 from typing import List
 
-from .msteams_base import MsTeamsBase
+from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
 
 
 class MsTeamsAction(MsTeamsBase):

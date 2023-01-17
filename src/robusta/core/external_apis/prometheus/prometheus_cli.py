@@ -1,7 +1,10 @@
-from .models import PrometheusQueryResult
 from datetime import datetime
-from ....integrations.prometheus.utils import check_prometheus_connection
-from prometheus_api_client import PrometheusConnect, PrometheusApiClientException
+from typing import Any, Dict, Optional
+
+from prometheus_api_client import PrometheusApiClientException, PrometheusConnect
+
+from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
+from robusta.integrations.prometheus.utils import check_prometheus_connection
 
 """
 This function is copied from the python package prometheus_api_client
@@ -9,11 +12,16 @@ git repo: https://github.com/4n4nd/prometheus-api-client-python
 It used to return only the result and not the resultType leading for less safe and clear code
 """
 
-
 # TODO: Replace this with our own prometheus client that handles return types and errors better
 
+
 def custom_query_range(
-        prometheus_base_url: str, query: str, start_time: datetime, end_time: datetime, step: str, params: dict = None
+    prometheus_base_url: str,
+    query: str,
+    start_time: datetime,
+    end_time: datetime,
+    step: str,
+    params: Optional[Dict[str, Any]] = None,
 ) -> PrometheusQueryResult:
     """
     Send a query_range to a Prometheus Host.
@@ -50,7 +58,5 @@ def custom_query_range(
     if response.status_code == 200:
         prometheus_result = PrometheusQueryResult(data=response.json()["data"])
     else:
-        raise PrometheusApiClientException(
-            "HTTP Status Code {} ({!r})".format(response.status_code, response.content)
-        )
+        raise PrometheusApiClientException("HTTP Status Code {} ({!r})".format(response.status_code, response.content))
     return prometheus_result

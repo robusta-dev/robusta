@@ -1,19 +1,29 @@
 import base64
 import json
+import logging
 import uuid
 from datetime import datetime
+from typing import Any, Dict
 
-from typing import Dict, Any
-
-from ...transformer import Transformer
-from ....reporting.callbacks import ExternalActionRequestBuilder
-from .....core.reporting import Finding, Enrichment, MarkdownBlock, logging, CallbackBlock, KubernetesDiffBlock, \
-    HeaderBlock, ListBlock, TableBlock, FileBlock, DividerBlock, PrometheusBlock
-from .....utils.parsing import datetime_to_db_str
+from robusta.core.reporting import (
+    CallbackBlock,
+    DividerBlock,
+    Enrichment,
+    FileBlock,
+    Finding,
+    HeaderBlock,
+    KubernetesDiffBlock,
+    ListBlock,
+    MarkdownBlock,
+    PrometheusBlock,
+    TableBlock,
+)
+from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
+from robusta.core.sinks.transformer import Transformer
+from robusta.utils.parsing import datetime_to_db_str
 
 
 class ModelConversion:
-
     @staticmethod
     def to_finding_json(account_id: str, cluster_id: str, finding: Finding):
         finding_json = {
@@ -35,7 +45,7 @@ class ModelConversion:
             "account_id": account_id,
             "video_links": [link.dict() for link in finding.video_links],
             "starts_at": datetime_to_db_str(finding.starts_at),
-            "updated_at": datetime_to_db_str(datetime.now())
+            "updated_at": datetime_to_db_str(datetime.now()),
         }
 
         if finding.creation_date:
@@ -51,13 +61,13 @@ class ModelConversion:
 
     @staticmethod
     def to_evidence_json(
-            account_id: str,
-            cluster_id: str,
-            sink_name: str,
-            signing_key: str,
-            finding_id: uuid,
-            enrichment: Enrichment
-        ) -> Dict[Any, Any]:
+        account_id: str,
+        cluster_id: str,
+        sink_name: str,
+        signing_key: str,
+        finding_id: uuid.UUID,
+        enrichment: Enrichment,
+    ) -> Dict[Any, Any]:
         structured_data = []
         for block in enrichment.blocks:
             if isinstance(block, MarkdownBlock):
@@ -87,10 +97,12 @@ class ModelConversion:
                 structured_data.append({"type": "prometheus", "data": block.data.json(), "metadata": block.metadata})
             elif isinstance(block, TableBlock):
                 if block.table_name:
-                    structured_data.append({
+                    structured_data.append(
+                        {
                             "type": "markdown",
                             "data": Transformer.to_github_markdown(block.table_name),
-                    })
+                        }
+                    )
                 structured_data.append(
                     {
                         "type": "table",
@@ -135,9 +147,7 @@ class ModelConversion:
 
                 structured_data.append({"type": "callbacks", "data": callbacks})
             else:
-                logging.error(
-                    f"cannot convert block of type {type(block)} to robusta platform format block: {block}"
-                )
+                logging.error(f"cannot convert block of type {type(block)} to robusta platform format block: {block}")
                 continue  # no reason to crash the entire report
 
         return {
@@ -146,5 +156,3 @@ class ModelConversion:
             "data": json.dumps(structured_data),
             "account_id": account_id,
         }
-
-
