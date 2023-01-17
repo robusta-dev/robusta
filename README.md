@@ -1,3 +1,5 @@
+<div id="top"></div>
+
 <div align="center">
   <p>
     <a href="https://home.robusta.dev/" target="_blank">
@@ -15,27 +17,6 @@
   <a href="https://www.youtube.com/channel/UCeLrAOI3anJAfO3BrYVB62Q"><img alt="Youtube" title="Youtube" src="https://img.shields.io/youtube/channel/subscribers/UCeLrAOI3anJAfO3BrYVB62Q?color=%23ff0000&label=Robusta%20Dev&logo=youtube&logoColor=%23ff0000&style=flat-square"/></a>
 
 </div>
-
-<div id="top"></div>
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary><h3 style="display:inline;">Table of Contents</h3></summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About the project</a>
-    </li>
-    <li>
-      <a href="#use-cases">Use cases</a>
-    </li>
-    <li><a href="#examples">Examples</a></li>
-    <li><a href="#installing-robusta">Installing Robusta</a></li>
-    <li><a href="#documentation">Documentation</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#stay-up-to-date">Stay up to date</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
 
 ## 💻 About the project
 Robusta is both an automations engine for Kubernetes, and a [multi-cluster observability platform](https://home.robusta.dev/).
