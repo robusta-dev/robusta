@@ -5,7 +5,7 @@ This list contains some common errors we have encountered over time. If you can'
 please contact support@robusta.dev or go to `our slack channel <https://robustacommunity.slack.com/ssb/redirect>`_.
 
 
-.. dropdown:: Robusta CLI is not in path
+.. dropdown:: command not found: robusta (Robusta CLI is not in path)
     :color: light
 
     1. Determine where the Robusta-cli binary file is installed  
