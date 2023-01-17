@@ -1,3 +1,5 @@
+<div id="top"></div>
+
 <div align="center">
   <p>
     <a href="https://home.robusta.dev/" target="_blank">
@@ -15,8 +17,6 @@
   <a href="https://www.youtube.com/channel/UCeLrAOI3anJAfO3BrYVB62Q"><img alt="Youtube" title="Youtube" src="https://img.shields.io/youtube/channel/subscribers/UCeLrAOI3anJAfO3BrYVB62Q?color=%23ff0000&label=Robusta%20Dev&logo=youtube&logoColor=%23ff0000&style=flat-square"/></a>
 
 </div>
-
-<div id="top"></div>
 
 ## 💻 About the project
 Robusta is both an automations engine for Kubernetes, and a [multi-cluster observability platform](https://home.robusta.dev/).
