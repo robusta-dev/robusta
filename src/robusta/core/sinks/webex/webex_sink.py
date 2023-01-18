@@ -1,7 +1,7 @@
-from .webex_sink_params import WebexSinkConfigWrapper
-from ..sink_base import SinkBase
-from ...reporting.base import Finding
-from ....integrations.webex.sender import WebexSender
+from robusta.core.reporting.base import Finding
+from robusta.core.sinks.sink_base import SinkBase
+from robusta.core.sinks.webex.webex_sink_params import WebexSinkConfigWrapper
+from robusta.integrations.webex.sender import WebexSender
 
 
 class WebexSink(SinkBase):
@@ -13,7 +13,7 @@ class WebexSink(SinkBase):
             room_id=sink_config.webex_sink.room_id,
             account_id=self.account_id,
             cluster_name=self.cluster_name,
-            webex_params=self.params
+            webex_params=self.params,
         )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):

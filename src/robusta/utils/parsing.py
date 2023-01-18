@@ -1,7 +1,7 @@
 import datetime
 import json
 import logging
-from typing import Union, Any
+from typing import Any, Union
 
 
 def load_json(s: Union[str, bytes]) -> Any:

@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import logging
 import os
@@ -5,43 +6,36 @@ import pkgutil
 import subprocess
 import sys
 import threading
-import yaml
-from typing import Optional, List, Dict
 from inspect import getmembers
+from typing import Dict, Optional
 
-from ..cli.utils import get_package_name
-from ..integrations.receiver import ActionRequestReceiver
-from ..integrations.scheduled.trigger import ScheduledTriggerEvent
-from ..core.playbooks.playbooks_event_handler import PlaybooksEventHandler
-from ..core.model.runner_config import RunnerConfig, PlaybookRepo
-from ..core.playbooks.actions_registry import ActionsRegistry, Action
-from ..core.model.env_vars import (
+import yaml
+
+from robusta.cli.utils import get_package_name
+from robusta.core.model.env_vars import (
+    CUSTOM_PLAYBOOKS_ROOT,
+    DEFAULT_PLAYBOOKS_PIP_INSTALL,
+    DEFAULT_PLAYBOOKS_ROOT,
     INTERNAL_PLAYBOOKS_ROOT,
     PLAYBOOKS_CONFIG_FILE_PATH,
     PLAYBOOKS_ROOT,
-    DEFAULT_PLAYBOOKS_ROOT,
-    CUSTOM_PLAYBOOKS_ROOT,
-    DEFAULT_PLAYBOOKS_PIP_INSTALL,
 )
-from ..integrations.git.git_repo import (
-    GitRepoManager,
-    GitRepo,
-    GIT_SSH_PREFIX,
+from robusta.core.model.runner_config import PlaybookRepo, RunnerConfig
+from robusta.core.playbooks.actions_registry import Action, ActionsRegistry
+from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
+from robusta.integrations.git.git_repo import (
     GIT_HTTPS_PREFIX,
+    GIT_SSH_PREFIX,
     LOCAL_PATH_URL_PREFIX,
+    GitRepo,
+    GitRepoManager,
 )
-from ..utils.file_system_watcher import FileSystemWatcher
-from ..model.playbook_definition import PlaybookDefinition
-from ..model.config import (
-    Registry,
-    SinksRegistry,
-    PlaybooksRegistryImpl,
-    PlaybooksRegistry,
-)
-from ..integrations.scheduled.playbook_scheduler_manager_impl import (
-    PlaybooksSchedulerManagerImpl,
-)
-import hashlib
+from robusta.integrations.receiver import ActionRequestReceiver
+from robusta.integrations.scheduled.playbook_scheduler_manager_impl import PlaybooksSchedulerManagerImpl
+from robusta.integrations.scheduled.trigger import ScheduledTriggerEvent
+from robusta.model.config import PlaybooksRegistry, PlaybooksRegistryImpl, Registry, SinksRegistry
+from robusta.model.playbook_definition import PlaybookDefinition
+from robusta.utils.file_system_watcher import FileSystemWatcher
 
 
 class ConfigLoader:
@@ -64,12 +58,8 @@ class ConfigLoader:
         self.event_handler = event_handler
         self.root_playbook_path = PLAYBOOKS_ROOT
         self.reload_lock = threading.RLock()
-        self.watcher = FileSystemWatcher(
-            self.root_playbook_path, self.__reload_playbook_packages
-        )
-        self.conf_watcher = FileSystemWatcher(
-            self.config_file_path, self.__reload_playbook_packages
-        )
+        self.watcher = FileSystemWatcher(self.root_playbook_path, self.__reload_playbook_packages)
+        self.conf_watcher = FileSystemWatcher(self.config_file_path, self.__reload_playbook_packages)
         self.__reload_playbook_packages("initialization")
 
     def close(self):
@@ -94,14 +84,9 @@ class ConfigLoader:
             return
 
         current_account_id = self.event_handler.get_global_config().get("account_id")
-        current_cluster_name = self.event_handler.get_global_config().get(
-            "cluster_name"
-        )
+        current_cluster_name = self.event_handler.get_global_config().get("cluster_name")
 
-        if (
-            current_account_id != receiver.account_id
-            or current_cluster_name != receiver.cluster_name
-        ):
+        if current_account_id != receiver.account_id or current_cluster_name != receiver.cluster_name:
             # need to re-create the receiver
             receiver.stop()
             self.registry.set_receiver(ActionRequestReceiver(self.event_handler))
@@ -110,9 +95,7 @@ class ConfigLoader:
     def __get_package_name(cls, local_path) -> str:
         package_name = get_package_name(local_path)
         if not package_name:
-            raise Exception(
-                f"Illegal playbooks package {local_path}. Package name not found"
-            )
+            raise Exception(f"Illegal playbooks package {local_path}. Package name not found")
         return package_name
 
     def __load_playbooks_repos(
@@ -123,60 +106,42 @@ class ConfigLoader:
         playbook_packages = []
         for playbook_package, playbooks_repo in playbooks_repos.items():
             try:
-                if (
-                    playbooks_repo.pip_install
-                ):  # skip playbooks that are already in site-packages
-                    if playbooks_repo.url.startswith(
-                        GIT_SSH_PREFIX
-                    ) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
+                if playbooks_repo.pip_install:  # skip playbooks that are already in site-packages
+                    if playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
                         repo = GitRepo(
                             playbooks_repo.url,
                             playbooks_repo.key.get_secret_value(),
                         )
                         local_path = repo.repo_local_path
                     elif playbooks_repo.url.startswith(LOCAL_PATH_URL_PREFIX):
-                        local_path = playbooks_repo.url.replace(
-                            LOCAL_PATH_URL_PREFIX, ""
-                        )
+                        local_path = playbooks_repo.url.replace(LOCAL_PATH_URL_PREFIX, "")
                     else:
                         raise Exception(
                             f"Illegal playbook repo url {playbooks_repo.url}. "
                             f"Must start with '{GIT_SSH_PREFIX}', '{GIT_HTTPS_PREFIX}' or '{LOCAL_PATH_URL_PREFIX}'"
                         )
 
-                    if not os.path.exists(
-                        local_path
-                    ):  # in case the repo url was defined before it was actually loaded
-                        logging.error(
-                            f"Playbooks local path {local_path} does not exist. Skipping"
-                        )
+                    if not os.path.exists(local_path):  # in case the repo url was defined before it was actually loaded
+                        logging.error(f"Playbooks local path {local_path} does not exist. Skipping")
                         continue
 
                     # Adding to pip the playbooks repo from local_path
-                    subprocess.check_call(
-                        [sys.executable, "-m", "pip", "install", "--no-build-isolation", local_path]
-                    )
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", "--no-build-isolation", local_path])
                     playbook_package = self.__get_package_name(local_path=local_path)
 
                 playbook_packages.append(playbook_package)
-            except Exception as e:
-                logging.error(
-                    f"Failed to add playbooks repo {playbook_package}", exc_info=True
-                )
+            except Exception:
+                logging.error(f"Failed to add playbooks repo {playbook_package}", exc_info=True)
 
         for package_name in playbook_packages:
             self.__import_playbooks_package(actions_registry, package_name)
 
     @classmethod
-    def __import_playbooks_package(
-        cls, actions_registry: ActionsRegistry, package_name: str
-    ):
+    def __import_playbooks_package(cls, actions_registry: ActionsRegistry, package_name: str):
         logging.info(f"Importing actions package {package_name}")
         # Reload is required for modules that are already loaded
         pkg = importlib.reload(importlib.import_module(package_name))
-        playbooks_modules = [
-            name for _, name, _ in pkgutil.walk_packages(path=pkg.__path__)
-        ]
+        playbooks_modules = [name for _, name, _ in pkgutil.walk_packages(path=pkg.__path__)]
         for playbooks_module in playbooks_modules:
             try:
                 module_name = ".".join([package_name, playbooks_module])
@@ -186,7 +151,7 @@ class ConfigLoader:
                 playbook_actions = getmembers(m, Action.is_action)
                 for (action_name, action_func) in playbook_actions:
                     actions_registry.add_action(action_func)
-            except Exception as e:
+            except Exception:
                 logging.error(f"failed to module {playbooks_module}", exc_info=True)
 
     def __reload_playbook_packages(self, change_name):
@@ -208,9 +173,7 @@ class ConfigLoader:
                 # order matters! Loading the default first, allows overriding it if adding package with the same name
                 # since python 3.7, iteration order is identical to insertion order, if dict didn't change
                 # default playbooks
-                playbook_repos[
-                    self.__get_package_name(DEFAULT_PLAYBOOKS_ROOT)
-                ] = PlaybookRepo(
+                playbook_repos[self.__get_package_name(DEFAULT_PLAYBOOKS_ROOT)] = PlaybookRepo(
                     url=f"file://{DEFAULT_PLAYBOOKS_ROOT}", pip_install=DEFAULT_PLAYBOOKS_PIP_INSTALL
                 )
 
@@ -223,22 +186,16 @@ class ConfigLoader:
                 if os.path.exists(CUSTOM_PLAYBOOKS_ROOT):
                     for custom_playbooks_location in os.listdir(CUSTOM_PLAYBOOKS_ROOT):
                         try:
-                            location = os.path.join(
-                                CUSTOM_PLAYBOOKS_ROOT, custom_playbooks_location
+                            location = os.path.join(CUSTOM_PLAYBOOKS_ROOT, custom_playbooks_location)
+                            runner_config.playbook_repos[self.__get_package_name(location)] = PlaybookRepo(
+                                url=f"file://{location}"
                             )
-                            runner_config.playbook_repos[
-                                self.__get_package_name(location)
-                            ] = PlaybookRepo(url=f"file://{location}")
                         except Exception:  # This may happen because of the lost+found directory
                             logging.warning(f"Skipping custom actions directory {custom_playbooks_location}")
                 else:
-                    logging.info(
-                        f"No custom playbooks defined at {CUSTOM_PLAYBOOKS_ROOT}"
-                    )
+                    logging.info(f"No custom playbooks defined at {CUSTOM_PLAYBOOKS_ROOT}")
 
-                self.__load_playbooks_repos(
-                    action_registry, runner_config.playbook_repos
-                )
+                self.__load_playbooks_repos(action_registry, runner_config.playbook_repos)
 
                 (sinks_registry, playbooks_registry) = self.__prepare_runtime_config(
                     runner_config,
@@ -256,26 +213,18 @@ class ConfigLoader:
                 self.registry.set_sinks(sinks_registry)
 
                 telemetry = self.registry.get_telemetry()
-                telemetry.playbooks_count = (
-                    len(runner_config.active_playbooks)
-                    if runner_config.active_playbooks
-                    else 0
-                )
+                telemetry.playbooks_count = len(runner_config.active_playbooks) if runner_config.active_playbooks else 0
                 telemetry.account_id = hashlib.sha256(
-                    str(
-                        runner_config.global_config.get("account_id", "no_account")
-                    ).encode("utf-8")
+                    str(runner_config.global_config.get("account_id", "no_account")).encode("utf-8")
                 ).hexdigest()
                 telemetry.cluster_id = hashlib.sha256(
-                    str(
-                        runner_config.global_config.get("cluster_name", "no_cluster")
-                    ).encode("utf-8")
+                    str(runner_config.global_config.get("cluster_name", "no_cluster")).encode("utf-8")
                 ).hexdigest()
 
                 self.__reload_receiver()
-            except Exception as e:
+            except Exception:
                 logging.error(
-                    f"unknown error reloading playbooks. will try again when they next change",
+                    "unknown error reloading playbooks. will try again when they next change",
                     exc_info=True,
                 )
 
@@ -288,9 +237,7 @@ class ConfigLoader:
         registry: Registry,
     ) -> (SinksRegistry, PlaybooksRegistry):
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
-        new_sinks = SinksRegistry.construct_new_sinks(
-            runner_config.sinks_config, existing_sinks, registry
-        )
+        new_sinks = SinksRegistry.construct_new_sinks(runner_config.sinks_config, existing_sinks, registry)
         sinks_registry = SinksRegistry(new_sinks)
 
         # TODO we will replace it with a more generic mechanism, as part of the triggers separation task
@@ -319,9 +266,7 @@ class ConfigLoader:
     @classmethod
     def __load_runner_config(cls, config_file_path) -> Optional[RunnerConfig]:
         if not os.path.exists(config_file_path):
-            logging.warning(
-                f"config file not found at {config_file_path} - not configuring any playbooks."
-            )
+            logging.warning(f"config file not found at {config_file_path} - not configuring any playbooks.")
             return None
 
         logging.info(f"loading config {config_file_path}")

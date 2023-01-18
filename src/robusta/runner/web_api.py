@@ -1,5 +1,6 @@
 import logging
 import time
+
 import requests
 
 
@@ -13,13 +14,14 @@ class WebApi:
         status_code = -1
 
         manual_action_url = "http://127.0.0.1:5000/api/trigger"
-        data = { "action_name": action_name, "action_params": action_params, "sinks": sinks }
+        data = {
+            "action_name": action_name,
+            "action_params": action_params,
+            "sinks": sinks,
+        }
         for _ in range(retries):
             try:
-                response = requests.post(
-                    manual_action_url,
-                    json=data
-                )
+                response = requests.post(manual_action_url, json=data)
                 status_code = response.status_code
                 if status_code == 200:
                     return status_code
@@ -28,8 +30,8 @@ class WebApi:
                     f"Failed to run manual action \naction_name:{action_name}\n"
                     f"Reason: {response.reason}\nStatus Code{status_code}"
                 )
-            except Exception as e:
-                logging.error(f"Error sending manual action request", exc_info=True)
+            except Exception:
+                logging.error("Error sending manual action request", exc_info=True)
 
             time.sleep(timeout_delay)
 

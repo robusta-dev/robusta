@@ -1,6 +1,25 @@
-from robusta.api import *
-import hikaru.model
+import logging
+from typing import List
+
+import hikaru
 import kubernetes.client.exceptions
+from hikaru.model import Pod, PodList
+
+from robusta.api import (
+    ActionException,
+    ErrorCodes,
+    FileBlock,
+    KubernetesResourceEvent,
+    MarkdownBlock,
+    ResourceLoader,
+    TableBlock,
+    action,
+    build_selector_query,
+    get_job_all_pods,
+    pod_limits,
+    pod_requests,
+    pod_restarts,
+)
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"]
 
@@ -36,7 +55,9 @@ def related_pods(event: KubernetesResourceEvent):
     """
     resource = event.get_resource()
     if resource.kind not in supported_resources:
-        raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}")
+        raise ActionException(
+            ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}"
+        )
 
     if resource.kind == "Job":
         job_pods = get_job_all_pods(resource)
@@ -45,9 +66,7 @@ def related_pods(event: KubernetesResourceEvent):
         pods = [resource]
     else:
         selector = build_selector_query(resource.spec.selector)
-        pods = PodList.listNamespacedPod(
-            namespace=resource.metadata.namespace, label_selector=selector
-        ).obj.items
+        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
 
     rows = [to_pod_row(pod, event.get_context().cluster_name) for pod in pods]
 
@@ -84,7 +103,7 @@ def get_resource_yaml(event: KubernetesResourceEvent):
     """
     resource = event.get_resource()
     if not resource:
-        logging.error(f"resource not found...")
+        logging.error("resource not found...")
         return
 
     resource_kind = resource.kind

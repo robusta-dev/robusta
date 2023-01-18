@@ -3,12 +3,12 @@ import shlex
 import subprocess
 import time
 from contextlib import contextmanager
-from typing import Optional, List
+from typing import List, Optional
 
 import click_spinner
+import requests
 import toml
 import typer
-import requests
 from dpath.util import get
 
 PLAYBOOKS_DIR = "playbooks/"
@@ -40,15 +40,13 @@ def exec_in_robusta_runner(
     for _ in range(tries - 1):
         try:
             return subprocess.check_call(exec_cmd)
-        except Exception as e:
+        except Exception:
             typer.secho(f"error: {error_msg}", fg="red")
             time.sleep(time_between_attempts)
     return subprocess.check_call(cmd)
 
 
-def exec_in_robusta_runner_output(
-    command: str, namespace: Optional[str]
-) -> Optional[bytes]:
+def exec_in_robusta_runner_output(command: str, namespace: Optional[str]) -> Optional[bytes]:
     exec_cmd = _build_exec_command(command, namespace)
     result = subprocess.check_output(exec_cmd)
     return result
@@ -87,9 +85,7 @@ def replace_in_file(path, original, replacement):
     with open(path) as r:
         text = r.read()
         if original not in text:
-            raise Exception(
-                f"Cannot replace text {original} in file {path} because it was not found"
-            )
+            raise Exception(f"Cannot replace text {original} in file {path} because it was not found")
         text = text.replace(original, replacement)
     with open(path, "w") as w:
         w.write(text)
@@ -113,7 +109,7 @@ def fetch_runner_logs(namespace: Optional[str], all_logs=False):
                     f"kubectl logs {namespace_to_kubectl(namespace)} {get_runner_pod(namespace)} -c runner --since={int(time.time() - start + 1)}s",
                     shell=True,
                 )
-        except:
+        except Exception:
             log_title("Cannot fetch logs. robusta-runner not found", color="red")
             return
 
@@ -125,7 +121,7 @@ def get_package_name(playbooks_dir: str) -> str:
         return get(parsed, "tool/poetry/name", default="")
 
 
-def get_runner_pod(namespace: str) -> Optional[str]:
+def get_runner_pod(namespace: Optional[str]) -> str:
     return subprocess.run(
         f"kubectl get pods {namespace_to_kubectl(namespace)} "
         f'--selector="robustaComponent=runner" '

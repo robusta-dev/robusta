@@ -1,10 +1,32 @@
-from robusta.api import *
+import json
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional
+from uuid import UUID
+
+import requests
+from pydantic import BaseModel
+
+from robusta.api import (
+    ActionException,
+    ActionParams,
+    AlertManagerDiscovery,
+    ErrorCodes,
+    ExecutionBaseEvent,
+    MarkdownBlock,
+    ServiceDiscovery,
+    TableBlock,
+    action,
+)
 
 # ref to api https://github.com/prometheus/alertmanager/blob/main/api/v2/openapi.yaml
 
+
 class Matcher(BaseModel):
     # https://github.com/prometheus/alertmanager/blob/main/api/v2/models/matcher.go
-    isEqual: bool = True # support old version matchers with omitted isEqual https://github.com/prometheus/alertmanager/pull/2603 
+    isEqual: bool = (
+        True  # support old version matchers with omitted isEqual https://github.com/prometheus/alertmanager/pull/2603
+    )
     isRegex: bool
     name: str
     value: str
@@ -41,9 +63,10 @@ class BaseSilenceParams(ActionParams):
     """
     :var alertmanager_url: Alternative Alert Manager url to send requests.
     """
-    alertmanager_flavor: str = None
+
+    alertmanager_flavor: str = None  # type: ignore
     alertmanager_url: Optional[str]
-    grafana_api_key: str = None
+    grafana_api_key: str = None  # type: ignore
 
 
 class DeleteSilenceParams(BaseSilenceParams):
@@ -86,7 +109,6 @@ def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
     except Exception as e:
         raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
 
-
     silence_list = [(Silence(**silence).to_list()) for silence in response.json()]
     if len(silence_list) == 0:
         event.add_enrichment([MarkdownBlock("*There are no silences*")])
@@ -112,7 +134,7 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
     try:
         res = requests.post(
             f"{alertmanager_url}{_get_url_path(SilenceOperation.CREATE, params)}",
-            data=params.json(exclude_defaults=True), # support old versions.
+            data=params.json(exclude_defaults=True),  # support old versions.
             headers=_gen_headers(params),
         )
     except Exception as e:
@@ -145,7 +167,7 @@ def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
     try:
         alertmanager_url = _get_alertmanager_url(params)
 
-        res = requests.delete(
+        requests.delete(
             f"{alertmanager_url}{_get_url_path(SilenceOperation.DELETE, params)}/{params.id}",
             headers=_gen_headers(params),
         )
@@ -189,7 +211,8 @@ def _get_alertmanager_url(params: BaseSilenceParams) -> str:
         return params.alertmanager_url
 
     if "grafana" == params.alertmanager_flavor:
-        return ServiceDiscovery.find_url(selectors=["app.kubernetes.io/name=grafana"],
-                                         error_msg="Failed to find grafana url")
+        return ServiceDiscovery.find_url(
+            selectors=["app.kubernetes.io/name=grafana"], error_msg="Failed to find grafana url"
+        )
 
     return AlertManagerDiscovery.find_alert_manager_url()

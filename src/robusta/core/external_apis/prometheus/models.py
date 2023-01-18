@@ -1,12 +1,12 @@
-from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
+from pydantic import BaseModel
 
 """
     The Metric object is defined in prometheus as a dictionary so no specific labels are guaranteed
     Known commonly returned labels in dictionary 'metric':
-    __name__: the name of the outer function in prometheus 
-   Other labels 'metric' sometimes contains:
+    __name__: the name of the outer function in prometheus
+    Other labels 'metric' sometimes contains:
     [container, created_by_kind, created_by_name, endpoint, host_ip, host_network, instance, job, namespace, node, pod,
     pod_ip, service, uid, ...]
 """
@@ -20,10 +20,10 @@ class PrometheusScalarValue(BaseModel):
 
     def __init__(self, raw_scalar_list: list):
         """
-            :var raw_scalar:  is the list prometheus returns as a scalar value from its queries
+        :var raw_scalar:  is the list prometheus returns as a scalar value from its queries
 
-            While usually this is a list of size 2 in the form of [float_timestamp, str_returned_value]
-            the list size and return value types are not guaranteed
+        While usually this is a list of size 2 in the form of [float_timestamp, str_returned_value]
+        the list size and return value types are not guaranteed
         """
         if len(raw_scalar_list) != 2:
             raise Exception(f"Invalid prometheus scalar value {raw_scalar_list}")
@@ -58,16 +58,17 @@ class PrometheusSeries(BaseModel):
 
 class PrometheusQueryResult(BaseModel):
     """
-        This class is the returned object for prometheus queries
-        :var result_type:  can be of type "vector", "matrix", "scalar", "string" depending on the query
-        :var vector_result:  a formatted vector list from the query result, if the var result_type is "vector"
-        :var series_list_result:  a formatted series list from the query result, if the var result_type is "matrix"
-        :var scalar_result:  scalar object of the query result, if the var result_type is "scalar"
-        :var string_result:  a string of the query result, if the var result_type is "string"
+    This class is the returned object for prometheus queries
+    :var result_type:  can be of type "vector", "matrix", "scalar", "string" depending on the query
+    :var vector_result:  a formatted vector list from the query result, if the var result_type is "vector"
+    :var series_list_result:  a formatted series list from the query result, if the var result_type is "matrix"
+    :var scalar_result:  scalar object of the query result, if the var result_type is "scalar"
+    :var string_result:  a string of the query result, if the var result_type is "string"
 
-        :raises:
-            (Exception) Raises an Exception in the case that there is an issue with the resultType and result not matching
+    :raises:
+        (Exception) Raises an Exception in the case that there is an issue with the resultType and result not matching
     """
+
     result_type: str
     vector_result: Optional[List[PrometheusVector]]
     series_list_result: Optional[List[PrometheusSeries]]
@@ -96,8 +97,10 @@ class PrometheusQueryResult(BaseModel):
         else:
             raise Exception("result or returnType is invalid")
 
-        super().__init__(result_type=result_type,
-                         vector_result=vector_result,
-                         series_list_result=series_list_result,
-                         scalar_result=scalar_result,
-                         string_result=string_result)
+        super().__init__(
+            result_type=result_type,
+            vector_result=vector_result,
+            series_list_result=series_list_result,
+            scalar_result=scalar_result,
+            string_result=string_result,
+        )

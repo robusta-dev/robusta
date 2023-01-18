@@ -1,8 +1,8 @@
 import logging
-from typing import List, Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-from ..common.requests import process_request, HttpMethod, check_response_succeed
-from ...core.model.env_vars import ROBUSTA_LOGO_URL
+from robusta.core.model.env_vars import ROBUSTA_LOGO_URL
+from robusta.integrations.common.requests import HttpMethod, check_response_succeed, process_request
 
 _API_PREFIX = "api/v4"
 
@@ -12,9 +12,7 @@ class MattermostClient:
     bot_id: str
     team_id: Optional[str]
 
-    def __init__(
-            self, url: str, token: str, token_id: str, channel_name: str, team: Optional[str]
-    ):
+    def __init__(self, url: str, token: str, token_id: str, channel_name: str, team: Optional[str]):
         """
         Set the Mattermost webhook url.
         """
@@ -29,11 +27,7 @@ class MattermostClient:
         return process_request(url, method, headers=headers, **kwargs)
 
     def _get_full_mattermost_url(self, endpoint: str) -> str:
-        return "/".join([
-            self.client_url,
-            _API_PREFIX,
-            endpoint
-        ])
+        return "/".join([self.client_url, _API_PREFIX, endpoint])
 
     def get_token_owner_id(self) -> Optional[str]:
         endpoint = f"users/tokens/{self.token_id}"
@@ -48,10 +42,9 @@ class MattermostClient:
     def update_bot_settings(self, bot_id: str):
         endpoint = f"bots/{bot_id}"
         url = self._get_full_mattermost_url(endpoint)
-        response = self._send_mattermost_request(url, HttpMethod.PUT, json={
-            "username": "robusta",
-            "display_name": "Robusta"
-        })
+        response = self._send_mattermost_request(
+            url, HttpMethod.PUT, json={"username": "robusta", "display_name": "Robusta"}
+        )
         if not check_response_succeed(response):
             logging.warning("Cannot update bot settings, probably bot has not enough permissions")
         self.update_bot_logo(bot_id)
@@ -77,11 +70,9 @@ class MattermostClient:
     def get_channel_id(self, channel_name: str) -> Optional[str]:
         endpoint = "channels/search"
         url = self._get_full_mattermost_url(endpoint)
-        payload = {
-            "term": channel_name
-        }
+        payload = {"term": channel_name}
         if self.team_id:
-            payload['team_ids'] = [self.team_id]
+            payload["team_ids"] = [self.team_id]
         response = self._send_mattermost_request(url, HttpMethod.POST, json=payload)
         if check_response_succeed(response):
             response = response.json()
@@ -92,7 +83,7 @@ class MattermostClient:
     def get_team_id(self, team_name: str) -> Optional[str]:
         endpoint = "teams/search"
         url = self._get_full_mattermost_url(endpoint)
-        response = self._send_mattermost_request(url, HttpMethod.POST, json={'term': team_name})
+        response = self._send_mattermost_request(url, HttpMethod.POST, json={"term": team_name})
         if check_response_succeed(response):
             response = response.json()
             if not len(response):
@@ -110,14 +101,16 @@ class MattermostClient:
         file_attachments = self.upload_files(file_attachments)
         endpoint = "posts"
         url = self._get_full_mattermost_url(endpoint)
-        response = self._send_mattermost_request(url, HttpMethod.POST, json={
-            "channel_id": self.channel_id,
-            "message": title,
-            "file_ids": file_attachments,
-            "props": {
-                "attachments": msg_attachments
-            }
-        })
+        response = self._send_mattermost_request(
+            url,
+            HttpMethod.POST,
+            json={
+                "channel_id": self.channel_id,
+                "message": title,
+                "file_ids": file_attachments,
+                "props": {"attachments": msg_attachments},
+            },
+        )
         if not check_response_succeed(response):
             logging.error("Couldn't deliver mattermost bot message")
 
@@ -126,11 +119,11 @@ class MattermostClient:
         file_ids = []
         url = self._get_full_mattermost_url(endpoint)
         for file in files:
-            response = self._send_mattermost_request(url, HttpMethod.POST, files={
-                "files": file,
-                "channel_id": (None, self.channel_id),
-                "filename": (None, file[0])
-            })
+            response = self._send_mattermost_request(
+                url,
+                HttpMethod.POST,
+                files={"files": file, "channel_id": (None, self.channel_id), "filename": (None, file[0])},
+            )
             if not check_response_succeed(response):
                 logging.error(f"There was an error uploading the file: {file[0]}")
                 continue

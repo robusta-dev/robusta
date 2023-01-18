@@ -1,9 +1,9 @@
 import datetime
-from slack_sdk import WebClient
-from typing import Optional, List
-from pydantic import BaseModel
-
 import urllib.request
+from typing import List, Optional
+
+from pydantic import BaseModel
+from slack_sdk import WebClient
 
 REMOTE_FEEDBACK_MESSAGE_ADDRESS = "https://docs.robusta.dev/extra/feedback_messages.json"
 
@@ -35,27 +35,23 @@ class SlackFeedbackMessagesSender(object):
             self._schedule_message(
                 feedback_message.minutes_from_now,
                 self._replace_account_id(feedback_message.title),
-                list(map(self._replace_account_id, feedback_message.other_sections)))
+                list(map(self._replace_account_id, feedback_message.other_sections)),
+            )
         return slack_feedback_config.heads_up_message
 
     def _replace_account_id(self, text: str):
-        return text.replace('$ACCOUNT_ID', self.account_id)
+        return text.replace("$ACCOUNT_ID", self.account_id)
 
     @staticmethod
     def _get_feedback_config_from_remote() -> str:
         with urllib.request.urlopen(REMOTE_FEEDBACK_MESSAGE_ADDRESS) as response:
             return response.read()
 
-    def _schedule_message(
-            self,
-            minutes_from_now: int,
-            title: str,
-            other_sections: List[str]
-    ):
+    def _schedule_message(self, minutes_from_now: int, title: str, other_sections: List[str]):
         slack_client = WebClient(token=self.slack_api_key)
 
         schedule_datetime = datetime.datetime.now() + datetime.timedelta(minutes=minutes_from_now)
-        schedule_timestamp = schedule_datetime.strftime('%s')
+        schedule_timestamp = schedule_datetime.strftime("%s")
 
         slack_client.chat_scheduleMessage(
             channel=self.channel_name,
@@ -64,7 +60,7 @@ class SlackFeedbackMessagesSender(object):
             blocks=self._gen_robusta_slack_message(title, other_sections),
             display_as_bot=True,
             unfurl_links=True,
-            unfurl_media=True
+            unfurl_media=True,
         )
 
     @staticmethod
@@ -79,12 +75,12 @@ class SlackFeedbackMessagesSender(object):
                 },
             },
         ]
-        additional_blocks = [{
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": message
-            },
-        } for message in other_sections]
+        additional_blocks = [
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": message},
+            }
+            for message in other_sections
+        ]
         blocks.extend(additional_blocks)
         return blocks

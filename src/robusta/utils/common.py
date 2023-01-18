@@ -1,12 +1,11 @@
-from hikaru import DiffDetail, HikaruBase
 from typing import List
+
+from hikaru import DiffDetail, HikaruBase
 
 
 # TODO: filter out all the managed fields crap
 def is_matching_diff(diff_detail: DiffDetail, fields_to_monitor: List[str]) -> bool:
-    return any(
-        substring in diff_detail.formatted_path for substring in fields_to_monitor
-    )
+    return any(substring in diff_detail.formatted_path for substring in fields_to_monitor)
 
 
 def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):

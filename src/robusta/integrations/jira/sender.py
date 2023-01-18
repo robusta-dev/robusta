@@ -1,10 +1,21 @@
+import logging
+import re
 from queue import PriorityQueue
+from typing import Dict, List, Tuple, Union
 
-from .client import JiraClient
-from ...core.reporting.base import *
-from ...core.reporting.blocks import *
-from ...core.reporting.utils import add_pngs_for_all_svgs
-from ...core.sinks.jira.jira_sink_params import JiraSinkParams
+from robusta.core.reporting import (
+    BaseBlock,
+    FileBlock,
+    Finding,
+    FindingSeverity,
+    HeaderBlock,
+    ListBlock,
+    MarkdownBlock,
+    TableBlock,
+)
+from robusta.core.reporting.utils import add_pngs_for_all_svgs
+from robusta.core.sinks.jira.jira_sink_params import JiraSinkParams
+from robusta.integrations.jira.client import JiraClient
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
@@ -27,14 +38,8 @@ CODE_REGEX = r"`{1,3}[\w|\s\d%!*><=\-:;@#$%^&()\.\,\]\[\\\/'\"]+`{1,3}"
 def to_paragraph(txt, attrs=None):
     marks = {}
     if attrs:
-        marks = {
-            "marks": [*attrs]
-        }
-    return {
-        "text": txt,
-        "type": "text",
-        **marks
-    }
+        marks = {"marks": [*attrs]}
+    return {"text": txt, "type": "text", **marks}
 
 
 def _union_lists(*arrays):
@@ -57,35 +62,27 @@ def to_strong_text(txt, marks=None):
 
 
 def to_markdown_text(txt, regex, marks, replacement_char):
-    return to_paragraph(
-        re.sub(regex, lambda m: m.group(0).replace(replacement_char, ""), txt),
-        marks
-    )
+    return to_paragraph(re.sub(regex, lambda m: m.group(0).replace(replacement_char, ""), txt), marks)
 
 
 MARKDOWN_MAPPER = {
     lambda x: re.search(STRONG_MARK_REGEX, x): {
         "split": lambda x: re.split(f"({STRONG_MARK_REGEX})", x),
-        "replace": lambda x, marks=None: to_strong_text(x, marks)
+        "replace": lambda x, marks=None: to_strong_text(x, marks),
     },
     lambda x: re.search(ITALIAN_MARK_REGEX, x): {
         "split": lambda x: re.split(f"({ITALIAN_MARK_REGEX})", x),
-        "replace": lambda x, marks=None: to_italian_text(x, marks)
+        "replace": lambda x, marks=None: to_italian_text(x, marks),
     },
     lambda x: re.search(CODE_REGEX, x): {
         "split": lambda x: re.split(f"({CODE_REGEX})", x),
-        "replace": lambda x, marks=None: to_code_text(x, marks)
+        "replace": lambda x, marks=None: to_code_text(x, marks),
     },
 }
 
 
 class JiraSender:
-    def __init__(
-            self,
-            cluster_name: str,
-            account_id: str,
-            params: JiraSinkParams
-    ):
+    def __init__(self, cluster_name: str, account_id: str, params: JiraSinkParams):
         self.cluster_name = cluster_name
         self.account_id = account_id
         self.params = params
@@ -109,10 +106,10 @@ class JiraSender:
         while not pq.empty():
             _, condition = pq.get_nowait()
             funcs = MARKDOWN_MAPPER[condition]
-            func_split, func_replace = funcs['split'], funcs['replace']
+            func_split, func_replace = funcs["split"], funcs["replace"]
             i = 0
             while i < len(text):
-                text_part = text[i]['text']
+                text_part = text[i]["text"]
                 marks = text[i].get("marks", None)
                 parts = func_split(text_part)
                 new_parts = []
@@ -121,64 +118,41 @@ class JiraSender:
                         continue
                     part = func_replace(part, marks) if condition(part) else to_paragraph(part, marks)
                     new_parts.append(part)
-                text = text[:i] + new_parts + text[i + 1:]
+                text = text[:i] + new_parts + text[i + 1 :]
                 i += len(new_parts)
         return text
 
-    def __to_jira(self, block: BaseBlock, sink_name: str) -> List[Union[Dict[str, str], tuple[str, bytes, str]]]:
+    def __to_jira(self, block: BaseBlock, sink_name: str) -> List[Union[Dict[str, str], Tuple[str, bytes, str]]]:
         if isinstance(block, MarkdownBlock):
             if not block.text:
                 return []
-            return [{
-                "type": "paragraph",
-                "content": self._markdown_to_jira(block.text)
-            }]
+            return [{"type": "paragraph", "content": self._markdown_to_jira(block.text)}]
         elif isinstance(block, FileBlock):
             return [(block.filename, block.contents, "application/octet-stream")]
         elif isinstance(block, HeaderBlock):
             return self.__to_jira(MarkdownBlock(block.text), sink_name)
         elif isinstance(block, TableBlock):
-            return [{
-                "type": "codeBlock",
-                "content": [
-                    {
-                        "text": block.to_markdown().text,
-                        "type": "text"
-                    }
-                ]
-            }]
+            return [{"type": "codeBlock", "content": [{"text": block.to_markdown().text, "type": "text"}]}]
         elif isinstance(block, ListBlock):
-            return [{
-                "type": "bulletList",
-                "content": [{
-                    "type": "listItem",
+            return [
+                {
+                    "type": "bulletList",
                     "content": [
                         {
-                            "type": "paragraph",
-                            "content": [
-                                {
-                                    "type": "text",
-                                    "text": str(item)
-                                }
-                            ]
+                            "type": "listItem",
+                            "content": [{"type": "paragraph", "content": [{"type": "text", "text": str(item)}]}],
                         }
-                    ]
-                } for item in block.items]
-            }]
+                        for item in block.items
+                    ],
+                }
+            ]
         else:
-            logging.warning(
-                f"cannot convert block of type {type(block)} to jira format block"
-            )
+            logging.warning(f"cannot convert block of type {type(block)} to jira format block")
             return []  # no reason to crash the entire report
 
-    def __parse_blocks_to_jira(
-            self,
-            report_blocks: List[BaseBlock]
-    ):
+    def __parse_blocks_to_jira(self, report_blocks: List[BaseBlock]):
         # Process attachment blocks
-        file_blocks = add_pngs_for_all_svgs(
-            [b for b in report_blocks if isinstance(b, FileBlock)]
-        )
+        file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         # Process attachment blocks
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
@@ -196,35 +170,37 @@ class JiraSender:
         return output_blocks, output_file_blocks
 
     def send_finding_to_jira(
-            self,
-            finding: Finding,
-            platform_enabled: bool,
+        self,
+        finding: Finding,
+        platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
         actions = []
 
         if platform_enabled:  # add link to the robusta ui, if it's configured
             investigate_url = finding.get_investigate_uri(self.account_id, self.cluster_name)
-            actions.append(to_paragraph("🔎 Investigate", [{
-                "type": "link",
-                "attrs": {"href": investigate_url}
-            }]))
+            actions.append(to_paragraph("🔎 Investigate", [{"type": "link", "attrs": {"href": investigate_url}}]))
             if finding.add_silence_url:
-                actions.append(to_paragraph("🔕 Silence", [{
-                    "type": "link",
-                    "attrs": {"href": finding.get_prometheus_silence_url(self.account_id, self.cluster_name)}
-                }]))
+                actions.append(
+                    to_paragraph(
+                        "🔕 Silence",
+                        [
+                            {
+                                "type": "link",
+                                "attrs": {
+                                    "href": finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
+                                },
+                            }
+                        ],
+                    )
+                )
 
             for video_link in finding.video_links:
-                actions.append(to_paragraph(f"🎬 {video_link.name}", [{
-                    "type": "link",
-                    "attrs": {"href": video_link.url}
-                }]))
+                actions.append(
+                    to_paragraph(f"🎬 {video_link.name}", [{"type": "link", "attrs": {"href": video_link.url}}])
+                )
 
-        actions = [{
-            "type": "paragraph",
-            "content": actions
-        }]
+        actions = [{"type": "paragraph", "content": actions}]
         # first add finding description block
         if finding.description:
             blocks.append(MarkdownBlock(finding.description))
@@ -232,9 +208,7 @@ class JiraSender:
         for enrichment in finding.enrichments:
             blocks.extend(enrichment.blocks)
 
-        output_blocks, file_blocks = self.__parse_blocks_to_jira(
-            blocks
-        )
+        output_blocks, file_blocks = self.__parse_blocks_to_jira(blocks)
         logging.debug("Creating issue")
         labels = []
         for attr in self.params.dedups:
@@ -242,15 +216,14 @@ class JiraSender:
                 labels.append(getattr(finding, attr))
             elif attr in finding.attribute_map:
                 labels.append(finding.attribute_map[attr])
-            elif attr == 'cluster_name':
+            elif attr == "cluster_name":
                 labels.append(self.cluster_name)
 
-        self.client.create_issue({
-            "description": {
-                "type": "doc",
-                "version": 1,
-                "content": actions + output_blocks
+        self.client.create_issue(
+            {
+                "description": {"type": "doc", "version": 1, "content": actions + output_blocks},
+                "summary": finding.title,
+                "labels": labels,
             },
-            "summary": finding.title,
-            "labels": labels
-        }, file_blocks)
+            file_blocks,
+        )
