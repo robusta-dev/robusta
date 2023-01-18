@@ -1,6 +1,11 @@
 # TODO: turn this into a bot that prints statistics/a graph of changes at the end of the day/week
 # on what changed the most
-from robusta.api import *
+import logging
+from typing import Dict
+
+from pydantic import BaseModel
+
+from robusta.api import DeploymentEvent, Finding, FindingType, action, get_persistent_data
 
 
 class DeploymentChangeCounter(BaseModel):
@@ -16,9 +21,7 @@ def count_pod_creations(event: DeploymentEvent):
     with get_persistent_data(PERSISTENT_DATA_NAME, DeploymentChangeCounter) as data:
         deployment = event.get_deployment()
         if not deployment:
-            logging.info(
-                f"count_pod_creations - no deployment for event: {DeploymentEvent}"
-            )
+            logging.info(f"count_pod_creations - no deployment for event: {DeploymentEvent}")
             return
         name = deployment.metadata.name
         value = data.changes_per_deployment.get(name, 0)

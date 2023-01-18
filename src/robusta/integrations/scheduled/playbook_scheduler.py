@@ -1,6 +1,6 @@
-from typing import Union, List, Callable
+from typing import Callable, List, Union
 
-from ...core.schedule.model import JobState, FixedDelayRepeat, DynamicDelayRepeat
+from robusta.core.schedule.model import DynamicDelayRepeat, FixedDelayRepeat, JobState
 
 
 class PlaybooksScheduler:

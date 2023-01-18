@@ -1,4 +1,24 @@
-from robusta.api import *
+import logging
+from typing import List, Tuple
+
+from hikaru.model import Container, Job, JobSpec, JobStatus, ObjectMeta, PodSpec, PodTemplateSpec
+
+from robusta.api import (
+    ActionParams,
+    EnvVar,
+    EventEnricherParams,
+    FileBlock,
+    JobEvent,
+    MarkdownBlock,
+    PodContainer,
+    PrometheusKubernetesAlert,
+    SlackAnnotations,
+    TableBlock,
+    action,
+    get_job_latest_pod,
+    get_resource_events_table,
+    to_kubernetes_name,
+)
 
 
 class JobParams(ActionParams):
@@ -18,16 +38,17 @@ class JobParams(ActionParams):
 
     :example command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
     """
+
     image: str
     command: List[str]
     name: str = "robusta-action-job"
     namespace: str = "default"
-    service_account: str = None
+    service_account: str = None  # type: ignore
     restart_policy: str = "OnFailure"
-    job_ttl_after_finished: int = None
+    job_ttl_after_finished: int = None  # type: ignore
     notify: bool = False
-    backoff_limit: int = None
-    active_deadline_seconds: int = None
+    backoff_limit: int = None  # type: ignore
+    active_deadline_seconds: int = None  # type: ignore
 
 
 @action
@@ -52,10 +73,7 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
     """
     job_name = to_kubernetes_name(params.name)
     job: Job = Job(
-        metadata=ObjectMeta(
-            name=job_name,
-            namespace=params.namespace
-        ),
+        metadata=ObjectMeta(name=job_name, namespace=params.namespace),
         spec=JobSpec(
             template=PodTemplateSpec(
                 spec=PodSpec(
@@ -64,25 +82,23 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
                             name=params.name,
                             image=params.image,
                             command=params.command,
-                            env=__get_alert_env_vars(event)
+                            env=__get_alert_env_vars(event),
                         )
                     ],
                     serviceAccountName=params.service_account,
-                    restartPolicy=params.restart_policy
+                    restartPolicy=params.restart_policy,
                 )
             ),
             backoffLimit=params.backoff_limit,
             activeDeadlineSeconds=params.active_deadline_seconds,
             ttlSecondsAfterFinished=params.job_ttl_after_finished,
-        )
+        ),
     )
 
     job.create()
 
     if params.notify:
-        event.add_enrichment([
-            MarkdownBlock(f"Alert handling job *{job_name}* created.")
-        ])
+        event.add_enrichment([MarkdownBlock(f"Alert handling job *{job_name}* created.")])
 
 
 def __get_alert_env_vars(event: PrometheusKubernetesAlert) -> List[EnvVar]:
@@ -108,9 +124,7 @@ def job_events_enricher(event: JobEvent, params: EventEnricherParams):
     """
     job = event.get_job()
     if not job:
-        logging.error(
-            f"cannot run job_events_enricher on alert with no job object: {event}"
-        )
+        logging.error(f"cannot run job_events_enricher on alert with no job object: {event}")
         return
 
     events_table_block = get_resource_events_table(
@@ -130,6 +144,7 @@ class JobPodEnricherParams(EventEnricherParams):
     :var events: Add the events of the related pod
     :var logs: Add the logs of the related pod
     """
+
     events: bool = True
     logs: bool = True
 
@@ -143,9 +158,7 @@ def job_pod_enricher(event: JobEvent, params: JobPodEnricherParams):
     """
     job = event.get_job()
     if not job:
-        logging.error(
-            f"cannot run job_pod_enricher on alert with no job object: {event}"
-        )
+        logging.error(f"cannot run job_pod_enricher on alert with no job object: {event}")
         return
 
     pod = get_job_latest_pod(job)
@@ -181,9 +194,7 @@ def job_info_enricher(event: JobEvent):
     """
     job = event.get_job()
     if not job:
-        logging.error(
-            f"cannot run job_info_enricher on alert with no job object: {event}"
-        )
+        logging.error(f"cannot run job_info_enricher on alert with no job object: {event}")
         return
 
     job_status: JobStatus = job.status
@@ -193,7 +204,7 @@ def job_info_enricher(event: JobEvent):
     succeeded = job_status.succeeded if job_status.succeeded else 0
     failed = job_status.failed if job_status.failed else 0
     status, message = __job_status_str(job_status)
-    job_rows: List[List[str, str]] = [["status", status]]
+    job_rows: List[List[str]] = [["status", status]]
     if message:
         job_rows.append(["message", message])
 
@@ -203,7 +214,7 @@ def job_info_enricher(event: JobEvent):
             ["failures", f"{failed}"],
             ["backoffLimit", f"{job_spec.backoffLimit}"],
             ["duration", f"{job_status.startTime} - {end_time}"],
-            ["containers", "------------------"]
+            ["containers", "------------------"],
         ]
     )
     containers = job_spec.template.spec.initContainers + job_spec.template.spec.containers
@@ -231,7 +242,7 @@ def __resources_str(request, limit) -> str:
     return f"{req}/{lim}"
 
 
-def __job_status_str(job_status: JobStatus) -> (str, str):
+def __job_status_str(job_status: JobStatus) -> Tuple[str, str]:
     if job_status.active:
         return "Running", ""
 

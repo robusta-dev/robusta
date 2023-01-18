@@ -1,11 +1,15 @@
 import logging
-from typing import List
+from typing import TYPE_CHECKING, List
 
-from ...core.model.env_vars import SERVICE_CACHE_TTL_SEC
-from ...core.exceptions import PrometheusNotFound
-from ...utils.service_discovery import find_service_url
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError
+
+from robusta.core.exceptions import PrometheusNotFound
+from robusta.core.model.env_vars import SERVICE_CACHE_TTL_SEC
+from robusta.utils.service_discovery import find_service_url
+
+if TYPE_CHECKING:
+    from prometheus_api_client import PrometheusConnect
 
 
 def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
@@ -52,7 +56,7 @@ class PrometheusDiscovery(ServiceDiscovery):
                 "app=prometheus-operator-prometheus",
                 "app=prometheus-msteams",
                 "app=rancher-monitoring-prometheus",
-                "app=prometheus-prometheus"
+                "app=prometheus-prometheus",
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
         )
@@ -70,7 +74,7 @@ class AlertManagerDiscovery(ServiceDiscovery):
                 "app=rancher-monitoring-alertmanager",
                 "app=prometheus-alertmanager",
                 "operated-alertmanager=true",
-                "app.kubernetes.io/name=alertmanager"
+                "app.kubernetes.io/name=alertmanager",
             ],
             error_msg="Alert manager url could not be found. Add 'alertmanager_url' under global_config",
         )

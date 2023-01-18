@@ -1,6 +1,23 @@
 import logging
+import textwrap
 
-from robusta.api import *
+from hikaru.model import DaemonSet, Node, NodeList
+
+from robusta.api import (
+    CallbackBlock,
+    CallbackChoice,
+    DaemonSetEvent,
+    ExecutionBaseEvent,
+    Finding,
+    FindingSource,
+    KubernetesFieldsBlock,
+    MarkdownBlock,
+    PrometheusKubernetesAlert,
+    RobustaPod,
+    action,
+    does_daemonset_have_toleration,
+    does_node_have_taint,
+)
 
 
 @action
@@ -15,13 +32,13 @@ def daemonset_fix_config(event: ExecutionBaseEvent):
             MarkdownBlock(
                 textwrap.dedent(
                     """\
-        Add the following to your daemonset pod-template:
-        ```
-        tolerations:
-        - effect: NoSchedule
-          key: ToBeDeletedByClusterAutoscaler
-          operator: Exists
-        ```"""
+                    Add the following to your daemonset pod-template:
+                    ```
+                    tolerations:
+                    - effect: NoSchedule
+                    key: ToBeDeletedByClusterAutoscaler
+                    operator: Exists
+                    ```"""
                 )
             )
         ]
@@ -52,17 +69,17 @@ def daemonset_silence_false_alarm(event: ExecutionBaseEvent):
             MarkdownBlock(
                 textwrap.dedent(
                     """\
-        Add the following to your `active_playbooks.yaml`:
-        ```
-          - name: "alerts_integration"
-            action_params:
-              alerts_config:
-                (...)
-                - alert_name: "KubernetesDaemonsetMisscheduled"
-                  (...)
-                  silencers:
-                    - name: "DaemonsetMisscheduledSmartSilencer"
-        ```"""
+                    Add the following to your `active_playbooks.yaml`:
+                    ```
+                    - name: "alerts_integration"
+                        action_params:
+                        alerts_config:
+                            (...)
+                            - alert_name: "KubernetesDaemonsetMisscheduled"
+                            (...)
+                            silencers:
+                                - name: "DaemonsetMisscheduledSmartSilencer"
+                    ```"""
                 )
             )
         ]
@@ -89,9 +106,7 @@ def daemonset_status_enricher(event: DaemonSetEvent):
     """
     ds = event.get_daemonset()
     if not ds:
-        logging.error(
-            f"cannot run DaemonsetEnricher on event with no daemonset: {event}"
-        )
+        logging.error(f"cannot run DaemonsetEnricher on event with no daemonset: {event}")
         return
 
     event.add_enrichment(
@@ -120,15 +135,11 @@ def daemonset_status_enricher(event: DaemonSetEvent):
 def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
     # if the daemonset was configured with an appropriate toleration, this false alarm isn't possible
     if does_daemonset_have_toleration(ds, "ToBeDeletedByClusterAutoscaler"):
-        logging.info(
-            f"daemonset is configured properly, so we don't have the known mismatch false alarm"
-        )
+        logging.info("daemonset is configured properly, so we don't have the known mismatch false alarm")
         return False
 
     nodes_by_name = {n.metadata.name: n for n in NodeList.listNode().obj.items}
-    ds_pods = RobustaPod.find_pods_with_direct_owner(
-        ds.metadata.namespace, ds.metadata.uid
-    )
+    ds_pods = RobustaPod.find_pods_with_direct_owner(ds.metadata.namespace, ds.metadata.uid)
 
     # look for at least one node where the false alarm is present
     for pod in ds_pods:
@@ -140,9 +151,7 @@ def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
 
         relevant_node: Node = nodes_by_name[pod.spec.nodeName]
         if does_node_have_taint(relevant_node, "ToBeDeletedByClusterAutoscaler"):
-            logging.info(
-                f"we found a cluster being deleted by the autoscaler - we have the known mismatch false alert"
-            )
+            logging.info("we found a cluster being deleted by the autoscaler - we have the known mismatch false alert")
             return True
 
     return False
@@ -165,9 +174,7 @@ def daemonset_misscheduled_analysis_enricher(event: DaemonSetEvent):
     """
     ds = event.get_daemonset()
     if not ds:
-        logging.error(
-            f"cannot run DaemonsetMisscheduledAnalysis on event with no daemonset: {event}"
-        )
+        logging.error(f"cannot run DaemonsetMisscheduledAnalysis on event with no daemonset: {event}")
         return
 
     if not check_for_known_mismatch_false_alarm(ds):
@@ -182,26 +189,22 @@ def daemonset_misscheduled_analysis_enricher(event: DaemonSetEvent):
             ),
             MarkdownBlock(
                 textwrap.dedent(
-                    f"""\
-            (<https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/|Learn more>).
+                    """\
+                    (<https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/|Learn more>).
 
-            *Remediation*
-            Would you like to:
+                    *Remediation*
+                    Would you like to:
 
-            1. Fix the daemonset configuration to avoid the false alarm
-            2. Use Robusta to silence the false alarm while passing through real alerts.
+                    1. Fix the daemonset configuration to avoid the false alarm
+                    2. Use Robusta to silence the false alarm while passing through real alerts.
 
-            Choose an option below to learn more."""
+                    Choose an option below to learn more."""
                 )
             ),
             CallbackBlock(
                 choices={
-                    "Fix the Configuration": CallbackChoice(
-                        action=daemonset_fix_config
-                    ),
-                    "Silence the false alarm": CallbackChoice(
-                        action=daemonset_silence_false_alarm
-                    ),
+                    "Fix the Configuration": CallbackChoice(action=daemonset_fix_config),
+                    "Silence the false alarm": CallbackChoice(action=daemonset_silence_false_alarm),
                 },
             ),
         ]

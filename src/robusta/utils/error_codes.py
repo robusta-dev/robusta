@@ -2,7 +2,6 @@ from enum import Enum
 from typing import Optional
 
 
-
 class ErrorCodes(Enum):
     ILLEGAL_TIMESTAMP = 4500
     NO_SIGNING_KEY = 4501
@@ -31,12 +30,9 @@ class ErrorCodes(Enum):
     ADD_SILENCE_FAILED = 5002
 
 
-    
-
-
 class ActionException(Exception):
-    def __init__(self, error : ErrorCodes, msg: Optional[str] = None):
+    def __init__(self, error: ErrorCodes, msg: Optional[str] = None):
         super().__init__(msg)
-        self.msg : Optional[str] = msg
-        self.code : int = error.value
-        self.type : str = error.name
+        self.msg: Optional[str] = msg
+        self.code: int = error.value
+        self.type: str = error.name

@@ -1,8 +1,7 @@
 import logging
-from typing import List
+from typing import List, Optional
 
-from .blocks import *
-
+from robusta.core.reporting.blocks import FileBlock
 
 JPG_SUFFIX = ".jpg"
 PNG_SUFFIX = ".png"
@@ -28,7 +27,7 @@ def convert_svg_to_png(svg: bytes) -> Optional[bytes]:
 
     try:
         return cairosvg.svg2png(bytestring=svg)
-    except Exception as e:
+    except Exception:
         logging.error(f"error converting svg to png; svg={svg}")
         return None
 

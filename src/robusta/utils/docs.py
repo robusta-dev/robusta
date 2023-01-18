@@ -1,4 +1,3 @@
-from typing import List
 from xml.etree import ElementTree
 
 from docutils.core import publish_doctree
@@ -50,6 +49,4 @@ class Docstring:
 
         # we select all the docutils paragraphs which are under a root <block_quote> element
         # this is essentially all the lines in the docstring which don't contain :field:
-        self.description = "\n\n".join(
-            ["".join(p.itertext()) for p in tree.findall("./block_quote/paragraph")]
-        )
+        self.description = "\n\n".join(["".join(p.itertext()) for p in tree.findall("./block_quote/paragraph")])

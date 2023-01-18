@@ -1,7 +1,7 @@
 from typing import List
 
-from .playbook_scheduler import PlaybooksScheduler
-from ...model.playbook_definition import PlaybookDefinition
+from robusta.integrations.scheduled.playbook_scheduler import PlaybooksScheduler
+from robusta.model.playbook_definition import PlaybookDefinition
 
 
 class PlaybooksSchedulerManager(PlaybooksScheduler):

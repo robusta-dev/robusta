@@ -1,7 +1,9 @@
 import os
-import pytest
 from pathlib import Path
-from .config import CONFIG
+
+import pytest
+
+from tests.config import CONFIG
 from tests.utils.robusta_utils import RobustaController
 from tests.utils.slack_utils import SlackChannel
 
@@ -24,7 +26,7 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.fixture
 def slack_channel() -> SlackChannel:
-    if not "PYTEST_SLACK_TOKEN" in os.environ or not "PYTEST_SLACK_CHANNEL" in os.environ:
+    if "PYTEST_SLACK_TOKEN" not in os.environ or "PYTEST_SLACK_CHANNEL" not in os.environ:
         pytest.skip("skipping slack tests (missing environment variables)", allow_module_level=True)
 
     return SlackChannel(CONFIG.PYTEST_SLACK_TOKEN, CONFIG.PYTEST_SLACK_CHANNEL)

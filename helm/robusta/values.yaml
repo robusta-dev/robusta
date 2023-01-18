@@ -13,6 +13,8 @@ sinksConfig: []
 clusterName: ""
 clusterZone: ""
 
+automountServiceAccountToken: true
+
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config
 globalConfig:
   grafana_url: ""

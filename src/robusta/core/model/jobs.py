@@ -1,9 +1,10 @@
-from kubernetes.client import V1Job, V1JobSpec, V1PodSpec, V1Container, V1JobStatus, V1Toleration
-from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
-from .pods import ContainerResources, ResourceAttributes
-from ...core.discovery import utils
+from kubernetes.client import V1Container, V1Job, V1JobSpec, V1JobStatus, V1PodSpec
+from pydantic import BaseModel
+
+from robusta.core.discovery import utils
+from robusta.core.model.pods import ContainerResources, ResourceAttributes
 
 SERVICE_TYPE_JOB = "Job"
 
@@ -87,7 +88,7 @@ class JobData(BaseModel):
             labels=job.metadata.labels,
             containers=pod_containers,
             pods=pods,
-            parents=JobData._get_job_parents(job)
+            parents=JobData._get_job_parents(job),
         )
 
 
@@ -132,7 +133,7 @@ class JobInfo(BaseModel):
             mem_req=job["mem_req"],
             completions=job["completions"],
             status=JobStatus(**job["status"]),
-            job_data=JobData(**job["job_data"])
+            job_data=JobData(**job["job_data"]),
         )
 
     @staticmethod
@@ -150,5 +151,5 @@ class JobInfo(BaseModel):
             mem_req=requests.memory,
             completions=completions,
             status=status,
-            job_data=job_data
+            job_data=job_data,
         )

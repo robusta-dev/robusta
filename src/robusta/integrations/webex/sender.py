@@ -1,18 +1,13 @@
-from ...core.reporting.base import Finding, FindingSeverity
-from ...core.reporting.utils import add_pngs_for_all_svgs, SVG_SUFFIX
-from ...core.reporting.blocks import (
-    MarkdownBlock,
-    BaseBlock,
-    FileBlock,
-    TableBlock,
-    List,
-)
-from ...core.sinks.transformer import Transformer
-from ...core.sinks.webex.webex_sink_params import WebexSinkParams
+import tempfile
+from enum import Enum
 
 from webexteamssdk import WebexTeamsAPI
-from enum import Enum
-import tempfile
+
+from robusta.core.reporting.base import Finding, FindingSeverity
+from robusta.core.reporting.blocks import BaseBlock, FileBlock, List, MarkdownBlock, TableBlock
+from robusta.core.reporting.utils import SVG_SUFFIX, add_pngs_for_all_svgs
+from robusta.core.sinks.transformer import Transformer
+from robusta.core.sinks.webex.webex_sink_params import WebexSinkParams
 
 INVESTIGATE_ICON = "🔍"
 SILENCE_ICON = "🔕"
@@ -34,23 +29,18 @@ class WebexSender:
     Parse different findings to show on Webex UI
     """
 
-    def __init__(self, bot_access_token: str, room_id: str, cluster_name: str, account_id: str,
-                 webex_params: WebexSinkParams):
+    def __init__(
+        self, bot_access_token: str, room_id: str, cluster_name: str, account_id: str, webex_params: WebexSinkParams
+    ):
         self.cluster_name = cluster_name
         self.webex_params = webex_params
         self.room_id = room_id
         self.account_id = account_id
-        self.client = WebexTeamsAPI(
-            access_token=bot_access_token
-        )  # Create a client using webexteamssdk
+        self.client = WebexTeamsAPI(access_token=bot_access_token)  # Create a client using webexteamssdk
 
     def send_finding_to_webex(self, finding: Finding, platform_enabled: bool):
-        message, table_blocks, file_blocks, description = self._separate_blocks(
-            finding, platform_enabled
-        )
-        adaptive_card_body = self._createAdaptiveCardBody(
-            message, table_blocks, description
-        )
+        message, table_blocks, file_blocks, description = self._separate_blocks(finding, platform_enabled)
+        adaptive_card_body = self._createAdaptiveCardBody(message, table_blocks, description)
         adaptive_card = self._createAdaptiveCard(adaptive_card_body)
 
         attachment = [
@@ -61,22 +51,16 @@ class WebexSender:
         ]
 
         # Here text="." is added because Webex API throws error to add text/file/markdown
-        self.client.messages.create(
-            roomId=self.room_id, text=".", attachments=attachment
-        )
+        self.client.messages.create(roomId=self.room_id, text=".", attachments=attachment)
         if file_blocks:
             self._send_files(file_blocks)
 
-    def _createAdaptiveCardBody(
-            self, message_content, table_blocks: List[TableBlock], description
-    ):
+    def _createAdaptiveCardBody(self, message_content, table_blocks: List[TableBlock], description):
         body = []
-        message_content_json = self._createMessageContentJSON(
-            message_content, description
-        )
+        message_content_json = self._createMessageContentJSON(message_content, description)
         body.append(message_content_json)
         if table_blocks:
-            table_blocks_json = self._createTableBlockJSON(table_blocks, body)
+            self._createTableBlockJSON(table_blocks, body)
 
         return body
 
@@ -91,9 +75,7 @@ class WebexSender:
                     {
                         "type": "Column",
                         "width": "stretch",
-                        "items": [
-                            {"type": "TextBlock", "text": header, "wrap": "true"}
-                        ],
+                        "items": [{"type": "TextBlock", "text": header, "wrap": "true"}],
                     }
                 )
             # seperating each row to add below headers of column
@@ -105,9 +87,7 @@ class WebexSender:
                         {
                             "type": "Column",
                             "width": "stretch",
-                            "items": [
-                                {"type": "TextBlock", "text": text, "wrap": "true"}
-                            ],
+                            "items": [{"type": "TextBlock", "text": text, "wrap": "true"}],
                         }
                     )
                 container["items"].append(row_json)
@@ -144,32 +124,16 @@ class WebexSender:
         file_blocks: List[FileBlock] = []
         description = None
 
-        message_content = self._create_message_content(
-            finding, platform_enabled
-        )
+        message_content = self._create_message_content(finding, platform_enabled)
 
         blocks = [MarkdownBlock(text=f"*Source:* _{self.cluster_name}_\n\n")]
 
         # Seperate blocks into *Other* Blocks, TableBlocks and FileBlocks
         for enrichment in finding.enrichments:
-            blocks.extend(
-                [
-                    block
-                    for block in enrichment.blocks
-                    if self.__is_webex_text_block(block)
-                ]
-            )
-            table_blocks.extend(
-                [block for block in enrichment.blocks if isinstance(block, TableBlock)]
-            )
+            blocks.extend([block for block in enrichment.blocks if self.__is_webex_text_block(block)])
+            table_blocks.extend([block for block in enrichment.blocks if isinstance(block, TableBlock)])
             file_blocks.extend(
-                add_pngs_for_all_svgs(
-                    [
-                        block
-                        for block in enrichment.blocks
-                        if isinstance(block, FileBlock)
-                    ]
-                )
+                add_pngs_for_all_svgs([block for block in enrichment.blocks if isinstance(block, FileBlock)])
             )
             if not self.webex_params.send_svg:
                 file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
@@ -184,9 +148,7 @@ class WebexSender:
         # Convert *Other* blocks to markdown
         for block in blocks:
             block_text = Transformer.to_standard_markdown([block])
-            if (
-                    len(block_text) + len(message_content) >= MAX_BLOCK_CHARS
-            ):  # webex message size limit
+            if len(block_text) + len(message_content) >= MAX_BLOCK_CHARS:  # webex message size limit
                 break
             message_content += block_text + "\n"
 

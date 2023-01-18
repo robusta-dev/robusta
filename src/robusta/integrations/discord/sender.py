@@ -1,14 +1,25 @@
-from typing import Tuple
+import logging
+import re
+from itertools import chain
+from typing import Dict, List, Tuple, Union
 
 import requests
 
-from ...core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT, ROBUSTA_LOGO_URL
-from ...core.reporting.base import *
-from ...core.reporting.blocks import *
-from ...core.reporting.utils import add_pngs_for_all_svgs
-from ...core.sinks.transformer import Transformer
-from ...core.sinks.discord.discord_sink_params import DiscordSinkParams
-from itertools import chain
+from robusta.core.model.env_vars import DISCORD_TABLE_COLUMNS_LIMIT, ROBUSTA_LOGO_URL
+from robusta.core.reporting import (
+    BaseBlock,
+    FileBlock,
+    Finding,
+    FindingSeverity,
+    HeaderBlock,
+    KubernetesDiffBlock,
+    ListBlock,
+    MarkdownBlock,
+    TableBlock,
+)
+from robusta.core.reporting.utils import add_pngs_for_all_svgs
+from robusta.core.sinks.discord.discord_sink_params import DiscordSinkParams
+from robusta.core.sinks.transformer import Transformer
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
@@ -36,6 +47,7 @@ class DiscordDescriptionBlock(DiscordBlock):
     """
     Discord description block
     """
+
     description: str
 
     def to_msg(self) -> Dict:
@@ -46,6 +58,7 @@ class DiscordHeaderBlock(DiscordBlock):
     """
     Discord description block
     """
+
     content: str
 
     def to_msg(self) -> Dict:
@@ -56,6 +69,7 @@ class DiscordFieldBlock(DiscordBlock):
     """
     Discord field block
     """
+
     name: str
     value: str
     inline: bool
@@ -65,11 +79,7 @@ class DiscordFieldBlock(DiscordBlock):
         super().__init__(name=name, value=value, inline=inline)
 
     def to_msg(self) -> Dict:
-        return {
-            "name": self.name,
-            "value": self.value,
-            "inline": self.inline
-        }
+        return {"name": self.name, "value": self.value, "inline": self.inline}
 
 
 def _add_color_to_block(block: Dict, msg_color: str):
@@ -77,13 +87,7 @@ def _add_color_to_block(block: Dict, msg_color: str):
 
 
 class DiscordSender:
-    def __init__(
-            self,
-            url: str,
-            account_id: str,
-            cluster_name: str,
-            discord_params: DiscordSinkParams
-    ):
+    def __init__(self, url: str, account_id: str, cluster_name: str, discord_params: DiscordSinkParams):
         """
         Set the Discord webhook url.
         """
@@ -104,8 +108,8 @@ class DiscordSender:
         regex = re.compile(r"\*.+\*")
         match = re.match(regex, block.text)
         if match:
-            title = text[match.span()[0]:match.span()[1]]
-            text = text[match.span()[1]:]
+            title = text[match.span()[0] : match.span()[1]]
+            text = text[match.span()[1] :]
         return title, DiscordSender.__transform_markdown_links(text) or BLANK_CHAR
 
     @staticmethod
@@ -113,34 +117,31 @@ class DiscordSender:
         return Transformer.to_github_markdown(text, add_angular_brackets=False)
 
     @staticmethod
-    def __format_final_message(discord_blocks: List[DiscordBlock],
-                               msg_color: Union[str, int]) -> Dict:
+    def __format_final_message(discord_blocks: List[DiscordBlock], msg_color: Union[str, int]) -> Dict:
         header_block = next((block.to_msg() for block in discord_blocks if isinstance(block, DiscordHeaderBlock)), {})
         fields = [block.to_msg() for block in discord_blocks if isinstance(block, DiscordFieldBlock)]
         discord_msg = {
             "username": "Robusta",
             "avatar_url": ROBUSTA_LOGO_URL,
             "embeds": [
-                *[_add_color_to_block(block.to_msg(), msg_color) for block in discord_blocks
-                  if isinstance(block, DiscordDescriptionBlock)]
+                *[
+                    _add_color_to_block(block.to_msg(), msg_color)
+                    for block in discord_blocks
+                    if isinstance(block, DiscordDescriptionBlock)
+                ]
             ],
-            **_add_color_to_block(header_block, msg_color)
+            **_add_color_to_block(header_block, msg_color),
         }
         if fields:
             discord_msg["embeds"].append({"fields": fields, "color": msg_color})
         return discord_msg
 
-    def __to_discord_diff(
-            self, block: KubernetesDiffBlock, sink_name: str
-    ) -> List[DiscordBlock]:
+    def __to_discord_diff(self, block: KubernetesDiffBlock, sink_name: str) -> List[DiscordBlock]:
 
         transformed_blocks = Transformer.to_markdown_diff(block, use_emoji_sign=True)
 
         _blocks = list(
-            chain(*[
-                self.__to_discord(transformed_block, sink_name)
-                for transformed_block in transformed_blocks
-            ])
+            chain(*[self.__to_discord(transformed_block, sink_name) for transformed_block in transformed_blocks])
         )
 
         return _blocks
@@ -150,20 +151,15 @@ class DiscordSender:
             if not block.text:
                 return []
             name, value = self.__extract_markdown_name(block)
-            return [DiscordFieldBlock(
-                name=name or BLANK_CHAR,
-                value=Transformer.apply_length_limit(value, MAX_FIELD_CHARS) or BLANK_CHAR
-            )]
+            return [
+                DiscordFieldBlock(
+                    name=name or BLANK_CHAR, value=Transformer.apply_length_limit(value, MAX_FIELD_CHARS) or BLANK_CHAR
+                )
+            ]
         elif isinstance(block, FileBlock):
             return [(block.filename, (block.filename, block.contents))]
         elif isinstance(block, DiscordFieldBlock):
-            return [
-                DiscordFieldBlock(
-                    name=block.name,
-                    value=block.value,
-                    inline=block.inline
-                )
-            ]
+            return [DiscordFieldBlock(name=block.name, value=block.value, inline=block.inline)]
         elif isinstance(block, HeaderBlock):
             return [
                 DiscordHeaderBlock(
@@ -180,31 +176,28 @@ class DiscordSender:
             return self.__to_discord(
                 DiscordFieldBlock(
                     name=block.table_name,
-                    value=block.to_markdown(max_chars=MAX_BLOCK_CHARS, add_table_header=False).text
-                ), sink_name
+                    value=block.to_markdown(max_chars=MAX_BLOCK_CHARS, add_table_header=False).text,
+                ),
+                sink_name,
             )
         elif isinstance(block, ListBlock):
             return self.__to_discord(block.to_markdown(), sink_name)
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_discord_diff(block, sink_name)
         else:
-            logging.warning(
-                f"cannot convert block of type {type(block)} to discord format block: {block}"
-            )
+            logging.warning(f"cannot convert block of type {type(block)} to discord format block: {block}")
             return []  # no reason to crash the entire report
 
     def __send_blocks_to_discord(
-            self,
-            report_blocks: List[BaseBlock],
-            title: str,
-            severity: FindingSeverity,
+        self,
+        report_blocks: List[BaseBlock],
+        title: str,
+        severity: FindingSeverity,
     ):
         msg_color = SEVERITY_COLOR_MAP.get(severity, "")
 
         # Process attachment blocks
-        file_blocks = add_pngs_for_all_svgs(
-            [b for b in report_blocks if isinstance(b, FileBlock)]
-        )
+        file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not self.discord_params.send_svg:
             file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
 
@@ -235,10 +228,14 @@ class DiscordSender:
             response = requests.post(self.url, json=discord_msg)
             response.raise_for_status()
             if attachment_blocks:
-                response = requests.post(self.url, data={
-                    "username": discord_msg["username"],
-                    "avatar_url": ROBUSTA_LOGO_URL,
-                }, files=attachment_blocks)
+                response = requests.post(
+                    self.url,
+                    data={
+                        "username": discord_msg["username"],
+                        "avatar_url": ROBUSTA_LOGO_URL,
+                    },
+                    files=attachment_blocks,
+                )
                 response.raise_for_status()
         except Exception as e:
             logging.error(
@@ -246,12 +243,12 @@ class DiscordSender:
                 blocks={output_blocks}\nattachment_blocks={attachment_blocks}\nmsg={discord_msg}"""
             )
         else:
-            logging.debug(f"Message was delivered successfully")
+            logging.debug("Message was delivered successfully")
 
     def send_finding_to_discord(
-            self,
-            finding: Finding,
-            platform_enabled: bool,
+        self,
+        finding: Finding,
+        platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
@@ -263,7 +260,7 @@ class DiscordSender:
                 actions = f"{actions} [:clapper: {video_link.name}]({video_link.url})"
             blocks.append(DiscordDescriptionBlock(description=actions))
 
-        blocks.append(DiscordFieldBlock(name=f"Source", value=f"`{self.cluster_name}`"))
+        blocks.append(DiscordFieldBlock(name="Source", value=f"`{self.cluster_name}`"))
 
         # first add finding description block
         if finding.description:
@@ -278,16 +275,10 @@ class DiscordSender:
             table_content = table_block.to_table_string()
             max_table_size = MAX_FIELD_CHARS - 6  # add code markdown characters
             if len(table_block.headers) > DISCORD_TABLE_COLUMNS_LIMIT or len(table_content) > max_table_size:
-                table_content = table_block.to_table_string(
-                    table_max_width=250
-                )  # bigger max width for file
-                table_name = (
-                    table_block.table_name if table_block.table_name else "data"
-                )
+                table_content = table_block.to_table_string(table_max_width=250)  # bigger max width for file
+                table_name = table_block.table_name if table_block.table_name else "data"
                 blocks.remove(table_block)
-                blocks.append(
-                    FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8"))
-                )
+                blocks.append(FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8")))
 
         self.__send_blocks_to_discord(
             blocks,

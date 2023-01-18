@@ -1,5 +1,5 @@
-from ..sink_config import SinkConfigBase
-from ..sink_base_params import SinkBaseParams
+from robusta.core.sinks.sink_base_params import SinkBaseParams
+from robusta.core.sinks.sink_config import SinkConfigBase
 
 
 class TelegramSinkParams(SinkBaseParams):
@@ -13,4 +13,3 @@ class TelegramSinkConfigWrapper(SinkConfigBase):
 
     def get_params(self) -> SinkBaseParams:
         return self.telegram_sink
-

@@ -1,7 +1,23 @@
+import logging
+from typing import List
+
+import requests
 from pydantic import SecretStr
 
-from robusta.api import *
-import requests
+from robusta.api import (
+    GRAFANA_RENDERER_URL,
+    ActionParams,
+    DeploymentChangeEvent,
+    DynamicDelayRepeat,
+    ExecutionBaseEvent,
+    FileBlock,
+    Finding,
+    FindingType,
+    K8sOperationType,
+    MarkdownBlock,
+    action,
+    is_matching_diff,
+)
 
 
 class ReportParams(ActionParams):
@@ -47,19 +63,19 @@ def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams
             )
             finding.add_enrichment([FileBlock("panel.png", image.content)])
     except requests.exceptions.ConnectionError:
-        finding.add_enrichment([
-            MarkdownBlock(
-                f"Connection to grafana-renderer container was refused. "
-                f"Make sure to set 'grafanaRenderer:enableContainer' to 'true' in the values yaml"
-            )
-        ])
+        finding.add_enrichment(
+            [
+                MarkdownBlock(
+                    "Connection to grafana-renderer container was refused. "
+                    "Make sure to set 'grafanaRenderer:enableContainer' to 'true' in the values yaml"
+                )
+            ]
+        )
 
     event.add_finding(finding)
 
 
-def has_matching_diff(
-    event: DeploymentChangeEvent, fields_to_monitor: List[str]
-) -> bool:
+def has_matching_diff(event: DeploymentChangeEvent, fields_to_monitor: List[str]) -> bool:
     all_diffs = event.obj.diff(event.old_obj)
     for diff in all_diffs:
         if is_matching_diff(diff, fields_to_monitor):
@@ -83,9 +99,7 @@ def deployment_status_report(event: DeploymentChangeEvent, action_params: Report
         if not has_matching_diff(event, action_params.fields_to_monitor):
             return
 
-    logging.info(
-        f"Scheduling rendering report. deployment: {event.obj.metadata.name} delays: {action_params.delays}"
-    )
+    logging.info(f"Scheduling rendering report. deployment: {event.obj.metadata.name} delays: {action_params.delays}")
     event.get_scheduler().schedule_action(
         action_func=report_rendering_task,
         task_id=f"deployment_status_report_{event.obj.metadata.name}_{event.obj.metadata.namespace}",

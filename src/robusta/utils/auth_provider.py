@@ -1,14 +1,14 @@
 import logging
 import os
 from typing import Optional
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
 
-from ..core.model.env_vars import RSA_KEYS_PATH
+from robusta.core.model.env_vars import RSA_KEYS_PATH
 
 
 class AuthProvider:
-
     def __init__(self):
         logging.info(f"Loading RSA keys from {RSA_KEYS_PATH}")
         self.prv: RSAPrivateKey = self.__class__._load_private_key(os.path.join(RSA_KEYS_PATH, "prv"))

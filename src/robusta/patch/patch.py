@@ -1,19 +1,22 @@
 import logging
-from typing import Union, List, Dict, get_type_hints, Optional
-from dataclasses import is_dataclass, InitVar
-from inspect import signature, getmodule
-from hikaru import HikaruDocumentBase, HikaruBase
-from ruamel.yaml import YAML
+from dataclasses import InitVar, is_dataclass
+from inspect import getmodule, signature
+from typing import Dict, List, Optional, Union, get_type_hints
+
+from hikaru import HikaruBase, HikaruDocumentBase
 from kubernetes.client.models.v1_container_image import V1ContainerImage
+from ruamel.yaml import YAML
 
 try:
     from typing import get_args, get_origin
 except ImportError:  # pragma: no cover
+
     def get_args(tp):
         return tp.__args__ if hasattr(tp, "__args__") else ()
 
     def get_origin(tp):
         return tp.__origin__ if hasattr(tp, "__origin__") else None
+
 
 NoneType = type(None)
 
@@ -40,11 +43,12 @@ def names(self, names):
     if names:
         self._names = names
     else:
-        self._names = ['']
+        self._names = [""]
 
 
 def official_plug_ins(self):
     return []
+
 
 # hikaru meta.py monkey patch function
 @classmethod
@@ -61,15 +65,14 @@ def get_empty_instance(cls):
     if cached_args:
         return cls(**cached_args)
     sig = signature(cls.__init__)
-    init_var_hints = {k for k, v in get_type_hints(cls).items()
-                      if isinstance(v, InitVar) or v is InitVar}
+    init_var_hints = {k for k, v in get_type_hints(cls).items() if isinstance(v, InitVar) or v is InitVar}
     hints = cls._get_hints()
     for p in sig.parameters.values():
-        if p.name in ('self', 'client') or p.name in init_var_hints:
+        if p.name in ("self", "client") or p.name in init_var_hints:
             continue
         # skip these either of these next two since they are supplied by default,
         # but only if they have default values
-        if p.name in ('apiVersion', 'kind'):
+        if p.name in ("apiVersion", "kind"):
             if issubclass(cls, HikaruDocumentBase):
                 continue
         f = hints[p.name]
@@ -80,20 +83,18 @@ def get_empty_instance(cls):
             type_args = get_args(f)
             initial_type = type_args[0]
             is_required = False
-        if ((type(initial_type) == type and issubclass(initial_type, (int, str,
-                                                                      bool,
-                                                                      float))) or
-                (is_dataclass(initial_type) and
-                 issubclass(initial_type, HikaruBase)) or
-                initial_type is object):
+        if (
+            (type(initial_type) == type and issubclass(initial_type, (int, str, bool, float)))
+            or (is_dataclass(initial_type) and issubclass(initial_type, HikaruBase))
+            or initial_type is object
+        ):
             # this is a type that might default to None
             # kw_args[p.name] = None
             if is_required:
-                if (is_dataclass(initial_type) and
-                        issubclass(initial_type, HikaruBase)):
+                if is_dataclass(initial_type) and issubclass(initial_type, HikaruBase):
                     kw_args[p.name] = initial_type.get_empty_instance()
                 else:
-                    kw_args[p.name] = ''
+                    kw_args[p.name] = ""
             else:
                 kw_args[p.name] = None
         else:
@@ -115,11 +116,13 @@ def get_empty_instance(cls):
             elif origin in (dict, Dict):
                 kw_args[p.name] = {}
             else:
-                raise NotImplementedError(f"Internal error! Unknown type"
-                                          f" {initial_type}"
-                                          f" for parameter {p.name} in"
-                                          f" {cls.__name__}. Please file a"
-                                          f" bug report.")  # pragma: no cover
+                raise NotImplementedError(
+                    f"Internal error! Unknown type"
+                    f" {initial_type}"
+                    f" for parameter {p.name} in"
+                    f" {cls.__name__}. Please file a"
+                    f" bug report."
+                )  # pragma: no cover
     new_inst = cls(**kw_args)
     # Caching the empty instance creation args, to use next time we want to create an empty instance
     cls.cached_args = kw_args
@@ -141,7 +144,7 @@ def _get_hints(cls) -> dict:
             hints.update(get_type_hints(c, globs))
     # patching ContainerImage hint to allow the names to be None due to containerd bug
     if cls.__name__ == "ContainerImage":
-        hints['names'] = Optional[List[str]]
+        hints["names"] = Optional[List[str]]
     # Caching the class hints for later use
     cls.cached_hints = hints
     return hints

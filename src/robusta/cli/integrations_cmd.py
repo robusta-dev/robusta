@@ -1,17 +1,15 @@
-import base64
 import os
 import textwrap
-
 import time
 import uuid
+from collections import namedtuple
+from typing import Tuple
 
 import requests
 import typer
-from pydantic import BaseModel
-from collections import namedtuple
 
-from .backend_profile import backend_profile
-from .utils import log_title
+from robusta.cli.backend_profile import backend_profile
+from robusta.cli.utils import log_title
 
 app = typer.Typer()
 
@@ -25,13 +23,9 @@ SlackApiKey = namedtuple("SlackApiKey", "key team_name")
 def wait_for_slack_api_key(id: str) -> SlackApiKey:
     while True:
         try:
-            response_json = requests.get(
-                f"{SLACK_INTEGRATION_SERVICE_ADDRESS}?id={id}"
-            ).json()
+            response_json = requests.get(f"{SLACK_INTEGRATION_SERVICE_ADDRESS}?id={id}").json()
             if response_json["token"]:
-                return SlackApiKey(
-                    str(response_json["token"]), response_json.get("team-name", None)
-                )
+                return SlackApiKey(str(response_json["token"]), response_json.get("team-name", None))
             time.sleep(0.5)
         except Exception as e:
             log_title(f"Error getting slack token {e}")
@@ -40,15 +34,13 @@ def wait_for_slack_api_key(id: str) -> SlackApiKey:
 def _get_slack_key_once() -> SlackApiKey:
     id = str(uuid.uuid4())
     url = f"{backend_profile.robusta_cloud_api_host}/integrations/slack?id={id}"
-    typer.secho(
-        f"If your browser does not automatically launch, open the below url:\n{url}"
-    )
+    typer.secho(f"If your browser does not automatically launch, open the below url:\n{url}")
     typer.launch(url)
     slack_api_key = wait_for_slack_api_key(id)
     return slack_api_key
 
 
-def get_slack_key() -> (str, str):
+def get_slack_key() -> Tuple[str, str]:
     slack_api_key = _get_slack_key_once()
     if not slack_api_key or not slack_api_key.team_name:
         return slack_api_key.key, ""
@@ -70,9 +62,7 @@ def slack():
 
 def get_ui_key() -> str:
     while True:
-        email = typer.prompt(
-            "Enter your Gmail/Google address. This will be used to login"
-        )
+        email = typer.prompt("Enter your Gmail/Google address. This will be used to login")
         email = email.strip()
         account_name = typer.prompt("Choose your account name (e.g your organization name)")
 
@@ -92,7 +82,7 @@ def get_ui_key() -> str:
             return robusta_api_key
 
         typer.secho(
-            f"Sorry, something didn't work out. The response was {res.content}\n"
+            f"Sorry, something didn't work out. The response was {res.content!r}\n"
             f"If you need help, email support@robusta.dev",
             fg="red",
         )

@@ -1,6 +1,7 @@
 import logging
 import os
 import os.path
+
 import colorlog
 
 
@@ -11,14 +12,10 @@ def init_logging():
 
     if os.environ.get("ENABLE_COLORED_LOGS", "false").lower() == "true":
         print("setting up colored logging")
-        colorlog.basicConfig(
-            format=logging_format, level=logging_level, datefmt=logging_datefmt
-        )
+        colorlog.basicConfig(format=logging_format, level=logging_level, datefmt=logging_datefmt)
     else:
         print("setting up regular logging")
-        logging.basicConfig(
-            format=logging_format, level=logging_level, datefmt=logging_datefmt
-        )
+        logging.basicConfig(format=logging_format, level=logging_level, datefmt=logging_datefmt)
 
     logging.getLogger().setLevel(logging_level)
     for logger_name in ["werkzeug", "telethon"]:
