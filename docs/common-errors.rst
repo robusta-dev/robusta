@@ -15,7 +15,7 @@ please contact support@robusta.dev or go to `our slack channel <https://robustac
 
         find / -regex '.*/bin/robusta' 2>/dev/null
     
-    2. Add the found path ``.../bin/`` (E.g ``/opt/homebrew/bin/``) to the user path directores. 
+    2. Add the found path ``.../bin/`` (E.g ``/opt/homebrew/bin/``) to the user path directories. 
 
     * Find your shell config file ( ~/.profile or ~/.bash_profile or ~/.zshrc etc...)
 
