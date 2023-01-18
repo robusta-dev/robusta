@@ -102,7 +102,7 @@ h2, h3 {
 }
 
 .md-search__form {
-    border: 2px solid var(--md-color-details);
+    border: 0.5px solid var(--md-color-details-border);
     background-color: var(--md-color-details-background);
 }
 
@@ -153,8 +153,7 @@ h2, h3 {
 }
 
 .md-typeset {
-    /* color: var(--sd-color-black); */
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
 .md-typeset a {
