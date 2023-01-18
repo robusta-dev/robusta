@@ -51,7 +51,7 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
                 MarkdownBlock( 
                     f"{Emojis.Recommend.value} *Robusta's Recommendation:* Remove this pod's CPU limit entirely. <https://home.robusta.dev/"
                     "blog/stop-using-cpu-limits/"
-                    " |Using CPU limits is *not* a best "
+                    "|Using CPU limits is *not* a best "
                     "practice.>"
                 ),
             ],
