@@ -48,10 +48,10 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
                     "<https://github.com/robusta-dev/alert-explanations/wiki/CPUThrottlingHigh-"
                     "(Prometheus-Alert)|Learn more.>"
                 ),
-                MarkdownBlock(
-                    f"{Emojis.Recommend.value} *Robusta's Recommendation:* Remove this pod's CPU limit entirely. <https://github.com/robusta-dev/"
-                    "alert-explanations/wiki/CPUThrottlingHigh-(Prometheus-Alert)#:~:text=relatively%20accurate%20one-,"
-                    "Explanation,-As%20long%20as|Using CPU limits is *not* a best "
+                MarkdownBlock( 
+                    f"{Emojis.Recommend.value} *Robusta's Recommendation:* Remove this pod's CPU limit entirely. <https://home.robusta.dev/"
+                    "blog/stop-using-cpu-limits/"
+                    " |Using CPU limits is *not* a best "
                     "practice.>"
                 ),
             ],
