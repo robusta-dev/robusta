@@ -5,10 +5,9 @@ Playbook actions are loaded into Robusta using the ``playbookRepos`` Helm value.
 
 Robusta has a set of builtin playbooks.
 
-You can load extra playbook actions in two different ways from git repositories, via HTTPS or via SSH.
-For public repos load the playbook via HTTPS, for private repos you will need to use SSH.
+You can load extra playbook actions in two different ways from git repositories, via HTTPS or via SSH. For private repos you will need to use SSH.
 
-1) Loading a git playbook by HTTPS:
+1) Loading a **public** git playbook by HTTPS:
 
 .. code-block:: yaml
 
@@ -18,7 +17,7 @@ For public repos load the playbook via HTTPS, for private repos you will need to
         url: "https://github.com/robusta-dev/robusta-chaos.git"
 
 
-2) Loading a git playbook by SSH:
+2) Loading a **public** or **private** git playbook by SSH:
 
 .. code-block:: yaml
 
@@ -31,8 +30,7 @@ For public repos load the playbook via HTTPS, for private repos you will need to
           ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
           -----END OPENSSH PRIVATE KEY-----
 
-The ``key`` should contain a deployment key, with ``read`` access. The ``key`` is required when accessing a git repo via ssh, even for public repositories.
-
+The ``key`` should contain a `deployment key <https://www.youtube.com/watch?v=qx1dHVtpCC0>`_, with ``read`` access.
 You can also save the SSH key in a `Kubernetes Secret <https://kubernetes.io/docs/concepts/configuration/secret/>`_, and reference it using an environment variable, like this:
 
 .. code-block:: yaml
@@ -54,4 +52,3 @@ You can also save the SSH key in a `Kubernetes Secret <https://kubernetes.io/doc
 
     Robusta does not watch for changes on git repositories. Playbooks are loaded from the repository when the server
     starts or the configuration changes, or by running manual reload: ``robusta playbooks reload``
-
