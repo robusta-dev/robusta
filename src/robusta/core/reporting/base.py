@@ -166,7 +166,7 @@ class Finding(Filterable):
             starts_at: datetime = None,
             ends_at: datetime = None,
             add_silence_url: bool = False,
-            alert_labels: Dict[Any, Any] = None
+            silence_labels: Dict[Any, Any] = None
     ) -> None:
         self.id: uuid = uuid.uuid4()
         self.title = title
@@ -189,7 +189,7 @@ class Finding(Filterable):
         )
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
         self.add_silence_url = add_silence_url
-        self.alert_labels = alert_labels
+        self.silence_labels = silence_labels
         self.creation_date = creation_date
         self.fingerprint = (
             fingerprint
@@ -270,8 +270,8 @@ class Finding(Filterable):
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
 
-        if self.alert_labels and self.alert_labels.get("service"):
-            labels["service"] = self.alert_labels["service"]
+        if self.silence_labels and self.silence_labels.get("service"):
+            labels["service"] = self.silence_labels["service"]
 
         # In prometheus job is related to the scrape target.
         # Kubernetes jobs are stored in job_name.
