@@ -1,4 +1,5 @@
 import logging
+import time
 from collections import defaultdict
 from datetime import datetime
 from string import Template
@@ -283,23 +284,28 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
             if container_status.state.waiting is not None and container_status.restartCount >= 1
         ]
 
+    tries: int = 2
+    backoff_seconds = 2
+    regex_replacement_style = (
+        RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
+    )
     for container in containers:
+        for _ in range(tries - 1):
+            log_data = pod.get_logs(
+                container=container,
+                regex_replacer_patterns=params.regex_replacer_patterns,
+                regex_replacement_style=regex_replacement_style,
+                previous=params.previous,
+            )
+            if not log_data:
+                logging.info("log data is empty, retrying...")
+                time.sleep(backoff_seconds)
+                continue
 
-        regex_replacement_style = (
-            RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
-        )
-        log_data = pod.get_logs(
-            container=container,
-            regex_replacer_patterns=params.regex_replacer_patterns,
-            regex_replacement_style=regex_replacement_style,
-            previous=params.previous,
-        )
-        if not log_data:
-            continue
-
-        event.add_enrichment(
-            [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
-        )
+            event.add_enrichment(
+                [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
+            )
+            break
 
 
 class SearchTermParams(ActionParams):
