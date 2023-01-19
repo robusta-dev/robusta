@@ -5,7 +5,7 @@ import urllib.parse
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
 from pydantic.main import BaseModel
@@ -167,6 +167,7 @@ class Finding(Filterable):
         starts_at: datetime = None,
         ends_at: datetime = None,
         add_silence_url: bool = False,
+        silence_labels: Dict[Any, Any] = None,
     ) -> None:
         self.id: uuid.UUID = uuid.uuid4()
         self.title = title
@@ -185,6 +186,7 @@ class Finding(Filterable):
         uri_path = f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
         self.add_silence_url = add_silence_url
+        self.silence_labels = silence_labels
         self.creation_date = creation_date
         self.fingerprint = (
             fingerprint if fingerprint else self.__calculate_fingerprint(subject, source, aggregation_key)
@@ -257,8 +259,14 @@ class Finding(Filterable):
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
 
+        if self.silence_labels and self.silence_labels.get("service"):
+            labels["service"] = self.silence_labels["service"]
+
+        # In prometheus job is related to the scrape target.
+        # Kubernetes jobs are stored in job_name.
         kind: Optional[str] = self.subject.subject_type.value
         if kind and self.subject.name:
+            kind = "job_name" if kind == "job" else kind
             labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
