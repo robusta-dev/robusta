@@ -14,7 +14,6 @@ from robusta.core.model.base_params import ChartValuesFormat, ResourceChartItemT
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 from robusta.core.reporting.blocks import FileBlock
 from robusta.core.reporting.custom_rendering import charts_style
-from robusta.integrations.prometheus.utils import PrometheusDiscovery
 
 
 class XAxisLine(BaseModel):
@@ -40,8 +39,7 @@ def run_prometheus_query(
 ) -> PrometheusQueryResult:
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
-    if not prometheus_base_url:
-        prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
+
     query_duration = ends_at - starts_at
     resolution = get_resolution_from_duration(query_duration)
     increment = max(query_duration.total_seconds() / resolution, 1.0)

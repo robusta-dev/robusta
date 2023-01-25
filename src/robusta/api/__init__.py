@@ -24,6 +24,7 @@ from robusta.core.model.base_params import (
 )
 from robusta.core.model.env_vars import (
     ALERT_BUILDER_WORKERS,
+    ALERTMANAGER_AUTH_HEADER,
     CLUSTER_STATUS_PERIOD_SEC,
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
@@ -44,6 +45,7 @@ from robusta.core.model.env_vars import (
     PLAYBOOKS_CONFIG_FILE_PATH,
     PLAYBOOKS_ROOT,
     PRINTED_TABLE_MAX_WIDTH,
+    PROMETHEUS_AUTH_HEADER,
     PROMETHEUS_ENABLED,
     PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
     RELAY_EXTERNAL_ACTIONS_URL,
@@ -247,7 +249,12 @@ from robusta.integrations.prometheus.models import (
     PrometheusAlert,
     PrometheusKubernetesAlert,
 )
-from robusta.integrations.prometheus.utils import AlertManagerDiscovery, PrometheusDiscovery, ServiceDiscovery
+from robusta.integrations.prometheus.utils import (
+    AlertManagerDiscovery,
+    PrometheusDiscovery,
+    ServiceDiscovery,
+    get_prometheus_connect,
+)
 from robusta.integrations.resource_analysis.cpu_analyzer import CpuAnalyzer
 from robusta.integrations.resource_analysis.memory_analyzer import MemoryAnalyzer, pretty_size
 from robusta.integrations.resource_analysis.node_cpu_analyzer import NodeCpuAnalyzer

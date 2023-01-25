@@ -1,18 +1,24 @@
 import logging
-from typing import TYPE_CHECKING, List
+from typing import List, Optional
 
 from cachetools import TTLCache
+from prometheus_api_client import PrometheusConnect
 from requests.exceptions import ConnectionError
 
 from robusta.core.exceptions import PrometheusNotFound
-from robusta.core.model.env_vars import SERVICE_CACHE_TTL_SEC
+from robusta.core.model.env_vars import PROMETHEUS_AUTH_HEADER, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
 
-if TYPE_CHECKING:
-    from prometheus_api_client import PrometheusConnect
+
+def get_prometheus_connect(url: Optional[str]) -> PrometheusConnect:
+    if url is None:
+        url = PrometheusDiscovery.find_prometheus_url()
+
+    headers = {"Authorization": PROMETHEUS_AUTH_HEADER} if PROMETHEUS_AUTH_HEADER is not None else {}
+    return PrometheusConnect(url=url, disable_ssl=True, headers=headers)
 
 
-def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
+def check_prometheus_connection(prom: PrometheusConnect, params: dict = None):
     params = params or {}
     try:
         prometheus_connected = prom.check_prometheus_connection(params)
