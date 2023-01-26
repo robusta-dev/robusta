@@ -8,6 +8,7 @@ import requests
 from pydantic import BaseModel
 
 from robusta.api import (
+    ALERTMANAGER_AUTH_HEADER,
     ActionException,
     ActionParams,
     AlertManagerDiscovery,
@@ -190,8 +191,13 @@ SilenceOperation = Enum("SilenceOperation", "CREATE DELETE LIST")
 
 def _gen_headers(params: BaseSilenceParams) -> Dict:
     headers = {"Content-type": "application/json"}
+
     if params.grafana_api_key:
-        headers.update({"Authorization": "Bearer {0}".format(params.grafana_api_key)})
+        headers.update({"Authorization": f"Bearer {params.grafana_api_key}"})
+
+    if ALERTMANAGER_AUTH_HEADER is not None:
+        headers.update({"Authorization": ALERTMANAGER_AUTH_HEADER})
+
     return headers
 
 
