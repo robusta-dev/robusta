@@ -4,8 +4,7 @@ from typing import Any, Dict, Optional
 from prometheus_api_client import PrometheusApiClientException
 
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
-from robusta.integrations.prometheus import get_prometheus_connect
-from robusta.integrations.prometheus.utils import check_prometheus_connection
+from robusta.integrations.prometheus.utils import check_prometheus_connection, get_prometheus_connect
 
 """
 This function is copied from the python package prometheus_api_client

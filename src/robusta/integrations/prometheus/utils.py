@@ -6,7 +6,7 @@ from prometheus_api_client import PrometheusConnect
 from requests.exceptions import ConnectionError
 
 from robusta.core.exceptions import PrometheusNotFound
-from robusta.core.model.env_vars import PROMETHEUS_AUTH_HEADER, SERVICE_CACHE_TTL_SEC
+from robusta.core.model.env_vars import PROMETHEUS_AUTH_HEADER, PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
 
 
@@ -15,7 +15,7 @@ def get_prometheus_connect(url: Optional[str]) -> PrometheusConnect:
         url = PrometheusDiscovery.find_prometheus_url()
 
     headers = {"Authorization": PROMETHEUS_AUTH_HEADER} if PROMETHEUS_AUTH_HEADER is not None else {}
-    return PrometheusConnect(url=url, disable_ssl=True, headers=headers)
+    return PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
 
 
 def check_prometheus_connection(prom: PrometheusConnect, params: dict = None):
