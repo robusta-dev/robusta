@@ -1,39 +1,34 @@
 Jira
 #################
 
-Robusta can send playbook results to Jira.
-
-To configure the Jira sink we will need some parameters to be set.
-
-.. note::
-
-    2-way interactivity (``CallbackBlock``) isn't implemented yet.
+Robusta can open Jira tickets based on playbooks results.
 
 Get your Jira configurations
 ------------------------------------------------
 
-To configure the Jira sink you need to have following values: ``url``, ``username``, ``api_key``,  ``dedups`` ``and project_name``.
+To configure the Jira sink you need to have following:
 
-The ``url`` parameter is pretty simple to find: you need to copy the url of your workspace, usually
-it looks like https://workspace.atlassian.net (**Note:** schema (https) is required)
+* ``url`` : The url of your workspace. For example: https://workspace.atlassian.net (**Note:** schema (https) is required)
+* ``username`` : Jira workspace user name. For example: jira-user@company.com
+* ``api_key`` : follow the `instructions <https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/>`_ to get your api key.
+* ``project_name`` : Project for the Jira tickets.
+* ``issue_type`` : [Optional - default: ``Task``] Jira ticket type
+* ``dedups`` : [Optional - default: ``fingerprint``] Tickets deduplication parameter. By default, Only one issue per ``fingerprint`` will be created. There can be more than one value to use. Possible values are: fingerprint, cluster_name, title, node, type, source, namespace, creation_date etc
+* ``project_type_id_override`` : [Optional - default: None] If available, will override the ``project_name`` configuration
+* ``issue_type_id_override`` : [Optional - default: None] If available, will override the ``issue_type`` configuration
 
-The ``username`` it's the username you are logging with to Jira workspace.
-
-``api_key`` can be configured, following the `instruction <https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/>`_.
-
-``dedups`` is the parameter which defines how your tickets will be distinguished. The default value is the fingerprint,
-so the issues with the same fingerprint won't be created. There can be more than one value to use. Possible values are:
-fingerprint, cluster_name, title, node, type, source, namespace, creation_date etc
-
-``project_name`` is the full name or shortened of the project so it can be found.
 
 .. note::
 
-   Permissions required for the user: ``write:jira-work``, ``read:jira-work``
+   * The configured user should have the following permissions: ``write:jira-work``, ``read:jira-work``
+   * If creating issues by ``project_name`` or ``issue_type`` fails, try specifying the corresponding ids using ``project_type_id_override`` and ``issue_type_id_override``
 
 Configuring the Jira sink
 ------------------------------------------------
-Now we're ready to configure the Jira sink.
+
+| Now we're ready to configure the Jira sink.
+| To avoid too many Jira tickets, it's recommended to use :ref:`Sink Matchers <Sink Matchers>` to limit the number of created tickets.
+| In the example below, tickets will be created for the ``CPUThrottlingHigh`` and ``KubePodCrashLooping`` Prometheus alerts.
 
 .. admonition:: Add this to your generated_values.yaml
 
@@ -48,6 +43,8 @@ Now we're ready to configure the Jira sink.
             dedups: (OPTIONAL)
               - fingerprint
             project_name: project_name
+            match:
+               identifier: "(CPUThrottlingHigh|KubePodCrashLooping)"
 
 Save the file and run
 
@@ -61,3 +58,8 @@ You should now get playbooks results in Jira! Example is shown below:
     .. image:: /images/jira_example.png
       :width: 1000
       :align: center
+
+
+.. note::
+
+    2-way interactivity (``CallbackBlock``) isn't implemented yet.
