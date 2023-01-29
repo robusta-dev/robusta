@@ -313,7 +313,10 @@ class SupabaseDal:
         is attempted to be converted to a json, which throws an error every time
         """
         url: str = str(supabase_request_obj.session.base_url).rstrip("/")
-        query: str = str(supabase_request_obj.session.params)
+
+        # postgres_py (which supabase cli uses) adds quotation marks around params with the characters ",.:()"
+        # supabase does not support this format
+        query: str = str(supabase_request_obj.session.params).replace('%22', '')
         response = requests.delete(f"{url}?{query}", headers=supabase_request_obj.session.headers)
         response_data = ""
         try:
