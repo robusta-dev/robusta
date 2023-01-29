@@ -241,6 +241,17 @@ platformPlaybooks:
     - resource_babysitter: {}
   sinks:
     - "robusta_ui_sink"
+- triggers:
+  - on_job_failure: {}
+  actions:
+  - create_finding:
+      aggregation_key: "job_failure"
+      title: "Job Failed"
+  - job_info_enricher: {}
+  - job_events_enricher: {}
+  - job_pod_enricher: {}
+  sinks:
+    - "robusta_ui_sink"
 
 # parameters for the robusta forwarder deployment
 kubewatch:
