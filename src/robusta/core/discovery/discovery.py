@@ -141,8 +141,10 @@ class Discovery:
                         extract_total_pods(pod),
                         extract_ready_pods(pod),
                     )
-                for pod in pod_items if not pod.metadata.owner_references and not is_pod_finished(pod)
-            ])
+                    for pod in pod_items
+                    if not pod.metadata.owner_references and not is_pod_finished(pod)
+                ]
+            )
         except Exception:
             logging.error(
                 "Failed to run periodic service discovery",
@@ -245,7 +247,7 @@ def is_pod_ready(pod: V1Pod) -> bool:
 def is_pod_finished(pod: V1Pod) -> bool:
     try:
         # all containers in the pod have terminated, this pod should be removed by GC
-        return pod.status.phase.lower() in ['succeeded', 'failed']
+        return pod.status.phase.lower() in ["succeeded", "failed"]
     except AttributeError:  # phase is an optional field
         return False
 
