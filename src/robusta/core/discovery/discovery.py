@@ -246,7 +246,7 @@ def is_pod_finished(pod: V1Pod) -> bool:
     try:
         # all containers in the pod have terminated, this pod should be removed by GC
         return pod.status.phase.lower() in ['succeeded', 'failed']
-    except Exception: # phase is an optional field
+    except AttributeError:  # phase is an optional field
         return False
 
 
