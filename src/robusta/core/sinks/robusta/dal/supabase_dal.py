@@ -322,7 +322,7 @@ class SupabaseDal:
         try:
             response_data = response.json()
         except Exception:  # this can be okay if no data is expected
-            logging.warning("Failed to parse delete response data")
+            logging.debug("Failed to parse delete response data")
 
         return {
             "data": response_data,
