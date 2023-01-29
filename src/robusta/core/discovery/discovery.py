@@ -142,7 +142,7 @@ class Discovery:
                         extract_ready_pods(pod),
                     )
                     for pod in pod_items
-                    if not pod.metadata.owner_references
+                    if not pod.metadata.owner_references and not is_pod_finished(pod)
                 ]
             )
         except Exception:
@@ -242,6 +242,14 @@ def is_pod_ready(pod: V1Pod) -> bool:
         if condition.type == "Ready":
             return condition.status.lower() == "true"
     return False
+
+
+def is_pod_finished(pod: V1Pod) -> bool:
+    try:
+        # all containers in the pod have terminated, this pod should be removed by GC
+        return pod.status.phase.lower() in ["succeeded", "failed"]
+    except AttributeError:  # phase is an optional field
+        return False
 
 
 def extract_ready_pods(resource) -> int:
