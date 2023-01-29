@@ -94,6 +94,18 @@ builtinPlaybooks:
   - image_pull_backoff_reporter:
       rate_limit: 3600
 
+- triggers:
+  - on_job_failure: {}
+  actions:
+  - create_finding:
+      aggregation_key: "job_failure"
+      title: "Job Failed"
+  - job_info_enricher: {}
+  - job_events_enricher: {}
+  - job_pod_enricher: {}
+  sinks:
+    - "robusta_ui_sink"
+
 # playbooks for non-prometheus based monitoring that use prometheus for enrichment
 - triggers:
   - on_pod_oom_killed:
