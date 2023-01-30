@@ -1,7 +1,7 @@
 import logging
 import re
 from itertools import chain
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Sequence, Tuple, Union
 
 import requests
 
@@ -76,7 +76,7 @@ class DiscordFieldBlock(DiscordBlock):
 
     def __init__(self, name: str, value: str, inline: bool = False):
         value = Transformer.apply_length_limit(value, MAX_FIELD_CHARS)
-        super().__init__(name=name, value=value, inline=inline)
+        super().__init__(name=name, value=value, inline=inline)  # type: ignore
 
     def to_msg(self) -> Dict:
         return {"name": self.name, "value": self.value, "inline": self.inline}
@@ -117,7 +117,7 @@ class DiscordSender:
         return Transformer.to_github_markdown(text, add_angular_brackets=False)
 
     @staticmethod
-    def __format_final_message(discord_blocks: List[DiscordBlock], msg_color: Union[str, int]) -> Dict:
+    def __format_final_message(discord_blocks: List[DiscordBlock], msg_color: str) -> Dict:
         header_block = next((block.to_msg() for block in discord_blocks if isinstance(block, DiscordHeaderBlock)), {})
         fields = [block.to_msg() for block in discord_blocks if isinstance(block, DiscordFieldBlock)]
         discord_msg = {
@@ -144,11 +144,11 @@ class DiscordSender:
             chain(*[self.__to_discord(transformed_block, sink_name) for transformed_block in transformed_blocks])
         )
 
-        return _blocks
+        return _blocks  # type: ignore
 
-    def __to_discord(self, block: BaseBlock, sink_name: str) -> List[Union[DiscordBlock, Tuple]]:
+    def __to_discord(self, block: BaseBlock, sink_name: str) -> Sequence[Union[DiscordBlock, Tuple]]:
         if isinstance(block, MarkdownBlock):
-            if not block.text:
+            if not block.text:  # type: ignore
                 return []
             name, value = self.__extract_markdown_name(block)
             return [
@@ -183,7 +183,7 @@ class DiscordSender:
         elif isinstance(block, ListBlock):
             return self.__to_discord(block.to_markdown(), sink_name)
         elif isinstance(block, KubernetesDiffBlock):
-            return self.__to_discord_diff(block, sink_name)
+            return self.__to_discord_diff(block, sink_name)  # type: ignore
         else:
             logging.warning(f"cannot convert block of type {type(block)} to discord format block: {block}")
             return []  # no reason to crash the entire report

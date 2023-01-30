@@ -2,20 +2,20 @@ import json
 import logging
 
 try:
-    from kafka import KafkaProducer
+    from kafka import KafkaProducer  # type: ignore
 except ImportError:
 
-    def KafkaProducer(self, *args, **kwargs):
+    def KafkaProducer(*args, **kwargs):
         raise ImportError("kafka-python is not installed")
 
 
 from robusta.core.reporting.base import Enrichment, Finding
 from robusta.core.reporting.blocks import JsonBlock, KubernetesDiffBlock
-from robusta.core.sinks.kafka.kafka_sink_params import KafkaSinkConfigWrapper
+from robusta.core.sinks.kafka.kafka_sink_params import KafkaSinkConfigWrapper, KafkaSinkParams
 from robusta.core.sinks.sink_base import SinkBase
 
 
-class KafkaSink(SinkBase):
+class KafkaSink(SinkBase[KafkaSinkParams]):
     def __init__(self, sink_config: KafkaSinkConfigWrapper, registry):
         super().__init__(sink_config.kafka_sink, registry)
         self.producer = KafkaProducer(bootstrap_servers=sink_config.kafka_sink.kafka_url)
@@ -25,9 +25,9 @@ class KafkaSink(SinkBase):
         for enrichment in finding.enrichments:
             self.send_enrichment(
                 enrichment,
-                finding.subject.name,
+                finding.subject.name,  # type: ignore
                 finding.subject.subject_type.value,
-                finding.subject.namespace,
+                finding.subject.namespace,  # type: ignore
             )
 
     def send_enrichment(

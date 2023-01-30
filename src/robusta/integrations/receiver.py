@@ -6,7 +6,7 @@ import logging
 import os
 import time
 from threading import Thread
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 from uuid import UUID
 
 import websocket
@@ -130,6 +130,7 @@ class ActionRequestReceiver:
         )
 
         if sync_response:
+            assert response is not None
             http_code = 200 if response.get("success") else 500
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
 
@@ -211,45 +212,25 @@ class ActionRequestReceiver:
             )
 
         signing_key = self.event_handler.get_global_config().get("signing_key")
+        body = action_request.body
         if not signing_key:
-            logging.error(f"Signing key not available. Cannot verify request {action_request.body}")
+            logging.error(f"Signing key not available. Cannot verify request {body}")
             return ValidationResponse(
                 http_code=500, error_code=ErrorCodes.NO_SIGNING_KEY.value, error_msg="No signing key"
             )
 
-        if action_request.signature:
-            # First auth protocol option, based on signature only
-            return self.validate_action_request_signature(action_request, signing_key)
-        elif action_request.partial_auth_a or action_request.partial_auth_b:
-            # Second auth protocol option, based on public key
-            return self.validate_with_private_key(action_request, signing_key)
-        else:  # Light action protocol option, authenticated in relay
-            return self.validate_light_action(action_request)
+        # First auth protocol option, based on signature only
+        signature = action_request.signature
+        if signature:
+            generated_signature = sign_action_request(body, signing_key)
+            if hmac.compare_digest(generated_signature, signature):
+                return ValidationResponse()
+            else:
+                return ValidationResponse(
+                    http_code=500, error_code=ErrorCodes.SIGNATURE_MISMATCH.value, error_msg="Signature mismatch"
+                )
 
-    def validate_light_action(self, action_request: ExternalActionRequest) -> ValidationResponse:
-        light_actions = self.event_handler.get_light_actions()
-        if action_request.body.action_name not in light_actions:
-            return ValidationResponse(
-                http_code=500,
-                error_code=ErrorCodes.UNAUTHORIZED_LIGHT_ACTION.value,
-                error_msg="Unauthorized action requested",
-            )
-        return ValidationResponse()
-
-    @staticmethod
-    def validate_action_request_signature(
-        action_request: ExternalActionRequest, signing_key: str
-    ) -> ValidationResponse:
-        generated_signature = sign_action_request(action_request.body, signing_key)
-        if hmac.compare_digest(generated_signature, action_request.signature):
-            return ValidationResponse()
-        else:
-            return ValidationResponse(
-                http_code=500, error_code=ErrorCodes.SIGNATURE_MISMATCH.value, error_msg="Signature mismatch"
-            )
-
-    def validate_with_private_key(self, action_request: ExternalActionRequest, signing_key: str) -> ValidationResponse:
-        body = action_request.body
+        # Second auth protocol option, based on public key
         partial_auth_a = action_request.partial_auth_a
         partial_auth_b = action_request.partial_auth_b
         if not partial_auth_a or not partial_auth_b:
@@ -274,6 +255,9 @@ class ActionRequestReceiver:
                 http_code=401, error_code=ErrorCodes.AUTH_VALIDATION_FAILED.value, error_msg="Auth validation failed"
             )
 
+        assert key_a is not None
+        assert key_b is not None
+
         try:
             signing_key_uuid = UUID(signing_key)
         except Exception:
@@ -293,7 +277,7 @@ class ActionRequestReceiver:
     @classmethod
     def __extract_key_and_validate(
         cls, encrypted: str, private_key: RSAPrivateKey, body: ActionRequestBody
-    ) -> (bool, Optional[UUID]):
+    ) -> Tuple[bool, Optional[UUID]]:
         try:
             plain = private_key.decrypt(
                 base64.b64decode(encrypted.encode("utf-8")),

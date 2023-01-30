@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from hikaru.model import Event, EventList
 
@@ -8,29 +8,33 @@ from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_da
 
 
 def filter_event(ev: Event, name_substring_filter: str, included_types: Optional[List[str]]) -> bool:
+    assert ev.involvedObject.name is not None
     if name_substring_filter is not None and name_substring_filter not in ev.involvedObject.name:
         return False
+
+    assert ev.type is not None
     if included_types is not None and ev.type.lower() not in [t.lower() for t in included_types]:
         return False
+
     return True
 
 
 def get_resource_events_table(
     table_name: str,
     kind: str,
-    name: str = None,
-    namespace: str = None,
+    name: Optional[str] = None,
+    namespace: Optional[str] = None,
     name_substring: str = "",
     included_types: Optional[List[str]] = None,
     max_events: Optional[int] = None,
 ) -> Optional[TableBlock]:
     field_selector = f"involvedObject.kind={kind}"
-    if name:
+    if name is not None:
         field_selector += f",involvedObject.name={name}"
-    if namespace:
+    if namespace is not None:
         field_selector += f",involvedObject.namespace={namespace}"
 
-    event_list: EventList = Event.listEventForAllNamespaces(field_selector=field_selector).obj
+    event_list = cast(EventList, Event.listEventForAllNamespaces(field_selector=field_selector).obj)
     if not event_list.items:
         return
 
@@ -60,23 +64,24 @@ def get_resource_events_table(
     )
 
 
-def get_event_timestamp(event: Event):
+def get_event_timestamp(event: Event) -> str:
     if event.lastTimestamp:
         return event.lastTimestamp
-    elif event.eventTime:
+    if event.eventTime:
         return event.eventTime
-    elif event.firstTimestamp:
+    if event.firstTimestamp:
         return event.firstTimestamp
     if event.metadata.creationTimestamp:
         return event.metadata.creationTimestamp
-    return
+    # TODO: Should we raise an exception here?
+    return  # type: ignore
 
 
-def get_events_list(event_type: str = None) -> EventList:
+def get_events_list(event_type: Optional[str] = None) -> EventList:
     """
     event_types are ["Normal","Warning"]
     """
-    if event_type:
+    if event_type is not None:
         field_selector = f"type={event_type}"
-        return Event.listEventForAllNamespaces(field_selector=field_selector).obj
-    return Event.listEventForAllNamespaces().obj
+        return Event.listEventForAllNamespaces(field_selector=field_selector).obj  # type: ignore
+    return Event.listEventForAllNamespaces().obj  # type: ignore

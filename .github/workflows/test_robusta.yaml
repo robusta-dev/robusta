@@ -1,6 +1,6 @@
 name: Test robusta with pytest
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
     run_tests:

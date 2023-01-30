@@ -1,6 +1,7 @@
 import hashlib
 import inspect
 import json
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -15,7 +16,7 @@ def get_function_hash(func):
     return hashlib.sha256(plaintext).hexdigest()
 
 
-def action_hash(func, action_params: BaseModel, additional_data: dict) -> str:
+def action_hash(func, action_params: Optional[BaseModel], additional_data: Optional[dict]) -> str:
     hash_input = (
         f"{get_function_hash(func)}"
         + ("None" if additional_data is None else json.dumps(additional_data))

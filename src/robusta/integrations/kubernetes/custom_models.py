@@ -26,10 +26,8 @@ from robusta.utils.parsing import load_json
 S = TypeVar("S")
 T = TypeVar("T")
 
-
-# TODO: import these from the python-tools project
 PYTHON_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v5.0"
-JAVA_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:jattach"
+JAVA_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:v1.1"
 
 
 class Process(BaseModel):
@@ -359,7 +357,7 @@ class RobustaPod(Pod):
 
 class RobustaDeployment(Deployment):
     @classmethod
-    def from_image(cls: Type[T], name, image="busybox", cmd=None) -> T:
+    def from_image(cls: Type[T], name: str, image="busybox", cmd=None) -> T:
         obj: RobustaDeployment = hikaru.from_dict(yaml.safe_load(get_deployment_yaml(name, image)), RobustaDeployment)
         obj.spec.template.spec.containers[0].command = prepare_pod_command(cmd)
         return obj

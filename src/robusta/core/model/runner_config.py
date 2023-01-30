@@ -26,29 +26,27 @@ class PlaybookRepo(BaseModel):
     pip_install: bool = True  # Set to False, if the playbooks package is already in site-packages.
 
 
+UnionSinkConfigWrapper = Union[
+    RobustaSinkConfigWrapper,
+    SlackSinkConfigWrapper,
+    DataDogSinkConfigWrapper,
+    KafkaSinkConfigWrapper,
+    MsTeamsSinkConfigWrapper,
+    OpsGenieSinkConfigWrapper,
+    TelegramSinkConfigWrapper,
+    WebhookSinkConfigWrapper,
+    VictoropsConfigWrapper,
+    PagerdutyConfigWrapper,
+    DiscordSinkConfigWrapper,
+    MattermostSinkConfigWrapper,
+    JiraSinkConfigWrapper,
+    WebexSinkConfigWrapper,
+]
+
+
 class RunnerConfig(BaseModel):
     playbook_repos: Dict[str, PlaybookRepo]
-    sinks_config: Optional[
-        List[
-            Union[
-                RobustaSinkConfigWrapper,
-                SlackSinkConfigWrapper,
-                DataDogSinkConfigWrapper,
-                KafkaSinkConfigWrapper,
-                MsTeamsSinkConfigWrapper,
-                OpsGenieSinkConfigWrapper,
-                TelegramSinkConfigWrapper,
-                WebhookSinkConfigWrapper,
-                VictoropsConfigWrapper,
-                PagerdutyConfigWrapper,
-                DiscordSinkConfigWrapper,
-                MattermostSinkConfigWrapper,
-                WebexSinkConfigWrapper,
-                JiraSinkConfigWrapper,
-            ]
-        ]
-    ]
-    light_actions: Optional[List[str]]
+    sinks_config: Optional[List[UnionSinkConfigWrapper]]
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDefinition]] = []
 

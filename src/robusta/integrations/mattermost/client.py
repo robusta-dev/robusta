@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from robusta.core.model.env_vars import ROBUSTA_LOGO_URL
 from robusta.integrations.common.requests import HttpMethod, check_response_succeed, process_request
@@ -8,7 +8,7 @@ _API_PREFIX = "api/v4"
 
 
 class MattermostClient:
-    channel_id: str
+    channel_id: Optional[str]
     bot_id: str
     team_id: Optional[str]
 
@@ -70,7 +70,7 @@ class MattermostClient:
     def get_channel_id(self, channel_name: str) -> Optional[str]:
         endpoint = "channels/search"
         url = self._get_full_mattermost_url(endpoint)
-        payload = {"term": channel_name}
+        payload: Dict[str, Any] = {"term": channel_name}
         if self.team_id:
             payload["team_ids"] = [self.team_id]
         response = self._send_mattermost_request(url, HttpMethod.POST, json=payload)

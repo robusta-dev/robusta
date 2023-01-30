@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from prometheus_api_client import PrometheusApiClientException, PrometheusConnect
+from prometheus_api_client import PrometheusApiClientException, PrometheusConnect  # type: ignore
 
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.integrations.prometheus.utils import check_prometheus_connection

@@ -44,15 +44,6 @@ class PlaybooksEventHandler(ABC):
         pass
 
     @abstractmethod
-    def get_light_actions(
-        self,
-    ) -> List[str]:
-        """Returns configured light actions"""
-        pass
-
-    @abstractmethod
-    def get_telemetry(
-        self,
-    ) -> Telemetry:
+    def get_telemetry(self) -> Telemetry:
         """Return runner telemetry"""
         pass

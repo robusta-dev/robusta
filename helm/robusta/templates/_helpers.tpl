@@ -34,10 +34,6 @@ global_config:
   {{- if .Values.globalConfig }}
 {{ toYaml .Values.globalConfig | indent 2 }}
   {{- end }}
-
-light_actions:
-{{ toYaml  .Values.lightActions | indent 2 }}
-
 active_playbooks:
 {{- if .Values.playbooks }}
   {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}

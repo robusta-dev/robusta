@@ -93,8 +93,9 @@ def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditPar
             action_params.cluster_name,
         )
     else:  # update
-        old_spec = event.old_obj.spec if event.old_obj else None
-        if obj_diff(event.obj.spec, old_spec, action_params.ignored_changes):  # we have a change in the spec
+        old_spec = event.old_obj.spec if event.old_obj else None  # type: ignore
+        # we have a change in the spec
+        if obj_diff(event.obj.spec, old_spec, action_params.ignored_changes):  # type: ignore
             git_repo.commit_push(
                 hikaru.get_yaml(event.obj.spec),  # type: ignore
                 path,

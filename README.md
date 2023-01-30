@@ -1,35 +1,60 @@
-<div id="top"></div>
-
 <div align="center">
   <p>
     <a href="https://home.robusta.dev/" target="_blank">
-        <img src="./logos/Robusta_readme.png" alt="Robusta.dev">
+        <img src="./logos/Robusta_readme.png" alt="Robusta Logo">
     </a>
 </p>
-  <h2>Keep your Kubernetes microservices up and running</h2>
-    <h3>Connect your existing Prometheus, gain 360° observability</h3>
+  <h2>Robusta</h2>
+    <h3>A monitoring, troubleshooting, and automations platform for Kubernetes</h3>
+   <a href="https://docs.robusta.dev/master/"><strong>Explore the docs »</strong></a>
+  <p>
 
-(Prometheus recommended, but not required)
+  ![GitHub Workflow Status (event)](https://img.shields.io/github/workflow/status/robusta-dev/robusta/Test%20robusta%20with%20pytest?event=push&label=Build&style=flat-square)
+  ![GitHub](https://img.shields.io/github/license/robusta-dev/robusta?color=orange&label=License&logoColor=Greed&style=flat-square)
 
   [![twitter robusta](https://img.shields.io/twitter/follow/RobustaDev?logo=twitter&color=blue&label=@RobustaDev&style=flat-square)](https://twitter.com/RobustaDev)
   [![slack robusta](https://img.shields.io/badge/Slack-Join-4A154B?style=flat-square&logo=slack&logoColor=white)](https://bit.ly/robusta-slack)
  <a href="https://www.linkedin.com/company/robusta-dev/"><img alt="LinkedIn" title="LinkedIn" src="https://img.shields.io/badge/-LinkedIn-blue?style=flat-square&logo=Linkedin&logoColor=white"/></a>
   <a href="https://www.youtube.com/channel/UCeLrAOI3anJAfO3BrYVB62Q"><img alt="Youtube" title="Youtube" src="https://img.shields.io/youtube/channel/subscribers/UCeLrAOI3anJAfO3BrYVB62Q?color=%23ff0000&label=Robusta%20Dev&logo=youtube&logoColor=%23ff0000&style=flat-square"/></a>
-
 </div>
 
+<div id="top"></div>
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary><h3 style="display:inline;">Table of Contents</h3></summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About the project</a>
+    </li>
+    <li>
+      <a href="#use-cases">Use cases</a>
+    </li>
+    <li><a href="#examples">Examples</a></li>
+    <li><a href="#installing-robusta">Installing Robusta</a></li>
+    <li><a href="#documentation">Documentation</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#stay-up-to-date">Stay up to date</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
+  </ol>
+</details>
+
 ## 💻 About the project
-Robusta is both an automations engine for Kubernetes, and a [multi-cluster observability platform](https://home.robusta.dev/).
+Robusta streamlines everything that happens **after** you deploy your application. It is somewhat like Zapier/IFTTT for DevOps, with an emphasis on prebuilt useful automations and not just "build your own".
 
-Robusta is commonly used alongside Prometheus, but other tools are supported too.
+## 🛠️ Use cases
 
-By listening to all the events in your cluster, Robusta can tell you *why* alerts fired, what happened at the same time, and what you can do about it.
+- [X] [Kubernetes monitoring - prebuilt Prometheus integration that enriches alerts with extra context and graphs](https://home.robusta.dev/prometheus-based-monitoring/?from=github)
+- [X] Event-triggered automations for Kubernetes (like Argo Events) with an emphasis on simplicity
+- [X] Auto-remediations - out of the box fixes for common alerts. Write your own in Python.
+- [X] [Change tracking - track and audit every change to your Kubernetes cluster](http://home.robusta.dev/ui?from=github)
 
-Robusta can either improve your existing alerts, or be used to define new alerts triggered by APIServer changes.
+[Screenshots and demos »](http://robusta.dev/?from=github)
 
-## 🛠️ How it works
 
-Robusta's behaviour is defined by rules like this:
+## ⚡ Examples
+
+**Monitor crashing pods and send their logs to Slack:**
 
 ```yaml
 triggers:
@@ -41,15 +66,19 @@ sinks:
   - slack
 ```
 
-In the above example, whenever the `KubePodCrashLooping` alert fires, Robusta will fetch logs from the right pod and attach them to the alert. The result looks like this:
-
 ![](./docs/images/crash-report.png)
 
-Robusta also supports alert-remediations:
+**Remediate alerts with the click of a button:**
 
 ![](./docs/images/alert_on_hpa_reached_limit1.png)
 
-[Over 50 types of automations and enrichments are built-in »](https://docs.robusta.dev/master/catalog/actions/index.html)
+**Take manual troubleshooting actions, like [attaching a debugger to a python pod](https://docs.robusta.dev/master/catalog/actions/python-troubleshooting.html#python-debugger):**
+
+```commandline
+robusta playbooks trigger python_debugger name=mypod namespace=default
+```
+
+[Over 50 built-in automations »](https://docs.robusta.dev/master/catalog/actions/index.html)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -101,7 +130,25 @@ Interested? Learn more about Robusta
 ## 📑 License
 Robusta is distributed under the MIT License. See [LICENSE.md](https://github.com/robusta-dev/robusta/blob/master/LICENSE) for more information.
 
+
 ## 🕐 Stay up to date
 We add new features regularly. Stay up to date by watching us on GitHub.
 
 ![](./docs/images/star-repo.gif)
+
+
+## 🙏 Acknowledgments
+Thank you to all of our contributors!
+
+An additional thanks to all the open source projects we use. Especially:
+
+1. [Hikaru](https://hikaru.readthedocs.io/)
+2. [Pydantic](https://pydantic-docs.helpmanual.io/)
+3. [Typer](https://typer.tiangolo.com/tutorial/options/)
+4. [Kubernetes Python library](https://github.com/kubernetes-client/python/)
+5. [CairoSVG](https://github.com/Kozea/CairoSVG)
+6. [...and all the other libraries we use](https://github.com/robusta-dev/robusta/network/dependencies)
+
+Each open source project is used in accordance with the relevant licenses.
+Details can be found on the website for each project.
+<p align="right">(<a href="#top">back to top</a>)</p>

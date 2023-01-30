@@ -5,21 +5,19 @@ This list contains some common errors we have encountered over time. If you can'
 please contact support@robusta.dev or go to `our slack channel <https://robustacommunity.slack.com/ssb/redirect>`_.
 
 
-.. dropdown:: command not found: robusta (Robusta CLI is not in path)
+.. dropdown:: Robusta CLI is not in path
     :color: light
 
-    1. Determine where the Robusta-cli binary file is located  
+    1. Determine where the Robusta-cli binary file is installed  
 
     .. code-block:: bash
-        :name: cb-find-python-cli-loc
+        :name: find-python-bin-loc
 
-        find / -regex '.*/bin/robusta' 2>/dev/null
+        which python3
     
-    2. Add the found path ``.../bin/`` (E.g ``/opt/homebrew/bin/``) to the user path directories. 
+    This <new-path> should be added to the user path directores.
 
-    * Find your shell config file ( ~/.profile or ~/.bash_profile or ~/.zshrc etc...)
-
-    * Append the following line to the shell config file:
+    2. Find your shell config file ( ~/.profile or ~/.bash_profile or ~/.zshrc etc...) and append the following line:
 
     .. code-block:: bash
         :name: add-path-var
@@ -29,9 +27,9 @@ please contact support@robusta.dev or go to `our slack channel <https://robustac
     3. Reopen the terminal or run:
 
     .. code-block:: bash
-        :name: cb-refresh-terminal
+        :name: cb-helm-repo-add-show-values
 
-        source <your-shell-config-file>
+        source <shell-config-file>
 
     .. note::
 

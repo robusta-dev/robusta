@@ -3,7 +3,7 @@ import textwrap
 import time
 import uuid
 from collections import namedtuple
-from typing import Tuple
+from typing import Tuple, cast
 
 import requests
 import typer
@@ -63,6 +63,7 @@ def slack():
 def get_ui_key() -> str:
     while True:
         email = typer.prompt("Enter your Gmail/Google address. This will be used to login")
+        email = cast(str, email)
         email = email.strip()
         account_name = typer.prompt("Choose your account name (e.g your organization name)")
 

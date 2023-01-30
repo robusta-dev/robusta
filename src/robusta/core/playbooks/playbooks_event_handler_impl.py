@@ -2,7 +2,7 @@ import copy
 import logging
 import traceback
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from robusta.core.exceptions import PrometheusNotFound
 from robusta.core.model.events import ExecutionBaseEvent, ExecutionContext
@@ -40,7 +40,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings)
                     # sink_findings needs to be shared between playbooks.
                     # build_execution_event returns a different instance because it's running in a child process
-                    execution_event.sink_findings = sink_findings
+                    execution_event.sink_findings = sink_findings  # type: ignore
                 except Exception:
                     logging.error(
                         f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}"
@@ -143,7 +143,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             else:
                 action_params = {"named_sinks": sinks}
         try:
-            instantiation_params = action_def.from_params_parameter_class(**action_params)
+            instantiation_params = action_def.from_params_parameter_class(**action_params)  # type: ignore
         except Exception:
             return self.__error_resp(
                 f"Failed to create execution instance for"
@@ -191,13 +191,13 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(msg, ErrorCodes.EXECUTION_EVENT_MISMATCH.value)
                 continue
 
-            action_with_params: bool = registered_action.params_type is not None
+            action_with_params = cast(bool, registered_action.params_type)
             action_params = None
             params = None
             if action_with_params:
                 try:
-                    action_params = merge_global_params(self.get_global_config(), action.action_params)
-                    params = registered_action.params_type(**action_params)
+                    action_params = merge_global_params(self.get_global_config(), action.action_params)  # type: ignore
+                    params = registered_action.params_type(**action_params)  # type: ignore
                 except Exception:
                     msg = (
                         f"Failed to create {registered_action.params_type} "
@@ -206,40 +206,41 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     )
                     execution_event.response = self.__error_resp(msg, ErrorCodes.PARAMS_INSTANTIATION_FAILED.value)
                     continue
-            try:
-                if action_with_params:
+
+                try:
                     registered_action.func(execution_event, params)
-                else:
-                    registered_action.func(execution_event)
-            except ActionException as e:
-                msg = (
-                    e.msg
-                    if e.msg
-                    else f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}"
-                )
-                logging.error(msg)
-                execution_event.response = self.__error_resp(e.type, e.code, log=False)
-            except PrometheusNotFound as e:
-                logging.error(str(e))
-                execution_event.add_enrichment(
-                    [
-                        MarkdownBlock(
-                            text="Robusta couldn't connect to the Prometheus client, check if the service is "
-                            "available. If it is, please add to *globalConfig* in *generated_values.yaml* "
-                            "the cluster *prometheus_url*. For example:\n"
-                            "```globalConfig:\n"
-                            "\tprometheus_url: http://prometheus-server.monitoring.svc.cluster.local:9090```"
+                except ActionException as e:
+                    msg = (
+                        e.msg
+                        if e.msg
+                        else (
+                            f"Action Exception {e.type} while processing "
+                            f"{action.action_name} {to_safe_str(action_params)}"
                         )
-                    ]
-                )
-            except Exception:
-                logging.error(
-                    f"Failed to execute action {action.action_name} {to_safe_str(action_params)}", exc_info=True
-                )
-                execution_event.response = self.__error_resp(
-                    ErrorCodes.ACTION_UNEXPECTED_ERROR.name, ErrorCodes.ACTION_UNEXPECTED_ERROR.value, log=False
-                )
-                execution_event.add_enrichment([MarkdownBlock(text=f"Oops... Error processing {action.action_name}")])
+                    )
+                    logging.error(msg)
+                    execution_event.response = self.__error_resp(e.type, e.code, log=False)
+                except PrometheusNotFound as e:
+                    logging.error(str(e))
+                    execution_event.add_enrichment(
+                        [
+                            MarkdownBlock(
+                                text="Robusta couldn't connect to the Prometheus client, check if the service is "
+                                "available. If it is, please add to *globalConfig* in *generated_values.yaml* "
+                                "the cluster *prometheus_url*. For example:\n"
+                                "```globalConfig:\n"
+                                "\tprometheus_url: http://prometheus-server.monitoring.svc.cluster.local:9090```"
+                            )
+                        ]
+                    )
+                except Exception:
+                    logging.error(f"Failed to execute action {action.action_name} {to_safe_str(action_params)}")
+                    execution_event.response = self.__error_resp(
+                        ErrorCodes.ACTION_UNEXPECTED_ERROR.name, ErrorCodes.ACTION_UNEXPECTED_ERROR.value, log=False
+                    )
+                    execution_event.add_enrichment(
+                        [MarkdownBlock(text=f"Oops... Error processing {action.action_name}")]
+                    )
         return execution_event.response
 
     @classmethod
@@ -250,8 +251,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         playbook_id: str,
     ) -> Optional[BaseTrigger]:
         for trigger in playbook_triggers:
-            if trigger.get().should_fire(trigger_event, playbook_id):
-                return trigger.get()
+            trigger_ = trigger.get()  # type: ignore
+            if trigger_.should_fire(trigger_event, playbook_id):
+                return trigger_
         return None
 
     def __handle_findings(self, execution_event: ExecutionBaseEvent):
@@ -284,9 +286,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def get_global_config(self) -> dict:
         return self.registry.get_playbooks().get_global_config()
-
-    def get_light_actions(self) -> List[str]:
-        return self.registry.get_light_actions()
 
     def get_telemetry(self) -> Telemetry:
         return self.registry.get_telemetry()

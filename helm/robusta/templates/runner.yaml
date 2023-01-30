@@ -20,16 +20,12 @@ spec:
       {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-runner-service-account
-      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
       containers:
       - name: runner
         image: {{ .Values.runner.image }}
         imagePullPolicy: {{ .Values.runner.imagePullPolicy }}
         securityContext:
-          allowPrivilegeEscalation: false
-          capabilities: {}
           privileged: false
-          readOnlyRootFilesystem: false
         env:
           - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml

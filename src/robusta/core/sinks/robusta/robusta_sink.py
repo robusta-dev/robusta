@@ -3,7 +3,7 @@ import json
 import logging
 import threading
 import time
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
@@ -16,12 +16,12 @@ from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
-from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
+from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.runner.web_api import WebApi
 
 
-class RobustaSink(SinkBase):
+class RobustaSink(SinkBase[RobustaSinkParams]):
     def __init__(self, sink_config: RobustaSinkConfigWrapper, registry):
         from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
 
@@ -105,7 +105,7 @@ class RobustaSink(SinkBase):
     def __assert_jobs_cache_initialized(self):
         if self.__jobs_cache is None:
             logging.info("Initializing jobs cache")
-            self.__jobs_cache: Dict[str, JobInfo] = {}
+            self.__jobs_cache = {}
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
 
@@ -174,6 +174,7 @@ class RobustaSink(SinkBase):
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
 
+            assert self.__jobs_cache is not None
             # save the cached services for the resolver.
             RobustaSink.__save_resolver_resources(
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
@@ -205,34 +206,34 @@ class RobustaSink(SinkBase):
 
     @classmethod
     def __to_node_info(cls, node: V1Node) -> Dict:
-        node_info = node.status.node_info.to_dict() if node.status.node_info else {}
-        node_info["labels"] = node.metadata.labels or {}
-        node_info["annotations"] = node.metadata.annotations or {}
-        node_info["addresses"] = [addr.address for addr in node.status.addresses]
+        node_info = node.status.node_info.to_dict() if node.status.node_info else {}  # type: ignore
+        node_info["labels"] = node.metadata.labels or {}  # type: ignore
+        node_info["annotations"] = node.metadata.annotations or {}  # type: ignore
+        node_info["addresses"] = [addr.address for addr in node.status.addresses]  # type: ignore
         return node_info
 
     @classmethod
     def __from_api_server_node(cls, api_server_node: V1Node, pod_requests_list: List[PodResources]) -> NodeInfo:
-        addresses = api_server_node.status.addresses or []
+        addresses = api_server_node.status.addresses or []  # type: ignore
         external_addresses = [address for address in addresses if "externalip" in address.type.lower()]
         external_ip = ",".join([addr.address for addr in external_addresses])
         internal_addresses = [address for address in addresses if "internalip" in address.type.lower()]
         internal_ip = ",".join([addr.address for addr in internal_addresses])
-        node_taints = api_server_node.spec.taints or []
+        node_taints = api_server_node.spec.taints or []  # type: ignore
         taints = ",".join([cls.__to_taint_str(taint) for taint in node_taints])
 
         return NodeInfo(
-            name=api_server_node.metadata.name,
-            node_creation_time=str(api_server_node.metadata.creation_timestamp),
+            name=api_server_node.metadata.name,  # type: ignore
+            node_creation_time=str(api_server_node.metadata.creation_timestamp),  # type: ignore
             internal_ip=internal_ip,
             external_ip=external_ip,
             taints=taints,
-            conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),
-            memory_capacity=PodResources.parse_mem(api_server_node.status.capacity.get("memory", "0Mi")),
-            memory_allocatable=PodResources.parse_mem(api_server_node.status.allocatable.get("memory", "0Mi")),
+            conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),  # type: ignore
+            memory_capacity=PodResources.parse_mem(api_server_node.status.capacity.get("memory", "0Mi")),  # type: ignore
+            memory_allocatable=PodResources.parse_mem(api_server_node.status.allocatable.get("memory", "0Mi")),  # type: ignore
             memory_allocated=sum([req.memory for req in pod_requests_list]),
-            cpu_capacity=PodResources.parse_cpu(api_server_node.status.capacity.get("cpu", "0")),
-            cpu_allocatable=PodResources.parse_cpu(api_server_node.status.allocatable.get("cpu", "0")),
+            cpu_capacity=PodResources.parse_cpu(api_server_node.status.capacity.get("cpu", "0")),  # type: ignore
+            cpu_allocatable=PodResources.parse_cpu(api_server_node.status.allocatable.get("cpu", "0")),  # type: ignore
             cpu_allocated=round(sum([req.cpu for req in pod_requests_list]), 3),
             pods_count=len(pod_requests_list),
             pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
@@ -241,8 +242,8 @@ class RobustaSink(SinkBase):
 
     def __publish_new_nodes(self, current_nodes: V1NodeList, node_requests: Dict[str, List[PodResources]]):
         # convert to map
-        curr_nodes = {}
-        for node in current_nodes.items:
+        curr_nodes: dict[str, Any] = {}
+        for node in current_nodes.items:  # type: ignore
             curr_nodes[node.metadata.name] = node
 
         # handle deleted nodes
@@ -256,7 +257,7 @@ class RobustaSink(SinkBase):
 
         # new or changed nodes
         for node_name in curr_nodes.keys():
-            updated_node = self.__from_api_server_node(curr_nodes.get(node_name), node_requests[node_name])
+            updated_node = self.__from_api_server_node(curr_nodes.get(node_name), node_requests[node_name])  # type: ignore
             if self.__nodes_cache.get(node_name) != updated_node:  # node not in the cache, or changed
                 updated_nodes.append(updated_node)
                 self.__nodes_cache[node_name] = updated_node
@@ -266,6 +267,7 @@ class RobustaSink(SinkBase):
     def __safe_delete_job(self, job_key):
         try:
             # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
+            assert self.__jobs_cache is not None
             self.__jobs_cache[job_key].deleted = True
             self.dal.remove_deleted_job(self.__jobs_cache[job_key])
             del self.__jobs_cache[job_key]
@@ -277,6 +279,8 @@ class RobustaSink(SinkBase):
         curr_jobs = {}
         for job in active_jobs:
             curr_jobs[job.get_service_key()] = job
+
+        assert self.__jobs_cache is not None
 
         # handle deleted jobs
         cache_keys = list(self.__jobs_cache.keys())
@@ -301,7 +305,6 @@ class RobustaSink(SinkBase):
                 version=self.registry.get_telemetry().runner_version,
                 last_alert_at=self.registry.get_telemetry().last_alert_at,
                 account_id=self.account_id,
-                light_actions=self.registry.get_light_actions(),
             )
 
             self.dal.publish_cluster_status(cluster_status)

@@ -10,10 +10,10 @@ from robusta.core.reporting.blocks import (
     TableBlock,
 )
 from robusta.core.sinks.sink_base import SinkBase
-from robusta.core.sinks.victorops.victorops_sink_params import VictoropsConfigWrapper
+from robusta.core.sinks.victorops.victorops_sink_params import VictoropsConfigWrapper, VictoropsSinkParams
 
 
-class VictoropsSink(SinkBase):
+class VictoropsSink(SinkBase[VictoropsSinkParams]):
     def __init__(self, sink_config: VictoropsConfigWrapper, registry):
         super().__init__(sink_config.victorops_sink, registry)
         self.url = sink_config.victorops_sink.url
@@ -60,7 +60,8 @@ class VictoropsSink(SinkBase):
 
         requests.post(self.url, json=json_dict)
 
-    def __to_unformatted_text(cls, block: BaseBlock) -> str:
+    @staticmethod
+    def __to_unformatted_text(block: BaseBlock) -> str:
         if isinstance(block, HeaderBlock):
             return block.text
         elif isinstance(block, TableBlock):

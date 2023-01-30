@@ -5,15 +5,15 @@
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import hikaru
 from hikaru import DiffDetail, DiffType
-from hikaru.model import HikaruDocumentBase
+from hikaru.model import HikaruDocumentBase  # type: ignore
 from pydantic import BaseModel
 
 try:
-    from tabulate import tabulate
+    from tabulate import tabulate  # type: ignore
 except ImportError:
 
     def tabulate(*args, **kwargs):
@@ -47,7 +47,7 @@ class MarkdownBlock(BaseBlock):
 
         if len(text) >= BLOCK_SIZE_LIMIT:
             text = text[:BLOCK_SIZE_LIMIT] + "..."
-        super().__init__(text=text)
+        super().__init__(text=text)  # type: ignore
 
 
 class DividerBlock(BaseBlock):
@@ -66,12 +66,12 @@ class FileBlock(BaseBlock):
     filename: str
     contents: bytes
 
-    def __init__(self, filename: str, contents: bytes):
+    def __init__(self, filename: str, contents: Union[bytes, str]):
         """
         :param filename: the file's name
         :param contents: the file's contents
         """
-        super().__init__(filename=filename, contents=contents)
+        super().__init__(filename=filename, contents=contents)  # type: ignore
 
 
 class HeaderBlock(BaseBlock):
@@ -85,7 +85,7 @@ class HeaderBlock(BaseBlock):
         """
         :param text: the header
         """
-        super().__init__(text=text)
+        super().__init__(text=text)  # type: ignore
 
 
 class ListBlock(BaseBlock):
@@ -99,7 +99,7 @@ class ListBlock(BaseBlock):
         """
         :param items: a list of strings
         """
-        super().__init__(items=items)
+        super().__init__(items=items)  # type: ignore
 
     def to_markdown(self) -> MarkdownBlock:
         mrkdwn = [f"* {item}" for item in self.items]
@@ -115,7 +115,7 @@ class KubernetesDiffBlock(BaseBlock):
     diffs: List[DiffDetail]
     old: Optional[str]
     new: Optional[str]
-    resource_name: Optional[str]
+    resource_name: str
     num_additions: Optional[int]
     num_deletions: Optional[int]
     num_modifications: Optional[int]
@@ -127,7 +127,7 @@ class KubernetesDiffBlock(BaseBlock):
         old: Optional[HikaruDocumentBase],
         new: Optional[HikaruDocumentBase],
         name: str,
-        namespace: str = None,
+        namespace: Optional[str] = None,
     ):
         """
         :param interesting_diffs: parts of the diff to emphasize - some sinks will only show these to save space
@@ -141,13 +141,13 @@ class KubernetesDiffBlock(BaseBlock):
         resource_name = self._obj_to_name(old, name, namespace) or self._obj_to_name(new, name, namespace)
 
         super().__init__(
-            diffs=interesting_diffs,
-            old=self._obj_to_content(old),
-            new=self._obj_to_content(new),
-            resource_name=resource_name,
-            num_additions=num_additions,
-            num_deletions=num_deletions,
-            num_modifications=num_modifications,
+            diffs=interesting_diffs,  # type: ignore
+            old=self._obj_to_content(old),  # type: ignore
+            new=self._obj_to_content(new),  # type: ignore
+            resource_name=resource_name,  # type: ignore
+            num_additions=num_additions,  # type: ignore
+            num_deletions=num_deletions,  # type: ignore
+            num_modifications=num_modifications,  # type: ignore
         )
 
     def get_description(self):
@@ -169,7 +169,7 @@ class KubernetesDiffBlock(BaseBlock):
             return hikaru.get_yaml(obj)
 
     @staticmethod
-    def _obj_to_name(obj: Optional[HikaruDocumentBase], name: str, namespace: str = ""):
+    def _obj_to_name(obj: Optional[HikaruDocumentBase], name: str, namespace: Optional[str] = ""):
         if obj is None:
             return ""
 
@@ -194,7 +194,7 @@ class JsonBlock(BaseBlock):
         """
         :param json_str: json as a string
         """
-        super().__init__(json_str=json_str)
+        super().__init__(json_str=json_str)  # type: ignore
 
 
 class TableBlock(BaseBlock):
@@ -220,12 +220,7 @@ class TableBlock(BaseBlock):
         :param rows: a list of rows. each row is a list of columns
         :param headers: names of each column
         """
-        super().__init__(
-            rows=rows,
-            headers=headers,
-            column_renderers=column_renderers,
-            table_name=table_name,
-        )
+        super().__init__(rows=rows, headers=headers, column_renderers=column_renderers, table_name=table_name)  # type: ignore
 
     @classmethod
     def __calc_max_width(cls, headers, rendered_rows, table_max_width: int) -> List[int]:
@@ -337,8 +332,8 @@ class KubernetesFieldsBlock(TableBlock):
 
 class CallbackChoice(BaseModel):
     action: Callable
-    action_params: Optional[BaseModel]
-    kubernetes_object: Optional[Any]
+    action_params: Optional[BaseModel] = None
+    kubernetes_object: Optional[Any] = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -355,7 +350,7 @@ class CallbackBlock(BaseBlock):
         """
         :param choices: a dict mapping between each the text on each button to the action it triggers
         """
-        super().__init__(choices=choices)
+        super().__init__(choices=choices)  # type: ignore
 
 
 class LinkProp(BaseModel):
@@ -385,4 +380,4 @@ class PrometheusBlock(BaseBlock):
         :param query: the Prometheus query run
         """
         metadata = {"query-result-version": "1.0", "query": query}
-        super().__init__(data=data, metadata=metadata)
+        super().__init__(data=data, metadata=metadata)  # type: ignore

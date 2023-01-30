@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from prometheus_api_client import PrometheusConnect
 
 
-def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
+def check_prometheus_connection(prom: "PrometheusConnect", params: Optional[dict] = None):
     params = params or {}
     try:
         prometheus_connected = prom.check_prometheus_connection(params)
@@ -26,7 +26,7 @@ class ServiceDiscovery:
     cache: TTLCache = TTLCache(maxsize=1, ttl=SERVICE_CACHE_TTL_SEC)
 
     @classmethod
-    def find_url(cls, selectors: List[str], error_msg: str):
+    def find_url(cls, selectors: List[str], error_msg: str) -> Optional[str]:
         """
         Try to autodiscover the url of an in-cluster service
         """
@@ -51,11 +51,7 @@ class PrometheusDiscovery(ServiceDiscovery):
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
-                "app=prometheus,component=server",
-                "app=prometheus-server",
-                "app=prometheus-operator-prometheus",
-                "app=prometheus-msteams",
-                "app=rancher-monitoring-prometheus",
+                "app.kubernetes.io/name=prometheus",
                 "app=prometheus-prometheus",
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
@@ -67,14 +63,14 @@ class AlertManagerDiscovery(ServiceDiscovery):
     def find_alert_manager_url(cls):
         return super().find_url(
             selectors=[
-                "app=kube-prometheus-stack-alertmanager",
-                "app=prometheus,component=alertmanager",
-                "app=prometheus-operator-alertmanager",
-                "app=alertmanager",
-                "app=rancher-monitoring-alertmanager",
-                "app=prometheus-alertmanager",
                 "operated-alertmanager=true",
                 "app.kubernetes.io/name=alertmanager",
+                "app=kube-prometheus-stack-alertmanager",
+                "app=alertmanager",
+                "app=prometheus,component=alertmanager",
+                "app=rancher-monitoring-alertmanager",
+                "app=prometheus-operator-alertmanager",
+                "app=prometheus-alertmanager",
             ],
             error_msg="Alert manager url could not be found. Add 'alertmanager_url' under global_config",
         )
