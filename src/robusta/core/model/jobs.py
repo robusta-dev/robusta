@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Dict, List, Optional
 
 from kubernetes.client import V1Container, V1Job, V1JobSpec, V1JobStatus, V1PodSpec
@@ -39,13 +40,16 @@ class JobStatus(BaseModel):
     failed: int = 0
     succeeded: int = 0
     completion_time: Optional[str]
+    failed_time: Optional[str]
     conditions: List[JobCondition]
 
     @staticmethod
     def from_api_server(job: V1Job) -> "JobStatus":
         job_status: V1JobStatus = job.status
         job_conditions: List[JobCondition] = [
-            JobCondition(type=condition.type, message=condition.message) for condition in (job_status.conditions or [])
+            JobCondition(type=condition.type, message=condition.message)
+            for condition in (job_status.conditions or [])
+            if condition.status.lower() == "true"
         ]
         return JobStatus(
             active=job_status.active or 0,
@@ -53,7 +57,20 @@ class JobStatus(BaseModel):
             succeeded=job_status.succeeded or 0,
             completion_time=str(job_status.completion_time),
             conditions=job_conditions,
+            failed_time=str(JobStatus._extract_failed_time(job_status)),
         )
+
+    @staticmethod
+    def _extract_failed_time(job_status: V1JobStatus) -> Optional[datetime]:
+        try:
+            for condition in job_status.conditions:
+                if condition.status.lower() == "true" and condition.type == "Failed":
+                    return condition.last_transition_time
+        except (
+            AttributeError,
+            TypeError,
+        ):  # if a field is missing
+            return None
 
 
 class JobData(BaseModel):
