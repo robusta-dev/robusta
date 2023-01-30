@@ -21,24 +21,23 @@ from kubernetes.client import (
     V1StatefulSetList,
     V1Volume,
 )
+from pydantic import BaseModel
 
 from robusta.core.discovery import utils
 from robusta.core.model.jobs import JobInfo
+from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
 
 
-class DiscoveryResults:
-    def __init__(
-        self,
-        services: List[ServiceInfo] = None,
-        nodes: Optional[V1NodeList] = None,
-        node_requests: Dict = None,
-        jobs: List[JobInfo] = None,
-    ):
-        self.services: List[ServiceInfo] = services
-        self.nodes: Optional[V1NodeList] = nodes
-        self.node_requests: Dict = node_requests
-        self.jobs: List[JobInfo] = jobs
+class DiscoveryResults(BaseModel):
+    services: List[ServiceInfo] = []
+    nodes: Optional[V1NodeList] = None
+    node_requests: Dict = {}
+    jobs: List[JobInfo] = []
+    namespaces: List[NamespaceInfo] = []
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class Discovery:
@@ -197,8 +196,25 @@ class Discovery:
                 "Failed to run periodic jobs discovery",
                 exc_info=True,
             )
+
+        # discover namespaces
+        namespaces: List[NamespaceInfo] = []
+        try:
+            namespaces = [
+                NamespaceInfo.from_api_server(namespace) for namespace in client.CoreV1Api().list_namespace().items
+            ]
+        except Exception:
+            logging.error(
+                "Failed to run periodic namespaces discovery",
+                exc_info=True,
+            )
+
         return DiscoveryResults(
-            services=active_services, nodes=current_nodes, node_requests=node_requests, jobs=active_jobs
+            services=active_services,
+            nodes=current_nodes,
+            node_requests=node_requests,
+            jobs=active_jobs,
+            namespaces=namespaces,
         )
 
     @staticmethod
