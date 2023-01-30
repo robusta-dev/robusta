@@ -43,7 +43,7 @@ class MsTeamsAdaptiveCardFilesText:
 
         self.text_map_and_single_text_lines_list = []
 
-    def create_files_for_presentation(self, file_blocks: List[FileBlock]) -> List[MsTeamsColumn]:
+    def create_files_for_presentation(self, file_blocks: List[FileBlock]) -> List[map]:
         file_content_list = []
 
         for file_block in file_blocks:
@@ -123,7 +123,7 @@ class MsTeamsAdaptiveCardFilesText:
 
         return list_to_return
 
-    def __action(self, index, open: bool, title: str) -> MsTeamsAction:
+    def __action(self, index, open: bool, title: str) -> map:
         visible_elements_map = {False: [], True: []}
         curr_key = self.open_key_list[index]
         for key in self.open_key_list:

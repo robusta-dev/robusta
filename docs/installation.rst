@@ -142,7 +142,7 @@ Standard Installation
                 --set kube-prometheus-stack.nodeExporter.enabled=false \
                 --set kube-prometheus-stack.prometheusOperator.kubeletService.enabled=false
 
-        * With GKE Autopilot restrictions, some components must be disabled when installing Robusta bundled with Kube-prometehus-stack.
+        * With GKE Autopilot restrictions, some components must be disabled when installing Robusta bundled with kube-prometehus-stack.
 
 
 .. note::

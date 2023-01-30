@@ -1,10 +1,10 @@
 import json
 import logging
 from threading import Lock
-from typing import List, Optional, cast
+from typing import List, Optional
 
+import kubernetes
 from hikaru.model import ObjectMeta
-from kubernetes.client import ApiException as K8sApiException
 
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
 from robusta.core.schedule.model import ScheduledJob
@@ -21,12 +21,12 @@ class SchedulerDal:
         self.__init_scheduler_dal()
 
     def __load_config_map(self) -> ConfigMap:
-        return ConfigMap.readNamespacedConfigMap(JOBS_CONFIGMAP_NAME, CONFIGMAP_NAMESPACE).obj  # type: ignore
+        return ConfigMap.readNamespacedConfigMap(JOBS_CONFIGMAP_NAME, CONFIGMAP_NAMESPACE).obj
 
     def __init_scheduler_dal(self):
         try:
             self.__load_config_map()
-        except K8sApiException as e:
+        except kubernetes.client.exceptions.ApiException as e:
             # we only want to catch exceptions because the config map doesn't exist
             if e.reason != "Not Found":
                 raise
@@ -34,8 +34,7 @@ class SchedulerDal:
             self.mutex.acquire()
             try:
                 conf_map = ConfigMap(metadata=ObjectMeta(name=JOBS_CONFIGMAP_NAME, namespace=CONFIGMAP_NAMESPACE))
-                assert conf_map.metadata is not None
-                conf_map.createNamespacedConfigMap(cast(str, conf_map.metadata.namespace))
+                conf_map.createNamespacedConfigMap(conf_map.metadata.namespace)
                 logging.info(f"created jobs states configmap {JOBS_CONFIGMAP_NAME} {CONFIGMAP_NAMESPACE}")
             finally:
                 self.mutex.release()
@@ -44,36 +43,24 @@ class SchedulerDal:
         self.mutex.acquire()
         try:
             confMap = self.__load_config_map()
-            assert confMap.data is not None
-            assert confMap.metadata is not None
-            assert confMap.metadata.namespace is not None
-            assert confMap.metadata.name is not None
             confMap.data[job.job_id] = job.json()
             confMap.replaceNamespacedConfigMap(confMap.metadata.name, confMap.metadata.namespace)
         finally:
             self.mutex.release()
 
     def get_scheduled_job(self, job_id: str) -> Optional[ScheduledJob]:
-        data = self.__load_config_map().data
-        assert data is not None
-        state_data = data.get(job_id)
+        state_data = self.__load_config_map().data.get(job_id)
         return ScheduledJob(**json.loads(state_data)) if state_data is not None else None
 
     def del_scheduled_job(self, job_id: str):
         self.mutex.acquire()
         try:
             confMap = self.__load_config_map()
-            assert confMap.data is not None
             if confMap.data.get(job_id) is not None:
                 del confMap.data[job_id]
-                assert confMap.metadata is not None
-                assert confMap.metadata.namespace is not None
-                assert confMap.metadata.name is not None
                 confMap.replaceNamespacedConfigMap(confMap.metadata.name, confMap.metadata.namespace)
         finally:
             self.mutex.release()
 
     def list_scheduled_jobs(self) -> List[ScheduledJob]:
-        data = self.__load_config_map().data
-        assert data is not None
-        return [cast(ScheduledJob, self.get_scheduled_job(job_id)) for job_id in data.keys()]
+        return [self.get_scheduled_job(job_id) for job_id in self.__load_config_map().data.keys()]

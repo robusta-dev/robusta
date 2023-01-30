@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, cast
+from typing import Callable, Dict, List, Optional, Tuple, Type, cast
 
 from pydantic.main import BaseModel
 
@@ -22,10 +22,10 @@ def action(func: Callable):
 
 
 class Action:
-    from_params_parameter_class: Optional[Type[Any]]
-    from_params_func: Optional[Callable[..., Any]]
-
-    def __init__(self, func: Callable):
+    def __init__(
+        self,
+        func: Callable,
+    ):
         if not self.is_action(func):
             raise NotAnActionException(func)
 

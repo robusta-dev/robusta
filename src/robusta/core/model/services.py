@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, cast
+from typing import Dict, List, Optional
 
 from kubernetes.client import V1Container, V1Volume
 from pydantic import BaseModel
@@ -32,12 +32,10 @@ class ContainerInfo(BaseModel):
             if container.env
             else []
         )
-        assert container.resources is not None
-        assert container.image is not None
         limits = container.resources.limits if container.resources.limits else {}
         requests = container.resources.requests if container.resources.requests else {}
         resources = Resources(limits=limits, requests=requests)
-        return ContainerInfo(name=cast(str, container.name), image=container.image, env=env, resources=resources)
+        return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources)
 
     def __eq__(self, other):
         if not isinstance(other, ContainerInfo):
@@ -53,14 +51,11 @@ class ContainerInfo(BaseModel):
 
 class VolumeInfo(BaseModel):
     name: str
-    persistent_volume_claim: Optional[Dict[str, str]] = None
+    persistent_volume_claim: Optional[Dict[str, str]]
 
     @staticmethod
     def get_volume_info(volume: V1Volume):
-        volume.name = cast(str, volume.name)
-
         if hasattr(volume, "persistent_volume_claim") and hasattr(volume.persistent_volume_claim, "claim_name"):
-            assert volume.persistent_volume_claim is not None
             return VolumeInfo(
                 name=volume.name, persistent_volume_claim={"claim_name": volume.persistent_volume_claim.claim_name}
             )
@@ -80,7 +75,7 @@ class ServiceConfig(BaseModel):
         return (
             sorted(self.containers, key=lambda x: x.name) == sorted(other.containers, key=lambda x: x.name)
             and sorted(self.volumes, key=lambda x: x.name) == sorted(other.volumes, key=lambda x: x.name)
-            and sorted(self.labels, key=lambda x: x) == sorted(other.labels, key=lambda x: x)
+            and sorted(self.labels, key=lambda x: x.name) == sorted(other.labels, key=lambda x: x.name)
         )
 
 

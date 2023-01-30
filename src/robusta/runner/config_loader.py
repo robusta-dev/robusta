@@ -1,5 +1,4 @@
 import hashlib
-import importlib
 import importlib.util
 import logging
 import os
@@ -8,7 +7,7 @@ import subprocess
 import sys
 import threading
 from inspect import getmembers
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 import yaml
 
@@ -109,7 +108,6 @@ class ConfigLoader:
             try:
                 if playbooks_repo.pip_install:  # skip playbooks that are already in site-packages
                     if playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
-                        assert playbooks_repo.key is not None
                         repo = GitRepo(
                             playbooks_repo.url,
                             playbooks_repo.key.get_secret_value(),
@@ -141,14 +139,16 @@ class ConfigLoader:
     @classmethod
     def __import_playbooks_package(cls, actions_registry: ActionsRegistry, package_name: str):
         logging.info(f"Importing actions package {package_name}")
-        pkg = importlib.import_module(package_name)
+        # Reload is required for modules that are already loaded
+        pkg = importlib.reload(importlib.import_module(package_name))
         playbooks_modules = [name for _, name, _ in pkgutil.walk_packages(path=pkg.__path__)]
         for playbooks_module in playbooks_modules:
             try:
                 module_name = ".".join([package_name, playbooks_module])
                 logging.info(f"importing actions from {module_name}")
-                module = importlib.import_module(module_name)
-                playbook_actions = getmembers(module, Action.is_action)
+                # Reload is required for modules that are already loaded
+                m = importlib.reload(importlib.import_module(module_name))
+                playbook_actions = getmembers(m, Action.is_action)
                 for (action_name, action_func) in playbook_actions:
                     actions_registry.add_action(action_func)
             except Exception:
@@ -162,7 +162,7 @@ class ConfigLoader:
                 if runner_config is None:
                     return
 
-                self.registry.set_global_config(runner_config.global_config)  # type: ignore
+                self.registry.set_global_config(runner_config.global_config)
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
                 # It allows to override these, with playbooks loaded afterwards
@@ -207,12 +207,11 @@ class ConfigLoader:
                 GitRepoManager.clear_git_repos()
 
                 self.__reload_scheduler(playbooks_registry)
-
+                self.registry.set_light_actions(runner_config.light_actions)
                 self.registry.set_actions(action_registry)
                 self.registry.set_playbooks(playbooks_registry)
                 self.registry.set_sinks(sinks_registry)
 
-                assert runner_config.global_config is not None
                 telemetry = self.registry.get_telemetry()
                 telemetry.playbooks_count = len(runner_config.active_playbooks) if runner_config.active_playbooks else 0
                 telemetry.account_id = hashlib.sha256(
@@ -236,9 +235,9 @@ class ConfigLoader:
         sinks_registry: SinksRegistry,
         actions_registry: ActionsRegistry,
         registry: Registry,
-    ) -> Tuple[SinksRegistry, PlaybooksRegistry]:
+    ) -> (SinksRegistry, PlaybooksRegistry):
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
-        new_sinks = SinksRegistry.construct_new_sinks(runner_config.sinks_config, existing_sinks, registry)  # type: ignore
+        new_sinks = SinksRegistry.construct_new_sinks(runner_config.sinks_config, existing_sinks, registry)
         sinks_registry = SinksRegistry(new_sinks)
 
         # TODO we will replace it with a more generic mechanism, as part of the triggers separation task
@@ -258,7 +257,7 @@ class ConfigLoader:
         playbooks_registry = PlaybooksRegistryImpl(
             active_playbooks,
             actions_registry,
-            runner_config.global_config,  # type: ignore
+            runner_config.global_config,
             sinks_registry.default_sinks,
         )
 

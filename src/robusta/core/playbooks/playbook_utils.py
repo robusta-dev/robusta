@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from typing import Any, Dict, Optional, Union
+from typing import Dict, Optional
 
 from pydantic.main import BaseModel
 from pydantic.types import SecretStr
@@ -19,7 +19,7 @@ def get_env_replacement(value: str) -> Optional[str]:
     return None
 
 
-def replace_env_vars_values(values: Dict[Any, Union[str, SecretStr, Any]]) -> Dict[Any, Union[str, SecretStr, Any]]:
+def replace_env_vars_values(values: Dict) -> Dict:
     for key, value in values.items():
         if isinstance(value, str):
             env_var_value = get_env_replacement(value)

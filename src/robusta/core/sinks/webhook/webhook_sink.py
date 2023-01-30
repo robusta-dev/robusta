@@ -7,10 +7,10 @@ from robusta.core.reporting import HeaderBlock, JsonBlock, KubernetesDiffBlock, 
 from robusta.core.reporting.base import BaseBlock, Finding
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.transformer import Transformer
-from robusta.core.sinks.webhook.webhook_sink_params import WebhookSinkConfigWrapper, WebhookSinkParams
+from robusta.core.sinks.webhook.webhook_sink_params import WebhookSinkConfigWrapper
 
 
-class WebhookSink(SinkBase[WebhookSinkParams]):
+class WebhookSink(SinkBase):
     def __init__(self, sink_config: WebhookSinkConfigWrapper, registry):
         super().__init__(sink_config.webhook_sink, registry)
 
@@ -31,7 +31,7 @@ class WebhookSink(SinkBase[WebhookSinkParams]):
                 message_lines.append(f"{video_link.name}: {video_link.url}")
 
         message_lines.append(f"Source: {self.cluster_name}")
-        message_lines.append(finding.description)  # type: ignore
+        message_lines.append(finding.description)
 
         message = ""
 
@@ -64,7 +64,6 @@ class WebhookSink(SinkBase[WebhookSinkParams]):
 
         return markdown_text
 
-    @classmethod
     def __to_unformatted_text(cls, block: BaseBlock) -> List[str]:
         lines = []
         if isinstance(block, HeaderBlock):

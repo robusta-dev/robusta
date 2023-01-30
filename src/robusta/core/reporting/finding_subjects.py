@@ -1,6 +1,4 @@
-from typing import Any, Optional
-
-from hikaru.model import ObjectMeta, ObjectReference, Pod
+from hikaru.model import ObjectReference, Pod
 
 from robusta.core.reporting.base import FindingSubject
 from robusta.core.reporting.consts import FindingSubjectType
@@ -9,26 +7,21 @@ from robusta.core.reporting.consts import FindingSubjectType
 class KubeObjFindingSubject(FindingSubject):
     def __init__(
         self,
-        obj: Optional[ObjectReference] = None,
-        finding_subject_type: Optional[FindingSubjectType] = None,
+        obj=None,
+        finding_subject_type: FindingSubjectType = None,
         should_add_node_name: bool = True,
     ):
         node_name = None
         if should_add_node_name:
             node_name = KubeObjFindingSubject.get_node_name(obj)
-        if finding_subject_type is None:
-            finding_subject_type = FindingSubjectType.from_kind(getattr(obj, "kind", None))
-
-        metadata = getattr(obj, "metadata", None)
-        if isinstance(metadata, ObjectMeta):
-            super(KubeObjFindingSubject, self).__init__(
-                metadata.name, finding_subject_type, metadata.namespace, node_name
-            )
-        else:
-            super(KubeObjFindingSubject, self).__init__(None, finding_subject_type, None, None)
+        if not finding_subject_type:
+            finding_subject_type = FindingSubjectType.from_kind(obj.kind)
+        super(KubeObjFindingSubject, self).__init__(
+            obj.metadata.name, finding_subject_type, obj.metadata.namespace, node_name
+        )
 
     @staticmethod
-    def get_node_name(obj: Optional[Any]) -> Optional[str]:
+    def get_node_name(obj):
         if not obj:
             return None
         is_node_object = hasattr(obj, "kind") and obj.kind == "Node"
@@ -43,13 +36,10 @@ class KubeObjFindingSubject(FindingSubject):
 
 
 class PodFindingSubject(FindingSubject):
-    def __init__(self, pod: Optional[Pod] = None):
-        if pod is not None and pod.metadata is not None:
-            super(PodFindingSubject, self).__init__(
-                pod.metadata.name,
-                FindingSubjectType.TYPE_POD,
-                pod.metadata.namespace,
-                pod.spec.nodeName if pod.spec is not None else None,
-            )
-        else:
-            super(PodFindingSubject, self).__init__(None, FindingSubjectType.TYPE_POD, None, None)
+    def __init__(self, pod: Pod = None):
+        super(PodFindingSubject, self).__init__(
+            pod.metadata.name,
+            FindingSubjectType.TYPE_POD,
+            pod.metadata.namespace,
+            pod.spec.nodeName,
+        )

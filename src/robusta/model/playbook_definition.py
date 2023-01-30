@@ -1,5 +1,5 @@
 import hashlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from pydantic import BaseModel, PrivateAttr
 
@@ -8,7 +8,7 @@ from robusta.model.playbook_action import PlaybookAction
 
 
 class PlaybookDefinition(BaseModel):
-    sinks: Optional[List[str]] = None
+    sinks: List[str] = None
     triggers: List[Trigger]
     actions: List[Dict[str, Any]]
     _actions: List[PlaybookAction] = PrivateAttr()

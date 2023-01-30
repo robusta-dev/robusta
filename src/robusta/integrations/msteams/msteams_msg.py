@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List
+from typing import List
 
 import requests
 
@@ -126,7 +126,7 @@ class MsTeamsMsg:
         self.__write_to_current_section([MsTeamsTextBlock(current_header_string, font_size="large")])
 
     # dont include the base 64 images in the total size calculation
-    def _put_text_files_data_up_to_max_limit(self, complete_card_map: Dict):
+    def _put_text_files_data_up_to_max_limit(self, complete_card_map: map):
         curr_images_len = 0
         for element in self.entire_msg:
             if isinstance(element, MsTeamsImages):

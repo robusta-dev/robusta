@@ -1,7 +1,7 @@
 import logging
 import re
 from queue import PriorityQueue
-from typing import Any, Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 from robusta.core.reporting import (
     BaseBlock,
@@ -122,7 +122,7 @@ class JiraSender:
                 i += len(new_parts)
         return text
 
-    def __to_jira(self, block: BaseBlock, sink_name: str) -> List[Union[Dict[str, Any], Tuple[str, bytes, str]]]:
+    def __to_jira(self, block: BaseBlock, sink_name: str) -> List[Union[Dict[str, str], Tuple[str, bytes, str]]]:
         if isinstance(block, MarkdownBlock):
             if not block.text:
                 return []

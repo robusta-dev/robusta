@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from hikaru.model import ContainerStatus, Pod
 
@@ -8,28 +8,21 @@ from robusta.core.triggers.oom_killed_trigger_base import Exclude, OOMKilledTrig
 class PodOOMKilledTrigger(OOMKilledTriggerBase):
     def __init__(
         self,
-        name_prefix: Optional[str] = None,
-        namespace_prefix: Optional[str] = None,
-        labels_selector: Optional[str] = None,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
         rate_limit: int = 0,
-        exclude: Optional[List[Exclude]] = None,
+        exclude: List[Exclude] = None,
     ):
         super().__init__(
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
             rate_limit=rate_limit,
-            exclude=exclude,  # type: ignore
+            exclude=exclude,
         )
 
     def get_relevant_oomkilled_container_statuses(self, pod: Pod) -> List[ContainerStatus]:
-        assert pod.status is not None
-        assert pod.status.containerStatuses is not None
-        assert pod.status.initContainerStatuses is not None
-        assert pod.metadata is not None
-        assert pod.metadata.name is not None
-        assert pod.metadata.namespace is not None
-
         if self.is_name_namespace_excluded(pod.metadata.name, pod.metadata.namespace):
             return []
         # pod not excluded

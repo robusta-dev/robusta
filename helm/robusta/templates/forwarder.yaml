@@ -19,6 +19,7 @@ spec:
       {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-forwarder-service-account
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
       containers:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
@@ -32,6 +33,12 @@ spec:
         volumeMounts:
           - name: robusta-kubewatch-config
             mountPath: /config
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {}
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsUser: 1000    
         resources:
           requests:
             cpu: {{ .Values.kubewatch.resources.requests.cpu }}

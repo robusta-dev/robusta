@@ -1,6 +1,6 @@
 import logging
 import tempfile
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -50,9 +50,7 @@ class SlackSender:
             logging.error(f"Cannot connect to Slack API: {e}")
             raise e
 
-    def __get_action_block_for_choices(
-        self, sink: str, choices: Optional[Dict[str, CallbackChoice]] = None
-    ) -> List[Dict[str, Any]]:
+    def __get_action_block_for_choices(self, sink: str, choices: Dict[str, CallbackChoice] = None):
         if choices is None:
             return []
 
@@ -185,7 +183,7 @@ class SlackSender:
             f.write(block.contents)
             f.flush()
             result = self.slack_client.files_upload(title=block.filename, file=f.name, filename=block.filename)
-            return result["file"]["permalink"]  # type: ignore
+            return result["file"]["permalink"]
 
     def prepare_slack_text(self, message: str, files: List[FileBlock] = []):
         if files:
@@ -262,8 +260,8 @@ class SlackSender:
             )
 
     def __create_finding_header(self, finding: Finding, status: FindingStatus, platform_enabled: bool) -> MarkdownBlock:
-        # TODO: Will not work in python 3.7
-        title = finding.title.removeprefix("[RESOLVED] ")  # type: ignore
+
+        title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
         if platform_enabled:
             title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
@@ -273,6 +271,7 @@ class SlackSender:
         return MarkdownBlock(f"{status_str} {sev.to_emoji()} `{sev.name.lower()}` {title}")
 
     def __create_links(self, finding: Finding):
+
         links: List[LinkProp] = []
         links.append(
             LinkProp(
@@ -335,6 +334,6 @@ class SlackSender:
             attachment_blocks,
             finding.title,
             sink_params,
-            bool(unfurl),
+            unfurl,
             status,
         )

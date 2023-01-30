@@ -3,12 +3,12 @@ import time
 from typing import List
 
 try:
-    from datadog_api_client.v1 import ApiClient, ApiException, Configuration  # type: ignore
-    from datadog_api_client.v1.api import events_api  # type: ignore
-    from datadog_api_client.v1.models import EventAlertType, EventCreateRequest  # type: ignore
-except ImportError:  # pragma: no cover
+    from datadog_api_client.v1 import ApiClient, ApiException, Configuration
+    from datadog_api_client.v1.api import events_api
+    from datadog_api_client.v1.models import EventAlertType, EventCreateRequest
+except ImportError:
 
-    def lazy_import_error(*args, **kwargs):
+    def lazy_import_error(self, *args, **kwargs):
         raise ImportError("datadog-api-client is not installed")
 
     Configuration = lazy_import_error
@@ -20,7 +20,7 @@ except ImportError:  # pragma: no cover
 
 
 try:
-    from tabulate import tabulate  # type: ignore
+    from tabulate import tabulate
 except ImportError:
 
     def tabulate(*args, **kwargs):
@@ -38,11 +38,11 @@ from robusta.core.reporting.blocks import (
     MarkdownBlock,
     TableBlock,
 )
-from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper, DataDogSinkParams
+from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
 from robusta.core.sinks.sink_base import SinkBase
 
 
-class DataDogSink(SinkBase[DataDogSinkParams]):
+class DataDogSink(SinkBase):
     def __init__(self, sink_config: DataDogSinkConfigWrapper, registry):
         super().__init__(sink_config.datadog_sink, registry)
 
@@ -116,7 +116,7 @@ class DataDogSink(SinkBase[DataDogSinkParams]):
             source_type_name="Robusta",
             host=f"{resource.namespace}/{resource.subject_type.value}/{resource.name}",
             tags=[f"cluster:{self.cluster_name}"],
-            text=DataDogSink.__enrichments_as_text(finding.enrichments),
+            text=DataDogSink.__trim_str(DataDogSink.__enrichments_as_text(finding.enrichments), 3997),
             title=DataDogSink.__trim_str(finding.title, 97),
         )
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import List
 
 from robusta.integrations.msteams.msteams_elements.msteams_action import MsTeamsAction
 from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
@@ -9,7 +9,7 @@ class MsTeamsColumn(MsTeamsBase):
         self.column_list = []
         super().__init__(self.__column_set())
 
-    def __column_set(self) -> Dict[str, Any]:
+    def __column_set(self) -> map:
         return {"type": "ColumnSet", "columns": self.column_list}
 
     def add_column(
@@ -17,8 +17,8 @@ class MsTeamsColumn(MsTeamsBase):
         items: List[MsTeamsBase],
         width_stretch: bool = False,
         is_visible: bool = True,
-        key: Optional[str] = None,
-        action: Optional[MsTeamsAction] = None,
+        key: str = None,
+        action: MsTeamsAction = None,
     ):
         block = {
             "type": "Column",

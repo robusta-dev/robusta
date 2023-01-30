@@ -1,13 +1,9 @@
-from typing import Generic, TypeVar
-
 from robusta.core.reporting.base import Finding
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 
-_T = TypeVar("_T", bound=SinkBaseParams)
 
-
-class SinkBase(Generic[_T]):
-    def __init__(self, sink_params: _T, registry):
+class SinkBase:
+    def __init__(self, sink_params: SinkBaseParams, registry):
         self.sink_name = sink_params.name
         self.params = sink_params
         self.default = sink_params.default

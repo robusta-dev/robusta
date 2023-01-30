@@ -24,7 +24,9 @@ from robusta.api import (
 
 class Matcher(BaseModel):
     # https://github.com/prometheus/alertmanager/blob/main/api/v2/models/matcher.go
-    isEqual: bool
+    isEqual: bool = (
+        True  # support old version matchers with omitted isEqual https://github.com/prometheus/alertmanager/pull/2603
+    )
     isRegex: bool
     name: str
     value: str
@@ -132,7 +134,7 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
     try:
         res = requests.post(
             f"{alertmanager_url}{_get_url_path(SilenceOperation.CREATE, params)}",
-            data=params.json(),
+            data=params.json(exclude_defaults=True),  # support old versions.
             headers=_gen_headers(params),
         )
     except Exception as e:

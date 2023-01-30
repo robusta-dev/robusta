@@ -12,7 +12,7 @@ def generate_high_cpu(event: ExecutionBaseEvent):
     Can be used to simulate alerts or other high CPU load scenarios.
     """
     logging.info("starting high cpu")
-    dep: RobustaDeployment = RobustaDeployment.from_image("stress-test", "jfusterm/stress", "stress --cpu 100")
+    dep = RobustaDeployment.from_image("stress-test", "jfusterm/stress", "stress --cpu 100")
     assert dep.metadata is not None
     assert dep.metadata.name is not None
     assert dep.metadata.namespace is not None

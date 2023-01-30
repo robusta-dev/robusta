@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from typing import Optional, cast
 
 from hikaru.model import Node
 
@@ -28,8 +27,6 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
     if not pod:
         logging.error(f"cannot run pod_graph_enricher on event with no pod: {pod_event}")
         return
-
-    assert pod.metadata is not None
     labels = {
         "pod": pod.metadata.name,
         "namespace": pod.metadata.namespace,
@@ -65,12 +62,8 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
     if not pod:
         logging.error(f"cannot run pod_node_graph_enricher on event with no pod: {pod_event}")
         return
-
-    assert pod.spec is not None
-    assert pod.spec.nodeName is not None
-    node = cast(Optional[Node], Node.readNode(pod.spec.nodeName).obj)
+    node: Node = Node.readNode(pod.spec.nodeName).obj
     if not node:
-        assert pod.metadata is not None
         logging.warning(f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}")
         return
     graph_enrichment = create_node_graph_enrichment(params, node)

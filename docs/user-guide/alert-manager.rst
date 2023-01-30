@@ -57,13 +57,24 @@ You should see the demo alert, in the Robusta UI, Slack, or any other configured
 
     The notification is displayed until the first alert is sent from AlertManager to Robusta.
 
+Setting up a custom Prometheus, AlertManager, and Grafana
+--------------------------------------------------------------
+Add custom AlertManager, Grafana or Prometheus in ``generated_values.yaml``.
+
+.. code-block:: yaml
+
+  global_config:
+  cluster_name: test-cluster
+  ...
+  alertmanager_url: ""
+  grafana_url: ""
+  prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
 
 Prometheus Operator
 -----------------------
-If you are using a Prometheus Operator that was **not** installed with Robusta, you should define a `manually-managed secret <https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md#manually-managed-secret>`_
-that sends alerts to Robusta by webhook.
+If you are using a Prometheus Operator that was **not** installed with Robusta, you should define a `manually-managed secret <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#using-a-kubernetes-secret>`_. Your Prometheus Operator uses this secret to sends alerts to Robusta by webhook.
 
-Follow the `instructions in the Prometheus Operator documentation <https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md#manually-managed-secret>`_, using the above configuration for alertmanager.yaml.
+AlertManager pushes alerts to Robusta. Follow the instructions in the `Prometheus Operator documentation <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#managing-alertmanager-configuration>`_, using the above configuration to configure alertmanager.yaml.
 
 An alternative is to configure an AlertmanagerConfig CRD, but this is **not** recommended as it `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
 

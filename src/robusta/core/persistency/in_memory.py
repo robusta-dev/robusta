@@ -1,6 +1,6 @@
 # dummy persistence driver
 from contextlib import contextmanager
-from typing import Dict, Iterator, Type, TypeVar, cast
+from typing import ContextManager, Dict, Type, TypeVar
 
 from pydantic import BaseModel
 
@@ -11,10 +11,10 @@ T = TypeVar("T", bound=BaseModel)
 
 
 @contextmanager
-def get_persistent_data(name: str, cls: Type[T]) -> Iterator[T]:
+def get_persistent_data(name: str, cls: Type[T]) -> ContextManager[T]:
     try:
-        data: T = cast(T, persistent_data.get(name, cls()))
+        data = persistent_data.get(name, cls())
         yield data
     finally:
         # write data back
-        persistent_data[name] = data  # type: ignore
+        persistent_data[name] = data

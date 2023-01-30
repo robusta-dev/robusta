@@ -82,7 +82,7 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
                             name=params.name,
                             image=params.image,
                             command=params.command,
-                            env=__get_alert_env_vars(event),  # type: ignore
+                            env=__get_alert_env_vars(event),
                         )
                     ],
                     serviceAccountName=params.service_account,

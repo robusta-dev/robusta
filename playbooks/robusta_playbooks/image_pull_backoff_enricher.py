@@ -23,13 +23,10 @@ from robusta.api import (
 
 
 def get_image_pull_backoff_container_statuses(status: PodStatus) -> List[ContainerStatus]:
-    assert status.containerStatuses is not None
     return [
         container_status
         for container_status in status.containerStatuses
-        if container_status.state is not None
-        and container_status.state.waiting is not None
-        and container_status.state.waiting.reason == "ImagePullBackOff"
+        if container_status.state.waiting is not None and container_status.state.waiting.reason == "ImagePullBackOff"
     ]
 
 

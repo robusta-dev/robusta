@@ -2,11 +2,9 @@ import logging
 from typing import List
 
 import opsgenie_sdk
-import opsgenie_sdk.api_client
-import opsgenie_sdk.configuration
 
 from robusta.core.reporting.base import Enrichment, Finding, FindingSeverity
-from robusta.core.sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper, OpsGenieSinkParams
+from robusta.core.sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.transformer import Transformer
 
@@ -19,7 +17,7 @@ PRIORITY_MAP = {
 }
 
 
-class OpsGenieSink(SinkBase[OpsGenieSinkParams]):
+class OpsGenieSink(SinkBase):
     def __init__(self, sink_config: OpsGenieSinkConfigWrapper, registry):
         super().__init__(sink_config.opsgenie_sink, registry)
 
@@ -34,7 +32,7 @@ class OpsGenieSink(SinkBase[OpsGenieSinkParams]):
             self.conf.host = sink_config.opsgenie_sink.host
 
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
-        self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)  # type: ignore
+        self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
 
     def __close_alert(self, finding: Finding):
         body = opsgenie_sdk.CloseAlertPayload(
@@ -99,5 +97,5 @@ class OpsGenieSink(SinkBase[OpsGenieSinkParams]):
 
     @classmethod
     def __enrichments_as_text(cls, enrichments: List[Enrichment]) -> str:
-        text_arr = [Transformer.to_html(list(enrichment.blocks)) for enrichment in enrichments]
+        text_arr = [Transformer.to_html(enrichment.blocks) for enrichment in enrichments]
         return "---\n".join(text_arr)

@@ -1,7 +1,8 @@
+import math
 from collections import defaultdict, namedtuple
 from datetime import datetime, timedelta
 from string import Template
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import humanize
 import pygal
@@ -30,25 +31,19 @@ def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_templat
 
 
 def get_node_internal_ip(node: Node) -> str:
-    assert node.status is not None
-    assert node.status.addresses is not None
     internal_ip = next(addr.address for addr in node.status.addresses if addr.type == "InternalIP")
     return internal_ip
 
 
 def run_prometheus_query(
-    prometheus_base_url: Optional[str], promql_query: str, starts_at: datetime, ends_at: datetime
+    prometheus_base_url: str, promql_query: str, starts_at: datetime, ends_at: datetime
 ) -> PrometheusQueryResult:
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
-
-    if prometheus_base_url is None:
+    if not prometheus_base_url:
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
-
-    assert prometheus_base_url is not None
-
     query_duration = ends_at - starts_at
-    resolution = 250  # 250 is used in Prometheus web client in /graph and looks good
+    resolution = get_resolution_from_duration(query_duration)
     increment = max(query_duration.total_seconds() / resolution, 1.0)
     return custom_query_range(
         prometheus_base_url,
@@ -60,8 +55,25 @@ def run_prometheus_query(
     )
 
 
+_RESOLUTION_DATA: Dict[timedelta, Union[int, Callable[[timedelta], int]]] = {
+    timedelta(hours=1): 250,
+    # NOTE: 1 minute resolution, max 1440 points
+    timedelta(days=1): lambda duration: math.ceil(duration.total_seconds() / 60),
+    # NOTE: 5 minute resolution, max 2016 points
+    timedelta(weeks=1): lambda duration: math.ceil(duration.total_seconds() / (60 * 5)),
+}
+_DEFAULT_RESOLUTION = 3000
+
+
+def get_resolution_from_duration(duration: timedelta) -> int:
+    for time_delta, resolution in sorted(_RESOLUTION_DATA.items(), key=lambda x: x[0]):
+        if duration <= time_delta:
+            return resolution if isinstance(resolution, int) else resolution(duration)
+    return _DEFAULT_RESOLUTION
+
+
 def create_chart_from_prometheus_query(
-    prometheus_base_url: Optional[str],
+    prometheus_base_url: str,
     promql_query: str,
     alert_starts_at: datetime,
     include_x_axis: bool,
@@ -112,8 +124,6 @@ def create_chart_from_prometheus_query(
     # TODO: change min_time time before  Jan 19 3001
     min_time = 32536799999
     max_time = 0
-
-    assert prometheus_query_result.series_list_result is not None
     for series in prometheus_query_result.series_list_result:
         label = "\n".join([v for v in series.metric.values()])
         values = []
@@ -169,7 +179,7 @@ def create_resource_enrichment(
     title_override: Optional[str] = None,
 ) -> FileBlock:
     ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
-    combinations: Dict[Tuple[ResourceChartResourceType, ResourceChartItemType], Optional[ChartOptions]] = {
+    combinations = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
             query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod"})',
             values_format=ChartValuesFormat.Plain,
@@ -200,11 +210,10 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Bytes,
         ),
     }
-    chosen_combination = combinations[resource_type, item_type]
+    combination = (resource_type, item_type)
+    chosen_combination = combinations[combination]
     if not chosen_combination:
-        raise AttributeError(
-            f"The following combination for resource chart is not supported: {(resource_type, item_type)}"
-        )
+        raise AttributeError(f"The following combination for resource chart is not supported: {combination}")
     values_format_text = "Utilization" if chosen_combination.values_format == ChartValuesFormat.Percentage else "Usage"
     title = (
         title_override

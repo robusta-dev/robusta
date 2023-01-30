@@ -5,7 +5,7 @@ import urllib.parse
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlencode
 
 from pydantic.main import BaseModel
@@ -45,7 +45,7 @@ class FindingSeverity(Enum):
         elif severity == "HIGH":
             return FindingSeverity.HIGH
 
-        raise NotImplementedError(f"Unknown severity {severity}")
+        raise Exception(f"Unknown severity {severity}")
 
     def to_emoji(self) -> str:
         if self == FindingSeverity.DEBUG:
@@ -58,8 +58,6 @@ class FindingSeverity(Enum):
             return "🟠"
         elif self == FindingSeverity.HIGH:
             return "🔴"
-        else:
-            raise NotImplementedError(f"Unknown severity {self}")
 
 
 class FindingStatus(Enum):
@@ -86,11 +84,11 @@ class VideoLink(BaseModel):
 
 class Enrichment:
     # These is the actual enrichment data
-    blocks: Sequence[BaseBlock] = []
+    blocks: List[BaseBlock] = []
     # General purpose rendering flags, that can be used by specific sinks
     annotations: Dict[str, str] = {}
 
-    def __init__(self, blocks: Sequence[BaseBlock], annotations=None):
+    def __init__(self, blocks: List[BaseBlock], annotations=None):
         if annotations is None:
             annotations = {}
         self.blocks = blocks
@@ -130,10 +128,10 @@ class Filterable:
 class FindingSubject:
     def __init__(
         self,
-        name: Optional[str] = None,
+        name: str = None,
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
-        namespace: Optional[str] = None,
-        node: Optional[str] = None,
+        namespace: str = None,
+        node: str = None,
     ):
         self.name = name
         self.subject_type = subject_type
@@ -157,16 +155,17 @@ class Finding(Filterable):
         aggregation_key: str,
         severity: FindingSeverity = FindingSeverity.INFO,
         source: FindingSource = FindingSource.NONE,
-        description: Optional[str] = None,
+        description: str = None,
         # TODO: this is bug-prone - see https://towardsdatascience.com/python-pitfall-mutable-default-arguments-9385e8265422
         subject: FindingSubject = FindingSubject(),
         finding_type: FindingType = FindingType.ISSUE,
         failure: bool = True,
-        creation_date: Optional[str] = None,
-        fingerprint: Optional[str] = None,
-        starts_at: Optional[datetime] = None,
-        ends_at: Optional[datetime] = None,
+        creation_date: str = None,
+        fingerprint: str = None,
+        starts_at: datetime = None,
+        ends_at: datetime = None,
         add_silence_url: bool = False,
+        silence_labels: Dict[Any, Any] = None,
     ) -> None:
         self.id: uuid.UUID = uuid.uuid4()
         self.title = title
@@ -185,6 +184,7 @@ class Finding(Filterable):
         uri_path = f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
         self.add_silence_url = add_silence_url
+        self.silence_labels = silence_labels
         self.creation_date = creation_date
         self.fingerprint = (
             fingerprint if fingerprint else self.__calculate_fingerprint(subject, source, aggregation_key)
@@ -230,7 +230,7 @@ class Finding(Filterable):
 
     def add_enrichment(
         self,
-        enrichment_blocks: Sequence[BaseBlock],
+        enrichment_blocks: List[BaseBlock],
         annotations=None,
         suppress_warning: bool = False,
     ):
@@ -257,8 +257,14 @@ class Finding(Filterable):
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
 
+        if self.silence_labels and self.silence_labels.get("service"):
+            labels["service"] = self.silence_labels["service"]
+
+        # In prometheus job is related to the scrape target.
+        # Kubernetes jobs are stored in job_name.
         kind: Optional[str] = self.subject.subject_type.value
         if kind and self.subject.name:
+            kind = "job_name" if kind == "job" else kind
             labels[kind] = self.subject.name
 
         labels["referer"] = "sink"

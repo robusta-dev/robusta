@@ -1,5 +1,3 @@
-from typing import Optional
-
 from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
 from robusta.integrations.msteams.msteams_mark_down_fix_url import MsTeamsMarkDownFixUrl
 
@@ -8,9 +6,9 @@ class MsTeamsTextBlock(MsTeamsBase):
     def __init__(
         self,
         text: str,
-        is_subtle: Optional[bool] = None,
-        wrap: Optional[bool] = None,
-        weight: Optional[str] = None,
+        is_subtle: bool = None,
+        wrap: bool = None,
+        weight: str = None,
         is_visible: bool = True,
         separator: bool = False,
         font_size: str = "medium",
@@ -37,9 +35,9 @@ class MsTeamsTextBlock(MsTeamsBase):
     def __text_block(
         self,
         text: str,
-        is_subtle: Optional[bool] = None,
-        wrap: Optional[bool] = None,
-        weight: Optional[str] = None,
+        is_subtle: bool = None,
+        wrap: bool = None,
+        weight: str = None,
         is_visible: bool = True,
         separator: bool = False,
         font_size: str = "medium",

@@ -10,7 +10,7 @@ def _get_templating_labels(event: ExecutionBaseEvent) -> Dict[str, str]:
     labels: Dict[str, str] = defaultdict(lambda: "<missing>")
     labels.update(
         {
-            "name": str(subject.name),
+            "name": subject.name,
             "kind": subject.subject_type.value,
             "namespace": subject.namespace if subject.namespace else "<missing>",
             "node": subject.node if subject.node else "<missing>",

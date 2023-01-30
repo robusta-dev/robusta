@@ -1,8 +1,7 @@
 # TODO: move to utils
-# TODO: typing.get_args and typing.get_origin are not available in python 3.7
 import logging
 from collections import defaultdict
-from typing import Callable, Dict, List, Optional, Type, Union, get_args, get_origin  # type: ignore
+from typing import Callable, Dict, List, Optional, Type, Union, get_args, get_origin
 
 import jsonref
 import yaml
@@ -39,7 +38,7 @@ class ExamplesGenerator:
         self.events_to_triggers = defaultdict(set)
         self.triggers_to_yaml = {}
 
-        for field_name, field in Trigger.__fields__.items():  # type: ignore
+        for field_name, field in Trigger.__fields__.items():
             trigger_classes = [t for t in get_possible_types(field.type_) if issubclass(t, BaseTrigger)]
             if len(trigger_classes) == 0:
                 continue

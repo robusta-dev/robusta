@@ -33,18 +33,13 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
     blocks: List[BaseBlock] = []
 
     # map pod names and namespaces by pod uid, and container names by container id
-    node_pods: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj  # type: ignore
+    node_pods: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
 
     pod_uid_to_name: Dict[str, str] = {}
     pod_uid_to_namespace: Dict[str, str] = {}
     container_id_to_name: Dict[str, str] = {}
 
     for pod in node_pods.items:
-        assert pod is not None
-        assert pod.metadata is not None
-        assert pod.metadata.uid is not None
-        assert pod.metadata.name is not None
-        assert pod.metadata.namespace is not None
         pod_uid_to_name[pod.metadata.uid] = pod.metadata.name
         pod_uid_to_namespace[pod.metadata.uid] = pod.metadata.namespace
 
@@ -54,14 +49,10 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
             pod_uid_to_name[pod.metadata.annotations["kubernetes.io/config.hash"]] = pod.metadata.name
             pod_uid_to_namespace[pod.metadata.annotations["kubernetes.io/config.hash"]] = pod.metadata.namespace
 
-        assert pod.status is not None
-        assert pod.status.containerStatuses is not None
         for container_status in pod.status.containerStatuses:
             container_id = re.match(".*//(.*)$", container_status.containerID).group(1)  # type: ignore
             container_id_to_name[container_id] = container_status.name
 
-    assert node.metadata is not None
-    assert node.metadata.name is not None
     # run disk-tools on node and parse its json output
     disk_info_str = RobustaPod.run_debugger_pod(
         node.metadata.name,

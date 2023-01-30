@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from hikaru.model import ContainerStatus, Pod
 from pydantic import BaseModel
@@ -12,8 +12,8 @@ from robusta.utils.rate_limiter import RateLimiter
 
 
 class Exclude(BaseModel):
-    name: Optional[str] = None
-    namespace: Optional[str] = None
+    name: str = None
+    namespace: str = None
 
 
 class OOMKilledTriggerBase(PodUpdateTrigger):
@@ -22,20 +22,20 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
     """
 
     rate_limit: int = 0
-    exclude: Optional[List[Exclude]] = None
+    exclude: List[Exclude] = None
 
     def __init__(
         self,
-        name_prefix: Optional[str] = None,
-        namespace_prefix: Optional[str] = None,
-        labels_selector: Optional[str] = None,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
         rate_limit: int = 0,
-        exclude: Optional[List[Dict]] = None,
+        exclude: List[Dict] = None,
     ):
         super().__init__(
-            name_prefix=name_prefix,  # type: ignore
-            namespace_prefix=namespace_prefix,  # type: ignore
-            labels_selector=labels_selector,  # type: ignore
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
         )
         self.rate_limit = rate_limit
         # pydantic not automatically converting exclude, exclude here is just a list of dicts according to runtime
@@ -55,7 +55,6 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
             return False
 
         pod = exec_event.get_pod()
-        assert pod is not None
 
         container_statuses = self.get_relevant_oomkilled_container_statuses(pod)
 
@@ -69,13 +68,9 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
         if not oom_killed or not oom_killed.state:
             return False
 
-        assert pod.metadata is not None
         # Perform a rate limit for this pod according to the rate_limit parameter
         name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name
         namespace = pod.metadata.namespace
-        assert name is not None
-        assert namespace is not None
-
         return RateLimiter.mark_and_test(
             f"{self.__class__.__name__}_{playbook_id}",
             namespace + ":" + name,
@@ -83,12 +78,7 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
         )
 
     def is_name_namespace_excluded(self, name: str, namespace: str) -> bool:
-        assert self.exclude is not None
-
         for selector in self.exclude:
-            assert selector.name is not None
-            assert selector.namespace is not None
-
             namespace_excluded = self.__is_excluded(selector.namespace, namespace, False)
             name_excluded = self.__is_excluded(selector.name, name, True)
             # match

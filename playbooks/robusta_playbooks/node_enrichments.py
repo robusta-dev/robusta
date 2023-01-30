@@ -1,5 +1,5 @@
 import logging
-from typing import List, cast
+from typing import List
 
 from hikaru.model import Pod, PodList
 
@@ -20,14 +20,10 @@ from robusta.api import (
 
 
 def pod_row(pod: Pod) -> List[str]:
-    assert pod.status is not None
-    assert pod.status.conditions is not None
-    assert pod.metadata is not None
-
     ready_condition = [condition.status for condition in pod.status.conditions if condition.type == "Ready"]
     return [
-        cast(str, pod.metadata.namespace),
-        cast(str, pod.metadata.name),
+        pod.metadata.namespace,
+        pod.metadata.name,
         ready_condition[0] if ready_condition else "Unknown",
     ]
 
@@ -42,10 +38,8 @@ def node_running_pods_enricher(event: NodeEvent):
         logging.error(f"NodeRunningPodsEnricher was called on event without node: {event}")
         return
 
-    assert node.metadata is not None
-
     block_list: List[BaseBlock] = []
-    pod_list = cast(PodList, Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj)
+    pod_list: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
     effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
     block_list.append(
         TableBlock(effected_pods_rows, ["namespace", "name", "ready"], table_name="Pods running on the node")
@@ -67,8 +61,6 @@ def node_allocatable_resources_enricher(event: NodeEvent):
 
     block_list: List[BaseBlock] = []
     if node:
-        assert node.status is not None
-        assert node.status.allocatable is not None
         block_list.append(
             TableBlock(
                 [[k, v] for (k, v) in node.status.allocatable.items()],
@@ -88,17 +80,14 @@ def node_status_enricher(event: NodeEvent):
 
     Can help troubleshooting Node issues.
     """
-    node = event.get_node()
-    if not node:
+    if not event.get_node():
         logging.error(f"node_status_enricher was called on event without node : {event}")
         return
 
-    assert node.status is not None
-    assert node.status.conditions is not None
     event.add_enrichment(
         [
             TableBlock(
-                [[c.type, c.status] for c in node.status.conditions],
+                [[c.type, c.status] for c in event.get_node().status.conditions],
                 headers=["Type", "Status"],
                 table_name="*Node status details:*",
             ),
@@ -113,13 +102,6 @@ def node_health_watcher(event: NodeChangeEvent):
 
     Add useful information regarding the node's health status.
     """
-    assert event.obj is not None
-    assert event.obj.status is not None
-    assert event.obj.status.conditions is not None
-    assert event.old_obj is not None
-    assert event.old_obj.status is not None
-    assert event.old_obj.status.conditions is not None
-
     new_condition = [c for c in event.obj.status.conditions if c.type == "Ready"]
     old_condition = [c for c in event.old_obj.status.conditions if c.type == "Ready"]
 
@@ -135,17 +117,14 @@ def node_health_watcher(event: NodeChangeEvent):
     if currently_ready or currently_ready == previously_ready:
         return
 
-    assert event.obj.metadata is not None
     finding = Finding(
         title=f"Unhealthy node {event.obj.metadata.name}",
         source=FindingSource.KUBERNETES_API_SERVER,
         aggregation_key="node_not_ready",
         severity=FindingSeverity.MEDIUM,
-        subject=KubeObjFindingSubject(event.obj),  # type: ignore
+        subject=KubeObjFindingSubject(event.obj),
     )
     event.add_finding(finding)
-
-    assert event.obj.metadata.name is not None
     event.add_enrichment([KubernetesDiffBlock([], event.old_obj, event.obj, event.obj.metadata.name)])
     node_status_enricher(event)
 
@@ -156,6 +135,5 @@ def node_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherPara
     Get a graph of a specific resource for this node.
     """
     node = node_event.get_node()
-    assert node is not None
     graph_enrichment = create_node_graph_enrichment(params, node)
     node_event.add_enrichment([graph_enrichment])

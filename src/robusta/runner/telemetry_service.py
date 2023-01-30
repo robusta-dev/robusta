@@ -4,14 +4,13 @@ import threading
 from collections import defaultdict
 from enum import Enum
 from time import sleep
-from typing import cast
 
 import requests
 import sentry_sdk
 from hikaru.model import NodeList
 
-from robusta.model.config import Registry
-from robusta.runner.telemetry import SinkInfo, Telemetry
+from robusta.model.config import Registry, Telemetry
+from robusta.runner.telemetry import SinkInfo
 
 
 class TelemetryLevel(Enum):
@@ -46,7 +45,7 @@ class TelemetryService:
             try:
                 tele = self.registry.get_telemetry()
 
-                current_nodes = cast(NodeList, NodeList.listNode().obj)
+                current_nodes: NodeList = NodeList.listNode().obj
                 tele.nodes_count = len(current_nodes.items)
 
                 self.__log(tele)

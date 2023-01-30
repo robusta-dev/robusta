@@ -5,7 +5,7 @@ from typing import List, Optional
 import markdown2
 
 try:
-    from tabulate import tabulate  # type: ignore
+    from tabulate import tabulate
 except ImportError:
 
     def tabulate(*args, **kwargs):

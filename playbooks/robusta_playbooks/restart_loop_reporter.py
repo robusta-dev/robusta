@@ -25,13 +25,11 @@ def _send_crash_report(
     event: PodEvent,
     crashed_container_statuses: List[ContainerStatus],
     action_name: str,
-    regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None,
+    regex_replacer_patterns: Optional[NamedRegexPattern] = None,
     regex_replacement_style: Optional[RegexReplacementStyle] = None,
 ):
 
     pod = event.get_pod()
-    assert pod is not None
-    assert pod.metadata is not None
     finding = Finding(
         title=f"Crashing pod {pod.metadata.name} in namespace {pod.metadata.namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
@@ -87,16 +85,11 @@ class ReportCrashLoopParams(ActionParams):
 @action
 def report_crash_loop(event: PodEvent, params: ReportCrashLoopParams):
     pod = event.get_pod()
-    assert pod is not None and pod.status is not None
-    assert pod.status.containerStatuses is not None and pod.status.initContainerStatuses is not None
-
     all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
     crashing_containers = [
         container_status
         for container_status in all_statuses
-        if container_status.state is not None
-        and container_status.state.waiting is not None
-        and container_status.restartCount >= 1
+        if container_status.state.waiting is not None and container_status.restartCount >= 1
     ]
     regex_replacement_style = (
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
@@ -122,15 +115,13 @@ class RestartLoopParams(RateLimitParams):
 
 # deprecated
 def get_crashing_containers(status: PodStatus, config: RestartLoopParams) -> List[ContainerStatus]:
-    assert status.containerStatuses is not None and status.initContainerStatuses is not None
     all_statuses = status.containerStatuses + status.initContainerStatuses
     return [
         container_status
         for container_status in all_statuses
-        if container_status.state is not None
-        and container_status.state.waiting is not None
+        if container_status.state.waiting is not None
         and container_status.restartCount > 1  # report only after the 2nd restart and get previous logs
-        and (config.restart_reason is None or config.restart_reason in container_status.state.waiting.reason)  # type: ignore
+        and (config.restart_reason is None or config.restart_reason in container_status.state.waiting.reason)
     ]
 
 
@@ -145,19 +136,13 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
         logging.info(f"restart_loop_reporter - no pod found on event: {event}")
         return
 
-    assert pod.status is not None
     crashed_container_statuses = get_crashing_containers(pod.status, config)
 
     if len(crashed_container_statuses) == 0:
         return  # no matched containers
 
-    assert pod.metadata is not None
-
     pod_name = pod.metadata.name
-    pod_namespace = pod.metadata.namespace
-    assert pod_name is not None
-    assert pod_namespace is not None
-    if not RateLimiter.mark_and_test("restart_loop_reporter", pod_name + pod_namespace, config.rate_limit):
+    if not RateLimiter.mark_and_test("restart_loop_reporter", pod_name + pod.metadata.namespace, config.rate_limit):
         return
 
     _send_crash_report(event, crashed_container_statuses, "restart_loop_reporter")

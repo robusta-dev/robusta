@@ -1,6 +1,5 @@
 import logging
 import textwrap
-from typing import Dict
 
 from hikaru.model import DaemonSet, Node, NodeList
 
@@ -143,7 +142,7 @@ def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
     assert ds.metadata is not None
     assert ds.metadata.namespace is not None
     assert ds.metadata.uid is not None
-    nodes_by_name: Dict[str, Node] = {n.metadata.name: n for n in NodeList.listNode().obj.items}  # type: ignore
+    nodes_by_name = {n.metadata.name: n for n in NodeList.listNode().obj.items}
     ds_pods = RobustaPod.find_pods_with_direct_owner(ds.metadata.namespace, ds.metadata.uid)
 
     # look for at least one node where the false alarm is present
@@ -167,8 +166,6 @@ def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
 def daemonset_misscheduled_smart_silencer(alert: PrometheusKubernetesAlert):
     """
     Silence daemonset misscheduled alert finding if it's a known false alarm.
-
-    checks if the issue described here: https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/
     """
     if not alert.daemonset:
         return
@@ -179,8 +176,6 @@ def daemonset_misscheduled_smart_silencer(alert: PrometheusKubernetesAlert):
 def daemonset_misscheduled_analysis_enricher(event: DaemonSetEvent):
     """
     Enrich the alert finding with analysis and possible causes for the misscheduling, if the cause is identified.
-
-    <https://blog.florentdelannoy.com/blog/2020/kube-daemonset-misscheduled/|Learn more>
     """
     ds = event.get_daemonset()
     if not ds:

@@ -1,12 +1,10 @@
-from typing import cast
-
 from tabulate import tabulate
 
 from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity
 from robusta.core.reporting.blocks import FileBlock, MarkdownBlock, TableBlock
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.telegram.telegram_client import TelegramClient
-from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkConfigWrapper, TelegramSinkParams
+from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkConfigWrapper
 from robusta.core.sinks.transformer import Transformer
 
 SEVERITY_EMOJI_MAP = {
@@ -20,7 +18,7 @@ SILENCE_ICON = "\U0001F515"
 VIDEO_ICON = "\U0001F3AC"
 
 
-class TelegramSink(SinkBase[TelegramSinkParams]):
+class TelegramSink(SinkBase):
     def __init__(self, sink_config: TelegramSinkConfigWrapper, registry):
         super().__init__(sink_config.telegram_sink, registry)
 
@@ -64,9 +62,7 @@ class TelegramSink(SinkBase[TelegramSinkParams]):
             blocks.append(MarkdownBlock(finding.description))
 
         for enrichment in finding.enrichments:
-            blocks.extend(
-                [cast(MarkdownBlock, block) for block in enrichment.blocks if self.__is_telegram_text_block(block)]
-            )
+            blocks.extend([block for block in enrichment.blocks if self.__is_telegram_text_block(block)])
 
         for block in blocks:
             block_text = Transformer.to_standard_markdown([block])
