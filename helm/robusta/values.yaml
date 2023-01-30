@@ -266,6 +266,7 @@ kubewatch:
       cpu: ~
   tolerations: []
   annotations: {}
+  nodeSelector: ~
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -297,6 +298,7 @@ runner:
   additional_env_froms: []
   tolerations: []
   annotations: {}
+  nodeSelector: ~
 
 kube-prometheus-stack:
   alertmanager:
@@ -365,5 +367,3 @@ kube-prometheus-stack:
         cpu: 10m
 
 rsa: ~
-
-
