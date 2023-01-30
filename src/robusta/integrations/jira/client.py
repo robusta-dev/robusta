@@ -16,14 +16,26 @@ class JiraClient:
 
     def __init__(self, jira_params: JiraSinkParams):
         self.params = jira_params
-        self.default_issue_type_id = self._get_default_issue_type()
-        self.default_project_id = self._get_default_project_id()
+        self.configured = True
+        if jira_params.issue_type_id_override:
+            self.default_issue_type_id = jira_params.issue_type_id_override
+        else:
+            self.default_issue_type_id = self._get_default_issue_type()
+
+        if jira_params.project_type_id_override:
+            self.default_project_id = jira_params.project_type_id_override
+        else:
+            self.default_project_id = self._get_default_project_id()
+
         if not self.default_issue_type_id:
-            logging.warning("Couldn't find the default issue type!")
+            logging.warning("Could not find Jira default issue type!")
             self.configured = False
         if not self.default_project_id:
-            logging.warning("Couldn't find the project!")
+            logging.warning("Could not find Jira default project")
             self.configured = False
+
+        if self.configured:
+            logging.info(f"Jira initialized successfully. Project: {self.default_project_id} issue type: {self.default_issue_type_id}")
 
     def _get_full_jira_url(self, endpoint: str) -> str:
         return "/".join([self.params.url, _API_PREFIX, endpoint])
@@ -41,11 +53,12 @@ class JiraClient:
         headers.update(kwargs.pop("headers", {}))
         response = process_request(url, http_method, headers=headers, auth=self._construct_auth(), **kwargs)
         if check_response_succeed(response):
-            response = response.json()
-            return response
+            return response.json()
         else:
-            logging.error(f"Response to {url} received an error code: {response.status_code}")
-            logging.info(response.request)
+            logging.error(f"Response to {url} received an error code: {response.status_code} "
+                          f"reason: {response.reason} text: {response.text} data: {response.json()}")
+            logging.info(f"request: url: {response.request.url} "
+                         f"headers: {response.request.headers} body: {response.request.body}")
             return None
 
     def list_issues(self, search_params: Optional[str] = None):
