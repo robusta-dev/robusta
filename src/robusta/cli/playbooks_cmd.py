@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import time
 import traceback
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import click
 import click_spinner
@@ -304,8 +304,8 @@ def _post_in_runner_pod(namespace: str, api_path: str, req_body: Dict, req_name:
 @app.command()
 def trigger(
     action_name: str,
-    param: List[str] = typer.Argument(
-        [],
+    param: Optional[List[str]] = typer.Argument(
+        None,
         help="data to send to action (can be used multiple times)",
         metavar="key=value",
     ),
@@ -322,7 +322,7 @@ def trigger(
     log_title("Triggering action...")
 
     action_params = {}
-    for p in param:
+    for p in param or []:
         (key, val) = p.split("=")
         action_params[key] = val
     # action_params = " ".join([f"-F '{p}'" for p in param])
