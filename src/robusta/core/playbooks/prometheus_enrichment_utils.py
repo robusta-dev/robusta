@@ -81,7 +81,7 @@ def create_chart_from_prometheus_query(
     chart_title: Optional[str] = None,
     values_format: Optional[ChartValuesFormat] = None,
     lines: Optional[List[XAxisLine]] = [],
-    chart_labels_override: Dict[int, str] = {},
+    additional_chart_labels: Dict[int, str] = {},
 ):
     if not alert_starts_at:
         ends_at = datetime.utcnow()
@@ -126,12 +126,10 @@ def create_chart_from_prometheus_query(
     min_time = 32536799999
     max_time = 0
     for i, series in enumerate(prometheus_query_result.series_list_result):
-        # NOTE: Try get override label, if not found, use the metric labels
-        label = (
-            "\n".join([v for v in series.metric.values()])
-            if i not in chart_labels_override
-            else chart_labels_override[i]
-        )
+        label = "\n".join([v for v in series.metric.values()])
+        # If the label is empty, try to take it from the additional_chart_labels
+        label = label or additional_chart_labels.get(i, label)
+
         values = []
         for index in range(len(series.values)):
             timestamp = series.timestamps[index]
@@ -157,7 +155,7 @@ def create_graph_enrichment(
     graph_title: Optional[str],
     chart_values_format: Optional[ChartValuesFormat],
     lines: Optional[List[XAxisLine]] = [],
-    chart_labels_override: Dict[int, str] = {},
+    additional_chart_labels: Dict[int, str] = {},
 ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
@@ -169,7 +167,7 @@ def create_graph_enrichment(
         chart_title=graph_title,
         values_format=chart_values_format,
         lines=lines,
-        chart_labels_override=chart_labels_override,
+        additional_chart_labels=additional_chart_labels,
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
@@ -208,7 +206,7 @@ def create_resource_enrichment(
             query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
-        (ResourceChartResourceType.Memory, ResourceChartItemType.Container,): ChartOptions(
+        (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
             query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container=~"$container", image!=""})',
             values_format=ChartValuesFormat.Bytes,
         ),
@@ -229,9 +227,9 @@ def create_resource_enrichment(
         else f"{resource_type.name} {values_format_text} for this {item_type.name.lower()}"
     )
 
-    # NOTE: Some queries do not prodice automatic labels, so we need to override them
+    # NOTE: Some queries do not produce automatic labels, so we need to provide them
     # Numerical index is the number of the series in the chart to override (excluding lines)
-    chart_labels_overrides = {
+    additional_chart_labels = {
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): {
             0: "Memory Usage",
         },
@@ -245,6 +243,6 @@ def create_resource_enrichment(
         graph_title=title,
         chart_values_format=chosen_combination.values_format,
         lines=lines,
-        chart_labels_override=chart_labels_overrides.get(combination, {}),
+        additional_chart_labels=additional_chart_labels.get(combination, {}),
     )
     return graph_enrichment
