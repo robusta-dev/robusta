@@ -66,7 +66,7 @@ def related_pods(event: KubernetesResourceEvent):
         )
 
     if resource.kind == "Job":
-        job_pods = get_job_all_pods(resource)
+        job_pods = get_job_all_pods(resource)  # type: ignore
         pods = job_pods if job_pods else []
     elif resource.kind == "Pod":
         pods = [resource]

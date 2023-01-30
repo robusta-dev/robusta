@@ -35,7 +35,9 @@ class JiraClient:
             self.configured = False
 
         if self.configured:
-            logging.info(f"Jira initialized successfully. Project: {self.default_project_id} issue type: {self.default_issue_type_id}")
+            logging.info(
+                f"Jira initialized successfully. Project: {self.default_project_id} issue type: {self.default_issue_type_id}"
+            )
 
     def _get_full_jira_url(self, endpoint: str) -> str:
         return "/".join([self.params.url, _API_PREFIX, endpoint])
@@ -55,10 +57,14 @@ class JiraClient:
         if check_response_succeed(response):
             return response.json()
         else:
-            logging.error(f"Response to {url} received an error code: {response.status_code} "
-                          f"reason: {response.reason} text: {response.text} data: {response.json()}")
-            logging.info(f"request: url: {response.request.url} "
-                         f"headers: {response.request.headers} body: {response.request.body}")
+            logging.error(
+                f"Response to {url} received an error code: {response.status_code} "
+                f"reason: {response.reason} text: {response.text} data: {response.json()}"
+            )
+            logging.info(
+                f"request: url: {response.request.url} "
+                f"headers: {response.request.headers} body: {response.request.body}"
+            )
             return None
 
     def list_issues(self, search_params: Optional[str] = None):
@@ -103,7 +109,9 @@ class JiraClient:
             query.append(f"labels = '{label}'")
         query = " AND ".join(query)
         issues = self.list_issues(query)
-        if issues.get("total", 0) < 1:
+
+        # TODO: fix pyright error, might be a bug
+        if issues.get("total", 0) < 1:  # type: ignore
             return False
         return True
 

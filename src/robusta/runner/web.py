@@ -39,7 +39,7 @@ class Web:
     @staticmethod
     @app.route("/api/alerts", methods=["POST"])
     def handle_alert_event():
-        req_json = request.get_json()
+        req_json = request.get_json()  # type: ignore
         Web._trace_incoming("alerts", req_json)
         alert_manager_event = AlertManagerEvent(**req_json)  # type: ignore
         for alert in alert_manager_event.alerts:
@@ -60,7 +60,7 @@ class Web:
     @staticmethod
     @app.route("/api/trigger", methods=["POST"])
     def handle_manual_trigger():
-        data = request.get_json()
+        data = request.get_json()  # type: ignore
         assert data is not None
 
         Web._trace_incoming("trigger", data)

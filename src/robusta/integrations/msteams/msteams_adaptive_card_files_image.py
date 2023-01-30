@@ -64,6 +64,6 @@ class MsTeamsAdaptiveCardFilesImage:
     # msteams cant read parsing of url to svg image
     @classmethod
     def __svg_convert_bytes_to_jpg(cls, svg_bytes: bytes):
-        from cairosvg import svg2png
+        from cairosvg import svg2png  # type: ignore
 
         return cls.__png_convert_bytes_to_base_64_url(svg2png(bytestring=svg_bytes))  # type: ignore

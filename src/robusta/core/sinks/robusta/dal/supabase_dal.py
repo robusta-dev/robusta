@@ -375,7 +375,7 @@ class SupabaseDal:
     def get_active_namespaces(self) -> List[NamespaceInfo]:
         res = (
             self.client.table(NAMESPACES_TABLE)
-            .select("*")
+            .select("*")  # type: ignore
             .filter("account_id", "eq", self.account_id)
             .filter("cluster_id", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -401,7 +401,7 @@ class SupabaseDal:
             return
 
         db_namespaces = [self.__to_db_namespace(namespace) for namespace in namespaces]
-        res = self.client.table(NAMESPACES_TABLE).insert(db_namespaces, upsert=True).execute()
+        res = self.client.table(NAMESPACES_TABLE).insert(db_namespaces, upsert=True).execute()  # type: ignore
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist namespaces {namespaces} error: {res.get('data')}")
             self.handle_supabase_error()

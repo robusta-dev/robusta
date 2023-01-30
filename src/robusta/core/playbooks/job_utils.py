@@ -39,12 +39,12 @@ def get_job_all_pods(job: Job) -> Optional[List[RobustaPod]]:
     if not job_selector:
         return None
 
-    return PodList.listNamespacedPod(namespace=job.metadata.namespace, label_selector=job_selector).obj.items
+    return PodList.listNamespacedPod(namespace=job.metadata.namespace, label_selector=job_selector).obj.items  # type: ignore
 
 
 def get_job_latest_pod(job: Job) -> Optional[RobustaPod]:
-    pod_list: List[RobustaPod] = get_job_all_pods(job)
+    pod_list: List[RobustaPod] = get_job_all_pods(job)  # type: ignore
     if not pod_list:
         return None
-    pod_list.sort(key=lambda pod: pod.status.startTime, reverse=True)
+    pod_list.sort(key=lambda pod: pod.status.startTime, reverse=True)  # type: ignore
     return pod_list[0] if pod_list else None

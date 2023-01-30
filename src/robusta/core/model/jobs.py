@@ -63,7 +63,7 @@ class JobStatus(BaseModel):
     @staticmethod
     def _extract_failed_time(job_status: V1JobStatus) -> Optional[datetime]:
         try:
-            for condition in job_status.conditions:
+            for condition in job_status.conditions:  # type: ignore
                 if condition.status.lower() == "true" and condition.type == "Failed":
                     return condition.last_transition_time
         except (

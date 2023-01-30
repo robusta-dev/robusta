@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from prometheus_api_client import PrometheusConnect
 
 
-def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
+def check_prometheus_connection(prom: "PrometheusConnect", params: Optional[dict] = None):
     params = params or {}
     try:
         prometheus_connected = prom.check_prometheus_connection(params)
