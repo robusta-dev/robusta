@@ -2,7 +2,7 @@ import math
 from collections import defaultdict, namedtuple
 from datetime import datetime, timedelta
 from string import Template
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import humanize
 import pygal
@@ -15,6 +15,9 @@ from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUES
 from robusta.core.reporting.blocks import FileBlock
 from robusta.core.reporting.custom_rendering import charts_style
 from robusta.integrations.prometheus.utils import PrometheusDiscovery
+
+ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
+ChartLabelFactory = Callable[[int], str]
 
 
 class XAxisLine(BaseModel):
@@ -81,7 +84,7 @@ def create_chart_from_prometheus_query(
     chart_title: Optional[str] = None,
     values_format: Optional[ChartValuesFormat] = None,
     lines: Optional[List[XAxisLine]] = [],
-    additional_chart_labels: Dict[int, str] = {},
+    chart_label_factory: Optional[ChartLabelFactory] = None,
 ):
     if not alert_starts_at:
         ends_at = datetime.utcnow()
@@ -127,8 +130,10 @@ def create_chart_from_prometheus_query(
     max_time = 0
     for i, series in enumerate(prometheus_query_result.series_list_result):
         label = "\n".join([v for v in series.metric.values()])
-        # If the label is empty, try to take it from the additional_chart_labels
-        label = label or additional_chart_labels.get(i, label)
+
+        # If the label is empty, try to take it from the additional_label_factory
+        if label == "" and chart_label_factory is not None:
+            label = chart_label_factory(i)
 
         values = []
         for index in range(len(series.values)):
@@ -155,7 +160,7 @@ def create_graph_enrichment(
     graph_title: Optional[str],
     chart_values_format: Optional[ChartValuesFormat],
     lines: Optional[List[XAxisLine]] = [],
-    additional_chart_labels: Dict[int, str] = {},
+    chart_label_factory: Optional[ChartLabelFactory] = None,
 ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
@@ -167,7 +172,7 @@ def create_graph_enrichment(
         chart_title=graph_title,
         values_format=chart_values_format,
         lines=lines,
-        additional_chart_labels=additional_chart_labels,
+        chart_label_factory=chart_label_factory,
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
@@ -185,7 +190,7 @@ def create_resource_enrichment(
     title_override: Optional[str] = None,
 ) -> FileBlock:
     ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
-    combinations = {
+    combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
             query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod"})',
             values_format=ChartValuesFormat.Plain,
@@ -228,12 +233,12 @@ def create_resource_enrichment(
     )
 
     # NOTE: Some queries do not produce automatic labels, so we need to provide them
-    # Numerical index is the number of the series in the chart to override (excluding lines)
-    additional_chart_labels = {
-        (ResourceChartResourceType.Memory, ResourceChartItemType.Container): {
-            0: "Memory Usage",
-        },
+    # Parameter in lambda is the number of the series in the chart to override (excluding lines)
+    # It could be used if there are multiple series in the chart
+    chart_label_factories: Dict[ResourceKey, ChartLabelFactory] = {
+        (ResourceChartResourceType.Memory, ResourceChartItemType.Container): lambda i: "Memory Usage",
     }
+
     graph_enrichment = create_graph_enrichment(
         starts_at,
         labels,
@@ -243,6 +248,6 @@ def create_resource_enrichment(
         graph_title=title,
         chart_values_format=chosen_combination.values_format,
         lines=lines,
-        additional_chart_labels=additional_chart_labels.get(combination, {}),
+        chart_label_factory=chart_label_factories.get(combination),
     )
     return graph_enrichment
