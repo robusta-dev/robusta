@@ -4,7 +4,6 @@ from typing import List
 import hikaru
 import kubernetes.client.exceptions
 from hikaru.model import Pod, PodList
-
 from robusta.api import (
     ActionException,
     ErrorCodes,
@@ -21,7 +20,7 @@ from robusta.api import (
     pod_restarts,
 )
 
-supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"]
+supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node"]
 
 
 def to_pod_row(pod: Pod, cluster_name: str) -> List:
@@ -66,6 +65,8 @@ def related_pods(event: KubernetesResourceEvent):
         pods = job_pods if job_pods else []
     elif resource.kind == "Pod":
         pods = [resource]
+    elif resource.kind == "Node":
+        pods = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={resource.metadata.name}").obj.items
     else:
         selector = build_selector_query(resource.spec.selector)
         pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
