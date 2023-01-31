@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import hikaru
 from hikaru import DiffDetail, DiffType
-from hikaru.model import HikaruDocumentBase  # type: ignore
+from hikaru.model import HikaruDocumentBase
 from pydantic import BaseModel
 
 try:

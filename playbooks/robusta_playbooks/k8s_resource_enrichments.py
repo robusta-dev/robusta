@@ -62,15 +62,15 @@ def related_pods(event: KubernetesResourceEvent):
         )
 
     if resource.kind == "Job":
-        job_pods = get_job_all_pods(resource)  # type: ignore
+        job_pods = get_job_all_pods(resource)
         pods = job_pods if job_pods else []
     elif resource.kind == "Pod":
         pods = [resource]
     else:
-        selector = build_selector_query(resource.spec.selector)  # type: ignore
-        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items  # type: ignore
+        selector = build_selector_query(resource.spec.selector)
+        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
 
-    rows = [to_pod_row(pod, event.get_context().cluster_name) for pod in pods]  # type: ignore
+    rows = [to_pod_row(pod, event.get_context().cluster_name) for pod in pods]
 
     event.add_enrichment(
         [
@@ -117,7 +117,7 @@ def get_resource_yaml(event: KubernetesResourceEvent):
             namespace=namespace,
             name=name,
         ).obj
-        resource_yaml = hikaru.get_yaml(loaded_resource)  # type: ignore
+        resource_yaml = hikaru.get_yaml(loaded_resource)
 
         event.add_enrichment(
             [

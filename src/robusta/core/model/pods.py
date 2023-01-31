@@ -153,7 +153,7 @@ def find_most_recent_oom_killed_container(
     for container_status in container_statuses:
         oom_killed_container: PodContainer = get_oom_killed_container(pod, container_status, only_current_state)  # type: ignore
         if latest_oom_kill_container is not None or (
-            get_oom_kill_time(oom_killed_container) > get_oom_kill_time(latest_oom_kill_container)  # type: ignore
+            get_oom_kill_time(oom_killed_container) > get_oom_kill_time(latest_oom_kill_container)
         ):
             latest_oom_kill_container = oom_killed_container
     return latest_oom_kill_container
@@ -162,7 +162,7 @@ def find_most_recent_oom_killed_container(
 def pod_most_recent_oom_killed_container(pod: Pod, only_current_state: bool = False) -> Optional[PodContainer]:
     if not pod.status:
         return None
-    all_container_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses  # type: ignore
+    all_container_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
     return find_most_recent_oom_killed_container(
         pod, container_statuses=all_container_statuses, only_current_state=only_current_state
     )

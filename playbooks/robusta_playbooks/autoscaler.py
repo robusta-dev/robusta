@@ -70,7 +70,7 @@ def alert_on_hpa_reached_limit(event: HorizontalPodAutoscalerChangeEvent, action
         return  # didn't reached max replicas limit
 
     avg_cpu = int(
-        hpa.status.currentCPUUtilizationPercentage  # type: ignore
+        hpa.status.currentCPUUtilizationPercentage
         / (hpa.status.currentReplicas if hpa.status.currentReplicas > 0 else 1)
     )
     new_max_replicas_suggestion = ceil((action_params.increase_pct + 100) * hpa.spec.maxReplicas / 100)

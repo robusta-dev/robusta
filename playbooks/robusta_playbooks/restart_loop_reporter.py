@@ -128,7 +128,7 @@ def get_crashing_containers(status: PodStatus, config: RestartLoopParams) -> Lis
         if container_status.state is not None
         and container_status.state.waiting is not None
         and container_status.restartCount > 1  # report only after the 2nd restart and get previous logs
-        and (config.restart_reason is None or config.restart_reason in container_status.state.waiting.reason)  # type: ignore
+        and (config.restart_reason is None or config.restart_reason in container_status.state.waiting.reason)
     ]
 
 

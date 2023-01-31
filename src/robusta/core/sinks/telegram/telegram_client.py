@@ -32,7 +32,7 @@ class TelegramClient:
         file_type = "Photo" if is_image(file_name) else "Document"
         url = f"{TELEGRAM_BASE_URL}/bot{self.bot_token}/send{file_type}?chat_id={self.chat_id}"
         if file_name.endswith(SVG_SUFFIX):
-            contents = convert_svg_to_png(contents)  # type: ignore
+            contents = convert_svg_to_png(contents)
             file_name = file_name.replace(SVG_SUFFIX, PNG_SUFFIX)
 
         files = {file_type.lower(): (file_name, contents)}

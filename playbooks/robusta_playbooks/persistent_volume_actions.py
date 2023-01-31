@@ -53,7 +53,7 @@ def volume_analysis(event: PersistentVolumeEvent):
         if pv_claimref is not None:
             # Do this if there is a PVC attached to PV
             pvc_obj = PersistentVolumeClaim.readNamespacedPersistentVolumeClaim(
-                name=pv_claimref.name, namespace=pv_claimref.namespace  # type: ignore
+                name=pv_claimref.name, namespace=pv_claimref.namespace
             ).obj
             pod = get_pod_related_to_pvc(pvc_obj, pv)
 

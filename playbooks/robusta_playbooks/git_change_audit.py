@@ -84,7 +84,7 @@ def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditPar
     if event.operation == K8sOperationType.DELETE:
         git_repo.delete_push(path, name, f"Delete {path}/{name}", action_params.cluster_name)
     elif event.operation == K8sOperationType.CREATE:
-        obj_yaml = hikaru.get_yaml(event.obj.spec)  # type: ignore
+        obj_yaml = hikaru.get_yaml(event.obj.spec)
         git_repo.commit_push(
             obj_yaml,
             path,
@@ -95,9 +95,9 @@ def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditPar
     else:  # update
         old_spec = event.old_obj.spec if event.old_obj else None  # type: ignore
         # we have a change in the spec
-        if obj_diff(event.obj.spec, old_spec, action_params.ignored_changes):  # type: ignore
+        if obj_diff(event.obj.spec, old_spec, action_params.ignored_changes):
             git_repo.commit_push(
-                hikaru.get_yaml(event.obj.spec),  # type: ignore
+                hikaru.get_yaml(event.obj.spec),
                 path,
                 name,
                 f"Update {event.obj.kind} named {event.obj.metadata.name} on namespace {namespace}",

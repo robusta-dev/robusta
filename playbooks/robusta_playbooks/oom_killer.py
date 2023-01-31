@@ -1,7 +1,7 @@
 import abc
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import pydantic
 from hikaru.model import Node, Pod, PodList, ResourceRequirements
@@ -92,7 +92,8 @@ def pod_oom_killer_enricher(
         ("Namespace", pod.metadata.namespace),
         ("Node Name", pod.spec.nodeName),
     ]
-    node: Optional[Node] = Node.readNode(pod.spec.nodeName).obj  # type: ignore
+    node_request = Node.readNode(pod.spec.nodeName)
+    node = cast(Optional[Node], node_request.obj)
     if node:
         allocatable_memory = PodResources.parse_mem(node.status.allocatable.get("memory", "0Mi"))
         capacity_memory = PodResources.parse_mem(node.status.capacity.get("memory", "0Mi"))
@@ -214,7 +215,8 @@ class OomKillsExtractor:
         self.oom_kill_reason_investigator = oom_kill_reason_investigator
 
     def extract_oom_kills(self) -> List[OomKill]:
-        results: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={self.node.metadata.name}").obj  # type: ignore
+        pods_request = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={self.node.metadata.name}")
+        results = cast(PodList, pods_request.obj)
 
         oom_kills: List[OomKill] = []
         for pod in results.items:

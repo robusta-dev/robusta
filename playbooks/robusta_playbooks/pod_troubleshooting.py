@@ -74,7 +74,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
         return
 
     processes = pod.get_processes()
-    debugger = RobustaPod.create_debugger_pod(pod.metadata.name, pod.spec.nodeName)  # type: ignore
+    debugger = RobustaPod.create_debugger_pod(pod.metadata.name, pod.spec.nodeName)
 
     try:
         finding = Finding(
@@ -109,7 +109,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
         event.add_finding(finding)
 
     finally:
-        debugger.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)  # type: ignore
+        debugger.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)
 
 
 @action
@@ -198,7 +198,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         return
 
     cmd = f"debug-toolkit memory --seconds={params.seconds} {process.pid}"
-    output = RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd)  # type: ignore
+    output = RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd)
     snapshot = PythonMemorySnapshot(**load_json(output))
 
     blocks = [
@@ -322,22 +322,22 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     cmd = (
         f"debug-toolkit stack-trace {pid} --amount={params.traces_amount} --sleep-duration-s={params.sleep_duration_s}"
     )
-    output = RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd)  # type: ignore
+    output = RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd)
     blocks = []
     try:
         output_json = load_json(output)
         SUCCESS_STATUS = "success"
         first_stack_trace_obj = StackTraceObject(**output_json[0]) if len(output_json) >= 1 else None
-        if len(output_json) == 0 or (len(output_json) == 1 and first_stack_trace_obj.status != SUCCESS_STATUS):  # type: ignore
+        if len(output_json) == 0 or (len(output_json) == 1 and first_stack_trace_obj.status != SUCCESS_STATUS):
             # no stack traces returned or only one with error
             error_message = "Failed to get python stack trace"
             if len(output_json) == 1:
-                error_message += f", debugger error {first_stack_trace_obj.error} at " f"{first_stack_trace_obj.trace}"  # type: ignore
+                error_message += f", debugger error {first_stack_trace_obj.error} at " f"{first_stack_trace_obj.trace}"
             logging.error(error_message)
             blocks.append(MarkdownBlock("Error while getting python stack trace."))
-        elif len(output_json) == 1 and first_stack_trace_obj.status == SUCCESS_STATUS:  # type: ignore
+        elif len(output_json) == 1 and first_stack_trace_obj.status == SUCCESS_STATUS:
             # print single stack trace directly to finding
-            for thread_output in first_stack_trace_obj.trace.split("\n\n"):  # type: ignore
+            for thread_output in first_stack_trace_obj.trace.split("\n\n"):
                 if thread_output.startswith("Current thread"):
                     # this is the thread we are getting the stack trace from, not relevant for debugging
                     continue
@@ -454,7 +454,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         return
 
     cmd = f"debug-toolkit debugger {process.pid} --port {params.port}"
-    output = load_json(RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd))  # type: ignore
+    output = load_json(RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd))
     finding.add_enrichment(
         [
             MarkdownBlock(

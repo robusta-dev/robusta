@@ -55,8 +55,8 @@ class AlertManagerEvent(BaseModel):
 @dataclass
 class PrometheusKubernetesAlert(PodEvent, NodeEvent, DeploymentEvent, JobEvent, DaemonSetEvent, StatefulSetEvent):
     alert: PrometheusAlert = None  # type: ignore
-    alert_name: Optional[str] = None
-    alert_severity: Optional[str] = None
+    alert_name: str = None  # type: ignore
+    alert_severity: str = None  # type: ignore
     label_namespace: Optional[str] = None
     node: Optional[Node] = None
     pod: Optional[RobustaPod] = None
@@ -65,6 +65,7 @@ class PrometheusKubernetesAlert(PodEvent, NodeEvent, DeploymentEvent, JobEvent, 
     daemonset: Optional[DaemonSet] = None
     statefulset: Optional[StatefulSet] = None
 
+    # TODO: In the code we mix usage of getters and direct access to the fields. We should unify this in the future.
     def get_node(self) -> Optional[Node]:
         return self.node
 
@@ -80,6 +81,7 @@ class PrometheusKubernetesAlert(PodEvent, NodeEvent, DeploymentEvent, JobEvent, 
     def get_daemonset(self) -> Optional[DaemonSet]:
         return self.daemonset
 
+    # TODO: In this case we might probably use a property instead of a getter
     def get_title(self) -> str:
         annotations = self.alert.annotations
         if annotations.get("summary"):

@@ -47,6 +47,7 @@ class ExecutionBaseEvent:
     _scheduler: Optional[PlaybooksScheduler] = None
     _context: ExecutionContext = None  # type: ignore
 
+    # TODO: Here it is also possible to use @property decorator to make the code more pythonic
     def set_context(self, context: ExecutionContext):
         self._context = context
 

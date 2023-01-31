@@ -48,7 +48,7 @@ class SlackFeedbackMessagesSender(object):
             return response.read()
 
     def _schedule_message(self, minutes_from_now: int, title: str, other_sections: List[str]):
-        slack_client = WebClient(token=self.slack_api_key)  # type: ignore
+        slack_client = WebClient(token=self.slack_api_key)
 
         schedule_datetime = datetime.datetime.now() + datetime.timedelta(minutes=minutes_from_now)
         schedule_timestamp = schedule_datetime.strftime("%s")

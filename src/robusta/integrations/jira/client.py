@@ -110,7 +110,7 @@ class JiraClient:
         query = " AND ".join(query)
         issues = self.list_issues(query)
 
-        # TODO: fix pyright error, might be a bug
+        # TODO: fix pyright error, might be a bug, as issues is a list
         if issues.get("total", 0) < 1:  # type: ignore
             return False
         return True

@@ -215,34 +215,34 @@ class RobustaSink(SinkBase[RobustaSinkParams]):
 
     @classmethod
     def __to_node_info(cls, node: V1Node) -> Dict:
-        node_info = node.status.node_info.to_dict() if node.status.node_info else {}  # type: ignore
-        node_info["labels"] = node.metadata.labels or {}  # type: ignore
-        node_info["annotations"] = node.metadata.annotations or {}  # type: ignore
-        node_info["addresses"] = [addr.address for addr in node.status.addresses]  # type: ignore
+        node_info = node.status.node_info.to_dict() if node.status.node_info else {}
+        node_info["labels"] = node.metadata.labels or {}
+        node_info["annotations"] = node.metadata.annotations or {}
+        node_info["addresses"] = [addr.address for addr in node.status.addresses]
         return node_info
 
     @classmethod
     def __from_api_server_node(cls, api_server_node: V1Node, pod_requests_list: List[PodResources]) -> NodeInfo:
-        addresses = api_server_node.status.addresses or []  # type: ignore
+        addresses = api_server_node.status.addresses or []
         external_addresses = [address for address in addresses if "externalip" in address.type.lower()]
         external_ip = ",".join([addr.address for addr in external_addresses])
         internal_addresses = [address for address in addresses if "internalip" in address.type.lower()]
         internal_ip = ",".join([addr.address for addr in internal_addresses])
-        node_taints = api_server_node.spec.taints or []  # type: ignore
+        node_taints = api_server_node.spec.taints or []
         taints = ",".join([cls.__to_taint_str(taint) for taint in node_taints])
 
         return NodeInfo(
-            name=api_server_node.metadata.name,  # type: ignore
-            node_creation_time=str(api_server_node.metadata.creation_timestamp),  # type: ignore
+            name=api_server_node.metadata.name,
+            node_creation_time=str(api_server_node.metadata.creation_timestamp),
             internal_ip=internal_ip,
             external_ip=external_ip,
             taints=taints,
-            conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),  # type: ignore
-            memory_capacity=PodResources.parse_mem(api_server_node.status.capacity.get("memory", "0Mi")),  # type: ignore
-            memory_allocatable=PodResources.parse_mem(api_server_node.status.allocatable.get("memory", "0Mi")),  # type: ignore
+            conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),
+            memory_capacity=PodResources.parse_mem(api_server_node.status.capacity.get("memory", "0Mi")),
+            memory_allocatable=PodResources.parse_mem(api_server_node.status.allocatable.get("memory", "0Mi")),
             memory_allocated=sum([req.memory for req in pod_requests_list]),
-            cpu_capacity=PodResources.parse_cpu(api_server_node.status.capacity.get("cpu", "0")),  # type: ignore
-            cpu_allocatable=PodResources.parse_cpu(api_server_node.status.allocatable.get("cpu", "0")),  # type: ignore
+            cpu_capacity=PodResources.parse_cpu(api_server_node.status.capacity.get("cpu", "0")),
+            cpu_allocatable=PodResources.parse_cpu(api_server_node.status.allocatable.get("cpu", "0")),
             cpu_allocated=round(sum([req.cpu for req in pod_requests_list]), 3),
             pods_count=len(pod_requests_list),
             pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
@@ -252,7 +252,7 @@ class RobustaSink(SinkBase[RobustaSinkParams]):
     def __publish_new_nodes(self, current_nodes: V1NodeList, node_requests: Dict[str, List[PodResources]]):
         # convert to map
         curr_nodes: dict[str, Any] = {}
-        for node in current_nodes.items:  # type: ignore
+        for node in current_nodes.items:
             curr_nodes[node.metadata.name] = node
 
         # handle deleted nodes
@@ -266,7 +266,7 @@ class RobustaSink(SinkBase[RobustaSinkParams]):
 
         # new or changed nodes
         for node_name in curr_nodes.keys():
-            updated_node = self.__from_api_server_node(curr_nodes.get(node_name), node_requests[node_name])  # type: ignore
+            updated_node = self.__from_api_server_node(curr_nodes.get(node_name), node_requests[node_name])
             if self.__nodes_cache.get(node_name) != updated_node:  # node not in the cache, or changed
                 updated_nodes.append(updated_node)
                 self.__nodes_cache[node_name] = updated_node

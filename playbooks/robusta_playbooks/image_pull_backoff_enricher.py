@@ -87,7 +87,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
                 {
                     "type": event.type,
                     "reason": event.reason,
-                    "source.component": event.source.component,  # type: ignore
+                    "source.component": event.source.component,
                     "message": event.message,
                 }
                 for event in investigator.pod_events.items
@@ -247,7 +247,7 @@ class ImagePullBackoffInvestigator:
         for config in self.configs:
             err_template = config["err_template"]
             reason = config["reason"]
-            if re.fullmatch(err_template, kubelet_image_pull_error) is not None:  # type: ignore
-                return reason  # type: ignore
+            if re.fullmatch(err_template, kubelet_image_pull_error) is not None:
+                return reason
 
         return ImagePullBackoffReason.Unknown

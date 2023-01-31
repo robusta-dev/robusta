@@ -25,9 +25,9 @@ class KafkaSink(SinkBase[KafkaSinkParams]):
         for enrichment in finding.enrichments:
             self.send_enrichment(
                 enrichment,
-                finding.subject.name,  # type: ignore
+                finding.subject.name,
                 finding.subject.subject_type.value,
-                finding.subject.namespace,  # type: ignore
+                finding.subject.namespace,
             )
 
     def send_enrichment(

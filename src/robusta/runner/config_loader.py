@@ -163,7 +163,7 @@ class ConfigLoader:
                 if runner_config is None:
                     return
 
-                self.registry.set_global_config(runner_config.global_config)  # type: ignore
+                self.registry.set_global_config(runner_config.global_config)
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
                 # It allows to override these, with playbooks loaded afterwards

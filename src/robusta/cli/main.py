@@ -391,7 +391,7 @@ def demo_alert(
     Create a demo alert on AlertManager.
     The alert pod is selected randomly from the pods in the current namespace
     """
-    config.load_kube_config(kube_config)  # type: ignore
+    config.load_kube_config(kube_config)
     if alertmanager_url is None:
         # search cluster alertmanager by known alertmanager labels
         alertmanager_url = AlertManagerDiscovery.find_alert_manager_url()

@@ -81,7 +81,7 @@ class Discovery:
                         extract_total_pods(deployment),
                         extract_ready_pods(deployment),
                     )
-                    for deployment in deployments.items  # type: ignore
+                    for deployment in deployments.items
                 ]
             )
             statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces()
@@ -95,7 +95,7 @@ class Discovery:
                         extract_total_pods(statefulset),
                         extract_ready_pods(statefulset),
                     )
-                    for statefulset in statefulsets.items  # type: ignore
+                    for statefulset in statefulsets.items
                 ]
             )
             daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces()
@@ -109,7 +109,7 @@ class Discovery:
                         extract_total_pods(daemonset),
                         extract_ready_pods(daemonset),
                     )
-                    for daemonset in daemonsets.items  # type: ignore
+                    for daemonset in daemonsets.items
                 ]
             )
             replicasets: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces()
@@ -123,7 +123,7 @@ class Discovery:
                         extract_total_pods(replicaset),
                         extract_ready_pods(replicaset),
                     )
-                    for replicaset in replicasets.items  # type: ignore
+                    for replicaset in replicasets.items
                     if not replicaset.metadata.owner_references
                 ]
             )
@@ -140,7 +140,7 @@ class Discovery:
                         extract_total_pods(pod),
                         extract_ready_pods(pod),
                     )
-                    for pod in pod_items  # type: ignore
+                    for pod in pod_items
                     if not pod.metadata.owner_references and not is_pod_finished(pod)
                 ]
             )
@@ -155,7 +155,7 @@ class Discovery:
         node_requests = defaultdict(list)
         try:
             current_nodes = client.CoreV1Api().list_node()
-            for pod in pod_items:  # type: ignore
+            for pod in pod_items:
                 pod_status = pod.status.phase
                 if pod_status in ["Running", "Unknown", "Pending"] and pod.spec.node_name:
                     node_requests[pod.spec.node_name].append(utils.k8s_pod_requests(pod))
@@ -170,7 +170,7 @@ class Discovery:
         active_jobs: List[JobInfo] = []
         try:
             current_jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces()
-            for job in current_jobs.items:  # type: ignore
+            for job in current_jobs.items:
                 job_pods: List[str] = []
                 job_labels = {}
 
@@ -183,8 +183,8 @@ class Discovery:
 
                 if job_labels:  # add job pods only if we found a valid selector
                     job_pods = [
-                        pod.metadata.name  # type: ignore
-                        for pod in pod_items  # type: ignore
+                        pod.metadata.name
+                        for pod in pod_items
                         if (
                             (job.metadata.namespace == pod.metadata.namespace)
                             and (job_labels.items() <= pod.metadata.labels.items())
@@ -241,9 +241,9 @@ def extract_containers(
     try:
         containers = []
         if isinstance(resource, (V1Deployment, V1DaemonSet, V1StatefulSet, V1Job)):
-            containers = resource.spec.template.spec.containers  # type: ignore
+            containers = resource.spec.template.spec.containers
         elif isinstance(resource, V1Pod):
-            containers = resource.spec.containers  # type: ignore
+            containers = resource.spec.containers
 
         return containers
     except Exception:  # may fail if one of the attributes is None
@@ -252,7 +252,7 @@ def extract_containers(
 
 
 def is_pod_ready(pod: V1Pod) -> bool:
-    for condition in pod.status.conditions:  # type: ignore
+    for condition in pod.status.conditions:
         if condition.type == "Ready":
             return condition.status.lower() == "true"
     return False
@@ -261,7 +261,7 @@ def is_pod_ready(pod: V1Pod) -> bool:
 def is_pod_finished(pod: V1Pod) -> bool:
     try:
         # all containers in the pod have terminated, this pod should be removed by GC
-        return pod.status.phase.lower() in ["succeeded", "failed"]  # type: ignore
+        return pod.status.phase.lower() in ["succeeded", "failed"]
     except AttributeError:  # phase is an optional field
         return False
 
@@ -269,9 +269,9 @@ def is_pod_finished(pod: V1Pod) -> bool:
 def extract_ready_pods(resource) -> int:
     try:
         if isinstance(resource, (V1Deployment, V1StatefulSet, V1Job)):
-            return 0 if not resource.status.ready_replicas else resource.status.ready_replicas  # type: ignore
+            return 0 if not resource.status.ready_replicas else resource.status.ready_replicas
         elif isinstance(resource, V1DaemonSet):
-            return 0 if not resource.status.number_ready else resource.status.number_ready  # type: ignore
+            return 0 if not resource.status.number_ready else resource.status.number_ready
         elif isinstance(resource, V1Pod):
             return 1 if is_pod_ready(resource) else 0
         return 0
@@ -283,9 +283,9 @@ def extract_ready_pods(resource) -> int:
 def extract_total_pods(resource) -> int:
     try:
         if isinstance(resource, (V1Deployment, V1StatefulSet, V1Job)):
-            return 1 if not resource.status.replicas else resource.status.replicas  # type: ignore
+            return 1 if not resource.status.replicas else resource.status.replicas
         elif isinstance(resource, V1DaemonSet):
-            return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled  # type: ignore
+            return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
         elif isinstance(resource, V1Pod):
             return 1
         return 0
@@ -299,9 +299,9 @@ def extract_volumes(resource) -> List[V1Volume]:
     try:
         volumes = []
         if isinstance(resource, (V1Deployment, V1DaemonSet, V1StatefulSet, V1Job)):
-            volumes = resource.spec.template.spec.volumes  # type: ignore
+            volumes = resource.spec.template.spec.volumes
         elif isinstance(resource, V1Pod):
-            volumes = resource.spec.volumes  # type: ignore
+            volumes = resource.spec.volumes
         return volumes or []
     except Exception:  # may fail if one of the attributes is None
         logging.error(f"Failed to extract volumes from {resource}", exc_info=True)

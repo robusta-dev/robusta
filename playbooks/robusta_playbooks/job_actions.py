@@ -1,11 +1,10 @@
 import logging
 from typing import List, Tuple
 
-from hikaru.model import Container, Job, JobSpec, JobStatus, ObjectMeta, PodSpec, PodTemplateSpec
+from hikaru.model import Container, EnvVar, Job, JobSpec, JobStatus, ObjectMeta, PodSpec, PodTemplateSpec
 
 from robusta.api import (
     ActionParams,
-    EnvVar,
     EventEnricherParams,
     FileBlock,
     JobEvent,
@@ -82,7 +81,7 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
                             name=params.name,
                             image=params.image,
                             command=params.command,
-                            env=__get_alert_env_vars(event),  # type: ignore
+                            env=__get_alert_env_vars(event),
                         )
                     ],
                     serviceAccountName=params.service_account,
@@ -247,6 +246,6 @@ def __job_status_str(job_status: JobStatus) -> Tuple[str, str]:
 
     for condition in job_status.conditions:
         if condition.status == "True":
-            return condition.type, condition.message  # type: ignore
+            return condition.type, condition.message
 
     return "Unknown", ""

@@ -148,7 +148,7 @@ class DiscordSender:
 
     def __to_discord(self, block: BaseBlock, sink_name: str) -> Sequence[Union[DiscordBlock, Tuple]]:
         if isinstance(block, MarkdownBlock):
-            if not block.text:  # type: ignore
+            if not block.text:
                 return []
             name, value = self.__extract_markdown_name(block)
             return [

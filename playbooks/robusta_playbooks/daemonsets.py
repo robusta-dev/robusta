@@ -139,7 +139,7 @@ def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
         logging.info("daemonset is configured properly, so we don't have the known mismatch false alarm")
         return False
 
-    nodes_by_name: Dict[str, Node] = {n.metadata.name: n for n in NodeList.listNode().obj.items}  # type: ignore
+    nodes_by_name: Dict[str, Node] = {n.metadata.name: n for n in NodeList.listNode().obj.items}
     ds_pods = RobustaPod.find_pods_with_direct_owner(ds.metadata.namespace, ds.metadata.uid)
 
     # look for at least one node where the false alarm is present

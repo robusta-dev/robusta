@@ -33,7 +33,7 @@ def exec_in_robusta_runner(
 
     if dry_run:
         # TODO: fix shlex.join for python 3.7 ?
-        typer.echo(f"Run the following command:\n {shlex.join(exec_cmd)}")  # type: ignore
+        typer.echo(f"Run the following command:\n {shlex.join(exec_cmd)}")
         return
 
     typer.echo(f"running cmd: {cmd}")

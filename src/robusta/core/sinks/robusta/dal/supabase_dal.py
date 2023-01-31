@@ -42,7 +42,7 @@ class RobustaClient(Client):
         auth = getattr(self, "auth", None)
         session = auth.current_session if auth else None
         if session and session["access_token"]:
-            access_token = auth.session()["access_token"]  # type: ignore
+            access_token = auth.session()["access_token"]
         else:
             access_token = self.supabase_key
 
@@ -101,7 +101,7 @@ class SupabaseDal:
         for enrichment in finding.enrichments:
             res = (
                 self.client.table(EVIDENCE_TABLE)
-                .insert(  # type: ignore
+                .insert(
                     ModelConversion.to_evidence_json(
                         account_id=self.account_id,
                         cluster_id=self.cluster,
@@ -120,7 +120,7 @@ class SupabaseDal:
 
         res = (
             self.client.table(ISSUES_TABLE)
-            .insert(ModelConversion.to_finding_json(self.account_id, self.cluster, finding))  # type: ignore
+            .insert(ModelConversion.to_finding_json(self.account_id, self.cluster, finding))
             .execute()
         )
         if res.get("status_code") != 201:
@@ -147,7 +147,7 @@ class SupabaseDal:
         if not services:
             return
         db_services = [self.to_service(service) for service in services]
-        res = self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()  # type: ignore
+        res = self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist services {services} error: {res.get('data')}")
             self.handle_supabase_error()
@@ -157,7 +157,7 @@ class SupabaseDal:
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
             self.client.table(SERVICES_TABLE)
-            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods")  # type: ignore
+            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -185,7 +185,7 @@ class SupabaseDal:
     def has_cluster_findings(self) -> bool:
         res = (
             self.client.table(ISSUES_TABLE)
-            .select("*")  # type: ignore
+            .select("*")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .limit(1)
@@ -202,7 +202,7 @@ class SupabaseDal:
     def get_active_nodes(self) -> List[NodeInfo]:
         res = (
             self.client.table(NODES_TABLE)
-            .select("*")  # type: ignore
+            .select("*")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster_id", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -247,7 +247,7 @@ class SupabaseDal:
             return
 
         db_nodes = [self.__to_db_node(node) for node in nodes]
-        res = self.client.table(NODES_TABLE).insert(db_nodes, upsert=True).execute()  # type: ignore
+        res = self.client.table(NODES_TABLE).insert(db_nodes, upsert=True).execute()
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist node {nodes} error: {res.get('data')}")
             self.handle_supabase_error()
@@ -257,7 +257,7 @@ class SupabaseDal:
     def get_active_jobs(self) -> List[JobInfo]:
         res = (
             self.client.table(JOBS_TABLE)
-            .select("*")  # type: ignore
+            .select("*")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster_id", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -284,7 +284,7 @@ class SupabaseDal:
             return
 
         db_jobs = [self.__to_db_job(job) for job in jobs]
-        res = self.client.table(JOBS_TABLE).insert(db_jobs, upsert=True).execute()  # type: ignore
+        res = self.client.table(JOBS_TABLE).insert(db_jobs, upsert=True).execute()
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist jobs {jobs} error: {res.get('data')}")
             self.handle_supabase_error()
@@ -297,7 +297,7 @@ class SupabaseDal:
 
         res = self.__delete_patch(
             self.client.table(JOBS_TABLE)
-            .delete()  # type: ignore
+            .delete()
             .eq("account_id", self.account_id)
             .eq("cluster_id", self.cluster)
             .eq("service_key", job.get_service_key())
@@ -365,7 +365,7 @@ class SupabaseDal:
     def publish_cluster_status(self, cluster_status: ClusterStatus):
         res = (
             self.client.table(CLUSTERS_STATUS_TABLE)
-            .insert(self.to_db_cluster_status(cluster_status), upsert=True)  # type: ignore
+            .insert(self.to_db_cluster_status(cluster_status), upsert=True)
             .execute()
         )
         if res.get("status_code") not in [200, 201]:
@@ -375,7 +375,7 @@ class SupabaseDal:
     def get_active_namespaces(self) -> List[NamespaceInfo]:
         res = (
             self.client.table(NAMESPACES_TABLE)
-            .select("*")  # type: ignore
+            .select("*")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster_id", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -401,7 +401,7 @@ class SupabaseDal:
             return
 
         db_namespaces = [self.__to_db_namespace(namespace) for namespace in namespaces]
-        res = self.client.table(NAMESPACES_TABLE).insert(db_namespaces, upsert=True).execute()  # type: ignore
+        res = self.client.table(NAMESPACES_TABLE).insert(db_namespaces, upsert=True).execute()
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist namespaces {namespaces} error: {res.get('data')}")
             self.handle_supabase_error()

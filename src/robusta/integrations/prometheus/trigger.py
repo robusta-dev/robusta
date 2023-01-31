@@ -125,8 +125,8 @@ class AlertEventBuilder:
         execution_event = PrometheusKubernetesAlert(
             sink_findings=sink_findings,
             alert=event.alert,
-            alert_name=labels["alertname"],
-            alert_severity=labels.get("severity"),
+            alert_name=labels.get("alertname", "UnknownAlert"),
+            alert_severity=labels.get("severity", "critical"),
             label_namespace=labels.get("namespace", None),
         )
 
@@ -152,7 +152,7 @@ class AlertEventBuilder:
 
         node_name = labels.get("node")
         if node_name:
-            execution_event.node = AlertEventBuilder.__load_node(execution_event.alert, node_name)  # type: ignore
+            execution_event.node = AlertEventBuilder.__load_node(execution_event.alert, node_name)
 
         # we handle nodes differently than other resources
         node_name = labels.get("instance", None)
@@ -160,7 +160,7 @@ class AlertEventBuilder:
         # when the job_name is kube-state-metrics "instance" refers to the IP of kube-state-metrics not the node
         # If the alert has pod, the 'instance' attribute contains the pod ip
         if not execution_event.node and node_name and job_name != "kube-state-metrics":
-            execution_event.node = AlertEventBuilder.__load_node(execution_event.alert, node_name)  # type: ignore
+            execution_event.node = AlertEventBuilder.__load_node(execution_event.alert, node_name)
 
         return execution_event
 

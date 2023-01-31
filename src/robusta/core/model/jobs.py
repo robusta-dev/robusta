@@ -62,7 +62,7 @@ class JobStatus(BaseModel):
     @staticmethod
     def _extract_failed_time(job_status: V1JobStatus) -> Optional[datetime]:
         try:
-            for condition in job_status.conditions:  # type: ignore
+            for condition in job_status.conditions:
                 if condition.status.lower() == "true" and condition.type == "Failed":
                     return condition.last_transition_time
         except (
@@ -153,11 +153,11 @@ class JobInfo(BaseModel):
 
     @staticmethod
     def from_api_server(job: V1Job, pods: List[str]) -> "JobInfo":
-        containers = job.spec.template.spec.containers  # type: ignore
+        containers = job.spec.template.spec.containers
         requests: ContainerResources = utils.containers_resources_sum(containers, ResourceAttributes.requests)
         status = JobStatus.from_api_server(job)
         job_data = JobData.from_api_server(job, pods)
-        completions = job.spec.completions if job.spec.completions is not None else 1  # type: ignore
+        completions = job.spec.completions if job.spec.completions is not None else 1
         return JobInfo(
             name=str(job.metadata.name),
             namespace=str(job.metadata.namespace),

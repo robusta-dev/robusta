@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, List
+from typing import Dict, List, cast
 
 import humanize
 from hikaru.model import EnvVar, EnvVarSource, ObjectFieldSelector, Pod, PodList
@@ -33,7 +33,8 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
     blocks: List[BaseBlock] = []
 
     # map pod names and namespaces by pod uid, and container names by container id
-    node_pods: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj  # type: ignore
+    node_pods_request = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}")
+    node_pods = cast(PodList, node_pods_request.obj)
 
     pod_uid_to_name: Dict[str, str] = {}
     pod_uid_to_namespace: Dict[str, str] = {}
