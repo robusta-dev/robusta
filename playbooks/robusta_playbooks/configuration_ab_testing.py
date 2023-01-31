@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from robusta.api import (
     ActionParams,
@@ -73,8 +73,9 @@ def config_ab_testing(event: ScheduledExecutionEvent, action_params: ABTestingPa
 
     next_config_set = action_params.configuration_sets[event.recurrence]
 
-    # TODO: Function should be specified as returning non-optional
-    api_version = get_api_version(action_params.api_version)
+    # TODO: Function should be specified as returning non-optional in auto-generated code,
+    # as it does not actually return None
+    api_version: Dict[str, Any] = get_api_version(action_params.api_version)  # type: ignore
     object_class = api_version.get(action_params.kind)
     if object_class is None:
         logging.error(f"No matching tested kind {action_params.kind}")

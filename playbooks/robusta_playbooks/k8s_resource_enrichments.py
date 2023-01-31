@@ -27,7 +27,6 @@ supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "Stateful
 def to_pod_row(pod: Pod, cluster_name: str) -> List:
     resource_requests = pod_requests(pod)
     resource_limits = pod_limits(pod)
-
     addresses = ",".join([str(address.ip) for address in pod.status.podIPs])
     return [
         pod.metadata.name,
@@ -55,7 +54,6 @@ def related_pods(event: KubernetesResourceEvent):
     Supports Deployments, ReplicaSets, DaemonSets, StatefulSets and Pods
     """
     resource = event.get_resource()
-
     if resource.kind not in supported_resources:
         raise ActionException(
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}"

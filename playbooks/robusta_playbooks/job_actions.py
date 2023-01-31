@@ -197,25 +197,27 @@ def job_info_enricher(event: JobEvent):
         logging.error(f"cannot run job_info_enricher on alert with no job object: {event}")
         return
 
-    end_time = job.status.completionTime if job.status.completionTime else "None"
-    succeeded = job.status.succeeded if job.status.succeeded else 0
-    failed = job.status.failed if job.status.failed else 0
-    status, message = __job_status_str(job.status)
+    job_status: JobStatus = job.status
+    job_spec: JobSpec = job.spec
+
+    end_time = job_status.completionTime if job_status.completionTime else "None"
+    succeeded = job_status.succeeded if job_status.succeeded else 0
+    failed = job_status.failed if job_status.failed else 0
+    status, message = __job_status_str(job_status)
     job_rows: List[List[str]] = [["status", status]]
     if message:
         job_rows.append(["message", message])
 
     job_rows.extend(
         [
-            ["completions", f"{succeeded}/{job.spec.completions}"],
+            ["completions", f"{succeeded}/{job_spec.completions}"],
             ["failures", f"{failed}"],
-            ["backoffLimit", f"{job.spec.backoffLimit}"],
-            ["duration", f"{job.status.startTime} - {end_time}"],
+            ["backoffLimit", f"{job_spec.backoffLimit}"],
+            ["duration", f"{job_status.startTime} - {end_time}"],
             ["containers", "------------------"],
         ]
     )
-
-    containers = job.spec.template.spec.initContainers + job.spec.template.spec.containers
+    containers = job_spec.template.spec.initContainers + job_spec.template.spec.containers
     for container in containers:
         container_requests = PodContainer.get_requests(container)
         container_limits = PodContainer.get_limits(container)

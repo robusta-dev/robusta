@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, cast
 
 import requests
 from pydantic import SecretStr
@@ -15,6 +15,7 @@ from robusta.api import (
     FindingType,
     K8sOperationType,
     MarkdownBlock,
+    RobustaDeployment,
     action,
     is_matching_diff,
 )
@@ -95,16 +96,18 @@ def deployment_status_report(event: DeploymentChangeEvent, action_params: Report
 
     Make sure to set 'grafanaRenderer.enableContainer' to 'true' in the values yaml to use this action.
     """
-    if event.operation == K8sOperationType.DELETE or event.obj is None:
+    if event.operation == K8sOperationType.DELETE:
         return
+
+    # Should not be None as we already checked for DELETE
+    event.obj = cast(RobustaDeployment, event.obj)
 
     if event.operation == K8sOperationType.UPDATE:
         if not has_matching_diff(event, action_params.fields_to_monitor):
             return
 
     logging.info(f"Scheduling rendering report. deployment: {event.obj.metadata.name} delays: {action_params.delays}")
-    scheduler = event.get_scheduler()
-    scheduler.schedule_action(
+    event.get_scheduler().schedule_action(
         action_func=report_rendering_task,
         task_id=f"deployment_status_report_{event.obj.metadata.name}_{event.obj.metadata.namespace}",
         scheduling_params=DynamicDelayRepeat(delay_periods=action_params.delays),
