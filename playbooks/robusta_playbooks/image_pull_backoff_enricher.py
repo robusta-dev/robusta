@@ -23,7 +23,6 @@ from robusta.api import (
 
 
 def get_image_pull_backoff_container_statuses(status: PodStatus) -> List[ContainerStatus]:
-    assert status.containerStatuses is not None
     return [
         container_status
         for container_status in status.containerStatuses
@@ -48,23 +47,15 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
     if pod is None:
         return
 
-    assert pod.status is not None
-
     # Check if image pull backoffs occurred. Terminate if not
     image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(pod.status)
     if len(image_pull_backoff_container_statuses) == 0:
         return
 
-    assert pod.metadata is not None
-
     # Extract pod name and namespace
     pod_name = pod.metadata.name
     replicaset_name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name
     namespace = pod.metadata.namespace
-
-    assert pod_name is not None
-    assert namespace is not None
-    assert replicaset_name is not None
 
     # Perform a rate limit for this pod according to the rate_limit parameter
     if not RateLimiter.mark_and_test(
@@ -238,7 +229,6 @@ class ImagePullBackoffInvestigator:
         if pod_event.reason != "Failed":
             return None
 
-        assert pod_event.source is not None
         if pod_event.source.component != "kubelet":
             return None
 
@@ -247,7 +237,6 @@ class ImagePullBackoffInvestigator:
             f'Failed to pull image "{image_name}": rpc error: code = NotFound desc = ',
         ]
 
-        assert pod_event.message is not None
         for prefix in prefixes:
             if pod_event.message.startswith(prefix):
                 return pod_event.message[len(prefix) :]

@@ -44,7 +44,6 @@ def volume_analysis(event: PersistentVolumeEvent):
         logging.error(f"VolumeAnalysis was called on event without Persistent Volume: {event}")
         return
 
-    assert pv.spec is not None
     # Get persistent volume data the object contains data related to PV like metadata etc
     pv_claimref = pv.spec.claimRef
     reader_pod = None
@@ -63,12 +62,8 @@ def volume_analysis(event: PersistentVolumeEvent):
 
                 volume_mount_name = None
 
-                assert pod.spec is not None
-                assert pod.spec.volumes is not None
-
                 # Find name of the mounted volume on pod
                 for volume in pod.spec.volumes:
-                    assert volume.persistentVolumeClaim is not None
                     if volume.persistentVolumeClaim.claimName == pv_claimref.name:
                         volume_mount_name = volume.name
                         break
@@ -80,14 +75,12 @@ def volume_analysis(event: PersistentVolumeEvent):
                     if container_found_flag:
                         break
 
-                    assert container.volumeMounts is not None
                     for volume_mount in container.volumeMounts:
                         if volume_mount_name == volume_mount.name:
                             container_volume_mount = volume_mount
                             container_found_flag = True
                             break
 
-                assert pv.metadata is not None
                 result = pod.exec(f"ls -R {container_volume_mount.mountPath}/")  # type: ignore
                 finding.title = f"Files present on persistent volume {pv.metadata.name} are: "
                 finding.add_enrichment(
@@ -101,7 +94,6 @@ def volume_analysis(event: PersistentVolumeEvent):
                 reader_pod = persistent_volume_reader(persistent_volume=pv)
                 result = reader_pod.exec(f"ls -R {reader_pod.spec.containers[0].volumeMounts[0].mountPath}")  # type: ignore
 
-                assert pv.metadata is not None
                 finding.title = f"Files present on persistent volume {pv.metadata.name} are: "
                 finding.add_enrichment(
                     [
@@ -109,7 +101,6 @@ def volume_analysis(event: PersistentVolumeEvent):
                     ]
                 )
         else:
-            assert pv.metadata is not None
             finding.add_enrichment(
                 [
                     MarkdownBlock(f"Persistent volume named {pv.metadata.name} have no persistent volume claim."),
@@ -171,8 +162,6 @@ def get_pod_related_to_pvc(pvc_obj, pv_obj):
     pod_list = cast(PodList, PodList.listNamespacedPod(pvc_obj.metadata.namespace).obj)
     pod = None
     for pod in pod_list.items:
-        assert pod.spec is not None
-        assert pod.spec.volumes is not None
         for volume in pod.spec.volumes:
             if volume.persistentVolumeClaim:
                 if volume.persistentVolumeClaim.claimName == pv_obj.spec.claimRef.name:

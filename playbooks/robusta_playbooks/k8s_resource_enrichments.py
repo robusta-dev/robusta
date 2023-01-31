@@ -28,10 +28,6 @@ def to_pod_row(pod: Pod, cluster_name: str) -> List:
     resource_requests = pod_requests(pod)
     resource_limits = pod_limits(pod)
 
-    assert pod.status is not None
-    assert pod.status.podIPs is not None
-    assert pod.metadata is not None
-    assert pod.spec is not None
     addresses = ",".join([str(address.ip) for address in pod.status.podIPs])
     return [
         pod.metadata.name,
@@ -59,7 +55,7 @@ def related_pods(event: KubernetesResourceEvent):
     Supports Deployments, ReplicaSets, DaemonSets, StatefulSets and Pods
     """
     resource = event.get_resource()
-    assert resource is not None
+
     if resource.kind not in supported_resources:
         raise ActionException(
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}"
@@ -111,8 +107,6 @@ def get_resource_yaml(event: KubernetesResourceEvent):
     if not resource:
         logging.error("resource not found...")
         return
-
-    assert resource.metadata is not None
 
     resource_kind = cast(str, resource.kind)
     namespace = cast(str, resource.metadata.namespace)

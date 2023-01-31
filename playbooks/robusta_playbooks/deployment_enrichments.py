@@ -17,9 +17,6 @@ def deployment_status_enricher(event: DeploymentEvent):
         logging.error(f"cannot run deployment_status_enricher on event with no deployment: {event}")
         return
 
-    assert deployment.status is not None
-    assert deployment.status.conditions is not None
-
     block_list: List[BaseBlock] = []
     block_list.append(MarkdownBlock("*Deployment status details:*"))
     for condition in deployment.status.conditions:

@@ -56,7 +56,6 @@ def wait_until_job_complete(job: Job, timeout):
     """
 
     def is_job_complete(j: Job) -> bool:
-        assert j.status is not None
         return j.status.completionTime is not None or j.status.failed is not None
 
     return wait_until(

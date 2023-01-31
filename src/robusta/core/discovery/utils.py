@@ -11,8 +11,6 @@ def k8s_pod_requests(pod: V1Pod) -> PodResources:
 
 
 def __pod_resources(pod: V1Pod, resource_attribute: ResourceAttributes) -> PodResources:
-    assert pod.spec is not None
-    assert pod.metadata is not None
     containers_resources = containers_resources_sum(pod.spec.containers, resource_attribute)
     return PodResources(
         pod_name=str(pod.metadata.name),
@@ -38,7 +36,6 @@ def container_resources(container: V1Container, resource_attribute: ResourceAttr
     container_cpu: float = 0.0
     container_mem: int = 0
 
-    assert container.resources is not None
     resources: V1ResourceRequirements = container.resources
     if resources:
         resource_spec = getattr(resources, resource_attribute.name) or {}  # requests or limits

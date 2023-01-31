@@ -110,7 +110,6 @@ def daemonset_status_enricher(event: DaemonSetEvent):
         logging.error(f"cannot run DaemonsetEnricher on event with no daemonset: {event}")
         return
 
-    assert ds.metadata is not None
     event.add_enrichment(
         [
             MarkdownBlock(f"*Daemonset Stats for {ds.metadata.name}*"),
@@ -140,15 +139,11 @@ def check_for_known_mismatch_false_alarm(ds: DaemonSet) -> bool:
         logging.info("daemonset is configured properly, so we don't have the known mismatch false alarm")
         return False
 
-    assert ds.metadata is not None
-    assert ds.metadata.namespace is not None
-    assert ds.metadata.uid is not None
     nodes_by_name: Dict[str, Node] = {n.metadata.name: n for n in NodeList.listNode().obj.items}  # type: ignore
     ds_pods = RobustaPod.find_pods_with_direct_owner(ds.metadata.namespace, ds.metadata.uid)
 
     # look for at least one node where the false alarm is present
     for pod in ds_pods:
-        assert pod.spec is not None
         if pod.spec.nodeName not in nodes_by_name:
             # we probably have a node that was created between the time we fetched the nodes and the time we fetched
             # the pods

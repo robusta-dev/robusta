@@ -48,11 +48,8 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
         if not isinstance(exec_event, PodChangeEvent):
             return False
 
+        # TODO: Can pod be None?
         pod = exec_event.get_pod()
-        assert pod is not None
-        assert pod.status is not None
-        assert pod.status.containerStatuses is not None
-        assert pod.status.initContainerStatuses is not None
 
         all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
         crashing = [
@@ -65,8 +62,6 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
 
         if not crashing:
             return False
-
-        assert pod.metadata is not None
 
         # Perform a rate limit for this pod according to the rate_limit parameter
         name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name

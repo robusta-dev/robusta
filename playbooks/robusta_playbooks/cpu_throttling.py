@@ -15,8 +15,6 @@ def cpu_throttling_analysis_enricher(event: PodEvent):
         logging.error(f"cannot run CPUThrottlingAnalysis on event with no pod: {event}")
         return
 
-    assert pod.metadata is not None
-    assert pod.metadata.name is not None
     if pod.metadata.name.startswith("metrics-server-") and pod.has_toleration(
         "components.gke.io/gke-managed-components"
     ):

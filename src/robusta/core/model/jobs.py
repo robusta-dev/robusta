@@ -98,8 +98,6 @@ class JobData(BaseModel):
         pod_containers: List[JobContainer] = [
             JobContainer.from_api_server(container) for container in pod_spec.containers  # type: ignore
         ]
-        assert job_spec.backoff_limit is not None
-        assert job.metadata is not None
         return JobData(
             backoff_limit=job_spec.backoff_limit,
             tolerations=[toleration.to_dict() for toleration in (pod_spec.tolerations or [])],
@@ -162,7 +160,6 @@ class JobInfo(BaseModel):
         status = JobStatus.from_api_server(job)
         job_data = JobData.from_api_server(job, pods)
         completions = job.spec.completions if job.spec.completions is not None else 1  # type: ignore
-        assert job.metadata is not None
         return JobInfo(
             name=str(job.metadata.name),
             namespace=str(job.metadata.namespace),

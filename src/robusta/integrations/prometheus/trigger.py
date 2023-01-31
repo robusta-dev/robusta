@@ -98,10 +98,6 @@ class AlertEventBuilder:
     def __find_node_by_ip(cls, ip) -> Optional[Node]:
         nodes = cast(NodeList, NodeList.listNode().obj)
         for node in nodes.items:
-            assert node.status is not None
-            assert node.status.addresses is not None
-            assert node.metadata is not None
-
             addresses = [a.address for a in node.status.addresses]
             logging.info(f"node {node.metadata.name} has addresses {addresses}")
             if ip in addresses:

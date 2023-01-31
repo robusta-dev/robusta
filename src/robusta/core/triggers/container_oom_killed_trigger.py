@@ -23,12 +23,6 @@ class ContainerOOMKilledTrigger(OOMKilledTriggerBase):
         )
 
     def get_relevant_oomkilled_container_statuses(self, pod: Pod) -> List[ContainerStatus]:
-        assert pod.status is not None
-        assert pod.status.containerStatuses is not None
-        assert pod.status.initContainerStatuses is not None
-        assert pod.metadata is not None
-        assert pod.metadata.namespace is not None
-
         statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
         return [
             status for status in statuses if not self.is_name_namespace_excluded(status.name, pod.metadata.namespace)

@@ -148,7 +148,6 @@ def gen_token(
     server_enc_key = uuid.UUID(int=(signing_key_uuid.int ^ client_enc_key.int))
     key_id = str(uuid.uuid4())
 
-    assert auth_config.pub is not None
     token_response = TokenDetails(
         pub=auth_config.pub,
         account_id=account_id,

@@ -93,8 +93,8 @@ class K8sBaseTrigger(BaseTrigger):
 
     @classmethod
     def __parse_kubernetes_objs(cls, k8s_payload: IncomingK8sEventPayload):
+        # TODO: should get_api_version return not Optional?
         api_version = get_api_version(k8s_payload.apiVersion)
-        assert api_version is not None
         model_class = api_version.get(k8s_payload.kind)
         if model_class is None:
             msg = (

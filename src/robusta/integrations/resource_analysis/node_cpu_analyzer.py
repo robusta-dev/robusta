@@ -16,14 +16,10 @@ class NodeCpuAnalyzer:
         self.node = node
         self.range_size = range_size
 
-        assert self.node.status is not None
-        assert self.node.status.addresses is not None
-
         self.internal_ip = next(addr.address for addr in self.node.status.addresses if addr.type == "InternalIP")
         if prometheus_url is None:
+            # TODO: what if we can't find the prometheus url?
             prometheus_url = PrometheusDiscovery.find_prometheus_url()
-
-        assert prometheus_url is not None
 
         self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
         self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
@@ -34,7 +30,6 @@ class NodeCpuAnalyzer:
         Gets the total cpu usage for the node, including both containers and everything running on the host directly
         :return: a float between 0 and 1 representing the percentage of total cpus used
         """
-        assert self.node.metadata is not None
 
         if other_method:
             return self._query(
@@ -74,7 +69,6 @@ class NodeCpuAnalyzer:
         return pod_to_cpu
 
     def get_per_pod_cpu_request(self):
-        assert self.node.metadata is not None
         query = f'sum by (pod)(kube_pod_container_resource_requests_cpu_cores{{node="{self.node.metadata.name}"}})'
         result = self.prom.custom_query(query, params=self.default_prometheus_params)
         return dict((r["metric"]["pod"], float(r["value"][1])) for r in result)
@@ -91,8 +85,6 @@ class NodeCpuAnalyzer:
             grouping = ""
         else:
             grouping = "by (pod)"
-
-        assert self.node.metadata is not None
 
         if normalized_by_cpu_count:
             # we divide by the number of machine_cpu_cores to return a result in th 0-1 range regardless of cpu count

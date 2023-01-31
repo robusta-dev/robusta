@@ -22,7 +22,7 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
     """
 
     rate_limit: int = 0
-    exclude: Optional[List[Exclude]] = None
+    exclude: List[Exclude] = None  # type: ignore
 
     def __init__(
         self,
@@ -54,9 +54,8 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
         if not isinstance(exec_event, PodChangeEvent):
             return False
 
+        # TODO: Can pod be None?
         pod = exec_event.get_pod()
-        assert pod is not None
-
         container_statuses = self.get_relevant_oomkilled_container_statuses(pod)
 
         if len(container_statuses) == 0:
@@ -69,12 +68,9 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
         if not oom_killed or not oom_killed.state:
             return False
 
-        assert pod.metadata is not None
         # Perform a rate limit for this pod according to the rate_limit parameter
         name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name
         namespace = pod.metadata.namespace
-        assert name is not None
-        assert namespace is not None
 
         return RateLimiter.mark_and_test(
             f"{self.__class__.__name__}_{playbook_id}",
@@ -83,12 +79,7 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
         )
 
     def is_name_namespace_excluded(self, name: str, namespace: str) -> bool:
-        assert self.exclude is not None
-
         for selector in self.exclude:
-            assert selector.name is not None
-            assert selector.namespace is not None
-
             namespace_excluded = self.__is_excluded(selector.namespace, namespace, False)
             name_excluded = self.__is_excluded(selector.name, name, True)
             # match

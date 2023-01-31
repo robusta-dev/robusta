@@ -23,7 +23,7 @@ class MemoryAnalyzer(PrometheusAnalyzer):
 
     def get_container_max_memory_usage_in_bytes(
         self, node_name: str, pod_name: str, container_name: str, duration: timedelta
-    ) -> float:
+    ) -> Optional[float]:
         """
         Returns the maximal memory usage (in bytes) for the given container, in the time range between now and now - duration.r
         """
@@ -60,7 +60,6 @@ class MemoryAnalyzer(PrometheusAnalyzer):
             f'container!="POD", container="{container_name}", id=~"/kubepods/.*"}}',
             duration,
         )
-        assert result is not None
         return result
 
     def _get_max_value_in_first_series_of_query(self, promql_query: str, duration: timedelta) -> Optional[float]:

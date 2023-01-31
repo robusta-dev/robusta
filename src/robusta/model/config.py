@@ -115,8 +115,7 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
                     logging.error(msg)
                     raise Exception(msg)
                 action.set_func_hash(get_function_hash(action_def.func))
-                if action_def.params_type:  # action has params
-                    assert action.action_params is not None
+                if action_def.params_type is not None and action.action_params is not None:  # action has params
                     action.action_params = merge_global_params(global_config, action.action_params)
                     if getattr(action_def.params_type, "pre_deploy_func", None):
                         for trigger in playbook_def.triggers:

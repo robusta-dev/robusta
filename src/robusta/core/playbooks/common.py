@@ -8,11 +8,9 @@ from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_da
 
 
 def filter_event(ev: Event, name_substring_filter: str, included_types: Optional[List[str]]) -> bool:
-    assert ev.involvedObject.name is not None
     if name_substring_filter is not None and name_substring_filter not in ev.involvedObject.name:
         return False
 
-    assert ev.type is not None
     if included_types is not None and ev.type.lower() not in [t.lower() for t in included_types]:
         return False
 

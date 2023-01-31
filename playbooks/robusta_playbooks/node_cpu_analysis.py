@@ -25,11 +25,10 @@ def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
     Collect information about pods running on this node, their CPU request configuration, their actual cpu usage etc.
     Provides insightful information regarding node high CPU usage.
     """
-    if not event.get_node():
+    node = event.get_node()
+    if not node:
         logging.error(f"NodeCPUEnricher was called on event without node: {event}")
         return
-    node = event.get_node()
-    assert node is not None
 
     analyzer = NodeCpuAnalyzer(node, params.prometheus_url)
 
@@ -42,7 +41,6 @@ def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
     per_pod_request = analyzer.get_per_pod_cpu_request()
     all_pod_names = list(set(per_pod_usage_unbounded.keys()).union(per_pod_request.keys()))
 
-    assert node.metadata is not None
     treemap = pygal.Treemap(style=charts_style())
     treemap.title = f"CPU Usage on Node {node.metadata.name}"
     treemap.value_formatter = lambda x: f"{int(x * 100)}%"

@@ -184,7 +184,6 @@ class RobustaSink(SinkBase[RobustaSinkParams]):
             self.__assert_namespaces_cache_initialized()
             self.__publish_new_namespaces(results.namespaces)
 
-            assert self.__jobs_cache is not None
             # save the cached services for the resolver.
             RobustaSink.__save_resolver_resources(
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
@@ -277,7 +276,6 @@ class RobustaSink(SinkBase[RobustaSinkParams]):
     def __safe_delete_job(self, job_key):
         try:
             # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
-            assert self.__jobs_cache is not None
             self.__jobs_cache[job_key].deleted = True
             self.dal.remove_deleted_job(self.__jobs_cache[job_key])
             del self.__jobs_cache[job_key]
@@ -289,8 +287,6 @@ class RobustaSink(SinkBase[RobustaSinkParams]):
         curr_jobs = {}
         for job in active_jobs:
             curr_jobs[job.get_service_key()] = job
-
-        assert self.__jobs_cache is not None
 
         # handle deleted jobs
         cache_keys = list(self.__jobs_cache.keys())

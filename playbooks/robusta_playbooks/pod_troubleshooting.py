@@ -73,7 +73,6 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
         logging.info(f"python_profiler - pod not found for event: {event}")
         return
 
-    assert pod.metadata is not None
     processes = pod.get_processes()
     debugger = RobustaPod.create_debugger_pod(pod.metadata.name, pod.spec.nodeName)  # type: ignore
 
@@ -123,7 +122,6 @@ def pod_ps(event: PodEvent):
         logging.info(f"pod_ps - pod not found for event: {event}")
         return
 
-    assert pod.metadata is not None
     logging.info(f"getting info for: {pod.metadata.name}")
 
     processes = pod.get_processes()
@@ -185,7 +183,6 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         logging.info(f"python_memory - pod not found for event: {event}")
         return
 
-    assert pod.metadata is not None
     finding = Finding(
         title=f"Memory allocations for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
@@ -382,7 +379,6 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         logging.info(f"advanced_debugging_options - pod not found for event: {event}")
         return
 
-    assert pod.metadata is not None
     finding = Finding(
         title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
@@ -442,7 +438,6 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
         logging.info(f"python_debugger - pod not found for event: {event}")
         return
 
-    assert pod.metadata is not None
     finding = Finding(
         title=f"Python debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,

@@ -39,7 +39,6 @@ class PodContainer:
     def __init__(self, pod: Pod, state: Optional[ContainerState], container_name: str):
         self.state = state
         container = PodContainer.get_pod_container_by_name(pod, container_name)
-        assert container is not None, "Container not found in pod"
         self.container = container
 
     @staticmethod
@@ -69,7 +68,6 @@ class PodContainer:
 
     @staticmethod
     def get_pod_container_by_name(pod: Pod, container_name: str) -> Optional[Container]:
-        assert pod.spec is not None
         for container in pod.spec.containers:
             if container_name == container.name:
                 return container
@@ -119,9 +117,6 @@ class PodResources(BaseModel):
 
 
 def pod_restarts(pod: Pod) -> int:
-    assert pod.status is not None
-    assert pod.status.containerStatuses is not None
-
     return sum([status.restartCount for status in pod.status.containerStatuses])
 
 
@@ -136,7 +131,6 @@ def pod_limits(pod: Pod) -> PodResources:
 def pod_resources(pod: Pod, resource_attribute: ResourceAttributes) -> PodResources:
     pod_cpu_req: float = 0.0
     pod_mem_req: int = 0
-    assert pod.spec is not None
     for container in pod.spec.containers:
         try:
             requests: Any = container.object_at_path(["resources", resource_attribute.name])  # requests or limits
@@ -145,8 +139,6 @@ def pod_resources(pod: Pod, resource_attribute: ResourceAttributes) -> PodResour
         except Exception:
             pass  # no requests on container, object_at_path throws error
 
-    assert pod.metadata is not None
-    assert pod.metadata.name is not None
     return PodResources(
         pod_name=pod.metadata.name,
         cpu=pod_cpu_req,
@@ -180,7 +172,6 @@ def get_oom_kill_time(container: Optional[PodContainer]) -> float:
     if not container:
         return 0
     state = container.state
-    assert state is not None
 
     if not state.terminated or not state.terminated.finishedAt:
         return 0

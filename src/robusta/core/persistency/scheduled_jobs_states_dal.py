@@ -34,7 +34,6 @@ class SchedulerDal:
             self.mutex.acquire()
             try:
                 conf_map = ConfigMap(metadata=ObjectMeta(name=JOBS_CONFIGMAP_NAME, namespace=CONFIGMAP_NAMESPACE))
-                assert conf_map.metadata is not None
                 conf_map.createNamespacedConfigMap(cast(str, conf_map.metadata.namespace))
                 logging.info(f"created jobs states configmap {JOBS_CONFIGMAP_NAME} {CONFIGMAP_NAMESPACE}")
             finally:
@@ -44,10 +43,6 @@ class SchedulerDal:
         self.mutex.acquire()
         try:
             confMap = self.__load_config_map()
-            assert confMap.data is not None
-            assert confMap.metadata is not None
-            assert confMap.metadata.namespace is not None
-            assert confMap.metadata.name is not None
             confMap.data[job.job_id] = job.json()
             confMap.replaceNamespacedConfigMap(confMap.metadata.name, confMap.metadata.namespace)
         finally:
@@ -55,7 +50,6 @@ class SchedulerDal:
 
     def get_scheduled_job(self, job_id: str) -> Optional[ScheduledJob]:
         data = self.__load_config_map().data
-        assert data is not None
         state_data = data.get(job_id)
         return ScheduledJob(**json.loads(state_data)) if state_data is not None else None
 
@@ -63,17 +57,12 @@ class SchedulerDal:
         self.mutex.acquire()
         try:
             confMap = self.__load_config_map()
-            assert confMap.data is not None
             if confMap.data.get(job_id) is not None:
                 del confMap.data[job_id]
-                assert confMap.metadata is not None
-                assert confMap.metadata.namespace is not None
-                assert confMap.metadata.name is not None
                 confMap.replaceNamespacedConfigMap(confMap.metadata.name, confMap.metadata.namespace)
         finally:
             self.mutex.release()
 
     def list_scheduled_jobs(self) -> List[ScheduledJob]:
         data = self.__load_config_map().data
-        assert data is not None
         return [cast(ScheduledJob, self.get_scheduled_job(job_id)) for job_id in data.keys()]

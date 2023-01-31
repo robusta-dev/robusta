@@ -38,9 +38,6 @@ class JobFailedTrigger(JobUpdateTrigger):
             return False
 
         # fire if the job is firing now, but wasn't firing before (in case the job is updated after it failed)
-        assert exec_event.obj is not None
-        assert exec_event.old_obj is not None
-
         currently_failed = JobFailedTrigger.__is_job_failed(exec_event.obj)
         return currently_failed and not JobFailedTrigger.__is_job_failed(exec_event.old_obj)
 
@@ -49,6 +46,5 @@ class JobFailedTrigger(JobUpdateTrigger):
         if not job.status:
             return False
 
-        assert job.status.conditions is not None
         failed_conditions = [condition for condition in job.status.conditions if condition.type == "Failed"]
         return len(failed_conditions) > 0

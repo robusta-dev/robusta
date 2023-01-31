@@ -91,28 +91,20 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
     if not alert.pod:
         return  # Silencing only pod alerts on NodeRestartSilencer
 
-    assert alert.pod.spec is not None
-    assert alert.pod.spec.nodeName is not None
-
     # TODO: do we already have alert.Node here?
     node = cast(Optional[Node], Node.readNode(alert.pod.spec.nodeName).obj)
     if not node:
         logging.warning(f"Node {alert.pod.spec.nodeName} not found for NodeRestartSilencer for {alert}")
         return
 
-    assert node.status is not None
-    assert node.status.conditions is not None
-
-    last_transition_times = [
+    last_transition_times: List[str] = [
         condition.lastTransitionTime for condition in node.status.conditions if condition.type == "Ready"
-    ]
+    ]  # type: ignore
     if last_transition_times and last_transition_times[0]:
         node_start_time_str = last_transition_times[0]
     else:  # if no ready time, take creation time
-        assert node.metadata is not None
         node_start_time_str = node.metadata.creationTimestamp
 
-    assert node_start_time_str is not None
     node_start_time = datetime.strptime(node_start_time_str, "%Y-%m-%dT%H:%M:%SZ")
     alert.stop_processing = datetime.utcnow().timestamp() < (node_start_time.timestamp() + params.post_restart_silence)
 
@@ -124,7 +116,6 @@ def default_enricher(alert: PrometheusKubernetesAlert):
 
     By default, this enricher is last in the processing order, so it will be added to all alerts, that aren't silenced.
     """
-    assert alert.alert is not None
     labels = alert.alert.labels
     alert.add_enrichment(
         [
@@ -157,7 +148,6 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     Enrich the alert with a graph of the Prometheus query which triggered the alert.
     """
     promql_query = alert.get_prometheus_query()
-    assert alert.alert is not None
     chart = create_chart_from_prometheus_query(
         params.prometheus_url,
         promql_query,
@@ -173,7 +163,6 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
     """
     Enrich the alert with a graph of a custom Prometheus query
     """
-    assert alert.alert is not None
     chart_values_format = ChartValuesFormat[params.chart_values_format] if params.chart_values_format else None
     graph_enrichment = create_graph_enrichment(
         alert.alert.startsAt,
@@ -192,7 +181,6 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
     """
     Enrich the alert with a graph of a relevant resource (Pod or Node).
     """
-    assert alert.alert is not None
     alert_labels = alert.alert.labels
     labels = {x: alert_labels[x] for x in alert_labels}
     node = alert.get_node()
@@ -236,7 +224,6 @@ def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
     The template can include all markdown directives supported by Slack.
     Note that Slack markdown links use a different format than GitHub.
     """
-    assert alert.alert is not None
     labels: Dict[str, Any] = defaultdict(lambda: "<missing>")
     labels.update(alert.alert.labels)
     template = Template(params.template)
@@ -285,7 +272,6 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
     if not log_data:
         return
 
-    assert pod.metadata is not None
     event.add_enrichment(
         [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
     )
@@ -328,7 +314,6 @@ def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
     """
     Add a button to the alert - clicking it will show the top StackOverflow search results on this alert name.
     """
-    assert alert.alert is not None
     alert_name = alert.alert.labels.get("alertname", "")
     if not alert_name:
         return

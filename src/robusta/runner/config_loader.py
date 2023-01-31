@@ -109,7 +109,6 @@ class ConfigLoader:
             try:
                 if playbooks_repo.pip_install:  # skip playbooks that are already in site-packages
                     if playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
-                        assert playbooks_repo.key is not None
                         repo = GitRepo(
                             playbooks_repo.url,
                             playbooks_repo.key.get_secret_value(),
@@ -214,7 +213,6 @@ class ConfigLoader:
                 self.registry.set_playbooks(playbooks_registry)
                 self.registry.set_sinks(sinks_registry)
 
-                assert runner_config.global_config is not None
                 telemetry = self.registry.get_telemetry()
                 telemetry.playbooks_count = len(runner_config.active_playbooks) if runner_config.active_playbooks else 0
                 telemetry.account_id = hashlib.sha256(

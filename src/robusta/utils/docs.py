@@ -45,7 +45,6 @@ class Docstring:
         for field in tree.iter(tag="field"):
             name = next(field.iter(tag="field_name"))
             body = next(field.iter(tag="field_body"))
-            assert name.text is not None
             self.fields.append(DocstringField(name.text, "".join(body.itertext())))
 
         # we select all the docutils paragraphs which are under a root <block_quote> element

@@ -7,7 +7,6 @@ from robusta.core.playbooks.prometheus_enrichment_utils import create_resource_e
 
 
 def create_node_graph_enrichment(params: ResourceGraphEnricherParams, node: Node):
-    assert node.metadata is not None
     start_at = datetime.now()
     labels = {"node": node.metadata.name}
     internal_ip = get_node_internal_ip(node)

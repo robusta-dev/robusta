@@ -130,7 +130,6 @@ class ActionRequestReceiver:
         )
 
         if sync_response:
-            assert response is not None
             http_code = 200 if response.get("success") else 500
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
 
@@ -275,8 +274,8 @@ class ActionRequestReceiver:
                 http_code=401, error_code=ErrorCodes.AUTH_VALIDATION_FAILED.value, error_msg="Auth validation failed"
             )
 
-        assert key_a is not None
-        assert key_b is not None
+        # NOTE: Here key_a and key_b are not None because we already checked it in the previous step
+        assert key_a is not None and key_b is not None
 
         try:
             signing_key_uuid = UUID(signing_key)

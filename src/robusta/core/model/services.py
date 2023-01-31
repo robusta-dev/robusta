@@ -32,8 +32,6 @@ class ContainerInfo(BaseModel):
             if container.env
             else []
         )
-        assert container.resources is not None
-        assert container.image is not None
         limits = container.resources.limits if container.resources.limits else {}
         requests = container.resources.requests if container.resources.requests else {}
         resources = Resources(limits=limits, requests=requests)
@@ -60,7 +58,6 @@ class VolumeInfo(BaseModel):
         volume.name = cast(str, volume.name)
 
         if hasattr(volume, "persistent_volume_claim") and hasattr(volume.persistent_volume_claim, "claim_name"):
-            assert volume.persistent_volume_claim is not None
             return VolumeInfo(
                 name=volume.name, persistent_volume_claim={"claim_name": volume.persistent_volume_claim.claim_name}
             )

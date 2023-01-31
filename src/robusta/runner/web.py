@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from typing import Any
 
 from flask import Flask, jsonify, request
 from prometheus_client import make_wsgi_app
@@ -60,8 +61,7 @@ class Web:
     @staticmethod
     @app.route("/api/trigger", methods=["POST"])
     def handle_manual_trigger():
-        data = request.get_json()  # type: ignore
-        assert data is not None
+        data: Any = request.get_json()  # type: ignore
 
         Web._trace_incoming("trigger", data)
         if not data.get("action_name", None):

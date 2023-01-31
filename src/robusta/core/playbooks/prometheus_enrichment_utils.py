@@ -31,8 +31,6 @@ def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_templat
 
 
 def get_node_internal_ip(node: Node) -> str:
-    assert node.status is not None
-    assert node.status.addresses is not None
     internal_ip = next(addr.address for addr in node.status.addresses if addr.type == "InternalIP")
     return internal_ip
 
@@ -44,9 +42,8 @@ def run_prometheus_query(
         raise Exception("Invalid timerange specified for the prometheus query.")
 
     if prometheus_base_url is None:
+        # TODO: here prometheus_base_url can still be None
         prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
-
-    assert prometheus_base_url is not None
 
     query_duration = ends_at - starts_at
     resolution = get_resolution_from_duration(query_duration)
@@ -86,7 +83,7 @@ def create_chart_from_prometheus_query(
     graph_duration_minutes: int = 0,
     chart_title: Optional[str] = None,
     values_format: Optional[ChartValuesFormat] = None,
-    lines: Optional[List[XAxisLine]] = [],
+    lines: List[XAxisLine] = [],
 ):
     if not alert_starts_at:
         ends_at = datetime.utcnow()
@@ -131,8 +128,7 @@ def create_chart_from_prometheus_query(
     min_time = 32536799999
     max_time = 0
 
-    assert prometheus_query_result.series_list_result is not None
-    for series in prometheus_query_result.series_list_result:
+    for series in prometheus_query_result.series_list_result:  # type: ignore
         label = "\n".join([v for v in series.metric.values()])
         values = []
         for index in range(len(series.values)):
@@ -143,7 +139,6 @@ def create_chart_from_prometheus_query(
         max_time = max(max_time, max(series.timestamps))
         chart.add(label, values)
 
-    assert lines is not None
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
         chart.add(line.label, value)

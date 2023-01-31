@@ -424,7 +424,6 @@ def demo_alert(
             )
             return
 
-        assert pod.metadata is not None
         alert_labels = {
             "alertname": alert,
             "severity": "critical",

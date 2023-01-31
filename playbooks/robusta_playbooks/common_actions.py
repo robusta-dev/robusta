@@ -71,7 +71,7 @@ class FindingFields(ActionParams):
     title: str
     aggregation_key: str
     description: Optional[str] = None
-    severity: Optional[str] = "HIGH"
+    severity: str = "HIGH"
 
 
 @action
@@ -86,7 +86,6 @@ def create_finding(event: ExecutionBaseEvent, params: FindingFields):
     """
     labels = _get_templating_labels(event)
 
-    assert params.severity is not None
     event.add_finding(
         Finding(
             title=Template(params.title).safe_substitute(labels),

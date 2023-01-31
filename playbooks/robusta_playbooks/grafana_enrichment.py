@@ -24,21 +24,16 @@ def add_deployment_lines_to_grafana(event: KubernetesAnyChangeEvent, action_para
 
     Supports Deployments, ReplicaSets, DaemonSets, StatefulSets, Jobs, and Pods
     """
-    assert event.obj is not None
-    assert event.old_obj is not None
+
     new_images = extract_images(event.obj)
     old_images = extract_images(event.old_obj)
+    # TODO: What if new_images or old_images is None?
     if new_images == old_images:
         return
 
-    assert event.obj.metadata is not None
-    assert event.obj.metadata.ownerReferences is not None
     if len(event.obj.metadata.ownerReferences) != 0:
         return  # not handling runtime objects
 
-    assert event.old_obj.metadata is not None
-    assert new_images is not None
-    assert old_images is not None
     msg = ""
     if new_images.keys() != old_images.keys():
         msg = f"number or names of images changed<br /><br />new<pre>{new_images}</pre>old<pre>{old_images}</pre>"
@@ -75,7 +70,6 @@ def add_alert_lines_to_grafana(event: PrometheusKubernetesAlert, params: Grafana
     else:
         description = ""
 
-    assert event.alert is not None
     grafana.add_line_to_dashboard(
         params.grafana_dashboard_uid,
         f'<h2>{event.get_title()}</h2><a href="{event.alert.generatorURL}">Open in AlertManager</a>{description}',
@@ -89,21 +83,15 @@ def report_image_changes(event: KubernetesAnyChangeEvent):
     """
     Report image changed whenever a new application version is deployed so that you can easily see changes.
     """
-    assert event.obj is not None
-    assert event.old_obj is not None
     new_images = extract_images(event.obj)
     old_images = extract_images(event.old_obj)
+    # TODO: What if new_images or old_images is None?
     if new_images == old_images:
         return
 
-    assert event.obj.metadata is not None
-    assert event.obj.metadata.ownerReferences is not None
     if len(event.obj.metadata.ownerReferences) != 0:
         return  # not handling runtime objects
 
-    assert event.old_obj.metadata is not None
-    assert new_images is not None
-    assert old_images is not None
     msg = ""
     changed_properties = []
     if new_images.keys() != old_images.keys():

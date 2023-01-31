@@ -8,7 +8,7 @@ from robusta.core.playbooks.prometheus_enrichment_utils import XAxisLine, create
 
 
 def create_container_graph(params: ResourceGraphEnricherParams, pod: Pod, container: Container, show_limit=False):
-    assert pod.metadata is not None
+
     labels = {
         "pod": pod.metadata.name,
         "container": container.name,

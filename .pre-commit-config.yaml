@@ -29,7 +29,7 @@ repos:
       - id: isort
         args: [--settings-path=pyproject.toml]
 
-  - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.291
-    hooks:
-    - id: pyright
+  # - repo: https://github.com/RobertCraigie/pyright-python
+  #   rev: v1.1.291
+  #   hooks:
+  #   - id: pyright

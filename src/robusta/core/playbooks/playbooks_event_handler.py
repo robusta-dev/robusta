@@ -34,7 +34,7 @@ class PlaybooksEventHandler(ABC):
         sinks: Optional[List[str]],
         sync_response: bool = False,
         no_sinks: bool = False,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         """Execute an external action"""
         pass
 

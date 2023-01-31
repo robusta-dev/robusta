@@ -76,7 +76,9 @@ def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams
 
 
 def has_matching_diff(event: DeploymentChangeEvent, fields_to_monitor: List[str]) -> bool:
-    assert event.obj is not None
+    if event.obj is None or event.old_obj is None:
+        return False
+
     all_diffs = event.obj.diff(event.old_obj)
     for diff in all_diffs:
         if is_matching_diff(diff, fields_to_monitor):
@@ -93,20 +95,15 @@ def deployment_status_report(event: DeploymentChangeEvent, action_params: Report
 
     Make sure to set 'grafanaRenderer.enableContainer' to 'true' in the values yaml to use this action.
     """
-    if event.operation == K8sOperationType.DELETE:
+    if event.operation == K8sOperationType.DELETE or event.obj is None:
         return
 
     if event.operation == K8sOperationType.UPDATE:
         if not has_matching_diff(event, action_params.fields_to_monitor):
             return
 
-    assert event.obj is not None
-    assert event.obj.metadata is not None
-
     logging.info(f"Scheduling rendering report. deployment: {event.obj.metadata.name} delays: {action_params.delays}")
     scheduler = event.get_scheduler()
-    assert scheduler is not None
-    assert event.named_sinks is not None
 
     scheduler.schedule_action(
         action_func=report_rendering_task,

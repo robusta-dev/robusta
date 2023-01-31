@@ -42,7 +42,6 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
         logging.info("unable to support non interactive jdk events")
         return
 
-    assert pod.metadata is not None
     finding = Finding(
         title=f"Java debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
@@ -106,7 +105,6 @@ def run_jdk_command_on_pid(
         logging.info(f"{aggregation_key} - pod not found for event: {event}")
         return
 
-    assert pod.metadata is not None
     finding = Finding(
         title=f"{cmd} run on pid {params.pid} in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
@@ -140,11 +138,6 @@ def run_jdk_command_on_pid(
 
 
 def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod, override_jtk_image: str):
-    assert pod.metadata is not None
-    assert pod.metadata.name is not None
-    assert pod.spec is not None
-    assert pod.spec.nodeName is not None
-
     java_toolkit_cmd = f"java-toolkit {jdk_cmd}"
     if override_jtk_image:
         return RobustaPod.exec_in_java_pod(

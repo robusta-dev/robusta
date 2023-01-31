@@ -11,11 +11,6 @@ def test_pod_orm(event: PodEvent):
         logging.info(f"test_pod_orm - no pod available on event: {event}")
         return
 
-    assert pod.spec is not None
-    assert pod.metadata is not None
-    assert pod.metadata.name is not None
-    assert pod.metadata.namespace is not None
-
     images = [container.image for container in pod.spec.containers]
     logging.info(f"pod images are {images}")
 

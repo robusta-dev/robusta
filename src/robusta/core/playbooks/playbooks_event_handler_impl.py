@@ -73,7 +73,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         actions: List[PlaybookAction],
         sync_response: bool = False,
         no_sinks: bool = False,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         if not no_sinks and execution_event.named_sinks is None:  # take the default sinks only if sinks not excluded
             execution_event.named_sinks = self.registry.get_playbooks().get_default_sinks()
 
@@ -127,7 +127,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         sinks: Optional[List[str]],
         sync_response: bool = False,
         no_sinks: bool = False,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         action_def = self.registry.get_actions().get_action(action_name)
         if not action_def:
             return self.__error_resp(f"External action not found {action_name}", ErrorCodes.ACTION_NOT_FOUND.value)

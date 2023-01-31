@@ -86,7 +86,7 @@ def get_images(containers: List[Container]) -> Dict[str, str]:
     return name_to_version
 
 
-def extract_images(k8s_obj: HikaruDocumentBase) -> Optional[Dict[str, str]]:
+def extract_images(k8s_obj: Optional[HikaruDocumentBase]) -> Optional[Dict[str, str]]:
     images = extract_image_list(k8s_obj)
     if not images:
         # no containers found on that k8s obj
@@ -99,7 +99,7 @@ def extract_images(k8s_obj: HikaruDocumentBase) -> Optional[Dict[str, str]]:
     return name_to_version
 
 
-def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
+def extract_image_list(k8s_obj: Optional[HikaruDocumentBase]) -> List[str]:
     containers_paths = [
         [
             "spec",
@@ -114,6 +114,7 @@ def extract_image_list(k8s_obj: HikaruDocumentBase) -> List[str]:
         try:
             for container in k8s_obj.object_at_path(path):
                 images.append(container.image)
+        # TODO: Plain except is bad practice
         except Exception:  # Path not found on object, not a real error
             pass
 
