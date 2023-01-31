@@ -1,0 +1,61 @@
+Generate a config
+-----------------------------------
+
+Robusta needs settings to work. For example, if you use Slack then Robusta needs a Slack API key. These settings are configured as Helm values.
+
+We'll generate the Helm values using the ``robusta`` cli tool. There are two ways to install the ``robusta`` cli: using ``pip`` or using a Docker container with the cli already inside.
+
+.. tab-set::
+
+    .. tab-item:: pip (recommended)
+        :name: pip-cli-tab
+
+        Install the ``robusta`` cli with ``pip``:
+
+        .. code-block:: bash
+            :name: cb-pip-install
+
+            pip install -U robusta-cli --no-cache
+
+        Run ``robusta`` to generate a Helm values file:
+
+        .. code-block:: bash
+           :name: cb-robusta-gen-config
+
+            robusta gen-config {{ gen_config_flags }}
+
+        .. admonition:: System Requirements
+            :class: warning
+
+            * Python 3.7 or higher is required. On systems with both Python 2 and Python 3, make sure you run ``pip3``
+            * Python's script directory must be in your PATH. If this is not the case, you will see a ``command not found: robusta`` error. See :ref:`Common Errors` to fix this.
+
+    .. tab-item:: docker
+        :name: docker-cli-tab
+
+        Download the robusta script and grant execute permissions:
+
+        .. code-block:: bash
+            :name: cb-docker-cli-download
+
+            curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
+            chmod +x robusta
+
+        Run the ``robusta`` cli tool to generate a Helm values file:
+
+        .. code-block:: bash
+            :name: cb-docker-cli-example
+
+            ./robusta gen-config {{ gen_config_flags }}
+
+        .. admonition:: System Requirements
+            :class: warning
+
+            A Docker daemon and bash are required.
+
+            On Windows you can use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
+
+You now have a ``generated_values.yaml`` file with a Robusta config. You can customize this more later, to `add integrations <https://docs.robusta.dev/master/automation/sinks/index.html>`_ like Discord.
+
+For now, lets install Robusta and see it in action.
+

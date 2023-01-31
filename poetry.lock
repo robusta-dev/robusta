@@ -2339,6 +2339,23 @@ reference = "HEAD"
 resolved_reference = "49020aaae470b00ea255dec2ed90007381a4d996"
 
 [[package]]
+name = "sphinx-jinja"
+version = "2.0.2"
+description = "includes jinja templates in a documentation"
+category = "dev"
+optional = false
+python-versions = ">=3.6,<4"
+files = [
+    {file = "sphinx-jinja-2.0.2.tar.gz", hash = "sha256:c6232b59a894139770be1dc6d0b00a379e4288ce78157904e1f8473dea3e0718"},
+    {file = "sphinx_jinja-2.0.2-py3-none-any.whl", hash = "sha256:705ebeb9b7a6018ca3f93724315a7c1effa6ba3db44d630e7eaaa15e4ac081a8"},
+]
+
+[package.dependencies]
+docutils = ">=0.16"
+Jinja2 = ">=2.11"
+sphinx = ">4.2.0"
+
+[[package]]
 name = "sphinxcontrib-applehelp"
 version = "1.0.2"
 description = "sphinxcontrib-applehelp is a sphinx extension which outputs Apple help books"
@@ -2923,4 +2940,4 @@ all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-excepti
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.1"
-content-hash = "9e48ced4ea879781c1ef3f80d0c93627c1c3796f049227e89f3d932fcf669f0e"
+content-hash = "501d9388b829439fab87740579b5019c827a78039acf1fd713b22e07fbc7af75"

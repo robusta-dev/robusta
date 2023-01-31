@@ -80,6 +80,9 @@ markupsafe = "2.0.1"
 [tool.poetry.extras]
 all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk", "poetry-core"]
 
+[tool.poetry.group.dev.dependencies]
+sphinx-jinja = "^2.0.2"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

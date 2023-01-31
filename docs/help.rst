@@ -69,3 +69,14 @@ please contact support@robusta.dev or go to `our slack channel <https://bit.ly/r
 
     For more info see:
     https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
+
+More Tutorials
+^^^^^^^^^^^^^^^^^^^^^^^
+Here are more tutorials from the Robusta community:
+
+* **Video:** `Kubernetes Notifications, Troubleshooting, And Automation With Robusta <https://www.youtube.com/watch?v=2P76WVVua8w>`_ by Viktor Farcic
+* **Video:** `Twitter challenge - Robusta.dev on 10 nodes <https://www.youtube.com/watch?v=l_zaCaY_wls>`_ by `Nuno Captain Corsair <https://twitter.com/nunixtech>`_
+* `Troubleshoot and automate to fix your k8s Application <https://csaju.com/blog/troubleshoot-and-automate-to-fix-your-k8s-application/>`_ by `Aju Tamang <https://twitter.com/pylang2>`_
+* `Getting Started with Robusta on Digital Ocean <https://dev.to/heyrutam/getting-started-with-robusta-on-digital-ocean-3g41>`_ by `Rutam Prita Mishra <https://github.com/Rutam21>`_
+* `Getting Started with Robusta on Civo Cloud <https://dev.to/heyrutam/getting-started-with-robusta-on-civo-cloud-5h8f>`_ by `Rutam Prita Mishra <https://github.com/Rutam21>`_
+* `Kubernetes troubleshooting and automation using Robusta <https://xxradar.medium.com/kubernetes-troubleshooting-and-automation-using-robusta-13f113fcdc36>`_ by `Philippe Bogaerts <https://twitter.com/xxradar>`_

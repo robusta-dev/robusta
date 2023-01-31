@@ -9,21 +9,35 @@
 
    self
 
+.. toctree::
+   :maxdepth: 4
+   :caption: How it works
+   :hidden:
+
+   Overview <architecture/index>
+   Components <architecture/components>
+   architecture/oss-vs-saas
+   How playbooks work <configuration/flow-control>
+   Robusta UI Triggers <architecture/robusta-ui-triggers>
+   Privacy & Security <architecture/privacy-and-security>
 
 .. toctree::
    :maxdepth: 4
-   :caption: Getting Started
+   :caption: Get Started
    :hidden:
    
-   Overview <getting-started/index>
-   getting-started/setup-robusta/index
-   getting-started/use-robusta/index
-   More tutorials <getting-started/more-tutorials>
-
+   Overview <get-started/index>
 
 .. toctree::
    :maxdepth: 4
-   :caption: Configuration
+   :caption: Installation
+   :hidden:
+
+   setup-robusta/index
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Reference
    :hidden:
 
    configuration/overview
@@ -33,27 +47,18 @@
    Reulsing comon settings <configuration/global-config>
    Handling Secrets <configuration/configuration-secrets>
    configuration/alert-manager
-   Upgrade & Uninstall <configuration/upgrade>
    configuration/embedded-prometheus
    Robusta CLI <configuration/robusta-cli>
    configuration/trigger-action-binding
    tutorials/prometheus-enrichment
    coverage
 
-..
-   tutorials/alert-correlation
-
 .. toctree::
    :maxdepth: 4
-   :caption: Architecture
+   :caption: Examples
    :hidden:
-    
-   Overview <architecture/index>
-   Components <architecture/components>
-   architecture/oss-vs-saas
-   How playbooks work <configuration/flow-control>
-   Robusta UI Triggers <architecture/robusta-ui-triggers>
-   Privacy & Security <architecture/privacy-and-security>
+
+   advanced-tutorials/index
 
 
 .. toctree::
@@ -86,38 +91,23 @@
 
    help
 
-
-
-Welcome to Robusta Docs
+Welcome to the Robusta Docs
 =============================
-Robusta is an open source platform for Kubernetes monitoring and runbook automation. It can be installed as a full monitoring stack or an add-on for Prometheus and other tools. Robusta watches your cluster, identifies problems, and gathers observability data about the cause. It also supports automatic remediation.
 
-.. button-ref:: getting-started/index
+Robusta helps you get more out of Prometheus on Kubernetes. To be precise, some people use Robusta for observability or runbook automation without Prometheus, but they're best together.
+
+Robusta extends Prometheus with full Kubernetes observability, letting you:
+
+* Correlate Prometheus alerts with pod logs
+* Attach APIServer information (e.g. ``kubectl get events``) to your alerts
+* See which alerts fired on a Deployment or Node
+* Understand *why* alerts occurred and what led to them firing
+* Perform automatic remediations
+
+...and more!
+
+.. button-ref:: get-started/index
     :color: primary
     :outline:
 
     Get Started →
-
-Learn about Robusta
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. grid:: 1 1 2 4
-    :gutter: 3
-
-    .. grid-item-card:: Architecture
-        :link: architecture/index
-        :link-type: doc
-
-        Technical details of how everything works
-
-    .. grid-item-card:: Track Changes
-        :link: /getting-started/use-robusta/trackchanges
-        :link-type: doc
-
-        Get notified when something changes in your cluster
-
-    .. grid-item-card:: Supported Sinks
-        :link: /automation/sinks/index
-        :link-type: doc
-
-        See all the integrations you can send data to 

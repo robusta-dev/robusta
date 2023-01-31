@@ -28,7 +28,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))  # so we can import the pl
 # -- Custom Sidebar -------------------------------------------------------
 
 
-
 # -- General configuration ------------------------------------------------
 
 extensions = [
@@ -47,7 +46,18 @@ extensions = [
     "autorobusta",
     "sphinx_immaterial",
     "sphinxcontrib.details.directive",
+    "sphinx_jinja",
 ]
+
+# for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
+jinja_contexts = {
+    "install_all_in_one": {"gen_config_flags": "--enable-prometheus-stack"},
+    "install_integrate_prometheus": {
+        "gen_config_flags": "--no-enable-prometheus-stack"
+    },
+    "install_no_prometheus": {"gen_config_flags": "--no-enable-prometheus-stack"},
+}
+
 # for sphinx.ext.inheritance_diagram
 # inheritance_graph_attrs = dict(rankdir="TB", size='""')
 
@@ -114,8 +124,8 @@ html_theme_options = {
     },
     "repo_url": "https://github.com/robusta-dev/robusta",
     "repo_name": "Robusta",
-    "repo_type": "github",  
-    "edit_uri": "tree/structure/docs",   ##### Modify to the Master Branch ###########
+    "repo_type": "github",
+    "edit_uri": "tree/structure/docs",  ##### Modify to the Master Branch ###########
     "palette": [
         {
             "media": "(prefers-color-scheme: light)",
@@ -135,7 +145,7 @@ html_theme_options = {
             "toggle": {
                 "icon": "material/weather-sunny",
                 "name": "Switch to light mode",
-            },  
+            },
         },
     ],
     "features": [
@@ -156,7 +166,7 @@ html_theme_options = {
         {
             "icon": "fontawesome/brands/slack",
             "link": "https://bit.ly/robusta-slack",
-        },   
+        },
         {
             "icon": "fontawesome/brands/twitter",
             "link": "https://twitter.com/RobustaDev",

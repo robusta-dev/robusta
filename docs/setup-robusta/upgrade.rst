@@ -1,30 +1,33 @@
-Upgrade and Uninstall
-######################
+Upgrade
+#########
 
-Robusta is :ref:`installed with Helm <Install with Helm>`, so Robusta upgrades are just Helm upgrades. Uninstalls are just Helm uninstalls.
+Most upgrades can be performed with two Helm commands. We call this a "Simple Upgrade".
 
-Upgrading Robusta
+Some upgrades require additional steps, as described in the "Manual Upgrade" section.
+
+Simple Upgrade
 ^^^^^^^^^^^^^^^^^^^^^
 To preserve your existing settings, you'll need the ``generated_values.yaml`` file that you
 originally installed Robusta with.
 
 .. admonition:: Where is my generated_values.yaml?
 
-    If you have lost your ``generated_values.yaml`` file, you can extract it from any cluster Robusta is installed on:
+    If you have lost your ``generated_values.yaml`` file, you can extract it from any cluster with Robusta:
 
     .. code-block:: bash
 
          helm get values -o yaml robusta > generated_values.yaml
 
-Once you've located your ``generated_values.yaml`` file, run the following command:
+Once you've located your ``generated_values.yaml`` file, run the following:
 
 .. code-block:: bash
 
     helm repo update
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-We recommend running the above command exactly as written and **not** running ``helm upgrade --reuse-values`` `as it doesn't respect changes to default values. <https://medium.com/@kcatstack/understand-helm-upgrade-flags-reset-values-reuse-values-6e58ac8f127e>`_
+.. admonition:: Can I run ``helm upgrade --reuse-values``?
 
+    We recommend against it. `The --reuse-values flag doesn't respect certain Chart changes. <https://medium.com/@kcatstack/understand-helm-upgrade-flags-reset-values-reuse-values-6e58ac8f127e>`_
 
 Verify that Robusta is running and there are no errors in the logs:
 
@@ -33,23 +36,26 @@ Verify that Robusta is running and there are no errors in the logs:
     robusta logs
 
 
-2. To install a Robusta pre-release, run ``helm upgrade`` with the ``--devel`` flag.
-
-Manual Upgrade Instructions
+Manual Upgrade
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In some scenarios, manual actions are required in addition to running ``helm upgrade``.
 
-If you're upgrading from a Robusta version lower than 0.9.1 **and** you're using the setting ``enablePrometheusStack`` than this applies to you. Otherwise, just upgrade as described above.
+Do I need to do a manual upgrade?
+------------------------------------
+You need a manual upgrade when **both** of the following are true:
 
-Why do I need to manually upgrade?
+* You're upgrading from a Robusta version lower than 0.9.1
+* You are using Robusta's embedded Prometheus stack (``enablePrometheusStack: true``)
+
+Why are manual upgrades necessary?
 ------------------------------------
 
 Robusta uses kube-prometheus-stack, which creates custom resources known as `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_.
 With Helm v3, CRDs are not updated or removed by default and should be manually handled. Consult also the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_.
 
 Upgrading from versions lower than 0.9.1
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------------
 
 1. Determine Robusta's version by running the following:
 
@@ -90,12 +96,10 @@ Upgrading from versions lower than 0.9.1
 
     robusta logs
 
+Pre-release Upgrade
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Uninstall
-^^^^^^^^^^^^^
+Sometimes we release beta versions of Robusta. Normally, Helm ignores these versions and will only consider stable
+versions when upgrading.
 
-This will uninstall Robusta:
-
-.. code-block:: bash
-
-    helm uninstall robusta
+To upgrade to beta versions of Robusta, run ``helm upgrade`` with the ``--devel`` flag.
