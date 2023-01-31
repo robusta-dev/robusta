@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from concurrent.futures.process import ProcessPoolExecutor
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union
 
 from kubernetes import client
 from kubernetes.client import (
@@ -12,13 +12,10 @@ from kubernetes.client import (
     V1DeploymentList,
     V1Job,
     V1JobList,
-    V1JobSpec,
     V1NodeList,
     V1ObjectMeta,
     V1Pod,
     V1PodList,
-    V1PodSpec,
-    V1PodStatus,
     V1ReplicaSetList,
     V1StatefulSet,
     V1StatefulSetList,
@@ -77,7 +74,7 @@ class Discovery:
             active_services.extend(
                 [
                     Discovery.__create_service_info(
-                        cast(V1ObjectMeta, deployment.metadata),
+                        deployment.metadata,
                         "Deployment",
                         extract_containers(deployment),
                         extract_volumes(deployment),
@@ -91,7 +88,7 @@ class Discovery:
             active_services.extend(
                 [
                     Discovery.__create_service_info(
-                        cast(V1ObjectMeta, statefulset.metadata),
+                        statefulset.metadata,
                         "StatefulSet",
                         extract_containers(statefulset),
                         extract_volumes(statefulset),
@@ -105,7 +102,7 @@ class Discovery:
             active_services.extend(
                 [
                     Discovery.__create_service_info(
-                        cast(V1ObjectMeta, daemonset.metadata),
+                        daemonset.metadata,
                         "DaemonSet",
                         extract_containers(daemonset),
                         extract_volumes(daemonset),
@@ -119,7 +116,7 @@ class Discovery:
             active_services.extend(
                 [
                     Discovery.__create_service_info(
-                        cast(V1ObjectMeta, replicaset.metadata),
+                        replicaset.metadata,
                         "ReplicaSet",
                         extract_containers(replicaset),
                         extract_volumes(replicaset),
@@ -127,7 +124,7 @@ class Discovery:
                         extract_ready_pods(replicaset),
                     )
                     for replicaset in replicasets.items  # type: ignore
-                    if not cast(V1ObjectMeta, replicaset.metadata).owner_references
+                    if not replicaset.metadata.owner_references
                 ]
             )
 
@@ -136,7 +133,7 @@ class Discovery:
             active_services.extend(
                 [
                     Discovery.__create_service_info(
-                        cast(V1ObjectMeta, pod.metadata),
+                        pod.metadata,
                         "Pod",
                         extract_containers(pod),
                         extract_volumes(pod),
@@ -144,7 +141,7 @@ class Discovery:
                         extract_ready_pods(pod),
                     )
                     for pod in pod_items  # type: ignore
-                    if not cast(V1ObjectMeta, pod.metadata).owner_references and not is_pod_finished(pod)
+                    if not pod.metadata.owner_references and not is_pod_finished(pod)
                 ]
             )
         except Exception:
@@ -159,8 +156,6 @@ class Discovery:
         try:
             current_nodes = client.CoreV1Api().list_node()
             for pod in pod_items:  # type: ignore
-                pod.status = cast(V1PodStatus, pod.status)
-                pod.spec = cast(V1PodSpec, pod.spec)
                 pod_status = pod.status.phase
                 if pod_status in ["Running", "Unknown", "Pending"] and pod.spec.node_name:
                     node_requests[pod.spec.node_name].append(utils.k8s_pod_requests(pod))
@@ -179,9 +174,6 @@ class Discovery:
                 job_pods: List[str] = []
                 job_labels = {}
 
-                job.spec = cast(V1JobSpec, job.spec)
-                job.metadata = cast(V1ObjectMeta, job.metadata)
-
                 if job.spec.selector:
                     job_labels = job.spec.selector.match_labels
                 elif job.metadata.labels:
@@ -194,8 +186,8 @@ class Discovery:
                         pod.metadata.name  # type: ignore
                         for pod in pod_items  # type: ignore
                         if (
-                            (job.metadata.namespace == cast(V1ObjectMeta, pod.metadata).namespace)
-                            and (job_labels.items() <= (cast(V1ObjectMeta, pod.metadata).labels or {}).items())
+                            (job.metadata.namespace == pod.metadata.namespace)
+                            and (job_labels.items() <= pod.metadata.labels.items())
                         )
                     ]
 

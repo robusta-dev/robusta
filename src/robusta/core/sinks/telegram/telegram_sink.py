@@ -1,4 +1,4 @@
-from typing import cast
+from typing import List
 
 from tabulate import tabulate
 
@@ -57,16 +57,14 @@ class TelegramSink(SinkBase[TelegramSinkParams]):
                 message_content = f"[{VIDEO_ICON} {video_link.name}]({video_link.url})"
             message_content += "\n\n"
 
-        blocks = [MarkdownBlock(text=f"*Source:* `{self.cluster_name}`\n\n")]
+        blocks: List[BaseBlock] = [MarkdownBlock(text=f"*Source:* `{self.cluster_name}`\n\n")]
 
         # first add finding description block
         if finding.description:
             blocks.append(MarkdownBlock(finding.description))
 
         for enrichment in finding.enrichments:
-            blocks.extend(
-                [cast(MarkdownBlock, block) for block in enrichment.blocks if self.__is_telegram_text_block(block)]
-            )
+            blocks.extend([block for block in enrichment.blocks if self.__is_telegram_text_block(block)])
 
         for block in blocks:
             block_text = Transformer.to_standard_markdown([block])

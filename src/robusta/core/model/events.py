@@ -44,7 +44,7 @@ class ExecutionBaseEvent:
     #  Response returned to caller. For admission or manual triggers for example
     response: Dict[str, Any] = None  # type: ignore
     stop_processing: bool = False
-    _scheduler: PlaybooksScheduler = None  # type: ignore
+    _scheduler: Optional[PlaybooksScheduler] = None
     _context: ExecutionContext = None  # type: ignore
 
     def set_context(self, context: ExecutionContext):
@@ -57,6 +57,9 @@ class ExecutionBaseEvent:
         self._scheduler = scheduler
 
     def get_scheduler(self) -> PlaybooksScheduler:
+        if self._scheduler is None:
+            raise ValueError("Scheduler is not set yet")
+
         return self._scheduler
 
     def create_default_finding(self) -> Finding:

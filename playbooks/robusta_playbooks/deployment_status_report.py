@@ -104,7 +104,6 @@ def deployment_status_report(event: DeploymentChangeEvent, action_params: Report
 
     logging.info(f"Scheduling rendering report. deployment: {event.obj.metadata.name} delays: {action_params.delays}")
     scheduler = event.get_scheduler()
-
     scheduler.schedule_action(
         action_func=report_rendering_task,
         task_id=f"deployment_status_report_{event.obj.metadata.name}_{event.obj.metadata.namespace}",

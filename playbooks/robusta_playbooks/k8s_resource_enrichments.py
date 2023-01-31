@@ -1,5 +1,5 @@
 import logging
-from typing import List, cast
+from typing import List
 
 import hikaru
 import kubernetes.client.exceptions
@@ -108,13 +108,12 @@ def get_resource_yaml(event: KubernetesResourceEvent):
         logging.error("resource not found...")
         return
 
-    resource_kind = cast(str, resource.kind)
-    namespace = cast(str, resource.metadata.namespace)
-    name = cast(str, resource.metadata.name)
+    namespace = resource.metadata.namespace
+    name = resource.metadata.name
 
     try:
         loaded_resource = ResourceLoader.read_resource(
-            kind=resource_kind,
+            kind=resource.kind,
             namespace=namespace,
             name=name,
         ).obj
@@ -122,15 +121,15 @@ def get_resource_yaml(event: KubernetesResourceEvent):
 
         event.add_enrichment(
             [
-                MarkdownBlock(f"Your YAML file for {resource_kind} {namespace}/{name}"),
+                MarkdownBlock(f"Your YAML file for {resource.kind} {namespace}/{name}"),
                 FileBlock(f"{name}.yaml", resource_yaml.encode()),
             ],
         )
     except KeyError:
-        logging.error(f"{resource_kind} is not supported resource kind")
+        logging.error(f"{resource.kind} is not supported resource kind")
     except kubernetes.client.exceptions.ApiException as exc:
         if exc.status == 404:
-            logging.error(f"{resource_kind.title()} {namespace}/{name} was not found")
+            logging.error(f"{resource.kind.title()} {namespace}/{name} was not found")
         else:
             logging.error(f"A following error occurred: {str(exc)}")
     except Exception as exc:

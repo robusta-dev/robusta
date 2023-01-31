@@ -1,7 +1,7 @@
 import json
 import logging
 from threading import Lock
-from typing import List, Optional, cast
+from typing import List, Optional
 
 from hikaru.model import ObjectMeta
 from kubernetes.client import ApiException as K8sApiException
@@ -34,7 +34,7 @@ class SchedulerDal:
             self.mutex.acquire()
             try:
                 conf_map = ConfigMap(metadata=ObjectMeta(name=JOBS_CONFIGMAP_NAME, namespace=CONFIGMAP_NAMESPACE))
-                conf_map.createNamespacedConfigMap(cast(str, conf_map.metadata.namespace))
+                conf_map.createNamespacedConfigMap(conf_map.metadata.namespace)
                 logging.info(f"created jobs states configmap {JOBS_CONFIGMAP_NAME} {CONFIGMAP_NAMESPACE}")
             finally:
                 self.mutex.release()
@@ -65,4 +65,4 @@ class SchedulerDal:
 
     def list_scheduled_jobs(self) -> List[ScheduledJob]:
         data = self.__load_config_map().data
-        return [cast(ScheduledJob, self.get_scheduled_job(job_id)) for job_id in data.keys()]
+        return [self.get_scheduled_job(job_id) for job_id in data.keys()]

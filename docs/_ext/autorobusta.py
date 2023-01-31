@@ -4,7 +4,7 @@ import pydoc
 import textwrap
 import typing
 from pathlib import Path
-from typing import Callable, List, Optional, Type, cast
+from typing import Callable, List, Optional, Type
 
 import pydantic.fields
 import sphinx.addnodes
@@ -53,10 +53,9 @@ class PydanticModelDirective(SphinxDirective):
 
     def run(self) -> List[Node]:
         objpath = self.arguments[0]
-        obj = pydoc.locate(objpath)
+        obj: Optional[type] = pydoc.locate(objpath)  # type: ignore
         if obj is None:
             raise Exception(f"Cannot document None: {objpath}")
-        obj = cast(type, obj)
         if not issubclass(obj, BaseModel):
             raise Exception(f"not a pydantic model: {obj}")
         return self.__document_model(obj, "show-code" in self.options, "show-optionality" in self.options)
@@ -222,10 +221,9 @@ class RobustaActionDirective(SphinxDirective):
             recommended_trigger = None
         else:
             recommended_trigger = self.arguments[1]
-        obj = pydoc.locate(objpath)
+        obj: Optional[Callable] = pydoc.locate(objpath)  # type: ignore
         if obj is None:
             raise Exception(f"Cannot document None: {objpath}")
-        obj = cast(Callable, obj)
         action_definition = Action(obj)
         return self.__generate_rst(action_definition, recommended_trigger)
 

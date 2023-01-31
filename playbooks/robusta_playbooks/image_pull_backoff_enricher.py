@@ -202,10 +202,10 @@ class ImagePullBackoffInvestigator:
         self.pod_name = pod_name
         self.namespace = namespace
 
-        self.pod_events = cast(
-            EventList,
-            EventList.listNamespacedEvent(self.namespace, field_selector=f"involvedObject.name={self.pod_name}").obj,
+        event_list = EventList.listNamespacedEvent(
+            self.namespace, field_selector=f"involvedObject.name={self.pod_name}"
         )
+        self.pod_events = cast(EventList, event_list.obj)
 
     def investigate(self, container_status: ContainerStatus) -> Optional[ImagePullOffInvestigation]:
         for pod_event in self.pod_events.items:

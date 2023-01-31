@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, cast
+from typing import Dict, List, Optional
 
 from kubernetes.client import V1Container, V1Volume
 from pydantic import BaseModel
@@ -35,7 +35,7 @@ class ContainerInfo(BaseModel):
         limits = container.resources.limits if container.resources.limits else {}
         requests = container.resources.requests if container.resources.requests else {}
         resources = Resources(limits=limits, requests=requests)
-        return ContainerInfo(name=cast(str, container.name), image=container.image, env=env, resources=resources)
+        return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources)
 
     def __eq__(self, other):
         if not isinstance(other, ContainerInfo):
@@ -55,8 +55,6 @@ class VolumeInfo(BaseModel):
 
     @staticmethod
     def get_volume_info(volume: V1Volume):
-        volume.name = cast(str, volume.name)
-
         if hasattr(volume, "persistent_volume_claim") and hasattr(volume.persistent_volume_claim, "claim_name"):
             return VolumeInfo(
                 name=volume.name, persistent_volume_claim={"claim_name": volume.persistent_volume_claim.claim_name}

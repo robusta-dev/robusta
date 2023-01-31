@@ -22,8 +22,8 @@ from robusta.api import (
 def pod_row(pod: Pod) -> List[str]:
     ready_condition = [condition.status for condition in pod.status.conditions if condition.type == "Ready"]
     return [
-        cast(str, pod.metadata.namespace),
-        cast(str, pod.metadata.name),
+        pod.metadata.namespace,
+        pod.metadata.name,
         ready_condition[0] if ready_condition else "Unknown",
     ]
 
@@ -39,7 +39,9 @@ def node_running_pods_enricher(event: NodeEvent):
         return
 
     block_list: List[BaseBlock] = []
-    pod_list = cast(PodList, Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj)
+
+    pod_list_request = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}")
+    pod_list = cast(PodList, pod_list_request.obj)
     effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
     block_list.append(
         TableBlock(effected_pods_rows, ["namespace", "name", "ready"], table_name="Pods running on the node")

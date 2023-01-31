@@ -32,7 +32,8 @@ def get_resource_events_table(
     if namespace is not None:
         field_selector += f",involvedObject.namespace={namespace}"
 
-    event_list = cast(EventList, Event.listEventForAllNamespaces(field_selector=field_selector).obj)
+    event_list_request = Event.listEventForAllNamespaces(field_selector=field_selector)
+    event_list = cast(EventList, event_list_request.obj)
     if not event_list.items:
         return
 

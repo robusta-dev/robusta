@@ -146,7 +146,7 @@ class PrometheusKubernetesAlert(PodEvent, NodeEvent, DeploymentEvent, JobEvent, 
             title=title,
             description=self.get_description(),
             source=FindingSource.PROMETHEUS,
-            aggregation_key=self.alert_name,  # type: ignore
+            aggregation_key=self.alert_name,
             severity=SEVERITY_MAP.get(self.alert.labels.get("severity", "info"), FindingSeverity.INFO),
             subject=alert_subject,
             fingerprint=self.alert.fingerprint,

@@ -159,7 +159,8 @@ def persistent_volume_reader(persistent_volume):
 
 
 def get_pod_related_to_pvc(pvc_obj, pv_obj):
-    pod_list = cast(PodList, PodList.listNamespacedPod(pvc_obj.metadata.namespace).obj)
+    pod_list_request = PodList.listNamespacedPod(pvc_obj.metadata.namespace)
+    pod_list = cast(PodList, pod_list_request.obj)
     pod = None
     for pod in pod_list.items:
         for volume in pod.spec.volumes:

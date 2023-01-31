@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Dict, List, Optional, cast
+from typing import Dict, List, Optional
 
-from kubernetes.client import V1Container, V1Job, V1JobSpec, V1JobStatus, V1PodSpec
+from kubernetes.client import V1Container, V1Job, V1JobStatus
 from pydantic import BaseModel
 
 from robusta.core.discovery import utils
@@ -45,19 +45,18 @@ class JobStatus(BaseModel):
 
     @staticmethod
     def from_api_server(job: V1Job) -> "JobStatus":
-        job_status = cast(V1JobStatus, job.status)
         job_conditions: List[JobCondition] = [
             JobCondition(type=condition.type, message=condition.message)
-            for condition in (job_status.conditions or [])
+            for condition in (job.status.conditions or [])
             if condition.status.lower() == "true"
         ]
         return JobStatus(
-            active=job_status.active or 0,
-            failed=job_status.failed or 0,
-            succeeded=job_status.succeeded or 0,
-            completion_time=str(job_status.completion_time),
+            active=job.status.active or 0,
+            failed=job.status.failed or 0,
+            succeeded=job.status.succeeded or 0,
+            completion_time=str(job.status.completion_time),
             conditions=job_conditions,
-            failed_time=str(JobStatus._extract_failed_time(job_status)),
+            failed_time=str(JobStatus._extract_failed_time(job.status)),
         )
 
     @staticmethod
@@ -93,13 +92,12 @@ class JobData(BaseModel):
 
     @staticmethod
     def from_api_server(job: V1Job, pods: List[str]) -> "JobData":
-        job_spec = cast(V1JobSpec, job.spec)
-        pod_spec = cast(V1PodSpec, job_spec.template.spec)  # type: ignore
+        pod_spec = job.spec.template.spec
         pod_containers: List[JobContainer] = [
-            JobContainer.from_api_server(container) for container in pod_spec.containers  # type: ignore
+            JobContainer.from_api_server(container) for container in pod_spec.containers
         ]
         return JobData(
-            backoff_limit=job_spec.backoff_limit,
+            backoff_limit=job.spec.backoff_limit,
             tolerations=[toleration.to_dict() for toleration in (pod_spec.tolerations or [])],
             node_selector=pod_spec.node_selector,
             labels=job.metadata.labels,

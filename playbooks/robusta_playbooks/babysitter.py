@@ -5,9 +5,7 @@
 # * https://github.com/wagoodman/diff2HtmlCompare
 # * https://github.com/GerHobbelt/google-diff-match-patch
 import logging
-from typing import List, cast
-
-from hikaru import HikaruDocumentBase
+from typing import List
 
 from robusta.api import (
     ActionParams,
@@ -59,8 +57,8 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         return
 
     filtered_diffs = []
-    obj = cast(HikaruDocumentBase, duplicate_without_fields(event.obj, config.omitted_fields))
-    old_obj = cast(HikaruDocumentBase, duplicate_without_fields(event.old_obj, config.omitted_fields))
+    obj = duplicate_without_fields(event.obj, config.omitted_fields)
+    old_obj = duplicate_without_fields(event.old_obj, config.omitted_fields)
 
     if event.operation == K8sOperationType.UPDATE:
         all_diffs = obj.diff(old_obj)

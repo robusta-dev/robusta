@@ -65,9 +65,9 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
         logging.error(f"cannot run pod_node_graph_enricher on event with no pod: {pod_event}")
         return
 
-    node = cast(Optional[Node], Node.readNode(pod.spec.nodeName).obj)
+    node_request = Node.readNode(pod.spec.nodeName)
+    node = cast(Optional[Node], node_request.obj)
     if not node:
-
         logging.warning(f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}")
         return
     graph_enrichment = create_node_graph_enrichment(params, node)

@@ -68,17 +68,12 @@ class HelmValues(BaseModel, extra=Extra.allow):
 
 
 def get_slack_channel() -> str:
-    return (
-        cast(
-            str,
-            typer.prompt(
-                "Which slack channel should I send notifications to? ",
-                prompt_suffix="#",
-            ),
-        )
-        .strip()
-        .strip("#")
+    prompt = typer.prompt(
+        "Which slack channel should I send notifications to? ",
+        prompt_suffix="#",
     )
+    prompt = cast(str, prompt)
+    return prompt.strip().strip("#")
 
 
 def write_values_file(output_path: str, values: HelmValues):
@@ -164,14 +159,12 @@ def gen_config(
         "Configure MsTeams integration?",
         default=False,
     ):
-        msteams_webhook = cast(
-            str,
-            typer.prompt(
-                "Please insert your MsTeams webhook url. "
-                "See https://docs.robusta.dev/master/catalog/sinks/ms-teams.html",
-                default=None,
-            ),
+        prompt = typer.prompt(
+            "Please insert your MsTeams webhook url. "
+            "See https://docs.robusta.dev/master/catalog/sinks/ms-teams.html",
+            default=None,
         )
+        msteams_webhook = cast(str, prompt)
 
     if msteams_webhook:
         sinks_config.append(

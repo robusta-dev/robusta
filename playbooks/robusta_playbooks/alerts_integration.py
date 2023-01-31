@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from string import Template
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 
 import requests
 from hikaru.model import Node
@@ -92,7 +92,7 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
         return  # Silencing only pod alerts on NodeRestartSilencer
 
     # TODO: do we already have alert.Node here?
-    node = cast(Optional[Node], Node.readNode(alert.pod.spec.nodeName).obj)
+    node: Optional[Node] = Node.readNode(alert.pod.spec.nodeName).obj
     if not node:
         logging.warning(f"Node {alert.pod.spec.nodeName} not found for NodeRestartSilencer for {alert}")
         return

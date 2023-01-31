@@ -1,7 +1,7 @@
 # TODO: turn this into a bot that prints statistics/a graph of changes at the end of the day/week
 # on what changed the most
 import logging
-from typing import Dict, cast
+from typing import Dict
 
 from pydantic import BaseModel
 
@@ -23,7 +23,7 @@ def count_pod_creations(event: DeploymentEvent):
         if not deployment:
             logging.info(f"count_pod_creations - no deployment for event: {DeploymentEvent}")
             return
-        name = cast(str, deployment.metadata.name)
+        name = deployment.metadata.name
         value = data.changes_per_deployment.get(name, 0)
         data.changes_per_deployment[name] = value + 1
 
