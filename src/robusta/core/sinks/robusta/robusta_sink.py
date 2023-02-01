@@ -12,6 +12,7 @@ from robusta.core.discovery.top_service_resolver import TopLevelResource, TopSer
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.jobs import JobInfo
+from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
@@ -57,6 +58,7 @@ class RobustaSink(SinkBase):
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
+        self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
         # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
         # helps differentiate between no jobs, to not initialized
         self.__jobs_cache: Optional[Dict[str, JobInfo]] = None
@@ -108,6 +110,11 @@ class RobustaSink(SinkBase):
             self.__jobs_cache: Dict[str, JobInfo] = {}
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
+
+    def __assert_namespaces_cache_initialized(self):
+        if not self.__namespaces_cache:
+            logging.info("Initializing namespaces cache")
+            self.__namespaces_cache = {namespace.name: namespace for namespace in self.dal.get_active_namespaces()}
 
     def __reset_caches(self):
         self.__services_cache: Dict[str, ServiceInfo] = {}
@@ -173,6 +180,9 @@ class RobustaSink(SinkBase):
 
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
+
+            self.__assert_namespaces_cache_initialized()
+            self.__publish_new_namespaces(results.namespaces)
 
             # save the cached services for the resolver.
             RobustaSink.__save_resolver_resources(
@@ -348,3 +358,26 @@ class RobustaSink(SinkBase):
         if time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC or first_alert:
             self.last_send_time = time.time()
             self.__update_cluster_status()
+
+    def __publish_new_namespaces(self, namespaces: List[NamespaceInfo]):
+        # convert to map
+        curr_namespaces = {namespace.name: namespace for namespace in namespaces}
+
+        # handle deleted namespaces
+        updated_namespaces: List[NamespaceInfo] = []
+        for namespace_name, namespace in self.__namespaces_cache.items():
+            if namespace_name not in curr_namespaces:
+                namespace.deleted = True
+                updated_namespaces.append(namespace)
+
+        for update in updated_namespaces:
+            if update.deleted:
+                del self.__namespaces_cache[update.name]
+
+        # new or changed namespaces
+        for namespace_name, updated_namespace in curr_namespaces.items():
+            if self.__namespaces_cache.get(namespace_name) != updated_namespace:
+                updated_namespaces.append(updated_namespace)
+                self.__namespaces_cache[namespace_name] = updated_namespace
+
+        self.dal.publish_namespaces(updated_namespaces)
