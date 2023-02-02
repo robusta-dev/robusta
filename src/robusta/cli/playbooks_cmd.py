@@ -27,7 +27,7 @@ PLAYBOOKS_MOUNT_LOCATION = "/etc/robusta/playbooks/storage"
 NAMESPACE_EXPLANATION = "Installation namespace. If none use the namespace currently active with kubectl."
 CONFIG_SECRET_NAME = "robusta-playbooks-config-secret"
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 
 
 def __validate_playbooks_dir(playbooks_dir: str) -> bool:

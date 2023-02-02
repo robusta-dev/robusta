@@ -19,7 +19,7 @@ from robusta.cli.playbooks_cmd import NAMESPACE_EXPLANATION, get_playbooks_confi
 from robusta.cli.utils import exec_in_robusta_runner_output, namespace_to_kubectl
 
 AUTH_SECRET_NAME = "robusta-auth-config-secret"
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 
 
 class RSAKeyPair(BaseModel):
