@@ -11,7 +11,7 @@ import typer
 from robusta.cli.backend_profile import backend_profile
 from robusta.cli.utils import log_title
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 
 SLACK_INTEGRATION_SERVICE_ADDRESS = os.environ.get(
     "SLACK_INTEGRATION_SERVICE_ADDRESS",
