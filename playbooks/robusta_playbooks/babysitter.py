@@ -85,5 +85,5 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         aggregation_key="ConfigurationChange/KubernetesResource/Change",
         subject=KubeObjFindingSubject(event.obj, should_add_node_name=should_get_subject_node_name),
     )
-    finding.add_enrichment([diff_block])
+    finding.add_enrichment([diff_block], annotations={"operation": event.operation})
     event.add_finding(finding)

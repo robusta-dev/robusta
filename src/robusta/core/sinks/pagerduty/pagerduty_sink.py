@@ -1,8 +1,10 @@
 import logging
+from typing import Dict, Any, Optional
 
 import requests
 
-from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity
+from robusta.core.model.k8s_operation_type import K8sOperationType
+from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity, Enrichment
 from robusta.core.reporting.blocks import (
     HeaderBlock,
     JsonBlock,
@@ -14,11 +16,11 @@ from robusta.core.reporting.blocks import (
 from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from robusta.core.sinks.sink_base import SinkBase
 
-
 class PagerdutySink(SinkBase):
     def __init__(self, sink_config: PagerdutyConfigWrapper, registry):
         super().__init__(sink_config.pagerduty_sink, registry)
-        self.url = "https://events.pagerduty.com/v2/enqueue/"
+        self.events_url = "https://events.pagerduty.com/v2/enqueue/"
+        self.change_url = "https://events.pagerduty.com/v2/change/enqueue"
         self.api_key = sink_config.pagerduty_sink.api_key
 
     @staticmethod
@@ -48,15 +50,79 @@ class PagerdutySink(SinkBase):
         else:
             return "trigger"
 
-    def write_finding(self, finding: Finding, platform_enabled: bool):
+    @staticmethod
+    def __send_changes_to_pagerduty(self, finding: Finding, platform_enabled: bool):
         custom_details: dict = {}
+        links = []
+        if platform_enabled:
+            href = finding.get_investigate_uri(self.account_id, self.cluster_name)
+            links.append({
+                "text": "🔂See the change history in Robusta",
+                "href": href
+            })
+        else:
+            links.append({
+                "text": "🔂See the change history in Robusta UI",
+                "href": "https://docs.robusta.dev/master/"  # todo request the team for the correct url
+            })
 
+        source = self.cluster_name
+
+        custom_details["namespace"] = finding.service.namespace
+        custom_details["resource"] = f"{finding.service.resource_type}/{finding.subject.name}"
+
+        if finding.subject.node:
+            custom_details["node"] = finding.subject.node
+
+        timestamp = finding.starts_at.astimezone().isoformat()
+
+        for enrichment in finding.enrichments:
+            for block in enrichment.blocks:
+                text = self.__to_unformatted_text(block)
+                changes = self.__block_to_changes(block, enrichment)
+                if not text or not changes:
+                    continue
+
+                operation = changes["operation"]
+                change_count = changes["change_count"]
+
+                if not operation:
+                    continue
+
+                changes_count_text = ""
+                if operation == K8sOperationType.UPDATE:
+                    changes_count_text = " ({change_count} {changes})".format(change_count=change_count, changes="change" if change_count == 1 else "changes")
+
+                summary = f"{finding.service.resource_type} {finding.service.namespace}/{finding.service.name} {operation.value}d in cluster {self.cluster_name}{changes_count_text}"
+
+                body = {
+                    "routing_key": self.api_key,
+                    "payload": {
+                        "summary": summary,
+                        "timestamp": timestamp,
+                        "source": source,
+                        "custom_details": custom_details
+                    },
+                    "links": links
+                }
+
+                headers = {"Content-Type": "application/json"}
+                response = requests.post(self.change_url, json=body, headers=headers)
+                if not response.ok:
+                    logging.error(
+                        f"Error sending message to PagerDuty: {response.status_code}, {response.reason}, {response.text}"
+                    )
+
+
+    @staticmethod
+    def __send_events_to_pagerduty(self, finding: Finding, platform_enabled: bool):
+        custom_details: dict = {}
         if platform_enabled:
             custom_details["🔎 Investigate"] = finding.get_investigate_uri(self.account_id, self.cluster_name)
 
             if finding.add_silence_url:
                 custom_details["🔕 Silence"] = finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
-        # custom fields that don't have an inherent meaning in PagerDuty itself:
+            # custom fields that don't have an inherent meaning in PagerDuty itself:
         custom_details["Resource"] = finding.subject.name
         custom_details["Cluster running Robusta"] = self.cluster_name
         custom_details["Namespace"] = finding.subject.namespace
@@ -99,11 +165,17 @@ class PagerdutySink(SinkBase):
         }
 
         headers = {"Content-Type": "application/json"}
-        response = requests.post(self.url, json=body, headers=headers)
+        response = requests.post(self.events_url, json=body, headers=headers)
         if not response.ok:
             logging.error(
                 f"Error sending message to PagerDuty: {response.status_code}, {response.reason}, {response.text}"
             )
+
+    def write_finding(self, finding: Finding, platform_enabled: bool):
+        if finding.aggregation_key == "ConfigurationChange/KubernetesResource/Change":
+            return PagerdutySink.__send_changes_to_pagerduty(self, finding=finding, platform_enabled=platform_enabled)
+
+        return PagerdutySink.__send_events_to_pagerduty(self, finding=finding, platform_enabled=platform_enabled)
 
     @staticmethod
     def __to_unformatted_text(block: BaseBlock) -> str:
@@ -126,3 +198,23 @@ class PagerdutySink(SinkBase):
             )
 
         return ""
+
+    # fetch the changed values from the block
+    @staticmethod
+    def __block_to_changes(block: BaseBlock, enrichment: Enrichment) -> Optional[Dict[str, Any]]:
+        if isinstance(block, KubernetesDiffBlock):
+            operation = enrichment.annotations.get("operation")
+
+            change_count = 0
+            if operation == K8sOperationType.UPDATE:
+                change_count = block.num_modifications
+            elif operation == K8sOperationType.CREATE:
+                change_count = block.num_additions
+            elif operation == K8sOperationType.DELETE:
+                change_count = block.num_deletions
+
+            return {
+                "change_count": change_count,
+                "operation": operation,
+            }
+        return None
