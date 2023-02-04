@@ -1,3 +1,6 @@
+AlertManager and Prometheus Integration
+****************************************
+
 Sending Alerts to Robusta
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -109,12 +112,12 @@ Robusta's Embedded Prometheus
 If you installed Robusta's :ref:`Embedded Prometheus Stack` then no configuration is necessary.
 
 Related Robusta Settings
-====================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Below are additional Robusta settings related to Prometheus, AlertManager, and Grafana.
 
 Setting up a custom Prometheus, AlertManager, and Grafana
------------------------------------------------------------
+==========================================================
 
 If you followed the instructions on this page, Prometheus and AlertManager will know about Robusta, but Robusta might not know about them!
 
@@ -139,7 +142,7 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Helm Up
 
 
 Alerts silencing
--------------------
+=================
 
 Robusta enables silencing AlertManager alerts directly from your notification channels (sinks).
 
