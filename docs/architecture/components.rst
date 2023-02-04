@@ -6,6 +6,20 @@ Standard Architecture
 
 Robusta is installed and managed with Helm.
 
+
+Robusta has three main parts, all open source:
+
+1. An automations engine for Kubernetes
+2. Builtin automations to enrich and fix common alerts
+3. Manual troubleshooting tools for everything else
+
+There are additional *optional* components:
+
+4. `An all-in-one bundle with Robusta, the Prometheus Operator, and default Kubernetes alerts <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_
+5. `A web UI to see all alerts, changes, and events in your cluster. <http://home.robusta.dev/ui?from=docs>`_
+
+
+
 Automations engine
 ^^^^^^^^^^^^^^^^^^^^^^
 The main component of Robusta is the automation engine, which runs in-cluster as two Kubernetes deployments

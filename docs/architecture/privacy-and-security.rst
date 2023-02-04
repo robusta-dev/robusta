@@ -40,33 +40,32 @@ This feature applies to the following Robusta actions:
 - :code:`logs_enricher`
 - :code:`report_crash_loop`
 
-To censor logs, you'll have to define a `python regex <https://www.w3schools.com/python/python_regex.asp>`_ for each expression you wish to filter.
+To censor logs, you can define a `python regex <https://www.w3schools.com/python/python_regex.asp>`_ for expressions you wish to filter.
 
-Here is an example configuration, input and output:
+Here is an example configuration:
 
-Configuration:
 .. code-block:: yaml
 
     - logs_enricher:
-      regex_replacement_style: SAME_LENGTH_ASTERISKS # You can also use NAMED
-      regex_replacer_patterns:
-        - name: MySecretPort
-          regex: "my secret port \d+"
-        - name: UUID
-          regex: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+        regex_replacement_style: SAME_LENGTH_ASTERISKS # You can also use NAMED
+        regex_replacer_patterns:
+          - name: MySecretPort
+            regex: "my secret port \d+"
+          - name: UUID
+            regex: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
-Input:
+Given the following input:
 
-.. code-block:: yaml
+.. code-block::
 
     # Input (actual pod log):
     2022-07-28 08:24:45.283 INFO     user's uuid: '193836d9-9cce-4df9-a454-c2edcf2e80e5'
     2022-07-28 08:35:00.762 INFO     Successfully loaded some critical module
     2022-07-28 08:35:01.090 INFO     using my secret port 114, ip: ['172.18.0.3']
 
-Output:
+The censored output will be:
 
-.. code-block:: yaml
+.. code-block::
 
     # Output for SAME_LENGTH_ASTERISKS (How it will appear in Slack, for example):
 
@@ -92,5 +91,4 @@ It is best to define this in a `global config <https://docs.robusta.dev/master/u
         - name: UUID
           regex: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
-| These values are inside the :code:`generated-values.yaml` file you use when you run :code:`helm install robusta...`
-| See `Installation Guide <https://docs.robusta.dev/master/getting-started/installation.html>`_ for more details.
+Place these values inside Robusta's :code:`generated-values.yaml` file. See `Installation Guide <https://docs.robusta.dev/master/getting-started/installation.html>`_ for more details.

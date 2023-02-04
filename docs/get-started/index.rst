@@ -41,9 +41,9 @@ Learn How
    Remediate Alerts <remediatealerts>
    Route Alerts <routealerts>
 
-* Track Failed Kubernetes Jobs
+* Track Failed Kubernetes Jobs - https://github.com/robusta-dev/robusta/issues/680#issuecomment-1397991931
 * Track Kubernetes Changes
 * Remediate Alerts
 * Route Alerts
 * Create tickets in Jira for Kubernetes issues
-
+* Remediate autoscaling issues - https://www.notion.so/Enable-HPA-resize-playbook-by-default-250826112ef1442da8d4a90efa70e8b8

@@ -1,42 +1,34 @@
 :hide-toc:
+
 Overview
 ================================
 
-Robusta has three main parts, all open source:
+At the core of Robusta is a rules engine which defines how to handle incoming events.
 
-1. An automations engine for Kubernetes
-2. Builtin automations to enrich and fix common alerts
-3. Manual troubleshooting tools for everything else
+Here is an example rule which takes the Prometheus alert ``KubePodCrashLooping`` and attaches logs and pod events.
 
-There are additional *optional* components:
+.. grid:: 2
+    :margin: 0
+    :padding: 0
 
-4. `An all-in-one bundle with Robusta, the Prometheus Operator, and default Kubernetes alerts <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_
-5. `A web UI to see all alerts, changes, and events in your cluster. <http://home.robusta.dev/ui?from=docs>`_
+    .. grid-item::
+        :columns: 5
 
-Development guides
-^^^^^^^^^^^^^^^^^^^
-.. grid:: 1 1 2 3
-    :gutter: 3
+        Triggers: this section defines when the alert fires
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Privacy & Security
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: privacy-and-security
-        :link-type: doc
+        Actions: this section defines how Robusta should process the alert.
 
-        Protect sensitive data and keep the logs clean
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Open Source vs SaaS
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: oss-vs-saas
-        :link-type: doc
+    .. grid-item::
+       :columns: 7
 
-        Differences, what is better for you and why?
-        
-    .. grid-item-card:: :octicon:`cpu;1em;` Components
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: components
-        :link-type: doc
+       .. code-block:: yaml
 
-        Learn how Robusta works from the inside
+            - triggers:
+              - on_prometheus_alert:
+                  alert_name: KubePodCrashLooping
+              actions:
+              - logs_enricher: {}
+              - pod_events_enricher: {}
 
-   
+Lets take a concrete ex

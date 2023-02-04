@@ -96,15 +96,30 @@ Welcome to the Robusta Docs
 
 Robusta helps you get more out of Prometheus on Kubernetes. To be precise, some people use Robusta for observability or runbook automation without Prometheus, but they're best together.
 
-Robusta extends Prometheus with full Kubernetes observability, letting you:
+.. grid:: 2
+    :margin: 0
+    :padding: 0
 
-* Correlate Prometheus alerts with pod logs
-* Attach APIServer information (e.g. ``kubectl get events``) to your alerts
-* See which alerts fired on a Deployment or Node
-* Understand *why* alerts occurred and what led to them firing
-* Perform automatic remediations
+    .. grid-item::
+        :columns: 6
 
-...and more!
+        Robusta extends Prometheus with full Kubernetes observability, letting you:
+
+        * Correlate Prometheus alerts with pod logs
+        * Attach APIServer information (e.g. ``kubectl get events``) to your alerts
+        * See which alerts fired on a Deployment or Node
+        * Understand *why* alerts occurred and what led to them firing
+        * Perform automatic remediations
+
+        ...and more!
+
+
+    .. grid-item::
+       :columns: 6
+
+       .. image:: /images/architecture-overview.png
+          :align: center
+
 
 .. button-ref:: get-started/index
     :color: primary
