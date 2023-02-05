@@ -7,3 +7,4 @@ class ClusterStatus(BaseModel):
     version: str
     last_alert_at: Optional[str]  # ts
     light_actions: List[str]
+    ttl_hours: int = 4380  # Time before unactive cluster data is deleted. 6 Months default.
