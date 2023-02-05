@@ -14,12 +14,10 @@
    :caption: How it works
    :hidden:
 
-   Overview <architecture/index>
-   Components <architecture/components>
-   architecture/oss-vs-saas
-   How playbooks work <configuration/flow-control>
-   Robusta UI Triggers <architecture/robusta-ui-triggers>
-   Privacy & Security <architecture/privacy-and-security>
+   Overview <how-it-works/index>
+   Components <how-it-works/components>
+   how-it-works/oss-vs-saas
+   Privacy & Security <how-it-works/privacy-and-security>
 
 .. toctree::
    :maxdepth: 4
@@ -44,14 +42,17 @@
    Connecting sinks <configuration/sinks-configuration>
    configuration/defining-playbooks
    configuration/additional-playbooks
-   Reulsing comon settings <configuration/global-config>
+   Re-using common settings <configuration/global-config>
    Handling Secrets <configuration/configuration-secrets>
+   How playbooks work <configuration/flow-control>
    configuration/alert-manager
    configuration/embedded-prometheus
    Robusta CLI <configuration/robusta-cli>
    configuration/trigger-action-binding
    tutorials/prometheus-enrichment
    coverage
+   Robusta UI Triggers <how-it-works/robusta-ui-triggers>
+
 
 .. toctree::
    :maxdepth: 4
