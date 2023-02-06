@@ -116,6 +116,7 @@ def create_chart_from_prometheus_query(
         ChartValuesFormat.Plain: lambda val: str(val),
         ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
         ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
+        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
     }
     chart_values_format = values_format if values_format else ChartValuesFormat.Plain
     chart.value_formatter = value_formatters[chart_values_format]
@@ -192,16 +193,16 @@ def create_resource_enrichment(
     ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
     combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod"})',
-            values_format=ChartValuesFormat.Plain,
+            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod"}) * 1000',
+            values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Node): ChartOptions(
             query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
-            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod", container=~"$container"})',
-            values_format=ChartValuesFormat.Plain,
+            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod", container=~"$container"}) * 1000',
+            values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
             query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container!="", image!=""})',
