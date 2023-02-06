@@ -237,6 +237,11 @@ def create_resource_enrichment(
     # Parameter in lambda is the number of the series in the chart to override (excluding lines)
     # It could be used if there are multiple series in the chart
     chart_label_factories: Dict[ResourceKey, ChartLabelFactory] = {
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): lambda i: labels.get("pod", "CPU Usage"),
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Node): lambda i: labels.get("node", "CPU Usage"),
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Container): lambda i: labels.get(
+            "container", "CPU Usage"
+        ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): lambda i: labels.get(
             "container", "Memory Usage"
         ),
