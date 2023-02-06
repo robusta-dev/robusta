@@ -264,15 +264,13 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
             )
         return
 
-    container: Optional[str] = None
+    container: str = pod.spec.containers[0].name
     all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
     if params.container_name:
         container = params.container_name
     elif any(status.name == event.get_subject().container for status in all_statuses):
         # support alerts with a container label, make sure its related to this pod.
         container = event.get_subject().container
-    elif container is None:
-        container = pod.spec.containers[0].name
 
     tries: int = 2
     backoff_seconds: int = 2
