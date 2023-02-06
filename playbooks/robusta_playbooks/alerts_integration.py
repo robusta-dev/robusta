@@ -264,48 +264,38 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
             )
         return
 
-    containers: list[str] = []
+    container: Optional[str] = None
     all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
     if params.container_name:
-        containers = [params.container_name]
-    elif event.get_subject().container:
+        container = params.container_name
+    elif any(status.name == event.get_subject().container for status in all_statuses):
         # support alerts with a container label, make sure its related to this pod.
-        containers = [
-            container_status.name
-            for container_status in all_statuses
-            if container_status.name == event.get_subject().container
-        ]
-
-    # If no container is specified, find containers in an unhealthy state. good for pending pods
-    if len(containers) == 0:
-        containers = [
-            container_status.name
-            for container_status in all_statuses
-            if container_status.state.waiting is not None and container_status.restartCount >= 1
-        ]
+        container = event.get_subject().container
+    elif container is None:
+        container = pod.spec.containers[0].name
 
     tries: int = 2
-    backoff_seconds = 2
+    backoff_seconds: int = 2
     regex_replacement_style = (
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     )
-    for container in containers:
-        for _ in range(tries - 1):
-            log_data = pod.get_logs(
-                container=container,
-                regex_replacer_patterns=params.regex_replacer_patterns,
-                regex_replacement_style=regex_replacement_style,
-                previous=params.previous,
-            )
-            if not log_data:
-                logging.info("log data is empty, retrying...")
-                time.sleep(backoff_seconds)
-                continue
 
-            event.add_enrichment(
-                [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
-            )
-            break
+    for _ in range(tries - 1):
+        log_data = pod.get_logs(
+            container=container,
+            regex_replacer_patterns=params.regex_replacer_patterns,
+            regex_replacement_style=regex_replacement_style,
+            previous=params.previous,
+        )
+        if not log_data:
+            logging.info("log data is empty, retrying...")
+            time.sleep(backoff_seconds)
+            continue
+
+        event.add_enrichment(
+            [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
+        )
+        break
 
 
 class SearchTermParams(ActionParams):
