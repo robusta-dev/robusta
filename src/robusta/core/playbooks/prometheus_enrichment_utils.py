@@ -116,6 +116,7 @@ def create_chart_from_prometheus_query(
         ChartValuesFormat.Plain: lambda val: str(val),
         ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
         ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
+        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
     }
     chart_values_format = values_format if values_format else ChartValuesFormat.Plain
     chart.value_formatter = value_formatters[chart_values_format]
@@ -193,7 +194,7 @@ def create_resource_enrichment(
     combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
             query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod"})',
-            values_format=ChartValuesFormat.Plain,
+            values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Node): ChartOptions(
             query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0',
@@ -201,7 +202,7 @@ def create_resource_enrichment(
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
             query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod", container=~"$container"})',
-            values_format=ChartValuesFormat.Plain,
+            values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
             query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container!="", image!=""})',
@@ -236,6 +237,11 @@ def create_resource_enrichment(
     # Parameter in lambda is the number of the series in the chart to override (excluding lines)
     # It could be used if there are multiple series in the chart
     chart_label_factories: Dict[ResourceKey, ChartLabelFactory] = {
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): lambda i: labels.get("pod", "CPU Usage"),
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Node): lambda i: labels.get("node", "CPU Usage"),
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Container): lambda i: labels.get(
+            "container", "CPU Usage"
+        ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): lambda i: labels.get(
             "container", "Memory Usage"
         ),
