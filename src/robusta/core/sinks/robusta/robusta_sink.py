@@ -28,6 +28,7 @@ class RobustaSink(SinkBase):
 
         super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
+        self.ttl_hours = sink_config.robusta_sink.ttl_hours
 
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if self.account_id != robusta_token.account_id:
@@ -313,6 +314,7 @@ class RobustaSink(SinkBase):
                 last_alert_at=self.registry.get_telemetry().last_alert_at,
                 account_id=self.account_id,
                 light_actions=self.registry.get_light_actions(),
+                ttl_hours=self.ttl_hours,
             )
 
             self.dal.publish_cluster_status(cluster_status)
