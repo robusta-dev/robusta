@@ -268,3 +268,7 @@ h2, h3 {
 [data-md-component="palette"] {
     display: none;
 }
+
+#learn-how {
+    margin-bottom: 0 !important;
+}
