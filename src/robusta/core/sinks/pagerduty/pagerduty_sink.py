@@ -57,12 +57,12 @@ class PagerdutySink(SinkBase):
         if platform_enabled:
             href = finding.get_investigate_uri(self.account_id, self.cluster_name)
             links.append({
-                "text": "🔂See the change history in Robusta",
+                "text": "🔂 See change history in Robusta",
                 "href": href
             })
         else:
             links.append({
-                "text": "🔂See the change history in Robusta UI",
+                "text": "🔂 Enable Robusta UI to see change history",
                 "href": "https://docs.robusta.dev/master/"  # todo request the team for the correct url
             })
 
@@ -78,10 +78,23 @@ class PagerdutySink(SinkBase):
 
         for enrichment in finding.enrichments:
             for block in enrichment.blocks:
-                text = self.__to_unformatted_text(block)
                 changes = self.__block_to_changes(block, enrichment)
-                if not text or not changes:
+
+                remarks = finding.description
+                if not remarks or not changes:
                     continue
+
+                custom_details["Remarks"] = remarks
+
+                unformatted_texts = self.__to_unformatted_text_for_changes(block)
+                if unformatted_texts:
+                    # custom_details["Changes"] = {} #todo clean up
+
+                    change_num = 1
+                    for diff_text in unformatted_texts:
+                        # custom_details["Changes"][f"Change {idx}"] = diff_text #todo clean up
+                        custom_details[f"Change {change_num}"] = diff_text
+                        change_num += 1
 
                 operation = changes["operation"]
                 change_count = changes["change_count"]
@@ -117,12 +130,33 @@ class PagerdutySink(SinkBase):
     @staticmethod
     def __send_events_to_pagerduty(self, finding: Finding, platform_enabled: bool):
         custom_details: dict = {}
+
+        links = []
         if platform_enabled:
-            custom_details["🔎 Investigate"] = finding.get_investigate_uri(self.account_id, self.cluster_name)
+            href = finding.get_investigate_uri(self.account_id, self.cluster_name)
+            links.append({
+                "text": "🔎 Investigate in Robusta",
+                "href": href
+            })
 
             if finding.add_silence_url:
-                custom_details["🔕 Silence"] = finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
-            # custom fields that don't have an inherent meaning in PagerDuty itself:
+                links.append({
+                    "text": "🔕 Create Prometheus Silence",
+                    "href": finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
+                })
+        else:
+            links.append({
+                "text": "🔎 Enable Robusta UI to investigate",
+                "href": "https://docs.robusta.dev/master/"  # todo request the team for the correct url
+            })
+
+            if finding.add_silence_url:
+                links.append({
+                    "text": "🔕 Enable Robusta UI to silence alerts",
+                    "href": "https://docs.robusta.dev/master/" # todo request the team for the correct url
+                })
+
+        # custom fields that don't have an inherent meaning in PagerDuty itself:
         custom_details["Resource"] = finding.subject.name
         custom_details["Cluster running Robusta"] = self.cluster_name
         custom_details["Namespace"] = finding.subject.namespace
@@ -141,7 +175,7 @@ class PagerdutySink(SinkBase):
 
         for enrichment in finding.enrichments:
             for block in enrichment.blocks:
-                text = self.__to_unformatted_text(block)
+                text = self.__to_unformatted_text_for_alerts(block)
                 if not text:
                     continue
 
@@ -162,6 +196,7 @@ class PagerdutySink(SinkBase):
             "routing_key": self.api_key,
             "event_action": PagerdutySink.__to_pagerduty_status_type(finding.title),
             "dedup_key": finding.fingerprint,
+            "links": links,
         }
 
         headers = {"Content-Type": "application/json"}
@@ -178,7 +213,7 @@ class PagerdutySink(SinkBase):
         return PagerdutySink.__send_events_to_pagerduty(self, finding=finding, platform_enabled=platform_enabled)
 
     @staticmethod
-    def __to_unformatted_text(block: BaseBlock) -> str:
+    def __to_unformatted_text_for_alerts(block: BaseBlock) -> str:
         if isinstance(block, HeaderBlock):
             return block.text
         elif isinstance(block, TableBlock):
@@ -192,12 +227,22 @@ class PagerdutySink(SinkBase):
         elif isinstance(block, KubernetesDiffBlock):
             return "\n".join(
                 map(
-                    lambda diff: f"{diff.path}: {diff.other_value} ==> {diff.value}",
+                    lambda diff: f"* {diff.formatted_path}",
                     block.diffs,
                 )
             )
 
         return ""
+
+    @staticmethod
+    def __to_unformatted_text_for_changes(block: BaseBlock) -> Optional[list[str]]:
+        if isinstance(block, KubernetesDiffBlock):
+            return list(map(
+                lambda diff: diff.formatted_path,
+                block.diffs,
+            ))
+
+        return None
 
     # fetch the changed values from the block
     @staticmethod
