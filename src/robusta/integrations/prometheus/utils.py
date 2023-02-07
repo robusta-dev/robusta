@@ -5,20 +5,29 @@ from cachetools import TTLCache
 from requests.exceptions import ConnectionError
 
 from robusta.core.exceptions import PrometheusNotFound
-from robusta.core.model.env_vars import PROMETHEUS_AUTH_HEADER, PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
+from robusta.core.model.base_params import PrometheusParams
+from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
 
 if TYPE_CHECKING:
     from prometheus_api_client import PrometheusConnect
 
 
-def get_prometheus_connect(url: Optional[str]) -> "PrometheusConnect":
+def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusConnect":
     from prometheus_api_client import PrometheusConnect
 
-    if url is None:
-        url = PrometheusDiscovery.find_prometheus_url()
+    url: Optional[str] = (
+        prometheus_params.prometheus_url
+        if prometheus_params.prometheus_url
+        else PrometheusDiscovery.find_prometheus_url()
+    )
 
-    headers = {"Authorization": PROMETHEUS_AUTH_HEADER} if PROMETHEUS_AUTH_HEADER is not None else {}
+    if not url:
+        raise PrometheusNotFound("Prometheus url could not be found. Add 'prometheus_url' under global_config")
+
+    headers = (
+        {"Authorization": prometheus_params.prometheus_auth} if prometheus_params.prometheus_auth is not None else {}
+    )
     return PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
 
 
@@ -36,7 +45,7 @@ class ServiceDiscovery:
     cache: TTLCache = TTLCache(maxsize=1, ttl=SERVICE_CACHE_TTL_SEC)
 
     @classmethod
-    def find_url(cls, selectors: List[str], error_msg: str):
+    def find_url(cls, selectors: List[str], error_msg: str) -> Optional[str]:
         """
         Try to autodiscover the url of an in-cluster service
         """
@@ -57,7 +66,7 @@ class ServiceDiscovery:
 
 class PrometheusDiscovery(ServiceDiscovery):
     @classmethod
-    def find_prometheus_url(cls):
+    def find_prometheus_url(cls) -> Optional[str]:
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
@@ -74,7 +83,7 @@ class PrometheusDiscovery(ServiceDiscovery):
 
 class AlertManagerDiscovery(ServiceDiscovery):
     @classmethod
-    def find_alert_manager_url(cls):
+    def find_alert_manager_url(cls) -> Optional[str]:
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-alertmanager",

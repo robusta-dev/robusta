@@ -24,7 +24,6 @@ from robusta.core.model.base_params import (
 )
 from robusta.core.model.env_vars import (
     ALERT_BUILDER_WORKERS,
-    ALERTMANAGER_AUTH_HEADER,
     CLUSTER_STATUS_PERIOD_SEC,
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
@@ -45,7 +44,6 @@ from robusta.core.model.env_vars import (
     PLAYBOOKS_CONFIG_FILE_PATH,
     PLAYBOOKS_ROOT,
     PRINTED_TABLE_MAX_WIDTH,
-    PROMETHEUS_AUTH_HEADER,
     PROMETHEUS_ENABLED,
     PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
     RELAY_EXTERNAL_ACTIONS_URL,

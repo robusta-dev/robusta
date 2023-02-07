@@ -149,7 +149,7 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     """
     promql_query = alert.get_prometheus_query()
     chart = create_chart_from_prometheus_query(
-        params.prometheus_url,
+        params,
         promql_query,
         alert.alert.startsAt,
         include_x_axis=False,
@@ -168,7 +168,7 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
         alert.alert.startsAt,
         alert.alert.labels,
         params.promql_query,
-        prometheus_url=params.prometheus_url,
+        prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
         graph_title=params.graph_title,
         chart_values_format=chart_values_format,
@@ -194,7 +194,7 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
         labels,
         ResourceChartResourceType[params.resource_type],
         ResourceChartItemType[params.item_type],
-        prometheus_url=params.prometheus_url,
+        prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
     )
     alert.add_enrichment([graph_enrichment])

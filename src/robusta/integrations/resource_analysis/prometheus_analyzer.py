@@ -2,13 +2,14 @@ import logging
 from datetime import datetime, timedelta, tzinfo
 from typing import Optional, Union
 
+from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 from robusta.integrations.prometheus.utils import check_prometheus_connection, get_prometheus_connect
 
 
 class PrometheusAnalyzer:
-    def __init__(self, prometheus_url: str, prometheus_tzinfo: Optional[tzinfo]):
-        self.prom = get_prometheus_connect(prometheus_url)
+    def __init__(self, prometheus_params: PrometheusParams, prometheus_tzinfo: Optional[tzinfo]):
+        self.prom = get_prometheus_connect(prometheus_params)
         self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
 
         check_prometheus_connection(self.prom, self.default_prometheus_params)

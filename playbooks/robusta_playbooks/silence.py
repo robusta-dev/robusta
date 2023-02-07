@@ -5,10 +5,9 @@ from typing import Dict, List, Optional
 from uuid import UUID
 
 import requests
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 from robusta.api import (
-    ALERTMANAGER_AUTH_HEADER,
     ActionException,
     ActionParams,
     AlertManagerDiscovery,
@@ -67,6 +66,7 @@ class BaseSilenceParams(ActionParams):
 
     alertmanager_flavor: str = None  # type: ignore
     alertmanager_url: Optional[str]
+    alertmanager_auth: Optional[SecretStr] = None
     grafana_api_key: str = None  # type: ignore
 
 
@@ -195,8 +195,8 @@ def _gen_headers(params: BaseSilenceParams) -> Dict:
     if params.grafana_api_key:
         headers.update({"Authorization": f"Bearer {params.grafana_api_key}"})
 
-    if ALERTMANAGER_AUTH_HEADER is not None:
-        headers.update({"Authorization": ALERTMANAGER_AUTH_HEADER})
+    elif params.alertmanager_auth:
+        headers.update({"Authorization": params.alertmanager_auth})
 
     return headers
 

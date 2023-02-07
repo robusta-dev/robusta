@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 from prometheus_api_client import PrometheusApiClientException
 
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
+from robusta.core.model.base_params import PrometheusParams
 from robusta.integrations.prometheus.utils import check_prometheus_connection, get_prometheus_connect
 
 """
@@ -16,7 +17,7 @@ It used to return only the result and not the resultType leading for less safe a
 
 
 def custom_query_range(
-    prometheus_base_url: str,
+    prometheus_params: PrometheusParams,
     query: str,
     start_time: datetime,
     end_time: datetime,
@@ -39,7 +40,7 @@ def custom_query_range(
         (RequestException) Raises an exception in case of a connection error
         (PrometheusApiClientException) Raises in case of non 200 response status code
     """
-    prom = get_prometheus_connect(prometheus_base_url)
+    prom = get_prometheus_connect(prometheus_params)
     start = round(start_time.timestamp())
     end = round(end_time.timestamp())
     params = params or {}
