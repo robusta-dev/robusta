@@ -79,32 +79,33 @@ class PagerdutySink(SinkBase):
         for enrichment in finding.enrichments:
             for block in enrichment.blocks:
                 changes = self.__block_to_changes(block, enrichment)
-
-                remarks = finding.description
-                if not remarks or not changes:
+                if not changes:
                     continue
 
-                custom_details["Remarks"] = remarks
-
-                unformatted_texts = self.__to_unformatted_text_for_changes(block)
-                if unformatted_texts:
-                    # custom_details["Changes"] = {} #todo clean up
-
-                    change_num = 1
-                    for diff_text in unformatted_texts:
-                        # custom_details["Changes"][f"Change {idx}"] = diff_text #todo clean up
-                        custom_details[f"Change {change_num}"] = diff_text
-                        change_num += 1
-
                 operation = changes["operation"]
-                change_count = changes["change_count"]
-
                 if not operation:
                     continue
 
+                unformatted_texts = self.__to_unformatted_text_for_changes(block)
+                if unformatted_texts:
+                    change_num = 1
+                    for diff_text in unformatted_texts:
+                        custom_details[f"Change {change_num}"] = diff_text
+                        change_num += 1
+
+                description = finding.description
                 changes_count_text = ""
+
                 if operation == K8sOperationType.UPDATE:
-                    changes_count_text = " ({change_count} {changes})".format(change_count=change_count, changes="change" if change_count == 1 else "changes")
+                    if description:
+                        custom_details["Remarks"] = description
+
+                    change_count = changes["change_count"]
+                    changes_count_text = " ({change_count} {changes})".format(change_count=change_count,
+                                                                              changes="change" if change_count == 1 else "changes")
+                elif operation == K8sOperationType.CREATE or operation == K8sOperationType.DELETE:
+                    if description:
+                        custom_details["Remarks"] = f"Resource {operation.value}d"
 
                 summary = f"{finding.service.resource_type} {finding.service.namespace}/{finding.service.name} {operation.value}d in cluster {self.cluster_name}{changes_count_text}"
 
@@ -125,7 +126,6 @@ class PagerdutySink(SinkBase):
                     logging.error(
                         f"Error sending message to PagerDuty: {response.status_code}, {response.reason}, {response.text}"
                     )
-
 
     @staticmethod
     def __send_events_to_pagerduty(self, finding: Finding, platform_enabled: bool):
@@ -153,7 +153,7 @@ class PagerdutySink(SinkBase):
             if finding.add_silence_url:
                 links.append({
                     "text": "🔕 Enable Robusta UI to silence alerts",
-                    "href": "https://docs.robusta.dev/master/" # todo request the team for the correct url
+                    "href": "https://docs.robusta.dev/master/"  # todo request the team for the correct url
                 })
 
         # custom fields that don't have an inherent meaning in PagerDuty itself:
