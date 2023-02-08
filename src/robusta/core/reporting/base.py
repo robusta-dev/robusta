@@ -132,11 +132,13 @@ class FindingSubject:
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
         namespace: str = None,
         node: str = None,
+        container: Optional[str] = None,
     ):
         self.name = name
         self.subject_type = subject_type
         self.namespace = namespace
         self.node = node
+        self.container = container
 
     def __str__(self):
         if self.namespace is not None:

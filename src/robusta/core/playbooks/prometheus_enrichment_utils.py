@@ -2,7 +2,7 @@ import math
 from collections import defaultdict, namedtuple
 from datetime import datetime, timedelta
 from string import Template
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import humanize
 import pygal
@@ -15,6 +15,9 @@ from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUES
 from robusta.core.reporting.blocks import FileBlock
 from robusta.core.reporting.custom_rendering import charts_style
 from robusta.integrations.prometheus.utils import PrometheusDiscovery
+
+ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
+ChartLabelFactory = Callable[[int], str]
 
 
 class XAxisLine(BaseModel):
@@ -81,6 +84,7 @@ def create_chart_from_prometheus_query(
     chart_title: Optional[str] = None,
     values_format: Optional[ChartValuesFormat] = None,
     lines: Optional[List[XAxisLine]] = [],
+    chart_label_factory: Optional[ChartLabelFactory] = None,
 ):
     if not alert_starts_at:
         ends_at = datetime.utcnow()
@@ -112,6 +116,7 @@ def create_chart_from_prometheus_query(
         ChartValuesFormat.Plain: lambda val: str(val),
         ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
         ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
+        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
     }
     chart_values_format = values_format if values_format else ChartValuesFormat.Plain
     chart.value_formatter = value_formatters[chart_values_format]
@@ -124,8 +129,13 @@ def create_chart_from_prometheus_query(
     # TODO: change min_time time before  Jan 19 3001
     min_time = 32536799999
     max_time = 0
-    for series in prometheus_query_result.series_list_result:
+    for i, series in enumerate(prometheus_query_result.series_list_result):
         label = "\n".join([v for v in series.metric.values()])
+
+        # If the label is empty, try to take it from the additional_label_factory
+        if label == "" and chart_label_factory is not None:
+            label = chart_label_factory(i)
+
         values = []
         for index in range(len(series.values)):
             timestamp = series.timestamps[index]
@@ -151,6 +161,7 @@ def create_graph_enrichment(
     graph_title: Optional[str],
     chart_values_format: Optional[ChartValuesFormat],
     lines: Optional[List[XAxisLine]] = [],
+    chart_label_factory: Optional[ChartLabelFactory] = None,
 ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
@@ -162,6 +173,7 @@ def create_graph_enrichment(
         chart_title=graph_title,
         values_format=chart_values_format,
         lines=lines,
+        chart_label_factory=chart_label_factory,
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
@@ -179,14 +191,18 @@ def create_resource_enrichment(
     title_override: Optional[str] = None,
 ) -> FileBlock:
     ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
-    combinations = {
+    combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
             query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod"})',
-            values_format=ChartValuesFormat.Plain,
+            values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Node): ChartOptions(
             query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0',
             values_format=ChartValuesFormat.Percentage,
+        ),
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
+            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod", container=~"$container"})',
+            values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
             query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container!="", image!=""})',
@@ -196,18 +212,14 @@ def create_resource_enrichment(
             query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
+        (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
+            query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container=~"$container", image!=""})',
+            values_format=ChartValuesFormat.Bytes,
+        ),
         (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): None,
         (ResourceChartResourceType.Disk, ResourceChartItemType.Node): ChartOptions(
             query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})) != 0))',
             values_format=ChartValuesFormat.Percentage,
-        ),
-        (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
-            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod", container=~"$container"})',
-            values_format=ChartValuesFormat.Plain,
-        ),
-        (ResourceChartResourceType.Memory, ResourceChartItemType.Container,): ChartOptions(
-            query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container=~"$container", image!=""})',
-            values_format=ChartValuesFormat.Bytes,
         ),
     }
     combination = (resource_type, item_type)
@@ -220,6 +232,21 @@ def create_resource_enrichment(
         if title_override
         else f"{resource_type.name} {values_format_text} for this {item_type.name.lower()}"
     )
+
+    # NOTE: Some queries do not produce automatic labels, so we need to provide them
+    # Parameter in lambda is the number of the series in the chart to override (excluding lines)
+    # It could be used if there are multiple series in the chart
+    chart_label_factories: Dict[ResourceKey, ChartLabelFactory] = {
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): lambda i: labels.get("pod", "CPU Usage"),
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Node): lambda i: labels.get("node", "CPU Usage"),
+        (ResourceChartResourceType.CPU, ResourceChartItemType.Container): lambda i: labels.get(
+            "container", "CPU Usage"
+        ),
+        (ResourceChartResourceType.Memory, ResourceChartItemType.Container): lambda i: labels.get(
+            "container", "Memory Usage"
+        ),
+    }
+
     graph_enrichment = create_graph_enrichment(
         starts_at,
         labels,
@@ -229,5 +256,6 @@ def create_resource_enrichment(
         graph_title=title,
         chart_values_format=chosen_combination.values_format,
         lines=lines,
+        chart_label_factory=chart_label_factories.get(combination),
     )
     return graph_enrichment

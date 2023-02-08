@@ -63,7 +63,7 @@ def _send_crash_report(
             regex_replacement_style=regex_replacement_style,
         )
         if container_log:
-            blocks.append(FileBlock(f"{pod.metadata.name}.txt", container_log))
+            blocks.append(FileBlock(f"{pod.metadata.name}/{container_status.name}.log", container_log))
         else:
             blocks.append(MarkdownBlock(f"Container logs unavailable for container: {container_status.name}"))
             logging.error(f"could not fetch logs from container: {container_status.name}. logs were {container_log}")

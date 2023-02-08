@@ -104,7 +104,7 @@ class ExecutionBaseEvent:
             first = False
 
     def override_finding_attributes(
-        self, title: Optional[str], description: Optional[str], severity: FindingSeverity = None
+        self, title: Optional[str] = None, description: Optional[str] = None, severity: FindingSeverity = None
     ):
         for sink in self.named_sinks:
             for finding in self.sink_findings[sink]:

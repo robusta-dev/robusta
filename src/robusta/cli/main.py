@@ -34,7 +34,7 @@ from robusta.integrations.prometheus.utils import AlertManagerDiscovery
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
 
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
 app.add_typer(integrations_commands, name="integrations", help="Integrations commands menu")
 app.add_typer(auth_commands, name="auth", help="Authentication commands menu")

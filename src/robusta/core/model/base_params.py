@@ -14,6 +14,7 @@ class ChartValuesFormat(Enum):
     Plain = auto()
     Bytes = auto()
     Percentage = auto()
+    CPUUsage = auto()
 
 
 class ResourceChartItemType(Enum):

@@ -141,8 +141,9 @@ class ExamplesGenerator:
             trigger_params = {}
 
         example = {
-            "actions": [{action_metadata.action_name: {}}],
-            "triggers": [{trigger: trigger_params}],
+            "customPlaybooks": [
+                {"actions": [{action_metadata.action_name: {}}], "triggers": [{trigger: trigger_params}]}
+            ]
         }
         if action_metadata.params_type:
             action_model = action_metadata.params_type
@@ -152,5 +153,5 @@ class ExamplesGenerator:
             # without it we need to understand json references and handle them ourselves
             action_schema = jsonref.loads(action_model.schema_json())
             action_example = example_from_schema(action_schema)
-            example["actions"][0][action_metadata.action_name] = action_example
+            example["customPlaybooks"][0]["actions"][0][action_metadata.action_name] = action_example
         return yaml.dump(example, Dumper=NoAliasDumper)

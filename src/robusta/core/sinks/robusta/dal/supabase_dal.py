@@ -12,6 +12,7 @@ from supabase_py.lib.auth_client import SupabaseAuthClient
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
 from robusta.core.model.jobs import JobInfo
+from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
@@ -23,6 +24,7 @@ EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
 CLUSTERS_STATUS_TABLE = "ClustersStatus"
 JOBS_TABLE = "Jobs"
+NAMESPACES_TABLE = "Namespaces"
 
 
 class RobustaAuthClient(SupabaseAuthClient):
@@ -313,13 +315,16 @@ class SupabaseDal:
         is attempted to be converted to a json, which throws an error every time
         """
         url: str = str(supabase_request_obj.session.base_url).rstrip("/")
-        query: str = str(supabase_request_obj.session.params)
+
+        # postgres_py (which supabase cli uses) adds quotation marks around params with the characters ",.:()"
+        # supabase does not support this format
+        query: str = str(supabase_request_obj.session.params).replace('%22', '')
         response = requests.delete(f"{url}?{query}", headers=supabase_request_obj.session.headers)
         response_data = ""
         try:
             response_data = response.json()
         except Exception:  # this can be okay if no data is expected
-            logging.warning("Failed to parse delete response data")
+            logging.debug("Failed to parse delete response data")
 
         return {
             "data": response_data,
@@ -365,3 +370,39 @@ class SupabaseDal:
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {res.get('data')}")
             self.handle_supabase_error()
+
+    def get_active_namespaces(self) -> List[NamespaceInfo]:
+        res = (
+            self.client.table(NAMESPACES_TABLE)
+            .select("*")
+            .filter("account_id", "eq", self.account_id)
+            .filter("cluster_id", "eq", self.cluster)
+            .filter("deleted", "eq", False)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to get existing namespaces (supabase) error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(f"get active namespaces failed. status: {res.get('status_code')}")
+
+        return [NamespaceInfo.from_db_row(namespace) for namespace in res.get("data")]
+
+    def __to_db_namespace(self, namespace: NamespaceInfo) -> Dict[Any, Any]:
+        db_job = namespace.dict()
+        db_job["account_id"] = self.account_id
+        db_job["cluster_id"] = self.cluster
+        db_job["updated_at"] = "now()"
+        return db_job
+
+    def publish_namespaces(self, namespaces: List[NamespaceInfo]):
+        if not namespaces:
+            return
+
+        db_namespaces = [self.__to_db_namespace(namespace) for namespace in namespaces]
+        res = self.client.table(NAMESPACES_TABLE).insert(db_namespaces, upsert=True).execute()
+        if res.get("status_code") not in [200, 201]:
+            logging.error(f"Failed to persist namespaces {namespaces} error: {res.get('data')}")
+            self.handle_supabase_error()
+            status_code = res.get("status_code")
+            raise Exception(f"publish namespaces failed. status: {status_code}")
