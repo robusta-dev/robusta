@@ -63,7 +63,7 @@ class PagerdutySink(SinkBase):
         else:
             links.append({
                 "text": "🔂 Enable Robusta UI to see change history",
-                "href": "https://docs.robusta.dev/master/"  # todo request the team for the correct url
+                "href": "https://bit.ly/robusta-ui-pager-duty"
             })
 
         source = self.cluster_name
@@ -147,13 +147,13 @@ class PagerdutySink(SinkBase):
         else:
             links.append({
                 "text": "🔎 Enable Robusta UI to investigate",
-                "href": "https://docs.robusta.dev/master/"  # todo request the team for the correct url
+                "href": "https://bit.ly/robusta-ui-pager-duty"
             })
 
             if finding.add_silence_url:
                 links.append({
                     "text": "🔕 Enable Robusta UI to silence alerts",
-                    "href": "https://docs.robusta.dev/master/"  # todo request the team for the correct url
+                    "href": "https://bit.ly/robusta-ui-pager-duty"
                 })
 
         # custom fields that don't have an inherent meaning in PagerDuty itself:
