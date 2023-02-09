@@ -18,8 +18,8 @@ def filter_event(ev: Event, name_substring_filter: str, included_types: Optional
 def get_resource_events_table(
     table_name: str,
     kind: str,
-    name: str = None,
-    namespace: str = None,
+    name: Optional[str] = None,
+    namespace: Optional[str] = None,
     name_substring: str = "",
     included_types: Optional[List[str]] = None,
     max_events: Optional[int] = None,

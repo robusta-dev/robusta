@@ -12,6 +12,7 @@ from robusta.api import (
     FindingSubjectType,
     FindingType,
     KubeObjFindingSubject,
+    KubernetesResourceEvent,
     MarkdownBlock,
     PodEvent,
     SlackAnnotations,
@@ -74,6 +75,29 @@ def event_resource_events(event: EventChangeEvent):
     )
     if events_table:
         event.add_enrichment([events_table], {SlackAnnotations.ATTACHMENT: True})
+
+
+@action
+def resource_events_enricher(event: KubernetesResourceEvent, params: EventEnricherParams):
+    """
+    Given a Kubernetes resource, fetch related events in the near past
+    """
+    resource = event.get_resource()
+    if resource.kind is None:
+        logging.error(f"cannot run resource_events_enricher without resource kind: {resource.kind}")
+        return
+
+    events_table_block = get_resource_events_table(
+        f"*{resource.kind} events:*",
+        resource.kind,
+        resource.metadata.name,
+        resource.metadata.namespace,
+        included_types=params.included_types,
+        max_events=params.max_events,
+    )
+
+    if events_table_block:
+        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
 
 
 @action
