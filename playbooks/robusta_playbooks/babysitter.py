@@ -21,6 +21,7 @@ from robusta.api import (
     duplicate_without_fields,
     is_matching_diff,
 )
+from robusta.core.reporting.consts import FindingAggregationKey
 
 
 class BabysitterConfig(ActionParams):
@@ -82,7 +83,7 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         source=FindingSource.KUBERNETES_API_SERVER,
         finding_type=FindingType.CONF_CHANGE,
         failure=False,
-        aggregation_key="ConfigurationChange/KubernetesResource/Change",
+        aggregation_key=FindingAggregationKey.CONFIGURATION_CHANGE_KUBERNETES_RESOURCE_CHANGE.value,
         subject=KubeObjFindingSubject(event.obj, should_add_node_name=should_get_subject_node_name),
     )
     finding.add_enrichment([diff_block], annotations={"operation": event.operation})

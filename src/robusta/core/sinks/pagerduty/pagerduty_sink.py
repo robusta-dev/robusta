@@ -13,6 +13,7 @@ from robusta.core.reporting.blocks import (
     MarkdownBlock,
     TableBlock,
 )
+from robusta.core.reporting.consts import FindingAggregationKey
 from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from robusta.core.sinks.sink_base import SinkBase
 
@@ -55,10 +56,9 @@ class PagerdutySink(SinkBase):
         custom_details: dict = {}
         links = []
         if platform_enabled:
-            href = finding.get_investigate_uri(self.account_id, self.cluster_name)
             links.append({
                 "text": "🔂 See change history in Robusta",
-                "href": href
+                "href": finding.get_investigate_uri(self.account_id, self.cluster_name)
             })
         else:
             links.append({
@@ -133,10 +133,9 @@ class PagerdutySink(SinkBase):
 
         links = []
         if platform_enabled:
-            href = finding.get_investigate_uri(self.account_id, self.cluster_name)
             links.append({
                 "text": "🔎 Investigate in Robusta",
-                "href": href
+                "href": finding.get_investigate_uri(self.account_id, self.cluster_name)
             })
 
             if finding.add_silence_url:
@@ -207,7 +206,7 @@ class PagerdutySink(SinkBase):
             )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
-        if finding.aggregation_key == "ConfigurationChange/KubernetesResource/Change":
+        if finding.aggregation_key == FindingAggregationKey.CONFIGURATION_CHANGE_KUBERNETES_RESOURCE_CHANGE.value:
             return PagerdutySink.__send_changes_to_pagerduty(self, finding=finding, platform_enabled=platform_enabled)
 
         return PagerdutySink.__send_events_to_pagerduty(self, finding=finding, platform_enabled=platform_enabled)
@@ -253,10 +252,6 @@ class PagerdutySink(SinkBase):
             change_count = 0
             if operation == K8sOperationType.UPDATE:
                 change_count = block.num_modifications
-            elif operation == K8sOperationType.CREATE:
-                change_count = block.num_additions
-            elif operation == K8sOperationType.DELETE:
-                change_count = block.num_deletions
 
             return {
                 "change_count": change_count,

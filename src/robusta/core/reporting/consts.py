@@ -9,6 +9,9 @@ class FindingType(Enum):
     HEALTH_CHECK = "health_check"
     REPORT = "report"
 
+class FindingAggregationKey(Enum):
+    NONE = None  # empty default
+    CONFIGURATION_CHANGE_KUBERNETES_RESOURCE_CHANGE = "ConfigurationChange/KubernetesResource/Change"
 
 # Finding sources
 class FindingSource(Enum):

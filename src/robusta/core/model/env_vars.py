@@ -64,7 +64,7 @@ WEBSOCKET_PING_INTERVAL = int(os.environ.get("WEBSOCKET_PING_INTERVAL", 120))
 # Timeout for the ping response, before killing the connection. Must be smaller than the interval
 WEBSOCKET_PING_TIMEOUT = int(os.environ.get("WEBSOCKET_PING_TIMEOUT", 30))
 
-TRACE_INCOMING_REQUESTS = bool(os.environ.get("TRACE_INCOMING_REQUESTS", True))
+TRACE_INCOMING_REQUESTS = bool(os.environ.get("TRACE_INCOMING_REQUESTS", False))
 
 SERVICE_CACHE_TTL_SEC = int(os.environ.get("SERVICE_CACHE_TTL_SEC", 900))
 SERVICE_CACHE_MAX_SIZE = int(os.environ.get("SERVICE_CACHE_MAX_SIZE", 1000))
