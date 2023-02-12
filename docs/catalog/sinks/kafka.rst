@@ -10,7 +10,7 @@ Configuring the Kafka sink
 
     .. code-block:: yaml
 
-        sinkConfig:
+        sinksConfig:
         - kafka_sink:
             name: kafka_sink
             kafka_url: "localhost:9092"

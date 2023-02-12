@@ -71,4 +71,5 @@ SERVICE_CACHE_MAX_SIZE = int(os.environ.get("SERVICE_CACHE_MAX_SIZE", 1000))
 
 PORT = int(os.environ.get("PORT", 5000))  # PORT
 
-
+# additional certificate to verify, base64 encoded.
+ADDITIONAL_CERTIFICATE: str = os.environ.get("CERTIFICATE", "")
