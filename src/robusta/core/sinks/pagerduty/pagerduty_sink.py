@@ -17,6 +17,7 @@ from robusta.core.reporting.consts import FindingAggregationKey
 from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from robusta.core.sinks.sink_base import SinkBase
 
+
 class PagerdutySink(SinkBase):
     def __init__(self, sink_config: PagerdutyConfigWrapper, registry):
         super().__init__(sink_config.pagerduty_sink, registry)
@@ -78,10 +79,10 @@ class PagerdutySink(SinkBase):
 
         for enrichment in finding.enrichments:
             for block in enrichment.blocks:
-                changes = self.__block_to_changes(block, enrichment)
-                if not changes:
+                if not isinstance(block, KubernetesDiffBlock):
                     continue
 
+                changes = self.__block_to_changes(block, enrichment)
                 operation = changes["operation"]
                 if not operation:
                     continue
@@ -101,11 +102,10 @@ class PagerdutySink(SinkBase):
                         custom_details["Remarks"] = description
 
                     change_count = changes["change_count"]
-                    changes_count_text = " ({change_count} {changes})".format(change_count=change_count,
-                                                                              changes="change" if change_count == 1 else "changes")
-                elif operation == K8sOperationType.CREATE or operation == K8sOperationType.DELETE:
-                    if description:
-                        custom_details["Remarks"] = f"Resource {operation.value}d"
+                    changes_count_text = f" ({change_count} {'change' if change_count == 1 else 'changes'})"
+
+                elif description:
+                    custom_details["Remarks"] = f"Resource {operation.value}d"
 
                 summary = f"{finding.service.resource_type} {finding.service.namespace}/{finding.service.name} {operation.value}d in cluster {self.cluster_name}{changes_count_text}"
 
@@ -234,27 +234,22 @@ class PagerdutySink(SinkBase):
         return ""
 
     @staticmethod
-    def __to_unformatted_text_for_changes(block: BaseBlock) -> Optional[list[str]]:
-        if isinstance(block, KubernetesDiffBlock):
-            return list(map(
-                lambda diff: diff.formatted_path,
-                block.diffs,
-            ))
-
-        return None
+    def __to_unformatted_text_for_changes(block: KubernetesDiffBlock) -> Optional[list[str]]:
+        return list(map(
+            lambda diff: diff.formatted_path,
+            block.diffs,
+        ))
 
     # fetch the changed values from the block
     @staticmethod
-    def __block_to_changes(block: BaseBlock, enrichment: Enrichment) -> Optional[Dict[str, Any]]:
-        if isinstance(block, KubernetesDiffBlock):
-            operation = enrichment.annotations.get("operation")
+    def __block_to_changes(block: KubernetesDiffBlock, enrichment: Enrichment) -> Dict[str, Any]:
+        operation = enrichment.annotations.get("operation")
 
-            change_count = 0
-            if operation == K8sOperationType.UPDATE:
-                change_count = block.num_modifications
+        change_count = 0
+        if operation == K8sOperationType.UPDATE:
+            change_count = block.num_modifications
 
-            return {
-                "change_count": change_count,
-                "operation": operation,
-            }
-        return None
+        return {
+            "change_count": change_count,
+            "operation": operation,
+        }
