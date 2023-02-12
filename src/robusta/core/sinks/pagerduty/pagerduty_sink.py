@@ -97,9 +97,8 @@ class PagerdutySink(SinkBase):
                 description = finding.description
                 changes_count_text = ""
 
-                if operation == K8sOperationType.UPDATE:
-                    if description:
-                        custom_details["Remarks"] = description
+                if operation == K8sOperationType.UPDATE and description:
+                    custom_details["Remarks"] = description
 
                     change_count = changes["change_count"]
                     changes_count_text = f" ({change_count} {'change' if change_count == 1 else 'changes'})"
