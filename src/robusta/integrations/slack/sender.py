@@ -41,7 +41,14 @@ class SlackSender:
         Connect to Slack and verify that the Slack token is valid.
         Return True on success, False on failure
         """
-        ssl_context = ssl.create_default_context(cafile=certifi.where()) if ADDITIONAL_CERTIFICATE else None
+        ssl_context = None
+        if ADDITIONAL_CERTIFICATE:
+            try:
+                ssl_context = ssl.create_default_context(cafile=certifi.where())
+            except Exception as e:
+                logging.exception(f"Failed to use custom certificate. {e}")
+                ssl_context = None
+
         self.slack_client = WebClient(token=slack_token, ssl=ssl_context)
         self.signing_key = signing_key
         self.account_id = account_id
