@@ -1,11 +1,13 @@
 import logging
+import ssl
 import tempfile
 from typing import Any, Dict, List
 
+import certifi
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-from robusta.core.model.env_vars import SLACK_TABLE_COLUMNS_LIMIT
+from robusta.core.model.env_vars import ADDITIONAL_CERTIFICATE, SLACK_TABLE_COLUMNS_LIMIT
 from robusta.core.reporting.base import Emojis, Finding, FindingStatus
 from robusta.core.reporting.blocks import (
     BaseBlock,
@@ -39,7 +41,8 @@ class SlackSender:
         Connect to Slack and verify that the Slack token is valid.
         Return True on success, False on failure
         """
-        self.slack_client = WebClient(token=slack_token)
+        ssl_context = ssl.create_default_context(cafile=certifi.where()) if ADDITIONAL_CERTIFICATE else None
+        self.slack_client = WebClient(token=slack_token, ssl=ssl_context)
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
