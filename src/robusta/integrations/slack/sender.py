@@ -47,7 +47,6 @@ class SlackSender:
                 ssl_context = ssl.create_default_context(cafile=certifi.where())
             except Exception as e:
                 logging.exception(f"Failed to use custom certificate. {e}")
-                ssl_context = None
 
         self.slack_client = WebClient(token=slack_token, ssl=ssl_context)
         self.signing_key = signing_key
