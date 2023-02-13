@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING, List, Optional
 
 from cachetools import TTLCache
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, HTTPError
 
 from robusta.core.exceptions import PrometheusNotFound
 from robusta.core.model.base_params import PrometheusParams
@@ -36,11 +36,18 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
 def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
     params = params or {}
     try:
-        prometheus_connected = prom.check_prometheus_connection(params)
-        if not prometheus_connected:
-            raise PrometheusNotFound(f"No Prometheus found under {prom.url}")
-    except ConnectionError:
-        raise PrometheusNotFound(f"Couldn't connect to Prometheus found under {prom.url}")
+        response = prom._session.get(
+            f"{prom.url}/api/v1/query",
+            verify=prom.ssl_verification,
+            headers=prom.headers,
+            # This query should return empty results, but is correct
+            params={"query": "example", **params},
+        )
+        response.raise_for_status()
+    except ConnectionError as e:
+        raise PrometheusNotFound(f"Couldn't connect to Prometheus found under {prom.url}") from e
+    except HTTPError as e:
+        raise PrometheusNotFound(f"No Prometheus found under {prom.url}") from e
 
 
 class ServiceDiscovery:
