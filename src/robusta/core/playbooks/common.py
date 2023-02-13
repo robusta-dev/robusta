@@ -80,3 +80,23 @@ def get_events_list(event_type: str = None) -> EventList:
         field_selector = f"type={event_type}"
         return Event.listEventForAllNamespaces(field_selector=field_selector).obj
     return Event.listEventForAllNamespaces().obj
+
+
+def get_resource_events(
+    kind: Optional[str] = None,
+    name: Optional[str] = None,
+    namespace: Optional[str] = None,
+    name_substring: str = "",
+    included_types: Optional[List[str]] = None,
+) -> List[Event]:
+    field_selector = ""
+    if kind:
+        field_selector = f"involvedObject.kind={kind}"
+    if name:
+        field_selector += f",involvedObject.name={name}"
+    if namespace:
+        field_selector += f",involvedObject.namespace={namespace}"
+
+    event_list: EventList = Event.listEventForAllNamespaces(field_selector=field_selector).obj
+
+    return [ev for ev in event_list.items if filter_event(ev, name_substring, included_types)]

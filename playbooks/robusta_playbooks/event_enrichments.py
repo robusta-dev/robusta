@@ -1,7 +1,9 @@
 import logging
 
 from robusta.api import (
+    ActionException,
     DeploymentEvent,
+    ErrorCodes,
     EventChangeEvent,
     EventEnricherParams,
     ExecutionBaseEvent,
@@ -16,12 +18,17 @@ from robusta.api import (
     MarkdownBlock,
     PodEvent,
     SlackAnnotations,
+    TableBlock,
     VideoEnricherParams,
     VideoLink,
     action,
+    get_job_all_pods,
     get_resource_events_table,
     list_pods_using_selector,
 )
+from robusta.core.reporting.custom_rendering import RendererType
+from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
+from src.robusta.core.playbooks.common import get_event_timestamp, get_resource_events
 
 
 class ExtendedEventEnricherParams(EventEnricherParams):
@@ -78,26 +85,74 @@ def event_resource_events(event: EventChangeEvent):
 
 
 @action
-def resource_events_enricher(event: KubernetesResourceEvent, params: EventEnricherParams):
+def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEventEnricherParams):
     """
     Given a Kubernetes resource, fetch related events in the near past
     """
-    resource = event.get_resource()
-    if resource.kind is None:
-        logging.error(f"cannot run resource_events_enricher without resource kind: {resource.kind}")
-        return
 
-    events_table_block = get_resource_events_table(
-        f"*{resource.kind} events:*",
-        resource.kind,
+    resource = event.get_resource()
+    if resource.kind not in ["Pod", "Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job", "Node"]:
+        raise ActionException(
+            ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Resource events enricher is not supported for resource {resource.kind}"
+        )
+
+    kind: str = resource.kind
+
+    events = get_resource_events(
+        kind,
         resource.metadata.name,
         resource.metadata.namespace,
         included_types=params.included_types,
-        max_events=params.max_events,
     )
 
-    if events_table_block:
-        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+    # append related pod data as well
+    if params.dependent_pod_mode and kind in ["Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job"]:
+        pods = []
+        if kind == "Job":
+            pods = get_job_all_pods(resource) or []
+        else:
+            pods = list_pods_using_selector(resource.metadata.namespace, resource.spec.selector, "")
+
+        selected_pods = pods[: min(len(pods), params.max_pods)]
+        for pod in selected_pods:
+            if len(events) >= params.max_events:
+                break
+
+            events.extend(
+                get_resource_events(
+                    "Pod",
+                    pod.metadata.name,
+                    pod.metadata.namespace,
+                    included_types=params.included_types,
+                )
+            )
+
+    events = events[: params.max_events]
+    events = sorted(events, key=get_event_timestamp, reverse=True)
+
+    if len(events) > 0:
+        rows = [
+            [
+                e.reason,
+                e.type,
+                parse_kubernetes_datetime_to_ms(get_event_timestamp(e)) if get_event_timestamp(e) else 0,
+                f"{e.involvedObject.kind}/{e.involvedObject.name}",
+                e.message,
+            ]
+            for e in events
+        ]
+
+        event.add_enrichment(
+            [
+                TableBlock(
+                    table_name=f"*{kind} events:*",
+                    column_renderers={"time": RendererType.DATETIME},
+                    headers=["reason", "type", "time", "object", "message"],
+                    rows=rows,
+                )
+            ],
+            {SlackAnnotations.ATTACHMENT: True},
+        )
 
 
 @action
