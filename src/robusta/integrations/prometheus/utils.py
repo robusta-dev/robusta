@@ -26,7 +26,9 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
         raise PrometheusNotFound("Prometheus url could not be found. Add 'prometheus_url' under global_config")
 
     headers = (
-        {"Authorization": prometheus_params.prometheus_auth} if prometheus_params.prometheus_auth is not None else {}
+        {"Authorization": prometheus_params.prometheus_auth.get_secret_value()}
+        if prometheus_params.prometheus_auth
+        else {}
     )
     return PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
 
