@@ -264,3 +264,4 @@ from robusta.utils.error_codes import ActionException, ErrorCodes
 from robusta.utils.function_hashes import action_hash
 from robusta.utils.parsing import load_json
 from robusta.utils.rate_limiter import RateLimiter
+from robusta.utils.base64_utils import is_base64_encoded
