@@ -1,9 +1,9 @@
 PagerDuty
 ##########
 
-`PagerDuty <https://www.pagerduty.com/>`_ is a popular incident response tool. Robusta is a popular Kubernetes monitoring solution, based on Prometheus.
+`PagerDuty <https://www.pagerduty.com/>`_ is a popular incident response tool.
 
-`Robusta <https://docs.robusta.dev/master/index.html>`_ can send three types of data to the PagerDuty API:
+`Robusta <https://docs.robusta.dev/master/index.html>`_ is a popular Kubernetes monitoring solution, based on Prometheus. Robusta can send three types of data to the PagerDuty API:
 
 *  `Change Events <https://support.pagerduty.com/docs/change-events>`_ - for example, when Deployments are updated
 
@@ -13,10 +13,10 @@ PagerDuty
 
 
 
-Setting up Services
+Prerequisites
 ------------------------------
 
-By default, Robusta sends notifications when Kubernetes pods crash.
+You need an integration key for a PagerDuty service. Here is how to generate it.
 
 1. To use Change Events or Alerts, you may need to set up the `Services <https://support.pagerduty.com/docs/services-and-integrations>`_
 
@@ -38,35 +38,37 @@ By default, Robusta sends notifications when Kubernetes pods crash.
 
 Configuring the PagerDuty sink
 ------------------------------------------------
-By default Robusta already listens to alerts and those will be sent to the `sink <https://docs.robusta.dev/master/catalog/sinks/index.html>`_ as soon as you add it.  With the default triggers Robusta also tracks changes to Deployments, DaemonSets and StatefulSets.
 
-| To configure PagerDuty sink on Robusta, add this code to your `generated_values.yaml` file.
+1. Sending Alerts to PagerDuty
 
+| To send alerts from Robusta to PagerDuty, add the following code to your generated_values.yaml file. This will send all alerts Robusta receives - whether they originate in Prometheus or in Robusta itself.
 
-.. admonition:: PagerDuty API key
-    :class: note
+.. code-block:: yaml
 
-    To a generate the PagerDuty API key you will need to setup the services as mentioned above.
+  sinksConfig:
+      - pagerduty_sink:
+          name: main_pagerduty_sink
+          api_key: <api key> # e.g. f653634653463678fadas43534506
 
-.. admonition:: generated_values.yaml
+2. Sending Kubernetes Changes to PagerDuty
 
-    .. code-block:: yaml
+| To send Kubernetes changes from Robusta to PagerDuty, add the following code to your generated_values.yaml file. This will send all Kubernetes changes Robusta receives - whether they originate in Prometheus or in Robusta itself.
 
-        sinksConfig:
-            - pagerduty_sink:
-                name: main_pagerduty_sink
-                api_key: <api key> # e.g. f653634653463678fadas43534506
+.. code-block:: yaml
 
-        - actions:
-          - resource_babysitter: {}
-          sinks:
-          - main_pagerduty_sink
-          triggers:
-          - on_deployment_all_changes: {}
-          - on_daemonset_all_changes: {}
-          - on_statefulset_all_changes: {}
+  sinksConfig:
+      - pagerduty_sink:
+          name: main_pagerduty_sink
+          api_key: <api key> # e.g. f653634653463678fadas43534506
 
-Using the above example, Robusta will track changes to `Deployments`, `DaemonSets` & `StatefulSets` and sends those alerts to PagerDuty's events API v2. You can further see those Alerts or Changes in the PagerDuty portal.
+  - actions:
+    - resource_babysitter: {}
+    sinks:
+    - main_pagerduty_sink
+    triggers:
+    - on_deployment_all_changes: {}
+    - on_daemonset_all_changes: {}
+    - on_statefulset_all_changes: {}
 
 Save the file and run
 
@@ -88,8 +90,3 @@ Save the file and run
     .. image:: /images/alert-on-cpu-usage-spike-pagerduty.png
       :width: 1117
       :align: center
-
-.. admonition:: View full incident log
-    :class: important
-
-    To view the full incident log, setup `Robusta UI sink <https://bit.ly/robusta-ui-pager-duty>`_.
