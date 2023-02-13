@@ -4,7 +4,7 @@ metadata:
   name: robusta
 build:
   artifacts:
-  - image: ganeshrobusta/robusta-runner-build
+  - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
     context: .
     docker:
       dockerfile: Dockerfile
@@ -23,7 +23,7 @@ deploy:
         valuesFiles:
           - deployment/generated_values.yaml
         artifactOverrides:
-          runner.image: ganeshrobusta/robusta-runner-build
+          runner.image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
 
 portForward:
 - resourceType: deployment
@@ -65,10 +65,3 @@ profiles:
         context: .
         custom:
           buildCommand: ./build_release.sh
-- name: local-build
-  build:
-    artifacts:
-      - image: ganeshrobusta/robusta-runner-build
-        context: .
-        docker:
-          dockerfile: Dockerfile
