@@ -44,10 +44,10 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
             params={"query": "example", **params},
         )
         response.raise_for_status()
-    except ConnectionError as e:
-        raise PrometheusNotFound(f"Couldn't connect to Prometheus found under {prom.url}") from e
-    except HTTPError as e:
-        raise PrometheusNotFound(f"No Prometheus found under {prom.url}") from e
+    except (ConnectionError, HTTPError) as e:
+        raise PrometheusNotFound(
+            f"Couldn't connect to Prometheus found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
+        ) from e
 
 
 class ServiceDiscovery:
