@@ -113,5 +113,4 @@ def git_change_audit(event: KubernetesAnyChangeEvent, action_params: GitAuditPar
                     action_params.cluster_name,
                 )
     except Exception as e:
-        logging.exception(e)
         logging.error("git audit error", exc_info=True)
