@@ -18,28 +18,26 @@ Prerequisites
 
 You need an integration key for a PagerDuty service. Here is how to generate it.
 
-1. To use Change Events or Alerts, you may need to set up the `Services <https://support.pagerduty.com/docs/services-and-integrations>`_
+1. Login to your PagerDuty dashboard
 
-2. Login to your PagerDuty dashboard
+2. Navigate to `Service` > `New Service` (Top right)
 
-3. Navigate to `Service` > `New Service` (Top right)
+3. Input `Name` and `Description` and Tap on the `Next` button
 
-4. Input `Name` and `Description` and Tap on the `Next` button
+4. Choose `Generate a new Escalation Policy` or `Select an existing Escalation Policy` and Tap on next
 
-5. Choose `Generate a new Escalation Policy` or `Select an existing Escalation Policy` and Tap on next
+5. On the next screen input the configuration details
 
-6. On the next screen input the configuration details
+6. On the `Integrations` screen check the `Events API V2` option and Tap on the `Create` button in the bottom on the screen
 
-7. On the `Integrations` screen check the `Events API V2` option and Tap on the `Create` button in the bottom on the screen
-
-8. Copy the `Integration Key`. A sample key would look like: f6c6e02a5a1a490ee02e90cde19ee388
+7. Copy the `Integration Key`. A sample key would look like: f6c6e02a5a1a490ee02e90cde19ee388
 
 
 
 Configuring the PagerDuty sink
 ------------------------------------------------
 
-1. Sending Alerts to PagerDuty
+**Sending Alerts to PagerDuty**
 
 | To send alerts from Robusta to PagerDuty, add the following code to your generated_values.yaml file. This will send all alerts Robusta receives - whether they originate in Prometheus or in Robusta itself.
 
@@ -50,9 +48,24 @@ Configuring the PagerDuty sink
           name: main_pagerduty_sink
           api_key: <api key> # e.g. f653634653463678fadas43534506
 
-2. Sending Kubernetes Changes to PagerDuty
+Save the file and run
 
-| To send Kubernetes changes from Robusta to PagerDuty, add the following code to your generated_values.yaml file. This will send all Kubernetes changes Robusta receives - whether they originate in Prometheus or in Robusta itself.
+.. code-block:: bash
+   :name: cb-add-pagerduty-sink
+
+    helm upgrade robusta robusta/robusta --values=generated_values.yaml
+
+Example Output:
+
+.. admonition:: To view the Alerts, on PagerDuty's dashboard navigate to `Incidents` > `Alerts`
+
+    .. image:: /images/alert-on-cpu-usage-spike-pagerduty.png
+      :width: 1117
+      :align: center
+
+**Sending Kubernetes Changes to PagerDuty**
+
+| To send Kubernetes changes from Robusta to PagerDuty, add the following code to your generated_values.yaml file. This will send all changes to PagerDuty, in addition to the alerts mentioned above.
 
 .. code-block:: yaml
 
@@ -77,16 +90,10 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-**Example Output:**
+Example Output:
 
 .. admonition:: To view the Changed Events, on PagerDuty's dashboard navigate to `Incidents` > `Recent Changes`
 
     .. image:: /images/change-events-updated-deployment-pagerduty.png
       :width: 1000
-      :align: center
-
-.. admonition:: To view the Alerts, on PagerDuty's dashboard navigate to `Incidents` > `Alerts`
-
-    .. image:: /images/alert-on-cpu-usage-spike-pagerduty.png
-      :width: 1117
       :align: center
