@@ -102,7 +102,7 @@ class ActionRequestReceiver:
         return {"action": "response", "request_id": request_id, "status_code": status_code, "data": data}
 
     def __exec_external_request(self, action_request: ExternalActionRequest, validate_timestamp: bool):
-        logging.info(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
+        logging.debug(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
         sync_response = action_request.request_id != ""  # if request_id is set, we need to write back the response
         validation_response = self.__validate_request(action_request, validate_timestamp)
         if validation_response.http_code != 200:

@@ -12,6 +12,7 @@ from robusta.core.discovery.top_service_resolver import TopLevelResource, TopSer
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.jobs import JobInfo
+from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
@@ -27,6 +28,7 @@ class RobustaSink(SinkBase):
 
         super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
+        self.ttl_hours = sink_config.robusta_sink.ttl_hours
 
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if self.account_id != robusta_token.account_id:
@@ -57,6 +59,7 @@ class RobustaSink(SinkBase):
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
+        self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
         # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
         # helps differentiate between no jobs, to not initialized
         self.__jobs_cache: Optional[Dict[str, JobInfo]] = None
@@ -108,6 +111,11 @@ class RobustaSink(SinkBase):
             self.__jobs_cache: Dict[str, JobInfo] = {}
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
+
+    def __assert_namespaces_cache_initialized(self):
+        if not self.__namespaces_cache:
+            logging.info("Initializing namespaces cache")
+            self.__namespaces_cache = {namespace.name: namespace for namespace in self.dal.get_active_namespaces()}
 
     def __reset_caches(self):
         self.__services_cache: Dict[str, ServiceInfo] = {}
@@ -174,6 +182,9 @@ class RobustaSink(SinkBase):
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
 
+            self.__assert_namespaces_cache_initialized()
+            self.__publish_new_namespaces(results.namespaces)
+
             # save the cached services for the resolver.
             RobustaSink.__save_resolver_resources(
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
@@ -220,7 +231,8 @@ class RobustaSink(SinkBase):
         internal_ip = ",".join([addr.address for addr in internal_addresses])
         node_taints = api_server_node.spec.taints or []
         taints = ",".join([cls.__to_taint_str(taint) for taint in node_taints])
-
+        capacity = api_server_node.status.capacity or {}
+        allocatable = api_server_node.status.allocatable or {}
         return NodeInfo(
             name=api_server_node.metadata.name,
             node_creation_time=str(api_server_node.metadata.creation_timestamp),
@@ -228,11 +240,11 @@ class RobustaSink(SinkBase):
             external_ip=external_ip,
             taints=taints,
             conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),
-            memory_capacity=PodResources.parse_mem(api_server_node.status.capacity.get("memory", "0Mi")),
-            memory_allocatable=PodResources.parse_mem(api_server_node.status.allocatable.get("memory", "0Mi")),
+            memory_capacity=PodResources.parse_mem(capacity.get("memory", "0Mi")),
+            memory_allocatable=PodResources.parse_mem(allocatable.get("memory", "0Mi")),
             memory_allocated=sum([req.memory for req in pod_requests_list]),
-            cpu_capacity=PodResources.parse_cpu(api_server_node.status.capacity.get("cpu", "0")),
-            cpu_allocatable=PodResources.parse_cpu(api_server_node.status.allocatable.get("cpu", "0")),
+            cpu_capacity=PodResources.parse_cpu(capacity.get("cpu", "0")),
+            cpu_allocatable=PodResources.parse_cpu(allocatable.get("cpu", "0")),
             cpu_allocated=round(sum([req.cpu for req in pod_requests_list]), 3),
             pods_count=len(pod_requests_list),
             pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
@@ -302,6 +314,7 @@ class RobustaSink(SinkBase):
                 last_alert_at=self.registry.get_telemetry().last_alert_at,
                 account_id=self.account_id,
                 light_actions=self.registry.get_light_actions(),
+                ttl_hours=self.ttl_hours,
             )
 
             self.dal.publish_cluster_status(cluster_status)
@@ -348,3 +361,26 @@ class RobustaSink(SinkBase):
         if time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC or first_alert:
             self.last_send_time = time.time()
             self.__update_cluster_status()
+
+    def __publish_new_namespaces(self, namespaces: List[NamespaceInfo]):
+        # convert to map
+        curr_namespaces = {namespace.name: namespace for namespace in namespaces}
+
+        # handle deleted namespaces
+        updated_namespaces: List[NamespaceInfo] = []
+        for namespace_name, namespace in self.__namespaces_cache.items():
+            if namespace_name not in curr_namespaces:
+                namespace.deleted = True
+                updated_namespaces.append(namespace)
+
+        for update in updated_namespaces:
+            if update.deleted:
+                del self.__namespaces_cache[update.name]
+
+        # new or changed namespaces
+        for namespace_name, updated_namespace in curr_namespaces.items():
+            if self.__namespaces_cache.get(namespace_name) != updated_namespace:
+                updated_namespaces.append(updated_namespace)
+                self.__namespaces_cache[namespace_name] = updated_namespace
+
+        self.dal.publish_namespaces(updated_namespaces)

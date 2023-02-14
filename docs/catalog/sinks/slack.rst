@@ -16,7 +16,7 @@ You can also generate a key by running ``robusta integrations slack`` and settin
 
     .. code-block:: yaml
 
-        sinkConfig:
+        sinksConfig:
         # slack integration params
         - slack_sink:
             name: main_slack_sink

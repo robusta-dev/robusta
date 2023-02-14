@@ -14,6 +14,7 @@ class ChartValuesFormat(Enum):
     Plain = auto()
     Bytes = auto()
     Percentage = auto()
+    CPUUsage = auto()
 
 
 class ResourceChartItemType(Enum):
@@ -40,7 +41,11 @@ class ActionParams(DocumentedModel):
     """
     Base class for all Action parameter classes.
     """
-
+    def post_initialization(self):
+        """
+        This function can be used to run post initialization logic on the action params
+        """
+        pass
     pass
 
 

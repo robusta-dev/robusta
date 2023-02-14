@@ -12,7 +12,7 @@ Configuring the Datadog sink
 
     .. code-block:: yaml
 
-        sinkConfig:
+        sinksConfig:
         - datadog_sink:
             name: datadog_sink
             api_key: "datadog api key"

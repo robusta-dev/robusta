@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
@@ -11,6 +11,8 @@ class JiraSinkParams(SinkBaseParams):
     issue_type: str = "Task"
     dedups: List[str] = ["fingerprint"]
     project_name: str
+    project_type_id_override: Optional[int]
+    issue_type_id_override: Optional[int]
 
 
 class JiraSinkConfigWrapper(SinkConfigBase):

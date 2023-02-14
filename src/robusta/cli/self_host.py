@@ -123,7 +123,7 @@ class SelfHostValues(BaseModel):
     enableRobustaUI: bool = True
 
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 
 
 @app.command()
