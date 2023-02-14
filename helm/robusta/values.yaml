@@ -188,6 +188,8 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
+  - on_prometheus_alert:
+      alert_name: NodeFilesystemAlmostOutOfSpace
   actions:
   - node_disk_analyzer: {}
   - alert_graph_enricher:
@@ -255,7 +257,7 @@ platformPlaybooks:
 
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.1
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.0
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:
@@ -266,7 +268,6 @@ kubewatch:
       cpu: ~
   tolerations: []
   annotations: {}
-  nodeSelector: ~
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -298,7 +299,6 @@ runner:
   additional_env_froms: []
   tolerations: []
   annotations: {}
-  nodeSelector: ~
 
 kube-prometheus-stack:
   alertmanager:
@@ -379,3 +379,5 @@ kube-prometheus-stack:
         cpu: 10m
 
 rsa: ~
+
+
