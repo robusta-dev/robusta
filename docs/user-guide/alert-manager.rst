@@ -126,6 +126,7 @@ If your Prometheus needs authentication, add the following to ``generated_values
 Or for AlertManager:
 
 .. code-block:: yaml
+
     globalConfig:
       alertmanager_auth: Bearer example-token # Basic base64-encoded-credentials or any other authentication header
 
@@ -134,6 +135,7 @@ SSL Verification
 By default Robusta will not verify the SSL certificate of the Prometheus server. If you want to enable this, add the following enviroment variable to ``generated_values.yaml``:
 
 .. code-block:: yaml
+
   runner:
     additional_env_vars:
     - name: PROMETHEUS_SSL_ENABLED
@@ -142,6 +144,7 @@ By default Robusta will not verify the SSL certificate of the Prometheus server.
 If you want to add a custom CA certificate, add the following enviroment variable to ``generated_values.yaml``:
 
 .. code-block:: yaml
+
   runner:
     certificate: "your-encoded-data" # base64 encoded certificate value
 
