@@ -121,14 +121,14 @@ If your Prometheus needs authentication, add the following to ``generated_values
 .. code-block:: yaml
 
   globalConfig:
-    prometheus_auth: Bearer example-token # Basic base64-encoded-credentials or any other authentication header
+    prometheus_auth: Bearer example-token # or any other auth header
 
 Or for AlertManager:
 
 .. code-block:: yaml
 
     globalConfig:
-      alertmanager_auth: Bearer example-token # Basic base64-encoded-credentials or any other authentication header
+      alertmanager_auth: Basic base64-encoded-credentials # or any other auth header
 
 SSL Verification
 ----------------
@@ -170,3 +170,7 @@ To create the silences using that AlertManager, add the following configuration 
     .. note::
 
       The Grafana api key must have ``Editor`` permission in order to create silences
+
+    .. note::
+
+      If both Grapfana api key and AlertManager auth are defined, Robusta will use the Grafana api key
