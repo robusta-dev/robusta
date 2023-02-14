@@ -136,7 +136,13 @@ from robusta.core.reporting.action_requests import (
     sign_action_request,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
-from robusta.core.reporting.consts import FindingSource, FindingSubjectType, FindingType, SlackAnnotations
+from robusta.core.reporting.consts import (
+    FindingSource,
+    FindingSubjectType,
+    FindingType,
+    SlackAnnotations,
+    FindingAggregationKey
+)
 from robusta.core.reporting.custom_rendering import RendererType, charts_style, render_value
 from robusta.core.reporting.finding_subjects import KubeObjFindingSubject, PodFindingSubject
 from robusta.core.schedule.model import (
