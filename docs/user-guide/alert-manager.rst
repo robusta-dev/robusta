@@ -15,7 +15,7 @@ If you installed Robusta's :ref:`Embedded Prometheus Stack` then no configuratio
 AlertManager receiver and route definition
 --------------------------------------------
 
-Add this snippet to your Prometheus AlertManager **values.yaml** file. 
+Add this snippet to your Prometheus AlertManager **values.yaml** file.
 
 .. admonition:: Robusta receiver and route
 
@@ -59,16 +59,14 @@ You should see the demo alert, in the Robusta UI, Slack, or any other configured
 
 Setting up a custom Prometheus, AlertManager, and Grafana
 --------------------------------------------------------------
-Add custom AlertManager, Grafana or Prometheus in ``generated_values.yaml``. 
+Add custom AlertManager, Grafana or Prometheus in ``generated_values.yaml``.
 
 .. code-block:: yaml
 
-  global_config:
-  cluster_name: test-cluster
-  ...
-  alertmanager_url: ""
-  grafana_url: ""
-  prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
+  globalConfig:
+    alertmanager_url: ""
+    grafana_url: ""
+    prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
 
 Prometheus Operator
 -----------------------
@@ -116,6 +114,43 @@ If AlertManager is located outside of your Kubernetes cluster then a few more st
 
 The `TOKEN` format is: `ACCOUNT_ID SIGNING_KEY`
 
+Additional Authentication Headers
+---------------------------------
+If your Prometheus needs authentication, add the following to ``generated_values.yaml``:
+
+.. code-block:: yaml
+
+  globalConfig:
+    prometheus_auth: Bearer <YOUR TOKEN> # or any other auth header
+
+Or for AlertManager:
+
+.. code-block:: yaml
+
+    globalConfig:
+      alertmanager_auth: Basic <USER:PASSWORD base64-encoded> # or any other auth header
+
+.. note::
+
+      If both Grapfana api key and AlertManager auth are defined, Robusta will use the Grafana api key
+
+SSL Verification
+----------------
+By default Robusta will not verify the SSL certificate of the Prometheus server. If you want to enable this, add the following enviroment variable to ``generated_values.yaml``:
+
+.. code-block:: yaml
+
+  runner:
+    additional_env_vars:
+    - name: PROMETHEUS_SSL_ENABLED
+      value: true
+
+If you want to add a custom CA certificate, add the following enviroment variable to ``generated_values.yaml``:
+
+.. code-block:: yaml
+
+  runner:
+    certificate: "<YOUR BASE-64 ENCODED DATA>" # base64-encoded certificate value
 
 Alerts silencing
 -----------------------------------------

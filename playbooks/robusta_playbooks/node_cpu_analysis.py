@@ -30,7 +30,7 @@ def node_cpu_enricher(event: NodeEvent, params: PrometheusParams):
         return
     node = event.get_node()
 
-    analyzer = NodeCpuAnalyzer(node, params.prometheus_url)
+    analyzer = NodeCpuAnalyzer(node, params)
 
     threshold = 0.005
     total_cpu_usage = analyzer.get_total_cpu_usage()

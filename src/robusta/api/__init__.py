@@ -253,7 +253,12 @@ from robusta.integrations.prometheus.models import (
     PrometheusAlert,
     PrometheusKubernetesAlert,
 )
-from robusta.integrations.prometheus.utils import AlertManagerDiscovery, PrometheusDiscovery, ServiceDiscovery
+from robusta.integrations.prometheus.utils import (
+    AlertManagerDiscovery,
+    PrometheusDiscovery,
+    ServiceDiscovery,
+    get_prometheus_connect,
+)
 from robusta.integrations.resource_analysis.cpu_analyzer import CpuAnalyzer
 from robusta.integrations.resource_analysis.memory_analyzer import MemoryAnalyzer, pretty_size
 from robusta.integrations.resource_analysis.node_cpu_analyzer import NodeCpuAnalyzer

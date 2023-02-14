@@ -7,7 +7,6 @@ import pydantic
 from hikaru.model import Node, Pod, PodList, ResourceRequirements
 
 from robusta.api import (
-    ActionParams,
     Finding,
     FindingSeverity,
     PodContainer,
@@ -25,19 +24,17 @@ from robusta.api import (
     parse_kubernetes_datetime_to_ms,
     pod_most_recent_oom_killed_container,
 )
+from robusta.core.model.base_params import PrometheusParams
 from robusta.integrations.resource_analysis.memory_analyzer import MemoryAnalyzer
 
 
-class OomKillerEnricherParams(ActionParams):
+class OomKillerEnricherParams(PrometheusParams):
     """
     :var new_oom_kills_duration_in_sec: In order to avoid duplicated, This playbook will only report OOMKills that occurred in the last new_oom_kills_duration_in_sec seconds. For example, if new_oom_kills_duration_in_sec is 1200, only OOMKills from the last 20 minutes will be considered.
-    :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster.
-    :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090".
     :var metrics_duration_in_secs: Memory usage metrics of nodes and pod containers where OOMKills have occurred will be queried from prometheus in order to determine the estimated reason of each OOMKill. This parameter determines the amount of time, in seconds, these metrics will be applied on. For example, if duration_in_secs is 1200, memory usage metrics from the last 20 minutes will be considered.
     """
 
     new_oom_kills_duration_in_sec: int = 1200
-    prometheus_url: Optional[str] = None
     metrics_duration_in_secs: int = 1200
 
 
@@ -280,7 +277,7 @@ class OomKillsExtractor:
 class KubernetesOomKillReasonInvestigator(OomKillReasonInvestigator):
     def __init__(self, node: Node, alert: PrometheusAlert, params: OomKillerEnricherParams):
         self.config = params
-        self.memory_analyzer = MemoryAnalyzer(params.prometheus_url, alert.startsAt.tzinfo)
+        self.memory_analyzer = MemoryAnalyzer(params, alert.startsAt.tzinfo)
         self.node = node
         self.node_reason_calculated = False
         self.node_reason: Optional[str] = None

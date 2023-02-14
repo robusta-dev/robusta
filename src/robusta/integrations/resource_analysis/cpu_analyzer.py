@@ -1,12 +1,13 @@
 from datetime import timedelta, tzinfo
 from typing import Optional
 
+from robusta.core.model.base_params import PrometheusParams
 from robusta.integrations.resource_analysis.prometheus_analyzer import PrometheusAnalyzer
 
 
 class CpuAnalyzer(PrometheusAnalyzer):
-    def __init__(self, prometheus_url: str, prometheus_tzinfo: Optional[tzinfo] = None):
-        super().__init__(prometheus_url, prometheus_tzinfo)
+    def __init__(self, prometheus_params: PrometheusParams, prometheus_tzinfo: Optional[tzinfo] = None):
+        super().__init__(prometheus_params, prometheus_tzinfo)
 
     def get_total_cpu_requests(self, duration: timedelta = timedelta(minutes=10)):
         """
