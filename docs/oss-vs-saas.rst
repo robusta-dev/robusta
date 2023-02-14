@@ -20,7 +20,7 @@ Pricing
 ^^^^^^^^^^^^
 The Robusta OSS is and always will be free. It is MIT licensed.
 
-The Robusta UI is `free to get started <https://home.robusta.dev/pricing>`__
+The Robusta UI is `free to get started <https://home.robusta.dev/pricing>`__.
 
 We also have enterprise plans if you need to self-host the UI in your own environment.
 
