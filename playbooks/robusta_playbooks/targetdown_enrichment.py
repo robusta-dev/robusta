@@ -10,7 +10,7 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert, params: TimedProm
     Enrich the finding with a detailed explanation for the cause of the CoreDNS and
     Kube-DNS unreachable
     """
-    if not alert.job or alert.job not in ["corens", "kube-dns"]:
+    if not alert.job or alert.job not in ["coredns", "kube-dns"]:
         return
     res = list_available_services("kube-system")
     try:
