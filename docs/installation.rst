@@ -282,15 +282,9 @@ Additional Installation Methods
     .. code-block:: yaml
 
         globalConfig:
-            ...
             prometheus_url: "https://prometheus-k8s-openshift-monitoring.apps.exampleappname.bs2o.p1.openshiftapps.com"
             prometheus_auth: "Bearer sha256~your-token-here"
 
-    To get the token, login using oc tool and run:
-
-    .. code-block:: bash
-
-        oc whoami --show-token
 
     To get the prometheus URL, run:
 
@@ -298,4 +292,10 @@ Additional Installation Methods
 
         oc -n openshift-monitoring get routes
 
-    And find the route with the name ``prometheus-k8s``.
+    And find the route with the name ``prometheus-k8s``. To get the token run:
+
+    .. code-block:: bash
+
+        oc whoami --show-token
+
+    We recommend to use a sealed secret to store the token. Read more about :ref:`Configuration secrets`.
