@@ -198,7 +198,7 @@ class ConfigLoader:
                 self.__load_playbooks_repos(action_registry, runner_config.playbook_repos)
 
                 # This needs to be set before the robusta sink is created since a cluster status is sent on creation
-                self.registry.set_light_actions(runner_config.light_actions)
+                self.registry.set_light_actions(runner_config.light_actions if runner_config.light_actions else [])
 
                 (sinks_registry, playbooks_registry) = self.__prepare_runtime_config(
                     runner_config,
