@@ -121,14 +121,14 @@ If your Prometheus needs authentication, add the following to ``generated_values
 .. code-block:: yaml
 
   globalConfig:
-    prometheus_auth: Bearer example-token # or any other auth header
+    prometheus_auth: Bearer <YOUR TOKEN> # or any other auth header
 
 Or for AlertManager:
 
 .. code-block:: yaml
 
     globalConfig:
-      alertmanager_auth: Basic base64-encoded-credentials # or any other auth header
+      alertmanager_auth: Basic <USER:PASSWORD base64-encoded> # or any other auth header
 
 SSL Verification
 ----------------
@@ -146,7 +146,7 @@ If you want to add a custom CA certificate, add the following enviroment variabl
 .. code-block:: yaml
 
   runner:
-    certificate: "your-encoded-data" # base64 encoded certificate value
+    certificate: "<YOUR BASE-64 ENCODED DATA>" # base64-encoded certificate value
 
 Alerts silencing
 -----------------------------------------
