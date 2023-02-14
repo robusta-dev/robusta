@@ -20,8 +20,8 @@ from robusta.api import (
     action,
     duplicate_without_fields,
     is_matching_diff,
+    FindingAggregationKey,
 )
-from robusta.core.reporting.consts import FindingAggregationKey
 
 
 class BabysitterConfig(ActionParams):
