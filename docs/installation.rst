@@ -76,7 +76,7 @@ If you’d like to send Robusta messages to additional destinations (Discord, Te
 .. admonition:: Robusta on Minikube
     :class: warning
 
-    We don't recommend installing Robusta on Minikube because of a recent issue with minikube. More details `here <https://github.com/kubernetes/minikube/issues/14806>`_. 
+    We don't recommend installing Robusta on Minikube because of a recent issue with minikube. More details `here <https://github.com/kubernetes/minikube/issues/14806>`_.
 
 .. admonition:: Robusta not in PATH
     :class: warning
@@ -141,10 +141,10 @@ Standard Installation
                 --set kube-prometheus-stack.kubeScheduler.enabled=false \
                 --set kube-prometheus-stack.nodeExporter.enabled=false \
                 --set kube-prometheus-stack.prometheusOperator.kubeletService.enabled=false
-        
+
         * With GKE Autopilot restrictions, some components must be disabled when installing Robusta bundled with kube-prometheus-stack.
 
-    
+
 .. note::
 
       Sensitive configuration values can be stored in Kubernetes secrets. See `Configuration secrets <https://docs.robusta.dev/master/user-guide/configuration-secrets.html>`_ guide.
@@ -277,12 +277,25 @@ Additional Installation Methods
 .. dropdown:: Installing on OpenShift
     :color: light
 
-    You will need to run one additional command:
+    Add additional configuration to your :ref:`Global config`:
+
+    .. code-block:: yaml
+
+        globalConfig:
+            ...
+            prometheus_url: "https://prometheus-k8s-openshift-monitoring.apps.exampleappname.bs2o.p1.openshiftapps.com"
+            prometheus_auth: "Bearer sha256~your-token-here"
+
+    To get the token, login using oc tool and run:
 
     .. code-block:: bash
-       :name: cb-oc-adm-policy-add
 
-        oc adm policy add-scc-to-user anyuid -z robusta-runner-service-account
+        oc whoami --show-token
 
-    It's possible to reduce the permissions more. Please feel free to open a PR suggesting something more minimal
+    To get the prometheus URL, run:
 
+    .. code-block:: bash
+
+        oc -n openshift-monitoring get routes
+
+    And find the route with the name ``prometheus-k8s``.
