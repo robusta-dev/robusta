@@ -130,6 +130,10 @@ Or for AlertManager:
     globalConfig:
       alertmanager_auth: Basic <USER:PASSWORD base64-encoded> # or any other auth header
 
+.. note::
+
+      If both Grapfana api key and AlertManager auth are defined, Robusta will use the Grafana api key
+
 SSL Verification
 ----------------
 By default Robusta will not verify the SSL certificate of the Prometheus server. If you want to enable this, add the following enviroment variable to ``generated_values.yaml``:
@@ -170,7 +174,3 @@ To create the silences using that AlertManager, add the following configuration 
     .. note::
 
       The Grafana api key must have ``Editor`` permission in order to create silences
-
-    .. note::
-
-      If both Grapfana api key and AlertManager auth are defined, Robusta will use the Grafana api key
