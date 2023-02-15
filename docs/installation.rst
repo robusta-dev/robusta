@@ -304,4 +304,4 @@ Additional Installation Methods
 
         oc whoami --show-token
 
-    We recommend using secrects to store the token. Read more about :ref:`Configuration secrets`.
+    We recommend using secrets to store the token. Read more about :ref:`Configuration secrets`.
