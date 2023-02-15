@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Dict, Optional
 
 import requests
-
 from robusta.api import ActionParams, AlertManagerEvent, ExecutionBaseEvent, action
 
 
@@ -21,6 +20,8 @@ class PrometheusAlertParams(ActionParams):
     pod_name: Optional[str] = None
     node_name: Optional[str] = None
     deployment_name: Optional[str] = None
+    service: Optional[str] = None
+    job: Optional[str] = None
     namespace: str = "default"
     status: str = "firing"
     severity: str = "error"
@@ -47,6 +48,10 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
         labels["node"] = prometheus_event_data.node_name
     if prometheus_event_data.deployment_name is not None:
         labels["deployment"] = prometheus_event_data.deployment_name
+    if prometheus_event_data.service is not None:
+        labels["service"] = prometheus_event_data.service
+    if prometheus_event_data.job is not None:
+        labels["job"] = prometheus_event_data.job
 
     prometheus_event = AlertManagerEvent(
         **{
