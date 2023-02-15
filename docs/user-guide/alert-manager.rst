@@ -9,12 +9,16 @@ For Robusta to improve Prometheus alerts, it has to see those alerts.
 To set it up, you'll have to configure an AlertManager ``receiver`` and ``route``.
 
 If you installed Robusta's :ref:`Embedded Prometheus Stack` then no configuration is necessary.
-For all other setups, read on!
+For other setups, read on!
 
 General Instructions
 ======================
-For Prometheus to send alerts to Robusta, add the following to AlertManager's config file.
-The exact method of doing so will depend on your setup. (See below.)
+For Prometheus to send alerts to Robusta, add two settings to AlertManager:
+
+1. A webhook receiver for Robusta
+2. A route for the webhook receiver you added
+
+Below is an example AlertManager configuration with those settings. Depending on your setup, the exact file to edit will be found in different places. (See below.)
 
 .. admonition:: AlertManager config for sending alerts to Robusta
 
@@ -25,6 +29,7 @@ The exact method of doing so will depend on your setup. (See below.)
             webhook_configs:
               # the following line assumes that Robusta was installed in the `default` namespace.
               # if you installed Robusta in a different namespace, replace `default` with the correct namespace
+              # likewise, if you named your Helm release ``robert`` then replace ``robusta`` with ``robert``
               - url: 'http://robusta-runner.default.svc.cluster.local/api/alerts'
                 send_resolved: true
 
@@ -38,8 +43,10 @@ The exact method of doing so will depend on your setup. (See below.)
 
 .. admonition:: Common Mistakes
 
-    1. The ``default`` in the webhook_config url, is the namespace robusta is installed on. If you installed Robusta on a different namespace, update the url accordingly.
-    2. Make sure the Robusta ``route`` is the first ``route`` defined. If it isn't the first route, it might not receive alerts. When a ``route`` is matched, the alert will not be sent to the following routes, unless the ``route`` is configured with ``continue: true``.
+    1. Make sure the Robusta ``route`` is the first ``route`` defined. If it isn't the first route, it might not receive alerts. When a ``route`` is matched, the alert will not be sent to following routes, unless the ``route`` is configured with ``continue: true``.
+    2. Tweak the settings accordingly if:
+        * You installed Robusta in a namespace other than ``default``
+        * You named Robusta's Helm release something other than ``robusta``
 
 After you configure AlertManager, you can test it works properly, by creating a demo alert:
 
@@ -64,12 +71,11 @@ Here are instructions for configuring AlertManager in specific setups. Don't see
 kube-prometheus-stack and Prometheus Operator
 ------------------------------------------------
 
-If you installed kube-prometheus-stack or Prometheus Operator **by yourself** (not via Robusta) then tell
+If you installed kube-prometheus-stack or the Prometheus Operator **by yourself** (not via Robusta) then tell
 AlertManager about Robusta using a `manually-managed secret <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#using-a-kubernetes-secret>`_.
+The Prometheus Operator will pass this secret to AlertManager, which will then push alerts to Robusta by webhook.
 
-Copy the config :ref:`above <General Instructions>` and place it in the appropriate secret.
-
-The Prometheus Operator will pass this secret to AlertManager. AlertManager will then push alerts to Robusta by webhook.
+To configure the secret, copy the configuration :ref:`here <General Instructions>` and place it in the appropriate secret.
 
 .. admonition:: Why use a secret instead of editing AlertManagerConfig?
 
@@ -144,13 +150,16 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Helm Up
 Alerts silencing
 =================
 
-Robusta enables silencing AlertManager alerts directly from your notification channels (sinks).
+Robusta lets you silence alerts directly from your notification channels (sinks).
+By default, Robusta will find the AlertManager running in your cluster and use it to create silences.
 
-By default, Robusta finds the AlertManager running on your cluster, and use it to create silences
+If Robusta can't find your AlertManager, :ref:`tell it where to find it <Setting up a custom Prometheus, AlertManager, and Grafana>`.
 
-Some users use the AlertManager embedded in Grafana
+Grafana AlertManager
+----------------------
+If you use the AlertManager embedded in Grafana, change one more setting for Robusta to create silences.
 
-To create the silences using that AlertManager, add the following configuration to the ``globalConfig`` section in your ``generated_values.yaml`` file:
+Add the following configuration to the ``globalConfig`` section in your ``generated_values.yaml`` file:
 
 .. admonition:: generated_values.yaml
 
@@ -163,3 +172,5 @@ To create the silences using that AlertManager, add the following configuration 
     .. note::
 
       The Grafana api key must have ``Editor`` permission in order to create silences
+
+This is necessary due to minor API changes in the embedded AlertManager that Grafana runs.
