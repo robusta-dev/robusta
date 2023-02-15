@@ -37,6 +37,8 @@ You can disable either source later, but for now let's demonstrate what Robusta 
 
 Testing out Prometheus alerts
 *******************************
+Want to see for yourself why robusta alerts are better? Run these commands that generate sample alerts.
+
 TODO: first demonstrate with simulated alert, then show you how to configure.
 
 Testing out APIServer alerts

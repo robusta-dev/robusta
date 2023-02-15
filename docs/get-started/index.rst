@@ -47,3 +47,7 @@ Learn How
 * Route Alerts
 * Create tickets in Jira for Kubernetes issues
 * Remediate autoscaling issues - https://www.notion.so/Enable-HPA-resize-playbook-by-default-250826112ef1442da8d4a90efa70e8b8
+
+* How filters work - explain both trigger filters and sink matchers
+* ChatOps
+* Track scale changes
