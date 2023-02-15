@@ -277,6 +277,12 @@ Additional Installation Methods
 .. dropdown:: Installing on OpenShift
     :color: light
 
+    Run this command to give permissions to robusta-forwarder:
+
+    .. code-block:: bash
+
+        oc adm policy add-scc-to-user anyuid -z robusta-forwarder-service-account
+
     Add additional configuration to your :ref:`Global config`:
 
     .. code-block:: yaml
@@ -298,4 +304,4 @@ Additional Installation Methods
 
         oc whoami --show-token
 
-    We recommend to use a sealed secret to store the token. Read more about :ref:`Configuration secrets`.
+    We recommend using secrets to store the token. Read more about :ref:`Configuration secrets`.
