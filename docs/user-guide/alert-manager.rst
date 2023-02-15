@@ -1,31 +1,36 @@
+AlertManager and Prometheus Integration
+****************************************
+
 Sending Alerts to Robusta
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For Robusta to improve Prometheus alerts, it has to see those alerts.
+For Robusta to improve Prometheus alerts, Robusta has to first receive those alerts from AlertManager.
 
-To set it up, you'll have to configure an AlertManager ``receiver`` and a ``route`` that routes alerts to that ``receiver`` in your existing prometheus setup.
-
-The setup depends on how you installed Prometheus.
-
-
-Robusta's Embedded Prometheus
------------------------------
 If you installed Robusta's :ref:`Embedded Prometheus Stack` then no configuration is necessary.
+For other setups, read on!
 
-AlertManager receiver and route definition
---------------------------------------------
+General Instructions
+======================
+To configure Prometheus to send alerts to Robusta, add two settings to AlertManager:
 
-Add this snippet to your Prometheus AlertManager **values.yaml** file.
+1. A webhook receiver for Robusta
+2. A route for the webhook receiver you added
 
-.. admonition:: Robusta receiver and route
+Below is an example AlertManager configuration. Depending on your setup, the exact file to edit may vary. (See below.)
+
+.. admonition:: AlertManager config for sending alerts to Robusta
 
     .. code-block:: yaml
 
         receivers:
           - name: 'robusta'
             webhook_configs:
+              # the following line assumes that Robusta was installed in the `default` namespace.
+              # if you installed Robusta in a different namespace, replace `default` with the correct namespace
+              # likewise, if you named your Helm release ``robert`` then replace ``robusta`` with ``robert``
               - url: 'http://robusta-runner.default.svc.cluster.local/api/alerts'
                 send_resolved: true
+
         route:
           routes:
           - receiver: 'robusta'
@@ -34,53 +39,45 @@ Add this snippet to your Prometheus AlertManager **values.yaml** file.
             repeat_interval: 4h
             continue: true
 
-    .. note::
+.. admonition:: Common Mistakes
 
-      The ``default`` in the webhook_config url, is the namespace robusta is installed on. If you installed Robusta on a different namespace, update the url accordingly.
+    1. Make sure the Robusta ``route`` is the first ``route`` defined. If it isn't the first route, it might not receive alerts. When a ``route`` is matched, the alert will not be sent to following routes, unless the ``route`` is configured with ``continue: true``.
+    2. Tweak the settings accordingly if:
+        * You installed Robusta in a namespace other than ``default``
+        * You named Robusta's Helm release something other than ``robusta``
 
-    .. note::
-
-      When a ``route`` is matched, the alert will not be sent to the following routes, unless the ``route`` is configured with ``continue: true``
-      Make sure the Robusta ``route`` is the first ``route`` defined.
-
-
-After you configured the ``receiver`` and ``route``, you can test it works properly, by creating a demo alert on AlertManager:
+After you configure AlertManager, you can test it works properly, by creating a demo alert:
 
 .. code-block:: bash
 
     robusta demo-alert
 
-You should see the demo alert, in the Robusta UI, Slack, or any other configured ``sink`` within a few minutes
+Within a few minutes, you should see the demo alert in the Robusta UI, Slack, and any other sinks you configured.
 
-.. admonition:: "Alerts won't show up" UI notification
+.. admonition:: Why do I still see a banner in the Robusta UI that "Alerts won't show up"?
     :class: warning
 
     The notification is displayed until the first alert is sent from AlertManager to Robusta.
 
-Setting up a custom Prometheus, AlertManager, and Grafana
---------------------------------------------------------------
-Add custom AlertManager, Grafana or Prometheus in ``generated_values.yaml``.
+Specific Instructions
+======================
 
-.. code-block:: yaml
+Here are instructions for configuring AlertManager in specific setups. Don't see your setup? Just follow the
+:ref:`General Instructions` above.
 
-  globalConfig:
-    alertmanager_url: ""
-    grafana_url: ""
-    prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
+kube-prometheus-stack and Prometheus Operator
+------------------------------------------------
 
-Prometheus Operator
------------------------
-If you are using a Prometheus Operator that was **not** installed with Robusta, you should define a `manually-managed secret <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#using-a-kubernetes-secret>`_. Your Prometheus Operator uses this secret to sends alerts to Robusta by webhook.
+If you installed kube-prometheus-stack or the Prometheus Operator **by yourself** (not via Robusta) then tell
+AlertManager about Robusta using a `Kubernetes Secret <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#managing-alertmanager-configuration>`_.
+The Prometheus Operator will pass this secret to AlertManager, which will then push alerts to Robusta by webhook.
 
-AlertManager pushes alerts to Robusta. Follow the instructions in the `Prometheus Operator documentation <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#managing-alertmanager-configuration>`_, using the above configuration to configure alertmanager.yaml.
+To configure the secret, copy the configuration :ref:`here <General Instructions>` and place it in the appropriate secret.
 
-An alternative is to configure an AlertmanagerConfig CRD, but this is **not** recommended as it `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
+.. admonition:: Why use a secret instead of editing AlertManagerConfig?
 
-Other In-Cluster Prometheus Installations
-------------------------------------------
-If you installed Prometheus in some other way, you will need to manually edit the `AlertManager configuration <https://prometheus.io/docs/alerting/latest/configuration/>`_ and add the above configuration.
-
-This file should be saved in different locations depending on your AlertManager setup.
+    In theory, you can configure an AlertmanagerConfig instead of using a secret. However, this is **not** recommended.
+    It `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
 
 Out-of-cluster Prometheus Installations
 -----------------------------------------
@@ -101,7 +98,8 @@ If AlertManager is located outside of your Kubernetes cluster then a few more st
               - url: 'https://api.robusta.dev/integrations/generic/alertmanager'
                 http_config:
                   authorization:
-                    credentials: TOKEN
+                    # Replace <TOKEN> with a string in the format `<ACCOUNT_ID> <SIGNING_KEY>`
+                    credentials: <TOKEN>
                 send_resolved: true
 
         route:
@@ -112,7 +110,36 @@ If AlertManager is located outside of your Kubernetes cluster then a few more st
             repeat_interval: 4h
             continue: true
 
-The `TOKEN` format is: `ACCOUNT_ID SIGNING_KEY`
+Robusta's Embedded Prometheus
+-----------------------------
+If you installed Robusta's :ref:`Embedded Prometheus Stack` then no configuration is necessary.
+
+Related Robusta Settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Below are additional Robusta settings related to Prometheus, AlertManager, and Grafana.
+
+Setting up a custom Prometheus, AlertManager, and Grafana
+==========================================================
+
+If you followed the instructions on this page, Prometheus and AlertManager will know about Robusta, but Robusta might not know about them!
+
+For certain features, Robusta needs to reach out to Prometheus and pull in extra information. This must
+be configured **in addition** to updating AlertManager's configuration.
+
+That said, most users won't need to set this up. Robusta can usually figure out where Prometheus and
+other services are located. If the auto-discovery isn't working, you'll configure it manually.
+
+Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Helm Upgrade>`.
+
+.. code-block:: yaml
+
+  # this line should already exist
+  globalConfig:
+      # add the lines below
+      alertmanager_url: ""
+      grafana_url: ""
+      prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
 
 Additional Authentication Headers
 ---------------------------------
@@ -123,7 +150,7 @@ If your Prometheus needs authentication, add the following to ``generated_values
   globalConfig:
     prometheus_auth: Bearer <YOUR TOKEN> # or any other auth header
 
-Or for AlertManager:
+For AlertManager:
 
 .. code-block:: yaml
 
@@ -132,11 +159,11 @@ Or for AlertManager:
 
 .. note::
 
-      If both Grapfana api key and AlertManager auth are defined, Robusta will use the Grafana api key
+      If both a Grafana API key and AlertManager auth are defined, Robusta will use the Grafana API key
 
 SSL Verification
 ----------------
-By default Robusta will not verify the SSL certificate of the Prometheus server. If you want to enable this, add the following enviroment variable to ``generated_values.yaml``:
+By default, Robusta does not verify the SSL certificate of the Prometheus server. To enable SSL verification, add the following to ``generated_values.yaml``:
 
 .. code-block:: yaml
 
@@ -145,7 +172,7 @@ By default Robusta will not verify the SSL certificate of the Prometheus server.
     - name: PROMETHEUS_SSL_ENABLED
       value: true
 
-If you want to add a custom CA certificate, add the following enviroment variable to ``generated_values.yaml``:
+To add a custom CA certificate, add the following as well:
 
 .. code-block:: yaml
 
@@ -153,15 +180,18 @@ If you want to add a custom CA certificate, add the following enviroment variabl
     certificate: "<YOUR BASE-64 ENCODED DATA>" # base64-encoded certificate value
 
 Alerts silencing
------------------------------------------
+=================
 
-Robusta enables silencing AlertManager alerts directly from your notification channels (Sinks)
+Robusta lets you silence alerts directly from your notification channels (sinks). Robusta will try to automatically find
+an AlertManager running in your cluster and use it to create silences.
 
-By default, Robusta finds the AlertManager running on your cluster, and use it to create silences
+If Robusta can't find your AlertManager, :ref:`tell it where to find it <Setting up a custom Prometheus, AlertManager, and Grafana>`.
 
-Some users use the AlertManager embedded in Grafana
+Grafana AlertManager
+----------------------
+If you use the AlertManager embedded in Grafana, change one more setting for Robusta to create silences.
 
-To create the silences using that AlertManager, add the following configuration to the ``globalConfig`` section in your ``generated_values.yaml`` file:
+Add the following configuration to the ``globalConfig`` section in your ``generated_values.yaml`` file:
 
 .. admonition:: generated_values.yaml
 
@@ -174,3 +204,5 @@ To create the silences using that AlertManager, add the following configuration 
     .. note::
 
       The Grafana api key must have ``Editor`` permission in order to create silences
+
+This is necessary due to minor API changes in the embedded AlertManager that Grafana runs.

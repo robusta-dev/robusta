@@ -24,7 +24,7 @@ Bundled Prometheus stack (optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Robusta includes an optional :ref:`embedded Prometheus stack`, preconfigured with alerts for Kubernetes according to best practices.
 
-If you already use *kube-prometheus-stack*, you can :ref:`point it at Robusta<Sending Alerts to Robusta>` instead.
+If you already use Prometheus, you can :ref:`point it at Robusta<Sending Alerts to Robusta>` instead.
 
 Web UI (optional)
 ^^^^^^^^^^^^^^^^^^^^^^
