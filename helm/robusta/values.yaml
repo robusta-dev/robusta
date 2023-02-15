@@ -136,7 +136,9 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: TargetDown
   actions:
+  - default_enricher: {}
   - target_down_dns_enricher: {}
+  stop: true
 
 - triggers:
   - on_prometheus_alert:
