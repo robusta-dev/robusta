@@ -1,7 +1,5 @@
-import os
-import os.path
-
 from robusta.core.model.env_vars import (
+    ADDITIONAL_CERTIFICATE,
     ENABLE_TELEMETRY,
     ROBUSTA_TELEMETRY_ENDPOINT,
     SEND_ADDITIONAL_TELEMETRY,
@@ -19,7 +17,7 @@ from robusta.runner.web import Web
 
 def main():
     init_logging()
-    if add_custom_certificate(os.environ.get("CERTIFICATE", "")):
+    if add_custom_certificate(ADDITIONAL_CERTIFICATE):
         logging.info("added custom certificate")
 
     create_monkey_patches()

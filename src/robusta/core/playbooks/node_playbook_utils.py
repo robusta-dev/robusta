@@ -18,7 +18,7 @@ def create_node_graph_enrichment(params: ResourceGraphEnricherParams, node: Node
         labels,
         ResourceChartResourceType[params.resource_type],
         ResourceChartItemType.Node,
-        prometheus_url=params.prometheus_url,
+        prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
     )
     return graph_enrichment

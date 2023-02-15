@@ -11,3 +11,6 @@ src/dist/
 venv/
 docs/_build
 .DS_Store
+staging.environment.env
+*.env
+.run

@@ -198,6 +198,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 try:
                     action_params = merge_global_params(self.get_global_config(), action.action_params)
                     params = registered_action.params_type(**action_params)
+                    params.post_initialization()
                 except Exception:
                     msg = (
                         f"Failed to create {registered_action.params_type} "

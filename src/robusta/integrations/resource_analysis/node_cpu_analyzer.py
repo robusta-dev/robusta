@@ -1,24 +1,21 @@
 from collections import OrderedDict
 
 from hikaru.model import Node
-from prometheus_api_client import PrometheusConnect
 
+from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
-from robusta.integrations.prometheus.utils import PrometheusDiscovery, check_prometheus_connection
+from robusta.integrations.prometheus.utils import check_prometheus_connection, get_prometheus_connect
 
 
 class NodeCpuAnalyzer:
 
     # TODO: perhaps we should handle this more elegantly by first loading all the data into a pandas dataframe
     # and then slicing it different ways
-    def __init__(self, node: Node, prometheus_url: str, range_size="5m"):
+    def __init__(self, node: Node, prometheus_params: PrometheusParams, range_size="5m"):
         self.node = node
         self.range_size = range_size
         self.internal_ip = next(addr.address for addr in self.node.status.addresses if addr.type == "InternalIP")
-        if prometheus_url is None:
-            prometheus_url = PrometheusDiscovery.find_prometheus_url()
-
-        self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
+        self.prom = get_prometheus_connect(prometheus_params)
         self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
         check_prometheus_connection(self.prom, self.default_prometheus_params)
 

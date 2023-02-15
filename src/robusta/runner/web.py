@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request
 from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
-from robusta.core.model.env_vars import NUM_EVENT_THREADS, TRACE_INCOMING_REQUESTS
+from robusta.core.model.env_vars import NUM_EVENT_THREADS, TRACE_INCOMING_REQUESTS, PORT
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
 from robusta.integrations.prometheus.models import AlertManagerEvent
@@ -34,7 +34,7 @@ class Web:
 
     @staticmethod
     def run():
-        app.run(host="0.0.0.0", use_reloader=False)
+        app.run(host="0.0.0.0", port=PORT, use_reloader=False)
 
     @staticmethod
     @app.route("/api/alerts", methods=["POST"])

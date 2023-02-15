@@ -1,4 +1,5 @@
 import logging
+import time
 from collections import defaultdict
 from datetime import datetime
 from string import Template
@@ -149,7 +150,7 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     """
     promql_query = alert.get_prometheus_query()
     chart = create_chart_from_prometheus_query(
-        params.prometheus_url,
+        params,
         promql_query,
         alert.alert.startsAt,
         include_x_axis=False,
@@ -168,7 +169,7 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
         alert.alert.startsAt,
         alert.alert.labels,
         params.promql_query,
-        prometheus_url=params.prometheus_url,
+        prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
         graph_title=params.graph_title,
         chart_values_format=chart_values_format,
@@ -194,7 +195,7 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
         labels,
         ResourceChartResourceType[params.resource_type],
         ResourceChartItemType[params.item_type],
-        prometheus_url=params.prometheus_url,
+        prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
     )
     alert.add_enrichment([graph_enrichment])
@@ -234,11 +235,13 @@ def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
 
 class LogEnricherParams(ActionParams):
     """
+    :var container_name: Specific container to get logs from
     :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
     :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
     :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
     """
 
+    container_name: Optional[str]
     warn_on_missing_label: bool = False
     regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
     regex_replacement_style: Optional[str] = None
@@ -261,20 +264,36 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
             )
         return
 
+    container: str = pod.spec.containers[0].name
+    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+    if params.container_name:
+        container = params.container_name
+    elif any(status.name == event.get_subject().container for status in all_statuses):
+        # support alerts with a container label, make sure its related to this pod.
+        container = event.get_subject().container
+
+    tries: int = 2
+    backoff_seconds: int = 2
     regex_replacement_style = (
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     )
-    log_data = pod.get_logs(
-        regex_replacer_patterns=params.regex_replacer_patterns,
-        regex_replacement_style=regex_replacement_style,
-        previous=params.previous,
-    )
-    if not log_data:
-        return
 
-    event.add_enrichment(
-        [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
-    )
+    for _ in range(tries - 1):
+        log_data = pod.get_logs(
+            container=container,
+            regex_replacer_patterns=params.regex_replacer_patterns,
+            regex_replacement_style=regex_replacement_style,
+            previous=params.previous,
+        )
+        if not log_data:
+            logging.info("log data is empty, retrying...")
+            time.sleep(backoff_seconds)
+            continue
+
+        event.add_enrichment(
+            [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
+        )
+        break
 
 
 class SearchTermParams(ActionParams):

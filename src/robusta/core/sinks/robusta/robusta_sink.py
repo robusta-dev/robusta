@@ -28,6 +28,7 @@ class RobustaSink(SinkBase):
 
         super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
+        self.ttl_hours = sink_config.robusta_sink.ttl_hours
 
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if self.account_id != robusta_token.account_id:
@@ -230,7 +231,8 @@ class RobustaSink(SinkBase):
         internal_ip = ",".join([addr.address for addr in internal_addresses])
         node_taints = api_server_node.spec.taints or []
         taints = ",".join([cls.__to_taint_str(taint) for taint in node_taints])
-
+        capacity = api_server_node.status.capacity or {}
+        allocatable = api_server_node.status.allocatable or {}
         return NodeInfo(
             name=api_server_node.metadata.name,
             node_creation_time=str(api_server_node.metadata.creation_timestamp),
@@ -238,11 +240,11 @@ class RobustaSink(SinkBase):
             external_ip=external_ip,
             taints=taints,
             conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),
-            memory_capacity=PodResources.parse_mem(api_server_node.status.capacity.get("memory", "0Mi")),
-            memory_allocatable=PodResources.parse_mem(api_server_node.status.allocatable.get("memory", "0Mi")),
+            memory_capacity=PodResources.parse_mem(capacity.get("memory", "0Mi")),
+            memory_allocatable=PodResources.parse_mem(allocatable.get("memory", "0Mi")),
             memory_allocated=sum([req.memory for req in pod_requests_list]),
-            cpu_capacity=PodResources.parse_cpu(api_server_node.status.capacity.get("cpu", "0")),
-            cpu_allocatable=PodResources.parse_cpu(api_server_node.status.allocatable.get("cpu", "0")),
+            cpu_capacity=PodResources.parse_cpu(capacity.get("cpu", "0")),
+            cpu_allocatable=PodResources.parse_cpu(allocatable.get("cpu", "0")),
             cpu_allocated=round(sum([req.cpu for req in pod_requests_list]), 3),
             pods_count=len(pod_requests_list),
             pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
@@ -312,6 +314,7 @@ class RobustaSink(SinkBase):
                 last_alert_at=self.registry.get_telemetry().last_alert_at,
                 account_id=self.account_id,
                 light_actions=self.registry.get_light_actions(),
+                ttl_hours=self.ttl_hours,
             )
 
             self.dal.publish_cluster_status(cluster_status)

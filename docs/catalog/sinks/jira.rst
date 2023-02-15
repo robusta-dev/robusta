@@ -34,7 +34,7 @@ Configuring the Jira sink
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
           - jira_sink:
             name: personal_jira_sink
             url: https://workspace.atlassian.net

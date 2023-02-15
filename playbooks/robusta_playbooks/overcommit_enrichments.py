@@ -18,7 +18,7 @@ def cpu_overcommited_enricher(alert: PrometheusKubernetesAlert, params: TimedPro
     Enrich the finding with a detailed explanation for the cause of the CPU overcommitment.
     Includes recommendations for the identified cause.
     """
-    cpu_analyzer = CpuAnalyzer(params.prometheus_url)
+    cpu_analyzer = CpuAnalyzer(params)
     cpu_requests = cpu_analyzer.get_total_cpu_requests(timedelta(seconds=params.default_query_duration))
     cpu_total = cpu_analyzer.get_total_cpu_allocatable(timedelta(seconds=params.default_query_duration))
     if not (cpu_total and cpu_requests):
@@ -48,7 +48,7 @@ def memory_overcommited_enricher(alert: PrometheusKubernetesAlert, params: Timed
     Enrich the finding with a detailed explanation for the cause of the Memory overcommitment.
     Includes recommendations for the identified cause.
     """
-    mem_analyzer = MemoryAnalyzer(params.prometheus_url)
+    mem_analyzer = MemoryAnalyzer(params)
     mem_requests = mem_analyzer.get_total_mem_requests(timedelta(seconds=params.default_query_duration))
     mem_total = mem_analyzer.get_total_mem_allocatable(timedelta(seconds=params.default_query_duration))
     if not (mem_requests and mem_total):
