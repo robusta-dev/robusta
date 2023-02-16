@@ -1,6 +1,6 @@
-from datetime import datetime
+import datetime
 from enum import Enum
-from typing import Dict
+from typing import Dict, Optional
 
 import requests
 
@@ -11,19 +11,22 @@ from robusta.utils.error_codes import ActionException, ErrorCodes
 
 SilenceOperation = Enum("SilenceOperation", "CREATE DELETE LIST")
 
+
 def create_label_matcher(name: str, value: str, isRegex: bool) -> SilenceMatcher:
     return SilenceMatcher(name=name, value=value, isEqual=not isRegex, isRegex=isRegex)
 
 
-def add_silence_from_prometheus_alert(alert: PrometheusKubernetesAlert, labels: [str]):
+def add_silence_from_prometheus_alert(alert: PrometheusKubernetesAlert, labels: [str], comment: Optional[str] = None):
     matchers = [create_label_matcher(name=label, value=alert.get_alert_label(label), isRegex=False)
-                               for label in labels if alert.get_alert_label(label)]
-    comment = "This alert was auto-silenced"
-    created_by = "robusta"
+                for label in labels if alert.get_alert_label(label)]
+    if not comment:
+        comment = "This alert was auto-silenced"
+    created_by = "robusta auto-silencer"
     starts_at = datetime.datetime.now()
-    ends_at = datetime.datetime.now() + datetime.timedelta(years=5)
-    silence_params = AddSilenceParams(matchers=matchers, comment=comment, createdBy=created_by, startsAt=starts_at, endsAt=ends_at)
-    add_silence_to_alert_manager(alert, silence_params)
+    ends_at = datetime.datetime.now() + datetime.timedelta(weeks=52 * 5)  # silence for 5 years
+    silence_params = AddSilenceParams(matchers=matchers, comment=comment, createdBy=created_by, startsAt=starts_at,
+                                      endsAt=ends_at)
+    add_silence_to_alert_manager(silence_params)
 
 
 def add_silence_to_alert_manager(params: AddSilenceParams):
