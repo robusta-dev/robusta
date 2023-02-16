@@ -14,6 +14,21 @@ def has_dns_pods(namespace: str, job: str) -> bool:
     return len(pods.items) > 1
 
 
+def auto_silence_target_down(alert: PrometheusKubernetesAlert, job: str, reason_for_silence:str):
+    job_is_coredns = job == "coredns"
+    alert.override_finding_attributes(
+        description=f"The Prometheus Stack expects the {job} to exist, but it can't be found"
+                    f" in kube-system. {reason_for_silence}"
+                    f", you can disable it by changing the following values in "
+                    f"prometheus stack. "
+                    f"\n\tcoreDns:\n\t\tenabled: {str(not job_is_coredns).lower()}"
+                    f"\n\tkubeDns:\n\t\tenabled: {str(job_is_coredns).lower()}```"
+    )
+    relevant_silence_labels = ['service', 'alertname', 'job']
+    comment = f"Misconfigured target {job} auto-silenced"
+    logging.info(f"{comment}, reason: {reason_for_silence}")
+    add_silence_from_prometheus_alert(alert, labels=relevant_silence_labels, comment=comment)
+
 @action
 def target_down_dns_enricher(alert: PrometheusKubernetesAlert):
     """
@@ -39,36 +54,15 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert):
 
     # wrong service is set up i.e. coredns when should be kube-dns
     if not has_dns_pods(alert.label_namespace, job):
-        relevant_silence_labels = ['service', 'alertname', 'job']
-        comment = f"Misconfigured target {job} auto-silenced"
-        logging.info(comment)
-        add_silence_from_prometheus_alert(alert, labels=relevant_silence_labels, comment=comment)
-        job_should_be_enabled = 'kube-dns' if job_is_coredns else 'coredns'
-        alert.override_finding_attributes(
-            description=f"The Prometheus Stack expects the {job} to exist, but it can't be found"
-                        f" in kube-system. { job_should_be_enabled} should be configured instead "
-                        f", you can enable it by changing the following values in "
-                        f"prometheus stack."
-                        f"```kube-prometheus-stack:"
-                        f"\n\tcoreDns:\n\t\tenabled: {str(not job_is_coredns).lower()}"
-                        f"\n\tkubeDns:\n\t\tenabled: {str(job_is_coredns).lower()}```"
-        )
+        other_job = 'kube-dns' if job_is_coredns else 'coredns'
+        silence_reason = f"{ other_job} should be configured instead"
+        auto_silence_target_down(alert, job, silence_reason)
         return
 
     # the service does not exist
     if not service_found:
-        alert.override_finding_attributes(
-            description=f"The Prometheus Stack expects the {job} to exist, but it can't be found"
-                        f" in kube-system (some cluster managers do not provide this service)"
-                        f", you can disable it by changing the following values in "
-                        f"prometheus stack. "
-                        f"\n\tcoreDns:\n\t\tenabled: {str(not job_is_coredns).lower()}"
-                        f"\n\tkubeDns:\n\t\tenabled: {str(job_is_coredns).lower()}```"
-        )
-        relevant_silence_labels = ['service', 'alertname', 'job']
-        comment = f"Misconfigured target {job} auto-silenced"
-        logging.info(comment)
-        add_silence_from_prometheus_alert(alert, labels=relevant_silence_labels, comment=comment)
+        silence_reason = 'Some cluster managers do not provide this service.'
+        auto_silence_target_down(alert, job, silence_reason)
     else:
         # We cannot reach out the service, so alert should be risen
         pass
