@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum, auto
 from typing import List, Optional, Union
 
@@ -227,3 +228,49 @@ class ProcessParams(ActionParams):
 class EventEnricherParams(ActionParams):
     max_events: int = 8
     included_types: List[str] = ["Warning", "Normal"]
+
+
+class SilenceMatcher(BaseModel):
+    # https://github.com/prometheus/alertmanager/blob/main/api/v2/models/matcher.go
+    isEqual: bool = (
+        True  # support old version matchers with omitted isEqual https://github.com/prometheus/alertmanager/pull/2603
+    )
+    isRegex: bool
+    name: str
+    value: str
+
+
+class BaseSilenceParams(ActionParams):
+    """
+    :var alertmanager_url: Alternative Alert Manager url to send requests.
+    """
+
+    alertmanager_flavor: str = None  # type: ignore
+    alertmanager_url: Optional[str]
+    grafana_api_key: str = None  # type: ignore
+
+
+class DeleteSilenceParams(BaseSilenceParams):
+    """
+    :var id: uuid of the silence.
+    """
+
+    id: str
+
+
+class AddSilenceParams(BaseSilenceParams):
+    """
+    :var id: uuid of the silence. use for update, empty on create.
+    :var comment: text comment of the silence.
+    :var createdBy: author of the silence.
+    :var startsAt: date.
+    :var endsAt: date.
+    :var matchers: List of matchers to filter the silence effect.
+    """
+
+    id: Optional[str]
+    comment: str
+    createdBy: str
+    startsAt: datetime
+    endsAt: datetime
+    matchers: List[SilenceMatcher]

@@ -6,11 +6,12 @@ from robusta.api import PrometheusKubernetesAlert, TimedPrometheusParams, action
 from robusta.integrations.kubernetes.api_client_utils import list_available_services
 
 
-def get_alert_label(alert: PrometheusKubernetesAlert, label: str) -> Optional[str]:
-    try:
-        return alert.alert.labels[label]
-    except KeyError:
-        return None
+def has_dns_pods(namespace: str, job: str) -> bool:
+    pods: PodList = PodList.listNamespacedPod(
+        namespace, label_selector=f"k8s-app = {job}"
+    ).obj
+    return len(pods.items) > 1
+
 
 @action
 def target_down_dns_enricher(alert: PrometheusKubernetesAlert):
@@ -18,7 +19,7 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert):
     Enrich the finding with a detailed explanation for the cause of the CoreDNS and
     Kube-DNS unreachable
     """
-    job = get_alert_label(alert, 'job')
+    job = alert.get_alert_label('job')
     if not job or job not in ["coredns", "kube-dns"]:
         return
     res = list_available_services("kube-system")
@@ -30,7 +31,7 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert):
     service_found = False
     for kube_item in items:
         kube_item_name = kube_item.get("metadata", {}).get("name")
-        if kube_item_name == get_alert_label(alert, 'service'):
+        if kube_item_name == alert.get_alert_label('service'):
             service_found = True
             break
 

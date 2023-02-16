@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
-from enum import Enum
-from typing import Dict, List, Optional
+from typing import List
 from uuid import UUID
 
 import requests
@@ -9,27 +8,23 @@ from pydantic import BaseModel, SecretStr
 
 from robusta.api import (
     ActionException,
-    ActionParams,
-    AlertManagerDiscovery,
+    AddSilenceParams,
+    BaseSilenceParams,
+    DeleteSilenceParams,
     ErrorCodes,
     ExecutionBaseEvent,
     MarkdownBlock,
-    ServiceDiscovery,
+    SilenceMatcher,
+    SilenceOperation,
     TableBlock,
     action,
+    add_silence_to_alert_manager,
+    silence_gen_headers,
+    silence_get_alertmanager_url,
+    silence_get_url_path,
 )
 
 # ref to api https://github.com/prometheus/alertmanager/blob/main/api/v2/openapi.yaml
-
-
-class Matcher(BaseModel):
-    # https://github.com/prometheus/alertmanager/blob/main/api/v2/models/matcher.go
-    isEqual: bool = (
-        True  # support old version matchers with omitted isEqual https://github.com/prometheus/alertmanager/pull/2603
-    )
-    isRegex: bool
-    name: str
-    value: str
 
 
 class SilenceStatus(BaseModel):
@@ -45,7 +40,7 @@ class Silence(BaseModel):
     createdBy: str
     startsAt: datetime
     endsAt: datetime
-    matchers: List[Matcher]
+    matchers: List[SilenceMatcher]
 
     def to_list(self) -> List[str]:
         return [
@@ -98,14 +93,14 @@ class AddSilenceParams(BaseSilenceParams):
 
 @action
 def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
-    alertmanager_url = _get_alertmanager_url(params)
+    alertmanager_url = silence_get_alertmanager_url(params)
     if not alertmanager_url:
         raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
 
     try:
         response = requests.get(
-            f"{alertmanager_url}{_get_url_path(SilenceOperation.LIST, params)}",
-            headers=_gen_headers(params),
+            f"{alertmanager_url}{silence_get_url_path(SilenceOperation.LIST, params)}",
+            headers=silence_gen_headers(params),
         )
     except Exception as e:
         raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
@@ -128,23 +123,7 @@ def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
 
 @action
 def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
-    alertmanager_url = _get_alertmanager_url(params)
-    if not alertmanager_url:
-        raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
-
-    try:
-        res = requests.post(
-            f"{alertmanager_url}{_get_url_path(SilenceOperation.CREATE, params)}",
-            data=params.json(exclude_defaults=True),  # support old versions.
-            headers=_gen_headers(params),
-        )
-    except Exception as e:
-        raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
-
-    if not res.ok:
-        raise ActionException(ErrorCodes.ADD_SILENCE_FAILED, msg=f"Add silence failed: {res.text}")
-
-    silence_id = res.json().get("silenceID") or res.json().get("id")  # on grafana alertmanager the 'id' is returned
+    silence_id = add_silence_to_alert_manager(params)
     if not silence_id:
         raise ActionException(ErrorCodes.ADD_SILENCE_FAILED)
 
@@ -161,16 +140,16 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
 
 @action
 def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
-    alertmanager_url = _get_alertmanager_url(params)
+    alertmanager_url = silence_get_alertmanager_url(params)
     if not alertmanager_url:
         raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
 
     try:
-        alertmanager_url = _get_alertmanager_url(params)
+        alertmanager_url = silence_get_alertmanager_url(params)
 
         requests.delete(
-            f"{alertmanager_url}{_get_url_path(SilenceOperation.DELETE, params)}/{params.id}",
-            headers=_gen_headers(params),
+            f"{alertmanager_url}{silence_get_url_path(SilenceOperation.DELETE, params)}/{params.id}",
+            headers=silence_gen_headers(params),
         )
     except Exception as e:
         raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
@@ -186,7 +165,6 @@ def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
     )
 
 
-SilenceOperation = Enum("SilenceOperation", "CREATE DELETE LIST")
 
 
 def _gen_headers(params: BaseSilenceParams) -> Dict:
