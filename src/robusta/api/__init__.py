@@ -104,6 +104,7 @@ from robusta.core.playbooks.prometheus_enrichment_utils import (
 )
 from robusta.core.playbooks.silence_utils import (
     SilenceOperation,
+    add_silence_from_prometheus_alert,
     add_silence_to_alert_manager,
     silence_gen_headers,
     silence_get_alertmanager_url,
