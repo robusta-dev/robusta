@@ -23,6 +23,8 @@ from kubernetes.client import (
 )
 from pydantic import BaseModel
 
+from robusta.core.model.cluster_status import ClusterStats
+from robusta.core.model.env_vars import DISCOVERY_MAX_BATCHES, DISCOVERY_BATCH_SIZE
 from robusta.core.discovery import utils
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
@@ -70,87 +72,132 @@ class Discovery:
         active_services: List[ServiceInfo] = []
         # discover micro services
         try:
-            deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces()
-            active_services.extend(
-                [
-                    Discovery.__create_service_info(
-                        deployment.metadata,
-                        "Deployment",
-                        extract_containers(deployment),
-                        extract_volumes(deployment),
-                        extract_total_pods(deployment),
-                        extract_ready_pods(deployment),
-                    )
-                    for deployment in deployments.items
-                ]
-            )
-            statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces()
-            active_services.extend(
-                [
-                    Discovery.__create_service_info(
-                        statefulset.metadata,
-                        "StatefulSet",
-                        extract_containers(statefulset),
-                        extract_volumes(statefulset),
-                        extract_total_pods(statefulset),
-                        extract_ready_pods(statefulset),
-                    )
-                    for statefulset in statefulsets.items
-                ]
-            )
-            daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces()
-            active_services.extend(
-                [
-                    Discovery.__create_service_info(
-                        daemonset.metadata,
-                        "DaemonSet",
-                        extract_containers(daemonset),
-                        extract_volumes(daemonset),
-                        extract_total_pods(daemonset),
-                        extract_ready_pods(daemonset),
-                    )
-                    for daemonset in daemonsets.items
-                ]
-            )
-            replicasets: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces()
-            active_services.extend(
-                [
-                    Discovery.__create_service_info(
-                        replicaset.metadata,
-                        "ReplicaSet",
-                        extract_containers(replicaset),
-                        extract_volumes(replicaset),
-                        extract_total_pods(replicaset),
-                        extract_ready_pods(replicaset),
-                    )
-                    for replicaset in replicasets.items
-                    if not replicaset.metadata.owner_references
-                ]
-            )
+            # discover deployments
+            # using k8s api `continue` to load in batches
+            continue_ref: Optional[str] = None
+            for _ in range(DISCOVERY_MAX_BATCHES):
+                deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces(
+                    limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
+                )
+                active_services.extend(
+                    [
+                        Discovery.__create_service_info(
+                            deployment.metadata,
+                            "Deployment",
+                            extract_containers(deployment),
+                            extract_volumes(deployment),
+                            extract_total_pods(deployment),
+                            extract_ready_pods(deployment),
+                        )
+                        for deployment in deployments.items
+                    ]
+                )
+                continue_ref = deployments.metadata._continue
+                if not continue_ref:
+                    break
 
-            pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces()
-            pod_items = pods.items
-            active_services.extend(
-                [
-                    Discovery.__create_service_info(
-                        pod.metadata,
-                        "Pod",
-                        extract_containers(pod),
-                        extract_volumes(pod),
-                        extract_total_pods(pod),
-                        extract_ready_pods(pod),
-                    )
-                    for pod in pod_items
-                    if not pod.metadata.owner_references and not is_pod_finished(pod)
-                ]
-            )
+            # discover statefulsets
+            continue_ref = None
+            for _ in range(DISCOVERY_MAX_BATCHES):
+                statefulsets: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces(
+                    limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
+                )
+                active_services.extend(
+                    [
+                        Discovery.__create_service_info(
+                            statefulset.metadata,
+                            "StatefulSet",
+                            extract_containers(statefulset),
+                            extract_volumes(statefulset),
+                            extract_total_pods(statefulset),
+                            extract_ready_pods(statefulset),
+                        )
+                        for statefulset in statefulsets.items
+                    ]
+                )
+                continue_ref = statefulsets.metadata._continue
+                if not continue_ref:
+                    break
+
+            # discover daemonsets
+            continue_ref = None
+            for _ in range(DISCOVERY_MAX_BATCHES):
+                daemonsets: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces(
+                    limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
+                )
+                active_services.extend(
+                    [
+                        Discovery.__create_service_info(
+                            daemonset.metadata,
+                            "DaemonSet",
+                            extract_containers(daemonset),
+                            extract_volumes(daemonset),
+                            extract_total_pods(daemonset),
+                            extract_ready_pods(daemonset),
+                        )
+                        for daemonset in daemonsets.items
+                    ]
+                )
+                continue_ref = daemonsets.metadata._continue
+                if not continue_ref:
+                    break
+
+            # discover replicasets
+            continue_ref = None
+            for _ in range(DISCOVERY_MAX_BATCHES):
+                replicasets: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces(
+                    limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
+                )
+                active_services.extend(
+                    [
+                        Discovery.__create_service_info(
+                            replicaset.metadata,
+                            "ReplicaSet",
+                            extract_containers(replicaset),
+                            extract_volumes(replicaset),
+                            extract_total_pods(replicaset),
+                            extract_ready_pods(replicaset),
+                        )
+                        for replicaset in replicasets.items
+                        if not replicaset.metadata.owner_references and replicaset.spec.replicas > 0
+                    ]
+                )
+                continue_ref = replicasets.metadata._continue
+                if not continue_ref:
+                    break
+
+            # discover pods
+            continue_ref = None
+            for _ in range(DISCOVERY_MAX_BATCHES):
+                pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces(
+                    limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
+                )
+                pod_items = pods.items
+                active_services.extend(
+                    [
+                        Discovery.__create_service_info(
+                            pod.metadata,
+                            "Pod",
+                            extract_containers(pod),
+                            extract_volumes(pod),
+                            extract_total_pods(pod),
+                            extract_ready_pods(pod),
+                        )
+                        for pod in pod_items
+                        if not pod.metadata.owner_references and not is_pod_finished(pod)
+                    ]
+                )
+                continue_ref = pods.metadata._continue
+                if not continue_ref:
+                    break
+
         except Exception:
             logging.error(
                 "Failed to run periodic service discovery",
                 exc_info=True,
             )
 
-        # discover nodes
+        # discover nodes - no need for batching. Number of nodes is not big enough
         current_nodes: Optional[V1NodeList] = None
         node_requests = defaultdict(list)
         try:
@@ -169,28 +216,37 @@ class Discovery:
         # discover jobs
         active_jobs: List[JobInfo] = []
         try:
-            current_jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces()
-            for job in current_jobs.items:
-                job_pods = []
-                job_labels = {}
-                if job.spec.selector:
-                    job_labels = job.spec.selector.match_labels
-                elif job.metadata.labels:
-                    job_name = job.metadata.labels.get("job-name", None)
-                    if job_name:
-                        job_labels = {"job-name": job_name}
+            continue_ref: Optional[str] = None
+            for _ in range(DISCOVERY_MAX_BATCHES):
+                current_jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces(
+                    limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
+                )
+                for job in current_jobs.items:
+                    job_pods = []
+                    job_labels = {}
+                    if job.spec.selector:
+                        job_labels = job.spec.selector.match_labels
+                    elif job.metadata.labels:
+                        job_name = job.metadata.labels.get("job-name", None)
+                        if job_name:
+                            job_labels = {"job-name": job_name}
 
-                if job_labels:  # add job pods only if we found a valid selector
-                    job_pods = [
-                        pod.metadata.name
-                        for pod in pod_items
-                        if (
-                            (job.metadata.namespace == pod.metadata.namespace)
-                            and (job_labels.items() <= (pod.metadata.labels or {}).items())
-                        )
-                    ]
+                    if job_labels:  # add job pods only if we found a valid selector
+                        job_pods = [
+                            pod.metadata.name
+                            for pod in pod_items
+                            if (
+                                (job.metadata.namespace == pod.metadata.namespace)
+                                and (job_labels.items() <= (pod.metadata.labels or {}).items())
+                            )
+                        ]
 
-                active_jobs.append(JobInfo.from_api_server(job, job_pods))
+                    active_jobs.append(JobInfo.from_api_server(job, job_pods))
+
+                continue_ref = current_jobs.metadata._continue
+                if not continue_ref:
+                    break
+
         except Exception:
             logging.error(
                 "Failed to run periodic jobs discovery",
@@ -230,6 +286,74 @@ class Discovery:
             Discovery.executor = ProcessPoolExecutor(max_workers=1)
             logging.info("Initialized new discovery pool")
             raise e
+
+    @staticmethod
+    def discover_stats() -> ClusterStats:
+        deploy_count = -1
+        sts_count = -1
+        dms_count = -1
+        rs_count = -1
+        pod_count = -1
+        node_count = -1
+        job_count = -1
+        try:
+            deps: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces(limit=1, _continue=None)
+            remaining = deps.metadata.remaining_item_count
+            deploy_count = remaining + len(deps.items)
+        except Exception:
+            logging.error("Failed to count deployments", exc_info=True)
+
+        try:
+            sts: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces(limit=1, _continue=None)
+            remaining = sts.metadata.remaining_item_count
+            sts_count = remaining + len(sts.items)
+        except Exception:
+            logging.error("Failed to count statefulsets", exc_info=True)
+
+        try:
+            dms: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces(limit=1, _continue=None)
+            remaining = dms.metadata.remaining_item_count
+            dms_count = remaining + len(dms.items)
+        except Exception:
+            logging.error("Failed to count daemonsets", exc_info=True)
+
+        try:
+            rs: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces(limit=1, _continue=None)
+            remaining = rs.metadata.remaining_item_count
+            rs_count = remaining + len(rs.items)
+        except Exception:
+            logging.error("Failed to count replicasets", exc_info=True)
+
+        try:
+            pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces(limit=1, _continue=None)
+            remaining = pods.metadata.remaining_item_count
+            pod_count = remaining + len(pods.items)
+        except Exception:
+            logging.error("Failed to count pods", exc_info=True)
+
+        try:
+            nodes: V1NodeList = client.CoreV1Api().list_node(limit=1, _continue=None)
+            remaining = nodes.metadata.remaining_item_count
+            node_count = remaining + len(nodes.items)
+        except Exception:
+            logging.error("Failed to count nodes", exc_info=True)
+
+        try:
+            jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces(limit=1, _continue=None)
+            remaining = jobs.metadata.remaining_item_count
+            job_count = remaining + len(jobs.items)
+        except Exception:
+            logging.error("Failed to count jobs", exc_info=True)
+
+        return ClusterStats(
+            deployments=deploy_count,
+            statefulsets=sts_count,
+            daemonsets=dms_count,
+            replicasets=rs_count,
+            pods=pod_count,
+            nodes=node_count,
+            jobs=job_count,
+        )
 
 
 # This section below contains utility related to k8s python api objects (rather than hikaru)
