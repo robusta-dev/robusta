@@ -1,12 +1,10 @@
 :hide-navigation:
 :hide-toc:
 
-
 .. toctree::
    :maxdepth: 4
    :caption: Home
    :hidden:
-
    self
 
 .. toctree::
@@ -23,7 +21,7 @@
    :maxdepth: 4
    :caption: Get Started
    :hidden:
-   
+
    Overview <get-started/index>
 
 .. toctree::

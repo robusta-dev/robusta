@@ -1,6 +1,18 @@
-from robusta.api import ActionParams, action, ExecutionBaseEvent, FileBlock, Finding, Optional, FindingSource, FindingType, MarkdownBlock
-from urllib.error import URLError, HTTPError
+from typing import Optional
+from urllib.error import HTTPError, URLError
+
 import requests
+
+from robusta.api import (
+    ActionParams,
+    ExecutionBaseEvent,
+    FileBlock,
+    Finding,
+    FindingSource,
+    FindingType,
+    MarkdownBlock,
+    action,
+)
 
 
 class HTTP_GET(ActionParams):
@@ -40,7 +52,7 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
             finding.title = f"Response received from {action_params.url} "
             finding.add_enrichment(
                 [
-                    FileBlock(f"Response.txt: ", result.text.encode()),
+                    FileBlock("Response.txt: ", result.text.encode()),
                 ]
             )
             event.add_finding(finding)
@@ -49,9 +61,7 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
         finding.title = f"{action_params.url} is un-reachable"
         finding.add_enrichment(
             [
-                MarkdownBlock(
-                    f"*Status Code*\n```\n{e.code}\n```"
-                ),
+                MarkdownBlock(f"*Status Code*\n```\n{e.code}\n```"),
             ]
         )
         event.add_finding(finding)
@@ -59,9 +69,7 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
         finding.title = f"{action_params.url} is un-reachable"
         finding.add_enrichment(
             [
-                MarkdownBlock(
-                    f"*Reason*\n```\n{e.reason}\n```"
-                ),
+                MarkdownBlock(f"*Reason*\n```\n{e.reason}\n```"),
             ]
         )
         event.add_finding(finding)
@@ -69,9 +77,7 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
         finding.title = f"{action_params.url} is un-reachable"
         finding.add_enrichment(
             [
-                MarkdownBlock(
-                    f"*Error*\n```\n{e}\n```"
-                ),
+                MarkdownBlock(f"*Error*\n```\n{e}\n```"),
             ]
         )
         event.add_finding(finding)
@@ -86,7 +92,7 @@ class HTTP_POST(ActionParams):
     """
 
     url: str
-    data: dict = None
+    data: dict = None  # type: ignore
     get_response: Optional[bool] = False
 
 
@@ -109,16 +115,13 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
 
     try:
 
-        result = requests.post(
-            action_params.url, data=action_params.data)
+        result = requests.post(action_params.url, data=action_params.data)
 
         if action_params.get_response:
             finding.title = f"Response received from {action_params.url} "
             finding.add_enrichment(
                 [
-
-                    FileBlock(f"Response.txt: ", result.text.encode()),
-
+                    FileBlock("Response.txt: ", result.text.encode()),
                 ]
             )
             event.add_finding(finding)
@@ -127,9 +130,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
         finding.title = f"{action_params.url} is un-reachable"
         finding.add_enrichment(
             [
-                MarkdownBlock(
-                    f"*Status Code*\n```\n{e.code}\n```"
-                ),
+                MarkdownBlock(f"*Status Code*\n```\n{e.code}\n```"),
             ]
         )
         event.add_finding(finding)
@@ -137,9 +138,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
         finding.title = f"{action_params.url} is un-reachable"
         finding.add_enrichment(
             [
-                MarkdownBlock(
-                    f"*Reason*\n```\n{e.reason}\n```"
-                ),
+                MarkdownBlock(f"*Reason*\n```\n{e.reason}\n```"),
             ]
         )
         event.add_finding(finding)
@@ -147,9 +146,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
         finding.title = f"{action_params.url} is un-reachable"
         finding.add_enrichment(
             [
-                MarkdownBlock(
-                    f"*Error*\n```\n{e}\n```"
-                ),
+                MarkdownBlock(f"*Error*\n```\n{e}\n```"),
             ]
         )
         event.add_finding(finding)

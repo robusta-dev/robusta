@@ -1,13 +1,9 @@
+import logging
 import os
 import re
 import subprocess
 import time
-import logging
 from typing import Optional
-
-import kubernetes
-from pathlib import Path
-from hikaru.model import Namespace
 
 
 class RobustaController:
@@ -55,7 +51,7 @@ class RobustaController:
             time.sleep(5)
         details = self._run_cmd(["kubectl", "describe", "pods"])
         logging.error(f"robusta runner did not start. logs={logs}; details={details}")
-        raise Exception(f"robusta runner did not start")
+        raise Exception("robusta runner did not start")
 
     def get_logs(self):
         return self._run_cmd(
@@ -101,13 +97,9 @@ class RobustaController:
         if os.name == "nt":
             shell = True
 
-        result = subprocess.run(
-            cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell
-        )
+        result = subprocess.run(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell)
         if result.returncode:
-            logging.error(
-                f"running command {cmd} failed with returncode={result.returncode}"
-            )
+            logging.error(f"running command {cmd} failed with returncode={result.returncode}")
             logging.error(f"stdout={result.stdout.decode()}")
             logging.error(f"stderr={result.stderr.decode()}")
             raise Exception(f"Error running robusta cli command: {cmd}")

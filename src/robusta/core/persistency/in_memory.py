@@ -1,7 +1,8 @@
 # dummy persistence driver
 from contextlib import contextmanager
+from typing import ContextManager, Dict, Type, TypeVar
+
 from pydantic import BaseModel
-from typing import Type, TypeVar, Dict, ContextManager
 
 persistent_data: Dict[str, BaseModel] = {}
 

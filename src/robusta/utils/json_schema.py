@@ -26,7 +26,6 @@
 
 from io import StringIO
 
-
 _DEFAULT_EXAMPLES = {
     "string": "string",
     "integer": 1,
@@ -134,16 +133,10 @@ def example_from_schema(schema):
         return [example_items[i % len(example_items)] for i in range(gen_length)]
 
     elif schema["type"] == "string":
-        example_string = _DEFAULT_STRING_EXAMPLES.get(
-            schema.get("format", None), _DEFAULT_EXAMPLES["string"]
-        )
+        example_string = _DEFAULT_STRING_EXAMPLES.get(schema.get("format", None), _DEFAULT_EXAMPLES["string"])
         min_length = schema.get("minLength", 0)
         max_length = schema.get("maxLength", max(min_length, len(example_string)))
-        gen_length = (
-            min(len(example_string), max_length)
-            if min_length <= len(example_string)
-            else min_length
-        )
+        gen_length = min(len(example_string), max_length) if min_length <= len(example_string) else min_length
         assert 0 <= min_length <= max_length
         if min_length <= len(example_string) <= max_length:
             return example_string

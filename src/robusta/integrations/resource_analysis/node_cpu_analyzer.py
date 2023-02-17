@@ -1,27 +1,23 @@
 from collections import OrderedDict
+
 from hikaru.model import Node
-from prometheus_api_client import PrometheusConnect
-from ..prometheus.utils import PrometheusDiscovery
-from ...core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+
+from robusta.core.model.base_params import PrometheusParams
+from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
+from robusta.integrations.prometheus.utils import check_prometheus_connection, get_prometheus_connect
 
 
 class NodeCpuAnalyzer:
 
     # TODO: perhaps we should handle this more elegantly by first loading all the data into a pandas dataframe
     # and then slicing it different ways
-    def __init__(self, node: Node, prometheus_url: str, range_size="5m"):
+    def __init__(self, node: Node, prometheus_params: PrometheusParams, range_size="5m"):
         self.node = node
         self.range_size = range_size
-        self.internal_ip = next(
-            addr.address
-            for addr in self.node.status.addresses
-            if addr.type == "InternalIP"
-        )
-        if prometheus_url is None:
-            prometheus_url = PrometheusDiscovery.find_prometheus_url()
-
-        self.prom = PrometheusConnect(url=prometheus_url, disable_ssl=True)
+        self.internal_ip = next(addr.address for addr in self.node.status.addresses if addr.type == "InternalIP")
+        self.prom = get_prometheus_connect(prometheus_params)
         self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+        check_prometheus_connection(self.prom, self.default_prometheus_params)
 
     def get_total_cpu_usage(self, other_method=False):
         """
@@ -57,9 +53,7 @@ class NodeCpuAnalyzer:
         :param normalize_by_cpu_count: should we divide by the number of cpus so that the result is in the range 0-1 regardless of cpu count?
         :return: a dict of {[pod_name] : [cpu_usage in the 0-1 range] }
         """
-        query = self._build_query_for_containerized_cpu_usage(
-            False, normalize_by_cpu_count
-        )
+        query = self._build_query_for_containerized_cpu_usage(False, normalize_by_cpu_count)
         result = self.prom.custom_query(query, params=self.default_prometheus_params)
         pod_value_pairs = [(r["metric"]["pod"], float(r["value"][1])) for r in result]
         pod_value_pairs = [(k, v) for (k, v) in pod_value_pairs if v >= threshold]
@@ -87,9 +81,7 @@ class NodeCpuAnalyzer:
 
         if normalized_by_cpu_count:
             # we divide by the number of machine_cpu_cores to return a result in th 0-1 range regardless of cpu count
-            normalization = (
-                f'/ scalar(sum (machine_cpu_cores{{node="{self.node.metadata.name}"}}))'
-            )
+            normalization = f'/ scalar(sum (machine_cpu_cores{{node="{self.node.metadata.name}"}}))'
         else:
             normalization = ""
 

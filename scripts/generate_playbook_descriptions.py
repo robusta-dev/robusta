@@ -1,9 +1,10 @@
 import argparse
+import glob
 import importlib
 import inspect
 import os
-import glob
 from typing import Callable
+
 from pydantic import BaseModel
 
 
@@ -46,8 +47,7 @@ def load_scripts(scripts_root):
 
         playbooks = inspect.getmembers(
             module,
-            lambda f: inspect.isfunction(f)
-            and getattr(f, "__playbook", None) is not None,
+            lambda f: inspect.isfunction(f) and getattr(f, "__playbook", None) is not None,
         )
         for _, func in playbooks:
             description = PlaybookDescription(
@@ -64,9 +64,7 @@ def load_scripts(scripts_root):
 def main():
     # TODO Arik - Need to be fixed in order to expose actions schema
     parser = argparse.ArgumentParser(description="Generate playbook descriptions")
-    parser.add_argument(
-        "directory", type=str, help="directory containing the playbooks"
-    )
+    parser.add_argument("directory", type=str, help="directory containing the playbooks")
     args = parser.parse_args()
     load_scripts(args.directory)
 

@@ -29,7 +29,7 @@ Now we're ready to configure the Telegram sink.
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
         - telegram_sink:
             name: personal_telegram sink
             bot_token: <YOUR BOT TOKEN>
@@ -44,5 +44,5 @@ Save the file and run
    :name: cb-add-telegram-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
-    
+
 You should now get playbooks results in Telegram!

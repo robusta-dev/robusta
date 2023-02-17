@@ -1,7 +1,8 @@
 import abc
+
 from pydantic import BaseModel
 
-from .sink_base_params import SinkBaseParams
+from robusta.core.sinks.sink_base_params import SinkBaseParams
 
 
 class SinkConfigBase(BaseModel):

@@ -1,9 +1,11 @@
-from kubernetes.client import V1Job, V1JobSpec, V1PodSpec, V1Container, V1JobStatus, V1Toleration
-from pydantic import BaseModel
-from typing import List, Dict, Optional
+from datetime import datetime
+from typing import Dict, List, Optional
 
-from .pods import ContainerResources, ResourceAttributes
-from ...core.discovery import utils
+from kubernetes.client import V1Container, V1Job, V1JobSpec, V1JobStatus, V1PodSpec
+from pydantic import BaseModel
+
+from robusta.core.discovery import utils
+from robusta.core.model.pods import ContainerResources, ResourceAttributes
 
 SERVICE_TYPE_JOB = "Job"
 
@@ -38,13 +40,16 @@ class JobStatus(BaseModel):
     failed: int = 0
     succeeded: int = 0
     completion_time: Optional[str]
+    failed_time: Optional[str]
     conditions: List[JobCondition]
 
     @staticmethod
     def from_api_server(job: V1Job) -> "JobStatus":
         job_status: V1JobStatus = job.status
         job_conditions: List[JobCondition] = [
-            JobCondition(type=condition.type, message=condition.message) for condition in (job_status.conditions or [])
+            JobCondition(type=condition.type, message=condition.message)
+            for condition in (job_status.conditions or [])
+            if condition.status.lower() == "true"
         ]
         return JobStatus(
             active=job_status.active or 0,
@@ -52,7 +57,20 @@ class JobStatus(BaseModel):
             succeeded=job_status.succeeded or 0,
             completion_time=str(job_status.completion_time),
             conditions=job_conditions,
+            failed_time=str(JobStatus._extract_failed_time(job_status)),
         )
+
+    @staticmethod
+    def _extract_failed_time(job_status: V1JobStatus) -> Optional[datetime]:
+        try:
+            for condition in job_status.conditions:
+                if condition.status.lower() == "true" and condition.type == "Failed":
+                    return condition.last_transition_time
+        except (
+            AttributeError,
+            TypeError,
+        ):  # if a field is missing
+            return None
 
 
 class JobData(BaseModel):
@@ -62,6 +80,16 @@ class JobData(BaseModel):
     labels: Optional[Dict[str, str]]
     containers: List[JobContainer]
     pods: Optional[List[str]]
+    parents: Optional[List[str]]
+
+    @staticmethod
+    def _get_job_parents(job: V1Job) -> List[str]:
+        try:
+            if not job.metadata or not job.metadata.owner_references:
+                return []
+            return [owner_reference.name for owner_reference in job.metadata.owner_references]
+        except Exception:
+            return []
 
     @staticmethod
     def from_api_server(job: V1Job, pods: List[str]) -> "JobData":
@@ -76,7 +104,8 @@ class JobData(BaseModel):
             node_selector=pod_spec.node_selector,
             labels=job.metadata.labels,
             containers=pod_containers,
-            pods=pods
+            pods=pods,
+            parents=JobData._get_job_parents(job),
         )
 
 
@@ -121,7 +150,7 @@ class JobInfo(BaseModel):
             mem_req=job["mem_req"],
             completions=job["completions"],
             status=JobStatus(**job["status"]),
-            job_data=JobData(**job["job_data"])
+            job_data=JobData(**job["job_data"]),
         )
 
     @staticmethod
@@ -130,13 +159,14 @@ class JobInfo(BaseModel):
         requests: ContainerResources = utils.containers_resources_sum(containers, ResourceAttributes.requests)
         status = JobStatus.from_api_server(job)
         job_data = JobData.from_api_server(job, pods)
+        completions = job.spec.completions if job.spec.completions is not None else 1
         return JobInfo(
             name=job.metadata.name,
             namespace=job.metadata.namespace,
             created_at=str(job.metadata.creation_timestamp),
             cpu_req=requests.cpu,
             mem_req=requests.memory,
-            completions=job.spec.completions,
+            completions=completions,
             status=status,
-            job_data=job_data
+            job_data=job_data,
         )

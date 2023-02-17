@@ -1,4 +1,26 @@
-from robusta.api import action, PodList, logging, PersistentVolumeEvent, PersistentVolumeClaim, FileBlock, RobustaPod, ObjectMeta, PodSpec, Volume, PersistentVolumeClaimVolumeSource, Container, VolumeMount, MarkdownBlock, Finding, FindingSource, FindingType
+import logging
+
+from hikaru.model import (
+    Container,
+    ObjectMeta,
+    PersistentVolumeClaim,
+    PersistentVolumeClaimVolumeSource,
+    PodList,
+    PodSpec,
+    Volume,
+    VolumeMount,
+)
+
+from robusta.api import (
+    FileBlock,
+    Finding,
+    FindingSource,
+    FindingType,
+    MarkdownBlock,
+    PersistentVolumeEvent,
+    RobustaPod,
+    action,
+)
 
 
 @action
@@ -9,7 +31,7 @@ def volume_analysis(event: PersistentVolumeEvent):
     function_name = "volume_analysis"
     # https://docs.robusta.dev/master/extending/actions/findings-api.html
     finding = Finding(
-        title=f"Persistent Volume content",
+        title="Persistent Volume content",
         source=FindingSource.MANUAL,
         aggregation_key=function_name,
         finding_type=FindingType.REPORT,
@@ -17,8 +39,7 @@ def volume_analysis(event: PersistentVolumeEvent):
     )
 
     if not event.get_persistentvolume():
-        logging.error(
-            f"VolumeAnalysis was called on event without Persistent Volume: {event}")
+        logging.error(f"VolumeAnalysis was called on event without Persistent Volume: {event}")
         return
 
     # Get persistent volume data the object contains data related to PV like metadata etc
@@ -31,7 +52,8 @@ def volume_analysis(event: PersistentVolumeEvent):
         if pv_claimref is not None:
             # Do this if there is a PVC attached to PV
             pvc_obj = PersistentVolumeClaim.readNamespacedPersistentVolumeClaim(
-                name=pv_claimref.name, namespace=pv_claimref.namespace).obj
+                name=pv_claimref.name, namespace=pv_claimref.namespace
+            ).obj
             pod = get_pod_related_to_pvc(pvc_obj, pv)
 
             if pod is not None:
@@ -57,38 +79,28 @@ def volume_analysis(event: PersistentVolumeEvent):
                             container_found_flag = True
                             break
 
-                result = pod.exec(
-                    f"ls -R {container_volume_mount.mountPath}/")
+                result = pod.exec(f"ls -R {container_volume_mount.mountPath}/")  # type: ignore
                 finding.title = f"Files present on persistent volume {pv.metadata.name} are: "
                 finding.add_enrichment(
                     [
-
-                        FileBlock(
-                            f"Data.txt: ", result.encode()),
-
+                        FileBlock("Data.txt: ", result.encode()),
                     ]
                 )
 
             else:
                 # Do this if no Pod is attached to PVC
                 reader_pod = persistent_volume_reader(persistent_volume=pv)
-                result = reader_pod.exec(
-                    f"ls -R {reader_pod.spec.containers[0].volumeMounts[0].mountPath}")
+                result = reader_pod.exec(f"ls -R {reader_pod.spec.containers[0].volumeMounts[0].mountPath}")
                 finding.title = f"Files present on persistent volume {pv.metadata.name} are: "
                 finding.add_enrichment(
                     [
-
-                        FileBlock(
-                            f"Data.txt: ", result.encode()),
-
+                        FileBlock("Data.txt: ", result.encode()),
                     ]
                 )
         else:
             finding.add_enrichment(
                 [
-                    MarkdownBlock(
-                        f"Persistent volume named {pv.metadata.name} have no persistent volume claim."
-                    ),
+                    MarkdownBlock(f"Persistent volume named {pv.metadata.name} have no persistent volume claim."),
                 ]
             )
 
@@ -98,6 +110,7 @@ def volume_analysis(event: PersistentVolumeEvent):
             reader_pod.delete()
 
     event.add_finding(finding)
+
 
 # returns a pod that mounts the given persistent volume
 
@@ -116,7 +129,7 @@ def persistent_volume_reader(persistent_volume):
                     name="pvc-mount",
                     persistentVolumeClaim=PersistentVolumeClaimVolumeSource(
                         claimName=persistent_volume.spec.claimRef.name
-                    )
+                    ),
                 )
             ],
             containers=[
@@ -132,11 +145,12 @@ def persistent_volume_reader(persistent_volume):
                         )
                     ],
                 )
-            ]
-        )
+            ],
+        ),
     )
     reader_pod = reader_pod_spec.create()
     return reader_pod
+
 
 # function to get pod data related to a pvc
 

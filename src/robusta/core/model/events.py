@@ -2,15 +2,22 @@ import copy
 import logging
 import uuid
 from collections import defaultdict
-from enum import Enum
-from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
-from ..reporting import FindingSubjectType, FindingSource
-from ...integrations.scheduled.playbook_scheduler import PlaybooksScheduler
-from ..reporting.base import Finding, BaseBlock, FindingSeverity, FindingSubject, VideoLink
+from robusta.core.reporting.base import (
+    BaseBlock,
+    Finding,
+    FindingSeverity,
+    FindingSource,
+    FindingSubject,
+    FindingSubjectType,
+    VideoLink,
+)
+from robusta.integrations.scheduled.playbook_scheduler import PlaybooksScheduler
 
 
 class EventType(Enum):
@@ -38,14 +45,11 @@ class ExecutionContext(BaseModel):
 class ExecutionBaseEvent:
     # Collection of findings that should be sent to each sink.
     # This collection is shared between different playbooks that are triggered by the same event.
-    sink_findings: Dict[str, List[Finding]] = field(
-        default_factory=lambda: defaultdict(list)
-    )
+    sink_findings: Dict[str, List[Finding]] = field(default_factory=lambda: defaultdict(list))
     # Target sinks for this execution event. Each playbook may have a different list of target sinks.
     named_sinks: Optional[List[str]] = None
-    response: Dict[
-        str, Any
-    ] = None  # Response returned to caller. For admission or manual triggers for example
+    #  Response returned to caller. For admission or manual triggers for example
+    response: Dict[str, Any] = None  # type: ignore
     stop_processing: bool = False
     _scheduler: Optional[PlaybooksScheduler] = None
     _context: Optional[ExecutionContext] = None
@@ -64,24 +68,17 @@ class ExecutionBaseEvent:
 
     def create_default_finding(self) -> Finding:
         """Create finding default fields according to the event type"""
-        return Finding(
-            title="Robusta notification", aggregation_key="Generic finding key"
-        )
+        return Finding(title="Robusta notification", aggregation_key="Generic finding key")
 
     def __prepare_sinks_findings(self):
-        finding_id: uuid = uuid.uuid4()
+        finding_id: uuid.UUID = uuid.uuid4()
         for sink in self.named_sinks:
             if len(self.sink_findings[sink]) == 0:
                 sink_finding = self.create_default_finding()
-                sink_finding.id = (
-                    finding_id  # share the same finding id between different sinks
-                )
+                sink_finding.id = finding_id  # share the same finding id between different sinks
                 self.sink_findings[sink].append(sink_finding)
 
-    def add_video_link(
-            self,
-            video_link: VideoLink
-    ):
+    def add_video_link(self, video_link: VideoLink):
         self.__prepare_sinks_findings()
         for sink in self.named_sinks:
             self.sink_findings[sink][0].add_video_link(video_link, True)
@@ -100,15 +97,15 @@ class ExecutionBaseEvent:
         first = True  # no need to clone the finding on the first sink. Use the orig finding
         for sink in self.named_sinks:
             if (len(self.sink_findings[sink]) > 0) and not suppress_warning:
-                logging.warning(
-                    f"Overriding active finding for {sink}. new finding: {finding}"
-                )
+                logging.warning(f"Overriding active finding for {sink}. new finding: {finding}")
             if not first:
                 finding = copy.deepcopy(finding)
             self.sink_findings[sink].insert(0, finding)
             first = False
 
-    def override_finding_attributes(self, title: str = "", description: str = "", severity: FindingSeverity = None):
+    def override_finding_attributes(
+        self, title: Optional[str] = None, description: Optional[str] = None, severity: FindingSeverity = None
+    ):
         for sink in self.named_sinks:
             for finding in self.sink_findings[sink]:
                 if title:
@@ -123,12 +120,8 @@ class ExecutionBaseEvent:
         return ExecutionBaseEvent(named_sinks=params.named_sinks)
 
     def get_subject(self) -> FindingSubject:
-        return FindingSubject(
-            name="Unresolved",
-            subject_type=FindingSubjectType.TYPE_NONE
-        )
+        return FindingSubject(name="Unresolved", subject_type=FindingSubjectType.TYPE_NONE)
 
     @classmethod
     def get_source(cls) -> FindingSource:
         return FindingSource.NONE
-

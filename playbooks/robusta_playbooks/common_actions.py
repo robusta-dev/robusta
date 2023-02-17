@@ -1,15 +1,21 @@
-from robusta.api import *
+from collections import defaultdict
+from string import Template
+from typing import Dict, Optional
+
+from robusta.api import ActionParams, ExecutionBaseEvent, Finding, FindingSeverity, action
 
 
 def _get_templating_labels(event: ExecutionBaseEvent) -> Dict:
     subject = event.get_subject()
-    labels = defaultdict(lambda: "<missing>")
-    labels.update({
-        "name": subject.name,
-        "kind": subject.subject_type,
-        "namespace": subject.namespace if subject.namespace else "<missing>",
-        "node": subject.node if subject.node else "<missing>",
-    })
+    labels: Dict[str, str] = defaultdict(lambda: "<missing>")
+    labels.update(
+        {
+            "name": subject.name,
+            "kind": subject.subject_type.value,
+            "namespace": subject.namespace if subject.namespace else "<missing>",
+            "node": subject.node if subject.node else "<missing>",
+        }
+    )
     return labels
 
 
@@ -19,6 +25,7 @@ class FindingOverrides(ActionParams):
     :var description: Overriding finding description. Description can be templated with name/namespace/kind/node of the resource, if applicable
     :var severity: Overriding finding severity. Allowed values: DEBUG, INFO, LOW, MEDIUM, HIGH
     :example severity: DEBUG
+    :example title: Resourece $kind/$namespace/$name is in trouble
     """
 
     title: Optional[str] = None
@@ -39,14 +46,12 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
     It must be placed as the last action in the playbook configuration, to override the attributes created by previous
     actions
     """
-    severity: Optional[FindingSeverity] = (
-        FindingSeverity[params.severity] if params.severity else None
-    )
+    severity: Optional[FindingSeverity] = FindingSeverity[params.severity] if params.severity else None
 
     labels = _get_templating_labels(event)
 
-    title: str = Template(params.title).safe_substitute(labels)
-    description: str = Template(params.description).safe_substitute(labels) if params.description else None
+    title = Template(params.title).safe_substitute(labels) if params.title else None
+    description = Template(params.description).safe_substitute(labels) if params.description else None
 
     event.override_finding_attributes(title, description, severity)
 
@@ -81,11 +86,13 @@ def create_finding(event: ExecutionBaseEvent, params: FindingFields):
     """
     labels = _get_templating_labels(event)
 
-    event.add_finding(Finding(
-        title=Template(params.title).safe_substitute(labels),
-        description=Template(params.description).safe_substitute(labels) if params.description else None,
-        aggregation_key=params.aggregation_key,
-        severity=FindingSeverity.from_severity(params.severity),
-        subject=event.get_subject(),
-        source=event.get_source(),
-    ))
+    event.add_finding(
+        Finding(
+            title=Template(params.title).safe_substitute(labels),
+            description=Template(params.description).safe_substitute(labels) if params.description else None,
+            aggregation_key=params.aggregation_key,
+            severity=FindingSeverity.from_severity(params.severity),
+            subject=event.get_subject(),
+            source=event.get_source(),
+        )
+    )

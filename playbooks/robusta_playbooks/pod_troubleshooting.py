@@ -1,9 +1,34 @@
 # TODO: move the python playbooks into their own subpackage and put each playbook in its own file
+import json
 import logging
+import textwrap
+from typing import List
 
 import humanize
-from robusta.api import *
-from typing import List
+from pydantic import BaseModel
+
+from robusta.api import (
+    ActionParams,
+    CallbackBlock,
+    CallbackChoice,
+    DividerBlock,
+    FileBlock,
+    Finding,
+    FindingSource,
+    FindingType,
+    HeaderBlock,
+    MarkdownBlock,
+    PodEvent,
+    PodFindingSubject,
+    ProcessFinder,
+    ProcessParams,
+    ProcessType,
+    RobustaPod,
+    SlackAnnotations,
+    TableBlock,
+    action,
+)
+from robusta.utils.parsing import load_json
 
 
 class StackTraceObject(BaseModel):
@@ -13,10 +38,11 @@ class StackTraceObject(BaseModel):
     :var error: the exception object from the debugger
     :var trace: on success the stack traces of all threads, on error the stack trace of the exception
     """
-    time: float = None
-    status: str = None
-    error: str = None
-    trace: str = None
+
+    time: float = None  # type: ignore
+    status: str = None  # type: ignore
+    error: str = None  # type: ignore
+    trace: str = None  # type: ignore
 
 
 class StartProfilingParams(ActionParams):
@@ -62,21 +88,15 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
         for target_proc in processes:
             target_cmd = " ".join(target_proc.cmdline)
             if action_params.process_name not in target_cmd:
-                logging.info(
-                    f"skipping process because it doesn't match process_name. {target_cmd}"
-                )
+                logging.info(f"skipping process because it doesn't match process_name. {target_cmd}")
                 continue
             elif "python" not in target_proc.exe:
-                logging.info(
-                    f"skipping process because it doesn't look like a python process. {target_cmd}"
-                )
+                logging.info(f"skipping process because it doesn't look like a python process. {target_cmd}")
                 continue
 
             filename = "/profile.svg"
             pyspy_cmd = f"py-spy record --duration={action_params.seconds} --pid={target_proc.pid} --rate 30 --nonblocking -o {filename} {'--idle' if action_params.include_idle else ''}"
-            logging.info(
-                f"starting to run profiler on {target_cmd} with pyspy command: {pyspy_cmd}"
-            )
+            logging.info(f"starting to run profiler on {target_cmd} with pyspy command: {pyspy_cmd}")
             pyspy_output = debugger.exec(pyspy_cmd)
             if "Error:" in pyspy_output:
                 logging.info(f"error profiler on {target_cmd}. error={pyspy_output}")
@@ -88,9 +108,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
         event.add_finding(finding)
 
     finally:
-        debugger.deleteNamespacedPod(
-            debugger.metadata.name, debugger.metadata.namespace
-        )
+        debugger.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)
 
 
 @action
@@ -142,9 +160,7 @@ class PythonMemoryStatistic(BaseModel):
         formatted_tb = "\n".join(self.traceback)
         if formatted_tb:
             formatted_tb = f"```\n{formatted_tb}\n```"
-        return textwrap.dedent(
-            f"*{humanize.naturalsize(self.size)} from {self.count} allocations*\n{formatted_tb}"
-        )
+        return textwrap.dedent(f"*{humanize.naturalsize(self.size)} from {self.count} allocations*\n{formatted_tb}")
 
 
 class PythonMemorySnapshot(BaseModel):
@@ -175,9 +191,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         failure=False,
     )
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
-    process = process_finder.get_match_or_report_error(
-        finding, "Profile", python_memory, python_process_inspector
-    )
+    process = process_finder.get_match_or_report_error(finding, "Profile", python_memory, python_process_inspector)
     if process is None:
         event.add_finding(finding)
         return
@@ -188,19 +202,13 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
 
     blocks = [
         HeaderBlock("Summary"),
-        MarkdownBlock(
-            f"*Total unfreed allocations: {humanize.naturalsize(snapshot.total)}*"
-        ),
-        MarkdownBlock(
-            f"*Additional overhead from tracing: {humanize.naturalsize(snapshot.overhead)}*"
-        ),
+        MarkdownBlock(f"*Total unfreed allocations: {humanize.naturalsize(snapshot.total)}*"),
+        MarkdownBlock(f"*Additional overhead from tracing: {humanize.naturalsize(snapshot.overhead)}*"),
         DividerBlock(),
         HeaderBlock("Largest unfreed allocations"),
     ]
     blocks.extend([MarkdownBlock(stat.to_markdown()) for stat in snapshot.data])
-    blocks.append(
-        MarkdownBlock(f"*Other unfreed memory:* {snapshot.other_data.to_markdown()}")
-    )
+    blocks.append(MarkdownBlock(f"*Other unfreed memory:* {snapshot.other_data.to_markdown()}"))
     finding.add_enrichment(blocks, annotations={SlackAnnotations.ATTACHMENT: True})
     event.add_finding(finding)
 
@@ -221,6 +229,7 @@ class StackTraceParams(DebuggerParams):
 
     traces_amount: int = 1
     sleep_duration_s: int = 1
+
 
 def get_example_launch_json(params: DebuggerParams):
     return {
@@ -255,13 +264,13 @@ def get_loaded_module_info(data):
 
     return (
         textwrap.dedent(
-            f"""\
-        These are the remote module paths
-        
-        Use this list to guess the right value for `remoteRoot` in launch.json
-        
-        When setting breakpoints, VSCode determines the remote filename by replacing `localRoot` with `remoteRoot` in the filename  
-        %s"""
+            """\
+            These are the remote module paths
+
+            Use this list to guess the right value for `remoteRoot` in launch.json
+
+            When setting breakpoints, VSCode determines the remote filename by replacing `localRoot` with `remoteRoot` in the filename
+            %s"""
         )
         % (output,)
     )
@@ -290,12 +299,14 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     pid = process_finder.get_lowest_relevant_pid()
 
     if not pid:
-        logging.error(f"debugger_stack_trace - no relevant pids")
+        logging.error("debugger_stack_trace - no relevant pids")
         return
 
     if params.traces_amount < 1 or params.sleep_duration_s < 0:
-        logging.error(f"debugger_stack_trace - invalid params, "
-                     f"traces_amount must be greater than 1 and sleep_duration_s must be greater than 0")
+        logging.error(
+            "debugger_stack_trace - invalid params, "
+            "traces_amount must be greater than 1 and sleep_duration_s must be greater than 0"
+        )
         return
 
     # if params pid is set, this will be returned, if not we return the parent process
@@ -307,7 +318,9 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
         finding_type=FindingType.REPORT,
         failure=False,
     )
-    cmd = f"debug-toolkit stack-trace {pid} --amount={params.traces_amount} --sleep-duration-s={params.sleep_duration_s}"
+    cmd = (
+        f"debug-toolkit stack-trace {pid} --amount={params.traces_amount} --sleep-duration-s={params.sleep_duration_s}"
+    )
     output = RobustaPod.exec_in_debugger_pod(
         pod.metadata.name,
         pod.spec.nodeName,
@@ -315,21 +328,19 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     )
     blocks = []
     try:
-        output_json = json.loads(output)
+        output_json = load_json(output)
         SUCCESS_STATUS = "success"
         first_stack_trace_obj = StackTraceObject(**output_json[0]) if len(output_json) >= 1 else None
-        if len(output_json) == 0 or (len(output_json) == 1 and
-                                     first_stack_trace_obj.status != SUCCESS_STATUS):
+        if len(output_json) == 0 or (len(output_json) == 1 and first_stack_trace_obj.status != SUCCESS_STATUS):  # type: ignore
             # no stack traces returned or only one with error
-            error_message = 'Failed to get python stack trace'
+            error_message = "Failed to get python stack trace"
             if len(output_json) == 1:
-                error_message += f', debugger error {first_stack_trace_obj.error} at ' \
-                                 f'{first_stack_trace_obj.trace}'
+                error_message += f", debugger error {first_stack_trace_obj.error} at " f"{first_stack_trace_obj.trace}"  # type: ignore
             logging.error(error_message)
-            blocks.append(MarkdownBlock(f"Error while getting python stack trace."))
-        elif len(output_json) == 1 and first_stack_trace_obj.status == SUCCESS_STATUS:
+            blocks.append(MarkdownBlock("Error while getting python stack trace."))
+        elif len(output_json) == 1 and first_stack_trace_obj.status == SUCCESS_STATUS:  # type: ignore
             # print single stack trace directly to finding
-            for thread_output in first_stack_trace_obj.trace.split("\n\n"):
+            for thread_output in first_stack_trace_obj.trace.split("\n\n"):  # type: ignore
                 if thread_output.startswith("Current thread"):
                     # this is the thread we are getting the stack trace from, not relevant for debugging
                     continue
@@ -343,15 +354,17 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
                 trace_object = StackTraceObject(**trace_object_json)
                 if trace_object.status != SUCCESS_STATUS:
                     # the full python stack trace of the error will appear here
-                    logging.error(f'Failed to get stack trace, debugger error {trace_object.error} at {trace_object.trace}')
+                    logging.error(
+                        f"Failed to get stack trace, debugger error {trace_object.error} at {trace_object.trace}"
+                    )
                     clean_output.append({"time": trace_object.time, "status": "Error: Failed to get stack trace."})
                 else:
                     clean_output.append(trace_object_json)
-            clean_file_output = json.dumps(clean_output, indent=4, sort_keys=True).replace('\\n', '\n')
+            clean_file_output = json.dumps(clean_output, indent=4, sort_keys=True).replace("\\n", "\n")
             blocks.append(FileBlock(f"debugger_stack_trace_{pid}.txt", clean_file_output.encode()))
     except ValueError:  # includes simplejson.decoder.JSONDecodeError
-        logging.error(f"failed to decode output")
-        blocks.append(MarkdownBlock(f"Failed to processess stack trace(s)"))
+        logging.error("failed to decode output")
+        blocks.append(MarkdownBlock("Failed to processess stack trace(s)"))
 
     finding.add_enrichment(blocks)
     event.add_finding(finding)
@@ -380,13 +393,11 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
     relevant_processes_pids = process_finder.get_pids()
     if not relevant_processes_pids:
-        ERROR_MESSAGE = f"No relevant processes found for advanced debugging."
+        ERROR_MESSAGE = "No relevant processes found for advanced debugging."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
     else:
-        finding.add_enrichment(
-            [MarkdownBlock(f"Please select an advanced debugging choice:")]
-        )
+        finding.add_enrichment([MarkdownBlock("Please select an advanced debugging choice:")])
         choices = {}
         for proc_pid in relevant_processes_pids:
             updated_params = params.copy()
@@ -400,13 +411,10 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
         finding.add_enrichment(
             [
                 CallbackBlock(choices),
-                MarkdownBlock(
-                    "*After clicking a button please wait up to 120 seconds for a response*"
-                ),
+                MarkdownBlock("*After clicking a button please wait up to 120 seconds for a response*"),
             ]
         )
     event.add_finding(finding)
-
 
 
 @action
@@ -442,9 +450,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     )
 
     process_finder = ProcessFinder(pod, params, ProcessType.PYTHON)
-    process = process_finder.get_match_or_report_error(
-        finding, "Debug", python_debugger, python_process_inspector
-    )
+    process = process_finder.get_match_or_report_error(finding, "Debug", python_debugger, python_process_inspector)
     if process is None:
         event.add_finding(finding)
         return
@@ -484,8 +490,5 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
             FileBlock("loaded-modules.txt", get_loaded_module_info(output).encode()),
         ]
     )
-    logging.info(
-        "Done! See instructions for connecting to the debugger in Slack or Robusta UI"
-    )
+    logging.info("Done! See instructions for connecting to the debugger in Slack or Robusta UI")
     event.add_finding(finding)
-

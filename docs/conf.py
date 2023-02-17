@@ -52,9 +52,7 @@ extensions = [
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
 jinja_contexts = {
     "install_all_in_one": {"gen_config_flags": "--enable-prometheus-stack"},
-    "install_integrate_prometheus": {
-        "gen_config_flags": "--no-enable-prometheus-stack"
-    },
+    "install_integrate_prometheus": {"gen_config_flags": "--no-enable-prometheus-stack"},
     "install_no_prometheus": {"gen_config_flags": "--no-enable-prometheus-stack"},
 }
 
@@ -71,9 +69,9 @@ autodoc_mock_imports = ["prometheus_api_client"]
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
-    #'special-members': '__init__',
+    # 'special-members': '__init__',
     "undoc-members": True,
-    #'exclude-members': '__weakref__'
+    # 'exclude-members': '__weakref__'
 }
 autoclass_content = "both"
 add_module_names = False
@@ -125,7 +123,8 @@ html_theme_options = {
     "repo_url": "https://github.com/robusta-dev/robusta",
     "repo_name": "Robusta",
     "repo_type": "github",
-    "edit_uri": "tree/structure/docs",  ##### Modify to the Master Branch ###########
+    # TODO: docs - need to modify to the Master Branch
+    "edit_uri": "tree/structure/docs",
     "palette": [
         {
             "media": "(prefers-color-scheme: light)",
@@ -178,10 +177,9 @@ html_theme_options = {
     ],
 }
 
-html_sidebars = {
-    "**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]
-}
+html_sidebars = {"**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]}
 
+copybutton_prompt_text = r"$ "
 # html_title = ""
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -194,6 +192,7 @@ html_css_files = [
 ]
 
 html_js_files = ["analytics.js"]
+html_favicon = "_static/favicon.png"
 
 html_favicon = "_static/faviconNew.svg"
 

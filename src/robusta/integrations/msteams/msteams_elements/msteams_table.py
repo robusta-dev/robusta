@@ -1,8 +1,8 @@
 from typing import List
 
-from .msteams_column import MsTeamsColumn
-from .msteams_text_block import MsTeamsTextBlock
-from .msteams_base import MsTeamsBase
+from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
+from robusta.integrations.msteams.msteams_elements.msteams_column import MsTeamsColumn
+from robusta.integrations.msteams.msteams_elements.msteams_text_block import MsTeamsTextBlock
 
 
 class MsTeamsTable(MsTeamsBase):

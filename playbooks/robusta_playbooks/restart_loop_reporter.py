@@ -1,14 +1,32 @@
 import logging
+from typing import List, Optional
 
-from robusta.api import *
+from hikaru.model import ContainerStatus, PodStatus
+
+from robusta.api import (
+    ActionParams,
+    BaseBlock,
+    FileBlock,
+    Finding,
+    FindingSeverity,
+    FindingSource,
+    MarkdownBlock,
+    NamedRegexPattern,
+    PodEvent,
+    PodFindingSubject,
+    RateLimiter,
+    RateLimitParams,
+    RegexReplacementStyle,
+    action,
+)
 
 
 def _send_crash_report(
-        event: PodEvent,
-        crashed_container_statuses: [ContainerStatus],
-        action_name: str,
-        regex_replacer_patterns: Optional[NamedRegexPattern] = None,
-        regex_replacement_style: Optional[RegexReplacementStyle] = None
+    event: PodEvent,
+    crashed_container_statuses: List[ContainerStatus],
+    action_name: str,
+    regex_replacer_patterns: Optional[NamedRegexPattern] = None,
+    regex_replacement_style: Optional[RegexReplacementStyle] = None,
 ):
 
     pod = event.get_pod()
@@ -21,16 +39,10 @@ def _send_crash_report(
     )
     blocks: List[BaseBlock] = []
     for container_status in crashed_container_statuses:
-        blocks.append(
-            MarkdownBlock(
-                f"*{container_status.name}* restart count: {container_status.restartCount}"
-            )
-        )
+        blocks.append(MarkdownBlock(f"*{container_status.name}* restart count: {container_status.restartCount}"))
         if container_status.state and container_status.state.waiting:
             blocks.append(
-                MarkdownBlock(
-                    f"*{container_status.name}* waiting reason: {container_status.state.waiting.reason}"
-                )
+                MarkdownBlock(f"*{container_status.name}* waiting reason: {container_status.state.waiting.reason}")
             )
         if container_status.state and container_status.state.terminated:
             blocks.append(
@@ -48,19 +60,13 @@ def _send_crash_report(
             container_status.name,
             previous=True,
             regex_replacer_patterns=regex_replacer_patterns,
-            regex_replacement_style=regex_replacement_style
+            regex_replacement_style=regex_replacement_style,
         )
         if container_log:
-            blocks.append(FileBlock(f"{pod.metadata.name}.txt", container_log))
+            blocks.append(FileBlock(f"{pod.metadata.name}/{container_status.name}.log", container_log))
         else:
-            blocks.append(
-                MarkdownBlock(
-                    f"Container logs unavailable for container: {container_status.name}"
-                )
-            )
-            logging.error(
-                f"could not fetch logs from container: {container_status.name}. logs were {container_log}"
-            )
+            blocks.append(MarkdownBlock(f"Container logs unavailable for container: {container_status.name}"))
+            logging.error(f"could not fetch logs from container: {container_status.name}. logs were {container_log}")
 
     finding.add_enrichment(blocks)
     event.add_finding(finding)
@@ -71,6 +77,7 @@ class ReportCrashLoopParams(ActionParams):
     :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
     :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
     """
+
     regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
     regex_replacement_style: str = "SAME_LENGTH_ASTERISKS"
 
@@ -80,13 +87,16 @@ def report_crash_loop(event: PodEvent, params: ReportCrashLoopParams):
     pod = event.get_pod()
     all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
     crashing_containers = [
-        container_status for container_status in all_statuses
+        container_status
+        for container_status in all_statuses
         if container_status.state.waiting is not None and container_status.restartCount >= 1
     ]
-    regex_replacement_style = \
+    regex_replacement_style = (
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
+    )
     _send_crash_report(
-        event, crashing_containers, "report_crash_loop", params.regex_replacer_patterns, regex_replacement_style)
+        event, crashing_containers, "report_crash_loop", params.regex_replacer_patterns, regex_replacement_style
+    )
 
 
 # The code below is deprecated. Please use the new crash loop action
@@ -100,24 +110,18 @@ class RestartLoopParams(RateLimitParams):
     :var restart_reason: Limit restart loops for this specific reason. If omitted, all restart reasons will be included.
     """
 
-    restart_reason: str = None
+    restart_reason: str = None  # type: ignore
 
 
 # deprecated
-def get_crashing_containers(
-    status: PodStatus, config: RestartLoopParams
-) -> [ContainerStatus]:
+def get_crashing_containers(status: PodStatus, config: RestartLoopParams) -> List[ContainerStatus]:
     all_statuses = status.containerStatuses + status.initContainerStatuses
     return [
         container_status
         for container_status in all_statuses
         if container_status.state.waiting is not None
-        and container_status.restartCount
-        > 1  # report only after the 2nd restart and get previous logs
-        and (
-            config.restart_reason is None
-            or config.restart_reason in container_status.state.waiting.reason
-        )
+        and container_status.restartCount > 1  # report only after the 2nd restart and get previous logs
+        and (config.restart_reason is None or config.restart_reason in container_status.state.waiting.reason)
     ]
 
 
@@ -138,9 +142,7 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
         return  # no matched containers
 
     pod_name = pod.metadata.name
-    if not RateLimiter.mark_and_test(
-        "restart_loop_reporter", pod_name + pod.metadata.namespace, config.rate_limit
-    ):
+    if not RateLimiter.mark_and_test("restart_loop_reporter", pod_name + pod.metadata.namespace, config.rate_limit):
         return
 
     _send_crash_report(event, crashed_container_statuses, "restart_loop_reporter")

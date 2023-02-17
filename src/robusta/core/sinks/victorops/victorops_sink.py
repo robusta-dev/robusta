@@ -1,17 +1,16 @@
 import requests
+
+from robusta.core.reporting.base import BaseBlock, Finding
 from robusta.core.reporting.blocks import (
     HeaderBlock,
-    ListBlock,
     JsonBlock,
     KubernetesDiffBlock,
+    ListBlock,
     MarkdownBlock,
     TableBlock,
 )
-from .victorops_sink_params import VictoropsConfigWrapper
-from ...reporting.base import Finding, BaseBlock
-
-
-from ..sink_base import SinkBase
+from robusta.core.sinks.sink_base import SinkBase
+from robusta.core.sinks.victorops.victorops_sink_params import VictoropsConfigWrapper
 
 
 class VictoropsSink(SinkBase):
@@ -26,14 +25,12 @@ class VictoropsSink(SinkBase):
             json_dict["vo_annotate.u.🔎 Investigate"] = finding.get_investigate_uri(self.account_id, self.cluster_name)
 
             if finding.add_silence_url:
-                json_dict[
-                    "vo_annotate.u.🔕 Silence"
-                ] = finding.get_prometheus_silence_url(self.cluster_name)
+                json_dict["vo_annotate.u.🔕 Silence"] = finding.get_prometheus_silence_url(
+                    self.account_id, self.cluster_name
+                )
 
             for video_link in finding.video_links:
-                json_dict[
-                    f"vo_annotate.u.🎬 {video_link.name}"
-                ] = video_link.url
+                json_dict[f"vo_annotate.u.🎬 {video_link.name}"] = video_link.url
 
         # custom fields
         json_dict["Resource"] = finding.subject.name
@@ -45,9 +42,7 @@ class VictoropsSink(SinkBase):
         json_dict["monitoring_tool"] = "Robusta"
         json_dict["message_type"] = "CRITICAL"
         json_dict["entity_id"] = finding.fingerprint
-        json_dict[
-            "entity_display_name"
-        ] = f"{finding.severity.to_emoji()} {finding.severity.name} - {finding.title}"
+        json_dict["entity_display_name"] = f"{finding.severity.to_emoji()} {finding.severity.name} - {finding.title}"
 
         message_lines = ""
         if finding.description:

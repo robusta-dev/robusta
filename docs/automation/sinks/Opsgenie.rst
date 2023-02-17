@@ -12,7 +12,7 @@ Configuring the OpsGenie sink
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
         - opsgenie_sink:
             name: ops_genie_sink
             api_key: OpsGenie integration API key  # configured from OpsGenie team integration
@@ -21,7 +21,7 @@ Configuring the OpsGenie sink
             - "sre"
             tags:
             - "prod a"
-            
+
 Save the file and run
 
 .. code-block:: bash

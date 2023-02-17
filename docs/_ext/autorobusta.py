@@ -4,20 +4,19 @@ import pydoc
 import textwrap
 import typing
 from pathlib import Path
-from typing import List, Type, Optional
+from typing import List, Optional, Type
 
 import pydantic.fields
 import sphinx.addnodes
 import yaml
-from PIL import Image
 from docutils import nodes
 from docutils.nodes import Node
 from docutils.parsers.rst import directives
 from docutils.statemachine import StringList
+from PIL import Image
 from pydantic import BaseModel
 from pydantic.fields import ModelField
 from sphinx.application import Sphinx
-from sphinx.ext.autodoc.directive import DummyOptionSpec
 from sphinx.util import nested_parse_with_titles
 from sphinx.util.docutils import SphinxDirective
 
@@ -59,14 +58,10 @@ class PydanticModelDirective(SphinxDirective):
             raise Exception(f"Cannot document None: {objpath}")
         if not issubclass(obj, BaseModel):
             raise Exception(f"not a pydantic model: {obj}")
-        return self.__document_model(
-            obj, "show-code" in self.options, "show-optionality" in self.options
-        )
+        return self.__document_model(obj, "show-code" in self.options, "show-optionality" in self.options)
 
     @classmethod
-    def __document_model(
-        cls, model: Type[BaseModel], show_code: bool, show_optionality: bool
-    ):
+    def __document_model(cls, model: Type[BaseModel], show_code: bool, show_optionality: bool):
         node = nodes.section()
 
         all_fields = model.__fields__.values()
@@ -84,9 +79,7 @@ class PydanticModelDirective(SphinxDirective):
         return node.children
 
     @classmethod
-    def __document_fields(
-        cls, fields: List[ModelField], show_code: bool, show_optionality: bool
-    ) -> List[Node]:
+    def __document_fields(cls, fields: List[ModelField], show_code: bool, show_optionality: bool) -> List[Node]:
         node = nodes.section()
 
         for field in fields:
@@ -95,16 +88,12 @@ class PydanticModelDirective(SphinxDirective):
             desc["domain"] = "robusta"
             desc["objtype"] = "model"
             desc.extend(cls.__document_field_signature(field, show_optionality))
-            desc.extend(
-                cls.__document_field_content(field, show_code, show_optionality)
-            )
+            desc.extend(cls.__document_field_content(field, show_code, show_optionality))
 
         return node.children
 
     @classmethod
-    def __document_field_signature(
-        cls, field: ModelField, show_optionality: bool
-    ) -> List[Node]:
+    def __document_field_signature(cls, field: ModelField, show_optionality: bool) -> List[Node]:
         sig = sphinx.addnodes.desc_signature()
 
         if show_optionality:
@@ -115,11 +104,7 @@ class PydanticModelDirective(SphinxDirective):
 
         sig.append(sphinx.addnodes.desc_name(text=field.name))
         sig.append(sphinx.addnodes.desc_sig_space())
-        sig.append(
-            sphinx.addnodes.desc_sig_element(
-                text=f"({cls.__get_readable_field_type(field)})"
-            )
-        )
+        sig.append(sphinx.addnodes.desc_sig_element(text=f"({cls.__get_readable_field_type(field)})"))
 
         if field.default:
             sig.append(sphinx.addnodes.desc_sig_space())
@@ -127,9 +112,7 @@ class PydanticModelDirective(SphinxDirective):
         return [sig]
 
     @classmethod
-    def __document_field_content(
-        cls, field: ModelField, show_code: bool, show_optionality: bool
-    ) -> List[Node]:
+    def __document_field_content(cls, field: ModelField, show_code: bool, show_optionality: bool) -> List[Node]:
         content = sphinx.addnodes.desc_content()
 
         if field.field_info.description:
@@ -140,7 +123,7 @@ class PydanticModelDirective(SphinxDirective):
 
         if typing.get_origin(field.type_) == typing.Union:
             possible_types = get_possible_types(field.type_)
-            paragraph = nodes.paragraph(text=f"each entry is one of the following:")
+            paragraph = nodes.paragraph(text="each entry is one of the following:")
             content.append(paragraph)
             for t in possible_types:
                 if isinstance(None, t):
@@ -148,12 +131,10 @@ class PydanticModelDirective(SphinxDirective):
                 content.extend(cls.__document_model(t, show_code, show_optionality))
 
         elif issubclass(field.type_, BaseModel):
-            paragraph = nodes.paragraph(text=f"each entry contains:")
+            paragraph = nodes.paragraph(text="each entry contains:")
             content.append(paragraph)
             # when documenting an inner model, we always show "required"/"optional" inline
-            content.extend(
-                cls.__document_model(field.type_, show_code, show_optionality)
-            )
+            content.extend(cls.__document_model(field.type_, show_code, show_optionality))
 
         return [content]
 
@@ -246,37 +227,29 @@ class RobustaActionDirective(SphinxDirective):
         action_definition = Action(obj)
         return self.__generate_rst(action_definition, recommended_trigger)
 
-    def __generate_rst(
-        self, action_definition: Action, recommended_trigger: Optional[str]
-    ):
+    def __generate_rst(self, action_definition: Action, recommended_trigger: Optional[str]):
         node = nodes.section()
         node.document = self.state.document
 
         trigger_params = json.loads(self.options.get("trigger-params", "{}"))
 
-        example_yaml = generator.generate_example_config(
-            action_definition.func, recommended_trigger, trigger_params
-        )
+        example_yaml = generator.generate_example_config(action_definition.func, recommended_trigger, trigger_params)
         params_cls = action_definition.params_type
         params_cls_path = ""
         if params_cls is not None:
             params_cls_path = f"{params_cls.__module__}.{params_cls.__name__}"
 
-        code = self.__get_source_code(action_definition.func)
+        # code = self.__get_source_code(action_definition.func)
         description = self.__get_description(action_definition)
-        triggers = self.__get_triggers(
-            generator.get_supported_triggers(action_definition), recommended_trigger
-        )
+        triggers = self.__get_triggers(generator.get_supported_triggers(action_definition), recommended_trigger)
         cli_trigger = generator.get_manual_trigger_cmd(action_definition)
 
-        indented_code = "\n".join(" " * 32 + l for l in code)
-        indented_description = "\n".join(" " * 28 + l for l in description.split("\n"))
-        indented_example = "\n".join(" " * 32 + l for l in example_yaml.split("\n"))
-        indented_triggers = "\n".join(" " * 24 + l for l in triggers)
+        # indented_code = "\n".join(" " * 32 + line for line in code)
+        indented_description = "\n".join(" " * 28 + line for line in description.split("\n"))
+        indented_example = "\n".join(" " * 32 + line for line in example_yaml.split("\n"))
+        indented_triggers = "\n".join(" " * 24 + line for line in triggers)
 
-        reference_label = self.options.get(
-            "reference-label", action_definition.action_name
-        )
+        reference_label = self.options.get("reference-label", action_definition.action_name)
         manual_trigger_only = "manual-trigger-only" in self.options
 
         indented_cli_trigger_example = ""
@@ -290,8 +263,8 @@ class RobustaActionDirective(SphinxDirective):
             """
 
         if manual_trigger_only:
-            example_config = f"""\
-                        
+            example_config = """\
+
                         This action is typically used via manual triggers and **not** predefined YAML triggers. An example config is not shown because it is not relevant for this action.
                         """
         else:
@@ -307,22 +280,22 @@ class RobustaActionDirective(SphinxDirective):
         content = textwrap.dedent(
             f"""\
             .. _{reference_label}:
-            
+
             {to_name(action_definition.action_name)}
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             .. admonition:: Playbook Action: {action_definition.action_name}
-            
+
                 .. tab-set::
-            
+
                     .. tab-item:: Description\n\n{indented_description}\n\n
-                    
+
                     .. tab-item:: Example Config\n\n{example_config}
 
                     .. tab-item:: Parameters
-                        
+
                         {".. pydantic-model:: " + params_cls_path if params_cls_path else "**No action parameters**"}
-                       
+
                     .. tab-item:: Supported Triggers\n\n{indented_triggers}\n
                         {indented_cli_trigger_example}
             """
@@ -363,24 +336,17 @@ class RobustaActionDirective(SphinxDirective):
             return trigger_name
 
     @classmethod
-    def __get_triggers(
-        cls, supported_triggers: List[str], recommended_trigger: Optional[str]
-    ):
+    def __get_triggers(cls, supported_triggers: List[str], recommended_trigger: Optional[str]):
         if ExamplesGenerator.SUBTRIGGER_MARKER in supported_triggers:
             has_subtriggers = True
             supported_triggers.remove(ExamplesGenerator.SUBTRIGGER_MARKER)
         else:
             has_subtriggers = False
 
-        if (
-            recommended_trigger is not None
-            and recommended_trigger not in supported_triggers
-        ):
+        if recommended_trigger is not None and recommended_trigger not in supported_triggers:
             supported_triggers.insert(0, recommended_trigger)
 
-        rst = [
-            f"* :ref:`{t} <{cls.__get_ref_for_trigger(t)}>`" for t in supported_triggers
-        ]
+        rst = [f"* :ref:`{t} <{cls.__get_ref_for_trigger(t)}>`" for t in supported_triggers]
         if has_subtriggers:
             rst.extend(
                 [
@@ -398,13 +364,11 @@ class RobustaActionDirective(SphinxDirective):
         if docs:
             description += docs + "\n\n"
         if self.content:
-            description += "\n".join(l for l in self.content)
+            description += "\n".join(line for line in self.content)
         if not description:
             description += "*No description*"
 
-        image_dir = Path(inspect.getfile(action_definition.func)).parent / Path(
-            "images"
-        )
+        image_dir = Path(inspect.getfile(action_definition.func)).parent / Path("images")
         image_paths = list(image_dir.glob(f"{action_definition.action_name}*"))
         for path in image_paths:
             # sphinx handles image paths in a weird way
@@ -416,12 +380,12 @@ class RobustaActionDirective(SphinxDirective):
 
             description += textwrap.dedent(
                 f"""
-                
+
                 .. thumbnail:: {relative_path}
                     :align: center
                     :width: {width}
                     :height: {height}
-                
+
                 """
             )
 

@@ -1,34 +1,28 @@
 import logging
 from collections import defaultdict
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
-from ..core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
-from ..core.sinks.sink_config import SinkConfigBase
-from ..core.sinks.sink_factory import SinkFactory
-from ..integrations.scheduled.playbook_scheduler_manager import (
-    PlaybooksSchedulerManager,
-)
-from ..integrations.receiver import ActionRequestReceiver
-from .playbook_definition import PlaybookDefinition
-from ..utils.function_hashes import get_function_hash
-from ..core.playbooks.playbook_utils import merge_global_params
-from ..core.sinks.sink_base import SinkBase
-from ..core.playbooks.base_trigger import TriggerEvent
-from ..core.playbooks.actions_registry import ActionsRegistry
-from ..runner.telemetry import Telemetry
-from ..core.model.env_vars import RUNNER_VERSION, PROMETHEUS_ENABLED
-
+from robusta.core.model.env_vars import PROMETHEUS_ENABLED, RUNNER_VERSION
+from robusta.core.playbooks.actions_registry import ActionsRegistry
+from robusta.core.playbooks.base_trigger import TriggerEvent
+from robusta.core.playbooks.playbook_utils import merge_global_params
+from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
+from robusta.core.sinks.sink_base import SinkBase
+from robusta.core.sinks.sink_config import SinkConfigBase
+from robusta.core.sinks.sink_factory import SinkFactory
+from robusta.integrations.receiver import ActionRequestReceiver
+from robusta.integrations.scheduled.playbook_scheduler_manager import PlaybooksSchedulerManager
+from robusta.model.playbook_definition import PlaybookDefinition
+from robusta.runner.telemetry import Telemetry
+from robusta.utils.function_hashes import get_function_hash
 
 
 class SinksRegistry:
-
     def __init__(self, sinks: Dict[str, SinkBase]):
         self.sinks = sinks
         self.default_sinks = [sink.sink_name for sink in sinks.values() if sink.default]
         if not self.default_sinks:
-            logging.warning(
-                f"No default sinks defined. By default, actions results are ignored."
-            )
+            logging.warning("No default sinks defined. By default, actions results are ignored.")
         platform_sinks = [sink for sink in sinks.values() if isinstance(sink.params, RobustaSinkParams)]
         self.platform_enabled = len(platform_sinks) > 0
 
@@ -43,16 +37,12 @@ class SinksRegistry:
         cls,
         new_sinks_config: List[SinkConfigBase],
         existing_sinks: Dict[str, SinkBase],
-        registry
+        registry,
     ) -> Dict[str, SinkBase]:
-    
+
         new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
         # remove deleted sinks
-        deleted_sink_names = [
-            sink_name
-            for sink_name in existing_sinks.keys()
-            if sink_name not in new_sink_names
-        ]
+        deleted_sink_names = [sink_name for sink_name in existing_sinks.keys() if sink_name not in new_sink_names]
         for deleted_sink in deleted_sink_names:
             logging.info(f"Deleting sink {deleted_sink}")
             existing_sinks[deleted_sink].stop()
@@ -69,26 +59,24 @@ class SinksRegistry:
                 ):
                     continue
                 if sink_config.get_name() not in new_sinks.keys():
-                    logging.info(
-                        f"Adding {type(sink_config)} sink named {sink_config.get_name()}"
-                    )
-                    new_sinks[sink_config.get_name()] = SinkFactory.create_sink(
-                        sink_config, registry
-                    )
+                    logging.info(f"Adding {type(sink_config)} sink named {sink_config.get_name()}")
+                    new_sinks[sink_config.get_name()] = SinkFactory.create_sink(sink_config, registry)
                 elif (
                     sink_config.get_params() != new_sinks[sink_config.get_name()].params
+                    or new_sinks[sink_config.get_name()].is_global_config_changed()
                 ):
+                    config_change_msg = (
+                        "due to global config change"
+                        if new_sinks[sink_config.get_name()].is_global_config_changed()
+                        else "due to param change"
+                    )
                     logging.info(
-                        f"Updating {type(sink_config)} sink named {sink_config.get_name()}"
+                        f"Updating {type(sink_config)} sink named {sink_config.get_name()} {config_change_msg}"
                     )
                     new_sinks[sink_config.get_name()].stop()
-                    new_sinks[sink_config.get_name()] = SinkFactory.create_sink(
-                        sink_config, registry
-                    )
+                    new_sinks[sink_config.get_name()] = SinkFactory.create_sink(sink_config, registry)
             except Exception as e:
-                logging.error(
-                    f"Error configuring sink {sink_config.get_name()} of type {type(sink_config)}: {e}"
-                )
+                logging.error(f"Error configuring sink {sink_config.get_name()} of type {type(sink_config)}: {e}")
 
         return new_sinks
 
@@ -128,14 +116,10 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
                     raise Exception(msg)
                 action.set_func_hash(get_function_hash(action_def.func))
                 if action_def.params_type:  # action has params
-                    action.action_params = merge_global_params(
-                        global_config, action.action_params
-                    )
+                    action.action_params = merge_global_params(global_config, action.action_params)
                     if getattr(action_def.params_type, "pre_deploy_func", None):
                         for trigger in playbook_def.triggers:
-                            action_params = action_def.params_type(
-                                **action.action_params
-                            )
+                            action_params = action_def.params_type(**action.action_params)
                             action_params.pre_deploy_func(trigger.get())
 
                 # validate that the action can be triggered by all playbooks triggers
@@ -150,10 +134,7 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
 
             # add the playbook only once for each event.
             playbooks_trigger_events = set(
-                [
-                    trigger_definition.get().get_trigger_event()
-                    for trigger_definition in playbook_def.triggers
-                ]
+                [trigger_definition.get().get_trigger_event() for trigger_definition in playbook_def.triggers]
             )
             for event in playbooks_trigger_events:
                 self.triggers_to_playbooks[event].append(playbook_def)
@@ -170,6 +151,7 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
 
 class Registry:
     _actions: ActionsRegistry = ActionsRegistry()
+    _light_actions: List[str] = []
     _playbooks: PlaybooksRegistry = PlaybooksRegistry()
     _sinks: SinksRegistry = None
     _scheduler = None
@@ -177,8 +159,14 @@ class Registry:
     _global_config = dict()
     _telemetry: Telemetry = Telemetry(
         runner_version=RUNNER_VERSION,
-        prometheus_enabled=PROMETHEUS_ENABLED, 
+        prometheus_enabled=PROMETHEUS_ENABLED,
     )
+
+    def set_light_actions(self, light_actions: List[str]):
+        self._light_actions = light_actions
+
+    def get_light_actions(self) -> List[str]:
+        return self._light_actions
 
     def set_actions(self, actions: ActionsRegistry):
         self._actions = actions
@@ -209,12 +197,12 @@ class Registry:
 
     def get_receiver(self) -> ActionRequestReceiver:
         return self._receiver
-    
+
     def get_telemetry(self) -> Telemetry:
         return self._telemetry
 
-    def set_global_config(self, config : Dict ):
+    def set_global_config(self, config: Dict):
         self.global_config = config
-    
+
     def get_global_config(self) -> Dict:
         return self.global_config

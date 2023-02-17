@@ -1,12 +1,11 @@
 from typing import List
 
-from .msteams_adaptive_card_files_image import MsTeamsAdaptiveCardFilesImage
-from .msteams_adaptive_card_files_text import MsTeamsAdaptiveCardFilesText
-from ...core.reporting import FileBlock
+from robusta.core.reporting import FileBlock
+from robusta.integrations.msteams.msteams_adaptive_card_files_image import MsTeamsAdaptiveCardFilesImage
+from robusta.integrations.msteams.msteams_adaptive_card_files_text import MsTeamsAdaptiveCardFilesText
 
 
-class MsTeamsAdaptiveCardFiles():
-
+class MsTeamsAdaptiveCardFiles:
     def __init__(self):
         self.text_files = MsTeamsAdaptiveCardFilesText()
 
@@ -22,7 +21,7 @@ class MsTeamsAdaptiveCardFiles():
         return text_files_section_list + image_section_map
 
     # return the list of text containers with the list of lines, so later after
-    # calculating the length of bytes left in the message, we can put the 
+    # calculating the length of bytes left in the message, we can put the
     # lines evenly in each text container so we dont exceed the msg length
     def get_text_files_containers_list(self):
         return self.text_files.get_text_files_containers_list()

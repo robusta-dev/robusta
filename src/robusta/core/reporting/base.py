@@ -1,21 +1,28 @@
 import hashlib
 import logging
-import urllib.parse
-from urllib.parse import urlencode
-import uuid
 import re
+import urllib.parse
+import uuid
 from datetime import datetime
 from enum import Enum
-from pydantic.main import BaseModel
-from typing import List, Dict, Union, Optional
+from typing import Any, Dict, List, Optional, Union
+from urllib.parse import urlencode
 
-from ..model.env_vars import ROBUSTA_UI_DOMAIN
-from ..reporting.consts import FindingSubjectType, FindingSource, FindingType
-from ...core.discovery.top_service_resolver import TopServiceResolver
+from pydantic.main import BaseModel
+
+from robusta.core.discovery.top_service_resolver import TopServiceResolver
+from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
+from robusta.core.reporting.consts import FindingSource, FindingSubjectType, FindingType
 
 
 class BaseBlock(BaseModel):
     hidden: bool = False
+
+
+class Emojis(Enum):
+    Explain = "📘"
+    Recommend = "🛠"
+    Alert = "🚨"
 
 
 class FindingSeverity(Enum):
@@ -99,9 +106,7 @@ class Filterable:
     def get_invalid_attributes(self, attributes: List[str]) -> List:
         return list(set(attributes) - set(self.attribute_map))
 
-    def attribute_matches(
-            self, attribute: str, expression: Union[str, List[str]]
-    ) -> bool:
+    def attribute_matches(self, attribute: str, expression: Union[str, List[str]]) -> bool:
         value = self.attribute_map[attribute]
         if isinstance(expression, str):
             return bool(re.match(expression, value))
@@ -122,16 +127,18 @@ class Filterable:
 
 class FindingSubject:
     def __init__(
-            self,
-            name: str = None,
-            subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
-            namespace: str = None,
-            node: str = None,
+        self,
+        name: str = None,
+        subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE,
+        namespace: str = None,
+        node: str = None,
+        container: Optional[str] = None,
     ):
         self.name = name
         self.subject_type = subject_type
         self.namespace = namespace
         self.node = node
+        self.container = container
 
     def __str__(self):
         if self.namespace is not None:
@@ -145,23 +152,24 @@ class Finding(Filterable):
     """
 
     def __init__(
-            self,
-            title: str,
-            aggregation_key: str,
-            severity: FindingSeverity = FindingSeverity.INFO,
-            source: FindingSource = FindingSource.NONE,
-            description: str = None,
-            # TODO: this is bug-prone - see https://towardsdatascience.com/python-pitfall-mutable-default-arguments-9385e8265422
-            subject: FindingSubject = FindingSubject(),
-            finding_type: FindingType = FindingType.ISSUE,
-            failure: bool = True,
-            creation_date: str = None,
-            fingerprint: str = None,
-            starts_at: datetime = None,
-            ends_at: datetime = None,
-            add_silence_url: bool = False,
+        self,
+        title: str,
+        aggregation_key: str,
+        severity: FindingSeverity = FindingSeverity.INFO,
+        source: FindingSource = FindingSource.NONE,
+        description: str = None,
+        # TODO: this is bug-prone - see https://towardsdatascience.com/python-pitfall-mutable-default-arguments-9385e8265422
+        subject: FindingSubject = FindingSubject(),
+        finding_type: FindingType = FindingType.ISSUE,
+        failure: bool = True,
+        creation_date: str = None,
+        fingerprint: str = None,
+        starts_at: datetime = None,
+        ends_at: datetime = None,
+        add_silence_url: bool = False,
+        silence_labels: Dict[Any, Any] = None,
     ) -> None:
-        self.id: uuid = uuid.uuid4()
+        self.id: uuid.UUID = uuid.uuid4()
         self.title = title
         self.finding_type = finding_type
         self.failure = failure
@@ -173,20 +181,15 @@ class Finding(Filterable):
         self.subject = subject
         self.enrichments: List[Enrichment] = []
         self.video_links: List[VideoLink] = []
-        self.service = TopServiceResolver.guess_cached_resource(
-            name=subject.name, namespace=subject.namespace
-        )
+        self.service = TopServiceResolver.guess_cached_resource(name=subject.name, namespace=subject.namespace)
         self.service_key = self.service.get_resource_key() if self.service else ""
-        uri_path = (
-            f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
-        )
+        uri_path = f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
         self.add_silence_url = add_silence_url
+        self.silence_labels = silence_labels
         self.creation_date = creation_date
         self.fingerprint = (
-            fingerprint
-            if fingerprint
-            else self.__calculate_fingerprint(subject, source, aggregation_key)
+            fingerprint if fingerprint else self.__calculate_fingerprint(subject, source, aggregation_key)
         )
         self.starts_at = starts_at if starts_at else datetime.now()
         self.ends_at = ends_at
@@ -217,26 +220,24 @@ class Finding(Filterable):
         uri_path = self._map_service_to_uri()
         params = {
             "account": account_id,
-            "clusters": f"[\"{cluster_name}\"]" if cluster_name else None,
-            "namespaces": f"[\"{self.subject.namespace}\"]" if self.subject.namespace else None,
+            "clusters": f'["{cluster_name}"]' if cluster_name else None,
+            "namespaces": f'["{self.subject.namespace}"]' if self.subject.namespace else None,
             "kind": self.service.resource_type if self.service else None,
             "name": self.service.name if self.service else None,
-            "names": f"[\"{self.aggregation_key}\"]" if self.aggregation_key else None
+            "names": f'["{self.aggregation_key}"]' if self.aggregation_key else None,
         }
         params = {k: v for k, v in params.items() if v is not None}
         uri_path = f"{uri_path}?{urlencode(params)}"
         return f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
 
     def add_enrichment(
-            self,
-            enrichment_blocks: List[BaseBlock],
-            annotations=None,
-            suppress_warning: bool = False,
+        self,
+        enrichment_blocks: List[BaseBlock],
+        annotations=None,
+        suppress_warning: bool = False,
     ):
         if self.dirty and not suppress_warning:
-            logging.warning(
-                "Updating a finding after it was added to the event is not allowed!"
-            )
+            logging.warning("Updating a finding after it was added to the event is not allowed!")
 
         if not enrichment_blocks:
             return
@@ -253,26 +254,27 @@ class Finding(Filterable):
     def __str__(self):
         return f"title: {self.title} desc: {self.description} severity: {self.severity} sub-name: {self.subject.name} sub-type:{self.subject.subject_type.value} enrich: {self.enrichments}"
 
-    def get_prometheus_silence_url(self, cluster_id: str) -> str:
-        labels: Dict[str, str] = {
-            "alertname": self.aggregation_key,
-            "cluster": cluster_id,
-        }
+    def get_prometheus_silence_url(self, account_id: str, cluster_name: str) -> str:
+        labels: Dict[str, str] = {"alertname": self.aggregation_key, "cluster": cluster_name, "account": account_id}
         if self.subject.namespace:
             labels["namespace"] = self.subject.namespace
 
-        kind: str = str(self.subject.subject_type.value)
+        if self.silence_labels and self.silence_labels.get("service"):
+            labels["service"] = self.silence_labels["service"]
+
+        # In prometheus job is related to the scrape target.
+        # Kubernetes jobs are stored in job_name.
+        kind: Optional[str] = self.subject.subject_type.value
         if kind and self.subject.name:
+            kind = "job_name" if kind == "job" else kind
             labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
-
+        # New label added here should be added to the UI silence create whitelist as well.
         return f"{ROBUSTA_UI_DOMAIN}/silences/create?{urllib.parse.urlencode(labels)}"
 
     @staticmethod
-    def __calculate_fingerprint(
-            subject: FindingSubject, source: FindingSource, aggregation_key: str
-    ) -> str:
+    def __calculate_fingerprint(subject: FindingSubject, source: FindingSource, aggregation_key: str) -> str:
         # some sinks require a unique fingerprint, typically used for two reasons:
         # 1. de-dupe the same alert if it fires twice
         # 2. update an existing alert and change its status from firing to resolved

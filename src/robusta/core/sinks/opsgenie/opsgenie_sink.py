@@ -1,15 +1,12 @@
 import logging
-import opsgenie_sdk
 from typing import List
 
-from .opsgenie_sink_params import OpsGenieSinkConfigWrapper
-from ..transformer import Transformer
-from ...reporting.base import (
-    Finding,
-    Enrichment,
-    FindingSeverity,
-)
-from ..sink_base import SinkBase
+import opsgenie_sdk
+
+from robusta.core.reporting.base import Enrichment, Finding, FindingSeverity
+from robusta.core.sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
+from robusta.core.sinks.sink_base import SinkBase
+from robusta.core.sinks.transformer import Transformer
 
 # Robusta has only 4 severities, OpsGenie has 5. We had to omit 1 priority
 PRIORITY_MAP = {
@@ -31,6 +28,9 @@ class OpsGenieSink(SinkBase):
         self.conf = opsgenie_sdk.configuration.Configuration()
         self.conf.api_key["Authorization"] = self.api_key
 
+        if sink_config.opsgenie_sink.host is not None:
+            self.conf.host = sink_config.opsgenie_sink.host
+
         self.api_client = opsgenie_sdk.api_client.ApiClient(configuration=self.conf)
         self.alert_api = opsgenie_sdk.AlertApi(api_client=self.api_client)
 
@@ -41,15 +41,13 @@ class OpsGenieSink(SinkBase):
             source="Robusta Opsgenie Sink",
         )
         try:
-            close_response = self.alert_api.close_alert(
+            self.alert_api.close_alert(
                 identifier=finding.fingerprint,
                 close_alert_payload=body,
                 identifier_type="alias",
             )
         except opsgenie_sdk.ApiException as err:
-            logging.error(
-                f"Error closing opsGenie alert {finding} {err}", exc_info=True
-            )
+            logging.error(f"Error closing opsGenie alert {finding} {err}", exc_info=True)
 
     def __open_alert(self, finding: Finding, platform_enabled: bool):
         description = self.__to_description(finding, platform_enabled)
@@ -74,9 +72,7 @@ class OpsGenieSink(SinkBase):
         try:
             self.alert_api.create_alert(create_alert_payload=body)
         except opsgenie_sdk.ApiException as err:
-            logging.error(
-                f"Error creating opsGenie alert {finding} {err}", exc_info=True
-            )
+            logging.error(f"Error creating opsGenie alert {finding} {err}", exc_info=True)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         if finding.title.startswith("[RESOLVED]"):
@@ -87,19 +83,19 @@ class OpsGenieSink(SinkBase):
     def __to_description(self, finding: Finding, platform_enabled: bool) -> str:
         description = ""
         if platform_enabled:
-            description = f'<a href="{finding.get_investigate_uri(self.account_id, self.cluster_name)}">🔎 Investigate</a>'
+            description = (
+                f'<a href="{finding.get_investigate_uri(self.account_id, self.cluster_name)}">🔎 Investigate</a>'
+            )
             if finding.add_silence_url:
-                description = f'{description}  <a href="{finding.get_prometheus_silence_url(self.cluster_name)}">🔕 Silence</a>'
+                description = f'{description}  <a href="{finding.get_prometheus_silence_url(self.account_id, self.cluster_name)}">🔕 Silence</a>'
 
             for video_link in finding.video_links:
-                description = f"{description}  <a href=\"{video_link.url}\">🎬 {video_link.name}</a>"
+                description = f'{description}  <a href="{video_link.url}">🎬 {video_link.name}</a>'
             description = f"{description}\n"
 
         return f"{description}{self.__enrichments_as_text(finding.enrichments)}"
 
     @classmethod
     def __enrichments_as_text(cls, enrichments: List[Enrichment]) -> str:
-        text_arr = [
-            Transformer.to_html(enrichment.blocks) for enrichment in enrichments
-        ]
+        text_arr = [Transformer.to_html(enrichment.blocks) for enrichment in enrichments]
         return "---\n".join(text_arr)

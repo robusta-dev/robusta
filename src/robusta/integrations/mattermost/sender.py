@@ -1,11 +1,22 @@
+import logging
+import re
 from itertools import chain
-from typing import Tuple
+from typing import Any, Dict, List, Tuple, Union
 
-from .client import MattermostClient
-from ...core.reporting.base import *
-from ...core.reporting.blocks import *
-from ...core.reporting.utils import add_pngs_for_all_svgs
-from ...core.sinks.transformer import Transformer
+from robusta.core.reporting.base import Finding, FindingSeverity
+from robusta.core.reporting.blocks import (
+    BaseBlock,
+    FileBlock,
+    HeaderBlock,
+    KubernetesDiffBlock,
+    ListBlock,
+    MarkdownBlock,
+    TableBlock,
+)
+from robusta.core.reporting.utils import add_pngs_for_all_svgs
+from robusta.core.sinks.mattermost.mattermost_sink_params import MattermostSinkParams
+from robusta.core.sinks.transformer import Transformer
+from robusta.integrations.mattermost.client import MattermostClient
 
 extension_regex = re.compile(r"\.[a-z]+$")
 MattermostBlock = Dict[str, Any]
@@ -26,18 +37,14 @@ MAX_BLOCK_CHARS = 16383  # Max allowed characters for mattermost
 
 
 class MattermostSender:
-    def __init__(
-            self,
-            cluster_name: str,
-            account_id: str,
-            client: MattermostClient
-    ):
+    def __init__(self, cluster_name: str, account_id: str, client: MattermostClient, sink_params: MattermostSinkParams):
         """
         Set the Mattermost webhook url.
         """
         self.cluster_name = cluster_name
         self.account_id = account_id
         self.client = client
+        self.sink_params = sink_params
 
     @classmethod
     def __add_severity_icon(cls, title: str, severity: FindingSeverity) -> str:
@@ -45,12 +52,8 @@ class MattermostSender:
         return f"{icon} {severity.name} - {title}"
 
     @classmethod
-    def __format_msg_attachments(cls, mattermost_blocks: List[str],
-                                 msg_color: str) -> List[Dict]:
-        return [{
-            "text": "\n".join(mattermost_blocks),
-            "color": msg_color
-        }]
+    def __format_msg_attachments(cls, mattermost_blocks: List[str], msg_color: str) -> List[Dict]:
+        return [{"text": "\n".join(mattermost_blocks), "color": msg_color}]
 
     def __to_mattermost(self, block: BaseBlock, sink_name: str) -> Union[str, Tuple]:
         if isinstance(block, MarkdownBlock):
@@ -66,42 +69,30 @@ class MattermostSender:
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_mattermost_diff(block, sink_name)
         else:
-            logging.warning(
-                f"cannot convert block of type {type(block)} to mattermost format block: {block}"
-            )
+            logging.warning(f"cannot convert block of type {type(block)} to mattermost format block: {block}")
             return ""  # no reason to crash the entire report
 
-    def __to_mattermost_diff(
-            self, block: KubernetesDiffBlock, sink_name: str
-    ) -> str:
+    def __to_mattermost_diff(self, block: KubernetesDiffBlock, sink_name: str) -> str:
 
         transformed_blocks = Transformer.to_markdown_diff(block, use_emoji_sign=True)
 
         _blocks = list(
-            chain(*[
-                self.__to_mattermost(transformed_block, sink_name)
-                for transformed_block in transformed_blocks
-            ])
+            chain(*[self.__to_mattermost(transformed_block, sink_name) for transformed_block in transformed_blocks])
         )
 
         return "\n".join(_blocks)
 
-    def __send_blocks_to_mattermost(
-            self,
-            report_blocks: List[BaseBlock],
-            title: str,
-            sink_name: str,
-            severity: FindingSeverity,
-    ):
+    def __send_blocks_to_mattermost(self, report_blocks: List[BaseBlock], title: str, severity: FindingSeverity):
         msg_color = SEVERITY_COLOR_MAP.get(severity, "")
 
         # Process attachment blocks
-        file_blocks = add_pngs_for_all_svgs(
-            [b for b in report_blocks if isinstance(b, FileBlock)]
-        )
+        file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         file_attachments = []
+        if not self.sink_params.send_svg:
+            file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
+
         for block in file_blocks:
-            file_attachments.append(self.__to_mattermost(block, sink_name))
+            file_attachments.append(self.__to_mattermost(block, self.sink_params.name))
 
         other_blocks = [b for b in report_blocks if not isinstance(b, FileBlock)]
 
@@ -109,9 +100,9 @@ class MattermostSender:
         header_block = {}
         if title:
             title = self.__add_severity_icon(title, severity)
-            header_block = self.__to_mattermost(HeaderBlock(title), sink_name)
+            header_block = self.__to_mattermost(HeaderBlock(title), self.sink_params.name)
         for block in other_blocks:
-            output_blocks.append(self.__to_mattermost(block, sink_name))
+            output_blocks.append(self.__to_mattermost(block, self.sink_params.name))
 
         attachments = self.__format_msg_attachments(output_blocks, msg_color)
 
@@ -125,17 +116,12 @@ class MattermostSender:
 
         self.client.post_message(header_block, attachments, file_attachments)
 
-    def send_finding_to_mattermost(
-            self,
-            finding: Finding,
-            sink_name: str,
-            platform_enabled: bool,
-    ):
+    def send_finding_to_mattermost(self, finding: Finding, platform_enabled: bool):
         blocks: List[BaseBlock] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
             actions = f"[:mag_right: Investigate]({finding.get_investigate_uri(self.account_id, self.cluster_name)})"
             if finding.add_silence_url:
-                actions = f"{actions} [:no_bell: Silence]({finding.get_prometheus_silence_url(self.cluster_name)})"
+                actions = f"{actions} [:no_bell: Silence]({finding.get_prometheus_silence_url(self.account_id, self.cluster_name)})"
             for video_link in finding.video_links:
                 actions = f"{actions} [:clapper: {video_link.name}]({video_link.url})"
 
@@ -153,6 +139,5 @@ class MattermostSender:
         self.__send_blocks_to_mattermost(
             blocks,
             finding.title,
-            sink_name,
             finding.severity,
         )

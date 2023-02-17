@@ -1,13 +1,13 @@
-from abc import abstractmethod
-from typing import Optional, Dict, Any, List, Protocol
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
 
-from ...model.playbook_action import PlaybookAction
-from ...core.model.events import ExecutionBaseEvent
-from ...core.playbooks.base_trigger import TriggerEvent
-from ...runner.telemetry import Telemetry
+from robusta.core.model.events import ExecutionBaseEvent
+from robusta.core.playbooks.base_trigger import TriggerEvent
+from robusta.model.playbook_action import PlaybookAction
+from robusta.runner.telemetry import Telemetry
 
 
-class PlaybooksEventHandler(Protocol):
+class PlaybooksEventHandler(ABC):
     """Interface for handling trigger events and running playbook actions"""
 
     @abstractmethod
@@ -33,16 +33,21 @@ class PlaybooksEventHandler(Protocol):
         action_params: Optional[dict],
         sinks: Optional[List[str]],
         sync_response: bool = False,
-        no_sinks: bool = False
+        no_sinks: bool = False,
     ) -> Optional[Dict[str, Any]]:
         """Execute an external action"""
         pass
 
     @abstractmethod
-    def get_global_config(
-        self,
-    ) -> dict:
+    def get_global_config(self) -> dict:
         """Return runner global config"""
+        pass
+
+    @abstractmethod
+    def get_light_actions(
+        self,
+    ) -> List[str]:
+        """Returns configured light actions"""
         pass
 
     @abstractmethod

@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-
 from typing import Dict, Optional
 
 from pydantic.main import BaseModel
@@ -50,9 +49,7 @@ def safe_str(s: str) -> str:
 
 
 def dict_params_safe_str(params: dict) -> str:
-    return ", ".join([
-        f"{k}: {safe_str(str(v))}" for k, v in params.items()
-    ])
+    return ", ".join([f"{k}: {safe_str(str(v))}" for k, v in params.items()])
 
 
 def to_safe_str(action_params) -> str:
@@ -60,5 +57,7 @@ def to_safe_str(action_params) -> str:
         return dict_params_safe_str(action_params)
     elif isinstance(action_params, BaseModel):
         return dict_params_safe_str(action_params.dict())
+    elif action_params is None:
+        return ""
     else:
         return f"Cannot stringify unknown params type {type(action_params)}"

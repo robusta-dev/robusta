@@ -1,4 +1,4 @@
-from pydantic.main import BaseModel, Optional
+from pydantic.main import BaseModel, List, Optional
 
 
 class ClusterStatus(BaseModel):
@@ -6,3 +6,5 @@ class ClusterStatus(BaseModel):
     cluster_id: str
     version: str
     last_alert_at: Optional[str]  # ts
+    light_actions: List[str]
+    ttl_hours: int

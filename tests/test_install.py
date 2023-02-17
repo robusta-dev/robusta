@@ -1,7 +1,8 @@
 import time
+
+from tests.utils.kubernetes_utils import create_crashing_deployment
 from tests.utils.robusta_utils import RobustaController
 from tests.utils.slack_utils import SlackChannel
-from tests.utils.kubernetes_utils import create_crashing_deployment
 
 
 def test_robusta_install(robusta: RobustaController, slack_channel: SlackChannel):

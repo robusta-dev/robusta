@@ -1,6 +1,15 @@
-import logging
+from datetime import timedelta
 
-from robusta.api import *
+from robusta.api import (
+    CpuAnalyzer,
+    MarkdownBlock,
+    MemoryAnalyzer,
+    PrometheusKubernetesAlert,
+    SlackAnnotations,
+    TimedPrometheusParams,
+    action,
+    pretty_size,
+)
 
 
 @action
@@ -9,7 +18,7 @@ def cpu_overcommited_enricher(alert: PrometheusKubernetesAlert, params: TimedPro
     Enrich the finding with a detailed explanation for the cause of the CPU overcommitment.
     Includes recommendations for the identified cause.
     """
-    cpu_analyzer = CpuAnalyzer(params.prometheus_url)
+    cpu_analyzer = CpuAnalyzer(params)
     cpu_requests = cpu_analyzer.get_total_cpu_requests(timedelta(seconds=params.default_query_duration))
     cpu_total = cpu_analyzer.get_total_cpu_allocatable(timedelta(seconds=params.default_query_duration))
     if not (cpu_total and cpu_requests):
@@ -24,11 +33,13 @@ def cpu_overcommited_enricher(alert: PrometheusKubernetesAlert, params: TimedPro
                 f"{round(cpu_total, 2)}."
             ),
         ],
-        annotations={SlackAnnotations.UNFURL: False}
+        annotations={SlackAnnotations.UNFURL: False},
     )
-    alert.override_finding_attributes(description="Your cluster is currently OK, but if a single node "
-                                                  "fails then some pods might not be scheduled."
-                                                  " Add more CPU to your cluster to increase resilience.")
+    alert.override_finding_attributes(
+        description="Your cluster is currently OK, but if a single node "
+        "fails then some pods might not be scheduled."
+        " Add more CPU to your cluster to increase resilience."
+    )
 
 
 @action
@@ -37,7 +48,7 @@ def memory_overcommited_enricher(alert: PrometheusKubernetesAlert, params: Timed
     Enrich the finding with a detailed explanation for the cause of the Memory overcommitment.
     Includes recommendations for the identified cause.
     """
-    mem_analyzer = MemoryAnalyzer(params.prometheus_url)
+    mem_analyzer = MemoryAnalyzer(params)
     mem_requests = mem_analyzer.get_total_mem_requests(timedelta(seconds=params.default_query_duration))
     mem_total = mem_analyzer.get_total_mem_allocatable(timedelta(seconds=params.default_query_duration))
     if not (mem_requests and mem_total):
@@ -52,8 +63,10 @@ def memory_overcommited_enricher(alert: PrometheusKubernetesAlert, params: Timed
                 f"{pretty_size(mem_total)}."
             ),
         ],
-        annotations={SlackAnnotations.UNFURL: False}
+        annotations={SlackAnnotations.UNFURL: False},
     )
-    alert.override_finding_attributes(description="Your cluster is currently OK, but if a single node "
-                                                  "fails then some pods might not be scheduled. Add more Memory"
-                                                  " to your cluster to increase resilience.")
+    alert.override_finding_attributes(
+        description="Your cluster is currently OK, but if a single node "
+        "fails then some pods might not be scheduled. Add more Memory"
+        " to your cluster to increase resilience."
+    )

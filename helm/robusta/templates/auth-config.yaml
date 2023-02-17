@@ -6,6 +6,11 @@ metadata:
   namespace: {{ .Release.Namespace }}
 type: Opaque
 data:
+{{- if and .Values.rsa.public .Values.rsa.private }}
+  prv: {{ .Values.rsa.private }}
+  pub: {{ .Values.rsa.public }}
+{{- else }}
   prv: {{ .Values.rsa.prv | b64enc }}
   pub: {{ .Values.rsa.pub | b64enc }}
+{{- end }}
 {{- end }}

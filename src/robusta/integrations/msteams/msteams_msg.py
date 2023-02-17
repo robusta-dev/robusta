@@ -1,24 +1,34 @@
 import json
 import logging
-import requests
 from typing import List
 
-from .msteams_elements.msteams_base import MsTeamsBase
-from .msteams_adaptive_card_files import MsTeamsAdaptiveCardFiles
-from .msteams_elements.msteams_table import MsTeamsTable
-from .msteams_elements.msteams_text_block import MsTeamsTextBlock
-from .msteams_elements.msteams_column import MsTeamsColumn
-from .msteams_elements.msteams_card import MsTeamsCard
-from .msteams_elements.msteams_images import MsTeamsImages
-from ...core.reporting import FileBlock, TableBlock, ListBlock, MarkdownBlock, KubernetesDiffBlock, HeaderBlock
+import requests
+
+from robusta.core.reporting import (
+    FileBlock,
+    Finding,
+    FindingSeverity,
+    HeaderBlock,
+    KubernetesDiffBlock,
+    ListBlock,
+    MarkdownBlock,
+    TableBlock,
+)
+from robusta.integrations.msteams.msteams_adaptive_card_files import MsTeamsAdaptiveCardFiles
+from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
+from robusta.integrations.msteams.msteams_elements.msteams_card import MsTeamsCard
+from robusta.integrations.msteams.msteams_elements.msteams_column import MsTeamsColumn
+from robusta.integrations.msteams.msteams_elements.msteams_images import MsTeamsImages
+from robusta.integrations.msteams.msteams_elements.msteams_table import MsTeamsTable
+from robusta.integrations.msteams.msteams_elements.msteams_text_block import MsTeamsTextBlock
 
 
 class MsTeamsMsg:
     # actual size according to the DOC is ~28K.
     # it's hard to determine the real size because for example there can be large images that doesn't count
-    # and converting the map to json doesn't give us an exact indication of the size so we need to take 
+    # and converting the map to json doesn't give us an exact indication of the size so we need to take
     # a safe zone of less then 28K
-    MAX_SIZE_IN_BYTES = (1024 * 20)
+    MAX_SIZE_IN_BYTES = 1024 * 20
 
     def __init__(self, webhook_url: str):
         self.entire_msg: List[MsTeamsBase] = []
@@ -26,11 +36,14 @@ class MsTeamsMsg:
         self.text_file_containers = []
         self.webhook_url = webhook_url
 
-    def write_title_and_desc(self, platform_enabled: bool, finding: "Finding", cluster_name: str, account_id: str):
-        block = MsTeamsTextBlock(text=f"{finding.severity} - {finding.title}", font_size='extraLarge')
+    def write_title_and_desc(self, platform_enabled: bool, finding: Finding, cluster_name: str, account_id: str):
+        severity: FindingSeverity = finding.severity
+        block = MsTeamsTextBlock(
+            text=f"{severity.to_emoji()} {severity.name} - {finding.title}", font_size="extraLarge"
+        )
         self.__write_to_entire_msg([block])
         if platform_enabled:  # add link to the Robusta ui, if it's configured
-            silence_url = finding.get_prometheus_silence_url(cluster_name)
+            silence_url = finding.get_prometheus_silence_url(account_id, cluster_name)
             actions = f"[🔎 Investigate]({finding.get_investigate_uri(account_id, cluster_name)})"
             if finding.add_silence_url:
                 actions = f"{actions}  [🔕 Silence]({silence_url})"
@@ -48,8 +61,8 @@ class MsTeamsMsg:
         if len(self.current_section) == 0:
             return
 
-        space_block = MsTeamsTextBlock(text=' ', font_size='small')
-        separator_block = MsTeamsTextBlock(text=' ', separator=True)
+        space_block = MsTeamsTextBlock(text=" ", font_size="small")
+        separator_block = MsTeamsTextBlock(text=" ", separator=True)
 
         underline_block = MsTeamsColumn()
         underline_block.add_column(items=[space_block, separator_block], width_stretch=True)
@@ -67,8 +80,8 @@ class MsTeamsMsg:
     def __sub_section_separator(self):
         if len(self.current_section) == 0:
             return
-        space_block = MsTeamsTextBlock(text=' ', font_size='small')
-        separator_block = MsTeamsTextBlock(text='_' * 30, font_size='small', horizontal_alignment='center')
+        space_block = MsTeamsTextBlock(text=" ", font_size="small")
+        separator_block = MsTeamsTextBlock(text="_" * 30, font_size="small", horizontal_alignment="center")
         self.__write_to_current_section([space_block, separator_block, space_block, space_block])
 
     def upload_files(self, file_blocks: List[FileBlock]):
@@ -91,7 +104,7 @@ class MsTeamsMsg:
     def items_list(self, block: ListBlock):
         self.__sub_section_separator()
         for line in block.items:
-            bullet_lines = '\n- ' + line + '\n'
+            bullet_lines = "\n- " + line + "\n"
             self.__write_to_current_section([MsTeamsTextBlock(bullet_lines)])
 
     def diff(self, block: KubernetesDiffBlock):
@@ -106,11 +119,11 @@ class MsTeamsMsg:
         self.__write_to_current_section([MsTeamsTextBlock(block.text)])
 
     def divider_block(self):
-        self.__write_to_current_section([MsTeamsTextBlock('\n\n')])
+        self.__write_to_current_section([MsTeamsTextBlock("\n\n")])
 
     def header_block(self, block: HeaderBlock):
-        current_header_string = block.text + '\n\n'
-        self.__write_to_current_section([MsTeamsTextBlock(current_header_string, font_size='large')])
+        current_header_string = block.text + "\n\n"
+        self.__write_to_current_section([MsTeamsTextBlock(current_header_string, font_size="large")])
 
     # dont include the base 64 images in the total size calculation
     def _put_text_files_data_up_to_max_limit(self, complete_card_map: map):

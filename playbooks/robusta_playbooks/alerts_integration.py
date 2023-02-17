@@ -1,13 +1,41 @@
 import logging
+import time
+from collections import defaultdict
+from datetime import datetime
+from string import Template
+from typing import Any, Dict, List, Optional
 
 import requests
-from string import Template
-from datetime import datetime, timedelta
-from urllib.parse import urlparse, unquote_plus
-from collections import defaultdict
-import re
+from hikaru.model import Node
 
-from robusta.api import *
+from robusta.api import (
+    ActionParams,
+    AlertResourceGraphEnricherParams,
+    CallbackBlock,
+    CallbackChoice,
+    ChartValuesFormat,
+    CustomGraphEnricherParams,
+    ExecutionBaseEvent,
+    FileBlock,
+    Finding,
+    FindingSource,
+    ListBlock,
+    MarkdownBlock,
+    NamedRegexPattern,
+    PodEvent,
+    PrometheusKubernetesAlert,
+    PrometheusParams,
+    RegexReplacementStyle,
+    ResourceChartItemType,
+    ResourceChartResourceType,
+    SlackAnnotations,
+    TableBlock,
+    action,
+    create_chart_from_prometheus_query,
+    create_graph_enrichment,
+    create_resource_enrichment,
+    get_node_internal_ip,
+)
 
 
 class SeverityParams(ActionParams):
@@ -67,15 +95,11 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
     # TODO: do we already have alert.Node here?
     node: Node = Node.readNode(alert.pod.spec.nodeName).obj
     if not node:
-        logging.warning(
-            f"Node {alert.pod.spec.nodeName} not found for NodeRestartSilencer for {alert}"
-        )
+        logging.warning(f"Node {alert.pod.spec.nodeName} not found for NodeRestartSilencer for {alert}")
         return
 
     last_transition_times = [
-        condition.lastTransitionTime
-        for condition in node.status.conditions
-        if condition.type == "Ready"
+        condition.lastTransitionTime for condition in node.status.conditions if condition.type == "Ready"
     ]
     if last_transition_times and last_transition_times[0]:
         node_start_time_str = last_transition_times[0]
@@ -83,9 +107,7 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
         node_start_time_str = node.metadata.creationTimestamp
 
     node_start_time = datetime.strptime(node_start_time_str, "%Y-%m-%dT%H:%M:%SZ")
-    alert.stop_processing = datetime.utcnow().timestamp() < (
-            node_start_time.timestamp() + params.post_restart_silence
-    )
+    alert.stop_processing = datetime.utcnow().timestamp() < (node_start_time.timestamp() + params.post_restart_silence)
 
 
 @action
@@ -115,9 +137,7 @@ def alert_definition_enricher(alert: PrometheusKubernetesAlert):
     """
     alert.add_enrichment(
         [
-            MarkdownBlock(
-                f"*Alert definition*\n```\n{alert.get_prometheus_query()}\n```"
-            ),
+            MarkdownBlock(f"*Alert definition*\n```\n{alert.get_prometheus_query()}\n```"),
         ],
         annotations={SlackAnnotations.ATTACHMENT: True},
     )
@@ -130,11 +150,11 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     """
     promql_query = alert.get_prometheus_query()
     chart = create_chart_from_prometheus_query(
-        params.prometheus_url,
+        params,
         promql_query,
         alert.alert.startsAt,
         include_x_axis=False,
-        graph_duration_minutes=60
+        graph_duration_minutes=60,
     )
     alert.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
 
@@ -149,10 +169,10 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
         alert.alert.startsAt,
         alert.alert.labels,
         params.promql_query,
-        prometheus_url=params.prometheus_url,
+        prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
         graph_title=params.graph_title,
-        chart_values_format=chart_values_format
+        chart_values_format=chart_values_format,
     )
     alert.add_enrichment([graph_enrichment])
 
@@ -168,15 +188,16 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
     if node:
         internal_ip = get_node_internal_ip(node)
         if internal_ip:
-            labels['node_internal_ip'] = internal_ip
+            labels["node_internal_ip"] = internal_ip
 
     graph_enrichment = create_resource_enrichment(
         alert.alert.startsAt,
         labels,
         ResourceChartResourceType[params.resource_type],
         ResourceChartItemType[params.item_type],
-        prometheus_url=params.prometheus_url,
-        graph_duration_minutes=params.graph_duration_minutes)
+        prometheus_params=params,
+        graph_duration_minutes=params.graph_duration_minutes,
+    )
     alert.add_enrichment([graph_enrichment])
 
 
@@ -204,7 +225,7 @@ def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
     The template can include all markdown directives supported by Slack.
     Note that Slack markdown links use a different format than GitHub.
     """
-    labels = defaultdict(lambda: "<missing>")
+    labels: Dict[str, Any] = defaultdict(lambda: "<missing>")
     labels.update(alert.alert.labels)
     template = Template(params.template)
     alert.add_enrichment(
@@ -214,10 +235,13 @@ def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
 
 class LogEnricherParams(ActionParams):
     """
+    :var container_name: Specific container to get logs from
     :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
     :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
     :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
     """
+
+    container_name: Optional[str]
     warn_on_missing_label: bool = False
     regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
     regex_replacement_style: Optional[str] = None
@@ -236,27 +260,40 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
     if pod is None:
         if params.warn_on_missing_label:
             event.add_enrichment(
-                [
-                    MarkdownBlock(
-                        "Cannot fetch logs because the pod is unknown. The alert has no `pod` label"
-                    )
-                ],
+                [MarkdownBlock("Cannot fetch logs because the pod is unknown. The alert has no `pod` label")],
             )
         return
 
-    regex_replacement_style = \
-        RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
-    log_data = pod.get_logs(
-        regex_replacer_patterns=params.regex_replacer_patterns,
-        regex_replacement_style=regex_replacement_style,
-        previous=params.previous
-    )
-    if not log_data:
-        return
+    container: str = pod.spec.containers[0].name
+    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+    if params.container_name:
+        container = params.container_name
+    elif any(status.name == event.get_subject().container for status in all_statuses):
+        # support alerts with a container label, make sure its related to this pod.
+        container = event.get_subject().container
 
-    event.add_enrichment(
-        [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
+    tries: int = 2
+    backoff_seconds: int = 2
+    regex_replacement_style = (
+        RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     )
+
+    for _ in range(tries - 1):
+        log_data = pod.get_logs(
+            container=container,
+            regex_replacer_patterns=params.regex_replacer_patterns,
+            regex_replacement_style=regex_replacement_style,
+            previous=params.previous,
+        )
+        if not log_data:
+            logging.info("log data is empty, retrying...")
+            time.sleep(backoff_seconds)
+            continue
+
+        event.add_enrichment(
+            [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
+        )
+        break
 
 
 class SearchTermParams(ActionParams):
@@ -286,11 +323,7 @@ def show_stackoverflow_search(event: ExecutionBaseEvent, params: SearchTermParam
         finding.add_enrichment([ListBlock(answers)])
     else:
         finding.add_enrichment(
-            [
-                MarkdownBlock(
-                    f'Sorry, StackOverflow doesn\'t know anything about "{params.search_term}"'
-                )
-            ]
+            [MarkdownBlock(f'Sorry, StackOverflow doesn\'t know anything about "{params.search_term}"')]
         )
     event.add_finding(finding)
 

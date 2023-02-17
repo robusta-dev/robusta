@@ -2,21 +2,22 @@ import copy
 import logging
 import traceback
 from collections import defaultdict
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
 
-from .base_trigger import TriggerEvent, BaseTrigger
-from .playbook_utils import merge_global_params, to_safe_str
-from .playbooks_event_handler import PlaybooksEventHandler
-from ..model.events import ExecutionBaseEvent, ExecutionContext
-from ..reporting import MarkdownBlock
-from ..reporting.base import Finding
-from ..reporting.consts import SYNC_RESPONSE_SINK
-from ..sinks.robusta.dal.model_conversion import ModelConversion
-from ...model.playbook_action import PlaybookAction
-from ...model.config import Registry
-from .trigger import Trigger
-from ...runner.telemetry import Telemetry
-from ...utils.error_codes import ErrorCodes
+from robusta.core.exceptions import PrometheusNotFound
+from robusta.core.model.events import ExecutionBaseEvent, ExecutionContext
+from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
+from robusta.core.playbooks.playbook_utils import merge_global_params, to_safe_str
+from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
+from robusta.core.playbooks.trigger import Trigger
+from robusta.core.reporting import MarkdownBlock
+from robusta.core.reporting.base import Finding
+from robusta.core.reporting.consts import SYNC_RESPONSE_SINK
+from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
+from robusta.model.config import Registry
+from robusta.model.playbook_action import PlaybookAction
+from robusta.runner.telemetry import Telemetry
+from robusta.utils.error_codes import ActionException, ErrorCodes
 
 
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
@@ -32,20 +33,18 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         execution_event: Optional[ExecutionBaseEvent] = None
         sink_findings: Dict[str, List[Finding]] = defaultdict(list)
         for playbook in playbooks:
-            fired_trigger = self.__get_fired_trigger(
-                trigger_event, playbook.triggers, playbook.get_id()
-            )
+            fired_trigger = self.__get_fired_trigger(trigger_event, playbook.triggers, playbook.get_id())
             if fired_trigger:
                 execution_event = None
                 try:
-                    execution_event = fired_trigger.build_execution_event(
-                        trigger_event, sink_findings
-                    )
+                    execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings)
                     # sink_findings needs to be shared between playbooks.
                     # build_execution_event returns a different instance because it's running in a child process
                     execution_event.sink_findings = sink_findings
                 except Exception:
-                    logging.error(f"Failed to build execution event for {trigger_event.get_event_description()}")
+                    logging.error(
+                        f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}"
+                    )
 
                 if execution_event:  # might not exist for unsupported k8s types
                     execution_event.named_sinks = (
@@ -58,9 +57,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         execution_event,
                         playbook.get_actions(),
                     )
-                    if (
-                        playbook_resp
-                    ):  # For now, only last response applies. (For simplicity reasons)
+                    if playbook_resp:  # For now, only last response applies. (For simplicity reasons)
                         execution_response = playbook_resp
                     if playbook.stop or execution_event.stop_processing:
                         break
@@ -78,9 +75,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         no_sinks: bool = False,
     ) -> Optional[Dict[str, Any]]:
         if not no_sinks and execution_event.named_sinks is None:  # take the default sinks only if sinks not excluded
-            execution_event.named_sinks = (
-                self.registry.get_playbooks().get_default_sinks()
-            )
+            execution_event.named_sinks = self.registry.get_playbooks().get_default_sinks()
 
         if sync_response:  # if we need to return sync response, we'll collect the findings under this sink name
             if execution_event.named_sinks:
@@ -96,8 +91,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
         if sync_response:  # add the findings to the response
             execution_response["findings"] = [
-                self.__to_finding_json(finding)
-                for finding in execution_event.sink_findings[SYNC_RESPONSE_SINK]
+                self.__to_finding_json(finding) for finding in execution_event.sink_findings[SYNC_RESPONSE_SINK]
             ]
 
         return execution_response
@@ -111,12 +105,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
         finding_json["evidence"] = [
             ModelConversion.to_evidence_json(
-                account_id,
-                cluster_id,
-                SYNC_RESPONSE_SINK,
-                signing_key,
-                finding.id,
-                enrichment
+                account_id, cluster_id, SYNC_RESPONSE_SINK, signing_key, finding.id, enrichment
             )
             for enrichment in finding.enrichments
         ]
@@ -124,10 +113,12 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def __prepare_execution_event(self, execution_event: ExecutionBaseEvent):
         execution_event.set_scheduler(self.registry.get_scheduler())
-        execution_event.set_context(ExecutionContext(
-            account_id=self.registry.get_global_config().get("account_id", ""),
-            cluster_name=self.registry.get_global_config().get("cluster_name", "")
-        ))
+        execution_event.set_context(
+            ExecutionContext(
+                account_id=self.registry.get_global_config().get("account_id", ""),
+                cluster_name=self.registry.get_global_config().get("cluster_name", ""),
+            )
+        )
 
     def run_external_action(
         self,
@@ -152,31 +143,29 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             else:
                 action_params = {"named_sinks": sinks}
         try:
-            instantiation_params = action_def.from_params_parameter_class(
-                **action_params
-            )
+            instantiation_params = action_def.from_params_parameter_class(**action_params)
         except Exception:
             return self.__error_resp(
                 f"Failed to create execution instance for"
                 f" {action_name} {action_def.from_params_parameter_class}"
-                f" {action_params} {traceback.format_exc()}"
-            , ErrorCodes.EVENT_PARAMS_INSTANTIATION_FAILED.value)
+                f" {action_params} {traceback.format_exc()}",
+                ErrorCodes.EVENT_PARAMS_INSTANTIATION_FAILED.value,
+            )
 
         execution_event = action_def.from_params_func(instantiation_params)
         if not execution_event:
             return self.__error_resp(
-                f"Failed to create execution event for "
-                f"{action_name} {action_params}"
-            , ErrorCodes.EVENT_INSTANTIATION_FAILED.value)
+                f"Failed to create execution event for {action_name} {action_params}",
+                ErrorCodes.EVENT_INSTANTIATION_FAILED.value,
+            )
 
-        playbook_action = PlaybookAction(
-            action_name=action_name, action_params=action_params
-        )
+        playbook_action = PlaybookAction(action_name=action_name, action_params=action_params)
         return self.run_actions(execution_event, [playbook_action], sync_response, no_sinks)
 
     @classmethod
-    def __error_resp(cls, msg: str, error_code: int) -> dict:
-        logging.error(msg)
+    def __error_resp(cls, msg: str, error_code: int, log: bool = True) -> dict:
+        if log:
+            logging.error(msg)
         return {"success": False, "msg": msg, "error_code": error_code}
 
     def __run_playbook_actions(
@@ -190,13 +179,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             if execution_event.stop_processing:
                 return execution_event.response
 
-            registered_action = self.registry.get_actions().get_action(
-                action.action_name
-            )
+            registered_action = self.registry.get_actions().get_action(action.action_name)
 
-            if (
-                not registered_action
-            ):  # Might happen if manually trying to trigger incorrect action
+            if not registered_action:  # Might happen if manually trying to trigger incorrect action
                 msg = f"action {action.action_name} not found. Skipping for event {type(execution_event)}"
                 execution_event.response = self.__error_resp(msg, ErrorCodes.ACTION_NOT_REGISTERED.value)
                 continue
@@ -206,15 +191,14 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(msg, ErrorCodes.EXECUTION_EVENT_MISMATCH.value)
                 continue
 
-            if not registered_action.params_type:
-                registered_action.func(execution_event)
-            else:
-                action_params = None
+            action_with_params: bool = registered_action.params_type is not None
+            action_params = None
+            params = None
+            if action_with_params:
                 try:
-                    action_params = merge_global_params(
-                        self.get_global_config(), action.action_params
-                    )
+                    action_params = merge_global_params(self.get_global_config(), action.action_params)
                     params = registered_action.params_type(**action_params)
+                    params.post_initialization()
                 except Exception:
                     msg = (
                         f"Failed to create {registered_action.params_type} "
@@ -223,22 +207,40 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     )
                     execution_event.response = self.__error_resp(msg, ErrorCodes.PARAMS_INSTANTIATION_FAILED.value)
                     continue
-
-                try:
+            try:
+                if action_with_params:
                     registered_action.func(execution_event, params)
-                except Exception:
-                    logging.error(
-                        f"Failed to execute action {action.action_name} {to_safe_str(action_params)}",
-                        exc_info=True,
-                    )
-                    execution_event.add_enrichment(
-                        [
-                            MarkdownBlock(
-                                text=f"Oops... Error processing {action.action_name}"
-                            )
-                        ]
-                    )
-
+                else:
+                    registered_action.func(execution_event)
+            except ActionException as e:
+                msg = (
+                    e.msg
+                    if e.msg
+                    else f"Action Exception {e.type} while processing {action.action_name} {to_safe_str(action_params)}"
+                )
+                logging.error(msg)
+                execution_event.response = self.__error_resp(e.type, e.code, log=False)
+            except PrometheusNotFound as e:
+                logging.error(str(e))
+                execution_event.add_enrichment(
+                    [
+                        MarkdownBlock(
+                            text="Robusta couldn't connect to the Prometheus client, check if the service is "
+                            "available. If it is, please add to *globalConfig* in *generated_values.yaml* "
+                            "the cluster *prometheus_url*. For example:\n"
+                            "```globalConfig:\n"
+                            "\tprometheus_url: http://prometheus-server.monitoring.svc.cluster.local:9090```"
+                        )
+                    ]
+                )
+            except Exception:
+                logging.error(
+                    f"Failed to execute action {action.action_name} {to_safe_str(action_params)}", exc_info=True
+                )
+                execution_event.response = self.__error_resp(
+                    ErrorCodes.ACTION_UNEXPECTED_ERROR.name, ErrorCodes.ACTION_UNEXPECTED_ERROR.value, log=False
+                )
+                execution_event.add_enrichment([MarkdownBlock(text=f"Oops... Error processing {action.action_name}")])
         return execution_event.response
 
     @classmethod
@@ -264,9 +266,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 try:
                     sink = self.registry.get_sinks().sinks.get(sink_name)
                     if not sink:
-                        logging.error(
-                            f"sink {sink_name} not found. Skipping event finding {finding}"
-                        )
+                        logging.error(f"sink {sink_name} not found. Skipping event finding {finding}")
                         continue
 
                     # only write the finding if is matching against the sink matchers
@@ -274,21 +274,20 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         # create deep copy, so that iterating on one sink enrichments won't affect the others
                         # Each sink has a different findings, but enrichments are shared
                         finding_copy = copy.deepcopy(finding)
-                        sink.write_finding(
-                            finding_copy, self.registry.get_sinks().platform_enabled
-                        )
-                        
+                        sink.write_finding(finding_copy, self.registry.get_sinks().platform_enabled)
+
                         sink_info = sinks_info[sink_name]
                         sink_info.type = sink.__class__.__name__
                         sink_info.findings_count += 1
 
                 except Exception:  # Failure to send to one sink shouldn't fail all
-                    logging.error(
-                        f"Failed to publish finding to sink {sink_name}", exc_info=True
-                    )
+                    logging.error(f"Failed to publish finding to sink {sink_name}", exc_info=True)
 
     def get_global_config(self) -> dict:
         return self.registry.get_playbooks().get_global_config()
+
+    def get_light_actions(self) -> List[str]:
+        return self.registry.get_light_actions()
 
     def get_telemetry(self) -> Telemetry:
         return self.registry.get_telemetry()

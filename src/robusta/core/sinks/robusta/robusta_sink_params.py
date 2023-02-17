@@ -1,7 +1,7 @@
 from pydantic.main import BaseModel
 
-from ..sink_config import SinkConfigBase
-from ..sink_base_params import SinkBaseParams
+from robusta.core.sinks.sink_base_params import SinkBaseParams
+from robusta.core.sinks.sink_config import SinkConfigBase
 
 
 class RobustaToken(BaseModel):
@@ -14,6 +14,7 @@ class RobustaToken(BaseModel):
 
 class RobustaSinkParams(SinkBaseParams):
     token: str
+    ttl_hours: int = 4380  # Time before unactive cluster data is deleted. 6 Months default.
 
 
 class RobustaSinkConfigWrapper(SinkConfigBase):

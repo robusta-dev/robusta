@@ -1,10 +1,11 @@
 import abc
 from typing import Optional, Union
+
 from pydantic import BaseModel
 
-from .event import ScheduledExecutionEvent
-from ...core.schedule.model import FixedDelayRepeat, DynamicDelayRepeat
-from ...core.playbooks.base_trigger import TriggerEvent, BaseTrigger
+from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
+from robusta.core.schedule.model import DynamicDelayRepeat, FixedDelayRepeat
+from robusta.integrations.scheduled.event import ScheduledExecutionEvent
 
 
 class ScheduledTriggerEvent(TriggerEvent):

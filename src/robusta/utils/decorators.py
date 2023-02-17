@@ -1,5 +1,6 @@
 from functools import wraps
 
+
 # from https://stackoverflow.com/a/14412901/495995
 def doublewrap(f):
     """

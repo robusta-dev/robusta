@@ -1,20 +1,19 @@
 import datetime
+import io
 import logging
 import os
 import re
+import tarfile
+import tempfile
 import time
 import traceback
-import io
-import tempfile
-import tarfile
 from typing import List, Optional
 
+from hikaru.model import Job
 from kubernetes import config
 from kubernetes.client.api import core_v1_api
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
-
-from hikaru.model import Job
 
 RUNNING_STATE = "Running"
 SUCCEEDED_STATE = "Succeeded"
@@ -27,13 +26,10 @@ try:
 except config.config_exception.ConfigException as e:
     logging.warning(f"Running without kube-config! e={e}")
 
-
 default_exec_command = ["/bin/sh", "-c"]
 
 
-def wait_until(
-    read_function, predicate_function, timeout_sec: float, backoff_wait_sec: float
-):
+def wait_until(read_function, predicate_function, timeout_sec: float, backoff_wait_sec: float):
     """
     repeatedly calls predicate_function(read_function)) until predicate_function returns True or we timeout
     return the last result of read_function() on success and raises an exception on timeout
@@ -46,7 +42,7 @@ def wait_until(
             resp = read_function()
             if predicate_function(resp):
                 return resp
-        except ApiException as e:
+        except ApiException:
             logging.error(f"failed calling read_function {traceback.format_exc()}")
 
         time.sleep(backoff_wait_sec)
@@ -71,9 +67,7 @@ def wait_until_job_complete(job: Job, timeout):
 
 
 # TODO: refactor to use wait_until function
-def wait_for_pod_status(
-    name, namespace, status: str, timeout_sec: float, backoff_wait_sec: float
-) -> str:
+def wait_for_pod_status(name, namespace, status: str, timeout_sec: float, backoff_wait_sec: float) -> str:
     pod_details = f"pod status: {name} {namespace} {status} {timeout_sec}"
     logging.debug(f"waiting for {pod_details}")
 
@@ -87,10 +81,8 @@ def wait_for_pod_status(
                 logging.debug(f"reached {pod_details}")
                 return status
 
-        except ApiException as e:
-            logging.error(
-                f"failed to get pod status {name} {namespace} {traceback.format_exc()}"
-            )
+        except ApiException:
+            logging.error(f"failed to get pod status {name} {namespace} {traceback.format_exc()}")
 
         time.sleep(backoff_wait_sec)
 
@@ -104,9 +96,7 @@ def exec_shell_command(name, shell_command: str, namespace="default", container=
     return exec_commands(name, commands, namespace, container)
 
 
-def upload_file(
-    name: str, destination: str, contents: bytes, namespace="default", container=None
-):
+def upload_file(name: str, destination: str, contents: bytes, namespace="default", container=None):
     core_v1 = core_v1_api.CoreV1Api()
     resp = stream(
         core_v1.connect_get_namespaced_pod_exec,
@@ -173,6 +163,28 @@ def get_pod_logs(
     return resp
 
 
+def list_available_services(
+    namespace="default",
+):
+    resp = None
+    try:
+        core_v1 = core_v1_api.CoreV1Api()
+        resp = core_v1.list_namespaced_service(
+            namespace,
+            _preload_content=False  # If this flag is not used, double quotes in json objects in stdout are converted
+            # by the kubernetes client to single quotes, which makes json.loads() fail.
+            # We therefore use this flag in order to get the raw bytes and decode the output
+        ).data.decode("utf-8")
+
+    except ApiException as e:
+        if e.status != 404:
+            logging.exception(f"failed to get services in {namespace} namespace")
+            resp = ""
+
+    logging.debug(f"list available services {resp}")
+    return resp
+
+
 def prepare_pod_command(cmd) -> Optional[List[str]]:
     if type(cmd) == list:
         return cmd
@@ -189,16 +201,11 @@ def exec_commands(name, exec_command, namespace="default", container=None):
     logging.debug(
         f"Executing command name: {name} command: {exec_command} namespace: {namespace} container: {container}"
     )
-    response_stdout = None
 
     # verify pod state before connecting
-    pod_status = wait_for_pod_status(
-        name, namespace, RUNNING_STATE, 90, 0.2
-    )  # TODO config
+    pod_status = wait_for_pod_status(name, namespace, RUNNING_STATE, 90, 0.2)  # TODO config
     if pod_status != RUNNING_STATE:
-        msg = (
-            f"Not running exec commands. Pod {name} {namespace} is not in running state"
-        )
+        msg = f"Not running exec commands. Pod {name} {namespace} is not in running state"
         logging.error(msg)
         return msg
 
@@ -250,10 +257,10 @@ def parse_kubernetes_datetime_with_ms(k8s_datetime: str) -> datetime.datetime:
 
 def parse_kubernetes_datetime_to_ms(k8s_datetime: str) -> float:
     """
-        for timestamps eventTime has milliseconds and firstTimestamp,lastTimestamp,creationTimestamp do not.
-        we parse the more commonly used timestamp first
+    for timestamps eventTime has milliseconds and firstTimestamp,lastTimestamp,creationTimestamp do not.
+    we parse the more commonly used timestamp first
     """
     try:
         return parse_kubernetes_datetime(k8s_datetime).timestamp() * 1000
-    except:
+    except ValueError:
         return parse_kubernetes_datetime_with_ms(k8s_datetime).timestamp() * 1000

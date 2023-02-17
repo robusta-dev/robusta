@@ -1,13 +1,13 @@
 import textwrap
-
-import requests
 from typing import List
 
-from .webhook_sink_params import WebhookSinkConfigWrapper
-from ..transformer import Transformer
-from ...reporting import HeaderBlock, ListBlock, JsonBlock, KubernetesDiffBlock, MarkdownBlock
-from ...reporting.base import Finding, BaseBlock
-from ..sink_base import SinkBase
+import requests
+
+from robusta.core.reporting import HeaderBlock, JsonBlock, KubernetesDiffBlock, ListBlock, MarkdownBlock
+from robusta.core.reporting.base import BaseBlock, Finding
+from robusta.core.sinks.sink_base import SinkBase
+from robusta.core.sinks.transformer import Transformer
+from robusta.core.sinks.webhook.webhook_sink_params import WebhookSinkConfigWrapper
 
 
 class WebhookSink(SinkBase):
@@ -23,7 +23,9 @@ class WebhookSink(SinkBase):
             message_lines.append(f"Investigate: {finding.get_investigate_uri(self.account_id, self.cluster_name)}")
 
             if finding.add_silence_url:
-                message_lines.append(f"Silence: {finding.get_prometheus_silence_url(self.cluster_name)}")
+                message_lines.append(
+                    f"Silence: {finding.get_prometheus_silence_url(self.account_id, self.cluster_name)}"
+                )
 
             for video_link in finding.video_links:
                 message_lines.append(f"{video_link.name}: {video_link.url}")

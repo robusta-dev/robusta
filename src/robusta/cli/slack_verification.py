@@ -1,13 +1,12 @@
 import traceback
 from urllib.error import URLError
+
 import typer
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 SLACK_WELCOME_MESSAGE_TITLE = ":large_green_circle: INFO - Welcome to Robusta"
-SLACK_WELCOME_MESSAGE_HEADER = (
-    "You've just signed up for Slack monitoring! "
-)
+SLACK_WELCOME_MESSAGE_HEADER = "You've just signed up for Slack monitoring! "
 SLACK_WELCOME_THANK_YOU_MESSAGE = "Thank you for using Robusta.dev"
 SLACK_WELCOME_SUPPORT_MESSAGE = (
     "If you have any questions or feedback feel free to write us at "
@@ -39,23 +38,24 @@ def verify_slack_channel(
             typer.secho(
                 f"The channel {channel_name_styled} was not found on Slack workspace {workspace}.\n"
                 f"Please verify that the channel exists.\n"
-                f"If this is a private channel, verify the Robusta app was added to the channel."
+                f"If this is a private channel, verify the Robusta app was added to the channel. "
+                # TODO: fix url in new docs
                 f"(See https://docs.robusta.dev/master/automation/sinks/slack.html#sending-robusta-notifications-to-a-private-channel)"
             )
         return False
-    except URLError as e:
+    except URLError:
         typer.secho(
-            f"SSL certificate issue. See https://docs.robusta.dev/master/common-errors.html\n"
-            f"Use --debug for more info.",
+            "SSL certificate issue. See https://docs.robusta.dev/master/common-errors.html\n"
+            "Use --debug for more info.",
             fg=typer.colors.RED,
         )
         exit(1)
-    except Exception as e:
+    except Exception:
         if debug:
             typer.secho(traceback.format_exc())
     typer.secho(
-        f"There was an unknown exception setting up Slack, use --debug for more info.\n"
-        f"Please contact support@robusta.dev",
+        "There was an unknown exception setting up Slack, use --debug for more info.\n"
+        "Please contact support@robusta.dev",
         fg=typer.colors.RED,
     )
     return False

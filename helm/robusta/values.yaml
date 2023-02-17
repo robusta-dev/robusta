@@ -1,6 +1,8 @@
 # most of this file is documented at https://docs.robusta.dev/master/user-guide/configuration.html
 # if you have any questions, feel free to ask via github issues or Slack (see link on robusta.dev)
 
+# NOTE: Do not use this file to install Robusta. It has missing values that need to be filled in. See the installation instructions instead https://docs.robusta.dev/master/installation.html
+
 # playbook repositories
 playbookRepos: {}
 
@@ -11,6 +13,8 @@ sinksConfig: []
 clusterName: ""
 clusterZone: ""
 
+automountServiceAccountToken: true
+
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config
 globalConfig:
   grafana_url: ""
@@ -19,6 +23,38 @@ globalConfig:
   prometheus_url: ""
   account_id: ""
   signing_key: ""
+
+# safe actions to enable authenticated users to run
+lightActions:
+- related_pods
+- prometheus_enricher
+- add_silence
+- delete_pod
+- delete_silence
+- get_silences
+- logs_enricher
+- pod_events_enricher
+- deployment_events_enricher
+- job_events_enricher
+- job_pod_enricher
+- get_resource_yaml
+- node_cpu_enricher
+- node_disk_analyzer
+- node_running_pods_enricher
+- node_allocatable_resources_enricher
+- node_status_enricher
+- node_graph_enricher
+- oomkilled_container_graph_enricher
+- pod_oom_killer_enricher
+- oom_killer_enricher
+- volume_analysis
+- python_profiler
+- pod_ps
+- python_memory
+- debugger_stack_trace
+- python_process_inspector
+- prometheus_alert
+- create_pvc_snapshot
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
@@ -95,6 +131,12 @@ builtinPlaybooks:
   - external_video_enricher:
       url: https://bit.ly/memory-overcommit
       name: Memory Overcommited
+
+- triggers:
+  - on_prometheus_alert:
+      alert_name: TargetDown
+  actions:
+  - target_down_dns_enricher: {}
 
 - triggers:
   - on_prometheus_alert:
@@ -199,10 +241,21 @@ platformPlaybooks:
     - resource_babysitter: {}
   sinks:
     - "robusta_ui_sink"
+- triggers:
+  - on_job_failure: {}
+  actions:
+  - create_finding:
+      aggregation_key: "job_failure"
+      title: "Job Failed"
+  - job_info_enricher: {}
+  - job_events_enricher: {}
+  - job_pod_enricher: {}
+  sinks:
+    - "robusta_ui_sink"
 
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.0
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.1
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:
@@ -213,6 +266,7 @@ kubewatch:
       cpu: ~
   tolerations: []
   annotations: {}
+  nodeSelector: ~
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -244,6 +298,7 @@ runner:
   additional_env_froms: []
   tolerations: []
   annotations: {}
+  nodeSelector: ~
 
 kube-prometheus-stack:
   alertmanager:
@@ -312,5 +367,3 @@ kube-prometheus-stack:
         cpu: 10m
 
 rsa: ~
-
-

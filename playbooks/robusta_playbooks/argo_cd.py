@@ -1,6 +1,15 @@
 from pydantic import SecretStr
 
-from robusta.api import *
+from robusta.api import (
+    ActionParams,
+    ArgoCDClient,
+    ExecutionBaseEvent,
+    Finding,
+    FindingType,
+    MarkdownBlock,
+    RateLimiter,
+    action,
+)
 
 
 class ArgoBaseParams(ActionParams):
@@ -11,6 +20,7 @@ class ArgoBaseParams(ActionParams):
 
     :example argo_url: https://my-argo-cd.com
     """
+
     argo_url: str
     argo_token: SecretStr
     argo_verify_server_cert: bool = True
@@ -21,6 +31,7 @@ class ArgoAppParams(ArgoBaseParams):
     :var argo_app_name: Argo CD application that needs syncing.
     :var rate_limit_seconds: this playbook is rate limited. Defaults to 1800 seconds.
     """
+
     argo_app_name: str
     rate_limit_seconds: int = 1800
 

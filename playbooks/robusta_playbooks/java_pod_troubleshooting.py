@@ -1,6 +1,24 @@
-from robusta.api import *
-from typing import List
+import logging
 import traceback
+from typing import Callable, List
+
+from robusta.api import (
+    CallbackBlock,
+    CallbackChoice,
+    FileBlock,
+    Finding,
+    FindingSource,
+    FindingType,
+    MarkdownBlock,
+    PodEvent,
+    PodFindingSubject,
+    ProcessFinder,
+    ProcessParams,
+    ProcessType,
+    RobustaPod,
+    TableBlock,
+    action,
+)
 
 
 class JavaParams(ProcessParams):
@@ -8,7 +26,7 @@ class JavaParams(ProcessParams):
     :var jtk_image: the java-toolkit image to use for debugging
     """
 
-    jtk_image: str = None
+    jtk_image: str = None  # type: ignore
 
 
 @action
@@ -21,7 +39,7 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
         logging.info(f"Java debugging - pod not found for event: {event}")
         return
     if not params.interactive:
-        logging.info(f"unable to support non interactive jdk events")
+        logging.info("unable to support non interactive jdk events")
         return
 
     finding = Finding(
@@ -34,7 +52,7 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
     )
     process_finder = ProcessFinder(pod, params, ProcessType.JAVA)
     if not process_finder.matching_processes:
-        ERROR_MESSAGE = f"No relevant processes found for java debugging."
+        ERROR_MESSAGE = "No relevant processes found for java debugging."
         logging.info(ERROR_MESSAGE)
         finding.add_enrichment([MarkdownBlock(ERROR_MESSAGE)])
         event.add_finding(finding)
@@ -43,17 +61,12 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
     finding.add_enrichment(
         [
             TableBlock(
-                [
-                    [proc.pid, proc.exe, " ".join(proc.cmdline)]
-                    for proc in process_finder.matching_processes
-                ],
+                [[proc.pid, proc.exe, " ".join(proc.cmdline)] for proc in process_finder.matching_processes],
                 ["pid", "exe", "cmdline"],
             )
         ]
     )
-    finding = add_jdk_choices_to_finding(
-        finding, params, process_finder.get_pids(), pod
-    )
+    finding = add_jdk_choices_to_finding(finding, params, process_finder.get_pids(), pod)
     event.add_finding(finding)
 
 
@@ -103,13 +116,8 @@ def run_jdk_command_on_pid(
 
     if not params.pid:
         process_finder = ProcessFinder(pod, params, ProcessType.JAVA)
-        process = process_finder.get_match_or_report_error(
-            finding, cmd, retrigger_action, java_process_inspector
-        )
+        process = process_finder.get_match_or_report_error(finding, cmd, retrigger_action, java_process_inspector)
         if process is None:
-            error_message = f"{aggregation_key} - pid not found for event: {event}"
-            logging.info(error_message)
-            finding.add_enrichment([MarkdownBlock(error_message)])
             event.add_finding(finding)
             return
         params.pid = process.pid
@@ -138,15 +146,11 @@ def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod, override_jtk_image: 
             java_toolkit_cmd,
             override_jtk_image=override_jtk_image,
         )
-    return RobustaPod.exec_in_java_pod(
-        pod.metadata.name, pod.spec.nodeName, java_toolkit_cmd
-    )
+    return RobustaPod.exec_in_java_pod(pod.metadata.name, pod.spec.nodeName, java_toolkit_cmd)
 
 
-def add_jdk_choices_to_finding(
-    finding: Finding, params: JavaParams, pids: List[int], pod: RobustaPod
-) -> Finding:
-    finding.add_enrichment([MarkdownBlock(f"Please select a Java troubleshooting choice:")])
+def add_jdk_choices_to_finding(finding: Finding, params: JavaParams, pids: List[int], pod: RobustaPod) -> Finding:
+    finding.add_enrichment([MarkdownBlock("Please select a Java troubleshooting choice:")])
     choices = {}
     for pid in pids:
         logging.info(f"jdk_choices_in_finding_for_pid {pid}")
@@ -166,9 +170,7 @@ def add_jdk_choices_to_finding(
     finding.add_enrichment(
         [
             CallbackBlock(choices),
-            MarkdownBlock(
-                "*After clicking a button please wait up to 120 seconds for a response*"
-            ),
+            MarkdownBlock("*After clicking a button please wait up to 120 seconds for a response*"),
         ]
     )
     return finding

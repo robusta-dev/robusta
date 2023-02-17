@@ -1,22 +1,27 @@
-from typing import List, Optional, Union
-from pydantic import SecretStr, BaseModel
-from ...utils.documented_pydantic import DocumentedModel
 from enum import Enum, auto
+from typing import List, Optional, Union
+
+from pydantic import BaseModel, SecretStr
+
+from robusta.utils.documented_pydantic import DocumentedModel
 
 
 class ChartValuesFormat(Enum):
     """
     Format option for chart rendering
     """
+
     Plain = auto()
     Bytes = auto()
     Percentage = auto()
+    CPUUsage = auto()
 
 
 class ResourceChartItemType(Enum):
     """
     Item selection for Alert resource enricher
     """
+
     Pod = auto()
     Node = auto()
     Container = auto()
@@ -26,6 +31,7 @@ class ResourceChartResourceType(Enum):
     """
     Resource selection for resource enricher(s)
     """
+
     CPU = auto()
     Memory = auto()
     Disk = auto()
@@ -35,7 +41,11 @@ class ActionParams(DocumentedModel):
     """
     Base class for all Action parameter classes.
     """
-
+    def post_initialization(self):
+        """
+        This function can be used to run post initialization logic on the action params
+        """
+        pass
     pass
 
 
@@ -77,17 +87,21 @@ class BashParams(ActionParams):
 class PrometheusParams(ActionParams):
     """
     :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
+    :var prometheus_auth: Prometheus auth header to be used in Authorization header. If omitted, we will not add any auth header
 
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+    :example prometheus_auth: Basic YWRtaW46cGFzc3dvcmQ=
     """
 
-    prometheus_url: str = None
+    prometheus_url: Optional[str] = None
+    prometheus_auth: Optional[SecretStr] = None
 
 
 class PrometheusDuration(BaseModel):
     """
     :var duration_minutes: the amount of minutes back you want results for
     """
+
     duration_minutes: int
 
 
@@ -99,6 +113,7 @@ class PrometheusDateRange(BaseModel):
 
     :example starts_at: '2022-09-14 09:40:59 UTC'
     """
+
     starts_at: str
     ends_at: str
 
@@ -109,6 +124,7 @@ class PrometheusQueryParams(PrometheusParams):
     :var duration: the duration of the query
 
     """
+
     promql_query: str
     duration: Union[PrometheusDateRange, PrometheusDuration]
 
@@ -136,7 +152,7 @@ class CustomGraphEnricherParams(PrometheusParams):
     promql_query: str
     graph_title: Optional[str] = None
     graph_duration_minutes: int = 60
-    chart_values_format: str = 'Plain'
+    chart_values_format: str = "Plain"
 
 
 class ResourceGraphEnricherParams(PrometheusParams):
@@ -146,6 +162,7 @@ class ResourceGraphEnricherParams(PrometheusParams):
 
     :example resource_type: Memory
     """
+
     resource_type: str
     graph_duration_minutes: int = 60
 
@@ -154,6 +171,7 @@ class PodResourceGraphEnricherParams(ResourceGraphEnricherParams):
     """
     :var display_limits: displays on the graph the pod limit for the resource if true (only CPU and Memory are supported)
     """
+
     display_limits: bool = False
 
 
@@ -162,6 +180,7 @@ class AlertResourceGraphEnricherParams(ResourceGraphEnricherParams):
     :var item_type: one of: Pod, Node (see ResourceChartItemType)
     :example item_type: Pod
     """
+
     item_type: str
 
 

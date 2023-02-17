@@ -1,19 +1,16 @@
-from typing import Optional, List
-from hikaru.model import EventList, Event
+from typing import List, Optional
 
-from ..reporting import TableBlock
-from ..reporting.custom_rendering import RendererType
-from ...integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
+from hikaru.model import Event, EventList
+
+from robusta.core.reporting import TableBlock
+from robusta.core.reporting.custom_rendering import RendererType
+from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
 
 
-def filter_event(
-    ev: Event, name_substring_filter: str, included_types: Optional[List[str]]
-) -> bool:
+def filter_event(ev: Event, name_substring_filter: str, included_types: Optional[List[str]]) -> bool:
     if name_substring_filter is not None and name_substring_filter not in ev.involvedObject.name:
         return False
-    if included_types is not None and ev.type.lower() not in [
-        t.lower() for t in included_types
-    ]:
+    if included_types is not None and ev.type.lower() not in [t.lower() for t in included_types]:
         return False
     return True
 
@@ -33,18 +30,12 @@ def get_resource_events_table(
     if namespace:
         field_selector += f",involvedObject.namespace={namespace}"
 
-    event_list: EventList = Event.listEventForAllNamespaces(
-        field_selector=field_selector
-    ).obj
+    event_list: EventList = Event.listEventForAllNamespaces(field_selector=field_selector).obj
     if not event_list.items:
         return
 
     headers = ["reason", "type", "time", "message"]
-    filtered_events = [
-        ev
-        for ev in event_list.items
-        if filter_event(ev, name_substring, included_types)
-    ]
+    filtered_events = [ev for ev in event_list.items if filter_event(ev, name_substring, included_types)]
     if not filtered_events:
         return
 
@@ -56,9 +47,7 @@ def get_resource_events_table(
         [
             event.reason,
             event.type,
-            parse_kubernetes_datetime_to_ms(get_event_timestamp(event))
-            if get_event_timestamp(event)
-            else 0,
+            parse_kubernetes_datetime_to_ms(get_event_timestamp(event)) if get_event_timestamp(event) else 0,
             event.message,
         ]
         for event in sorted_events

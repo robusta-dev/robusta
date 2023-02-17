@@ -1,4 +1,6 @@
-from robusta.api import *
+import logging
+
+from robusta.api import ActionParams, ExecutionBaseEvent, PodEvent, RobustaPod, action
 
 
 @action
@@ -17,7 +19,7 @@ def test_pod_orm(event: PodEvent):
 
     logging.info(f"deleting pod {pod.metadata.name}")
     RobustaPod.deleteNamespacedPod(pod.metadata.name, pod.metadata.namespace)
-    logging.info(f"pod deleted")
+    logging.info("pod deleted")
 
 
 class EchoParams(ActionParams):

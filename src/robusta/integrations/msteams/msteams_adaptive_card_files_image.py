@@ -1,18 +1,15 @@
-import tempfile
 import base64
 import os
+import tempfile
 import uuid
-from PIL import Image
+from typing import List
 
-from ...core.reporting.blocks import *
-from .msteams_elements.msteams_images import MsTeamsImages
-from cairosvg import svg2png
-
-from ...core.reporting.utils import is_image, file_suffix_match, JPG_SUFFIX, PNG_SUFFIX
+from robusta.core.reporting.blocks import FileBlock
+from robusta.core.reporting.utils import JPG_SUFFIX, PNG_SUFFIX, file_suffix_match, is_image
+from robusta.integrations.msteams.msteams_elements.msteams_images import MsTeamsImages
 
 
 class MsTeamsAdaptiveCardFilesImage:
-
     @classmethod
     def create_files_for_presentation(cls, file_blocks: List[FileBlock]) -> map:
         encoded_images = []
@@ -41,20 +38,22 @@ class MsTeamsAdaptiveCardFilesImage:
     @classmethod
     def __jpg_convert_bytes_to_base_64_url(cls, jpg_bytes: bytes):
         b64_string = base64.b64encode(jpg_bytes).decode("utf-8")
-        return 'data:image/jpeg;base64,{0}'.format(b64_string)
+        return "data:image/jpeg;base64,{0}".format(b64_string)
 
     # msteams cant read parsing of url to 'data:image/png;base64,...
     @classmethod
-    def __png_convert_bytes_to_base_64_url(cls, png_bytes : bytes):
+    def __png_convert_bytes_to_base_64_url(cls, png_bytes: bytes):
+        from PIL import Image
+
         png_file_path = cls.__get_tmp_file_path() + PNG_SUFFIX
         jpg_file_path = cls.__get_tmp_file_path() + JPG_SUFFIX
-        with open(png_file_path, 'wb') as f:
+        with open(png_file_path, "wb") as f:
             f.write(png_bytes)
 
         im = Image.open(png_file_path)
-        rgb_im = im.convert('RGB')
+        rgb_im = im.convert("RGB")
         rgb_im.save(jpg_file_path)
-        with open(jpg_file_path, 'rb') as f:
+        with open(jpg_file_path, "rb") as f:
             jpg_bytes = f.read()
 
         os.remove(png_file_path)
@@ -64,5 +63,7 @@ class MsTeamsAdaptiveCardFilesImage:
 
     # msteams cant read parsing of url to svg image
     @classmethod
-    def __svg_convert_bytes_to_jpg(cls, svg_bytes : bytes):
+    def __svg_convert_bytes_to_jpg(cls, svg_bytes: bytes):
+        from cairosvg import svg2png
+
         return cls.__png_convert_bytes_to_base_64_url(svg2png(bytestring=svg_bytes))

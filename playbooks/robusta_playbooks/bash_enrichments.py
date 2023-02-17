@@ -1,4 +1,7 @@
-from robusta.api import *
+import logging
+from typing import List
+
+from robusta.api import BaseBlock, BashParams, MarkdownBlock, NodeEvent, PodEvent, RobustaPod, action
 
 
 @action
@@ -31,9 +34,7 @@ def node_bash_enricher(event: NodeEvent, params: BashParams):
         return
 
     block_list: List[BaseBlock] = []
-    exec_result = RobustaPod.exec_in_debugger_pod(
-        "node-bash-pod", node.metadata.name, params.bash_command
-    )
+    exec_result = RobustaPod.exec_in_debugger_pod("node-bash-pod", node.metadata.name, params.bash_command)
     block_list.append(MarkdownBlock(f"Command results for *{params.bash_command}:*"))
     block_list.append(MarkdownBlock(exec_result))
     event.add_enrichment(block_list)

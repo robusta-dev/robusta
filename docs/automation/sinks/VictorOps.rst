@@ -13,7 +13,7 @@ Configuring the VictorOps sink
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
             - victorops_sink:
                 name: main_victorops_sink
                 url: <REST endpoint> # e.g. https://alert.victorops.com/integrations/generic/20131114/alert/4a6a87eb-fca9-4117-931a-c842277ea90a/$routing_key

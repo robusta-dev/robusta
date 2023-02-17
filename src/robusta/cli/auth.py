@@ -1,29 +1,32 @@
 import base64
+import re
 import subprocess
 import traceback
 import uuid
 from typing import Optional
+
 import click_spinner
-from dpath.util import get
 import requests
 import typer
 import yaml
-import re
-from cryptography.hazmat.primitives.serialization import Encoding, PrivateFormat, PublicFormat, NoEncryption
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat, PublicFormat
+from dpath.util import get
 from pydantic import BaseModel
 
-from .backend_profile import backend_profile
-from .playbooks_cmd import NAMESPACE_EXPLANATION, get_playbooks_config
-from .utils import namespace_to_kubectl, exec_in_robusta_runner_output
+from robusta.cli.backend_profile import backend_profile
+from robusta.cli.playbooks_cmd import NAMESPACE_EXPLANATION, get_playbooks_config
+from robusta.cli.utils import exec_in_robusta_runner_output, namespace_to_kubectl
 
 AUTH_SECRET_NAME = "robusta-auth-config-secret"
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 
 
 class RSAKeyPair(BaseModel):
-    prv: str
-    pub: str
+    prv: str = None
+    pub: str = None
+    private: str = None
+    public: str = None
 
 
 def gen_rsa_pair() -> RSAKeyPair:
@@ -35,15 +38,10 @@ def gen_rsa_pair() -> RSAKeyPair:
 
     # get private key in PEM container format
     pem = key.private_bytes(
-        encoding=Encoding.PEM,
-        format=PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=NoEncryption()
+        encoding=Encoding.PEM, format=PrivateFormat.TraditionalOpenSSL, encryption_algorithm=NoEncryption()
     )
 
-    return RSAKeyPair(
-        pub=public_key.decode('utf-8'),
-        prv=pem.decode('utf-8')
-    )
+    return RSAKeyPair(public=base64.b64encode(public_key), private=base64.b64encode(pem))
 
 
 def get_existing_auth_config(namespace: str) -> Optional[RSAKeyPair]:
@@ -58,7 +56,7 @@ def get_existing_auth_config(namespace: str) -> Optional[RSAKeyPair]:
     auth_secret = yaml.safe_load(secret_content)
     return RSAKeyPair(
         prv=base64.b64decode(auth_secret["data"]["prv"]).decode(),
-        pub=base64.b64decode(auth_secret["data"]["pub"]).decode()
+        pub=base64.b64decode(auth_secret["data"]["pub"]).decode(),
     )
 
 
@@ -78,14 +76,14 @@ def store_server_token(token_details: TokenDetails, debug: bool = False) -> bool
             typer.secho(f"Failed to store server token. status-code {response.status_code} text {response.text}")
 
         return response.status_code == 201
-    except Exception as e:
+    except Exception:
         if debug:
             typer.secho(f"Error trying to store server token. {traceback.format_exc()}")
         return False
 
 
 def _get_signing_key_from_env_variable(namespace: Optional[str], env_var_name: str) -> str:
-    return str(exec_in_robusta_runner_output(f'echo "${env_var_name}"', namespace), 'utf-8').strip()
+    return str(exec_in_robusta_runner_output(f'echo "${env_var_name}"', namespace), "utf-8").strip()
 
 
 @app.command(name="web-connect")
@@ -95,10 +93,7 @@ def gen_token(
         ...,
         help="Robusta account id",
     ),
-    user_id: str = typer.Option(
-        ...,
-        help="User id for which the token is created",
-    ),
+    user_id: str = typer.Option(..., help="User id for which the token is created"),
     session_token: str = typer.Option(
         ...,
         help="User session token. Created for an authenticated user via the Robusta UI",
@@ -115,8 +110,11 @@ def gen_token(
         auth_config = get_existing_auth_config(namespace)
 
     if not auth_config:
-        typer.secho("\nRSA auth isn't configured. "
-                    "Please update Robusta and run `robusta update-config` to configure it. Aborting!", fg="red")
+        typer.secho(
+            "\nRSA auth isn't configured. "
+            "Please update Robusta and run `robusta update-config` to configure it. Aborting!",
+            fg="red",
+        )
         return
 
     playbooks_config = get_playbooks_config(namespace)
@@ -138,8 +136,11 @@ def gen_token(
                 return
         signing_key_uuid = uuid.UUID(signing_key)
     except Exception:
-        typer.secho("Bad format for signing_key. Please run `robusta update-config` to generate a new valid"
-                    " signing_key for your account.", fg="red")
+        typer.secho(
+            "Bad format for signing_key. Please run `robusta update-config` to generate a new valid"
+            " signing_key for your account.",
+            fg="red",
+        )
         return
 
     client_enc_key = uuid.uuid4()
@@ -161,5 +162,5 @@ def gen_token(
     # client response is the same, only with a different enc_key
     token_response.enc_key = str(client_enc_key)
 
-    typer.secho(f"Token created successfully. Submit it in the Robusta UI", fg="green")
+    typer.secho("Token created successfully. Submit it in the Robusta UI", fg="green")
     typer.secho(base64.b64encode(token_response.json(exclude={"session_token"}).encode("utf-8")).decode())

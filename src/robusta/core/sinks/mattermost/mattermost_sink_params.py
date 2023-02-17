@@ -1,8 +1,10 @@
-from pydantic import validator
+from typing import Optional
 from urllib.parse import urlparse
 
-from ..sink_base_params import SinkBaseParams
-from ..sink_config import SinkConfigBase
+from pydantic import validator
+
+from robusta.core.sinks.sink_base_params import SinkBaseParams
+from robusta.core.sinks.sink_config import SinkConfigBase
 
 
 class MattermostSinkParams(SinkBaseParams):
@@ -10,6 +12,7 @@ class MattermostSinkParams(SinkBaseParams):
     token: str
     token_id: str
     channel: str
+    team: Optional[str]
 
     @validator("url")
     def set_http_schema(cls, url):

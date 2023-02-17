@@ -51,7 +51,7 @@ Installing the cli
         .. admonition:: Common Errors
             :class: warning
 
-            * Docker daemon is required. 
+            * Docker daemon is required.
 
 Using the cli
 ---------------------
@@ -97,11 +97,10 @@ You can view additional commands with ``robusta --help``.
 
 These two commands are useful for changing Robusta configurations without doing a Helm re-deploy:
 
-``robusta edit-config``
+``robusta playbooks edit-config``
     Bypass helm and edit Robusta's configuration directly
 
 ``robusta playbooks configure``
     Bypass helm and push a new Robusta configuration
 
 .. warning:: Changes made by these commands will be overridden by Helm next time it updates your cluster. Furthermore, the internal Robusta configuration file has a slightly different format than the Helm values.
-

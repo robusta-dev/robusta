@@ -1,6 +1,6 @@
 from typing import List
 
-from .msteams_base import MsTeamsBase
+from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
 
 
 class MsTeamsCard(MsTeamsBase):
@@ -9,21 +9,12 @@ class MsTeamsCard(MsTeamsBase):
             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
             "type": "AdaptiveCard",
             "version": "1.2",
-            "msTeams": {
-                "width": "full"
-            },
-            "body": [elem.get_map_value() for elem in elements]
+            "msTeams": {"width": "full"},
+            "body": [elem.get_map_value() for elem in elements],
         }
 
-        attachment = {
-            "contentType": "application/vnd.microsoft.card.adaptive",
-            "contentUrl": None,
-            "content": content
-        }
+        attachment = {"contentType": "application/vnd.microsoft.card.adaptive", "contentUrl": None, "content": content}
 
-        block = {
-            "type": "message",
-            "attachments": [attachment]
-        }
+        block = {"type": "message", "attachments": [attachment]}
 
         super().__init__(block)

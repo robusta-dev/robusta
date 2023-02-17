@@ -1,15 +1,31 @@
 import re
 import urllib.parse
-
-import markdown2
 from typing import List, Optional
 
-from ...core.reporting import MarkdownBlock, BaseBlock, DividerBlock, JsonBlock, KubernetesDiffBlock, HeaderBlock, \
-    ListBlock, TableBlock, tabulate
+import markdown2
+
+try:
+    from tabulate import tabulate
+except ImportError:
+
+    def tabulate(*args, **kwargs):
+        raise ImportError("Please install tabulate to use the TableBlock")
+
+
+from robusta.core.reporting import (
+    BaseBlock,
+    DividerBlock,
+    FileBlock,
+    HeaderBlock,
+    JsonBlock,
+    KubernetesDiffBlock,
+    ListBlock,
+    MarkdownBlock,
+    TableBlock,
+)
 
 
 class Transformer:
-
     @staticmethod
     def apply_length_limit(msg: str, max_length: int, truncator: Optional[str] = None) -> str:
         """
@@ -45,14 +61,7 @@ class Transformer:
 
         divider = ":arrow_right:" if use_emoji_sign else "==>"
         _blocks = []
-        _blocks.extend(
-            ListBlock(
-                [
-                    f"*{d.formatted_path}*: {d.other_value} {divider} {d.value}"
-                    for d in block.diffs
-                ]
-            )
-        )
+        _blocks.extend(ListBlock([f"*{d.formatted_path}*: {d.other_value} {divider} {d.value}" for d in block.diffs]))
 
         return _blocks
 
@@ -62,9 +71,7 @@ class Transformer:
         matches = re.findall(regex, markdown_data)
         links = []
         if matches:
-            links = [
-                match for match in matches if len(match) > 1
-            ]  # filter out illegal matches
+            links = [match for match in matches if len(match) > 1]  # filter out illegal matches
         return links
 
     @staticmethod
@@ -91,7 +98,7 @@ class Transformer:
         for link in mrkdwn_links:
             link_content = link[1:-1]
             link_parts = link_content.split("|")
-            mrkdwn_text = mrkdwn_text.replace(link, f"<a href=\"{link_parts[0]}\">{link_parts[1]}</a>")
+            mrkdwn_text = mrkdwn_text.replace(link, f'<a href="{link_parts[0]}">{link_parts[1]}</a>')
 
         # replace slack markdown bold: from *bold text* to <b>bold text<b>  (markdown2 converts this to italic)
         mrkdwn_text = re.sub(r"\*([^\*]*)\*", r"<b>\1</b>", mrkdwn_text)
@@ -124,9 +131,7 @@ class Transformer:
             elif isinstance(block, TableBlock):
                 if block.table_name:
                     lines.append(cls.__markdown_to_html(block.table_name))
-                lines.append(
-                    tabulate(block.render_rows(), headers=block.headers, tablefmt="html").replace("\n", "")
-                )
+                lines.append(tabulate(block.render_rows(), headers=block.headers, tablefmt="html").replace("\n", ""))
         return "\n".join(lines)
 
     @classmethod
@@ -143,9 +148,7 @@ class Transformer:
                 lines.append(block.json_str)
             elif isinstance(block, KubernetesDiffBlock):
                 for diff in block.diffs:
-                    lines.append(
-                        f"**{'.'.join(diff.path)}**: {diff.other_value} ==> {diff.value}"
-                    )
+                    lines.append(f"**{'.'.join(diff.path)}**: {diff.other_value} ==> {diff.value}")
             elif isinstance(block, HeaderBlock):
                 lines.append(f"**{block.text}**")
             elif isinstance(block, ListBlock):
@@ -154,7 +157,17 @@ class Transformer:
                 if block.table_name:
                     lines.append(cls.to_github_markdown(block.table_name, False))
                 rendered_rows = block.render_rows()
-                lines.append(
-                    tabulate(rendered_rows, headers=block.headers, tablefmt="presto")
-                )
+                lines.append(tabulate(rendered_rows, headers=block.headers, tablefmt="presto"))
         return "\n".join(lines)
+
+    @staticmethod
+    def tableblock_to_fileblocks(blocks: List[BaseBlock], column_limit: int) -> List[FileBlock]:
+        file_blocks: List[FileBlock] = []
+        for table_block in [b for b in blocks if isinstance(b, TableBlock)]:
+            if len(table_block.headers) >= column_limit:
+                table_name = table_block.table_name if table_block.table_name else "data"
+                table_content = table_block.to_table_string(table_max_width=250)  # bigger max width for file
+                file_blocks.append(FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8")))
+                blocks.remove(table_block)
+
+        return file_blocks

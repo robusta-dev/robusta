@@ -1,4 +1,4 @@
-Webhook 
+Webhook
 ###########
 
 Robusta can send playbooks results to a webhook.
@@ -7,11 +7,11 @@ Robusta can send playbooks results to a webhook.
 
     .. code-block:: yaml
 
-        sinks_config:
+        sinksConfig:
         - webhook_sink:
             name: webhook_sink
             url: "https://my-webhook-service.com/robusta-alerts"
-            
+
 Save the file and run
 
 .. code-block:: bash

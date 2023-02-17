@@ -1,7 +1,8 @@
 import logging
 import time
-from threading import Thread, Lock
-from queue import Queue, Full
+from queue import Full, Queue
+from threading import Thread
+
 import prometheus_client
 
 from robusta.core.model.env_vars import INCOMING_EVENTS_QUEUE_MAX_SIZE
@@ -9,15 +10,11 @@ from robusta.core.model.env_vars import INCOMING_EVENTS_QUEUE_MAX_SIZE
 
 class QueueMetrics:
     def __init__(self):
-        self.queued = prometheus_client.Counter(
-            "queued", "Number of queued events", labelnames=("queue_name",)
-        )
+        self.queued = prometheus_client.Counter("queued", "Number of queued events", labelnames=("queue_name",))
         self.processed = prometheus_client.Counter(
             "processed", "Number of processed events", labelnames=("queue_name",)
         )
-        self.rejected = prometheus_client.Counter(
-            "rejected", "Number of rejected events", labelnames=("queue_name",)
-        )
+        self.rejected = prometheus_client.Counter("rejected", "Number of rejected events", labelnames=("queue_name",))
         self.total_process_time = prometheus_client.Summary(
             "total_process_time",
             "Total process time (seconds)",
@@ -38,9 +35,7 @@ class QueueMetrics:
 class TaskQueue(Queue):
     def __init__(self, name: str, num_workers, metrics: QueueMetrics):
         Queue.__init__(self, maxsize=INCOMING_EVENTS_QUEUE_MAX_SIZE)
-        logging.info(
-            f"Initialized task queue: {num_workers} workers. Max size {INCOMING_EVENTS_QUEUE_MAX_SIZE}"
-        )
+        logging.info(f"Initialized task queue: {num_workers} workers. Max size {INCOMING_EVENTS_QUEUE_MAX_SIZE}")
         self.name = name
         self.num_workers = num_workers
         self.metrics = metrics

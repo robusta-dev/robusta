@@ -7,6 +7,15 @@ packages = [
     { include = "robusta", from = "src"},
 ]
 
+[tool.black]
+line-length = 120
+target-version = ['py37']
+
+[tool.isort]
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+
 [tool.poetry.scripts]
 robusta = "robusta.cli.main:app"
 
@@ -24,7 +33,6 @@ tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.7.0" }
 Flask = { version = "^1.1.2", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
-manhole =  { version = "^1.8.0", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
 better-exceptions = { version =  "^0.3.3", optional = true }
 CairoSVG = { version = "^2.5.2", optional = true }
@@ -50,6 +58,7 @@ webexteamssdk = "^1.6.1"
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
 dulwich =  { version = "0.20.28", optional = true }
 cryptography = "^36.0.0"
+PyJWT = "2.4.0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
@@ -73,12 +82,24 @@ tinycss = "^0.4"
 rsa = "^4.8"
 sphinxcontrib-details-directive = "^0.1.0"
 sphinx-immaterial = { git = "https://github.com/robusta-dev/robusta-immaterial.git" }
+flake8 = "5.0.4"
+black = "21.5b2"
+mypy = "0.991"
+isort = "5.10.1"
+absolufy-imports = "^0.3.1"
+types-pytz = "^2022.6.0.1"
+types-requests = "^2.28.11.5"
+types-cachetools = "^5.2.1"
+types-PyYAML = "^6.0.0"
+types-click-spinner = "^0.1.10"
+types-toml = "^0.10.2"
+types-tabulate = "^0.8.10"
 
 # There is a bug in jinga2 and markupsafe (explicitly markupsafe 2.1.1)
 markupsafe = "2.0.1"
 
 [tool.poetry.extras]
-all = ["Flask", "grafana-api", "manhole", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk", "poetry-core"]
+all = ["Flask", "grafana-api", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk", "poetry-core"]
 
 [tool.poetry.group.dev.dependencies]
 sphinx-jinja = "^2.0.2"
