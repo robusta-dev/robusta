@@ -186,10 +186,7 @@ def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
     )
 
 
-<<<<<<< master
-=======
 SilenceOperation = Enum("SilenceOperation", "CREATE DELETE LIST")
->>>>>>> replacing silence with "name silence"
 
 
 def _gen_headers(params: BaseSilenceParams) -> Dict:
