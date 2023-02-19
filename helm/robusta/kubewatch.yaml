@@ -1,7 +1,7 @@
 namespace: ""
 resource:
   deployment: true
-  replicationcontroller: true
+  replicationcontroller: false  # 0.10.12 disabled because not supported on the runner
   replicaset: true
   daemonset: true
   statefulset: true
