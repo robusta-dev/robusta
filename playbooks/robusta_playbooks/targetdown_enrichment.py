@@ -17,7 +17,7 @@ def has_dns_deployment(namespace: str, job: str) -> bool:
     return False
 
 
-def auto_silence_target_down(alert: PrometheusKubernetesAlert, job: str, reason_for_silence: str):
+def silence_target_down(alert: PrometheusKubernetesAlert, job: str, reason_for_silence: str):
     comment = f"Misconfigured target {job} silenced"
     logging.info(f"{comment}, reason: {reason_for_silence}")
     alert.stop_processing = True
@@ -50,12 +50,12 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert):
     # wrong dns is set up i.e. coredns when should be kube-dns
     if has_dns_deployment(alert.label_namespace, other_dns):
         silence_reason = f"{ other_dns} should be configured instead"
-        auto_silence_target_down(alert, job, silence_reason)
+        silence_target_down(alert, job, silence_reason)
 
     # the service does not exist
     if not service_found:
         silence_reason = f"Service {service} not found."
-        auto_silence_target_down(alert, job, silence_reason)
+        silence_target_down(alert, job, silence_reason)
     else:
         # We cannot reach out the service, so alert should be risen
         pass
