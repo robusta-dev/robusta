@@ -76,6 +76,11 @@ priorityBuiltinPlaybooks:
   actions:
   - name_silencer:
       names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
+- triggers:
+  - on_prometheus_alert:
+      alert_name: TargetDown
+  actions:
+  - target_down_dns_enricher: {}
 
 # custom user playbooks
 customPlaybooks: []
@@ -131,14 +136,6 @@ builtinPlaybooks:
   - external_video_enricher:
       url: https://bit.ly/memory-overcommit
       name: Memory Overcommited
-
-- triggers:
-  - on_prometheus_alert:
-      alert_name: TargetDown
-  actions:
-  - default_enricher: {}
-  - target_down_dns_enricher: {}
-  stop: true
 
 - triggers:
   - on_prometheus_alert:
@@ -289,7 +286,6 @@ runner:
   log_level: INFO
   sentry_dsn: https://53b627690db14de7b02095407596fa16@o1120648.ingest.sentry.io/6156573
   sendAdditionalTelemetry: false
-  autoSilenceAlerts: true
   certificate: "" # base64 encoded
   resources:
     requests:

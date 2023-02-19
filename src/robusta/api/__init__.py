@@ -1,13 +1,10 @@
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.core.model.base_params import (
     ActionParams,
-    AddSilenceParams,
     AlertResourceGraphEnricherParams,
-    BaseSilenceParams,
     BashParams,
     ChartValuesFormat,
     CustomGraphEnricherParams,
-    DeleteSilenceParams,
     EventEnricherParams,
     FindingKeyParams,
     GrafanaAnnotationParams,
@@ -22,13 +19,11 @@ from robusta.core.model.base_params import (
     ResourceChartItemType,
     ResourceChartResourceType,
     ResourceGraphEnricherParams,
-    SilenceMatcher,
     TimedPrometheusParams,
     VideoEnricherParams,
 )
 from robusta.core.model.env_vars import (
     ALERT_BUILDER_WORKERS,
-    AUTO_SILENCE_ALERTS,
     CLUSTER_STATUS_PERIOD_SEC,
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
@@ -102,14 +97,6 @@ from robusta.core.playbooks.prometheus_enrichment_utils import (
     create_resource_enrichment,
     get_node_internal_ip,
     run_prometheus_query,
-)
-from robusta.core.playbooks.silence_utils import (
-    SilenceOperation,
-    add_silence_from_prometheus_alert,
-    add_silence_to_alert_manager,
-    silence_gen_headers,
-    silence_get_alertmanager_url,
-    silence_get_url_path,
 )
 from robusta.core.playbooks.trigger import (
     BaseTrigger,
