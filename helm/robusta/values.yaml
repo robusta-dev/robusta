@@ -326,6 +326,18 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
+      storage:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi
+
+
+
+
+
   kubeProxy:
     enabled: false
   prometheus:
