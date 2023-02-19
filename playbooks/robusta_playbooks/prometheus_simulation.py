@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Dict, Optional
 
 import requests
-
 from robusta.api import ActionParams, AlertManagerEvent, ExecutionBaseEvent, action
 
 
@@ -10,6 +9,9 @@ class PrometheusAlertParams(ActionParams):
     """
     :var alert_name: Simulated alert name.
     :var pod_name: Pod name, for a simulated pod alert.
+    :var node_name: Node name, for a simulated node alert.
+    :var deployment_name: Deployment name, for a simulated deployment alert.
+    :var container_name: Container name, for adding a label on container.
     :var namespace: Pod namespace, for a simulated pod alert.
     :var status: Simulated alert status. firing/resolved.
     :var severity: Simulated alert severity.
@@ -21,6 +23,7 @@ class PrometheusAlertParams(ActionParams):
     pod_name: Optional[str] = None
     node_name: Optional[str] = None
     deployment_name: Optional[str] = None
+    container_name: Optional[str] = None
     namespace: str = "default"
     status: str = "firing"
     severity: str = "error"
@@ -47,6 +50,8 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
         labels["node"] = prometheus_event_data.node_name
     if prometheus_event_data.deployment_name is not None:
         labels["deployment"] = prometheus_event_data.deployment_name
+    if prometheus_event_data.container_name is not None:
+        labels["container"] = prometheus_event_data.container_name
 
     prometheus_event = AlertManagerEvent(
         **{
