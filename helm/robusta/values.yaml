@@ -257,7 +257,7 @@ platformPlaybooks:
 
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.0
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.1
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:
@@ -268,6 +268,7 @@ kubewatch:
       cpu: ~
   tolerations: []
   annotations: {}
+  nodeSelector: ~
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -300,6 +301,7 @@ runner:
   additional_env_froms: []
   tolerations: []
   annotations: {}
+  nodeSelector: ~
 
 kube-prometheus-stack:
   alertmanager:
@@ -380,5 +382,3 @@ kube-prometheus-stack:
         cpu: 10m
 
 rsa: ~
-
-
