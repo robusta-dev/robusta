@@ -9,7 +9,9 @@ class PrometheusAlertParams(ActionParams):
     """
     :var alert_name: Simulated alert name.
     :var pod_name: Pod name, for a simulated pod alert.
+    :var job_name: Job name, for a simulated Job alert.
     :var namespace: Pod namespace, for a simulated pod alert.
+    :var service: service name, for additional prometheus labels.
     :var status: Simulated alert status. firing/resolved.
     :var severity: Simulated alert severity.
     :var description: Simulated alert description.
@@ -21,7 +23,7 @@ class PrometheusAlertParams(ActionParams):
     node_name: Optional[str] = None
     deployment_name: Optional[str] = None
     service: Optional[str] = None
-    job: Optional[str] = None
+    job_name: Optional[str] = None
     namespace: str = "default"
     status: str = "firing"
     severity: str = "error"
@@ -50,8 +52,8 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
         labels["deployment"] = prometheus_event_data.deployment_name
     if prometheus_event_data.service is not None:
         labels["service"] = prometheus_event_data.service
-    if prometheus_event_data.job is not None:
-        labels["job"] = prometheus_event_data.job
+    if prometheus_event_data.job_name is not None:
+        labels["job"] = prometheus_event_data.job_name
 
     prometheus_event = AlertManagerEvent(
         **{
