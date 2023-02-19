@@ -1,10 +1,12 @@
 import datetime
+import logging
 from enum import Enum
 from typing import Dict, Optional
 
 import requests
 
 from robusta.core.model.base_params import AddSilenceParams, BaseSilenceParams, SilenceMatcher
+from robusta.core.model.env_vars import AUTO_SILENCE_ALERTS
 from robusta.integrations.prometheus.models import PrometheusKubernetesAlert
 from robusta.integrations.prometheus.utils import AlertManagerDiscovery, ServiceDiscovery
 from robusta.utils.error_codes import ActionException, ErrorCodes
@@ -16,7 +18,11 @@ def create_label_matcher(name: str, value: str, isRegex: bool) -> SilenceMatcher
     return SilenceMatcher(name=name, value=value, isEqual=not isRegex, isRegex=isRegex)
 
 
-def add_silence_from_prometheus_alert(alert: PrometheusKubernetesAlert, labels: [str], comment: Optional[str] = None):
+def add_silence_from_prometheus_alert(alert: PrometheusKubernetesAlert, labels: [str], comment: Optional[str] = None,
+                                      log_message: Optional[str] = None):
+    if not AUTO_SILENCE_ALERTS:
+        return
+    logging.info(log_message)
     matchers = [create_label_matcher(name=label, value=alert.get_alert_label(label), isRegex=False)
                 for label in labels if alert.get_alert_label(label)]
     if not comment:

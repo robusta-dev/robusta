@@ -26,8 +26,8 @@ def auto_silence_target_down(alert: PrometheusKubernetesAlert, job: str, reason_
     )
     relevant_silence_labels = ['service', 'alertname', 'job']
     comment = f"Misconfigured target {job} auto-silenced"
-    logging.info(f"{comment}, reason: {reason_for_silence}")
-    add_silence_from_prometheus_alert(alert, labels=relevant_silence_labels, comment=comment)
+    log_message = f"{comment}, reason: {reason_for_silence}"
+    add_silence_from_prometheus_alert(alert, labels=relevant_silence_labels, comment=comment, log_message=log_message )
 
 @action
 def target_down_dns_enricher(alert: PrometheusKubernetesAlert):

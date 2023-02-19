@@ -41,6 +41,8 @@ spec:
             value: {{ .Values.enablePrometheusStack | quote}}
           - name: SEND_ADDITIONAL_TELEMETRY
             value: {{ .Values.runner.sendAdditionalTelemetry | quote }}
+          - name: AUTO_SILENCE_ALERTS
+            value: { { .Values.runner.autoSilenceAlerts | quote } }
           - name: LOG_LEVEL
             value: {{ .Values.runner.log_level }}
           - name: INSTALLATION_NAMESPACE
