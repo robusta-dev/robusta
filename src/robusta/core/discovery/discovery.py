@@ -68,7 +68,8 @@ class Discovery:
 
     @staticmethod
     def discovery_process() -> DiscoveryResults:
-        pod_items = []  # pods are used for both micro services and node discover
+        pods_metadata: List[V1ObjectMeta] = []
+        node_requests = defaultdict(list)  # map between node name, to request of pods running on it
         active_services: List[ServiceInfo] = []
         # discover micro services
         try:
@@ -172,46 +173,44 @@ class Discovery:
                 pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces(
                     limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
                 )
-                pod_items = pods.items
-                active_services.extend(
-                    [
-                        Discovery.__create_service_info(
-                            pod.metadata,
-                            "Pod",
-                            extract_containers(pod),
-                            extract_volumes(pod),
-                            extract_total_pods(pod),
-                            extract_ready_pods(pod),
+                for pod in pods.items:
+                    pods_metadata.append(pod.metadata)
+                    if not pod.metadata.owner_references and not is_pod_finished(pod):
+                        active_services.append(
+                            Discovery.__create_service_info(
+                                pod.metadata,
+                                "Pod",
+                                extract_containers(pod),
+                                extract_volumes(pod),
+                                extract_total_pods(pod),
+                                extract_ready_pods(pod),
+                            )
                         )
-                        for pod in pod_items
-                        if not pod.metadata.owner_references and not is_pod_finished(pod)
-                    ]
-                )
+
+                    pod_status = pod.status.phase
+                    if pod_status in ["Running", "Unknown", "Pending"] and pod.spec.node_name:
+                        node_requests[pod.spec.node_name].append(utils.k8s_pod_requests(pod))
+
                 continue_ref = pods.metadata._continue
                 if not continue_ref:
                     break
 
-        except Exception:
+        except Exception as e:
             logging.error(
                 "Failed to run periodic service discovery",
                 exc_info=True,
             )
+            raise e
 
         # discover nodes - no need for batching. Number of nodes is not big enough
-        current_nodes: Optional[V1NodeList] = None
-        node_requests = defaultdict(list)
         try:
             current_nodes: V1NodeList = client.CoreV1Api().list_node()
-            for pod in pod_items:
-                pod_status = pod.status.phase
-                if pod_status in ["Running", "Unknown", "Pending"] and pod.spec.node_name:
-                    node_requests[pod.spec.node_name].append(utils.k8s_pod_requests(pod))
-
-        except Exception:
+        except Exception as e:
             logging.error(
                 "Failed to run periodic nodes discovery",
                 exc_info=True,
             )
+            raise e
 
         # discover jobs
         active_jobs: List[JobInfo] = []
@@ -233,11 +232,11 @@ class Discovery:
 
                     if job_labels:  # add job pods only if we found a valid selector
                         job_pods = [
-                            pod.metadata.name
-                            for pod in pod_items
+                            pod_meta.name
+                            for pod_meta in pods_metadata
                             if (
-                                (job.metadata.namespace == pod.metadata.namespace)
-                                and (job_labels.items() <= (pod.metadata.labels or {}).items())
+                                (job.metadata.namespace == pod_meta.namespace)
+                                and (job_labels.items() <= (pod_meta.labels or {}).items())
                             )
                         ]
 
@@ -247,23 +246,24 @@ class Discovery:
                 if not continue_ref:
                     break
 
-        except Exception:
+        except Exception as e:
             logging.error(
                 "Failed to run periodic jobs discovery",
                 exc_info=True,
             )
+            raise e
 
         # discover namespaces
-        namespaces: List[NamespaceInfo] = []
         try:
-            namespaces = [
+            namespaces: List[NamespaceInfo] = [
                 NamespaceInfo.from_api_server(namespace) for namespace in client.CoreV1Api().list_namespace().items
             ]
-        except Exception:
+        except Exception as e:
             logging.error(
                 "Failed to run periodic namespaces discovery",
                 exc_info=True,
             )
+            raise e
 
         return DiscoveryResults(
             services=active_services,
@@ -298,49 +298,49 @@ class Discovery:
         job_count = -1
         try:
             deps: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces(limit=1, _continue=None)
-            remaining = deps.metadata.remaining_item_count
+            remaining = deps.metadata.remaining_item_count or 0
             deploy_count = remaining + len(deps.items)
         except Exception:
             logging.error("Failed to count deployments", exc_info=True)
 
         try:
             sts: V1StatefulSetList = client.AppsV1Api().list_stateful_set_for_all_namespaces(limit=1, _continue=None)
-            remaining = sts.metadata.remaining_item_count
+            remaining = sts.metadata.remaining_item_count or 0
             sts_count = remaining + len(sts.items)
         except Exception:
             logging.error("Failed to count statefulsets", exc_info=True)
 
         try:
             dms: V1DaemonSetList = client.AppsV1Api().list_daemon_set_for_all_namespaces(limit=1, _continue=None)
-            remaining = dms.metadata.remaining_item_count
+            remaining = dms.metadata.remaining_item_count or 0
             dms_count = remaining + len(dms.items)
         except Exception:
             logging.error("Failed to count daemonsets", exc_info=True)
 
         try:
             rs: V1ReplicaSetList = client.AppsV1Api().list_replica_set_for_all_namespaces(limit=1, _continue=None)
-            remaining = rs.metadata.remaining_item_count
+            remaining = rs.metadata.remaining_item_count or 0
             rs_count = remaining + len(rs.items)
         except Exception:
             logging.error("Failed to count replicasets", exc_info=True)
 
         try:
             pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces(limit=1, _continue=None)
-            remaining = pods.metadata.remaining_item_count
+            remaining = pods.metadata.remaining_item_count or 0
             pod_count = remaining + len(pods.items)
         except Exception:
             logging.error("Failed to count pods", exc_info=True)
 
         try:
             nodes: V1NodeList = client.CoreV1Api().list_node(limit=1, _continue=None)
-            remaining = nodes.metadata.remaining_item_count
+            remaining = nodes.metadata.remaining_item_count or 0
             node_count = remaining + len(nodes.items)
         except Exception:
             logging.error("Failed to count nodes", exc_info=True)
 
         try:
             jobs: V1JobList = client.BatchV1Api().list_job_for_all_namespaces(limit=1, _continue=None)
-            remaining = jobs.metadata.remaining_item_count
+            remaining = jobs.metadata.remaining_item_count or 0
             job_count = remaining + len(jobs.items)
         except Exception:
             logging.error("Failed to count jobs", exc_info=True)
