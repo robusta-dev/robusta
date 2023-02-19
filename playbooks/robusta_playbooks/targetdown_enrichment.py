@@ -30,6 +30,7 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert):
     Kube-DNS unreachable
     """
     job = alert.get_alert_label('job')
+    service = alert.get_alert_label('service')
     if not job or job not in ["coredns", "kube-dns"]:
         return
     res = list_available_services("kube-system")
@@ -41,7 +42,7 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert):
     service_found = False
     for kube_item in items:
         kube_item_name = kube_item.get("metadata", {}).get("name")
-        if kube_item_name == alert.get_alert_label('service'):
+        if kube_item_name == service:
             service_found = True
             break
 
@@ -53,7 +54,7 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert):
 
     # the service does not exist
     if not service_found:
-        silence_reason = 'Some cluster managers do not provide this service.'
+        silence_reason = f"Service {service} not found."
         auto_silence_target_down(alert, job, silence_reason)
     else:
         # We cannot reach out the service, so alert should be risen
