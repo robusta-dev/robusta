@@ -26,7 +26,7 @@ def create_container_graph(params: ResourceGraphEnricherParams, pod: Pod, contai
         labels,
         ResourceChartResourceType[params.resource_type],
         ResourceChartItemType.Container,
-        prometheus_url=params.prometheus_url,
+        prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
         lines=limit_lines,
         title_override=f"{params.resource_type} Usage for container {container.name}",

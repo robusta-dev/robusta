@@ -53,7 +53,7 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
         return
 
     prometheus_result = run_prometheus_query(
-        prometheus_base_url=params.prometheus_url,
+        prometheus_params=params,
         promql_query=params.promql_query,
         starts_at=starts_at,
         ends_at=ends_at,

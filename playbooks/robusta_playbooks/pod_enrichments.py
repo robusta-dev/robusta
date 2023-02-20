@@ -46,7 +46,7 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
         labels,
         ResourceChartResourceType[params.resource_type],
         ResourceChartItemType.Pod,
-        prometheus_url=params.prometheus_url,
+        prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
         lines=limit_lines,
     )

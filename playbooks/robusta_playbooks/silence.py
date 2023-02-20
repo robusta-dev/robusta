@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 from uuid import UUID
 
 import requests
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 from robusta.api import (
     ActionException,
@@ -66,6 +66,7 @@ class BaseSilenceParams(ActionParams):
 
     alertmanager_flavor: str = None  # type: ignore
     alertmanager_url: Optional[str]
+    alertmanager_auth: Optional[SecretStr] = None
     grafana_api_key: str = None  # type: ignore
 
 
@@ -190,8 +191,13 @@ SilenceOperation = Enum("SilenceOperation", "CREATE DELETE LIST")
 
 def _gen_headers(params: BaseSilenceParams) -> Dict:
     headers = {"Content-type": "application/json"}
+
     if params.grafana_api_key:
-        headers.update({"Authorization": "Bearer {0}".format(params.grafana_api_key)})
+        headers.update({"Authorization": f"Bearer {params.grafana_api_key}"})
+
+    elif params.alertmanager_auth:
+        headers.update({"Authorization": params.alertmanager_auth})
+
     return headers
 
 

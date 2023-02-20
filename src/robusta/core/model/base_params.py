@@ -41,7 +41,11 @@ class ActionParams(DocumentedModel):
     """
     Base class for all Action parameter classes.
     """
-
+    def post_initialization(self):
+        """
+        This function can be used to run post initialization logic on the action params
+        """
+        pass
     pass
 
 
@@ -83,11 +87,14 @@ class BashParams(ActionParams):
 class PrometheusParams(ActionParams):
     """
     :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
+    :var prometheus_auth: Prometheus auth header to be used in Authorization header. If omitted, we will not add any auth header
 
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+    :example prometheus_auth: Basic YWRtaW46cGFzc3dvcmQ=
     """
 
-    prometheus_url: str = None
+    prometheus_url: Optional[str] = None
+    prometheus_auth: Optional[SecretStr] = None
 
 
 class PrometheusDuration(BaseModel):

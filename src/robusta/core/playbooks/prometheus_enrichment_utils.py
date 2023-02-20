@@ -10,11 +10,15 @@ from hikaru.model import Node
 from pydantic import BaseModel
 
 from robusta.core.external_apis.prometheus.prometheus_cli import PrometheusQueryResult, custom_query_range
-from robusta.core.model.base_params import ChartValuesFormat, ResourceChartItemType, ResourceChartResourceType
+from robusta.core.model.base_params import (
+    ChartValuesFormat,
+    PrometheusParams,
+    ResourceChartItemType,
+    ResourceChartResourceType,
+)
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 from robusta.core.reporting.blocks import FileBlock
 from robusta.core.reporting.custom_rendering import charts_style
-from robusta.integrations.prometheus.utils import PrometheusDiscovery
 
 ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
 ChartLabelFactory = Callable[[int], str]
@@ -39,17 +43,16 @@ def get_node_internal_ip(node: Node) -> str:
 
 
 def run_prometheus_query(
-    prometheus_base_url: str, promql_query: str, starts_at: datetime, ends_at: datetime
+    prometheus_params: PrometheusParams, promql_query: str, starts_at: datetime, ends_at: datetime
 ) -> PrometheusQueryResult:
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
-    if not prometheus_base_url:
-        prometheus_base_url = PrometheusDiscovery.find_prometheus_url()
+
     query_duration = ends_at - starts_at
     resolution = get_resolution_from_duration(query_duration)
     increment = max(query_duration.total_seconds() / resolution, 1.0)
     return custom_query_range(
-        prometheus_base_url,
+        prometheus_params,
         promql_query,
         starts_at,
         ends_at,
@@ -76,7 +79,7 @@ def get_resolution_from_duration(duration: timedelta) -> int:
 
 
 def create_chart_from_prometheus_query(
-    prometheus_base_url: str,
+    prometheus_params: PrometheusParams,
     promql_query: str,
     alert_starts_at: datetime,
     include_x_axis: bool,
@@ -94,7 +97,7 @@ def create_chart_from_prometheus_query(
         alert_duration = ends_at - alert_starts_at
         graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
         starts_at = ends_at - graph_duration
-    prometheus_query_result = run_prometheus_query(prometheus_base_url, promql_query, starts_at, ends_at)
+    prometheus_query_result = run_prometheus_query(prometheus_params, promql_query, starts_at, ends_at)
     if prometheus_query_result.result_type != "matrix":
         raise Exception(
             f"Unsupported query result for robusta chart, Type received: {prometheus_query_result.result_type}, type supported 'matrix'"
@@ -156,7 +159,7 @@ def create_graph_enrichment(
     start_at: datetime,
     labels: Dict[Any, Any],
     promql_query: str,
-    prometheus_url: Optional[str],
+    prometheus_params: PrometheusParams,
     graph_duration_minutes: int,
     graph_title: Optional[str],
     chart_values_format: Optional[ChartValuesFormat],
@@ -165,7 +168,7 @@ def create_graph_enrichment(
 ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
-        prometheus_url,
+        prometheus_params,
         promql_query,
         start_at,
         include_x_axis=True,
@@ -186,7 +189,7 @@ def create_resource_enrichment(
     resource_type: ResourceChartResourceType,
     item_type: ResourceChartItemType,
     graph_duration_minutes: int,
-    prometheus_url: Optional[str] = None,
+    prometheus_params: PrometheusParams,
     lines: Optional[List[XAxisLine]] = [],
     title_override: Optional[str] = None,
 ) -> FileBlock:
@@ -251,7 +254,7 @@ def create_resource_enrichment(
         starts_at,
         labels,
         chosen_combination.query,
-        prometheus_url=prometheus_url,
+        prometheus_params=prometheus_params,
         graph_duration_minutes=graph_duration_minutes,
         graph_title=title,
         chart_values_format=chosen_combination.values_format,

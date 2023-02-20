@@ -29,6 +29,7 @@ FLOAT_PRECISION_LIMIT = int(os.environ.get("FLOAT_PRECISION_LIMIT", 11))
 
 PROMETHEUS_REQUEST_TIMEOUT_SECONDS = float(os.environ.get("PROMETHEUS_REQUEST_TIMEOUT_SECONDS", 90.0))
 PROMETHEUS_ENABLED = os.environ.get("PROMETHEUS_ENABLED", "false").lower() == "true"
+PROMETHEUS_SSL_ENABLED = os.environ.get("PROMETHEUS_SSL_ENABLED", "false").lower() == "true"
 
 INCOMING_REQUEST_TIME_WINDOW_SECONDS = int(os.environ.get("INCOMING_REQUEST_TIME_WINDOW_SECONDS", 3600))
 
@@ -68,3 +69,11 @@ TRACE_INCOMING_REQUESTS = bool(os.environ.get("TRACE_INCOMING_REQUESTS", False))
 
 SERVICE_CACHE_TTL_SEC = int(os.environ.get("SERVICE_CACHE_TTL_SEC", 900))
 SERVICE_CACHE_MAX_SIZE = int(os.environ.get("SERVICE_CACHE_MAX_SIZE", 1000))
+
+PORT = int(os.environ.get("PORT", 5000))  # PORT
+
+# additional certificate to verify, base64 encoded.
+ADDITIONAL_CERTIFICATE: str = os.environ.get("CERTIFICATE", "")
+
+DISCOVERY_MAX_BATCHES = int(os.environ.get("DISCOVERY_MAX_BATCHES", 100))
+DISCOVERY_BATCH_SIZE = int(os.environ.get("DISCOVERY_BATCH_SIZE", 500))

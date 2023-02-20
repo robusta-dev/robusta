@@ -1,32 +1,60 @@
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from cachetools import TTLCache
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, HTTPError
 
 from robusta.core.exceptions import PrometheusNotFound
-from robusta.core.model.env_vars import SERVICE_CACHE_TTL_SEC
+from robusta.core.model.base_params import PrometheusParams
+from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
 
 if TYPE_CHECKING:
     from prometheus_api_client import PrometheusConnect
 
 
+def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusConnect":
+    from prometheus_api_client import PrometheusConnect
+
+    url: Optional[str] = (
+        prometheus_params.prometheus_url
+        if prometheus_params.prometheus_url
+        else PrometheusDiscovery.find_prometheus_url()
+    )
+
+    if not url:
+        raise PrometheusNotFound("Prometheus url could not be found. Add 'prometheus_url' under global_config")
+
+    headers = (
+        {"Authorization": prometheus_params.prometheus_auth.get_secret_value()}
+        if prometheus_params.prometheus_auth
+        else {}
+    )
+    return PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
+
+
 def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
     params = params or {}
     try:
-        prometheus_connected = prom.check_prometheus_connection(params)
-        if not prometheus_connected:
-            raise PrometheusNotFound(f"No Prometheus found under {prom.url}")
-    except ConnectionError:
-        raise PrometheusNotFound(f"Couldn't connect to Prometheus found under {prom.url}")
+        response = prom._session.get(
+            f"{prom.url}/api/v1/query",
+            verify=prom.ssl_verification,
+            headers=prom.headers,
+            # This query should return empty results, but is correct
+            params={"query": "example", **params},
+        )
+        response.raise_for_status()
+    except (ConnectionError, HTTPError) as e:
+        raise PrometheusNotFound(
+            f"Couldn't connect to Prometheus found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
+        ) from e
 
 
 class ServiceDiscovery:
     cache: TTLCache = TTLCache(maxsize=1, ttl=SERVICE_CACHE_TTL_SEC)
 
     @classmethod
-    def find_url(cls, selectors: List[str], error_msg: str):
+    def find_url(cls, selectors: List[str], error_msg: str) -> Optional[str]:
         """
         Try to autodiscover the url of an in-cluster service
         """
@@ -47,7 +75,7 @@ class ServiceDiscovery:
 
 class PrometheusDiscovery(ServiceDiscovery):
     @classmethod
-    def find_prometheus_url(cls):
+    def find_prometheus_url(cls) -> Optional[str]:
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
@@ -64,7 +92,7 @@ class PrometheusDiscovery(ServiceDiscovery):
 
 class AlertManagerDiscovery(ServiceDiscovery):
     @classmethod
-    def find_alert_manager_url(cls):
+    def find_alert_manager_url(cls) -> Optional[str]:
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-alertmanager",

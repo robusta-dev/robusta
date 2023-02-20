@@ -237,7 +237,15 @@ class GitRepo:
                 return
 
             try:
-                os.remove(os.path.join(file_local_path, file_name))
+                removed_file = os.path.join(file_local_path, file_name)
+                os.remove(removed_file)
+                self.__exec_git_cmd(
+                    [
+                        "git",
+                        "rm",
+                        removed_file,
+                    ]
+                )
                 self.__exec_git_cmd(
                     [
                         "git",
