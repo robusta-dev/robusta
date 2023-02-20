@@ -55,6 +55,7 @@ lightActions:
 - python_process_inspector
 - prometheus_alert
 - create_pvc_snapshot
+- resource_events_enricher
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
