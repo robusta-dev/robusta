@@ -136,7 +136,8 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                 e.reason,
                 e.type,
                 parse_kubernetes_datetime_to_ms(get_event_timestamp(e)) if get_event_timestamp(e) else 0,
-                f"{e.involvedObject.kind}/{e.involvedObject.name}",
+                e.involvedObject.kind,
+                e.involvedObject.name,
                 e.message,
             ]
             for e in events
@@ -147,7 +148,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                 TableBlock(
                     table_name=f"*{kind} events:*",
                     column_renderers={"time": RendererType.DATETIME},
-                    headers=["reason", "type", "time", "object", "message"],
+                    headers=["reason", "type", "time", "kind", "name", "message"],
                     rows=rows,
                 )
             ],
