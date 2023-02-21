@@ -1,10 +1,12 @@
 import logging
-from typing import List
+from typing import List, Dict, Any, Optional
 
+import json
 import hikaru
 import kubernetes.client.exceptions
-from hikaru.model import Pod, PodList
+from hikaru.model import Pod, PodList, ContainerStatus
 from robusta.api import (
+    PodContainer,
     ActionException,
     ErrorCodes,
     FileBlock,
@@ -12,6 +14,7 @@ from robusta.api import (
     MarkdownBlock,
     ResourceLoader,
     TableBlock,
+    JsonBlock,
     action,
     build_selector_query,
     get_job_all_pods,
@@ -43,6 +46,90 @@ def to_pod_row(pod: Pod, cluster_name: str) -> List:
         pod.status.phase,
     ]
 
+def get_related_pods(resource) -> list[Pod]:
+    kind: str = resource.kind or ""
+    if kind not in supported_resources:
+        raise ActionException(
+            ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {kind}"
+        )
+
+    if kind == "Job":
+        job_pods = get_job_all_pods(resource)
+        pods = job_pods if job_pods else []
+    elif kind == "Pod":
+        pods = [resource]
+    elif kind == "Node":
+        pods = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={resource.metadata.name}").obj.items
+    else:
+        selector = build_selector_query(resource.spec.selector)
+        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
+
+    return pods
+
+def to_pod_obj(pod: Pod) -> Dict[str,Any]:
+    resource_requests = pod_requests(pod)
+    resource_limits = pod_limits(pod)
+    addresses = ",".join([address.ip for address in pod.status.podIPs])
+    return {
+        "name": pod.metadata.name,
+        "namespace": pod.metadata.namespace,
+        "node": pod.spec.nodeName,
+        "cpu limit": resource_limits.cpu,
+        "cpu request": resource_requests.cpu,
+        "memory limit": resource_limits.memory,
+        "memory request": resource_requests.memory,
+        "creation_time": pod.metadata.creationTimestamp,
+        "restarts": pod_restarts(pod),
+        "addresses": addresses,
+        "containers": get_pod_containers(pod),
+        "status": pod.status.phase,
+    }
+
+def get_pod_containers(pod: Pod) -> List[Dict[str,Any]]:
+    containers = []
+    for container in pod.spec.containers:
+        requests = PodContainer.get_requests(container)
+        limits = PodContainer.get_limits(container)
+        containerStatus: Optional[ContainerStatus] = PodContainer.get_status(pod, container.name)  
+        containerState = getattr(containerStatus, "state", None)
+        stateStr : str = "waiting"
+        state = None
+        if containerState:
+            for s in ["running", "waiting" , "terminated"]:
+                state = getattr(containerState, s, None)
+                if state is not None:
+                    stateStr = s
+                    break
+
+        containers.append({
+            "name": container.name,
+            "cpuLimit": limits.cpu,
+            "cpuRequest": requests.cpu,
+            "memoryLimit": limits.memory,
+            "memoryRequest": requests.memory,
+            "restarts": getattr(containerStatus, "restarts", 0),
+            "status": stateStr,
+            "created": getattr(state, "startedAt", None)
+        })
+    
+    return containers
+ 
+
+
+
+@action
+def resource_related_pods(event: KubernetesResourceEvent):
+    """
+    Return the list of pods and containers related to that k8s resource.
+    For example, return all pods of a given k8s Deployment
+
+    Supports Deployments, ReplicaSets, DaemonSets, StatefulSets and Pods
+    """
+    pods = get_related_pods(event.get_resource())
+    event.add_enrichment([
+       JsonBlock(json.dumps([to_pod_obj(pod) for pod in pods]))
+    ])
+
 
 @action
 def related_pods(event: KubernetesResourceEvent):
@@ -52,22 +139,7 @@ def related_pods(event: KubernetesResourceEvent):
 
     Supports Deployments, ReplicaSets, DaemonSets, StatefulSets and Pods
     """
-    resource = event.get_resource()
-    if resource.kind not in supported_resources:
-        raise ActionException(
-            ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}"
-        )
-
-    if resource.kind == "Job":
-        job_pods = get_job_all_pods(resource)
-        pods = job_pods if job_pods else []
-    elif resource.kind == "Pod":
-        pods = [resource]
-    elif resource.kind == "Node":
-        pods = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={resource.metadata.name}").obj.items
-    else:
-        selector = build_selector_query(resource.spec.selector)
-        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
+    pods = get_related_pods(event.get_resource())
 
     rows = [to_pod_row(pod, event.get_context().cluster_name) for pod in pods]
 
@@ -107,6 +179,7 @@ def get_resource_yaml(event: KubernetesResourceEvent):
         logging.error("resource not found...")
         return
 
+    logging.info("attempt yaml")
     resource_kind = resource.kind
     namespace: str = resource.metadata.namespace
     name: str = resource.metadata.name

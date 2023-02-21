@@ -71,6 +71,13 @@ class PodContainer:
             if container_name == container.name:
                 return container
         return None
+    
+    @staticmethod
+    def get_status(pod: Pod, container_name: str) -> Optional[ContainerStatus]:
+        for status in pod.status.containerStatuses:
+            if container_name == status.name:
+                return status
+        return None
 
 
 class PodResources(BaseModel):
