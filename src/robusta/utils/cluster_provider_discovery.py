@@ -7,14 +7,14 @@ from hikaru.model import NodeList
 
 
 class ClusterProviderType(Enum):
-    GKE = auto()
-    AKS = auto()
-    EKS = auto()
-    Kind = auto()
-    Minikube = auto()
-    RancherDesktop = auto()
-    Kapsule = auto()
-    Kops = auto()
+    GKE = "GKE"
+    AKS = "AKS"
+    EKS = "EKS"
+    Kind = "Kind"
+    Minikube = "Minikube"
+    RancherDesktop = "RancherDesktop"
+    Kapsule = "Kapsule"
+    Kops = "Kops"
     Unknown = auto()
 
 
@@ -35,8 +35,6 @@ def _get_node_label(node, label) -> Optional[str]:
 
 def _detect_provider_from_hostname(nodes) -> Optional[ClusterProviderType]:
     nodes_host_names = [_get_node_label(node, "kubernetes.io/hostname") for node in nodes]
-        return ClusterProviderType.Unknown
-    nodes_host_names = _get_node_label(nodes[0], "kubernetes.io/hostname")
     for host_name in nodes_host_names:
         if not host_name:
             continue
