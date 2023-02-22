@@ -34,10 +34,12 @@ def _get_node_label(node, label) -> Optional[str]:
 
 
 def _detect_provider_from_hostname(nodes) -> Optional[ClusterProviderType]:
-    if not _get_node_label(nodes[0], "kubernetes.io/hostname"):
+    nodes_host_names = [_get_node_label(node, "kubernetes.io/hostname") for node in nodes]
         return ClusterProviderType.Unknown
     nodes_host_names = _get_node_label(nodes[0], "kubernetes.io/hostname")
     for host_name in nodes_host_names:
+        if not host_name:
+            continue
         for cluster_type in HOSTNAME_MATCH:
             cluster_hostname_regex = HOSTNAME_MATCH[cluster_type]
             if len(re.findall(cluster_hostname_regex, host_name)) >= 1:
