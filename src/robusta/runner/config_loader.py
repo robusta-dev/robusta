@@ -17,7 +17,6 @@ from robusta.core.model.env_vars import (
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
     DEFAULT_PLAYBOOKS_ROOT,
     INTERNAL_PLAYBOOKS_ROOT,
-    K8S_CLUSTER_PROVIDER,
     PLAYBOOKS_CONFIG_FILE_PATH,
     PLAYBOOKS_ROOT,
 )
@@ -158,19 +157,20 @@ class ConfigLoader:
 
     def __reload_playbook_packages(self, change_name):
         logging.info(f"Reloading playbook packages due to change on {change_name}")
-        try:
-            global K8S_CLUSTER_PROVIDER
-            if K8S_CLUSTER_PROVIDER.lower() == "unknown":
-                K8S_CLUSTER_PROVIDER = find_cluster_provider().value
-                logging.warning(find_cluster_provider())
-        except:
-            logging.error(f"failed to K8S_CLUSTER_PROVIDER", exc_info=True)
+
         with self.reload_lock:
             try:
                 runner_config = self.__load_runner_config(self.config_file_path)
                 if runner_config is None:
                     return
 
+                try:
+                    if runner_config.global_config.get("provider", "unknown").lower() == "unknown":
+                        provider = find_cluster_provider().value
+                        runner_config.global_config["provider"] = provider
+                        logging.info(f"{provider} cluster detected")
+                except:
+                    logging.error(f"failed to determine cluster provider", exc_info=True)
                 self.registry.set_global_config(runner_config.global_config)
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first

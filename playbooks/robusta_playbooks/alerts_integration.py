@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional
 import requests
 from hikaru.model import Node
 from robusta.api import (
-    K8S_CLUSTER_PROVIDER,
     ActionParams,
     AlertResourceGraphEnricherParams,
     CallbackBlock,
@@ -92,17 +91,14 @@ def name_silencer(alert: PrometheusKubernetesAlert, params: NameSilencerParams):
     """
     Silence named alerts.
     """
-    lowercase_provider = [provider.lower() for provider in params.k8s_providers]
-    if len(lowercase_provider) > 0:
-        logging.warning(K8S_CLUSTER_PROVIDER)
-        logging.warning(lowercase_provider)
-        logging.warning(K8S_CLUSTER_PROVIDER.lower() not in lowercase_provider)
-    # provider specified and not in the list we don't silence
-    if len(lowercase_provider) > 0 and K8S_CLUSTER_PROVIDER.lower() not in lowercase_provider:
-        return
+    if params.k8s_providers and len(params.k8s_providers) > 0:
+        provider = alert.get_context().provider
+        lowercase_provider = [provider.lower() for provider in params.k8s_providers]
+        if provider.lower() not in lowercase_provider:
+            return
 
     if alert.alert_name in params.names:
-        logging.debug(f"silencing alert {alert}")
+        logging.warning(f"silencing alert {alert}")
         alert.stop_processing = True
 
 
