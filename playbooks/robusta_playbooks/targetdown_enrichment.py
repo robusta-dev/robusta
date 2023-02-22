@@ -67,7 +67,9 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert, params: TimedProm
 
     ::note: Deprecated
     """
-    if not alert.job or alert.job not in ["corens", "kube-dns"]:
+    job = alert.get_alert_label('job')
+    service = alert.get_alert_label('service')
+    if job not in ["corens", "kube-dns"]:
         return
     res = list_available_services("kube-system")
     try:
@@ -78,7 +80,7 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert, params: TimedProm
     service_found = False
     for kube_item in items:
         kube_item_name = kube_item.get("metadata", {}).get("name")
-        if kube_item_name == alert.job:
+        if kube_item_name == service:
             service_found = True
             break
 
