@@ -80,7 +80,7 @@ priorityBuiltinPlaybooks:
   - on_prometheus_alert:
       alert_name: TargetDown
   actions:
-  - target_down_dns_enricher: {}
+  - target_down_dns_silencer: {}
 
 # custom user playbooks
 customPlaybooks: []
