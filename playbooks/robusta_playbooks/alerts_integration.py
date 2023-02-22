@@ -93,10 +93,14 @@ def name_silencer(alert: PrometheusKubernetesAlert, params: NameSilencerParams):
     Silence named alerts.
     """
     lowercase_provider = [provider.lower() for provider in params.k8s_providers]
-
+    if len(lowercase_provider) > 0:
+        logging.warning(K8S_CLUSTER_PROVIDER)
+        logging.warning(lowercase_provider)
+        logging.warning(K8S_CLUSTER_PROVIDER.lower() not in lowercase_provider)
     # provider specified and not in the list we don't silence
-    if lowercase_provider and K8S_CLUSTER_PROVIDER.lower() not in lowercase_provider:
+    if len(lowercase_provider) > 0 and K8S_CLUSTER_PROVIDER.lower() not in lowercase_provider:
         return
+
     if alert.alert_name in params.names:
         logging.debug(f"silencing alert {alert}")
         alert.stop_processing = True
