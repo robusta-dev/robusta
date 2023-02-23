@@ -77,6 +77,9 @@ class PrometheusKubernetesAlert(PodEvent, NodeEvent, DeploymentEvent, JobEvent, 
     def get_job(self) -> Optional[RobustaJob]:
         return self.job
 
+    def get_alert_label(self, label: str) -> Optional[str]:
+        return self.alert.labels.get(label, None)
+
     def get_daemonset(self) -> Optional[DaemonSet]:
         return self.daemonset
 

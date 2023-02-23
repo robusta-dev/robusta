@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional
 
 import requests
 from hikaru.model import Node
-
 from robusta.api import (
     ActionParams,
     AlertResourceGraphEnricherParams,
@@ -64,6 +63,24 @@ class NameSilencerParams(ActionParams):
     """
 
     names: List[str]
+
+
+class SilenceAlertParams(ActionParams):
+    """
+    :var log_silence: prints a log in robusta logs of the silence.
+    """
+
+    log_silence: bool = False
+
+
+@action
+def silence_alert(alert: PrometheusKubernetesAlert, params: SilenceAlertParams):
+    """
+    Silence received alert.
+    """
+    if params.log_silence:
+        logging.info(f"silencing alert {alert}")
+    alert.stop_processing = True
 
 
 @action
