@@ -55,6 +55,7 @@ lightActions:
 - python_process_inspector
 - prometheus_alert
 - create_pvc_snapshot
+- resource_events_enricher
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
@@ -76,6 +77,11 @@ priorityBuiltinPlaybooks:
   actions:
   - name_silencer:
       names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
+- triggers:
+  - on_prometheus_alert:
+      alert_name: TargetDown
+  actions:
+  - target_down_dns_silencer: {}
 
 # custom user playbooks
 customPlaybooks: []
@@ -131,12 +137,6 @@ builtinPlaybooks:
   - external_video_enricher:
       url: https://bit.ly/memory-overcommit
       name: Memory Overcommited
-
-- triggers:
-  - on_prometheus_alert:
-      alert_name: TargetDown
-  actions:
-  - target_down_dns_enricher: {}
 
 - triggers:
   - on_prometheus_alert:
@@ -328,6 +328,18 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
+      storage:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi
+
+
+
+
+
   kubeProxy:
     enabled: false
   prometheus:
