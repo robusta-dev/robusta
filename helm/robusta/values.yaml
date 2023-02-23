@@ -188,6 +188,8 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
+  - on_prometheus_alert:
+      alert_name: NodeFilesystemAlmostOutOfSpace
   actions:
   - node_disk_analyzer: {}
   - alert_graph_enricher:
