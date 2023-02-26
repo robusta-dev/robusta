@@ -77,7 +77,6 @@ class PrometheusAlertTrigger(BaseTrigger):
         if not prefix_match(self.instance_name_prefix, labels.get("instance")):
             return False
 
-        # __CLUSTER_PROVIDER__ is None if not initiated
         provider = get_cluster_provider()
         if provider and self.k8s_providers and len(self.k8s_providers) > 0:
             lowercase_provider = [provider.lower() for provider in self.k8s_providers]

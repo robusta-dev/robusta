@@ -61,7 +61,6 @@ def severity_silencer(alert: PrometheusKubernetesAlert, params: SeverityParams):
 class NameSilencerParams(ActionParams):
     """
     :var names: List of alert names that should be silenced.
-
     """
 
     names: List[str]
@@ -91,7 +90,7 @@ def name_silencer(alert: PrometheusKubernetesAlert, params: NameSilencerParams):
     Silence named alerts.
     """
     if alert.alert_name in params.names:
-        logging.warning(f"silencing alert {alert}")
+        logging.debug(f"silencing alert {alert}")
         alert.stop_processing = True
 
 

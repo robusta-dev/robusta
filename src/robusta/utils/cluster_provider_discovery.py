@@ -73,7 +73,6 @@ def _is_detect_cluster_from_kubelet_version(nodes, kubelet_substring) -> bool:
 
 def get_cluster_provider():
     global __CLUSTER_PROVIDER__
-    logging.warning(__CLUSTER_PROVIDER__)
     return __CLUSTER_PROVIDER__
 
 

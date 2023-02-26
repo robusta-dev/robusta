@@ -157,17 +157,12 @@ class ConfigLoader:
 
     def __reload_playbook_packages(self, change_name):
         logging.info(f"Reloading playbook packages due to change on {change_name}")
-
         with self.reload_lock:
             try:
                 runner_config = self.__load_runner_config(self.config_file_path)
                 if runner_config is None:
                     return
-
-                try:
-                    discover_cluster_provider()
-                except:
-                    logging.error(f"failed to determine cluster provider", exc_info=True)
+                discover_cluster_provider()
                 self.registry.set_global_config(runner_config.global_config)
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
