@@ -96,6 +96,15 @@ priorityBuiltinPlaybooks:
   - name_silencer:
       names: [ "KubeletDown" ]
 
+- triggers:
+  - on_prometheus_alert:
+      alert_name: CPUThrottlingHigh
+      k8s_providers: [ "DigitalOcean" ]
+      pod_name_prefix: "do-node-agent"
+  actions:
+  - silence_alert:
+      log_silence: true
+
 # Smart Silences
 - triggers:
   - on_prometheus_alert:

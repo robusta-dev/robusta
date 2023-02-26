@@ -15,6 +15,7 @@ class ClusterProviderType(Enum):
     RancherDesktop = "RancherDesktop"
     Kapsule = "Kapsule"
     Kops = "Kops"
+    DigitalOcean = "DigitalOcean"
     Unknown = auto()
 
 
@@ -102,6 +103,11 @@ def find_cluster_provider() -> ClusterProviderType:
         KOPS_NODE_LABEL = "kops.k8s.io/instancegroup"
         if _get_node_label(nodes[0], KOPS_NODE_LABEL):
             return ClusterProviderType.Kops
+
+        DIGITAL_OCEAN_NODE_LABEL = "doks.digitalocean.com/version"
+        if _get_node_label(nodes[0], DIGITAL_OCEAN_NODE_LABEL):
+            return ClusterProviderType.DigitalOcean
+
     except Exception:
         logging.error("Error detecting cluster type", exc_info=True)
     return ClusterProviderType.Unknown
