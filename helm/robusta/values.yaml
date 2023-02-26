@@ -77,13 +77,23 @@ priorityBuiltinPlaybooks:
   actions:
   - name_silencer:
       names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
+
 # Silences for small/local clusters
+- triggers:
+  - on_prometheus_alert:
+      status: "all"
+      k8s_providers: ["Minikube", "Kind", "RancherDesktop"]
+  actions:
   - name_silencer:
-      on_k8s_providers: ["Minikube", "Kind", "RancherDesktop"]
       names: ["etcdInsufficientMembers", "etcdMembersDown", "NodeClockNotSynchronising", "PrometheusTSDBCompactionsFailing"]
+
 # Silences for specific providers
+- triggers:
+  - on_prometheus_alert:
+      status: "all"
+      k8s_providers: [ "GKE" ]
+  actions:
   - name_silencer:
-      on_k8s_providers: [ "GKE" ]
       names: [ "KubeletDown" ]
 - triggers:
   - on_prometheus_alert:
@@ -229,6 +239,17 @@ builtinPlaybooks:
   actions:
   - default_enricher: {}
 
+- triggers:
+  - on_prometheus_alert:
+      alert_name: NodeFilesystemSpaceFillingUp
+      k8s_providers: ["Minikube", "Kind", "RancherDesktop"]
+  - on_prometheus_alert:
+      alert_name: NodeFilesystemAlmostOutOfSpace
+      k8s_providers: ["Minikube", "Kind", "RancherDesktop"]
+  actions:
+  - alert_explanation_enricher:
+      alert_explanation: "This alert is fired when the file system is running out of space."
+      recommended_resolution: "This is a common issue on local clusters and we recommend to increase the node disk size for your cluster to run optimally."
 # additional builtin playbooks to enable when using Robusta UI
 # these are disabled by default without the UI because they are spammy when sent to slack
 

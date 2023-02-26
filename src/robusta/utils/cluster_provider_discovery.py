@@ -24,6 +24,8 @@ HOSTNAME_MATCH: Dict[ClusterProviderType, str] = {
     ClusterProviderType.RancherDesktop: ".*rancher-desktop.*"
 }
 
+__CLUSTER_PROVIDER__ = None
+
 
 def _get_node_label(node, label) -> Optional[str]:
     try:
@@ -68,6 +70,18 @@ def _is_detect_cluster_from_kubelet_version(nodes, kubelet_substring) -> bool:
         pass
     return False
 
+
+def get_cluster_provider():
+    global __CLUSTER_PROVIDER__
+    logging.warning(__CLUSTER_PROVIDER__)
+    return __CLUSTER_PROVIDER__
+
+
+def discover_cluster_provider():
+    global __CLUSTER_PROVIDER__
+    if not __CLUSTER_PROVIDER__:
+        __CLUSTER_PROVIDER__ = find_cluster_provider().value
+        logging.info(f"{__CLUSTER_PROVIDER__} cluster detected")
 
 def find_cluster_provider() -> ClusterProviderType:
     try:

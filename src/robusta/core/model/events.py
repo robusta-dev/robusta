@@ -34,7 +34,6 @@ class ExecutionEventBaseParams(BaseModel):
 class ExecutionContext(BaseModel):
     account_id: str
     cluster_name: str
-    provider: str
 
 
 # Right now:

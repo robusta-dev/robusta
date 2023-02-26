@@ -117,7 +117,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             ExecutionContext(
                 account_id=self.registry.get_global_config().get("account_id", ""),
                 cluster_name=self.registry.get_global_config().get("cluster_name", ""),
-                provider=self.registry.get_global_config().get("provider", ""),
             )
         )
 

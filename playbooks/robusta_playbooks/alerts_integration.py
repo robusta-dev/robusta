@@ -14,6 +14,7 @@ from robusta.api import (
     CallbackChoice,
     ChartValuesFormat,
     CustomGraphEnricherParams,
+    Emojis,
     ExecutionBaseEvent,
     FileBlock,
     Finding,
@@ -33,6 +34,7 @@ from robusta.api import (
     create_chart_from_prometheus_query,
     create_graph_enrichment,
     create_resource_enrichment,
+    get_cluster_provider,
     get_node_internal_ip,
 )
 
@@ -91,8 +93,8 @@ def name_silencer(alert: PrometheusKubernetesAlert, params: NameSilencerParams):
     """
     Silence named alerts.
     """
+    provider = get_cluster_provider()
     if params.k8s_providers and len(params.k8s_providers) > 0:
-        provider = alert.get_context().provider
         lowercase_provider = [provider.lower() for provider in params.k8s_providers]
         if provider.lower() not in lowercase_provider:
             return
@@ -134,6 +136,31 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
 
     node_start_time = datetime.strptime(node_start_time_str, "%Y-%m-%dT%H:%M:%SZ")
     alert.stop_processing = datetime.utcnow().timestamp() < (node_start_time.timestamp() + params.post_restart_silence)
+
+
+class AlertExplanationParams(ActionParams):
+    """
+    :var alert_explanation: Period after restart to silence alerts. Seconds.
+    """
+
+    alert_explanation: str
+    recommended_resolution: Optional[str]
+
+
+@action
+def alert_explanation_enricher(alert: PrometheusKubernetesAlert, params: AlertExplanationParams):
+    """
+    Enrich the finding an explanation and recommendation of how to resolve the issue
+    """
+    blocks = [MarkdownBlock(
+                f"{Emojis.Explain.value} *Alert Explanation:* {params.alert_explanation}"
+            )]
+    if params.recommended_resolution:
+        resolution_block = MarkdownBlock(
+                f"{Emojis.Recommend.value} *Robusta's Recommendation:* {params.recommended_resolution}"
+            )
+        blocks.append(resolution_block)
+    alert.add_enrichment(blocks, annotations={SlackAnnotations.UNFURL: False},)
 
 
 @action

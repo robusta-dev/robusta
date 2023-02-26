@@ -35,7 +35,7 @@ from robusta.integrations.scheduled.playbook_scheduler_manager_impl import Playb
 from robusta.integrations.scheduled.trigger import ScheduledTriggerEvent
 from robusta.model.config import PlaybooksRegistry, PlaybooksRegistryImpl, Registry, SinksRegistry
 from robusta.model.playbook_definition import PlaybookDefinition
-from robusta.utils.cluster_provider_discovery import find_cluster_provider
+from robusta.utils.cluster_provider_discovery import discover_cluster_provider
 from robusta.utils.file_system_watcher import FileSystemWatcher
 
 
@@ -165,10 +165,7 @@ class ConfigLoader:
                     return
 
                 try:
-                    if runner_config.global_config.get("provider", "unknown").lower() == "unknown":
-                        provider = find_cluster_provider().value
-                        runner_config.global_config["provider"] = provider
-                        logging.info(f"{provider} cluster detected")
+                    discover_cluster_provider()
                 except:
                     logging.error(f"failed to determine cluster provider", exc_info=True)
                 self.registry.set_global_config(runner_config.global_config)
