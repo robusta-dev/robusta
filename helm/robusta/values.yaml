@@ -95,6 +95,8 @@ priorityBuiltinPlaybooks:
   actions:
   - name_silencer:
       names: [ "KubeletDown" ]
+
+# Smart Silences
 - triggers:
   - on_prometheus_alert:
       alert_name: TargetDown
