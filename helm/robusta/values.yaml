@@ -77,9 +77,14 @@ priorityBuiltinPlaybooks:
   actions:
   - name_silencer:
       names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
+# Silences for small/local clusters
   - name_silencer:
-      k8s_providers: ["Minikube", "Kind", "RancherDesktop"]
+      on_k8s_providers: ["Minikube", "Kind", "RancherDesktop"]
       names: ["etcdInsufficientMembers", "etcdMembersDown", "NodeClockNotSynchronising", "PrometheusTSDBCompactionsFailing"]
+# Silences for specific providers
+  - name_silencer:
+      on_k8s_providers: [ "GKE" ]
+      names: [ "KubeletDown" ]
 - triggers:
   - on_prometheus_alert:
       alert_name: TargetDown
