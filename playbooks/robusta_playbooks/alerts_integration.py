@@ -34,7 +34,6 @@ from robusta.api import (
     create_chart_from_prometheus_query,
     create_graph_enrichment,
     create_resource_enrichment,
-    get_cluster_provider,
     get_node_internal_ip,
 )
 
@@ -62,12 +61,10 @@ def severity_silencer(alert: PrometheusKubernetesAlert, params: SeverityParams):
 class NameSilencerParams(ActionParams):
     """
     :var names: List of alert names that should be silenced.
-    :var k8s_providers: List of providers the alerts should be silenced on, if empty than all providers will be silenced
 
     """
 
     names: List[str]
-    k8s_providers: Optional[List[str]]
 
 
 class SilenceAlertParams(ActionParams):
@@ -93,12 +90,6 @@ def name_silencer(alert: PrometheusKubernetesAlert, params: NameSilencerParams):
     """
     Silence named alerts.
     """
-    provider = get_cluster_provider()
-    if params.k8s_providers and len(params.k8s_providers) > 0:
-        lowercase_provider = [provider.lower() for provider in params.k8s_providers]
-        if provider.lower() not in lowercase_provider:
-            return
-
     if alert.alert_name in params.names:
         logging.warning(f"silencing alert {alert}")
         alert.stop_processing = True
