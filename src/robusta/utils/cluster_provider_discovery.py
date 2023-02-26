@@ -68,7 +68,7 @@ def _is_aks(nodes) -> bool:
         provider_id = node.spec.providerID
         if "aks" in provider_id:
             return True
-    except AttributeError:
+    except (AttributeError, TypeError):
         # is not aks, field is optional so could be missing
         pass
     return False
@@ -80,7 +80,7 @@ def _is_detect_cluster_from_kubelet_version(nodes, kubelet_substring) -> bool:
         kubelet_version = node.status.nodeInfo.kubeletVersion
         if kubelet_substring in kubelet_version:
             return True
-    except AttributeError:
+    except (AttributeError, TypeError):
         # missing kubeletVersion
         pass
     return False
