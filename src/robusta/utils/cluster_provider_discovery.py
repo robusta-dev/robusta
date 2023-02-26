@@ -21,8 +21,14 @@ class ClusterProviderType(Enum):
 
 HOSTNAME_MATCH: Dict[ClusterProviderType, str] = {
     ClusterProviderType.Kind: ".*kind.*",
-    ClusterProviderType.Minikube: ".*minikube.*",
     ClusterProviderType.RancherDesktop: ".*rancher-desktop.*"
+}
+
+NODE_LABELS: Dict[ClusterProviderType, str] = {
+    ClusterProviderType.Minikube: "minikube.k8s.io/name",
+    ClusterProviderType.DigitalOcean: "doks.digitalocean.com/version",
+    ClusterProviderType.Kops: "kops.k8s.io/instancegroup",
+    ClusterProviderType.Kapsule: "k8s.scaleway.com/kapsule"
 }
 
 __CLUSTER_PROVIDER__ = None
@@ -45,6 +51,13 @@ def _detect_provider_from_hostname(nodes) -> Optional[ClusterProviderType]:
             cluster_hostname_regex = HOSTNAME_MATCH[cluster_type]
             if len(re.findall(cluster_hostname_regex, host_name)) >= 1:
                 return cluster_type
+    return ClusterProviderType.Unknown
+
+
+def _detect_provider_from_node_labels(nodes) -> Optional[ClusterProviderType]:
+    for cluster_type in NODE_LABELS:
+        if _get_node_label(nodes[0], NODE_LABELS[cluster_type]):
+            return cluster_type
     return ClusterProviderType.Unknown
 
 
@@ -96,17 +109,9 @@ def find_cluster_provider() -> ClusterProviderType:
         elif _is_detect_cluster_from_kubelet_version(nodes, 'eks'):
             return ClusterProviderType.EKS
 
-        KAPSULE_NODE_LABEL = "k8s.scaleway.com/kapsule"
-        if _get_node_label(nodes[0], KAPSULE_NODE_LABEL):
-            return ClusterProviderType.Kapsule
-
-        KOPS_NODE_LABEL = "kops.k8s.io/instancegroup"
-        if _get_node_label(nodes[0], KOPS_NODE_LABEL):
-            return ClusterProviderType.Kops
-
-        DIGITAL_OCEAN_NODE_LABEL = "doks.digitalocean.com/version"
-        if _get_node_label(nodes[0], DIGITAL_OCEAN_NODE_LABEL):
-            return ClusterProviderType.DigitalOcean
+        cluster_provider_from_labels = _detect_provider_from_node_labels(nodes)
+        if cluster_provider_from_labels != ClusterProviderType.Unknown:
+            return cluster_provider_from_labels
 
     except Exception:
         logging.error("Error detecting cluster type", exc_info=True)
