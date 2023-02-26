@@ -18,12 +18,13 @@ class ClusterProviderType(Enum):
     DigitalOcean = "DigitalOcean"
     Unknown = auto()
 
-
+# the value is a regex match of the hostname
 HOSTNAME_MATCH: Dict[ClusterProviderType, str] = {
     ClusterProviderType.Kind: ".*kind.*",
     ClusterProviderType.RancherDesktop: ".*rancher-desktop.*"
 }
 
+# the value is a node label unique to the provider
 NODE_LABELS: Dict[ClusterProviderType, str] = {
     ClusterProviderType.Minikube: "minikube.k8s.io/name",
     ClusterProviderType.DigitalOcean: "doks.digitalocean.com/version",
