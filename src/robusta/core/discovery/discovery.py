@@ -23,12 +23,13 @@ from kubernetes.client import (
 )
 from pydantic import BaseModel
 
-from robusta.core.model.cluster_status import ClusterStats
-from robusta.core.model.env_vars import DISCOVERY_MAX_BATCHES, DISCOVERY_BATCH_SIZE
 from robusta.core.discovery import utils
+from robusta.core.model.cluster_status import ClusterStats
+from robusta.core.model.env_vars import DISCOVERY_BATCH_SIZE, DISCOVERY_MAX_BATCHES
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
+from robusta.utils.cluster_provider_discovery import get_cluster_provider
 
 
 class DiscoveryResults(BaseModel):
@@ -353,6 +354,7 @@ class Discovery:
             pods=pod_count,
             nodes=node_count,
             jobs=job_count,
+            provider=get_cluster_provider()
         )
 
 
