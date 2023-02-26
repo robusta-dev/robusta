@@ -131,7 +131,8 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
 
 class AlertExplanationParams(ActionParams):
     """
-    :var alert_explanation: Period after restart to silence alerts. Seconds.
+    :var alert_explanation: A human-readable explanation of when prometheus fires the alert
+    :var recommended_resolution: A recommended resolution for the alert
     """
 
     alert_explanation: str
