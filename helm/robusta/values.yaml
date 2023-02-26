@@ -251,7 +251,7 @@ builtinPlaybooks:
   actions:
   - alert_explanation_enricher:
       alert_explanation: "This alert is fired when the file system is running out of space."
-      recommended_resolution: "This is a common issue on local clusters and we recommend to increase the node disk size for your cluster to run optimally."
+      recommended_resolution: "This is a common issue on local clusters and we recommend increasing the node disk size for your cluster to run optimally."
 
 # additional builtin playbooks to enable when using Robusta UI
 # these are disabled by default without the UI because they are spammy when sent to slack
