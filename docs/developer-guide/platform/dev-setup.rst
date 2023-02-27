@@ -13,7 +13,7 @@ Installing Robusta in-cluster from source
 1. ``git clone`` the source code.
 2. Install `skaffold <https://skaffold.dev/>`_ and `helm <https://helm.sh/>`_
 3. Run ``robusta gen-config`` and copy the result to ``deployment/generated_values.yaml``
-4. Run ``skaffold run --tail``
+4. Run ``skaffold run --tail``, or ``skaffold run --tail -p apple-m1-dev`` if you're using Apple M1
 
 Common errors
 ---------------

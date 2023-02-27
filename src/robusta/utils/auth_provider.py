@@ -23,6 +23,9 @@ class AuthProvider:
     @staticmethod
     def _load_private_key(file_name: str) -> Optional[RSAPrivateKey]:
         try:
+            if not os.path.isfile(file_name):
+                logging.info(f"no rsa private key at {file_name}")
+                return None
             with open(file_name, "rb") as key_file:
                 private_key = serialization.load_pem_private_key(
                     key_file.read(),
@@ -38,6 +41,9 @@ class AuthProvider:
     @staticmethod
     def _load_public_key(file_name: str) -> Optional[RSAPublicKey]:
         try:
+            if not os.path.isfile(file_name):
+                logging.info(f"no rsa public key at {file_name}")
+                return None
             with open(file_name, "rb") as key_file:
                 public_key = serialization.load_pem_public_key(key_file.read())
                 logging.info(f"Loaded public key file {file_name}")

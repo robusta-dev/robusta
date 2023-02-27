@@ -55,6 +55,7 @@ lightActions:
 - python_process_inspector
 - prometheus_alert
 - create_pvc_snapshot
+- resource_events_enricher
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
@@ -76,6 +77,11 @@ priorityBuiltinPlaybooks:
   actions:
   - name_silencer:
       names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
+- triggers:
+  - on_prometheus_alert:
+      alert_name: TargetDown
+  actions:
+  - target_down_dns_silencer: {}
 
 # custom user playbooks
 customPlaybooks: []
@@ -134,12 +140,6 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
-      alert_name: TargetDown
-  actions:
-  - target_down_dns_enricher: {}
-
-- triggers:
-  - on_prometheus_alert:
       alert_name: KubePodNotReady
   actions:
   - logs_enricher: {}
@@ -188,6 +188,8 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
+  - on_prometheus_alert:
+      alert_name: NodeFilesystemAlmostOutOfSpace
   actions:
   - node_disk_analyzer: {}
   - alert_graph_enricher:
