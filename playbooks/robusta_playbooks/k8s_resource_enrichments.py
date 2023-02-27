@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 import json
 import hikaru
 import kubernetes.client.exceptions
-from hikaru.model import Pod, PodList, ContainerStatus
+from hikaru.model import Pod, PodList, ContainerStatus, ContainerState
 from robusta.api import (
     PodContainer,
     ActionException,
@@ -66,7 +66,7 @@ def get_related_pods(resource) -> list[Pod]:
 
     return pods
 
-def to_pod_obj(pod: Pod) -> Dict[str,Any]:
+def to_pod_obj(pod: Pod, cluster: str) -> Dict[str,Any]:
     resource_requests = pod_requests(pod)
     resource_limits = pod_limits(pod)
     addresses = ",".join([address.ip for address in pod.status.podIPs])
@@ -74,11 +74,12 @@ def to_pod_obj(pod: Pod) -> Dict[str,Any]:
         "name": pod.metadata.name,
         "namespace": pod.metadata.namespace,
         "node": pod.spec.nodeName,
-        "cpu limit": resource_limits.cpu,
-        "cpu request": resource_requests.cpu,
-        "memory limit": resource_limits.memory,
-        "memory request": resource_requests.memory,
-        "creation_time": pod.metadata.creationTimestamp,
+        "clusterName": cluster,
+        "cpuLimit": resource_limits.cpu,
+        "cpuRequest": resource_requests.cpu,
+        "memoryLimit": resource_limits.memory,
+        "memoryRequest": resource_requests.memory,
+        "creationTime": pod.metadata.creationTimestamp,
         "restarts": pod_restarts(pod),
         "addresses": addresses,
         "containers": get_pod_containers(pod),
@@ -91,12 +92,12 @@ def get_pod_containers(pod: Pod) -> List[Dict[str,Any]]:
         requests = PodContainer.get_requests(container)
         limits = PodContainer.get_limits(container)
         containerStatus: Optional[ContainerStatus] = PodContainer.get_status(pod, container.name)  
-        containerState = getattr(containerStatus, "state", None)
+        currentState : Optional[ContainerState] = getattr(containerStatus, "state", None)
         stateStr : str = "waiting"
         state = None
-        if containerState:
+        if currentState:
             for s in ["running", "waiting" , "terminated"]:
-                state = getattr(containerState, s, None)
+                state = getattr(currentState, s, None)
                 if state is not None:
                     stateStr = s
                     break
@@ -107,7 +108,7 @@ def get_pod_containers(pod: Pod) -> List[Dict[str,Any]]:
             "cpuRequest": requests.cpu,
             "memoryLimit": limits.memory,
             "memoryRequest": requests.memory,
-            "restarts": getattr(containerStatus, "restarts", 0),
+            "restarts": getattr(containerStatus, "restartCount", 0),
             "status": stateStr,
             "created": getattr(state, "startedAt", None)
         })
@@ -126,8 +127,9 @@ def resource_related_pods(event: KubernetesResourceEvent):
     Supports Deployments, ReplicaSets, DaemonSets, StatefulSets and Pods
     """
     pods = get_related_pods(event.get_resource())
+    cluster = event.get_context().cluster_name
     event.add_enrichment([
-       JsonBlock(json.dumps([to_pod_obj(pod) for pod in pods]))
+       JsonBlock(json.dumps([to_pod_obj(pod, cluster) for pod in pods]))
     ])
 
 
