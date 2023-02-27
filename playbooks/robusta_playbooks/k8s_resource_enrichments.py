@@ -181,7 +181,6 @@ def get_resource_yaml(event: KubernetesResourceEvent):
         logging.error("resource not found...")
         return
 
-    logging.info("attempt yaml")
     resource_kind = resource.kind
     namespace: str = resource.metadata.namespace
     name: str = resource.metadata.name
