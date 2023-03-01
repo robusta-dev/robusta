@@ -76,5 +76,11 @@ In this part we will update the self_host_values.yaml file to use your app crede
 
 #. Go to your app page -> Basic Information
 #. In the App Credentials section find: ``Client ID``, ``Client Secret`` and ``Signing Secret``.
-#. Open the self_host_values.yaml file
-#. replace ``slackClientId``, ``slackClientSecret`` and ``slackSigningSecret`` respectively.
+#. Fill ``slackClientId``, ``slackClientSecret`` and ``slackSigningSecret`` respectively.
+
+.. code-block:: bash
+   :name: cb-slack-integrations-yaml-values
+
+    slackClientId: "<your-client-id>"
+    slackClientSecret: "<your-client-secret>"
+    slackSigningSecret: "<your-signing-secret>"

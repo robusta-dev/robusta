@@ -16,10 +16,14 @@ GCP Guide
 Set up a GKE global static IP 
 ---------------------------------
 
+* Locate your `project ID <https://support.google.com/googleapi/answer/7014113?hl=en>`_ if its not set on your workspace.
+
+* Create a new global IP:
+
 .. code-block:: bash
    :name: cb-gke-create-static-global-ip
 
-    gcloud compute addresses create robusta-platform-ip --global
+    gcloud compute addresses create robusta-platform-ip --global --project=<your-project-id>
    
 .. admonition:: Common Errors
    :class: warning
@@ -36,10 +40,10 @@ in this step we are going to route your DNS to the GKE global static IP.
 .. code-block:: bash
     :name: cb-gke-get-global-ip-address
 
-    gcloud compute addresses list --filter=name:robusta-platform-ip --global 
+    gcloud compute addresses list --filter=name:robusta-platform-ip --global --project=<your-project-id>
 
-Route the subdomains
-^^^^^^^^^^^^^^^^^^^^^
+Route the subdomains to the new IP
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The linking process depends on your domain provider (e.g. Namecheap, GoDaddy or Google Domains). 
 Usually it involves creating an “A Record”.
@@ -78,7 +82,7 @@ You can now install the Robusta platform into your cluster using `Helm <https://
 .. code-block:: bash
     :name: cb-gke-install
 
-    helm install robusta-platform robusta-platform/robusta-platform -f values.yaml
+    helm install robusta-platform robusta-platform/robusta-platform -f self_host_values.yaml
 
 **It will take the Robusta platform approximately 30 min to activate due to Google's SSL certificate provisioning process.**
 check the :ref:`Troubleshooting <Troubleshooting>` section for more info.
@@ -101,7 +105,7 @@ robusta_cli_config.json file was generated for you with the required settings.
     $ robusta version
     Using Robusta backend profile: /Path/to/your/robusta_cli_config.json
 
-Integartions
+Integrations
 ----------------
 
 Now that your values file is ready, here are a couple of guides we'd recommend you check out.
@@ -115,7 +119,7 @@ Troubleshooting
 GKE Managed certificate 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Robusta platform uses GKE Google-managed SSL certificate which takes approximately 30~ min to activate. 
+Robusta's platform uses Google-managed SSL certificate which takes approximately 30~ min to activate. 
 
 * Go to `GKE Managed certificates <https://console.cloud.google.com/net-services/loadbalancing/advanced/sslCertificates/list>`_ and find ``robusta-platform-certificate``.
 * Make sure the certificate Status is Active and you see your 4 sub-domains with an Active status as well.
@@ -124,8 +128,8 @@ Load balancer
 ^^^^^^^^^^^^^^^
 The load balancer depends on the managed certificate to run proprly.
 
-* Go to `GKE Load Balancers <https://console.cloud.google.com/net-services/loadbalancing/list/loadBalancers/>`_ find the ``robusta-platform`` load balacer.
-* Make sure you see green check mark with 5 backend services running.
+* Go to `GKE Load Balancers <https://console.cloud.google.com/net-services/loadbalancing/list/loadBalancers/>`_ find the ``robusta-platform-ingress`` load balacer.
+* Make sure there are 5 backend services running with green check mark.
 
 Deployments
 ^^^^^^^^^^^^^
