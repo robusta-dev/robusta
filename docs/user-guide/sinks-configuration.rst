@@ -111,7 +111,7 @@ Supported attributes:
   - ``node`` : the Kubernetes node name
   - ``name`` : the Kubernetes object name
 
-The regular expressions must be in the `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_.
+The regular expressions must be in the `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_. (Robusta uses `re.match <https://docs.python.org/3/library/re.html#re.match>`_)
 
 .. rubric:: Footnotes
 
