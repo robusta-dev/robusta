@@ -204,8 +204,8 @@ class RobustaSink(SinkBase):
                 self.__should_clear_cache = False
                 self.__reset_caches()
         except Exception:
-            # we had an error during discovery. Reset caches to align the data with the storage
             self.__should_clear_cache = False
+            # we had an error during discovery. Reset caches to align the data with the storage
             self.__reset_caches()
             logging.error(
                 f"Failed to run publish discovery for {self.sink_name}",
