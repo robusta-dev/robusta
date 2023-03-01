@@ -219,7 +219,7 @@ class RobustaSink(SinkBase):
         node_info = node.status.node_info.to_dict() if node.status.node_info else {}
         node_info["labels"] = node.metadata.labels or {}
         node_info["annotations"] = node.metadata.annotations or {}
-        node_info["addresses"] = [addr.address for addr in node.status.addresses]
+        node_info["addresses"] = [addr.address for addr in node.status.addresses] if node.status.addresses else []
         return node_info
 
     @classmethod
