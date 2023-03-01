@@ -59,6 +59,7 @@ class RobustaSink(SinkBase):
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
+        self.__should_clear_cache = False
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
         # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
         # helps differentiate between no jobs, to not initialized
@@ -121,6 +122,7 @@ class RobustaSink(SinkBase):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__jobs_cache = None
+        self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
 
     def stop(self):
         self.__active = False
@@ -153,6 +155,7 @@ class RobustaSink(SinkBase):
 
             self.dal.persist_services(updated_services)
         except Exception:
+            self.__should_clear_cache = True
             logging.error(
                 f"Failed to run publish services for {self.sink_name}",
                 exc_info=True,
@@ -196,8 +199,13 @@ class RobustaSink(SinkBase):
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
             )
 
+            # we had a handled error during discovery. Reset caches to align the data with the storage
+            if self.__should_clear_cache:
+                self.__should_clear_cache = False
+                self.__reset_caches()
         except Exception:
             # we had an error during discovery. Reset caches to align the data with the storage
+            self.__should_clear_cache = False
             self.__reset_caches()
             logging.error(
                 f"Failed to run publish discovery for {self.sink_name}",
@@ -228,8 +236,7 @@ class RobustaSink(SinkBase):
         node_info["addresses"] = [addr.address for addr in node.status.addresses] if node.status.addresses else []
         return node_info
 
-    @classmethod
-    def __from_api_server_node(cls, api_server_node: V1Node, pod_requests_list: List[PodResources]) -> Optional[NodeInfo]:
+    def __from_api_server_node(self, api_server_node: V1Node, pod_requests_list: List[PodResources]) -> Optional[NodeInfo]:
         try:
             addresses = api_server_node.status.addresses or []
             external_addresses = [address for address in addresses if "externalip" in address.type.lower()]
@@ -237,7 +244,7 @@ class RobustaSink(SinkBase):
             internal_addresses = [address for address in addresses if "internalip" in address.type.lower()]
             internal_ip = ",".join([addr.address for addr in internal_addresses])
             node_taints = api_server_node.spec.taints or []
-            taints = ",".join([cls.__to_taint_str(taint) for taint in node_taints])
+            taints = ",".join([self.__to_taint_str(taint) for taint in node_taints])
             capacity = api_server_node.status.capacity or {}
             allocatable = api_server_node.status.allocatable or {}
             return NodeInfo(
@@ -246,7 +253,7 @@ class RobustaSink(SinkBase):
                 internal_ip=internal_ip,
                 external_ip=external_ip,
                 taints=taints,
-                conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),
+                conditions=self.__to_active_conditions_str(api_server_node.status.conditions),
                 memory_capacity=PodResources.parse_mem(capacity.get("memory", "0Mi")),
                 memory_allocatable=PodResources.parse_mem(allocatable.get("memory", "0Mi")),
                 memory_allocated=sum([req.memory for req in pod_requests_list]),
@@ -255,9 +262,10 @@ class RobustaSink(SinkBase):
                 cpu_allocated=round(sum([req.cpu for req in pod_requests_list]), 3),
                 pods_count=len(pod_requests_list),
                 pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
-                node_info=cls.__to_node_info(api_server_node),
+                node_info=self.__to_node_info(api_server_node),
             )
         except Exception:
+            self.__should_clear_cache = True
             node_name = api_server_node.metadata.name
             logging.error(
                 f"Failed to create NodeInfo for node {node_name}",
@@ -285,12 +293,13 @@ class RobustaSink(SinkBase):
             for node_name in curr_nodes.keys():
                 pod_requests = node_requests.get(node_name, [])  # if all the pods on the node have no requests
                 updated_node = self.__from_api_server_node(curr_nodes.get(node_name), pod_requests)
-                if updated_node and self.__nodes_cache.get(node_name) != updated_node:  # node not in the cache, or changed
+                if self.__nodes_cache.get(node_name) != updated_node:  # node not in the cache, or changed
                     updated_nodes.append(updated_node)
                     self.__nodes_cache[node_name] = updated_node
 
             self.dal.publish_nodes(updated_nodes)
         except Exception:
+            self.__should_clear_cache = True
             logging.error(
                 f"Failed to run publish nodes for {self.sink_name}",
                 exc_info=True,
@@ -328,6 +337,7 @@ class RobustaSink(SinkBase):
 
             self.dal.publish_jobs(updated_jobs)
         except Exception:
+            self.__should_clear_cache = True
             logging.error(
                 f"Failed to run publish jobs for {self.sink_name}",
                 exc_info=True,
@@ -415,6 +425,7 @@ class RobustaSink(SinkBase):
 
             self.dal.publish_namespaces(updated_namespaces)
         except Exception:
+            self.__should_clear_cache = True
             logging.error(
                 f"Failed to run publish namespaces for {self.sink_name}",
                 exc_info=True,
