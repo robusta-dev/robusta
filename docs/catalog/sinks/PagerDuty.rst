@@ -3,7 +3,16 @@ PagerDuty
 
 `PagerDuty <https://www.pagerduty.com/>`_ is a popular incident response tool.
 
-`Robusta <https://docs.robusta.dev/master/index.html>`_ is a popular Kubernetes monitoring solution, based on Prometheus. Robusta can send three types of data to the PagerDuty API:
+
+`Robusta <https://docs.robusta.dev/master/index.html>`_ is a popular Open-Source Kubernetes monitoring tool that allows you to find major problems in your Cluster by tracking changes and identifying bad practices.
+
+* With its awesome Prometheus integration, you can easily monitor and analyze your system's performance, set up alerts on crashing pods or unavailable replicas, and troubleshoot issues in real-time.
+* Robusta provides comprehensive metrics and analytics that help you identify bottlenecks, optimize resource usage, and improve the overall health of your system.
+* Its seamless integration with Prometheus makes it easy to monitor your system's performance and identify issues as soon as they arise.
+
+| With Robusta, you can ensure that your system is running smoothly and efficiently, while avoiding common pitfalls and bad practices. Whether you're a developer, a sysadmin, or a DevOps engineer, Robusta can help you keep your cluster healthy and efficient.
+
+Robusta can send three types of data to the PagerDuty API:
 
 *  `Change Events <https://support.pagerduty.com/docs/change-events>`_ - for example, when Deployments are updated
 
