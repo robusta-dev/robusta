@@ -12,7 +12,9 @@ PagerDuty
 
 | With Robusta, you can ensure that your system is running smoothly and efficiently, while avoiding common pitfalls and bad practices. Whether you're a developer, a sysadmin, or a DevOps engineer, Robusta can help you keep your cluster healthy and efficient.
 
-Robusta can send three types of data to the PagerDuty API:
+
+
+| **Robusta can send three types of data to the PagerDuty API:**
 
 *  `Change Events <https://support.pagerduty.com/docs/change-events>`_ - for example, when Deployments are updated
 
