@@ -12,15 +12,14 @@ PagerDuty
 
 | With Robusta, you can ensure that your system is running smoothly and efficiently, while avoiding common pitfalls and bad practices. Whether you're a developer, a sysadmin, or a DevOps engineer, Robusta can help you keep your cluster healthy and efficient.
 
-
-
+|
 | **Robusta can send three types of data to the PagerDuty API:**
 
 *  `Change Events <https://support.pagerduty.com/docs/change-events>`_ - for example, when Deployments are updated
 
-* Enriched Prometheus `alerts <https://support.pagerduty.com/docs/alerts>`_ - Robusta receives the alert from Prometheus, attaches context like Pod logs, and forward to PagerDuty
+* Enriched Prometheus `Alerts <https://support.pagerduty.com/docs/alerts>`_ - Robusta receives the alert from Prometheus, attaches context like Pod logs, and forward to PagerDuty
 
-* Standalone `alerts <https://support.pagerduty.com/docs/alerts>`_ - if you don’t use Prometheus, Robusta can still send alerts to PagerDuty for errors like CrashLoopBackOff
+* Standalone `Alerts <https://support.pagerduty.com/docs/alerts>`_ - if you don’t use Prometheus, Robusta can still send alerts to PagerDuty for errors like CrashLoopBackOff
 
 
 
