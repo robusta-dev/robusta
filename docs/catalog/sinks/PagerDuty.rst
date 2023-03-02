@@ -22,6 +22,10 @@ PagerDuty
 * Standalone `Alerts <https://support.pagerduty.com/docs/alerts>`_ - if you don’t use Prometheus, Robusta can still send alerts to PagerDuty for errors like CrashLoopBackOff
 
 
+.. raw:: html
+
+  <div style="position: relative; padding-bottom: 62.5%; height: 0;"><iframe src="https://www.youtube.com/embed/QHBsv-1ukTQ" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+
 
 Prerequisites
 ------------------------------
