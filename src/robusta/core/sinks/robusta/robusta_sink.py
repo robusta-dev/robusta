@@ -9,7 +9,7 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
-from robusta.core.model.cluster_status import ClusterStats, ClusterStatus
+from robusta.core.model.cluster_status import ClusterStatus, ClusterStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
@@ -59,7 +59,6 @@ class RobustaSink(SinkBase):
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
-        self.__should_clear_cache = False
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
         # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
         # helps differentiate between no jobs, to not initialized
@@ -131,35 +130,28 @@ class RobustaSink(SinkBase):
         self.dal.persist_finding(finding)
 
     def __publish_new_services(self, active_services: List[ServiceInfo]):
-        try:
-            # convert to map
-            curr_services = {}
-            for service in active_services:
-                curr_services[service.get_service_key()] = service
+        # convert to map
+        curr_services = {}
+        for service in active_services:
+            curr_services[service.get_service_key()] = service
 
-            # handle deleted services
-            cache_keys = list(self.__services_cache.keys())
-            updated_services: List[ServiceInfo] = []
-            for service_key in cache_keys:
-                if not curr_services.get(service_key):  # service doesn't exist any more, delete it
-                    self.__services_cache[service_key].deleted = True
-                    updated_services.append(self.__services_cache[service_key])
-                    del self.__services_cache[service_key]
+        # handle deleted services
+        cache_keys = list(self.__services_cache.keys())
+        updated_services: List[ServiceInfo] = []
+        for service_key in cache_keys:
+            if not curr_services.get(service_key):  # service doesn't exist any more, delete it
+                self.__services_cache[service_key].deleted = True
+                updated_services.append(self.__services_cache[service_key])
+                del self.__services_cache[service_key]
 
-            # new or changed services
-            for service_key in curr_services.keys():
-                current_service = curr_services[service_key]
-                if self.__services_cache.get(service_key) != current_service:  # service not in the cache, or changed
-                    updated_services.append(current_service)
-                    self.__services_cache[service_key] = current_service
+        # new or changed services
+        for service_key in curr_services.keys():
+            current_service = curr_services[service_key]
+            if self.__services_cache.get(service_key) != current_service:  # service not in the cache, or changed
+                updated_services.append(current_service)
+                self.__services_cache[service_key] = current_service
 
-            self.dal.persist_services(updated_services)
-        except Exception:
-            self.__should_clear_cache = True
-            logging.error(
-                f"Failed to run publish services for {self.sink_name}",
-                exc_info=True,
-            )
+        self.dal.persist_services(updated_services)
 
     def __get_events_history(self):
         try:
@@ -199,12 +191,7 @@ class RobustaSink(SinkBase):
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
             )
 
-            # we had a handled error during discovery. Reset caches to align the data with the storage
-            if self.__should_clear_cache:
-                self.__should_clear_cache = False
-                self.__reset_caches()
         except Exception:
-            self.__should_clear_cache = False
             # we had an error during discovery. Reset caches to align the data with the storage
             self.__reset_caches()
             logging.error(
@@ -236,74 +223,59 @@ class RobustaSink(SinkBase):
         node_info["addresses"] = [addr.address for addr in node.status.addresses] if node.status.addresses else []
         return node_info
 
-    def __from_api_server_node(self, api_server_node: V1Node, pod_requests_list: List[PodResources]) -> Optional[NodeInfo]:
-        try:
-            addresses = api_server_node.status.addresses or []
-            external_addresses = [address for address in addresses if "externalip" in address.type.lower()]
-            external_ip = ",".join([addr.address for addr in external_addresses])
-            internal_addresses = [address for address in addresses if "internalip" in address.type.lower()]
-            internal_ip = ",".join([addr.address for addr in internal_addresses])
-            node_taints = api_server_node.spec.taints or []
-            taints = ",".join([self.__to_taint_str(taint) for taint in node_taints])
-            capacity = api_server_node.status.capacity or {}
-            allocatable = api_server_node.status.allocatable or {}
-            return NodeInfo(
-                name=api_server_node.metadata.name,
-                node_creation_time=str(api_server_node.metadata.creation_timestamp),
-                internal_ip=internal_ip,
-                external_ip=external_ip,
-                taints=taints,
-                conditions=self.__to_active_conditions_str(api_server_node.status.conditions),
-                memory_capacity=PodResources.parse_mem(capacity.get("memory", "0Mi")),
-                memory_allocatable=PodResources.parse_mem(allocatable.get("memory", "0Mi")),
-                memory_allocated=sum([req.memory for req in pod_requests_list]),
-                cpu_capacity=PodResources.parse_cpu(capacity.get("cpu", "0")),
-                cpu_allocatable=PodResources.parse_cpu(allocatable.get("cpu", "0")),
-                cpu_allocated=round(sum([req.cpu for req in pod_requests_list]), 3),
-                pods_count=len(pod_requests_list),
-                pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
-                node_info=self.__to_node_info(api_server_node),
-            )
-        except Exception:
-            self.__should_clear_cache = True
-            node_name = api_server_node.metadata.name
-            logging.error(
-                f"Failed to create NodeInfo for node {node_name}",
-                exc_info=True,
-            )
-            return None
+    @classmethod
+    def __from_api_server_node(cls, api_server_node: V1Node, pod_requests_list: List[PodResources]) -> NodeInfo:
+        addresses = api_server_node.status.addresses or []
+        external_addresses = [address for address in addresses if "externalip" in address.type.lower()]
+        external_ip = ",".join([addr.address for addr in external_addresses])
+        internal_addresses = [address for address in addresses if "internalip" in address.type.lower()]
+        internal_ip = ",".join([addr.address for addr in internal_addresses])
+        node_taints = api_server_node.spec.taints or []
+        taints = ",".join([cls.__to_taint_str(taint) for taint in node_taints])
+        capacity = api_server_node.status.capacity or {}
+        allocatable = api_server_node.status.allocatable or {}
+        return NodeInfo(
+            name=api_server_node.metadata.name,
+            node_creation_time=str(api_server_node.metadata.creation_timestamp),
+            internal_ip=internal_ip,
+            external_ip=external_ip,
+            taints=taints,
+            conditions=cls.__to_active_conditions_str(api_server_node.status.conditions),
+            memory_capacity=PodResources.parse_mem(capacity.get("memory", "0Mi")),
+            memory_allocatable=PodResources.parse_mem(allocatable.get("memory", "0Mi")),
+            memory_allocated=sum([req.memory for req in pod_requests_list]),
+            cpu_capacity=PodResources.parse_cpu(capacity.get("cpu", "0")),
+            cpu_allocatable=PodResources.parse_cpu(allocatable.get("cpu", "0")),
+            cpu_allocated=round(sum([req.cpu for req in pod_requests_list]), 3),
+            pods_count=len(pod_requests_list),
+            pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
+            node_info=cls.__to_node_info(api_server_node),
+        )
 
     def __publish_new_nodes(self, current_nodes: V1NodeList, node_requests: Dict[str, List[PodResources]]):
-        try:
-            # convert to map
-            curr_nodes = {}
-            for node in current_nodes.items:
-                curr_nodes[node.metadata.name] = node
+        # convert to map
+        curr_nodes = {}
+        for node in current_nodes.items:
+            curr_nodes[node.metadata.name] = node
 
-            # handle deleted nodes
-            updated_nodes: List[NodeInfo] = []
-            cache_keys = list(self.__nodes_cache.keys())
-            for node_name in cache_keys:
-                if not curr_nodes.get(node_name):  # node doesn't exist any more, delete it
-                    self.__nodes_cache[node_name].deleted = True
-                    updated_nodes.append(self.__nodes_cache[node_name])
-                    del self.__nodes_cache[node_name]
+        # handle deleted nodes
+        updated_nodes: List[NodeInfo] = []
+        cache_keys = list(self.__nodes_cache.keys())
+        for node_name in cache_keys:
+            if not curr_nodes.get(node_name):  # node doesn't exist any more, delete it
+                self.__nodes_cache[node_name].deleted = True
+                updated_nodes.append(self.__nodes_cache[node_name])
+                del self.__nodes_cache[node_name]
 
-            # new or changed nodes
-            for node_name in curr_nodes.keys():
-                pod_requests = node_requests.get(node_name, [])  # if all the pods on the node have no requests
-                updated_node = self.__from_api_server_node(curr_nodes.get(node_name), pod_requests)
-                if self.__nodes_cache.get(node_name) != updated_node:  # node not in the cache, or changed
-                    updated_nodes.append(updated_node)
-                    self.__nodes_cache[node_name] = updated_node
+        # new or changed nodes
+        for node_name in curr_nodes.keys():
+            pod_requests = node_requests.get(node_name, [])  # if all the pods on the node have no requests
+            updated_node = self.__from_api_server_node(curr_nodes.get(node_name), pod_requests)
+            if self.__nodes_cache.get(node_name) != updated_node:  # node not in the cache, or changed
+                updated_nodes.append(updated_node)
+                self.__nodes_cache[node_name] = updated_node
 
-            self.dal.publish_nodes(updated_nodes)
-        except Exception:
-            self.__should_clear_cache = True
-            logging.error(
-                f"Failed to run publish nodes for {self.sink_name}",
-                exc_info=True,
-            )
+        self.dal.publish_nodes(updated_nodes)
 
     def __safe_delete_job(self, job_key):
         try:
@@ -315,33 +287,26 @@ class RobustaSink(SinkBase):
             logging.error(f"Failed to delete job with service key {job_key}", exc_info=True)
 
     def __publish_new_jobs(self, active_jobs: List[JobInfo]):
-        try:
-            # convert to map
-            curr_jobs = {}
-            for job in active_jobs:
-                curr_jobs[job.get_service_key()] = job
+        # convert to map
+        curr_jobs = {}
+        for job in active_jobs:
+            curr_jobs[job.get_service_key()] = job
 
-            # handle deleted jobs
-            cache_keys = list(self.__jobs_cache.keys())
-            updated_jobs: List[JobInfo] = []
-            for job_key in cache_keys:
-                if not curr_jobs.get(job_key):  # job doesn't exist any more, delete it
-                    self.__safe_delete_job(job_key)
+        # handle deleted jobs
+        cache_keys = list(self.__jobs_cache.keys())
+        updated_jobs: List[JobInfo] = []
+        for job_key in cache_keys:
+            if not curr_jobs.get(job_key):  # job doesn't exist any more, delete it
+                self.__safe_delete_job(job_key)
 
-            # new or changed jobs
-            for job_key in curr_jobs.keys():
-                current_job = curr_jobs[job_key]
-                if self.__jobs_cache.get(job_key) != current_job:  # job not in the cache, or changed
-                    updated_jobs.append(current_job)
-                    self.__jobs_cache[job_key] = current_job
+        # new or changed jobs
+        for job_key in curr_jobs.keys():
+            current_job = curr_jobs[job_key]
+            if self.__jobs_cache.get(job_key) != current_job:  # job not in the cache, or changed
+                updated_jobs.append(current_job)
+                self.__jobs_cache[job_key] = current_job
 
-            self.dal.publish_jobs(updated_jobs)
-        except Exception:
-            self.__should_clear_cache = True
-            logging.error(
-                f"Failed to run publish jobs for {self.sink_name}",
-                exc_info=True,
-            )
+        self.dal.publish_jobs(updated_jobs)
 
     def __update_cluster_status(self):
         try:
@@ -402,31 +367,24 @@ class RobustaSink(SinkBase):
             self.__update_cluster_status()
 
     def __publish_new_namespaces(self, namespaces: List[NamespaceInfo]):
-        try:
-            # convert to map
-            curr_namespaces = {namespace.name: namespace for namespace in namespaces}
+        # convert to map
+        curr_namespaces = {namespace.name: namespace for namespace in namespaces}
 
-            # handle deleted namespaces
-            updated_namespaces: List[NamespaceInfo] = []
-            for namespace_name, namespace in self.__namespaces_cache.items():
-                if namespace_name not in curr_namespaces:
-                    namespace.deleted = True
-                    updated_namespaces.append(namespace)
+        # handle deleted namespaces
+        updated_namespaces: List[NamespaceInfo] = []
+        for namespace_name, namespace in self.__namespaces_cache.items():
+            if namespace_name not in curr_namespaces:
+                namespace.deleted = True
+                updated_namespaces.append(namespace)
 
-            for update in updated_namespaces:
-                if update.deleted:
-                    del self.__namespaces_cache[update.name]
+        for update in updated_namespaces:
+            if update.deleted:
+                del self.__namespaces_cache[update.name]
 
-            # new or changed namespaces
-            for namespace_name, updated_namespace in curr_namespaces.items():
-                if self.__namespaces_cache.get(namespace_name) != updated_namespace:
-                    updated_namespaces.append(updated_namespace)
-                    self.__namespaces_cache[namespace_name] = updated_namespace
+        # new or changed namespaces
+        for namespace_name, updated_namespace in curr_namespaces.items():
+            if self.__namespaces_cache.get(namespace_name) != updated_namespace:
+                updated_namespaces.append(updated_namespace)
+                self.__namespaces_cache[namespace_name] = updated_namespace
 
-            self.dal.publish_namespaces(updated_namespaces)
-        except Exception:
-            self.__should_clear_cache = True
-            logging.error(
-                f"Failed to run publish namespaces for {self.sink_name}",
-                exc_info=True,
-            )
+        self.dal.publish_namespaces(updated_namespaces)
