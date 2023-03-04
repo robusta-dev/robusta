@@ -105,11 +105,7 @@ Ask for help, or just say hi!
 
 1. `Slack <https://bit.ly/robusta-slack>`_ - **link only works on desktop**
 2. `GitHub Issues <https://github.com/robusta-dev/robusta/issues>`_
-
-
-**Commercial Support**
-
-We offer several affordable plans. Contact support@robusta.dev for details.
+3. `Email <support@robusta.dev>`_ - support@robusta.dev
 
 
 
