@@ -21,11 +21,12 @@ Configuring the Robusta UI sink
             - robusta_sink:
                 name: robusta_ui_sink
                 token: <your-token>
+                ttl_hours: 4380
 
 .. note::
 
-    | **Unactive** Robusta clusters have a default 6 months **data retention** span.
-    | For Test or ephemeral clusters you can use a custom data retention span using ``ttl_hours = <number-time-span>`` under your robusta_sink.
+    | **Unactive** Robusta clusters have a default 6 months **data retention** span (4380 hours).
+    | For Test or ephemeral clusters you can use a custom data retention span using ``ttl_hours = <number-time-span>``.
 
 Save the file and run
 
