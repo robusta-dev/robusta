@@ -180,4 +180,6 @@ def gen_config(
     values_dict["robusta-relay"] = relayValues.dict()
 
     backendProfile = BackendProfile.fromDomain(domain=domain)
+    self_host_approval_url = f"https://api.robusta.dev/terms-of-service.html"
+    typer.echo(f"By using this software you agree to the terms of service ({self_host_approval_url})\n")
     write_values_files("self_host_values.yaml", "robusta_cli_config.json", values_dict, backendProfile)
