@@ -1,7 +1,11 @@
 Robusta UI
 #################
 
-Robusta can send Playbooks results to Robusta UI.
+Robusta can send Kubernetes errors and alerts to the Robusta UI.
+
+.. image:: /images/robusta-demo.gif
+    :width: 1000
+    :align: center
 
 To configure Robusta UI, use our CLI to generate a token. Run:
 
@@ -25,8 +29,8 @@ Configuring the Robusta UI sink
 
 .. note::
 
-    | **Unactive** Robusta clusters have a default 6 months **data retention** span (4380 hours).
-    | For Test or ephemeral clusters you can use a custom data retention span using ``ttl_hours = <number-time-span>``.
+    | **Inactive** Robusta clusters have a default 6 months **data retention** span (4380 hours).
+    | To prevent short-lived clusters from fililng up the UI, you can remove clusters that haven't communicated for more than a few hours by setting ``ttl_hours = <number-time-span>``.
 
 Save the file and run
 
