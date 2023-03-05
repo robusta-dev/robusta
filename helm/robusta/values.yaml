@@ -150,6 +150,8 @@ builtinPlaybooks:
       alert_name: KubeJobFailed
   - on_prometheus_alert:
       alert_name: KubeJobCompletion
+  - on_prometheus_alert:
+      alert_name: KubeJobNotCompleted
   actions:
   - job_info_enricher: {}
   - job_events_enricher: {}
