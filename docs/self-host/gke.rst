@@ -77,7 +77,14 @@ Generate the self host values files
 Deploy
 --------
 
-You can now install the Robusta platform into your cluster using `Helm <https://helm.sh/docs/intro/install/>`_ :
+* Add the chart repository:
+
+.. code-block:: bash
+    :name: cb-gke-add-helm-repo
+
+    helm repo add robusta-platform https://robusta-charts-all.storage.googleapis.com && helm repo update
+
+* Install the Robusta platform into your cluster using `Helm <https://helm.sh/docs/intro/install/>`_ :
     
 .. code-block:: bash
     :name: cb-gke-install

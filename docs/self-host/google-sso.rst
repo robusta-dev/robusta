@@ -50,9 +50,9 @@ Fill ``Client ID`` and ``Client Secret`` from the previous step and add the foll
 .. code-block:: bash
    :name: cb-google-sso-yaml-values
 
-    ENABLE_GOOGLE_SIGNUP: true
-    GOOGLE_CLIENT_ID: <your-client-id>
-    GOOGLE_CLIENT_SECRET: <your-client-secret>
+   ENABLE_GOOGLE_SIGNUP: true
+   GOOGLE_CLIENT_ID: <your-client-id>
+   GOOGLE_CLIENT_SECRET: <your-client-secret>
 
 Support
 ^^^^^^^^^^^^^^^
