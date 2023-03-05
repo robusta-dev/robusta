@@ -32,6 +32,7 @@ class PrometheusAlertParams(ActionParams):
     status: str = "firing"
     severity: str = "error"
     description: str = "simulated prometheus alert"
+    summary: Optional[str]
     generator_url = ""
 
 
@@ -61,6 +62,10 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
     if prometheus_event_data.job_name is not None:
         labels["job"] = prometheus_event_data.job_name
 
+    annotations = {
+        "description": prometheus_event_data.description,
+        "summary": prometheus_event_data.summary if prometheus_event_data.summary else prometheus_event_data.alert_name,
+    }
     prometheus_event = AlertManagerEvent(
         **{
             "status": prometheus_event_data.status,
@@ -76,7 +81,7 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
                     "startsAt": datetime.now(),
                     "generatorURL": prometheus_event_data.generator_url,
                     "labels": labels,
-                    "annotations": {},
+                    "annotations": annotations,
                 }
             ],
         }

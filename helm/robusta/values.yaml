@@ -219,6 +219,21 @@ builtinPlaybooks:
   - deployment_events_enricher:
       included_types: ["Warning", "Normal"]
       dependent_pod_mode: true
+
+# Default event enrichment for relevant Prometheus alerts
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeStatefulSetReplicasMismatch
+  - on_prometheus_alert:
+      alert_name: KubeDaemonSetRolloutStuck
+  - on_prometheus_alert:
+      alert_name: KubeNodeUnreachable
+  - on_prometheus_alert:
+      alert_name: KubeStatefulSetUpdateNotRolledOut
+  actions:
+  - resource_events_enricher: {}
+
+# Default prometheus enrichment
 - triggers:
   - on_prometheus_alert:
       status: "all"
