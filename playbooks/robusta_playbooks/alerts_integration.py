@@ -143,15 +143,16 @@ def alert_explanation_enricher(alert: PrometheusKubernetesAlert, params: AlertEx
     """
     Enrich the finding an explanation and recommendation of how to resolve the issue
     """
-    blocks = [MarkdownBlock(
-                f"{Emojis.Explain.value} *Alert Explanation:* {params.alert_explanation}"
-            )]
+    blocks = [MarkdownBlock(f"{Emojis.Explain.value} *Alert Explanation:* {params.alert_explanation}")]
     if params.recommended_resolution:
         resolution_block = MarkdownBlock(
-                f"{Emojis.Recommend.value} *Robusta's Recommendation:* {params.recommended_resolution}"
-            )
+            f"{Emojis.Recommend.value} *Robusta's Recommendation:* {params.recommended_resolution}"
+        )
         blocks.append(resolution_block)
-    alert.add_enrichment(blocks, annotations={SlackAnnotations.UNFURL: False},)
+    alert.add_enrichment(
+        blocks,
+        annotations={SlackAnnotations.UNFURL: False},
+    )
 
 
 @action
