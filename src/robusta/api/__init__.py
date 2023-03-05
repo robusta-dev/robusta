@@ -272,7 +272,7 @@ from robusta.integrations.scheduled.trigger import DynamicDelayRepeatTrigger, Fi
 from robusta.integrations.slack.sender import SlackSender
 from robusta.runner.object_updater import update_item_attr
 from robusta.utils.base64_utils import is_base64_encoded
-from robusta.utils.cluster_provider_discovery import get_cluster_provider
+from robusta.utils.cluster_provider_discovery import ClusterProviderDiscovery
 from robusta.utils.common import duplicate_without_fields, is_matching_diff
 from robusta.utils.error_codes import ActionException, ErrorCodes
 from robusta.utils.function_hashes import action_hash

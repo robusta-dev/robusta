@@ -29,7 +29,7 @@ from robusta.core.model.env_vars import DISCOVERY_BATCH_SIZE, DISCOVERY_MAX_BATC
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
-from robusta.utils.cluster_provider_discovery import get_cluster_provider
+from robusta.utils.cluster_provider_discovery import ClusterProviderDiscovery
 
 
 class DiscoveryResults(BaseModel):
@@ -354,7 +354,7 @@ class Discovery:
             pods=pod_count,
             nodes=node_count,
             jobs=job_count,
-            provider=get_cluster_provider()
+            provider=ClusterProviderDiscovery.get_cluster_provider(),
         )
 
 
