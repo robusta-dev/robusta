@@ -113,13 +113,7 @@ builtinPlaybooks:
   stop: true
 
 # playbooks for prometheus alerts enrichment
-- triggers:
-  - on_prometheus_alert:
-      alert_name: KubePodCrashLooping
-  actions:
-  - logs_enricher: {}
-  - pod_events_enricher: {}
-
+# Prometheus Overcommit playbooks
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeCPUOvercommit
@@ -138,6 +132,14 @@ builtinPlaybooks:
       url: https://bit.ly/memory-overcommit
       name: Memory Overcommited
 
+# Prometheus Pods playbooks
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubePodCrashLooping
+  actions:
+  - logs_enricher: {}
+  - pod_events_enricher: {}
+
 - triggers:
   - on_prometheus_alert:
       alert_name: KubePodNotReady
@@ -145,6 +147,7 @@ builtinPlaybooks:
   - logs_enricher: {}
   - pod_events_enricher: {}
 
+# Prometheus Jobs playbooks
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeJobFailed
@@ -157,14 +160,13 @@ builtinPlaybooks:
   - job_events_enricher: {}
   - job_pod_enricher: {}
 
+# Prometheus Daemonset playbooks
 - triggers:
   - on_prometheus_alert:
-      alert_name: KubeNodeNotReady
-  - on_prometheus_alert:
-      alert_name: KubeletTooManyPods
+      alert_name: KubeDaemonSetRolloutStuck
   actions:
-  - node_allocatable_resources_enricher: {}
-  - node_running_pods_enricher: {}
+  - resource_events_enricher: {}
+
 - triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDaemonsetMisscheduled
@@ -173,6 +175,23 @@ builtinPlaybooks:
   actions:
   - daemonset_status_enricher: {}
   - daemonset_misscheduled_analysis_enricher: {}
+
+# Prometheus Node related playbooks
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeNodeNotReady
+  - on_prometheus_alert:
+      alert_name: KubeletTooManyPods
+  actions:
+  - node_allocatable_resources_enricher: {}
+  - node_running_pods_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeNodeUnreachable
+  actions:
+  - resource_events_enricher: {}
+
 - triggers:
   - on_prometheus_alert:
       alert_name: HostHighCpuLoad
@@ -181,6 +200,7 @@ builtinPlaybooks:
   - alert_graph_enricher:
       resource_type: CPU
       item_type: Node
+
 - triggers:
   - on_prometheus_alert:
       alert_name: HostOomKillDetected
@@ -189,6 +209,7 @@ builtinPlaybooks:
   - alert_graph_enricher:
       resource_type: Memory
       item_type: Node
+
 - triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
@@ -199,6 +220,7 @@ builtinPlaybooks:
   - alert_graph_enricher:
       resource_type: Disk
       item_type: Node
+
 - triggers:
   - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
@@ -208,6 +230,7 @@ builtinPlaybooks:
   - alert_graph_enricher:
       resource_type: CPU
       item_type: Pod
+
 - triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDeploymentReplicasMismatch
@@ -220,14 +243,10 @@ builtinPlaybooks:
       included_types: ["Warning", "Normal"]
       dependent_pod_mode: true
 
-# Default event enrichment for relevant Prometheus alerts
+# Prometheus Statefulset playbooks
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeStatefulSetReplicasMismatch
-  - on_prometheus_alert:
-      alert_name: KubeDaemonSetRolloutStuck
-  - on_prometheus_alert:
-      alert_name: KubeNodeUnreachable
   - on_prometheus_alert:
       alert_name: KubeStatefulSetUpdateNotRolledOut
   actions:

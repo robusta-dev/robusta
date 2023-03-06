@@ -28,6 +28,8 @@ class PrometheusAlertParams(ActionParams):
     container_name: Optional[str] = None
     service: Optional[str] = None
     job_name: Optional[str] = None
+    statefulset_name: Optional[str] = None
+    daemonset_name: Optional[str] = None
     namespace: str = "default"
     status: str = "firing"
     severity: str = "error"
@@ -60,7 +62,11 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
     if prometheus_event_data.service is not None:
         labels["service"] = prometheus_event_data.service
     if prometheus_event_data.job_name is not None:
-        labels["job"] = prometheus_event_data.job_name
+        labels["job_name"] = prometheus_event_data.job_name
+    if prometheus_event_data.statefulset_name is not None:
+        labels["statefulset"] = prometheus_event_data.statefulset_name
+    if prometheus_event_data.daemonset_name is not None:
+        labels["daemonset"] = prometheus_event_data.daemonset_name
 
     annotations = {
         "description": prometheus_event_data.description,
