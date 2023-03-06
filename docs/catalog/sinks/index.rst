@@ -9,7 +9,7 @@ Supported sinks
 The following sinks are supported:
 
 * :ref:`Slack` - send playbooks results to a Slack channel
-* `Robusta UI <https://home.robusta.dev/ui/>`_ - send playbooks results to Robusta's web UI
+* :ref:`Robusta UI` - send playbooks results to Robusta's web UI
 * :ref:`MS Teams` - send playbooks results to an MS Teams channel webhook.
 * :ref:`Kafka` - send playbooks results to a Kafka topic
 * :ref:`DataDog` - send playbooks results to the Datadog events API
@@ -62,6 +62,7 @@ if it has the field `default: true` in the YAML.
    :maxdepth: 1
 
    slack
+   RobustaUI
    telegram
    discord
    kafka
