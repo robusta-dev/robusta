@@ -39,13 +39,13 @@ class ClusterProviderDiscovery:
 
     def init_provider_discovery(self):
         try:
-            self.cluster_provider = self._find_cluster_provider()
-            logging.info(f"{self.cluster_provider} cluster discovered.")
+            self.provider = self._find_cluster_provider()
+            logging.info(f"{self.provider} cluster discovered.")
         except Exception:
             logging.error("Error detecting cluster type", exc_info=True)
 
     def get_cluster_provider(self):
-        return self.cluster_provider
+        return self.provider
 
     @staticmethod
     def _get_node_label(node: List[Node], label: str) -> Optional[str]:
