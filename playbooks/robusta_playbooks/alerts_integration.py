@@ -14,6 +14,7 @@ from robusta.api import (
     CallbackChoice,
     ChartValuesFormat,
     CustomGraphEnricherParams,
+    Emojis,
     ExecutionBaseEvent,
     FileBlock,
     Finding,
@@ -125,6 +126,33 @@ def node_restart_silencer(alert: PrometheusKubernetesAlert, params: NodeRestartP
 
     node_start_time = datetime.strptime(node_start_time_str, "%Y-%m-%dT%H:%M:%SZ")
     alert.stop_processing = datetime.utcnow().timestamp() < (node_start_time.timestamp() + params.post_restart_silence)
+
+
+class AlertExplanationParams(ActionParams):
+    """
+    :var alert_explanation: A human-readable explanation of when prometheus fires the alert
+    :var recommended_resolution: A recommended resolution for the alert
+    """
+
+    alert_explanation: str
+    recommended_resolution: Optional[str]
+
+
+@action
+def alert_explanation_enricher(alert: PrometheusKubernetesAlert, params: AlertExplanationParams):
+    """
+    Enrich the finding an explanation and recommendation of how to resolve the issue
+    """
+    blocks = [MarkdownBlock(f"{Emojis.Explain.value} *Alert Explanation:* {params.alert_explanation}")]
+    if params.recommended_resolution:
+        resolution_block = MarkdownBlock(
+            f"{Emojis.Recommend.value} *Robusta's Recommendation:* {params.recommended_resolution}"
+        )
+        blocks.append(resolution_block)
+    alert.add_enrichment(
+        blocks,
+        annotations={SlackAnnotations.UNFURL: False},
+    )
 
 
 @action

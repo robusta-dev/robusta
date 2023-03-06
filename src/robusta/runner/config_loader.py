@@ -35,6 +35,7 @@ from robusta.integrations.scheduled.playbook_scheduler_manager_impl import Playb
 from robusta.integrations.scheduled.trigger import ScheduledTriggerEvent
 from robusta.model.config import PlaybooksRegistry, PlaybooksRegistryImpl, Registry, SinksRegistry
 from robusta.model.playbook_definition import PlaybookDefinition
+from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.file_system_watcher import FileSystemWatcher
 
 
@@ -161,7 +162,7 @@ class ConfigLoader:
                 runner_config = self.__load_runner_config(self.config_file_path)
                 if runner_config is None:
                     return
-
+                cluster_provider.init_provider_discovery()
                 self.registry.set_global_config(runner_config.global_config)
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
