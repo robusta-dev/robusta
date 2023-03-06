@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from hikaru.model import Node, NodeList
 
 
-class ClusterProviderType(Enum):
+class ClusterProviderType(str, Enum):
     GKE = "GKE"
     AKS = "AKS"
     EKS = "EKS"
@@ -37,42 +37,21 @@ NODE_LABELS: Dict[ClusterProviderType, str] = {
 class ClusterProviderDiscovery:
     cluster_provider: ClusterProviderType = ClusterProviderType.Unknown
 
-    @staticmethod
-    def init_provider_discovery():
+    def init_provider_discovery(self):
         try:
-            ClusterProviderDiscovery.cluster_provider = ClusterProviderDiscovery._find_cluster_provider()
-            logging.info(f"{ClusterProviderDiscovery.cluster_provider.value} cluster discovered.")
+            self.cluster_provider = self._find_cluster_provider()
+            logging.info(f"{self.cluster_provider} cluster discovered.")
         except Exception:
             logging.error("Error detecting cluster type", exc_info=True)
 
-    @staticmethod
-    def get_cluster_provider():
-        return ClusterProviderDiscovery.cluster_provider.value
+    def get_cluster_provider(self):
+        return self.cluster_provider
 
     @staticmethod
     def _get_node_label(node: List[Node], label: str) -> Optional[str]:
         if node.metadata.labels:
             return node.metadata.labels.get(label)
         return None
-
-    @staticmethod
-    def _detect_provider_from_hostname(nodes: List[Node]) -> Optional[ClusterProviderType]:
-        nodes_host_names = [ClusterProviderDiscovery._get_node_label(node, "kubernetes.io/hostname") for node in nodes]
-        for host_name in nodes_host_names:
-            if not host_name:
-                continue
-            for cluster_type in HOSTNAME_MATCH:
-                cluster_hostname_regex = HOSTNAME_MATCH[cluster_type]
-                if bool(re.match(cluster_hostname_regex, host_name)):
-                    return cluster_type
-        return ClusterProviderType.Unknown
-
-    @staticmethod
-    def _detect_provider_from_node_labels(nodes: List[Node]) -> Optional[ClusterProviderType]:
-        for cluster_type, node_label in NODE_LABELS.items():
-            if ClusterProviderDiscovery._get_node_label(nodes[0], node_label):
-                return cluster_type
-        return ClusterProviderType.Unknown
 
     @staticmethod
     def _is_aks(nodes: List[Node]) -> bool:
@@ -94,19 +73,39 @@ class ClusterProviderDiscovery:
             # missing kubeletVersion
             return False
 
-    @staticmethod
-    def _find_cluster_provider() -> ClusterProviderType:
+    def _detect_provider_from_hostname(self, nodes: List[Node]) -> Optional[ClusterProviderType]:
+        nodes_host_names = [self._get_node_label(node, "kubernetes.io/hostname") for node in nodes]
+        for host_name in nodes_host_names:
+            if not host_name:
+                continue
+            for cluster_type in HOSTNAME_MATCH:
+                cluster_hostname_regex = HOSTNAME_MATCH[cluster_type]
+                if re.match(cluster_hostname_regex, host_name):
+                    return cluster_type
+        return ClusterProviderType.Unknown
+
+    def _detect_provider_from_node_labels(self, nodes: List[Node]) -> Optional[ClusterProviderType]:
+        for cluster_type, node_label in NODE_LABELS.items():
+            if self._get_node_label(nodes[0], node_label):
+                return cluster_type
+        return ClusterProviderType.Unknown
+
+    def _find_cluster_provider(self) -> ClusterProviderType:
         nodes = NodeList.listNode().obj.items
-        cluster_hostname_provider = ClusterProviderDiscovery._detect_provider_from_hostname(nodes)
+        cluster_hostname_provider = self._detect_provider_from_hostname(nodes)
         if cluster_hostname_provider != ClusterProviderType.Unknown:
             return cluster_hostname_provider
-        elif ClusterProviderDiscovery._is_aks(nodes):
+        elif self._is_aks(nodes):
             return ClusterProviderType.AKS
-        elif ClusterProviderDiscovery._is_detect_cluster_from_kubelet_version(nodes, "gke"):
+        elif self._is_detect_cluster_from_kubelet_version(nodes, "gke"):
             return ClusterProviderType.GKE
-        elif ClusterProviderDiscovery._is_detect_cluster_from_kubelet_version(nodes, "eks"):
+        elif self._is_detect_cluster_from_kubelet_version(nodes, "eks"):
             return ClusterProviderType.EKS
 
-        cluster_provider_from_labels = ClusterProviderDiscovery._detect_provider_from_node_labels(nodes)
+        cluster_provider_from_labels = self._detect_provider_from_node_labels(nodes)
         if cluster_provider_from_labels != ClusterProviderType.Unknown:
             return cluster_provider_from_labels
+
+
+cluster_provider = ClusterProviderDiscovery()
+__all__ = ["cluster_provider"]
