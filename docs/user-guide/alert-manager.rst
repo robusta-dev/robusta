@@ -34,8 +34,8 @@ Below is an example AlertManager configuration. Depending on your setup, the exa
         route:
           routes:
           - receiver: 'robusta'
-            match_re:
-              severity: 'info|warn|error|critical'
+          matchers:
+            - severity =~ "info|warn|error|critical"
             repeat_interval: 4h
             continue: true
 
@@ -105,8 +105,8 @@ If AlertManager is located outside of your Kubernetes cluster then a few more st
         route:
           routes:
           - receiver: 'robusta'
-            match_re:
-              severity: 'info|warn|error|critical'
+            matchers:
+              - severity =~ "info|warn|error|critical"
             repeat_interval: 4h
             continue: true
 
