@@ -73,15 +73,15 @@ Example Output:
       - pagerduty_sink:
           name: main_pagerduty_sink
           api_key: <api key> # e.g. f653634653463678fadas43534506
-
-  - actions:
-    - resource_babysitter: {}
-    sinks:
-    - main_pagerduty_sink
-    triggers:
-    - on_deployment_all_changes: {}
-    - on_daemonset_all_changes: {}
-    - on_statefulset_all_changes: {}
+  customPlaybooks:
+     - actions:
+       - resource_babysitter: {}
+       sinks:
+       - main_pagerduty_sink
+       triggers:
+       - on_deployment_all_changes: {}
+       - on_daemonset_all_changes: {}
+       - on_statefulset_all_changes: {}
 
 Save the file and run
 
