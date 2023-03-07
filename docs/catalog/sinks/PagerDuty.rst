@@ -101,7 +101,7 @@ Example Output:
 Support
 ----------------------
 
-Ask for help, or just say hi!
+If you need help with the PagerDuty integration, get in touch with the Robusta team:
 
 1. `Slack <https://bit.ly/robusta-slack>`_ - **link only works on desktop**
 2. `GitHub Issues <https://github.com/robusta-dev/robusta/issues>`_
