@@ -28,7 +28,7 @@ You need an integration key for a PagerDuty service. Here is how to generate it.
 
 5. On the next screen input the configuration details
 
-6. On the `Integrations` screen check the `Events API V2` option and Tap on the `Create` button in the bottom on the screen
+6. On the `Integrations` screen, search for and select the intergration "Robusta.dev" and tap on the `Create Service` button in the bottom on the screen
 
 7. Copy the `Integration Key`. A sample key would look like: f6c6e02a5a1a490ee02e90cde19ee388
 
