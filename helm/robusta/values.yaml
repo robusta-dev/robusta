@@ -124,7 +124,7 @@ builtinPlaybooks:
   actions:
   - report_crash_loop: {}
 - triggers:
-  - on_pod_update: {}
+  - on_image_pull_backoff: {}
   actions:
   - image_pull_backoff_reporter:
       rate_limit: 3600
