@@ -1,4 +1,5 @@
 import os
+import re
 import textwrap
 import time
 import uuid
@@ -61,10 +62,28 @@ def slack():
 
 
 def get_ui_key() -> str:
+    # substring to match the "Account already in use" error
+    account_already_exists_message_substring = "already exists. Please choose a different account name"
+    # a suggested account name in case the user inputted "Account name" is already in use. See below for more
+    suggested_account_name = ""
+    # account email variable
+    email = ""
+
     while True:
-        email = typer.prompt("Enter your Gmail/Google address. This will be used to login")
-        email = email.strip()
-        account_name = typer.prompt("Choose your account name (e.g your organization name)")
+        # `account_name` will be empty by default since `suggested_account_name` is empty in the first iteration
+        #   if the user chooses a suggested account name, because of the 'Account not available' error, in any of the while loop iterations.
+        #   then `account_name` will be assigned as `suggested_account_name`
+        account_name = suggested_account_name
+
+        # if the `suggested_account_name` is EMPTY then proceed with Robusta UI sink account setup
+        if not suggested_account_name:
+            email = typer.prompt("Enter your Gmail/Google address. This will be used to login")
+            email = email.strip()
+            account_name = typer.prompt("Choose your account name (e.g your organization name)")
+        # if the `suggested_account_name` exists then:
+        #   `account_name = suggested_account_name`
+        #   proceed with creating a new account which was suggested by the cli script
+        #   in the previous while loop iteration
 
         res = requests.post(
             f"{backend_profile.robusta_cloud_api_host}/accounts/create",
@@ -81,6 +100,58 @@ def get_ui_key() -> str:
             )
             return robusta_api_key
 
+        # Parse and check the return body to see if it is an 'Account not available' error.
+        if account_already_exists_message_substring in res.json().get("msg"):
+
+            # Do a regex check on whether the account_name contains `{-1|-2|-d}` as prefix
+            matched_text = re.search(r'-\d+$', account_name)
+
+            incremented_prefix = "-1"
+            if matched_text is not None:
+                # If the account name contains `{-1|-2|-d}` as prefix then capture it
+                incremented_prefix = matched_text.group()
+                # type cast it to an unsigned integer
+                integer_only = int(re.sub('[^0-9]', '', incremented_prefix)) or 0
+                # increment the prefix integer by 1
+                incremented_prefix = f'-{integer_only + 1}'
+                # remove the existing prefix from the account name
+                prefix_cleaned_account_name = re.sub(r'-[0-9]+$', '', account_name)
+                # assign suggested account name as `account name without prefix` + `incremented prefix`
+                suggested_account_name = f"{prefix_cleaned_account_name}{incremented_prefix}"
+            else:
+                # If the account name NOT contains `{-1|-2|-d}` as prefix then
+                # assign suggested account name as `account name` + `incremented prefix` (which is -1 by default)
+                suggested_account_name = f"{account_name}{incremented_prefix}"
+
+            # throw an error indicating that the account name has already been taken.
+            typer.secho(
+                f"The account name you entered is already in use.",
+                fg="red"
+            )
+            # prompt the user to use the 'suggested account name' instead?
+            use_suggested_account_name = typer.confirm(
+                f"Would you prefer \"{suggested_account_name}\" instead?",
+                default=True)
+            if use_suggested_account_name:
+                # if they accept continue with the account creation using the 'suggested account name'
+                continue
+            else:
+                # else reset `suggested_account_name`
+                suggested_account_name = ""
+
+                # prompt the user to retry the whole robusta ui sink setup again
+                try_again = typer.confirm("Would you like to try again?", default=True)
+                if try_again:
+                    # if they accept, retry the robusta ui sink account setup
+                    continue
+                else:
+                    # else ditch the robusta ui sink account setup
+                    return ""
+
+        # reset `suggested_account_name` if suggested account won't be used
+        suggested_account_name = ""
+
+        # unhandled errors will be captured here
         typer.secho(
             f"Sorry, something didn't work out. The response was {res.content!r}\n"
             f"If you need help, email support@robusta.dev",

@@ -14,3 +14,4 @@ docs/_build
 staging.environment.env
 *.env
 .run
+dist/**/*
