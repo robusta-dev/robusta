@@ -28,6 +28,8 @@ SEVERITY_EMOJI_MAP = {
     FindingSeverity.LOW: ":yellow_circle:",
     FindingSeverity.INFO: ":green_circle:",
 }
+
+# use hex to decimal converter, eg: https://www.rapidtables.com/convert/number/hex-to-decimal.html
 SEVERITY_COLOR_MAP = {
     FindingSeverity.HIGH: "14495556",
     FindingSeverity.MEDIUM: "16027661",
