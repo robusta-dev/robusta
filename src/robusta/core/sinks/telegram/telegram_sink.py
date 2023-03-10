@@ -1,3 +1,5 @@
+from enum import Enum
+
 from tabulate import tabulate
 
 from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity
@@ -16,6 +18,23 @@ SEVERITY_EMOJI_MAP = {
 INVESTIGATE_ICON = "\U0001F50E"
 SILENCE_ICON = "\U0001F515"
 VIDEO_ICON = "\U0001F3AC"
+
+
+class FindingStatus(Enum):
+    FIRING = 'firing'
+    RESOLVED = 'resolved'
+
+    def to_color_hex(self) -> str:
+        if self == FindingStatus.RESOLVED:
+            return "#00B302"
+
+        return "#EF311F"
+
+    def to_emoji(self) -> str:
+        if self == FindingStatus.RESOLVED:
+            return "✅"
+
+        return "🔥"
 
 
 class TelegramSink(SinkBase):
@@ -42,7 +61,12 @@ class TelegramSink(SinkBase):
                     self.client.send_file(file_name=f"{table_name}.txt", contents=table_text.encode("utf-8"))
 
     def __get_message_text(self, finding: Finding, platform_enabled: bool):
-        message_content = self.__build_telegram_title(finding.title, finding.severity)
+        status: FindingStatus = (
+            FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
+        )
+        title = finding.title.removeprefix("[RESOLVED] ")
+
+        message_content = self.__build_telegram_title(title, status, finding.severity)
 
         if platform_enabled:
             message_content += (
@@ -78,6 +102,6 @@ class TelegramSink(SinkBase):
         return not (isinstance(block, FileBlock) or isinstance(block, TableBlock))
 
     @classmethod
-    def __build_telegram_title(cls, title: str, severity: FindingSeverity) -> str:
+    def __build_telegram_title(cls, title: str, status: FindingStatus, severity: FindingSeverity) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
-        return f"{icon} **{severity.name} - {title}**\n\n"
+        return f"{status.to_emoji()} {status.name.lower()} - {icon} {severity.name} - *{title}*\n\n"
