@@ -1,4 +1,5 @@
 import os
+import re
 import textwrap
 import time
 import uuid
@@ -18,6 +19,7 @@ SLACK_INTEGRATION_SERVICE_ADDRESS = os.environ.get(
     f"{backend_profile.robusta_cloud_api_host}/integrations/slack/get-token",
 )
 SlackApiKey = namedtuple("SlackApiKey", "key team_name")
+ACCOUNT_EXISTS_ERROR = "already exists. Please choose a different account name"
 
 
 def wait_for_slack_api_key(id: str) -> SlackApiKey:
@@ -60,11 +62,31 @@ def slack():
     )
 
 
+def get_alternative_name(account_name: str) -> str:
+    # Check whether account_name ends with '-' followed by a digit
+    matched_text = re.search(r"-\d+$", account_name)
+
+    if matched_text is not None:
+        suffix = matched_text.group()
+        suffix_integer_only = int(re.sub("[^0-9]", "", suffix)) or 0
+        suffix = f"-{suffix_integer_only + 1}"
+        suffix_cleaned_account_name = re.sub(r"-[0-9]+$", "", account_name)
+        alternative_name = f"{suffix_cleaned_account_name}{suffix}"
+    else:
+        alternative_name = f"{account_name}-1"
+
+    return alternative_name
+
+
 def get_ui_key() -> str:
+    account_name = ""
+    email = ""
+
     while True:
-        email = typer.prompt("Enter your Gmail/Google address. This will be used to login")
-        email = email.strip()
-        account_name = typer.prompt("Choose your account name (e.g your organization name)")
+        if not account_name:
+            email = typer.prompt("Enter your Gmail/Google address. This will be used to login")
+            email = email.strip()
+            account_name = typer.prompt("Choose your account name (e.g your organization name)")
 
         res = requests.post(
             f"{backend_profile.robusta_cloud_api_host}/accounts/create",
@@ -81,14 +103,32 @@ def get_ui_key() -> str:
             )
             return robusta_api_key
 
-        typer.secho(
-            f"Sorry, something didn't work out. The response was {res.content!r}\n"
-            f"If you need help, email support@robusta.dev",
-            fg="red",
-        )
-        try_again = typer.confirm("Would you like to try again?", default=True)
-        if not try_again:
-            return ""
+        if ACCOUNT_EXISTS_ERROR in res.json().get("msg"):
+            alternative_account_name = get_alternative_name(account_name)
+
+            typer.secho(f"The account name \"{account_name}\" is already in use.", fg="red")
+
+            use_alternative_name = typer.confirm(
+                f'Would you prefer "{alternative_account_name}" instead?', default=True
+            )
+
+            if use_alternative_name:
+                account_name = alternative_account_name
+            else:
+                try_again = typer.confirm("Would you like to try again?", default=True)
+                if not try_again:
+                    return ""
+                account_name = ""
+        else:
+            typer.secho(
+                f"Sorry, something didn't work out. The response was {res.content!r}\n"
+                f"If you need help, email support@robusta.dev",
+                fg="red",
+            )
+            try_again = typer.confirm("Would you like to try again?", default=True)
+            if not try_again:
+                return ""
+            account_name = ""
 
 
 @app.command()
