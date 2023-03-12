@@ -1,8 +1,4 @@
-import logging
 from datetime import datetime
-from typing import List, Optional
-
-from hikaru.model import ContainerStatus
 
 from robusta.core.playbooks.base_trigger import TriggerEvent
 from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
@@ -14,7 +10,7 @@ from robusta.utils.rate_limiter import RateLimiter
 class PodImagePullBackoffTrigger(PodUpdateTrigger):
     """
     :var rate_limit: Limit firing to once every `rate_limit` seconds
-    :var fire_delay: Limit to pods that are still firing pullback after `fire_delay` seconds
+    :var fire_delay: Limit to pods that are still firing image backoff after `fire_delay` seconds
     """
 
     rate_limit: int = 3600
@@ -55,7 +51,9 @@ class PodImagePullBackoffTrigger(PodUpdateTrigger):
             run_time_seconds = (
                 datetime.utcnow().timestamp() - parse_kubernetes_datetime_to_ms(pod.status.startTime) / 1000
             )
-        logging.warning(f"runtime {run_time_seconds}")
+
+        # sometimes Image pull backoff fires falsely on pod startup
+        # due to not loading a needed component like a secret before loading the image
         if self.fire_delay > run_time_seconds:
             return False
 
@@ -69,7 +67,6 @@ class PodImagePullBackoffTrigger(PodUpdateTrigger):
 
         if not is_backoff:
             return False
-        logging.warning(f"PodImagePullBackoffTriggered {pod.metadata.name}")
         # Perform a rate limit for this pod according to the rate_limit parameter
         name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name
         namespace = pod.metadata.namespace

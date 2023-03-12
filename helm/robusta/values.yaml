@@ -123,11 +123,11 @@ builtinPlaybooks:
       restart_reason: "CrashLoopBackOff"
   actions:
   - report_crash_loop: {}
+
 - triggers:
   - on_image_pull_backoff: {}
   actions:
-  - image_pull_backoff_reporter:
-      rate_limit: 3600
+  - image_pull_backoff_reporter: {}
 
 # playbooks for non-prometheus based monitoring that use prometheus for enrichment
 - triggers:
