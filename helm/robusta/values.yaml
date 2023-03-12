@@ -208,6 +208,16 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+      alert_name: KubeletTooManyPods
+  actions:
+  - node_running_pods_enricher:
+      show_pod_capacity: true
+  - alert_explanation_enricher:
+      alert_explanation: "You are approaching the limit of how many pods you can run on your node. Having too many pods on a node can negatively impact application performance and increase the risk of node failure."
+      recommended_resolution: "To resolve this issue, you could either add more nodes or verify that the number of replicas running on the node is intentional and not a result of any mistake."
+
+- triggers:
+  - on_prometheus_alert:
       alert_name: KubeNodeNotReady
   actions:
   - node_allocatable_resources_enricher: {}
