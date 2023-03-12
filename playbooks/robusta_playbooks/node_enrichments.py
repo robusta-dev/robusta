@@ -41,9 +41,12 @@ def node_running_pods_enricher(event: NodeEvent):
 
     block_list: List[BaseBlock] = []
     pod_list: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
+    pod_count = len(pod_list.items)
     effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
     block_list.append(
-        TableBlock(effected_pods_rows, ["namespace", "name", "ready"], table_name="Pods running on the node")
+        TableBlock(
+            effected_pods_rows, ["namespace", "name", "ready"], table_name=f"{pod_count} Pods running on the node"
+        )
     )
     event.add_enrichment(block_list)
 
