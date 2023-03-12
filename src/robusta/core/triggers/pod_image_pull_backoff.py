@@ -47,6 +47,8 @@ class PodImagePullBackoffTrigger(PodUpdateTrigger):
 
         pod = exec_event.get_pod()
         run_time_seconds = 0
+
+        # startTime does not exist every time pod update is fired, like when the pod is just created
         if pod.status.startTime:
             run_time_seconds = (
                 datetime.utcnow().timestamp() - parse_kubernetes_datetime_to_ms(pod.status.startTime) / 1000
