@@ -259,11 +259,8 @@ class RobustaPod(Pod):
 
     @staticmethod
     def exec_on_node(pod_name: str, node_name: str, cmd):
-        node_runner = RobustaPod.create_debugger_pod(pod_name, node_name)
-        try:
-            node_runner.exec(f"nsenter -t 1 -a {cmd}")
-        finally:
-            node_runner.delete()
+        command = f'nsenter -t 1 -a "{cmd}"'
+        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, command)
 
     @staticmethod
     def run_debugger_pod(

@@ -2,9 +2,9 @@ import logging
 from typing import List
 
 from hikaru.model import Pod, PodList
-
 from robusta.api import (
     BaseBlock,
+    FileBlock,
     Finding,
     FindingSeverity,
     FindingSource,
@@ -13,6 +13,7 @@ from robusta.api import (
     NodeChangeEvent,
     NodeEvent,
     ResourceGraphEnricherParams,
+    RobustaPod,
     TableBlock,
     action,
     create_node_graph_enrichment,
@@ -93,6 +94,23 @@ def node_status_enricher(event: NodeEvent):
             ),
         ]
     )
+
+
+@action
+def node_dmesg_enricher(event: NodeEvent):
+    """
+    Gets the dmesg from a node
+    """
+    node = event.get_node()
+    if not node:
+        logging.error(f"node_dmesg_enricher was called on event without node : {event}")
+        return
+    exec_result = RobustaPod.exec_on_node(pod_name="dmesg_pod", node_name=node.metadata.name, cmd="dmesg")
+    logging.warning(exec_result)
+    if exec_result:
+        event.add_enrichment(
+            [FileBlock(f"dmesg.log", exec_result.encode())],
+        )
 
 
 @action
