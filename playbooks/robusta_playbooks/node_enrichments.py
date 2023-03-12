@@ -85,6 +85,8 @@ def node_status_enricher(event: NodeEvent):
         logging.error(f"node_status_enricher was called on event without node : {event}")
         return
 
+    logging.info(f"node_status_enricher is depricated, use status_enricher instead")
+
     event.add_enrichment(
         [
             TableBlock(
