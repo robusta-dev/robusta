@@ -213,8 +213,8 @@ builtinPlaybooks:
   - node_running_pods_enricher:
       show_pod_capacity: true
   - alert_explanation_enricher:
-      alert_explanation: "You are approaching the limit of how many pods you can run on your node. Having too many pods on a node can negatively impact application performance and increase the risk of node failure."
-      recommended_resolution: "To resolve this issue, you could either add more nodes or verify that the number of replicas running on the node is intentional and not a result of any mistake."
+      alert_explanation: "You are approaching the limit of how many pods you can run on your node. This in and of its self is not an error but may impact the future scheduling of pods on this node."
+      recommended_resolution: "If you would like to increase the pod density check with your cluster providers documentation, or add more nodes to increase cluster wide capacity."
 
 - triggers:
   - on_prometheus_alert:
