@@ -2,7 +2,7 @@ from enum import Enum
 
 from tabulate import tabulate
 
-from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity
+from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity, FindingStatus
 from robusta.core.reporting.blocks import FileBlock, MarkdownBlock, TableBlock
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.telegram.telegram_client import TelegramClient
@@ -18,23 +18,6 @@ SEVERITY_EMOJI_MAP = {
 INVESTIGATE_ICON = "\U0001F50E"
 SILENCE_ICON = "\U0001F515"
 VIDEO_ICON = "\U0001F3AC"
-
-
-class FindingStatus(Enum):
-    FIRING = 'firing'
-    RESOLVED = 'resolved'
-
-    def to_color_hex(self) -> str:
-        if self == FindingStatus.RESOLVED:
-            return "#00B302"
-
-        return "#EF311F"
-
-    def to_emoji(self) -> str:
-        if self == FindingStatus.RESOLVED:
-            return "✅"
-
-        return "🔥"
 
 
 class TelegramSink(SinkBase):

@@ -70,6 +70,12 @@ class FindingStatus(Enum):
 
         return "#EF311F"
 
+    def to_color_decimal(self) -> str:
+        if self == FindingStatus.RESOLVED:
+            return "45826"
+
+        return "15675679"
+
     def to_emoji(self) -> str:
         if self == FindingStatus.RESOLVED:
             return "✅"

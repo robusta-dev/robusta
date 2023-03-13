@@ -22,6 +22,8 @@ from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.discord.discord_sink_params import DiscordSinkParams
 from robusta.core.sinks.transformer import Transformer
 
+from src.robusta.core.reporting.base import FindingStatus
+
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
     FindingSeverity.MEDIUM: ":orange_circle:",
@@ -39,23 +41,6 @@ SEVERITY_COLOR_MAP = {
 MAX_BLOCK_CHARS = 2048  # Max allowed characters for discord per one embed
 MAX_FIELD_CHARS = 1024  # Max allowed characters for discord per one 'field type' embed
 BLANK_CHAR = "\u200b"  # Discord does not allow us to send empty strings, so we use blank char instead
-
-
-class FindingStatus(Enum):
-    FIRING = 'firing'
-    RESOLVED = 'resolved'
-
-    def to_color_hex(self) -> str:
-        if self == FindingStatus.RESOLVED:
-            return "45826"
-
-        return "15675679"
-
-    def to_emoji(self) -> str:
-        if self == FindingStatus.RESOLVED:
-            return "✅"
-
-        return "🔥"
 
 
 class DiscordBlock(BaseBlock):
@@ -304,7 +289,7 @@ class DiscordSender:
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
 
-        msg_color = status.to_color_hex()
+        msg_color = status.to_color_decimal()
         title = finding.title.removeprefix("[RESOLVED] ")
 
         self.__send_blocks_to_discord(
