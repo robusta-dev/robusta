@@ -65,47 +65,39 @@ class PendingInvestigator:
     configs = [
         # Containerd
         {
-            "err_template": "Insufficient nvidia.com/gpu",
+            "err_templates": [".*(Insufficient [^\/]+\/gpu).*"],
             "reason": PendingPodReason.NotEnoughGPU,
         },
         {
-            "err_template": "Insufficient memory",
+            "err_templates": ["Insufficient memory"],
             "reason": PendingPodReason.NotEnoughMemory,
         },
         {
-            "err_template": "Insufficient cpu",
+            "err_templates": ["Insufficient cpu"],
             "reason": PendingPodReason.NotEnoughCPU,
         },
         {
-            "err_template": "had taint {...}, that the pod didn't tolerate",
+            "err_templates": [".*(had taint {[^}]+}, that the pod didn't tolerate).*", "node(s) had untolerated taint"],
             "reason": PendingPodReason.NoMatchingTaint,
         },
         {
-            "err_template": "node(s) had untolerated taint",
-            "reason": PendingPodReason.NoMatchingTaint,
-        },
-        {
-            "err_template": "node(s) were unschedulable",
+            "err_templates": ["node(s) were unschedulable"],
             "reason": PendingPodReason.NodesUnschedulable,
         },
         {
-            "err_template": "didn't match Pod's node affinity/selector",
+            "err_templates": [
+                "didn't match Pod's node affinity/selector",
+                "didn't match pod affinity/anti-affinity rules",
+                "didn't match pod anti-affinity rules",
+            ],
             "reason": PendingPodReason.NoMatchingAffinity,
         },
         {
-            "err_template": "didn't match pod anti-affinity rules",
-            "reason": PendingPodReason.NoMatchingAffinity,
-        },
-        {
-            "err_template": "didn't match pod affinity/anti-affinity rules",
-            "reason": PendingPodReason.NoMatchingAffinity,
-        },
-        {
-            "err_template": 'persistentvolumeclaim "..." not found',
+            "err_templates": ['.*(persistentvolumeclaim "[^"]*" not found).*'],
             "reason": PendingPodReason.PVCNotFound,
         },
         {
-            "err_template": "Too many pods",
+            "err_templates": ["Too many pods"],
             "reason": PendingPodReason.TooManyPods,
         },
     ]
@@ -147,10 +139,12 @@ class PendingInvestigator:
         reasons = []
         event_message = pod_event.message
         for config in self.configs:
-            err_template = config["err_template"]
+            err_templates = config["err_templates"]
             reason = config["reason"]
-            if re.fullmatch(err_template, event_message) is not None or err_template in event_message:  # type: ignore
-                reasons.append(reason)
+            for template in err_templates:
+                if re.fullmatch(template, event_message) is not None or template in event_message:  # type: ignore
+                    reasons.append(reason)
+                    break
 
         if not reasons:
             return [PendingPodReason.Unknown]
