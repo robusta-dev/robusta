@@ -93,6 +93,10 @@ class PendingInvestigator:
             "reason": PendingPodReason.NoMatchingAffinity,
         },
         {
+            "err_template": "didn't match pod anti-affinity rules",
+            "reason": PendingPodReason.NoMatchingAffinity,
+        },
+        {
             "err_template": "didn't match pod affinity/anti-affinity rules",
             "reason": PendingPodReason.NoMatchingAffinity,
         },
@@ -115,39 +119,28 @@ class PendingInvestigator:
         ).obj
 
     def investigate(self) -> List[PendingPodReason]:
-        logging.info(f"events {self.pod_events.items}")
         failed_scheduling_events = [
             pod_event for pod_event in self.pod_events.items if self.is_scheduler_failed_scheduling_event(pod_event)
         ]
-        logging.info(f"failed_scheduling_events {failed_scheduling_events}")
         if not failed_scheduling_events:
             return None
 
         newest_failed_event = max(failed_scheduling_events, key=lambda x: get_event_timestamp(x))
-        logging.info(f"for {newest_failed_event}")
-
         reasons = self.get_reason_from_failed_scheduling_event(newest_failed_event)
-        logging.info(f"got message: {reasons}")
-
         return reasons  # return object with all reasons and message
 
     @staticmethod
     def is_scheduler_failed_scheduling_event(pod_event: Event) -> bool:
-        logging.warning(pod_event.message)
         if pod_event.type != "Warning":
-            logging.warning('pod_event.type != "Warning"')
             return False
 
         if pod_event.reason != "FailedScheduling":
-            logging.warning(pod_event.reason != "FailedScheduling")
             return False
 
-        if pod_event.source.component != "default-scheduler":
-            logging.warning(pod_event.source.component != "default-scheduler")
+        if pod_event.reportingComponent != "default-scheduler":
             return False
 
         regex_string = "\d+\/\d+( nodes are available\:).*"
-        logging.warning(bool(re.match(regex_string, pod_event.message)) == True)
         return bool(re.match(regex_string, pod_event.message))
 
     def get_reason_from_failed_scheduling_event(self, pod_event: Event) -> List[PendingPodReason]:
