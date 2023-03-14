@@ -22,7 +22,7 @@ from robusta.integrations.msteams.msteams_elements.msteams_images import MsTeams
 from robusta.integrations.msteams.msteams_elements.msteams_table import MsTeamsTable
 from robusta.integrations.msteams.msteams_elements.msteams_text_block import MsTeamsTextBlock
 
-from src.robusta.core.reporting.base import FindingStatus
+from robusta.core.reporting.base import FindingStatus
 
 
 class MsTeamsMsg:
