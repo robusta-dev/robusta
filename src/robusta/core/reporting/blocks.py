@@ -386,3 +386,11 @@ class PrometheusBlock(BaseBlock):
         """
         metadata = {"query-result-version": "1.0", "query": query}
         super().__init__(data=data, metadata=metadata)
+
+
+class ScanReportBlock(BaseBlock):
+
+    checkName: str
+    config: str
+    resultPayload: str
+    

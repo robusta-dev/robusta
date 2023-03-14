@@ -1,6 +1,4 @@
 import logging
-import traceback
-from datetime import datetime
 from typing import Callable, List
 
 
@@ -16,20 +14,16 @@ from robusta.api import (
     ExecutionBaseEvent,
     RobustaJob,
     to_kubernetes_name,
-    prepare_pod_command,
     FileBlock,
     Finding,
     FindingSource,
     FindingType,
     MarkdownBlock,
-    PodEvent,
-    PodFindingSubject,
-    ProcessFinder,
     ProcessParams,
-    ProcessType,
-    RobustaPod,
     action,
+    ScanReportBlock
 )
+
 
 formats = ["standard", "yaml", "html", "json"]
 
@@ -44,7 +38,7 @@ class PopeyeParams(ProcessParams):
     image: str = "derailed/popeye" 
     timeout = 120
     format: str = "standard"
-
+    output: str = "file"
 
 
 @action
@@ -83,8 +77,8 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     finding.add_enrichment(
         [
             FileBlock(
-                f"Popeye report.{params.format}",
-                logs.encode()
+                f"popeye.txt",
+                contents=logs.encode()
             )
         ]
     )

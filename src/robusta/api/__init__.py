@@ -127,6 +127,7 @@ from robusta.core.reporting import (
     MarkdownBlock,
     TableBlock,
     VideoLink,
+    ScanReportBlock
 )
 from robusta.core.reporting.action_requests import (
     ActionRequestBody,

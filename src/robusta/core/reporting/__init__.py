@@ -24,6 +24,7 @@ from robusta.core.reporting.blocks import (
     MarkdownBlock,
     PrometheusBlock,
     TableBlock,
+    ScanReportBlock,
 )
 
 __all__ = [
@@ -50,4 +51,5 @@ __all__ = [
     "CallbackChoice",
     "PrometheusBlock",
     "JsonBlock",
+    "ScanReportBlock"
 ]
