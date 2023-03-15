@@ -73,4 +73,4 @@ The command below creates a crashing pod which triggers the ``KubePodCrashLoopin
 
 .. note::
 
-   * If creating issues by ``project_name`` or ``issue_type`` fails, try specifying the corresponding ids using ``project_type_id_override`` and ``issue_type_id_override``. Check Optional Settings below for details. 
+   * If creating issues by ``project_name`` or ``issue_type`` fails, try specifying the corresponding ids using ``project_type_id_override`` and ``issue_type_id_override``. Check Optional Settings above for details. 
