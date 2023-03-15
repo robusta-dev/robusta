@@ -15,7 +15,7 @@ Prerequisites
 * ``url`` : The url of your workspace. For example: https://workspace.atlassian.net (**Note:** schema (https) is required)
 * ``username`` : The email you use to log into your Jira account. Eg: jira-user@company.com
 * ``api_key`` : Follow these `instructions <https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/>`_ to get your api key.
-* ``project_name`` : Project you want the Jira tickets to be created in.
+* ``project_name`` : Project you want the Jira tickets to be created in. Go to **Project Settings** -> **Details** -> **Name**.
 
 .. note::
 
@@ -58,17 +58,13 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-Try the example below to make sure you are recieving alert notifications on Jira. 
+Try the example below to recieve an alert notification in Jira.
 
-
-.. note::
-
-    2-way interactivity (``CallbackBlock``) isn't implemented yet.
 
 Test your Jira integration
 -------------------------------
 
-The example below creates a crashing pod which triggers ``KubePodCrashLooping`` event. 
+The command below creates a crashing pod which triggers the ``KubePodCrashLooping`` alert. This will cause a Jira ticket to be opened when using the above example.
 
 .. code-block:: bash
    :name: KubePodCrashLooping test
@@ -77,4 +73,4 @@ The example below creates a crashing pod which triggers ``KubePodCrashLooping`` 
 
 .. note::
 
-   * If creating issues by ``project_name`` or ``issue_type`` fails, try specifying the corresponding ids using ``project_type_id_override`` and ``issue_type_id_override``. Check Optional Settings for details. 
+   * If creating issues by ``project_name`` or ``issue_type`` fails, try specifying the corresponding ids using ``project_type_id_override`` and ``issue_type_id_override``. Check Optional Settings below for details. 
