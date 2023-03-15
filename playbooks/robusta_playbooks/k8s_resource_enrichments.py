@@ -1,5 +1,6 @@
 import logging
 from typing import List, Dict, Any, Optional
+from pydantic import BaseModel
 
 import json
 import hikaru
@@ -22,6 +23,31 @@ from robusta.api import (
     pod_requests,
     pod_restarts,
 )
+
+class RelatedContainer(BaseModel):
+    name: str
+    cpuLimit: float
+    cpuRequest: float
+    memoryLimit: int
+    memoryRequest: int
+    restarts: int
+    status: str
+    created: Optional[str]
+
+class RelatedPod(BaseModel):
+    name: str
+    namespace: str
+    node: str
+    clusterName: str
+    cpuLimit: float
+    cpuRequest: float
+    memoryLimit: int
+    memoryRequest: int
+    creationTime: str
+    restarts: int
+    addresses: str
+    containers: List[RelatedContainer]
+    status: Optional[str]
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node"]
 
@@ -53,6 +79,7 @@ def get_related_pods(resource) -> list[Pod]:
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {kind}"
         )
 
+    pods = []
     if kind == "Job":
         job_pods = get_job_all_pods(resource)
         pods = job_pods if job_pods else []
@@ -66,28 +93,28 @@ def get_related_pods(resource) -> list[Pod]:
 
     return pods
 
-def to_pod_obj(pod: Pod, cluster: str) -> Dict[str,Any]:
+def to_pod_obj(pod: Pod, cluster: str) -> RelatedPod:
     resource_requests = pod_requests(pod)
     resource_limits = pod_limits(pod)
     addresses = ",".join([address.ip for address in pod.status.podIPs])
-    return {
-        "name": pod.metadata.name,
-        "namespace": pod.metadata.namespace,
-        "node": pod.spec.nodeName,
-        "clusterName": cluster,
-        "cpuLimit": resource_limits.cpu,
-        "cpuRequest": resource_requests.cpu,
-        "memoryLimit": resource_limits.memory,
-        "memoryRequest": resource_requests.memory,
-        "creationTime": pod.metadata.creationTimestamp,
-        "restarts": pod_restarts(pod),
-        "addresses": addresses,
-        "containers": get_pod_containers(pod),
-        "status": pod.status.phase,
-    }
+    return RelatedPod(
+        name=pod.metadata.name,
+        namespace=pod.metadata.namespace,
+        node=pod.spec.nodeName,
+        clusterName=cluster,
+        cpuLimit=resource_limits.cpu,
+        cpuRequest=resource_requests.cpu,
+        memoryLimit=resource_limits.memory,
+        memoryRequest=resource_requests.memory,
+        creationTime=pod.metadata.creationTimestamp,
+        restarts=pod_restarts(pod),
+        addresses=addresses,
+        containers=get_pod_containers(pod),
+        status=pod.status.phase,
+    )
 
-def get_pod_containers(pod: Pod) -> List[Dict[str,Any]]:
-    containers = []
+def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
+    containers: List[RelatedContainer] = []
     for container in pod.spec.containers:
         requests = PodContainer.get_requests(container)
         limits = PodContainer.get_limits(container)
@@ -102,16 +129,18 @@ def get_pod_containers(pod: Pod) -> List[Dict[str,Any]]:
                     stateStr = s
                     break
 
-        containers.append({
-            "name": container.name,
-            "cpuLimit": limits.cpu,
-            "cpuRequest": requests.cpu,
-            "memoryLimit": limits.memory,
-            "memoryRequest": requests.memory,
-            "restarts": getattr(containerStatus, "restartCount", 0),
-            "status": stateStr,
-            "created": getattr(state, "startedAt", None)
-        })
+        containers.append(
+            RelatedContainer(
+            name=container.name,
+            cpuLimit=limits.cpu,
+            cpuRequest=requests.cpu,
+            memoryLimit=limits.memory,
+            memoryRequest=requests.memory,
+            restarts=getattr(containerStatus, "restartCount", 0),
+            status=stateStr,
+            created=getattr(state, "startedAt", None)
+            )
+        )
     
     return containers
  
@@ -129,9 +158,8 @@ def resource_related_pods(event: KubernetesResourceEvent):
     pods = get_related_pods(event.get_resource())
     cluster = event.get_context().cluster_name
     event.add_enrichment([
-       JsonBlock(json.dumps([to_pod_obj(pod, cluster) for pod in pods]))
+       JsonBlock(json.dumps([to_pod_obj(pod, cluster).dict() for pod in pods]))
     ])
-
 
 @action
 def related_pods(event: KubernetesResourceEvent):
