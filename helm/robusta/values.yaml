@@ -183,6 +183,7 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: KubePodNotReady
   actions:
+  - pending_pod_reporter: {}
   - logs_enricher: {}
   - pod_events_enricher: {}
 
@@ -190,6 +191,7 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: KubeContainerWaiting
   actions:
+  - pending_pod_reporter: {}
   - pod_events_enricher: {}
 
 - triggers:

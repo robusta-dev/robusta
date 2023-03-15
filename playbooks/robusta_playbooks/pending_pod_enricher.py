@@ -1,20 +1,25 @@
 import logging
 from typing import List, Optional
 
-from hikaru.model import Pod
+from hikaru.model import Pod, PodList
 from robusta.api import (
+    ActionException,
     BaseBlock,
+    ErrorCodes,
     Finding,
     FindingSeverity,
     FindingSource,
     FindingType,
     HeaderBlock,
+    KubernetesResourceEvent,
     MarkdownBlock,
     PendingInvestigator,
     PendingPodReason,
     PodEvent,
     PodFindingSubject,
     action,
+    build_selector_query,
+    get_job_all_pods,
 )
 
 
@@ -28,6 +33,28 @@ def get_unscheduled_message(pod: Pod) -> Optional[str]:
         return None
     return pod_scheduled_condition[0].message
 
+
+supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"]
+
+
+@action
+def pod_issue_investigator(event: KubernetesResourceEvent):
+    resource = event.get_resource()
+    if resource.kind not in supported_resources:
+        raise ActionException(
+            ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}"
+        )
+
+    if resource.kind == "Job":
+        job_pods = get_job_all_pods(resource)
+        pods = job_pods if job_pods else []
+    elif resource.kind == "Pod":
+        pods = [resource]
+    else:
+        selector = build_selector_query(resource.spec.selector)
+        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
+    for pod in pods:
+        if pod
 
 @action
 def pending_pod_reporter(event: PodEvent):
