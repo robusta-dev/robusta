@@ -33,11 +33,11 @@ Below is an example AlertManager configuration. Depending on your setup, the exa
 
         route:
           routes:
-          - receiver: 'robusta'
-          matchers:
-            - severity =~ "info|warn|error|critical"
-            repeat_interval: 4h
-            continue: true
+            - receiver: 'robusta'
+              matchers:
+                - severity =~ "info|warn|error|critical"
+              repeat_interval: 4h
+              continue: true
 
 .. admonition:: Common Mistakes
 
