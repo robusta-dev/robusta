@@ -1,6 +1,6 @@
 import logging
 import re
-from enum import Enum, auto
+from enum import Enum
 from typing import Dict, List, Optional
 
 from hikaru.model import Node, NodeList
@@ -16,7 +16,7 @@ class ClusterProviderType(str, Enum):
     Kapsule = "Kapsule"
     Kops = "Kops"
     DigitalOcean = "DigitalOcean"
-    Unknown = auto()
+    Unknown = "Unknown"
 
 
 # the value is a regex match of the hostname
