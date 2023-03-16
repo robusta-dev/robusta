@@ -4,7 +4,6 @@ from typing import Dict, List
 
 import humanize
 from hikaru.model import EnvVar, EnvVarSource, ObjectFieldSelector, Pod, PodList
-
 from robusta.api import ActionParams, BaseBlock, MarkdownBlock, NodeEvent, RobustaPod, TableBlock, action
 from robusta.utils.parsing import load_json
 
@@ -50,8 +49,10 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
             pod_uid_to_namespace[pod.metadata.annotations["kubernetes.io/config.hash"]] = pod.metadata.namespace
 
         for container_status in pod.status.containerStatuses:
-            container_id = re.match(".*//(.*)$", container_status.containerID).group(1)  # type: ignore
-            container_id_to_name[container_id] = container_status.name
+            # containers with ImagePullBackOff will have no containerID and throw an exception in regex
+            if container_status.containerID:
+                container_id = re.match(".*//(.*)$", container_status.containerID).group(1)  # type: ignore
+                container_id_to_name[container_id] = container_status.name
 
     # run disk-tools on node and parse its json output
     disk_info_str = RobustaPod.run_debugger_pod(

@@ -1,11 +1,12 @@
 import json
+import logging
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional
 from uuid import UUID
 
 import requests
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, SecretStr, validator
 
 from robusta.api import (
     ActionException,
@@ -69,6 +70,12 @@ class BaseSilenceParams(ActionParams):
     alertmanager_auth: Optional[SecretStr] = None
     grafana_api_key: str = None  # type: ignore
 
+    @validator("alertmanager_url", allow_reuse=True)
+    def remove_ending_slash(cls, v):
+        if v.endswith("/"):
+            return v[:-1]
+        return v
+
 
 class DeleteSilenceParams(BaseSilenceParams):
     """
@@ -108,6 +115,7 @@ def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
             headers=_gen_headers(params),
         )
     except Exception as e:
+        logging.error(f"Failed to get alertmanager silences. url: {alertmanager_url} {e}", exc_info=True)
         raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
 
     silence_list = [(Silence(**silence).to_list()) for silence in response.json()]
@@ -139,6 +147,7 @@ def add_silence(event: ExecutionBaseEvent, params: AddSilenceParams):
             headers=_gen_headers(params),
         )
     except Exception as e:
+        logging.error(f"Failed to add silence to alertmanager. url: {alertmanager_url} {e}", exc_info=True)
         raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
 
     if not res.ok:
@@ -173,6 +182,7 @@ def delete_silence(event: ExecutionBaseEvent, params: DeleteSilenceParams):
             headers=_gen_headers(params),
         )
     except Exception as e:
+        logging.error(f"Failed to delete alertmanager silence. url: {alertmanager_url} {e}", exc_info=True)
         raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED) from e
 
     event.add_enrichment(
@@ -196,7 +206,7 @@ def _gen_headers(params: BaseSilenceParams) -> Dict:
         headers.update({"Authorization": f"Bearer {params.grafana_api_key}"})
 
     elif params.alertmanager_auth:
-        headers.update({"Authorization": params.alertmanager_auth})
+        headers.update({"Authorization": params.alertmanager_auth.get_secret_value()})
 
     return headers
 

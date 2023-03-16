@@ -277,11 +277,13 @@ Additional Installation Methods
 .. dropdown:: Installing on OpenShift
     :color: light
 
-    Run this command to give permissions to robusta-forwarder:
+    Run this command to give permissions to the Robusta pods:
 
     .. code-block:: bash
+       :name: cb-oc-adm-policy-add
 
         oc adm policy add-scc-to-user anyuid -z robusta-forwarder-service-account
+        oc adm policy add-scc-to-user anyuid -z robusta-runner-service-account
 
     Add additional configuration to your :ref:`Global config`:
 

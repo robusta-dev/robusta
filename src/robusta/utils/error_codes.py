@@ -29,6 +29,7 @@ class ErrorCodes(Enum):
     ALERT_MANAGER_REQUEST_FAILED = 5001
     ADD_SILENCE_FAILED = 5002
 
+    PROMETHEUS_DISCOVERY_FAILED = 5100
 
 class ActionException(Exception):
     def __init__(self, error: ErrorCodes, msg: Optional[str] = None):

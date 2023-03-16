@@ -9,6 +9,7 @@ class ClusterStats(BaseModel):
     pods: int
     nodes: int
     jobs: int
+    provider: str
 
 
 class ClusterStatus(BaseModel):
