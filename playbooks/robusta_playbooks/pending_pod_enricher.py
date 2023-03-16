@@ -1,4 +1,5 @@
 import logging
+from enum import Enum, auto
 from typing import List, Optional
 
 from hikaru.model import Pod, PodList
@@ -34,6 +35,68 @@ def get_unscheduled_message(pod: Pod) -> Optional[str]:
     return pod_scheduled_condition[0].message
 
 
+class PodIssue(Enum):
+    ImagePullBackoff = auto()
+    Pending = auto()
+    CrashloopBackoff = auto()
+    PotentialCrashloopBackoff = auto()
+    NoneDetected = auto()
+
+
+def detect_pod_issue(pod: Pod) -> PodIssue:
+    if is_pod_pending(pod):
+        return PodIssue.Pending
+    elif has_image_pull_issue(pod):
+        return PodIssue.ImagePullBackoff
+    elif is_crashlooping(pod):
+        return PodIssue.CrashloopBackoff
+    elif might_be_crashlooping(pod):
+        return PodIssue.PotentialCrashloopBackoff
+    return PodIssue.NoneDetected
+
+
+def is_crashlooping(pod: Pod) -> bool:
+    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+    crashlooping_containers = [
+        container_status
+        for container_status in all_statuses
+        if container_status.state.waiting is not None
+        and container_status.restartCount > 1  # report only after the 2nd restart and get previous logs
+        and "CrashloopBackOff" in container_status.state.waiting.reason
+    ]
+    return len(crashlooping_containers) > 0
+
+
+def might_be_crashlooping(pod: Pod) -> bool:
+    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+    crashlooping_containers = [
+        container_status
+        for container_status in all_statuses
+        if container_status.state.waiting is not None and container_status.restartCount > 4
+    ]
+    # check event for container backoff event
+    return len(crashlooping_containers) > 0
+
+
+def has_image_pull_issue(pod: Pod) -> bool:
+    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+    image_pull_statuses = [
+        container_status
+        for container_status in all_statuses
+        if container_status.state.waiting is not None
+        and container_status.state.waiting.reason in ["ImagePullBackOff", "ErrImagePull"]
+    ]
+    return len(image_pull_statuses) > 0
+
+
+def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue):
+    pods_with_issue = [pod for pod in pods if detect_pod_issue(pod) == issue]
+    pod_names = [pod.metadata.name for pod in pods_with_issue]
+    pods_with_issue_string = ", ".join(pod_names)
+    blocks: List[BaseBlock] = [MarkdownBlock(f"*{issue}:* on {len(pod_names)} pods: {pods_with_issue_string}")]
+    event.add_enrichment(blocks)
+
+
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"]
 
 
@@ -54,7 +117,12 @@ def pod_issue_investigator(event: KubernetesResourceEvent):
         selector = build_selector_query(resource.spec.selector)
         pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
     for pod in pods:
-        if pod
+        pod_issue = detect_pod_issue(pod)
+        if pod_issue == PodIssue.NoneDetected:
+            continue
+        report_pod_issue(event, pods, pod_issue)
+        break
+
 
 @action
 def pending_pod_reporter(event: PodEvent):

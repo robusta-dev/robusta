@@ -320,11 +320,21 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: KubeDeploymentReplicasMismatch
   actions:
+  - pod_issue_investigator: {}
   - deployment_events_enricher:
       included_types: ["Warning"]
   - deployment_events_enricher:
       included_types: ["Warning", "Normal"]
       dependent_pod_mode: true
+
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeStatefulSetReplicasMismatch
+  - on_prometheus_alert:
+      alert_name: KubePodCrashLooping
+  actions:
+  - pod_issue_investigator: {}
+
 - triggers:
   - on_prometheus_alert:
       status: "all"
