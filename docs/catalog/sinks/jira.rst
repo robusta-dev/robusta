@@ -61,8 +61,8 @@ Save the file and run
 Try the example below to recieve an alert notification in Jira.
 
 
-Test your Jira integration
--------------------------------
+Test your Jira Prometheus Integration
+---------------------------------------
 
 The command below creates a crashing pod which triggers the ``KubePodCrashLooping`` alert. This will cause a Jira ticket to be opened when using the above example.
 
