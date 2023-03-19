@@ -8,6 +8,7 @@ import kubernetes.client.exceptions
 from hikaru.model import Pod, PodList, ContainerStatus, ContainerState
 from robusta.api import (
     PodContainer,
+    ActionParams,
     ActionException,
     ErrorCodes,
     FileBlock,
@@ -23,6 +24,13 @@ from robusta.api import (
     pod_requests,
     pod_restarts,
 )
+
+class RelatedPodParams(ActionParams):
+    """
+    :var block_type: output format type of the action.
+    """
+    output_format: str = "table"  # table, json
+
 
 class RelatedContainer(BaseModel):
     name: str
@@ -145,24 +153,8 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
     return containers
  
 
-
-
 @action
-def resource_related_pods(event: KubernetesResourceEvent):
-    """
-    Return the list of pods and containers related to that k8s resource.
-    For example, return all pods of a given k8s Deployment
-
-    Supports Deployments, ReplicaSets, DaemonSets, StatefulSets and Pods
-    """
-    pods = get_related_pods(event.get_resource())
-    cluster = event.get_context().cluster_name
-    event.add_enrichment([
-       JsonBlock(json.dumps([to_pod_obj(pod, cluster).dict() for pod in pods]))
-    ])
-
-@action
-def related_pods(event: KubernetesResourceEvent):
+def related_pods(event: KubernetesResourceEvent, params: RelatedPodParams):
     """
     Return the list of pods related to that k8s resource.
     For example, return all pods of a given k8s Deployment
@@ -170,32 +162,37 @@ def related_pods(event: KubernetesResourceEvent):
     Supports Deployments, ReplicaSets, DaemonSets, StatefulSets and Pods
     """
     pods = get_related_pods(event.get_resource())
+    cluster = event.get_context().cluster_name
 
-    rows = [to_pod_row(pod, event.get_context().cluster_name) for pod in pods]
-
-    event.add_enrichment(
-        [
-            TableBlock(
-                table_name="related pods",
-                headers=[
-                    "name",
-                    "namespace",
-                    "cluster",
-                    "node",
-                    "cpu limit",
-                    "cpu request",
-                    "memory limit",
-                    "memory request",
-                    "creation_time",
-                    "restarts",
-                    "addresses",
-                    "containers",
-                    "status",
-                ],
-                rows=rows,
-            )
-        ]
-    )
+    if params.output_format == "json":
+        event.add_enrichment([
+        JsonBlock(json.dumps([to_pod_obj(pod, cluster).dict() for pod in pods]))
+        ])
+    else:
+        rows = [to_pod_row(pod, cluster) for pod in pods]
+        event.add_enrichment(
+            [
+                TableBlock(
+                    table_name="related pods",
+                    headers=[
+                        "name",
+                        "namespace",
+                        "cluster",
+                        "node",
+                        "cpu limit",
+                        "cpu request",
+                        "memory limit",
+                        "memory request",
+                        "creation_time",
+                        "restarts",
+                        "addresses",
+                        "containers",
+                        "status",
+                    ],
+                    rows=rows,
+                )
+            ]
+        )
 
 
 @action
