@@ -5,6 +5,7 @@
    :maxdepth: 4
    :caption: Home
    :hidden:
+
    self
 
 .. toctree::
@@ -57,7 +58,7 @@
    :caption: Examples
    :hidden:
 
-   advanced-tutorials/index
+   examples/index
 
 
 .. toctree::
@@ -93,7 +94,13 @@
 Welcome to the Robusta Docs
 =============================
 
-Robusta helps you get more out of Prometheus on Kubernetes. To be precise, some people use Robusta for observability or runbook automation without Prometheus, but they're best together.
+Robusta is a Kubernetes-native observability platform. It is commonly used as an extension to Prometheus, or a standalone
+monitoring solution.
+
+Robusta gathers Kubernetes-specific data when alerts fire, as well as tracking CrashLoopBackOffs, Job failures, and more.
+
+Capabilities
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. grid:: 2
     :margin: 0
@@ -102,15 +109,19 @@ Robusta helps you get more out of Prometheus on Kubernetes. To be precise, some 
     .. grid-item::
         :columns: 6
 
-        Robusta extends Prometheus with full Kubernetes observability, letting you:
-
         * Correlate Prometheus alerts with pod logs
-        * Attach APIServer information (e.g. ``kubectl get events``) to your alerts
-        * See which alerts fired on a Deployment or Node
-        * Understand *why* alerts occurred and what led to them firing
+        * Attach missing information to your alerts (e.g. ``kubectl get events``)
+        * Notify on Kubernetes-native errors, like Job failure
+        * Understand *why* alerts fired, with automated evidence collection
         * Perform automatic remediations
 
         ...and more!
+
+        .. button-ref:: get-started/index
+            :color: primary
+            :outline:
+
+            Get Started →
 
 
     .. grid-item::
@@ -118,10 +129,3 @@ Robusta helps you get more out of Prometheus on Kubernetes. To be precise, some 
 
        .. image:: /images/architecture-overview.png
           :align: center
-
-
-.. button-ref:: get-started/index
-    :color: primary
-    :outline:
-
-    Get Started →

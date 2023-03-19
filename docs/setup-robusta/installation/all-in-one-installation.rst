@@ -3,15 +3,16 @@
 
 Monitor Kubernetes from Scratch
 ####################################
+*Estimated time: 5 minutes*
 
-In this five minute tutorial, we setup Kubernetes monitoring from scratch, using the all-in-one Robusta and Prometheus
+Setup Kubernetes monitoring from scratch, using the all-in-one Robusta and Prometheus
 package. This is the recommended way to monitor your cluster.
 
 Prerequisites
 ---------------------
 
 * A :ref:`supported Kubernetes cluster <Supported Kubernetes Clusters>`
-* Helm, installed on a machine with access to the cluster
+* Helm
 
 .. include:: ../_questions.rst
 

@@ -13,15 +13,24 @@ Quick Install
 
 Robusta can be installed three ways:
 
-* :ref:`As an all-in-one package, including Robusta and Prometheus <Monitor Kubernetes from Scratch>`
-* :ref:`As a standalone package, integrated with an existing Prometheus <Integrate with Existing Prometheus>`
-* :ref:`As a standalone package, with no Prometheus connected <Barebones Installation>`
+* :ref:`All in one package <Monitor Kubernetes from Scratch>` *(recommended, includes robusta + prometheus)*
+* :ref:`Integrate existing Prometheus <Integrate with Existing Prometheus>`
+* :ref:`Standalone (no Prometheus at all) <Barebones Installation>`
 
-Choosing the right setup
-********************************
+What about Thanos/Cortex/Mimir/VictoriaMetrics?
+********************************************************
+Any Prometheus-compatible solution is fine. Just follow instructions under :ref:`Integrate with Existing Prometheus`
 
-**For clusters without an existing Prometheus**, use the all-in-one package.
+Can I use Robusta with DataDog?
+********************************************************
+We have a DataDog integration available. Try it out.
 
-**For clusters already monitored by Prometheus**, use the standalone and integrated package.
+Is NewRelic supported?
+**********************************
+It's being planned, speak to us on Slack.
 
-**For users who want to avoid using Prometheus**, use the standalone package. This will disable Prometheus-related features, but all other Robusta features will works.
+Does Robusta replace monitoring tools?
+*************************************************************
+Robusta's :ref:`all-in-one package <Monitor Kubernetes from Scratch>` is a complete monitoring and observability solution.
+
+Alternatively, you can keep your existing tools and add-on robusta.

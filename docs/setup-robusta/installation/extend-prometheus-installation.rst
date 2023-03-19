@@ -3,16 +3,16 @@
 
 Integrate with Existing Prometheus
 ####################################
+*Estimated time: 5 minutes*
 
-In this five minute tutorial, we integrate Robusta with an existing Prometheus install. By the end of the tutorial,
-you will see your Prometheus alerts in Robusta and have improved alert notifications.
+Install Robusta alongside an existing Prometheus. See what Robusta can do.
 
 Prerequisites
 ---------------------
 
 * A :ref:`supported Kubernetes cluster <Supported Kubernetes Clusters>`
 * A Prometheus installation
-* Helm, installed on a machine with access to the cluster
+* Helm
 
 .. include:: ../_questions.rst
 

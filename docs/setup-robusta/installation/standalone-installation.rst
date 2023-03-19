@@ -4,17 +4,21 @@
 Barebones Installation
 ####################################
 
-In this five minute tutorial, we setup Robusta **without** integrating Prometheus. We'll show what Robusta can do
-standalone.
+*Estimated time: 5 minutes*
 
-For most people, we recommend **not** following this tutorial and instead choosing a tutorial that integrates Robusta
-and Prometheus.
+Install Robusta standalone, without integrating Prometheus. See Robusta's native capabilities.
+
+.. warning::
+
+   Most people should install with Prometheus and **not** follow this tutorial.
+
+   Robusta is useful standalone, but Prometheus makes it even better!
 
 Prerequisites
 ---------------------
 
 * A :ref:`supported Kubernetes cluster <Supported Kubernetes Clusters>`
-* Helm, installed on a machine with access to the cluster
+* Helm
 
 .. include:: ../_questions.rst
 

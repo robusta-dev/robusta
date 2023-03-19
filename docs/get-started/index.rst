@@ -16,19 +16,19 @@ Quick Start
 
     .. grid-item-card:: :octicon:`book;1em;` Monitor Kubernetes from Scratch
         :class-card: sd-bg-text-light
-        :link: monitor-kubernetes-from-scratch
+        :link: ../setup-robusta/installation/all-in-one-installation
         :link-type: doc
 
-        Everything you need to setup monitoring and observability from scratch.
+        Five minute setup. Great default alerts. Powered by Prometheus and Robusta.
 
     .. grid-item-card::  :octicon:`book;1em;`  Integrate with Existing Prometheus
         :class-card: sd-bg-light sd-bg-text-light
-        :link: enrich-alerts
+        :link: ../setup-robusta/installation/extend-prometheus-installation
         :link-type: doc
 
-        Add logs and Kubernetes context to your existing Prometheus alerts.
+        Make your existing alerts better. Attach pod logs. Automatic alert insights.
 
-Already have a monitoring tool that isn't Prometheus? See all integrations.
+Using a monitoring tool other than Prometheus? See all integrations.
 
 Learn How
 ===================
@@ -51,3 +51,5 @@ Learn How
 * How filters work - explain both trigger filters and sink matchers
 * ChatOps
 * Track scale changes
+
+* Monitor PVCs https://robustaco.slack.com/archives/C034F1Y1C4S/p1676815178255829
