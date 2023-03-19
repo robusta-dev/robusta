@@ -21,8 +21,7 @@ from robusta.core.reporting import (
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.discord.discord_sink_params import DiscordSinkParams
 from robusta.core.sinks.transformer import Transformer
-
-from src.robusta.core.reporting.base import FindingStatus
+from robusta.core.reporting.base import FindingStatus
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",

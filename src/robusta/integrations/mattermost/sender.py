@@ -3,7 +3,7 @@ import re
 from itertools import chain
 from typing import Any, Dict, List, Tuple, Union
 
-from robusta.core.reporting.base import Finding, FindingSeverity
+from robusta.core.reporting.base import Finding, FindingSeverity, FindingStatus
 from robusta.core.reporting.blocks import (
     BaseBlock,
     FileBlock,
@@ -47,9 +47,9 @@ class MattermostSender:
         self.sink_params = sink_params
 
     @classmethod
-    def __add_severity_icon(cls, title: str, severity: FindingSeverity) -> str:
+    def __add_mattermost_title(cls, title: str, status: FindingStatus, severity: FindingSeverity) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
-        return f"{icon} {severity.name} - {title}"
+        return f"{status.to_emoji()} {status.name.lower()} - {icon} {severity.name} - **{title}**"
 
     @classmethod
     def __format_msg_attachments(cls, mattermost_blocks: List[str], msg_color: str) -> List[Dict]:
@@ -82,8 +82,14 @@ class MattermostSender:
 
         return "\n".join(_blocks)
 
-    def __send_blocks_to_mattermost(self, report_blocks: List[BaseBlock], title: str, severity: FindingSeverity):
-        msg_color = SEVERITY_COLOR_MAP.get(severity, "")
+    def __send_blocks_to_mattermost(
+            self,
+            report_blocks: List[BaseBlock],
+            title: str,
+            status: FindingStatus,
+            severity: FindingSeverity,
+            msg_color: str,
+    ):
 
         # Process attachment blocks
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
@@ -99,7 +105,7 @@ class MattermostSender:
         output_blocks = []
         header_block = {}
         if title:
-            title = self.__add_severity_icon(title, severity)
+            title = self.__add_mattermost_title(title=title, status=status, severity=severity)
             header_block = self.__to_mattermost(HeaderBlock(title), self.sink_params.name)
         for block in other_blocks:
             output_blocks.append(self.__to_mattermost(block, self.sink_params.name))
@@ -136,8 +142,17 @@ class MattermostSender:
         for enrichment in finding.enrichments:
             blocks.extend(enrichment.blocks)
 
+        status: FindingStatus = (
+            FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
+        )
+
+        msg_color = status.to_color_hex()
+        title = finding.title.removeprefix("[RESOLVED] ")
+
         self.__send_blocks_to_mattermost(
-            blocks,
-            finding.title,
-            finding.severity,
+            report_blocks=blocks,
+            title=title,
+            status=status,
+            severity=finding.severity,
+            msg_color=msg_color,
         )

@@ -1,6 +1,6 @@
 import logging
 import re
-from enum import Enum, auto
+from enum import Enum
 from typing import Dict, List, Optional
 
 from hikaru.model import Node, NodeList
@@ -16,7 +16,7 @@ class ClusterProviderType(str, Enum):
     Kapsule = "Kapsule"
     Kops = "Kops"
     DigitalOcean = "DigitalOcean"
-    Unknown = auto()
+    Unknown = "Unknown"
 
 
 # the value is a regex match of the hostname
@@ -35,7 +35,7 @@ NODE_LABELS: Dict[ClusterProviderType, str] = {
 
 
 class ClusterProviderDiscovery:
-    cluster_provider: ClusterProviderType = ClusterProviderType.Unknown
+    provider: ClusterProviderType = ClusterProviderType.Unknown
 
     def init_provider_discovery(self):
         try:
@@ -54,11 +54,11 @@ class ClusterProviderDiscovery:
         return None
 
     @staticmethod
-    def _is_aks(nodes: List[Node]) -> bool:
+    def _is_str_in_cluster_provider(nodes: List[Node], identifier: str) -> bool:
         node = nodes[0]
         try:
             provider_id = node.spec.providerID
-            return "aks" in provider_id
+            return identifier in provider_id
         except (AttributeError, TypeError):
             # is not aks, field is optional so could be missing
             return False
@@ -95,16 +95,16 @@ class ClusterProviderDiscovery:
         cluster_hostname_provider = self._detect_provider_from_hostname(nodes)
         if cluster_hostname_provider != ClusterProviderType.Unknown:
             return cluster_hostname_provider
-        elif self._is_aks(nodes):
+        elif self._is_str_in_cluster_provider(nodes, "aks"):
             return ClusterProviderType.AKS
         elif self._is_detect_cluster_from_kubelet_version(nodes, "gke"):
             return ClusterProviderType.GKE
         elif self._is_detect_cluster_from_kubelet_version(nodes, "eks"):
             return ClusterProviderType.EKS
+        elif self._is_str_in_cluster_provider(nodes, "kind"):
+            return ClusterProviderType.Kind
 
-        cluster_provider_from_labels = self._detect_provider_from_node_labels(nodes)
-        if cluster_provider_from_labels != ClusterProviderType.Unknown:
-            return cluster_provider_from_labels
+        return self._detect_provider_from_node_labels(nodes)
 
 
 cluster_provider = ClusterProviderDiscovery()
