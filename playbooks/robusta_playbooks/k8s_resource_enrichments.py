@@ -27,9 +27,9 @@ from robusta.api import (
 
 class RelatedPodParams(ActionParams):
     """
-    :var block_type: output format type of the action.
+    :var output_format: The output format of the action. table or json, table is the default.
     """
-    output_format: str = "table"  # table, json
+    output_format: str = "table"
 
 
 class RelatedContainer(BaseModel):
