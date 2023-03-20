@@ -10,7 +10,7 @@ from robusta.utils.rate_limiter import RateLimiter
 class PodImagePullBackoffTrigger(PodUpdateTrigger):
     """
     :var rate_limit: Limit firing to once every `rate_limit` seconds
-    :var fire_delay: Limit to pods that are still firing image backoff after `fire_delay` seconds
+    :var fire_delay: Limit firing for a pod that has run atleast `fire_delay` seconds
     """
 
     rate_limit: int = 3600
