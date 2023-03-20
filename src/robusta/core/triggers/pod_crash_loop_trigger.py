@@ -15,7 +15,7 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
     :var fire_delay: Limit firing for a pod that has run atleast `fire_delay` seconds
     """
 
-    rate_limit: int = 3600
+    rate_limit: int = 14400
     restart_reason: str = None
     restart_count: int = 2
     fire_delay: int = 120
@@ -25,7 +25,7 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-        rate_limit: int = 3600,
+        rate_limit: int = 14400,
         restart_reason: str = None,
         restart_count: int = 2,
         fire_delay: int = 0,

@@ -13,7 +13,7 @@ class PodImagePullBackoffTrigger(PodUpdateTrigger):
     :var fire_delay: Limit firing for a pod that has run atleast `fire_delay` seconds
     """
 
-    rate_limit: int = 3600
+    rate_limit: int = 14400
     fire_delay: int = 120
 
     def __init__(
@@ -21,7 +21,7 @@ class PodImagePullBackoffTrigger(PodUpdateTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-        rate_limit: int = 3600,
+        rate_limit: int = 14400,
         fire_delay: int = 120,
     ):
         super().__init__(
