@@ -1,10 +1,13 @@
 import logging
+import re
 from datetime import datetime, timedelta
-from typing import Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from prometheus_api_client import PrometheusApiClientException
 from robusta.api import (
+    ActionParams,
     ExecutionBaseEvent,
+    NamedRegexPattern,
     PrometheusDateRange,
     PrometheusDiscovery,
     PrometheusDuration,
@@ -39,12 +42,41 @@ def parse_duration(
     return None, None
 
 
+class PrometheusLogsParams(ActionParams):
+    """
+    :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
+    :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
+    :var lines_with_regex: only shows lines that match the regex
+    """
+
+    regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
+    regex_replacement_style: str = "SAME_LENGTH_ASTERISKS"
+    lines_with_regex: Optional[str] = None
+
+
+def filter_logs(logs: str, lines_with_regex: str) -> str:
+    regex = re.compile(lines_with_regex)
+    return "\n".join(re.findall(regex, logs))
+
+
 @action
-def prometheus_logs_enricher(event: ExecutionBaseEvent):
+def prometheus_logs_enricher(event: ExecutionBaseEvent, params: PrometheusLogsParams):
+    """
+    Enriches the finding with the logs from your prometheus pod
+
+    For clusters with an out of cluster prometheus or no detectable prometheus this action will silently do nothing.
+    """
+    regex_replacement_style = (
+        RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
+    )
     pods = PrometheusDiscovery.find_prometheus_pods()
     logging.warning(len(pods))
     if pods:
-        log_data = pods[0].get_logs()
+        log_data = pods[0].get_logs(
+            regex_replacer_patterns=params.regex_replacer_patterns, regex_replacement_style=regex_replacement_style
+        )
+        if params.lines_with_regex:
+            log_data = filter_logs(log_data, params.lines_with_regex)
         logging.warning(log_data)
         if log_data:
             event.add_enrichment(
