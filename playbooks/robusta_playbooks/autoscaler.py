@@ -89,7 +89,7 @@ def alert_on_hpa_reached_limit(event: HorizontalPodAutoscalerChangeEvent, action
 
     finding.add_enrichment(
         [
-            MarkdownBlock(f"Current avg cpu utilization: *{avg_cpu} %*        -- (usage vs requested)"),
+            MarkdownBlock(f"On average, pods scaled under this HPA are using *{avg_cpu} %* of the requested cpu."),
             CallbackBlock(choices),
         ]
     )
