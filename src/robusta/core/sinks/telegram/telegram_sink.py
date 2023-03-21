@@ -24,7 +24,7 @@ class TelegramSink(SinkBase):
     def __init__(self, sink_config: TelegramSinkConfigWrapper, registry):
         super().__init__(sink_config.telegram_sink, registry)
 
-        self.client = TelegramClient(sink_config.telegram_sink.chat_id, sink_config.telegram_sink.bot_token)
+        self.client = TelegramClient(sink_config.telegram_sink.chat_id, sink_config.telegram_sink.thread_id, sink_config.telegram_sink.bot_token)
         self.send_files = sink_config.telegram_sink.send_files
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
