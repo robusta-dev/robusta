@@ -153,6 +153,12 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+        alert_name: PrometheusRuleFailures
+  actions:
+  - prometheus_logs_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
       alert_name: KubeCPUOvercommit
   actions:
   - cpu_overcommited_enricher: {}

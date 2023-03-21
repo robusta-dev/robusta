@@ -2,11 +2,13 @@ import logging
 from typing import TYPE_CHECKING, List, Optional, Dict
 
 from cachetools import TTLCache
+from hikaru.model import Pod, PodList, StatefulSetList
 from requests.exceptions import ConnectionError, HTTPError
 
 from robusta.core.exceptions import PrometheusNotFound
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
+from robusta.integrations.kubernetes.custom_models import build_selector_query
 from robusta.utils.service_discovery import find_service_url
 
 if TYPE_CHECKING:
@@ -89,7 +91,24 @@ class ServiceDiscovery:
         return None
 
 
-class PrometheusDiscovery(ServiceDiscovery):
+class PrometheusDiscovery(ServiceDiscovery, PodsDiscovery):
+    PROMETHEUS_SELECTORS = [
+        "app=kube-prometheus-stack-prometheus",
+        "app=prometheus,component=server",
+        "app=prometheus-server",
+        "app=prometheus-operator-prometheus",
+        "app=prometheus-msteams",
+        "app=rancher-monitoring-prometheus",
+        "app=prometheus-prometheus",
+    ]
+
+    @classmethod
+    def find_prometheus_pods(cls) -> Optional[List[Pod]]:
+        return super().find_pods(
+            selectors=cls.PROMETHEUS_SELECTORS,
+            error_msg="Prometheus pods could not be found.",
+        )
+
     @classmethod
     def find_prometheus_url(cls) -> Optional[str]:
         return super().find_url(

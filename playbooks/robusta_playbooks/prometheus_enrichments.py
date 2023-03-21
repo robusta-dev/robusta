@@ -6,13 +6,14 @@ from prometheus_api_client import PrometheusApiClientException
 from robusta.api import (
     ExecutionBaseEvent,
     PrometheusDateRange,
+    PrometheusDiscovery,
     PrometheusDuration,
     PrometheusQueryParams,
     PrometheusQueryResult,
     action,
     run_prometheus_query,
 )
-from robusta.core.reporting.blocks import PrometheusBlock
+from robusta.core.reporting.blocks import FileBlock, PrometheusBlock
 
 
 def parse_timestamp_string(date_string: str) -> Optional[datetime]:
@@ -36,6 +37,19 @@ def parse_duration(
         return starts_at, ends_at
     logging.error("Non supported duration provided")
     return None, None
+
+
+@action
+def prometheus_logs_enricher(event: ExecutionBaseEvent):
+    pods = PrometheusDiscovery.find_prometheus_pods()
+    logging.warning(len(pods))
+    if pods:
+        log_data = pods[0].get_logs()
+        logging.warning(log_data)
+        if log_data:
+            event.add_enrichment(
+                [FileBlock(f"{pods[0].metadata.name}.log", log_data.encode())],
+            )
 
 
 @action
