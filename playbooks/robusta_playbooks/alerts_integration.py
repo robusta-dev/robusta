@@ -319,7 +319,7 @@ class LogEnricherParams(ActionParams):
     :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
     :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
     :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
-    :var lines_with_regex: only shows lines that match the regex
+    :var filter_regex: only shows lines that match the regex
     """
 
     container_name: Optional[str]
@@ -327,12 +327,7 @@ class LogEnricherParams(ActionParams):
     regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
     regex_replacement_style: Optional[str] = None
     previous: bool = False
-    lines_with_regex: Optional[str] = None
-
-
-def filter_logs(logs: str, lines_with_regex: str) -> str:
-    regex = re.compile(lines_with_regex)
-    return "\n".join(re.findall(regex, logs))
+    filter_regex: Optional[str] = None
 
 
 @action
@@ -370,14 +365,13 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
             container=container,
             regex_replacer_patterns=params.regex_replacer_patterns,
             regex_replacement_style=regex_replacement_style,
+            filter_regex=params.filter_regex,
             previous=params.previous,
         )
         if not log_data:
             logging.info("log data is empty, retrying...")
             time.sleep(backoff_seconds)
             continue
-        if params.lines_with_regex:
-            log_data = filter_logs(log_data, params.lines_with_regex)
         event.add_enrichment(
             [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
         )
