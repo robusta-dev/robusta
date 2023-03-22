@@ -47,7 +47,7 @@ MAPPINGS = [
     ResourceMapping(StatefulSet, "statefulset", "statefulset"),
     ResourceMapping(RobustaJob, "job", "job_name"),
     ResourceMapping(RobustaPod, "pod", "pod"),
-    ResourceMapping(HorizontalPodAutoscaler, "horizontalpodautoscaler", "horizontalpodautoscaler"),
+    ResourceMapping(HorizontalPodAutoscaler, "hpa", "horizontalpodautoscaler"),
 ]
 
 

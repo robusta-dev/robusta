@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 
 SYNC_RESPONSE_SINK = "robusta-synchronized-response-sink"
@@ -9,9 +10,11 @@ class FindingType(Enum):
     HEALTH_CHECK = "health_check"
     REPORT = "report"
 
+
 class FindingAggregationKey(Enum):
     NONE = None  # empty default
     CONFIGURATION_CHANGE_KUBERNETES_RESOURCE_CHANGE = "ConfigurationChange/KubernetesResource/Change"
+
 
 # Finding sources
 class FindingSource(Enum):
@@ -32,6 +35,7 @@ class FindingSubjectType(Enum):
     TYPE_JOB = "job"
     TYPE_DAEMONSET = "daemonset"
     TYPE_STATEFULSET = "statefulset"
+    TYPE_HPA = "horizontalpodautoscaler"
 
     @staticmethod
     def from_kind(kind: str):
@@ -47,6 +51,8 @@ class FindingSubjectType(Enum):
             return FindingSubjectType.TYPE_DAEMONSET
         elif kind == "statefulset":
             return FindingSubjectType.TYPE_STATEFULSET
+        elif kind == "horizontalpodautoscaler":
+            return FindingSubjectType.TYPE_HPA
         return FindingSubjectType.TYPE_NONE
 
 
