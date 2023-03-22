@@ -79,7 +79,7 @@ class PrometheusDiscovery(ServiceDiscovery):
         return super().find_url(
             selectors=[
                 "app=kube-prometheus-stack-prometheus",
-                "app=prometheus,component=server",
+                "app=prometheus,component=server,release!=kubecost",
                 "app=prometheus-server",
                 "app=prometheus-operator-prometheus",
                 "app=prometheus-msteams",
