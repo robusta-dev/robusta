@@ -54,7 +54,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get install graphviz pandoc
-        curl -sSL https://install.python-poetry.org | python3 -
+        curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
         poetry config virtualenvs.create false
         poetry install --extras=all
 

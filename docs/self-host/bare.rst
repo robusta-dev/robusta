@@ -22,7 +22,7 @@ Generate the self host values files
 .. code-block:: bash
     :name: cb-self-managed-gen-config
 
-    robusta self-host gen-config --domain <MY_DOMAIN>
+    robusta self-host gen-config --provider on-prem --domain <MY_DOMAIN>
 
 Deploy
 --------
@@ -33,24 +33,6 @@ You can now install the Robusta platform into your cluster using `Helm <https://
     :name: cb-self-managed-install
 
     helm install robusta-platform robusta-platform/robusta-platform -f values.yaml
-
-Set up DNS to NodePorts
--------------------------
-
-In this step we are going to route your DNS to the Robusta platform NodePort services.
-NodePorts are in the 30000-32767 range usually. First, get the node ports:
-
-.. code-block:: bash
-    :name: cb-self-managed-get-node-ports
-
-    kubectl get svc robusta-ui kong platform-relay platform-relay-ws
-
-route each subdomain to ExposedIP:NodePort for the following services:
-
-1. db.MY_DOMAIN -> ``kong``
-2. platform.MY_DOMAIN -> ``robusta-ui``
-3. relay.MY_DOMAIN -> ``platform-relay-ws``
-4. api.MY_DOMAIN -> ``platform-relay``
 
 Configure the Robusta CLI to use your backend configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

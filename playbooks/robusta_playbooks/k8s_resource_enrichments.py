@@ -1,10 +1,14 @@
 import logging
-from typing import List
+from typing import List, Optional
+from pydantic import BaseModel
 
+import json
 import hikaru
 import kubernetes.client.exceptions
-from hikaru.model import Pod, PodList
+from hikaru.model import Pod, PodList, ContainerStatus, ContainerState
 from robusta.api import (
+    PodContainer,
+    ActionParams,
     ActionException,
     ErrorCodes,
     FileBlock,
@@ -12,6 +16,7 @@ from robusta.api import (
     MarkdownBlock,
     ResourceLoader,
     TableBlock,
+    JsonBlock,
     action,
     build_selector_query,
     get_job_all_pods,
@@ -19,6 +24,38 @@ from robusta.api import (
     pod_requests,
     pod_restarts,
 )
+
+class RelatedPodParams(ActionParams):
+    """
+    :var output_format: The output format of the action. table or json, table is the default.
+    """
+    output_format: str = "table"
+
+
+class RelatedContainer(BaseModel):
+    name: str
+    cpuLimit: float
+    cpuRequest: float
+    memoryLimit: int
+    memoryRequest: int
+    restarts: int
+    status: str
+    created: Optional[str]
+
+class RelatedPod(BaseModel):
+    name: str
+    namespace: str
+    node: str
+    clusterName: str
+    cpuLimit: float
+    cpuRequest: float
+    memoryLimit: int
+    memoryRequest: int
+    creationTime: str
+    restarts: int
+    addresses: str
+    containers: List[RelatedContainer]
+    status: Optional[str]
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node"]
 
@@ -43,57 +80,119 @@ def to_pod_row(pod: Pod, cluster_name: str) -> List:
         pod.status.phase,
     ]
 
+def get_related_pods(resource) -> list[Pod]:
+    kind: str = resource.kind or ""
+    if kind not in supported_resources:
+        raise ActionException(
+            ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {kind}"
+        )
+
+    pods = []
+    if kind == "Job":
+        job_pods = get_job_all_pods(resource)
+        pods = job_pods if job_pods else []
+    elif kind == "Pod":
+        pods = [resource]
+    elif kind == "Node":
+        pods = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={resource.metadata.name}").obj.items
+    else:
+        selector = build_selector_query(resource.spec.selector)
+        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
+
+    return pods
+
+def to_pod_obj(pod: Pod, cluster: str) -> RelatedPod:
+    resource_requests = pod_requests(pod)
+    resource_limits = pod_limits(pod)
+    addresses = ",".join([address.ip for address in pod.status.podIPs])
+    return RelatedPod(
+        name=pod.metadata.name,
+        namespace=pod.metadata.namespace,
+        node=pod.spec.nodeName,
+        clusterName=cluster,
+        cpuLimit=resource_limits.cpu,
+        cpuRequest=resource_requests.cpu,
+        memoryLimit=resource_limits.memory,
+        memoryRequest=resource_requests.memory,
+        creationTime=pod.metadata.creationTimestamp,
+        restarts=pod_restarts(pod),
+        addresses=addresses,
+        containers=get_pod_containers(pod),
+        status=pod.status.phase,
+    )
+
+def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
+    containers: List[RelatedContainer] = []
+    for container in pod.spec.containers:
+        requests = PodContainer.get_requests(container)
+        limits = PodContainer.get_limits(container)
+        containerStatus: Optional[ContainerStatus] = PodContainer.get_status(pod, container.name)  
+        currentState : Optional[ContainerState] = getattr(containerStatus, "state", None)
+        stateStr : str = "waiting"
+        state = None
+        if currentState:
+            for s in ["running", "waiting" , "terminated"]:
+                state = getattr(currentState, s, None)
+                if state is not None:
+                    stateStr = s
+                    break
+
+        containers.append(
+            RelatedContainer(
+            name=container.name,
+            cpuLimit=limits.cpu,
+            cpuRequest=requests.cpu,
+            memoryLimit=limits.memory,
+            memoryRequest=requests.memory,
+            restarts=getattr(containerStatus, "restartCount", 0),
+            status=stateStr,
+            created=getattr(state, "startedAt", None)
+            )
+        )
+    
+    return containers
+ 
 
 @action
-def related_pods(event: KubernetesResourceEvent):
+def related_pods(event: KubernetesResourceEvent, params: RelatedPodParams):
     """
     Return the list of pods related to that k8s resource.
     For example, return all pods of a given k8s Deployment
 
     Supports Deployments, ReplicaSets, DaemonSets, StatefulSets and Pods
     """
-    resource = event.get_resource()
-    if resource.kind not in supported_resources:
-        raise ActionException(
-            ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {resource.kind}"
-        )
+    pods = get_related_pods(event.get_resource())
+    cluster = event.get_context().cluster_name
 
-    if resource.kind == "Job":
-        job_pods = get_job_all_pods(resource)
-        pods = job_pods if job_pods else []
-    elif resource.kind == "Pod":
-        pods = [resource]
-    elif resource.kind == "Node":
-        pods = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={resource.metadata.name}").obj.items
+    if params.output_format == "json":
+        event.add_enrichment([
+        JsonBlock(json.dumps([to_pod_obj(pod, cluster).dict() for pod in pods]))
+        ])
     else:
-        selector = build_selector_query(resource.spec.selector)
-        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
-
-    rows = [to_pod_row(pod, event.get_context().cluster_name) for pod in pods]
-
-    event.add_enrichment(
-        [
-            TableBlock(
-                table_name="related pods",
-                headers=[
-                    "name",
-                    "namespace",
-                    "cluster",
-                    "node",
-                    "cpu limit",
-                    "cpu request",
-                    "memory limit",
-                    "memory request",
-                    "creation_time",
-                    "restarts",
-                    "addresses",
-                    "containers",
-                    "status",
-                ],
-                rows=rows,
-            )
-        ]
-    )
+        rows = [to_pod_row(pod, cluster) for pod in pods]
+        event.add_enrichment(
+            [
+                TableBlock(
+                    table_name="related pods",
+                    headers=[
+                        "name",
+                        "namespace",
+                        "cluster",
+                        "node",
+                        "cpu limit",
+                        "cpu request",
+                        "memory limit",
+                        "memory request",
+                        "creation_time",
+                        "restarts",
+                        "addresses",
+                        "containers",
+                        "status",
+                    ],
+                    rows=rows,
+                )
+            ]
+        )
 
 
 @action
