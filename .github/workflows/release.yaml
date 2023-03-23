@@ -87,7 +87,7 @@ jobs:
 
     - name: Prepare pypi dist
       run: |
-        curl -sSL https://install.python-poetry.org | python3 -
+        curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
         poetry config virtualenvs.create false
         poetry install --extras "all"
         poetry publish --build -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_PASS }}
