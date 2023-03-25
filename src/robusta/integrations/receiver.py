@@ -51,7 +51,7 @@ class ActionRequestReceiver:
         self.account_id = self.event_handler.get_global_config().get("account_id")
         self.cluster_name = self.event_handler.get_global_config().get("cluster_name")
         self.auth_provider = AuthProvider()
-        self.relay_active = False
+        self.healthy = False
 
         self.ws = websocket.WebSocketApp(
             WEBSOCKET_RELAY_ADDRESS,
@@ -78,7 +78,7 @@ class ActionRequestReceiver:
             logging.warning("relay address empty. Not initializing relay")
             return
 
-        self.relay_active = True
+        self.healthy = True
         websocket.enableTrace(RECEIVER_ENABLE_WEBSOCKET_TRACING)
         receiver_thread = Thread(target=self.run_forever)
         receiver_thread.start()

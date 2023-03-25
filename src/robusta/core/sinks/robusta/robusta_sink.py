@@ -22,7 +22,7 @@ from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
 
-from robusta.integrations.prometheus.utils import get_prometheus_connect
+from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags
 from robusta.core.model.base_params import PrometheusParams
 from silence import get_alertmanager_silences_connection, BaseSilenceParams
 
@@ -320,12 +320,12 @@ class RobustaSink(SinkBase):
                 relayConnection=False,
                 alertManagerConnection=False,
                 prometheusConnection=False,
+                retentionTime='',
             )
 
-            self.registry.get_actions()
             receiver = self.registry.get_receiver()
             if isinstance(receiver, ActionRequestReceiver):
-                activity_stats.relayConnection = receiver.relay_active
+                activity_stats.relayConnection = receiver.healthy
 
             global_config = self.get_global_config()
             prometheus_params = PrometheusParams()
@@ -336,6 +336,10 @@ class RobustaSink(SinkBase):
                     'container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}')
                 if response:
                     activity_stats.prometheusConnection = True
+                    flag_response = get_prometheus_flags(prom=prometheus_connection)
+
+                    if flag_response:
+                        activity_stats.retentionTime = flag_response['data']['storage.tsdb.retention.time']
 
             base_silence_params = BaseSilenceParams()
             base_silence_params.alertmanager_url = global_config["alertmanager_url"]
