@@ -2,10 +2,11 @@ import json
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from uuid import UUID
 
 import requests
+from flask import Response
 from pydantic import BaseModel, SecretStr, validator
 
 from robusta.api import (
@@ -19,6 +20,7 @@ from robusta.api import (
     TableBlock,
     action,
 )
+
 
 # ref to api https://github.com/prometheus/alertmanager/blob/main/api/v2/openapi.yaml
 
@@ -101,6 +103,20 @@ class AddSilenceParams(BaseSilenceParams):
     startsAt: datetime
     endsAt: datetime
     matchers: List[Matcher]
+
+
+def get_alertmanager_silences_connection(params: BaseSilenceParams) -> Optional[Union[Response, Response]]:
+    alertmanager_url = _get_alertmanager_url(params)
+    if not alertmanager_url:
+        return None
+
+    try:
+        return requests.get(
+            f"{alertmanager_url}{_get_url_path(SilenceOperation.LIST, params)}",
+            headers=_gen_headers(params),
+        )
+    except:
+        return None
 
 
 @action

@@ -9,7 +9,7 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
-from robusta.core.model.cluster_status import ClusterStatus, ClusterStats
+from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
@@ -19,7 +19,12 @@ from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
+from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
+
+from robusta.integrations.prometheus.utils import get_prometheus_connect
+from robusta.core.model.base_params import PrometheusParams
+from silence import get_alertmanager_silences_connection, BaseSilenceParams
 
 
 class RobustaSink(SinkBase):
@@ -310,6 +315,34 @@ class RobustaSink(SinkBase):
 
     def __update_cluster_status(self):
         try:
+
+            activity_stats = ActivityStats(
+                relayConnection=False,
+                alertManagerConnection=False,
+                prometheusConnection=False,
+            )
+
+            self.registry.get_actions()
+            receiver = self.registry.get_receiver()
+            if isinstance(receiver, ActionRequestReceiver):
+                activity_stats.relayConnection = receiver.relay_active
+
+            global_config = self.get_global_config()
+            prometheus_params = PrometheusParams()
+            prometheus_params.prometheus_url = global_config["prometheus_url"]
+            prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
+            if prometheus_connection:
+                response = prometheus_connection.custom_query(
+                    'container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}')
+                if response:
+                    activity_stats.prometheusConnection = True
+
+            base_silence_params = BaseSilenceParams()
+            base_silence_params.alertmanager_url = global_config["alertmanager_url"]
+            alertmanager_silences_connection = get_alertmanager_silences_connection(params=base_silence_params)
+            if alertmanager_silences_connection:
+                activity_stats.alertManagerConnection = True
+
             cluster_stats: ClusterStats = Discovery.discover_stats()
             cluster_status = ClusterStatus(
                 cluster_id=self.cluster_name,
@@ -319,6 +352,7 @@ class RobustaSink(SinkBase):
                 light_actions=self.registry.get_light_actions(),
                 ttl_hours=self.ttl_hours,
                 stats=cluster_stats,
+                activity_stats=activity_stats
             )
 
             self.dal.publish_cluster_status(cluster_status)
@@ -388,3 +422,6 @@ class RobustaSink(SinkBase):
                 self.__namespaces_cache[namespace_name] = updated_namespace
 
         self.dal.publish_namespaces(updated_namespaces)
+
+    def get_global_config(self) -> dict:
+        return self.registry.global_config
