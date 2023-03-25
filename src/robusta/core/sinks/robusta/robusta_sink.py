@@ -320,7 +320,7 @@ class RobustaSink(SinkBase):
                 relayConnection=False,
                 alertManagerConnection=False,
                 prometheusConnection=False,
-                retentionTime='',
+                prometheusRetentionTime='',
             )
 
             receiver = self.registry.get_receiver()
@@ -339,7 +339,7 @@ class RobustaSink(SinkBase):
                     flag_response = get_prometheus_flags(prom=prometheus_connection)
 
                     if flag_response:
-                        activity_stats.retentionTime = flag_response['data']['storage.tsdb.retention.time']
+                        activity_stats.prometheusRetentionTime = flag_response['data']['storage.tsdb.retention.time']
 
             base_silence_params = BaseSilenceParams()
             base_silence_params.alertmanager_url = global_config["alertmanager_url"]
