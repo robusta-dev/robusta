@@ -12,6 +12,12 @@ class ClusterStats(BaseModel):
     provider: str
 
 
+class ActivityStats(BaseModel):
+    relayConnection: bool
+    alertManagerConnection: bool
+    prometheusConnection: bool
+
+
 class ClusterStatus(BaseModel):
     account_id: str
     cluster_id: str
@@ -20,3 +26,4 @@ class ClusterStatus(BaseModel):
     light_actions: List[str]
     ttl_hours: int
     stats: ClusterStats
+    activity_stats: ActivityStats
