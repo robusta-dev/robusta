@@ -396,12 +396,14 @@ def is_pod_finished(pod: V1Pod) -> bool:
 
 def extract_ready_pods(resource) -> int:
     try:
-        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet) or isinstance(resource, V1Job):
+        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
             return 0 if not resource.status.ready_replicas else resource.status.ready_replicas
         elif isinstance(resource, V1DaemonSet):
             return 0 if not resource.status.number_ready else resource.status.number_ready
         elif isinstance(resource, V1Pod):
             return 1 if is_pod_ready(resource) else 0
+        elif isinstance(resource, V1Job):
+            return 0 if not resource.spec.succeeded else resource.spec.succeeded
         return 0
     except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
         logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
@@ -410,12 +412,15 @@ def extract_ready_pods(resource) -> int:
 
 def extract_total_pods(resource) -> int:
     try:
-        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet) or isinstance(resource, V1Job):
-            return 1 if not resource.status.replicas else resource.status.replicas
+        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
+            # resource.spec.replicas can be 0, default value is 1
+            return resource.spec.replicas if resource.spec.replicas is not None else 1
         elif isinstance(resource, V1DaemonSet):
             return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
         elif isinstance(resource, V1Pod):
             return 1
+        elif isinstance(resource, V1Job):
+            return resource.spec.completions
         return 0
     except Exception:
         logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
