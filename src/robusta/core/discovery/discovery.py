@@ -420,7 +420,9 @@ def extract_total_pods(resource) -> int:
         elif isinstance(resource, V1Pod):
             return 1
         elif isinstance(resource, V1Job):
-            return resource.spec.completions
+            # if completions are undefined than means that the success of any pod signals the success of all pods
+            # completions can be 0
+            return resource.spec.completions if resource.spec.completions is not None else 1
         return 0
     except Exception:
         logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
