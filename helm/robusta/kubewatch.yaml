@@ -17,3 +17,4 @@ resource:
   namespace: true
   configmap: true # 0.9.17
   secret: false       # disabled for security reasons
+  event: true  # added on kubewatch 2.3
