@@ -314,20 +314,25 @@ class RobustaSink(SinkBase):
         self.dal.publish_jobs(updated_jobs)
 
     def __update_cluster_status(self):
+        global_config = self.get_global_config()
+        activity_stats = ActivityStats(
+            relayConnection=False,
+            alertManagerConnection=False,
+            prometheusConnection=False,
+            prometheusRetentionTime='',
+        )
+
+        # checking the status of relay connection
         try:
-
-            activity_stats = ActivityStats(
-                relayConnection=False,
-                alertManagerConnection=False,
-                prometheusConnection=False,
-                prometheusRetentionTime='',
-            )
-
             receiver = self.registry.get_receiver()
             if isinstance(receiver, ActionRequestReceiver):
                 activity_stats.relayConnection = receiver.healthy
 
-            global_config = self.get_global_config()
+        except Exception:
+            pass
+
+        # checking the status of prometheus
+        try:
             prometheus_params = PrometheusParams()
             prometheus_params.prometheus_url = global_config["prometheus_url"]
             prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
@@ -340,13 +345,23 @@ class RobustaSink(SinkBase):
 
                     if flag_response:
                         activity_stats.prometheusRetentionTime = flag_response['data']['storage.tsdb.retention.time']
+        except Exception:
+            pass
 
-            base_silence_params = BaseSilenceParams()
-            base_silence_params.alertmanager_url = global_config["alertmanager_url"]
-            alertmanager_silences_connection = get_alertmanager_silences_connection(params=base_silence_params)
-            if alertmanager_silences_connection:
-                activity_stats.alertManagerConnection = True
+        # checking the status of the alert manager
+        try:
+            alertmanager_url = global_config["alertmanager_url"]
 
+            if alertmanager_url:
+                base_silence_params = BaseSilenceParams()
+                base_silence_params.alertmanager_url = alertmanager_url
+                alertmanager_silences_connection = get_alertmanager_silences_connection(params=base_silence_params)
+                if alertmanager_silences_connection:
+                    activity_stats.alertManagerConnection = True
+        except Exception:
+            pass
+
+        try:
             cluster_stats: ClusterStats = Discovery.discover_stats()
             cluster_status = ClusterStatus(
                 cluster_id=self.cluster_name,
