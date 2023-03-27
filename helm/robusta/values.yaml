@@ -313,6 +313,7 @@ kubewatch:
       memory: 512Mi
     limits:
       cpu: ~
+  additional_env_vars: []
   tolerations: []
   annotations: {}
   nodeSelector: ~
