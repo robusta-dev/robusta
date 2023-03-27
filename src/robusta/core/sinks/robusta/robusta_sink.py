@@ -6,6 +6,7 @@ import time
 from typing import Dict, List, Optional
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
+from robusta_playbooks.silence import BaseSilenceParams, get_alertmanager_silences_connection
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
@@ -24,7 +25,6 @@ from robusta.runner.web_api import WebApi
 
 from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags
 from robusta.core.model.base_params import PrometheusParams
-from silence import get_alertmanager_silences_connection, BaseSilenceParams
 
 
 class RobustaSink(SinkBase):
