@@ -4,8 +4,10 @@
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
+import uuid
 from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional, Sequence
+from datetime import datetime
 
 import hikaru
 from hikaru import DiffDetail, DiffType
@@ -19,7 +21,7 @@ except ImportError:
     def tabulate(*args, **kwargs):
         raise ImportError("Please install tabulate to use the TableBlock")
 
-
+from robusta.core.reporting.consts import ScanType
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.core.model.env_vars import PRINTED_TABLE_MAX_WIDTH
 from robusta.core.reporting.base import BaseBlock
@@ -388,9 +390,23 @@ class PrometheusBlock(BaseBlock):
         super().__init__(data=data, metadata=metadata)
 
 
+class ScanReportRow(BaseModel):
+    scan_id: uuid.UUID
+    namespace: str
+    name: str
+    kind: str
+    container: str
+    content: str # json
+    priority: float
+
 class ScanReportBlock(BaseBlock):
 
-    checkName: str
-    config: str
-    resultPayload: str
+    title: str
+    scan_id: uuid.UUID
+    type: ScanType
+    start_time: datetime
+    end_time: datetime
+    score: str
+    results: List[ScanReportRow]
+    config: str #TBD
     

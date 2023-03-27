@@ -127,7 +127,8 @@ from robusta.core.reporting import (
     MarkdownBlock,
     TableBlock,
     VideoLink,
-    ScanReportBlock
+    ScanReportBlock,
+    ScanReportRow
 )
 from robusta.core.reporting.action_requests import (
     ActionRequestBody,
@@ -143,6 +144,7 @@ from robusta.core.reporting.consts import (
     FindingSubjectType,
     FindingType,
     SlackAnnotations,
+    ScanType,
 )
 from robusta.core.reporting.custom_rendering import RendererType, charts_style, render_value
 from robusta.core.reporting.finding_subjects import KubeObjFindingSubject, PodFindingSubject

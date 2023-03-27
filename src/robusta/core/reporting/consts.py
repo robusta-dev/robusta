@@ -54,3 +54,7 @@ class FindingSubjectType(Enum):
 class SlackAnnotations:
     UNFURL = "unfurl"
     ATTACHMENT = "attachment"
+
+class ScanType(Enum):
+    POPEYE = 1
+    KRR = 2
