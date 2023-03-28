@@ -7,7 +7,6 @@ from typing import Dict, List, Optional
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
-from deployment.defaults.robusta_playbooks.silence import BaseSilenceParams, get_alertmanager_silences_connection
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
@@ -25,6 +24,7 @@ from robusta.runner.web_api import WebApi
 
 from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags
 from robusta.core.model.base_params import PrometheusParams
+from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_silences_connection
 
 
 class RobustaSink(SinkBase):
