@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Union
 from uuid import UUID
 
 import requests
-from flask import Response
 from pydantic import BaseModel, SecretStr, validator
 
 from robusta.core.model.base_params import ActionParams
@@ -95,7 +94,7 @@ class AddSilenceParams(BaseSilenceParams):
     matchers: List[Matcher]
 
 
-def get_alertmanager_silences_connection(params: BaseSilenceParams) -> Optional[Union[Response, Response]]:
+def get_alertmanager_silences_connection(params: BaseSilenceParams) -> Optional[Union[requests.Response, requests.Response]]:
     alertmanager_url = get_alertmanager_url(params)
     if not alertmanager_url:
         return None
