@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 import uuid
 from typing import List, Optional, Dict
 from pydantic import BaseModel
@@ -55,6 +56,10 @@ class PopeyeReport(BaseModel):
     errors:  Optional[List[str]]
 
 
+class GroupedIssues(BaseModel):
+    issues = []
+    level: str = "0"
+
  
 formats = ["standard", "yaml", "html", "json"]
 
@@ -70,6 +75,16 @@ class PopeyeParams(ProcessParams):
     timeout = 120
     format: str = "json"
     output: str = "file"
+
+
+def group_issues_list(issues: List[Issue]) -> Dict[str,GroupedIssues]:
+    groupedIssues: Dict[str, GroupedIssues] = defaultdict(lambda: GroupedIssues())
+    for issue in issues:
+        group = groupedIssues[issue.group]
+        group.issues.append(issue.dict(exclude={"group", "gvr"}))
+        group.level = max(group.level, issue.level)
+
+    return groupedIssues
 
 
 @action
@@ -101,7 +116,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
 
     scan_block = ScanReportBlock(
         title="Popeye scan",
-        scan_id= uuid.uuid4(),
+        scan_id=str(uuid.uuid4()),
         type=ScanType.POPEYE,
         start_time=start_time,
         end_time=end_time,
@@ -116,35 +131,37 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         issuesDict: Dict[str,List[Issue]] = section.issues or {}
         for resource, issuesList  in issuesDict.items():
             namespace, _ , name = resource.rpartition("/")
-            #TODO create the combined issues dictionary. 
-            #TODO max priority maximum of all issues.
-            for issue in issuesList:
+
+            groupedIssues = group_issues_list(issuesList)
+            for group, gIssues in groupedIssues.items():
                 scan_issues.append(
                     ScanReportRow(
                     scan_id=scan_block.scan_id,
-                    priority=int(issue.level),
+                    priority=int(gIssues.level),
+                    scan_type=ScanType.POPEYE,
                     namespace=namespace,
                     name=name,
                     kind=kind,
-                    container=issue.group if issue.gvr == "containers" else "",
-                    content=issue.json(exclude={"group", "gvr"})
+                    container= group if group != "__root__" else "",
+                    content= json.dumps(gIssues.issues)
                     )
                 )
     scan_block.results = scan_issues
 
     #todo check fail/timeout cases.
     finding = Finding(
-        title=f"Popeye Report:",
+        title=f"Popeye Report",
         source=FindingSource.MANUAL,
         aggregation_key="popeye_report",
         finding_type=FindingType.REPORT,
-        failure=False,
+        failure=False
     )
 
     finding.add_enrichment(
         [
             scan_block
         ],
+        annotations={"scan": True}
     )
 
     event.add_finding(finding)

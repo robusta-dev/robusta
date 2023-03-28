@@ -17,7 +17,8 @@ from robusta.core.reporting import (
     MarkdownBlock,
     PrometheusBlock,
     TableBlock,
-    JsonBlock
+    JsonBlock,
+    ScanReportBlock,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer

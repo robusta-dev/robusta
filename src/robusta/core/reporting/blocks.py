@@ -4,7 +4,6 @@
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import textwrap
-import uuid
 from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional, Sequence
 from datetime import datetime
@@ -391,8 +390,9 @@ class PrometheusBlock(BaseBlock):
 
 
 class ScanReportRow(BaseModel):
-    scan_id: uuid.UUID
+    scan_id: str # UUID
     namespace: str
+    scan_type: ScanType
     name: str
     kind: str
     container: str
@@ -402,7 +402,7 @@ class ScanReportRow(BaseModel):
 class ScanReportBlock(BaseBlock):
 
     title: str
-    scan_id: uuid.UUID
+    scan_id: str # UUID
     type: ScanType
     start_time: datetime
     end_time: datetime
