@@ -317,7 +317,7 @@ class RobustaSink(SinkBase):
             cluster_nodes = ClusterNodes(
                 account_id=self.account_id,
                 cluster_id=self.cluster_name,
-                max_node_count=cluster_stats.nodes,
+                node_count=cluster_stats.nodes,
             )
             self.dal.publish_cluster_nodes(cluster_nodes)
 

@@ -413,7 +413,6 @@ class SupabaseDal:
     def to_db_cluster_nodes(self, data: ClusterNodes) -> Dict[str, Any]:
         db_cluster_nodes = data.dict()
         db_cluster_nodes["updated_at"] = "now()"
-        db_cluster_nodes["max_node_count"] = data.max_node_count
 
         hour_now = datetime.now().strftime("%Y-%m-%d %H:00:00")
         res = (
@@ -434,8 +433,10 @@ class SupabaseDal:
         if len(db_data) > 0:
             db_id = db_data[0]["id"]
             last_max_node_count = db_data[0]["max_node_count"]
-            db_cluster_nodes["max_node_count"] = max(last_max_node_count, data.max_node_count)
+            db_cluster_nodes["max_node_count"] = max(last_max_node_count, data.node_count)
             db_cluster_nodes["id"] = db_id
+        else:
+            db_cluster_nodes["max_node_count"] = data.node_count
 
         db_cluster_nodes["daily_hour"] = hour_now
         logging.info(f"cluster nodes {db_cluster_nodes}")
