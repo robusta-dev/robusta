@@ -340,8 +340,9 @@ class RobustaSink(SinkBase):
 
             flag_response = get_prometheus_flags(prom=prometheus_connection)
             if flag_response:
-                activity_stats.prometheusRetentionTime = flag_response.get('data', None).get(
-                    'storage.tsdb.retention.time', None)
+                data = flag_response.get('data', None)
+                if data:
+                    activity_stats.prometheusRetentionTime = data.get('storage.tsdb.retention.time', None)
 
         except Exception:
             pass
