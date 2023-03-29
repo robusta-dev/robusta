@@ -6,7 +6,6 @@ import time
 from typing import Dict, List, Optional
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
-from prometheus_api_client import PrometheusConnect
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
@@ -344,16 +343,16 @@ class RobustaSink(SinkBase):
                 if data:
                     activity_stats.prometheusRetentionTime = data.get('storage.tsdb.retention.time', None)
 
-        except Exception:
-            pass
+        except Exception as e:
+            logging.error(f"Failed to connect to prometheus. {e}", exc_info=True)
 
         # checking the status of the alert manager
         try:
             base_silence_params = BaseSilenceParams(alertmanager_url=global_config.get("alertmanager_url", None))
             get_alertmanager_silences_connection(params=base_silence_params)
             activity_stats.alertManagerConnection = True
-        except Exception:
-            pass
+        except Exception as e:
+            logging.error(f"Failed to connect to the alert manager silence. {e}", exc_info=True)
 
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()

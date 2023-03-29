@@ -1,10 +1,8 @@
 import json
-import logging
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional, Union
 from uuid import UUID
-from requests.exceptions import ConnectionError, HTTPError
 
 import requests
 from pydantic import BaseModel, SecretStr, validator
@@ -106,7 +104,6 @@ def get_alertmanager_silences_connection(params: BaseSilenceParams):
             headers=gen_alertmanager_headers(params),
         )
     except Exception as e:
-        logging.error(f"Failed to connect to alertmanager silence. url: {alertmanager_url} {e}", exc_info=True)
         raise AlertsManagerNotFound(
             f"Could not connect to the alert manager [{alertmanager_url}] \nCaused by {e.__class__.__name__}: {e})"
         ) from e
