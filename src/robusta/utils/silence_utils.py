@@ -1,12 +1,15 @@
 import json
+import logging
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional, Union
 from uuid import UUID
+from requests.exceptions import ConnectionError, HTTPError
 
 import requests
 from pydantic import BaseModel, SecretStr, validator
 
+from robusta.core.exceptions import AlertsManagerNotFound
 from robusta.core.model.base_params import ActionParams
 from robusta.integrations.prometheus.utils import ServiceDiscovery, AlertManagerDiscovery
 
@@ -94,18 +97,19 @@ class AddSilenceParams(BaseSilenceParams):
     matchers: List[Matcher]
 
 
-def get_alertmanager_silences_connection(params: BaseSilenceParams) -> Optional[Union[requests.Response, requests.Response]]:
+def get_alertmanager_silences_connection(params: BaseSilenceParams):
     alertmanager_url = get_alertmanager_url(params)
-    if not alertmanager_url:
-        return None
 
     try:
         return requests.get(
             f"{alertmanager_url}{get_alertmanager_url_path(SilenceOperation.LIST, params)}",
             headers=gen_alertmanager_headers(params),
         )
-    except:
-        return None
+    except Exception as e:
+        logging.error(f"Failed to connect to alertmanager silence. url: {alertmanager_url} {e}", exc_info=True)
+        raise AlertsManagerNotFound(
+            f"Could not connect to the alert manager [{alertmanager_url}] \nCaused by {e.__class__.__name__}: {e})"
+        ) from e
 
 
 SilenceOperation = Enum("SilenceOperation", "CREATE DELETE LIST")

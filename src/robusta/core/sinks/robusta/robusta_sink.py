@@ -6,6 +6,7 @@ import time
 from typing import Dict, List, Optional
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
+from prometheus_api_client import PrometheusConnect
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
@@ -22,7 +23,8 @@ from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
 
-from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags
+from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags, \
+    check_prometheus_connection
 from robusta.core.model.base_params import PrometheusParams
 from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_silences_connection
 
@@ -323,41 +325,32 @@ class RobustaSink(SinkBase):
         )
 
         # checking the status of relay connection
-        try:
-            receiver = self.registry.get_receiver()
-            if isinstance(receiver, ActionRequestReceiver):
-                activity_stats.relayConnection = receiver.healthy
-
-        except Exception:
-            pass
+        receiver = self.registry.get_receiver()
+        if isinstance(receiver, ActionRequestReceiver):
+            activity_stats.relayConnection = receiver.healthy
 
         # checking the status of prometheus
         try:
-            prometheus_params = PrometheusParams()
-            prometheus_params.prometheus_url = global_config["prometheus_url"]
+            prometheus_params = PrometheusParams(prometheus_url=global_config.get("prometheus_url", None))
             prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
-            if prometheus_connection:
-                response = prometheus_connection.custom_query(
-                    'container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}')
-                if response:
-                    activity_stats.prometheusConnection = True
-                    flag_response = get_prometheus_flags(prom=prometheus_connection)
+            check_prometheus_connection(prom=prometheus_connection, params={
+                'query': 'container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}'})
 
-                    if flag_response:
-                        activity_stats.prometheusRetentionTime = flag_response['data']['storage.tsdb.retention.time']
+            activity_stats.prometheusConnection = True
+
+            flag_response = get_prometheus_flags(prom=prometheus_connection)
+            if flag_response:
+                activity_stats.prometheusRetentionTime = flag_response.get('data', None).get(
+                    'storage.tsdb.retention.time', None)
+
         except Exception:
             pass
 
         # checking the status of the alert manager
         try:
-            alertmanager_url = global_config["alertmanager_url"]
-
-            if alertmanager_url:
-                base_silence_params = BaseSilenceParams()
-                base_silence_params.alertmanager_url = alertmanager_url
-                alertmanager_silences_connection = get_alertmanager_silences_connection(params=base_silence_params)
-                if alertmanager_silences_connection:
-                    activity_stats.alertManagerConnection = True
+            base_silence_params = BaseSilenceParams(alertmanager_url=global_config.get("alertmanager_url", None))
+            get_alertmanager_silences_connection(params=base_silence_params)
+            activity_stats.alertManagerConnection = True
         except Exception:
             pass
 

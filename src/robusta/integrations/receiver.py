@@ -83,6 +83,8 @@ class ActionRequestReceiver:
         receiver_thread = Thread(target=self.run_forever)
         receiver_thread.start()
 
+        return self
+
     def run_forever(self):
         logging.info("starting relay receiver")
         while self.active:
@@ -240,7 +242,7 @@ class ActionRequestReceiver:
 
     @staticmethod
     def validate_action_request_signature(
-        action_request: ExternalActionRequest, signing_key: str
+            action_request: ExternalActionRequest, signing_key: str
     ) -> ValidationResponse:
         generated_signature = sign_action_request(action_request.body, signing_key)
         if hmac.compare_digest(generated_signature, action_request.signature):
@@ -294,7 +296,7 @@ class ActionRequestReceiver:
 
     @classmethod
     def __extract_key_and_validate(
-        cls, encrypted: str, private_key: RSAPrivateKey, body: ActionRequestBody
+            cls, encrypted: str, private_key: RSAPrivateKey, body: ActionRequestBody
     ) -> (bool, Optional[UUID]):
         try:
             plain = private_key.decrypt(
