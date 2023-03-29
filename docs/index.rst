@@ -34,7 +34,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: Reference
+   :caption: Configuration
    :hidden:
 
    configuration/overview
@@ -58,20 +58,7 @@
    :caption: Examples
    :hidden:
 
-   examples/index
-
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Automation
-   :hidden:
-
-   automation/overview
-   automation/automation-basics
-   automation/triggers/index
-   automation/actions/index
-   automation/sinks/index
-   popular-automations/index
+   tutorials/index
 
 .. toctree::
    :maxdepth: 4
@@ -96,8 +83,9 @@ Welcome to the Robusta Docs
 
 Robusta is a Kubernetes-native observability platform. It is commonly used as an extension to Prometheus, or a standalone
 monitoring solution.
+Robusta gathers Kubernetes-specific data when alerts fire, as well as tracking CrashLoopBackOffs, Job failures, and other native Kubernetes events.
 
-Robusta gathers Kubernetes-specific data when alerts fire, as well as tracking CrashLoopBackOffs, Job failures, and more.
+Finally, it routes notifications to Slack, MSTeams, PagerDuty (and more) via a unified event bus. In short, better notifications, unified routing.
 
 Capabilities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -112,8 +100,8 @@ Capabilities
         * Correlate Prometheus alerts with pod logs
         * Attach missing information to your alerts (e.g. ``kubectl get events``)
         * Notify on Kubernetes-native errors, like Job failure
-        * Understand *why* alerts fired, with automated evidence collection
-        * Perform automatic remediations
+        * Understand *why* alerts fired, with automated community runbooks
+        * Remediate alerts by automatically running commands
 
         ...and more!
 
