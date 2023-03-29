@@ -1,9 +1,13 @@
 :hide-toc:
-Overview
+Common Settings
 ==========================
 
-Robusta is configured using Helm values. This section documents the important values.
+Robusta is configured using Helm values. Here are common settings you might want to change:
 
+* Sinks - where should Robusta send notifications? Slack, MSTeams, Telegram, Discord, and more
+
+All Settings
+=============
 All possible values for Robusta can be listed like so:
 
 .. code-block:: yaml
