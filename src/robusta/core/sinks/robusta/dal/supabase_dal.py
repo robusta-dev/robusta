@@ -2,6 +2,7 @@ import json
 import logging
 import threading
 import time
+from datetime import datetime
 from typing import Any, Dict, List
 
 import requests
@@ -9,6 +10,7 @@ from postgrest_py.request_builder import QueryRequestBuilder
 from supabase_py import Client
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
+from robusta.core.model.cluster_nodes import ClusterNodes
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
 from robusta.core.model.jobs import JobInfo
@@ -23,6 +25,7 @@ NODES_TABLE = "Nodes"
 EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
 CLUSTERS_STATUS_TABLE = "ClustersStatus"
+CLUSTER_NODES_TABLE = "ClusterNodes"
 JOBS_TABLE = "Jobs"
 NAMESPACES_TABLE = "Namespaces"
 
@@ -406,3 +409,46 @@ class SupabaseDal:
             self.handle_supabase_error()
             status_code = res.get("status_code")
             raise Exception(f"publish namespaces failed. status: {status_code}")
+
+    def to_db_cluster_nodes(self, data: ClusterNodes) -> Dict[str, Any]:
+        db_cluster_nodes = data.dict()
+        db_cluster_nodes["updated_at"] = "now()"
+        db_cluster_nodes["max_node_count"] = data.max_node_count
+
+        hour_now = datetime.now().strftime("%Y-%m-%d %H:00:00")
+        res = (
+            self.client.table(CLUSTER_NODES_TABLE)
+            .select("id, max_node_count")
+            .filter("account_id", "eq", self.account_id)
+            .filter("cluster_id", "eq", self.cluster)
+            .filter("daily_hour", "eq", hour_now)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to get existing services (supabase) error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+        db_data = res.get('data', [])
+        if len(db_data) > 0:
+            db_id = db_data[0]["id"]
+            last_max_node_count = db_data[0]["max_node_count"]
+            db_cluster_nodes["max_node_count"] = max(last_max_node_count, data.max_node_count)
+            db_cluster_nodes["id"] = db_id
+
+        db_cluster_nodes["daily_hour"] = hour_now
+        logging.info(f"cluster nodes {db_cluster_nodes}")
+
+
+        return db_cluster_nodes
+
+    def publish_cluster_nodes(self, cluster_nodes: ClusterNodes):
+        res = (
+            self.client.table(CLUSTER_NODES_TABLE)
+            .insert(self.to_db_cluster_nodes(cluster_nodes), upsert=True)
+            .execute()
+        )
+        if res.get("status_code") not in [200, 201]:
+            logging.error(f"Failed to upsert {self.to_db_cluster_nodes(cluster_nodes)} error: {res.get('data')}")
+            self.handle_supabase_error()

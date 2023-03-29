@@ -9,6 +9,7 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
+from robusta.core.model.cluster_nodes import ClusterNodes
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.jobs import JobInfo
@@ -309,8 +310,17 @@ class RobustaSink(SinkBase):
         self.dal.publish_jobs(updated_jobs)
 
     def __update_cluster_status(self):
+
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()
+
+            cluster_nodes = ClusterNodes(
+                account_id=self.account_id,
+                cluster_id=self.cluster_name,
+                max_node_count=cluster_stats.nodes,
+            )
+            self.dal.publish_cluster_nodes(cluster_nodes)
+
             cluster_status = ClusterStatus(
                 cluster_id=self.cluster_name,
                 version=self.registry.get_telemetry().runner_version,
