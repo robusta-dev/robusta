@@ -4,12 +4,8 @@
 Quick Start
 ===================
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   monitor-kubernetes-from-scratch
-   enrich-alerts
+Install Robusta
+^^^^^^^^^^^^^^^^
 
 .. grid:: 1 1 2 3
     :gutter: 3
@@ -30,26 +26,21 @@ Quick Start
 
 Using a monitoring tool other than Prometheus? See all integrations.
 
-Learn How
-===================
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   trackchanges
-   Remediate Alerts <remediatealerts>
-   Route Alerts <routealerts>
+Learn Robusta
+^^^^^^^^^^^^^^^^
 
 * Track Failed Kubernetes Jobs - https://github.com/robusta-dev/robusta/issues/680#issuecomment-1397991931
 * Track Kubernetes Changes
 * Remediate Alerts
-* Route Alerts
+* Route Alerts - Notification Routing
 * Create tickets in Jira for Kubernetes issues
 * Remediate autoscaling issues - https://www.notion.so/Enable-HPA-resize-playbook-by-default-250826112ef1442da8d4a90efa70e8b8
 
 * How filters work - explain both trigger filters and sink matchers
 * ChatOps
 * Track scale changes
+* Track Kubernetes events - https://github.com/robusta-dev/robusta/issues/799#event-8873234835
+* Automatically deleting pods
+* Automatically running jobs
 
 * Monitor PVCs https://robustaco.slack.com/archives/C034F1Y1C4S/p1676815178255829
