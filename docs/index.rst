@@ -13,17 +13,18 @@
    :caption: How it works
    :hidden:
 
-   Overview <how-it-works/index>
-   Components <how-it-works/components>
+   how-it-works/index
+   how-it-work/how-playbooks-work
+   how-it-works/architecture
    how-it-works/oss-vs-saas
    Privacy & Security <how-it-works/privacy-and-security>
+   how-it-works/usage-faq
 
 .. toctree::
    :maxdepth: 4
-   :caption: Get Started
    :hidden:
 
-   Overview <get-started/index>
+   get-started
 
 .. toctree::
    :maxdepth: 4
@@ -55,7 +56,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: Examples
+   :caption: Tutorials
    :hidden:
 
    tutorials/index
@@ -81,8 +82,8 @@
 Welcome to the Robusta Docs
 =============================
 
-Robusta is a Kubernetes-native observability platform. It is commonly used as an extension to Prometheus, or a standalone
-monitoring solution.
+Robusta is a Kubernetes-native observability platform. It is commonly used as an extension to Prometheus, or a standalone monitoring solution.
+
 Robusta gathers Kubernetes-specific data when alerts fire, as well as tracking CrashLoopBackOffs, Job failures, and other native Kubernetes events.
 
 Finally, it routes notifications to Slack, MSTeams, PagerDuty (and more) via a unified event bus. In short, better notifications, unified routing.
