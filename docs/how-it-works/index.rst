@@ -1,142 +1,109 @@
 
-Overview
+What is Robusta
 ================================
 
-What is Robusta
-^^^^^^^^^^^^^^^^^^^
+The core of Robusta is a rules-engine. Using predefined YAML instructions, it:
 
-The core of Robusta is a rules-engine. It listens for incoming events like Prometheus alerts and
-CrashLoopBackOffs. Then it gathers observability data and remediates problems - all according to the rules.
+1. Listens to Kubernetes events, Prometheus alerts, and other sources
+2. Gathers observability data - e.g. logs, graphs, thread dumps
+3. Notifies in various destinations (optional)
 
-We'll explain what that means, but first lets see an example.
+Lets see two examples and how they're implemented with Robusta:
 
-Example - Better Prometheus Alerts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* :ref:`Automatically investigate a Prometheus alert`
+* :ref:`Track failing Kubernetes Jobs`
 
-``KubePodCrashLooping`` is a common Prometheus alert that identifies crashing pods. The Prometheus alert makes it clear
-there is a problem, but it can't tell you *why* the pod is crashing.
+Examples
+^^^^^^^^^^^^^
 
-Lets fix that with Robusta:
+Automatically investigate a Prometheus alert
+----------------------------------------------
 
-.. grid:: 2
-    :margin: 0
-    :padding: 0
+``KubePodCrashLooping`` is a Prometheus alert that identifies crashing pods. Here's what it normally looks like in Slack:
 
-    .. grid-item::
-       :columns: 7
-
-       .. code-block:: yaml
-
-            - triggers:
-              - on_prometheus_alert:
-                  alert_name: KubePodCrashLooping
-              actions:
-              - logs_enricher: {}
-              - pod_events_enricher: {}
-              sinks:
-              - slack_sink
-
-       .. code-annotations::
-            1. This rule will fire on the Prometheus alert named "KubePodCrashLooping"
-            2. Robusta will find the pod that crashed and fetch logs
-            3. The alert - along with data Robusta gathered - will be sent to Slack
-
-    .. grid-item::
-        :columns: 5
-
-        To the left is a Robusta rule, or "playbook". It has three sections.
-
-        **Triggers**: what events should cause this rule to run?
-
-        **Actions**: what should happen when this rule runs?
-
-        **Sinks**: where should results from this rule be sent?
-
-Result
-------------
-.. image:: /images/example-alert.png
+.. image:: /images/prometheus-alert-without-robusta.png
     :width: 800px
 
-Benefits
-^^^^^^^^^^^^
-Robusta's main benefit is *obvious* and *actionable* alerts. But there are additional advantages:
+Clearly a pod is crashing in the cluster. But why?
 
-1. **Efficient Logging:** When incidents occur at night, Robusta gathers the data you need and commits it to persistent storage for later investigation. This lets you ship far fewer logs, while making it easier to find the ones that matter.
-2. **Developer Enablement:** Not all engineers have access to production, but with Robusta they can resolve issues anyway. Right from Slack.
-3. **Knowledge Sharing:** Goodbye outdated runbook wikis. Hello awesome Slack messages you'll actually look at.
+With Robusta, the same Slack alert becomes this:
 
-Common Questions
-^^^^^^^^^^^^^^^^^^
+.. image:: /images/prometheus-alert-with-robusta.png
+    :width: 800px
 
-How does Robusta know which pods are related to an alert?
--------------------------------------------------------------------------
+👆️ The Prometheus alert now contains pod logs. It also gained rapid-response buttons like "Investigate" and "Silence".
 
-Most Prometheus alerts have metadata like ``pod=<pod_name>``. Robusta reads this metadata and builds a map of where the
-alert fired and on what resource.
+This looks like magic, but with Robusta it's actually 7 lines of YAML:
 
-Do I need to write my own rules to use Robusta?
----------------------------------------------------------------
-No. Our community has already contributed rules for common Prometheus alerts. We have excellent coverage today and it
-will only improve over time.
+.. code-block:: yaml
 
+    - triggers:
+      - on_prometheus_alert:
+          alert_name: KubePodCrashLooping
+      actions:
+      - logs_enricher: {}
+      sinks:
+      - slack_sink
 
-What events can Robusta listen to?
-----------------------------------
+**Note:** Robusta works out of the box, even without custom YAML! There are builtin rules from the community.
 
-Robusta can respond to any webhook or APIServer event. This includes:
+.. admonition:: How does Robusta know which pod to fetch logs from?
 
-* Prometheus Alerts
-* Failed Jobs and CrashLoopBackOffs
-* Change to Deployments
+    In the above example:
 
-You can also forward custom events by webhook.
+    1. ``on_prometheus_alert`` receives an alert and parses the metadata, including the ``pod`` label.
+    2. Robusta finds the relevant Kubernetes pod.
+    3. ``logs_enricher`` receives the pod as input.
 
-Actions Robusta can take
---------------------------
+    Rules define logic and Robusta handles the plumbing.
 
-Robusta acts on incoming events. Actions are typically one of the following:
+Track failing Kubernetes Jobs
+----------------------------------------
 
-* **Enrich** - fetch extra data so you can see *why* the event occurred, then notify the user
+Instead of improving Prometheus alerts, Robusta can generate alerts itself. Robusta has builtin triggers for Kubernetes errors and change.
 
-  For example, given a Prometheus alert on CrashLoopBackOff, fetch Pod logs
+Lets send send a Slack notification when a Kubernetes Job fails:
 
-* **Silence** - silence false positives based on rules you or the community define
+.. code-block:: yaml
 
-  For example, Robusta has optional rules out of the box to silence APIServerDown alerts on GKE autopilot, where the alert constantly fires and is a false positive
+    - triggers:
+      - on_job_failure: {}
+      actions:
+      - create_finding:
+          title: "Job Failed"
+          aggregation_key: "job_failure"
+      - job_info_enricher: {}
+      - job_events_enricher: {}
+      - job_pod_enricher: {}
 
-* **Remediate** - automatically fix the problem, or "click to fix"
+Here is the result:
 
-  For example, if the HPA reaches the max replica count then you can bump it up by 30% with the click of a button.
+.. image:: /images/on_job_failed_example.png
+    :width: 800px
 
-External Notifications
--------------------------
+.. admonition:: Should I generate alerts with Robusta or with Prometheus?
 
-Robusta can notify in over XYZ external destinations, which we Robusta calls *sinks*. Builtin sinks include:
+    Robusta can respond to Prometheus alerts, or it can generate alerts itself.
 
-* Slack, MSTeams, Discord, Telegram
-* PagerDuty and OpsGenie
-* DataDog and the Robusta SaaS
+    Most people mix and match the two options, depending on their use case. Here are some guidelines:
 
-...and many more.
+    * When alerts involve thresholds and time-series, use Prometheus. (Example: Job running > 18 hours.)
+    * When alerts involve discrete events, use Robusta. (Example: Job failed.)
 
+    That said, the choice is yours! Robusta is flexible and supports both approaches.
 
-Rules are pipelines
----------------------------
+In the above example, the triggering condition was a failed Job.
 
-All events coming into Robusta are matched against ``triggers``.
+Then Robusta generated a notification using four actions:
 
-Any matching events then flow to ``actions``.
+1. ``create_finding`` - create a notification
+2. ``job_info_enricher`` - fetch the Job's status
+3. ``job_events_enricher`` run ``kubectl get events`` and extract events related to this Job
+4. ``job_pod_enricher`` find the latest Pod in this Job and fetch it's information
 
-Finally, any output from ``actions`` is sent to ``sinks``.
+Next Steps
+^^^^^^^^^^^^^
 
-Every event in the pipeline has a type
-------------------------------------------------
-
-Each trigger outputs an event of a specific type. Each actions expects an event of a specific type.
-
-For example, ``on_prometheus_alert`` outputs a ``PrometheusAlert`` event. Likewise, ``on_pod_update`` outputs a
-``PodChangeEvent``.
-
-These events flow into the ``actions`` section. Each ``action`` requires events of a specific type.
-For example, the ``logs_enricher`` action expects to receive events that have a Pod object. This can be a
-``PrometheusAlert`` event or a ``PodEvent``.
+* See all the options for defining rules
+* See example rules
+* Install Robusta with Helm
