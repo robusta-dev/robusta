@@ -9,9 +9,15 @@ from robusta.api import (
     MarkdownBlock,
     TableBlock,
     action,
+    get_alertmanager_url,
+    BaseSilenceParams,
+    get_alertmanager_url_path,
+    SilenceOperation,
+    gen_alertmanager_headers,
+    Silence,
+    AddSilenceParams,
+    DeleteSilenceParams
 )
-from robusta.utils.silence_utils import get_alertmanager_url, BaseSilenceParams, get_alertmanager_url_path, \
-    SilenceOperation, gen_alertmanager_headers, Silence, AddSilenceParams, DeleteSilenceParams
 
 
 @action
