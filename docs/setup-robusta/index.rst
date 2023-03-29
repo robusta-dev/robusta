@@ -16,5 +16,5 @@
    add-more-clusters
    upgrade
    uninstall
-   more-installation-methods
-
+   supported-clusters
+   installation-faq

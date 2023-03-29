@@ -10,7 +10,7 @@ Install Robusta standalone, without integrating Prometheus. See Robusta's native
 
 .. warning::
 
-   Most people should install with Prometheus and **not** follow this tutorial.
+   Most people should install with Prometheus **instead** of this tutorial.
 
    Robusta is useful standalone, but Prometheus makes it even better!
 
@@ -31,7 +31,7 @@ Prerequisites
 See Robusta in action
 ------------------------------
 
-Let's deploy a crashing pod. Robusta will identify the problem and notify us:
+Let's deploy a crashing pod:
 
 .. code-block:: bash
    :name: cb-apply-crashpod

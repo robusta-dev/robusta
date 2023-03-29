@@ -3,7 +3,7 @@ Generate a config
 
 Robusta needs settings to work. For example, if you use Slack then Robusta needs a Slack API key. These settings are configured as Helm values.
 
-We'll generate the Helm values using the ``robusta`` cli tool. There are two ways to install the ``robusta`` cli: using ``pip`` or using a Docker container with the cli already inside.
+We'll generate the Helm values using the ``robusta`` cli tool. You can install the cli with ``pip`` or run it inside a prebuilt container.
 
 .. tab-set::
 
@@ -55,7 +55,8 @@ We'll generate the Helm values using the ``robusta`` cli tool. There are two way
 
             On Windows you can use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
 
-You now have a ``generated_values.yaml`` file with a Robusta config. You can customize this more later, to `add integrations <https://docs.robusta.dev/master/automation/sinks/index.html>`_ like Discord.
+You now have a ``generated_values.yaml`` file with a Robusta config.
 
-For now, lets install Robusta and see it in action.
+**Save this file!** You'll need it to install Robusta on all your clusters. This is also the file you'll customize later,
+for example to `add integrations <https://docs.robusta.dev/master/automation/sinks/index.html>`_ like Discord.
 

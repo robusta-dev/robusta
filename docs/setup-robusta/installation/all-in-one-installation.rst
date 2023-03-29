@@ -25,7 +25,7 @@ Prerequisites
 See Robusta in action
 ------------------------------
 
-Let's deploy a crashing pod. Robusta will identify the problem and notify us:
+Let's deploy a crashing pod:
 
 .. code-block:: bash
    :name: cb-apply-crashpod

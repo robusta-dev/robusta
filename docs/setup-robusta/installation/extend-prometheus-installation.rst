@@ -44,7 +44,7 @@ TODO: first demonstrate with simulated alert, then show you how to configure.
 Testing out APIServer alerts
 ****************************
 
-Let's deploy a crashing pod. Robusta will identify the problem and notify us:
+Let's deploy a crashing pod:
 
 .. code-block:: bash
    :name: cb-apply-crashpod

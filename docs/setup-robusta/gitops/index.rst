@@ -1,6 +1,6 @@
 :hide-toc:
 
-GitOps Instructions
+GitOps
 ====================
 We recommend doing a test install :ref:`without GitOps <Quick Install>` first. Then:
 
