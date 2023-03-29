@@ -68,7 +68,10 @@ def api_service_status_enricher(alert: PrometheusKubernetesAlert):
         return
 
     available_status = available_condition.get("status") == "True"
+    if available_status:
+        logging.info(f"Api service is available, no need to report status.")
+        return
     reason = available_condition.get("reason")
     message = available_condition.get("message")
-    blocks.append(MarkdownBlock(f"*Apiservice status details:*\n{available_status}, *{reason}-* {message}"))
+    blocks.append(MarkdownBlock(f"*Apiservice status details:*\n*{reason}-* {message}"))
     alert.add_enrichment(blocks)
