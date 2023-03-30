@@ -191,7 +191,7 @@ class SlackSender:
         with tempfile.NamedTemporaryFile() as f:
             f.write(block.contents)
             f.flush()
-            result = self.slack_client.files_upload(title=block.filename, file=f.name, filename=block.filename)
+            result = self.slack_client.files_upload_v2(title=block.filename, file=f.name, filename=block.filename)
             return result["file"]["permalink"]
 
     def prepare_slack_text(self, message: str, files: List[FileBlock] = []):
