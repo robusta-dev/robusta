@@ -26,6 +26,12 @@ class ApiService(BaseModel):
         return self.full_json
 
     def get_yaml(self):
+        # remove noisy fields
+        if self.full_json.get("metadata", {}).get("managedFields", {}):
+            del self.full_json["metadata"]["managedFields"]
+        last_applied = "kubectl.kubernetes.io/last-applied-configuration"
+        if self.full_json.get("metadata", {}).get("annotations", {}).get(last_applied):
+            del self.full_json["metadata"]["annotations"][last_applied]
         return yaml.dump(self.full_json)
 
     def get_available_condition(self) -> Optional[ApiServiceConditions]:
@@ -42,8 +48,6 @@ class ApiService(BaseModel):
         service_name = service.get("name")
         namespace = service.get("namespace")
         conditions = apiservice.get("status", {}).get("conditions", [])
-        if apiservice.get("metadata", {}).get("managedFields", {}):
-            del apiservice["metadata"]["managedFields"]
         return ApiService(
             name=name,
             service_name=service_name,
