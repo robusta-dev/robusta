@@ -60,14 +60,14 @@ class ActionRequestReceiver:
             on_error=self.on_error,
         )
 
+        self.start_receiver()
+
         if not self.account_id or not self.cluster_name:
             logging.error(
                 f"Action receiver cannot start. "
                 f"Missing required account_id {self.account_id} cluster_name {self.cluster_name}"
             )
             return
-
-        self.start_receiver()
 
     def start_receiver(self):
         if not CLOUD_ROUTING:
@@ -82,8 +82,6 @@ class ActionRequestReceiver:
         websocket.enableTrace(RECEIVER_ENABLE_WEBSOCKET_TRACING)
         receiver_thread = Thread(target=self.run_forever)
         receiver_thread.start()
-
-        return self
 
     def run_forever(self):
         logging.info("starting relay receiver")

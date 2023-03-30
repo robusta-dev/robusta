@@ -50,9 +50,9 @@ class ConfigLoader:
     # |- playbook_dir2
     #    |--- ...
     def __init__(
-        self,
-        registry: Registry,
-        event_handler: PlaybooksEventHandler,
+            self,
+            registry: Registry,
+            event_handler: PlaybooksEventHandler,
     ):
         self.config_file_path = PLAYBOOKS_CONFIG_FILE_PATH
         self.registry = registry
@@ -100,9 +100,9 @@ class ConfigLoader:
         return package_name
 
     def __load_playbooks_repos(
-        self,
-        actions_registry: ActionsRegistry,
-        playbooks_repos: Dict[str, PlaybookRepo],
+            self,
+            actions_registry: ActionsRegistry,
+            playbooks_repos: Dict[str, PlaybookRepo],
     ):
         playbook_packages = []
         for playbook_package, playbooks_repo in playbooks_repos.items():
@@ -201,6 +201,8 @@ class ConfigLoader:
                 # This needs to be set before the robusta sink is created since a cluster status is sent on creation
                 self.registry.set_light_actions(runner_config.light_actions if runner_config.light_actions else [])
 
+                self.__reload_receiver()
+
                 (sinks_registry, playbooks_registry) = self.__prepare_runtime_config(
                     runner_config,
                     self.registry.get_sinks(),
@@ -224,7 +226,6 @@ class ConfigLoader:
                     str(runner_config.global_config.get("cluster_name", "no_cluster")).encode("utf-8")
                 ).hexdigest()
 
-                self.__reload_receiver()
             except Exception:
                 logging.error(
                     "unknown error reloading playbooks. will try again when they next change",
@@ -233,11 +234,11 @@ class ConfigLoader:
 
     @classmethod
     def __prepare_runtime_config(
-        cls,
-        runner_config: RunnerConfig,
-        sinks_registry: SinksRegistry,
-        actions_registry: ActionsRegistry,
-        registry: Registry,
+            cls,
+            runner_config: RunnerConfig,
+            sinks_registry: SinksRegistry,
+            actions_registry: ActionsRegistry,
+            registry: Registry,
     ) -> (SinksRegistry, PlaybooksRegistry):
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(runner_config.sinks_config, existing_sinks, registry)
