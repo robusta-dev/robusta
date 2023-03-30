@@ -235,14 +235,15 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 )
                 execution_event.response = self.__error_resp(
                     ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.name, ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.value, log=False)
-            except Exception:
+            except Exception as e:
                 logging.error(
                     f"Failed to execute action {action.action_name} {to_safe_str(action_params)}", exc_info=True
                 )
                 execution_event.response = self.__error_resp(
                     ErrorCodes.ACTION_UNEXPECTED_ERROR.name, ErrorCodes.ACTION_UNEXPECTED_ERROR.value, log=False
                 )
-                execution_event.add_enrichment([MarkdownBlock(text=f"Oops... Error processing {action.action_name}")])
+                execution_event.add_enrichment([MarkdownBlock(
+                    text=f"An error occurred while processing the playbook action '{action.action_name}': \"{e}\"")])
         return execution_event.response
 
     @classmethod
