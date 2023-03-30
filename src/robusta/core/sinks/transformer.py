@@ -1,7 +1,7 @@
 import re
 import urllib.parse
 from typing import List, Optional
-
+from fpdf import FPDF
 import markdown2
 
 try:
@@ -22,6 +22,7 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    ScanReportBlock
 )
 
 
@@ -171,3 +172,28 @@ class Transformer:
                 blocks.remove(table_block)
 
         return file_blocks
+
+
+    @staticmethod
+    def scanReportBlock_to_fileblock(block: BaseBlock) -> BaseBlock:
+
+        if not isinstance(block, ScanReportBlock):
+            return block
+        
+        scan: ScanReportBlock = block
+        pdf = FPDF(orientation="landscape")
+        pdf.add_page()
+        pdf.set_font("Roboto", "B", 16)
+        pdf.cell(80)
+        pdf.cell(30, 10, f"Popeye report - {scan.end_time} - score: {scan.score}", border=0, align="C")
+        pdf.ln(20)
+
+        pdf.set_font("Roboto", "B", 6)
+        with pdf.table() as table:
+            table.row(["Priority", "Namespace", "Name", "Kind", "Container", "Content"])
+            for item in scan.results:
+                table.row([str(item.priority), item.namespace, item.name, item.kind,
+                            item.container, item.content ])
+
+
+        return FileBlock(scan.title, pdf.output('', 'S'))

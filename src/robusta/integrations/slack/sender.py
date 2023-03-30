@@ -22,6 +22,7 @@ from robusta.core.reporting.blocks import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    ScanReportBlock
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import SlackAnnotations
@@ -182,6 +183,8 @@ class SlackSender:
             return self.__get_action_block_for_choices(sink_name, block.choices)
         elif isinstance(block, LinksBlock):
             return self.__to_slack_links(block.links)
+        elif isinstance(block, ScanReportBlock):
+            raise AssertionError("to_slack() should never be called on a ScanReportBlock")
         else:
             logging.error(f"cannot convert block of type {type(block)} to slack format block: {block}")
             return []  # no reason to crash the entire report
@@ -225,6 +228,7 @@ class SlackSender:
         unfurl: bool,
         status: FindingStatus,
     ):
+        report_blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in report_blocks]
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
             file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
