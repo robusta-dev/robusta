@@ -193,8 +193,6 @@ builtinPlaybooks:
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeAggregatedAPIDown
-  - on_prometheus_alert:
-      alert_name: KubeAggregatedAPIErrors
   actions:
   - api_service_status_enricher: {}
 
