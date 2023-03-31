@@ -164,17 +164,7 @@ def pull(
             shell=True,
         )
     except Exception:
-        error_message = traceback.format_exc()
-
-        if f"ls {PLAYBOOKS_MOUNT_LOCATION}" in error_message:
-            if not os.path.isdir(PLAYBOOKS_MOUNT_LOCATION):
-                typer.secho(
-                    f"The directory '{PLAYBOOKS_MOUNT_LOCATION}' does not exists\n",
-                    fg="red",
-                )
-                return
-
-        typer.echo(f"Failed to pull deployed playbooks {error_message}")
+        typer.echo(f"Failed to pull deployed playbooks {traceback.format_exc()}")
 
 
 @app.command("list-dirs")
@@ -197,22 +187,19 @@ def list_dirs(
             f"kubectl exec -it {namespace_to_kubectl(namespace)} {runner_pod} -c runner "
             f"-- bash -c 'ls {PLAYBOOKS_MOUNT_LOCATION}'",
             shell=True,
+            stderr=subprocess.STDOUT,
         )
 
         log_title(f"Stored playbooks directories: \n { ls_res.decode('utf-8')}")
 
+    except subprocess.CalledProcessError as e:
+        if "no such file or directory" in str(e.output).lower():
+            log_title(f"Could not find any stored playbooks.")
+            return
+
+        typer.echo(f"Failed to list deployed playbooks {traceback.format_exc()}")
     except Exception:
-        error_message = traceback.format_exc()
-
-        if f"ls {PLAYBOOKS_MOUNT_LOCATION}" in error_message:
-            if not os.path.isdir(PLAYBOOKS_MOUNT_LOCATION):
-                typer.secho(
-                    f"The directory '{PLAYBOOKS_MOUNT_LOCATION}' does not exists\n",
-                    fg="red",
-                )
-                return
-
-        typer.echo(f"Failed to list deployed playbooks {error_message}")
+        typer.echo(f"Failed to list deployed playbooks {traceback.format_exc()}")
 
 
 @app.command()
