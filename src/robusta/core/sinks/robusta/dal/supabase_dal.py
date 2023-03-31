@@ -25,6 +25,7 @@ ISSUES_TABLE = "Issues"
 CLUSTERS_STATUS_TABLE = "ClustersStatus"
 JOBS_TABLE = "Jobs"
 NAMESPACES_TABLE = "Namespaces"
+NODES_COUNT_FUNC = "update_node_count_test"
 
 
 class RobustaAuthClient(SupabaseAuthClient):
@@ -318,11 +319,31 @@ class SupabaseDal:
 
         # postgres_py (which supabase cli uses) adds quotation marks around params with the characters ",.:()"
         # supabase does not support this format
-        query: str = str(supabase_request_obj.session.params).replace('%22', '')
+        query: str = str(supabase_request_obj.session.params).replace("%22", "")
         response = requests.delete(f"{url}?{query}", headers=supabase_request_obj.session.headers)
         response_data = ""
         try:
             response_data = response.json()
+        except Exception:  # this can be okay if no data is expected
+            logging.debug("Failed to parse delete response data")
+
+        return {
+            "data": response_data,
+            "status_code": response.status_code,
+        }
+
+    def __rpc_patch(self, func_name: str, params: dict) -> Dict[str, Any]:
+        """
+        Supabase client is async. Sync impl of rpc call
+        """
+        builder = self.client.table(f"rpc/{func_name}")  # rpc builder
+        url: str = str(builder.session.base_url).rstrip("/")
+
+        response = requests.post(url, headers=builder.session.headers, json=params)
+        response_data = {}
+        try:
+            if response.content:
+                response_data = response.json()
         except Exception:  # this can be okay if no data is expected
             logging.debug("Failed to parse delete response data")
 
@@ -369,6 +390,18 @@ class SupabaseDal:
         )
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {res.get('data')}")
+            self.handle_supabase_error()
+
+    def publish_node_count(self, node_count: int):
+        data = {
+            "_account_id": self.account_id,
+            "_cluster_id": self.cluster,
+            "_node_count": node_count,
+        }
+        res = self.__rpc_patch(NODES_COUNT_FUNC, data)
+
+        if res.get("status_code") not in [200, 201, 204]:
+            logging.error(f"Failed to publish node count {data} error: {res.get('data')}")
             self.handle_supabase_error()
 
     def get_active_namespaces(self) -> List[NamespaceInfo]:
