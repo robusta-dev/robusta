@@ -236,6 +236,23 @@ def job_info_enricher(event: JobEvent):
     event.add_enrichment([table_block])
 
 
+@action
+def delete_job(event: JobEvent):
+    """
+    Delete the job from the cluster
+    """
+    job = event.get_job()
+    if not job:
+        logging.info("Cannot run delete_job with no job. skipping")
+        return
+
+    # After deletion the metadata is empty. Saving the name and namespace
+    name = job.metadata.name
+    namespace = job.metadata.namespace
+    job.delete()
+    event.add_enrichment([MarkdownBlock(f"Job *{namespace}/{name}* deleted")])
+
+
 def __resources_str(request, limit) -> str:
     req = f"{request}" if request else "None"
     lim = f"{limit}" if limit else "None"

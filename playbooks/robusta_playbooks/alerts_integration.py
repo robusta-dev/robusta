@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import requests
 from hikaru.model import Node
+
 from robusta.api import (
     ActionParams,
     AlertResourceGraphEnricherParams,
@@ -82,6 +83,39 @@ def silence_alert(alert: PrometheusKubernetesAlert, params: SilenceAlertParams):
     if params.log_silence:
         logging.info(f"silencing alert {alert}")
     alert.stop_processing = True
+
+
+class StatusSilencerParams(ActionParams):
+    """
+    :var include: If available, will stop processing unless the pod status is in the include list
+    :var exclude: If available, will stop processing if the pod status is in the exclude list
+
+    :example include: ["Pending"]
+    :example exclude: ["Evicted"]
+    """
+
+    include: Optional[List[str]]
+    exclude: Optional[List[str]]
+
+
+@action
+def pod_status_silencer(event: PodEvent, params: StatusSilencerParams):
+    """
+    Stop execution based on pod statuses.
+    """
+    pod = event.get_pod()
+    if not pod:
+        logging.info("Cannot run pod_status_silencer with no pod. skipping")
+        return
+
+    if params.include:  # Stop unless pod status in include list
+        if pod.status.phase not in params.include:
+            event.stop_processing = True
+            return
+
+    if params.exclude:
+        if pod.status.phase in params.exclude:
+            event.stop_processing = True
 
 
 @action
