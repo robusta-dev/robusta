@@ -38,7 +38,7 @@
    :caption: Configuration
    :hidden:
 
-   configuration/overview
+   configuration/index
    Connecting sinks <configuration/sinks-configuration>
    configuration/defining-playbooks
    configuration/additional-playbooks
@@ -82,14 +82,8 @@
 Welcome to the Robusta Docs
 =============================
 
-Robusta is a Kubernetes-native observability platform. It is commonly used as an extension to Prometheus, or a standalone monitoring solution.
+Robusta is an observability and monitoring platform built for Kubernetes. It is commonly used as an extension to Prometheus, or standalone.
 
-Robusta gathers Kubernetes-specific data when alerts fire, as well as tracking CrashLoopBackOffs, Job failures, and other native Kubernetes events.
-
-Finally, it routes notifications to Slack, MSTeams, PagerDuty (and more) via a unified event bus. In short, better notifications, unified routing.
-
-Capabilities
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. grid:: 2
     :margin: 0
@@ -98,13 +92,19 @@ Capabilities
     .. grid-item::
         :columns: 6
 
-        * Correlate Prometheus alerts with pod logs
-        * Attach missing information to your alerts (e.g. ``kubectl get events``)
-        * Notify on Kubernetes-native errors, like Job failure
-        * Understand *why* alerts fired, with automated community runbooks
-        * Remediate alerts by automatically running commands
+        **Reasons to use Robusta:**
 
-        ...and more!
+        * Get better alerts - with automatic insights
+        * Spend less time defining alerts - with opinionated defaults
+        * Remove blind-spots - with direct APIServer monitoring
+        * Reduce alert fatigue - with smart silencing and routing
+
+        **Things you can do with Robusta:**
+
+        * Correlate Prometheus alerts with pod logs, Kubernetes events, and more
+        * Notify on Kubernetes-native errors without PromQL
+        * Analyze alerts with `ChatGPT <https://github.com/robusta-dev/kubernetes-chatgpt-bot/>`_ or expert runbooks
+        * Remediate alerts with automatic commands
 
         .. button-ref:: get-started/index
             :color: primary
