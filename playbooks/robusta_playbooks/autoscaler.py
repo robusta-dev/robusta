@@ -12,6 +12,7 @@ from robusta.api import (
     HorizontalPodAutoscalerChangeEvent,
     HorizontalPodAutoscalerEvent,
     MarkdownBlock,
+    PrometheusKubernetesAlert,
     SlackAnnotations,
     action,
     get_resource_events_table,
@@ -59,10 +60,10 @@ class HPALimitParams(ActionParams):
 
 
 @action
-def hpa_events_enricher(event: HorizontalPodAutoscalerEvent, params: EventEnricherParams):
-    hpa = event.hpa
+def hpa_events_enricher(alert: PrometheusKubernetesAlert, params: EventEnricherParams):
+    hpa = alert.hpa
     if not hpa:
-        logging.info(f"hpa_events_enricher - no hpa on event: {event}")
+        logging.info(f"hpa_events_enricher - no hpa on event: {alert}")
         return
     replicas_block = MarkdownBlock(
         f"*Replicas: Desired ({hpa.status.desiredReplicas}) --> Running ({hpa.status.currentReplicas})*"
