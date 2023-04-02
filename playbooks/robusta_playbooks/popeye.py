@@ -39,7 +39,7 @@ class Tally(BaseModel):
 class Issue(BaseModel):
     group: str # __root__ | container name
     gvr: str # kubernetes_schema | containers 
-    level: str # OK INFO WARNING ERROR
+    level: int # 0OK 1INFO 2WARNING 3ERROR
     message: str 
 
 class PopeyeSection(BaseModel):
@@ -58,7 +58,7 @@ class PopeyeReport(BaseModel):
 
 class GroupedIssues(BaseModel):
     issues = []
-    level: str = "0"
+    level: int = 0
 
  
 formats = ["standard", "yaml", "html", "json"]
@@ -137,7 +137,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
                 scan_issues.append(
                     ScanReportRow(
                     scan_id=scan_block.scan_id,
-                    priority=int(gIssues.level),
+                    priority=gIssues.level,
                     scan_type=ScanType.POPEYE,
                     namespace=namespace,
                     name=name,
