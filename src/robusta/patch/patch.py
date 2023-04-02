@@ -4,7 +4,9 @@ from inspect import getmodule, signature
 from typing import Dict, List, Optional, Union, get_type_hints
 
 from hikaru import HikaruBase, HikaruDocumentBase
+from hikaru.model import VolumeProjection
 from kubernetes.client.models.v1_container_image import V1ContainerImage
+from kubernetes.client.models.v1_projected_volume_source import V1ProjectedVolumeSource
 from ruamel.yaml import YAML
 
 try:
@@ -37,6 +39,14 @@ def create_monkey_patches():
     # which causes the kubernetes python api to throw an exception
     logging.info("Creating kubernetes ContainerImage monkey patch")
     V1ContainerImage.names = V1ContainerImage.names.setter(names)
+    V1ProjectedVolumeSource.sources = V1ProjectedVolumeSource.sources.setter(sources)
+
+
+def sources(self, sources):
+    if sources:
+        self._sources = sources
+    else:
+        self._sources = []
 
 
 def names(self, names):
@@ -145,6 +155,9 @@ def _get_hints(cls) -> dict:
     # patching ContainerImage hint to allow the names to be None due to containerd bug
     if cls.__name__ == "ContainerImage":
         hints["names"] = Optional[List[str]]
+    # patching ProjectedVolumeSource hint to allow the sources to be None
+    if cls.__name__ == "ProjectedVolumeSource":
+        hints["sources"] = Optional[List[VolumeProjection]]
     # Caching the class hints for later use
     cls.cached_hints = hints
     return hints
