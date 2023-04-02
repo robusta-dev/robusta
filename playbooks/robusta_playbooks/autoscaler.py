@@ -5,13 +5,16 @@ from robusta.api import (
     ActionParams,
     CallbackBlock,
     CallbackChoice,
+    EventEnricherParams,
     Finding,
     FindingSeverity,
     FindingSource,
     HorizontalPodAutoscalerChangeEvent,
     HorizontalPodAutoscalerEvent,
     MarkdownBlock,
+    SlackAnnotations,
     action,
+    get_resource_events_table,
 )
 
 
@@ -53,6 +56,28 @@ class HPALimitParams(ActionParams):
     """
 
     increase_pct: int = 20
+
+
+@action
+def hpa_events_enricher(event: HorizontalPodAutoscalerEvent, params: EventEnricherParams):
+    hpa = event.hpa
+    if not hpa:
+        logging.info(f"hpa_events_enricher - no hpa on event: {event}")
+        return
+    replicas_block = MarkdownBlock(
+        f"*Replicas: Desired ({hpa.status.desiredReplicas}) --> Running ({hpa.status.currentReplicas})*"
+    )
+    events_table_block = get_resource_events_table(
+        "*HPA events:*",
+        hpa.kind,
+        hpa.metadata.name,
+        hpa.metadata.namespace,
+        included_types=params.included_types,
+        max_events=params.max_events,
+    )
+    event.add_enrichment([replicas_block])
+    if events_table_block:
+        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
 
 
 @action
