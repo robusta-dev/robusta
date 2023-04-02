@@ -396,7 +396,7 @@ class ScanReportRow(BaseModel):
     name: str
     kind: str
     container: str
-    content: str # json
+    content: list[Any] # scan result data
     priority: float
 
 class ScanReportBlock(BaseBlock):
@@ -410,3 +410,16 @@ class ScanReportBlock(BaseBlock):
     results: List[ScanReportRow]
     config: str #TBD
     
+    def grade(self):
+        if self.score >= 90:
+            return "A"
+        elif self.score >= 80:
+            return "B"
+        elif self.score >= 70:
+            return "C"
+        elif self.score >= 60:
+            return "D"
+        elif self.score >= 50:
+            return "E"
+        else:
+            return "F" 

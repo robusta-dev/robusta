@@ -143,7 +143,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
                     name=name,
                     kind=kind,
                     container= group if group != "__root__" else "",
-                    content= json.dumps(gIssues.issues)
+                    content= gIssues.issues
                     )
                 )
     scan_block.results = scan_issues
