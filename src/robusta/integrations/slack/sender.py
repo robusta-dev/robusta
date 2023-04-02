@@ -228,7 +228,7 @@ class SlackSender:
         unfurl: bool,
         status: FindingStatus,
     ):
-        report_blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in report_blocks]
+       
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
             file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
@@ -330,6 +330,9 @@ class SlackSender:
 
         unfurl = True
         for enrichment in finding.enrichments:
+            if enrichment.annotations.get("scan", False):
+                enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
+
             # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
             unfurl = unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True)
             if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
