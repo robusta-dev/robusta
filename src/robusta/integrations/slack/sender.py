@@ -25,7 +25,7 @@ from robusta.core.reporting.blocks import (
     ScanReportBlock
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
-from robusta.core.reporting.consts import SlackAnnotations
+from robusta.core.reporting.consts import SlackAnnotations, EnrichmentAnnotation
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
@@ -330,7 +330,7 @@ class SlackSender:
 
         unfurl = True
         for enrichment in finding.enrichments:
-            if enrichment.annotations.get("scan", False):
+            if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
                 enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
 
             # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False

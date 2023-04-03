@@ -24,7 +24,8 @@ from robusta.api import (
     action,
     ScanReportBlock,
     ScanReportRow,
-    ScanType
+    ScanType,
+    EnrichmentAnnotation
 )
 
 #https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/report/tally.go#L163
@@ -166,9 +167,9 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
 
     finding.add_enrichment(
         [
-            scan_block
+            scan_block  
         ],
-        annotations={"scan": True}
+        annotations={EnrichmentAnnotation.SCAN: True}
     )
 
     event.add_finding(finding)

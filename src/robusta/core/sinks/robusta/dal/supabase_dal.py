@@ -20,6 +20,8 @@ from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.blocks import ScanReportBlock,ScanReportRow
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
+from robusta.core.reporting.consts import EnrichmentAnnotation
+from robusta.core.reporting import Enrichment
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -109,39 +111,51 @@ class SupabaseDal:
         return db_sr
     
 
-    def persist_scan(self, scanBlock: ScanReportBlock):
+    def persist_scan(self, enrichment: Enrichment):
 
-        db_scanResults = [self.__to_db_scanResult(sr) for sr in scanBlock.results]
+        for block in enrichment.blocks:
+            if not isinstance(block, ScanReportBlock):
+                return
+
+        db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
         res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
         if res.get("status_code") not in [200, 201]:
-            logging.error(f"Failed to persist scan {scanBlock.scan_id} error: {res.get('data')}")
+            logging.error(f"Failed to persist scan {block.scan_id} error: {res.get('data')}")
             self.handle_supabase_error()
 
         self.client.postgrest.session.headers.update(self.client._get_auth_headers())
         tasks = [self.event_loop.create_task(self.client.rpc("insert_scan_meta", {
             "_account_id": self.account_id,
             "_cluster": self.cluster,
-            "_scan_id": scanBlock.scan_id,
-            "_scan_start": str(scanBlock.start_time),
-            "_scan_end": str(scanBlock.end_time),
-            "_type": scanBlock.type,
-            "_grade": scanBlock.score
+            "_scan_id": block.scan_id,
+            "_scan_start": str(block.start_time),
+            "_scan_end": str(block.end_time),
+            "_type": block.type,
+            "_grade": block.score
         }))]
         self.event_loop.run_until_complete(asyncio.wait(tasks))
         res = tasks[0].result()
 
         if res.status_code not in [200, 201, 204]:
             logging.error(
-                f"Failed to persist scan meta {scanBlock.scan_id} error: {res.message}"
+                f"Failed to persist scan meta {block.scan_id} error: {res.message}"
             )
             self.handle_supabase_error()
             return None
 
     def persist_finding(self, finding: Finding):
-        for enrichment in finding.enrichments:
-            if enrichment.annotations.get("scan", False):
-                self.persist_scan(enrichment.blocks[0]) #todo find scanblock.
-            else:    
+
+        scans, enrichments = [], []
+        for e in finding.enrichments:
+            scans.append(e) if e.annotations.get(EnrichmentAnnotation.SCAN, False) else enrichments.append(e)
+
+        for s in scans:
+            self.persist_scan(s)
+                
+        if (len(scans)> 0) and (len(enrichments)) == 0:
+            return    
+        
+        for enrichment in enrichments: 
                 res = (
                     self.client.table(EVIDENCE_TABLE)
                     .insert(

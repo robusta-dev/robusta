@@ -145,6 +145,7 @@ from robusta.core.reporting.consts import (
     FindingType,
     SlackAnnotations,
     ScanType,
+    EnrichmentAnnotation
 )
 from robusta.core.reporting.custom_rendering import RendererType, charts_style, render_value
 from robusta.core.reporting.finding_subjects import KubeObjFindingSubject, PodFindingSubject

@@ -51,6 +51,9 @@ class FindingSubjectType(Enum):
 
 
 # Annotations
+class EnrichmentAnnotation(Enum):
+    SCAN = "scan"
+    
 class SlackAnnotations:
     UNFURL = "unfurl"
     ATTACHMENT = "attachment"
