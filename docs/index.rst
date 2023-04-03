@@ -39,7 +39,7 @@
    :hidden:
 
    configuration/index
-   Connecting sinks <configuration/sinks-configuration>
+   configuration/sinks/index
    configuration/defining-playbooks
    configuration/additional-playbooks
    Re-using common settings <configuration/global-config>

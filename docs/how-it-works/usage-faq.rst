@@ -2,45 +2,39 @@
 Usage FAQ
 ==========
 
-Do I need to write my own rules?
+Does Robusta have builtin alerts?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-No. Our community has already contributed many rules. They work out of the box without any configuration.
+Yes. Robusta includes built-in alerts based on Prometheus and direct APIServer monitoring.
+
+These alerts work out of the box without any configuration.
 
 That said, you can always write your own.
 
 What events can Robusta listen to?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Robusta can respond to:
+Robusta listens to:
 
 * Prometheus alerts
-* APIServer events (CrashLoopBackOffs, OOMKills, and more)
-* Changes to Kubernetes resources (updated deployments, new pods, etc)
+* CrashLoopBackOffs
+* OOMKills
+* Job Failures
+* Other APIServer errors
+* Updates to Kubernetes Deployments and other resources
 
-You can also forward custom events by webhook.
+Want Robusta to respond to a custom event? Just send your event to Robusta by webhook.
 
 What actions can Robusta take?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Actions typically do one of the following:
 
-* Correlate existing observability data. For example, when a Pod is...
-
-  * Pending, then ask the APIServer why it's pending
-  * OOMKilled, then attach a graph of memory usage from Prometheus
-  * in CrashLoopBackOff, then fetch Pod logs
-
-* Collect high-fidelity observability data.
-
-  * For example, when a Java application has a memory leak, run jmap on-demand
-
+* Correlate existing observability data
+* Perform high-fidelity data collection (e.g. fetch heap dumps)
 * Remediate problems
-
-  * For example, if the HPA reaches the maximum scaling limit at 2AM, increase the limit by 30% from Slack. Fix it properly in the morning.
-
 * Silence false alarms
 
-  * For example, don't notify about APIServerDown on GKE autopilot clusters. It's a known false positive.
+For concrete examples, see :ref:`What is Robusta`.
 
 Where can Robusta send notifications?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -6,7 +6,7 @@ The core of Robusta is a rules-engine. Using predefined YAML instructions, it:
 
 1. Listens to Kubernetes events, Prometheus alerts, and other sources
 2. Gathers observability data - e.g. logs, graphs, thread dumps
-3. Notifies in various destinations (optional)
+3. Notifies in various destinations
 
 Lets see two examples and how they're implemented with Robusta:
 
@@ -33,7 +33,7 @@ With Robusta, the same Slack alert becomes this:
 
 👆️ The Prometheus alert now contains pod logs. It also gained rapid-response buttons like "Investigate" and "Silence".
 
-This looks like magic, but with Robusta it's actually 7 lines of YAML:
+This looks like magic, but with Robusta it's actually 5 lines of YAML:
 
 .. code-block:: yaml
 
@@ -42,8 +42,6 @@ This looks like magic, but with Robusta it's actually 7 lines of YAML:
           alert_name: KubePodCrashLooping
       actions:
       - logs_enricher: {}
-      sinks:
-      - slack_sink
 
 **Note:** Robusta works out of the box, even without custom YAML! There are builtin rules from the community.
 
@@ -60,9 +58,9 @@ This looks like magic, but with Robusta it's actually 7 lines of YAML:
 Track failing Kubernetes Jobs
 ----------------------------------------
 
-Instead of improving Prometheus alerts, Robusta can generate alerts itself. Robusta has builtin triggers for Kubernetes errors and change.
+Instead of improving Prometheus alerts, Robusta can generate alerts itself by listening to the APIServer.
 
-Lets send send a Slack notification when a Kubernetes Job fails:
+Lets send a Slack notification when a Kubernetes Job fails:
 
 .. code-block:: yaml
 
@@ -100,6 +98,23 @@ Then Robusta generated a notification using four actions:
 2. ``job_info_enricher`` - fetch the Job's status
 3. ``job_events_enricher`` run ``kubectl get events`` and extract events related to this Job
 4. ``job_pod_enricher`` find the latest Pod in this Job and fetch it's information
+
+
+..     .. tab-item:: Event Correlation
+
+..         .. admonition:: Show application updates in Grafana to correlate them with error spikes
+
+..             .. image:: /images/grafana-deployment-enrichment.png
+..               :width: 400
+..               :align: center
+
+..     .. tab-item:: Remediate alerts
+
+..         .. admonition:: Temporarily increase the HPA maximum so you can go back to sleep
+
+..             .. image:: /images/alert_on_hpa_reached_limit1.png
+..                 :width: 600
+..                 :align: center
 
 Next Steps
 ^^^^^^^^^^^^^

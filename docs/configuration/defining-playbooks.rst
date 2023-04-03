@@ -1,44 +1,46 @@
-Defining playbooks
+Custom playbooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Playbooks are defined using the ``customPlaybooks`` Helm value.
+:ref:`Robusta is a rules engine <What is Robusta>`. These rules are called playbooks.
 
-Every playbooks has three parts: triggers, actions, and sinks. See the :ref:`Automation Basics` tutorial for
-a walkthrough.
+Every playbook has two main parts:
+
+* :ref:`Triggering conditions <Defining Triggers>` (*when* should this playbook run)
+* :ref:`Actions to perform <Defining Actions>` (*what* should this playbook do)
+
+To define playbooks, you use the ``customPlaybooks`` Helm value. For example:
 
 .. code-block:: yaml
 
     customPlaybooks:
     - triggers:
-      - on_deployment_update:
+        - on_kubernetes_warning_event_create:
+            include: ["Liveness"]   # fires on failed Liveness probes
       actions:
-      - resource_babysitter:
-          fields_to_monitor: ["status.conditions"]
-      sinks:
-      - "main_slack_sink"
+        - customise_finding:
+            severity: HIGH
+            title: "Failed liveness probe: $name"
+        - event_resource_events: {}
 
-Configuring triggers
+👆 Here, the generating trigger is a Kubernetes event. There are many triggers available, including Prometheus alerts, crashing pods, and OOMKills.
+
+Defining Triggers
 ----------------------
-Triggers define when a playbook runs:
+Triggers define when a playbook runs. For a list of all triggers, see here.
 
-.. code-block:: yaml
-    :emphasize-lines: 3-4
+Most triggers support filters that further restrict when the trigger fires. For example:
 
-    customPlaybooks:
-      - triggers:
-          - on_deployment_update:
-              name_prefix: MyApp
-        actions:
-          - resource_babysitter:
-              fields_to_monitor: ["status.conditions"]
-        sinks:
-          - "main_slack_sink"
+``name_prefix`` which further restricts the trigger.
 
-.. note::
+If multiple triggers match, multiple playbooks will run according to the rules in :ref:`Flow Control`
 
-    In the yaml, ``triggers`` is an array, but currently it must contain exactly one entry.
+Defining Actions
+----------------------
+Actions define what to do. For a list of all actions, see here.
 
-Most triggers support extra filters like ``name_prefix`` which further restricts the trigger.
+Most triggers support filters that further restrict when the trigger fires. For example:
+
+``name_prefix`` which further restricts the trigger.
 
 If multiple triggers match, multiple playbooks will run according to the rules in :ref:`Flow Control`
 

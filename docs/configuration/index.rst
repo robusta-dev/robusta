@@ -3,9 +3,9 @@
 Overview
 ==========================
 
-Learn how to configure Robusta once its installed.
+Learn how to configure Robusta after you :ref:`install it <Quick Install>`.
 
-Need to install Robusta or configure GitOps? See :ref:`Installation <Quick Install>` first.
+All configuration is done via Robusta's Helm chart, as documented here.
 
 Popular Settings
 ^^^^^^^^^^^^^^^^^^
@@ -37,9 +37,7 @@ Popular Settings
 All Settings
 ^^^^^^^^^^^^^^^
 
-Robusta is configured using Helm values.
-
-All possible values for Robusta can be listed like so:
+You can see all of Robusta's settings in the Helm chart:
 
 .. code-block:: yaml
 
