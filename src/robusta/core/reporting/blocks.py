@@ -409,17 +409,26 @@ class ScanReportBlock(BaseBlock):
     score: str
     results: List[ScanReportRow]
     config: str #TBD
+    scanRowToString: Callable[[ScanReportRow], str]
+    # @staticmethod
+    # def rowToStr(row:ScanReportRow) -> str:
+    #     return "\n".join(row.content)
+
+
     
     def grade(self):
-        if self.score >= 90:
+        score = int(self.score)
+        if score >= 90:
             return "A"
-        elif self.score >= 80:
+        elif score >= 80:
             return "B"
-        elif self.score >= 70:
+        elif score >= 70:
             return "C"
-        elif self.score >= 60:
+        elif score >= 60:
             return "D"
-        elif self.score >= 50:
+        elif score >= 50:
             return "E"
         else:
             return "F" 
+        
+  

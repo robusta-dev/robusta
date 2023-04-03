@@ -60,9 +60,15 @@ class GroupedIssues(BaseModel):
     issues = []
     level: int = 0
 
- 
 formats = ["standard", "yaml", "html", "json"]
 
+
+def scanRowToStr(row: ScanReportRow) -> str:
+    txt = f"{row.container}\n"
+    for i in row.content:
+        txt+= f"{i['level']} {i['message']}\n"
+    
+    return txt
 
 class PopeyeParams(ProcessParams):
     """
@@ -81,7 +87,7 @@ def group_issues_list(issues: List[Issue]) -> Dict[str,GroupedIssues]:
     groupedIssues: Dict[str, GroupedIssues] = defaultdict(lambda: GroupedIssues())
     for issue in issues:
         group = groupedIssues[issue.group]
-        group.issues.append(issue.dict(exclude={"group", "gvr"}))
+        group.issues.append({"level":issue.level, "message":issue.message})
         group.level = max(group.level, issue.level)
 
     return groupedIssues
@@ -122,7 +128,8 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         end_time=end_time,
         score=popeye_scan.score,
         results=[],
-        config=""
+        config="",
+        scanRowToString=scanRowToStr
         )
 
     scan_issues: List[ScanReportRow] = []
