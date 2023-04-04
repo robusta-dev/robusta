@@ -186,7 +186,7 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: KubeHpaReplicasMismatch
   actions:
-  - hpa_events_enricher: {}
+  - hpa_mismatch_enricher: {}
 
 - triggers:
   - on_prometheus_alert:

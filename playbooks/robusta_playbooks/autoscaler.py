@@ -1,6 +1,10 @@
+import json
 import logging
 from math import ceil
+from typing import Optional
 
+from kubernetes import client
+from kubernetes.client import ApiregistrationV1Api, V1DeploymentList
 from robusta.api import (
     ActionParams,
     CallbackBlock,
@@ -59,15 +63,65 @@ class HPALimitParams(ActionParams):
     increase_pct: int = 20
 
 
+class HPAMismatchParams(EventEnricherParams):
+    """
+    :var check_for_metrics_server: Checks if the metrics-server exists and adds a finding on how to add it.
+    """
+
+    # allowed a way to disable this finding for users who have custom setup
+    check_for_metrics_server: bool = True
+
+
+def has_metrics_server_deployment() -> bool:
+    label = f"k8s-app=metrics-server"
+    deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces(label_selector=label).items
+    return len(deployments) > 0
+
+
+def has_metrics_server_apiservice() -> Optional[bool]:
+    api_services = ApiregistrationV1Api().list_api_service().items
+    metrics_server_apiservices = [
+        apiservice
+        for apiservice in api_services
+        # sometimes name can be versioned like metrics-server-v0.4.5
+        if apiservice.spec.service and "metrics-server" in apiservice.spec.service.name
+    ]
+    return len(metrics_server_apiservices) > 0
+
+
+def get_missing_metrics_server_message() -> Optional[str]:
+    NO_MESSAGE = ""
+    has_apiservice = has_metrics_server_apiservice()
+    if has_apiservice is None:  # Error with kubernetes cli getting/parsing the apiservice
+        return NO_MESSAGE
+    has_deployment = has_metrics_server_deployment()
+    logging.warning(f"{has_apiservice} {has_deployment}")
+    if has_apiservice and has_deployment:
+        return NO_MESSAGE
+    # only the apiservice is missing
+    if has_deployment and not has_apiservice:
+        return (
+            "The HPA cannot function because a metrics API was not found.\n\n"
+            "You can fix this by deploying metrics-server API service:\n\n"
+            "```kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/metrics-server/master/manifests/base/apiservice.yaml```"
+        )
+    # if the deployment isn't configured this will install the metrics-server + apiservice
+    return (
+        "The HPA cannot function because a metrics API was not found.\n\n"
+        "You can fix this by deploying metrics-server:\n\n"
+        "```kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml```"
+    )
+
+
 @action
 def hpa_events_enricher(alert: PrometheusKubernetesAlert, params: EventEnricherParams):
+    """
+    Notify with the events for the HPA.
+    """
     hpa = alert.hpa
     if not hpa:
         logging.info(f"hpa_events_enricher - no hpa on event: {alert}")
         return
-    replicas_block = MarkdownBlock(
-        f"*Replicas: Desired ({hpa.status.desiredReplicas}) --> Running ({hpa.status.currentReplicas})*"
-    )
     events_table_block = get_resource_events_table(
         "*HPA events:*",
         hpa.kind,
@@ -76,9 +130,28 @@ def hpa_events_enricher(alert: PrometheusKubernetesAlert, params: EventEnricherP
         included_types=params.included_types,
         max_events=params.max_events,
     )
-    alert.add_enrichment([replicas_block])
     if events_table_block:
         alert.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+
+
+@action
+def hpa_mismatch_enricher(alert: PrometheusKubernetesAlert, params: HPAMismatchParams):
+    """
+    Notifies with the replica count events and potential fixes for an HPA.
+    """
+    hpa = alert.hpa
+    if not hpa:
+        logging.info(f"hpa_mismatch_enricher - no hpa on event: {alert}")
+        return
+    if params.check_for_metrics_server:
+        metrics_server_message = get_missing_metrics_server_message()
+        if metrics_server_message:
+            alert.add_enrichment([MarkdownBlock(metrics_server_message)])
+    replicas_block = MarkdownBlock(
+        f"*Replicas: Desired ({hpa.status.desiredReplicas}) --> Running ({hpa.status.currentReplicas})*"
+    )
+    alert.add_enrichment([replicas_block])
+    hpa_events_enricher(alert, params)
 
 
 @action
