@@ -17,6 +17,7 @@
    how-it-work/how-playbooks-work
    how-it-works/architecture
    how-it-works/oss-vs-saas
+   how-it-works/flow-control
    Privacy & Security <how-it-works/privacy-and-security>
    how-it-works/usage-faq
 
@@ -44,7 +45,6 @@
    configuration/additional-playbooks
    Re-using common settings <configuration/global-config>
    Handling Secrets <configuration/configuration-secrets>
-   How playbooks work <configuration/flow-control>
    configuration/alert-manager
    configuration/embedded-prometheus
    Robusta CLI <configuration/robusta-cli>
