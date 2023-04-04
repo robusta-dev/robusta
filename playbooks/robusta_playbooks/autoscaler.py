@@ -76,9 +76,9 @@ def hpa_events_enricher(alert: PrometheusKubernetesAlert, params: EventEnricherP
         included_types=params.included_types,
         max_events=params.max_events,
     )
-    event.add_enrichment([replicas_block])
+    alert.add_enrichment([replicas_block])
     if events_table_block:
-        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+        alert.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
 
 
 @action
