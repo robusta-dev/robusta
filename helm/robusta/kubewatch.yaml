@@ -1,7 +1,7 @@
 namespace: ""
 resource:
   deployment: true
-  replicationcontroller: true
+  replicationcontroller: false  # 0.10.12 disabled because not supported on the runner
   replicaset: true
   daemonset: true
   statefulset: true
@@ -17,3 +17,4 @@ resource:
   namespace: true
   configmap: true # 0.9.17
   secret: false       # disabled for security reasons
+  event: true  # added on kubewatch 2.3

@@ -17,9 +17,9 @@ class MattermostSink(SinkBase):
             team=sink_config.mattermost_sink.team,
         )
         self.sender = MattermostSender(
-            cluster_name=self.cluster_name, account_id=self.account_id, client=client, sink_params=self.params
+            cluster_name=self.cluster_name, account_id=self.account_id, client=client,
+            sink_params=sink_config.mattermost_sink
         )
-        self.sender = MattermostSender(cluster_name=self.cluster_name, account_id=self.account_id, client=client)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.sender.send_finding_to_mattermost(finding, platform_enabled)

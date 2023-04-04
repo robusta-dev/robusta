@@ -61,6 +61,10 @@ class RunnerConfig(BaseModel):
     @staticmethod
     def _replace_env_var_in_playbook_repo(playbook_repo: PlaybookRepo):
 
+        url_env_var_replacement = get_env_replacement(playbook_repo.url)
+        if url_env_var_replacement:
+            playbook_repo.url = url_env_var_replacement
+
         if not playbook_repo.key:
             return playbook_repo
 

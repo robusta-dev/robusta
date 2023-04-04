@@ -9,7 +9,7 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
-from robusta.core.model.cluster_status import ClusterStatus
+from robusta.core.model.cluster_status import ClusterStatus, ClusterStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
@@ -121,6 +121,7 @@ class RobustaSink(SinkBase):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__jobs_cache = None
+        self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
 
     def stop(self):
         self.__active = False
@@ -219,7 +220,7 @@ class RobustaSink(SinkBase):
         node_info = node.status.node_info.to_dict() if node.status.node_info else {}
         node_info["labels"] = node.metadata.labels or {}
         node_info["annotations"] = node.metadata.annotations or {}
-        node_info["addresses"] = [addr.address for addr in node.status.addresses]
+        node_info["addresses"] = [addr.address for addr in node.status.addresses] if node.status.addresses else []
         return node_info
 
     @classmethod
@@ -268,7 +269,8 @@ class RobustaSink(SinkBase):
 
         # new or changed nodes
         for node_name in curr_nodes.keys():
-            updated_node = self.__from_api_server_node(curr_nodes.get(node_name), node_requests[node_name])
+            pod_requests = node_requests.get(node_name, [])  # if all the pods on the node have no requests
+            updated_node = self.__from_api_server_node(curr_nodes.get(node_name), pod_requests)
             if self.__nodes_cache.get(node_name) != updated_node:  # node not in the cache, or changed
                 updated_nodes.append(updated_node)
                 self.__nodes_cache[node_name] = updated_node
@@ -308,6 +310,7 @@ class RobustaSink(SinkBase):
 
     def __update_cluster_status(self):
         try:
+            cluster_stats: ClusterStats = Discovery.discover_stats()
             cluster_status = ClusterStatus(
                 cluster_id=self.cluster_name,
                 version=self.registry.get_telemetry().runner_version,
@@ -315,6 +318,7 @@ class RobustaSink(SinkBase):
                 account_id=self.account_id,
                 light_actions=self.registry.get_light_actions(),
                 ttl_hours=self.ttl_hours,
+                stats=cluster_stats,
             )
 
             self.dal.publish_cluster_status(cluster_status)

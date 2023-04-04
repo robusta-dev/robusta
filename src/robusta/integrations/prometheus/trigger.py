@@ -12,6 +12,7 @@ from robusta.core.reporting.base import Finding
 from robusta.integrations.helper import exact_match, prefix_match
 from robusta.integrations.kubernetes.custom_models import RobustaDeployment, RobustaJob, RobustaPod
 from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKubernetesAlert
+from robusta.utils.cluster_provider_discovery import cluster_provider
 
 
 class PrometheusTriggerEvent(TriggerEvent):
@@ -51,6 +52,7 @@ class PrometheusAlertTrigger(BaseTrigger):
     pod_name_prefix: str = None
     namespace_prefix: str = None
     instance_name_prefix: str = None
+    k8s_providers: Optional[List[str]]
 
     def get_trigger_event(self):
         return PrometheusTriggerEvent.__name__
@@ -74,6 +76,12 @@ class PrometheusAlertTrigger(BaseTrigger):
 
         if not prefix_match(self.instance_name_prefix, labels.get("instance")):
             return False
+
+        provider = cluster_provider.get_cluster_provider()
+        if provider and self.k8s_providers and len(self.k8s_providers) > 0:
+            lowercase_provider = [provider.lower() for provider in self.k8s_providers]
+            if provider.lower() not in lowercase_provider:
+                return False
 
         return True
 

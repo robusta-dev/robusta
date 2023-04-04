@@ -1,5 +1,6 @@
 import logging
 import re
+from enum import Enum
 from itertools import chain
 from typing import Dict, List, Tuple, Union
 
@@ -20,6 +21,7 @@ from robusta.core.reporting import (
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.discord.discord_sink_params import DiscordSinkParams
 from robusta.core.sinks.transformer import Transformer
+from robusta.core.reporting.base import FindingStatus
 
 SEVERITY_EMOJI_MAP = {
     FindingSeverity.HIGH: ":red_circle:",
@@ -27,6 +29,8 @@ SEVERITY_EMOJI_MAP = {
     FindingSeverity.LOW: ":yellow_circle:",
     FindingSeverity.INFO: ":green_circle:",
 }
+
+# use hex to decimal converter, eg: https://www.rapidtables.com/convert/number/hex-to-decimal.html
 SEVERITY_COLOR_MAP = {
     FindingSeverity.HIGH: "14495556",
     FindingSeverity.MEDIUM: "16027661",
@@ -97,9 +101,9 @@ class DiscordSender:
         self.discord_params = discord_params
 
     @classmethod
-    def __add_severity_icon(cls, title: str, severity: FindingSeverity) -> str:
+    def __add_discord_title(cls, title: str, status: FindingStatus, severity: FindingSeverity) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
-        return f"{icon} {severity.name} - {title}"
+        return f"{status.to_emoji()} {status.name.lower()} - {icon} {severity.name} - **{title}**"
 
     @staticmethod
     def __extract_markdown_name(block: MarkdownBlock):
@@ -108,8 +112,8 @@ class DiscordSender:
         regex = re.compile(r"\*.+\*")
         match = re.match(regex, block.text)
         if match:
-            title = text[match.span()[0] : match.span()[1]]
-            text = text[match.span()[1] :]
+            title = text[match.span()[0]: match.span()[1]]
+            text = text[match.span()[1]:]
         return title, DiscordSender.__transform_markdown_links(text) or BLANK_CHAR
 
     @staticmethod
@@ -189,13 +193,13 @@ class DiscordSender:
             return []  # no reason to crash the entire report
 
     def __send_blocks_to_discord(
-        self,
-        report_blocks: List[BaseBlock],
-        title: str,
-        severity: FindingSeverity,
+            self,
+            report_blocks: List[BaseBlock],
+            title: str,
+            status: FindingStatus,
+            severity: FindingSeverity,
+            msg_color: str,
     ):
-        msg_color = SEVERITY_COLOR_MAP.get(severity, "")
-
         # Process attachment blocks
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not self.discord_params.send_svg:
@@ -209,7 +213,7 @@ class DiscordSender:
 
         output_blocks = []
         if title:
-            title = self.__add_severity_icon(title, severity)
+            title = self.__add_discord_title(title=title, status=status, severity=severity)
             output_blocks.extend(self.__to_discord(HeaderBlock(title), self.discord_params.name))
         for block in other_blocks:
             output_blocks.extend(self.__to_discord(block, self.discord_params.name))
@@ -246,9 +250,9 @@ class DiscordSender:
             logging.debug("Message was delivered successfully")
 
     def send_finding_to_discord(
-        self,
-        finding: Finding,
-        platform_enabled: bool,
+            self,
+            finding: Finding,
+            platform_enabled: bool,
     ):
         blocks: List[BaseBlock] = []
         if platform_enabled:  # add link to the robusta ui, if it's configured
@@ -280,8 +284,17 @@ class DiscordSender:
                 blocks.remove(table_block)
                 blocks.append(FileBlock(f"{table_name}.txt", bytes(table_content, "utf-8")))
 
+        status: FindingStatus = (
+            FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
+        )
+
+        msg_color = status.to_color_decimal()
+        title = finding.title.removeprefix("[RESOLVED] ")
+
         self.__send_blocks_to_discord(
-            blocks,
-            finding.title,
-            finding.severity,
+            report_blocks=blocks,
+            title=title,
+            status=status,
+            severity=finding.severity,
+            msg_color=msg_color,
         )

@@ -35,6 +35,7 @@ from robusta.integrations.scheduled.playbook_scheduler_manager_impl import Playb
 from robusta.integrations.scheduled.trigger import ScheduledTriggerEvent
 from robusta.model.config import PlaybooksRegistry, PlaybooksRegistryImpl, Registry, SinksRegistry
 from robusta.model.playbook_definition import PlaybookDefinition
+from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.file_system_watcher import FileSystemWatcher
 
 
@@ -161,7 +162,7 @@ class ConfigLoader:
                 runner_config = self.__load_runner_config(self.config_file_path)
                 if runner_config is None:
                     return
-
+                cluster_provider.init_provider_discovery()
                 self.registry.set_global_config(runner_config.global_config)
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
@@ -197,6 +198,9 @@ class ConfigLoader:
 
                 self.__load_playbooks_repos(action_registry, runner_config.playbook_repos)
 
+                # This needs to be set before the robusta sink is created since a cluster status is sent on creation
+                self.registry.set_light_actions(runner_config.light_actions if runner_config.light_actions else [])
+
                 (sinks_registry, playbooks_registry) = self.__prepare_runtime_config(
                     runner_config,
                     self.registry.get_sinks(),
@@ -207,7 +211,6 @@ class ConfigLoader:
                 GitRepoManager.clear_git_repos()
 
                 self.__reload_scheduler(playbooks_registry)
-                self.registry.set_light_actions(runner_config.light_actions)
                 self.registry.set_actions(action_registry)
                 self.registry.set_playbooks(playbooks_registry)
                 self.registry.set_sinks(sinks_registry)

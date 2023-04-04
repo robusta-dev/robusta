@@ -22,6 +22,8 @@ from robusta.integrations.msteams.msteams_elements.msteams_images import MsTeams
 from robusta.integrations.msteams.msteams_elements.msteams_table import MsTeamsTable
 from robusta.integrations.msteams.msteams_elements.msteams_text_block import MsTeamsTextBlock
 
+from robusta.core.reporting.base import FindingStatus
+
 
 class MsTeamsMsg:
     # actual size according to the DOC is ~28K.
@@ -37,9 +39,14 @@ class MsTeamsMsg:
         self.webhook_url = webhook_url
 
     def write_title_and_desc(self, platform_enabled: bool, finding: Finding, cluster_name: str, account_id: str):
-        severity: FindingSeverity = finding.severity
+        status: FindingStatus = (
+            FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
+        )
+        title = finding.title.removeprefix("[RESOLVED] ")
+        title = self.__build_msteams_title(title, status, finding.severity)
+
         block = MsTeamsTextBlock(
-            text=f"{severity.to_emoji()} {severity.name} - {finding.title}", font_size="extraLarge"
+            text=f"{title}", font_size="extraLarge"
         )
         self.__write_to_entire_msg([block])
         if platform_enabled:  # add link to the Robusta ui, if it's configured
@@ -56,6 +63,10 @@ class MsTeamsMsg:
         if finding.description is not None:
             block = MsTeamsTextBlock(text=finding.description)
             self.__write_to_entire_msg([block])
+
+    @classmethod
+    def __build_msteams_title(cls, title: str, status: FindingStatus, severity: FindingSeverity) -> str:
+        return f"{status.to_emoji()} {status.name.lower()} - {severity.to_emoji()} {severity.name} - **{title}**"
 
     def write_current_section(self):
         if len(self.current_section) == 0:

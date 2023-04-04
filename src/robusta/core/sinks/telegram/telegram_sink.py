@@ -1,6 +1,8 @@
+from enum import Enum
+
 from tabulate import tabulate
 
-from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity
+from robusta.core.reporting.base import BaseBlock, Finding, FindingSeverity, FindingStatus
 from robusta.core.reporting.blocks import FileBlock, MarkdownBlock, TableBlock
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.telegram.telegram_client import TelegramClient
@@ -22,7 +24,7 @@ class TelegramSink(SinkBase):
     def __init__(self, sink_config: TelegramSinkConfigWrapper, registry):
         super().__init__(sink_config.telegram_sink, registry)
 
-        self.client = TelegramClient(sink_config.telegram_sink.chat_id, sink_config.telegram_sink.bot_token)
+        self.client = TelegramClient(sink_config.telegram_sink.chat_id, sink_config.telegram_sink.thread_id, sink_config.telegram_sink.bot_token)
         self.send_files = sink_config.telegram_sink.send_files
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
@@ -42,7 +44,12 @@ class TelegramSink(SinkBase):
                     self.client.send_file(file_name=f"{table_name}.txt", contents=table_text.encode("utf-8"))
 
     def __get_message_text(self, finding: Finding, platform_enabled: bool):
-        message_content = self.__build_telegram_title(finding.title, finding.severity)
+        status: FindingStatus = (
+            FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
+        )
+        title = finding.title.removeprefix("[RESOLVED] ")
+
+        message_content = self.__build_telegram_title(title, status, finding.severity)
 
         if platform_enabled:
             message_content += (
@@ -78,6 +85,6 @@ class TelegramSink(SinkBase):
         return not (isinstance(block, FileBlock) or isinstance(block, TableBlock))
 
     @classmethod
-    def __build_telegram_title(cls, title: str, severity: FindingSeverity) -> str:
+    def __build_telegram_title(cls, title: str, status: FindingStatus, severity: FindingSeverity) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
-        return f"{icon} **{severity.name} - {title}**\n\n"
+        return f"{status.to_emoji()} {status.name.lower()} - {icon} {severity.name} - *{title}*\n\n"

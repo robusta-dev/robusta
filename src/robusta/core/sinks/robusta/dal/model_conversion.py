@@ -17,6 +17,7 @@ from robusta.core.reporting import (
     MarkdownBlock,
     PrometheusBlock,
     TableBlock,
+    JsonBlock
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer
@@ -146,6 +147,8 @@ class ModelConversion:
                     )
 
                 structured_data.append({"type": "callbacks", "data": callbacks})
+            elif isinstance(block, JsonBlock):
+                structured_data.append({"type": "json", "data": block.json_str})
             else:
                 logging.error(f"cannot convert block of type {type(block)} to robusta platform format block: {block}")
                 continue  # no reason to crash the entire report

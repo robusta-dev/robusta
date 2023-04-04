@@ -28,7 +28,7 @@ You need an integration key for a PagerDuty service. Here is how to generate it.
 
 5. On the next screen input the configuration details
 
-6. On the `Integrations` screen check the `Events API V2` option and Tap on the `Create` button in the bottom on the screen
+6. On the `Integrations` screen, search for and select the integration "Robusta.dev" and tap on the `Create Service` button in the bottom on the screen
 
 7. Copy the `Integration Key`. A sample key would look like: f6c6e02a5a1a490ee02e90cde19ee388
 
@@ -73,15 +73,15 @@ Example Output:
       - pagerduty_sink:
           name: main_pagerduty_sink
           api_key: <api key> # e.g. f653634653463678fadas43534506
-
-  - actions:
-    - resource_babysitter: {}
-    sinks:
-    - main_pagerduty_sink
-    triggers:
-    - on_deployment_all_changes: {}
-    - on_daemonset_all_changes: {}
-    - on_statefulset_all_changes: {}
+  customPlaybooks:
+     - actions:
+       - resource_babysitter: {}
+       sinks:
+       - main_pagerduty_sink
+       triggers:
+       - on_deployment_all_changes: {}
+       - on_daemonset_all_changes: {}
+       - on_statefulset_all_changes: {}
 
 Save the file and run
 
@@ -97,3 +97,15 @@ Example Output:
     .. image:: /images/change-events-updated-deployment-pagerduty.png
       :width: 1000
       :align: center
+
+Support
+----------------------
+
+If you need help with the PagerDuty integration, get in touch with the Robusta team:
+
+1. `Slack <https://bit.ly/robusta-slack>`_ - **link only works on desktop**
+2. `GitHub Issues <https://github.com/robusta-dev/robusta/issues>`_
+3. `Email <support@robusta.dev>`_ - support@robusta.dev
+
+
+

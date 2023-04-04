@@ -30,6 +30,9 @@ spec:
             value: /config
           - name: ENABLE_PPROF
             value: {{ .Values.kubewatch.pprof | quote }}
+          {{- if .Values.kubewatch.additional_env_vars }}
+          {{ toYaml .Values.kubewatch.additional_env_vars | nindent 10 }}
+          {{- end }}
         volumeMounts:
           - name: robusta-kubewatch-config
             mountPath: /config

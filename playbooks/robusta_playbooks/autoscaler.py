@@ -69,10 +69,7 @@ def alert_on_hpa_reached_limit(event: HorizontalPodAutoscalerChangeEvent, action
     if hpa.status.desiredReplicas != hpa.spec.maxReplicas:
         return  # didn't reached max replicas limit
 
-    avg_cpu = int(
-        hpa.status.currentCPUUtilizationPercentage
-        / (hpa.status.currentReplicas if hpa.status.currentReplicas > 0 else 1)
-    )
+    avg_cpu = int(hpa.status.currentCPUUtilizationPercentage)
     new_max_replicas_suggestion = ceil((action_params.increase_pct + 100) * hpa.spec.maxReplicas / 100)
     choices = {
         f"Update HPA max replicas to: {new_max_replicas_suggestion}": CallbackChoice(
@@ -92,7 +89,7 @@ def alert_on_hpa_reached_limit(event: HorizontalPodAutoscalerChangeEvent, action
 
     finding.add_enrichment(
         [
-            MarkdownBlock(f"Current avg cpu utilization: *{avg_cpu} %*        -- (usage vs requested)"),
+            MarkdownBlock(f"On average, pods scaled under this HPA are using *{avg_cpu} %* of the requested cpu."),
             CallbackBlock(choices),
         ]
     )
