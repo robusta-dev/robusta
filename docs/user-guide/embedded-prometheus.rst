@@ -22,7 +22,7 @@ Prometheus retention period
 Robusta UI uses Prometheus data for showing graphs.
 To keep storage usage low, Prometheus keeps the data only for 14-15 days.
 
-To change how long Prometheus saves the data, set the retention:
+To change how long Prometheus saves the data, set the retention in your `generated_values.yaml` file:
 
 .. code-block:: yaml
 
