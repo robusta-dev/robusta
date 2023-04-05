@@ -65,7 +65,7 @@ formats = ["standard", "yaml", "html", "json"]
 
 
 def scanRowToStr(row: ScanReportRow) -> str:
-    txt = f"{row.container}\n"
+    txt = f"**{row.container}**\n" if row.container else "" 
     for i in row.content:
         txt+= f"{i['level']} {i['message']}\n"
     
@@ -80,8 +80,22 @@ class PopeyeParams(ProcessParams):
 
     image: str = "derailed/popeye" 
     timeout = 120
-    format: str = "json"
-    output: str = "file"
+    args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
+    spinach: str = """popeye:
+                        excludes: 
+                            apps/v1/daemonsets:
+                            - name: rx:kube-system
+                            apps/v1/deployments:
+                            - name: rx:kube-system
+                            v1/configmaps:
+                            - name: rx:kube-system
+                            v1/pods:
+                            - name: rx:kube-system
+                            v1/services:
+                            - name: rx:kube-system
+                            v1/namespaces:
+                            - name: kube-system"""
+
 
 
 def group_issues_list(issues: List[Issue]) -> Dict[str,GroupedIssues]:
@@ -99,18 +113,14 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     """
     Displays a popeye scan report.
     """
+
     spec = PodSpec(
         serviceAccountName=f"{RELEASE_NAME}-runner-service-account",
         containers=[
             Container(
                 name=to_kubernetes_name(params.image),
                 image=params.image,
-                args=[
-                    "-o",
-                    params.format,
-                    "--force-exit-zero",
-                ],
-                #command=prepare_pod_command(params.command),
+                command=["/bin/sh", "-c", f"echo '{params.spinach}' > ~/spinach.yaml && popeye -f ~/spinach.yaml {params.args} -o json --force-exit-zero"],
             )
         ],
         restartPolicy="Never",
@@ -118,6 +128,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
 
     start_time = datetime.now()
     scan = json.loads(RobustaJob.run_simple_job_spec(spec,"popeye_job",params.timeout))
+    #catch typeerror could not read file prorly.
     end_time = datetime.now() 
     popeye_scan = PopeyeReport(**scan['popeye'])
 
@@ -167,7 +178,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
 
     finding.add_enrichment(
         [
-            scan_block  
+            scan_block
         ],
         annotations={EnrichmentAnnotation.SCAN: True}
     )
