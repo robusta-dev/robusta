@@ -155,6 +155,7 @@ builtinPlaybooks:
   - on_prometheus_alert:
         alert_name: PrometheusRuleFailures
   actions:
+  - prometheus_rules_enricher: {}
   - logs_enricher:
       filter_regex: ".*Evaluating rule failed.*"
 
