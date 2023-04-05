@@ -4,13 +4,12 @@ from typing import List, Optional, Tuple, Union
 
 from prometheus_api_client import PrometheusApiClientException
 from kubernetes import client
-from kubernetes.client import V1ServiceList
 from kubernetes.client.models.v1_service import V1Service
 from robusta.api import (
     ExecutionBaseEvent,
-    PrometheusAlert,
     PrometheusDateRange,
     PrometheusDuration,
+    PrometheusKubernetesAlert,
     PrometheusQueryParams,
     PrometheusQueryResult,
     action,
@@ -94,7 +93,7 @@ def get_duplicate_kubelet_msg(rule_group) -> str:
 
 
 @action
-def prometheus_rules_enricher(alert: PrometheusAlert):
+def prometheus_rules_enricher(alert: PrometheusKubernetesAlert):
     """
     Enriches the finding with a for information due to rule failure
     """
