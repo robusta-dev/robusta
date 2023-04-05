@@ -18,7 +18,7 @@ alerts from the kubernetes-mixin project.
 Our alerting will likely diverge more over time as we take advantage of more Robusta features.
 
 Prometheus retention period
-^^^^^^^^^
+------------------------------
 Robusta UI uses Prometheus data for showing graphs.
 To keep storage usage low, Prometheus keeps the data only for 14-15 days.
 
@@ -34,7 +34,7 @@ If you're not using the embedded prometheus stack, click `here <https://promethe
 
 
 See also
-^^^^^^^^^
+------------------------------
 
 * :ref:`Robusta architecture <Architecture>`
 * `Comparison of Robusta and a bare-bones Prometheus stack without Robusta <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_
