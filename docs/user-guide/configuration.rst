@@ -25,4 +25,5 @@ our release process.
    AlertManager integration <alert-manager>
    Embedded Prometheus Stack <embedded-prometheus>
    Deploying Robusta on specific nodes <node-selector>
+   Two-way Interactivity <interactivity>
 
