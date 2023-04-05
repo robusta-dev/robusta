@@ -205,7 +205,6 @@ class Transformer:
         pdf.cell(pdf.w * 0.3, 10, f"**{scan.grade()}** {scan.score}", border=0, markdown=True)
     
         sections: dict[str, dict[str,List]] = defaultdict(lambda: defaultdict(list))
-        #sections = defaultdict(list)
         for item in scan.results:
             sections[item.kind][f"{item.name}/{item.namespace}"].append(item)
 
@@ -226,10 +225,10 @@ class Transformer:
                         n,ns = group.split("/",1)
                         issue_txt = ""
                         max_priority:int = 0
-                        for res in scanRes:
+                        for res in sorted(scanRes, key=lambda x: len(x.container)):
                             issue_txt += scan.scanRowToString(row=res)
                             max_priority = max(max_priority,res.priority)
 
-                        table.row([str(max_priority), n, ns, issue_txt])
+                        table.row([str(int(max_priority)), n, ns, issue_txt])
                         
         return FileBlock(f"{title} Report.pdf", pdf.output('', 'S'))
