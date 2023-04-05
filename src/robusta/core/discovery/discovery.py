@@ -402,8 +402,6 @@ def extract_ready_pods(resource) -> int:
             return 0 if not resource.status.number_ready else resource.status.number_ready
         elif isinstance(resource, V1Pod):
             return 1 if is_pod_ready(resource) else 0
-        elif isinstance(resource, V1Job):
-            return 0 if not resource.spec.succeeded else resource.spec.succeeded
         return 0
     except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
         logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
@@ -419,10 +417,6 @@ def extract_total_pods(resource) -> int:
             return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
         elif isinstance(resource, V1Pod):
             return 1
-        elif isinstance(resource, V1Job):
-            # if completions are undefined than means that the success of any pod signals the success of all pods
-            # completions can be 0
-            return resource.spec.completions if resource.spec.completions is not None else 1
         return 0
     except Exception:
         logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
