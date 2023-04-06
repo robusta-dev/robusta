@@ -99,10 +99,11 @@ def get_alertmanager_silences_connection(params: BaseSilenceParams):
     alertmanager_url = get_alertmanager_url(params)
 
     try:
-        return requests.get(
+        response = requests.get(
             f"{alertmanager_url}{get_alertmanager_url_path(SilenceOperation.LIST, params)}",
-            headers=gen_alertmanager_headers(params),
-        )
+            headers=gen_alertmanager_headers(params), )
+        response.raise_for_status()
+
     except Exception as e:
         raise AlertsManagerNotFound(
             f"Could not connect to the alert manager [{alertmanager_url}] \nCaused by {e.__class__.__name__}: {e})"
