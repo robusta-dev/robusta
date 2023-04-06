@@ -17,6 +17,22 @@ alerts from the kubernetes-mixin project.
 
 Our alerting will likely diverge more over time as we take advantage of more Robusta features.
 
+Prometheus retention period
+------------------------------
+Robusta UI uses Prometheus data for showing graphs.
+To keep storage usage low, Prometheus keeps the data only for 14-15 days.
+
+To change how long Prometheus saves the data, set the retention in your `generated_values.yaml` file:
+
+.. code-block:: yaml
+
+      prometheus:
+        prometheusSpec:
+          retention: 15d
+
+If you're not using the embedded prometheus stack, click `here <https://prometheus.io/docs/prometheus/latest/storage/#operational-aspects>`_ to learn more.
+
+
 See also
 ^^^^^^^^^^^^^^
 
