@@ -332,8 +332,7 @@ class RobustaSink(SinkBase):
         try:
             prometheus_params = PrometheusParams(prometheus_url=global_config.get("prometheus_url", ""))
             prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
-            check_prometheus_connection(prom=prometheus_connection, params={
-                'query': 'container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", image!=""}'})
+            check_prometheus_connection(prom=prometheus_connection, params={})
 
             activity_stats.prometheusConnection = True
 
