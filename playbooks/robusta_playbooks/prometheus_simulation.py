@@ -2,8 +2,7 @@ from datetime import datetime
 from typing import Dict, Optional
 
 import requests
-from robusta.api import ActionParams, AlertManagerEvent, ExecutionBaseEvent, action
-
+from robusta.api import ActionParams, AlertManagerEvent, ExecutionBaseEvent, action, PORT
 
 class PrometheusAlertParams(ActionParams):
     """
@@ -83,7 +82,7 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
     )
     headers = {"Content-type": "application/json"}
     return requests.post(
-        "http://localhost:5000/api/alerts",
+        f"http://localhost:{PORT}/api/alerts",
         data=prometheus_event.json(),
         headers=headers,
     )
@@ -101,7 +100,7 @@ def handle_alertmanager_event(event: ExecutionBaseEvent, alert_manager_event: Al
     prometheus_event = AlertManagerEvent(**alert_manager_event.event)
     headers = {"Content-type": "application/json"}
     return requests.post(
-        "http://localhost:5000/api/alerts",
+        f"http://localhost:{PORT}/api/alerts",
         data=prometheus_event.json(),
         headers=headers,
     )
