@@ -395,7 +395,7 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
-      retention: 14d
+      retention: 15d
       # we set a value slightly lower than the 100Gi below
       # the retentionSize uses the suffix GB but it is really Gi units
       # that is, the retentionSize is measured in base2 units just like Gi, Mi, etc
