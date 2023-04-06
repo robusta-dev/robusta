@@ -10,7 +10,6 @@ from postgrest_py.request_builder import QueryRequestBuilder
 from supabase_py import Client
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
-from robusta.core.model.cluster_nodes import ClusterNodes
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
 from robusta.core.model.jobs import JobInfo
@@ -28,7 +27,7 @@ CLUSTERS_STATUS_TABLE = "ClustersStatus"
 CLUSTER_NODES_TABLE = "ClusterNodes"
 JOBS_TABLE = "Jobs"
 NAMESPACES_TABLE = "Namespaces"
-
+UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
 
 class RobustaAuthClient(SupabaseAuthClient):
     def _set_timeout(*args, **kwargs):
@@ -321,11 +320,31 @@ class SupabaseDal:
 
         # postgres_py (which supabase cli uses) adds quotation marks around params with the characters ",.:()"
         # supabase does not support this format
-        query: str = str(supabase_request_obj.session.params).replace('%22', '')
+        query: str = str(supabase_request_obj.session.params).replace("%22", "")
         response = requests.delete(f"{url}?{query}", headers=supabase_request_obj.session.headers)
         response_data = ""
         try:
             response_data = response.json()
+        except Exception:  # this can be okay if no data is expected
+            logging.debug("Failed to parse delete response data")
+
+        return {
+            "data": response_data,
+            "status_code": response.status_code,
+        }
+
+    def __rpc_patch(self, func_name: str, params: dict) -> Dict[str, Any]:
+        """
+        Supabase client is async. Sync impl of rpc call
+        """
+        builder = self.client.table(f"rpc/{func_name}")  # rpc builder
+        url: str = str(builder.session.base_url).rstrip("/")
+
+        response = requests.post(url, headers=builder.session.headers, json=params)
+        response_data = {}
+        try:
+            if response.content:
+                response_data = response.json()
         except Exception:  # this can be okay if no data is expected
             logging.debug("Failed to parse delete response data")
 
@@ -410,46 +429,16 @@ class SupabaseDal:
             status_code = res.get("status_code")
             raise Exception(f"publish namespaces failed. status: {status_code}")
 
-    def to_db_cluster_nodes(self, data: ClusterNodes) -> Dict[str, Any]:
-        db_cluster_nodes = data.dict()
-        db_cluster_nodes["updated_at"] = "now()"
+    def publish_cluster_nodes(self, node_count: int):
+        data = {
+            "_account_id": self.account_id,
+            "_cluster_id": self.cluster,
+            "_node_count": node_count,
+        }
+        res = self.__rpc_patch(UPDATE_CLUSTER_NODE_COUNT, data)
 
-        hour_now = datetime.now().strftime("%Y-%m-%d %H:00:00")
-        res = (
-            self.client.table(CLUSTER_NODES_TABLE)
-            .select("id, max_node_count")
-            .filter("account_id", "eq", self.account_id)
-            .filter("cluster_id", "eq", self.cluster)
-            .filter("daily_hour", "eq", hour_now)
-            .execute()
-        )
-        if res.get("status_code") not in [200]:
-            msg = f"Failed to get existing services (supabase) error: {res.get('data')}"
-            logging.error(msg)
+        if res.get("status_code") not in [200, 201, 204]:
+            logging.error(f"Failed to publish node count {data} error: {res.get('data')}")
             self.handle_supabase_error()
-            raise Exception(msg)
 
-        db_data = res.get('data', [])
-        if len(db_data) > 0:
-            db_id = db_data[0]["id"]
-            last_max_node_count = db_data[0]["max_node_count"]
-            db_cluster_nodes["max_node_count"] = max(last_max_node_count, data.node_count)
-            db_cluster_nodes["id"] = db_id
-        else:
-            db_cluster_nodes["max_node_count"] = data.node_count
-
-        db_cluster_nodes["daily_hour"] = hour_now
-        logging.info(f"cluster nodes {db_cluster_nodes}")
-
-
-        return db_cluster_nodes
-
-    def publish_cluster_nodes(self, cluster_nodes: ClusterNodes):
-        res = (
-            self.client.table(CLUSTER_NODES_TABLE)
-            .insert(self.to_db_cluster_nodes(cluster_nodes), upsert=True)
-            .execute()
-        )
-        if res.get("status_code") not in [200, 201]:
-            logging.error(f"Failed to upsert {self.to_db_cluster_nodes(cluster_nodes)} error: {res.get('data')}")
-            self.handle_supabase_error()
+        logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
