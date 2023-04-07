@@ -234,11 +234,11 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     ]
                 )
                 execution_event.response = self.__error_resp(
-                    ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.name, ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.value, log=False)
-            except Exception as e:
+                    ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.name, ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.value, log=False
+                )
+            except Exception:
                 logging.error(
-                    f"Failed to execute action {action.action_name} {to_safe_str(action_params)}: \"{e}\"",
-                    exc_info=True
+                    f"Failed to execute action {action.action_name} {to_safe_str(action_params)}", exc_info=True
                 )
                 execution_event.response = self.__error_resp(
                     ErrorCodes.ACTION_UNEXPECTED_ERROR.name, ErrorCodes.ACTION_UNEXPECTED_ERROR.value, log=False
