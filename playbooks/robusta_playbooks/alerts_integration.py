@@ -91,7 +91,7 @@ class StatusSilencerParams(ActionParams):
     :var exclude: If available, will stop processing if the pod status is in the exclude list
 
     :example include: ["Pending"]
-    :example exclude: ["Evicted"]
+    :example exclude: ["Unknown"]
     """
 
     include: Optional[List[str]]
