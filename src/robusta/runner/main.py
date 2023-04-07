@@ -6,7 +6,7 @@ from robusta.core.model.env_vars import (
     TELEMETRY_PERIODIC_SEC,
 )
 from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHandlerImpl
-from robusta.model.config import Registry
+from robusta.model.registry import Registry
 from robusta.patch.patch import create_monkey_patches
 from robusta.runner.config_loader import ConfigLoader
 from robusta.runner.log_init import init_logging, logging

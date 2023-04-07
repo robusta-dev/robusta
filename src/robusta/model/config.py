@@ -2,7 +2,6 @@ import logging
 from collections import defaultdict
 from typing import Dict, List, Optional
 
-from robusta.core.model.env_vars import PROMETHEUS_ENABLED, RUNNER_VERSION
 from robusta.core.playbooks.actions_registry import ActionsRegistry
 from robusta.core.playbooks.base_trigger import TriggerEvent
 from robusta.core.playbooks.playbook_utils import merge_global_params
@@ -10,10 +9,7 @@ from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrap
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.sink_factory import SinkFactory
-from robusta.integrations.receiver import ActionRequestReceiver
-from robusta.integrations.scheduled.playbook_scheduler_manager import PlaybooksSchedulerManager
 from robusta.model.playbook_definition import PlaybookDefinition
-from robusta.runner.telemetry import Telemetry
 from robusta.utils.function_hashes import get_function_hash
 
 
@@ -149,60 +145,3 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
         return self.global_config
 
 
-class Registry:
-    _actions: ActionsRegistry = ActionsRegistry()
-    _light_actions: List[str] = []
-    _playbooks: PlaybooksRegistry = PlaybooksRegistry()
-    _sinks: SinksRegistry = None
-    _scheduler = None
-    _receiver: ActionRequestReceiver = None
-    _global_config = dict()
-    _telemetry: Telemetry = Telemetry(
-        runner_version=RUNNER_VERSION,
-        prometheus_enabled=PROMETHEUS_ENABLED,
-    )
-
-    def set_light_actions(self, light_actions: List[str]):
-        self._light_actions = light_actions
-
-    def get_light_actions(self) -> List[str]:
-        return self._light_actions
-
-    def set_actions(self, actions: ActionsRegistry):
-        self._actions = actions
-
-    def get_actions(self) -> ActionsRegistry:
-        return self._actions
-
-    def set_playbooks(self, playbooks: PlaybooksRegistry):
-        self._playbooks = playbooks
-
-    def get_playbooks(self) -> PlaybooksRegistry:
-        return self._playbooks
-
-    def set_sinks(self, sinks: SinksRegistry):
-        self._sinks = sinks
-
-    def get_sinks(self) -> SinksRegistry:
-        return self._sinks
-
-    def set_scheduler(self, scheduler: PlaybooksSchedulerManager):
-        self._scheduler = scheduler
-
-    def get_scheduler(self) -> PlaybooksSchedulerManager:
-        return self._scheduler
-
-    def set_receiver(self, receiver: ActionRequestReceiver):
-        self._receiver = receiver
-
-    def get_receiver(self) -> ActionRequestReceiver:
-        return self._receiver
-
-    def get_telemetry(self) -> Telemetry:
-        return self._telemetry
-
-    def set_global_config(self, config: Dict):
-        self.global_config = config
-
-    def get_global_config(self) -> Dict:
-        return self.global_config

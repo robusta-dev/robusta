@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.base_trigger import TriggerEvent
 from robusta.model.playbook_action import PlaybookAction
+from robusta.model.registry_handler import RegistryHandler
 from robusta.runner.telemetry import Telemetry
 
 
@@ -51,8 +52,15 @@ class PlaybooksEventHandler(ABC):
         pass
 
     @abstractmethod
+    def get_registry(
+            self,
+    ) -> RegistryHandler:
+        """Return runner Registry"""
+        pass
+
+    @abstractmethod
     def get_telemetry(
-        self,
+            self,
     ) -> Telemetry:
         """Return runner telemetry"""
         pass
