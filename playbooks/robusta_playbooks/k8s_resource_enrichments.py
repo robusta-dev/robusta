@@ -39,23 +39,23 @@ class RelatedContainer(BaseModel):
     memoryLimit: int
     memoryRequest: int
     restarts: int
-    status: str
-    created: Optional[str]
+    status: Optional[str] = None
+    created: Optional[str] = None
 
 class RelatedPod(BaseModel):
-    name: str
-    namespace: str
-    node: str
+    name: Optional[str] = None
+    namespace: Optional[str] = None
+    node: Optional[str] = None
     clusterName: str
     cpuLimit: float
     cpuRequest: float
     memoryLimit: int
     memoryRequest: int
-    creationTime: str
+    creationTime: Optional[str] = None
     restarts: int
     addresses: str
     containers: List[RelatedContainer]
-    status: Optional[str]
+    status: Optional[str] = None
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node"]
 
@@ -104,26 +104,26 @@ def get_related_pods(resource) -> list[Pod]:
 def to_pod_obj(pod: Pod, cluster: str) -> RelatedPod:
     resource_requests = pod_requests(pod)
     resource_limits = pod_limits(pod)
-    addresses = ",".join([address.ip for address in pod.status.podIPs])
+    addresses = ",".join([address.ip for address in getattr(pod.status, "podIPs" , [])])
     return RelatedPod(
-        name=pod.metadata.name,
-        namespace=pod.metadata.namespace,
-        node=pod.spec.nodeName,
+        name=getattr(pod.metadata, "name", None),
+        namespace=getattr(pod.metadata, "namespace", None), 
+        node=getattr(pod.spec, "nodeName" , None), 
         clusterName=cluster,
         cpuLimit=resource_limits.cpu,
         cpuRequest=resource_requests.cpu,
         memoryLimit=resource_limits.memory,
         memoryRequest=resource_requests.memory,
-        creationTime=pod.metadata.creationTimestamp,
+        creationTime=getattr(pod.metadata, "creationTimestamp" , None),
         restarts=pod_restarts(pod),
         addresses=addresses,
         containers=get_pod_containers(pod),
-        status=pod.status.phase,
+        status=getattr(pod.status, "phase" , None),
     )
 
 def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
     containers: List[RelatedContainer] = []
-    for container in pod.spec.containers:
+    for container in getattr(pod.spec, "containers", []):
         requests = PodContainer.get_requests(container)
         limits = PodContainer.get_limits(container)
         containerStatus: Optional[ContainerStatus] = PodContainer.get_status(pod, container.name)  
