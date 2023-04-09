@@ -86,7 +86,7 @@ class PrometheusQueryResult(BaseModel):
             raise Exception("resultType missing")
         if result is None:
             raise Exception("result object missing")
-        elif result_type == "string":
+        elif result_type == "string" or result_type == "error":
             string_result = str(result)
         elif result_type == "scalar" and isinstance(result, list):
             scalar_result = PrometheusScalarValue(result)
