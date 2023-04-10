@@ -234,7 +234,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     ]
                 )
                 execution_event.response = self.__error_resp(
-                    ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.name, ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.value, log=False)
+                    ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.name, ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.value, log=False
+                )
             except Exception:
                 logging.error(
                     f"Failed to execute action {action.action_name} {to_safe_str(action_params)}", exc_info=True
@@ -242,7 +243,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(
                     ErrorCodes.ACTION_UNEXPECTED_ERROR.name, ErrorCodes.ACTION_UNEXPECTED_ERROR.value, log=False
                 )
-                execution_event.add_enrichment([MarkdownBlock(text=f"Oops... Error processing {action.action_name}")])
         return execution_event.response
 
     @classmethod
@@ -286,7 +286,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     logging.error(f"Failed to publish finding to sink {sink_name}", exc_info=True)
 
     def get_global_config(self) -> dict:
-        return self.registry.get_playbooks().get_global_config()
+        return self.registry.get_global_config()
 
     def get_light_actions(self) -> List[str]:
         return self.registry.get_light_actions()

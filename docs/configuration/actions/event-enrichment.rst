@@ -116,3 +116,5 @@ These actions can selectively silence Prometheus alerts. They only work with the
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.name_silencer
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.silence_alert
+
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.pod_status_silencer
