@@ -60,14 +60,14 @@ class ActionRequestReceiver:
             on_error=self.on_error,
         )
 
-        self.start_receiver()
-
         if not self.account_id or not self.cluster_name:
             logging.error(
                 f"Action receiver cannot start. "
                 f"Missing required account_id {self.account_id} cluster_name {self.cluster_name}"
             )
             return
+
+        self.start_receiver()
 
     def start_receiver(self):
         if not CLOUD_ROUTING:
