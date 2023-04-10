@@ -6,7 +6,7 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 
 class FileSinkParms(SinkBaseParams):
     file_name: str = None
-    format: str = "json"
+    
 
 class FileSinkConfigWrapper(SinkConfigBase):
     file_sink: FileSinkParms

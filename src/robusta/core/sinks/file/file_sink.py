@@ -15,7 +15,7 @@ class FileSink(SinkBase):
                                                exclude_empty_parent=False,
                                                exclude_patterns=["^\.add_silence_url$", "^\.dirty$"],
                                                ).to_dictionary
-        # TODO: check fromat parameter to support other serialization formats
+        # TODO: check format parameter to support other serialization formats
         self.__serialize = lambda data: json.dumps(data, indent=2)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
@@ -24,9 +24,10 @@ class FileSink(SinkBase):
         data = self.__serialize(dict_data)
 
         # write to console if file_name not provided
-        fout = sys.stdout if self.params.file_name is None else open(self.file_name, "w")
+        fout = sys.stdout if self.params.file_name is None else open(self.params.file_name, "a")
         try:
             fout.write(data)
+            fout.write("\n")
         finally:
-            if fout != sys.stdout:
+            if fout != sys.stdout and fout is not None:
                 fout.close()
