@@ -9,7 +9,7 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
-from robusta.core.model.cluster_status import ClusterStatus, ClusterStats
+from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
@@ -19,7 +19,13 @@ from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
+from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
+
+from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags, \
+    check_prometheus_connection
+from robusta.core.model.base_params import PrometheusParams
+from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_silences_connection
 
 
 class RobustaSink(SinkBase):
@@ -309,6 +315,44 @@ class RobustaSink(SinkBase):
         self.dal.publish_jobs(updated_jobs)
 
     def __update_cluster_status(self):
+        global_config = self.get_global_config()
+        activity_stats = ActivityStats(
+            relayConnection=False,
+            alertManagerConnection=False,
+            prometheusConnection=False,
+            prometheusRetentionTime='',
+        )
+
+        # checking the status of relay connection
+        receiver = self.registry.get_receiver()
+        if isinstance(receiver, ActionRequestReceiver):
+            activity_stats.relayConnection = receiver.healthy
+
+        # checking the status of prometheus
+        try:
+            prometheus_params = PrometheusParams(prometheus_url=global_config.get("prometheus_url", ""))
+            prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
+            check_prometheus_connection(prom=prometheus_connection, params={})
+
+            activity_stats.prometheusConnection = True
+
+            flag_response = get_prometheus_flags(prom=prometheus_connection)
+            if flag_response:
+                data = flag_response.get('data', None)
+                if data:
+                    activity_stats.prometheusRetentionTime = data.get('storage.tsdb.retention.time', "")
+
+        except Exception as e:
+            logging.error(f"Failed to connect to prometheus. {e}", exc_info=True)
+
+        # checking the status of the alert manager
+        try:
+            base_silence_params = BaseSilenceParams(alertmanager_url=global_config.get("alertmanager_url", ""))
+            get_alertmanager_silences_connection(params=base_silence_params)
+            activity_stats.alertManagerConnection = True
+        except Exception as e:
+            logging.error(f"Failed to connect to the alert manager silence. {e}", exc_info=True)
+
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()
             cluster_status = ClusterStatus(
@@ -319,6 +363,7 @@ class RobustaSink(SinkBase):
                 light_actions=self.registry.get_light_actions(),
                 ttl_hours=self.ttl_hours,
                 stats=cluster_stats,
+                activity_stats=activity_stats
             )
 
             self.dal.publish_cluster_status(cluster_status)
@@ -388,3 +433,6 @@ class RobustaSink(SinkBase):
                 self.__namespaces_cache[namespace_name] = updated_namespace
 
         self.dal.publish_namespaces(updated_namespaces)
+
+    def get_global_config(self) -> dict:
+        return self.registry.get_global_config()

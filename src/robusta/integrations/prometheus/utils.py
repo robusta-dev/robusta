@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Dict
 
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError, HTTPError
@@ -44,6 +44,22 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
             params={"query": "example", **params},
         )
         response.raise_for_status()
+    except (ConnectionError, HTTPError) as e:
+        raise PrometheusNotFound(
+            f"Couldn't connect to Prometheus found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
+        ) from e
+
+
+def get_prometheus_flags(prom: "PrometheusConnect") -> Dict:
+    try:
+        response = prom._session.get(
+            f"{prom.url}/api/v1/status/flags",
+            verify=prom.ssl_verification,
+            headers=prom.headers,
+            # This query should return empty results, but is correct
+            params={},
+        )
+        return response.json()
     except (ConnectionError, HTTPError) as e:
         raise PrometheusNotFound(
             f"Couldn't connect to Prometheus found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
