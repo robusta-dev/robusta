@@ -33,7 +33,8 @@ from robusta.integrations.git.git_repo import (
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.integrations.scheduled.playbook_scheduler_manager_impl import PlaybooksSchedulerManagerImpl
 from robusta.integrations.scheduled.trigger import ScheduledTriggerEvent
-from robusta.model.config import PlaybooksRegistry, PlaybooksRegistryImpl, Registry, SinksRegistry
+from robusta.model.config import PlaybooksRegistry, PlaybooksRegistryImpl, SinksRegistry
+from robusta.model.registry import Registry
 from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.file_system_watcher import FileSystemWatcher

@@ -9,8 +9,8 @@ import requests
 import sentry_sdk
 from hikaru.model import NodeList
 
-from robusta.model.config import Registry, Telemetry
-from robusta.runner.telemetry import SinkInfo
+from robusta.model.registry import Registry
+from robusta.runner.telemetry import SinkInfo, Telemetry
 
 
 class TelemetryLevel(Enum):

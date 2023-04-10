@@ -48,8 +48,10 @@ class ActionRequestReceiver:
     def __init__(self, event_handler: PlaybooksEventHandler):
         self.event_handler = event_handler
         self.active = True
-        self.account_id = self.event_handler.get_global_config().get("account_id")
-        self.cluster_name = self.event_handler.get_global_config().get("cluster_name")
+
+        self.account_id = self.event_handler.get_registry().get_global_config().get("account_id")
+        self.cluster_name = self.event_handler.get_registry().get_global_config().get("cluster_name")
+
         self.auth_provider = AuthProvider()
         self.healthy = False
 
@@ -182,8 +184,8 @@ class ActionRequestReceiver:
         logging.info(f"Relay websocket error: {error}")
 
     def on_open(self, ws):
-        account_id = self.event_handler.get_global_config().get("account_id")
-        cluster_name = self.event_handler.get_global_config().get("cluster_name")
+        account_id = self.event_handler.get_registry().get_global_config().get("account_id")
+        cluster_name = self.event_handler.get_registry().get_global_config().get("cluster_name")
         open_payload = {
             "action": "auth",
             "account_id": account_id,

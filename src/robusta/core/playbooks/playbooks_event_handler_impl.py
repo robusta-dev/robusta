@@ -14,8 +14,9 @@ from robusta.core.reporting import MarkdownBlock
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.consts import SYNC_RESPONSE_SINK
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
-from robusta.model.config import Registry
+from robusta.model.registry import Registry
 from robusta.model.playbook_action import PlaybookAction
+from robusta.model.registry_handler import RegistryHandler
 from robusta.runner.telemetry import Telemetry
 from robusta.utils.error_codes import ActionException, ErrorCodes
 
@@ -293,3 +294,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def get_telemetry(self) -> Telemetry:
         return self.registry.get_telemetry()
+
+    def get_registry(self) -> RegistryHandler:
+        return self.registry
