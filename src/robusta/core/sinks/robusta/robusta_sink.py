@@ -435,4 +435,4 @@ class RobustaSink(SinkBase):
         self.dal.publish_namespaces(updated_namespaces)
 
     def get_global_config(self) -> dict:
-        return self.registry.global_config
+        return self.registry.get_global_config()
