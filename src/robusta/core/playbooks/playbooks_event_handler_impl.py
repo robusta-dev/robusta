@@ -286,7 +286,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     logging.error(f"Failed to publish finding to sink {sink_name}", exc_info=True)
 
     def get_global_config(self) -> dict:
-        return self.registry.get_playbooks().get_global_config()
+        return self.registry.get_global_config()
 
     def get_light_actions(self) -> List[str]:
         return self.registry.get_light_actions()
