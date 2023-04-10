@@ -109,27 +109,27 @@ def get_related_pods(resource) -> list[Pod]:
 def to_pod_obj(pod: Pod, cluster: str) -> RelatedPod:
     resource_requests = pod_requests(pod)
     resource_limits = pod_limits(pod)
-    addresses = ",".join([address.ip for address in getattr(pod.status, "podIPs", [])])
+    addresses = ",".join([address.ip for address in pod.status.podIPs])
     return RelatedPod(
-        name=getattr(pod.metadata, "name", None),
-        namespace=getattr(pod.metadata, "namespace", None),
-        node=getattr(pod.spec, "nodeName", None),
+        name=pod.metadata.name,
+        namespace=pod.metadata.namespace,
+        node=pod.spec.nodeName,
         clusterName=cluster,
         cpuLimit=resource_limits.cpu,
         cpuRequest=resource_requests.cpu,
         memoryLimit=resource_limits.memory,
         memoryRequest=resource_requests.memory,
-        creationTime=getattr(pod.metadata, "creationTimestamp", None),
+        creationTime=pod.metadata.creationTimestamp,
         restarts=pod_restarts(pod),
         addresses=addresses,
         containers=get_pod_containers(pod),
-        status=getattr(pod.status, "phase", None),
+        status=pod.status.phase,
     )
 
 
 def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
     containers: List[RelatedContainer] = []
-    for container in getattr(pod.spec, "containers", []):
+    for container in pod.spec.containers:
         requests = PodContainer.get_requests(container)
         limits = PodContainer.get_limits(container)
         containerStatus: Optional[ContainerStatus] = PodContainer.get_status(pod, container.name)
