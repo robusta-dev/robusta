@@ -68,7 +68,7 @@ def levelToString(level: int) -> str:
     else:
         return "OK"
 
-def scanRowToStr(row: ScanReportRow) -> str:
+def scanRowContentToString(row: ScanReportRow) -> str:
     txt = f"**{row.container}**\n" if row.container else "" 
     for i in row.content:
         txt+= f"{levelToString(i['level'])} {i['message']}\n"
@@ -86,20 +86,22 @@ class PopeyeParams(ProcessParams):
     image: str = "derailed/popeye" 
     timeout = 120
     args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
-    spinach: str = """popeye:
-                        excludes: 
-                            apps/v1/daemonsets:
-                            - name: rx:kube-system
-                            apps/v1/deployments:
-                            - name: rx:kube-system
-                            v1/configmaps:
-                            - name: rx:kube-system
-                            v1/pods:
-                            - name: rx:kube-system
-                            v1/services:
-                            - name: rx:kube-system
-                            v1/namespaces:
-                            - name: kube-system"""
+    spinach: str = """\
+popeye:
+    excludes: 
+        apps/v1/daemonsets:
+        - name: rx:kube-system
+        apps/v1/deployments:
+        - name: rx:kube-system
+        v1/configmaps:
+        - name: rx:kube-system
+        v1/pods:
+        - name: rx:kube-system
+        v1/services:
+        - name: rx:kube-system
+        v1/namespaces:
+        - name: kube-system"""
+
 
 
 
@@ -145,8 +147,9 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         end_time=end_time,
         score=popeye_scan.score,
         results=[],
-        config=f"{params.args} \n {params.spinach}",
-        scanRowToString=scanRowToStr
+        config=f"{params.args} \n\n {params.spinach}",
+        pdf_scan_row_content_format=scanRowContentToString,
+        pdf_scan_row_priority_format=levelToString
         )
 
     scan_issues: List[ScanReportRow] = []

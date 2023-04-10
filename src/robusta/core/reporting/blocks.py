@@ -7,7 +7,7 @@ import textwrap
 from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional, Sequence
 from datetime import datetime
-
+import json
 import hikaru
 from hikaru import DiffDetail, DiffType
 from hikaru.model import HikaruDocumentBase
@@ -400,7 +400,6 @@ class ScanReportRow(BaseModel):
     priority: float
 
 class ScanReportBlock(BaseBlock):
-
     title: str
     scan_id: str # UUID
     type: ScanType
@@ -408,14 +407,11 @@ class ScanReportBlock(BaseBlock):
     end_time: datetime
     score: str
     results: List[ScanReportRow]
-    config: str #TBD
-    scanRowToString: Callable[[ScanReportRow], str]
-    # @staticmethod
-    # def rowToStr(row:ScanReportRow) -> str:
-    #     return "\n".join(row.content)
+    config: str
+    pdf_scan_row_content_format: Callable[[ScanReportRow], str] = lambda row: json.dumps(row.content)
+    pdf_scan_row_priority_format: Callable[[float], str] = lambda priority: str(priority)
 
 
-    
     def grade(self):
         score = int(self.score)
         if score >= 90:

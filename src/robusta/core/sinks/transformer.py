@@ -201,18 +201,18 @@ class Transformer:
             if pdf.will_page_break(50):
                 pdf.add_page()
         
-            pdf.ln(15)
+            pdf.ln(12)
             pdf.set_font("", "B", 12)
             pdf.set_text_color(headers_color)
             pdf.cell(txt=header, border=0)
-            pdf.ln(15)
+            pdf.ln(12)
 
         def writeConfig(pdf: FPDF, config: str):
             pdf.set_text_color(accent_color)
             pdf.cell(txt="config", border=0)
-            pdf.ln(10)
+            pdf.ln(12)
             setNormalTextStyle(pdf)
-            pdf.cell(txt=config, border=0)
+            pdf.multi_cell(w=0,txt=config, border=0)
 
 
         def writeTable(pdf: FPDF, rows: list[list[str]]):
@@ -251,9 +251,9 @@ class Transformer:
                 issue_txt = ""
                 max_priority:int = 0
                 for res in sorted(scanRes, key=lambda x: len(x.container)):
-                    issue_txt += scan.scanRowToString(row=res)
+                    issue_txt += scan.pdf_scan_row_content_format(row=res)
                     max_priority = max(max_priority,res.priority)
-                    rows.append([str(int(max_priority)), n, ns, issue_txt])    
+                    rows.append([scan.pdf_scan_row_priority_format(max_priority), n, ns, issue_txt])    
 
             writeSectionHeader(pdf, kind)
             writeTable(pdf, rows)
