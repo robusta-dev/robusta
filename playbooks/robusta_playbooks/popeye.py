@@ -1,4 +1,3 @@
-import logging
 from collections import defaultdict
 import uuid
 from typing import List, Optional, Dict
@@ -15,11 +14,9 @@ from robusta.api import (
     ExecutionBaseEvent,
     RobustaJob,
     to_kubernetes_name,
-    FileBlock,
     Finding,
     FindingSource,
     FindingType,
-    MarkdownBlock,
     ProcessParams,
     action,
     ScanReportBlock,
@@ -61,21 +58,29 @@ class GroupedIssues(BaseModel):
     issues = []
     level: int = 0
 
-formats = ["standard", "yaml", "html", "json"]
-
+def levelToString(level: int) -> str:
+    if level == 1:
+        return "I"
+    elif level == 2:
+        return "W"
+    elif level == 3:
+        return "E"
+    else:
+        return "OK"
 
 def scanRowToStr(row: ScanReportRow) -> str:
     txt = f"**{row.container}**\n" if row.container else "" 
     for i in row.content:
-        txt+= f"{i['level']} {i['message']}\n"
+        txt+= f"{levelToString(i['level'])} {i['message']}\n"
     
     return txt
 
 class PopeyeParams(ProcessParams):
     """
     :var image: the popeye container image to use for the scan.
-    :var format: the popeye report output format.
     :var timeout: time span for yielding the scan.
+    :var args: popeye cli arguments.
+    :var spinach: spinach.yaml config file to supply to the scan.
     """
 
     image: str = "derailed/popeye" 
@@ -140,7 +145,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         end_time=end_time,
         score=popeye_scan.score,
         results=[],
-        config="",
+        config=f"{params.args} \n {params.spinach}",
         scanRowToString=scanRowToStr
         )
 
