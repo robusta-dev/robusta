@@ -25,7 +25,7 @@ Frequently Asked Questions
 ----------------------------
 
 Why not run ``robusta gen-config`` separately for each cluster?
-*******************************************************
+******************************************************************
 
 Each time you run ``robusta gen-config``, it creates a new account ID. The Robusta UI groups all your clusters by that ID.
 

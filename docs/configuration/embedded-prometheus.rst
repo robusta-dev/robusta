@@ -34,7 +34,7 @@ If you're not using the embedded prometheus stack, click `here <https://promethe
 
 
 See also
-^^^^^^^^^^^^^^
+------------------------------
 
 * :ref:`Robusta architecture <Standard Architecture>`
 * `Comparison of Robusta and a bare-bones Prometheus stack without Robusta <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_

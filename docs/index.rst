@@ -52,7 +52,7 @@
    tutorials/prometheus-enrichment
    coverage
    Robusta UI Triggers <how-it-works/robusta-ui-triggers>
-
+   Two-way Interactivity <interactivity>
 
 .. toctree::
    :maxdepth: 4
