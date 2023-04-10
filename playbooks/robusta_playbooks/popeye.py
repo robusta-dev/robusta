@@ -1,9 +1,10 @@
 from collections import defaultdict
 import uuid
 from typing import List, Optional, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from datetime import datetime
-import json
+import json 
+from json import JSONDecodeError
 from robusta.core.model.env_vars import RELEASE_NAME
 from hikaru.model import (
     Container,
@@ -22,7 +23,9 @@ from robusta.api import (
     ScanReportBlock,
     ScanReportRow,
     ScanType,
-    EnrichmentAnnotation
+    EnrichmentAnnotation,
+    MarkdownBlock,
+    FileBlock
 )
 
 #https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/report/tally.go#L163
@@ -77,14 +80,16 @@ def scanRowContentToString(row: ScanReportRow) -> str:
 
 class PopeyeParams(ProcessParams):
     """
-    :var image: the popeye container image to use for the scan.
-    :var timeout: time span for yielding the scan.
-    :var args: popeye cli arguments.
-    :var spinach: spinach.yaml config file to supply to the scan.
+    :var image: The popeye container image to use for the scan.
+    :var timeout: Time span for yielding the scan.
+    :var args: Popeye cli arguments.
+    :var spinach: Spinach.yaml config file to supply to the scan.
+    :var serviceAccountName: The account name to use for the Popeye scan job.
     """
 
     image: str = "derailed/popeye" 
-    timeout = 120
+    serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
+    timeout = 300
     args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
     spinach: str = """\
 popeye:
@@ -122,7 +127,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     """
 
     spec = PodSpec(
-        serviceAccountName=f"{RELEASE_NAME}-runner-service-account",
+        serviceAccountName=params.serviceAccountName,
         containers=[
             Container(
                 name=to_kubernetes_name(params.image),
@@ -133,11 +138,28 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         restartPolicy="Never",
     )
 
-    start_time = datetime.now()
-    scan = json.loads(RobustaJob.run_simple_job_spec(spec,"popeye_job",params.timeout))
-    #catch typeerror could not read file prorly.
-    end_time = datetime.now() 
-    popeye_scan = PopeyeReport(**scan['popeye'])
+    start_time = end_time = datetime.now()
+    popeye_scan = scan = {} 
+    logs = None
+    
+    try:
+        logs = RobustaJob.run_simple_job_spec(spec,"popeye_job",params.timeout)
+        scan = json.loads(logs)
+        end_time = datetime.now() 
+        popeye_scan = PopeyeReport(**scan['popeye'])
+    except JSONDecodeError as e:
+        event.add_enrichment([MarkdownBlock(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")])
+        return
+    except ValidationError as e:
+        event.add_enrichment([MarkdownBlock(f"*Popeye scan job failed. Result format issue.*\n\n {e}")])
+        event.add_enrichment([FileBlock("Popeye-scan-failed.log", contents=logs.encode())])
+        return
+    except Exception as e:
+        if str(e) == "Failed to reach wait condition":
+            event.add_enrichment([MarkdownBlock(f"*Popeye scan job failed. The job wait condition timed out ({params.timeout}s)*")])
+        else:
+            event.add_enrichment([MarkdownBlock(f"*Popeye scan job unexpected error.*\n {e}")])
+        return
 
     scan_block = ScanReportBlock(
         title="Popeye scan",
@@ -175,21 +197,19 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
                 )
     scan_block.results = scan_issues
 
-    #todo check fail/timeout cases.
     finding = Finding(
-        title=f"Popeye Report",
-        source=FindingSource.MANUAL,
-        aggregation_key="popeye_report",
-        finding_type=FindingType.REPORT,
-        failure=False
-    )
-
+            title=f"Popeye Report",
+            source=FindingSource.MANUAL,
+            aggregation_key="popeye_report",
+            finding_type=FindingType.REPORT,
+            failure=False
+        )
     finding.add_enrichment(
         [
             scan_block
         ],
         annotations={EnrichmentAnnotation.SCAN: True}
     )
-
     event.add_finding(finding)
+    
     
