@@ -2,6 +2,7 @@ import logging
 from collections import defaultdict
 from typing import Dict, List, Optional
 
+from robusta.core.model.env_vars import PROMETHEUS_ENABLED, RUNNER_VERSION
 from robusta.core.playbooks.actions_registry import ActionsRegistry
 from robusta.core.playbooks.base_trigger import TriggerEvent
 from robusta.core.playbooks.playbook_utils import merge_global_params
@@ -9,7 +10,10 @@ from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrap
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.sink_factory import SinkFactory
+from robusta.integrations.receiver import ActionRequestReceiver
+from robusta.integrations.scheduled.playbook_scheduler_manager import PlaybooksSchedulerManager
 from robusta.model.playbook_definition import PlaybookDefinition
+from robusta.runner.telemetry import Telemetry
 from robusta.utils.function_hashes import get_function_hash
 
 
