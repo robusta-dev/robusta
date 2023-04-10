@@ -396,7 +396,7 @@ def is_pod_finished(pod: V1Pod) -> bool:
 
 def extract_ready_pods(resource) -> int:
     try:
-        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet) or isinstance(resource, V1Job):
+        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
             return 0 if not resource.status.ready_replicas else resource.status.ready_replicas
         elif isinstance(resource, V1DaemonSet):
             return 0 if not resource.status.number_ready else resource.status.number_ready
@@ -410,8 +410,9 @@ def extract_ready_pods(resource) -> int:
 
 def extract_total_pods(resource) -> int:
     try:
-        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet) or isinstance(resource, V1Job):
-            return 1 if not resource.status.replicas else resource.status.replicas
+        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
+            # resource.spec.replicas can be 0, default value is 1
+            return resource.spec.replicas if resource.spec.replicas is not None else 1
         elif isinstance(resource, V1DaemonSet):
             return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
         elif isinstance(resource, V1Pod):
