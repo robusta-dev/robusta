@@ -183,52 +183,81 @@ class Transformer:
         if not isinstance(block, ScanReportBlock):
             return block
         
-        grey_color = (112,136,137)
-        def setTableStyle(pdf: FPDF):
-            pdf.set_font("", "", 10)
+        accent_color = (140, 249, 209)
+        headers_color = (63, 63, 63)
+        table_color = (207, 215, 216)
+        def setNormalTextStyle(pdf: FPDF):
+            pdf.set_font("", "", 8)
             pdf.set_text_color(0,0,0)
 
-        def setSectionTextStyle(pdf : FPDF):
-            pdf.set_font("", "B", 14)
-            pdf.set_text_color(grey_color)
+        def writeReportHeader(title: str, end_time, score: int, grade: str):
+            pdf.cell(pdf.w * 0.7, 10, f"**{title}** {end_time.strftime('%b %d, %y %X')}", border=0, markdown=True)
+            if int(score) >= 0:
+                pdf.cell(pdf.w * 0.3, 10, f"**{grade}** {score}", border=0, markdown=True)
+            
+            pdf.ln(20)
+
+        def writeSectionHeader(pdf: FPDF, header: str):
+            if pdf.will_page_break(50):
+                pdf.add_page()
+        
+            pdf.ln(15)
+            pdf.set_font("", "B", 12)
+            pdf.set_text_color(headers_color)
+            pdf.cell(txt=header, border=0)
+            pdf.ln(15)
+
+        def writeConfig(pdf: FPDF, config: str):
+            pdf.set_text_color(accent_color)
+            pdf.cell(txt="config", border=0)
+            pdf.ln(10)
+            setNormalTextStyle(pdf)
+            pdf.cell(txt=config, border=0)
 
 
+        def writeTable(pdf: FPDF, rows: list[list[str]]):
+            pdf.set_draw_color(table_color)
+            setNormalTextStyle(pdf)
+            with pdf.table(borders_layout="INTERNAL",
+                rows=rows,
+                headings_style=FontFace(color=(headers_color)),
+                col_widths=(10,25,25,65),
+                markdown=True,
+                line_height=1.5 * pdf.font_size
+                ) as t:
+                pass
+
+        
         scan: ScanReportBlock = block
         pdf = FPDF(orientation="landscape", format="A4")
         pdf.add_page()
         pdf.set_font("courier","", 18)
-        pdf.set_draw_color(grey_color)
         pdf.set_line_width(.1)  
-        headings_style = FontFace(emphasis="BOLD", color=(grey_color))
-        title: str = scan.type.capitalize()
-        pdf.cell(pdf.w * 0.7, 10, f"**{title} Scan** {scan.end_time.strftime('%b %d, %y %X')}", border=0, markdown=True)
-        pdf.cell(pdf.w * 0.3, 10, f"**{scan.grade()}** {scan.score}", border=0, markdown=True)
-    
+        pdf.c_margin = 2 # create default cell margin to add table "padding"
+  
+        title = f"{scan.type.capitalize()} report"
+        writeReportHeader(title, scan.end_time, scan.score, scan.grade())
+        writeConfig(pdf,scan.config)
+
         sections: dict[str, dict[str,List]] = defaultdict(lambda: defaultdict(list))
         for item in scan.results:
             sections[item.kind][f"{item.name}/{item.namespace}"].append(item)
 
         for kind, grouped_issues in sections.items():
-            pdf.ln(20)
-            setSectionTextStyle(pdf)
-            pdf.cell(txt=kind, border=0)
-            pdf.ln(20)
-            setTableStyle(pdf)
-            with pdf.table( borders_layout="INTERNAL",
-                headings_style=headings_style,
-                col_widths=(10,25,25,65),
-                text_align="LEFT",
-                markdown=True,
-                line_height=1.5 * pdf.font_size) as table: 
-                    table.row(["Priority", "Name", "Namespace", "Issues"])
-                    for group, scanRes in grouped_issues.items():
-                        n,ns = group.split("/",1)
-                        issue_txt = ""
-                        max_priority:int = 0
-                        for res in sorted(scanRes, key=lambda x: len(x.container)):
-                            issue_txt += scan.scanRowToString(row=res)
-                            max_priority = max(max_priority,res.priority)
 
-                        table.row([str(int(max_priority)), n, ns, issue_txt])
+            rows = [["Priority", "Name", "Namespace", "Issues"]]
+            for group, scanRes in grouped_issues.items():
+                n,ns = group.split("/",1)
+                issue_txt = ""
+                max_priority:int = 0
+                for res in sorted(scanRes, key=lambda x: len(x.container)):
+                    issue_txt += scan.scanRowToString(row=res)
+                    max_priority = max(max_priority,res.priority)
+                    rows.append([str(int(max_priority)), n, ns, issue_txt])    
+
+            writeSectionHeader(pdf, kind)
+            writeTable(pdf, rows)
+
+
                         
         return FileBlock(f"{title} Report.pdf", pdf.output('', 'S'))
