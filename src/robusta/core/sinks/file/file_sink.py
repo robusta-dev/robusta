@@ -15,7 +15,7 @@ class FileSink(SinkBase):
                                                exclude_empty_parent=False,
                                                exclude_patterns=["^\.add_silence_url$", "^\.dirty$"],
                                                ).to_dictionary
-        # TODO: check format parameter to support other serialization formats
+        # TODO: check fromat parameter to support other serialization formats
         self.__serialize = lambda data: json.dumps(data, indent=2)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):

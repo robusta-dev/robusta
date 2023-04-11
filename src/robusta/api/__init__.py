@@ -43,6 +43,7 @@ from robusta.core.model.env_vars import (
     NUM_EVENT_THREADS,
     PLAYBOOKS_CONFIG_FILE_PATH,
     PLAYBOOKS_ROOT,
+    PORT,
     PRINTED_TABLE_MAX_WIDTH,
     PROMETHEUS_ENABLED,
     PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
@@ -278,3 +279,6 @@ from robusta.utils.error_codes import ActionException, ErrorCodes
 from robusta.utils.function_hashes import action_hash
 from robusta.utils.parsing import load_json
 from robusta.utils.rate_limiter import RateLimiter
+from robusta.utils.silence_utils import (get_alertmanager_url, BaseSilenceParams, get_alertmanager_url_path,
+                                         SilenceOperation, gen_alertmanager_headers, Silence, AddSilenceParams,
+                                         DeleteSilenceParams)
