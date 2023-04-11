@@ -24,9 +24,10 @@ class FileSink(SinkBase):
         data = self.__serialize(dict_data)
 
         # write to console if file_name not provided
-        fout = sys.stdout if self.params.file_name is None else open(self.file_name, "w")
+        fout = sys.stdout if self.params.file_name is None else open(self.params.file_name, "a")
         try:
             fout.write(data)
+            fout.write("\n")
         finally:
-            if fout != sys.stdout:
+            if fout != sys.stdout and fout is not None:
                 fout.close()

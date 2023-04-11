@@ -11,7 +11,7 @@ class ObjectTraverser:
     to a safe dictinary which can be easily converted to json or yaml
     """
 
-    class __Skip(Exception):
+    class __SkipException(Exception):
         """ __Skip internal exception used internally to skip some types"""
         pass
 
@@ -40,12 +40,12 @@ class ObjectTraverser:
         for key, value in dict.items():
             try:
                 res[key] = self.__map_value(value, path=path + "." + key)
-            except self.__Skip:
+            except self.__SkipException:
                 # just skip this key, value
                 skipped = True
         # skip if the object is empty (because of its values where skipped)
         if self.exclude_empty_parent and skipped and not res:
-            raise self.__Skip
+            raise self.__SkipException
         return res
 
     def __map_sequence(self, seq: Iterable, path):
@@ -55,21 +55,21 @@ class ObjectTraverser:
         for index, value in enumerate(seq):
             try:
                 res.append(self.__map_value(value, path=path + "." + str(index)))
-            except self.__Skip:
+            except self.__SkipException:
                 # this value has to be skipped, dont add it to result
                 skipped = True
 
         # if skipped was only the value and the list is empty, raise to skip the whole list
         if self.exclude_empty_parent and skipped and not res:
-            raise self.__Skip
+            raise self.__SkipException
         return res
 
     def __map_value(self, obj: Any, path) -> Dict[str, Any]:
         # handle types in the skip list
         if isinstance(obj, self.exclude_types):
-            raise self.__Skip
+            raise self.__SkipException
         if any(regx.match(path) for regx in self.exclude_regxs):
-            raise self.__Skip
+            raise self.__SkipException
 
         # different cases of object mapping
         if obj is None:
