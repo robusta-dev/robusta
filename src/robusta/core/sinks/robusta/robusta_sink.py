@@ -355,6 +355,7 @@ class RobustaSink(SinkBase):
 
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()
+
             cluster_status = ClusterStatus(
                 cluster_id=self.cluster_name,
                 version=self.registry.get_telemetry().runner_version,
@@ -367,6 +368,7 @@ class RobustaSink(SinkBase):
             )
 
             self.dal.publish_cluster_status(cluster_status)
+            self.dal.publish_cluster_nodes(cluster_stats.nodes)
         except Exception:
             logging.exception(
                 f"Failed to run periodic update cluster status for {self.sink_name}",
