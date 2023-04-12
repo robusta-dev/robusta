@@ -2,7 +2,8 @@ from typing import Callable, List, Optional
 
 from kubernetes import client
 from pydantic import BaseModel
-from utils.error_codes import ActionException, ErrorCodes
+
+from robusta.utils.error_codes import ActionException, ErrorCodes
 
 
 class ResourceLister(BaseModel):
