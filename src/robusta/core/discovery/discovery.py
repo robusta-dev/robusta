@@ -25,7 +25,7 @@ from pydantic import BaseModel
 
 from robusta.core.discovery import utils
 from robusta.core.model.cluster_status import ClusterStats
-from robusta.core.model.env_vars import DISCOVERY_BATCH_SIZE, DISCOVERY_MAX_BATCHES
+from robusta.core.model.env_vars import DISCOVERY_BATCH_SIZE, DISCOVERY_MAX_BATCHES, DISCOVERY_PROCESS_TIMEOUT_SEC
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
@@ -278,7 +278,7 @@ class Discovery:
     def discover_resources() -> DiscoveryResults:
         try:
             future = Discovery.executor.submit(Discovery.discovery_process)
-            return future.result()
+            return future.result(timeout=DISCOVERY_PROCESS_TIMEOUT_SEC)
         except Exception as e:
             # We've seen this and believe the process is killed due to oom kill
             # The process pool becomes not usable, so re-creating it

@@ -56,3 +56,15 @@ class PlaybooksEventHandler(ABC):
     ) -> Telemetry:
         """Return runner telemetry"""
         pass
+
+    @abstractmethod
+    def is_healthy(
+        self,
+    ) -> bool:
+        """Return if the runner is healthy"""
+        pass
+
+    @abstractmethod
+    def handle_sigint(self, sig, frame):
+        """Run pre-stop procedure"""
+        pass

@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
 
-from flask import Flask, jsonify, request
+from flask import Flask, abort, jsonify, request
 from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
-from robusta.core.model.env_vars import NUM_EVENT_THREADS, TRACE_INCOMING_REQUESTS, PORT
+from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_REQUESTS
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
 from robusta.integrations.prometheus.models import AlertManagerEvent
@@ -80,6 +80,15 @@ class Web:
     def handle_playbooks_reload():
         Web.loader.reload("reload request")
         return jsonify(success=True)
+
+    @staticmethod
+    @app.route("/healthz", methods=["GET"])
+    def healthz():
+        if Web.event_handler.is_healthy():
+            return jsonify()
+        else:
+            logging.error("Runner health check failed")
+            return abort(code=500)
 
     @staticmethod
     def _trace_incoming(api: str, incoming_request):
