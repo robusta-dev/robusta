@@ -51,6 +51,7 @@ class ActionRequestReceiver:
         self.account_id = self.event_handler.get_global_config().get("account_id")
         self.cluster_name = self.event_handler.get_global_config().get("cluster_name")
         self.auth_provider = AuthProvider()
+        self.healthy = False
 
         self.ws = websocket.WebSocketApp(
             WEBSOCKET_RELAY_ADDRESS,
@@ -77,6 +78,7 @@ class ActionRequestReceiver:
             logging.warning("relay address empty. Not initializing relay")
             return
 
+        self.healthy = True
         websocket.enableTrace(RECEIVER_ENABLE_WEBSOCKET_TRACING)
         receiver_thread = Thread(target=self.run_forever)
         receiver_thread.start()
@@ -238,7 +240,7 @@ class ActionRequestReceiver:
 
     @staticmethod
     def validate_action_request_signature(
-        action_request: ExternalActionRequest, signing_key: str
+            action_request: ExternalActionRequest, signing_key: str
     ) -> ValidationResponse:
         generated_signature = sign_action_request(action_request.body, signing_key)
         if hmac.compare_digest(generated_signature, action_request.signature):
@@ -292,7 +294,7 @@ class ActionRequestReceiver:
 
     @classmethod
     def __extract_key_and_validate(
-        cls, encrypted: str, private_key: RSAPrivateKey, body: ActionRequestBody
+            cls, encrypted: str, private_key: RSAPrivateKey, body: ActionRequestBody
     ) -> (bool, Optional[UUID]):
         try:
             plain = private_key.decrypt(

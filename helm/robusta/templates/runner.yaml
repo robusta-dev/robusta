@@ -35,8 +35,6 @@ spec:
             value: /etc/robusta/config/active_playbooks.yaml
           - name: RELEASE_NAME
             value: {{ .Release.Name | quote }}
-          - name: ENABLE_COLORED_LOGS
-            value: "true"
           - name: PROMETHEUS_ENABLED
             value: {{ .Values.enablePrometheusStack | quote}}
           - name: SEND_ADDITIONAL_TELEMETRY

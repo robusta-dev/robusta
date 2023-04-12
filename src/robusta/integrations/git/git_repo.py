@@ -12,7 +12,7 @@ from typing import Dict, List
 from robusta.core.model.env_vars import GIT_MAX_RETRIES
 
 GIT_DIR_NAME = "robusta-git"
-REPO_LOCAL_BASE_DIR = os.path.join(os.environ.get("REPO_LOCAL_BASE_DIR", "/app"), GIT_DIR_NAME)
+REPO_LOCAL_BASE_DIR = os.path.abspath(os.path.join(os.environ.get("REPO_LOCAL_BASE_DIR", "/app"), GIT_DIR_NAME))
 SSH_ROOT_DIR = os.environ.get("SSH_ROOT_DIR", "/root/.ssh")
 
 GIT_SSH_PREFIX = "git@"
