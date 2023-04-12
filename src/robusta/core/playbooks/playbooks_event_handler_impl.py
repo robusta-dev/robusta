@@ -299,11 +299,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         self,
     ) -> bool:
         sinks_registry = self.registry.get_sinks()
-        if sinks_registry and sinks_registry.get_all():
-            for sink in sinks_registry.get_all().values():
-                if not sink.is_healthy():
-                    return False
-        return True
+        if not sinks_registry or not sinks_registry.get_all():
+            return False
+        return all(sink.is_healthy() for sink in sinks_registry.get_all().values())
 
     def handle_sigint(self, sig, frame):
         logging.info("SIGINT handler called")
