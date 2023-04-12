@@ -30,3 +30,9 @@ class SinkBase:
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         raise NotImplementedError(f"write_finding not implemented for sink {self.sink_name}")
+
+    def is_healthy(self) -> bool:
+        """
+        Sink health check. Concrete sinks can implement real health checks
+        """
+        return True

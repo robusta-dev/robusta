@@ -54,14 +54,14 @@ spec:
           - name: RUNNER_VERSION
             value: {{ .Chart.AppVersion }}
           - name: CERTIFICATE
-            value: {{ .Values.runner.certificate }}    
+            value: {{ .Values.runner.certificate }}
           {{- if kindIs "string" .Values.runner.additional_env_vars }}
           {{- fail "The `additional_env_vars` string value is deprecated. Change the `additional_env_vars` value to an array" -}}
           {{- end }}
           {{- if .Values.runner.additional_env_vars }}
           {{ toYaml .Values.runner.additional_env_vars | nindent 10 }}
           {{- end }}
-        envFrom: 
+        envFrom:
         - secretRef:
             name: robusta-runner-secret
             optional: true
@@ -77,6 +77,10 @@ spec:
           - name: persistent-playbooks-storage
             mountPath: /etc/robusta/playbooks/storage
           {{- end }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
         lifecycle:
           preStop:
             exec:

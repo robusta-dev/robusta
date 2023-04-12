@@ -16,3 +16,4 @@ staging.environment.env
 .run
 dist/**/*
 generated_values.yaml
+.isort.cfg
