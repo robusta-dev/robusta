@@ -76,6 +76,10 @@ These actions can add context to more than one Kubernetes resource type
 
 .. robusta-action:: playbooks.robusta_playbooks.k8s_resource_enrichments.related_pods
 
+.. robusta-action:: playbooks.robusta_playbooks.k8s_resource_enrichments.list_resource_names
+
+.. robusta-action:: playbooks.robusta_playbooks.k8s_resource_enrichments.get_resource_yaml
+
 Event Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -24,12 +24,14 @@ class ErrorCodes(Enum):
     ACTION_UNEXPECTED_ERROR = 4700
     RESOURCE_NOT_SUPPORTED = 4701
     RESOURCE_NOT_FOUND = 4702
+    ILLEGAL_ACTION_PARAMS = 4703
 
     ALERT_MANAGER_DISCOVERY_FAILED = 5000
     ALERT_MANAGER_REQUEST_FAILED = 5001
     ADD_SILENCE_FAILED = 5002
 
     PROMETHEUS_DISCOVERY_FAILED = 5100
+
 
 class ActionException(Exception):
     def __init__(self, error: ErrorCodes, msg: Optional[str] = None):

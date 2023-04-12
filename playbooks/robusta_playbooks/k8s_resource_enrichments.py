@@ -11,12 +11,15 @@ from robusta.api import (
     ActionException,
     ActionParams,
     ErrorCodes,
+    ExecutionBaseEvent,
     FileBlock,
     JsonBlock,
     KubernetesResourceEvent,
+    ListBlock,
     MarkdownBlock,
     PodContainer,
     ResourceLoader,
+    ResourceNameLister,
     TableBlock,
     action,
     build_selector_query,
@@ -238,3 +241,26 @@ def get_resource_yaml(event: KubernetesResourceEvent):
     except Exception as exc:
         logging.error("Unexpected error occurred!")
         logging.exception(exc)
+
+
+class NamedResourcesParams(ActionParams):
+    """
+    :var kind: The k8s resource kind. Must be one of: [node,deployment,statefulset,daemonset,job,persistentvolume,persistentvolumeclaim,service,configmap,networkpolicy].
+    :var namespace: For namespaced k8s resources. List names for the specified namespace. If omitted, all namespaces will be used
+    """
+
+    kind: str
+    namespace: Optional[str]
+
+
+@action
+def list_resource_names(event: ExecutionBaseEvent, params: NamedResourcesParams):
+    """
+    List the names of the cluster resources for the given kind and namespace
+    """
+    resource_names = ResourceNameLister.list_resource_names(params.kind, params.namespace)
+    event.add_enrichment(
+        [
+            ListBlock(resource_names),
+        ],
+    )
