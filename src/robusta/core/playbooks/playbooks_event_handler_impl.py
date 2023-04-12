@@ -300,7 +300,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
     ) -> bool:
         sinks_registry = self.registry.get_sinks()
         if not sinks_registry or not sinks_registry.get_all():
-            return False
+            return True
         return all(sink.is_healthy() for sink in sinks_registry.get_all().values())
 
     def handle_sigint(self, sig, frame):
