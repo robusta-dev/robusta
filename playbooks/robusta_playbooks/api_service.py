@@ -22,9 +22,6 @@ class ApiService(BaseModel):
     conditions: List[ApiServiceConditions]
     full_json: dict
 
-    def get_json(self):
-        return self.full_json
-
     def get_yaml(self):
         # remove noisy fields
         if self.full_json.get("metadata", {}).get("managedFields", {}):
@@ -42,13 +39,12 @@ class ApiService(BaseModel):
             return None
         return available_conditions[0]
 
-    @staticmethod
-    def parse_apiservice(apiservice: dict, name: str):
+    def __init__(self, apiservice: dict, name: str):
         service = apiservice.get("spec", {}).get("service", {})
         service_name = service.get("name")
         namespace = service.get("namespace")
         conditions = apiservice.get("status", {}).get("conditions", [])
-        return ApiService(
+        super().__init__(
             name=name,
             service_name=service_name,
             service_namespace=namespace,
@@ -60,6 +56,7 @@ class ApiService(BaseModel):
 def get_api_service(name: str) -> Optional[ApiService]:
     try:
         field_selector = f"metadata.name={name}"
+        # list_api_service Can fail when creating apiservice due to old kubernetes client version
         api_services_json: V1APIServiceList = (
             ApiregistrationV1Api()
             .list_api_service(field_selector=field_selector, _preload_content=False)
@@ -73,7 +70,7 @@ def get_api_service(name: str) -> Optional[ApiService]:
             logging.info(f"Too many matching api services found.")
             return None
         api_service = api_services_json_list[0]
-        return ApiService.parse_apiservice(api_service, name=name)
+        return ApiService(apiservice=api_service, name=name)
     except Exception:
         logging.error(f"Failed getting api_services", exc_info=True)
     return None
@@ -97,7 +94,7 @@ def get_apiservice_yaml_blocks(apiservice: ApiService) -> List[BaseBlock]:
         apiservice_yaml = apiservice.get_yaml()
         has_service = apiservice.service_name and apiservice.service_namespace
         error_text = (
-            f"The APIServer was extended with APIs from `{apiservice.service_name}/{apiservice.service_namespace}` which has an error."
+            f"The APIServer was extended with APIs from `{apiservice.service_name}/{apiservice.service_namespace}` which has an error. "
             if has_service
             else f"The APIService {apiservice.name} has an error. "
         )
