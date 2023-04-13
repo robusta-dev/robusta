@@ -7,6 +7,8 @@ from kubernetes import client
 from kubernetes.client.models.v1_service import V1Service
 from robusta.api import (
     ExecutionBaseEvent,
+    MarkdownBlock,
+    PrometheusBlock,
     PrometheusDateRange,
     PrometheusDuration,
     PrometheusKubernetesAlert,
@@ -15,7 +17,6 @@ from robusta.api import (
     action,
     run_prometheus_query,
 )
-from robusta.core.reporting.blocks import MarkdownBlock, PrometheusBlock
 
 
 def parse_timestamp_string(date_string: str) -> Optional[datetime]:
@@ -73,18 +74,17 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
         )
 
 
-def get_duplicate_kubelet_msg(rule_group) -> str:
+def get_duplicate_kubelet_msg(rule_group: Optional[str]) -> Optional[str]:
     """
     checks if there are multiple kubelets and
     """
-    NO_MESSAGE = ""
     if not rule_group or "kubelet" not in rule_group:
-        return NO_MESSAGE
+        return None
     labels_selectors = "k8s-app=kubelet, app.kubernetes.io/managed-by=prometheus-operator"
     v1 = client.CoreV1Api()
     kubelet_services: List[V1Service] = v1.list_service_for_all_namespaces(label_selector=labels_selectors).items
     if not kubelet_services or len(kubelet_services) <= 1:
-        return NO_MESSAGE
+        return None
     # there is more than one kubelet
     kubelet_names_string = ", ".join(
         [f"{kubelet.metadata.namespace}/{kubelet.metadata.name}" for kubelet in kubelet_services]
