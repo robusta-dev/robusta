@@ -1,4 +1,3 @@
-import json
 import logging
 from math import ceil
 from typing import Optional

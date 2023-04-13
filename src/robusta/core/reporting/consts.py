@@ -1,4 +1,3 @@
-import logging
 from enum import Enum
 
 SYNC_RESPONSE_SINK = "robusta-synchronized-response-sink"

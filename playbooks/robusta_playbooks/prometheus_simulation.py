@@ -12,7 +12,7 @@ class PrometheusAlertParams(ActionParams):
     :var deployment_name: Deployment name, for a simulated deployment alert.
     :var container_name: Container name, for adding a label on container.
     :var job_name: Job name, for a simulated Job alert.
-    :var hpa: Job name, for a simulated HorizontalPodAutoscaler alert.
+    :var hpa: HPA name, for a simulated HorizontalPodAutoscaler alert.
     :var namespace: Pod namespace, for a simulated pod alert.
     :var service: service name, for additional prometheus labels.
     :var status: Simulated alert status. firing/resolved.
