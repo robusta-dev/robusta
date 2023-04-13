@@ -56,6 +56,7 @@ lightActions:
 - prometheus_alert
 - create_pvc_snapshot
 - resource_events_enricher
+- popeye_scan
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
@@ -301,7 +302,16 @@ platformPlaybooks:
   - job_pod_enricher: {}
   sinks:
     - "robusta_ui_sink"
-
+- triggers:
+  - on_schedule:
+      fixed_delay_repeat:
+        repeat: -1 
+        seconds_delay: 86400 # daily    
+  actions:
+  - popeye_scan: {}
+  sinks:
+    - "robusta_ui_sink"
+    
 # parameters for the robusta forwarder deployment
 kubewatch:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.1
