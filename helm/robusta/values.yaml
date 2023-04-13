@@ -184,6 +184,12 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+      alert_name: KubeHpaReplicasMismatch
+  actions:
+  - hpa_mismatch_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
       alert_name: KubeJobFailed
   - on_prometheus_alert:
       alert_name: KubeJobCompletion
