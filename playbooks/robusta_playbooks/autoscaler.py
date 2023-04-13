@@ -94,7 +94,6 @@ def get_missing_metrics_server_message() -> Optional[str]:
     if has_apiservice is None:  # Error with kubernetes cli getting/parsing the apiservice
         return NO_MESSAGE
     has_deployment = has_metrics_server_deployment()
-    logging.warning(f"{has_apiservice} {has_deployment}")
     if has_apiservice and has_deployment:
         return NO_MESSAGE
     # only the apiservice is missing
