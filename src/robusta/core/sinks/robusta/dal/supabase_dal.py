@@ -120,8 +120,10 @@ class SupabaseDal:
         db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
         res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
         if res.get("status_code") not in [200, 201]:
-            logging.error(f"Failed to persist scan {block.scan_id} error: {res.get('data')}")
+            msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
+            logging.error(msg)
             self.handle_supabase_error()
+            raise Exception(msg)
 
         self.client.postgrest.session.headers.update(self.client._get_auth_headers())
         tasks = [self.event_loop.create_task(self.client.rpc("insert_scan_meta", {
@@ -137,11 +139,10 @@ class SupabaseDal:
         res = tasks[0].result()
 
         if res.status_code not in [200, 201, 204]:
-            logging.error(
-                f"Failed to persist scan meta {block.scan_id} error: {res.message}"
-            )
+            msg = f"Failed to persist scan meta {block.scan_id} error: {res.message}"
+            logging.error(msg)
             self.handle_supabase_error()
-            return None
+            raise Exception(msg)
 
     def persist_finding(self, finding: Finding):
 
