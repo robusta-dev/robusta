@@ -194,6 +194,12 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+      alert_name: KubeAggregatedAPIDown
+  actions:
+  - api_service_status_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
       alert_name: KubeNodeNotReady
   actions:
   - node_allocatable_resources_enricher: {}
