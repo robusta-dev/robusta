@@ -76,6 +76,10 @@ These actions can add context to more than one Kubernetes resource type
 
 .. robusta-action:: playbooks.robusta_playbooks.k8s_resource_enrichments.related_pods
 
+.. robusta-action:: playbooks.robusta_playbooks.k8s_resource_enrichments.list_resource_names
+
+.. robusta-action:: playbooks.robusta_playbooks.k8s_resource_enrichments.get_resource_yaml
+
 Event Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -116,3 +120,5 @@ These actions can selectively silence Prometheus alerts. They only work with the
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.name_silencer
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.silence_alert
+
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.pod_status_silencer

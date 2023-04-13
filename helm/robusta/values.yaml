@@ -56,6 +56,8 @@ lightActions:
 - prometheus_alert
 - create_pvc_snapshot
 - resource_events_enricher
+- delete_job
+- list_resource_names
 - popeye_scan
 
 # install prometheus, alert-manager, and grafana along with Robusta?
@@ -124,11 +126,11 @@ builtinPlaybooks:
       restart_reason: "CrashLoopBackOff"
   actions:
   - report_crash_loop: {}
+
 - triggers:
-  - on_pod_update: {}
+  - on_image_pull_backoff: {}
   actions:
-  - image_pull_backoff_reporter:
-      rate_limit: 3600
+  - image_pull_backoff_reporter: {}
 
 # playbooks for non-prometheus based monitoring that use prometheus for enrichment
 - triggers:
@@ -305,13 +307,13 @@ platformPlaybooks:
 - triggers:
   - on_schedule:
       fixed_delay_repeat:
-        repeat: -1 
-        seconds_delay: 86400 # daily    
+        repeat: -1
+        seconds_delay: 86400 # daily
   actions:
   - popeye_scan: {}
   sinks:
     - "robusta_ui_sink"
-    
+
 # parameters for the robusta forwarder deployment
 kubewatch:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.1
@@ -323,6 +325,7 @@ kubewatch:
       memory: 512Mi
     limits:
       cpu: ~
+  additional_env_vars: []
   tolerations: []
   annotations: {}
   nodeSelector: ~
@@ -404,7 +407,7 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
-      retention: 14d
+      retention: 15d
       # we set a value slightly lower than the 100Gi below
       # the retentionSize uses the suffix GB but it is really Gi units
       # that is, the retentionSize is measured in base2 units just like Gi, Mi, etc

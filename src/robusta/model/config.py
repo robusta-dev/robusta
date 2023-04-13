@@ -202,7 +202,7 @@ class Registry:
         return self._telemetry
 
     def set_global_config(self, config: Dict):
-        self.global_config = config
+        self._global_config = config
 
     def get_global_config(self) -> Dict:
-        return self.global_config
+        return self._global_config

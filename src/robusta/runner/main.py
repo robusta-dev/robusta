@@ -1,3 +1,5 @@
+import signal
+
 from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
     ENABLE_TELEMETRY,
@@ -36,6 +38,7 @@ def main():
         logging.info("Telemetry is disabled.")
 
     Web.init(event_handler, loader)
+    signal.signal(signal.SIGINT, event_handler.handle_sigint)
     Web.run()  # blocking
     loader.close()
 

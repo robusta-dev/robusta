@@ -21,15 +21,16 @@ from robusta.api import (
     TableBlock,
     VideoEnricherParams,
     VideoLink,
+    RendererType,
     action,
     get_job_all_pods,
     get_resource_events_table,
     list_pods_using_selector,
+    parse_kubernetes_datetime_to_ms,
+    get_event_timestamp, 
+    get_resource_events
+    
 )
-from robusta.core.reporting.custom_rendering import RendererType
-from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
-from src.robusta.core.playbooks.common import get_event_timestamp, get_resource_events
-
 
 class ExtendedEventEnricherParams(EventEnricherParams):
     """
@@ -56,10 +57,10 @@ def event_report(event: EventChangeEvent):
         finding_type=FindingType.ISSUE,
         aggregation_key=f"Kubernetes {event.obj.type} Event",
         subject=FindingSubject(
-            k8s_obj.name,
-            FindingSubjectType.from_kind(k8s_obj.kind),
-            k8s_obj.namespace,
-            KubeObjFindingSubject.get_node_name(k8s_obj),
+            name=k8s_obj.name,
+            subject_type=FindingSubjectType.from_kind(k8s_obj.kind),
+            namespace=k8s_obj.namespace,
+            node=KubeObjFindingSubject.get_node_name(k8s_obj),
         ),
     )
     event.add_finding(finding)

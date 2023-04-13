@@ -14,12 +14,13 @@ import yaml
 
 from robusta.cli.utils import (
     PLAYBOOKS_DIR,
+    _build_exec_command,
     exec_in_robusta_runner,
     fetch_runner_logs,
     get_package_name,
     get_runner_pod,
     log_title,
-    namespace_to_kubectl,
+    namespace_to_kubectl
 )
 
 PLAYBOOKS_MOUNT_LOCATION = "/etc/robusta/playbooks/storage"
@@ -187,10 +188,17 @@ def list_dirs(
             f"kubectl exec -it {namespace_to_kubectl(namespace)} {runner_pod} -c runner "
             f"-- bash -c 'ls {PLAYBOOKS_MOUNT_LOCATION}'",
             shell=True,
+            stderr=subprocess.STDOUT,
         )
 
         log_title(f"Stored playbooks directories: \n { ls_res.decode('utf-8')}")
 
+    except subprocess.CalledProcessError as e:
+        if "no such file or directory" in str(e.output).lower():
+            log_title(f"Could not find any stored playbooks.")
+            return
+
+        typer.echo(f"Failed to list deployed playbooks {traceback.format_exc()}")
     except Exception:
         typer.echo(f"Failed to list deployed playbooks {traceback.format_exc()}")
 
@@ -327,13 +335,29 @@ def trigger(
     # action_params = " ".join([f"-F '{p}'" for p in param])
     req_body = {"action_name": action_name, "action_params": action_params}
 
-    _post_in_runner_pod(
-        namespace=namespace,
-        api_path="trigger",
-        req_body=req_body,
-        req_name="trigger action",
-        dry_run=dry_run,
+    cmd = (
+        f"curl -X POST http://localhost:5000/api/trigger "
+        f"-H 'Content-Type: application/json' "
+        f"-d '{json.dumps(req_body)}'"
     )
+
+    if dry_run:
+        typer.echo("For a local runner:")
+        typer.echo(cmd)
+        typer.echo("For your cluster:")
+        typer.echo(" ".join(_build_exec_command(cmd, namespace)))
+        return
+
+    with fetch_runner_logs(namespace=namespace):
+        exec_in_robusta_runner(
+            cmd,
+            namespace=namespace,
+            tries=3,
+            error_msg=f"Cannot trigger playbook - usually this means Robusta just started. Will try again",
+            dry_run=False,  # dry_run handled separately above
+        )
+        typer.echo("\n")
+
     log_title("Done!")
 
 

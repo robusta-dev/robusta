@@ -18,6 +18,7 @@ from robusta.model.config import Registry
 from robusta.model.playbook_action import PlaybookAction
 from robusta.runner.telemetry import Telemetry
 from robusta.utils.error_codes import ActionException, ErrorCodes
+from robusta.utils.stack_tracer import StackTracer
 
 
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
@@ -234,7 +235,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     ]
                 )
                 execution_event.response = self.__error_resp(
-                    ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.name, ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.value, log=False)
+                    ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.name, ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.value, log=False
+                )
             except Exception:
                 logging.error(
                     f"Failed to execute action {action.action_name} {to_safe_str(action_params)}", exc_info=True
@@ -242,7 +244,6 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(
                     ErrorCodes.ACTION_UNEXPECTED_ERROR.name, ErrorCodes.ACTION_UNEXPECTED_ERROR.value, log=False
                 )
-                execution_event.add_enrichment([MarkdownBlock(text=f"Oops... Error processing {action.action_name}")])
         return execution_event.response
 
     @classmethod
@@ -286,10 +287,23 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     logging.error(f"Failed to publish finding to sink {sink_name}", exc_info=True)
 
     def get_global_config(self) -> dict:
-        return self.registry.get_playbooks().get_global_config()
+        return self.registry.get_global_config()
 
     def get_light_actions(self) -> List[str]:
         return self.registry.get_light_actions()
 
     def get_telemetry(self) -> Telemetry:
         return self.registry.get_telemetry()
+
+    def is_healthy(
+        self,
+    ) -> bool:
+        sinks_registry = self.registry.get_sinks()
+        if not sinks_registry or not sinks_registry.get_all():
+            return True
+        return all(sink.is_healthy() for sink in sinks_registry.get_all().values())
+
+    def handle_sigint(self, sig, frame):
+        logging.info("SIGINT handler called")
+        if not self.is_healthy():  # dump stuck trace only when the runner is unhealthy
+            StackTracer.dump()

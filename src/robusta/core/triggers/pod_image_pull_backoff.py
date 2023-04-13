@@ -7,18 +7,14 @@ from robusta.integrations.kubernetes.base_triggers import K8sTriggerEvent
 from robusta.utils.rate_limiter import RateLimiter
 
 
-class PodCrashLoopTrigger(PodUpdateTrigger):
+class PodImagePullBackoffTrigger(PodUpdateTrigger):
     """
     :var rate_limit: Limit firing to once every `rate_limit` seconds
-    :var restart_reason: Limit restart loops for this specific reason. If omitted, all restart reasons will be included.
-    :var restart_count: Fire only after the specified number of restarts # Depricated
     :var fire_delay: Fire only if the pod is running for more than fire_delay seconds.
     """
 
     rate_limit: int = 14400
-    restart_reason: str = None
-    restart_count: int = 2
-    fire_delay: int = 180
+    fire_delay: int = 120
 
     def __init__(
         self,
@@ -26,9 +22,7 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
         namespace_prefix: str = None,
         labels_selector: str = None,
         rate_limit: int = 14400,
-        restart_reason: str = None,
-        restart_count: int = 2,
-        fire_delay: int = 0,
+        fire_delay: int = 120,
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -36,8 +30,6 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
             labels_selector=labels_selector,
         )
         self.rate_limit = rate_limit
-        self.restart_reason = restart_reason
-        self.restart_count = restart_count
         self.fire_delay = fire_delay
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
@@ -54,7 +46,6 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
             return False
 
         pod = exec_event.get_pod()
-
         run_time_seconds = 0
 
         # startTime does not exist every time pod update is fired, like when the pod is just created
@@ -63,27 +54,26 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
                 datetime.utcnow().timestamp() - parse_kubernetes_datetime_to_ms(pod.status.startTime) / 1000
             )
 
-        # sometimes pods can fire falsely on pod startup
-        # due to not loading a needed component
+        # sometimes Image pull backoff fires falsely on pod startup
+        # due to not loading a needed component like a secret before loading the image
         if self.fire_delay > run_time_seconds:
             return False
 
-        all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
-        crashing = [
+        statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
+        is_backoff = [
             container_status
-            for container_status in all_statuses
+            for container_status in statuses
             if container_status.state.waiting is not None
-            and (self.restart_reason is None or self.restart_reason in container_status.state.waiting.reason)
+            and container_status.state.waiting.reason == "ImagePullBackOff"
         ]
 
-        if not crashing:
+        if not is_backoff:
             return False
-
         # Perform a rate limit for this pod according to the rate_limit parameter
         name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name
         namespace = pod.metadata.namespace
         return RateLimiter.mark_and_test(
-            f"PodCrashLoopTrigger_{playbook_id}",
+            f"PodImagePullBackoffTrigger_{playbook_id}",
             namespace + ":" + name,
             self.rate_limit,
         )
