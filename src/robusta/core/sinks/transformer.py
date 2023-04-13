@@ -257,7 +257,5 @@ class Transformer:
 
             writeSectionHeader(pdf, kind)
             writeTable(pdf, rows)
-
-
                         
-        return FileBlock(f"{title} Report.pdf", pdf.output('', 'S'))
+        return FileBlock(f"{title}.pdf", pdf.output('', 'S'))
