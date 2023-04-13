@@ -11,14 +11,14 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
     """
     :var rate_limit: Limit firing to once every `rate_limit` seconds
     :var restart_reason: Limit restart loops for this specific reason. If omitted, all restart reasons will be included.
-    :var restart_count: Fire only after the specified number of restarts
-    :var fire_delay: Limit firing for a pod that has run atleast `fire_delay` seconds
+    :var restart_count: Fire only after the specified number of restarts # Depricated
+    :var fire_delay: Fire only if the pod is running for more than fire_delay seconds.
     """
 
     rate_limit: int = 14400
     restart_reason: str = None
     restart_count: int = 2
-    fire_delay: int = 120
+    fire_delay: int = 180
 
     def __init__(
         self,
@@ -73,7 +73,6 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
             container_status
             for container_status in all_statuses
             if container_status.state.waiting is not None
-            and container_status.restartCount >= self.restart_count  # report only after the restart_count restart
             and (self.restart_reason is None or self.restart_reason in container_status.state.waiting.reason)
         ]
 

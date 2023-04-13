@@ -52,13 +52,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
 
     # Extract pod name and namespace
     pod_name = pod.metadata.name
-    replicaset_name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name
     namespace = pod.metadata.namespace
-
-    if action_params.rate_limit:
-        logging.info(
-            "The param rate_limit deprecated for action image_pull_backoff_reporter, add rate limit to trigger"
-        )
 
     # Extract the error message and reason for the image pull back for every container with the ImagePullBackOff status.
     # Put all the relevant information into Markdown Blocks
