@@ -2,17 +2,20 @@ import logging
 from typing import List
 
 from hikaru.model import Pod, PodList
-
 from robusta.api import (
+    ActionParams,
     BaseBlock,
+    FileBlock,
     Finding,
     FindingSeverity,
     FindingSource,
     KubeObjFindingSubject,
     KubernetesDiffBlock,
+    MarkdownBlock,
     NodeChangeEvent,
     NodeEvent,
     ResourceGraphEnricherParams,
+    RobustaPod,
     TableBlock,
     action,
     create_node_graph_enrichment,
@@ -29,6 +32,27 @@ def pod_row(pod: Pod) -> List[str]:
 
 
 @action
+def node_pods_capacity_enricher(event: NodeEvent):
+    node = event.get_node()
+    if not node:
+        logging.error(f"node_pods_capacity_enricher was called on event without node: {event}")
+        return
+
+    block_list: List[BaseBlock] = []
+    pod_list: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
+
+    # the capacity limit is only relevant to currently running pods, not 'pending', 'succeeded' or 'failed'.
+    running_pod_count = len([pod for pod in pod_list.items if pod.status.phase.lower() == "running"])
+    pod_capacity = node.status.capacity.get("pods")
+    capacity_string = f" and the maximum capacity for pods on this node is {pod_capacity}" if pod_capacity else ""
+    pod_capacity_formatted_message = (
+        f"*On the node {node.metadata.name}, there are currently {running_pod_count} pods running{capacity_string}.*"
+    )
+    block_list.append(MarkdownBlock(pod_capacity_formatted_message))
+    event.add_enrichment(block_list)
+
+
+@action
 def node_running_pods_enricher(event: NodeEvent):
     """
     Enrich the finding with pods running on this node, along with the 'Ready' status of each pod.
@@ -40,9 +64,10 @@ def node_running_pods_enricher(event: NodeEvent):
 
     block_list: List[BaseBlock] = []
     pod_list: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
+
     effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
     block_list.append(
-        TableBlock(effected_pods_rows, ["namespace", "name", "ready"], table_name="Pods running on the node")
+        TableBlock(effected_pods_rows, ["namespace", "name", "ready"], table_name=f"Pods running on the node")
     )
     event.add_enrichment(block_list)
 
@@ -84,6 +109,8 @@ def node_status_enricher(event: NodeEvent):
         logging.error(f"node_status_enricher was called on event without node : {event}")
         return
 
+    logging.info(f"node_status_enricher is depricated, use status_enricher instead")
+
     event.add_enrichment(
         [
             TableBlock(
@@ -93,6 +120,22 @@ def node_status_enricher(event: NodeEvent):
             ),
         ]
     )
+
+
+@action
+def node_dmesg_enricher(event: NodeEvent):
+    """
+    Gets the dmesg from a node
+    """
+    node = event.get_node()
+    if not node:
+        logging.error(f"node_dmesg_enricher was called on event without node : {event}")
+        return
+    exec_result = RobustaPod.exec_on_node(pod_name="dmesg_pod", node_name=node.metadata.name, cmd="dmesg")
+    if exec_result:
+        event.add_enrichment(
+            [FileBlock(f"dmesg.log", exec_result.encode())],
+        )
 
 
 @action
