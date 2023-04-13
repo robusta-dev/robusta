@@ -268,7 +268,7 @@ def list_resource_names(event: ExecutionBaseEvent, params: NamedResourcesParams)
 
 class StatusEnricherParams(ActionParams):
     """
-    :var show_message: shows the message attached to each condition
+    :var show_details: shows the message attached to each condition
 
     """
 
@@ -286,9 +286,7 @@ def status_enricher(event: KubernetesResourceEvent, params: StatusEnricherParams
         logging.error(f"status_enricher was called on event without a resource : {event}")
         return
     if not resource.status.conditions:
-        event.add_enrichment(
-            [MarkdownBlock(f"*No status/conditions to report for {resource.kind} {resource.metadata.name}*")]
-        )
+        return
     headers = ["Type", "Status"]
     if params.show_details:
         headers.append("Message")

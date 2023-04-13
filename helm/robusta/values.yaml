@@ -212,8 +212,8 @@ builtinPlaybooks:
   actions:
   - node_pods_capacity_enricher: {}
   - alert_explanation_enricher:
-      alert_explanation: "You are approaching the limit of how many pods you can run on your node. This in and of its self is not an error but may impact the future scheduling of pods on this node."
-      recommended_resolution: "If you would like to increase the pod density check your cluster providers documentation or add more nodes to increase cluster wide capacity."
+      alert_explanation: "The node is approaching the maximum number of scheduled pods."
+      recommended_resolution: "Verify that you defined proper resource requests for your workloads. If pods cannot be scheduled, add more nodes to your cluster."
 
 - triggers:
   - on_prometheus_alert:

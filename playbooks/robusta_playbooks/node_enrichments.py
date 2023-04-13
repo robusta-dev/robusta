@@ -132,7 +132,6 @@ def node_dmesg_enricher(event: NodeEvent):
         logging.error(f"node_dmesg_enricher was called on event without node : {event}")
         return
     exec_result = RobustaPod.exec_on_node(pod_name="dmesg_pod", node_name=node.metadata.name, cmd="dmesg")
-    logging.warning(exec_result)
     if exec_result:
         event.add_enrichment(
             [FileBlock(f"dmesg.log", exec_result.encode())],
