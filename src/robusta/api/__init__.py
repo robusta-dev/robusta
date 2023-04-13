@@ -127,6 +127,7 @@ from robusta.core.reporting import (
     KubernetesFieldsBlock,
     ListBlock,
     MarkdownBlock,
+    PrometheusBlock,
     TableBlock,
     VideoLink,
 )
