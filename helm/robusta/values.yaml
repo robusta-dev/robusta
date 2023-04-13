@@ -203,6 +203,8 @@ builtinPlaybooks:
       alert_name: KubeJobFailed
   - on_prometheus_alert:
       alert_name: KubeJobCompletion
+  - on_prometheus_alert:
+      alert_name: KubeJobNotCompleted
   actions:
   - job_info_enricher: {}
   - job_events_enricher: {}
@@ -235,12 +237,46 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+      alert_name: KubeNodeUnreachable
+  actions:
+  - resource_events_enricher: {}
+  - node_status_enricher: {}
+
+# Prometheus Statefulset playbooks
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeStatefulSetReplicasMismatch
+  actions:
+  - resource_events_enricher:
+      dependent_pod_mode: true
+  - statefulset_replicas_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeStatefulSetUpdateNotRolledOut
+  actions:
+  - related_pods: {}
+  - statefulset_replicas_enricher: {}
+
+
+# Prometheus Daemonset playbooks
+- triggers:
+  - on_prometheus_alert:
+      alert_name: KubeDaemonSetRolloutStuck
+  actions:
+  - resource_events_enricher: {}
+  - related_pods: {}
+  - daemonset_status_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
       alert_name: KubernetesDaemonsetMisscheduled
   - on_prometheus_alert:
       alert_name: KubeDaemonSetMisScheduled
   actions:
   - daemonset_status_enricher: {}
   - daemonset_misscheduled_analysis_enricher: {}
+
 - triggers:
   - on_prometheus_alert:
       alert_name: HostHighCpuLoad
