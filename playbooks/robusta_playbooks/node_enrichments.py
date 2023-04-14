@@ -31,6 +31,17 @@ def pod_row(pod: Pod) -> List[str]:
     ]
 
 
+def has_resource_request(pod: Pod, resource_type: str) -> bool:
+    for container in pod.spec.containers:
+        try:
+            has_request = container.object_at_path(["resources", "requests", resource_type])
+            if has_request:
+                return True
+        except Exception:
+            pass  # no requests on container, object_at_path throws error
+    return False
+
+
 @action
 def node_pods_capacity_enricher(event: NodeEvent):
     node = event.get_node()
@@ -41,13 +52,19 @@ def node_pods_capacity_enricher(event: NodeEvent):
     block_list: List[BaseBlock] = []
     pod_list: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
 
+    running_pods = [pod for pod in pod_list.items if pod.status.phase.lower() == "running"]
+    pods_with_cpu_request = [pod for pod in running_pods if not has_resource_request(pod, "cpu")]
+    pods_with_memory_request = [pod for pod in running_pods if not has_resource_request(pod, "memory")]
+    requests_string = ""
+    if pods_with_cpu_request:
+        requests_string += f"{len(pods_with_cpu_request)} pods don't have cpu request. "
+    if pods_with_memory_request:
+        requests_string += f"{len(pods_with_memory_request)} pods don't have memory request. "
     # the capacity limit is only relevant to currently running pods, not 'pending', 'succeeded' or 'failed'.
-    running_pod_count = len([pod for pod in pod_list.items if pod.status.phase.lower() == "running"])
+    running_pod_count = len(running_pods)
     pod_capacity = node.status.capacity.get("pods")
     capacity_string = f" and the maximum capacity for pods on this node is {pod_capacity}" if pod_capacity else ""
-    pod_capacity_formatted_message = (
-        f"*On the node {node.metadata.name}, there are currently {running_pod_count} pods running{capacity_string}.*"
-    )
+    pod_capacity_formatted_message = f"*On the node {node.metadata.name}, there are currently {running_pod_count} pods running{capacity_string}.*\n{requests_string}"
     block_list.append(MarkdownBlock(pod_capacity_formatted_message))
     event.add_enrichment(block_list)
 
