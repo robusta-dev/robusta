@@ -56,6 +56,7 @@ lightActions:
 - prometheus_alert
 - create_pvc_snapshot
 - resource_events_enricher
+- krr_scan
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
