@@ -38,12 +38,19 @@ For faster builds that are running on Google Cloud
 Running Robusta locally
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is never necessary, but you might find it more convenient to run Robusta locally and not in cluster.
+A very convenient way to develop Robusta is to run it locally:
 
 1. ``git clone`` the source code
-2. ``poetry install``
-3. ``poetry run python3 -m robusta.runner.main``
-4. Consider using `telepresence <https://www.telepresence.io/>`_ to connect your local Robusta process with in-cluster services like Prometheus.
+2. Run ``./run_runner_locally.sh``
+
+.. note::
+
+    You must have a cluster with Robusta installed for this to work. The runner needs a configuration file to run and it extracts it from your existing cluster.
+
+Additional tips:
+* If you want to develop playbooks locally, configure ``playbookRepos`` with a local path to your playbooks directory.
+* Your local runner wont incoming Kubernetes changes or Prometheus alerts.
+* For instructions on simulating Prometheus alerts, try ``poetry run robusta playbooks trigger --dry-run prometheus_alert alert_name=KubePodCrashLooping namespace=default pod_name=example-pod``
 
 Running Robusta cli locally
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

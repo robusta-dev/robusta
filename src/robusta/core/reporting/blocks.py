@@ -3,11 +3,12 @@
 # 1. We use pydantic and not dataclasses so that field types are validated
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
+import json
 import textwrap
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Optional, Sequence
 from datetime import datetime
-import json
+from typing import Any, Callable, Dict, List, Optional, Sequence
+
 import hikaru
 from hikaru import DiffDetail, DiffType
 from hikaru.model import HikaruDocumentBase
@@ -20,10 +21,11 @@ except ImportError:
     def tabulate(*args, **kwargs):
         raise ImportError("Please install tabulate to use the TableBlock")
 
-from robusta.core.reporting.consts import ScanType
+
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.core.model.env_vars import PRINTED_TABLE_MAX_WIDTH
 from robusta.core.reporting.base import BaseBlock
+from robusta.core.reporting.consts import ScanType
 from robusta.core.reporting.custom_rendering import render_value
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
@@ -390,18 +392,19 @@ class PrometheusBlock(BaseBlock):
 
 
 class ScanReportRow(BaseModel):
-    scan_id: str # UUID
+    scan_id: str  # UUID
     namespace: str
     scan_type: ScanType
     name: str
     kind: str
     container: str
-    content: list[Any] # scan result data
+    content: List[Any]  # scan result data
     priority: float
+
 
 class ScanReportBlock(BaseBlock):
     title: str
-    scan_id: str # UUID
+    scan_id: str  # UUID
     type: ScanType
     start_time: datetime
     end_time: datetime
@@ -410,7 +413,6 @@ class ScanReportBlock(BaseBlock):
     config: str
     pdf_scan_row_content_format: Callable[[ScanReportRow], str] = lambda row: json.dumps(row.content)
     pdf_scan_row_priority_format: Callable[[float], str] = lambda priority: str(priority)
-
 
     def grade(self):
         score = int(self.score)
@@ -425,6 +427,4 @@ class ScanReportBlock(BaseBlock):
         elif score >= 50:
             return "E"
         else:
-            return "F" 
-        
-  
+            return "F"

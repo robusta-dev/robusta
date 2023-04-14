@@ -16,8 +16,10 @@ from hikaru.model import (
     HorizontalPodAutoscaler,
     Job,
     Namespace,
+    NetworkPolicy,
     Node,
     PersistentVolume,
+    PersistentVolumeClaim,
     Pod,
     ReplicaSet,
     Service,
@@ -33,8 +35,10 @@ from hikaru.model.rel_1_16.v1 import Event as v1Event
 from hikaru.model.rel_1_16.v1 import HorizontalPodAutoscaler as v1HorizontalPodAutoscaler
 from hikaru.model.rel_1_16.v1 import Job as v1Job
 from hikaru.model.rel_1_16.v1 import Namespace as v1Namespace
+from hikaru.model.rel_1_16.v1 import NetworkPolicy as v1NetworkPolicy
 from hikaru.model.rel_1_16.v1 import Node as v1Node
 from hikaru.model.rel_1_16.v1 import PersistentVolume as v1PersistentVolume
+from hikaru.model.rel_1_16.v1 import PersistentVolumeClaim as v1PersistentVolumeClaim
 from hikaru.model.rel_1_16.v1 import Pod as v1Pod
 from hikaru.model.rel_1_16.v1 import ReplicaSet as v1ReplicaSet
 from hikaru.model.rel_1_16.v1 import Service as v1Service
@@ -49,8 +53,10 @@ from hikaru.model.rel_1_16.v2beta1 import Event as v2beta1Event
 from hikaru.model.rel_1_16.v2beta1 import HorizontalPodAutoscaler as v2beta1HorizontalPodAutoscaler
 from hikaru.model.rel_1_16.v2beta1 import Job as v2beta1Job
 from hikaru.model.rel_1_16.v2beta1 import Namespace as v2beta1Namespace
+from hikaru.model.rel_1_16.v2beta1 import NetworkPolicy as v2beta1NetworkPolicy
 from hikaru.model.rel_1_16.v2beta1 import Node as v2beta1Node
 from hikaru.model.rel_1_16.v2beta1 import PersistentVolume as v2beta1PersistentVolume
+from hikaru.model.rel_1_16.v2beta1 import PersistentVolumeClaim as v2beta1PersistentVolumeClaim
 from hikaru.model.rel_1_16.v2beta1 import Pod as v2beta1Pod
 from hikaru.model.rel_1_16.v2beta1 import ReplicaSet as v2beta1ReplicaSet
 from hikaru.model.rel_1_16.v2beta1 import Service as v2beta1Service
@@ -65,8 +71,10 @@ from hikaru.model.rel_1_16.v2beta2 import Event as v2beta2Event
 from hikaru.model.rel_1_16.v2beta2 import HorizontalPodAutoscaler as v2beta2HorizontalPodAutoscaler
 from hikaru.model.rel_1_16.v2beta2 import Job as v2beta2Job
 from hikaru.model.rel_1_16.v2beta2 import Namespace as v2beta2Namespace
+from hikaru.model.rel_1_16.v2beta2 import NetworkPolicy as v2beta2NetworkPolicy
 from hikaru.model.rel_1_16.v2beta2 import Node as v2beta2Node
 from hikaru.model.rel_1_16.v2beta2 import PersistentVolume as v2beta2PersistentVolume
+from hikaru.model.rel_1_16.v2beta2 import PersistentVolumeClaim as v2beta2PersistentVolumeClaim
 from hikaru.model.rel_1_16.v2beta2 import Pod as v2beta2Pod
 from hikaru.model.rel_1_16.v2beta2 import ReplicaSet as v2beta2ReplicaSet
 from hikaru.model.rel_1_16.v2beta2 import Service as v2beta2Service
@@ -98,6 +106,8 @@ LOADERS_MAPPINGS = {
     "namespace": (False, Namespace.readNamespace),
     "serviceaccount": (True, ServiceAccount.readNamespacedServiceAccount),
     "persistentvolume": (False, PersistentVolume.readPersistentVolume),
+    "persistentvolumeclaim": (True, PersistentVolumeClaim.readNamespacedPersistentVolumeClaim),
+    "networkpolicy": (True, NetworkPolicy.readNamespacedNetworkPolicy),
     "configmap": (True, ConfigMap.readNamespacedConfigMap),
 }
 
@@ -140,6 +150,8 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             Namespace,
             ServiceAccount,
             PersistentVolume,
+            PersistentVolumeClaim,
+            NetworkPolicy,
             ConfigMap,
         ]
     ] = None
@@ -162,6 +174,8 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             Namespace,
             ServiceAccount,
             PersistentVolume,
+            PersistentVolumeClaim,
+            NetworkPolicy,
             ConfigMap,
         ],
         named_sinks: List[str],
@@ -188,6 +202,8 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             Namespace,
             ServiceAccount,
             PersistentVolume,
+            PersistentVolumeClaim,
+            NetworkPolicy,
             ConfigMap,
         ]
     ]:
@@ -229,8 +245,10 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             v1Event,
             v1HorizontalPodAutoscaler,
             v1Namespace,
+            v1NetworkPolicy,
             v1Node,
             v1PersistentVolume,
+            v1PersistentVolumeClaim,
             v1ReplicaSet,
             v1Service,
             v1ServiceAccount,
@@ -242,8 +260,10 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             v2beta1Event,
             v2beta1HorizontalPodAutoscaler,
             v2beta1Namespace,
+            v2beta1NetworkPolicy,
             v2beta1Node,
             v2beta1PersistentVolume,
+            v2beta1PersistentVolumeClaim,
             v2beta1ReplicaSet,
             v2beta1Service,
             v2beta1ServiceAccount,
@@ -255,8 +275,10 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             v2beta2Event,
             v2beta2HorizontalPodAutoscaler,
             v2beta2Namespace,
+            v2beta2NetworkPolicy,
             v2beta2Node,
             v2beta2PersistentVolume,
+            v2beta2PersistentVolumeClaim,
             v2beta2ReplicaSet,
             v2beta2Service,
             v2beta2ServiceAccount,
@@ -275,8 +297,10 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             v1Event,
             v1HorizontalPodAutoscaler,
             v1Namespace,
+            v1NetworkPolicy,
             v1Node,
             v1PersistentVolume,
+            v1PersistentVolumeClaim,
             v1ReplicaSet,
             v1Service,
             v1ServiceAccount,
@@ -288,8 +312,10 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             v2beta1Event,
             v2beta1HorizontalPodAutoscaler,
             v2beta1Namespace,
+            v2beta1NetworkPolicy,
             v2beta1Node,
             v2beta1PersistentVolume,
+            v2beta1PersistentVolumeClaim,
             v2beta1ReplicaSet,
             v2beta1Service,
             v2beta1ServiceAccount,
@@ -301,8 +327,10 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             v2beta2Event,
             v2beta2HorizontalPodAutoscaler,
             v2beta2Namespace,
+            v2beta2NetworkPolicy,
             v2beta2Node,
             v2beta2PersistentVolume,
+            v2beta2PersistentVolumeClaim,
             v2beta2ReplicaSet,
             v2beta2Service,
             v2beta2ServiceAccount,
@@ -324,8 +352,10 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             v1Event,
             v1HorizontalPodAutoscaler,
             v1Namespace,
+            v1NetworkPolicy,
             v1Node,
             v1PersistentVolume,
+            v1PersistentVolumeClaim,
             v1ReplicaSet,
             v1Service,
             v1ServiceAccount,
@@ -337,8 +367,10 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             v2beta1Event,
             v2beta1HorizontalPodAutoscaler,
             v2beta1Namespace,
+            v2beta1NetworkPolicy,
             v2beta1Node,
             v2beta1PersistentVolume,
+            v2beta1PersistentVolumeClaim,
             v2beta1ReplicaSet,
             v2beta1Service,
             v2beta1ServiceAccount,
@@ -350,8 +382,10 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             v2beta2Event,
             v2beta2HorizontalPodAutoscaler,
             v2beta2Namespace,
+            v2beta2NetworkPolicy,
             v2beta2Node,
             v2beta2PersistentVolume,
+            v2beta2PersistentVolumeClaim,
             v2beta2ReplicaSet,
             v2beta2Service,
             v2beta2ServiceAccount,
@@ -1088,6 +1122,106 @@ class PersistentVolumeChangeEvent(PersistentVolumeEvent, KubernetesAnyChangeEven
         )
 
 
+class PersistentVolumeClaimAttributes(ExecutionEventBaseParams):
+    name: str
+    namespace: str
+
+
+@dataclass
+class PersistentVolumeClaimEvent(KubernetesResourceEvent):
+    def __init__(self, obj: PersistentVolumeClaim, named_sinks: List[str]):
+        super().__init__(obj=obj, named_sinks=named_sinks)
+
+    def get_persistentvolumeclaim(self) -> Optional[PersistentVolumeClaim]:
+        return self.obj
+
+    @staticmethod
+    def from_params(params: PersistentVolumeClaimAttributes) -> Optional["PersistentVolumeClaimEvent"]:
+        try:
+            obj = PersistentVolumeClaim.readNamespacedPersistentVolumeClaim(
+                name=params.name, namespace=params.namespace
+            ).obj
+        except Exception:
+            logging.error(f"Could not load PersistentVolumeClaim {params}", exc_info=True)
+            return None
+        return PersistentVolumeClaimEvent(obj=obj, named_sinks=params.named_sinks)
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj),
+        )
+
+
+@dataclass
+class PersistentVolumeClaimChangeEvent(PersistentVolumeClaimEvent, KubernetesAnyChangeEvent):
+    obj: Optional[Union[v1PersistentVolumeClaim, v2beta1PersistentVolumeClaim, v2beta2PersistentVolumeClaim]] = None
+    old_obj: Optional[Union[v1PersistentVolumeClaim, v2beta1PersistentVolumeClaim, v2beta2PersistentVolumeClaim]] = None
+
+    def get_persistentvolumeclaim(
+        self,
+    ) -> Optional[Union[v1PersistentVolumeClaim, v2beta1PersistentVolumeClaim, v2beta2PersistentVolumeClaim]]:
+        return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj),
+        )
+
+
+class NetworkPolicyAttributes(ExecutionEventBaseParams):
+    name: str
+    namespace: str
+
+
+@dataclass
+class NetworkPolicyEvent(KubernetesResourceEvent):
+    def __init__(self, obj: NetworkPolicy, named_sinks: List[str]):
+        super().__init__(obj=obj, named_sinks=named_sinks)
+
+    def get_networkpolicy(self) -> Optional[NetworkPolicy]:
+        return self.obj
+
+    @staticmethod
+    def from_params(params: NetworkPolicyAttributes) -> Optional["NetworkPolicyEvent"]:
+        try:
+            obj = NetworkPolicy.readNamespacedNetworkPolicy(name=params.name, namespace=params.namespace).obj
+        except Exception:
+            logging.error(f"Could not load NetworkPolicy {params}", exc_info=True)
+            return None
+        return NetworkPolicyEvent(obj=obj, named_sinks=params.named_sinks)
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj),
+        )
+
+
+@dataclass
+class NetworkPolicyChangeEvent(NetworkPolicyEvent, KubernetesAnyChangeEvent):
+    obj: Optional[Union[v1NetworkPolicy, v2beta1NetworkPolicy, v2beta2NetworkPolicy]] = None
+    old_obj: Optional[Union[v1NetworkPolicy, v2beta1NetworkPolicy, v2beta2NetworkPolicy]] = None
+
+    def get_networkpolicy(self) -> Optional[Union[v1NetworkPolicy, v2beta1NetworkPolicy, v2beta2NetworkPolicy]]:
+        return self.obj
+
+    def get_subject(self) -> FindingSubject:
+        return FindingSubject(
+            name=self.obj.metadata.name,
+            subject_type=FindingSubjectType.from_kind(self.obj.kind),
+            namespace=self.obj.metadata.namespace,
+            node=KubeObjFindingSubject.get_node_name(self.obj),
+        )
+
+
 class ConfigMapAttributes(ExecutionEventBaseParams):
     name: str
     namespace: str
@@ -1152,5 +1286,7 @@ KIND_TO_EVENT_CLASS = {
     "namespace": NamespaceChangeEvent,
     "serviceaccount": ServiceAccountChangeEvent,
     "persistentvolume": PersistentVolumeChangeEvent,
+    "persistentvolumeclaim": PersistentVolumeClaimChangeEvent,
+    "networkpolicy": NetworkPolicyChangeEvent,
     "configmap": ConfigMapChangeEvent,
 }

@@ -2,11 +2,13 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional, Tuple, Union
 
+from prometheus_api_client import PrometheusApiClientException
 from robusta.api import (
     ExecutionBaseEvent,
     PrometheusDateRange,
     PrometheusDuration,
     PrometheusQueryParams,
+    PrometheusQueryResult,
     action,
     run_prometheus_query,
 )
@@ -51,13 +53,18 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
     if not starts_at or not ends_at:
         raise Exception("Invalid request, verify the duration times are of format '%Y-%m-%d %H:%M:%S %Z'")
         return
-
-    prometheus_result = run_prometheus_query(
-        prometheus_params=params,
-        promql_query=params.promql_query,
-        starts_at=starts_at,
-        ends_at=ends_at,
-    )
-    event.add_enrichment(
-        [PrometheusBlock(data=prometheus_result, query=params.promql_query)],
-    )
+    try:
+        prometheus_result = run_prometheus_query(
+            prometheus_params=params,
+            promql_query=params.promql_query,
+            starts_at=starts_at,
+            ends_at=ends_at,
+        )
+        event.add_enrichment(
+            [PrometheusBlock(data=prometheus_result, query=params.promql_query)],
+        )
+    except PrometheusApiClientException as e:
+        data = PrometheusQueryResult({"resultType": "error", "result": str(e)})
+        event.add_enrichment(
+            [PrometheusBlock(data=data, query=params.promql_query)],
+        )

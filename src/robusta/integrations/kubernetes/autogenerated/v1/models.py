@@ -20,5 +20,7 @@ KIND_TO_MODEL_CLASS = {
     "Namespace": Namespace,
     "ServiceAccount": ServiceAccount,
     "PersistentVolume": PersistentVolume,
+    "PersistentVolumeClaim": PersistentVolumeClaim,
+    "NetworkPolicy": NetworkPolicy,
     "ConfigMap": ConfigMap,
 }
