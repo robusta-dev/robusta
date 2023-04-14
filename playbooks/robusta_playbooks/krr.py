@@ -1,5 +1,6 @@
 import json
 import uuid
+import functools
 from datetime import datetime
 from typing import Dict, List, Optional, Union, Literal
 
@@ -43,21 +44,43 @@ class KRRRecommended(BaseModel):
 class KRRScan(BaseModel):
     object: KRRObject
     recommended: KRRRecommended
-    severity: str
-    severities: Dict[str, str]
+    severity: str = "UNKNOWN"
+    severities: Dict[str, Dict[str, str]] = {
+        "cpu": {
+            "request": "UNKNOWN",
+            "limit": "UNKNOWN",
+        },
+        "memory": {
+            "request": "UNKNOWN",
+            "limit": "UNKNOWN",
+        }
+    }
 
     @property
     def priority(self) -> int:
         return krr_severity_to_priority(self.severity)
 
     @property
-    def priorities(self) -> Dict[str, int]:
-        return {resource: krr_severity_to_priority(severity) for resource, severity in self.severities.items()}
+    @functools.lru_cache()
+    def priorities(self) -> Dict[str, Dict[str, int]]:
+        return {
+            resource: {
+                type_: krr_severity_to_priority(severity)
+                for type_, severity
+                in severity_data.items()
+            }
+            for resource, severity_data
+            in self.severities.items()
+        }
+
+    def __hash__(self) -> int:
+        return hash(id(self))
 
 
 class KRRResponse(BaseModel):
     scans: List[KRRScan]
     score: int
+    resources: List[str] = ["cpu", "memory"]
 
 
 class KRRParams(ProcessParams):
@@ -74,7 +97,7 @@ class KRRParams(ProcessParams):
     args: str = ""
     timeout = 300
 
-    @validator("args")
+    @validator("args", allow_reuse=True)
     def check_args(cls, args: str) -> str:
         args_split = args.split()
         if "-q" in args_split or "-f" in args_split:
@@ -166,9 +189,12 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                             "request": scan.recommended.requests[resource],
                             "limit": scan.recommended.limits[resource],
                         },
-                        "priority": scan.priorities[resource],
+                        "priority": {
+                            "request": scan.priorities[resource]["request"],
+                            "limit": scan.priorities[resource]["limit"],
+                        },
                     }
-                    for resource in ["cpu", "memory"]
+                    for resource in krr_scan.resources
                 ]
             )
             for scan in krr_scan.scans
