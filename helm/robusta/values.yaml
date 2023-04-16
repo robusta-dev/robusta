@@ -307,8 +307,8 @@ platformPlaybooks:
 - triggers:
   - on_schedule:
       fixed_delay_repeat:
-        repeat: -1
-        seconds_delay: 86400 # daily
+        repeat: 1
+        seconds_delay: 120
   actions:
   - popeye_scan: {}
   sinks:
