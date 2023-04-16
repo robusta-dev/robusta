@@ -25,7 +25,6 @@ class PodIssue(str, Enum):
     Pending = "Pending"
     CrashloopBackoff = "CrashloopBackoff"
     Crashing = "Crashing"
-    PotentialCrashloopBackoff = "PotentialCrashloopBackoff"
     NoneDetected = "NoneDetected"
 
 
@@ -141,7 +140,7 @@ def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: Pod
     if additional_blocks:
         blocks.append(MarkdownBlock(f"\n\n*{pod_names[0]}* was picked for investigation\n"))
         blocks.extend(additional_blocks)
-    event.add_enrichment(blocks)
+        event.add_enrichment(blocks)
 
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:

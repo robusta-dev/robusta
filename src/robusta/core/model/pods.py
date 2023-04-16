@@ -135,6 +135,7 @@ def pod_limits(pod: Pod) -> PodResources:
 
 
 def pod_other_limits(pod: Pod) -> Dict[str, float]:
+    # for additional defined resources like GPU
     return pod_other_resources(pod, ResourceAttributes.limits)
 
 
@@ -157,7 +158,7 @@ def pod_other_resources(pod: Pod, resource_attribute: ResourceAttributes) -> Dic
                 else:
                     total_resources[resource_type] += float(requests[resource_type])
         except Exception:
-            logging.error(f"failed to parce requests {container.resources}", exc_info=True)
+            logging.error(f"failed to parce {resource_attribute.name} {container.resources}", exc_info=True)
     return total_resources
 
 
