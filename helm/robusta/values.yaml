@@ -60,6 +60,7 @@ lightActions:
 - list_resource_names
 - node_dmesg_enricher
 - status_enricher
+- popeye_scan
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
@@ -372,6 +373,15 @@ platformPlaybooks:
   - job_info_enricher: {}
   - job_events_enricher: {}
   - job_pod_enricher: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
+  - on_schedule:
+      fixed_delay_repeat:
+        repeat: 1
+        seconds_delay: 120
+  actions:
+  - popeye_scan: {}
   sinks:
     - "robusta_ui_sink"
 

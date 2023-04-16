@@ -53,7 +53,7 @@ class RobustaSink(SinkBase):
             robusta_token.password,
             sink_config.robusta_sink.name,
             self.cluster_name,
-            self.signing_key,
+            self.signing_key
         )
 
         self.first_prometheus_alert_time = 0
