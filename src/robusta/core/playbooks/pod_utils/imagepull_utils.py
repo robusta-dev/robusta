@@ -88,7 +88,7 @@ def get_image_pull_backoff_blocks(pod: Pod) -> Optional[List[BaseBlock]]:
                 )
         else:
             blocks.append(MarkdownBlock(f"*Error message:* {container_status.name}:\n{error_message}"))
-        return blocks
+    return blocks
 
 
 class ImagePullOffInvestigation:
