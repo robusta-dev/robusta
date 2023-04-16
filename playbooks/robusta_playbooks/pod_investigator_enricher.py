@@ -83,13 +83,14 @@ def is_crashlooping(pod: Pod) -> bool:
         container_status
         for container_status in all_statuses
         if container_status.state.waiting is not None
-        and container_status.restartCount > 1  # report only after the 2nd restart and get previous logs
+        and container_status.restartCount > 1
         and "CrashloopBackOff" in container_status.state.waiting.reason
     ]
     return len(crashlooping_containers) > 0
 
 
 def timestamp_in_last_15_minutes(timestamp: str) -> bool:
+    # most relevant alerts are fired on issues that occurred in the last 15 minutes
     time_ms = parse_kubernetes_datetime_to_ms(timestamp)
     timestamp_happened = datetime.datetime.fromtimestamp(time_ms / 1000)
     now = datetime.datetime.now()
@@ -98,7 +99,7 @@ def timestamp_in_last_15_minutes(timestamp: str) -> bool:
 
 
 def had_recent_crash(pod: Pod) -> bool:
-    # is a pod is crashlooping but currently running it wont have the status crashloop backoff
+    # is a pod is crashlooping but currently running it won't have the state.waiting.reason crashloop backoff
     all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
     crashing_containers = [
         container_status
