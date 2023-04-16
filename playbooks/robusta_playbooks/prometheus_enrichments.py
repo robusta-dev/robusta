@@ -1,18 +1,22 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from prometheus_api_client import PrometheusApiClientException
+from kubernetes import client
+from kubernetes.client.models.v1_service import V1Service
 from robusta.api import (
     ExecutionBaseEvent,
+    MarkdownBlock,
+    PrometheusBlock,
     PrometheusDateRange,
     PrometheusDuration,
+    PrometheusKubernetesAlert,
     PrometheusQueryParams,
     PrometheusQueryResult,
     action,
     run_prometheus_query,
 )
-from robusta.core.reporting.blocks import PrometheusBlock
 
 
 def parse_timestamp_string(date_string: str) -> Optional[datetime]:
@@ -68,3 +72,31 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
         event.add_enrichment(
             [PrometheusBlock(data=data, query=params.promql_query)],
         )
+
+
+def get_duplicate_kubelet_msg(rule_group: Optional[str]) -> Optional[str]:
+    """
+    checks if there are multiple kubelets and
+    """
+    if not rule_group or "kubelet" not in rule_group:
+        return None
+    labels_selectors = "k8s-app=kubelet, app.kubernetes.io/managed-by=prometheus-operator"
+    v1 = client.CoreV1Api()
+    kubelet_services: List[V1Service] = v1.list_service_for_all_namespaces(label_selector=labels_selectors).items
+    if not kubelet_services or len(kubelet_services) <= 1:
+        return None
+    # there is more than one kubelet
+    kubelet_names_string = ", ".join(
+        [f"{kubelet.metadata.namespace}/{kubelet.metadata.name}" for kubelet in kubelet_services]
+    )
+    return f"The rule failure might be caused by multiple kubelet services running in your cluster: {kubelet_names_string}."
+
+
+@action
+def prometheus_rules_enricher(alert: PrometheusKubernetesAlert):
+    """
+    Enriches the finding with a for information due to rule failure
+    """
+    kubelet_error_string = get_duplicate_kubelet_msg(alert.get_alert_label("rule_group"))
+    if kubelet_error_string:
+        alert.add_enrichment([MarkdownBlock(kubelet_error_string)])

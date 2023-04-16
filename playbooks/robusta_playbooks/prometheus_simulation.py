@@ -12,6 +12,7 @@ class PrometheusAlertParams(ActionParams):
     :var deployment_name: Deployment name, for a simulated deployment alert.
     :var container_name: Container name, for adding a label on container.
     :var job_name: Job name, for a simulated Job alert.
+    :var hpa: HPA name, for a simulated HorizontalPodAutoscaler alert.
     :var namespace: Pod namespace, for a simulated pod alert.
     :var service: service name, for additional prometheus labels.
     :var status: Simulated alert status. firing/resolved.
@@ -27,10 +28,15 @@ class PrometheusAlertParams(ActionParams):
     container_name: Optional[str] = None
     service: Optional[str] = None
     job_name: Optional[str] = None
+    name: Optional[str] = None
+    hpa: Optional[str] = None
+    statefulset_name: Optional[str] = None
+    daemonset_name: Optional[str] = None
     namespace: str = "default"
     status: str = "firing"
     severity: str = "error"
     description: str = "simulated prometheus alert"
+    summary: Optional[str]
     generator_url = ""
 
 
@@ -59,7 +65,19 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
         labels["service"] = prometheus_event_data.service
     if prometheus_event_data.job_name is not None:
         labels["job"] = prometheus_event_data.job_name
+    if prometheus_event_data.name is not None:
+        labels["name"] = prometheus_event_data.name
+    if prometheus_event_data.hpa is not None:
+        labels["horizontalpodautoscaler"] = prometheus_event_data.hpa
+    if prometheus_event_data.statefulset_name is not None:
+        labels["statefulset"] = prometheus_event_data.statefulset_name
+    if prometheus_event_data.daemonset_name is not None:
+        labels["daemonset"] = prometheus_event_data.daemonset_name
 
+    annotations = {
+        "description": prometheus_event_data.description,
+        "summary": prometheus_event_data.summary if prometheus_event_data.summary else prometheus_event_data.alert_name,
+    }
     prometheus_event = AlertManagerEvent(
         **{
             "status": prometheus_event_data.status,
@@ -75,7 +93,7 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
                     "startsAt": datetime.now(),
                     "generatorURL": prometheus_event_data.generator_url,
                     "labels": labels,
-                    "annotations": {},
+                    "annotations": annotations,
                 }
             ],
         }
