@@ -2,8 +2,6 @@ import json
 import logging
 import threading
 import time
-from datetime import datetime
-import asyncio
 
 from typing import Any, Dict, List
 
@@ -19,7 +17,7 @@ from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
-from robusta.core.reporting.blocks import ScanReportBlock,ScanReportRow
+from robusta.core.reporting.blocks import ScanReportBlock, ScanReportRow
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.reporting import Enrichment
@@ -91,7 +89,6 @@ class SupabaseDal:
         sink_name: str,
         cluster_name: str,
         signing_key: str,
-        event_loop
     ):
         self.url = url
         self.key = key
@@ -104,47 +101,41 @@ class SupabaseDal:
         self.sign_in()
         self.sink_name = sink_name
         self.signing_key = signing_key
-        self.event_loop = event_loop
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
         db_sr = scanResult.dict()
         db_sr["account_id"] = self.account_id
         db_sr["cluster_id"] = self.cluster
         return db_sr
-    
 
     def persist_scan(self, enrichment: Enrichment):
-
         for block in enrichment.blocks:
             if not isinstance(block, ScanReportBlock):
-                return
+                continue
 
-        db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
-        res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
-        if res.get("status_code") not in [200, 201]:
-            msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
-            logging.error(msg)
-            self.handle_supabase_error()
-            raise Exception(msg)
+            db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
+            res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
+            if res.get("status_code") not in [200, 201]:
+                msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
+                logging.error(msg)
+                self.handle_supabase_error()
+                raise Exception(msg)
 
-        self.client.postgrest.session.headers.update(self.client._get_auth_headers())
-        tasks = [self.event_loop.create_task(self.client.rpc("insert_scan_meta", {
-            "_account_id": self.account_id,
-            "_cluster": self.cluster,
-            "_scan_id": block.scan_id,
-            "_scan_start": str(block.start_time),
-            "_scan_end": str(block.end_time),
-            "_type": block.type,
-            "_grade": block.score
-        }))]
-        self.event_loop.run_until_complete(asyncio.wait(tasks))
-        res = tasks[0].result()
+            res = self.__rpc_patch("insert_scan_meta", {
+                "_account_id": self.account_id,
+                "_cluster": self.cluster,
+                "_scan_id": block.scan_id,
+                "_scan_start": str(block.start_time),
+                "_scan_end": str(block.end_time),
+                "_type": block.type,
+                "_grade": block.score
+            })
 
-        if res.status_code not in [200, 201, 204]:
-            msg = f"Failed to persist scan meta {block.scan_id} error: {res.message}"
-            logging.error(msg)
-            self.handle_supabase_error()
-            raise Exception(msg)
+            if res.get("status_code") not in [200, 201, 204]:
+                msg = f"Failed to persist scan meta {block.scan_id} error: {res.get('data')}"
+                logging.error(msg)
+                self.handle_supabase_error()
+                raise Exception(msg)
 
     def persist_finding(self, finding: Finding):
 

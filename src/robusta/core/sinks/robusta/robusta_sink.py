@@ -4,7 +4,6 @@ import logging
 import threading
 import time
 from typing import Dict, List, Optional
-import asyncio
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
@@ -54,8 +53,7 @@ class RobustaSink(SinkBase):
             robusta_token.password,
             sink_config.robusta_sink.name,
             self.cluster_name,
-            self.signing_key,
-            asyncio.get_event_loop()
+            self.signing_key
         )
 
         self.first_prometheus_alert_time = 0
