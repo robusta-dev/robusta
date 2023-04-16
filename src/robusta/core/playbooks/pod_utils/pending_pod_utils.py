@@ -1,3 +1,4 @@
+import logging
 import re
 from enum import Enum
 from typing import List, Optional
@@ -10,13 +11,11 @@ from robusta.core.reporting.blocks import BaseBlock, MarkdownBlock
 
 
 def get_pending_pod_blocks(pod: Pod):
-    pod_name = pod.metadata.name
-    namespace = pod.metadata.namespace
     blocks: List[BaseBlock] = []
-    investigator = PendingInvestigator(pod_name, namespace)
+    investigator = PendingInvestigator(pod)
     all_reasons = investigator.investigate()
     message = get_unscheduled_message(pod)
-    blocks.append(MarkdownBlock(f"Pod {pod_name} could not be scheduled."))
+    blocks.append(MarkdownBlock(f"Pod {pod.metadata.name} could not be scheduled."))
     if message:
         blocks.append(MarkdownBlock(f"*Reason:* {message}"))
 
@@ -97,23 +96,28 @@ class PendingInvestigator:
         },
     ]
 
-    def __init__(self, pod_name: str, namespace: str):
-        self.pod_name = pod_name
-        self.namespace = namespace
+    def __init__(self, pod: Pod):
+        self.pod = pod
+        self.pod_name = pod.metadata.name
+        self.namespace = pod.metadata.namespace
 
         self.pod_events: EventList = EventList.listNamespacedEvent(
             self.namespace, field_selector=f"involvedObject.name={self.pod_name}"
         ).obj
 
     def investigate(self) -> Optional[List[PendingPodReason]]:
+        event_message = get_unscheduled_message(self.pod)
+        if not event_message:
+            return None
+        # prefer to get message from event if event still exists, it won't exist still for old pods
         failed_scheduling_events = [
             pod_event for pod_event in self.pod_events.items if self.is_scheduler_failed_scheduling_event(pod_event)
         ]
-        if not failed_scheduling_events:
-            return None
+        if failed_scheduling_events:
+            newest_failed_event = max(failed_scheduling_events, key=lambda x: get_event_timestamp(x))
+            event_message = newest_failed_event[0].message
 
-        newest_failed_event = max(failed_scheduling_events, key=lambda x: get_event_timestamp(x))
-        reasons = self.get_reason_from_failed_scheduling_event(newest_failed_event)
+        reasons = self.get_reason_from_failed_scheduling_event_message(event_message)
         return reasons  # return object with all reasons and message
 
     @staticmethod
@@ -130,9 +134,8 @@ class PendingInvestigator:
         regex_string = "\d+\/\d+( nodes are available\:).*"
         return bool(re.match(regex_string, pod_event.message))
 
-    def get_reason_from_failed_scheduling_event(self, pod_event: Event) -> List[PendingPodReason]:
+    def get_reason_from_failed_scheduling_event_message(self, event_message: str) -> List[PendingPodReason]:
         reasons = []
-        event_message = pod_event.message
         for config in self.configs:
             err_templates = config["err_templates"]
             reason = config["reason"]
