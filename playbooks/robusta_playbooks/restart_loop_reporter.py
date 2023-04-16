@@ -2,15 +2,12 @@ import logging
 from typing import List, Optional
 
 from hikaru.model import ContainerStatus, PodStatus
-
 from robusta.api import (
     ActionParams,
     BaseBlock,
-    FileBlock,
     Finding,
     FindingSeverity,
     FindingSource,
-    MarkdownBlock,
     NamedRegexPattern,
     PodEvent,
     PodFindingSubject,
@@ -18,12 +15,12 @@ from robusta.api import (
     RateLimitParams,
     RegexReplacementStyle,
     action,
+    get_crash_report_blocks,
 )
 
 
 def _send_crash_report(
     event: PodEvent,
-    crashed_container_statuses: List[ContainerStatus],
     action_name: str,
     regex_replacer_patterns: Optional[NamedRegexPattern] = None,
     regex_replacement_style: Optional[RegexReplacementStyle] = None,
@@ -37,36 +34,7 @@ def _send_crash_report(
         aggregation_key=action_name,
         subject=PodFindingSubject(pod),
     )
-    blocks: List[BaseBlock] = []
-    for container_status in crashed_container_statuses:
-        blocks.append(MarkdownBlock(f"*{container_status.name}* restart count: {container_status.restartCount}"))
-        if container_status.state and container_status.state.waiting:
-            blocks.append(
-                MarkdownBlock(f"*{container_status.name}* waiting reason: {container_status.state.waiting.reason}")
-            )
-        if container_status.state and container_status.state.terminated:
-            blocks.append(
-                MarkdownBlock(
-                    f"*{container_status.name}* termination reason: {container_status.state.terminated.reason}"
-                )
-            )
-        if container_status.lastState and container_status.lastState.terminated:
-            blocks.append(
-                MarkdownBlock(
-                    f"*{container_status.name}* termination reason: {container_status.lastState.terminated.reason}"
-                )
-            )
-        container_log = pod.get_logs(
-            container_status.name,
-            previous=True,
-            regex_replacer_patterns=regex_replacer_patterns,
-            regex_replacement_style=regex_replacement_style,
-        )
-        if container_log:
-            blocks.append(FileBlock(f"{pod.metadata.name}/{container_status.name}.log", container_log))
-        else:
-            blocks.append(MarkdownBlock(f"Container logs unavailable for container: {container_status.name}"))
-            logging.error(f"could not fetch logs from container: {container_status.name}. logs were {container_log}")
+    blocks: List[BaseBlock] = get_crash_report_blocks(pod, regex_replacer_patterns, regex_replacement_style)
 
     finding.add_enrichment(blocks)
     event.add_finding(finding)
@@ -85,18 +53,10 @@ class ReportCrashLoopParams(ActionParams):
 @action
 def report_crash_loop(event: PodEvent, params: ReportCrashLoopParams):
     pod = event.get_pod()
-    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
-    crashing_containers = [
-        container_status
-        for container_status in all_statuses
-        if container_status.state.waiting is not None and container_status.restartCount >= 1
-    ]
     regex_replacement_style = (
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     )
-    _send_crash_report(
-        event, crashing_containers, "report_crash_loop", params.regex_replacer_patterns, regex_replacement_style
-    )
+    _send_crash_report(event, "report_crash_loop", params.regex_replacer_patterns, regex_replacement_style)
 
 
 # The code below is deprecated. Please use the new crash loop action
@@ -145,4 +105,4 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
     if not RateLimiter.mark_and_test("restart_loop_reporter", pod_name + pod.metadata.namespace, config.rate_limit):
         return
 
-    _send_crash_report(event, crashed_container_statuses, "restart_loop_reporter")
+    _send_crash_report(event, "restart_loop_reporter")
