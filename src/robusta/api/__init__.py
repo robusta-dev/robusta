@@ -98,7 +98,11 @@ from robusta.core.playbooks.pod_utils.imagepull_utils import (
     get_image_pull_backoff_blocks,
     get_image_pull_backoff_container_statuses,
 )
-from robusta.core.playbooks.pod_utils.pending_pod_utils import PendingInvestigator, PendingPodReason
+from robusta.core.playbooks.pod_utils.pending_pod_utils import (
+    PendingInvestigator,
+    PendingPodReason,
+    get_pending_pod_blocks,
+)
 from robusta.core.playbooks.prometheus_enrichment_utils import (
     XAxisLine,
     create_chart_from_prometheus_query,

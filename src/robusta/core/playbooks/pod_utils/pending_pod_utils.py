@@ -2,9 +2,47 @@ import re
 from enum import Enum
 from typing import List, Optional
 
-from hikaru.model import Event, EventList
+from hikaru.model import Event, EventList, Pod
 
+from robusta.core.model.pods import pod_other_requests, pod_requests
 from robusta.core.playbooks.common import get_event_timestamp
+from robusta.core.reporting.blocks import BaseBlock, MarkdownBlock
+
+
+def get_pending_pod_blocks(pod: Pod):
+    pod_name = pod.metadata.name
+    namespace = pod.metadata.namespace
+    blocks: List[BaseBlock] = []
+    investigator = PendingInvestigator(pod_name, namespace)
+    all_reasons = investigator.investigate()
+    message = get_unscheduled_message(pod)
+    blocks.append(MarkdownBlock(f"Pod {pod_name} could not be scheduled."))
+    if message:
+        blocks.append(MarkdownBlock(f"*Reason:* {message}"))
+
+    RESOURCE_REASONS = [PendingPodReason.NotEnoughGPU, PendingPodReason.NotEnoughCPU, PendingPodReason.NotEnoughMemory]
+    resource_related_reasons = [reason for reason in all_reasons if reason in RESOURCE_REASONS]
+    if resource_related_reasons:
+        requests = pod_requests(pod)
+        request_resources = []
+        if requests.cpu:
+            request_resources.append(f"{requests.cpu} CPU")
+        if requests.memory:
+            request_resources.append(f"{requests.memory} Memory")
+        other_requests = pod_other_requests(pod)
+        if other_requests:
+            request_resources.extend([f"{value} {key}" for key, value in other_requests.items()])
+        resources_string = ", ".join(request_resources)
+        blocks.append(MarkdownBlock(f"*Pod requires:* {resources_string}"))
+
+    return blocks
+
+
+def get_unscheduled_message(pod: Pod) -> Optional[str]:
+    pod_scheduled_condition = [condition for condition in pod.status.conditions if condition.type == "PodScheduled"]
+    if not pod_scheduled_condition:
+        return None
+    return pod_scheduled_condition[0].message
 
 
 class PendingPodReason(str, Enum):

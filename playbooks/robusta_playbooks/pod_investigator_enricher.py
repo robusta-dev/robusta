@@ -12,28 +12,20 @@ from robusta.api import (
     MarkdownBlock,
     PendingInvestigator,
     PendingPodReason,
-    PodEvent,
     action,
     build_selector_query,
     get_crash_report_blocks,
     get_image_pull_backoff_blocks,
     get_image_pull_backoff_container_statuses,
     get_job_all_pods,
+    get_pending_pod_blocks,
     parse_kubernetes_datetime_to_ms,
     pod_other_requests,
-    pod_requests,
 )
 
 
 def is_pod_pending(pod: Pod) -> bool:
     return pod.status.phase.lower() == "pending"
-
-
-def get_unscheduled_message(pod: Pod) -> Optional[str]:
-    pod_scheduled_condition = [condition for condition in pod.status.conditions if condition.type == "PodScheduled"]
-    if not pod_scheduled_condition:
-        return None
-    return pod_scheduled_condition[0].message
 
 
 class PodIssue(str, Enum):
@@ -119,7 +111,7 @@ def get_pod_issue_blocks(pod: Pod) -> Optional[List[BaseBlock]]:
     if has_image_pull_issue(pod):
         return get_image_pull_backoff_blocks(pod)
     elif is_pod_pending(pod):
-        return get_pending_pod_investigator_blocks(pod)
+        return get_pending_pod_blocks(pod)
     elif is_crashlooping(pod):
         return get_crash_report_blocks(pod)
     elif had_recent_crash(pod):
@@ -172,54 +164,3 @@ def pod_issue_investigator(event: KubernetesResourceEvent):
             continue
         report_pod_issue(event, pods, pod_issue)
         break
-
-
-def get_pending_pod_investigator_blocks(pod: Pod):
-    pod_name = pod.metadata.name
-    namespace = pod.metadata.namespace
-    blocks: List[BaseBlock] = []
-    investigator = PendingInvestigator(pod_name, namespace)
-    all_reasons = investigator.investigate()
-    message = get_unscheduled_message(pod)
-    blocks.append(MarkdownBlock(f"Pod {pod_name} could not be scheduled."))
-    if message:
-        blocks.append(MarkdownBlock(f"*Reason:* {message}"))
-
-    RESOURCE_REASONS = [PendingPodReason.NotEnoughGPU, PendingPodReason.NotEnoughCPU, PendingPodReason.NotEnoughMemory]
-    resource_related_reasons = [reason for reason in all_reasons if reason in RESOURCE_REASONS]
-    if resource_related_reasons:
-        requests = pod_requests(pod)
-        request_resources = []
-        if requests.cpu:
-            request_resources.append(f"{requests.cpu} CPU")
-        if requests.memory:
-            request_resources.append(f"{requests.memory} Memory")
-        other_requests = pod_other_requests(pod)
-        if other_requests:
-            request_resources.extend([f"{value} {key}" for key, value in other_requests.items()])
-        resources_string = ", ".join(request_resources)
-        blocks.append(MarkdownBlock(f"*Pod requires:* {resources_string}"))
-
-    return blocks
-
-
-def is_imagepull_backoff(pod: Pod) -> bool:
-    return len(get_image_pull_backoff_container_statuses(pod.status)) > 0
-
-
-@action
-def pending_pod_reporter(event: PodEvent):
-    """
-    Notify when and why a pod is pending.
-    """
-    pod = event.get_pod()
-    if pod is None:
-        logging.info("No pod for pending_pod_reporter")
-        return
-
-    if not is_pod_pending(pod) or is_imagepull_backoff(pod):
-        logging.info(f"Pod {pod.metadata.name} is not pending.")
-        return
-
-    blocks: List[BaseBlock] = get_pending_pod_investigator_blocks(pod)
-    event.add_enrichment(blocks)
