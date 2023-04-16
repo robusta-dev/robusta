@@ -191,7 +191,7 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: KubeContainerWaiting
   actions:
-  - pending_pod_enricher: {}
+  - pod_issue_investigator: {}
   - pod_events_enricher: {}
 
 - triggers:
