@@ -5,7 +5,7 @@ from pydantic import BaseModel, ValidationError
 from datetime import datetime
 import json 
 from json import JSONDecodeError
-from robusta.core.model.env_vars import RELEASE_NAME
+from robusta.api import RELEASE_NAME
 from hikaru.model import (
     Container,
     PodSpec,
@@ -61,7 +61,7 @@ class GroupedIssues(BaseModel):
     issues = []
     level: int = 0
 
-def levelToString(level: int) -> str:
+def level_to_string(level: int) -> str:
     if level == 1:
         return "I"
     elif level == 2:
@@ -71,10 +71,10 @@ def levelToString(level: int) -> str:
     else:
         return "OK"
 
-def scanRowContentToString(row: ScanReportRow) -> str:
+def scan_row_content_to_string(row: ScanReportRow) -> str:
     txt = f"**{row.container}**\n" if row.container else "" 
     for i in row.content:
-        txt+= f"{levelToString(i['level'])} {i['message']}\n"
+        txt+= f"{level_to_string(i['level'])} {i['message']}\n"
     
     return txt
 
@@ -84,11 +84,11 @@ class PopeyeParams(ProcessParams):
     :var timeout: Time span for yielding the scan.
     :var args: Popeye cli arguments.
     :var spinach: Spinach.yaml config file to supply to the scan.
-    :var serviceAccountName: The account name to use for the Popeye scan job.
+    :var service_account_name: The account name to use for the Popeye scan job.
     """
 
     image: str = "derailed/popeye" 
-    serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
+    service_account_name: str = f"{RELEASE_NAME}-runner-service-account"
     timeout = 300
     args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
     spinach: str = """\
@@ -111,13 +111,13 @@ popeye:
 
 
 def group_issues_list(issues: List[Issue]) -> Dict[str,GroupedIssues]:
-    groupedIssues: Dict[str, GroupedIssues] = defaultdict(lambda: GroupedIssues())
+    grouped_issues: Dict[str, GroupedIssues] = defaultdict(lambda: GroupedIssues())
     for issue in issues:
-        group = groupedIssues[issue.group]
+        group = grouped_issues[issue.group]
         group.issues.append({"level":issue.level, "message":issue.message})
         group.level = max(group.level, issue.level)
 
-    return groupedIssues
+    return grouped_issues
 
 
 @action
@@ -127,7 +127,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     """
 
     spec = PodSpec(
-        serviceAccountName=params.serviceAccountName,
+        serviceAccountName=params.service_account_name,
         containers=[
             Container(
                 name=to_kubernetes_name(params.image),
@@ -170,19 +170,19 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         score=popeye_scan.score,
         results=[],
         config=f"{params.args} \n\n {params.spinach}",
-        pdf_scan_row_content_format=scanRowContentToString,
-        pdf_scan_row_priority_format=levelToString
+        pdf_scan_row_content_format=scan_row_content_to_string,
+        pdf_scan_row_priority_format=level_to_string
         )
 
     scan_issues: List[ScanReportRow] = []
     for section in popeye_scan.sanitizers:
         kind = section.sanitizer
-        issuesDict: Dict[str,List[Issue]] = section.issues or {}
-        for resource, issuesList  in issuesDict.items():
+        issues_dict: Dict[str,List[Issue]] = section.issues or {}
+        for resource, issuesList  in issues_dict.items():
             namespace, _ , name = resource.rpartition("/")
 
-            groupedIssues = group_issues_list(issuesList)
-            for group, gIssues in groupedIssues.items():
+            grouped_issues = group_issues_list(issuesList)
+            for group, gIssues in grouped_issues.items():
                 scan_issues.append(
                     ScanReportRow(
                     scan_id=scan_block.scan_id,
