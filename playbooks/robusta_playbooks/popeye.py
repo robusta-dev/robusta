@@ -1,65 +1,68 @@
-from collections import defaultdict
+import json
 import uuid
-from typing import List, Optional, Dict
-from pydantic import BaseModel, ValidationError
+from collections import defaultdict
 from datetime import datetime
-import json 
 from json import JSONDecodeError
-from robusta.api import RELEASE_NAME
-from hikaru.model import (
-    Container,
-    PodSpec,
-)
+from typing import Dict, List, Optional
+
+from hikaru.model import Container, PodSpec
+from pydantic import BaseModel, ValidationError
 
 from robusta.api import (
+    RELEASE_NAME,
+    EnrichmentAnnotation,
     ExecutionBaseEvent,
-    RobustaJob,
-    to_kubernetes_name,
+    FileBlock,
     Finding,
     FindingSource,
     FindingType,
+    MarkdownBlock,
     ProcessParams,
-    action,
+    RobustaJob,
     ScanReportBlock,
     ScanReportRow,
     ScanType,
-    EnrichmentAnnotation,
-    MarkdownBlock,
-    FileBlock
+    action,
+    to_kubernetes_name,
 )
 
-#https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/report/tally.go#L163
+
+# https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/report/tally.go#L163
 class Tally(BaseModel):
     ok: int
     info: int
     warning: int
     error: int
-    score:  int
+    score: int
 
-#https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/issues/issue.go#L15
+
+# https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/issues/issue.go#L15
 class Issue(BaseModel):
-    group: str # __root__ | container name
-    gvr: str # kubernetes_schema | containers 
-    level: int # 0OK 1INFO 2WARNING 3ERROR
-    message: str 
+    group: str  # __root__ | container name
+    gvr: str  # kubernetes_schema | containers
+    level: int  # 0OK 1INFO 2WARNING 3ERROR
+    message: str
+
 
 class PopeyeSection(BaseModel):
-    sanitizer: str # kind
-    gvr: str         
+    sanitizer: str  # kind
+    gvr: str
     tally: Tally
-    issues: Optional[Dict[str,List[Issue]]] # (namespace/name)->issues
+    issues: Optional[Dict[str, List[Issue]]]  # (namespace/name)->issues
 
-#https://github.com/derailed/popeye/blob/master/internal/report/builder.go#L52
+
+# https://github.com/derailed/popeye/blob/master/internal/report/builder.go#L52
 class PopeyeReport(BaseModel):
-    score: int    
+    score: int
     grade: str
-    sanitizers:  Optional[List[PopeyeSection]]
-    errors:  Optional[List[str]]
+    sanitizers: Optional[List[PopeyeSection]]
+    errors: Optional[List[str]]
 
 
 class GroupedIssues(BaseModel):
     issues = []
     level: int = 0
+
 
 def level_to_string(level: int) -> str:
     if level == 1:
@@ -71,12 +74,14 @@ def level_to_string(level: int) -> str:
     else:
         return "OK"
 
+
 def scan_row_content_to_string(row: ScanReportRow) -> str:
-    txt = f"**{row.container}**\n" if row.container else "" 
+    txt = f"**{row.container}**\n" if row.container else ""
     for i in row.content:
-        txt+= f"{level_to_string(i['level'])} {i['message']}\n"
-    
+        txt += f"{level_to_string(i['level'])} {i['message']}\n"
+
     return txt
+
 
 class PopeyeParams(ProcessParams):
     """
@@ -87,13 +92,13 @@ class PopeyeParams(ProcessParams):
     :var service_account_name: The account name to use for the Popeye scan job.
     """
 
-    image: str = "derailed/popeye" 
+    image: str = "derailed/popeye"
     service_account_name: str = f"{RELEASE_NAME}-runner-service-account"
     timeout = 300
     args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
     spinach: str = """\
 popeye:
-    excludes: 
+    excludes:
         apps/v1/daemonsets:
         - name: rx:kube-system
         apps/v1/deployments:
@@ -108,13 +113,11 @@ popeye:
         - name: kube-system"""
 
 
-
-
-def group_issues_list(issues: List[Issue]) -> Dict[str,GroupedIssues]:
+def group_issues_list(issues: List[Issue]) -> Dict[str, GroupedIssues]:
     grouped_issues: Dict[str, GroupedIssues] = defaultdict(lambda: GroupedIssues())
     for issue in issues:
         group = grouped_issues[issue.group]
-        group.issues.append({"level":issue.level, "message":issue.message})
+        group.issues.append({"level": issue.level, "message": issue.message})
         group.level = max(group.level, issue.level)
 
     return grouped_issues
@@ -132,22 +135,26 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
             Container(
                 name=to_kubernetes_name(params.image),
                 image=params.image,
-                command=["/bin/sh", "-c", f"echo '{params.spinach}' > ~/spinach.yaml && popeye -f ~/spinach.yaml {params.args} -o json --force-exit-zero"],
+                command=[
+                    "/bin/sh",
+                    "-c",
+                    f"echo '{params.spinach}' > ~/spinach.yaml && popeye -f ~/spinach.yaml {params.args} -o json --force-exit-zero",
+                ],
             )
         ],
         restartPolicy="Never",
     )
 
     start_time = end_time = datetime.now()
-    popeye_scan = scan = {} 
+    popeye_scan = scan = {}
     logs = None
-    
+
     try:
-        logs = RobustaJob.run_simple_job_spec(spec,"popeye_job",params.timeout)
+        logs = RobustaJob.run_simple_job_spec(spec, "popeye_job", params.timeout)
         scan = json.loads(logs)
-        end_time = datetime.now() 
-        popeye_scan = PopeyeReport(**scan['popeye'])
-    except JSONDecodeError as e:
+        end_time = datetime.now()
+        popeye_scan = PopeyeReport(**scan["popeye"])
+    except JSONDecodeError:
         event.add_enrichment([MarkdownBlock(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")])
         return
     except ValidationError as e:
@@ -156,7 +163,9 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         return
     except Exception as e:
         if str(e) == "Failed to reach wait condition":
-            event.add_enrichment([MarkdownBlock(f"*Popeye scan job failed. The job wait condition timed out ({params.timeout}s)*")])
+            event.add_enrichment(
+                [MarkdownBlock(f"*Popeye scan job failed. The job wait condition timed out ({params.timeout}s)*")]
+            )
         else:
             event.add_enrichment([MarkdownBlock(f"*Popeye scan job unexpected error.*\n {e}")])
         return
@@ -171,45 +180,38 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         results=[],
         config=f"{params.args} \n\n {params.spinach}",
         pdf_scan_row_content_format=scan_row_content_to_string,
-        pdf_scan_row_priority_format=level_to_string
-        )
+        pdf_scan_row_priority_format=level_to_string,
+    )
 
     scan_issues: List[ScanReportRow] = []
     for section in popeye_scan.sanitizers:
         kind = section.sanitizer
-        issues_dict: Dict[str,List[Issue]] = section.issues or {}
-        for resource, issuesList  in issues_dict.items():
-            namespace, _ , name = resource.rpartition("/")
+        issues_dict: Dict[str, List[Issue]] = section.issues or {}
+        for resource, issuesList in issues_dict.items():
+            namespace, _, name = resource.rpartition("/")
 
             grouped_issues = group_issues_list(issuesList)
             for group, gIssues in grouped_issues.items():
                 scan_issues.append(
                     ScanReportRow(
-                    scan_id=scan_block.scan_id,
-                    priority=gIssues.level,
-                    scan_type=ScanType.POPEYE,
-                    namespace=namespace,
-                    name=name,
-                    kind=kind,
-                    container= group if group != "__root__" else "",
-                    content= gIssues.issues
+                        scan_id=scan_block.scan_id,
+                        priority=gIssues.level,
+                        scan_type=ScanType.POPEYE,
+                        namespace=namespace,
+                        name=name,
+                        kind=kind,
+                        container=group if group != "__root__" else "",
+                        content=gIssues.issues,
                     )
                 )
     scan_block.results = scan_issues
 
     finding = Finding(
-            title=f"Popeye Report",
-            source=FindingSource.MANUAL,
-            aggregation_key="popeye_report",
-            finding_type=FindingType.REPORT,
-            failure=False
-        )
-    finding.add_enrichment(
-        [
-            scan_block
-        ],
-        annotations={EnrichmentAnnotation.SCAN: True}
+        title="Popeye Report",
+        source=FindingSource.MANUAL,
+        aggregation_key="popeye_report",
+        finding_type=FindingType.REPORT,
+        failure=False,
     )
+    finding.add_enrichment([scan_block], annotations={EnrichmentAnnotation.SCAN: True})
     event.add_finding(finding)
-    
-    
