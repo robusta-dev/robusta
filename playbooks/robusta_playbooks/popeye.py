@@ -145,10 +145,8 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         restartPolicy="Never",
     )
 
-    start_time = end_time = datetime.now()
-    popeye_scan = scan = {}
+    start_time = datetime.now()
     logs = None
-
     try:
         logs = RobustaJob.run_simple_job_spec(spec, "popeye_job", params.timeout)
         scan = json.loads(logs)
