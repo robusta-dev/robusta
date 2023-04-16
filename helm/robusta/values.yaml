@@ -211,7 +211,6 @@ builtinPlaybooks:
   - job_info_enricher: {}
   - job_events_enricher: {}
   - job_pod_enricher: {}
-  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:
