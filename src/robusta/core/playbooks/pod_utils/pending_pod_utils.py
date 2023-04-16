@@ -29,7 +29,7 @@ def get_pending_pod_blocks(pod: Pod):
             request_resources.append(f"{requests.cpu} CPU")
         if requests.memory:
             request_resources.append(f"{requests.memory} Memory")
-        other_requests = pod_other_requests(pod)
+        other_requests = pod_other_requests(pod)  # for additional defined resources like GPU
         if other_requests:
             request_resources.extend([f"{value} {key}" for key, value in other_requests.items()])
         resources_string = ", ".join(request_resources)

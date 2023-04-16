@@ -71,7 +71,7 @@ class PodContainer:
             if container_name == container.name:
                 return container
         return None
-    
+
     @staticmethod
     def get_status(pod: Pod, container_name: str) -> Optional[ContainerStatus]:
         for status in pod.status.containerStatuses:
@@ -139,6 +139,7 @@ def pod_other_limits(pod: Pod) -> dict[str, float]:
 
 
 def pod_other_requests(pod: Pod) -> dict[str, float]:
+    # for additional defined resources like GPU
     return pod_other_resources(pod, ResourceAttributes.requests)
 
 

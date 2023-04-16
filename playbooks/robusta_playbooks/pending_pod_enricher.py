@@ -1,18 +1,7 @@
 import logging
 from typing import List
 
-from robusta.api import (
-    BaseBlock,
-    PendingInvestigator,
-    PendingPodReason,
-    PodEvent,
-    action,
-    get_crash_report_blocks,
-    get_image_pull_backoff_blocks,
-    get_image_pull_backoff_container_statuses,
-    get_pending_pod_blocks,
-    pod_other_requests,
-)
+from robusta.api import BaseBlock, PodEvent, action, get_image_pull_backoff_container_statuses, get_pending_pod_blocks
 
 
 @action

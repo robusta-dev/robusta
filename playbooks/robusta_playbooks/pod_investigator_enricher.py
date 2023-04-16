@@ -10,17 +10,13 @@ from robusta.api import (
     ErrorCodes,
     KubernetesResourceEvent,
     MarkdownBlock,
-    PendingInvestigator,
-    PendingPodReason,
     action,
     build_selector_query,
     get_crash_report_blocks,
     get_image_pull_backoff_blocks,
-    get_image_pull_backoff_container_statuses,
     get_job_all_pods,
     get_pending_pod_blocks,
     parse_kubernetes_datetime_to_ms,
-    pod_other_requests,
 )
 
 
@@ -156,6 +152,7 @@ def pod_issue_investigator(event: KubernetesResourceEvent):
     elif resource.kind == "Pod":
         pods = [resource]
     else:
+        # if the kind is Deployment", "DaemonSet", "ReplicaSet", "StatefulSet"
         selector = build_selector_query(resource.spec.selector)
         pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
     for pod in pods:
