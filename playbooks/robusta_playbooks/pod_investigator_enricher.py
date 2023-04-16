@@ -59,7 +59,8 @@ def pod_issue_investigator(event: KubernetesResourceEvent):
         logging.info(f"No pod issues discovered for {resource.kind} {resource.metadata.name}")
         return
     # Investigate first issue found
-    report_pod_issue(event, pods, pods_with_issues[0])
+    pod_issue = detect_pod_issue(pods_with_issues[0])
+    report_pod_issue(event, pods_with_issues, pod_issue)
 
 
 def detect_pod_issue(pod: Pod) -> PodIssue:
