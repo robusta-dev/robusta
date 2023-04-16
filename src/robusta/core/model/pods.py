@@ -143,9 +143,9 @@ def pod_other_requests(pod: Pod) -> Dict[str, float]:
     return pod_other_resources(pod, ResourceAttributes.requests)
 
 
-def pod_other_resources(pod: Pod, resource_attribute: ResourceAttributes) -> dict[str, float]:
+def pod_other_resources(pod: Pod, resource_attribute: ResourceAttributes) -> Dict[str, float]:
     standard_resources = ["cpu", "memory"]
-    total_resources: dict[str, float] = {}
+    total_resources: Dict[str, float] = {}
     for container in pod.spec.containers:
         try:
             requests = container.object_at_path(["resources", resource_attribute.name])  # requests or limits
