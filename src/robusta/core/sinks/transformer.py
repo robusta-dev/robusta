@@ -217,14 +217,15 @@ class Transformer:
         def write_table(pdf: FPDF, rows: list[list[str]]):
             pdf.set_draw_color(table_color)
             set_normal_test_style(pdf)
-            pdf.table(
+            with pdf.table(
                 borders_layout="INTERNAL",
                 rows=rows,
                 headings_style=FontFace(color=(headers_color)),
                 col_widths=(10, 25, 25, 65),
                 markdown=True,
                 line_height=1.5 * pdf.font_size,
-            )
+            ):
+                pass
 
         scan: ScanReportBlock = block
         pdf = FPDF(orientation="landscape", format="A4")
