@@ -184,7 +184,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     )
 
     scan_issues: List[ScanReportRow] = []
-    for section in popeye_scan.sanitizers:
+    for section in popeye_scan.sanitizers or []:
         kind = section.sanitizer
         issues_dict: Dict[str, List[Issue]] = section.issues or {}
         for resource, issuesList in issues_dict.items():
