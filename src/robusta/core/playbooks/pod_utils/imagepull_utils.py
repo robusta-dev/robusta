@@ -160,12 +160,12 @@ class ImagePullBackoffInvestigator:
     def investigate(self, container_status: ContainerStatus) -> Optional[ImagePullOffInvestigation]:
         for pod_event in self.pod_events.items:
             error_message = self.get_kubelet_image_pull_error_from_event(pod_event, container_status.image)
-            logging.info(f"for {pod_event} got message: {error_message}")
+            logging.debug(f"for {pod_event} got message: {error_message}")
             if error_message is None:
                 continue
 
             reason = self.get_reason_from_kubelet_image_pull_error(error_message)
-            logging.info(f"reason is: {reason}")
+            logging.debug(f"reason is: {reason}")
 
             return ImagePullOffInvestigation(error_message=error_message, reason=reason)
 

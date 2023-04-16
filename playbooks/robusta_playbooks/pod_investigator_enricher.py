@@ -53,12 +53,13 @@ def pod_issue_investigator(event: KubernetesResourceEvent):
         # if the kind is Deployment", "DaemonSet", "ReplicaSet", "StatefulSet"
         selector = build_selector_query(resource.spec.selector)
         pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
-    for pod in pods:
-        pod_issue = detect_pod_issue(pod)
-        if pod_issue == PodIssue.NoneDetected:
-            continue
-        report_pod_issue(event, pods, pod_issue)
-        break
+
+    pods_with_issues = [pod for pod in pods if detect_pod_issue(pod) != PodIssue.NoneDetected]
+    if not pods_with_issues:
+        logging.info(f"No pod issues discovered for {resource.kind} {resource.metadata.name}")
+        return
+    # Investigate first issue found
+    report_pod_issue(event, pods, pods_with_issues[0])
 
 
 def detect_pod_issue(pod: Pod) -> PodIssue:

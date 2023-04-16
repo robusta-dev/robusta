@@ -115,7 +115,7 @@ class PendingInvestigator:
         ]
         if failed_scheduling_events:
             newest_failed_event = max(failed_scheduling_events, key=lambda x: get_event_timestamp(x))
-            event_message = newest_failed_event[0].message
+            event_message = newest_failed_event.message
 
         reasons = self.get_reason_from_failed_scheduling_event_message(event_message)
         return reasons  # return object with all reasons and message

@@ -158,7 +158,7 @@ def pod_other_resources(pod: Pod, resource_attribute: ResourceAttributes) -> Dic
                 else:
                     total_resources[resource_type] += float(requests[resource_type])
         except Exception:
-            logging.error(f"failed to parce {resource_attribute.name} {container.resources}", exc_info=True)
+            logging.error(f"failed to parse {resource_attribute.name} {container.resources}", exc_info=True)
     return total_resources
 
 
