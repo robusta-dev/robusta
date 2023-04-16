@@ -147,6 +147,11 @@ def get_expected_replicas(resource) -> int:
 
 @action
 def pod_issue_investigator(event: KubernetesResourceEvent):
+    """
+    Enriches alert with a finding that investigates the pods issues
+    Note:
+        The only supported resources for investigation are "Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"
+    """
     resource = event.get_resource()
     if resource.kind not in supported_resources:
         raise ActionException(
