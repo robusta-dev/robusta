@@ -2,7 +2,6 @@ import json
 import logging
 import threading
 import time
-
 from typing import Any, Dict, List
 
 import requests
@@ -16,11 +15,11 @@ from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.services import ServiceInfo
+from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.blocks import ScanReportBlock, ScanReportRow
-from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.core.reporting.consts import EnrichmentAnnotation
-from robusta.core.reporting import Enrichment
+from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -121,15 +120,18 @@ class SupabaseDal:
                 self.handle_supabase_error()
                 raise Exception(msg)
 
-            res = self.__rpc_patch("insert_scan_meta", {
-                "_account_id": self.account_id,
-                "_cluster": self.cluster,
-                "_scan_id": block.scan_id,
-                "_scan_start": str(block.start_time),
-                "_scan_end": str(block.end_time),
-                "_type": block.type,
-                "_grade": block.score
-            })
+            res = self.__rpc_patch(
+                "insert_scan_meta",
+                {
+                    "_account_id": self.account_id,
+                    "_cluster": self.cluster,
+                    "_scan_id": block.scan_id,
+                    "_scan_start": str(block.start_time),
+                    "_scan_end": str(block.end_time),
+                    "_type": block.type,
+                    "_grade": block.score,
+                },
+            )
 
             if res.get("status_code") not in [200, 201, 204]:
                 msg = f"Failed to persist scan meta {block.scan_id} error: {res.get('data')}"
@@ -145,29 +147,29 @@ class SupabaseDal:
 
         for s in scans:
             self.persist_scan(s)
-                
-        if (len(scans)> 0) and (len(enrichments)) == 0:
-            return    
-        
-        for enrichment in enrichments: 
-                res = (
-                    self.client.table(EVIDENCE_TABLE)
-                    .insert(
-                        ModelConversion.to_evidence_json(
-                            account_id=self.account_id,
-                            cluster_id=self.cluster,
-                            sink_name=self.sink_name,
-                            signing_key=self.signing_key,
-                            finding_id=finding.id,
-                            enrichment=enrichment,
-                        )
+
+        if (len(scans) > 0) and (len(enrichments)) == 0:
+            return
+
+        for enrichment in enrichments:
+            res = (
+                self.client.table(EVIDENCE_TABLE)
+                .insert(
+                    ModelConversion.to_evidence_json(
+                        account_id=self.account_id,
+                        cluster_id=self.cluster,
+                        sink_name=self.sink_name,
+                        signing_key=self.signing_key,
+                        finding_id=finding.id,
+                        enrichment=enrichment,
                     )
-                    .execute()
                 )
-                if res.get("status_code") != 201:
-                    logging.error(
-                        f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"
-                    )
+                .execute()
+            )
+            if res.get("status_code") != 201:
+                logging.error(
+                    f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"
+                )
 
         res = (
             self.client.table(ISSUES_TABLE)
@@ -218,7 +220,7 @@ class SupabaseDal:
             msg = f"Failed to get existing services (supabase) error: {res.get('data')}"
             logging.error(msg)
             self.handle_supabase_error()
-            raise Exception(msg) 
+            raise Exception(msg)
         return [
             ServiceInfo(
                 name=service["name"],
