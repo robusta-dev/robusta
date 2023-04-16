@@ -5,13 +5,13 @@ from robusta.api import BaseBlock, PodEvent, action, get_image_pull_backoff_cont
 
 
 @action
-def pending_pod_reporter(event: PodEvent):
+def pending_pod_enricher(event: PodEvent):
     """
     Notify when and why a pod is pending.
     """
     pod = event.get_pod()
     if pod is None:
-        logging.info("No pod for pending_pod_reporter")
+        logging.info("No pod for pending_pod_enricher")
         return
     is_pod_pending = pod.status.phase.lower() == "pending"
     is_imagepull_backoff = len(get_image_pull_backoff_container_statuses(pod.status)) > 0
