@@ -186,18 +186,18 @@ class Transformer:
         accent_color = (140, 249, 209)
         headers_color = (63, 63, 63)
         table_color = (207, 215, 216)
-        def setNormalTextStyle(pdf: FPDF):
+        def set_normal_test_style(pdf: FPDF):
             pdf.set_font("", "", 8)
             pdf.set_text_color(0,0,0)
 
-        def writeReportHeader(title: str, end_time, score: int, grade: str):
+        def write_report_header(title: str, end_time, score: int, grade: str):
             pdf.cell(pdf.w * 0.7, 10, f"**{title}** {end_time.strftime('%b %d, %y %X')}", border=0, markdown=True)
             if int(score) >= 0:
                 pdf.cell(pdf.w * 0.3, 10, f"**{grade}** {score}", border=0, markdown=True)
             
             pdf.ln(20)
 
-        def writeSectionHeader(pdf: FPDF, header: str):
+        def write_section_header(pdf: FPDF, header: str):
             if pdf.will_page_break(50):
                 pdf.add_page()
         
@@ -207,17 +207,17 @@ class Transformer:
             pdf.cell(txt=header, border=0)
             pdf.ln(12)
 
-        def writeConfig(pdf: FPDF, config: str):
+        def write_config(pdf: FPDF, config: str):
             pdf.set_text_color(accent_color)
             pdf.cell(txt="config", border=0)
             pdf.ln(12)
-            setNormalTextStyle(pdf)
+            set_normal_test_style(pdf)
             pdf.multi_cell(w=0,txt=config, border=0)
 
 
-        def writeTable(pdf: FPDF, rows: list[list[str]]):
+        def write_table(pdf: FPDF, rows: list[list[str]]):
             pdf.set_draw_color(table_color)
-            setNormalTextStyle(pdf)
+            set_normal_test_style(pdf)
             with pdf.table(borders_layout="INTERNAL",
                 rows=rows,
                 headings_style=FontFace(color=(headers_color)),
@@ -236,8 +236,8 @@ class Transformer:
         pdf.c_margin = 2 # create default cell margin to add table "padding"
   
         title = f"{scan.type.capitalize()} report"
-        writeReportHeader(title, scan.end_time, scan.score, scan.grade())
-        writeConfig(pdf,scan.config)
+        write_report_header(title, scan.end_time, scan.score, scan.grade())
+        write_config(pdf,scan.config)
 
         sections: dict[str, dict[str,List]] = defaultdict(lambda: defaultdict(list))
         for item in scan.results:
@@ -255,7 +255,7 @@ class Transformer:
                     max_priority = max(max_priority,res.priority)
                     rows.append([scan.pdf_scan_row_priority_format(max_priority), n, ns, issue_txt])    
 
-            writeSectionHeader(pdf, kind)
-            writeTable(pdf, rows)
+            write_section_header(pdf, kind)
+            write_table(pdf, rows)
                         
         return FileBlock(f"{title}.pdf", pdf.output('', 'S'))
