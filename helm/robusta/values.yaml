@@ -183,7 +183,6 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: KubePodNotReady
   actions:
-  - pending_pod_reporter: {}
   - logs_enricher: {}
   - pod_events_enricher: {}
   - pod_issue_investigator: {}
@@ -194,7 +193,6 @@ builtinPlaybooks:
   actions:
   - pending_pod_reporter: {}
   - pod_events_enricher: {}
-  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:
@@ -255,6 +253,7 @@ builtinPlaybooks:
   - resource_events_enricher:
       dependent_pod_mode: true
   - statefulset_replicas_enricher: {}
+  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:
@@ -329,14 +328,6 @@ builtinPlaybooks:
   - deployment_events_enricher:
       included_types: ["Warning", "Normal"]
       dependent_pod_mode: true
-
-- triggers:
-  - on_prometheus_alert:
-      alert_name: KubeStatefulSetReplicasMismatch
-  - on_prometheus_alert:
-      alert_name: KubePodCrashLooping
-  actions:
-  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:

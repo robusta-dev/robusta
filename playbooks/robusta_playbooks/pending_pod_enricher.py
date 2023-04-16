@@ -1,5 +1,6 @@
+import datetime
 import logging
-from enum import Enum, auto
+from enum import Enum
 from typing import List, Optional
 
 from hikaru.model import Pod, PodList
@@ -7,22 +8,18 @@ from robusta.api import (
     ActionException,
     BaseBlock,
     ErrorCodes,
-    Finding,
-    FindingSeverity,
-    FindingSource,
-    FindingType,
     KubernetesResourceEvent,
     MarkdownBlock,
     PendingInvestigator,
     PendingPodReason,
     PodEvent,
-    PodFindingSubject,
     action,
     build_selector_query,
     get_crash_report_blocks,
     get_image_pull_backoff_blocks,
     get_image_pull_backoff_container_statuses,
     get_job_all_pods,
+    parse_kubernetes_datetime_to_ms,
     pod_other_requests,
     pod_requests,
 )
@@ -43,6 +40,7 @@ class PodIssue(str, Enum):
     ImagePullBackoff = "ImagePullBackoff"
     Pending = "Pending"
     CrashloopBackoff = "CrashloopBackoff"
+    Crashing = "Crashing"
     PotentialCrashloopBackoff = "PotentialCrashloopBackoff"
     NoneDetected = "NoneDetected"
 
@@ -52,8 +50,8 @@ def detect_pod_issue(pod: Pod) -> PodIssue:
         return PodIssue.ImagePullBackoff
     elif is_crashlooping(pod):
         return PodIssue.CrashloopBackoff
-    elif might_be_crashlooping(pod):
-        return PodIssue.CrashloopBackoff
+    elif had_recent_crash(pod):
+        return PodIssue.Crashing
     elif is_pod_pending(pod):
         return PodIssue.Pending
     return PodIssue.NoneDetected
@@ -71,15 +69,25 @@ def is_crashlooping(pod: Pod) -> bool:
     return len(crashlooping_containers) > 0
 
 
-def might_be_crashlooping(pod: Pod) -> bool:
+def timestamp_in_last_15_minutes(timestamp: str) -> bool:
+    time_ms = parse_kubernetes_datetime_to_ms(timestamp)
+    timestamp_happened = datetime.datetime.fromtimestamp(time_ms / 1000)
+    now = datetime.datetime.now()
+    last_15_minutes = datetime.timedelta(minutes=15)
+    return now - timestamp_happened < last_15_minutes
+
+
+def had_recent_crash(pod: Pod) -> bool:
+    # is a pod is crashlooping but currently running it wont have the status crashloop backoff
     all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
-    crashlooping_containers = [
+    crashing_containers = [
         container_status
         for container_status in all_statuses
-        if container_status.state.waiting is not None and container_status.restartCount > 4
+        if container_status.lastState.terminated is not None
+        and container_status.lastState.terminated.reason == "Error"
+        and timestamp_in_last_15_minutes(container_status.lastState.terminated.finishedAt)
     ]
-    # check event for container backoff event
-    return len(crashlooping_containers) > 0
+    return len(crashing_containers) > 0
 
 
 def has_image_pull_issue(pod: Pod) -> bool:
@@ -114,7 +122,7 @@ def get_pod_issue_blocks(pod: Pod) -> Optional[List[BaseBlock]]:
         return get_pending_pod_investigator_blocks(pod)
     elif is_crashlooping(pod):
         return get_crash_report_blocks(pod)
-    elif might_be_crashlooping(pod):
+    elif had_recent_crash(pod):
         return get_crash_report_blocks(pod)
     return None
 
