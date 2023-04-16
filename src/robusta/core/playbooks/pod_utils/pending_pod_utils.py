@@ -128,9 +128,6 @@ class PendingInvestigator:
         if pod_event.reason != "FailedScheduling":
             return False
 
-        if pod_event.reportingComponent != "default-scheduler":
-            return False
-
         regex_string = "\d+\/\d+( nodes are available\:).*"
         return bool(re.match(regex_string, pod_event.message))
 
