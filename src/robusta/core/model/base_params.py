@@ -1,7 +1,8 @@
+import logging
 from enum import Enum, auto
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, SecretStr, validator
 
 from robusta.utils.documented_pydantic import DocumentedModel
 
@@ -41,11 +42,13 @@ class ActionParams(DocumentedModel):
     """
     Base class for all Action parameter classes.
     """
+
     def post_initialization(self):
         """
         This function can be used to run post initialization logic on the action params
         """
         pass
+
     pass
 
 
@@ -95,6 +98,13 @@ class PrometheusParams(ActionParams):
 
     prometheus_url: Optional[str] = None
     prometheus_auth: Optional[SecretStr] = None
+
+    @validator("prometheus_url", allow_reuse=True)
+    def validate_protocol(cls, v):
+        if v and not v.startswith("http"):  # if the user configured url without http(s)
+            v = f"http://{v}"
+            logging.info(f"Adding protocol to prometheus_url: {v}")
+        return v
 
 
 class PrometheusDuration(BaseModel):
