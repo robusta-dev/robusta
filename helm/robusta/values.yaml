@@ -186,6 +186,7 @@ builtinPlaybooks:
   - pending_pod_reporter: {}
   - logs_enricher: {}
   - pod_events_enricher: {}
+  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:
@@ -193,6 +194,7 @@ builtinPlaybooks:
   actions:
   - pending_pod_reporter: {}
   - pod_events_enricher: {}
+  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:
@@ -211,6 +213,7 @@ builtinPlaybooks:
   - job_info_enricher: {}
   - job_events_enricher: {}
   - job_pod_enricher: {}
+  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:

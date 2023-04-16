@@ -1,5 +1,5 @@
 import re
-from enum import Enum, auto
+from enum import Enum
 from typing import List, Optional
 
 from hikaru.model import Event, EventList
