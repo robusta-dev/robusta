@@ -3,8 +3,10 @@
 # 1. We use pydantic and not dataclasses so that field types are validated
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
+import json
 import textwrap
 from copy import deepcopy
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import hikaru
@@ -23,6 +25,7 @@ except ImportError:
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.core.model.env_vars import PRINTED_TABLE_MAX_WIDTH
 from robusta.core.reporting.base import BaseBlock
+from robusta.core.reporting.consts import ScanType
 from robusta.core.reporting.custom_rendering import render_value
 
 BLOCK_SIZE_LIMIT = 2997  # due to slack block size limit of 3000
@@ -386,3 +389,42 @@ class PrometheusBlock(BaseBlock):
         """
         metadata = {"query-result-version": "1.0", "query": query}
         super().__init__(data=data, metadata=metadata)
+
+
+class ScanReportRow(BaseModel):
+    scan_id: str  # UUID
+    scan_type: ScanType
+    kind: Optional[str]
+    name: Optional[str]
+    namespace: Optional[str]
+    container: Optional[str]
+    content: List[Any]  # scan result data
+    priority: float
+
+
+class ScanReportBlock(BaseBlock):
+    title: str
+    scan_id: str  # UUID
+    type: ScanType
+    start_time: datetime
+    end_time: datetime
+    score: str
+    results: List[ScanReportRow]
+    config: str
+    pdf_scan_row_content_format: Callable[[ScanReportRow], str] = lambda row: json.dumps(row.content)
+    pdf_scan_row_priority_format: Callable[[float], str] = lambda priority: str(priority)
+
+    def grade(self):
+        score = int(self.score)
+        if score >= 90:
+            return "A"
+        elif score >= 80:
+            return "B"
+        elif score >= 70:
+            return "C"
+        elif score >= 60:
+            return "D"
+        elif score >= 50:
+            return "E"
+        else:
+            return "F"

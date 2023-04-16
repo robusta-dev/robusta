@@ -128,6 +128,8 @@ from robusta.core.reporting import (
     ListBlock,
     MarkdownBlock,
     PrometheusBlock,
+    ScanReportBlock,
+    ScanReportRow,
     TableBlock,
     VideoLink,
 )
@@ -140,10 +142,12 @@ from robusta.core.reporting.action_requests import (
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import (
+    EnrichmentAnnotation,
     FindingAggregationKey,
     FindingSource,
     FindingSubjectType,
     FindingType,
+    ScanType,
     SlackAnnotations,
 )
 from robusta.core.reporting.custom_rendering import RendererType, charts_style, render_value
