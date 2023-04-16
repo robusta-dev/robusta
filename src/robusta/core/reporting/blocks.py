@@ -393,11 +393,11 @@ class PrometheusBlock(BaseBlock):
 
 class ScanReportRow(BaseModel):
     scan_id: str  # UUID
-    namespace: str
     scan_type: ScanType
-    name: str
-    kind: str
-    container: str
+    kind: Optional[str]
+    name: Optional[str]
+    namespace: Optional[str]
+    container: Optional[str]
     content: List[Any]  # scan result data
     priority: float
 
