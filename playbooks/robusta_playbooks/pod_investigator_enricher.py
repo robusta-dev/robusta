@@ -20,10 +20,6 @@ from robusta.api import (
 )
 
 
-def is_pod_pending(pod: Pod) -> bool:
-    return pod.status.phase.lower() == "pending"
-
-
 class PodIssue(str, Enum):
     ImagePullBackoff = "ImagePullBackoff"
     Pending = "Pending"
@@ -31,6 +27,39 @@ class PodIssue(str, Enum):
     Crashing = "Crashing"
     PotentialCrashloopBackoff = "PotentialCrashloopBackoff"
     NoneDetected = "NoneDetected"
+
+
+supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"]
+
+
+@action
+def pod_issue_investigator(event: KubernetesResourceEvent):
+    """
+    Enriches alert with a finding that investigates the pods issues
+    Note:
+        The only supported resources for investigation are "Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"
+    """
+    resource = event.get_resource()
+    if resource.kind not in supported_resources:
+        raise ActionException(
+            ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Pod investigator is not supported for resource {resource.kind}"
+        )
+
+    if resource.kind == "Job":
+        job_pods = get_job_all_pods(resource)
+        pods = job_pods if job_pods else []
+    elif resource.kind == "Pod":
+        pods = [resource]
+    else:
+        # if the kind is Deployment", "DaemonSet", "ReplicaSet", "StatefulSet"
+        selector = build_selector_query(resource.spec.selector)
+        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
+    for pod in pods:
+        pod_issue = detect_pod_issue(pod)
+        if pod_issue == PodIssue.NoneDetected:
+            continue
+        report_pod_issue(event, pods, pod_issue)
+        break
 
 
 def detect_pod_issue(pod: Pod) -> PodIssue:
@@ -43,6 +72,10 @@ def detect_pod_issue(pod: Pod) -> PodIssue:
     elif is_pod_pending(pod):
         return PodIssue.Pending
     return PodIssue.NoneDetected
+
+
+def is_pod_pending(pod: Pod) -> bool:
+    return pod.status.phase.lower() == "pending"
 
 
 def is_crashlooping(pod: Pod) -> bool:
@@ -90,17 +123,41 @@ def has_image_pull_issue(pod: Pod) -> bool:
 
 
 def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue):
+    # find pods with issues
     pods_with_issue = [pod for pod in pods if detect_pod_issue(pod) == issue]
     pod_names = [pod.metadata.name for pod in pods_with_issue]
+    expected_pods = get_expected_replicas(event)
+    message_string = f"{len(pod_names)}/{expected_pods} pod(s) are in {issue} state. "
     resource = event.get_resource()
-    expected_replicas = get_expected_replicas(resource)
-    message_string = f"{len(pod_names)}/{expected_replicas} pod(s) are in {issue} state."
+    if resource.kind == "Job":
+        message_string = f"{len(pod_names)} pod(s) are in {issue} state. "
+
+    # no need to report here if len(pods) != expected_pods since there are mismatch enrichers
+
     blocks: List[BaseBlock] = [MarkdownBlock(message_string)]
+    # get blocks from specific pod issue
     additional_blocks = get_pod_issue_blocks(pods_with_issue[0])
+
     if additional_blocks:
         blocks.append(MarkdownBlock(f"\n\n*{pod_names[0]}* was picked for investigation\n"))
         blocks.extend(additional_blocks)
     event.add_enrichment(blocks)
+
+
+def get_expected_replicas(event: KubernetesResourceEvent) -> int:
+    resource = event.get_resource()
+    kind = resource.kind
+    try:
+        if kind == "Deployment" or kind == "StatefulSet":
+            return resource.spec.replicas if resource.spec.replicas is not None else 1
+        elif kind == "DaemonSet":
+            return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
+        elif kind == "Pod":
+            return 1
+        return 0
+    except Exception:
+        logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
+    return 1
 
 
 def get_pod_issue_blocks(pod: Pod) -> Optional[List[BaseBlock]]:
@@ -113,51 +170,3 @@ def get_pod_issue_blocks(pod: Pod) -> Optional[List[BaseBlock]]:
     elif had_recent_crash(pod):
         return get_crash_report_blocks(pod)
     return None
-
-
-supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"]
-
-
-def get_expected_replicas(resource) -> int:
-    kind = resource.kind
-    try:
-        if kind == "Deployment" or kind == "StatefulSet" or kind == "Job":
-            return 1 if not resource.status.replicas else resource.status.replicas
-        elif kind == "DaemonSet":
-            return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
-        elif kind == "Pod":
-            return 1
-        return 0
-    except Exception:
-        logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
-    return 1
-
-
-@action
-def pod_issue_investigator(event: KubernetesResourceEvent):
-    """
-    Enriches alert with a finding that investigates the pods issues
-    Note:
-        The only supported resources for investigation are "Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job"
-    """
-    resource = event.get_resource()
-    if resource.kind not in supported_resources:
-        raise ActionException(
-            ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Pod investigator is not supported for resource {resource.kind}"
-        )
-
-    if resource.kind == "Job":
-        job_pods = get_job_all_pods(resource)
-        pods = job_pods if job_pods else []
-    elif resource.kind == "Pod":
-        pods = [resource]
-    else:
-        # if the kind is Deployment", "DaemonSet", "ReplicaSet", "StatefulSet"
-        selector = build_selector_query(resource.spec.selector)
-        pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
-    for pod in pods:
-        pod_issue = detect_pod_issue(pod)
-        if pod_issue == PodIssue.NoneDetected:
-            continue
-        report_pod_issue(event, pods, pod_issue)
-        break
