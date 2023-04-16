@@ -124,9 +124,9 @@ class Scheduler:
 
     def __is_job_done(self, job: ScheduledJob) -> bool:
         if isinstance(job.scheduling_params, DynamicDelayRepeat):
-            return job.state.exec_count == len(job.scheduling_params.delay_periods)
+            return job.state.exec_count >= len(job.scheduling_params.delay_periods)
         else:  # default, FIXED_DELAY_REPEAT
-            return job.state.exec_count == job.scheduling_params.repeat
+            return job.state.exec_count >= job.scheduling_params.repeat
 
     def __calc_job_delay_for_next_run(self, job: ScheduledJob):
         if job.state.job_status == JobStatus.NEW:
@@ -136,7 +136,8 @@ class Scheduler:
                 return INITIAL_SCHEDULE_DELAY_SEC
 
         if isinstance(job.scheduling_params, DynamicDelayRepeat):
-            next_delay = job.scheduling_params.delay_periods[job.state.exec_count]
+            next_delay_idx = min(job.state.exec_count, len(job.scheduling_params.delay_periods) - 1)
+            next_delay = job.scheduling_params.delay_periods[next_delay_idx]
         else:  # FIXED_DELAY_REPEAT type
             next_delay = job.scheduling_params.seconds_delay
 
