@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from hikaru.model import Container, ContainerState, ContainerStatus, Pod
 from pydantic import BaseModel
@@ -134,11 +134,11 @@ def pod_limits(pod: Pod) -> PodResources:
     return pod_resources(pod, ResourceAttributes.limits)
 
 
-def pod_other_limits(pod: Pod) -> dict[str, float]:
+def pod_other_limits(pod: Pod) -> Dict[str, float]:
     return pod_other_resources(pod, ResourceAttributes.limits)
 
 
-def pod_other_requests(pod: Pod) -> dict[str, float]:
+def pod_other_requests(pod: Pod) -> Dict[str, float]:
     # for additional defined resources like GPU
     return pod_other_resources(pod, ResourceAttributes.requests)
 
