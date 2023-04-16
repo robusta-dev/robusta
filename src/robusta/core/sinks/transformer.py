@@ -1,11 +1,11 @@
 import re
 import urllib.parse
-from typing import List, Optional
-from fpdf import FPDF
-import markdown2
 from collections import defaultdict
+from typing import List, Optional
+
+import markdown2
+from fpdf import FPDF
 from fpdf.fonts import FontFace
-import json
 
 try:
     from tabulate import tabulate
@@ -24,8 +24,8 @@ from robusta.core.reporting import (
     KubernetesDiffBlock,
     ListBlock,
     MarkdownBlock,
+    ScanReportBlock,
     TableBlock,
-    ScanReportBlock
 )
 
 
@@ -176,31 +176,31 @@ class Transformer:
 
         return file_blocks
 
-
     @staticmethod
     def scanReportBlock_to_fileblock(block: BaseBlock) -> BaseBlock:
 
         if not isinstance(block, ScanReportBlock):
             return block
-        
+
         accent_color = (140, 249, 209)
         headers_color = (63, 63, 63)
         table_color = (207, 215, 216)
+
         def set_normal_test_style(pdf: FPDF):
             pdf.set_font("", "", 8)
-            pdf.set_text_color(0,0,0)
+            pdf.set_text_color(0, 0, 0)
 
         def write_report_header(title: str, end_time, score: int, grade: str):
             pdf.cell(pdf.w * 0.7, 10, f"**{title}** {end_time.strftime('%b %d, %y %X')}", border=0, markdown=True)
             if int(score) >= 0:
                 pdf.cell(pdf.w * 0.3, 10, f"**{grade}** {score}", border=0, markdown=True)
-            
+
             pdf.ln(20)
 
         def write_section_header(pdf: FPDF, header: str):
             if pdf.will_page_break(50):
                 pdf.add_page()
-        
+
             pdf.ln(12)
             pdf.set_font("", "B", 12)
             pdf.set_text_color(headers_color)
@@ -212,34 +212,32 @@ class Transformer:
             pdf.cell(txt="config", border=0)
             pdf.ln(12)
             set_normal_test_style(pdf)
-            pdf.multi_cell(w=0,txt=config, border=0)
-
+            pdf.multi_cell(w=0, txt=config, border=0)
 
         def write_table(pdf: FPDF, rows: list[list[str]]):
             pdf.set_draw_color(table_color)
             set_normal_test_style(pdf)
-            with pdf.table(borders_layout="INTERNAL",
+            pdf.table(
+                borders_layout="INTERNAL",
                 rows=rows,
                 headings_style=FontFace(color=(headers_color)),
-                col_widths=(10,25,25,65),
+                col_widths=(10, 25, 25, 65),
                 markdown=True,
-                line_height=1.5 * pdf.font_size
-                ) as t:
-                pass
+                line_height=1.5 * pdf.font_size,
+            )
 
-        
         scan: ScanReportBlock = block
         pdf = FPDF(orientation="landscape", format="A4")
         pdf.add_page()
-        pdf.set_font("courier","", 18)
-        pdf.set_line_width(.1)  
-        pdf.c_margin = 2 # create default cell margin to add table "padding"
-  
+        pdf.set_font("courier", "", 18)
+        pdf.set_line_width(0.1)
+        pdf.c_margin = 2  # create default cell margin to add table "padding"
+
         title = f"{scan.type.capitalize()} report"
         write_report_header(title, scan.end_time, scan.score, scan.grade())
-        write_config(pdf,scan.config)
+        write_config(pdf, scan.config)
 
-        sections: dict[str, dict[str,List]] = defaultdict(lambda: defaultdict(list))
+        sections: dict[str, dict[str, List]] = defaultdict(lambda: defaultdict(list))
         for item in scan.results:
             sections[item.kind][f"{item.name}/{item.namespace}"].append(item)
 
@@ -247,15 +245,15 @@ class Transformer:
 
             rows = [["Priority", "Name", "Namespace", "Issues"]]
             for group, scanRes in grouped_issues.items():
-                n,ns = group.split("/",1)
+                n, ns = group.split("/", 1)
                 issue_txt = ""
-                max_priority:int = 0
+                max_priority: int = 0
                 for res in sorted(scanRes, key=lambda x: len(x.container)):
                     issue_txt += scan.pdf_scan_row_content_format(row=res)
-                    max_priority = max(max_priority,res.priority)
-                    rows.append([scan.pdf_scan_row_priority_format(max_priority), n, ns, issue_txt])    
+                    max_priority = max(max_priority, res.priority)
+                    rows.append([scan.pdf_scan_row_priority_format(max_priority), n, ns, issue_txt])
 
             write_section_header(pdf, kind)
             write_table(pdf, rows)
-                        
-        return FileBlock(f"{title}.pdf", pdf.output('', 'S'))
+
+        return FileBlock(f"{title}.pdf", pdf.output("", "S"))
