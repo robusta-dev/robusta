@@ -142,11 +142,13 @@ class SupabaseDal:
     def persist_finding(self, finding: Finding):
 
         scans, enrichments = [], []
-        for e in finding.enrichments:
-            scans.append(e) if e.annotations.get(EnrichmentAnnotation.SCAN, False) else enrichments.append(e)
+        for enrich in finding.enrichments:
+            scans.append(enrich) if enrich.annotations.get(EnrichmentAnnotation.SCAN, False) else enrichments.append(
+                enrich
+            )
 
-        for s in scans:
-            self.persist_scan(s)
+        for scan in scans:
+            self.persist_scan(scan)
 
         if (len(scans) > 0) and (len(enrichments)) == 0:
             return
