@@ -1,6 +1,5 @@
 import json
 import uuid
-import functools
 from datetime import datetime
 from typing import Dict, List, Optional, Union, Literal
 
@@ -36,45 +35,28 @@ class KRRObject(BaseModel):
     allocations: Dict[str, Dict[str, Optional[float]]]
 
 
+class KRRRecommendedInfo(BaseModel):
+    value: Union[float, Literal["?"], None]
+    severity: str = "UNKNOWN"
+
+    @property
+    def priority(self) -> int:
+        return krr_severity_to_priority(self.severity)
+
+
 class KRRRecommended(BaseModel):
-    requests: Dict[str, Union[float, Literal['?'], None]]
-    limits: Dict[str, Union[float, Literal['?'], None]]
+    requests: Dict[str, KRRRecommendedInfo]
+    limits: Dict[str, KRRRecommendedInfo]
 
 
 class KRRScan(BaseModel):
     object: KRRObject
     recommended: KRRRecommended
     severity: str = "UNKNOWN"
-    severities: Dict[str, Dict[str, str]] = {
-        "cpu": {
-            "request": "UNKNOWN",
-            "limit": "UNKNOWN",
-        },
-        "memory": {
-            "request": "UNKNOWN",
-            "limit": "UNKNOWN",
-        }
-    }
 
     @property
     def priority(self) -> int:
         return krr_severity_to_priority(self.severity)
-
-    @property
-    @functools.lru_cache()
-    def priorities(self) -> Dict[str, Dict[str, int]]:
-        return {
-            resource: {
-                type_: krr_severity_to_priority(severity)
-                for type_, severity
-                in severity_data.items()
-            }
-            for resource, severity_data
-            in self.severities.items()
-        }
-
-    def __hash__(self) -> int:
-        return hash(id(self))
 
 
 class KRRResponse(BaseModel):
@@ -186,16 +168,16 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                             "limit": scan.object.allocations["limits"][resource],
                         },
                         "recommended": {
-                            "request": scan.recommended.requests[resource],
-                            "limit": scan.recommended.limits[resource],
+                            "request": scan.recommended.requests[resource].value,
+                            "limit": scan.recommended.limits[resource].value,
                         },
                         "priority": {
-                            "request": scan.priorities[resource]["request"],
-                            "limit": scan.priorities[resource]["limit"],
+                            "request": scan.recommended.requests[resource].priority,
+                            "limit": scan.recommended.limits[resource].priority,
                         },
                     }
                     for resource in krr_scan.resources
-                ]
+                ],
             )
             for scan in krr_scan.scans
         ],
