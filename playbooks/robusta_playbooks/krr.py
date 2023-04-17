@@ -1,12 +1,16 @@
 import json
+import os
+import shlex
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Union, Literal
+from typing import Dict, List, Literal, Optional, Union
 
 from hikaru.model import Container, PodSpec
 from pydantic import BaseModel, ValidationError, validator
 
 from robusta.api import (
+    RELEASE_NAME,
+    ActionParams,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
     FileBlock,
@@ -14,7 +18,6 @@ from robusta.api import (
     FindingSource,
     FindingType,
     MarkdownBlock,
-    ProcessParams,
     RobustaJob,
     ScanReportBlock,
     ScanReportRow,
@@ -22,7 +25,8 @@ from robusta.api import (
     action,
     to_kubernetes_name,
 )
-from robusta.core.model.env_vars import RELEASE_NAME
+
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "leavemyyard/robusta-krr:latest")
 
 
 class KRRObject(BaseModel):
@@ -65,26 +69,33 @@ class KRRResponse(BaseModel):
     resources: List[str] = ["cpu", "memory"]
 
 
-class KRRParams(ProcessParams):
+class KRRParams(ActionParams):
     """
-    :var image: The krr container image to use for the scan.
     :var timeout: Time span for yielding the scan.
     :var args: KRR cli arguments.
     :var serviceAccountName: The account name to use for the KRR scan job.
     """
 
-    image: str = "leavemyyard/robusta-krr:latest"
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
-    strategy = "simple"
+    strategy: str = "simple"
     args: str = ""
-    timeout = 300
+    timeout: int = 300
 
     @validator("args", allow_reuse=True)
     def check_args(cls, args: str) -> str:
-        args_split = args.split()
-        if "-q" in args_split or "-f" in args_split:
-            raise ValueError("args cannot contain '-q' or '-f'")
+        for forbidden_arg in ["-q", "-f", "-v", "--quiet", "--format", "--verbose"]:
+            if forbidden_arg in args:
+                raise ValueError(f"Argument {forbidden_arg} is not allowed.")
+
         return args
+
+    @property
+    def args_sanitized(self) -> str:
+        return " ".join([f"'{arg}'" for arg in shlex.split(self.args)])
+
+    @validator("strategy", allow_reuse=True)
+    def check_strategy(cls, strategy: str) -> str:
+        return shlex.quote(strategy)
 
 
 def krr_severity_to_priority(severity: str) -> int:
@@ -110,9 +121,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         serviceAccountName=params.serviceAccountName,
         containers=[
             Container(
-                name=to_kubernetes_name(params.image),
-                image=params.image,
-                command=["/bin/sh", "-c", f"python krr.py {params.strategy} {params.args} -q -f json"],
+                name=to_kubernetes_name(IMAGE),
+                image=IMAGE,
+                command=["/bin/sh", "-c", f"python krr.py {params.strategy} {params.args_sanitized} -q -f json"],
             )
         ],
         restartPolicy="Never",
