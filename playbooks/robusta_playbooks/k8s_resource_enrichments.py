@@ -264,3 +264,42 @@ def list_resource_names(event: ExecutionBaseEvent, params: NamedResourcesParams)
             ListBlock(resource_names),
         ],
     )
+
+
+class StatusEnricherParams(ActionParams):
+    """
+    :var show_details: shows the message attached to each condition
+
+    """
+
+    show_details: bool = False
+
+
+@action
+def status_enricher(event: KubernetesResourceEvent, params: StatusEnricherParams):
+    """
+    Enrich the finding with the k8s objects's status conditions.
+
+    """
+    resource = event.get_resource()
+    if not resource:
+        logging.error(f"status_enricher was called on event without a resource : {event}")
+        return
+    if not resource.status.conditions:
+        return
+    headers = ["Type", "Status"]
+    if params.show_details:
+        headers.append("Message")
+        rows = [[c.type, c.status, c.message] for c in resource.status.conditions]
+    else:
+        rows = [[c.type, c.status] for c in resource.status.conditions]
+
+    event.add_enrichment(
+        [
+            TableBlock(
+                rows=rows,
+                headers=headers,
+                table_name=f"*{resource.kind} status details:*",
+            ),
+        ]
+    )

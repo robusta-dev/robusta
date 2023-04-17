@@ -171,6 +171,7 @@ class RobustaPod(Pod):
         tail_lines=None,
         regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None,
         regex_replacement_style: Optional[RegexReplacementStyle] = None,
+        filter_regex: Optional[str] = None,
     ) -> str:
         """
         Fetch pod logs, can replace sensitive data in the logs using a regex
@@ -184,6 +185,10 @@ class RobustaPod(Pod):
             previous,
             tail_lines,
         )
+
+        if pods_logs and filter_regex:
+            regex = re.compile(filter_regex)
+            pods_logs = "\n".join(re.findall(regex, pods_logs))
 
         if pods_logs and regex_replacer_patterns:
             logging.info("Sanitizing log data with the provided regex patterns")
@@ -259,11 +264,8 @@ class RobustaPod(Pod):
 
     @staticmethod
     def exec_on_node(pod_name: str, node_name: str, cmd):
-        node_runner = RobustaPod.create_debugger_pod(pod_name, node_name)
-        try:
-            node_runner.exec(f"nsenter -t 1 -a {cmd}")
-        finally:
-            node_runner.delete()
+        command = f'nsenter -t 1 -a "{cmd}"'
+        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, command)
 
     @staticmethod
     def run_debugger_pod(

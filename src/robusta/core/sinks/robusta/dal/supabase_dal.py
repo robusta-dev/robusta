@@ -2,9 +2,6 @@ import json
 import logging
 import threading
 import time
-from datetime import datetime
-import asyncio
-
 from typing import Any, Dict, List
 
 import requests
@@ -18,11 +15,11 @@ from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.services import ServiceInfo
-from robusta.core.reporting.base import Finding
-from robusta.core.reporting.blocks import ScanReportBlock,ScanReportRow
-from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
-from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.reporting import Enrichment
+from robusta.core.reporting.base import Finding
+from robusta.core.reporting.blocks import ScanReportBlock, ScanReportRow
+from robusta.core.reporting.consts import EnrichmentAnnotation
+from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -91,7 +88,6 @@ class SupabaseDal:
         sink_name: str,
         cluster_name: str,
         signing_key: str,
-        event_loop
     ):
         self.url = url
         self.key = key
@@ -104,79 +100,78 @@ class SupabaseDal:
         self.sign_in()
         self.sink_name = sink_name
         self.signing_key = signing_key
-        self.event_loop = event_loop
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
         db_sr = scanResult.dict()
         db_sr["account_id"] = self.account_id
         db_sr["cluster_id"] = self.cluster
         return db_sr
-    
 
     def persist_scan(self, enrichment: Enrichment):
-
         for block in enrichment.blocks:
             if not isinstance(block, ScanReportBlock):
-                return
+                continue
 
-        db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
-        res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
-        if res.get("status_code") not in [200, 201]:
-            msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
-            logging.error(msg)
-            self.handle_supabase_error()
-            raise Exception(msg)
+            db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
+            res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
+            if res.get("status_code") not in [200, 201]:
+                msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
+                logging.error(msg)
+                self.handle_supabase_error()
+                raise Exception(msg)
 
-        self.client.postgrest.session.headers.update(self.client._get_auth_headers())
-        tasks = [self.event_loop.create_task(self.client.rpc("insert_scan_meta", {
-            "_account_id": self.account_id,
-            "_cluster": self.cluster,
-            "_scan_id": block.scan_id,
-            "_scan_start": str(block.start_time),
-            "_scan_end": str(block.end_time),
-            "_type": block.type,
-            "_grade": block.score
-        }))]
-        self.event_loop.run_until_complete(asyncio.wait(tasks))
-        res = tasks[0].result()
+            res = self.__rpc_patch(
+                "insert_scan_meta",
+                {
+                    "_account_id": self.account_id,
+                    "_cluster": self.cluster,
+                    "_scan_id": block.scan_id,
+                    "_scan_start": str(block.start_time),
+                    "_scan_end": str(block.end_time),
+                    "_type": block.type,
+                    "_grade": block.score,
+                },
+            )
 
-        if res.status_code not in [200, 201, 204]:
-            msg = f"Failed to persist scan meta {block.scan_id} error: {res.message}"
-            logging.error(msg)
-            self.handle_supabase_error()
-            raise Exception(msg)
+            if res.get("status_code") not in [200, 201, 204]:
+                msg = f"Failed to persist scan meta {block.scan_id} error: {res.get('data')}"
+                logging.error(msg)
+                self.handle_supabase_error()
+                raise Exception(msg)
 
     def persist_finding(self, finding: Finding):
 
         scans, enrichments = [], []
-        for e in finding.enrichments:
-            scans.append(e) if e.annotations.get(EnrichmentAnnotation.SCAN, False) else enrichments.append(e)
+        for enrich in finding.enrichments:
+            scans.append(enrich) if enrich.annotations.get(EnrichmentAnnotation.SCAN, False) else enrichments.append(
+                enrich
+            )
 
-        for s in scans:
-            self.persist_scan(s)
-                
-        if (len(scans)> 0) and (len(enrichments)) == 0:
-            return    
-        
-        for enrichment in enrichments: 
-                res = (
-                    self.client.table(EVIDENCE_TABLE)
-                    .insert(
-                        ModelConversion.to_evidence_json(
-                            account_id=self.account_id,
-                            cluster_id=self.cluster,
-                            sink_name=self.sink_name,
-                            signing_key=self.signing_key,
-                            finding_id=finding.id,
-                            enrichment=enrichment,
-                        )
+        for scan in scans:
+            self.persist_scan(scan)
+
+        if (len(scans) > 0) and (len(enrichments)) == 0:
+            return
+
+        for enrichment in enrichments:
+            res = (
+                self.client.table(EVIDENCE_TABLE)
+                .insert(
+                    ModelConversion.to_evidence_json(
+                        account_id=self.account_id,
+                        cluster_id=self.cluster,
+                        sink_name=self.sink_name,
+                        signing_key=self.signing_key,
+                        finding_id=finding.id,
+                        enrichment=enrichment,
                     )
-                    .execute()
                 )
-                if res.get("status_code") != 201:
-                    logging.error(
-                        f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"
-                    )
+                .execute()
+            )
+            if res.get("status_code") != 201:
+                logging.error(
+                    f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"
+                )
 
         res = (
             self.client.table(ISSUES_TABLE)
@@ -227,7 +222,7 @@ class SupabaseDal:
             msg = f"Failed to get existing services (supabase) error: {res.get('data')}"
             logging.error(msg)
             self.handle_supabase_error()
-            raise Exception(msg) 
+            raise Exception(msg)
         return [
             ServiceInfo(
                 name=service["name"],
