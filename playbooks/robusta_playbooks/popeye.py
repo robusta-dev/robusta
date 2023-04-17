@@ -131,6 +131,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     Displays a popeye scan report.
     """
 
+    sanitize_args = " ".join([f"'{arg}'" for arg in shlex.split(params.args)])
     spec = PodSpec(
         serviceAccountName=params.service_account_name,
         containers=[
@@ -140,7 +141,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
                 command=[
                     "/bin/sh",
                     "-c",
-                    f"echo '{params.spinach}' > ~/spinach.yaml && popeye -f ~/spinach.yaml {shlex.quote(params.args)} -o json --force-exit-zero",
+                    f"echo '{params.spinach}' > ~/spinach.yaml && popeye -f ~/spinach.yaml {sanitize_args} -o json --force-exit-zero",
                 ],
             )
         ],
