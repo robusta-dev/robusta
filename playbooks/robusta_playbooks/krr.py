@@ -111,6 +111,29 @@ def krr_severity_to_priority(severity: str) -> int:
         return 0
 
 
+def priority_to_krr_severity(priority: int) -> str:
+    if priority == 4:
+        return "CRITICAL"
+    elif priority == 3:
+        return "WARNING"
+    elif priority == 2:
+        return "OK"
+    elif priority == 1:
+        return "GOOD"
+    else:
+        return "UNKNOWN"
+
+
+def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
+    return "\n".join(
+        f"{entry['resource'].upper()} Request: " +
+        f"{entry['allocated']['request']} -> " +
+        f"{entry['recommended']['request']} " +
+        f"({priority_to_krr_severity(entry['priority']['request'])})"
+        for entry in row.content
+    )
+
+
 @action
 def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
@@ -193,6 +216,8 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             for scan in krr_scan.scans
         ],
         config=params.json(),
+        pdf_scan_row_content_format=_pdf_scan_row_content_format,
+        pdf_scan_row_priority_format=lambda priority: priority_to_krr_severity(int(priority)),
     )
 
     finding = Finding(
