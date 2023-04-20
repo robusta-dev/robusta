@@ -1,4 +1,6 @@
 import json
+import os
+import shlex
 import uuid
 from collections import defaultdict
 from datetime import datetime
@@ -10,6 +12,7 @@ from pydantic import BaseModel, ValidationError
 
 from robusta.api import (
     RELEASE_NAME,
+    ActionParams,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
     FileBlock,
@@ -17,7 +20,6 @@ from robusta.api import (
     FindingSource,
     FindingType,
     MarkdownBlock,
-    ProcessParams,
     RobustaJob,
     ScanReportBlock,
     ScanReportRow,
@@ -25,6 +27,8 @@ from robusta.api import (
     action,
     to_kubernetes_name,
 )
+
+IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye")
 
 
 # https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/report/tally.go#L163
@@ -83,16 +87,14 @@ def scan_row_content_to_string(row: ScanReportRow) -> str:
     return txt
 
 
-class PopeyeParams(ProcessParams):
+class PopeyeParams(ActionParams):
     """
-    :var image: The popeye container image to use for the scan.
     :var timeout: Time span for yielding the scan.
     :var args: Popeye cli arguments.
     :var spinach: Spinach.yaml config file to supply to the scan.
     :var service_account_name: The account name to use for the Popeye scan job.
     """
 
-    image: str = "derailed/popeye"
     service_account_name: str = f"{RELEASE_NAME}-runner-service-account"
     timeout = 300
     args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
@@ -129,16 +131,17 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     Displays a popeye scan report.
     """
 
+    sanitize_args = shlex.join(shlex.split(params.args))
     spec = PodSpec(
         serviceAccountName=params.service_account_name,
         containers=[
             Container(
-                name=to_kubernetes_name(params.image),
-                image=params.image,
+                name=to_kubernetes_name(IMAGE),
+                image=IMAGE,
                 command=[
                     "/bin/sh",
                     "-c",
-                    f"echo '{params.spinach}' > ~/spinach.yaml && popeye -f ~/spinach.yaml {params.args} -o json --force-exit-zero",
+                    f"echo '{params.spinach}' > ~/spinach.yaml && popeye -f ~/spinach.yaml {sanitize_args} -o json --force-exit-zero",
                 ],
             )
         ],
