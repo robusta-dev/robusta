@@ -2,7 +2,7 @@ import json
 import secrets
 import string
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import jwt as JWT
 import typer
@@ -109,7 +109,8 @@ class SelfHostValues(BaseModel):
     POSTGRES_PORT: int = 5432
     POSTGRES_STORAGE: str = "100Gi"
     POSTGRES_PASSWORD: str = gen_secret(12)
-    STORAGE_CLASS_NAME: str = "standard"
+    STORAGE_CLASS_NAME: Optional[str] = None
+    EKS_CERTIFICATE_ARN: Optional[str] = None
 
     SITE_URL: str  # callback target should point to the dash board
     ADDITIONAL_REDIRECT_URLS: str = ""
@@ -130,19 +131,20 @@ app = typer.Typer(add_completion=False)
 def gen_config(
     provider: str = typer.Option(
         ...,
-        help='Cloud host provider. options are "on-prem", "gke"',
+        help='Cloud host provider. options are "on-prem", "gke", "eks"',
     ),
     domain: str = typer.Option(..., help="domain used to route the on-prem services."),
-    storage_class_name: str = typer.Option("standard", help="database PVC storageClassName."),
+    storage_class_name: str = typer.Option(None, help="database PVC storageClassName."),
+    eks_certificate_arn: str = typer.Option(None, help="certificate arn for EKS ingress"),
     platform_nport: int = typer.Option(30311, help="node port for the Robusta dashboard."),
     db_nport: int = typer.Option(30312, help="node port Robusta database."),
     api_nport: int = typer.Option(30313, help="node port for Robusta API."),
     ws_nport: int = typer.Option(30314, help="node port for Robusta websocket."),
 ):
     """Create self host configuration files"""
-    if provider not in {"on-prem", "gke"}:
+    if provider not in {"on-prem", "gke", "eks"}:
         typer.secho(
-            f'Invalid provider {provider}. options are "on-prem", "gke"',
+            f'Invalid provider {provider}. options are "on-prem", "gke", "eks"',
             fg=typer.colors.RED,
         )
         return
@@ -160,6 +162,7 @@ def gen_config(
         SITE_URL=f"https://platform.{domain}",
         PUBLIC_REST_URL=f"https://db.{domain}/rest/v1/",
         STORAGE_CLASS_NAME=storage_class_name,
+        EKS_CERTIFICATE_ARN=eks_certificate_arn,
     )
     values.KONG_HTTP_NODE_PORT = db_nport
 
@@ -175,11 +178,11 @@ def gen_config(
     uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY)
     uiValues.service["nodePort"] = platform_nport
 
-    values_dict = values.dict()
+    values_dict = values.dict(exclude_none=True)
     values_dict["robusta-ui"] = uiValues.dict()
     values_dict["robusta-relay"] = relayValues.dict()
 
     backendProfile = BackendProfile.fromDomain(domain=domain)
-    self_host_approval_url = f"https://api.robusta.dev/terms-of-service.html"
+    self_host_approval_url = "https://api.robusta.dev/terms-of-service.html"
     typer.echo(f"By using this software you agree to the terms of service ({self_host_approval_url})\n")
     write_values_files("self_host_values.yaml", "robusta_cli_config.json", values_dict, backendProfile)
