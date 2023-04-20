@@ -108,6 +108,10 @@ popeye:
         v1/configmaps:
         - name: rx:kube-system
         v1/pods:
+        - name: rx:.*
+          codes:
+          - 106
+          - 107
         - name: rx:kube-system
         v1/services:
         - name: rx:kube-system
