@@ -91,7 +91,7 @@ class KRRParams(ActionParams):
 
     @property
     def args_sanitized(self) -> str:
-        return " ".join([f"'{arg}'" for arg in shlex.split(self.args)])
+        return shlex.join(shlex.split(self.args))
 
     @validator("strategy", allow_reuse=True)
     def check_strategy(cls, strategy: str) -> str:
