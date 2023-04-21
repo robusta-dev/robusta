@@ -20,6 +20,7 @@ class FindingSource(Enum):
     NONE = None  # empty default
     KUBERNETES_API_SERVER = "kubernetes_api_server"
     PROMETHEUS = "prometheus"
+    HELM = "helm"
     MANUAL = "manual"
     CALLBACK = "callback"
     SCHEDULER = "scheduler"

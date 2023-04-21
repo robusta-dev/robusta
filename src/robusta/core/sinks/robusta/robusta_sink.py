@@ -11,6 +11,7 @@ from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
+from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
@@ -19,7 +20,9 @@ from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
+from robusta.integrations.helm.trigger import HelmTriggerEvent
 from robusta.integrations.receiver import ActionRequestReceiver
+from robusta.runner.web import Web
 from robusta.runner.web_api import WebApi
 
 from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags, \
@@ -69,6 +72,7 @@ class RobustaSink(SinkBase):
         # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
         # helps differentiate between no jobs, to not initialized
         self.__jobs_cache: Optional[Dict[str, JobInfo]] = None
+        self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
@@ -117,6 +121,13 @@ class RobustaSink(SinkBase):
             self.__jobs_cache: Dict[str, JobInfo] = {}
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
+
+    def __assert_helm_releases_cache_initialized(self):
+        if self.__helm_releases_cache is None:
+            logging.info("Initializing helm releases cache")
+            self.__helm_releases_cache: Dict[str, JobInfo] = {}
+            for job in self.dal.get_active_jobs():
+                self.__helm_releases_cache[job.get_service_key()] = job
 
     def __assert_namespaces_cache_initialized(self):
         if not self.__namespaces_cache:
@@ -193,6 +204,10 @@ class RobustaSink(SinkBase):
 
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
+
+            self.__assert_helm_releases_cache_initialized()
+            Web.alerts_queue.add_task(Web.event_handler.handle_trigger, HelmTriggerEvent(alert=alert))
+            self.__publish_new_helm_releases(results.helm_releases)
 
             self.__assert_namespaces_cache_initialized()
             self.__publish_new_namespaces(results.namespaces)
@@ -318,6 +333,10 @@ class RobustaSink(SinkBase):
                 self.__jobs_cache[job_key] = current_job
 
         self.dal.publish_jobs(updated_jobs)
+
+    def __publish_new_helm_releases(self, active_helm_releases: List[HelmRelease]):
+        #todo
+        print("todo __publish_new_helm_releases")
 
     def __update_cluster_status(self):
         global_config = self.get_global_config()
