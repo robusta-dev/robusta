@@ -18,4 +18,3 @@
    uninstall
    supported-clusters
    installation-faq
-

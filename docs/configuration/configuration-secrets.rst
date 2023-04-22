@@ -1,4 +1,4 @@
-Configuration secrets
+Managing Secrets in Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Some of the configuration values are considered secrets, and cannot be saved in plain text format.

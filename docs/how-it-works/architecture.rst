@@ -4,7 +4,7 @@ Architecture
 Robusta runs in-cluster as two Kubernetes deployments
 
 * robusta-forwarder - Connects to the APIServer and monitors Kubernetes changes. Forwards them to robusta-runner.
-* robusta-runner - Receives all events, processes them, send notifications
+* robusta-runner - Receives all events, evaluates playbooks, sends notifications
 
 .. image:: ../images/arch-1/arch-1.png
    :width: 600

@@ -14,11 +14,10 @@
    :hidden:
 
    how-it-works/index
-   how-it-work/how-playbooks-work
+   how-it-works/playbooks
    how-it-works/architecture
    how-it-works/oss-vs-saas
-   how-it-works/flow-control
-   Privacy & Security <how-it-works/privacy-and-security>
+   how-it-works/privacy-and-security
    how-it-works/usage-faq
 
 .. toctree::
@@ -40,11 +39,12 @@
    :hidden:
 
    configuration/index
+   configuration/sending-notifications
    configuration/sinks/index
    configuration/defining-playbooks
    configuration/additional-playbooks
-   Re-using common settings <configuration/global-config>
-   Handling Secrets <configuration/configuration-secrets>
+   configuration/global-config
+   configuration/configuration-secrets
    configuration/alert-manager
    configuration/embedded-prometheus
    Robusta CLI <configuration/robusta-cli>
@@ -111,7 +111,6 @@ Robusta is an observability and monitoring platform built for Kubernetes. It is 
             :outline:
 
             Get Started →
-
 
     .. grid-item::
        :columns: 6

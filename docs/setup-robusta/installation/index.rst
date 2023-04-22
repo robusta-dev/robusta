@@ -1,5 +1,7 @@
 :hide-toc:
 
+.. _install:
+
 Quick Install
 ===============
 

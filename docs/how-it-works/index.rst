@@ -1,39 +1,38 @@
+.. _how-it-works-index:
 
-What is Robusta
-================================
+What is Robusta?
+=================================================
 
-The core of Robusta is a rules-engine. Using predefined YAML instructions, it:
+The `Robusta Open Source <https://github.com/robusta-dev/robusta>`_ is a rules-engine for Kubernetes, designed for monitoring and observability use cases. Utilizing predefined YAML rules, it:
 
-1. Listens to Kubernetes events, Prometheus alerts, and other sources
-2. Gathers observability data - e.g. logs, graphs, thread dumps
-3. Notifies in various destinations
+1. **Listens passively to various sources:** Robusta monitors Kubernetes events, Prometheus alerts, and other sources to stay informed about your cluster's current state.
+2. **Actively collects observability data:** When noteworthy events occur, Robusta actively gathers and correlates information such as logs, graphs, and thread dumps.
+3. **Sends notifications:** Based on your preferences, Robusta notifies in destinations like Slack, MSTeams, and PagerDuty
 
-Lets see two examples and how they're implemented with Robusta:
+In Robusta, rules are called *playbooks*. To get a feel for how playbooks work, let's explore two examples:
 
-* :ref:`Automatically investigate a Prometheus alert`
-* :ref:`Track failing Kubernetes Jobs`
+* :ref:`Automatically Investigate a Prometheus Alert`
+* :ref:`Track Failing Kubernetes Jobs`
 
 Examples
 ^^^^^^^^^^^^^
 
-Automatically investigate a Prometheus alert
+Automatically Investigate a Prometheus Alert
 ----------------------------------------------
 
-``KubePodCrashLooping`` is a Prometheus alert that identifies crashing pods. Here's what it normally looks like in Slack:
+``KubePodCrashLooping`` is a Prometheus alert that identifies crashing pods. It normally looks like this in Slack:
 
 .. image:: /images/prometheus-alert-without-robusta.png
     :width: 800px
 
-Clearly a pod is crashing in the cluster. But why?
-
-With Robusta, the same Slack alert becomes this:
+While it's clear that a pod is crashing in the cluster, it's not obvious why. With Robusta, the same Slack alert is transformed into this:
 
 .. image:: /images/prometheus-alert-with-robusta.png
     :width: 800px
 
-👆️ The Prometheus alert now contains pod logs. It also gained rapid-response buttons like "Investigate" and "Silence".
+Now the alert contains pod logs and rapid-response buttons like "Investigate" and "Silence".
 
-This looks like magic, but with Robusta it's actually 5 lines of YAML:
+This enhancement is implemented with 5 lines of YAML in Robusta:
 
 .. code-block:: yaml
 
@@ -43,24 +42,32 @@ This looks like magic, but with Robusta it's actually 5 lines of YAML:
       actions:
       - logs_enricher: {}
 
-**Note:** Robusta works out of the box, even without custom YAML! There are builtin rules from the community.
+Here's how it works:
 
-.. admonition:: How does Robusta know which pod to fetch logs from?
+1. A Prometheus alert fires and is sent to Robusta by webhook
+2. Robusta evaluates all of the ``on_prometheus_alert`` triggers that are currently loaded.
+3. If the alert name is ``KubePodCrashLooping``, there's a match and Robusta decides to run the above playbook.
+4. Before running actions, Robusta looks at the alert's metadata and maps the alert to relevant Kubernetes objects. For ``KubePodCrashLooping`` this topology mapping includes the Pod and Node on which the alert fired.
+5. Robusta runs all actions in the playbook - in this case, ``logs_enricher``.
+6. ``logs_enricher`` is a builtin Robusta action that takes a Pod-related event as input (e.g. a Prometheus alert firing on a Pod) and fetch logs from the event's Pod.
+7. The ``logs_enricher`` action builds a notification message.
+8. The notification is forwarded to sinks according to the user's global settings.
 
-    In the above example:
+.. admonition:: Do I need to write playbooks to use Robusta?
 
-    1. ``on_prometheus_alert`` receives an alert and parses the metadata, including the ``pod`` label.
-    2. Robusta finds the relevant Kubernetes pod.
-    3. ``logs_enricher`` receives the pod as input.
+    Nope, you can get started without writing any YAML. Robusta includes builtin playbooks covering dozens of problems seen on real-world clusters.
 
-    Rules define logic and Robusta handles the plumbing.
-
-Track failing Kubernetes Jobs
+Track Failing Kubernetes Jobs
 ----------------------------------------
 
-Instead of improving Prometheus alerts, Robusta can generate alerts itself by listening to the APIServer.
+Robusta can generate alerts by listening to the APIServer, rather than just improving existing Prometheus alerts.
 
-Lets send a Slack notification when a Kubernetes Job fails:
+For example, lets notify in Slack when a Kubernetes Job fails:
+
+.. image:: /images/on_job_failed_example.png
+    :width: 800px
+
+Here is the Robusta rule that generates this notification:
 
 .. code-block:: yaml
 
@@ -74,34 +81,25 @@ Lets send a Slack notification when a Kubernetes Job fails:
       - job_events_enricher: {}
       - job_pod_enricher: {}
 
-Here is the result:
+In this example, the trigger was ``on_job_failure``. Robusta generated a notification using four actions:
 
-.. image:: /images/on_job_failed_example.png
-    :width: 800px
+1. ``create_finding`` - create the notification message itself
+2. ``job_info_enricher`` - fetch the Job's status and attach it
+3. ``job_events_enricher`` run ``kubectl get events`` and attach events related to this Job
+4. ``job_pod_enricher`` find the latest Pod in this Job and attach its information
 
 .. admonition:: Should I generate alerts with Robusta or with Prometheus?
 
-    Robusta can respond to Prometheus alerts, or it can generate alerts itself.
+    Robusta can respond to Prometheus alerts, or it can generate alerts itself. Most users mix and match these options, depending on their use case. Here are some guidelines:
 
-    Most people mix and match the two options, depending on their use case. Here are some guidelines:
+    * Use Prometheus for alerts involving thresholds and time-series (e.g. Jobs running over 18 hours).
+    * Use Robusta for alerts involving discrete events (e.g. Jobs failing).
 
-    * When alerts involve thresholds and time-series, use Prometheus. (Example: Job running > 18 hours.)
-    * When alerts involve discrete events, use Robusta. (Example: Job failed.)
-
-    That said, the choice is yours! Robusta is flexible and supports both approaches.
-
-In the above example, the triggering condition was a failed Job.
-
-Then Robusta generated a notification using four actions:
-
-1. ``create_finding`` - create a notification
-2. ``job_info_enricher`` - fetch the Job's status
-3. ``job_events_enricher`` run ``kubectl get events`` and extract events related to this Job
-4. ``job_pod_enricher`` find the latest Pod in this Job and fetch it's information
+    That said, the choice is yours. Robusta is flexible and supports both approaches.
 
 Next Steps
 ^^^^^^^^^^^^^
 
-* See all the options for defining rules
-* See example rules
-* Install Robusta with Helm
+* :ref:`Explore all options for defining rules (playbooks) <defining-playbooks>`
+* View example playbooks
+* :ref:`Install Robusta with Helm <install>`

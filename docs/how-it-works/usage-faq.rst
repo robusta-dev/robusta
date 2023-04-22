@@ -8,7 +8,7 @@ Yes. Robusta includes built-in alerts based on Prometheus and direct APIServer m
 
 These alerts work out of the box without any configuration.
 
-That said, you can always write your own.
+You can also :ref:`write your own `.
 
 What events can Robusta listen to?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

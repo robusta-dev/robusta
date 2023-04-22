@@ -9,7 +9,8 @@ Robusta can send Kubernetes errors and alerts to the Robusta UI.
 
 To configure Robusta UI, use our CLI to generate a token. Run:
 
-.. code-block:: cb-robusta-ui-sink-generate-token
+.. code-block::
+   :name: cb-robusta-ui-sink-generate-token
 
     robusta integrations ui
 
@@ -19,7 +20,8 @@ Configuring the Robusta UI sink
 
 .. admonition:: Add this to your generated_values.yaml
 
-    .. code-block:: cb-robusta-ui-sink-config
+    .. code-block:: bash
+      :name: cb-robusta-ui-sink-config
 
         sinksConfig:
             - robusta_sink:
@@ -29,8 +31,9 @@ Configuring the Robusta UI sink
 
 .. note::
 
-    | **Inactive** Robusta clusters have a default 6 months **data retention** span (4380 hours).
-    | To prevent short-lived clusters from fililng up the UI, you can remove clusters that haven't communicated for more than a few hours by setting ``ttl_hours = <number-time-span>``.
+    **Inactive** Robusta clusters have a default 6 months **data retention** span (4380 hours).
+
+   To prevent short-lived clusters from fililng up the UI, you can remove clusters that haven't communicated for more than a few hours by setting ``ttl_hours = <number-time-span>``.
 
 Save the file and run
 

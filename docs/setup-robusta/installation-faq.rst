@@ -1,5 +1,39 @@
-Installation FAQ
+Troubleshooting and FAQ
 ################################
+
+robusta-runner isn't working or has exceptions
+================================================
+Try checking the pod's memory consumption and if necessary increasing the memory request in the Helm values:
+
+.. code-block:: yaml
+
+    runner:
+      resources:
+        requests:
+          memory: 2048Mi
+        limits:
+          memory: 2048Mi
+
+Here's a representative error caused by too little memory:
+
+.. code-block::
+
+    2023-04-17 23:37:43.019 ERROR    Discovery process internal error
+    2023-04-17 23:37:43.022 INFO     Initialized new discovery pool
+    2023-04-17 23:37:43.022 ERROR    Failed to run publish discovery for robusta_ui_sink
+    Traceback (most recent call last):
+      File "/app/src/robusta/core/sinks/robusta/robusta_sink.py", line 175, in __discover_resources
+        results: DiscoveryResults = Discovery.discover_resources()
+      File "/app/src/robusta/core/discovery/discovery.py", line 288, in discover_resources
+        raise e
+      File "/app/src/robusta/core/discovery/discovery.py", line 280, in discover_resources
+        return future.result()
+      File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 446, in result
+        return self.__get_result()
+      File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+        raise self._exception
+    concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+
 
 Can I install without the Robusta cli?
 ========================================

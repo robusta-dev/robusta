@@ -1,4 +1,4 @@
-Privacy & Security
+Privacy and Security
 ############################
 
 Robusta was designed with security in mind. Our four guiding security principles are:
