@@ -3,12 +3,12 @@
 Multi-cluster
 ##############################
 
-Have more than one Kubernetes cluster to monitor? Follow the instructions here.
+This guide is for environments with more than one Kubernetes cluster. You can add all your clusters to the same Robusta account.
 
 Installing Robusta on multiple clusters
 ------------------------------------------
 
-1. Install Robusta on the first cluster, as described in :ref:`Quick Install`.
+1. Install Robusta on the first cluster, as described in :ref:`Installation Guides`.
 
 2. Do a ``helm install`` on each additional cluster, **re-using** your existing ``generated_values.yaml``.
 

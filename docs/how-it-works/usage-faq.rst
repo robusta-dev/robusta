@@ -2,15 +2,15 @@
 Usage FAQ
 ==========
 
-Does Robusta have builtin alerts?
+Does Robusta have Builtin Alerts?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Yes. Robusta includes built-in alerts based on Prometheus and direct APIServer monitoring.
 
 These alerts work out of the box without any configuration.
 
-You can also :ref:`write your own `.
+You can also :ref:`write your own alerts <Defining Alerts>`.
 
-What events can Robusta listen to?
+What Events Can Robusta Listen to?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Robusta listens to:
@@ -22,9 +22,11 @@ Robusta listens to:
 * Other APIServer errors
 * Updates to Kubernetes Deployments and other resources
 
+See the full list in :ref:`All Triggers`.
+
 Want Robusta to respond to a custom event? Just send your event to Robusta by webhook.
 
-What actions can Robusta take?
+What Actions Can Robusta Take?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Actions typically do one of the following:
@@ -34,9 +36,11 @@ Actions typically do one of the following:
 * Remediate problems
 * Silence false alarms
 
-For concrete examples, see :ref:`What is Robusta`.
+See the full list in :ref:`All Actions`.
 
-Where can Robusta send notifications?
+For examples, see :ref:`What are Playbooks?`.
+
+Where Can Robusta Send Notifications?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In Robusta, destinations are called *sinks*. Here are some built-in sinks:
@@ -45,4 +49,4 @@ In Robusta, destinations are called *sinks*. Here are some built-in sinks:
 * Incident management tools: *PagerDuty and OpsGenie*
 * Monitoring Platforms: *DataDog and the Robusta SaaS*
 
-See the full list :ref:`here <Sinks>`.
+See the full list in :ref:`All Sinks`.

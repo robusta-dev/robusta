@@ -1,21 +1,21 @@
 .. _how-it-works-index:
 
-What is Robusta?
+What are Playbooks?
 =================================================
 
-The `Robusta Open Source <https://github.com/robusta-dev/robusta>`_ is a rules-engine for Kubernetes, designed for monitoring and observability use cases. Utilizing predefined YAML rules, it:
+The `Robusta Open Source <https://github.com/robusta-dev/robusta>`_ is a rules-engine for Kubernetes, designed for monitoring and observability use cases. The rules are called *playbooks*. Using playbooks, Robusta:
 
 1. **Listens passively to various sources:** Robusta monitors Kubernetes events, Prometheus alerts, and other sources to stay informed about your cluster's current state.
 2. **Actively collects observability data:** When noteworthy events occur, Robusta actively gathers and correlates information such as logs, graphs, and thread dumps.
 3. **Sends notifications:** Based on your preferences, Robusta notifies in destinations like Slack, MSTeams, and PagerDuty
 
-In Robusta, rules are called *playbooks*. To get a feel for how playbooks work, let's explore two examples:
+To get a feel for how playbooks work, let's explore two examples:
 
 * :ref:`Automatically Investigate a Prometheus Alert`
 * :ref:`Track Failing Kubernetes Jobs`
 
-Examples
-^^^^^^^^^^^^^
+Example Plabyooks
+^^^^^^^^^^^^^^^^^^^^^^
 
 Automatically Investigate a Prometheus Alert
 ----------------------------------------------
@@ -100,6 +100,6 @@ In this example, the trigger was ``on_job_failure``. Robusta generated a notific
 Next Steps
 ^^^^^^^^^^^^^
 
-* :ref:`Explore all options for defining rules (playbooks) <defining-playbooks>`
+* :ref:`Learn how to define playbooks <defining-playbooks>`
 * View example playbooks
 * :ref:`Install Robusta with Helm <install>`

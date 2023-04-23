@@ -2,8 +2,8 @@
 
 .. _install:
 
-Quick Install
-===============
+Installation Guides
+====================
 
 .. toctree::
    :maxdepth: 1

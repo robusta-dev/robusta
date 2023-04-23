@@ -16,7 +16,7 @@ Common Settings
         :link: sinks/index
         :link-type: doc
 
-        Add new destinations for Robusta notifications.
+        Send notifications from Robusta to external integrations.
 
     .. grid-item-card:: :octicon:`book;1em;` Integrate Prometheus
         :class-card: sd-bg-light sd-bg-text-light
@@ -30,7 +30,7 @@ Common Settings
         :link: alert-manager
         :link-type: doc
 
-        Create alerts for custom Kubernetes events
+        Create custom alerts for Kubernetes
 
 Full List of Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
