@@ -173,7 +173,7 @@ def create_chart_from_prometheus_query(
     if filter_prom_jobs:
         series_list_result = filter_prom_jobs_results(series_list_result)
     for i, series in enumerate(series_list_result):
-        label = "\n".join([v for v in series.metric.values()])
+        label = "\n".join([v for (key, v) in series.metric.items() if key != "job"])
         # If the label is empty, try to take it from the additional_label_factory
         if label == "" and chart_label_factory is not None:
             label = chart_label_factory(i)
