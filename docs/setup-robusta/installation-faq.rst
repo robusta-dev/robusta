@@ -80,18 +80,6 @@ Verify success by checking that two Robusta pods are running:
 
     Make sure you add the ``--namespace`` flag to future ``robusta`` cli commands.
 
-Does Robusta support OpenShift?
-========================================
-
-Yes. You will need to run an additional command during installation:
-
-.. code-block:: bash
-   :name: cb-oc-adm-policy-add
-
-    oc adm policy add-scc-to-user anyuid -z robusta-runner-service-account
-
-The above policy is a very permissive. Feel free to open a PR suggesting something more minimal.
-
 Does Robusta support Thanos/Cortex/Mimir/VictoriaMetrics?
 ============================================================
 Any Prometheus-compatible solution is fine. Just follow instructions under :ref:`Integrate with Existing Prometheus`
