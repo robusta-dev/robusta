@@ -1,4 +1,3 @@
-import logging
 import math
 from collections import defaultdict, namedtuple
 from datetime import datetime, timedelta
