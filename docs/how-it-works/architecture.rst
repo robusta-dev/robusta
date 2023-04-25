@@ -12,26 +12,23 @@ Robusta runs in-cluster as two Kubernetes deployments
 
 Robusta has some optional components, described below.
 
-Bundled Prometheus stack (optional)
+Bundled Prometheus (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Install Robusta with :ref:`Prometheus included <embedded Prometheus stack>`. This is powered by ``kube-prometheus-stack``.
 
 Alternatively, you can :ref:`integrate an existing Prometheus with Robusta <Sending Alerts to Robusta>`.
 
-Web UI (optional)
+Web UI (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^
 
 The Robusta `SaaS platform <http://home.robusta.dev/ui?from=docs>`_ provides a single pane of glass for all your alerts and clusters.
 
-CLI (optional)
+CLI (Optional)
 ^^^^^^^^^^^^^^^^
 The :ref:`robusta cli <CLI Commands>` makes it easier to install Robusta by auto-generating Helm values.
-
-.. See also
-   * `Comparison of Robusta and a bare-bones Prometheus stack without Robusta <https://home.robusta.dev/prometheus-based-monitoring/?from=docs>`_
 
 Next Steps
 ^^^^^^^^^^^^^
 
-:ref:`Ready to install Robusta? Get started! <installation>`
+:ref:`Ready to install Robusta? Get started. <Installation Guides>`

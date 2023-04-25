@@ -18,16 +18,20 @@ Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value:
         name: my_teams_sink           # arbitrary name
         webhook_url: <placeholder>    # a sink-specific parameter
         match: {}                     # optional routing rules (see below)
-        default: true                 # optional, see below
+        default: true                 # optional (see below)
 
-To use multiple sinks, place all of them in the ``sinksConfig`` section.
+To add a sink, update ``sinksConfig`` according to the instructions in :ref:`Sinks Reference`. Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+Configure as many sinks as you like.
+
+.. _sink-matchers:
 
 Routing Alerts to Specific Sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can define which messages a sink should accept by using *matchers*.
+Define which messages a sink accepts using *matchers*.
 
-For example, if we want Slack to only receive high-severity messages for the prod namespace:
+For example, Slack can be configured to receive high-severity messages in a specific namespace. Other messages will not be sent to Slack.
 
 .. code-block:: yaml
 
@@ -40,11 +44,11 @@ For example, if we want Slack to only receive high-severity messages for the pro
           namespace: [prod]
           severity: [HIGH]
 
-If multiple match conditions are present, all of them must be satisfied for the sink to accept a message.
+The above example defines match conditions by both ``namespace`` and ``severity``. When multiple conditions are present, all must be satisfied.
 
 By default, every message is sent to every matching sink. To change this behaviour, you can mark a sink as :ref:`non-default <Non-default sinks>`.
 
-What Type of Matching Rules can you Write?
+Matches Can Be Lists Or Regexes
 ********************************************
 
 Every *match* rule supports both regular expressions and a list of exact values:
@@ -78,7 +82,7 @@ The regular expressions must be in the `Python re module format <https://docs.py
 Alternative Routing Methods
 ************************************************
 
-For :ref:`customPlaybooks <defining-playbooks>`, you have an additional option for routing notifications.
+For :ref:`customPlaybooks <defining-playbooks>`, there is another option for routing notifications.
 
 Instead of using sink matchers, you can set the *sinks* attribute per playbook:
 
@@ -100,7 +104,7 @@ Instead of using sink matchers, you can set the *sinks* attribute per playbook:
 
 Notifications generated this way are sent exclusively to the specified sinks. They will still be filtered by matchers.
 
-Non-default sinks
+Non-Default Sinks
 *********************************
 
 To prevent a sink from receiving most notifications, you can set ``default: false``. In this case, notifications will be
@@ -111,9 +115,9 @@ Here too, matchers apply as usual and perform further filtering.
 Next Steps
 ^^^^^^^^^^^^
 
-:ref:`Learn about the built-in sinks <Sinks Reference>`.
+* :ref:`View a list of built-in sinks <Sinks Reference>`
+* :ref:`See examples of routing rules in the tutorials<Route Notifications>`
 
 .. rubric:: Footnotes
 
 .. [#f1] This is equivalent to ``Finding.aggregation_key`` which is set by each playbook that generates results. For now, you must check a playbook's source code to see the value. For example, the `resource_babysitter playbook  <https://github.com/robusta-dev/robusta/blob/master/playbooks/robusta_playbooks/babysitter.py#L66>`_  sets a value of ``ConfigurationChange/KubernetesResource/Change``
-

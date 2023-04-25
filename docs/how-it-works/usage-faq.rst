@@ -49,4 +49,4 @@ In Robusta, destinations are called *sinks*. Here are some built-in sinks:
 * Incident management tools: *PagerDuty and OpsGenie*
 * Monitoring Platforms: *DataDog and the Robusta SaaS*
 
-See the full list in :ref:`All Sinks`.
+See the full list in :ref:`Sinks Reference`.

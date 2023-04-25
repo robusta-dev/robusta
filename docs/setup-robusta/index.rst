@@ -13,8 +13,9 @@
 .. toctree::
    :hidden:
 
-   add-more-clusters
+   multi-cluster
    upgrade
    uninstall
    supported-clusters
+   node-selector
    installation-faq

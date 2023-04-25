@@ -1,22 +1,69 @@
+:hide-toc:
+
+.. _tutorials:
 
 Overview
 ================================
 
-Most Popular How-tos
-^^^^^^^^^^^^^^^^^^^^^
+This section is optimized for quick learning by example. If you prefer deep reference guides, refer to
+:ref:`Configuration Overview` and :ref:`How it works`.
 
-..     .. tab-item:: Event Correlation
+Discover Builtin Features
+---------------------------
 
-..         .. admonition:: Show application updates in Grafana to correlate them with error spikes
+.. toctree::
+   :maxdepth: 1
 
-..             .. image:: /images/grafana-deployment-enrichment.png
-..               :width: 400
-..               :align: center
+   alert-builtin-enrichment
+   chatgpt
 
-..     .. tab-item:: Remediate alerts
+Custom Alerts and Playbooks
+------------------------------------
 
-..         .. admonition:: Temporarily increase the HPA maximum so you can go back to sleep
+.. toctree::
+   :maxdepth: 1
 
-..             .. image:: /images/alert_on_hpa_reached_limit1.png
-..                 :width: 600
-..                 :align: center
+   playbook-job-failure
+   playbook-failed-liveness
+   playbook-route-alerts
+   playbook-track-changes
+   alert-custom-prometheus
+   alert-custom-enrichments
+
+Notification Routing
+----------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   routing-by-namespace
+   routing-exclusion
+   routing-by-type
+   route-silencing
+
+Automatic Remediation
+------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   alert-remediation
+
+Application Troubleshooting
+----------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   application-troubleshooting-java
+   application-troubleshooting-python
+
+.. More tutorial ideas:
+.. Remediate Alerts
+.. Create tickets in Jira for Kubernetes issues
+.. Remediate autoscaling issues - https://www.notion.so/Enable-HPA-resize-playbook-by-default-250826112ef1442da8d4a90efa70e8b8
+.. ChatOps
+.. Track scale changes
+.. Automatically deleting pods
+.. Automatically running jobs
+.. Monitor PVCs https://robustaco.slack.com/archives/C034F1Y1C4S/p1676815178255829

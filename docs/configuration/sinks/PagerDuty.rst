@@ -1,22 +1,20 @@
 PagerDuty
 ##########
 
-`PagerDuty <https://www.pagerduty.com/>`_ is a popular incident response tool.
+Robusta can send three types of data to `PagerDuty <https://www.pagerduty.com/>`_:
 
-`Robusta <https://docs.robusta.dev/master/index.html>`_ is a popular Kubernetes monitoring solution, based on Prometheus. Robusta can send three types of data to the PagerDuty API:
+* `Change Events <https://support.pagerduty.com/docs/change-events>`_ - for example, when Deployments are updated
 
-*  `Change Events <https://support.pagerduty.com/docs/change-events>`_ - for example, when Deployments are updated
+* `Enriched Prometheus alerts <https://support.pagerduty.com/docs/alerts>`_ - Robusta receives alerts from Prometheus, correlates alerts with Pods logs and other data, forwards the result to PagerDuty
 
-* Enriched Prometheus `alerts <https://support.pagerduty.com/docs/alerts>`_ - Robusta receives the alert from Prometheus, attaches context like Pod logs, and forward to PagerDuty
-
-* Standalone `alerts <https://support.pagerduty.com/docs/alerts>`_ - if you don’t use Prometheus, Robusta can still send alerts to PagerDuty for errors like CrashLoopBackOff
+* `Standalone alerts <https://support.pagerduty.com/docs/alerts>`_ - Robusta listens to the APIServer and sends PagerDuty errors like CrashLoopBackOff
 
 
 
 Prerequisites
 ------------------------------
 
-You need an integration key for a PagerDuty service. Here is how to generate it.
+You will need an integration key for a PagerDuty service:
 
 1. Login to your PagerDuty dashboard
 
@@ -37,9 +35,10 @@ You need an integration key for a PagerDuty service. Here is how to generate it.
 Configuring the PagerDuty sink
 ------------------------------------------------
 
-**Sending Alerts to PagerDuty**
+Sending Alerts to PagerDuty
+******************************
 
-| To send alerts from Robusta to PagerDuty, add the following code to your generated_values.yaml file. This will send all alerts Robusta receives - whether they originate in Prometheus or in Robusta itself.
+Add the following code to your generated_values.yaml. This will send all alerts Robusta receives - whether they originate in Prometheus or Robusta itself.
 
 .. code-block:: yaml
 
@@ -63,9 +62,10 @@ Example Output:
       :width: 1117
       :align: center
 
-**Sending Kubernetes Changes to PagerDuty**
+Sending Kubernetes Changes to PagerDuty
+************************************************************
 
-| To send Kubernetes changes from Robusta to PagerDuty, add the following code to your generated_values.yaml file. This will send all changes to PagerDuty, in addition to the alerts mentioned above.
+Add the following code to your generated_values.yaml file. This will send all changes to PagerDuty, in addition to the alerts mentioned above.
 
 .. code-block:: yaml
 

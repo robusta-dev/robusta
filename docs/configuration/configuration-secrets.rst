@@ -1,15 +1,23 @@
-Managing Secrets in Configuration
+Managing Secrets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Some of the configuration values are considered secrets, and cannot be saved in plain text format.
-We recommend using `SealedSecrets <https://github.com/bitnami-labs/sealed-secrets>`_
-or one of the other secret management system for Kubernetes, to encrypt the secret values.
+Some configuration values are considered secrets and cannot be saved in plain text format.
 
-As an alternative, we can pull secret values from Kubernetes secrets.
+We recommend using `SealedSecrets <https://github.com/bitnami-labs/sealed-secrets>`_ or another secret management
+system for Kubernetes.
 
-First, define an environment variable that is taken from a Kubernetes secret.
+As an alternative, Robusta can pull secret values from Kubernetes secrets.
 
-In your ``generated_values.yaml`` file add:
+Pulling Values from Kubernetes Secrets
+--------------------------------------------------
+
+Robusta can pull values from Kubernetes secrets for:
+
+* Sink Configuration
+* Global Config
+* Action Parameters
+
+To do so, first define an environment variable based on a Kubernetes secret. Add to Robusta's Helm values:
 
 .. code-block:: yaml
 
@@ -22,7 +30,7 @@ In your ``generated_values.yaml`` file add:
            key: secret_grafana_key
 
 
-Next, define that the value should be pulled from an environment variable by using the special {{ env.VARIABLE }} syntax:
+Then reference that environment variable in other Helm values using the special ``{{ env.VARIABLE }}`` syntax:
 
 .. code-block:: yaml
 
@@ -30,12 +38,5 @@ Next, define that the value should be pulled from an environment variable by usi
      grafana_api_key: "{{ env.GRAFANA_KEY }}"
      grafana_url: http://grafana.namespace.svc
 
-Finally, create a Kubernetes secret named ``my-robusta-secrets``, and in it ``secret_grafana_key`` with your grafana api key.
-
-Values can be taken from environment variables in:
-
-* global config
-* playbooks action parameters
-* sinks configuration
-
-
+Finally, make sure the Kubernetes secret actually exists. In this example, create a Secret named ``my-robusta-secrets``
+with a ``secret_grafana_key`` value inside.

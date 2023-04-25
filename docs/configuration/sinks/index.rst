@@ -2,7 +2,7 @@
 
 :hide-toc:
 
-All Sinks
+Sinks Reference
 ==================
 
 .. toctree::
@@ -23,9 +23,9 @@ All Sinks
    VictorOps
    PagerDuty
 
-Here are the destinations Robusta can send notifications to.
+Robusta can send notifications to various destinations, known as sinks.
 
-See also:
+**Related Topics:**
 
 * :ref:`Sending Notifications <sinks-overview>`
 * :ref:`Routing Alerts to Specific Sinks`

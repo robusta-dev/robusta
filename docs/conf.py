@@ -54,6 +54,14 @@ jinja_contexts = {
     "install_all_in_one": {"gen_config_flags": "--enable-prometheus-stack"},
     "install_integrate_prometheus": {"gen_config_flags": "--no-enable-prometheus-stack"},
     "install_no_prometheus": {"gen_config_flags": "--no-enable-prometheus-stack"},
+    "autogen_triggers": {"all_resources": ["Pod", "ReplicaSet", "DaemonSet", "Deployment",
+                                           "StatefulSet", "Service", "Event", "HorizontalPodAutoscaler",
+                                           "Node", "ClusterRole", "ClusterRoleBinding", "Job", "Namespace",
+                                           "ServiceAccount", "PersistentVolume"]}
+}
+
+jinja_filters = {
+    "to_snake_case": lambda s: ''.join(['_'+c.lower() if c.isupper() else c for c in s]).lstrip('_')
 }
 
 # for sphinx.ext.inheritance_diagram

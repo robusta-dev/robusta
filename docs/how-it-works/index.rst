@@ -7,14 +7,14 @@ The `Robusta Open Source <https://github.com/robusta-dev/robusta>`_ is a rules-e
 
 1. **Listens passively to various sources:** Robusta monitors Kubernetes events, Prometheus alerts, and other sources to stay informed about your cluster's current state.
 2. **Actively collects observability data:** When noteworthy events occur, Robusta actively gathers and correlates information such as logs, graphs, and thread dumps.
-3. **Sends notifications:** Based on your preferences, Robusta notifies in destinations like Slack, MSTeams, and PagerDuty
+3. **Sends notifications:** Based on your preferences, Robusta notifies in :ref:`sinks <Sinks Reference>` like Slack, MSTeams, and PagerDuty
 
-To get a feel for how playbooks work, let's explore two examples:
+To get a feel for playbooks, let's explore two examples:
 
 * :ref:`Automatically Investigate a Prometheus Alert`
 * :ref:`Track Failing Kubernetes Jobs`
 
-Example Plabyooks
+Example Playbooks
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Automatically Investigate a Prometheus Alert
@@ -46,12 +46,11 @@ Here's how it works:
 
 1. A Prometheus alert fires and is sent to Robusta by webhook
 2. Robusta evaluates all of the ``on_prometheus_alert`` triggers that are currently loaded.
-3. If the alert name is ``KubePodCrashLooping``, there's a match and Robusta decides to run the above playbook.
-4. Before running actions, Robusta looks at the alert's metadata and maps the alert to relevant Kubernetes objects. For ``KubePodCrashLooping`` this topology mapping includes the Pod and Node on which the alert fired.
-5. Robusta runs all actions in the playbook - in this case, ``logs_enricher``.
-6. ``logs_enricher`` is a builtin Robusta action that takes a Pod-related event as input (e.g. a Prometheus alert firing on a Pod) and fetch logs from the event's Pod.
-7. The ``logs_enricher`` action builds a notification message.
-8. The notification is forwarded to sinks according to the user's global settings.
+3. If the alert name is ``KubePodCrashLooping``, there's a match and Robusta runs the above playbook.
+4. The Prometheus alert is mapped to a Kubernetes resources (in this case a Pod) using the alert's metadata.
+5. All actions in the playbook execute - in this case, a single action called ``logs_enricher``.
+6. ``logs_enricher`` is a builtin action that takes a Pod-related event as input and fetch logs. It also builds a notification message.
+7. The notification is sent to sinks according to global settings.
 
 .. admonition:: Do I need to write playbooks to use Robusta?
 
@@ -62,7 +61,7 @@ Track Failing Kubernetes Jobs
 
 Robusta can generate alerts by listening to the APIServer, rather than just improving existing Prometheus alerts.
 
-For example, lets notify in Slack when a Kubernetes Job fails:
+Lets notify in Slack when a Kubernetes Job fails:
 
 .. image:: /images/on_job_failed_example.png
     :width: 800px
@@ -100,6 +99,6 @@ In this example, the trigger was ``on_job_failure``. Robusta generated a notific
 Next Steps
 ^^^^^^^^^^^^^
 
-* :ref:`Learn how to define playbooks <defining-playbooks>`
-* View example playbooks
+* :ref:`See more examples <tutorials>`
+* :ref:`See reference guide on defining playbooks <defining-playbooks>`
 * :ref:`Install Robusta with Helm <install>`

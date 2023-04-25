@@ -1,0 +1,19 @@
+
+{% for resource_name in all_resources %}
+
+{{ resource_name }} Triggers
+************************************
+
+The following triggers are available for {{ resource_name }}s:
+
+* ``on_{{ resource_name.lower() }}_create``
+* ``on_{{ resource_name.lower() }}_update``
+* ``on_{{ resource_name.lower() }}_delete``
+* ``on_{{ resource_name.lower() }}_all_changes``
+
+The last trigger, ``on_{{ resource_name.lower() }}_all_changes``, fires when any of the other triggers fires.
+
+These triggers support the common :ref:`Low-Level Filters`, like ``name_prefix``, ``namespace_prefix``, and
+``labels_selector``.
+
+{% endfor %}

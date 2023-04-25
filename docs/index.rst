@@ -14,17 +14,17 @@
    :hidden:
 
    how-it-works/index
-   how-it-works/playbooks
    how-it-works/architecture
    how-it-works/oss-vs-saas
    how-it-works/privacy-and-security
+   how-it-works/coverage
    how-it-works/usage-faq
 
 .. toctree::
    :maxdepth: 4
    :hidden:
 
-   get-started
+   quick-start
 
 .. toctree::
    :maxdepth: 4
@@ -41,18 +41,12 @@
    configuration/index
    configuration/sending-notifications
    configuration/sinks/index
-   configuration/defining-playbooks
-   configuration/additional-playbooks
-   configuration/global-config
    configuration/configuration-secrets
    configuration/alert-manager
    configuration/embedded-prometheus
-   Robusta CLI <configuration/robusta-cli>
-   configuration/trigger-action-binding
-   tutorials/prometheus-enrichment
-   coverage
-   Robusta UI Triggers <how-it-works/robusta-ui-triggers>
-   Two-way Interactivity <interactivity>
+   configuration/additional-settings
+   configuration/robusta-ui-triggers
+   configuration/defining-playbooks/index
 
 .. toctree::
    :maxdepth: 4
@@ -92,28 +86,31 @@ Robusta is an observability and monitoring platform built for Kubernetes. It is 
     .. grid-item::
         :columns: 6
 
-        **Reasons to use Robusta:**
+        **Why Use Robusta?**
 
         * Get better alerts - with automatic insights
         * Spend less time defining alerts - with opinionated defaults
         * Remove blind-spots - with direct APIServer monitoring
-        * Reduce alert fatigue - with smart silencing and routing
+        * Reduce alert fatigue - with smart silencing and alert routing
 
-        **Things you can do with Robusta:**
+        **Key Capabilities**
 
-        * Correlate Prometheus alerts with pod logs, Kubernetes events, and more
+        * Correlate Prometheus alerts with pod logs, k8s events, and more
         * Notify on Kubernetes-native errors without PromQL
-        * Analyze alerts with `ChatGPT <https://github.com/robusta-dev/kubernetes-chatgpt-bot/>`_ or expert runbooks
+        * Alert analysis powered by `ChatGPT <https://github.com/robusta-dev/kubernetes-chatgpt-bot/>`_ and expert runbooks
         * Remediate alerts with automatic commands
-
-        .. button-ref:: get-started/index
-            :color: primary
-            :outline:
-
-            Get Started →
 
     .. grid-item::
        :columns: 6
 
        .. image:: /images/architecture-overview.png
           :align: center
+
+Robusta is used in production by hundreds of teams. It monitors infrastructure for the Hubble Space Telescope,
+Fortune 500 companies, and startups of all sizes.
+
+.. button-ref:: quick-start
+    :color: primary
+    :outline:
+
+    Get Started →

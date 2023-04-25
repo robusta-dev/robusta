@@ -1,9 +1,9 @@
-Generate a config
+Generate a Config
 -----------------------------------
 
 Robusta needs settings to work. For example, if you use Slack then Robusta needs a Slack API key. These settings are configured as Helm values.
 
-We'll generate the Helm values using the ``robusta`` cli tool. You can install the cli with ``pip`` or run it inside a prebuilt container.
+Use the ``robusta`` cli tool to generate the Helm values. You can install the cli with ``pip`` or run it inside a prebuilt container.
 
 .. tab-set::
 
@@ -27,8 +27,8 @@ We'll generate the Helm values using the ``robusta`` cli tool. You can install t
         .. admonition:: System Requirements
             :class: warning
 
-            * Python 3.7 or higher is required. On systems with both Python 2 and Python 3, make sure you run ``pip3``
-            * Python's script directory must be in your PATH. If this is not the case, you will see a ``command not found: robusta`` error. See :ref:`Common Errors` to fix this.
+            * Python 3.7 or higher is required. Use ``pip3`` On systems with both Python 2 and Python 3.
+            * Ensure Python's script directory is in your PATH. If not, you'll encounter a ``command not found: robusta`` error. See :ref:`Common Errors` to fix this.
 
     .. tab-item:: docker
         :name: docker-cli-tab
@@ -53,10 +53,7 @@ We'll generate the Helm values using the ``robusta`` cli tool. You can install t
 
             A Docker daemon and bash are required.
 
-            On Windows you can use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
+            On Windows, use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
 
-You now have a ``generated_values.yaml`` file with a Robusta config.
-
-**Save this file!** You'll need it to install Robusta on all your clusters. This is also the file you'll customize later,
-for example to `add integrations <https://docs.robusta.dev/master/automation/sinks/index.html>`_ like Discord.
-
+You should now have a ``generated_values.yaml`` file with a Robusta config. **Save this file!**
+You'll need it whenever you install Robusta on a new cluster.

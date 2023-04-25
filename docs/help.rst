@@ -39,7 +39,7 @@ please contact support@robusta.dev or go to `our slack channel <https://bit.ly/r
 
         which python3
     
-    This <new-path> should be added to the user path directores.
+    This <new-path> should be added to the user path directories.
 
     2. Find your shell config file ( ~/.profile or ~/.bash_profile or ~/.zshrc etc...) and append the following line:
 
@@ -61,7 +61,7 @@ please contact support@robusta.dev or go to `our slack channel <https://bit.ly/r
 
       ``python3 -m robusta.cli.main gen-config``
 
-.. details:: SSL certificate issues on Mac OS when using the cli
+.. details:: SSL certificate errors on Mac OS
 
     This implies a python package with certificates is missing on your system.
 
@@ -69,6 +69,42 @@ please contact support@robusta.dev or go to `our slack channel <https://bit.ly/r
 
     For more info see:
     https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
+
+.. details:: robusta-runner isn't working or has exceptions
+
+    Check the pod's memory consumption. If necessary, increase the memory request in the Helm values:
+
+    .. code-block:: yaml
+
+        runner:
+          resources:
+            requests:
+              memory: 2048Mi
+            limits:
+              memory: 2048Mi
+
+    Here's a representative error caused by too little memory:
+
+    .. details:: Discovery Error
+
+        .. code-block::
+
+            2023-04-17 23:37:43.019 ERROR    Discovery process internal error
+            2023-04-17 23:37:43.022 INFO     Initialized new discovery pool
+            2023-04-17 23:37:43.022 ERROR    Failed to run publish discovery for robusta_ui_sink
+            Traceback (most recent call last):
+              File "/app/src/robusta/core/sinks/robusta/robusta_sink.py", line 175, in __discover_resources
+                results: DiscoveryResults = Discovery.discover_resources()
+              File "/app/src/robusta/core/discovery/discovery.py", line 288, in discover_resources
+                raise e
+              File "/app/src/robusta/core/discovery/discovery.py", line 280, in discover_resources
+                return future.result()
+              File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 446, in result
+                return self.__get_result()
+              File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result
+                raise self._exception
+            concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
+
 
 More Tutorials
 ^^^^^^^^^^^^^^^^^^^^^^^

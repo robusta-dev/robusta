@@ -276,3 +276,7 @@ h2, h3 {
 .sd-sphinx-override p {
     margin-bottom: 0px;
 }
+
+.sd-tab-set>label {
+    font-size: 20px;
+}

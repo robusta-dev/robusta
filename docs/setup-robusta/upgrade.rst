@@ -90,7 +90,7 @@ Upgrading from versions lower than 0.9.1
 
     robusta logs
 
-Trying out pre-releases
+Installing pre-releases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sometimes we release beta versions of Robusta. To try them, run ``helm upgrade`` with the ``--devel`` flag.
+To install a beta version of Robusta, run ``helm upgrade --devel``.

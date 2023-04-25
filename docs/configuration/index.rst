@@ -3,7 +3,7 @@
 Configuration Overview
 ==========================
 
-Follow this guide to configure Robusta after :ref:`installing it <Quick Install>`. Configuration is done using Robusta's Helm values.
+Follow this guide to configure Robusta after :ref:`installing it <Installation Guide>`. Configuration is done using Robusta's Helm values.
 
 Common Settings
 ^^^^^^^^^^^^^^^^^^
@@ -11,31 +11,31 @@ Common Settings
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`book;1em;` Sinks
+    .. grid-item-card:: :octicon:`book;1em;` Send Notifications
         :class-card: sd-bg-light sd-bg-text-light
-        :link: sinks/index
+        :link: sending-notifications
         :link-type: doc
 
-        Send notifications from Robusta to external integrations.
+        Send notifications from Robusta to external systems.
 
     .. grid-item-card:: :octicon:`book;1em;` Integrate Prometheus
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: additional-playbooks
-        :link-type: doc
-
-        Connect Prometheus, AlertManager, Grafana, and others.
-
-    .. grid-item-card:: :octicon:`book;1em;` Define Alerts
         :class-card: sd-bg-light sd-bg-text-light
         :link: alert-manager
         :link-type: doc
 
-        Create custom alerts for Kubernetes
+        Connect Prometheus, AlertManager, Grafana, and others.
 
-Full List of Settings
+    .. grid-item-card:: :octicon:`book;1em;` Define Custom Playbooks
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: defining-playbooks/index
+        :link-type: doc
+
+        Create your own alerts and Kubernetes automations
+
+All Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can see all of Robusta's settings in the Helm chart:
+All of Robusta's settings are listed as Helm chart values:
 
 .. code-block:: yaml
 
