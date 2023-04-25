@@ -45,8 +45,7 @@ This method works for public repos too:
           ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
           -----END OPENSSH PRIVATE KEY-----
 
-The ``key`` parameter must contain a deployment key with ``read`` access. This parameter is required when accessing a
-git repo over ssh, even for public repositories.
+The ``key`` parameter must contain a deployment key with ``read`` access.
 
 Handling Secrets
 *******************

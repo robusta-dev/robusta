@@ -10,50 +10,35 @@ Use the ``robusta`` cli tool to generate the Helm values. You can install the cl
     .. tab-item:: pip (recommended)
         :name: pip-cli-tab
 
-        Install the ``robusta`` cli with ``pip``:
+        .. details:: System Requirements
+
+            * Python 3.7 or higher is required.
+            * Use ``pip3`` on systems with both Python 2 and Python 3.
+            * A ``command not found: robusta`` error means :ref:`Python's script directory is not your PATH.<Common Errors>`.
 
         .. code-block:: bash
             :name: cb-pip-install
 
             pip install -U robusta-cli --no-cache
-
-        Run ``robusta`` to generate a Helm values file:
-
-        .. code-block:: bash
-           :name: cb-robusta-gen-config
-
             robusta gen-config {{ gen_config_flags }}
-
-        .. admonition:: System Requirements
-            :class: warning
-
-            * Python 3.7 or higher is required. Use ``pip3`` On systems with both Python 2 and Python 3.
-            * Ensure Python's script directory is in your PATH. If not, you'll encounter a ``command not found: robusta`` error. See :ref:`Common Errors` to fix this.
 
     .. tab-item:: docker
         :name: docker-cli-tab
 
-        Download the robusta script and grant execute permissions:
+        .. details:: System Requirements
+
+            A Docker daemon and bash are required.
+
+            On Windows, use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
 
         .. code-block:: bash
             :name: cb-docker-cli-download
 
             curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
             chmod +x robusta
-
-        Run the ``robusta`` cli tool to generate a Helm values file:
-
-        .. code-block:: bash
-            :name: cb-docker-cli-example
-
             ./robusta gen-config {{ gen_config_flags }}
 
-        .. admonition:: System Requirements
-            :class: warning
-
-            A Docker daemon and bash are required.
-
-            On Windows, use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
-
 You should now have a ``generated_values.yaml`` file with a Robusta config. **Save this file!**
-You'll need it whenever you install Robusta on a new cluster.
+You'll need it to install Robusta on new clusters.
+
+This file contains sensitive values. Refer to :ref:`Managing Secrets` for tips on protecting them.

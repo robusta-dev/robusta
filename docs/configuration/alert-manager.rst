@@ -54,10 +54,10 @@ After you configure AlertManager, you can test it works properly, by creating a 
 
 Within a few minutes, you should see the demo alert in the Robusta UI, Slack, and any other sinks you configured.
 
-.. admonition:: Why do I still see a banner in the Robusta UI that "Alerts won't show up"?
+.. admonition:: Why do I see a banner in the UI that "Alerts won't show up"?
     :class: warning
 
-    The notification is displayed until the first alert is sent from AlertManager to Robusta.
+    This notification is displayed until AlertManager sends the first alert to Robusta.
 
 Specific Instructions
 ======================
@@ -80,7 +80,7 @@ To configure the secret, copy the configuration :ref:`here <General Instructions
     It `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
 
 Out-of-cluster Prometheus Installations
-----------------------------------------------------
+-----------------------------------------
 
 If AlertManager is located outside of your Kubernetes cluster then a few more steps are necessary:
 

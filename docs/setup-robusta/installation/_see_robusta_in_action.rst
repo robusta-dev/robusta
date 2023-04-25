@@ -1,14 +1,14 @@
 See Robusta in action
 ------------------------------
 
-Let's deploy a crashing pod:
+Deploy a crashing pod:
 
 .. code-block:: bash
    :name: cb-apply-crashpod
 
    kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw
 
-Verify that the pod is actually crashing:
+Verify the pod is crashing:
 
 .. code-block:: console
    :name: cb-verify-crash-pod-crashing
@@ -17,7 +17,7 @@ Verify that the pod is actually crashing:
    NAME                            READY   STATUS             RESTARTS   AGE
    crashpod-64d8fbfd-s2dvn         0/1     CrashLoopBackOff   1          7s
 
-Once the pod has reached two restarts, you'll get notified in Slack (or whatever alternative integration you configured):
+Once the pod restarts twice, you'll get notified in your configured :ref:`sink <Sinks Reference>`.
 
 .. admonition:: Example Slack Message
 

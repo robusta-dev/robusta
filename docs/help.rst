@@ -27,21 +27,19 @@ Common Errors
 ^^^^^^^^^^^^^
 
 This list contains some common errors we have encountered over time. If you can't find your answer here,
-please contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-slack>`_.
+contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-slack>`_.
 
 
-.. details:: Robusta CLI is not in path
+.. details:: command not found: robusta (CLI not in path)
 
-    1. Determine where the Robusta-cli binary file is installed  
+    1. Determine where the Robusta-cli binary file is located
 
     .. code-block:: bash
-        :name: find-python-bin-loc
+        :name: cb-find-python-cli-loc
 
-        which python3
-    
-    This <new-path> should be added to the user path directories.
+        find / -regex '.*/bin/robusta' 2>/dev/null
 
-    2. Find your shell config file ( ~/.profile or ~/.bash_profile or ~/.zshrc etc...) and append the following line:
+    2. Add the path you found (e.g ``/opt/homebrew/bin/``) to your PATH. To do so, find your shell config file ( ~/.profile or ~/.bash_profile or ~/.zshrc etc...) and append the following:
 
     .. code-block:: bash
         :name: add-path-var
@@ -51,15 +49,13 @@ please contact support@robusta.dev or go to `our slack channel <https://bit.ly/r
     3. Reopen the terminal or run:
 
     .. code-block:: bash
-        :name: cb-helm-repo-add-show-values
+        :name: cb-refresh-terminal
 
-        source <shell-config-file>
+        source <your-shell-config-file>
 
-    .. note::
+    .. admonition:: Alternative Solution
 
-      If you prefer not to update PATH, you can use Python's ``-m`` flag
-
-      ``python3 -m robusta.cli.main gen-config``
+      Instead of modifying PATH, run Robusta commands via the python3 binary: ``python3 -m robusta.cli.main gen-config``
 
 .. details:: SSL certificate errors on Mac OS
 
