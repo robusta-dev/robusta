@@ -139,6 +139,7 @@ Trigger parameters:
     * If A `name` is defined without a `namespace` than all containers with that name prefix will be ignored for this trigger.
     * If A `namespace` is defined without a `name` than all containers in that namespace will be ignored for this trigger.
 
+
 Job Triggers
 ***************
 
