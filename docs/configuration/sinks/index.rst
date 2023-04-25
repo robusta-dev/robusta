@@ -18,6 +18,7 @@ Sinks Reference
    ms-teams
    mattermost
    webhook
+   file
    webex
    Opsgenie
    VictorOps
@@ -96,6 +97,12 @@ Click a sink for setup instructions.
         :class-card: sd-bg-light sd-bg-text-light
         :link: PagerDuty
         :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` File
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: file
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` Webex
         :class-card: sd-bg-light sd-bg-text-light
         :link: webex
