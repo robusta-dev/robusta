@@ -10,7 +10,7 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
-from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_PERIOD_SEC
+from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
@@ -53,7 +53,7 @@ class RobustaSink(SinkBase):
             robusta_token.password,
             sink_config.robusta_sink.name,
             self.cluster_name,
-            self.signing_key,
+            self.signing_key
         )
 
         self.first_prometheus_alert_time = 0
@@ -131,6 +131,11 @@ class RobustaSink(SinkBase):
 
     def stop(self):
         self.__active = False
+
+    def is_healthy(self) -> bool:
+        if self.last_send_time == 0:
+            return True
+        return time.time() - self.last_send_time < DISCOVERY_CHECK_THRESHOLD_SEC
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.dal.persist_finding(finding)
@@ -355,6 +360,7 @@ class RobustaSink(SinkBase):
 
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()
+
             cluster_status = ClusterStatus(
                 cluster_id=self.cluster_name,
                 version=self.registry.get_telemetry().runner_version,
@@ -367,6 +373,7 @@ class RobustaSink(SinkBase):
             )
 
             self.dal.publish_cluster_status(cluster_status)
+            self.dal.publish_cluster_nodes(cluster_stats.nodes)
         except Exception:
             logging.exception(
                 f"Failed to run periodic update cluster status for {self.sink_name}",

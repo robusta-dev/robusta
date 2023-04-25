@@ -15,7 +15,10 @@ from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.services import ServiceInfo
+from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import Finding
+from robusta.core.reporting.blocks import ScanReportBlock, ScanReportRow
+from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 
 SERVICES_TABLE = "Services"
@@ -25,6 +28,8 @@ ISSUES_TABLE = "Issues"
 CLUSTERS_STATUS_TABLE = "ClustersStatus"
 JOBS_TABLE = "Jobs"
 NAMESPACES_TABLE = "Namespaces"
+UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
+SCANS_RESULT_TABLE = "ScansResults"
 
 
 class RobustaAuthClient(SupabaseAuthClient):
@@ -96,8 +101,59 @@ class SupabaseDal:
         self.sink_name = sink_name
         self.signing_key = signing_key
 
+    def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
+        db_sr = scanResult.dict()
+        db_sr["account_id"] = self.account_id
+        db_sr["cluster_id"] = self.cluster
+        return db_sr
+
+    def persist_scan(self, enrichment: Enrichment):
+        for block in enrichment.blocks:
+            if not isinstance(block, ScanReportBlock):
+                continue
+
+            db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
+            res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
+            if res.get("status_code") not in [200, 201]:
+                msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
+                logging.error(msg)
+                self.handle_supabase_error()
+                raise Exception(msg)
+
+            res = self.__rpc_patch(
+                "insert_scan_meta",
+                {
+                    "_account_id": self.account_id,
+                    "_cluster": self.cluster,
+                    "_scan_id": block.scan_id,
+                    "_scan_start": str(block.start_time),
+                    "_scan_end": str(block.end_time),
+                    "_type": block.type,
+                    "_grade": block.score,
+                },
+            )
+
+            if res.get("status_code") not in [200, 201, 204]:
+                msg = f"Failed to persist scan meta {block.scan_id} error: {res.get('data')}"
+                logging.error(msg)
+                self.handle_supabase_error()
+                raise Exception(msg)
+
     def persist_finding(self, finding: Finding):
-        for enrichment in finding.enrichments:
+
+        scans, enrichments = [], []
+        for enrich in finding.enrichments:
+            scans.append(enrich) if enrich.annotations.get(EnrichmentAnnotation.SCAN, False) else enrichments.append(
+                enrich
+            )
+
+        for scan in scans:
+            self.persist_scan(scan)
+
+        if (len(scans) > 0) and (len(enrichments)) == 0:
+            return
+
+        for enrichment in enrichments:
             res = (
                 self.client.table(EVIDENCE_TABLE)
                 .insert(
@@ -167,7 +223,6 @@ class SupabaseDal:
             logging.error(msg)
             self.handle_supabase_error()
             raise Exception(msg)
-
         return [
             ServiceInfo(
                 name=service["name"],
@@ -318,11 +373,31 @@ class SupabaseDal:
 
         # postgres_py (which supabase cli uses) adds quotation marks around params with the characters ",.:()"
         # supabase does not support this format
-        query: str = str(supabase_request_obj.session.params).replace('%22', '')
+        query: str = str(supabase_request_obj.session.params).replace("%22", "")
         response = requests.delete(f"{url}?{query}", headers=supabase_request_obj.session.headers)
         response_data = ""
         try:
             response_data = response.json()
+        except Exception:  # this can be okay if no data is expected
+            logging.debug("Failed to parse delete response data")
+
+        return {
+            "data": response_data,
+            "status_code": response.status_code,
+        }
+
+    def __rpc_patch(self, func_name: str, params: dict) -> Dict[str, Any]:
+        """
+        Supabase client is async. Sync impl of rpc call
+        """
+        builder = self.client.table(f"rpc/{func_name}")  # rpc builder
+        url: str = str(builder.session.base_url).rstrip("/")
+
+        response = requests.post(url, headers=builder.session.headers, json=params)
+        response_data = {}
+        try:
+            if response.content:
+                response_data = response.json()
         except Exception:  # this can be okay if no data is expected
             logging.debug("Failed to parse delete response data")
 
@@ -406,3 +481,17 @@ class SupabaseDal:
             self.handle_supabase_error()
             status_code = res.get("status_code")
             raise Exception(f"publish namespaces failed. status: {status_code}")
+
+    def publish_cluster_nodes(self, node_count: int):
+        data = {
+            "_account_id": self.account_id,
+            "_cluster_id": self.cluster,
+            "_node_count": node_count,
+        }
+        res = self.__rpc_patch(UPDATE_CLUSTER_NODE_COUNT, data)
+
+        if res.get("status_code") not in [200, 201, 204]:
+            logging.error(f"Failed to publish node count {data} error: {res.get('data')}")
+            self.handle_supabase_error()
+
+        logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")

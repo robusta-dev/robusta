@@ -2,6 +2,7 @@ import logging
 from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, NamedTuple, Optional, Type, Union
 
+from hikaru.model import HorizontalPodAutoscaler
 from hikaru.model.rel_1_16 import DaemonSet, Job, Node, NodeList, StatefulSet
 from pydantic.main import BaseModel
 
@@ -28,7 +29,14 @@ class PrometheusTriggerEvent(TriggerEvent):
 
 
 class ResourceMapping(NamedTuple):
-    hikaru_class: Union[Type[RobustaPod], Type[RobustaDeployment], Type[Job], Type[DaemonSet], Type[StatefulSet]]
+    hikaru_class: Union[
+        Type[RobustaPod],
+        Type[RobustaDeployment],
+        Type[Job],
+        Type[DaemonSet],
+        Type[StatefulSet],
+        Type[HorizontalPodAutoscaler],
+    ]
     attribute_name: str
     prometheus_label: str
 
@@ -39,6 +47,7 @@ MAPPINGS = [
     ResourceMapping(StatefulSet, "statefulset", "statefulset"),
     ResourceMapping(RobustaJob, "job", "job_name"),
     ResourceMapping(RobustaPod, "pod", "pod"),
+    ResourceMapping(HorizontalPodAutoscaler, "hpa", "horizontalpodautoscaler"),
 ]
 
 

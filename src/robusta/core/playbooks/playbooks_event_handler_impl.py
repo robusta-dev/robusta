@@ -18,6 +18,7 @@ from robusta.model.config import Registry
 from robusta.model.playbook_action import PlaybookAction
 from robusta.runner.telemetry import Telemetry
 from robusta.utils.error_codes import ActionException, ErrorCodes
+from robusta.utils.stack_tracer import StackTracer
 
 
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
@@ -293,3 +294,16 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def get_telemetry(self) -> Telemetry:
         return self.registry.get_telemetry()
+
+    def is_healthy(
+        self,
+    ) -> bool:
+        sinks_registry = self.registry.get_sinks()
+        if not sinks_registry or not sinks_registry.get_all():
+            return True
+        return all(sink.is_healthy() for sink in sinks_registry.get_all().values())
+
+    def handle_sigint(self, sig, frame):
+        logging.info("SIGINT handler called")
+        if not self.is_healthy():  # dump stuck trace only when the runner is unhealthy
+            StackTracer.dump()

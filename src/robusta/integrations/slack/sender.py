@@ -22,9 +22,10 @@ from robusta.core.reporting.blocks import (
     ListBlock,
     MarkdownBlock,
     TableBlock,
+    ScanReportBlock
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
-from robusta.core.reporting.consts import SlackAnnotations
+from robusta.core.reporting.consts import SlackAnnotations, EnrichmentAnnotation
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
@@ -182,6 +183,8 @@ class SlackSender:
             return self.__get_action_block_for_choices(sink_name, block.choices)
         elif isinstance(block, LinksBlock):
             return self.__to_slack_links(block.links)
+        elif isinstance(block, ScanReportBlock):
+            raise AssertionError("to_slack() should never be called on a ScanReportBlock")
         else:
             logging.error(f"cannot convert block of type {type(block)} to slack format block: {block}")
             return []  # no reason to crash the entire report
@@ -225,6 +228,7 @@ class SlackSender:
         unfurl: bool,
         status: FindingStatus,
     ):
+       
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
             file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
@@ -326,6 +330,9 @@ class SlackSender:
 
         unfurl = True
         for enrichment in finding.enrichments:
+            if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
+                enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
+
             # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
             unfurl = unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True)
             if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):

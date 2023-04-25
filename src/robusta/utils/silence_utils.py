@@ -1,7 +1,8 @@
 import json
+import logging
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 from uuid import UUID
 
 import requests
@@ -9,8 +10,7 @@ from pydantic import BaseModel, SecretStr, validator
 
 from robusta.core.exceptions import AlertsManagerNotFound
 from robusta.core.model.base_params import ActionParams
-from robusta.integrations.prometheus.utils import ServiceDiscovery, AlertManagerDiscovery
-
+from robusta.integrations.prometheus.utils import AlertManagerDiscovery, ServiceDiscovery
 
 # ref to api https://github.com/prometheus/alertmanager/blob/main/api/v2/openapi.yaml
 
@@ -63,7 +63,12 @@ class BaseSilenceParams(ActionParams):
     grafana_api_key: str = None  # type: ignore
 
     @validator("alertmanager_url", allow_reuse=True)
-    def remove_ending_slash(cls, v):
+    def validate_alertmanager_url(cls, v):
+
+        if v and not v.startswith("http"):  # if the user configured url without http(s)
+            v = f"http://{v}"
+            logging.info(f"Adding protocol to alertmanager_url: {v}")
+
         if v.endswith("/"):
             return v[:-1]
         return v
@@ -101,7 +106,8 @@ def get_alertmanager_silences_connection(params: BaseSilenceParams):
     try:
         response = requests.get(
             f"{alertmanager_url}{get_alertmanager_url_path(SilenceOperation.LIST, params)}",
-            headers=gen_alertmanager_headers(params), )
+            headers=gen_alertmanager_headers(params),
+        )
         response.raise_for_status()
 
     except Exception as e:

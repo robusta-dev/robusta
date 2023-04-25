@@ -6,7 +6,6 @@ from enum import Flag
 from typing import List, Optional
 
 from hikaru.model import ContainerStatus, Event, EventList, PodStatus
-
 from robusta.api import (
     BaseBlock,
     Finding,
@@ -48,20 +47,12 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
     # Check if image pull backoffs occurred. Terminate if not
     image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(pod.status)
     if len(image_pull_backoff_container_statuses) == 0:
+        logging.info("No image pull backoff found.")
         return
 
     # Extract pod name and namespace
     pod_name = pod.metadata.name
-    replicaset_name = pod.metadata.ownerReferences[0].name if pod.metadata.ownerReferences else pod.metadata.name
     namespace = pod.metadata.namespace
-
-    # Perform a rate limit for this pod according to the rate_limit parameter
-    if not RateLimiter.mark_and_test(
-        "image_pull_backoff_reporter",
-        namespace + ":" + replicaset_name,
-        action_params.rate_limit,
-    ):
-        return
 
     # Extract the error message and reason for the image pull back for every container with the ImagePullBackOff status.
     # Put all the relevant information into Markdown Blocks

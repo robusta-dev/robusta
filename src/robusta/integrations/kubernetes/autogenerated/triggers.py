@@ -924,6 +924,128 @@ class PersistentVolumeUpdateTrigger(K8sBaseTrigger):
         return PersistentVolumeChangeEvent
 
 
+# PersistentVolumeClaim Triggers
+class PersistentVolumeClaimAllChangesTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="PersistentVolumeClaim",
+            operation=None,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return PersistentVolumeClaimChangeEvent
+
+
+class PersistentVolumeClaimCreateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="PersistentVolumeClaim",
+            operation=K8sOperationType.CREATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return PersistentVolumeClaimChangeEvent
+
+
+class PersistentVolumeClaimDeleteTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="PersistentVolumeClaim",
+            operation=K8sOperationType.DELETE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return PersistentVolumeClaimChangeEvent
+
+
+class PersistentVolumeClaimUpdateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="PersistentVolumeClaim",
+            operation=K8sOperationType.UPDATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return PersistentVolumeClaimChangeEvent
+
+
+# NetworkPolicy Triggers
+class NetworkPolicyAllChangesTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="NetworkPolicy",
+            operation=None,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return NetworkPolicyChangeEvent
+
+
+class NetworkPolicyCreateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="NetworkPolicy",
+            operation=K8sOperationType.CREATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return NetworkPolicyChangeEvent
+
+
+class NetworkPolicyDeleteTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="NetworkPolicy",
+            operation=K8sOperationType.DELETE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return NetworkPolicyChangeEvent
+
+
+class NetworkPolicyUpdateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="NetworkPolicy",
+            operation=K8sOperationType.UPDATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return NetworkPolicyChangeEvent
+
+
 # ConfigMap Triggers
 class ConfigMapAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
@@ -1089,6 +1211,10 @@ class K8sTriggers(BaseModel):
     on_namespace_create: Optional[NamespaceCreateTrigger]
     on_namespace_delete: Optional[NamespaceDeleteTrigger]
     on_namespace_update: Optional[NamespaceUpdateTrigger]
+    on_networkpolicy_all_changes: Optional[NetworkPolicyAllChangesTrigger]
+    on_networkpolicy_create: Optional[NetworkPolicyCreateTrigger]
+    on_networkpolicy_delete: Optional[NetworkPolicyDeleteTrigger]
+    on_networkpolicy_update: Optional[NetworkPolicyUpdateTrigger]
     on_node_all_changes: Optional[NodeAllChangesTrigger]
     on_node_create: Optional[NodeCreateTrigger]
     on_node_delete: Optional[NodeDeleteTrigger]
@@ -1097,6 +1223,10 @@ class K8sTriggers(BaseModel):
     on_persistentvolume_create: Optional[PersistentVolumeCreateTrigger]
     on_persistentvolume_delete: Optional[PersistentVolumeDeleteTrigger]
     on_persistentvolume_update: Optional[PersistentVolumeUpdateTrigger]
+    on_persistentvolumeclaim_all_changes: Optional[PersistentVolumeClaimAllChangesTrigger]
+    on_persistentvolumeclaim_create: Optional[PersistentVolumeClaimCreateTrigger]
+    on_persistentvolumeclaim_delete: Optional[PersistentVolumeClaimDeleteTrigger]
+    on_persistentvolumeclaim_update: Optional[PersistentVolumeClaimUpdateTrigger]
     on_pod_all_changes: Optional[PodAllChangesTrigger]
     on_pod_create: Optional[PodCreateTrigger]
     on_pod_delete: Optional[PodDeleteTrigger]
