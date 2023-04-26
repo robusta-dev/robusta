@@ -1,36 +1,38 @@
-import re
 from typing import List
-
-import hikaru
-from hikaru.meta import HikaruBase
-from pydantic import SecretStr
 
 from robusta.api import (
     ActionParams,
-    GitRepoManager,
-    K8sOperationType,
-    KubernetesAnyChangeEvent,
     action,
-    is_matching_diff,
-    is_base64_encoded
+    HelmReleasesChangeEvent,
+    Finding, FindingSeverity, FindingSource, MarkdownBlock
 )
-import base64
 import logging
 
 
-class HelmReleaseParams(ActionParams):
+class CreateHelmStatusNotificationParams(ActionParams):
     """
     todo add docs
     """
 
-    namespace: str
+    message: str
 
 
 @action
-def helm_release_events(event: KubernetesAnyChangeEvent, action_params: HelmReleaseParams):
-    """
-    Audit Kubernetes resources from the cluster to Git as yaml files (cluster/namespace/resources hierarchy).
-    Monitor resource changes and save it to a dedicated Git repository.
+def create_helm_status_notification(event: HelmReleasesChangeEvent, params: CreateHelmStatusNotificationParams):
+    # todo
+    #pass
+    #event.add_enrichment(enrichment_blocks=, annotations=)
 
-    Using this audit repository, you can easily detect unplanned changes on your clusters.
-    """
+    finding = Finding(# todo
+        title=f"helm status events",
+        severity=FindingSeverity.LOW,
+        source=FindingSource.HELM_RELEASE,
+        aggregation_key="helm_releases",
+    )
+    # todo
+    finding.add_enrichment(
+        [
+            MarkdownBlock(f"helm status events"),
+        ]
+    )
+    event.add_finding(finding)

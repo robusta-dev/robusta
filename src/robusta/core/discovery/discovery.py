@@ -257,10 +257,13 @@ class Discovery:
             raise e
 
         # discover helm state
+        # todo disable secrets reading in discovery using playbook check
         helm_releases: List[HelmRelease] = []
         try:
             continue_ref: Optional[str] = None
             for _ in range(DISCOVERY_MAX_BATCHES):
+                #todo namespace
+                #todo use namespace and names_in check
                 secrets = client.CoreV1Api().list_namespaced_secret(namespace="", label_selector=f"owner=helm",
                                                                     _continue=continue_ref)
                 if not secrets.items:

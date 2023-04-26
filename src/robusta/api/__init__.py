@@ -165,6 +165,7 @@ from robusta.core.sinks.kafka import KafkaSink, KafkaSinkConfigWrapper, KafkaSin
 from robusta.integrations.argocd.argocd_client import ArgoCDClient
 from robusta.integrations.git.git_repo import ClusterChanges, GitRepo, GitRepoManager, SingleChange
 from robusta.integrations.grafana import Grafana
+from robusta.core.triggers.helm_releases_triggers import (HelmReleasesTriggerEvent, HelmReleasesChangeEvent)
 from robusta.integrations.kubernetes.api_client_utils import (
     exec_commands,
     exec_shell_command,

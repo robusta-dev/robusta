@@ -1,16 +1,37 @@
 from typing import Optional
 from pydantic import BaseModel
 from base64 import b64decode
+from datetime import datetime
 import gzip
 import json
 
 
+class Metadata(BaseModel):
+    name: str
+    version: str
+    description: str
+    icon: str
+    apiVersion: str
+    appVersion: str
+
+
+class Chart(BaseModel):
+    metadata: Metadata
+
+
+class Info(BaseModel):
+    firstdeployed: datetime
+    lastdeployed: datetime
+    deleted: str
+    description: str
+    status: str
+    notes: str
+
+
 class HelmRelease(BaseModel):
     name: str
-    info: Optional[dict]
-    chart: Optional[dict]
-    config: Optional[dict]
-    manifest: Optional[str]
+    info: Info
+    chart: Optional[Chart]
     version: int
     namespace: str
 
@@ -18,10 +39,8 @@ class HelmRelease(BaseModel):
     def from_json(cls, release_data: dict) -> "HelmRelease":
         return cls(
             name=release_data.get("name", None),
-            info=release_data.get("info", {}),
-            chart=release_data.get("chart", {}),
-            config=release_data.get("config", {}),
-            manifest=release_data.get("manifest", None),
+            info=release_data.get("info", None),
+            chart=release_data.get("chart", None),
             version=release_data.get("version", None),
             namespace=release_data.get("namespace", None),
         )
@@ -46,8 +65,6 @@ class HelmRelease(BaseModel):
             name=release_data["name"],
             info=release_data["info"],
             chart=release_data["chart"],
-            config=release_data["config"],
-            manifest=release_data["manifest"],
             version=release_data["version"],
             namespace=release_data["namespace"],
         )

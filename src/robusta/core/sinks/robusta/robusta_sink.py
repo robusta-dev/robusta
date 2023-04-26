@@ -20,9 +20,7 @@ from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
-from robusta.integrations.helm.trigger import HelmTriggerEvent
 from robusta.integrations.receiver import ActionRequestReceiver
-from robusta.runner.web import Web
 from robusta.runner.web_api import WebApi
 
 from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags, \
@@ -32,6 +30,7 @@ from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_sile
 
 
 class RobustaSink(SinkBase):
+
     def __init__(self, sink_config: RobustaSinkConfigWrapper, registry):
         from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
 
@@ -191,7 +190,22 @@ class RobustaSink(SinkBase):
         except Exception:
             logging.error("Error getting events history", exc_info=True)
 
-    def __discover_resources(self):
+    def __send_helm_release_events(self, release_data: List[HelmRelease]):
+        try:
+            logging.info("Sending helm release events")
+            response = WebApi.send_helm_release_events(
+                release_data=release_data,
+                retries=4,
+                timeout_delay=30,
+            )
+            if response != 200:
+                logging.error("Error occured while sending `helm release`")
+            else:
+                logging.info("Sent `helm release`.")
+        except Exception:
+            logging.error("Error occured while sending `helm release`", exc_info=True)
+
+    def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
         try:
             results: DiscoveryResults = Discovery.discover_resources()
@@ -205,9 +219,11 @@ class RobustaSink(SinkBase):
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
 
+
+            #todo
             self.__assert_helm_releases_cache_initialized()
-            Web.alerts_queue.add_task(Web.event_handler.handle_trigger, HelmTriggerEvent(alert=alert))
             self.__publish_new_helm_releases(results.helm_releases)
+
 
             self.__assert_namespaces_cache_initialized()
             self.__publish_new_namespaces(results.namespaces)
@@ -216,6 +232,8 @@ class RobustaSink(SinkBase):
             RobustaSink.__save_resolver_resources(
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
             )
+
+            return results
 
         except Exception:
             # we had an error during discovery. Reset caches to align the data with the storage
@@ -415,10 +433,14 @@ class RobustaSink(SinkBase):
         while self.__active:
             start_t = time.time()
             self.__periodic_cluster_status()
-            self.__discover_resources()
+            discovery_results = self.__discover_resources()
             if get_history:
                 self.__get_events_history()
                 get_history = False
+
+            if discovery_results.helm_releases:
+                self.__send_helm_release_events(release_data=discovery_results.helm_releases)
+
             duration = round(time.time() - start_t)
             # for small cluster duration is discovery_period_sec. For bigger clusters, up to 5 min
             sleep_dur = min(max(self.__discovery_period_sec, 3 * duration), 300)
