@@ -25,7 +25,7 @@ class FindingOverrides(ActionParams):
     :var description: Overriding finding description. Description can be templated with name/namespace/kind/node of the resource, if applicable
     :var severity: Overriding finding severity. Allowed values: DEBUG, INFO, LOW, MEDIUM, HIGH
     :example severity: DEBUG
-    :example title: Resourece $kind/$namespace/$name is in trouble
+    :example title: Resource $kind/$namespace/$name is in trouble
     """
 
     title: Optional[str] = None

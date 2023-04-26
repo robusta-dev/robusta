@@ -39,6 +39,34 @@ Using Private Channels
 
     <div style="position: relative; padding-bottom: 62.5%; height: 0;"><iframe src="https://www.loom.com/embed/a0b1a27a54df44fa95c483917b961b11" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
 
+Automatically @mentioning Users
+---------------------------------
+
+It is possible to automatically tag users in Slack.
+
+To do so in :ref:`custom playbooks <customPlaybooks>` mention the ``@username`` anywhere in the description:
+
+.. code-block::
+
+    customPlaybooks:
+    - actions:
+      triggers:
+      - on_kubernetes_warning_event:
+          include: ["TooManyPods"]
+      - create_finding:
+          aggregation_key: "too-many-pods-warning"
+          severity: HIGH
+          title: "Too many pods on $node!"
+          description: "@some-user, please take a look." # (1)
+
+
+.. code-annotations::
+    1. @some-user will become a mention in Slack
+
+If you'd like to automatically tag users on builtin alerts, please
+`let us know <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=Tag%20Slack%20Users>`_.
+We want to hear requirements.
+
 Custom Slack Apps
 -------------------------------------------------------------------
 
