@@ -50,9 +50,9 @@ class MsTeamsSender:
 
     @classmethod
     def send_finding_to_ms_teams(
-        cls, webhook_url: str, finding: Finding, platform_enabled: bool, cluster_name: str, account_id: str
+        cls, webhook_url: str, finding: Finding, platform_enabled: bool, cluster_name: str, account_id: str, use_emoji: bool
     ):
-        msg = MsTeamsMsg(webhook_url)
+        msg = MsTeamsMsg(webhook_url, use_emoji)
         msg.write_title_and_desc(platform_enabled, finding, cluster_name, account_id)
 
         for enrichment in finding.enrichments:

@@ -32,18 +32,19 @@ class MsTeamsMsg:
     # a safe zone of less then 28K
     MAX_SIZE_IN_BYTES = 1024 * 20
 
-    def __init__(self, webhook_url: str):
+    def __init__(self, webhook_url: str, use_emoji: bool):
         self.entire_msg: List[MsTeamsBase] = []
         self.current_section: List[MsTeamsBase] = []
         self.text_file_containers = []
         self.webhook_url = webhook_url
+        self.use_emoji = use_emoji
 
     def write_title_and_desc(self, platform_enabled: bool, finding: Finding, cluster_name: str, account_id: str):
         status: FindingStatus = (
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
         title = finding.title.removeprefix("[RESOLVED] ")
-        title = self.__build_msteams_title(title, status, finding.severity)
+        title = self.__build_msteams_title(title, status, finding.severity, self.use_emoji)
 
         block = MsTeamsTextBlock(
             text=f"{title}", font_size="extraLarge"
@@ -51,11 +52,11 @@ class MsTeamsMsg:
         self.__write_to_entire_msg([block])
         if platform_enabled:  # add link to the Robusta ui, if it's configured
             silence_url = finding.get_prometheus_silence_url(account_id, cluster_name)
-            actions = f"[🔎 Investigate]({finding.get_investigate_uri(account_id, cluster_name)})"
+            actions = f"[{'🔎' if self.use_emoji else ''} Investigate]({finding.get_investigate_uri(account_id, cluster_name)})"
             if finding.add_silence_url:
-                actions = f"{actions}  [🔕 Silence]({silence_url})"
+                actions = f"{actions}  [{'🔕' if self.use_emoji else ''} Silence]({silence_url})"
             for video_link in finding.video_links:
-                actions = f"{actions} [🎬 {video_link.name}]({video_link.url})"
+                actions = f"{actions} [{'🎬' if self.use_emoji else ''} {video_link.name}]({video_link.url})"
             self.__write_to_entire_msg([MsTeamsTextBlock(text=actions)])
 
         self.__write_to_entire_msg([MsTeamsTextBlock(text=f"**Source:** *{cluster_name}*")])
@@ -65,8 +66,8 @@ class MsTeamsMsg:
             self.__write_to_entire_msg([block])
 
     @classmethod
-    def __build_msteams_title(cls, title: str, status: FindingStatus, severity: FindingSeverity) -> str:
-        return f"{status.to_emoji()} {status.name.lower()} - {severity.to_emoji()} {severity.name} - **{title}**"
+    def __build_msteams_title(cls, title: str, status: FindingStatus, severity: FindingSeverity, use_emoji: bool) -> str:
+        return f"{status.to_emoji() if use_emoji else ''} {status.name.lower()} - {severity.to_emoji() if use_emoji else ''} {severity.name} - **{title}**"
 
     def write_current_section(self):
         if len(self.current_section) == 0:
