@@ -1,5 +1,7 @@
 :hide-toc:
 
+:hide-footer:
+
 .. _install:
 
 Installation Guides
