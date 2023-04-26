@@ -52,9 +52,9 @@ class Web:
     @staticmethod
     @app.route("/api/helm-releases", methods=["POST"])
     def handle_alert_helm_event():
-        data = request.get_json()["data"]
-        Web._trace_incoming("helm events", data)
-        helm_release_payload = IncomingHelmReleasesEventPayload(**data)
+        req_json = request.get_json()
+        Web._trace_incoming("helm events", req_json)
+        helm_release_payload = IncomingHelmReleasesEventPayload.parse_obj(req_json)
         Web.api_server_queue.add_task(Web.event_handler.handle_trigger,
                                       HelmReleasesTriggerEvent(helm_release_payload=helm_release_payload))
         return jsonify(success=True)

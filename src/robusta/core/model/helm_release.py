@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from base64 import b64decode
 from datetime import datetime
@@ -10,7 +10,6 @@ class Metadata(BaseModel):
     name: str
     version: str
     description: str
-    icon: str
     apiVersion: str
     appVersion: str
 
@@ -20,8 +19,8 @@ class Chart(BaseModel):
 
 
 class Info(BaseModel):
-    firstdeployed: datetime
-    lastdeployed: datetime
+    first_deployed: datetime
+    last_deployed: datetime
     deleted: str
     description: str
     status: str
@@ -44,6 +43,16 @@ class HelmRelease(BaseModel):
             version=release_data.get("version", None),
             namespace=release_data.get("namespace", None),
         )
+
+    def to_dict(self):
+        data = json.loads(self.json())
+        data['info']['first_deployed'] = self.info.first_deployed.isoformat()
+        data['info']['last_deployed'] = self.info.last_deployed.isoformat()
+        return data
+
+    @staticmethod
+    def list_to_json(releases: List["HelmRelease"]):
+        return [release.to_dict() for release in releases]
 
     @classmethod
     def from_api_server(cls, encoded_release_data: str) -> "HelmRelease":

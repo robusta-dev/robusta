@@ -45,14 +45,14 @@ class WebApi:
     def send_helm_release_events(release_data: List[HelmRelease], retries=1, timeout_delay=1):
         status_code = -1
 
-        manual_action_url = f"http://127.0.0.1:{PORT}/api/helm-releases"
+        url = f"http://127.0.0.1:{PORT}/api/helm-releases"
         data = {
-            "version": "1",
-            "data": release_data,
+            "version": 1,
+            "data": HelmRelease.list_to_json(release_data),
         }
         for _ in range(retries):
             try:
-                response = requests.post(manual_action_url, json=data)
+                response = requests.post(url, json=data)
                 status_code = response.status_code
                 if status_code == 200:
                     return status_code
