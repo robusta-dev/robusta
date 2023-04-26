@@ -3,11 +3,11 @@ Silencing Alerts
 
 Prometheus Alerts can be silenced several ways:
 
-* Define a *silence* in Prometheus according to alert labels
-* Clicking the *Silence* button in Slack (this is equivalent to the above method)
-* Define a Robusta playbook with a *smart silencer action*
+1. Define a *silence* in Prometheus according to alert labels
+2. Clicking the *Silence* button in Slack (this is equivalent to the above method)
+3. Define a Robusta playbook with a *smart silencer action*
 
-Robusta silencers are useful for:
+Robusta silencers (the third method) are useful for:
 
 * Implementing *silencing as code* in a YAML file
 * Selectively silencing with *smart logic*, not just according to labels

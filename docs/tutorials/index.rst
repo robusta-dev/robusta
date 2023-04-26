@@ -37,9 +37,9 @@ Notification Routing
    :maxdepth: 1
 
    routing-by-namespace
-   routing-exclusion
    routing-by-type
-   route-silencing
+   routing-exclusion
+   routing-silencing
 
 Automatic Remediation
 ------------------------

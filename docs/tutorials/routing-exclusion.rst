@@ -1,7 +1,9 @@
-Dropping Alerts
+Routing with Exclusion Rules
 =============================
 
 This guide defines a sink that receives all notifications *except* for something specific.
+
+To drop a specific notification altogether, see :ref:`Silencing Alerts`.
 
 Using Matchers to Exclude Alerts
 ------------------------------------------------
