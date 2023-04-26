@@ -23,7 +23,7 @@ One of the following:
 * Robusta's embedded Prometheus Stack
 * An external Prometheus integrated with Robusta, including the Prometheus Operator.
 
-Defining a Custom Prometheus Alert
+Defining a Custom Alert
 ---------------------------------------
 
 Prometheus Alerts are defined on Kubernetes using the *PrometheusRule CRD*.
@@ -82,9 +82,9 @@ Once the alert fires, a notification arrives in your configured sinks:
 
 .. TODO example image
 
-Enhancing the Alert with Robusta
+Enriching the Alert
 ------------------------------------
 
 In the next tutorial, we enhance this Prometheus alert with Robusta. Keep reading to learn more:
 
-* :ref:`Custom Prometheus Enhancements`
+* :ref:`Enrich Custom Prometheus Alerts`

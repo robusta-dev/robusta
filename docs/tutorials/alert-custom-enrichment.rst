@@ -1,4 +1,4 @@
-Custom Prometheus Enhancements
+Enrich Custom Prometheus Alerts
 ##############################
 
 In the last tutorial we defined a custom Prometheus alert.
@@ -11,8 +11,8 @@ Prerequisites
 Complete the previous tutorial, :ref:`Define Custom Prometheus Alerts`.
 
 
-Enriching alerts
------------------
+Enriching a Custom Alert
+--------------------------------
 
 Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert:
 

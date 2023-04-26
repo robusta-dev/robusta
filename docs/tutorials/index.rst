@@ -28,7 +28,7 @@ Custom Alerts and Playbooks
    playbook-route-alerts
    playbook-track-changes
    alert-custom-prometheus
-   alert-custom-enrichments
+   alert-custom-enrichment
 
 Notification Routing
 ----------------------
