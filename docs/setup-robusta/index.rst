@@ -18,4 +18,5 @@
    uninstall
    supported-clusters
    node-selector
+   proxies
    installation-faq
