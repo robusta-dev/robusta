@@ -6,7 +6,7 @@ This tutorial installs Robusta with `Flux <https://fluxcd.io/>`_ using Flux `Hel
 Prerequisites
 ---------------------
 * A Kubernetes cluster with Flux installed.
-* A ``generated_values.yaml`` file. Follow the :ref:`Quick Install` tutorials to generate this.
+* A ``generated_values.yaml`` file. Follow the :ref:`Generate a Config` tutorial to generate this.
 
 .. include:: ../_questions.rst
 
@@ -44,7 +44,10 @@ Example ``generated_values.yaml``:
       prv: xxxxxx
       pub: xxxxxx
 
-For now, create a ``generated_values.yaml`` by following the :ref:`Quick Install`.
+.. admonition:: Secrets handling
+    :class: note
+
+    Read this guide about :ref:`Managing Secrets`.
 
 
 Creating a ``HelmRepository``
@@ -89,9 +92,3 @@ Finish installing
 Move `robusta-helm.yaml` and `robusta-release.yaml` to the Flux bootstrap path.
 
 Commit and push the changes. Wait for the repository to reconcile.
-
-
-.. admonition:: Secrets handling
-    :class: note
-
-    We recommend using sealed secrets, read the full guide about :ref:`Managing Secrets`.

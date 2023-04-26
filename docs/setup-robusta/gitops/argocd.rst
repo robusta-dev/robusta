@@ -6,7 +6,7 @@ This tutorial installs Robusta with `ArgoCD <https://argoproj.github.io/cd>`_.
 Prerequisites
 ---------------------
 * A Kubernetes cluster with ArgoCD
-* A ``generated_values.yaml`` file. Follow the :ref:`Quick Install` tutorials to generate this.
+* A ``generated_values.yaml`` file. Follow the :ref:`Generate a Config` tutorial to generate this.
 
 .. include:: ../_questions.rst
 
@@ -21,7 +21,7 @@ Prepare your ``generated_values.yaml`` file for ArgoCD:
 Example ``generated_values.yaml``:
 
 .. code-block:: yaml
-    
+
     clusterName: my_cluster_name # <- This is the line to be added
     isSmallCluster: false        # <- Optional. Set this on test clusters to lower Robusta's resource usage.
     globalConfig:
@@ -57,6 +57,10 @@ Example ``generated_values.yaml``:
 ..     - Requires more advanced ArgoCD functions to combine the robusta helm chart with the external ``generated_value.yaml`` file
 
 .. We'll describe the simpler option here. We're currently working on a guide for the more advanced option, contact us if you have questions.
+.. admonition:: Secrets handling
+    :class: note
+
+    Read this guide about :ref:`Managing Secrets`.
 
 
 Configure ArgoCD
