@@ -1,0 +1,22 @@
+{% from "configuration/defining-playbooks/triggers/_k8s-generic-macro.jinja" import render_generic_trigger %}
+
+{{ resource_name }} Triggers
+************************************
+
+The following triggers are available for {{ resource_name }}s.
+
+{% set trigger_name = 'on_' + resource_name.lower() + '_create' %}
+{% set description = 'Fires when a ' + resource_name  + ' is created' %}
+{{ render_generic_trigger(resource_name, trigger_name, description, 'created', related_actions ) }}
+
+{% set trigger_name = 'on_' + resource_name.lower() + '_update' %}
+{% set description = 'Fires when a ' + resource_name  + ' is updated. Creations and deletions are excluded.' %}
+{{ render_generic_trigger(resource_name, trigger_name, description, 'updated', related_actions ) }}
+
+{% set trigger_name = 'on_' + resource_name.lower() + '_delete' %}
+{% set description = 'Fires when a ' + resource_name  + ' is deleted' %}
+{{ render_generic_trigger(resource_name, trigger_name, description, 'deleted', related_actions ) }}
+
+{% set trigger_name = 'on_' + resource_name.lower() + '_all_changes' %}
+{% set description = 'Fires when a ' + resource_name  + ' is created, updated, or deleted.' %}
+{{ render_generic_trigger(resource_name, trigger_name, description, 'all_changes', related_actions ) }}

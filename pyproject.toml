@@ -108,7 +108,7 @@ markupsafe = "2.0.1"
 all = ["Flask", "grafana-api", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase-py", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk", "poetry-core"]
 
 [tool.poetry.group.dev.dependencies]
-sphinx-jinja = "^2.0.2"
+sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

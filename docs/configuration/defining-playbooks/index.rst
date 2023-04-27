@@ -13,5 +13,11 @@ Learn how to define Robusta playbooks.
    playbook-advanced
    trigger-action-binding
    external-playbook-repositories
+
+Reference Materials:
+
+.. toctree::
+   :maxdepth: 1
+
    triggers/index
    actions/index

@@ -13,6 +13,7 @@ questions or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues
    :hidden:
 
    writing-playbooks
+   my-first-custom-action
    playbook-repositories
    findings-api
    triggers-and-events

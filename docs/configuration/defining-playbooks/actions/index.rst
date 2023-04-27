@@ -7,6 +7,7 @@ Actions Reference
    :maxdepth: 1
    :hidden:
 
+   message-formatting
    event-enrichment
    remediation
    change-tracking
@@ -14,8 +15,6 @@ Actions Reference
    python-troubleshooting
    java-troubleshooting
    miscellaneous
-   message-formatting
-
 
 BuiltIn Actions
 -----------------------

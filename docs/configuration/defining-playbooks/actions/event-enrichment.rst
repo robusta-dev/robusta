@@ -58,6 +58,8 @@ These actions can add context to any deployment-related event, be it from ``on_p
 
 .. robusta-action:: playbooks.robusta_playbooks.event_enrichments.deployment_events_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.deployment_events_enricher
+
 Job Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -83,18 +85,18 @@ These actions can add context to more than one Kubernetes resource type
 Event Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+These actions are for use with :ref:`on_kubernetes_warning_event_create` and other Warning Event triggers.
+
+For actions that *fetch* Warning Events for other triggers, see :ref:`job_events_enricher`, :ref:`pod_events_enricher`, and :ref:`deployment_events_enricher`
+
 .. robusta-action:: playbooks.robusta_playbooks.event_enrichments.event_resource_events
-
-.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.deployment_events_enricher
-
-.. robusta-action:: playbooks.robusta_playbooks.event_enrichments.pod_events_enricher
 
 Prometheus Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These actions enrich Prometheus alerts and only support the ``on_prometheus_alert`` trigger.
+These actions enrich Prometheus alerts and only support the :ref:`on_prometheus_alert` trigger.
 
-However, the opposite is not true! ``on_prometheus_alert`` supports many actions, not just these.
+However, the opposite is not true! :ref:`on_prometheus_alert` supports many actions, not just these.
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.graph_enricher
 
@@ -113,7 +115,7 @@ However, the opposite is not true! ``on_prometheus_alert`` supports many actions
 Prometheus Silencers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These actions can selectively silence Prometheus alerts. They only work with the ``on_prometheus_alert`` trigger:
+These actions can selectively silence Prometheus alerts. They only work with the :ref:`on_prometheus_alert` trigger:
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.node_restart_silencer
 

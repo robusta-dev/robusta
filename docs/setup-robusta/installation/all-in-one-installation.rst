@@ -16,7 +16,8 @@ Prerequisites
 
 .. include:: ../_questions.rst
 
-.. jinja:: install_all_in_one
+.. jinja::
+   :inline-ctx: { "gen_config_flags": "--enable-prometheus-stack" }
    :header_update_levels:
    :file: setup-robusta/installation/_generate_config.jinja
 

@@ -61,8 +61,7 @@
    :hidden:
 
    extending/overview
-   extending/actions/my-first-custom-action
-   Write Python automations <extending/actions/index>
+   Custom Python Actions <extending/actions/index>
    Modify Robusta core <extending/platform/index>
    Docs Contributions <extending/platform/docs-contributions>
 

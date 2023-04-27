@@ -337,24 +337,10 @@ class RobustaActionDirective(SphinxDirective):
 
     @classmethod
     def __get_triggers(cls, supported_triggers: List[str], recommended_trigger: Optional[str]):
-        if ExamplesGenerator.SUBTRIGGER_MARKER in supported_triggers:
-            has_subtriggers = True
-            supported_triggers.remove(ExamplesGenerator.SUBTRIGGER_MARKER)
-        else:
-            has_subtriggers = False
-
         if recommended_trigger is not None and recommended_trigger not in supported_triggers:
             supported_triggers.insert(0, recommended_trigger)
 
         rst = [f"* :ref:`{t} <{cls.__get_ref_for_trigger(t)}>`" for t in supported_triggers]
-        if has_subtriggers:
-            rst.extend(
-                [
-                    "",
-                    "Or any other inheriting trigger. See :ref:`Trigger-Action Compatibility` for details",
-                    "",
-                ]
-            )
         return rst
 
     def __get_description(self, action_definition: Action):

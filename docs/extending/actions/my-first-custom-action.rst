@@ -1,15 +1,13 @@
-Custom Automations
+A Complete Python Action
 ######################################################
 
 .. note::
 
-    It is recommended to read :ref:`Automation Basics` before starting this guide.
+    It is recommended to read :ref:`The Basics` before starting this guide.
 
-In previous tutorials, we configured automations. We used builtin actions and configured them in YAML.
+Robusta can be extended in Python if the :ref:`built-in actions<Actions Reference>` don't do what you need.
 
-In this tutorial, we will write a custom action in Python code.
-
-For educational purposes, we'll automate the investigation of a short and made-up (but realistic) error scenario.
+In this tutorial, we will write a custom action. For educational purposes, we'll automate the investigation of a made-up (but realistic) error scenario.
 
 The scenario
 ---------------------------------------

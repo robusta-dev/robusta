@@ -1,5 +1,3 @@
-.. _on_prometheus_alert:
-
 Prometheus and AlertManager
 #############################
 
@@ -10,39 +8,52 @@ Prerequisites
 ---------------
 AlertManager must be connected to Robusta. Refer to :ref:`Sending Alerts to Robusta`.
 
-Examples
+Triggers
 -----------
 
-Run a bash command on the Node associated with a specific Prometheus alert:
+The following triggers are available for Prometheus alerts:
 
-.. code-block:: yaml
+.. _on_prometheus_alert:
 
-    customPlaybooks:
-    - triggers:
-      - on_prometheus_alert:
-          alert_name: HostHighCpuLoad
-      actions:
-      - node_bash_enricher:
-         bash_command: ps aux
+.. details:: on_prometheus_alert
 
-This will run the ``ps aux`` whenever a ``HostHighCpuLoad`` alert fires. The node will be chosen according to the
-alert's labels. Output from the command will be sent as a :ref:`Robusta notification <Sending Notifications>`.
 
-on_prometheus_alert
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ``on_prometheus_alert`` fires when a Prometheus alert starts or stops firing.
 
-The ``on_prometheus_alert`` trigger supports several filters:
+    .. admonition:: Example
 
-.. pydantic-model:: robusta.integrations.prometheus.trigger.PrometheusAlertTrigger
+        Run the ``ps aux`` command when HostHighCpuLoad fires. Output will be sent as a :ref:`Robusta notification <Sending Notifications>`. The node on which the command executes will be selected according to the alert labels.
+
+        .. code-block:: yaml
+
+            customPlaybooks:
+            - triggers:
+              - on_prometheus_alert:
+                  alert_name: HostHighCpuLoad
+              actions:
+              - node_bash_enricher:
+                 bash_command: ps aux
+
+    ``on_prometheus_alert`` supports the following parameters:
+
+    .. pydantic-model:: robusta.integrations.prometheus.trigger.PrometheusAlertTrigger
+
+Recommended Actions
+---------------------
+
+There are dedicated playbook actions for ``on_prometheus_alert``:
+
+* :ref:`Prometheus Enrichers`
+* :ref:`Prometheus Silencers`
+
+Additionally, almost all :ref:`Event Enrichment` actions support ``on_prometheus_alert``.
 
 Running Python Code in Response to a Alert
 ---------------------------------------------
 
-If the builtin actions aren't sufficient, you can extend Robusta with your own playbook actions that respond to Prometheus alerts.
+If the :ref:`builtin actions <Actions Reference>` are insufficient, you can extend Robusta with your own actions that respond to Prometheus alerts.
 
-These actions are written in Python:
-
-.. admonition:: my_playbook.py
+.. admonition:: example action
 
     .. code-block:: python
 
@@ -55,3 +66,5 @@ These actions are written in Python:
 
 ``alert.pod`` is a Kubernetes pod object. It will exist if the Prometheus alert had a ``pod`` label and the pod is alive
 when the playbook runs. There are also ``node``, ``deployment``, and ``daemonset`` fields.
+
+Refer to :ref:`Custom Python Actions` for more details.
