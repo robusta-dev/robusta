@@ -1,6 +1,9 @@
 import traceback
 from urllib.error import URLError
 
+import certifi
+import ssl
+import os
 import typer
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -22,7 +25,17 @@ def verify_slack_channel(
 ) -> bool:
     try:
         output_welcome_message_blocks = __gen_robusta_test_welcome_message()
-        slack_client = WebClient(token=slack_api_key)
+
+        ssl_context = None
+        if os.environ.get("CERTIFICATE", ""):
+            try:
+                ssl_context = ssl.create_default_context(cafile=certifi.where())
+            except Exception as e:
+                typer.secho(
+                    f"Failed to use custom certificate. {e}",
+                    fg=typer.colors.RED,
+                )
+        slack_client = WebClient(token=slack_api_key, ssl=ssl_context)
         slack_client.chat_postMessage(
             channel=channel_name,
             text="Welcome to Robusta",

@@ -13,6 +13,8 @@ from hikaru.model import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTempla
 from kubernetes import client, config
 from pydantic import BaseModel, Extra
 
+import certifi
+import os
 from robusta._version import __version__
 from robusta.cli.auth import RSAKeyPair
 from robusta.cli.auth import app as auth_commands
@@ -30,9 +32,30 @@ from robusta.core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrap
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta.integrations.prometheus.utils import AlertManagerDiscovery
-
+ADDITIONAL_CERTIFICATE: str = os.environ.get("CERTIFICATE", "")
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
 
+
+def cert_already_exists(new_cert: bytes) -> bool:
+    with open(certifi.where(), "r") as outfile:
+        return str(new_cert, "utf-8") in outfile.read()
+
+
+def add_custom_certificate(custom_ca: str):
+    if custom_ca:
+        new_cert = base64.b64decode(custom_ca)
+        if not cert_already_exists(new_cert):
+            with open(certifi.where(), "ab") as outfile:
+                outfile.write(base64.b64decode(custom_ca))
+                return True
+        else:
+            typer.secho("using custom certificate", fg="green")
+
+    return False
+
+
+if add_custom_certificate(ADDITIONAL_CERTIFICATE):
+    typer.secho("using custom certificate", fg="green")
 
 app = typer.Typer(add_completion=False)
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
@@ -200,7 +223,8 @@ def gen_config(
         disable_cloud_routing = False
 
     slack_feedback_heads_up_message: Optional[str] = None
-    if slack_integration_configured:
+    # When using custom certificates we do not want to add the extra slack message.
+    if slack_integration_configured and not ADDITIONAL_CERTIFICATE:
         try:
             slack_feedback_heads_up_message = SlackFeedbackMessagesSender(
                 slack_api_key, slack_channel, account_id, debug
