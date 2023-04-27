@@ -11,11 +11,11 @@ You can trigger Robusta playbooks on the following events:
    :maxdepth: 1
    :hidden:
 
-   Prometheus and AlertManager <prometheus>
    Kubernetes (API Server) <kubernetes>
+   Prometheus and AlertManager <prometheus>
    Scheduled <scheduled>
-   Manual Triggers <manual-triggers>
    Webhooks <webhook>
+   Manual Triggers <manual-triggers>
    ElasticSearch <elasticsearch>
 
 
