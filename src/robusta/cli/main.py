@@ -172,7 +172,7 @@ def gen_config(
                 ms_teams_sink=MsTeamsSinkParams(
                     name="main_ms_teams_sink",
                     webhook_url=msteams_webhook,
-                    use_emoji=True
+                    use_emoji=False
                 )
             )
         )
