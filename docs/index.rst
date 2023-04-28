@@ -45,7 +45,6 @@
    configuration/alert-manager
    configuration/embedded-prometheus
    configuration/additional-settings
-   configuration/robusta-ui-triggers
    configuration/defining-playbooks/index
 
 .. toctree::
