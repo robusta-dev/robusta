@@ -1,4 +1,7 @@
 :hide-navigation:
+
+:hide-footer:
+
 :hide-toc:
 
 Quick Start

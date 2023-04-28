@@ -19,7 +19,7 @@ OpenShift is supported. Robusta needs to be granted permissions to run:
     oc adm policy add-scc-to-user anyuid -z robusta-forwarder-service-account
     oc adm policy add-scc-to-user anyuid -z robusta-runner-service-account
 
-The above permissions are very loose. More restrictive policies can be applied too.
+The above is very permissive. More restrictive policies can be applied.
 
 Minikube
 ==========

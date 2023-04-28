@@ -1,11 +1,11 @@
 Build from Source
 ###################################################
 
-Installing Robusta from source is necessary to develop new features for the Robusta Engine (robusta-runner).
+Install Robusta from source to develop new features for the Robusta Engine (robusta-runner).
 
-To install Robusta as a user, refer to :ref:`install-all-in-one` instead.
+To install Robusta as a user, follow :ref:`install-all-in-one` instead.
 
-To develop new playbook actions, you typically don't need to build Robusta from source. Refer to :ref:`Developing New Actions`.
+To develop new playbook actions, you don't need to install from source. Refer to :ref:`Developing New Actions`.
 
 Using Skaffold
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

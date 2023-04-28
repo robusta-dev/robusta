@@ -6,7 +6,8 @@ Sending Alerts to Robusta
 
 For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from AlertManager.
 
-If you installed Robusta's :ref:`Embedded Prometheus Stack` then no configuration is necessary.
+**If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
+
 For other setups, read on!
 
 General Instructions
@@ -109,10 +110,6 @@ If AlertManager is located outside of your Kubernetes cluster then a few more st
               - severity =~ "info|warn|error|critical"
             repeat_interval: 4h
             continue: true
-
-Robusta's Embedded Prometheus
------------------------------
-If you installed Robusta's :ref:`Embedded Prometheus Stack` then no configuration is necessary.
 
 Related Robusta Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
