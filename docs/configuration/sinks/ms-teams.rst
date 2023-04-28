@@ -1,7 +1,7 @@
 MS teams
 ##########
 
-Robusta can report issues and events in your cluster to a MS teams webhook.
+Robusta can report issues and events in your Kubernetes cluster to a MS teams webhook.
 
 .. image:: /images/deployment-babysitter-teams.png
     :width: 600

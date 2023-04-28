@@ -1,7 +1,7 @@
 Robusta UI
 #################
 
-Robusta can send Kubernetes issues and events in your cluster to the Robusta UI.
+Robusta can send Kubernetes issues and events in your Kubernetes cluster to the Robusta UI.
 
 Example Output:
 

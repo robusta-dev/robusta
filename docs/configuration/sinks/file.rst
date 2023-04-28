@@ -1,7 +1,7 @@
 File
 ###########
 
-Robusta can write issues and events in your cluster to a local file (in JSON format).
+Robusta can write issues and events in your Kubernetes cluster to a local file (in JSON format).
 
 
 .. admonition:: Add this to your generated_values.yaml

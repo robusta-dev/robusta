@@ -1,7 +1,7 @@
 Slack
 #################
 
-Robusta can report issues and events in your cluster to Slack.
+Robusta can report issues and events in your Kubernetes cluster to Slack.
 
 Connecting Slack
 ------------------------------------------------

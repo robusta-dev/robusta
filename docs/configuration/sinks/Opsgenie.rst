@@ -1,7 +1,7 @@
 Opsgenie
 ##########
 
-Robusta can report issues and events in your cluster to the OpsGenie alerts API.
+Robusta can report issues and events in your Kubernetes cluster to the OpsGenie alerts API.
 
 To configure OpsGenie, We need an OpsGenie API key. It can be configured using the OpsGenie team integration.
 

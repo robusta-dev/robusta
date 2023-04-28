@@ -1,7 +1,7 @@
 Discord
 #################
 
-Robusta can report issues and events in your cluster to Discord.
+Robusta can report issues and events in your Kubernetes cluster to Discord.
 
 .. image:: /images/discord_example.png
     :width: 1000

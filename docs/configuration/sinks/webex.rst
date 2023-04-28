@@ -1,7 +1,7 @@
 Webex
 #################
 
-Robusta can report issues and events in your cluster to Webex.
+Robusta can report issues and events in your Kubernetes cluster to Webex.
 
 .. image:: /images/webex_sink/webex_sink_example.png
   :width: 1000
