@@ -77,5 +77,5 @@ PORT = int(os.environ.get("PORT", 5000))  # PORT
 # additional certificate to verify, base64 encoded.
 ADDITIONAL_CERTIFICATE: str = os.environ.get("CERTIFICATE", "")
 
-DISCOVERY_MAX_BATCHES = int(os.environ.get("DISCOVERY_MAX_BATCHES", 100))
-DISCOVERY_BATCH_SIZE = int(os.environ.get("DISCOVERY_BATCH_SIZE", 500))
+DISCOVERY_MAX_BATCHES = int(os.environ.get("DISCOVERY_MAX_BATCHES", 25))
+DISCOVERY_BATCH_SIZE = int(os.environ.get("DISCOVERY_BATCH_SIZE", 2000))
