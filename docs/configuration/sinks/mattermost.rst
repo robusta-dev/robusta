@@ -1,7 +1,11 @@
 Mattermost
 #################
 
-Robusta can send playbook results to Mattermost.
+Robusta can report issues and events in your cluster to Mattermost.
+
+.. image:: /images/mattermost_sink_example.png
+  :width: 1000
+  :align: center
 
 To configure the Mattermost sink we will need the Mattermost bot settings
 
@@ -10,7 +14,7 @@ To configure the Mattermost sink we will need the Mattermost bot settings
     2-way interactivity (``CallbackBlock``) isn't implemented yet.
 
 
-Get your mattermost webhook url
+Getting your mattermost webhook url
 ------------------------------------------------
 
 1. First, go to **Main Menu > Integrations > Bot Accounts**.
@@ -71,11 +75,9 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-You should now get playbooks results in Mattermost! Example is shown below:
+You should now get playbooks results in Mattermost!
 
-    .. image:: /images/mattermost_sink_example.png
-      :width: 1000
-      :align: center
+
 
 Mattermost configuration tutorial
 ---------------------------------

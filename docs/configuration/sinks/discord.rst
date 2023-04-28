@@ -1,7 +1,11 @@
 Discord
 #################
 
-Robusta can send playbook results to Discord.
+Robusta can report issues and events in your cluster to Discord.
+
+.. image:: /images/discord_example.png
+    :width: 1000
+    :align: center
 
 To configure the Discord sink we will need the Discord *webhook url*
 
@@ -9,7 +13,7 @@ To configure the Discord sink we will need the Discord *webhook url*
 
     2-way interactivity (``CallbackBlock``) isn't implemented yet.
 
-Get your discord webhook url
+Getting your discord webhook url
 ------------------------------------------------
 
 1. Open the Discord channel you want to receive Robusta event notifications.
@@ -54,11 +58,8 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-You should now get playbooks results in Discord! Example is shown below:
+You should now get playbooks results in Discord!
 
-    .. image:: /images/discord_example.png
-      :width: 1000
-      :align: center
 
 Discord configuration tutorial
 ---------------------------------

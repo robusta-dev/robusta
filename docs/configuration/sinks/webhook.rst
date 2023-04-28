@@ -1,7 +1,7 @@
 Webhook
 ###########
 
-Robusta can send playbooks results to a webhook.
+Robusta can report issues and events in your cluster  to a webhook.
 
 .. admonition:: Add this to your generated_values.yaml
 
