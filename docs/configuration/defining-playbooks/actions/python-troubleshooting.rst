@@ -1,9 +1,9 @@
-Python troubleshooting
-######################
+Python Troubleshooting
+##########################
 
-Robusta makes it easy to troubleshoot and debug Python applications running on Kubernetes.
+Robusta includes built-in actions to troubleshoot, profile, and debug Python applications on Kubernetes.
 
-Make sure you read about :ref:`Manual Triggers` to understand how this works.
+These actions can be triggered automatically on Prometheus alerts, or :ref:`manually using the robusta cli <Manual Triggers>`.
 
 .. raw:: html
 

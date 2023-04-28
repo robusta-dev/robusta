@@ -1,11 +1,11 @@
-Java Troubleshooting Actions
+Java Troubleshooting
 ##############################
 
-Robusta makes it easy to troubleshoot and debug Java applications running on Kubernetes.
+Robusta includes built-in actions to troubleshoot and profile Java applications on Kubernetes.
 
-Make sure you read about :ref:`Manual Triggers` to understand how this works.
+These actions can be triggered automatically on Prometheus alerts, or :ref:`manually using the robusta cli <Manual Triggers>`.
 
-Look at :ref:`Java jmap and stack` for a tutorial on Java troubleshooting.
+For a tutorial, refer to :ref:`Java jmap and stack`.
 
 .. robusta-action:: playbooks.robusta_playbooks.java_pod_troubleshooting.java_process_inspector
 
