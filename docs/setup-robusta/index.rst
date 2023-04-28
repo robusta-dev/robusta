@@ -15,7 +15,6 @@
 
    multi-cluster
    upgrade
-   uninstall
    supported-clusters
    node-selector
    proxies

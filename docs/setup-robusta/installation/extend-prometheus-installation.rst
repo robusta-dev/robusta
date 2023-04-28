@@ -1,6 +1,8 @@
 :tocdepth: 2
 :globaltoc_collapse: false
 
+.. _install-existing-prometheus:
+
 Integrate with Existing Prometheus
 ####################################
 *Estimated time: 5 minutes*

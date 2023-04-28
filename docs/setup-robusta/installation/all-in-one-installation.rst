@@ -1,6 +1,8 @@
 :tocdepth: 2
 :globaltoc_collapse: false
 
+.. _install-all-in-one:
+
 Monitor Kubernetes from Scratch
 ####################################
 *Estimated time: 5 minutes*

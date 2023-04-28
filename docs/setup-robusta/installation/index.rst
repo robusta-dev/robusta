@@ -14,6 +14,7 @@ Installation Guides
    all-in-one-installation
    extend-prometheus-installation
    standalone-installation
+   dev-setup
 
 Robusta can be installed three ways:
 

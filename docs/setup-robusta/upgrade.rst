@@ -1,5 +1,5 @@
-Upgrade
-#########
+Upgrade and Uninstall
+######################
 
 Most upgrades are just ``helm upgrades``, but some upgrades require manual steps.
 
@@ -93,3 +93,12 @@ Installing pre-releases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Install beta version of Robusta with ``helm upgrade --devel``.
+
+Uninstall
+^^^^^^^^^^
+
+You can uninstall Robusta as follows:
+
+.. code-block:: bash
+
+    helm uninstall robusta

@@ -1,4 +1,4 @@
-Troubleshooting and FAQ
+FAQ
 ################################
 
 I have an error installing Robusta
