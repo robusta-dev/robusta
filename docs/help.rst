@@ -9,7 +9,7 @@ Ask for help, or just say hi!
 .. grid:: 5
    :gutter: 3
 
-   .. grid-item-card:: :octicon:`comment-discussion;1em;` Slack    
+   .. grid-item-card:: :octicon:`comment-discussion;1em;` Slack
       :class-card: sd-bg-light sd-bg-text-light
       :link: https://bit.ly/robusta-slack
 
@@ -20,7 +20,7 @@ Ask for help, or just say hi!
 
 Commercial Support
 ^^^^^^^^^^^^^^^^^^^
-Contact support@robusta.dev for details. 
+Contact support@robusta.dev for details.
 
 
 Common Errors
@@ -106,7 +106,12 @@ More Tutorials
 ^^^^^^^^^^^^^^^^^^^^^^^
 Here are more tutorials from the Robusta community:
 
-* **Video:** `Kubernetes Notifications, Troubleshooting, And Automation With Robusta <https://www.youtube.com/watch?v=2P76WVVua8w>`_ by Viktor Farcic
+.. raw:: html
+
+  <div style="position: relative; height: 0; padding-bottom: 56.25%;"> <iframe src="https://www.youtube.com/embed/2P76WVVua8w" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+
+
+.. * **Video:** `Kubernetes Notifications, Troubleshooting, And Automation With Robusta <https://www.youtube.com/watch?v=2P76WVVua8w>`_ by Viktor Farcic
 * **Video:** `Twitter challenge - Robusta.dev on 10 nodes <https://www.youtube.com/watch?v=l_zaCaY_wls>`_ by `Nuno Captain Corsair <https://twitter.com/nunixtech>`_
 * `Troubleshoot and automate to fix your k8s Application <https://csaju.com/blog/troubleshoot-and-automate-to-fix-your-k8s-application/>`_ by `Aju Tamang <https://twitter.com/pylang2>`_
 * `Getting Started with Robusta on Digital Ocean <https://dev.to/heyrutam/getting-started-with-robusta-on-digital-ocean-3g41>`_ by `Rutam Prita Mishra <https://github.com/Rutam21>`_
