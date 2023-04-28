@@ -56,7 +56,7 @@ Any Prometheus-compatible solution is fine. Just follow instructions under :ref:
 
 Can I use Robusta with DataDog?
 ============================================================
-Yes, we have a DataDog integration available. Try it out.
+Yes, we have a :ref:`DataDog integration <DataDog>` available. Try it out.
 
 Is NewRelic supported?
 =======================

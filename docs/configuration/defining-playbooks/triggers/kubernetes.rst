@@ -17,32 +17,9 @@ Popular Triggers
 
 These triggers fire on events that hint at problems in the cluster:
 
-* :ref:`Warning Event Triggers`
 * :ref:`Crashing Pod Triggers`
 * :ref:`Job Triggers`
-
-Warning Event Triggers
-************************
-
-Warning events are the output of:
-
-.. code-block::
-
-    kubectl get events --all-namespaces --field-selector type=Warning
-
-The following triggers track Warning Events:
-
-.. jinja::
-  :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-warning-events.jinja
-
-.. admonition:: Which trigger should I use?
-
-    You should almost always use the ``on_kubernetes_warning_event_create`` trigger. The other triggers are documented for completeness, but are rarely useful.
-
-All Warning Event Triggers support optional *inclusion* and *exclusion* filters. These filters perform a text-match on
-each the Event's reason and message fields. Matching is case insensitive.
-
+* :ref:`Warning Event Triggers`
 
 Crashing Pod Triggers
 **********************
@@ -154,6 +131,28 @@ The following triggers are available for failed Jobs:
           - job_events_enricher: { }
 
 For triggers that fire on any Job change, see :ref:`Job Triggers`.
+
+Warning Event Triggers
+************************
+
+Warning events are the output of:
+
+.. code-block::
+
+    kubectl get events --all-namespaces --field-selector type=Warning
+
+The following triggers track Warning Events:
+
+.. jinja::
+  :header_update_levels:
+  :file: configuration/defining-playbooks/triggers/_k8s-warning-events.jinja
+
+.. admonition:: Which trigger should I use?
+
+    You should almost always use the ``on_kubernetes_warning_event_create`` trigger. The other triggers are documented for completeness, but are rarely useful.
+
+All Warning Event Triggers support optional *inclusion* and *exclusion* filters. These filters perform a text-match on
+each the Event's reason and message fields. Matching is case insensitive.
 
 Low-level Triggers
 ----------------------

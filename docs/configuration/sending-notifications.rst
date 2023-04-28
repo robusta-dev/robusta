@@ -3,9 +3,11 @@
 Sending Notifications
 ==========================
 
-Robusta can send messages to various destinations, called sinks.
+Robusta can send notifications to various destinations, called sinks.
 
-This page documents general settings. For a list of all sinks, refer to :ref:`Sinks Reference`.
+For a list of all sinks, refer to :ref:`Sinks Reference`.
+
+To define rules that generate custom notifications, refer to :ref:`Defining Playbooks`.
 
 Defining Sinks
 ^^^^^^^^^^^^^^^^^^
