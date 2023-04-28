@@ -22,7 +22,7 @@ The following triggers are available for Prometheus alerts:
 
     .. admonition:: Example
 
-        Run the ``ps aux`` command when HostHighCpuLoad fires. Output will be sent as a :ref:`Robusta notification <Sending Notifications>`. The node on which the command executes will be selected according to the alert labels.
+        Run the ``ps aux`` command when HostHighCpuLoad fires. Output will be sent as a :ref:`Robusta notification <sinks-overview>`. The node on which the command executes will be selected according to the alert labels.
 
         .. code-block:: yaml
 

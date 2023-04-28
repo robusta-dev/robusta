@@ -168,7 +168,7 @@ Let’s name our action ``report_scheduling_failure``, and write everything in a
 
 Before we proceed, we need to enable local playbook repositories in Robusta.
 
-Follow this quick guide to learn how to package your python file for Robusta: :ref:`Custom playbook repositories`
+Follow this quick guide to learn how to package your python file for Robusta: :ref:`Creating Playbook Repositories`
 
 Let’s push the new action to Robusta
 

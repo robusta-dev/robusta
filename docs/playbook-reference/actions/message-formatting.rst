@@ -3,7 +3,7 @@ Message Formatting
 
 These actions are useful for creating notifications or customising the output of existing actions.
 
-For more details, refer to :ref:`Sending Notifications`.
+To control where these notifications are sent, refer to :ref:`Configuring Notifications <sinks-overview>`
 
 Create finding
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

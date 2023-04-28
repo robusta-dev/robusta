@@ -47,22 +47,20 @@
    configuration/additional-settings
    configuration/defining-playbooks/index
 
+
+.. toctree::
+   :maxdepth: 4
+   :caption: Playbooks
+   :hidden:
+
+   playbook-reference/index
+
 .. toctree::
    :maxdepth: 4
    :caption: Tutorials
    :hidden:
 
    tutorials/index
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Extending
-   :hidden:
-
-   extending/overview
-   Custom Python Actions <extending/actions/index>
-   Modify Robusta core <extending/platform/index>
-   Docs Contributions <extending/platform/docs-contributions>
 
 .. toctree::
    :maxdepth: 4

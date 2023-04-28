@@ -1,5 +1,6 @@
 :hide-toc:
-Writing Playbook actions
+
+Developing New Actions
 =============================
 
 So you're ready to extend Robusta with a custom action. Exciting stuff.
@@ -30,15 +31,14 @@ Playbook Guides
         :class-card: sd-bg-light sd-bg-text-light
         :link: writing-playbooks
         :link-type: doc
-
         
-    .. grid-item-card:: :octicon:`cpu;1em;` Custom playbook repository
+    .. grid-item-card:: :octicon:`cpu;1em;` Creating Playbook Repositories
         :class-card: sd-bg-light sd-bg-text-light
         :link: playbook-repositories
         :link-type: doc
 
-   
-    .. grid-item-card:: :octicon:`cpu;1em;` Creating findings
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Creating Findings
         :class-card: sd-bg-light sd-bg-text-light
         :link: findings-api
         :link-type: doc
@@ -50,13 +50,13 @@ Playbook Guides
         :link-type: doc
 
         
-    .. grid-item-card:: :octicon:`cpu;1em;` Utility functions
+    .. grid-item-card:: :octicon:`cpu;1em;` Utility Functions
         :class-card: sd-bg-light sd-bg-text-light
         :link: utility-functions
         :link-type: doc
 
    
-    .. grid-item-card:: :octicon:`cpu;1em;` Playbook documentation
+    .. grid-item-card:: :octicon:`cpu;1em;` Documenting Playbooks
         :class-card: sd-bg-light sd-bg-text-light
         :link: documenting-actions
         :link-type: doc

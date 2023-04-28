@@ -1,11 +1,13 @@
-Custom playbook repositories
+Creating Playbook Repositories
 ################################
 
-First read the :ref:`the guide on writing playbook actions <The Basics>` if you haven't already.
+To deliver custom playbook actions to the world, you'll need to package them up.
+This is done with a git repository in a specific format.
 
-Creating your own playbook repository
------------------------------------------
+Read the :ref:`the guide on writing playbook actions <The Basics>`, if you haven't already.
 
+What is a Playbook Repository?
+-------------------------------
 A playbook repository is a directory with the following structure:
 
 .. code-block:: yaml
@@ -42,7 +44,7 @@ inner playbooks directory.
 If your playbook requires additional python dependencies, list those in your ``pyproject.toml`` file
 and Robusta will install them with your playbooks repository.
 
-Loading your own playbook repository
+Testing Custom Playbook Actions
 -------------------------------------------
 
 You can load your playbook in one of two ways:

@@ -1,4 +1,4 @@
-{% from "configuration/defining-playbooks/triggers/_k8s-generic-macro.jinja" import render_custom_trigger %}
+{% from "playbook-reference//triggers/_k8s-generic-macro.jinja" import render_custom_trigger %}
 {% macro render_warning_event_examples(resource_name, trigger_name, description, verb_for_finding) %}
 
     .. md-tab-set::

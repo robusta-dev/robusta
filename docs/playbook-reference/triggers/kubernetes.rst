@@ -5,24 +5,15 @@ Kubernetes (API Server)
 
 Robusta can run automated playbooks when Kubernetes resources change. Playbooks can identify issues, track changes, or automate actions.
 
-Example Use Cases
--------------------
+.. details:: Related Tutorials
 
-* :ref:`Track Failed Kubernetes Jobs`
-* :ref:`Track Failed Liveness Probes`
-* :ref:`Track Kubernetes Changes`
+    * :ref:`Track Failed Kubernetes Jobs`
+    * :ref:`Track Failed Liveness Probes`
+    * :ref:`Track Kubernetes Changes`
 
-Popular Triggers
---------------------------
-
-These triggers fire on events that hint at problems in the cluster:
-
-* :ref:`Crashing Pod Triggers`
-* :ref:`Job Triggers`
-* :ref:`Warning Event Triggers`
 
 Crashing Pod Triggers
-**********************
+------------------------
 
 The following triggers are available for crashing Pods:
 
@@ -106,7 +97,7 @@ The following triggers are available for crashing Pods:
 For triggers that fire on any Pod change, see :ref:`Pod Triggers`.
 
 Job Failure Triggers
-*********************
+------------------------
 
 The following triggers are available for failed Jobs:
 
@@ -133,7 +124,7 @@ The following triggers are available for failed Jobs:
 For triggers that fire on any Job change, see :ref:`Job Triggers`.
 
 Warning Event Triggers
-************************
+------------------------
 
 Warning events are the output of:
 
@@ -145,7 +136,7 @@ The following triggers track Warning Events:
 
 .. jinja::
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-warning-events.jinja
+  :file: playbook-reference/triggers/_k8s-warning-events.jinja
 
 .. admonition:: Which trigger should I use?
 
@@ -163,79 +154,79 @@ compared to other triggers, as they fire on even the smallest change to a resour
 .. jinja::
   :inline-ctx: { "resource_name" : "Pod", "related_actions" : ["Pod Enrichers", "pod_events_enricher"] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 For triggers that fire only on Pod errors, see :ref:`Crashing Pod Triggers`.
 
 .. jinja::
   :inline-ctx: { "resource_name" : "ReplicaSet", "related_actions" : ["related_pods"] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "DaemonSet", "related_actions" : ["Daemonset Enrichers", "related_pods"] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "Deployment", "related_actions" : ["Deployment Enrichers", "deployment_events_enricher", "related_pods"] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "StatefulSet", "related_actions" : [] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "Service", "related_actions" : [] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "Event", "related_actions" : ["Event Enrichers"] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "HorizontalPodAutoscaler", "related_actions" : [] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "Node", "related_actions" : ["Node Enrichers", "related_pods"] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "ClusterRole", "related_actions" : [] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "ClusterRoleBinding", "related_actions" : [] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "Job", "related_actions" : ["Job Enrichers", "related_pods"] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "Namespace", "related_actions" : [] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "ServiceAccount", "related_actions" : [] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
   :inline-ctx: { "resource_name" : "PersistentVolume", "related_actions" : [] }
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-generic-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 Wildcard triggers
 *********************
@@ -246,7 +237,7 @@ low-level triggers.
 
 .. jinja::
   :header_update_levels:
-  :file: configuration/defining-playbooks/triggers/_k8s-wildcard-triggers.jinja
+  :file: playbook-reference/triggers/_k8s-wildcard-triggers.jinja
 
 Common Filters
 -----------------

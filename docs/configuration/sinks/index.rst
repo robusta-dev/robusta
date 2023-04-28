@@ -23,12 +23,13 @@ Sinks Reference
    Opsgenie
    VictorOps
    PagerDuty
+   sinks-development
 
 Robusta can report issues and events in your Kubernetes cluster to various destinations, known as sinks.
 
 **Related Topics:**
 
-* :ref:`Sending Notifications <sinks-overview>`
+* :ref:`Configuring Notifications <sinks-overview>`
 * :ref:`Routing Alerts to Specific Sinks`
 
 Available sinks

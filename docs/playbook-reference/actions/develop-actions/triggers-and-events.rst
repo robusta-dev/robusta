@@ -6,7 +6,7 @@ actions you deal with events.
 
 The basic idea is that **triggers** generate **event** objects and those events are passed to **action** functions.
 
-Lifecycle of a Robusta event
+Lifecycle of a Robusta Event
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 1. A pod changes
 2. The API Server notifies Robusta
@@ -15,7 +15,7 @@ Lifecycle of a Robusta event
 5. The trigger converts data from the APIServer to a concrete event like ``PodEvent``
 6. The ``PodEvent`` is passed to all playbook actions
 
-Compatibility of actions and events
+Compatibility of Actions and Events
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This is discussed in :ref:`Trigger-Action Compatibility` from the perspective of a user who configures playbooks in YAML.
 
@@ -52,15 +52,12 @@ However, this action doesn't actually need a Prometheus alert as input as it doe
 
 Therefore this action can be triggered with ``on_prometheus_alert`` but it can **also** be triggered on any other PodEvent.
 
-Who is compatible with who
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Which Triggers are Compatible with Which Events?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here is the Robusta event hierarchy:
 
-
-
-.. image:: ../../images/Event_Hierarchy/Event_Hierarchy_Diagram.drawio.svg
+.. image:: /images/Event_Hierarchy/Event_Hierarchy_Diagram.drawio.svg
     :align: center
-    
 
 ..
     this is a sphinx comment
@@ -70,7 +67,6 @@ Here is the Robusta event hierarchy:
         :parts: 1
         :include-subclasses:
 
-
 .. note::
 
     Note that ``PrometheusKubernetesAlert`` inherits from many Kubernetes event classes, so you can use
@@ -79,8 +75,8 @@ Here is the Robusta event hierarchy:
     However, at runtime the alert must contain a relevant label in order to map the alert to the relevant
     Kubernetes object.
 
-Support manual triggers
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Writing Actions that Support Manual Triggers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You're writing a playbook action and you'd like to support :ref:`manual triggers`. It's easy.
 
 All classes above with names like ``PodEvent`` support manual triggers automatically. When running the manual trigger

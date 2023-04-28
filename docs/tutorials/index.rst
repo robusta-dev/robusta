@@ -17,6 +17,8 @@ Discover Builtin Features
    alert-builtin-enrichment
    chatgpt
 
+.. _playbook-tutorials:
+
 Custom Alerts and Playbooks
 ------------------------------------
 

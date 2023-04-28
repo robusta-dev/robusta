@@ -1,6 +1,6 @@
 .. _sinks-overview:
 
-Sending Notifications
+Configuring Notifications
 ==========================
 
 Robusta can send notifications to various destinations, called sinks.

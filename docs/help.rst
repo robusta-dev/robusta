@@ -1,8 +1,13 @@
-:hide-navigation:
 :hide-toc:
 
-Help
-===============
+Getting Support
+================
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   docs-contributions
 
 Ask for help, or just say hi!
 
@@ -21,7 +26,6 @@ Ask for help, or just say hi!
 Commercial Support
 ^^^^^^^^^^^^^^^^^^^
 Contact support@robusta.dev for details.
-
 
 Common Errors
 ^^^^^^^^^^^^^

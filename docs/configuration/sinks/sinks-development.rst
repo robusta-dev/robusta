@@ -1,5 +1,7 @@
-Implement a custom sink
+Developing a New Sink
 ################################
+
+If Robusta doesn't support the sink you need, consider implementing your own.
 
 What Are Robusta Sinks?
 --------------------------
@@ -18,7 +20,7 @@ Before reading this tutorial, make sure you are familiar with the
 :ref:`Findings API <Creating Findings>`
 It contains explanations of the types of findings your sink will have to process.
 
-Implementation details
+How Sinks are Implemented
 --------------------------
 
 Sinks are located under the directory `src/robusta/core/sinks <https://github.com/robusta-dev/robusta/tree/master/src/robusta/core/sinks>`_.
@@ -33,7 +35,7 @@ You can use helper classes and methods defined in `src/robusta/integrations <htt
 To start with, create a new Python module inside the `src/robusta/core/sinks <https://github.com/robusta-dev/robusta/tree/master/src/robusta/core/sinks>`_
 folder that will contain all your sink’s source code.
 
-Implementing The Sink Configuration Class
+Implementing The Config Class
 --------------------------------------------
 
 There are two configuration classes we need to provide so our new sink can work properly.
@@ -82,8 +84,8 @@ Robusta YAML file. (E.g, if you renamed *mattermost_sink* in :code:`MattermostSi
 Accordingly, you should create two configuration classes for your new sink.
 These classes must inherit from :code:`SinkBaseParams` and :code:`SinkConfigBase` accordingly.
 
-Sink Implementation
---------------------
+Implementing the Sink Class
+------------------------------
 
 Now we will implement the sink itself.
 
@@ -143,4 +145,4 @@ Once you have completed your sink’s implementation, you must add it to Robusta
         ]
 
 Congrats! If you’ve made it here, you can now configure your new sink in Robusta’s
-YAML configuration file and receive notifications at the destination of your choosing!
+YAML configuration file and receive notifications at the destination of your choosing.

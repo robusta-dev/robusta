@@ -1,7 +1,8 @@
 ## Contributing
-Any contribution is most welcome, fork the project, make changes and create a PR. We can't wait to review and merge your PR's!
+Contributions are welcome. Fork the project, make changes and create a PR. We can't wait to review and merge.
 
-* [Coding Conventions](https://docs.robusta.dev/master/extending/platform/coding-conventions.html#formatting-and-coding-conventions)
-* [Core platform contributions](https://docs.robusta.dev/master/extending/platform/dev-setup.html)
-* [Documentation contributions](https://docs.robusta.dev/master/extending/platform/docs-contributions.html)
+* [Coding Conventions](./CODING-CONVENTIONS.md)
+* [Implementing Sinks](https://docs.robusta.dev/master/configuration/sinks/sinks-development.html)
+* [Implementing Actions](https://docs.robusta.dev/master/playbook-reference/actions/develop-actions/index.html)
+* [Improving the Docs](https://docs.robusta.dev/master/docs-contributions.html)
 * [Issue/Feature](https://github.com/robusta-dev/robusta/issues)
