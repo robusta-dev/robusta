@@ -1,11 +1,13 @@
 Robusta UI
 #################
 
-Robusta can send Kubernetes errors and alerts to the Robusta UI.
+Robusta can send Kubernetes issues and events in your cluster to the Robusta UI.
 
-.. image:: /images/robusta-demo.gif
-    :width: 1000
-    :align: center
+Example Output:
+
+    .. image:: /images/robusta-demo.gif
+        :width: 1000
+        :align: center
 
 To configure Robusta UI, use our CLI to generate a token. Run:
 

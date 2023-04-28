@@ -1,19 +1,19 @@
 Telegram
 #################
 
-Robusta can send playbook results to Telegram conversations.
+Robusta can report issues and events in your cluster to Telegram conversations.
 
 .. note::
 
-    Tables are sent as file attachments to Telegram sinks because it's too big for most Telegram chat clients.
+    Tables are sent as file attachments to Telegram because it's too big for most Telegram chat clients.
 
     In addition, 2-way interactivity (``CallbackBlock``) isn't implemented yet.
 
-Get your Bot token
+Getting your Bot token
 ------------------------------------------------
 Follow the instructions `here <https://core.telegram.org/bots#6-botfather>`_ to create a new Bot, and get your Bot token.
 
-Chat id
+Obtaining your Chat id
 ------------------------------------------------
 Before using the sink, you must first start the conversation with your Bot. (Locate your Bot in your Telegram app, and start the conversation)
 
@@ -21,7 +21,7 @@ If you want to send messages to a group, add the created Bot to your group (new 
 
 Next, we will need to obtain the ``chat id``. Checkout this `post <https://dev.to/rizkyrajitha/get-notifications-with-telegram-bot-537l#:~:text=keep%20the%20access%20token%20securely.%20Anyone%20with%20access%20token%20can%20manipulate%20your%20bot>`_ to find out how.
 
-Thread id
+Getting your Thread id
 ------------------------------------------------
 You can configure Robusta to send alerts to a specific message thread (topic) if your group chat has them enabled.
 To do this you need to:

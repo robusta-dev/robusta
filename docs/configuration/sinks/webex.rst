@@ -1,7 +1,11 @@
 Webex
 #################
 
-Robusta can send playbook results to Webex.
+Robusta can report issues and events in your cluster to Webex.
+
+.. image:: /images/webex_sink/webex_sink_example.png
+  :width: 1000
+  :align: center
 
 To configure the Webex sink we will need the Webex bot settings
 
@@ -59,8 +63,4 @@ Now we're ready to configure the webex sink.
             bot_access_token: <YOUR BOT ACCESS TOKEN>
             room_id: <YOUR ROOM ID>
 
-You should now get playbooks results in Webex! Example is shown below:
-
-.. image:: /images/webex_sink/webex_sink_example.png
-  :width: 1000
-  :align: center
+You should now get playbooks results in Webex!

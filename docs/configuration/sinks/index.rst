@@ -24,7 +24,7 @@ Sinks Reference
    VictorOps
    PagerDuty
 
-Robusta can send notifications to various destinations, known as sinks.
+Robusta can report issues and events in your cluster to various destinations, known as sinks.
 
 **Related Topics:**
 
@@ -110,4 +110,3 @@ Click a sink for setup instructions.
 
 
 **Need support for a new sink?** `Tell us and we'll add it. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
-

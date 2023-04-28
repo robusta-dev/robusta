@@ -1,7 +1,11 @@
 MS teams
 ##########
 
-Robusta can send playbook result to a MS teams channel webhook.
+Robusta can report issues and events in your cluster to a MS teams webhook.
+
+.. image:: /images/deployment-babysitter-teams.png
+    :width: 600
+    :align: center
 
 To configure a MS teams sink we need a webhook URL for the target teams channel. You can configure it in MS teams channel connectors.
 
@@ -23,12 +27,6 @@ Save the file and run
    :name: cb-add-msteams-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
-
-**Example Output:**
-
-    .. image:: /images/deployment-babysitter-teams.png
-      :width: 600
-      :align: center
 
 Creating a webhook url in MS Teams
 -----------------------------------

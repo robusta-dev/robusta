@@ -1,7 +1,7 @@
 Slack
 #################
 
-Robusta can send notifications to Slack.
+Robusta can report issues and events in your cluster to Slack.
 
 Connecting Slack
 ------------------------------------------------
@@ -67,7 +67,7 @@ If you'd like to automatically tag users on builtin alerts, please
 `let us know <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=Tag%20Slack%20Users>`_.
 We want to hear requirements.
 
-Custom Slack Apps
+Creating Custom Slack Apps
 -------------------------------------------------------------------
 
 If you can't use the `official Slack app <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_, you can create

@@ -9,6 +9,11 @@ Robusta can send three types of data to `PagerDuty <https://www.pagerduty.com/>`
 
 * `Standalone alerts <https://support.pagerduty.com/docs/alerts>`_ - Robusta listens to the APIServer and sends PagerDuty errors like CrashLoopBackOff
 
+Example Output:
+
+  .. image:: /images/change-events-updated-deployment-pagerduty.png
+    :width: 1000
+    :align: center
 
 
 Prerequisites
@@ -90,13 +95,9 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-Example Output:
 
-.. admonition:: To view the Changed Events, on PagerDuty's dashboard navigate to `Incidents` > `Recent Changes`
+To view the Changed Events, on PagerDuty's dashboard navigate to `Incidents` > `Recent Changes`
 
-    .. image:: /images/change-events-updated-deployment-pagerduty.png
-      :width: 1000
-      :align: center
 
 Support
 ----------------------
@@ -106,6 +107,3 @@ If you need help with the PagerDuty integration, get in touch with the Robusta t
 1. `Slack <https://bit.ly/robusta-slack>`_ - **link only works on desktop**
 2. `GitHub Issues <https://github.com/robusta-dev/robusta/issues>`_
 3. `Email <support@robusta.dev>`_ - support@robusta.dev
-
-
-

@@ -1,7 +1,8 @@
-File 
+File
 ###########
 
-Robusta can send playbooks results to a local file (in JSON format).
+Robusta can write issues and events in your cluster to a local file (in JSON format).
+
 
 .. admonition:: Add this to your generated_values.yaml
 
@@ -11,9 +12,9 @@ Robusta can send playbooks results to a local file (in JSON format).
         - file_sink:
             name: file_sink
             file_name: optional\path\to\file.json
-            
-The ``file_name`` is the path to the output file where the playbook finding data will be written. 
-It has to be a valid path with write permissions. This parameter is optional. 
+
+The ``file_name`` is the path to the output file where the playbook finding data will be written.
+It has to be a valid path with write permissions. This parameter is optional.
 If you omit it the stdout (console) will be used as default output.
 
 Save the file and run
@@ -22,5 +23,3 @@ Save the file and run
    :name: cb-add-webhook-sink
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
-
-
