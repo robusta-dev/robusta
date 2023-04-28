@@ -1,7 +1,7 @@
 VictorOps
 ##########
 
-Robusta can report issues and events in your cluster to the VictorOps alerts API.
+Robusta can report issues and events in your Kubernetes cluster to the VictorOps alerts API.
 
 | To configure VictorOps, a VictorOps REST endpoint (url) is needed.
 | Consult the VictorOps `REST endpoint integration guide <https://help.victorops.com/knowledge-base/rest-endpoint-integration-guide/#:~:text=In%20VictorOps%2C%20click%20on%20Integrations,preferred%20method%20to%20create%20incidents>`_.

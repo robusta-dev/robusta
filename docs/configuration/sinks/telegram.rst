@@ -1,7 +1,7 @@
 Telegram
 #################
 
-Robusta can report issues and events in your cluster to Telegram conversations.
+Robusta can report issues and events in your Kubernetes cluster to Telegram conversations.
 
 .. note::
 

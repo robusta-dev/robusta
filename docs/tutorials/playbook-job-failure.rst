@@ -27,8 +27,18 @@ Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 Testing Your Playbook
 ------------------------------------------
 
-TODO: add demo from kubernetes-demos repo.
-Show screenshot of result
+Deploy a failing job. The job will fail after 60 seconds, then attempt to run again. After two attempts, it will fail for good.
+
+.. code-block:: yaml
+
+    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/job_failure/job_crash.yaml
+
+.. details:: Output
+
+    .. image:: /images/failingjobs.png
+        :alt: Alternative text for the image
+        :align: center
+
 
 How it Works
 -------------

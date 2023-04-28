@@ -1,7 +1,7 @@
 Kafka
 #########
 
-Robusta can report issues and events in your cluster to a Kafka topic.
+Robusta can report issues and events in your Kubernetes cluster to a Kafka topic.
 
 Configuring the Kafka sink
 ------------------------------------------------

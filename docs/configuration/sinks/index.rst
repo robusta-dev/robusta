@@ -24,7 +24,7 @@ Sinks Reference
    VictorOps
    PagerDuty
 
-Robusta can report issues and events in your cluster to various destinations, known as sinks.
+Robusta can report issues and events in your Kubernetes cluster to various destinations, known as sinks.
 
 **Related Topics:**
 

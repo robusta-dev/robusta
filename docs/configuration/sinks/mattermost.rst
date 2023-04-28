@@ -1,7 +1,7 @@
 Mattermost
 #################
 
-Robusta can report issues and events in your cluster to Mattermost.
+Robusta can report issues and events in your Kubernetes cluster to Mattermost.
 
 .. image:: /images/mattermost_sink_example.png
   :width: 1000

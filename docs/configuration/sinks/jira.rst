@@ -1,7 +1,7 @@
 Jira
 #################
 
-Robusta can open Jira tickets automatically, based on the issues and events in your cluster.
+Robusta can open Jira tickets automatically, based on the issues and events in your Kubernetes cluster.
 
   .. image:: /images/jira_example.png
     :width: 1000
