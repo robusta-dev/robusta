@@ -53,7 +53,10 @@ class Web:
     @app.route("/api/helm-releases", methods=["POST"])
     def handle_alert_helm_event():
         req_json = request.get_json()
-        Web._trace_incoming("helm events", req_json)
+        Web._trace_incoming("received helm events via api", req_json)
+        logging.info(
+            f"received helm events via api\n"
+        )
         helm_release_payload = IncomingHelmReleasesEventPayload.parse_obj(req_json)
         Web.api_server_queue.add_task(Web.event_handler.handle_trigger,
                                       HelmReleasesTriggerEvent(helm_release_payload=helm_release_payload))

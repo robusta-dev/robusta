@@ -36,6 +36,7 @@ class FindingSubjectType(Enum):
     TYPE_DAEMONSET = "daemonset"
     TYPE_STATEFULSET = "statefulset"
     TYPE_HPA = "horizontalpodautoscaler"
+    TYPE_HELM_RELEASES = "helmreleases"
 
     @staticmethod
     def from_kind(kind: str):
@@ -53,6 +54,8 @@ class FindingSubjectType(Enum):
             return FindingSubjectType.TYPE_STATEFULSET
         elif kind == "horizontalpodautoscaler":
             return FindingSubjectType.TYPE_HPA
+        elif kind == "helmreleases":
+            return FindingSubjectType.TYPE_HELM_RELEASES
         return FindingSubjectType.TYPE_NONE
 
 

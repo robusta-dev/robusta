@@ -27,9 +27,9 @@ from robusta.api import (
     get_resource_events_table,
     list_pods_using_selector,
     parse_kubernetes_datetime_to_ms,
-    get_event_timestamp, 
+    get_event_timestamp,
     get_resource_events
-    
+
 )
 
 class ExtendedEventEnricherParams(EventEnricherParams):

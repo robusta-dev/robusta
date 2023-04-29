@@ -1,38 +1,41 @@
-from typing import List
+from typing import Optional
 
 from robusta.api import (
     ActionParams,
     action,
     HelmReleasesChangeEvent,
-    Finding, FindingSeverity, FindingSource, MarkdownBlock
+    Finding, FindingSource
 )
 import logging
 
+from robusta.core.reporting import JsonBlock
+
 
 class CreateHelmStatusNotificationParams(ActionParams):
-    """
-    todo add docs
-    """
-
-    message: str
+    message: Optional[str] = ""
 
 
 @action
 def create_helm_status_notification(event: HelmReleasesChangeEvent, params: CreateHelmStatusNotificationParams):
-    # todo
-    #pass
-    #event.add_enrichment(enrichment_blocks=, annotations=)
+    logging.info(f"received - helm releases change event: {event.helm_release.namespace}/{event.helm_release.name}")
 
-    finding = Finding(# todo
-        title=f"helm status events",
-        severity=FindingSeverity.LOW,
+    alert_subject = event.get_alert_subject()
+    status_message = "[RESOLVED] " if event.helm_release.info.status.lower() == "deployed" else ""
+    title = f"{status_message}{params.message if params.message else f'{event.helm_release.info.status} Helm release'} - {event.get_title()}"
+
+    finding = Finding(
+        title=title,
+        description=event.get_description(),
         source=FindingSource.HELM_RELEASE,
-        aggregation_key="helm_releases",
+        aggregation_key="on_helm_release_data",
+        severity=event.get_severity(),
+        subject=alert_subject,
+        starts_at=event.helm_release.info.last_deployed,
+        ends_at=event.helm_release.info.last_deployed,
     )
-    # todo
+
     finding.add_enrichment(
         [
-            MarkdownBlock(f"helm status events"),
+            JsonBlock(event.helm_release.to_dict()),
         ]
     )
-    event.add_finding(finding)

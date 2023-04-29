@@ -257,13 +257,10 @@ class Discovery:
             raise e
 
         # discover helm state
-        # todo disable secrets reading in discovery using playbook check
-        helm_releases: List[HelmRelease] = []
+        helm_releases_map: dict[str, HelmRelease] = {}
         try:
             continue_ref: Optional[str] = None
             for _ in range(DISCOVERY_MAX_BATCHES):
-                #todo namespace
-                #todo use namespace and names_in check
                 secrets = client.CoreV1Api().list_namespaced_secret(namespace="", label_selector=f"owner=helm",
                                                                     _continue=continue_ref)
                 if not secrets.items:
@@ -278,7 +275,8 @@ class Discovery:
                         continue
 
                     decoded_release_row = HelmRelease.from_api_server(secret_item.data['release'])
-                    helm_releases.append(decoded_release_row)
+                    # we use map here to deduplicate and pick only the latest release data
+                    helm_releases_map[decoded_release_row.get_service_key()] = decoded_release_row
 
                 continue_ref = secrets.metadata._continue
                 if not continue_ref:
@@ -309,7 +307,7 @@ class Discovery:
             node_requests=node_requests,
             jobs=active_jobs,
             namespaces=namespaces,
-            helm_releases=helm_releases
+            helm_releases=list(helm_releases_map.values())
         )
 
     @staticmethod

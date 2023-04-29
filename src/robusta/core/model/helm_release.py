@@ -69,11 +69,15 @@ class HelmRelease(BaseModel):
         return cls.from_json(json.loads(decompressed_data))
 
     @classmethod
-    def from_db_row(cls, release_data: dict) -> "HelmRelease":
-        return cls(
-            name=release_data["name"],
-            info=release_data["info"],
-            chart=release_data["chart"],
-            version=release_data["version"],
-            namespace=release_data["namespace"],
+    def from_db_row(cls, data: dict) -> "HelmRelease":
+        return HelmRelease(
+            name=data["name"],
+            info=Info(**data.get("info", {})),
+            chart=Chart(**data.get("chart", {})),
+            version=data["version"],
+            namespace=data["namespace"],
+
         )
+
+    def get_service_key(self) -> str:
+        return f"{self.namespace}/{self.name}"
