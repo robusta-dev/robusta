@@ -50,6 +50,9 @@ class HelmRelease(BaseModel):
         data['info']['last_deployed'] = self.info.last_deployed.isoformat()
         return data
 
+    def to_str(self, indent: int = 4):
+        return json.dumps(self.to_dict(), indent=indent)
+
     @staticmethod
     def list_to_json(releases: List["HelmRelease"]):
         return [release.to_dict() for release in releases]

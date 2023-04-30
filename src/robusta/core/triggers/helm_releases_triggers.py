@@ -58,12 +58,6 @@ class HelmReleasesTriggerEvent(TriggerEvent):
 class HelmReleasesChangeEvent(ExecutionBaseEvent):
     helm_release: HelmRelease = None
 
-    def get_description(self) -> str:
-        return f"Received an alert for Helm release {self.helm_release.namespace}/{self.helm_release.name}"
-
-    def get_title(self) -> str:
-        return f"{self.helm_release.name} in namespace {self.helm_release.namespace}"
-
     def get_severity(self) -> FindingSeverity:
         if self.helm_release.info.status == "failed":
             return FindingSeverity.HIGH
@@ -75,9 +69,9 @@ class HelmReleasesChangeEvent(ExecutionBaseEvent):
 
     def get_alert_subject(self) -> FindingSubject:
         return FindingSubject(
-            name=self.helm_release.name,
+            name=None,
             subject_type=FindingSubjectType.TYPE_HELM_RELEASES,
-            namespace=self.helm_release.namespace,
+            namespace=None,
         )
 
     def get_subject(self) -> FindingSubject:

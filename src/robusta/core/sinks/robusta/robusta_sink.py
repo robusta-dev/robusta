@@ -125,9 +125,7 @@ class RobustaSink(SinkBase):
         if self.__helm_releases_cache is None:
             logging.info("Initializing helm releases cache")
             self.__helm_releases_cache: Dict[str, HelmRelease] = {}
-            #todo do we need this?
             for helm_release in self.dal.get_active_helm_release():
-                # todo
                 self.__helm_releases_cache[helm_release.get_service_key()] = helm_release
 
     def __assert_namespaces_cache_initialized(self):
@@ -221,11 +219,8 @@ class RobustaSink(SinkBase):
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
 
-
-            #todo
             self.__assert_helm_releases_cache_initialized()
             self.__publish_new_helm_releases(results.helm_releases)
-
 
             self.__assert_namespaces_cache_initialized()
             self.__publish_new_namespaces(results.namespaces)
@@ -369,7 +364,8 @@ class RobustaSink(SinkBase):
         # new or changed helm_releases
         for helm_release_key in curr_helm_releases.keys():
             current_helm_release = curr_helm_releases[helm_release_key]
-            if self.__helm_releases_cache.get(helm_release_key) != current_helm_release:  # helm_release not in the cache, or changed
+            if self.__helm_releases_cache.get(
+                    helm_release_key) != current_helm_release:  # helm_release not in the cache, or changed
                 helm_releases.append(current_helm_release)
                 self.__helm_releases_cache[helm_release_key] = current_helm_release
 
@@ -447,8 +443,6 @@ class RobustaSink(SinkBase):
             return False
 
     def __discover_cluster(self):
-        #todo discovery isnt happening in (DISCOVERY_PERIOD_SEC) 90 seconds -> it has differential mechanism. for big cluster it takes longer
-        #todo what about encrypted helm secrets?
         logging.info("Cluster discovery initialized")
         get_history = self.__should_run_history()
         while self.__active:
@@ -459,7 +453,7 @@ class RobustaSink(SinkBase):
                 self.__get_events_history()
                 get_history = False
 
-            #todo discovery_results is turning out to be None after a few iterations
+            # todo discovery_results is turning out to be None after a few iterations
             if discovery_results and discovery_results.helm_releases and len(discovery_results.helm_releases):
                 self.__send_helm_release_events(release_data=discovery_results.helm_releases)
 
