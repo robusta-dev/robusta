@@ -4,11 +4,10 @@ metadata:
   name: robusta
 build:
   artifacts:
-    #  - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-    - image: ganeshrobusta/robusta-runner-build
-      context: .
-      docker:
-        dockerfile: Dockerfile
+  - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+    context: .
+    docker:
+      dockerfile: Dockerfile
   local:
     concurrency: 0
   # this is very important. we need to use inputDigest so that different developers don't build the same tags
@@ -24,55 +23,45 @@ deploy:
         valuesFiles:
           - deployment/generated_values.yaml
         artifactOverrides:
-          #          runner.image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-          runner.image: ganeshrobusta/robusta-runner-build
+          runner.image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
 
 portForward:
-  - resourceType: deployment
-    resourceName: robusta-runner
-    port: 5000
-    localPort: 5000
+- resourceType: deployment
+  resourceName: robusta-runner
+  port: 5000
+  localPort: 5000
 
 
 profiles:
-  - name: apple-m1-dev
-    build:
-      artifacts:
-        - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-          context: .
-          custom:
-            buildCommand: ./build_on_apple_m1.sh
-      local:
-        concurrency: 0
-  - name: arm
-    build:
-      artifacts:
-        - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-          context: .
-          custom:
-            buildCommand: ./build_with_arm.sh
-  - name: gcloud-build
-    build:
-      googleCloudBuild:
+- name: apple-m1-dev
+  build:
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        custom:
+          buildCommand: ./build_on_apple_m1.sh
+    local:
+      concurrency: 0
+- name: arm
+  build:
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        custom:
+          buildCommand: ./build_with_arm.sh
+- name: gcloud-build
+  build:
+    googleCloudBuild:
         projectId: genuine-flight-317411
-      artifacts:
-        - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-          context: .
-          docker:
-            dockerfile: Dockerfile
-  - name: release
-    build:
-      artifacts:
-        - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-          context: .
-          custom:
-            buildCommand: ./build_release.sh
-
-  - name: local-build
-    build:
-      artifacts:
-        - image: ganeshrobusta/robusta-runner-build
-          context: .
-          docker:
-            dockerfile: Dockerfile
-# skaffold dev -p local-build
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        docker:
+          dockerfile: Dockerfile
+- name: release
+  build:
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        custom:
+          buildCommand: ./build_release.sh
