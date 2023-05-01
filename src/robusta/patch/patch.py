@@ -164,6 +164,8 @@ def _get_hints(cls) -> dict:
     # patching ProjectedVolumeSource hint to allow the sources to be None
     if cls.__name__ == "ProjectedVolumeSource":
         hints["sources"] = Optional[List[VolumeProjection]]
+    if cls.__name__ == "Event":
+        hints["eventTime"] = Optional[str]
     # Caching the class hints for later use
     cls.cached_hints = hints
     return hints
