@@ -51,7 +51,7 @@ class IngressList(HikaruDocumentBase):
         watch: Optional[bool] = None,
         client: ApiClient = None,
         async_req: bool = False,
-    ) -> Response["IngressList"]:
+    ) -> Response:
         r"""
         list or watch objects of kind Ingress
 
@@ -161,7 +161,7 @@ class IngressList(HikaruDocumentBase):
         all_args["async_req"] = async_req
         result = the_method(**all_args)
         codes_returning_objects = (200,)
-        return Response["IngressList"](result, codes_returning_objects)
+        return Response(result, codes_returning_objects)
 
     @staticmethod
     def listNamespacedIngress(
@@ -178,7 +178,7 @@ class IngressList(HikaruDocumentBase):
         pretty: Optional[str] = None,
         client: ApiClient = None,
         async_req: bool = False,
-    ) -> Response["IngressList"]:
+    ) -> Response:
         r"""
         list or watch objects of kind Ingress
 
@@ -290,14 +290,7 @@ class IngressList(HikaruDocumentBase):
         all_args["async_req"] = async_req
         result = the_method(**all_args)
         codes_returning_objects = (200,)
-        return Response["IngressList"](result, codes_returning_objects)
-
-    _namespaced_watcher = WatcherDescriptor(
-        "kubernetes.client.api",
-        ".networking_v1_api",
-        "NetworkingV1Api",
-        "list_namespaced_ingress",
-    )
+        return Response(result, codes_returning_objects)
 
 
 @dataclass
@@ -345,7 +338,7 @@ class Ingress(HikaruDocumentBase):
         pretty: Optional[str] = None,
         client: ApiClient = None,
         async_req: bool = False,
-    ) -> Response["Ingress"]:
+    ) -> Response:
         r"""
         read the specified Ingress
 
@@ -390,7 +383,7 @@ class Ingress(HikaruDocumentBase):
         all_args["async_req"] = async_req
         result = the_method(**all_args)
         codes_returning_objects = (200,)
-        return Response["Ingress"](result, codes_returning_objects)
+        return Response(result, codes_returning_objects)
 
     def read(
         self,
