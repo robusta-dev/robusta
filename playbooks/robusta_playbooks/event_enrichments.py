@@ -17,20 +17,20 @@ from robusta.api import (
     KubernetesResourceEvent,
     MarkdownBlock,
     PodEvent,
+    RendererType,
     SlackAnnotations,
     TableBlock,
     VideoEnricherParams,
     VideoLink,
-    RendererType,
     action,
+    get_event_timestamp,
     get_job_all_pods,
+    get_resource_events,
     get_resource_events_table,
     list_pods_using_selector,
     parse_kubernetes_datetime_to_ms,
-    get_event_timestamp, 
-    get_resource_events
-    
 )
+
 
 class ExtendedEventEnricherParams(EventEnricherParams):
     """
