@@ -115,7 +115,7 @@ class PendingInvestigator:
         ]
         if failed_scheduling_events:
             newest_failed_event = max(failed_scheduling_events, key=lambda x: get_event_timestamp(x))
-            event_message = newest_failed_event.message
+            event_message = newest_failed_event.note
 
         reasons = self.get_reason_from_failed_scheduling_event_message(event_message)
         return reasons  # return object with all reasons and message
@@ -129,7 +129,7 @@ class PendingInvestigator:
             return False
 
         regex_string = "\d+\/\d+( nodes are available\:).*"
-        return bool(re.match(regex_string, pod_event.message))
+        return bool(re.match(regex_string, pod_event.note))
 
     def get_reason_from_failed_scheduling_event_message(self, event_message: str) -> List[PendingPodReason]:
         reasons = []

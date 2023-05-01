@@ -66,7 +66,7 @@ def create_debug_event_finding(event: Event):
 
     finding = Finding(
         title=f"{event.reason} {event.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
-        description=event.message,
+        description=event.note,
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,

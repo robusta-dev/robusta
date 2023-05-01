@@ -48,7 +48,7 @@ def get_resource_events_table(
             event.reason,
             event.type,
             parse_kubernetes_datetime_to_ms(get_event_timestamp(event)) if get_event_timestamp(event) else 0,
-            event.message,
+            event.note,
         ]
         for event in sorted_events
     ]

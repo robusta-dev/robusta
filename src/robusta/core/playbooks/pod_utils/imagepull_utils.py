@@ -56,8 +56,8 @@ def get_image_pull_backoff_blocks(pod: Pod) -> Optional[List[BaseBlock]]:
                 {
                     "type": event.type,
                     "reason": event.reason,
-                    "source.component": event.source.component,
-                    "message": event.message,
+                    "source.component": event.deprecatedSource.component,
+                    "message": event.note,
                 }
                 for event in investigator.pod_events.items
             ]
@@ -179,7 +179,7 @@ class ImagePullBackoffInvestigator:
         if pod_event.reason != "Failed":
             return None
 
-        if pod_event.source.component != "kubelet":
+        if pod_event.deprecatedSource.component != "kubelet":
             return None
 
         prefixes = [
@@ -188,8 +188,8 @@ class ImagePullBackoffInvestigator:
         ]
 
         for prefix in prefixes:
-            if pod_event.message.startswith(prefix):
-                return pod_event.message[len(prefix) :]
+            if pod_event.note.startswith(prefix):
+                return pod_event.note[len(prefix) :]
 
         return None
 
