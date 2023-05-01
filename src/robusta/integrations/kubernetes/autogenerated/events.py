@@ -53,6 +53,7 @@ LOADERS_MAPPINGS = {
     "persistentvolumeclaim": (True, PersistentVolumeClaim.readNamespacedPersistentVolumeClaim),
     "networkpolicy": (True, NetworkPolicy.readNamespacedNetworkPolicy),
     "configmap": (True, ConfigMap.readNamespacedConfigMap),
+    "ingress": (True, Ingress.readNamespacedIngress),
 }
 
 
