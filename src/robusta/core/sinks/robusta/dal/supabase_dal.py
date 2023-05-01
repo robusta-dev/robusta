@@ -392,12 +392,32 @@ class SupabaseDal:
             return
 
         db_helm_releases = [self.__to_db_helm_release(helm_release) for helm_release in helm_releases]
+        logging.info(f"[supabase] Publishing the helm_releases {db_helm_releases}")
+
         res = self.client.table(HELM_RELEASES_TABLE).insert(db_helm_releases, upsert=True).execute()
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist helm_releases {helm_releases} error: {res.get('data')}")
             self.handle_supabase_error()
             status_code = res.get("status_code")
             raise Exception(f"publish helm_releases failed. status: {status_code}")
+
+    def remove_deleted_helm_release(self, helm_release: HelmRelease):
+        if not helm_release:
+            return
+
+        res = self.__delete_patch(
+            self.client.table(HELM_RELEASES_TABLE)
+            .delete()
+            .eq("account_id", self.account_id)
+            .eq("service_key", helm_release.get_service_key())
+        )
+        status_code = res.get("status_code")
+        valid_deleted_statuses = [204, 200, 202]
+        if status_code not in valid_deleted_statuses:
+            logging.error(f"Failed to delete helm release {helm_release} error: {res.get('data')}")
+            self.handle_supabase_error()
+            raise Exception(f"remove deleted helm release failed. status: {status_code}")
+
 
     @staticmethod
     def __delete_patch(supabase_request_obj: QueryRequestBuilder) -> Dict[str, Any]:

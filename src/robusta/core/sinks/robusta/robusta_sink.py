@@ -137,6 +137,7 @@ class RobustaSink(SinkBase):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__jobs_cache = None
+        self.__helm_releases_cache = None
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
 
     def stop(self):
@@ -199,11 +200,11 @@ class RobustaSink(SinkBase):
                 timeout_delay=30,
             )
             if response != 200:
-                logging.error("Error occured while sending `helm release`")
+                logging.error("Error occured while sending `helm release trigger event`")
             else:
-                logging.info("Sent `helm release`.")
+                logging.info("Sent `helm release` trigger event.")
         except Exception:
-            logging.error("Error occured while sending `helm release`", exc_info=True)
+            logging.error("Error occured while sending `helm release` trigger event", exc_info=True)
 
     def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
@@ -349,19 +350,28 @@ class RobustaSink(SinkBase):
 
         self.dal.publish_jobs(updated_jobs)
 
+    def __safe_delete_helm_releases(self, helm_releases_key):
+        try:
+            logging.info(f"[supabase] deleting the helm release: {helm_releases_key}")
+
+            self.dal.remove_deleted_helm_release(self.__helm_releases_cache[helm_releases_key])
+            del self.__helm_releases_cache[helm_releases_key]
+        except Exception:
+            logging.error(f"Failed to delete helm releases with service key {helm_releases_key}", exc_info=True)
+
     def __publish_new_helm_releases(self, active_helm_releases: List[HelmRelease]):
         curr_helm_releases = {}
         for helm_release in active_helm_releases:
             curr_helm_releases[helm_release.get_service_key()] = helm_release
 
-        # handle deleted helm_releases
+        # handle deleted helm release
         cache_keys = list(self.__helm_releases_cache.keys())
         helm_releases: List[HelmRelease] = []
         for helm_release_key in cache_keys:
-            if not curr_helm_releases.get(helm_release_key):  # job doesn't exist any more, delete it
-                self.__safe_delete_job(helm_release_key)
+            if not curr_helm_releases.get(helm_release_key):  # helm_release doesn't exist any more, delete it
+                self.__safe_delete_helm_releases(helm_release_key)
 
-        # new or changed helm_releases
+        # new or changed helm release
         for helm_release_key in curr_helm_releases.keys():
             current_helm_release = curr_helm_releases[helm_release_key]
             if self.__helm_releases_cache.get(
@@ -453,7 +463,6 @@ class RobustaSink(SinkBase):
                 self.__get_events_history()
                 get_history = False
 
-            # todo discovery_results is turning out to be None after a few iterations
             if discovery_results and discovery_results.helm_releases and len(discovery_results.helm_releases):
                 self.__send_helm_release_events(release_data=discovery_results.helm_releases)
 
