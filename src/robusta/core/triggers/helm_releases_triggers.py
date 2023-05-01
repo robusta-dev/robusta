@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
-from robusta.core.reporting import FindingSubject, Finding, FindingSource, FindingSubjectType, FindingSeverity
+from robusta.core.reporting import Finding, FindingSeverity
 from robusta.utils.rate_limiter import RateLimiter
 
 
@@ -31,14 +31,14 @@ class HelmReleasesTriggerEvent(TriggerEvent):
         version = self.helm_release_payload.version
         return f"HelmReleases-{version}"
 
-    def filter_releases(self, status: str, namespace: str, names: List[str], for_sec: int) -> List[HelmRelease]:
+    def filter_releases(self, status: List[str], namespace: str, names: List[str], for_sec: int) -> List[HelmRelease]:
         filtered_list = []
         for release_data in self.helm_release_payload.data:
+            if status and release_data.info.status not in status:
+                continue
             if names and release_data.name not in names:
                 continue
             if namespace and release_data.namespace != namespace:
-                continue
-            if status and release_data.info.status != status:
                 continue
 
             # if the last deployed time is lesser than the `for_sec` time then dont append to the filtered list
@@ -56,41 +56,28 @@ class HelmReleasesTriggerEvent(TriggerEvent):
 
 @dataclass
 class HelmReleasesChangeEvent(ExecutionBaseEvent):
-    helm_release: HelmRelease = None
+    helm_releases: List[HelmRelease] = []
 
-    def get_severity(self) -> FindingSeverity:
-        if self.helm_release.info.status == "failed":
+    @staticmethod
+    def get_severity(helm_release: HelmRelease) -> FindingSeverity:
+        if helm_release.info.status in ["failed", "unknown"]:
             return FindingSeverity.HIGH
 
-        if self.helm_release.info.status == "deployed":
+        if helm_release.info.status in ["deployed", "uninstalled"]:
             return FindingSeverity.INFO
 
         return FindingSeverity.MEDIUM
 
-    def get_alert_subject(self) -> FindingSubject:
-        return FindingSubject(
-            name=None,
-            subject_type=FindingSubjectType.TYPE_HELM_RELEASES,
-            namespace=None,
-        )
-
-    def get_subject(self) -> FindingSubject:
-        return self.get_alert_subject()
-
-    @classmethod
-    def get_source(cls) -> FindingSource:
-        return FindingSource.PROMETHEUS
-
 
 class OnHelmReleaseDataTrigger(BaseTrigger):
-    status: str
+    status: List[str]
     names: Optional[List[str]]
     namespace: Optional[str]
     for_sec: Optional[int]
     rate_limit: Optional[int]
-    firing_release: Optional[HelmRelease] = None
+    firing_releases: Optional[List[HelmRelease]] = []
 
-    def __init__(self, status: str, names: List[str] = [], namespace: str = None, for_sec: int = 900,
+    def __init__(self, status: List[str], names: List[str] = [], namespace: str = None, for_sec: int = 900,
                  rate_limit: int = 14_400):
         super().__init__(
             status=status,
@@ -105,7 +92,7 @@ class OnHelmReleaseDataTrigger(BaseTrigger):
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         should_fire = super().should_fire(event, playbook_id)
-        self.firing_release = None
+        self.firing_releases = []
         if not should_fire:
             return should_fire
 
@@ -125,10 +112,9 @@ class OnHelmReleaseDataTrigger(BaseTrigger):
             )
 
             if can_fire:
-                self.firing_release = release
-                return True
+                self.firing_releases.append(release)
 
-        return False
+        return len(self.firing_releases) > 0
 
     def build_execution_event(
             self, event: HelmReleasesTriggerEvent, sink_findings: Dict[str, List[Finding]]
@@ -137,7 +123,7 @@ class OnHelmReleaseDataTrigger(BaseTrigger):
             return
 
         return HelmReleasesChangeEvent(
-            helm_release=self.firing_release,
+            helm_releases=self.firing_releases,
         )
 
     @staticmethod
