@@ -131,9 +131,9 @@ def does_node_have_taint(node: Node, taint_key: str) -> bool:
 class RobustaEvent:
     @classmethod
     def get_events(cls, kind: str, name: str, namespace: str = None) -> EventList:
-        field_selector = f"involvedObject.kind={kind},involvedObject.name={name}"
+        field_selector = f"regarding.kind={kind},regarding.name={name}"
         if namespace:
-            field_selector += f",involvedObject.namespace={namespace}"
+            field_selector += f",regarding.namespace={namespace}"
 
         return EventList.listEventForAllNamespaces(field_selector=field_selector).obj
 

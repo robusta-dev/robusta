@@ -209,7 +209,9 @@ class OomKillsExtractor:
         self.oom_kill_reason_investigator = oom_kill_reason_investigator
 
     def extract_oom_kills(self) -> List[OomKill]:
-        results: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={self.node.metadata.name}").obj
+        results: PodList = PodList.listPodForAllNamespaces(
+            field_selector=f"spec.nodeName={self.node.metadata.name}"
+        ).obj
 
         oom_kills: List[OomKill] = []
         for pod in results.items:

@@ -41,7 +41,7 @@ def event_history(event: ExecutionBaseEvent):
     reported_obj_history_list = []
     warning_events = get_events_list(event_type="Warning")
     for warning_event in warning_events.items:
-        warning_event_key = gen_object_key(warning_event.involvedObject)
+        warning_event_key = gen_object_key(warning_event.regarding)
         if warning_event_key in reported_obj_history_list:
             # if there were multiple warnings on the same object we dont want the history pulled multiple times
             continue
@@ -62,7 +62,7 @@ def create_debug_event_finding(event: Event):
     """
     Create finding based on the kubernetes event
     """
-    k8s_obj = event.involvedObject
+    k8s_obj = event.regarding
 
     finding = Finding(
         title=f"{event.reason} {event.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",

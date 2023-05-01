@@ -100,7 +100,7 @@ def get_related_pods(resource) -> list[Pod]:
     elif kind == "Pod":
         pods = [resource]
     elif kind == "Node":
-        pods = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={resource.metadata.name}").obj.items
+        pods = PodList.listPodForAllNamespaces(field_selector=f"spec.nodeName={resource.metadata.name}").obj.items
     else:
         selector = build_selector_query(resource.spec.selector)
         pods = PodList.listNamespacedPod(namespace=resource.metadata.namespace, label_selector=selector).obj.items
