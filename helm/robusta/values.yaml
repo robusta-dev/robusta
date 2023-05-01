@@ -187,11 +187,13 @@ builtinPlaybooks:
   actions:
   - logs_enricher: {}
   - pod_events_enricher: {}
+  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeContainerWaiting
   actions:
+  - pod_issue_investigator: {}
   - pod_events_enricher: {}
 
 - triggers:
@@ -252,6 +254,7 @@ builtinPlaybooks:
   - resource_events_enricher:
       dependent_pod_mode: true
   - statefulset_replicas_enricher: {}
+  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:
@@ -320,11 +323,13 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: KubeDeploymentReplicasMismatch
   actions:
+  - pod_issue_investigator: {}
   - deployment_events_enricher:
       included_types: ["Warning"]
   - deployment_events_enricher:
       included_types: ["Warning", "Normal"]
       dependent_pod_mode: true
+
 - triggers:
   - on_prometheus_alert:
       status: "all"
