@@ -50,12 +50,9 @@ extensions = [
 ]
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
-jinja_contexts = {
-}
+jinja_contexts = {}
 
-jinja_filters = {
-    "to_snake_case": lambda s: ''.join(['_'+c.lower() if c.isupper() else c for c in s]).lstrip('_')
-}
+jinja_filters = {"to_snake_case": lambda s: "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")}
 
 # for sphinx.ext.inheritance_diagram
 # inheritance_graph_attrs = dict(rankdir="TB", size='""')
@@ -91,7 +88,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Robusta"
-copyright = "2022, Robusta"
+copyright = "2023, Robusta"
 author = "Natan Yellin"
 
 # The short X.Y version.

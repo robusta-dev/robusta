@@ -72,7 +72,7 @@
 Welcome to the Robusta Docs
 =============================
 
-Robusta is an observability and monitoring platform built for Kubernetes. It is commonly used as an extension to Prometheus, or standalone.
+Robusta is an open-source automation engine that extends the functionality of `Prometheus <https://prometheus.io/>`_ to complement your monitoring and observability stack.
 
 
 .. grid:: 2
