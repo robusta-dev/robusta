@@ -10,6 +10,7 @@ import logging
 
 from robusta.core.reporting import MarkdownBlock
 
+
 class CreateHelmStatusNotificationParams(ActionParams):
     message: Optional[str] = ""
 
@@ -19,7 +20,7 @@ def create_helm_status_notification(event: HelmReleasesChangeEvent, params: Crea
     for helm_release in event.helm_releases:
         logging.info(f"received - helm releases change event: {helm_release.namespace}/{helm_release.name}")
 
-        title = f"{params.message if params.message else f'{helm_release.info.status} Helm release'}"
+        title = f"{params.message if params.message else f'Helm release - status: {helm_release.info.status}'}"
 
         finding = Finding(
             title=title,
