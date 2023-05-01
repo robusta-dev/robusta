@@ -118,7 +118,7 @@ Next Steps
 ^^^^^^^^^^^^
 
 * :ref:`View a list of built-in sinks <Sinks Reference>`
-* :ref:`See examples of routing rules in the tutorials<Route Notifications>`
+* :ref:`See examples of routing rules in the tutorials<sink-matchers>`
 
 .. rubric:: Footnotes
 

@@ -5,6 +5,8 @@ Kubernetes (API Server)
 
 Robusta can run automated playbooks when Kubernetes resources change. Playbooks can identify issues, track changes, or automate actions.
 
+These triggers work even when Prometheus is not connected to Robusta. They're triggered by the Kubernetes APIServer directly.
+
 .. details:: Related Tutorials
 
     * :ref:`Track Failed Kubernetes Jobs`

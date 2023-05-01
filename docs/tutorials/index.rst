@@ -32,6 +32,8 @@ Custom Alerts and Playbooks
    alert-custom-prometheus
    alert-custom-enrichment
 
+.. _tutorials-notification-routing:
+
 Notification Routing
 ----------------------
 
