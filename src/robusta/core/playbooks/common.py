@@ -61,12 +61,12 @@ def get_resource_events_table(
 
 
 def get_event_timestamp(event: Event):
-    if event.lastTimestamp:
-        return event.lastTimestamp
+    if event.deprecatedLastTimestamp:
+        return event.deprecatedLastTimestamp
     elif event.eventTime:
         return event.eventTime
-    elif event.firstTimestamp:
-        return event.firstTimestamp
+    elif event.deprecatedFirstTimestamp:
+        return event.deprecatedFirstTimestamp
     if event.metadata.creationTimestamp:
         return event.metadata.creationTimestamp
     return
@@ -78,8 +78,8 @@ def get_events_list(event_type: str = None) -> EventList:
     """
     if event_type:
         field_selector = f"type={event_type}"
-        return Event.listEventForAllNamespaces(field_selector=field_selector).obj
-    return Event.listEventForAllNamespaces().obj
+        return EventList.listEventForAllNamespaces(field_selector=field_selector).obj
+    return EventList.listEventForAllNamespaces().obj
 
 
 def get_resource_events(
@@ -97,6 +97,6 @@ def get_resource_events(
     if namespace:
         field_selector += f",regarding.namespace={namespace}"
 
-    event_list: EventList = Event.listEventForAllNamespaces(field_selector=field_selector).obj
+    event_list: EventList = EventList.listEventForAllNamespaces(field_selector=field_selector).obj
 
     return [ev for ev in event_list.items if filter_event(ev, name_substring, included_types)]

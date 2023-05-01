@@ -135,7 +135,7 @@ class RobustaEvent:
         if namespace:
             field_selector += f",involvedObject.namespace={namespace}"
 
-        return Event.listEventForAllNamespaces(field_selector=field_selector).obj
+        return EventList.listEventForAllNamespaces(field_selector=field_selector).obj
 
 
 class RegexReplacementStyle(Enum):
