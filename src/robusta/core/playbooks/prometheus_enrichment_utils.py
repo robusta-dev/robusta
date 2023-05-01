@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import humanize
 import pygal
-from hikaru.model import Node
+from hikaru.model.rel_1_26 import Node
 from pydantic import BaseModel
 
 from robusta.core.external_apis.prometheus.prometheus_cli import PrometheusQueryResult, custom_query_range

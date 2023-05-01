@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 import pydantic
-from hikaru.model import Node, Pod, PodList, ResourceRequirements
-
+from hikaru.model.rel_1_26 import Node, Pod, PodList, ResourceRequirements
 from robusta.api import (
     Finding,
     FindingSeverity,

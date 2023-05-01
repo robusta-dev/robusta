@@ -1,8 +1,7 @@
 import logging
 from datetime import datetime
 
-from hikaru.model import Node
-
+from hikaru.model.rel_1_26 import Node
 from robusta.api import (
     PodEvent,
     PodResourceGraphEnricherParams,

@@ -1,6 +1,6 @@
 import uuid
 
-from hikaru.model.rel_1_16 import (
+from hikaru.model.rel_1_26 import (
     Container,
     Deployment,
     DeploymentSpec,

@@ -3,7 +3,7 @@ import re
 from enum import Enum
 from typing import List, Optional
 
-from hikaru.model import Event, EventList, Pod
+from hikaru.model.rel_1_26 import Event, EventList, Pod
 
 from robusta.core.model.pods import pod_other_requests, pod_requests
 from robusta.core.playbooks.common import get_event_timestamp

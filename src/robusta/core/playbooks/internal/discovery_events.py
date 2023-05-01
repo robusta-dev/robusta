@@ -1,4 +1,4 @@
-from hikaru.model import Event
+from hikaru.model.rel_1_26 import Event
 
 from robusta.api import (
     ExecutionBaseEvent,

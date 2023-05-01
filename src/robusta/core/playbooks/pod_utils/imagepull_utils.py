@@ -5,7 +5,7 @@ import re
 from enum import Flag
 from typing import List, Optional
 
-from hikaru.model import ContainerStatus, Event, EventList, Pod, PodStatus
+from hikaru.model.rel_1_26 import ContainerStatus, Event, EventList, Pod, PodStatus
 
 from robusta.core.reporting import BaseBlock, HeaderBlock, MarkdownBlock
 

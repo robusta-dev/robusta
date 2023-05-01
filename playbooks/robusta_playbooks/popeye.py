@@ -7,9 +7,8 @@ from datetime import datetime
 from json import JSONDecodeError
 from typing import Dict, List, Optional
 
-from hikaru.model import Container, PodSpec
+from hikaru.model.rel_1_26 import Container, PodSpec
 from pydantic import BaseModel, ValidationError
-
 from robusta.api import (
     RELEASE_NAME,
     ActionParams,

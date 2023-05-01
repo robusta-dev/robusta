@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from hikaru.model import Event, EventList
+from hikaru.model.rel_1_26 import Event, EventList
 
 from robusta.core.reporting import TableBlock
 from robusta.core.reporting.custom_rendering import RendererType

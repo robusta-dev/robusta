@@ -1,6 +1,6 @@
 import logging
 
-from hikaru.model import (
+from hikaru.model.rel_1_26 import (
     Container,
     ObjectMeta,
     PersistentVolumeClaim,
@@ -10,7 +10,6 @@ from hikaru.model import (
     Volume,
     VolumeMount,
 )
-
 from robusta.api import (
     FileBlock,
     Finding,

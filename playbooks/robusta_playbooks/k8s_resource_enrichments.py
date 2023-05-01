@@ -4,9 +4,8 @@ from typing import List, Optional
 
 import hikaru
 import kubernetes.client.exceptions
-from hikaru.model import ContainerState, ContainerStatus, Pod, PodList
+from hikaru.model.rel_1_26 import ContainerState, ContainerStatus, Pod, PodList
 from pydantic import BaseModel
-
 from robusta.api import (
     ActionException,
     ActionParams,

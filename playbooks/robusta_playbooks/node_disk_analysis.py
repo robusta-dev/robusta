@@ -3,7 +3,7 @@ import re
 from typing import Dict, List
 
 import humanize
-from hikaru.model import EnvVar, EnvVarSource, ObjectFieldSelector, Pod, PodList
+from hikaru.model.rel_1_26 import EnvVar, EnvVarSource, ObjectFieldSelector, Pod, PodList
 from robusta.api import ActionParams, BaseBlock, MarkdownBlock, NodeEvent, RobustaPod, TableBlock, action
 from robusta.utils.parsing import load_json
 

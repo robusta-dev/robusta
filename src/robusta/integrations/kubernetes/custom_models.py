@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
 import hikaru
 import yaml
-from hikaru.model import *  # * import is necessary for hikaru subclasses to work
+from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclasses to work
 from pydantic import BaseModel
 
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
