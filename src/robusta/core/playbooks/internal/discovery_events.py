@@ -48,9 +48,9 @@ def event_history(event: ExecutionBaseEvent):
         finding = create_debug_event_finding(warning_event)
         events_table = get_resource_events_table(
             "Resource events",
-            warning_event.involvedObject.kind,
-            warning_event.involvedObject.name,
-            warning_event.involvedObject.namespace,
+            warning_event.regarding.kind,
+            warning_event.regarding.name,
+            warning_event.regarding.namespace,
         )
         if events_table:
             finding.add_enrichment([events_table])

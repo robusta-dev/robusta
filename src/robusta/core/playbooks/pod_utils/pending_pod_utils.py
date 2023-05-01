@@ -102,7 +102,7 @@ class PendingInvestigator:
         self.namespace = pod.metadata.namespace
 
         self.pod_events: EventList = EventList.listNamespacedEvent(
-            self.namespace, field_selector=f"involvedObject.name={self.pod_name}"
+            self.namespace, field_selector=f"regarding.name={self.pod_name}"
         ).obj
 
     def investigate(self) -> Optional[List[PendingPodReason]]:

@@ -154,7 +154,7 @@ class ImagePullBackoffInvestigator:
         self.namespace = namespace
 
         self.pod_events: EventList = EventList.listNamespacedEvent(
-            self.namespace, field_selector=f"involvedObject.name={self.pod_name}"
+            self.namespace, field_selector=f"regarding.name={self.pod_name}"
         ).obj
 
     def investigate(self, container_status: ContainerStatus) -> Optional[ImagePullOffInvestigation]:

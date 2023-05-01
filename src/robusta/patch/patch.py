@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Union, get_type_hints
 from hikaru import HikaruBase, HikaruDocumentBase
 from hikaru.model.rel_1_26 import VolumeProjection
 from kubernetes.client import V1APIServiceSpec
+from kubernetes.client.models.events_v1_event import EventsV1Event
 from kubernetes.client.models.v1_container_image import V1ContainerImage
 from kubernetes.client.models.v1_projected_volume_source import V1ProjectedVolumeSource
 from ruamel.yaml import YAML
@@ -42,6 +43,11 @@ def create_monkey_patches():
     V1ContainerImage.names = V1ContainerImage.names.setter(names)
     V1ProjectedVolumeSource.sources = V1ProjectedVolumeSource.sources.setter(sources)
     V1APIServiceSpec.service = V1APIServiceSpec.service.setter(service)
+    EventsV1Event.event_time = EventsV1Event.event_time.setter(event_time)
+
+
+def event_time(self, event_time):
+    self._event_time = event_time
 
 
 def service(self, service):
