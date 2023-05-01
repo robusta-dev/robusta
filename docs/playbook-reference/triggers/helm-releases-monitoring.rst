@@ -3,6 +3,10 @@ Helm Releases Monitoring
 
 Robusta is capable of monitoring your Helm releases and keeping you informed about their status. It can send you notifications when a release fails, is pending for more than x seconds, or gets deployed successfully, among other things.
 
+Prerequisites
+---------------
+Robusta UI Sink must be connected to Robusta. Refer to :ref:`Robusta UI`.
+
 Triggers
 -----------
 
@@ -22,8 +26,6 @@ The following triggers are available:
     * ``rate_limit``: Limit firing to once every `rate_limit` seconds. This field is optional.
 
     .. admonition:: Example
-
-        Run
 
         .. code-block:: yaml
 
