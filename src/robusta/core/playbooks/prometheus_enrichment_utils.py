@@ -80,12 +80,9 @@ def get_resolution_from_duration(duration: timedelta) -> int:
 
 
 def get_target_name(series: PrometheusSeries) -> Optional[str]:
-    if series.metric.get("container"):
-        return series.metric["container"]
-    elif series.metric.get("pod"):
-        return series.metric["pod"]
-    elif series.metric.get("node"):
-        return series.metric["node"]
+    for label in ["container", "pod", "node"]:
+        if label in series.metric:
+            return series.metric[label]
     return None
 
 
@@ -97,7 +94,7 @@ def filter_prom_jobs_results(series_list_result: Optional[List[PrometheusSeries]
     if not series_list_result or len(series_list_result) == 1:
         return series_list_result
 
-    target_names = set([get_target_name(series) for series in series_list_result if get_target_name(series)])
+    target_names = {get_target_name(series) for series in series_list_result if get_target_name(series)}
     return_list: List[PrometheusSeries] = []
 
     # takes kubelet job if exists, return first job alphabetically if it doesn't
@@ -172,7 +169,9 @@ def create_chart_from_prometheus_query(
     if filter_prom_jobs:
         series_list_result = filter_prom_jobs_results(series_list_result)
     for i, series in enumerate(series_list_result):
-        label = "\n".join([v for (key, v) in series.metric.items() if key != "job"])
+        label = get_target_name(series)
+        if not label:
+            label = "\n".join([v for (key, v) in series.metric.items() if key != "job"])
         # If the label is empty, try to take it from the additional_label_factory
         if label == "" and chart_label_factory is not None:
             label = chart_label_factory(i)
@@ -244,7 +243,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
-            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod", container=~"$container"}[5m])) by (container, job)',
+            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod", container=~"$container"}[5m])) by (container, pod, job)',
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
@@ -256,7 +255,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
-            query='sum(container_memory_working_set_bytes{pod=~"$pod", container=~"$container", image!=""}) by (container, job)',
+            query='sum(container_memory_working_set_bytes{pod=~"$pod", container=~"$container", image!=""}) by (container, pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): None,
