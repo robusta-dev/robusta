@@ -17,6 +17,7 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
             include: ["Liveness"]   # fires on failed Liveness probes
       actions:
         - create_finding:
+            aggregation_key: "Failed Liveness Probe"
             severity: HIGH
             title: "Failed liveness probe: $name"
         - event_resource_events: {}
@@ -26,11 +27,22 @@ Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 Testing Your Playbook
 ------------------------------------------
 
-TODO: add demo to kubernetes-demos repo and reference it here
-Show screenshot of result
+Apply the following command the create a failing liveness probe.
+
+.. code-block:: yaml
+
+    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/liveness_probe_fail/failing_liveness_probe.yaml
+
+
+.. details:: Output
+
+    .. image:: /images/failedlivenessprobe.png
+        :alt: Failed liveness probe notification on Slack
+        :align: center
 
 How it Works
 -------------
+
 
 TODO
 
