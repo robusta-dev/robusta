@@ -158,7 +158,6 @@ h2, h3 {
 
 .md-typeset {
     font-size: 0.8rem;
-    line-height: 1.4;
 }
 
 .md-typeset a {
@@ -269,6 +268,11 @@ h2, h3 {
     color: var(--md-default-fg-color);
 }
 
+/* Disable Dark Mode */
+/*[data-md-component="palette"] {
+    display: none;
+}*/
+
 #learn-how {
     margin-bottom: 20px !important;
 }
@@ -279,9 +283,4 @@ h2, h3 {
 
 .sd-tab-set>label {
     font-size: 16px;
-}
-
-.md-typeset blockquote, .md-typeset dl, .md-typeset figure, .md-typeset ol, .md-typeset pre, .md-typeset ul {
-    margin-bottom: 0.5em;
-    margin-top: 0.5em;
 }
