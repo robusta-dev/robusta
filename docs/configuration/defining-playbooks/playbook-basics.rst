@@ -45,7 +45,9 @@ Perform a :ref:`Helm Upgrade <Simple Upgrade>` to apply the custom playbook.
 
 Next time a Liveness probe fails, you will get notified.
 
-TODO: image
+    .. image:: /images/failedlivenessprobe.png
+        :alt: Failing Kubernetes liveness probe notification on Slack
+        :align: center
 
 Let's explore each part of the above playbook in depth.
 
