@@ -7,7 +7,7 @@ A *Finding* is Robusta's term for a notification.
 
 This guide explains how to create and modify Findings in :ref:`customPlaybooks <customPlaybooks>`.
 
-Actions for Working with Findings
+Creating Notifications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are two generic actions for working with notifications:
@@ -19,52 +19,70 @@ There are two generic actions for working with notifications:
 
 ``customise_finding`` will modify an existing notification, already created by other actions.
 
-For example, we can use ``create_finding`` to notify about failed Jobs.
+For example, we can use ``create_finding`` to notify about Pods that were killed because they used up memory.
 
 .. code-block:: yaml
 
     customPlaybooks:
     - triggers:
-      - on_job_failure:
-          namespace_prefix: robusta
+      - on_pod_oom_killed: {} # (1)
       actions:
       - create_finding:
-          title: "Job $name on namespace $namespace failed"
-          aggregation_key: "Job Failure"
+          title: "Pod $name in namespace $namespace OOMKilled results"
+          aggregation_key: "Pod OOMKill"
 
-TODO: show screenshot.
+.. code-annotations::
+    1. See :ref:`on_pod_oom_killed<on_pod_oom_killed>`
 
-Adding Details to Notifications
+Enriching Notifications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Robusta's true power is the ability to build *detailed* and *context-aware* notifications.
 
-For example, if a Kubernetes Job fails, we can lookup the last Pod to run inside the Job, fetch it's logs, and attach
-those logs to the notification:
+Lets use these capabilities to improve the above example. When a Pod is OOMKilled, we usually investigate by:
 
-TODO show example
+1. Viewing a graph of Pod memory usage
+2. Running ``kubectl describe`` and investigating
 
-Details Are Always Inside Findings
+We can automate this with Robusta:
+
+.. code-block:: yaml
+
+    customPlaybooks:
+    - triggers:
+      - on_pod_oom_killed: {} # (1)
+      actions:
+      - create_finding:
+          title: "Pod $name in namespace $namespace OOMKilled results"
+          aggregation_key: "Pod OOMKill"
+      - pod_graph_enricher: # (2)
+          resource_type: Memory
+          display_limits: true
+      - pod_oom_killer_enricher: {} # (3)
+
+.. code-annotations::
+    1. See :ref:`on_pod_oom_killed<on_pod_oom_killed>`
+    2. See :ref:`pod_graph_enricher<pod_graph_enricher>`
+    3. See :ref:`pod_oom_killer_enricher<pod_oom_killer_enricher>`
+
+Here is the result in Slack:
+
+.. image:: /images/oomkill-notification-with-enrichers.png
+
+Automatic Findings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Actions can add details to a notification, even if a notification wasn't created first.
+What happens if you call an enrichment action like ``pod_graph_enricher`` but you never call ``create_finding`` first?
 
-When this occurs, a new notification will be implicitly created with a default title and description. You can then
-override the default notification using :ref:`customise_finding<customise_finding>`. Alternatively, you can insert
-a :ref:`create_finding<create_finding>` action before adding details. These two methods are equivalent.
+No worries. In cases like this, a default Finding (notification) is created when the enricher runs. The Finding's title
+is set automatically based on the event that triggered the action.
 
-Some actions both create notifications and attach details. For instance, ``report_crash_loop`` generates a
-notification and also attaches logs.
-
-The Order of Actions Matters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This means that the order of actions within a playbook is important! Put ``create_finding`` before other actions, so that subsequent actions
+already have a Finding to work with. If you first ``pod_graph_enricher`` before ``create_finding``, you'll end up with
+two notification messages - one created implicitly by calling ``pod_graph_enricher`` and one created
+explicitly by ``create_finding``.
 
 .. note::
 
-    This section is going to change in the future. We're planning to simplify the Findings API so it's even easier to
-    use.
-
-The order of actions within a playbook is important. Some actions create notifications. Other actions attach data to
-existing notification. Make sure actions that create notifications run first. Otherwise you will receive multiple
-notifications.
-
+    Some actions both create Findings and enrich them. For instance, :ref:`report_crash_loop<report_crash_loop>` does both.
+    In this case, there's no need to call ``create_finding`` explicitly.
