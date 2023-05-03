@@ -74,7 +74,6 @@ Welcome to the Robusta Docs
 
 Robusta is an open-source automation engine that extends the functionality of `Prometheus <https://prometheus.io/>`_ to complement your monitoring and observability stack.
 
-
 .. grid:: 2
     :margin: 0
     :padding: 0
@@ -84,7 +83,7 @@ Robusta is an open-source automation engine that extends the functionality of `P
 
         **Why Use Robusta?**
 
-        * Get better alerts - with automatic insights
+        * Get better alerts - by automatically enriching them
         * Spend less time defining alerts - with opinionated defaults
         * Remove blind-spots - with direct APIServer monitoring
         * Reduce alert fatigue - with smart silencing and alert routing
@@ -102,8 +101,7 @@ Robusta is an open-source automation engine that extends the functionality of `P
        .. image:: /images/architecture-overview.png
           :align: center
 
-Robusta is used in production by hundreds of teams. It monitors infrastructure for the Hubble Space Telescope,
-Fortune 500 companies, and startups of all sizes.
+Robusta is used in production by hundreds of teams. It monitors infrastructure for Fortune 500 companies, managed service providers, and startups of all sizes.
 
 .. button-ref:: quick-start
     :color: primary
