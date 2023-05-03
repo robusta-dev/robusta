@@ -265,9 +265,9 @@ h2, h3 {
 }
 
 /* Disable Dark Mode */
-[data-md-component="palette"] {
+/*[data-md-component="palette"] {
     display: none;
-}
+}*/
 
 #learn-how {
     margin-bottom: 20px !important;
