@@ -22,5 +22,6 @@ KIND_TO_MODEL_CLASS = {
     "PersistentVolume": PersistentVolume,
     "PersistentVolumeClaim": PersistentVolumeClaim,
     "NetworkPolicy": NetworkPolicy,
-    "ConfigMap": ConfigMap
+    "ConfigMap": ConfigMap,
+    "Ingress": Ingress
 }

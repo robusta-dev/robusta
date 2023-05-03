@@ -23,6 +23,7 @@ KUBERNETES_RESOURCES = [
     "PersistentVolumeClaim",
     "NetworkPolicy",
     "ConfigMap",
+    "Ingress",
 ]
 KUBERNETES_RESOURCES_STR = ",".join(KUBERNETES_RESOURCES)
 NON_NAMESPACED_RESOURCES = ["Node", "ClusterRole", "ClusterRoleBinding", "Namespace", "PersistentVolume"]
@@ -73,7 +74,6 @@ def autogenerate_events(f: TextIO):
     )
 
     all_versioned_resources = set()
-    KUBERNETES_RESOURCES.append("Ingress")
     for resource in KUBERNETES_RESOURCES:
         if resource in CUSTOM_SUBCLASSES:
             all_versioned_resources.add(get_model_class(resource))
@@ -87,15 +87,6 @@ def autogenerate_events(f: TextIO):
 
     for version in sorted(KUBERNETES_VERSIONS):
         for resource in sorted(KUBERNETES_RESOURCES):
-            if resource == "Ingress":
-                f.write(
-                    textwrap.dedent(
-                        f"""\
-                    from robusta.integrations.kubernetes.ingress.hikaru.model import {resource} as {version}{resource}
-                    """
-                    )
-                )
-                continue
             f.write(
                 textwrap.dedent(
                     f"""\
