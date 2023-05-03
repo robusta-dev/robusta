@@ -36,7 +36,7 @@ Deploy a failing job. The job will fail after 60 seconds, then attempt to run ag
 .. details:: Output
 
     .. image:: /images/failingjobs.png
-        :alt: Alternative text for the image
+        :alt: Failing Kubernetes jobs notification on Slack
         :align: center
 
 
