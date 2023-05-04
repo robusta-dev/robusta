@@ -34,7 +34,7 @@ class HelmReleasesTriggerEvent(TriggerEvent):
         version = self.helm_release_payload.version
         return f"HelmReleases-{version}"
 
-    def filter_releases(self, status: List[str], namespace: str, names: List[str], for_sec: int) -> List[HelmRelease]:
+    def filter_releases(self, status: List[str], namespace: str, names: List[str], duration: int) -> List[HelmRelease]:
         filtered_list = []
         for release_data in self.helm_release_payload.data:
             if status and release_data.info.status not in status:
@@ -44,13 +44,14 @@ class HelmReleasesTriggerEvent(TriggerEvent):
             if namespace and release_data.namespace != namespace:
                 continue
 
-            # if the last deployed time is lesser than the `for_sec` time then dont append to the filtered list
-            last_deployed_utc = release_data.info.last_deployed.astimezone(pytz.utc)
-            now_utc = datetime.now().astimezone(pytz.utc)
-            time_delta = now_utc - last_deployed_utc
-            time_delta_seconds = time_delta.total_seconds()
-            if time_delta_seconds < for_sec:
-                continue
+            if duration:
+                # if the last deployed time is lesser than the `duration` time then dont append to the filtered list
+                last_deployed_utc = release_data.info.last_deployed.astimezone(pytz.utc)
+                now_utc = datetime.now().astimezone(pytz.utc)
+                time_delta = now_utc - last_deployed_utc
+                time_delta_seconds = time_delta.total_seconds()
+                if time_delta_seconds < duration:
+                    continue
 
             filtered_list.append(release_data)
 
@@ -78,22 +79,22 @@ class OnHelmReleaseBaseTrigger(BaseTrigger):
     trigger_name: str
     names: Optional[List[str]]
     namespace: Optional[str]
-    for_sec: Optional[int]
+    duration: Optional[int]
     rate_limit: Optional[int]
     firing_releases: Optional[List[HelmRelease]] = []
 
     def __init__(self, status: List[str],
-                trigger_name: str,
-                names: List[str] = [],
-                namespace: str = None,
-                for_sec: int = 900,
-                rate_limit: int = 14_400):
+                 trigger_name: str,
+                 names: List[str] = [],
+                 namespace: str = None,
+                 duration: int = 900,
+                 rate_limit: int = 14_400):
         super().__init__(
             status=status,
             trigger_name=trigger_name,
             names=names,
             namespace=namespace,
-            for_sec=for_sec,
+            duration=duration,
             rate_limit=rate_limit,
         )
 
@@ -110,7 +111,7 @@ class OnHelmReleaseBaseTrigger(BaseTrigger):
             return False
 
         filtered_releases = event.filter_releases(status=self.status, namespace=self.namespace, names=self.names,
-                                                  for_sec=self.for_sec)
+                                                  duration=self.duration)
 
         # Perform a rate limit for this release according to the rate_limit parameter
         # only one event will get fired per discovery cycle
@@ -169,17 +170,17 @@ class OnHelmReleaseOneTimeBaseTrigger(BaseTrigger):
 class OnHelmReleaseUnhealthyTrigger(OnHelmReleaseBaseTrigger):
     names: Optional[List[str]]
     namespace: Optional[str]
-    for_sec: Optional[int]
+    duration: Optional[int]
     rate_limit: Optional[int]
 
-    def __init__(self, names: List[str] = [], namespace: str = None, for_sec: int = 900,
+    def __init__(self, names: List[str] = [], namespace: str = None, duration: int = 900,
                  rate_limit: int = 14_400):
         super().__init__(
             status=["pending-install", "pending-upgrade", "pending-rollback", "uninstalling"],
             trigger_name="OnHelmReleaseUnhealthyTrigger",
             names=names,
             namespace=namespace,
-            for_sec=for_sec,
+            duration=duration,
             rate_limit=rate_limit,
         )
 
@@ -203,7 +204,7 @@ class OnHelmReleaseFailTrigger(OnHelmReleaseBaseTrigger, OnHelmReleaseOneTimeBas
             trigger_name="OnHelmReleaseFailTrigger",
             names=names,
             namespace=namespace,
-            for_sec=0,
+            duration=0,
             rate_limit=sys.maxsize,
         )
 
@@ -221,7 +222,7 @@ class OnHelmReleaseDeployedTrigger(OnHelmReleaseBaseTrigger, OnHelmReleaseOneTim
             trigger_name="OnHelmReleaseDeployedTrigger",
             names=names,
             namespace=namespace,
-            for_sec=0,
+            duration=0,
             rate_limit=sys.maxsize,
         )
 
@@ -239,7 +240,7 @@ class OnHelmReleaseUninstallTrigger(OnHelmReleaseBaseTrigger, OnHelmReleaseOneTi
             trigger_name="OnHelmReleaseUninstallTrigger",
             names=names,
             namespace=namespace,
-            for_sec=0,
+            duration=0,
             rate_limit=sys.maxsize,
         )
 
