@@ -30,7 +30,7 @@ Optional Settings
 Configuring the Jira sink
 ------------------------------------------------
 
-| To avoid too many Jira tickets, it's recommended to use :ref:`Sink Matchers <Sink Matchers>` to limit the number of created tickets.
+| To avoid too many Jira tickets, it's recommended to use :ref:`Sink Matchers <sink-matchers>` to limit the number of created tickets.
 
 | In the example below, tickets will be created only for the ``CPUThrottlingHigh`` and ``KubePodCrashLooping`` Prometheus alerts.
 

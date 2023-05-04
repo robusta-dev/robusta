@@ -1,5 +1,5 @@
 Enrich Custom Prometheus Alerts
-##############################
+#################################
 
 In the last tutorial we defined a custom Prometheus alert.
 
@@ -54,4 +54,4 @@ Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus
 Further Reading
 ---------------
 
-* View all :ref:`Prometheus Enrichment <Prometheus Enrichers> actions`
+* View all :ref:`Prometheus enrichment actions <Prometheus Enrichers>`
