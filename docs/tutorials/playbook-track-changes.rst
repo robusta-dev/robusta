@@ -67,10 +67,8 @@ The action is :ref:`resource_babysitter<resource_babysitter>` action, which itse
 ignores uninteresting changes. This action is a little unusual - most of the time *triggers* perform all the filtering
 and *actions* act on everything that reaches them.
 
-In the future we're planning to improve the trigger mechanism so that filtering like ``fields_to_monitor`` moves out of
-:ref:`resource_babysitter<resource_babysitter>` and into the ``on_deployment_update <on_deployment_update>` trigger
-itself.
-
+In the future we're planning to improve the trigger mechanism. Filters like ``fields_to_monitor`` will move from the
+:ref:`resource_babysitter<resource_babysitter>` into triggers like ``on_deployment_update <on_deployment_update>`.
 
 Adding Change Routing
 ------------------------------

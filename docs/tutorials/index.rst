@@ -27,7 +27,6 @@ Custom Alerts and Playbooks
 
    playbook-job-failure
    playbook-failed-liveness
-   playbook-route-alerts
    playbook-track-changes
    .. alert-custom-prometheus
    alert-custom-enrichment

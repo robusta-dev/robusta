@@ -40,7 +40,7 @@ First, duplicate duplicate your sink. You need a unique sink for each channel yo
         slack_channel: system-notifications
         api_key: secret-key
 
-Add a :ref:`matcher <Sink matchers>` to each sink, so it receives a subset of notifications:
+Add a :ref:`matcher <sink-matchers>` to each sink, so it receives a subset of notifications:
 
 
 .. code-block:: yaml

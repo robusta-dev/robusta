@@ -138,7 +138,7 @@ The second parameter to ``RateLimiter.mark_and_test`` defines a key used for che
 
 stop_processing
 --------------------------------------
-Normally, multiple actions run one after another. (See :ref:`Flow Control`.)
+Normally, multiple actions run one after another.
 
 A playbook can stop Robusta from running further actions by setting ``event.stop_processing = True``.
 

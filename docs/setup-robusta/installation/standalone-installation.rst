@@ -19,7 +19,7 @@ Install Robusta standalone, without integrating Prometheus. See Robusta's native
 Prerequisites
 ---------------------
 
-* A :ref:`supported Kubernetes cluster <Supported Kubernetes Clusters>`
+* A :ref:`supported Kubernetes cluster <Supported Clusters>`
 * Helm
 
 .. include:: ../_questions.rst

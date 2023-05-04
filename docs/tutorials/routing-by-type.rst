@@ -42,7 +42,7 @@ The first step is to duplicate your sink. You need two unique sinks - one for ea
 
 The sinks are nearly identical - only the ``name`` and ``slack_channel`` parameters vary.
 
-Now lets add a :ref:`matcher <Sink matchers>` to each sink, so it receives a subset of notifications:
+Now lets add a :ref:`matcher <sink-matchers>` to each sink, so it receives a subset of notifications:
 
 .. code-block:: yaml
 

@@ -89,6 +89,8 @@ In this example, the trigger was ``on_job_failure``. Robusta generated a notific
 3. ``job_events_enricher`` run ``kubectl get events`` and attach events related to this Job
 4. ``job_pod_enricher`` find the latest Pod in this Job and attach its information
 
+.. _robusta-or-prometheus-alerts:
+
 .. admonition:: Should I generate alerts with Robusta or with Prometheus?
 
     Robusta can respond to Prometheus alerts, or it can generate alerts itself. Most users mix and match these options, depending on their use case. Here are some guidelines:

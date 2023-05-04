@@ -2,7 +2,7 @@
 
 GitOps
 ====================
-We recommend doing a test install :ref:`without GitOps <Quick Install>` first. Then:
+We recommend doing a test install :ref:`without GitOps <Installation Guides>` first. Then:
 
 * :ref:`Install Robusta with ArgoCD <Install with ArgoCD>`
 * :ref:`Install Robusta with Flux <Install with Flux>`

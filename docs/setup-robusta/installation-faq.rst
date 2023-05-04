@@ -3,7 +3,7 @@ FAQ
 
 I have an error installing Robusta
 ================================================
-Please refer to the :ref:`Help` page.
+Please refer to :ref:`Help <Getting Support>` for common errors and solutions.
 
 Can I install Robusta without the cli?
 ========================================
@@ -17,7 +17,7 @@ Yes, using the cli is optional. It auto-generates helm values, but you can also 
     helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
     helm show values robusta/robusta
 
-2. Modify those values to your heart's content. (See our :ref:`Configuration Guide`.)
+2. Modify those values to your heart's content. Refer to the :ref:`Configuration Guide <Configuration Overview>` for details.
 
 3. Do a ``helm install``.
 

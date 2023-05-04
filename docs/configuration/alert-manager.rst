@@ -85,8 +85,8 @@ Out-of-cluster Prometheus Installations
 
 If AlertManager is located outside of your Kubernetes cluster then a few more steps are necessary:
 
-1. Enable two-way interactivity in :ref:`Robusta's configuration <Configuration Guide>` by setting ``disableCloudRouting: false``
-2. Make sure that your alerts contain a label named ``cluster_name`` which matches the :ref:`cluster_name defined in Robusta's configuration <Mandatory global config>`. This is necessary so that the Robusta cloud knows which cluster to forward events to.
+1. Enable two-way interactivity in :ref:`Robusta's configuration <Configuration Overview>` by setting ``disableCloudRouting: false``
+2. Make sure that your alerts contain a label named ``cluster_name`` which matches the :ref:`cluster_name defined in Robusta's configuration <Global Config>`. This is necessary so that the Robusta cloud knows which cluster to forward events to.
 3. Configure AlertManager as follows:
 
 .. admonition:: alertmanager.yaml
@@ -127,7 +127,7 @@ be configured **in addition** to updating AlertManager's configuration.
 That said, most users won't need to set this up. Robusta can usually figure out where Prometheus and
 other services are located. If the auto-discovery isn't working, you'll configure it manually.
 
-Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Helm Upgrade>`.
+Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
 
 .. code-block:: yaml
 

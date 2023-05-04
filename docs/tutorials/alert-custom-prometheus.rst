@@ -10,7 +10,7 @@ You can define new alerts in two ways using Robusta:
 
 These methods are not mutually exclusive. Robusta playbooks can respond to Prometheus alerts, or they can generate
 alerts themselves by listening directly to the Kubernetes APIServer. To better understand the trade-offs, refer to
-:ref:`Should I generate alerts with Robusta or with Prometheus?`
+:ref:`Should I generate alerts with Robusta or with Prometheus? <robusta-or-prometheus-alerts>`
 
 In this tutorial, we use the first method to generate a custom Prometheus alert using PromQL. In the next tutorial,
 we define a custom Robusta playbook that enhances the alert and makes it better.

@@ -67,4 +67,4 @@ If the :ref:`builtin actions <Actions Reference>` are insufficient, you can exte
 ``alert.pod`` is a Kubernetes pod object. It will exist if the Prometheus alert had a ``pod`` label and the pod is alive
 when the playbook runs. There are also ``node``, ``deployment``, and ``daemonset`` fields.
 
-Refer to :ref:`Custom Python Actions` for more details.
+Refer to :ref:`Developing New Actions` for more details.
