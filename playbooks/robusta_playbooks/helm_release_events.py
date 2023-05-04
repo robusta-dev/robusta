@@ -25,7 +25,7 @@ def create_helm_status_notification(event: HelmReleasesChangeEvent, params: Crea
         finding = Finding(
             title=title,
             source=FindingSource.HELM_RELEASE,
-            aggregation_key=f"on_helm_release_data_{helm_release.info.status}",
+            aggregation_key=f"${event.trigger_name}_{helm_release.info.status}",
             severity=HelmReleasesChangeEvent.get_severity(helm_release),
             starts_at=helm_release.info.last_deployed,
             ends_at=helm_release.info.last_deployed,
