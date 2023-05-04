@@ -29,7 +29,7 @@ Custom Alerts and Playbooks
    playbook-failed-liveness
    playbook-route-alerts
    playbook-track-changes
-   alert-custom-prometheus
+   .. alert-custom-prometheus
    alert-custom-enrichment
 
 .. _tutorials-notification-routing:
