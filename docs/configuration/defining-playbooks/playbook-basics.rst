@@ -1,7 +1,5 @@
 .. _customPlaybooks:
 
-.. _defining-playbooks:
-
 Playbook Basics
 ##################
 
