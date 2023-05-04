@@ -41,11 +41,12 @@ Testing Your Playbook
 
 Scale a deployment that exists in your cluster:
 
-TODO: provide yaml and better demo
+Run the following YAML files to simulate a deployment change
 
-.. code-block:: python
+.. code-block:: yaml
 
-   kubectl scale --replicas NEW_REPLICAS_COUNT deployments/DEPLOYMENT_NAME
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/crashpod/healthy.yaml
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/crashpod/broken.yaml
 
 A Robusta notification will arrive in your configured :ref:`sinks <Sinks Reference>`, showing exactly what changed in the deployment:
 

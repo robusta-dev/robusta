@@ -56,7 +56,11 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
 class FindingFields(ActionParams):
     """
     :var title: Finding title. Title can be templated with name/namespace/kind/node of the resource, if applicable
-    :var aggregation_key: Identifier of this finding
+    :var aggregation_key: Aggregation Keys are used for grouping similar types of notifications together. For example, all CrashLoopBackOff notifications should have the same Aggregation Key so that Sinks can group them together.
+
+            Generally, each instance of create_finding in your playbooks should specify a unique Aggregation Key, like “Crashing Pod” or “OOMKill”.
+
+            Aggregation Keys should generally not include Pod names or other strings that change. If you include dynamic data in the Aggregation Key, each unique Aggregation Key will create it’s own grouping.
     :var description: Finding description. Description can be templated
     :var severity: Finding severity. Allowed values: DEBUG, INFO, LOW, MEDIUM, HIGH
 
