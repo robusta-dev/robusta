@@ -33,6 +33,11 @@ You can trigger Robusta playbooks on the following events:
         :link: prometheus
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` Helm Releases Monitoring
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: helm-releases-monitoring
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` Scheduled Triggers
         :class-card: sd-bg-light sd-bg-text-light
         :link: scheduled
