@@ -47,9 +47,11 @@ class MattermostSender:
         self.sink_params = sink_params
 
     @classmethod
-    def __add_mattermost_title(cls, title: str, status: FindingStatus, severity: FindingSeverity) -> str:
+    def __add_mattermost_title(cls, title: str, status: FindingStatus, severity: FindingSeverity,
+                               add_silence_url: bool) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
-        return f"{status.to_emoji()} {status.name.lower()} - {icon} {severity.name} - **{title}**"
+        status_str: str = f"{status.to_emoji()} {status.name.lower()} - " if add_silence_url else ""
+        return f"{status_str}{icon} {severity.name} - **{title}**"
 
     @classmethod
     def __format_msg_attachments(cls, mattermost_blocks: List[str], msg_color: str) -> List[Dict]:
@@ -89,6 +91,7 @@ class MattermostSender:
             status: FindingStatus,
             severity: FindingSeverity,
             msg_color: str,
+            add_silence_url: bool,
     ):
 
         # Process attachment blocks
@@ -105,7 +108,8 @@ class MattermostSender:
         output_blocks = []
         header_block = {}
         if title:
-            title = self.__add_mattermost_title(title=title, status=status, severity=severity)
+            title = self.__add_mattermost_title(title=title, status=status, severity=severity,
+                                                add_silence_url=add_silence_url)
             header_block = self.__to_mattermost(HeaderBlock(title), self.sink_params.name)
         for block in other_blocks:
             output_blocks.append(self.__to_mattermost(block, self.sink_params.name))
@@ -155,4 +159,5 @@ class MattermostSender:
             status=status,
             severity=finding.severity,
             msg_color=msg_color,
+            add_silence_url=finding.add_silence_url,
         )
