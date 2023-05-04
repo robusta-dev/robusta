@@ -11,7 +11,7 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
     :var restart_count: Fire only after the specified number of restarts
     """
 
-    rate_limit: int = 3600
+    rate_limit: int = 14400
     restart_reason: str = None
     restart_count: int = 2
 
@@ -20,7 +20,7 @@ class PodCrashLoopTrigger(PodUpdateTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-        rate_limit: int = 3600,
+        rate_limit: int = 14400,
         restart_reason: str = None,
         restart_count: int = 2,
     ):
