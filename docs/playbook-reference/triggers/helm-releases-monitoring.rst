@@ -40,7 +40,7 @@ The following triggers are available:
 
             customPlaybooks:
               - actions:
-                - create_helm_status_notification:
+                - helm_status_notification:
                     message: "Helm release is in an unhealthy state" # optional
                 triggers:
                   - on_helm_release_unhealthy:
@@ -49,8 +49,13 @@ The following triggers are available:
                       duration: 1200 # optional
                       rate_limit: 900 # optional
 
-        ``create_helm_status_notification`` supports the following parameters:
+        ``helm_status_notification`` supports the following parameters:
             ``message``: Custom message for the action event. This field is optional.
+
+    .. image:: /images/helm-release-unhealthy.png
+      :width: 1000
+      :align: center
+
 
 .. _on_helm_release_fail:
 
@@ -71,25 +76,25 @@ The following triggers are available:
 
             customPlaybooks:
               - actions:
-                - create_helm_status_notification:
+                - helm_status_notification:
                     message: "Helm release failed" # optional
                 triggers:
                   - on_helm_release_fail:
                       names: ["demo-app"] # optional
                       namespace: "default" # optional
 
-        ``create_helm_status_notification`` supports the following parameters:
+        ``helm_status_notification`` supports the following parameters:
         * ``message``: Custom message for the action event. This field is optional.
 
     .. image:: /images/helm-release-failed.png
       :width: 1000
       :align: center
 
-.. _on_helm_release_deployed:
+.. _on_helm_release_deploy:
 
-.. details:: on_helm_release_deployed
+.. details:: on_helm_release_deploy
 
-    The ``on_helm_release_deployed`` event is triggered when a Helm release enters a ``deployed`` state. This is a one-time trigger, meaning that it only fires once when the release is deployed.
+    The ``on_helm_release_deploy`` event is triggered when a Helm release enters a ``deployed`` state. This is a one-time trigger, meaning that it only fires once when the release is deployed.
 
     **Available options**:
 
@@ -104,14 +109,14 @@ The following triggers are available:
 
             customPlaybooks:
               - actions:
-                - create_helm_status_notification:
+                - helm_status_notification:
                     message: "Helm release is deployed" # optional
                 triggers:
-                  - on_helm_release_deployed:
+                  - on_helm_release_deploy:
                       names: ["demo-app"] # optional
                       namespace: "default" # optional
 
-        ``create_helm_status_notification`` supports the following parameters:
+        ``helm_status_notification`` supports the following parameters:
             ``message``: Custom message for the action event. This field is optional.
 
     .. image:: /images/helm-release-deployed.png
@@ -138,12 +143,16 @@ The following triggers are available:
 
             customPlaybooks:
               - actions:
-                - create_helm_status_notification:
+                - helm_status_notification:
                     message: "Helm release was uninstalled" # optional
                 triggers:
                   - on_helm_release_uninstall:
                       names: ["demo-app"] # optional
                       namespace: "default" # optional
 
-        ``create_helm_status_notification`` supports the following parameters:
+        ``helm_status_notification`` supports the following parameters:
             ``message``: Custom message for the action event. This field is optional.
+
+    .. image:: /images/helm-release-uninstalled.png
+      :width: 1000
+      :align: center
