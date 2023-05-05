@@ -116,7 +116,10 @@ class PydanticModelDirective(SphinxDirective):
         content = sphinx.addnodes.desc_content()
 
         if field.field_info.description:
-            content.append(nodes.paragraph(text=field.field_info.description))
+            for line in field.field_info.description.splitlines():
+                if line == "|":
+                    line = "\n"
+                content.append(nodes.paragraph(text=line))
 
         if show_code:
             content.extend(cls.__document_field_example(field))
