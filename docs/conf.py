@@ -47,6 +47,7 @@ extensions = [
     "sphinx_immaterial",
     "sphinxcontrib.details.directive",
     "sphinx_jinja",
+    "sphinxext.rediraffe",
 ]
 
 
@@ -55,6 +56,24 @@ extensions = [
 redirects = {
     "/installation.html": "/setup-robusta/installation/index.html",
     "/catalog/actions/index.html": "/playbook-reference/actions/index.html",
+    # "/catalog/triggers/index.html": "",
+    # "/user-guide/configuration.html": "",
+    # "/architecture.html": "",
+    # "/upgrade.html": "",
+    # "/developer-guide/actions/findings-api.html": "",
+    # "/tutorials/my-first-custom-action.html": "",
+    # "/tutorials/my-first-custom-action.html?highlight=on_pod_create": "",
+    # "/user-guide/architecture.html": "",
+    # "/user-guide/self-hosting.html": "",
+    # "/getting-started/installation.html": "",
+    # "/catalog/actions/event-enrichment.html": "",
+    # "/tutorials/java-troubleshooting.html*": "",
+    # "/catalog/sinks/index.html": "",
+    # "/tutorials/prometheus-enrichment.html": "",
+    # "/user-guide/alert-manager.html": "",
+    # "/catalog/sinks/webhook.html": "",
+    # "/catalog/sinks/PagerDuty.html": "",
+    # "/catalog/actions/event-enrichment.html?highlight=silence": ""
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
