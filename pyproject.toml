@@ -109,6 +109,7 @@ all = ["Flask", "grafana-api", "watchdog", "dulwich", "better-exceptions", "Cair
 
 [tool.poetry.group.dev.dependencies]
 sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
+sphinxext-rediraffe = "^0.2.7"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
