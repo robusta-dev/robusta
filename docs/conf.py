@@ -49,6 +49,14 @@ extensions = [
     "sphinx_jinja",
 ]
 
+
+# sphinx redirects from old docs
+
+redirects = {
+    "/installation.html": "/setup-robusta/installation/index.html",
+    "/catalog/actions/index.html": "/playbook-reference/actions/index.html",
+}
+
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
 jinja_contexts = {}
 
