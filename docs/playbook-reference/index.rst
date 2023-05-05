@@ -4,6 +4,6 @@
    :hidden:
 
    overview
-   triggers/index
-   actions/index
+   ⚡️ Triggers <triggers/index>
+   💥 Actions <actions/index>
    examples
