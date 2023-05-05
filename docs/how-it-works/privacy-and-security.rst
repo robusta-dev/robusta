@@ -27,7 +27,7 @@ This is used, for example, to show you when deployments were updated and what YA
 
 All data in the SaaS platform is encrypted at rest and stored in accordance with industry standards.
 
-If necessary, the SaaS UI can be run :ref:`on-prem <Self hosted architecture>` as part of our paid plans.
+If necessary, the SaaS UI can be run on-prem as part of our paid plans. Contact support@robusta.dev for details.
 
 Censoring Sensitive Data
 *************************

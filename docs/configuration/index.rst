@@ -3,7 +3,7 @@
 Configuration Overview
 ==========================
 
-Follow this guide to configure Robusta after :ref:`installing it <Installation Guide>`. Configuration is done using Robusta's Helm values.
+Follow this guide to configure Robusta after :ref:`installing it <install>`. Configuration is done using Robusta's Helm values.
 
 Common Settings
 ^^^^^^^^^^^^^^^^^^

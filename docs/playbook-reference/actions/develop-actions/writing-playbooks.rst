@@ -31,7 +31,7 @@ Lets write a playbook action in Python:
         ])
 
 You'll need to package up the code as a playbook repository and load it into Robusta.
-See :ref:`here <Creating your own playbook repository>` for details.
+Refer to :ref:`Loading External Actions`.
 
 Using your action
 -------------------------------------------------------------
