@@ -40,7 +40,7 @@
 
    configuration/index
    configuration/sending-notifications
-   configuration/sinks/index
+   🔔 Sinks Reference <configuration/sinks/index>
    configuration/configuration-secrets
    configuration/alert-manager
    configuration/embedded-prometheus

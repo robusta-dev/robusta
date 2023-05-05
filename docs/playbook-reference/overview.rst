@@ -18,12 +18,12 @@ In this Section
 .. grid::
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Triggers Reference
+    .. grid-item-card:: ⚡️ Triggers Reference
         :class-card: sd-bg-light sd-bg-text-light
         :link: triggers/index
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;`  Actions Reference
+    .. grid-item-card:: 💥 Actions Reference
         :class-card: sd-bg-light sd-bg-text-light
         :link: actions/index
         :link-type: doc
@@ -34,12 +34,12 @@ Elsewhere in the Docs
 .. grid::
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Sinks Reference
+    .. grid-item-card:: 🔔 Sinks Reference
         :class-card: sd-bg-light sd-bg-text-light
         :link: sinks-reference
         :link-type: ref
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Playbook Tutorials
+    .. grid-item-card:: 🎓 Tutorials
         :class-card: sd-bg-light sd-bg-text-light
         :link: playbook-tutorials
         :link-type: ref
