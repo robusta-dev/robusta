@@ -49,6 +49,8 @@ extensions = [
     "sphinx_jinja",
 ]
 
+suppress_warnings = ['autosectionlabel.*']
+
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
 jinja_contexts = {}
 
