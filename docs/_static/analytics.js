@@ -15,11 +15,8 @@ function setupCopyListener() {
 function trackPageViewEvent() {
   const pageUrl = window.location.href;
   trackEvent('DocsPageview', {'pageUrl': pageUrl});
-  if (pageUrl.endsWith('/installation.html')) {
-    trackEvent('InstallationPageview', {'pageUrl': pageUrl});
-  }
-  if (pageUrl.endsWith('/argocd-installation.html')) {
-    trackEvent('ArgoCDInstallationPageview', {'pageUrl': pageUrl});
+  if (pageUrl.includes('setup-robusta')) {
+    trackEvent('NewInstallationPageview', {'pageUrl': pageUrl});
   }
 }
 
