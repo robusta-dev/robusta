@@ -53,21 +53,21 @@ The following triggers are available for crashing Pods:
         * If A `namespace` is defined without a `name` than all pods in that namespace will be ignored for this trigger.
 
 
-        An example playbook using :ref:`pod_graph_enricher<pod_graph_enricher>` to show memory graphs of OOMKilled Pods:
+    An example playbook using :ref:`pod_graph_enricher<pod_graph_enricher>` to show memory graphs of OOMKilled Pods:
 
-        .. code-block:: yaml
+    .. code-block:: yaml
 
-            customPlaybooks:
-            - triggers:
-              - on_pod_oom_killed:
-                  rate_limit: 900
-                  exclude:
-                    - name: "oomkilled-pod"
-                      namespace: "default"
-              actions:
-              - pod_graph_enricher:
-                  resource_type: Memory
-                  display_limits: true
+        customPlaybooks:
+        - triggers:
+          - on_pod_oom_killed:
+              rate_limit: 900
+              exclude:
+                - name: "oomkilled-pod"
+                  namespace: "default"
+          actions:
+          - pod_graph_enricher:
+              resource_type: Memory
+              display_limits: true
 
 .. _on_container_oom_killed:
 
