@@ -2,11 +2,11 @@
 
 // noinspection DuplicatedCode
 function setupCopyListener() {
-  let codeCells = document.querySelectorAll("pre[id^=codecell]");
+  let codeCells = document.querySelectorAll("code");
   codeCells.forEach(element => element.addEventListener('copy', (event) => {
     reportCopy(element);
   }));
-  let copyButtons = document.querySelectorAll("button[data-clipboard-target*=codecell]");
+  let copyButtons = document.querySelectorAll("button[data-clipboard-target*=code]");
   copyButtons.forEach(element => element.addEventListener('click', (event) => {
     reportCopy(element);
   }));
@@ -38,8 +38,9 @@ function reportCopy(baseElement) {
     const path = window.location.pathname;
     const page = path.split("/").pop();
     if (page && page.endsWith('html')) {
-      trackEvent('copied from a codeblock on: ' + page)
+      trackEvent('copied from a codeblock in the docs');
+      trackEvent('copied from a codeblock on: ' + page);
     }
-    trackEvent('copied from codeblock: ' + id_element.getAttribute('id'))
+    trackEvent('copied from codeblock: ' + id_element.getAttribute('id'));
   }
 }
