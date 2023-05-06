@@ -47,7 +47,7 @@ extensions = [
     "sphinx_immaterial",
     "sphinxcontrib.details.directive",
     "sphinx_jinja",
-    "sphinxext.rediraffe",
+    "sphinx_reredirects",
 ]
 
 suppress_warnings = ['autosectionlabel.*']
@@ -55,8 +55,8 @@ suppress_warnings = ['autosectionlabel.*']
 # sphinx redirects from old docs
 
 redirects = {
-    "/installation.html": "/setup-robusta/installation/index.html",
-    "/catalog/actions/index.html": "/playbook-reference/actions/index.html",
+    "installation.html": "setup-robusta/installation/index.html",
+    "catalog/actions/index.html": "playbook-reference/actions/index.html",
     # "/catalog/triggers/index.html": "",
     # "/user-guide/configuration.html": "",
     # "/architecture.html": "",
