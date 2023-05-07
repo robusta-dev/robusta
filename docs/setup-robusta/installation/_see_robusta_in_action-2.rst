@@ -15,7 +15,7 @@ Testing out Prometheus alerts
 
 Want to see for yourself why Robusta alerts are better? Run these commands that generate sample alerts:
 
-TODO: first demonstrate with simulated alert, then show you how to configure.
+first demonstrate with simulated alert, then show you how to configure.
 
 Testing out APIServer alerts
 ****************************
