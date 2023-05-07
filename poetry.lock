@@ -868,8 +868,8 @@ files = [
 
 [package.dependencies]
 autopep8 = ">=1.5.5"
-black = ">=20.8b1,<=21.5b2"
-kubernetes = "26.1.0"
+black = ">=20.8b1,<=23.1.0"
+kubernetes = ">=23.6.0,<=26.1.0"
 "ruamel.yaml" = ">=0.16.12"
 
 [[package]]
@@ -1083,7 +1083,7 @@ version = "26.1.0"
 description = "Kubernetes python client"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
 files = [
     {file = "kubernetes-26.1.0-py2.py3-none-any.whl", hash = "sha256:e3db6800abf7e36c38d2629b5cb6b74d10988ee0cba6fba45595a7cbe60c0042"},
     {file = "kubernetes-26.1.0.tar.gz", hash = "sha256:5854b0c508e8d217ca205591384ab58389abdae608576f9c9afc35a3c76a366c"},
@@ -1093,7 +1093,7 @@ files = [
 certifi = ">=14.05.14"
 google-auth = ">=1.0.1"
 python-dateutil = ">=2.5.3"
-pyyaml = ">=3.12"
+pyyaml = ">=5.4.1"
 requests = "*"
 requests-oauthlib = "*"
 setuptools = ">=21.0.0"
@@ -3181,4 +3181,4 @@ all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "dulwich"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.1"
-content-hash = "351fdd99051bf63feccd86156f74dbeef545f5590b8128fab191f5ae1ffe36f9"
+content-hash = "18779f3075cff7b7bfa4a9aefaba7ce0cde1eaa646f51a2556c70bacfcf51864"
