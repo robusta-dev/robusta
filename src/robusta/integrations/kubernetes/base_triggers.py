@@ -118,7 +118,6 @@ class K8sBaseTrigger(BaseTrigger):
         # get_execution_event_type() that it creates a KubernetesAnyChangeEvent object but it really creates
         # a different concrete event class using the logic below
         event_class = KIND_TO_EVENT_CLASS.get(event.k8s_payload.kind.lower())
-        logging.warning(f"{event.k8s_payload.kind} {event.k8s_payload.description}")
         if event_class is None:
             logging.info(
                 f"classes for kind {event.k8s_payload.kind} cannot be found. skipping. description {event.k8s_payload.description}"
