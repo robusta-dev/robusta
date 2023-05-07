@@ -3181,4 +3181,4 @@ all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "dulwich"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.1"
-content-hash = "18779f3075cff7b7bfa4a9aefaba7ce0cde1eaa646f51a2556c70bacfcf51864"
+content-hash = "60161ec0a20f4aa5232d6a3b3e35d89e4abf382cc5b323a1f764ccf300f71b68"
