@@ -38,13 +38,13 @@ Prometheus Alerts are defined on Kubernetes using the *PrometheusRule CRD*.
 
     When Robusta's embedded Prometheus Stack is enabled, the Prometheus Operator is installed automatically.
 
-Define a ``PrometheusRule`` to TODO.
+.. Define a ``PrometheusRule`` to TODO.
 
-.. code-block:: yaml
+.. .. code-block:: yaml
 
-    TODO
+..     TODO
 
-Apply this PrometheusRule to your cluster using ``kubectl``:
+.. Apply this PrometheusRule to your cluster using ``kubectl``:
 
 .. code-block:: bash
 

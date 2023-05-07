@@ -68,7 +68,7 @@ ignores uninteresting changes. This action is a little unusual - most of the tim
 and *actions* act on everything that reaches them.
 
 In the future we're planning to improve the trigger mechanism. Filters like ``fields_to_monitor`` will move from the
-:ref:`resource_babysitter<resource_babysitter>` into triggers like ``on_deployment_update <on_deployment_update>`.
+:ref:`resource_babysitter<resource_babysitter>` into triggers like `on_deployment_update <on_deployment_update>`.
 
 Adding Change Routing
 ------------------------------
@@ -93,14 +93,14 @@ Here is the latter method:
       - some_sink_name
 
 
-Check Your Understanding
-------------------------------
-Change the playbook configuration so it monitors changes to any Pod's image,
-whether that Pod is part of a Deployment or not.
+.. Check Your Understanding
+.. ------------------------------
+.. Change the playbook configuration so it monitors changes to any Pod's image,
+.. whether that Pod is part of a Deployment or not.
 
-.. details:: Solution
+.. .. details:: Solution
 
-    TODO: show solution
+..     TODO: show solution
 
 Cleanup
 ------------------------------
