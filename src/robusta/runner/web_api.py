@@ -1,6 +1,7 @@
 import logging
 import time
 from typing import List
+from urllib.error import HTTPError
 
 import requests
 
@@ -9,6 +10,25 @@ from robusta.core.model.helm_release import HelmRelease
 
 
 class WebApi:
+
+    @staticmethod
+    def __post(url: str, data: dict, retries=1, timeout_delay=1):
+        response = None
+
+        for _ in range(retries):
+            try:
+                response = requests.post(url, json=data)
+                status_code = response.status_code
+                if status_code == 200:
+                    return response
+                response.raise_for_status()
+            except Exception as e:
+                raise e
+
+            time.sleep(timeout_delay)
+
+        return response
+
     @staticmethod
     def run_manual_action(action_name: str, action_params=None, sinks=None, retries=1, timeout_delay=1):
         if sinks is None:
@@ -23,21 +43,19 @@ class WebApi:
             "action_params": action_params,
             "sinks": sinks,
         }
-        for _ in range(retries):
-            try:
-                response = requests.post(manual_action_url, json=data)
-                status_code = response.status_code
-                if status_code == 200:
-                    return status_code
 
-                logging.error(
-                    f"Failed to run manual action \naction_name:{action_name}\n"
-                    f"Reason: {response.reason}\nStatus Code{status_code}"
-                )
-            except Exception:
-                logging.error("Error sending manual action request", exc_info=True)
+        try:
+            response = WebApi.__post(url=manual_action_url, data=data, retries=retries, timeout_delay=timeout_delay)
+            status_code = response.status_code
+        except HTTPError as e:
+            status_code = e.status
 
-            time.sleep(timeout_delay)
+            logging.error(
+                f"Failed to run manual action \naction_name:{action_name}\n"
+                f"Reason: {e.reason}\nStatus Code{status_code}"
+            )
+        except Exception:
+            logging.error("Error sending manual action request", exc_info=True)
 
         return status_code
 
@@ -47,23 +65,20 @@ class WebApi:
 
         url = f"http://127.0.0.1:{PORT}/api/helm-releases"
         data = {
-            "version": 1,
             "data": HelmRelease.list_to_json(release_data),
         }
-        for _ in range(retries):
-            try:
-                response = requests.post(url, json=data)
-                status_code = response.status_code
-                if status_code == 200:
-                    return status_code
 
-                logging.error(
-                    f"Failed to send helm release events\n"
-                    f"Reason: {response.reason}\nStatus Code{status_code}"
-                )
-            except Exception:
-                logging.error("Error sending helm release events request", exc_info=True)
+        try:
+            response = WebApi.__post(url=url, data=data, retries=retries, timeout_delay=timeout_delay)
+            status_code = response.status_code
+        except HTTPError as e:
+            status_code = e.status
 
-            time.sleep(timeout_delay)
+            logging.error(
+                f"Failed to send helm release events\n"
+                f"Reason: {e.reason}\nStatus Code{status_code}"
+            )
+        except Exception:
+            logging.error("Error sending helm release events request", exc_info=True)
 
         return status_code

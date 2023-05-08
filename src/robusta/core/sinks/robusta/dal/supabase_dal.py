@@ -315,6 +315,7 @@ class SupabaseDal:
             self.client.table(JOBS_TABLE)
             .select("*")
             .filter("account_id", "eq", self.account_id)
+            .filter("cluster_id", "eq", self.cluster)
             .filter("deleted", "eq", False)
             .execute()
         )
@@ -370,6 +371,7 @@ class SupabaseDal:
             self.client.table(HELM_RELEASES_TABLE)
             .select("*")
             .filter("account_id", "eq", self.account_id)
+            .filter("cluster_id", "eq", self.cluster)
             .execute()
         )
         if res.get("status_code") not in [200]:
@@ -381,8 +383,9 @@ class SupabaseDal:
         return [HelmRelease.from_db_row(helm_release) for helm_release in res.get("data")]
 
     def __to_db_helm_release(self, helm_release: HelmRelease) -> Dict[Any, Any]:
-        db_helm_release = helm_release.to_dict()
+        db_helm_release = helm_release.dict()
         db_helm_release["account_id"] = self.account_id
+        db_helm_release["cluster_id"] = self.cluster
         db_helm_release["service_key"] = helm_release.get_service_key()
         db_helm_release["updated_at"] = "now()"
         return db_helm_release
@@ -409,6 +412,7 @@ class SupabaseDal:
             self.client.table(HELM_RELEASES_TABLE)
             .delete()
             .eq("account_id", self.account_id)
+            .eq("cluster_id", self.cluster)
             .eq("service_key", helm_release.get_service_key())
         )
         status_code = res.get("status_code")
@@ -417,7 +421,6 @@ class SupabaseDal:
             logging.error(f"Failed to delete helm release {helm_release} error: {res.get('data')}")
             self.handle_supabase_error()
             raise Exception(f"remove deleted helm release failed. status: {status_code}")
-
 
     @staticmethod
     def __delete_patch(supabase_request_obj: QueryRequestBuilder) -> Dict[str, Any]:

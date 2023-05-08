@@ -1,55 +1,46 @@
-from typing import Optional
-
 from robusta.api import (
-    ActionParams,
     action,
-    HelmReleasesChangeEvent,
-    Finding, FindingSource
+    HelmReleasesEvent,
+    Finding, FindingSource,
+    MarkdownBlock
 )
 import logging
 
-from robusta.core.reporting import MarkdownBlock
-
-
-class CreateHelmStatusNotificationParams(ActionParams):
-    message: Optional[str] = ""
-
 
 @action
-def create_helm_status_notification(event: HelmReleasesChangeEvent, params: CreateHelmStatusNotificationParams):
-    for helm_release in event.helm_releases:
-        logging.info(f"received - helm releases change event: {helm_release.namespace}/{helm_release.name}")
+def helm_status_notification(event: HelmReleasesEvent):
+    logging.info(f"received - helm releases change event: {event.helm_release.namespace}/{event.helm_release.name}")
 
-        title = f"{params.message if params.message else f'Helm release - status: {helm_release.info.status}'}"
+    title = f'Helm release {event.helm_release.namespace}/{event.helm_release.name} - version: {event.helm_release.version} - status: {event.helm_release.info.status}'
 
-        finding = Finding(
-            title=title,
-            source=FindingSource.HELM_RELEASE,
-            aggregation_key=f"{event.trigger_name}_{helm_release.info.status}",
-            severity=HelmReleasesChangeEvent.get_severity(helm_release),
-            starts_at=helm_release.info.last_deployed,
-            ends_at=helm_release.info.last_deployed,
-        )
+    finding = Finding(
+        title=title,
+        source=FindingSource.HELM_RELEASE,
+        aggregation_key=event.get_aggregation_key(),
+        severity=HelmReleasesEvent.get_severity(event.helm_release),
+        starts_at=event.helm_release.info.get_last_deployed(),
+        ends_at=event.helm_release.info.get_last_deployed(),
+    )
 
-        chart_info = ""
-        if helm_release.chart:
-            chart_info = f"\nChart Information:\n\n" \
-                         f"  ● *Name*: `{helm_release.chart.metadata.name}`\n\n" \
-                         f"  ● *Version*: `{helm_release.chart.metadata.version}`\n\n\n"
+    chart_info = ""
+    if event.helm_release.chart:
+        chart_info = f"\nChart Information:\n\n" \
+                     f"  ● *Name*: `{event.helm_release.chart.metadata.name}`\n\n" \
+                     f"  ● *Version*: `{event.helm_release.chart.metadata.version}`\n\n\n"
 
-        finding.add_enrichment(
-            [
-                MarkdownBlock(
-                    f"Helm release `{helm_release.namespace}/{helm_release.name}` is currently in the `{helm_release.info.status}` status\n\n"
-                    f"Release information:\n\n"
-                    f"  ● *Name*: `{helm_release.name}`\n\n"
-                    f"  ● *Namespace*: `{helm_release.namespace}`\n\n"
-                    f"  ● *First Deployed*: `{helm_release.info.first_deployed.strftime('%b %d, %Y, %I:%M:%S %p%z')}`\n\n"
-                    f"  ● *Last Deployed*: `{helm_release.info.last_deployed.strftime('%b %d, %Y, %I:%M:%S %p%z')}`\n\n"
-                    f"  ● *Description*: `{helm_release.info.description}`\n\n"
-                    f"{chart_info}"
-                ),
-            ]
-        )
+    finding.add_enrichment(
+        [
+            MarkdownBlock(
+                f"Helm release `{event.helm_release.namespace}/{event.helm_release.name}` is currently in the `{event.helm_release.info.status}` status\n\n"
+                f"Release information:\n\n"
+                f"  ● *Name*: `{event.helm_release.name}`\n\n"
+                f"  ● *Namespace*: `{event.helm_release.namespace}`\n\n"
+                f"  ● *First Deployed*: `{event.helm_release.info.get_first_deployed().strftime('%b %d, %Y, %I:%M:%S %p%z')}`\n\n"
+                f"  ● *Last Deployed*: `{event.helm_release.info.get_last_deployed().strftime('%b %d, %Y, %I:%M:%S %p%z')}`\n\n"
+                f"  ● *Description*: `{event.helm_release.info.description}`\n\n"
+                f"{chart_info}"
+            ),
+        ]
+    )
 
-        event.add_finding(finding)
+    event.add_finding(finding)

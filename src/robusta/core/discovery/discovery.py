@@ -261,17 +261,17 @@ class Discovery:
         try:
             continue_ref: Optional[str] = None
             for _ in range(DISCOVERY_MAX_BATCHES):
-                secrets = client.CoreV1Api().list_namespaced_secret(namespace="", label_selector=f"owner=helm",
-                                                                    _continue=continue_ref)
+                secrets = client.CoreV1Api().list_secret_for_all_namespaces(label_selector=f"owner=helm",
+                                                                            _continue=continue_ref)
                 if not secrets.items:
-                    logging.info(
+                    logging.debug(
                         "[Discovery] No helm data available",
                         exc_info=True,
                     )
                     break
 
                 for secret_item in secrets.items:
-                    if not secret_item.data or not secret_item.data['release']:
+                    if not secret_item.data or not secret_item.data.get("release", None):
                         continue
 
                     decoded_release_row = HelmRelease.from_api_server(secret_item.data['release'])

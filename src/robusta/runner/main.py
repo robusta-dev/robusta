@@ -20,7 +20,7 @@ from robusta.utils.server_start import ServerStart
 
 def main():
     init_logging()
-    ServerStart.set_pod_start_time()
+    ServerStart.set()
     if add_custom_certificate(ADDITIONAL_CERTIFICATE):
         logging.info("added custom certificate")
 
