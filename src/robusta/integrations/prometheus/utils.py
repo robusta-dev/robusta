@@ -26,8 +26,8 @@ class PrometheusAuthorization:
     )
 
     @classmethod
-    def get_authorization_headers(cls, params: PrometheusParams) -> Dict:
-        if params.prometheus_auth:
+    def get_authorization_headers(cls, params: Optional[PrometheusParams] = None) -> Dict:
+        if params and params.prometheus_auth:
             return {"Authorization": params.prometheus_auth.get_secret_value()}
         elif cls.azure_authorization:
             return {"Authorization": (f"Bearer {cls.bearer_token}")}
@@ -96,10 +96,14 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
         )
 
         if response.status_code == 401:
-            if not PrometheusAuthorization.request_new_token():
-                logging.error(f"Authorization error for Prometheus found under {prom.url}. {response.reason})")
-
-            return
+            if PrometheusAuthorization.request_new_token():
+                prom.headers = PrometheusAuthorization.get_authorization_headers()
+                response = prom._session.get(
+                    f"{prom.url}/api/v1/query",
+                    verify=prom.ssl_verification,
+                    headers=prom.headers,
+                    params={"query": "example", **params},
+                )
 
         response.raise_for_status()
     except (ConnectionError, HTTPError) as e:
