@@ -11,7 +11,7 @@ Robusta can monitor your Helm releases, notify you about updates, and take actio
 
 Prerequisites
 ---------------
-Robusta UI Sink must be connected to Robusta. Refer to :ref:`Robusta UI`.
+To use Helm Triggers, the :ref:`Robusta UI` sink must be enabled..
 
 Triggers
 -----------
@@ -23,34 +23,32 @@ The following triggers are available:
 .. details:: on_helm_release_unhealthy
 
 
-    The ``on_helm_release_unhealthy`` event is triggered when a Helm release remains in an unhealthy state for a prolonged period. Specifically, this trigger is activated when the release is in one of the following states for more than X seconds (which can be set using the ``duration`` field): ``uninstalling``, ``pending-install``, ``pending-upgrade``, or ``pending-rollback``.
+    ``on_helm_release_unhealthy`` triggers when a Helm release remains unhealthy for over ``duration`` seconds.  Unhealthy states are: ``uninstalling``, ``pending-install``, ``pending-upgrade``, and ``pending-rollback``.
+
 
     **Available options**:
 
-    * ``names``: A list of Helm release names that this trigger will monitor. If you leave this field empty, the trigger will monitor all release names specified in the namespace. This field is optional.
-    * ``namespace``: This field specifies the namespace that the trigger will monitor. If you leave this field empty, the trigger will monitor across all namespaces. This field is optional.
-    * ``duration``: This field specifies the threshold time, in seconds, before the trigger could be initiated, and the release status should continue to stay within this threshold time before the trigger is initiated. This field is optional.
-    * ``rate_limit``: Limit firing to once every `rate_limit` seconds. This field is optional.
+    * ``rate_limit``: Limit firing to once every `rate_limit` seconds.
+    * ``names``: List of Helm release names for this trigger to monitor. Leaving this field empty monitors all release names in the namespace. Optional.
+    * ``namespace``: The Helm release namespace for this trigger to monitor. Leaving this field empty monitors all release namespace in the cluster. Optional.
+    * ``duration``: Minimum time, in seconds, that a release must remain unhealthy before the trigger fires. If the unhealthy state lasts less than this duration, the trigger won't fire. Default value is 14400 seconds (4 Hours). Optional.
 
     .. admonition:: Example
 
-        This example demonstrates how to set up a trigger that watches a Helm release for an unhealthy state. If the release remains in a transient state for more than 1200 seconds, the `on_helm_release_unhealthy` trigger is activated.
+        Monitor the ``demo-app`` Helm release in the ``default`` namespace. Send notifications when it is unhealthy for more than 20 minutes (1200 seconds). Do not send further notifications for at least 15 minutes (900 seconds).
 
         .. code-block:: yaml
 
             customPlaybooks:
-              - actions:
-                - helm_status_notification:
-                    message: "Helm release is in an unhealthy state" # optional
-                triggers:
-                  - on_helm_release_unhealthy:
-                      names: ["demo-app"] # optional
-                      namespace: "default" # optional
-                      duration: 1200 # optional
-                      rate_limit: 900 # optional
+              - triggers:
+                - on_helm_release_unhealthy:
+                    names: ["demo-app"] # optional
+                    namespace: "default" # optional
+                    duration: 1200 # optional
+                    rate_limit: 900
+                actions:
+                  - helm_status_enricher: {}
 
-        ``helm_status_notification`` supports the following parameters:
-            ``message``: Custom message for the action event. This field is optional.
 
     .. image:: /images/helm-release-unhealthy.png
       :width: 1000
@@ -61,30 +59,26 @@ The following triggers are available:
 
 .. details:: on_helm_release_fail
 
-    The ``on_helm_release_fail`` event is triggered when a Helm release enters a ``failed`` state. This is a one-time trigger, meaning that it only fires once when the release fails.
+    ``on_helm_release_fail` is triggered when a Helm release enters a ``failed`` state. This is a one-time trigger, meaning that it only fires once when the release fails.
 
     **Available options**:
 
-    * ``names``: A list of Helm release names that this trigger will monitor. If you leave this field empty, the trigger will monitor all release names specified in the namespace. This field is optional.
-    * ``namespace``: This field specifies the namespace that the trigger will monitor. If you leave this field empty, the trigger will monitor across all namespaces. This field is optional.
+    * ``names``: List of Helm release names for this trigger to monitor. Leaving this field empty monitors all release names in the namespace. Optional.
+    * ``namespace``: The Helm release namespace for this trigger to monitor. Leaving this field empty monitors all release namespace in the cluster. Optional.
 
     .. admonition:: Example
 
-        This example demonstrates how to set up a trigger that watches a Helm release for an ``failed`` state.
+        Monitor the ``demo-app`` Helm release in the ``default`` namespace and send notifications when it is failing.
 
         .. code-block:: yaml
 
             customPlaybooks:
-              - actions:
-                - helm_status_notification:
-                    message: "Helm release failed" # optional
-                triggers:
-                  - on_helm_release_fail:
-                      names: ["demo-app"] # optional
-                      namespace: "default" # optional
-
-        ``helm_status_notification`` supports the following parameters:
-        * ``message``: Custom message for the action event. This field is optional.
+              - triggers:
+                - on_helm_release_fail:
+                    names: ["demo-app"] # optional
+                    namespace: "default" # optional
+                actions:
+                  - helm_status_enricher: {}
 
     .. image:: /images/helm-release-failed.png
       :width: 1000
@@ -98,26 +92,22 @@ The following triggers are available:
 
     **Available options**:
 
-    * ``names``: A list of Helm release names that this trigger will monitor. If you leave this field empty, the trigger will monitor all release names specified in the namespace. This field is optional.
-    * ``namespace``: This field specifies the namespace that the trigger will monitor. If you leave this field empty, the trigger will monitor across all namespaces. This field is optional.
+    * ``names``: List of Helm release names for this trigger to monitor. Leaving this field empty monitors all release names in the namespace. Optional.
+    * ``namespace``: The Helm release namespace for this trigger to monitor. Leaving this field empty monitors all release namespace in the cluster. Optional.
 
     .. admonition:: Example
 
-        This example demonstrates how to set up a trigger that watches a Helm release for an ``deployed`` state.
+        Monitor the ``demo-app`` Helm release in the ``default`` namespace and send notifications when it is deployed.
 
         .. code-block:: yaml
 
             customPlaybooks:
-              - actions:
-                - helm_status_notification:
-                    message: "Helm release is deployed" # optional
-                triggers:
-                  - on_helm_release_deploy:
-                      names: ["demo-app"] # optional
-                      namespace: "default" # optional
-
-        ``helm_status_notification`` supports the following parameters:
-            ``message``: Custom message for the action event. This field is optional.
+              - triggers:
+                - on_helm_release_deploy:
+                    names: ["demo-app"] # optional
+                    namespace: "default" # optional
+                actions:
+                  - helm_status_enricher: {}
 
     .. image:: /images/helm-release-deployed.png
       :width: 1000
@@ -132,26 +122,22 @@ The following triggers are available:
 
     **Available options**:
 
-    * ``names``: A list of Helm release names that this trigger will monitor. If you leave this field empty, the trigger will monitor all release names specified in the namespace. This field is optional.
-    * ``namespace``: This field specifies the namespace that the trigger will monitor. If you leave this field empty, the trigger will monitor across all namespaces. This field is optional.
+    * ``names``: List of Helm release names for this trigger to monitor. Leaving this field empty monitors all release names in the namespace. Optional.
+    * ``namespace``: The Helm release namespace for this trigger to monitor. Leaving this field empty monitors all release namespace in the cluster. Optional.
 
     .. admonition:: Example
 
-        This example demonstrates how to set up a trigger that watches a Helm release for an ``uninstalled`` state.
+        Monitor the ``demo-app`` Helm release in the ``default`` namespace and send notifications when it is uninstalled.
 
         .. code-block:: yaml
 
             customPlaybooks:
-              - actions:
-                - helm_status_notification:
-                    message: "Helm release was uninstalled" # optional
-                triggers:
-                  - on_helm_release_uninstall:
-                      names: ["demo-app"] # optional
-                      namespace: "default" # optional
-
-        ``helm_status_notification`` supports the following parameters:
-            ``message``: Custom message for the action event. This field is optional.
+              - triggers:
+                - on_helm_release_uninstall:
+                    names: ["demo-app"] # optional
+                    namespace: "default" # optional
+                actions:
+                  - helm_status_enricher: {}
 
     .. image:: /images/helm-release-uninstalled.png
       :width: 1000
