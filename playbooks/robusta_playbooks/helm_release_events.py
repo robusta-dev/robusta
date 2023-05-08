@@ -8,7 +8,7 @@ import logging
 
 
 @action
-def helm_status_notification(event: HelmReleasesEvent):
+def helm_status_enricher(event: HelmReleasesEvent):
     logging.info(f"received - helm releases change event: {event.helm_release.namespace}/{event.helm_release.name}")
 
     title = f'Helm release {event.helm_release.namespace}/{event.helm_release.name} - version: {event.helm_release.version} - status: {event.helm_release.info.status}'
