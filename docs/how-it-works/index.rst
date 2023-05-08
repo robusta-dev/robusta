@@ -9,6 +9,10 @@ The `Robusta Open Source <https://github.com/robusta-dev/robusta>`_ is a rules-e
 2. **Actively collects observability data:** When noteworthy events occur, Robusta actively gathers and correlates information such as logs, graphs, and thread dumps.
 3. **Sends notifications:** Based on your preferences, Robusta notifies in :ref:`sinks <Sinks Reference>` like Slack, MSTeams, and PagerDuty
 
+
+.. image:: /images/architecture-overview.png
+    :width: 800px
+
 To get a feel for playbooks, let's explore two examples:
 
 * :ref:`Automatically Investigate a Prometheus Alert` *(Prometheus required)*

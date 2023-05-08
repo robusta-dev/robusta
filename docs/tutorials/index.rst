@@ -5,11 +5,13 @@
 Overview
 ================================
 
-This section is optimized for quick learning by example. If you prefer deep reference guides, refer to
+This section is optimized for learning by example. If you prefer reference guides, refer to
 :ref:`Configuration Overview` and :ref:`How it works`.
 
 Discover Builtin Features
 ---------------------------
+
+No customization needed. Here's a teaser of what Robusta does out of the box:
 
 .. toctree::
    :maxdepth: 1
@@ -21,6 +23,8 @@ Discover Builtin Features
 
 Custom Alerts and Playbooks
 ------------------------------------
+
+Define your own alerts. Customize the data shown in alert notifications.
 
 .. toctree::
    :maxdepth: 1
@@ -36,6 +40,8 @@ Custom Alerts and Playbooks
 Notification Routing
 ----------------------
 
+Send alerts to the right people.
+
 .. toctree::
    :maxdepth: 1
 
@@ -47,6 +53,8 @@ Notification Routing
 Automatic Remediation
 ------------------------
 
+Fix problems automatically.
+
 .. toctree::
    :maxdepth: 1
 
@@ -54,6 +62,8 @@ Automatic Remediation
 
 Application Troubleshooting
 ----------------------------
+
+Troubleshoot, debug, and profile Kubernetes applications faster.
 
 .. toctree::
    :maxdepth: 1

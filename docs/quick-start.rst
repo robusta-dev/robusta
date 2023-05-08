@@ -4,7 +4,7 @@
 
 :hide-toc:
 
-Quick Start
+Get Started
 ===================
 
 Install Robusta
@@ -27,7 +27,8 @@ Install Robusta
 
         Make your existing alerts better. Attach pod logs. Automatic alert insights.
 
-Using a monitoring tool other than Prometheus? See all integrations.
+Using a monitoring tool other than Prometheus?
+Use :ref:`Robusta without Prometheus <install-barebones>`.
 
 Learn Robusta
 ^^^^^^^^^^^^^^^^

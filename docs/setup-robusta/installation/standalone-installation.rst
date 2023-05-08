@@ -8,7 +8,8 @@ Barebones Installation
 
 *Estimated time: 5 minutes*
 
-Install Robusta standalone, without integrating Prometheus. See Robusta's native capabilities.
+Robusta normally uses the APIServer and Prometheus as data-sources. It's possible to disable Prometheus and still benefit
+from Robusta's other features, like notifications on crashing pods and OOMKills.
 
 .. warning::
 
