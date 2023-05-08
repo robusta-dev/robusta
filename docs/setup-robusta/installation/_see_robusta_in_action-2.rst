@@ -15,8 +15,18 @@ Testing out Prometheus alerts
 
 Want to see for yourself why Robusta alerts are better? Run these commands that generate sample alerts:
 
-first demonstrate with simulated alert, then show you how to configure.
+.. first demonstrate with simulated alert, then show you how to configure.
 
+.. .. code-block:: bash
+..    :name: cb-apply-crashpod
+
+..    kubectl apply -f https://gist.githubusercontent.com/robusta-lab/283609047306dc1f05cf59806ade30b6/raw
+
+
+.. .. admonition:: Example Slack Message
+
+..     .. image:: /images/simulatedprometheusalert.png
+      
 Testing out APIServer alerts
 ****************************
 

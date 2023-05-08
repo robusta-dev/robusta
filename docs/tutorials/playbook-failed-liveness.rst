@@ -47,4 +47,4 @@ This playbook uses the :ref:`on_kubernetes_warning_event_create<on_kubernetes_wa
 
 It uses the :ref:`create_finding <create_finding>` action to generate a notification message, and :ref:`event_resource_events <event_resource_events>` action to gather all other events on the same resource in the near past.
 
-.. improve based on comments at https://github.com/robusta-dev/robusta/issues/799#event-8873234835
+..  improve based on comments at https://github.com/robusta-dev/robusta/issues/799#event-8873234835
