@@ -31,11 +31,11 @@ The following triggers are available:
     * ``rate_limit``: Limit firing to once every `rate_limit` seconds.
     * ``names``: List of Helm release names for this trigger to monitor. Leaving this field empty monitors all release names in the namespace. Optional.
     * ``namespace``: The Helm release namespace for this trigger to monitor. Leaving this field empty monitors all release namespace in the cluster. Optional.
-    * ``duration``: Minimum time, in seconds, that a release must remain unhealthy before the trigger fires. If the unhealthy state lasts less than this duration, the trigger won't fire. Default value is 14400 seconds (4 Hours). Optional.
+    * ``duration``: Minimum time, in seconds, that a release must remain unhealthy before the trigger fires. If the unhealthy state lasts less than this duration, the trigger won't fire. Default value is 900 seconds (15 minutes). Optional.
 
     .. admonition:: Example
 
-        Monitor the ``demo-app`` Helm release in the ``default`` namespace. Send notifications when it is unhealthy for more than 20 minutes (1200 seconds). Do not send further notifications for at least 15 minutes (900 seconds).
+        Monitor the ``demo-app`` Helm release in the ``default`` namespace. Send notifications when it is unhealthy for more than 15 minutes (900 seconds). Do not send further notifications for at least 4 hours (14400 seconds).
 
         .. code-block:: yaml
 
@@ -44,8 +44,8 @@ The following triggers are available:
                 - on_helm_release_unhealthy:
                     names: ["demo-app"] # optional
                     namespace: "default" # optional
-                    duration: 1200 # optional
-                    rate_limit: 900
+                    duration: 900 # optional
+                    rate_limit: 14400
                 actions:
                   - helm_status_enricher: {}
 
