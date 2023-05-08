@@ -1,9 +1,9 @@
 Enrich Custom Prometheus Alerts
 #################################
 
-In the last tutorial we defined a custom Prometheus alert.
+.. In the last tutorial we defined a custom Prometheus alert.
 
-We now configure a Robusta playbook to enhance that alert.
+We now configure a Robusta playbook to enhance a Prometheus alert.
 
 Prerequisites
 ---------------------------------

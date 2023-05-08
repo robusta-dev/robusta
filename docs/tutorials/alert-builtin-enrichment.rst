@@ -36,7 +36,9 @@ Testing out Prometeheus alerts
 
    robusta playbooks trigger prometheus_alert alert_name=KubePodCrashLooping namespace=default pod_name=example-pod
 
-TODO
+.. admonition:: Example Slack Message
+
+    .. image:: /images/simulatedprometheusalert.png
 
 
 Testing out APIServer alerts
