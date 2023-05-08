@@ -45,6 +45,7 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 Pod Enrichers (Crashes)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
 These actions add context for specific Pod-related errors.
 
 They're less general than the above actions, and usually designed for a specific error like CrashLoopBackOff.
