@@ -96,13 +96,32 @@ Robusta is an open source observability tool for Kubernetes, which extends Prome
         * Route alerts by namespace, team, and severity
         * Not just Prometheus. Send notifications for rollouts/changes too
         * Remediate alerts with custom commands
-        * :ref:`Many integrations <Sinks Reference>`, including Slack, MSTeams, OpsGenie, and PagerDuty
+        * :ref:`Many integrations <Sinks Reference>`, including Slack, MSTeams, OpsGenie, PagerDuty, and JIRA
 
     .. grid-item::
-       :columns: 6
+        :columns: 6
 
-       .. image:: /images/prometheus-alert-with-robusta.png
-           :width: 800px
+        .. md-tab-set::
+
+            .. md-tab-item:: Crashing Pod
+
+               .. image:: /images/prometheus-alert-with-robusta.png
+                   :width: 800px
+
+            .. md-tab-item:: OOMKill
+
+               .. image:: /images/oomkillpod.png
+                   :width: 800px
+
+            .. md-tab-item:: Stuck Job
+
+               .. image:: /images/failingjobs.png
+                   :width: 800px
+
+            .. md-tab-item:: JIRA Integration
+
+               .. image:: /images/jira_example.png
+                   :width: 800px
 
 Robusta is used in production by hundreds of teams. It monitors infrastructure for Fortune 500 companies, MSPs, and startups.
 
