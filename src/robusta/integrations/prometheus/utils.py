@@ -11,12 +11,17 @@ from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
 
+AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
+AZURE_TOKEN_ENDPOINT = os.environ.get(
+    "AZURE_TOKEN_ENDPOINT", f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/token"
+)
+
 
 class PrometheusAuthorization:
     bearer_token: str = ""
     azure_authorization: bool = (
         os.environ.get("AZURE_CLIENT_ID", "")
-        or os.environ.get("AZURE_CLIENT_ID", "")
+        or os.environ.get("AZURE_TENANT_ID", "")
         or os.environ.get("AZURE_CLIENT_SECRET", "")
     )
 
@@ -34,22 +39,22 @@ class PrometheusAuthorization:
         if cls.azure_authorization:
             try:
                 res = requests.post(
-                    url=f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/token",
+                    url=AZURE_TOKEN_ENDPOINT,
                     headers={"Content-Type": "application/x-www-form-urlencoded"},
                     data={
                         "grant_type": "client_credentials",
                         "client_id": os.environ.get("AZURE_CLIENT_ID"),
                         "client_secret": os.environ.get("AZURE_CLIENT_SECRET"),
-                        "resource": "https://prometheus.monitor.azure.com",
+                        "resource": AZURE_RESOURCE,
                     },
                 )
             except Exception:
                 logging.exception("Unexpected error when trying to generate azure access token.")
-                return
+                return False
 
             if not res.ok:
                 logging.error(f"Could not generate an azure access token. {res.reason}")
-                return
+                return False
 
             cls.bearer_token = res.json().get("access_token")
             logging.info("Generated new azure access token.")
