@@ -55,22 +55,22 @@ suppress_warnings = ['autosectionlabel.*']
 # sphinx redirects from old docs
 
 redirects = {
-    "installation.html": "setup-robusta/installation/index.html",
-    "catalog/actions/index.html": "playbook-reference/actions/index.html",
-    "user-guide/configuration.html": "configuration/index.html",
-    "architecture.html": "how-it-works/architecture.html",
-    "upgrade.html": "setup-robusta/upgrade.html",
-    "developer-guide/actions/findings-api.html": "playbook-reference/actions/develop-actions/findings-api.html",
-    "tutorials/my-first-custom-action.html": "playbook-reference/actions/develop-actions/index.html",
-    "user-guide/self-hosting.html": "structure/how-it-works/oss-vs-saas.html",
-    "getting-started/installation.html": "setup-robusta/installation/all-in-one-installation.html",
-    "tutorials/java-troubleshooting.html*": "tutorials/application-troubleshooting-java.html",
-    "catalog/sinks/index.html": "configuration/sinks/index.html",
-    "tutorials/prometheus-enrichment.html": "tutorials/alert-custom-enrichment.html",
-    "user-guide/alert-manager.html": "configuration/alert-manager.html",
-    "catalog/sinks/webhook.html": "configuration/sinks/webhook.html",
-    "catalog/sinks/PagerDuty.html": "configuration/sinks/PagerDuty.html",
-    "catalog/actions/event-enrichment.html*": "playbook-reference/actions/event-enrichment.htm"
+    "installation.html": "/setup-robusta/installation/index.html",
+    "catalog/actions/index.html": "/playbook-reference/actions/index.html",
+    "user-guide/configuration.html": "/configuration/index.html",
+    "architecture.html": "/how-it-works/architecture.html",
+    "upgrade.html": "/setup-robusta/upgrade.html",
+    "developer-guide/actions/findings-api.html": "/playbook-reference/actions/develop-actions/findings-api.html",
+    "tutorials/my-first-custom-action.html": "/playbook-reference/actions/develop-actions/index.html",
+    "user-guide/self-hosting.html": "/how-it-works/oss-vs-saas.html",
+    "getting-started/installation.html": "/setup-robusta/installation/all-in-one-installation.html",
+    "tutorials/java-troubleshooting.html": "/tutorials/application-troubleshooting-java.html",
+    "catalog/sinks/index.html": "/configuration/sinks/index.html",
+    "tutorials/prometheus-enrichment.html": "/tutorials/alert-custom-enrichment.html",
+    "user-guide/alert-manager.html": "/configuration/alert-manager.html",
+    "catalog/sinks/webhook.html": "/configuration/sinks/webhook.html",
+    "catalog/sinks/PagerDuty.html": "/configuration/sinks/PagerDuty.html",
+    "catalog/actions/event-enrichment.html": "/playbook-reference/actions/event-enrichment.html"
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
