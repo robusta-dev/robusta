@@ -22,7 +22,6 @@ Robusta can take many automated actions, in response to events in your cluster.
 Built-in Actions
 -----------------------
 
-
 .. grid:: 1 1 2 2
     :gutter: 3
 

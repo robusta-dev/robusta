@@ -87,6 +87,10 @@ h2, h3 {
     color: var(--md-color-details-active);
 }
 
+.md-header__button:not(.focus-visible) {
+    color: #27C499;
+}
+
 .md-source {
     opacity: 1;
     color: var(--md-color-details);
@@ -265,9 +269,9 @@ h2, h3 {
 }
 
 /* Disable Dark Mode */
-[data-md-component="palette"] {
+/*[data-md-component="palette"] {
     display: none;
-}
+}*/
 
 #learn-how {
     margin-bottom: 20px !important;

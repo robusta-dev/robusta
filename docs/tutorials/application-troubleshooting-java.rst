@@ -37,7 +37,7 @@ You should receive a message (by default in Slack) with the troubleshooting opti
   :width: 600
   :align: center
 
-Click the buttons in Slack to run jmap or jstack. See :ref:`Java Troubleshooting Actions` for more information on what each of the debugging choices do.
+Click the buttons in Slack to run jmap or jstack. See :ref:`Java Troubleshooting` for more information on what each of the debugging choices do.
 
 As an example, here is jmap output showing the application's memory usage:
 
@@ -48,5 +48,5 @@ As an example, here is jmap output showing the application's memory usage:
 Learn more
 ^^^^^^^^^^^^^^
 
-* :ref:`Java Troubleshooting Actions`
+* :ref:`Java Troubleshooting`
 * :ref:`Manual Triggers`

@@ -31,7 +31,7 @@ Lets write a playbook action in Python:
         ])
 
 You'll need to package up the code as a playbook repository and load it into Robusta.
-See :ref:`here <Creating your own playbook repository>` for details.
+Refer to :ref:`Loading External Actions`.
 
 Using your action
 -------------------------------------------------------------
@@ -138,7 +138,7 @@ The second parameter to ``RateLimiter.mark_and_test`` defines a key used for che
 
 stop_processing
 --------------------------------------
-Normally, multiple actions run one after another. (See :ref:`Flow Control`.)
+Normally, multiple actions run one after another.
 
 A playbook can stop Robusta from running further actions by setting ``event.stop_processing = True``.
 

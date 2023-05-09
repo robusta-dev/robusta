@@ -36,14 +36,14 @@ Deploy a failing job. The job will fail after 60 seconds, then attempt to run ag
 .. details:: Output
 
     .. image:: /images/failingjobs.png
-        :alt: Alternative text for the image
+        :alt: Failing Kubernetes jobs notification on Slack
         :align: center
 
 
 How it Works
 -------------
 
-This playbook uses the :ref:`on_job_failure` trigger, that fires once for each Job failure.
+This playbook uses the :ref:`on_job_failure<on_job_failure>` trigger, that fires once for each Job failure.
 
 It uses the :ref:`create_finding <create_finding>` action to generate a notification message, and three additional actions to
 attach extra information: :ref:`job_info_enricher <job_info_enricher>`, :ref:`job_events_enricher <job_events_enricher>`,

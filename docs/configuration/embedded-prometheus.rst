@@ -7,7 +7,7 @@ We provide defaults that were fine-tuned for low-noise and out-of-the-box integr
 
 Default alerts were tested on the following clusters, to identify and remove false positives:
 
-TODO: show table with testing results.
+.. TODO: show table with testing results.
 
 Alerts are based on excellent work done in the kubernetes-mixin project, with additional modifications by Robusta.
 

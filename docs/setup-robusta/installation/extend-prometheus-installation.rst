@@ -12,7 +12,7 @@ Install Robusta alongside an existing Prometheus. See what Robusta can do.
 Prerequisites
 ---------------------
 
-* A :ref:`supported Kubernetes cluster <Supported Kubernetes Clusters>`
+* A :ref:`supported Kubernetes cluster <Supported Clusters>`
 * A Prometheus installation
 * Helm
 

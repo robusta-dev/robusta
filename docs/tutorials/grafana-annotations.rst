@@ -1,7 +1,6 @@
 Remediate Alerts
 ===================
 
-TODO
 
 For example, we can write annotations to Grafana when deployments update:
 

@@ -1,14 +1,15 @@
 Enrich Custom Prometheus Alerts
-##############################
+#################################
 
-In the last tutorial we defined a custom Prometheus alert.
+.. In the last tutorial we defined a custom Prometheus alert.
 
-We now configure a Robusta playbook to enhance that alert.
+We now configure a Robusta playbook to enhance a Prometheus alert.
 
 Prerequisites
 ---------------------------------
 
-Complete the previous tutorial, :ref:`Define Custom Prometheus Alerts`.
+.. Complete the previous tutorial, :ref:`Define Custom Prometheus Alerts`.
+You must have some Prometheus alerts already defined. Ex: HostHighCpuLoad
 
 
 Enriching a Custom Alert
@@ -53,4 +54,4 @@ Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus
 Further Reading
 ---------------
 
-* View all :ref:`Prometheus Enrichment <Prometheus Enrichers> actions`
+* View all :ref:`Prometheus enrichment actions <Prometheus Enrichers>`

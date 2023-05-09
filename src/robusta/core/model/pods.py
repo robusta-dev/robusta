@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from hikaru.model import Container, ContainerState, ContainerStatus, Pod
 from pydantic import BaseModel
@@ -71,7 +71,7 @@ class PodContainer:
             if container_name == container.name:
                 return container
         return None
-    
+
     @staticmethod
     def get_status(pod: Pod, container_name: str) -> Optional[ContainerStatus]:
         for status in pod.status.containerStatuses:
@@ -82,8 +82,8 @@ class PodContainer:
 
 class PodResources(BaseModel):
     pod_name: str
-    cpu: float
-    memory: int
+    cpu: float  # whole cores
+    memory: int  # Mb
 
     @staticmethod
     def parse_cpu(cpu: str) -> float:
@@ -132,6 +132,34 @@ def pod_requests(pod: Pod) -> PodResources:
 
 def pod_limits(pod: Pod) -> PodResources:
     return pod_resources(pod, ResourceAttributes.limits)
+
+
+def pod_other_limits(pod: Pod) -> Dict[str, float]:
+    # for additional defined resources like GPU
+    return pod_other_resources(pod, ResourceAttributes.limits)
+
+
+def pod_other_requests(pod: Pod) -> Dict[str, float]:
+    # for additional defined resources like GPU
+    return pod_other_resources(pod, ResourceAttributes.requests)
+
+
+def pod_other_resources(pod: Pod, resource_attribute: ResourceAttributes) -> Dict[str, float]:
+    standard_resources = ["cpu", "memory"]
+    total_resources: Dict[str, float] = {}
+    for container in pod.spec.containers:
+        try:
+            requests = container.object_at_path(["resources", resource_attribute.name])  # requests or limits
+            for resource_type in requests.keys():
+                if resource_type in standard_resources:
+                    continue
+                if resource_type not in total_resources:
+                    total_resources[resource_type] = float(requests[resource_type])
+                else:
+                    total_resources[resource_type] += float(requests[resource_type])
+        except Exception:
+            logging.error(f"failed to parse {resource_attribute.name} {container.resources}", exc_info=True)
+    return total_resources
 
 
 def pod_resources(pod: Pod, resource_attribute: ResourceAttributes) -> PodResources:

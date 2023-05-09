@@ -23,6 +23,7 @@
 .. toctree::
    :maxdepth: 4
    :hidden:
+   :caption: 🚀 Get Started
 
    quick-start
 
@@ -40,7 +41,7 @@
 
    configuration/index
    configuration/sending-notifications
-   configuration/sinks/index
+   🔔 Sinks Reference <configuration/sinks/index>
    configuration/configuration-secrets
    configuration/alert-manager
    configuration/embedded-prometheus
@@ -50,14 +51,14 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: Playbooks
+   :caption: 🎨 Playbooks
    :hidden:
 
    playbook-reference/index
 
 .. toctree::
    :maxdepth: 4
-   :caption: Tutorials
+   :caption: 🎓 Tutorials
    :hidden:
 
    tutorials/index
@@ -70,40 +71,59 @@
    help
 
 Welcome to the Robusta Docs
-=============================
+===============================
 
-Robusta is an observability and monitoring platform built for Kubernetes. It is commonly used as an extension to Prometheus, or standalone.
+Robusta is an open source observability tool for Kubernetes, which extends Prometheus. Using automation rules, Robusta automatically fetches the data you need to investigate, and attaches it to your alerts.
 
-
-.. grid:: 2
+.. grid:: 1 1 2 2
     :margin: 0
     :padding: 0
 
     .. grid-item::
-        :columns: 6
 
-        **Why Use Robusta?**
+        **Examples**
 
-        * Get better alerts - with automatic insights
-        * Spend less time defining alerts - with opinionated defaults
-        * Remove blind-spots - with direct APIServer monitoring
-        * Reduce alert fatigue - with smart silencing and alert routing
+        * When alerts fire on Pods, fetch Pod logs
+        * When Jobs fail, show data from the last run
+        * When Pods are Pending, see why (``kubectl get events``)
+        * When common alerts in ``kube-prometheus-stack`` fire, suggest fixes
+        * Optionally send alerts to ChatGPT for analysis (disabled by default)
 
-        **Key Capabilities**
+        **More Features**
 
-        * Correlate Prometheus alerts with pod logs, k8s events, and more
-        * Notify on Kubernetes-native errors without PromQL
-        * Alert analysis powered by `ChatGPT <https://github.com/robusta-dev/kubernetes-chatgpt-bot/>`_ and expert runbooks
-        * Remediate alerts with automatic commands
+        * Batteries included. No need to define alerts or automations. (We regularly test our alerts on GKE, EKS, AKS, and RKE to fine-tune.)
+        * Route alerts by namespace, team, and severity
+        * Not just Prometheus. Send notifications for rollouts/changes too
+        * Remediate alerts with custom commands
+        * :ref:`Many integrations <Sinks Reference>`, including Slack, MSTeams, OpsGenie, PagerDuty, and JIRA
 
     .. grid-item::
-       :columns: 6
 
-       .. image:: /images/architecture-overview.png
-          :align: center
+        .. md-tab-set::
 
-Robusta is used in production by hundreds of teams. It monitors infrastructure for the Hubble Space Telescope,
-Fortune 500 companies, and startups of all sizes.
+            .. md-tab-item:: Crashing Pod
+
+               .. image:: /images/prometheus-alert-with-robusta.png
+                   :width: 800px
+
+            .. md-tab-item:: OOMKill
+
+               .. image:: /images/oomkillpod.png
+                   :width: 800px
+
+            .. md-tab-item:: Stuck Job
+
+               .. image:: /images/failingjobs.png
+                   :width: 800px
+
+            .. md-tab-item:: JIRA Integration
+
+               .. image:: /images/jira_example.png
+                   :width: 800px
+
+Robusta is used in production by hundreds of teams. It monitors infrastructure for Fortune 500 companies, MSPs, and startups.
+
+It can install everything you need to monitor Kubernetes from scratch, or it can be added to an existing Prometheus.
 
 .. button-ref:: quick-start
     :color: primary

@@ -1,24 +1,23 @@
 Robusta UI
 #################
 
-Robusta can send Kubernetes issues and events in your Kubernetes cluster to the Robusta UI.
+Robusta can send issues and events in your Kubernetes cluster to the `Robusta UI <https://home.robusta.dev/>`_.
 
-Example Output:
+.. image:: /images/robusta-ui.gif
+  :align: center
 
-    .. image:: /images/robusta-demo.gif
-        :width: 1000
-        :align: center
 
-To configure Robusta UI, use our CLI to generate a token. Run:
+Configuring the Robusta UI Sink
+------------------------------------------------
+
+Use the ``robusta`` CLI to generate a token:
 
 .. code-block::
    :name: cb-robusta-ui-sink-generate-token
 
     robusta integrations ui
 
-
-Configuring the Robusta UI sink
-------------------------------------------------
+Add a new sink to your Helm values, under ``sinksConfig``, with the token you generated:
 
 .. admonition:: Add this to your generated_values.yaml
 
@@ -26,28 +25,21 @@ Configuring the Robusta UI sink
       :name: cb-robusta-ui-sink-config
 
         sinksConfig:
-            - robusta_sink:
-                name: robusta_ui_sink
-                token: <your-token>
-                ttl_hours: 4380
+        - robusta_sink:
+            name: robusta_ui_sink
+            token: <your-token>
+            ttl_hours: 4380
 
-.. note::
+Perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
-    **Inactive** Robusta clusters have a default 6 months **data retention** span (4380 hours).
+Handling Short-Lived Clusters in the UI
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   To prevent short-lived clusters from fililng up the UI, you can remove clusters that haven't communicated for more than a few hours by setting ``ttl_hours = <number-time-span>``.
+By default, inactive Robusta clusters will be kept in the UI for 6 months **data retention**. (4380 hours)
 
-Save the file and run
+If you have many short-lived clusters, you can remove them from the UI automatically once they stop running.
+To do so, configure a shorter retention period by setting ``ttl_hours = <hours>``.
 
-.. code-block:: bash
-   :name: cb-add-victorops-sink
-
-    helm upgrade robusta robusta/robusta --values=generated_values.yaml
-
-**Example Output:**
-
-For full overview of Robusta UI features check our `home page <https://home.robusta.dev>`_.
-
-.. image:: /images/robusta-ui-example.png
-    :width: 1000
-    :align: center
+More Information about the UI
+-------------------------------------
+For more information on UI features, view `robusta.dev <https://home.robusta.dev>`_.

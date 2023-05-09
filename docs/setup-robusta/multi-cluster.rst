@@ -10,7 +10,7 @@ It's important to add all clusters to the same Robusta account.
 Installing Robusta on multiple clusters
 ------------------------------------------
 
-1. Install Robusta on the first cluster, as described in :ref:`Installation Guides`.
+1. Install Robusta on the first cluster, as described in :ref:`install`.
 
 2. Do a ``helm install`` on each additional cluster, **re-using** your existing ``generated_values.yaml``.
 

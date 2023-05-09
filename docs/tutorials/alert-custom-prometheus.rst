@@ -10,7 +10,7 @@ You can define new alerts in two ways using Robusta:
 
 These methods are not mutually exclusive. Robusta playbooks can respond to Prometheus alerts, or they can generate
 alerts themselves by listening directly to the Kubernetes APIServer. To better understand the trade-offs, refer to
-:ref:`Should I generate alerts with Robusta or with Prometheus?`
+:ref:`Should I generate alerts with Robusta or with Prometheus? <robusta-or-prometheus-alerts>`
 
 In this tutorial, we use the first method to generate a custom Prometheus alert using PromQL. In the next tutorial,
 we define a custom Robusta playbook that enhances the alert and makes it better.
@@ -38,13 +38,13 @@ Prometheus Alerts are defined on Kubernetes using the *PrometheusRule CRD*.
 
     When Robusta's embedded Prometheus Stack is enabled, the Prometheus Operator is installed automatically.
 
-Define a ``PrometheusRule`` to TODO.
+.. Define a ``PrometheusRule`` to TODO.
 
-.. code-block:: yaml
+.. .. code-block:: yaml
 
-    TODO
+..     TODO
 
-Apply this PrometheusRule to your cluster using ``kubectl``:
+.. Apply this PrometheusRule to your cluster using ``kubectl``:
 
 .. code-block:: bash
 

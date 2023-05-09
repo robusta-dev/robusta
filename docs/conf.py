@@ -47,15 +47,36 @@ extensions = [
     "sphinx_immaterial",
     "sphinxcontrib.details.directive",
     "sphinx_jinja",
+    "sphinx_reredirects",
 ]
 
-# for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
-jinja_contexts = {
+suppress_warnings = ['autosectionlabel.*']
+
+# sphinx redirects from old docs
+
+redirects = {
+    "installation.html": "/master/setup-robusta/installation/index.html",
+    "catalog/actions/index.html": "/master/playbook-reference/actions/index.html",
+    "user-guide/configuration.html": "/master/configuration/index.html",
+    "architecture.html": "/master/how-it-works/architecture.html",
+    "upgrade.html": "/master/setup-robusta/upgrade.html",
+    "developer-guide/actions/findings-api.html": "/master/playbook-reference/actions/develop-actions/findings-api.html",
+    "tutorials/my-first-custom-action.html": "/master/playbook-reference/actions/develop-actions/index.html",
+    "user-guide/self-hosting.html": "/master/how-it-works/oss-vs-saas.html",
+    "getting-started/installation.html": "/master/setup-robusta/installation/all-in-one-installation.html",
+    "tutorials/java-troubleshooting.html": "/master/tutorials/application-troubleshooting-java.html",
+    "catalog/sinks/index.html": "/master/configuration/sinks/index.html",
+    "tutorials/prometheus-enrichment.html": "/master/tutorials/alert-custom-enrichment.html",
+    "user-guide/alert-manager.html": "/master/configuration/alert-manager.html",
+    "catalog/sinks/webhook.html": "/master/configuration/sinks/webhook.html",
+    "catalog/sinks/PagerDuty.html": "/master/configuration/sinks/PagerDuty.html",
+    "catalog/actions/event-enrichment.html": "/master/playbook-reference/actions/event-enrichment.html"
 }
 
-jinja_filters = {
-    "to_snake_case": lambda s: ''.join(['_'+c.lower() if c.isupper() else c for c in s]).lstrip('_')
-}
+# for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
+jinja_contexts = {}
+
+jinja_filters = {"to_snake_case": lambda s: "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")}
 
 # for sphinx.ext.inheritance_diagram
 # inheritance_graph_attrs = dict(rankdir="TB", size='""')
@@ -91,7 +112,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "Robusta"
-copyright = "2022, Robusta"
+copyright = "2023, Robusta"
 author = "Natan Yellin"
 
 # The short X.Y version.

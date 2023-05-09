@@ -17,7 +17,8 @@ Lifecycle of a Robusta Event
 
 Compatibility of Actions and Events
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This is discussed in :ref:`Trigger-Action Compatibility` from the perspective of a user who configures playbooks in YAML.
+
+This is discussed in :ref:`Matching Actions to Triggers` from the perspective of a user who configures playbooks in YAML.
 
 Let's look at this from the perspective of a developer who is writing a playbook action in Python.
 

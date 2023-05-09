@@ -49,8 +49,7 @@ Robusta also supports alert-remediations:
 
 ![](./docs/images/alert_on_hpa_reached_limit1.png)
 
-[Over 50 types of automations and enrichments are built-in »](https://docs.robusta.dev/master/catalog/actions/index.html)
-
+[Over 50 types of automations and enrichments are built-in »](https://docs.robusta.dev/master/playbook-reference/actions/index.html
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## 📒 Installing Robusta
@@ -79,10 +78,10 @@ helm install robusta robusta/robusta -f ./generated_values.yaml
 ## 📝 Documentation
 Interested? Learn more about Robusta
 
-* [Architecture](https://docs.robusta.dev/master/architecture.html)
-* [Upgrade and Uninstall](https://docs.robusta.dev/master/configuration/upgrade.html)
-* [Configuration Guide](https://docs.robusta.dev/master/configuration/configuration.html)
-* [Triggers](https://docs.robusta.dev/master/automation/triggers/index.html)
+* [Architecture](https://docs.robusta.dev/master/how-it-works/architecture.html)
+* [Upgrade and Uninstall](https://docs.robusta.dev/master/setup-robusta/upgrade.html)
+* [Configuration Guide](https://docs.robusta.dev/master/configuration/index.html)
+* [Triggers](https://docs.robusta.dev/master/playbook-reference/triggers/index.html)
 
 [Full documentation »](https://docs.robusta.dev/master/index.html)
 <p align="right">(<a href="#top">back to top</a>)</p>

@@ -41,11 +41,12 @@ Testing Your Playbook
 
 Scale a deployment that exists in your cluster:
 
-TODO: provide yaml and better demo
+Run the following YAML files to simulate a deployment change
 
-.. code-block:: python
+.. code-block:: yaml
 
-   kubectl scale --replicas NEW_REPLICAS_COUNT deployments/DEPLOYMENT_NAME
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/crashpod/healthy.yaml
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/crashpod/broken.yaml
 
 A Robusta notification will arrive in your configured :ref:`sinks <Sinks Reference>`, showing exactly what changed in the deployment:
 
@@ -66,10 +67,8 @@ The action is :ref:`resource_babysitter<resource_babysitter>` action, which itse
 ignores uninteresting changes. This action is a little unusual - most of the time *triggers* perform all the filtering
 and *actions* act on everything that reaches them.
 
-In the future we're planning to improve the trigger mechanism so that filtering like ``fields_to_monitor`` moves out of
-:ref:`resource_babysitter<resource_babysitter>` and into the ``on_deployment_update <on_deployment_update>` trigger
-itself.
-
+In the future we're planning to improve the trigger mechanism. Filters like ``fields_to_monitor`` will move from the
+:ref:`resource_babysitter<resource_babysitter>` into triggers like `on_deployment_update <on_deployment_update>`.
 
 Adding Change Routing
 ------------------------------
@@ -94,14 +93,14 @@ Here is the latter method:
       - some_sink_name
 
 
-Check Your Understanding
-------------------------------
-Change the playbook configuration so it monitors changes to any Pod's image,
-whether that Pod is part of a Deployment or not.
+.. Check Your Understanding
+.. ------------------------------
+.. Change the playbook configuration so it monitors changes to any Pod's image,
+.. whether that Pod is part of a Deployment or not.
 
-.. details:: Solution
+.. .. details:: Solution
 
-    TODO: show solution
+..     TODO: show solution
 
 Cleanup
 ------------------------------

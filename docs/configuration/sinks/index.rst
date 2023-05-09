@@ -10,19 +10,20 @@ Sinks Reference
    :maxdepth: 1
 
    slack
+   ms-teams
    RobustaUI
    telegram
    discord
-   kafka
    DataDog
-   ms-teams
    mattermost
+   Opsgenie
+   PagerDuty
+   VictorOps
+   jira
    webhook
    file
    webex
-   Opsgenie
-   VictorOps
-   PagerDuty
+   kafka
    sinks-development
 
 Robusta can report issues and events in your Kubernetes cluster to various destinations, known as sinks.
@@ -44,6 +45,11 @@ Click a sink for setup instructions.
         :link: slack
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` MS-teams
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: ms-teams
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` Robusta UI
         :class-card: sd-bg-light sd-bg-text-light
         :link: RobustaUI
@@ -59,19 +65,9 @@ Click a sink for setup instructions.
         :link: discord
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Kafka
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: kafka
-        :link-type: doc
-
     .. grid-item-card:: :octicon:`cpu;1em;` DataDog
         :class-card: sd-bg-light sd-bg-text-light
         :link: DataDog
-        :link-type: doc
-
-    .. grid-item-card:: :octicon:`cpu;1em;` MS-teams
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: ms-teams
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Mattermost
@@ -79,14 +75,14 @@ Click a sink for setup instructions.
         :link: mattermost
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Webhook
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: webhook
-        :link-type: doc
-
     .. grid-item-card:: :octicon:`cpu;1em;` OpsGenie
         :class-card: sd-bg-light sd-bg-text-light
         :link: Opsgenie
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` PagerDuty
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: PagerDuty
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` VictorOps
@@ -94,9 +90,14 @@ Click a sink for setup instructions.
         :link: VictorOps
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` PagerDuty
+    .. grid-item-card:: :octicon:`cpu;1em;` Jira
         :class-card: sd-bg-light sd-bg-text-light
-        :link: PagerDuty
+        :link: jira
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Webhook
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: webhook
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` File
@@ -108,6 +109,12 @@ Click a sink for setup instructions.
         :class-card: sd-bg-light sd-bg-text-light
         :link: webex
         :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Kafka
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: kafka
+        :link-type: doc
+
 
 
 **Need support for a new sink?** `Tell us and we'll add it. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_

@@ -11,8 +11,8 @@ The `Robusta Open Source <https://github.com/robusta-dev/robusta>`_ is a rules-e
 
 To get a feel for playbooks, let's explore two examples:
 
-* :ref:`Automatically Investigate a Prometheus Alert`
-* :ref:`Track Failing Kubernetes Jobs`
+* :ref:`Automatically Investigate a Prometheus Alert` *(Prometheus required)*
+* :ref:`Track Failing Kubernetes Jobs` *(No Prometheus required)*
 
 Example Playbooks
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -61,6 +61,8 @@ Track Failing Kubernetes Jobs
 
 Robusta can generate alerts by listening to the APIServer, rather than just improving existing Prometheus alerts.
 
+This is useful is you don't have Prometheus, and for cases when writing Prometheus alerts is awkward.
+
 Lets notify in Slack when a Kubernetes Job fails:
 
 .. image:: /images/on_job_failed_example.png
@@ -86,6 +88,8 @@ In this example, the trigger was ``on_job_failure``. Robusta generated a notific
 2. ``job_info_enricher`` - fetch the Job's status and attach it
 3. ``job_events_enricher`` run ``kubectl get events`` and attach events related to this Job
 4. ``job_pod_enricher`` find the latest Pod in this Job and attach its information
+
+.. _robusta-or-prometheus-alerts:
 
 .. admonition:: Should I generate alerts with Robusta or with Prometheus?
 

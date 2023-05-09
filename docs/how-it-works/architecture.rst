@@ -26,9 +26,9 @@ The Robusta `SaaS platform <http://home.robusta.dev/ui?from=docs>`_ provides a s
 
 CLI (Optional)
 ^^^^^^^^^^^^^^^^
-The :ref:`robusta cli <CLI Commands>` makes it easier to install Robusta by auto-generating Helm values.
+The ``robusta`` cli makes it easier to install Robusta by auto-generating Helm values.
 
 Next Steps
 ^^^^^^^^^^^^^
 
-:ref:`Ready to install Robusta? Get started. <Installation Guides>`
+:ref:`Ready to install Robusta? Get started. <install>`

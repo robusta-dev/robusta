@@ -2460,6 +2460,21 @@ reference = "HEAD"
 resolved_reference = "f003b0fd23dacbd2242f13c839d5c233be643bef"
 
 [[package]]
+name = "sphinx-reredirects"
+version = "0.1.1"
+description = "Handles redirects for moved pages in Sphinx documentation projects"
+category = "dev"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "sphinx_reredirects-0.1.1-py3-none-any.whl", hash = "sha256:fab84a6e859db462c7d79eb03043eeea8d5efe1c3d078ad05e097f8b17f45641"},
+    {file = "sphinx_reredirects-0.1.1.tar.gz", hash = "sha256:4519a45d316c921c46327b72fe410e1e7a32fe51694741296020b0ca008fbcee"},
+]
+
+[package.dependencies]
+sphinx = "*"
+
+[[package]]
 name = "sphinxcontrib-applehelp"
 version = "1.0.2"
 description = "sphinxcontrib-applehelp is a sphinx extension which outputs Apple help books"
@@ -3158,4 +3173,4 @@ all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "dulwich"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.1"
-content-hash = "6267ee8227ffdf2043d87d79a7c386c2fa7d69e5db7c2ffad915fe0ce5872c82"
+content-hash = "6a7e9e28751e88564d1a00736840252871e397aad54bc58733aaf8cbb296066b"

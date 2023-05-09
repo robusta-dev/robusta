@@ -8,7 +8,7 @@ Yes. Robusta includes built-in alerts based on Prometheus and direct APIServer m
 
 These alerts work out of the box without any configuration.
 
-You can also :ref:`write your own alerts <Defining Alerts>`.
+You can also :ref:`write your own alerts <Custom Alerts and Playbooks>`.
 
 What Events Can Robusta Listen to?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -22,7 +22,7 @@ Robusta listens to:
 * Other APIServer errors
 * Updates to Kubernetes Deployments and other resources
 
-See the full list in :ref:`All Triggers`.
+See the full list in :ref:`All Triggers <Triggers Reference>`.
 
 Want Robusta to respond to a custom event? Just send your event to Robusta by webhook.
 
@@ -36,7 +36,7 @@ Actions typically do one of the following:
 * Remediate problems
 * Silence false alarms
 
-See the full list in :ref:`All Actions`.
+See the full list in :ref:`All Actions <Actions Reference>`.
 
 For examples, see :ref:`What are Playbooks?`.
 
