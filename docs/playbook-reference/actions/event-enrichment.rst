@@ -3,7 +3,7 @@ Event Enrichment
 
 The actions are used to gather extra data on errors, alerts, and other cluster events.
 
-Use them as building blocks in your own automations.
+Use them as building blocks in your own automations, or write :ref:`your own enrichment actions in Python <Developing New Actions>`.
 
 Node Enrichers
 ^^^^^^^^^^^^^^^^^^^^^^^^^

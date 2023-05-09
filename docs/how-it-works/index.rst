@@ -3,10 +3,15 @@
 What are Playbooks?
 =================================================
 
-The `Robusta Open Source <https://github.com/robusta-dev/robusta>`_ is a rules-engine for Kubernetes, designed for monitoring and observability use cases. The rules are called *playbooks*. Using playbooks, Robusta:
+The `Robusta Open Source <https://github.com/robusta-dev/robusta>`_ is a rules-engine for Kubernetes, designed for monitoring and observability use cases.
+
+In Robusta, rules are called *playbooks*. Every playbook consists of a *trigger* (e.g. a Crashing Pod, a Prometheus Alert, or some other condition) and one or
+more *actions*. Actions can enrich alerts, silence them, or remediate problems.
+
+Conceptually, Robusta does three things:
 
 1. **Listens passively to various sources:** Robusta monitors Kubernetes events, Prometheus alerts, and other sources to stay informed about your cluster's current state.
-2. **Actively collects observability data:** When noteworthy events occur, Robusta actively gathers and correlates information such as logs, graphs, and thread dumps.
+2. **Actively collects observability data:** When noteworthy events occur, Robusta actively gathers and correlates information such as logs, graphs, and thread dumps. All according to the playbooks defined in Robusta.
 3. **Sends notifications:** Based on your preferences, Robusta notifies in :ref:`sinks <Sinks Reference>` like Slack, MSTeams, and PagerDuty
 
 To get a feel for playbooks, let's explore two examples:

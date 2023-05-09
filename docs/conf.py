@@ -57,6 +57,7 @@ suppress_warnings = ['autosectionlabel.*']
 redirects = {
     "installation.html": "/master/setup-robusta/installation/index.html",
     "catalog/actions/index.html": "/master/playbook-reference/actions/index.html",
+    "configuration/sending-notifications.html": "/master/configuration/configuring-sinks.html",
     "user-guide/configuration.html": "/master/configuration/index.html",
     "architecture.html": "/master/how-it-works/architecture.html",
     "upgrade.html": "/master/setup-robusta/upgrade.html",
