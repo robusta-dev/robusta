@@ -60,8 +60,8 @@ of what changed. These actions should take one of the ChangeEvent classes. For e
 
    @action
    def pod_change_monitor(event: PodChangeEvent):
-      logging.info(f"new object: {event.obj})
-      logging.info(f"old object: {event.old_obj})
+      logging.info(f"new object: {event.obj}")
+      logging.info(f"old object: {event.old_obj}")
 
 ``PodChangeEvent`` will fire on creations, updates, and deletions. You can check the event type with ``event.operation``.
 
