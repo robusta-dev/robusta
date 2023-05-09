@@ -88,7 +88,7 @@ The following triggers are available:
 
 .. details:: on_helm_release_deploy
 
-    The ``on_helm_release_deploy`` is triggered when a Helm release enters a ``deployed`` state. This is a one-time trigger, meaning that it only fires once when the release is deployed.
+    The ``on_helm_release_deploy`` is triggered when a Helm release enters a ``deployed`` state. This is a one-time trigger, meaning that it only fires once when the release is successfully deployed.
 
     **Available options**:
 
