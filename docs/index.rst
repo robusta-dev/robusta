@@ -75,12 +75,11 @@ Welcome to the Robusta Docs
 
 Robusta is an open source observability tool for Kubernetes, which extends Prometheus. Using automation rules, Robusta automatically fetches the data you need to investigate, and attaches it to your alerts.
 
-.. grid:: 2
+.. grid:: 1 1 2 2
     :margin: 0
     :padding: 0
 
     .. grid-item::
-        :columns: 6
 
         **Examples**
 
@@ -99,7 +98,6 @@ Robusta is an open source observability tool for Kubernetes, which extends Prome
         * :ref:`Many integrations <Sinks Reference>`, including Slack, MSTeams, OpsGenie, PagerDuty, and JIRA
 
     .. grid-item::
-        :columns: 6
 
         .. md-tab-set::
 
