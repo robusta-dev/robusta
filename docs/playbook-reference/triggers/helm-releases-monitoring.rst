@@ -1,7 +1,7 @@
 Helm Releases Monitoring
 #############################
 
-Robusta can monitor your Helm releases, notify you about updates, and take actions in response. For example, you can:
+Robusta can monitor your Helm releases and notify you about updates or problems. For example:
 
 * Get notified in Slack when a Helm release fails
 * Get notified in MSTeams if a Helm release is pending for more than X seconds
@@ -29,8 +29,8 @@ The following triggers are available:
     **Available options**:
 
     * ``rate_limit``: Limit firing to once every `rate_limit` seconds.
-    * ``names``: List of Helm release names for this trigger to monitor. Leaving this field empty monitors all release names in the namespace. Optional.
-    * ``namespace``: The Helm release namespace for this trigger to monitor. Leaving this field empty monitors all release namespace in the cluster. Optional.
+    * ``names``: List of Helm releases for this trigger to monitor. Leaving this field empty monitors all releases in the namespace. Optional.
+    * ``namespace``: The Kubernetes namespace for this trigger to monitor. Leaving this field empty monitors all namespaces in the cluster. Optional.
     * ``duration``: Minimum time, in seconds, that a release must remain unhealthy before the trigger fires. If the unhealthy state lasts less than this duration, the trigger won't fire. Default value is 900 seconds (15 minutes). Optional.
 
     .. admonition:: Example
@@ -59,12 +59,12 @@ The following triggers are available:
 
 .. details:: on_helm_release_fail
 
-    ``on_helm_release_fail` is triggered when a Helm release enters a ``failed`` state. This is a one-time trigger, meaning that it only fires once when the release fails.
+    ``on_helm_release_fail`` is triggered when a Helm release enters a ``failed`` state. This is a one-time trigger, meaning that it only fires once when the release fails.
 
     **Available options**:
 
-    * ``names``: List of Helm release names for this trigger to monitor. Leaving this field empty monitors all release names in the namespace. Optional.
-    * ``namespace``: The Helm release namespace for this trigger to monitor. Leaving this field empty monitors all release namespace in the cluster. Optional.
+    * ``names``: List of Helm releases for this trigger to monitor. Leaving this field empty monitors all releases in the namespace. Optional.
+    * ``namespace``: The Kubernetes namespace for this trigger to monitor. Leaving this field empty monitors all namespaces in the cluster. Optional.
 
     .. admonition:: Example
 
@@ -88,12 +88,12 @@ The following triggers are available:
 
 .. details:: on_helm_release_deploy
 
-    The ``on_helm_release_deploy`` event is triggered when a Helm release enters a ``deployed`` state. This is a one-time trigger, meaning that it only fires once when the release is deployed.
+    The ``on_helm_release_deploy`` is triggered when a Helm release enters a ``deployed`` state. This is a one-time trigger, meaning that it only fires once when the release is deployed.
 
     **Available options**:
 
-    * ``names``: List of Helm release names for this trigger to monitor. Leaving this field empty monitors all release names in the namespace. Optional.
-    * ``namespace``: The Helm release namespace for this trigger to monitor. Leaving this field empty monitors all release namespace in the cluster. Optional.
+    * ``names``: List of Helm releases for this trigger to monitor. Leaving this field empty monitors all releases in the namespace. Optional.
+    * ``namespace``: The Kubernetes namespace for this trigger to monitor. Leaving this field empty monitors all namespaces in the cluster. Optional.
 
     .. admonition:: Example
 
@@ -118,12 +118,12 @@ The following triggers are available:
 
 .. details:: on_helm_release_uninstall
 
-    The ``on_helm_release_uninstall`` event is triggered when a Helm release enters a ``uninstalled`` state. This is a one-time trigger, meaning that it only fires once when the release is uninstalled.
+    The ``on_helm_release_uninstall`` is triggered when a Helm release enters a ``uninstalled`` state. This is a one-time trigger, meaning that it only fires once when the release is uninstalled.
 
     **Available options**:
 
-    * ``names``: List of Helm release names for this trigger to monitor. Leaving this field empty monitors all release names in the namespace. Optional.
-    * ``namespace``: The Helm release namespace for this trigger to monitor. Leaving this field empty monitors all release namespace in the cluster. Optional.
+    * ``names``: List of Helm releases for this trigger to monitor. Leaving this field empty monitors all releases in the namespace. Optional.
+    * ``namespace``: The Kubernetes namespace for this trigger to monitor. Leaving this field empty monitors all namespaces in the cluster. Optional.
 
     .. admonition:: Example
 
