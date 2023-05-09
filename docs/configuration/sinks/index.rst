@@ -30,7 +30,7 @@ Robusta can report issues and events in your Kubernetes cluster to various desti
 
 **Related Topics:**
 
-* :ref:`Configuring Notifications <sinks-overview>`
+* :ref:`sinks-overview`
 * :ref:`Routing Alerts to Specific Sinks`
 
 Available sinks

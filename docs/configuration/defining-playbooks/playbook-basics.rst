@@ -64,13 +64,13 @@ Breaking down the name, you'll notice the format ``on_<resource_type>_<operation
 The trigger also had an *include* filter, limiting which Warning Events cause the playbook to run.
 See each trigger's documentation to learn which filters are supported.
 
-Discover Common Triggers
+Common Triggers
 ********************************
-Other popular triggers include:
+Popular triggers include:
 
-* ``on_prometheus_alert``
-* ``on_deployment_update``
-* ``on_pod_crash_loop``
+* :ref:`on_prometheus_alert<on_prometheus_alert>`
+* :ref:`on_pod_crash_loop<on_pod_crash_loop>`
+* :ref:`on_deployment_update<on_deployment_update>`
 
 All triggers can be found under :ref:`Triggers Reference`.
 
@@ -79,7 +79,7 @@ Understanding Actions
 
 **Actions** perform tasks in response to triggers, such as collecting information, investigating issues, or fixing problems.
 
-In the above example, there were two actions:
+In the above example, there were two actions. When playbooks contain multiple actions, they are executed in order:
 
 * ``create_finding`` - this generates the notification message
 * ``event_resource_events`` - this is a specific action for ``on_kubernetes_warning_event_create`` which attaches relevant events to the notification
@@ -87,13 +87,19 @@ In the above example, there were two actions:
 The latter action has a funny name, which reflects that it takes a Kubernetes Warning Event as input, finds the related Kubernetes
 resource (e.g. a Pod), and then fetches all the related Kubernetes Warning Events for that resource.
 
-Action Execute in Order
-*************************
-When playbooks contain multiple actions, they are executed in order.
+.. _actions-vs-enrichers-vs-silencers:
 
-Discover Common Actions
+.. admonition:: Actions, Enrichers, and Silencers
+
+    Many actions in Robusta were written for a specific purpose, like *enriching* alerts or *silencing* them.
+
+    By convention, these actions are called *enrichers* and *silencers*, but those names are just convention.
+
+    Under the hood, enrichers and silencers are plain old actions, nothing more.
+
+Common Actions
 ********************************
-Other popular actions include:
+Popular actions include:
 
 * :ref:`logs_enricher<logs_enricher>` - fetch a Pod's logs
 * :ref:`node_bash_enricher<node_bash_enricher>` - run a bash command on a Node

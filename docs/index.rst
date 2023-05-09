@@ -40,7 +40,7 @@
    :hidden:
 
    configuration/index
-   configuration/sending-notifications
+   configuration/configuring-sinks
    🔔 Sinks Reference <configuration/sinks/index>
    configuration/configuration-secrets
    configuration/alert-manager
