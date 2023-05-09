@@ -32,15 +32,6 @@
         .forEach((logo) => logo.style.display = "block");
     }, 300)
 
-    if ( window.location.pathname !== '/index.html' ) {
-      const slateLogo = document
-        .querySelectorAll('[data-id="slate-logo"]')
-        .forEach((logo) => {
-          const logoPath = logo.getAttribute('src');
-          logo.setAttribute('src', `../${logoPath}`);
-        });
-    }
-    
   }, false);
 </script>
 {% endblock %}
