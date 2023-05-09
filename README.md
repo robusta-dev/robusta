@@ -49,7 +49,7 @@ Robusta also supports alert-remediations:
 
 ![](./docs/images/alert_on_hpa_reached_limit1.png)
 
-[Over 50 types of automations and enrichments are built-in »](https://docs.robusta.dev/master/playbook-reference/actions/index.html
+[Over 50 types of automations and enrichments are built-in »](https://docs.robusta.dev/master/playbook-reference/actions/index.html)
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## 📒 Installing Robusta
