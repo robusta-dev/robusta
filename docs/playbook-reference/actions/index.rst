@@ -61,14 +61,14 @@ Built-in Actions
         :link: java-troubleshooting
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` Miscellaneous
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: miscellaneous
-        :link-type: doc
-
     .. grid-item-card:: :octicon:`cpu;1em;` Scans
         :class-card: sd-bg-light sd-bg-text-light
         :link: scans
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Miscellaneous
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: miscellaneous
         :link-type: doc
 
 Custom Actions
