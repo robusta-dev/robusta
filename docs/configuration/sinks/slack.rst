@@ -81,7 +81,7 @@ your own. This is not recommended for most companies due to the added complexity
 6. Copy the ``Bot User OAuth Token`` from "OAuth and Permissions".
 7. Add the token to SinksConfig in your `generated_values.yaml` file.
 
-.. code-block:: bash
+.. code-block:: yaml
     :name: cb-custom-slack-app-config
 
     sinksConfig:
