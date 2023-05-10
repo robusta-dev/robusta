@@ -3,15 +3,35 @@ Scans
 
 Robusta includes built-in actions to scan and get insights on Kubernetes clusters.
 
-These actions can be triggered automatically on a schedule, manually using the Robusta Platform and :ref:`manually using the robusta cli <Manual Triggers>`.
+These actions can be triggered automatically on a schedule, manually using the Robusta UI and :ref:`manually using the robusta cli <Manual Triggers>`.
 
 
 Popeye - A Kubernetes Cluster Sanitizer
 ---------------------------------------------
 
-`Popeye <https://github.com/derailed/popeye>`_ is a utility that scans live Kubernetes cluster and reports potential issues with deployed resources and configurations. by default Robusta will run a Popeye scan on startup.
+`Popeye <https://github.com/derailed/popeye>`_ is a utility that scans live Kubernetes cluster and reports potential issues with deployed resources and configurations. By default Robusta will run one Popeye scan on startup.
 
-Popeye scans can be triggerd and viewed in the Robusta platform
+To run :ref:`Scheduled` Popeye scans, add this to your `generated_values.yaml` file:
+
+.. code-block:: yaml
+    :name: cb-popeye-set-periodic-scan
+
+    customPlaybooks:
+    - triggers:
+    - on_schedule:
+        fixed_delay_repeat:
+            repeat: 1 # number of times to run or -1 to run forever
+            seconds_delay: 604800 # 1 week
+    actions:
+    - popeye_scan: {}
+    sinks:
+        - "robusta_ui_sink"
+
+.. warning::
+
+    Currently Popeye scans are only supported with the Robusta UI and Slack :ref:`sinks <Sinks Reference>`.
+
+Popeye scans can be triggerd and viewed in the Robusta UI
 
 .. image:: /images/popeye_example.png
     :width: 1000
@@ -31,7 +51,6 @@ Troubleshooting Popeye
 When triggering a Popeye scan, Popeye will run as a one-off job directly in your cluster.
 Use these steps to find possible issues with the scan action.
 
-| Currently Popeye scans are only supported with the Robusta platform and Slack :ref:`sinks <Sinks Reference>`.
 
 * To find errors with the Popeye job run:
 
