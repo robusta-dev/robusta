@@ -1,13 +1,11 @@
 .. _sinks-overview:
 
-Configuring Notifications
+Configuring Sinks
 ==========================
 
 Robusta can send notifications to various destinations, called sinks.
 
 For a list of all sinks, refer to :ref:`Sinks Reference`.
-
-To define rules that generate custom notifications, refer to :ref:`Defining Playbooks`.
 
 Defining Sinks
 ^^^^^^^^^^^^^^^^^^

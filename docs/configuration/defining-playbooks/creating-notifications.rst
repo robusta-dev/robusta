@@ -69,6 +69,10 @@ Here is the result in Slack:
 
 .. image:: /images/oomkill-notification-with-enrichers.png
 
+.. admonition:: What's the difference between actions and enrichers?
+
+    Enrichers are just regular Robusta actions. :ref:`Learn more. <actions-vs-enrichers-vs-silencers>`
+
 Automatic Findings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -13,7 +13,7 @@ Common Settings
 
     .. grid-item-card:: :octicon:`book;1em;` Send Notifications
         :class-card: sd-bg-light sd-bg-text-light
-        :link: sending-notifications
+        :link: configuring-sinks
         :link-type: doc
 
         Send notifications from Robusta to external systems.
