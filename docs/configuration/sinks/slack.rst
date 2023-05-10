@@ -78,7 +78,17 @@ your own. This is not recommended for most companies due to the added complexity
 3. Under "OAuth and Permissions" add the following scopes: chat:write, files:write, incoming-webhook, and channels:history
 4. Under "Event Subscriptions" add bot user events for message.channels and press "Save Changes"
 5. Click "Install into Workspace"
-6. Copy the signing token from basic information and the bot token from "OAuth and Permissions". Add them to the YAML.
+6. Copy the ``Bot User OAuth Token`` from "OAuth and Permissions".
+7. Add the token to SinksConfig in your `generated_values.yaml` file.
+
+.. code-block:: bash
+    :name: cb-custom-slack-app-config
+
+    sinksConfig:
+    - slack_sink:
+        name: main_slack_sink
+        slack_channel: <your-channel>
+        api_key: <your Bot User OAuth Token>
 
 .. warning::
 
