@@ -14,6 +14,7 @@ Actions Reference
    grafana
    python-troubleshooting
    java-troubleshooting
+   scans
    miscellaneous
    develop-actions/index
 
@@ -34,12 +35,12 @@ Built-in Actions
         :class-card: sd-bg-light sd-bg-text-light
         :link: event-enrichment
         :link-type: doc
-        
+
     .. grid-item-card:: :octicon:`cpu;1em;` Remediation
         :class-card: sd-bg-light sd-bg-text-light
         :link: remediation
         :link-type: doc
-   
+
     .. grid-item-card:: :octicon:`cpu;1em;` Change Tracking
         :class-card: sd-bg-light sd-bg-text-light
         :link: change-tracking
@@ -65,6 +66,11 @@ Built-in Actions
         :link: miscellaneous
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` Scans
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: scans
+        :link-type: doc
+
 Custom Actions
 ---------------
 
@@ -88,4 +94,3 @@ Need to do something that the builtin actions don't cover? :ref:`Write your own 
                 MarkdownBlock("*Oh no!* An alert occurred on " + pod_name),
                 FileBlock("crashing-pod.log", pod_logs)
             ])
-
