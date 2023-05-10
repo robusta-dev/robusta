@@ -31,7 +31,7 @@ Troubleshooting Popeye
 When triggering a Popeye scan, Popeye will run as a one-off job directly in your cluster.
 Use these steps to find possible issues with the scan action.
 
-| Currently Popeye scan is available only to the Robusta platform and Slack :ref:`sinks <Sinks Reference>`.
+| Currently Popeye scans are only supported with the Robusta platform and Slack :ref:`sinks <Sinks Reference>`.
 
 * To find errors with the Popeye job run:
 
