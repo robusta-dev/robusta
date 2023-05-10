@@ -5,9 +5,11 @@ import threading
 import time
 from typing import Dict, List, Optional
 
+from hikaru.model import DaemonSet, StatefulSet, Deployment, Job, Pod, Container, Volume
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
-from robusta.core.discovery.discovery import Discovery, DiscoveryResults
+from robusta.core.discovery.discovery import Discovery, DiscoveryResults, extract_total_pods, extract_ready_pods, \
+    extract_volumes, extract_containers
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
@@ -15,8 +17,10 @@ from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.pods import PodResources
-from robusta.core.model.services import ServiceInfo
-from robusta.core.reporting.base import Finding
+from robusta.core.model.services import ServiceInfo, ContainerInfo, VolumeInfo, ServiceConfig
+from robusta.core.reporting import KubernetesDiffBlock
+from robusta.core.reporting.base import Finding, Enrichment
+from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
@@ -137,7 +141,53 @@ class RobustaSink(SinkBase):
             return True
         return time.time() - self.last_send_time < DISCOVERY_CHECK_THRESHOLD_SEC
 
+    def __publish_resource_diff_services(self, enrichments: List[Enrichment]):
+        for enrich in enrichments:
+            if not enrich.blocks:
+                continue
+
+            block = enrich.blocks[0]
+            if not isinstance(block, KubernetesDiffBlock):
+                continue
+
+            new_resource = block.new_obj
+            if isinstance(new_resource, Deployment) \
+                    or isinstance(new_resource, DaemonSet) \
+                    or isinstance(new_resource, StatefulSet) \
+                    or isinstance(new_resource, Job) \
+                    or isinstance(new_resource, Pod):
+                containers = extract_containers(new_resource)
+                volumes = extract_volumes(new_resource)
+                meta = new_resource.metadata
+                container_info = [ContainerInfo.get_container_info(container) for container in
+                                  containers] if containers else []
+                volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
+                config = ServiceConfig(labels=meta.labels or {}, containers=container_info,
+                                       volumes=volumes_info)
+                ready_pods = extract_total_pods(new_resource)
+                total_pods = extract_ready_pods(new_resource)
+
+                services = ServiceInfo(
+                    name=meta.name,
+                    namespace=meta.namespace,
+                    service_type=new_resource.kind,
+                    service_config=config,
+                    ready_pods=ready_pods,
+                    total_pods=total_pods,
+                )
+                self.__publish_new_services([services])
+
     def write_finding(self, finding: Finding, platform_enabled: bool):
+        resource_diffs = []
+        for enrich in finding.enrichments:
+            if enrich.annotations.get(EnrichmentAnnotation.RESOURCE_DIFF, False):
+                resource_diffs.append(enrich)
+
+        if len(resource_diffs) > 0:
+            self.__publish_resource_diff_services(resource_diffs)
+            return
+
+        # the finding is not an `is_resource_diff`
         self.dal.persist_finding(finding)
 
     def __publish_new_services(self, active_services: List[ServiceInfo]):

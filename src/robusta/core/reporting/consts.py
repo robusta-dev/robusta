@@ -58,6 +58,7 @@ class FindingSubjectType(Enum):
 # Annotations
 class EnrichmentAnnotation(Enum):
     SCAN = "scan"
+    RESOURCE_DIFF = "resource_diff"
 
 
 class SlackAnnotations:

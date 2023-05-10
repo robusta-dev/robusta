@@ -1,5 +1,6 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
+from hikaru.model import Container, Volume
 from kubernetes.client import V1Container, V1Volume
 from pydantic import BaseModel
 
@@ -22,11 +23,24 @@ class Resources(BaseModel):
 class ContainerInfo(BaseModel):
     name: str
     image: str
+    image_tag: Optional[str]
     env: List[EnvVar]
     resources: Resources
 
     @staticmethod
-    def get_container_info(container: V1Container):
+    def extract_image_tag(image_url) -> Optional[str]:
+        if "@" in image_url:
+            # The digest is specified after the last "@" character
+            return image_url.split("@")[-1]
+        elif ":" in image_url:
+            # The tag is specified after the last colon
+            return image_url.split(":")[-1]
+        else:
+            # No tag specified
+            return None
+
+    @staticmethod
+    def get_container_info(container: Union[V1Container, Container]):
         env = (
             [EnvVar(name=env.name, value=env.value) for env in container.env if env.name and env.value]
             if container.env
@@ -35,7 +49,8 @@ class ContainerInfo(BaseModel):
         limits = container.resources.limits if container.resources.limits else {}
         requests = container.resources.requests if container.resources.requests else {}
         resources = Resources(limits=limits, requests=requests)
-        return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources)
+        return ContainerInfo(name=container.name, image=container.image,
+                             image_tag=ContainerInfo.extract_image_tag(container.image), env=env, resources=resources)
 
     def __eq__(self, other):
         if not isinstance(other, ContainerInfo):
@@ -54,7 +69,7 @@ class VolumeInfo(BaseModel):
     persistent_volume_claim: Optional[Dict[str, str]]
 
     @staticmethod
-    def get_volume_info(volume: V1Volume):
+    def get_volume_info(volume: Union[V1Volume, Volume]):
         if hasattr(volume, "persistent_volume_claim") and hasattr(volume.persistent_volume_claim, "claim_name"):
             return VolumeInfo(
                 name=volume.name, persistent_volume_claim={"claim_name": volume.persistent_volume_claim.claim_name}

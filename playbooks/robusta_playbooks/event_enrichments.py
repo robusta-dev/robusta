@@ -29,6 +29,9 @@ from robusta.api import (
     get_resource_events_table,
     list_pods_using_selector,
     parse_kubernetes_datetime_to_ms,
+    KubernetesAnyChangeEvent,
+    EnrichmentAnnotation,
+    KubernetesDiffBlock
 )
 
 
@@ -227,3 +230,8 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
     Attaches a video links to the finding
     """
     event.add_video_link(VideoLink(url=params.url, name=params.name))
+
+@action
+def resource_events_diff(event: KubernetesAnyChangeEvent):
+    event.add_enrichment(enrichment_blocks=[KubernetesDiffBlock([], event.old_obj, event.obj, event.obj.metadata.name)],
+                         annotations={EnrichmentAnnotation.RESOURCE_DIFF: True})
