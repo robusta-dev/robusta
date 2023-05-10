@@ -16,4 +16,22 @@
         setupCopyListener();
     }, false);
 </script>
+<script>
+  window.addEventListener("DOMContentLoaded", function() {
+    const body = document.getElementsByTagName('body')[0];
+
+    setInterval(function () {
+      const currentColorTheme = body.getAttribute('data-md-color-scheme');
+
+      Array
+        .from(body.querySelectorAll("[data-theme-logo]"))
+        .forEach((logo) => logo.style.display = "none");
+
+      Array
+        .from(body.querySelectorAll(`[data-theme-logo='${currentColorTheme}']`))
+        .forEach((logo) => logo.style.display = "block");
+    }, 300)
+
+  }, false);
+</script>
 {% endblock %}

@@ -1,0 +1,16 @@
+Remediation
+############################
+
+Robusta includes actions that modify Kubernetes resources in your cluster. See also:
+
+* :ref:`node_bash_enricher`
+* :ref:`pod_bash_enricher`
+
+.. robusta-action:: playbooks.robusta_playbooks.job_actions.alert_handling_job
+
+.. robusta-action:: playbooks.robusta_playbooks.pod_actions.delete_pod
+
+.. robusta-action:: playbooks.robusta_playbooks.job_actions.delete_job on_job_failure
+
+.. robusta-action:: playbooks.robusta_playbooks.autoscaler.alert_on_hpa_reached_limit on_horizontalpodautoscaler_update
+

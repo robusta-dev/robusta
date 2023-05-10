@@ -25,6 +25,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / Path("_ext")))
 sys.path.insert(0, str(Path(__file__).parent.parent))  # so we can import the playbooks
 
+# -- Custom Sidebar -------------------------------------------------------
+
+
 # -- General configuration ------------------------------------------------
 
 extensions = [
@@ -41,7 +44,40 @@ extensions = [
     "sphinx_design",
     "sphinxcontrib.images",
     "autorobusta",
+    "sphinx_immaterial",
+    "sphinxcontrib.details.directive",
+    "sphinx_jinja",
+    "sphinx_reredirects",
 ]
+
+suppress_warnings = ['autosectionlabel.*']
+
+# sphinx redirects from old docs
+
+redirects = {
+    "installation.html": "/master/setup-robusta/installation/index.html",
+    "catalog/actions/index.html": "/master/playbook-reference/actions/index.html",
+    "configuration/sending-notifications.html": "/master/configuration/configuring-sinks.html",
+    "user-guide/configuration.html": "/master/configuration/index.html",
+    "architecture.html": "/master/how-it-works/architecture.html",
+    "upgrade.html": "/master/setup-robusta/upgrade.html",
+    "developer-guide/actions/findings-api.html": "/master/playbook-reference/actions/develop-actions/findings-api.html",
+    "tutorials/my-first-custom-action.html": "/master/playbook-reference/actions/develop-actions/index.html",
+    "user-guide/self-hosting.html": "/master/how-it-works/oss-vs-saas.html",
+    "getting-started/installation.html": "/master/setup-robusta/installation/all-in-one-installation.html",
+    "tutorials/java-troubleshooting.html": "/master/tutorials/application-troubleshooting-java.html",
+    "catalog/sinks/index.html": "/master/configuration/sinks/index.html",
+    "tutorials/prometheus-enrichment.html": "/master/tutorials/alert-custom-enrichment.html",
+    "user-guide/alert-manager.html": "/master/configuration/alert-manager.html",
+    "catalog/sinks/webhook.html": "/master/configuration/sinks/webhook.html",
+    "catalog/sinks/PagerDuty.html": "/master/configuration/sinks/PagerDuty.html",
+    "catalog/actions/event-enrichment.html": "/master/playbook-reference/actions/event-enrichment.html"
+}
+
+# for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
+jinja_contexts = {}
+
+jinja_filters = {"to_snake_case": lambda s: "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")}
 
 # for sphinx.ext.inheritance_diagram
 # inheritance_graph_attrs = dict(rankdir="TB", size='""')
@@ -77,13 +113,13 @@ master_doc = "index"
 
 # General information about the project.
 project = "Robusta"
-copyright = "2021, Robusta"
+copyright = "2023, Robusta"
 author = "Natan Yellin"
 
 # The short X.Y version.
-version = "DOCS_VERSION_PLACEHOLDER"
+# version = "DOCS_VERSION_PLACEHOLDER"
 # The full version, including alpha/beta/rc tags.
-release = "DOCS_RELEASE_PLACEHOLDER"
+# release = "DOCS_RELEASE_PLACEHOLDER"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -99,29 +135,74 @@ pygments_dark_style = "witchhazel.WitchHazelStyle"
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-# html_theme_path = [furo.get_pygments_stylesheet()]
-html_theme = "furo"
+html_theme = "sphinx_immaterial"
+
+html_logo = "_static/logo_default.svg"
+
 html_theme_options = {
-    "announcement": 'Want to work at an Open Source Company? We\'re hiring in Israel and remote! Explore <a href="https://home.robusta.dev/jobs/">open roles</a>.',
-    "sidebar_hide_name": True,
-    "light_logo": "logo.png",
-    "dark_logo": "logo-dark.png",
-    "light_css_variables": {
-        # for branding purposes this should really be #d9534f, but it doesn't look as good
-        "color-brand-primary": "#7253ed",
-        "color-brand-content": "#7253ed",
+    "icon": {
+        "repo": "fontawesome/brands/github",
     },
-    "dark_css_variables": {
-        "color-announcement-background": "#433e56",
-        # "color-brand-primary": "#7C4DFF",
-        # "color-brand-content": "#7C4DFF",
-        # "color-sidebar-link-text": "black",
-    },
+    "repo_url": "https://github.com/robusta-dev/robusta",
+    "repo_name": "Robusta",
+    "repo_type": "github",
+    # TODO: docs - need to modify to the Master Branch
+    "edit_uri": "tree/structure/docs",
+    "palette": [
+        {
+            "media": "(prefers-color-scheme: light)",
+            "scheme": "default",
+            "primary": "robusta",
+            "accent": "robusta",
+            "toggle": {
+                "icon": "material/weather-night",
+                "name": "Switch to dark mode",
+            },
+        },
+        {
+            "media": "(prefers-color-scheme: dark)",
+            "scheme": "slate",
+            "primary": "robusta-dark",
+            "accent": "robusta-dark",
+            "toggle": {
+                "icon": "material/weather-sunny",
+                "name": "Switch to light mode",
+            },
+        },
+    ],
+    "features": [
+        "navigation.instant",
+        "navigation.top",
+        "navigation.tabs",
+        "navigation.tabs.sticky",
+        "search.share",
+        "toc.follow",
+        "toc.sticky",
+    ],
+    "globaltoc_collapse": False,
+    "social": [
+        {
+            "icon": "fontawesome/brands/github",
+            "link": "https://github.com/robusta-dev/robusta",
+        },
+        {
+            "icon": "fontawesome/brands/slack",
+            "link": "https://bit.ly/robusta-slack",
+        },
+        {
+            "icon": "fontawesome/brands/twitter",
+            "link": "https://twitter.com/RobustaDev",
+        },
+        {
+            "icon": "fontawesome/brands/linkedin",
+            "link": "https://www.linkedin.com/company/robusta-dev/",
+        },
+    ],
 }
 
+html_sidebars = {"**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]}
+
 copybutton_prompt_text = r"$ "
-
-
 # html_title = ""
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -134,10 +215,9 @@ html_css_files = [
 ]
 
 html_js_files = ["analytics.js"]
-
 html_favicon = "_static/favicon.png"
 
-# html_logo = "_static/logo.png"
+html_favicon = "_static/faviconNew.svg"
 
 
 def setup(app):

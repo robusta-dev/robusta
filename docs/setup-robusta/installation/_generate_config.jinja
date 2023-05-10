@@ -1,0 +1,44 @@
+Generate a Config
+-----------------------------------
+
+Robusta needs settings to work. For example, if you use Slack then Robusta needs a Slack API key. These settings are configured as Helm values.
+
+Use the ``robusta`` cli tool to generate the Helm values. You can install the cli with ``pip`` or run it inside a prebuilt container.
+
+.. tab-set::
+
+    .. tab-item:: pip (recommended)
+        :name: pip-cli-tab
+
+        .. details:: System Requirements
+
+            * Python 3.7 or higher is required.
+            * Use ``pip3`` on systems with both Python 2 and Python 3.
+            * A ``command not found: robusta`` error means :ref:`Python's script directory is not your PATH.<Common Errors>`.
+
+        .. code-block:: bash
+            :name: cb-pip-install
+
+            pip install -U robusta-cli --no-cache
+            robusta gen-config {{ gen_config_flags }}
+
+    .. tab-item:: docker
+        :name: docker-cli-tab
+
+        .. details:: System Requirements
+
+            A Docker daemon and bash are required.
+
+            On Windows, use bash inside `WSL <https://docs.microsoft.com/en-us/windows/wsl/install>`_.
+
+        .. code-block:: bash
+            :name: cb-docker-cli-download
+
+            curl -fsSL -o robusta https://docs.robusta.dev/master/_static/robusta
+            chmod +x robusta
+            ./robusta gen-config {{ gen_config_flags }}
+
+You should now have a ``generated_values.yaml`` file with a Robusta config. **Save this file!**
+You'll need it to install Robusta on new clusters.
+
+This file contains sensitive values. Refer to :ref:`Managing Secrets` for tips on protecting them.

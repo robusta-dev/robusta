@@ -11,4 +11,4 @@ If you want to upload a new chart version, follow these steps:
 4. From the directory, `helm`, run: `./upload_chart.sh`
 
 # Installing robusta with the helm chart
-See https://docs.robusta.dev/master/getting-started/installation.html
+See https://docs.robusta.dev/master/getting-started/getting-started/installation.html

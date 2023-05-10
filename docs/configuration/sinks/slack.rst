@@ -1,0 +1,86 @@
+Slack
+#################
+
+Robusta can report issues and events in your Kubernetes cluster to Slack.
+
+Connecting Slack
+------------------------------------------------
+
+When installing Robusta, run ``robusta gen-config`` and follow the prompts. This will use our `official
+Slack app <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_.
+
+**Note: Robusta can only write messages and doesn't require read permissions.**
+
+Alternatively, generate a key by running ``robusta integrations slack`` and set the following Helm values in your
+``generated_values.yaml``:
+
+.. code-block:: yaml
+
+     sinks_config:
+     # slack integration params
+     - slack_sink:
+         name: main_slack_sink
+         api_key: MY SLACK KEY
+         slack_channel: MY SLACK CHANNEL
+
+Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+.. note::
+
+    You can change the slack_channel at any time in ``generated_values.yaml``. No need to re-run ``robusta integrations slack``.
+
+Using Private Channels
+-------------------------------------------------------------------
+
+1. Add Robusta to your workspace using the instructions above.
+2. Add the Robusta app to the private channel. See the video below for instructions:
+
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 62.5%; height: 0;"><iframe src="https://www.loom.com/embed/a0b1a27a54df44fa95c483917b961b11" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+
+Automatically @mentioning Users
+---------------------------------
+
+It is possible to automatically tag users in Slack.
+
+To do so in :ref:`custom playbooks <customPlaybooks>` mention the ``@username`` anywhere in the description:
+
+.. code-block::
+
+    customPlaybooks:
+    - actions:
+      triggers:
+      - on_kubernetes_warning_event:
+          include: ["TooManyPods"]
+      - create_finding:
+          aggregation_key: "too-many-pods-warning"
+          severity: HIGH
+          title: "Too many pods on $node!"
+          description: "@some-user, please take a look." # (1)
+
+
+.. code-annotations::
+    1. @some-user will become a mention in Slack
+
+If you'd like to automatically tag users on builtin alerts, please
+`let us know <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=Tag%20Slack%20Users>`_.
+We want to hear requirements.
+
+Creating Custom Slack Apps
+-------------------------------------------------------------------
+
+If you can't use the `official Slack app <https://slack.com/apps/A0214S5PHB4-robusta?tab=more_info>`_, you can create
+your own. This is not recommended for most companies due to the added complexity.
+
+1. `Create a new Slack app. <https://api.slack.com/apps?new_app=1>`_
+2. Enable Socket mode in your Slack App and copy the websocket token into the Robusta deployment yaml.
+3. Under "OAuth and Permissions" add the following scopes: chat:write, files:write, incoming-webhook, and channels:history
+4. Under "Event Subscriptions" add bot user events for message.channels and press "Save Changes"
+5. Click "Install into Workspace"
+6. Copy the signing token from basic information and the bot token from "OAuth and Permissions". Add them to the YAML.
+
+.. warning::
+
+    When using a custom Slack app, callback buttons are not supported due to complexities in how Slack handles incoming
+    messages. :ref:`Contact us if you need assistance. <help>`

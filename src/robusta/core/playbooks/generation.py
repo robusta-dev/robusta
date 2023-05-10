@@ -31,7 +31,6 @@ class NoAliasDumper(yaml.SafeDumper):
 
 class ExamplesGenerator:
 
-    SUBTRIGGER_MARKER = "..."
     ANY_TRIGGER_MARKER = "any trigger"
 
     def __init__(self):
@@ -54,6 +53,7 @@ class ExamplesGenerator:
 
     def get_possible_triggers(self, event_cls: Type[ExecutionBaseEvent]) -> List[str]:
         name = event_cls.__name__
+        # TODO: why?
         if name == "ExecutionBaseEvent":
             return ["on_pod_create"]
         triggers = self.events_to_triggers.get(event_cls)
@@ -84,46 +84,20 @@ class ExamplesGenerator:
 
         return cmd + f" {action_params_sample}"
 
-    # build a triggers list for events that much k8s objects
-    @classmethod
-    def get_k8s_trigger_list(cls, name: str, all_triggers, include_prometheus: bool = False):
-        if name not in ["KubernetesAnyChangeEvent", "KubernetesResourceEvent"]:
-            return all_triggers
-
-        any_triggers = [trigger for trigger in all_triggers if "on_kubernetes_any_resource" in trigger]
-
-        if include_prometheus:
-            any_triggers.extend([trigger for trigger in all_triggers if "prometheus" in trigger])
-
-        any_triggers.append(cls.SUBTRIGGER_MARKER)
-        return any_triggers
-
     def get_supported_triggers(self, action: Action) -> List[str]:
         """
         Get supported triggers for docs.
-        Return a list (or sublist) of supported triggers, and the manual trigger command, if supported
+        Return a list of all supported triggers
         """
         event_cls: Type[ExecutionBaseEvent] = action.event_type
         name = event_cls.__name__
         if name == "ExecutionBaseEvent":
             return [self.ANY_TRIGGER_MARKER]
 
+        all_triggers = self.get_possible_triggers(event_cls)
+
         # remove duplications and sort
-        all_triggers = sorted(list(set(self.get_possible_triggers(event_cls))))
-
-        if len(all_triggers) == 1:  # prometheus alert trigger, scheduled trigger
-            return list(all_triggers)
-
-        if issubclass(event_cls, KubernetesAnyChangeEvent):  # change trigger
-            return self.get_k8s_trigger_list(name, all_triggers)
-
-        # validating we don't have unexpected trigger
-        if not issubclass(event_cls, KubernetesResourceEvent):
-            logging.error(f"Found unexpected trigger {event_cls}")
-            return ["no trigger"]
-
-        # Resource trigger, PodEvent, DeploymentEvent etc
-        return self.get_k8s_trigger_list(name, all_triggers, True)
+        return list(sorted(list(set(all_triggers))))
 
     def generate_example_config(
         self,

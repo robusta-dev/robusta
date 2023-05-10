@@ -1,0 +1,67 @@
+{% macro render_custom_trigger(resource_name, trigger_name, description, verb_for_finding, related_actions, examples_macro) %}
+
+.. _{{ trigger_name }}:
+
+.. details:: {{ trigger_name }}
+
+    {{ description }}
+
+    {{ examples_macro(resource_name, trigger_name, description, verb_for_finding) }}
+
+    {% if related_actions %}
+    Related actions:
+    {% for action in related_actions %}
+    * :ref:`{{ action }}<{{ action }}>`
+    {% endfor %}
+    {% endif %}
+
+{% endmacro %}
+
+{% macro render_generic_examples(resource_name, trigger_name, description, verb_for_finding) %}
+
+    .. md-tab-set::
+
+        .. md-tab-item:: Simple Example
+
+            .. code-block:: yaml
+
+                customPlaybooks:
+                  triggers:
+                  - {{ trigger_name }}: {}
+                  actions:
+                  - create_finding: # (1)
+                      title: "{{ resource_name }} $name in namespace $namespace was {{ verb_for_finding }}"
+                      aggregation_key: "{{ resource_name }}_{{ verb_for_finding }}"
+
+            .. code-annotations::
+                1. A common action that creates a notification. See :ref:`create_finding<create_finding>`.
+
+        .. md-tab-item:: Filters Example
+
+            .. code-block:: yaml
+
+                customPlaybooks:
+                  triggers:
+                  - {{ trigger_name }}:
+                      name_prefix: "my-resource" # (2)
+                      namespace_prefix: "kube-system" # (3)
+                      labels_selector: "label1=value1" # (4)
+                  actions:
+                  - create_finding: # (1)
+                      title: "{{ resource_name }} $name in namespace $namespace was {{ verb_for_finding }}"
+                      aggregation_key: "{{ resource_name }}_{{ verb_for_finding }}"
+
+
+            .. code-annotations::
+                1. A common action that creates a notification. See :ref:`create_finding<create_finding>`.
+                2. *Optional* filter on {{ resource_name }} name.
+                3. *Optional* filter on {{ resource_name }} namespace.
+                4. *Optional* filter on {{ resource_name }} labels. Format is ``label1=value1,label2=value2``. If multiple labels are provided, all must match.
+
+{% endmacro %}
+
+{% macro render_generic_trigger(resource_name, trigger_name, description, verb_for_finding, related_actions) %}
+
+{{ render_custom_trigger(resource_name, trigger_name, description, verb_for_finding, related_actions, render_generic_examples) }}
+
+{% endmacro %}
