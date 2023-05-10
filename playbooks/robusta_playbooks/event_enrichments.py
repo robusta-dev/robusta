@@ -51,7 +51,7 @@ def event_report(event: EventChangeEvent):
     # creating the finding before the rate limiter, to use the service key for rate limiting
     finding = Finding(
         title=f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
-        description=event.obj.message,
+        description=event.obj.note,
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.INFO if event.obj.type == "Normal" else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,

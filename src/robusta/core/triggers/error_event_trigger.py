@@ -55,7 +55,7 @@ class WarningEventTrigger(EventAllChangesTrigger):
         if self.operations and exec_event.operation.value not in self.operations:
             return False
 
-        event_content = f"{exec_event.obj.reason}{exec_event.obj.message}".lower()
+        event_content = f"{exec_event.obj.reason}{exec_event.obj.note}".lower()
         # exclude if any of the exclusions is found in the event content
         for exclusion in self.exclude:
             if exclusion.lower() in event_content:
