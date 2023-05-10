@@ -372,6 +372,12 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 - triggers:
+    - on_kubernetes_any_resource_all_changes: {}
+  actions:
+    - resource_events_diff: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
   - on_job_failure: {}
   actions:
   - create_finding:
