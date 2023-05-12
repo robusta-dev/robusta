@@ -35,7 +35,7 @@ class HelmReleasesTriggerEvent(TriggerEvent):
         return HelmReleasesTriggerEvent.__name__
 
     def get_event_description(self) -> str:
-        return f"HelmReleases-{self.helm_release.namespace}/v{self.helm_release.name}/{self.helm_release.version}-" \
+        return f"HelmReleases-{self.helm_release.namespace}/{self.helm_release.name}/{self.helm_release.chart.metadata.version}-" \
                f"{self.helm_release.info.status}"
 
 
@@ -60,18 +60,14 @@ class HelmReleasesEvent(ExecutionBaseEvent):
 class HelmReleaseBaseTrigger(BaseTrigger):
     statuses: List[str]
     rate_limit: int
-    trigger_name: str
     names: Optional[List[str]]
     namespace: Optional[str]
     duration: Optional[int]
-    firing_release: Optional[HelmRelease]
 
     def get_trigger_event(self):
         return HelmReleasesTriggerEvent.__name__
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
-        self.firing_release = None
-
         if not isinstance(event, HelmReleasesTriggerEvent):
             return False
 
@@ -110,15 +106,10 @@ class HelmReleaseBaseTrigger(BaseTrigger):
             return False
 
         can_fire = RateLimiter.mark_and_test(
-            f"{self.trigger_name}_{playbook_id}",
+            f"{playbook_id}",
             rate_limiter_id,
             self.rate_limit,
         )
-
-        if can_fire:
-            logging.info(f"triggering a helm release event: {self.trigger_name}")
-
-        self.firing_release = event.helm_release
 
         return can_fire
 
@@ -129,7 +120,7 @@ class HelmReleaseBaseTrigger(BaseTrigger):
             return
 
         return HelmReleasesEvent(
-            helm_release=self.firing_release,
+            helm_release=event.helm_release,
         )
 
     @staticmethod
@@ -137,7 +128,7 @@ class HelmReleaseBaseTrigger(BaseTrigger):
         return HelmReleasesEvent
 
 
-class OnHelmReleaseUnhealthyTrigger(HelmReleaseBaseTrigger):
+class HelmReleaseUnhealthyTrigger(HelmReleaseBaseTrigger):
     def __init__(self,
                  rate_limit: int,
                  names: List[str] = [],
@@ -145,7 +136,6 @@ class OnHelmReleaseUnhealthyTrigger(HelmReleaseBaseTrigger):
                  duration: int = 900, ):
         super().__init__(
             statuses=UNHEALTHY_STATUSES,
-            trigger_name="OnHelmReleaseUnhealthyTrigger",
             names=names,
             namespace=namespace,
             duration=duration,
@@ -153,11 +143,10 @@ class OnHelmReleaseUnhealthyTrigger(HelmReleaseBaseTrigger):
         )
 
 
-class OnHelmReleaseFailTrigger(HelmReleaseBaseTrigger):
+class HelmReleaseFailTrigger(HelmReleaseBaseTrigger):
     def __init__(self, names: List[str] = [], namespace: str = None, rate_limit: int = sys.maxsize):
         super().__init__(
             statuses=FAILED_STATUSES,
-            trigger_name="OnHelmReleaseFailTrigger",
             names=names,
             namespace=namespace,
             duration=0,
@@ -165,23 +154,10 @@ class OnHelmReleaseFailTrigger(HelmReleaseBaseTrigger):
         )
 
 
-class OnHelmReleaseDeployTrigger(HelmReleaseBaseTrigger):
+class HelmReleaseDeployTrigger(HelmReleaseBaseTrigger):
     def __init__(self, names: List[str] = [], namespace: str = None, rate_limit: int = sys.maxsize):
         super().__init__(
             statuses=DEPLOYED_STATUSES,
-            trigger_name="OnHelmReleaseDeployTrigger",
-            names=names,
-            namespace=namespace,
-            duration=0,
-            rate_limit=rate_limit,
-        )
-
-
-class OnHelmReleaseUninstallTrigger(HelmReleaseBaseTrigger):
-    def __init__(self, names: List[str] = [], namespace: str = None, rate_limit: int = sys.maxsize):
-        super().__init__(
-            statuses=UNINSTALLED_STATUSES,
-            trigger_name="OnHelmReleaseUninstallTrigger",
             names=names,
             namespace=namespace,
             duration=0,
@@ -190,7 +166,6 @@ class OnHelmReleaseUninstallTrigger(HelmReleaseBaseTrigger):
 
 
 class HelmReleaseTriggers(BaseModel):
-    on_helm_release_unhealthy: Optional[OnHelmReleaseUnhealthyTrigger]
-    on_helm_release_fail: Optional[OnHelmReleaseFailTrigger]
-    on_helm_release_deploy: Optional[OnHelmReleaseDeployTrigger]
-    on_helm_release_uninstall: Optional[OnHelmReleaseUninstallTrigger]
+    on_helm_release_unhealthy: Optional[HelmReleaseUnhealthyTrigger]
+    on_helm_release_fail: Optional[HelmReleaseFailTrigger]
+    on_helm_release_deploy: Optional[HelmReleaseDeployTrigger]

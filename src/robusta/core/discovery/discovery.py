@@ -25,7 +25,8 @@ from pydantic import BaseModel
 
 from robusta.core.discovery import utils
 from robusta.core.model.cluster_status import ClusterStats
-from robusta.core.model.env_vars import DISCOVERY_BATCH_SIZE, DISCOVERY_MAX_BATCHES, DISCOVERY_PROCESS_TIMEOUT_SEC
+from robusta.core.model.env_vars import DISCOVERY_BATCH_SIZE, DISCOVERY_MAX_BATCHES, DISCOVERY_PROCESS_TIMEOUT_SEC, \
+    DISABLE_HELM_MONITORING
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
@@ -256,38 +257,39 @@ class Discovery:
             )
             raise e
 
-        # discover helm state
         helm_releases_map: dict[str, HelmRelease] = {}
-        try:
-            continue_ref: Optional[str] = None
-            for _ in range(DISCOVERY_MAX_BATCHES):
-                secrets = client.CoreV1Api().list_secret_for_all_namespaces(label_selector=f"owner=helm",
-                                                                            _continue=continue_ref)
-                if not secrets.items:
-                    logging.debug(
-                        "[Discovery] No helm data available",
-                        exc_info=True,
-                    )
-                    break
+        if not DISABLE_HELM_MONITORING:
+            # discover helm state
+            try:
+                continue_ref: Optional[str] = None
+                for _ in range(DISCOVERY_MAX_BATCHES):
+                    secrets = client.CoreV1Api().list_secret_for_all_namespaces(label_selector=f"owner=helm",
+                                                                                _continue=continue_ref)
+                    if not secrets.items:
+                        break
 
-                for secret_item in secrets.items:
-                    if not secret_item.data or not secret_item.data.get("release", None):
-                        continue
+                    for secret_item in secrets.items:
+                        release_data = secret_item.data.get("release", None)
+                        if not release_data:
+                            continue
 
-                    decoded_release_row = HelmRelease.from_api_server(secret_item.data['release'])
-                    # we use map here to deduplicate and pick only the latest release data
-                    helm_releases_map[decoded_release_row.get_service_key()] = decoded_release_row
+                        try:
+                            decoded_release_row = HelmRelease.from_api_server(secret_item.data['release'])
+                            # we use map here to deduplicate and pick only the latest release data
+                            helm_releases_map[decoded_release_row.get_service_key()] = decoded_release_row
+                        except Exception as e:
+                            logging.error(f"an error occured while decoding helm releases: {e}")
 
-                continue_ref = secrets.metadata._continue
-                if not continue_ref:
-                    break
+                    continue_ref = secrets.metadata._continue
+                    if not continue_ref:
+                        break
 
-        except Exception as e:
-            logging.error(
-                "Failed to run periodic helm discovery",
-                exc_info=True,
-            )
-            raise e
+            except Exception as e:
+                logging.error(
+                    "Failed to run periodic helm discovery",
+                    exc_info=True,
+                )
+                raise e
 
         # discover namespaces
         try:

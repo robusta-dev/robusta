@@ -9,24 +9,20 @@ import logging
 
 @action
 def helm_status_enricher(event: HelmReleasesEvent):
-    logging.info(f"received - helm releases change event: {event.helm_release.namespace}/{event.helm_release.name}")
+    logging.debug(f"received - helm releases change event: {event.helm_release.namespace}/{event.helm_release.name}")
 
-    title = f'Helm release {event.helm_release.namespace}/{event.helm_release.name} - version: {event.helm_release.version} - status: {event.helm_release.info.status}'
+    title = f'Helm release {event.helm_release.namespace}/{event.helm_release.name} - version: {event.helm_release.chart.metadata.version} - status: {event.helm_release.info.status}'
 
     finding = Finding(
         title=title,
         source=FindingSource.HELM_RELEASE,
         aggregation_key=event.get_aggregation_key(),
         severity=HelmReleasesEvent.get_severity(event.helm_release),
-        starts_at=event.helm_release.info.get_last_deployed(),
-        ends_at=event.helm_release.info.get_last_deployed(),
     )
 
-    chart_info = ""
-    if event.helm_release.chart:
-        chart_info = f"\nChart Information:\n\n" \
-                     f"  ● *Name*: `{event.helm_release.chart.metadata.name}`\n\n" \
-                     f"  ● *Version*: `{event.helm_release.chart.metadata.version}`\n\n\n"
+    chart_info = f"\nChart Information:\n\n" \
+                 f"  ● *Name*: `{event.helm_release.chart.metadata.name}`\n\n" \
+                 f"  ● *Version*: `{event.helm_release.chart.metadata.version}`\n\n\n"
 
     finding.add_enrichment(
         [

@@ -36,9 +36,10 @@ class Info(BaseModel):
 class HelmRelease(BaseModel):
     name: str
     info: Info
-    chart: Optional[Chart]
+    chart: Chart
     version: int
     namespace: str
+    deleted: bool = False
 
     @staticmethod
     def list_to_json(releases: List["HelmRelease"]):
@@ -63,4 +64,4 @@ class HelmRelease(BaseModel):
         return HelmRelease(**data)
 
     def get_service_key(self) -> str:
-        return f"{self.namespace}/{self.name}"
+        return f"{self.namespace}/HelmRelease/{self.name}"

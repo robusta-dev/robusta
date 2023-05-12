@@ -193,7 +193,7 @@ class RobustaSink(SinkBase):
 
     def __send_helm_release_events(self, release_data: List[HelmRelease]):
         try:
-            logging.info("Sending helm release events")
+            logging.debug("Sending helm release events")
             response = WebApi.send_helm_release_events(
                 release_data=release_data,
                 retries=4,
@@ -202,7 +202,7 @@ class RobustaSink(SinkBase):
             if response != 200:
                 logging.error("Error occured while sending `helm release trigger event`")
             else:
-                logging.info("Sent `helm release` trigger event.")
+                logging.debug("Sent `helm release` trigger event.")
         except Exception:
             logging.error("Error occured while sending `helm release` trigger event", exc_info=True)
 
@@ -350,15 +350,6 @@ class RobustaSink(SinkBase):
 
         self.dal.publish_jobs(updated_jobs)
 
-    def __safe_delete_helm_releases(self, helm_releases_key):
-        try:
-            logging.info(f"[supabase] deleting the helm release: {helm_releases_key}")
-
-            self.dal.remove_deleted_helm_release(self.__helm_releases_cache[helm_releases_key])
-            del self.__helm_releases_cache[helm_releases_key]
-        except Exception:
-            logging.error(f"Failed to delete helm releases with service key {helm_releases_key}", exc_info=True)
-
     def __publish_new_helm_releases(self, active_helm_releases: List[HelmRelease]):
         curr_helm_releases = {}
         for helm_release in active_helm_releases:
@@ -368,8 +359,10 @@ class RobustaSink(SinkBase):
         cache_keys = list(self.__helm_releases_cache.keys())
         helm_releases: List[HelmRelease] = []
         for helm_release_key in cache_keys:
-            if not curr_helm_releases.get(helm_release_key):  # helm_release doesn't exist any more, delete it
-                self.__safe_delete_helm_releases(helm_release_key)
+            if not curr_helm_releases.get(helm_release_key):  # helm release doesn't exist any more, delete it
+                self.__helm_releases_cache[helm_release_key].deleted = True
+                helm_releases.append(self.__helm_releases_cache[helm_release_key])
+                del self.__helm_releases_cache[helm_release_key]
 
         # new or changed helm release
         for helm_release_key in curr_helm_releases.keys():
@@ -463,7 +456,7 @@ class RobustaSink(SinkBase):
                 self.__get_events_history()
                 get_history = False
 
-            if discovery_results and discovery_results.helm_releases and len(discovery_results.helm_releases):
+            if discovery_results and discovery_results.helm_releases:
                 self.__send_helm_release_events(release_data=discovery_results.helm_releases)
 
             duration = round(time.time() - start_t)

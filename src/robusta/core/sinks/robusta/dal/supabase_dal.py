@@ -28,7 +28,7 @@ EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
 CLUSTERS_STATUS_TABLE = "ClustersStatus"
 JOBS_TABLE = "Jobs"
-HELM_RELEASES_TABLE = "helm_releases"
+HELM_RELEASES_TABLE = "HelmReleases"
 NAMESPACES_TABLE = "Namespaces"
 UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
 SCANS_RESULT_TABLE = "ScansResults"
@@ -372,6 +372,7 @@ class SupabaseDal:
             .select("*")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster_id", "eq", self.cluster)
+            .filter("deleted", "eq", False)
             .execute()
         )
         if res.get("status_code") not in [200]:
@@ -395,7 +396,7 @@ class SupabaseDal:
             return
 
         db_helm_releases = [self.__to_db_helm_release(helm_release) for helm_release in helm_releases]
-        logging.info(f"[supabase] Publishing the helm_releases {db_helm_releases}")
+        logging.debug(f"[supabase] Publishing the helm_releases {db_helm_releases}")
 
         res = self.client.table(HELM_RELEASES_TABLE).insert(db_helm_releases, upsert=True).execute()
         if res.get("status_code") not in [200, 201]:
@@ -403,24 +404,6 @@ class SupabaseDal:
             self.handle_supabase_error()
             status_code = res.get("status_code")
             raise Exception(f"publish helm_releases failed. status: {status_code}")
-
-    def remove_deleted_helm_release(self, helm_release: HelmRelease):
-        if not helm_release:
-            return
-
-        res = self.__delete_patch(
-            self.client.table(HELM_RELEASES_TABLE)
-            .delete()
-            .eq("account_id", self.account_id)
-            .eq("cluster_id", self.cluster)
-            .eq("service_key", helm_release.get_service_key())
-        )
-        status_code = res.get("status_code")
-        valid_deleted_statuses = [204, 200, 202]
-        if status_code not in valid_deleted_statuses:
-            logging.error(f"Failed to delete helm release {helm_release} error: {res.get('data')}")
-            self.handle_supabase_error()
-            raise Exception(f"remove deleted helm release failed. status: {status_code}")
 
     @staticmethod
     def __delete_patch(supabase_request_obj: QueryRequestBuilder) -> Dict[str, Any]:

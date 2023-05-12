@@ -13,6 +13,12 @@ Prerequisites
 ---------------
 To use Helm Triggers, the :ref:`Robusta UI` sink must be enabled..
 
+To allow Robusta to monitor Helm Releases, it needs to access your Service Account secrets. To **disable** monitoring the releases, set the following in your ``generated_values.yaml`` file:
+
+.. code-block:: yaml
+
+    monitorHelmReleases: false
+
 Triggers
 -----------
 
@@ -110,35 +116,5 @@ The following triggers are available:
                   - helm_status_enricher: {}
 
     .. image:: /images/helm-release-deployed.png
-      :width: 1000
-      :align: center
-
-
-.. _on_helm_release_uninstall:
-
-.. details:: on_helm_release_uninstall
-
-    The ``on_helm_release_uninstall`` is triggered when a Helm release enters a ``uninstalled`` state. This is a one-time trigger, meaning that it only fires once when the release is uninstalled.
-
-    **Available options**:
-
-    * ``names``: List of Helm releases for this trigger to monitor. Leaving this field empty monitors all releases in the namespace. Optional.
-    * ``namespace``: The Kubernetes namespace for this trigger to monitor. Leaving this field empty monitors all namespaces in the cluster. Optional.
-
-    .. admonition:: Example
-
-        Monitor the ``demo-app`` Helm release in the ``default`` namespace and send notifications when it is uninstalled.
-
-        .. code-block:: yaml
-
-            customPlaybooks:
-              - triggers:
-                - on_helm_release_uninstall:
-                    names: ["demo-app"] # optional
-                    namespace: "default" # optional
-                actions:
-                  - helm_status_enricher: {}
-
-    .. image:: /images/helm-release-uninstalled.png
       :width: 1000
       :align: center
