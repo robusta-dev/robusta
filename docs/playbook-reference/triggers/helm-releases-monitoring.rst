@@ -11,13 +11,10 @@ Robusta can monitor your Helm releases and notify you about updates or problems.
 
 Prerequisites
 ---------------
-To use Helm Triggers, the :ref:`Robusta UI` sink must be enabled..
+There are two prerequisites for using Helm triggers:
 
-To allow Robusta to monitor Helm Releases, it needs to access your Service Account secrets. To **disable** monitoring the releases, set the following in your ``generated_values.yaml`` file:
-
-.. code-block:: yaml
-
-    monitorHelmReleases: false
+* The :ref:`Robusta UI` sink must be enabled
+* ``monitorHelmReleases: true`` must be set in Robusta's Helm values
 
 Triggers
 -----------
