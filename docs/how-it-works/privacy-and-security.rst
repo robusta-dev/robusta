@@ -34,8 +34,7 @@ Censoring Sensitive Data
 
 Pod logs gathered by Robusta can be censored using regexes. Refer to the :ref:`Censoring Logs` guide for details.
 
-
 Kubernetes Secrets
---------------------
+********************
 
-If you'd like to monitor Helm releases with Robusta, access to Kubernetes Secrets is required. You can disable this feature and remove Robusta's access to Kubernetes secrets by setting ``monitorHelmReleases: false``
+Robusta can monitor Helm releases in your cluster for issues. To do so, access to Kubernetes Secrets is required. You can disable this with ``monitorHelmReleases: false`` if necessary.
