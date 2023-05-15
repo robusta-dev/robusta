@@ -25,7 +25,9 @@ from pydantic import BaseModel
 
 from robusta.core.discovery import utils
 from robusta.core.model.cluster_status import ClusterStats
-from robusta.core.model.env_vars import DISCOVERY_BATCH_SIZE, DISCOVERY_MAX_BATCHES, DISCOVERY_PROCESS_TIMEOUT_SEC
+from robusta.core.model.env_vars import DISCOVERY_BATCH_SIZE, DISCOVERY_MAX_BATCHES, DISCOVERY_PROCESS_TIMEOUT_SEC, \
+    DISABLE_HELM_MONITORING
+from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
@@ -38,6 +40,7 @@ class DiscoveryResults(BaseModel):
     node_requests: Dict = {}
     jobs: List[JobInfo] = []
     namespaces: List[NamespaceInfo] = []
+    helm_releases: List[HelmRelease] = []
 
     class Config:
         arbitrary_types_allowed = True
@@ -48,12 +51,12 @@ class Discovery:
 
     @staticmethod
     def __create_service_info(
-        meta: V1ObjectMeta,
-        kind: str,
-        containers: List[V1Container],
-        volumes: List[V1Volume],
-        total_pods: int,
-        ready_pods: int,
+            meta: V1ObjectMeta,
+            kind: str,
+            containers: List[V1Container],
+            volumes: List[V1Volume],
+            total_pods: int,
+            ready_pods: int,
     ) -> ServiceInfo:
         container_info = [ContainerInfo.get_container_info(container) for container in containers] if containers else []
         volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
@@ -236,8 +239,8 @@ class Discovery:
                             pod_meta.name
                             for pod_meta in pods_metadata
                             if (
-                                (job.metadata.namespace == pod_meta.namespace)
-                                and (job_labels.items() <= (pod_meta.labels or {}).items())
+                                    (job.metadata.namespace == pod_meta.namespace)
+                                    and (job_labels.items() <= (pod_meta.labels or {}).items())
                             )
                         ]
 
@@ -253,6 +256,40 @@ class Discovery:
                 exc_info=True,
             )
             raise e
+
+        helm_releases_map: dict[str, HelmRelease] = {}
+        if not DISABLE_HELM_MONITORING:
+            # discover helm state
+            try:
+                continue_ref: Optional[str] = None
+                for _ in range(DISCOVERY_MAX_BATCHES):
+                    secrets = client.CoreV1Api().list_secret_for_all_namespaces(label_selector=f"owner=helm",
+                                                                                _continue=continue_ref)
+                    if not secrets.items:
+                        break
+
+                    for secret_item in secrets.items:
+                        release_data = secret_item.data.get("release", None)
+                        if not release_data:
+                            continue
+
+                        try:
+                            decoded_release_row = HelmRelease.from_api_server(secret_item.data['release'])
+                            # we use map here to deduplicate and pick only the latest release data
+                            helm_releases_map[decoded_release_row.get_service_key()] = decoded_release_row
+                        except Exception as e:
+                            logging.error(f"an error occured while decoding helm releases: {e}")
+
+                    continue_ref = secrets.metadata._continue
+                    if not continue_ref:
+                        break
+
+            except Exception as e:
+                logging.error(
+                    "Failed to run periodic helm discovery",
+                    exc_info=True,
+                )
+                raise e
 
         # discover namespaces
         try:
@@ -272,6 +309,7 @@ class Discovery:
             node_requests=node_requests,
             jobs=active_jobs,
             namespaces=namespaces,
+            helm_releases=list(helm_releases_map.values())
         )
 
     @staticmethod
@@ -364,10 +402,10 @@ def extract_containers(resource) -> List[V1Container]:
     try:
         containers = []
         if (
-            isinstance(resource, V1Deployment)
-            or isinstance(resource, V1DaemonSet)
-            or isinstance(resource, V1StatefulSet)
-            or isinstance(resource, V1Job)
+                isinstance(resource, V1Deployment)
+                or isinstance(resource, V1DaemonSet)
+                or isinstance(resource, V1StatefulSet)
+                or isinstance(resource, V1Job)
         ):
             containers = resource.spec.template.spec.containers
         elif isinstance(resource, V1Pod):
@@ -428,10 +466,10 @@ def extract_volumes(resource) -> List[V1Volume]:
     try:
         volumes = []
         if (
-            isinstance(resource, V1Deployment)
-            or isinstance(resource, V1DaemonSet)
-            or isinstance(resource, V1StatefulSet)
-            or isinstance(resource, V1Job)
+                isinstance(resource, V1Deployment)
+                or isinstance(resource, V1DaemonSet)
+                or isinstance(resource, V1StatefulSet)
+                or isinstance(resource, V1Job)
         ):
             volumes = resource.spec.template.spec.volumes
         elif isinstance(resource, V1Pod):

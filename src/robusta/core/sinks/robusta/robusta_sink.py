@@ -11,6 +11,7 @@ from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
+from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
@@ -29,6 +30,7 @@ from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_sile
 
 
 class RobustaSink(SinkBase):
+
     def __init__(self, sink_config: RobustaSinkConfigWrapper, registry):
         from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
 
@@ -69,6 +71,7 @@ class RobustaSink(SinkBase):
         # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
         # helps differentiate between no jobs, to not initialized
         self.__jobs_cache: Optional[Dict[str, JobInfo]] = None
+        self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
@@ -118,6 +121,13 @@ class RobustaSink(SinkBase):
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
 
+    def __assert_helm_releases_cache_initialized(self):
+        if self.__helm_releases_cache is None:
+            logging.info("Initializing helm releases cache")
+            self.__helm_releases_cache: Dict[str, HelmRelease] = {}
+            for helm_release in self.dal.get_active_helm_release():
+                self.__helm_releases_cache[helm_release.get_service_key()] = helm_release
+
     def __assert_namespaces_cache_initialized(self):
         if not self.__namespaces_cache:
             logging.info("Initializing namespaces cache")
@@ -127,6 +137,7 @@ class RobustaSink(SinkBase):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__jobs_cache = None
+        self.__helm_releases_cache = None
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
 
     def stop(self):
@@ -180,7 +191,22 @@ class RobustaSink(SinkBase):
         except Exception:
             logging.error("Error getting events history", exc_info=True)
 
-    def __discover_resources(self):
+    def __send_helm_release_events(self, release_data: List[HelmRelease]):
+        try:
+            logging.debug("Sending helm release events")
+            response = WebApi.send_helm_release_events(
+                release_data=release_data,
+                retries=4,
+                timeout_delay=30,
+            )
+            if response != 200:
+                logging.error("Error occured while sending `helm release trigger event`")
+            else:
+                logging.debug("Sent `helm release` trigger event.")
+        except Exception:
+            logging.error("Error occured while sending `helm release` trigger event", exc_info=True)
+
+    def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
         try:
             results: DiscoveryResults = Discovery.discover_resources()
@@ -194,6 +220,9 @@ class RobustaSink(SinkBase):
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
 
+            self.__assert_helm_releases_cache_initialized()
+            self.__publish_new_helm_releases(results.helm_releases)
+
             self.__assert_namespaces_cache_initialized()
             self.__publish_new_namespaces(results.namespaces)
 
@@ -201,6 +230,8 @@ class RobustaSink(SinkBase):
             RobustaSink.__save_resolver_resources(
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
             )
+
+            return results
 
         except Exception:
             # we had an error during discovery. Reset caches to align the data with the storage
@@ -319,6 +350,30 @@ class RobustaSink(SinkBase):
 
         self.dal.publish_jobs(updated_jobs)
 
+    def __publish_new_helm_releases(self, active_helm_releases: List[HelmRelease]):
+        curr_helm_releases = {}
+        for helm_release in active_helm_releases:
+            curr_helm_releases[helm_release.get_service_key()] = helm_release
+
+        # handle deleted helm release
+        cache_keys = list(self.__helm_releases_cache.keys())
+        helm_releases: List[HelmRelease] = []
+        for helm_release_key in cache_keys:
+            if not curr_helm_releases.get(helm_release_key):  # helm release doesn't exist any more, delete it
+                self.__helm_releases_cache[helm_release_key].deleted = True
+                helm_releases.append(self.__helm_releases_cache[helm_release_key])
+                del self.__helm_releases_cache[helm_release_key]
+
+        # new or changed helm release
+        for helm_release_key in curr_helm_releases.keys():
+            current_helm_release = curr_helm_releases[helm_release_key]
+            if self.__helm_releases_cache.get(
+                    helm_release_key) != current_helm_release:  # helm_release not in the cache, or changed
+                helm_releases.append(current_helm_release)
+                self.__helm_releases_cache[helm_release_key] = current_helm_release
+
+        self.dal.publish_helm_releases(helm_releases)
+
     def __update_cluster_status(self):
         global_config = self.get_global_config()
         activity_stats = ActivityStats(
@@ -396,10 +451,14 @@ class RobustaSink(SinkBase):
         while self.__active:
             start_t = time.time()
             self.__periodic_cluster_status()
-            self.__discover_resources()
+            discovery_results = self.__discover_resources()
             if get_history:
                 self.__get_events_history()
                 get_history = False
+
+            if discovery_results and discovery_results.helm_releases:
+                self.__send_helm_release_events(release_data=discovery_results.helm_releases)
+
             duration = round(time.time() - start_t)
             # for small cluster duration is discovery_period_sec. For bigger clusters, up to 5 min
             sleep_dur = min(max(self.__discovery_period_sec, 3 * duration), 300)

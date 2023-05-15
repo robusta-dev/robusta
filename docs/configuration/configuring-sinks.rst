@@ -75,7 +75,18 @@ The following attributes can be included in a *match* block:
 - ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
 - ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
 - ``source``: one of ``NONE``, ``KUBERNETES_API_SERVER``, ``PROMETHEUS``, ``MANUAL``, ``CALLBACK``
-- ``identifier``: e.g. ``report_crash_loop`` [#f1]_
+- ``identifier``: e.g. ``report_crash_loop``
+
+.. details:: How do I find the ``identifier`` value to use in a match block?
+
+    For Prometheus alerts, it's always the alert name.
+
+    .. TODO: update after we finish our improvements here:
+    .. For builtin APIServer alerts, it can vary, but common values are ``report_crash_loop``, ``image_pull_backoff_reporter``, ``ConfigurationChange/KubernetesResource/Change``, and ``job_failure``.
+
+    For custom playbooks, it's the value you set in :ref:`create_finding<create_finding>` under ``aggregation_key``.
+
+    Ask us in Slack if you need help.
 
 The regular expressions must be in the `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_, as passed to `re.match <https://docs.python.org/3/library/re.html#re.match>`_.
 
@@ -112,12 +123,18 @@ routed to the sink only from :ref:`customPlaybooks that explicitly name this sin
 
 Here too, matchers apply as usual and perform further filtering.
 
-Next Steps
+Examples
+^^^^^^^^^^^
+
+🎓 :ref:`Route Alerts By Namespace`
+
+🎓 :ref:`Route Alerts By Type`
+
+🎓 :ref:`Routing with Exclusion Rules`
+
+See Also
 ^^^^^^^^^^^^
 
-* :ref:`View a list of built-in sinks <Sinks Reference>`
-* :ref:`See examples of routing rules in the tutorials<sink-matchers>`
+🔔 :ref:`All Sinks <Sinks Reference>`
 
-.. rubric:: Footnotes
-
-.. [#f1] This is equivalent to ``Finding.aggregation_key`` which is set by each playbook that generates results. For now, you must check a playbook's source code to see the value. For example, the `resource_babysitter playbook  <https://github.com/robusta-dev/robusta/blob/master/playbooks/robusta_playbooks/babysitter.py#L66>`_  sets a value of ``ConfigurationChange/KubernetesResource/Change``
+🎓 :ref:`Silencing Alerts`
