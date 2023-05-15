@@ -16,8 +16,6 @@ from robusta.utils.server_start import ServerStart
 UNHEALTHY_STATUSES = ["pending-install", "pending-upgrade", "pending-rollback", "uninstalling"]
 FAILED_STATUSES = ["failed", "unknown"]
 DEPLOYED_STATUSES = ["deployed"]
-UNINSTALLED_STATUSES = ["uninstalled"]
-
 
 class IncomingHelmReleasesEventPayload(BaseModel):
     """
