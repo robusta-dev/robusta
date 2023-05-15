@@ -43,7 +43,16 @@ This method works for public repos too:
         key: LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tL
 
 
-The ``key`` parameter must contain a `base64` encoded deployment key with ``read`` access. 
+The ``key`` parameter must contain a ``base64`` encoded deployment key with ``read`` access.
+
+.. admonition:: Example deployment key
+
+     .. code-block:: yaml
+
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
+        -----END OPENSSH PRIVATE KEY-----
+
 
 Handling Secrets
 *******************
