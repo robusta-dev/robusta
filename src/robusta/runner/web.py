@@ -7,6 +7,7 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_REQUESTS
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
+from robusta.core.triggers.helm_releases_triggers import IncomingHelmReleasesEventPayload, HelmReleasesTriggerEvent
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
 from robusta.integrations.prometheus.models import AlertManagerEvent
 from robusta.integrations.prometheus.trigger import PrometheusTriggerEvent
@@ -46,6 +47,20 @@ class Web:
             Web.alerts_queue.add_task(Web.event_handler.handle_trigger, PrometheusTriggerEvent(alert=alert))
 
         Web.event_handler.get_telemetry().last_alert_at = str(datetime.now())
+        return jsonify(success=True)
+
+    @staticmethod
+    @app.route("/api/helm-releases", methods=["POST"])
+    def handle_helm_releases():
+        req_json = request.get_json()
+        Web._trace_incoming("received helm release trigger events via api", req_json)
+        logging.debug(
+            f"received helm release trigger events via api\n"
+        )
+        helm_release_payload = IncomingHelmReleasesEventPayload.parse_obj(req_json)
+        for helm_release in helm_release_payload.data:
+            Web.api_server_queue.add_task(Web.event_handler.handle_trigger,
+                                          HelmReleasesTriggerEvent(helm_release=helm_release))
         return jsonify(success=True)
 
     @staticmethod

@@ -49,6 +49,10 @@ spec:
           - name: CLOUD_ROUTING
             value: "False"
           {{- end }}
+          {{- if not .Values.monitorHelmReleases }}
+          - name: DISABLE_HELM_MONITORING
+            value: "True"
+          {{- end }}
           - name: RUNNER_VERSION
             value: {{ .Chart.AppVersion }}
           - name: CERTIFICATE
