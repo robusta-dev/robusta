@@ -3,15 +3,19 @@ Scans
 
 Robusta includes built-in actions to scan and get insights on Kubernetes clusters.
 
-These actions can be triggered automatically on a schedule, manually using the Robusta UI and :ref:`manually using the robusta cli <Manual Triggers>`.
+These actions can be triggered:
 
+* Automatically, on a schedule.
+* On demand, via the Robusta UI.
+* On demand, via :ref:`cli command <Manual Triggers>`.
 
 Popeye - A Kubernetes Cluster Sanitizer
 ---------------------------------------------
 
-`Popeye <https://github.com/derailed/popeye>`_ is a utility that scans live Kubernetes cluster and reports potential issues with deployed resources and configurations. By default Robusta will run one Popeye scan on startup.
+`Popeye <https://github.com/derailed/popeye>`_ is a utility that scans live Kubernetes clusters and reports potential issues with resources and configurations.
+By default, every instance of Robusta that's connected to the UI will run a Popeye scan on startup. Further Popeye scans can be triggered in the UI, and all scans can be viewed there.
 
-To run :ref:`Scheduled` Popeye scans, add this to your `generated_values.yaml` file:
+With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`.
 
 .. code-block:: yaml
     :name: cb-popeye-set-periodic-scan
@@ -27,19 +31,23 @@ To run :ref:`Scheduled` Popeye scans, add this to your `generated_values.yaml` f
     sinks:
         - "robusta_ui_sink"
 
-.. warning::
+The results can be sent as a PDF to Slack,
 
-    Currently Popeye scans are only supported with the Robusta UI and Slack :ref:`sinks <Sinks Reference>`.
+.. image:: /images/popeye_slack_example.png
+    :width: 1000
+    :align: center
 
-Popeye scans can be triggerd and viewed in the Robusta UI
+or to the Robusta UI.
 
 .. image:: /images/popeye_example.png
     :width: 1000
     :align: center
 
-.. robusta-action:: playbooks.robusta_playbooks.popeye.popeye_scan
+Other sinks like MSTeams are not supported yet.
 
-    Manually trigger with:
+.. robusta-action:: playbooks.robusta_playbooks.popeye.popeye_scan on_schedule
+
+    You can trigger a Popeye scan at any time, by running the following command:
 
     .. code-block:: bash
 
@@ -48,9 +56,7 @@ Popeye scans can be triggerd and viewed in the Robusta UI
 Troubleshooting Popeye
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When triggering a Popeye scan, Popeye will run as a one-off job directly in your cluster.
-Use these steps to find possible issues with the scan action.
-
+Popeye scans run as Jobs in your cluster. If there are issues with a scan, troubleshoot as follows:
 
 * To find errors with the Popeye job run:
 
@@ -59,7 +65,7 @@ Use these steps to find possible issues with the scan action.
 
     kubectl get events --all-namespaces --field-selector=type!=Normal | grep popeye-job
 
-* Useful information could be found in the Robusta runner logs, use Robusta CLI:
+* Additional errors can sometimes be found in the Robusta runner logs:
 
 .. code-block:: bash
     :name: cb-popeye-get-logs
