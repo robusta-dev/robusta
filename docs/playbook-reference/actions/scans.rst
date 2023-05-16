@@ -27,7 +27,12 @@ With or without the UI, you can configure additional scans on a :ref:`schedule <
             repeat: 1 # number of times to run or -1 to run forever
             seconds_delay: 604800 # 1 week
     actions:
-    - popeye_scan: {}
+    - popeye_scan:
+        spinach: |
+          popeye:
+              excludes:
+                  v1/pods:
+                  - name: rx:kube-system
     sinks:
         - "robusta_ui_sink"
 
