@@ -1,8 +1,15 @@
 Track Failed Kubernetes Jobs
 ##############################
 
-Lets track failing Kubernetes Jobs and notify the user. Notifications will be sent to all configured :ref:`Sinks <Sinks Reference>`
-like Slack, MSTeams, or DataDog. It is also possible to :ref:`route notifications to specific sinks<Routing Alerts to Specific Sinks>`.
+Notify about failed Kubernetes Jobs in Slack, MSTeams, DataDog, or other :ref:`Sinks <Sinks Reference>`.
+
+.. image:: /images/failingjobs.png
+    :alt: Failing Kubernetes jobs notification on Slack
+    :align: center
+
+.. admonition:: Avoid Duplicate Alerts
+
+    If you installed Robusta with the embedded Prometheus stack, you don't need to configure this playbook. It's configured by default.
 
 Defining a Playbook
 ------------------------------------------
@@ -13,7 +20,7 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
 
     customPlaybooks:
     - triggers:
-      - on_job_failure: {}
+      - on_job_failure: {}  # (1)
       actions:
       - create_finding:
           title: "Job Failed"
@@ -21,6 +28,14 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
       - job_info_enricher: {}
       - job_events_enricher: {}
       - job_pod_enricher: {}
+
+.. code-annotations::
+    1. :ref:`on_job_failure<on_job_failure>` fires once for each failed Kubernetes Job
+    2. :ref:`create_finding<create_finding>` generates a notification message
+    3. :ref:`job_info_enricher<job_info_enricher>` fetches the Jobs status and information
+    4. :ref:`job_events_enricher<job_events_enricher>` runs ``kubectl get events``, finds Events related to the Job, and attaches them
+    5. :ref:`job_pod_enricher<job_pod_enricher>` finds Pods that were part of the Job. It attaches Pod-level information like Pod logs
+
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
@@ -33,25 +48,10 @@ Deploy a failing job. The job will fail after 60 seconds, then attempt to run ag
 
     kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/job_failure/job_crash.yaml
 
-.. details:: Output
+Tips and Tricks
+----------------
 
-    .. image:: /images/failingjobs.png
-        :alt: Failing Kubernetes jobs notification on Slack
-        :align: center
+Route failed Jobs to specific Slack channels
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Refer to :ref:`docs on notification routing<Routing Alerts to Specific Sinks>`.
 
-
-How it Works
--------------
-
-This playbook uses the :ref:`on_job_failure<on_job_failure>` trigger, that fires once for each Job failure.
-
-It uses the :ref:`create_finding <create_finding>` action to generate a notification message, and three additional actions to
-attach extra information: :ref:`job_info_enricher <job_info_enricher>`, :ref:`job_events_enricher <job_events_enricher>`,
-and :ref:`job_pod_enricher <job_pod_enricher>`.
-
-Avoiding Duplicate Notifications
-------------------------------------------
-Many Prometheus installations include a default alert to track failing Kubernetes Jobs.
-
-When using Robusta, you can disable that Prometheus alert or you can use the ``on_prometheus_alert`` trigger instead
-of the ``on_job_failure`` trigger to avoid a duplicate. Robusta does something similar out of the box.
