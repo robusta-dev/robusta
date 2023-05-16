@@ -520,3 +520,15 @@ kube-prometheus-stack:
         cpu: 10m
 
 rsa: ~
+
+# custom parameters for OpenShift clusters
+openshift:
+  enabled: false
+  createScc: false
+  createPrivilegedScc: false
+
+  privilegedSccName: null
+  sccName: null
+
+  sccPriority: null
+  privilegedSccPriority: null
