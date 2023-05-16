@@ -43,7 +43,7 @@ class MsTeamsMsg:
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
         title = finding.title.removeprefix("[RESOLVED] ")
-        title = self.__build_msteams_title(title, status, finding.severity)
+        title = self.__build_msteams_title(title, status, finding.severity, finding.add_silence_url)
 
         block = MsTeamsTextBlock(
             text=f"{title}", font_size="extraLarge"
@@ -65,8 +65,9 @@ class MsTeamsMsg:
             self.__write_to_entire_msg([block])
 
     @classmethod
-    def __build_msteams_title(cls, title: str, status: FindingStatus, severity: FindingSeverity) -> str:
-        return f"{status.to_emoji()} {status.name.lower()} - {severity.to_emoji()} {severity.name} - **{title}**"
+    def __build_msteams_title(cls, title: str, status: FindingStatus, severity: FindingSeverity, add_silence_url: bool) -> str:
+        status_str: str = f"{status.to_emoji()} {status.name.lower()} - " if add_silence_url else ""
+        return f"{status_str}{severity.to_emoji()} {severity.name} - **{title}**"
 
     def write_current_section(self):
         if len(self.current_section) == 0:

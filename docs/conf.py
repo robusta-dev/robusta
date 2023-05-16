@@ -146,8 +146,7 @@ html_theme_options = {
     "repo_url": "https://github.com/robusta-dev/robusta",
     "repo_name": "Robusta",
     "repo_type": "github",
-    # TODO: docs - need to modify to the Master Branch
-    "edit_uri": "tree/structure/docs",
+    "edit_uri": "tree/master/docs",
     "palette": [
         {
             "media": "(prefers-color-scheme: light)",
@@ -212,9 +211,11 @@ html_static_path = ["_static"]
 
 html_css_files = [
     "custom.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css",
 ]
 
 html_js_files = ["analytics.js"]
+
 html_favicon = "_static/favicon.png"
 
 html_favicon = "_static/faviconNew.svg"
