@@ -9,6 +9,35 @@ These actions can be triggered:
 * On demand, via the Robusta UI.
 * On demand, via :ref:`cli command <Manual Triggers>`.
 
+KRR - Prometheus-based Kubernetes Resource Recommendations
+---------------------------------------------
+
+Robustas `KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool for optimizing resource allocation in Kubernetes clusters.
+It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory.
+This reduces costs and improves performance.
+By default, every instance of Robusta that's connected to the UI will run a KRR scan on startup. Further KRR scans can be triggered in the UI, and all scans can be viewed there.
+
+With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`.
+The results can be sent as a PDF to Slack,
+
+.. image:: /images/krr_slack_example.png
+    :width: 1000
+    :align: center
+
+or to the Robusta UI.
+
+.. image:: /images/krr_example.png
+    :width: 1000
+    :align: center
+
+.. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule
+
+    You can trigger a KRR scan at any time, by running the following command:
+
+    .. code-block:: bash
+
+        robusta playbooks trigger krr_scan
+
 Popeye - A Kubernetes Cluster Sanitizer
 ---------------------------------------------
 
