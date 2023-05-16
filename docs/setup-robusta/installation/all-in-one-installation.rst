@@ -7,8 +7,7 @@ Monitor Kubernetes from Scratch
 ####################################
 *Estimated time: 5 minutes*
 
-Setup Kubernetes monitoring from scratch, using the all-in-one Robusta and Prometheus
-package. This is the recommended way to monitor your cluster.
+Setup Kubernetes monitoring from scratch. Install Robusta, Prometheus and Grafana on using the all-in-one Helm chart. This is the recommended way to monitor your cluster.
 
 Prerequisites
 ---------------------
