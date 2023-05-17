@@ -15,7 +15,7 @@ use in :ref:`customPlaybooks<customPlaybooks>`.
 External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH.
 
 Loading Actions from Public Git Repo
-------------------------------------------
+------------------------------------------  
 
 Use HTTPs to load actions:
 
@@ -40,12 +40,19 @@ This method works for public repos too:
       # add the same playbooks as above, this time over ssh
       my_extra_playbooks:
         url: "git@github.com:robusta-dev/robusta-chaos.git"
-        key: |-
-          -----BEGIN OPENSSH PRIVATE KEY-----
-          ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
-          -----END OPENSSH PRIVATE KEY-----
+        key: LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tL
 
-The ``key`` parameter must contain a deployment key with ``read`` access.
+
+The ``key`` parameter must contain a ``base64`` encoded deployment key with ``read`` access.
+
+.. admonition:: Example deployment key
+
+     .. code-block:: yaml
+
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
+        -----END OPENSSH PRIVATE KEY-----
+
 
 Handling Secrets
 *******************

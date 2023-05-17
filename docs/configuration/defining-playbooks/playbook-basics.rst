@@ -52,10 +52,7 @@ Let's explore each part of the above playbook in depth.
 Understanding Triggers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Triggers** are event-driven, firing at specific moments when something occurs in your cluster. In the background,
-Robusta continuously listens to events in your cluster and evaluates triggers. Even a Kubernetes cluster doing nothing
-generates a constant stream of events. Robusta evaluates all of them, but most events are filtered out and will never
-cause a trigger to fire. The power of Robusta is picking out interesting events from all that noise.
+**Triggers** are event-driven, firing at specific moments when something occurs in your cluster. Even a Kubernetes cluster doing nothing generates a constant stream of events. Using triggers, you can find and react to the events that matter.
 
 Going back to the above example, we saw the trigger ``on_kubernetes_warning_event_create``.
 Breaking down the name, you'll notice the format ``on_<resource_type>_<operation>``. This is a general pattern.

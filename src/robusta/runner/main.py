@@ -15,10 +15,12 @@ from robusta.runner.log_init import init_logging, logging
 from robusta.runner.ssl_utils import add_custom_certificate
 from robusta.runner.telemetry_service import TelemetryLevel, TelemetryService
 from robusta.runner.web import Web
+from robusta.utils.server_start import ServerStart
 
 
 def main():
     init_logging()
+    ServerStart.set()
     if add_custom_certificate(ADDITIONAL_CERTIFICATE):
         logging.info("added custom certificate")
 
