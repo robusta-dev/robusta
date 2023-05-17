@@ -112,8 +112,21 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
         ) from e
 
 
+def __text_config_to_dict(text: str) -> Dict:
+    conf = {}
+    lines = text.strip().split('\n')
+    for line in lines:
+        key, val = line.strip().split('=')
+        conf[key] = val.strip('"')
+
+    return conf
+
+
 def get_prometheus_flags(prom: "PrometheusConnect") -> Dict:
     try:
+        result = {}
+
+        # connecting to prometheus
         response = prom._session.get(
             f"{prom.url}/api/v1/status/flags",
             verify=prom.ssl_verification,
@@ -121,12 +134,38 @@ def get_prometheus_flags(prom: "PrometheusConnect") -> Dict:
             # This query should return empty results, but is correct
             params={},
         )
-        return response.json()
+
+        if response.status_code != 400:
+            response.raise_for_status()
+            result["retentionTime"] = response.json().get('data', {}).get('storage.tsdb.retention.time', "")
+            return result
+
+        logging.error(
+            "The prometheus endpoint `/api/v1/status/flags` does not exist. "
+            "Making an attempt to connect to VictoriaMetrics")
+
+        # connecting to VictoriaMetrics
+        response = prom._session.get(
+            f"{prom.url}/flags",
+            verify=prom.ssl_verification,
+            headers=prom.headers,
+            # This query should return empty results, but is correct
+            params={},
+        )
+        response.raise_for_status()
+
+        configuration = __text_config_to_dict(response.text)
+        retentionPeriod = configuration.get('-retentionPeriod')
+
+        # if the retentionPeriod is only a number then treat it as (m)onth
+        # ref: https://docs.victoriametrics.com/?highlight=-retentionPeriod#retention
+        result["retentionTime"] = retentionPeriod if not retentionPeriod.isdigit() else f"{retentionPeriod}m"
+
+        return result
     except (ConnectionError, HTTPError) as e:
         raise PrometheusNotFound(
             f"Couldn't connect to Prometheus found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
         ) from e
-
 
 class ServiceDiscovery:
     cache: TTLCache = TTLCache(maxsize=1, ttl=SERVICE_CACHE_TTL_SEC)
@@ -163,6 +202,7 @@ class PrometheusDiscovery(ServiceDiscovery):
                 "app=prometheus-msteams",
                 "app=rancher-monitoring-prometheus",
                 "app=prometheus-prometheus",
+                "app.kubernetes.io/name=vmsingle",
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
         )
@@ -181,6 +221,7 @@ class AlertManagerDiscovery(ServiceDiscovery):
                 "app=prometheus-alertmanager",
                 "operated-alertmanager=true",
                 "app.kubernetes.io/name=alertmanager",
+                "app.kubernetes.io/name=vmalertmanager",
             ],
             error_msg="Alert manager url could not be found. Add 'alertmanager_url' under global_config",
         )

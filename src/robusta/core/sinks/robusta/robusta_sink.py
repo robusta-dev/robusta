@@ -341,11 +341,9 @@ class RobustaSink(SinkBase):
 
             activity_stats.prometheusConnection = True
 
-            flag_response = get_prometheus_flags(prom=prometheus_connection)
-            if flag_response:
-                data = flag_response.get('data', None)
-                if data:
-                    activity_stats.prometheusRetentionTime = data.get('storage.tsdb.retention.time', "")
+            prometheus_flags = get_prometheus_flags(prom=prometheus_connection)
+            if prometheus_flags:
+                activity_stats.prometheusRetentionTime = prometheus_flags.get('retentionTime', "")
 
         except Exception as e:
             logging.error(f"Failed to connect to prometheus. {e}", exc_info=True)
