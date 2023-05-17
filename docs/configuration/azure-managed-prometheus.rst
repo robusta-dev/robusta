@@ -12,7 +12,7 @@ To configure Azure to send alerts to Robusta:
 2. In the Azure Webhook section click ``Generate URL`` and save the generated url.
 3. Login to the Microsoft Azure Portal, go to ``alerts`` > ``Action groups``
 4. Edit your action group, in the `Actions` section add a ``Webhook`` and copy the url from step 2, into the URI input.
-5. Make sure the ``Enable the common alert schema.`` option is active.
+5. Make sure the ``Enable the common alert schema`` option is active.
 
 .. admonition:: Why do I see a banner in the UI that "Alerts won't show up"?
     :class: warning
@@ -29,8 +29,8 @@ Get the Azure prometheus query endpoint
 =========================================
 
 1. Go to `Azure Monitor workspaces <https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/microsoft.monitor%2Faccounts>`_ and chose your monitored workspace.
-2. In your monitored workspace `overview`, find the ``Query endpoint`` and copy it.
-3. In your `generated_values.yaml` file add the prometheus url with 443 port:
+2. In your monitored workspace, `overview`, find the ``Query endpoint`` and copy it.
+3. In your `generated_values.yaml` file add the query endpoint url with a 443 port:
 
 .. code-block:: yaml
 
