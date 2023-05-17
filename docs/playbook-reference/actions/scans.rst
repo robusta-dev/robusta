@@ -18,17 +18,22 @@ This reduces costs and improves performance.
 By default, every instance of Robusta that's connected to the UI will run a KRR scan on startup. Further KRR scans can be triggered in the UI, and all scans can be viewed there.
 
 With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`.
-The results can be sent as a PDF to Slack,
+The results can be sent as a PDF to Slack or to the Robusta UI.
 
-.. image:: /images/krr_slack_example.png
-    :width: 1000
-    :align: center
+.. grid-item::
 
-or to the Robusta UI.
+    .. md-tab-set::
 
-.. image:: /images/krr_example.png
-    :width: 1000
-    :align: center
+        .. md-tab-item:: Slack
+
+            .. image:: /images/krr_slack_example.png
+                :width: 1000px
+
+        .. md-tab-item:: Robusta UI
+
+            .. image:: /images/krr_example.png
+                :width: 1000px
+
 
 .. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule
 
@@ -44,7 +49,7 @@ Popeye - A Kubernetes Cluster Sanitizer
 `Popeye <https://github.com/derailed/popeye>`_ is a utility that scans live Kubernetes clusters and reports potential issues with resources and configurations.
 By default, every instance of Robusta that's connected to the UI will run a Popeye scan on startup. Further Popeye scans can be triggered in the UI, and all scans can be viewed there.
 
-With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`.
+With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>` as shown below.
 
 .. code-block:: yaml
     :name: cb-popeye-set-periodic-scan
@@ -65,19 +70,26 @@ With or without the UI, you can configure additional scans on a :ref:`schedule <
     sinks:
         - "robusta_ui_sink"
 
-The results can be sent as a PDF to Slack,
+The results can be sent as a PDF to Slack or to the Robusta UI.
 
-.. image:: /images/popeye_slack_example.png
-    :width: 1000
-    :align: center
+.. grid-item::
 
-or to the Robusta UI.
+    .. md-tab-set::
 
-.. image:: /images/popeye_example.png
-    :width: 1000
-    :align: center
+        .. md-tab-item:: Slack
 
-Other sinks like MSTeams are not supported yet.
+            .. image:: /images/popeye_slack_example.png
+                :width: 1000px
+
+        .. md-tab-item:: Robusta UI
+
+            .. image:: /images/popeye_example.png
+                :width: 1000px
+
+
+.. Note::
+
+    Other sinks like MSTeams are not supported yet.
 
 .. robusta-action:: playbooks.robusta_playbooks.popeye.popeye_scan on_schedule
 
