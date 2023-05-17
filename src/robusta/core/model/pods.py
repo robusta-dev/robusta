@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional, Union
 
 from hikaru.model import Container, ContainerState, ContainerStatus, Pod
 from pydantic import BaseModel
@@ -23,6 +23,23 @@ k8s_memory_factors = {
     "Pi": 1024 * 1024 * 1024 * 1024,
     "Ei": 1024 * 1024 * 1024 * 1024 * 1024,
 }
+
+
+def format_unit(x: Union[float, int], /, *, base: Literal[1024, 1000] = 1024) -> str:
+    """Converts an integer to a string with respect of units."""
+
+    if x < 1:
+        return f"{int(x*1000)}m"
+
+    units = ['', 'K', 'M', 'G', 'T', 'P', 'E']
+    binary_units = ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei']
+
+    x = int(x)
+    for i, unit in enumerate(binary_units if base == 1024 else units):
+        if x < base**(i + 1) or i == len(units) - 1 or x / base**(i + 1) < 10:
+            return f"{x/base**i:.0f}{unit}"
+    return f"{x/6**i:.0f}{unit}"
+
 
 ResourceAttributes = Enum("ResourceAttributes", "requests limits")
 

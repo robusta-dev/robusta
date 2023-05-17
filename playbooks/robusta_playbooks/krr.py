@@ -1,14 +1,13 @@
 import json
+import logging
 import os
 import shlex
-import logging
 import uuid
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union
 
 from hikaru.model import Container, PodSpec
 from pydantic import BaseModel, ValidationError, validator
-
 from robusta.api import (
     RELEASE_NAME,
     ActionParams,
@@ -24,6 +23,7 @@ from robusta.api import (
     ScanReportRow,
     ScanType,
     action,
+    format_unit,
     to_kubernetes_name,
 )
 
@@ -125,11 +125,20 @@ def priority_to_krr_severity(priority: int) -> str:
         return "UNKNOWN"
 
 
+def format_krr_value(value: Union[float, Literal["?"], None]) -> str:
+    if value is None:
+        return "unset"
+    elif isinstance(value, str):
+        return "?"
+    else:
+        return format_unit(value)
+
+
 def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
     return "\n".join(
         f"{entry['resource'].upper()} Request: " +
-        f"{entry['allocated']['request']} -> " +
-        f"{entry['recommended']['request']} " +
+        f"{format_krr_value(entry['allocated']['request'])} -> " +
+        f"{format_krr_value(entry['recommended']['request'])} " +
         f"({priority_to_krr_severity(entry['priority']['request'])})"
         for entry in row.content
     )

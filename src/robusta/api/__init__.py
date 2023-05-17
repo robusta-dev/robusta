@@ -75,6 +75,7 @@ from robusta.core.model.pods import (
     PodResources,
     ResourceAttributes,
     find_most_recent_oom_killed_container,
+    format_unit,
     get_oom_kill_time,
     get_oom_killed_container,
     is_state_in_oom_status,
