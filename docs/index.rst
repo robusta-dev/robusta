@@ -113,7 +113,7 @@ Robusta is an open source observability tool for Kubernetes, which extends Prome
 
             .. md-tab-item:: Stuck Job
 
-               .. image:: /images/failingjobs.png
+               .. image:: /images/struckjob.png
                    :width: 800px
 
             .. md-tab-item:: JIRA Integration
