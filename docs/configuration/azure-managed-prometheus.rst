@@ -11,8 +11,9 @@ To configure Azure to send alerts to Robusta:
 1. Login to the Robusta UI and navigate to the ``settings`` > ``advanced`` tab.
 2. In the Azure Webhook section click ``Generate URL`` and save the generated url.
 3. Login to the Microsoft Azure Portal, go to ``alerts`` > ``Action groups``
-4. Edit your action group, in the `Actions` section add a ``Webhook`` and copy the url from step 2, into the URI input.
-5. Make sure the ``Enable the common alert schema`` option is active.
+4. Create a new action group, or edit an existing one.
+5. Under the `Actions` tabs (**not** the Notifications tab) add a ``Webhook`` and copy the url from step 2, into the URI input.
+6. Make sure to select ``Enable the common alert schema``.
 
 .. admonition:: Why do I see a banner in the UI that "Alerts won't show up"?
     :class: warning
