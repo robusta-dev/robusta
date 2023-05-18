@@ -33,5 +33,5 @@ Next Steps
 Integrate Robusta with AlertManager:
 
 * :ref:`Follow a guide to integrate AlertManager <Integrating AlertManager and Prometheus>`.
-* :ref:`Follow a guide to integrate with Azure managed Prmetheus <Azure managed Prometheus>`.
+* :ref:`Follow a guide to integrate with Azure managed Prometheus <Azure managed Prometheus>`.
 * :ref:`See the features you'll gain by integrating AlertManager <Enhanced Prometheus Alerts>`.

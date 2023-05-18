@@ -167,7 +167,7 @@ By default, Robusta does not verify the SSL certificate of the Prometheus server
   runner:
     additional_env_vars:
     - name: PROMETHEUS_SSL_ENABLED
-      value: true
+      value: "true"
 
 To add a custom CA certificate, add the following as well:
 
