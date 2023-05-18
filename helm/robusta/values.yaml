@@ -62,10 +62,12 @@ lightActions:
 - status_enricher
 - popeye_scan
 - krr_scan
+- handle_alertmanager_event
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
 enableServiceMonitors: false
+monitorHelmReleases: true
 
 # disable messages routed by Robusta cloud
 disableCloudRouting: false
@@ -394,7 +396,7 @@ platformPlaybooks:
 
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.4
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.5
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:

@@ -11,6 +11,7 @@ from supabase_py.lib.auth_client import SupabaseAuthClient
 
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
+from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
@@ -27,6 +28,7 @@ EVIDENCE_TABLE = "Evidence"
 ISSUES_TABLE = "Issues"
 CLUSTERS_STATUS_TABLE = "ClustersStatus"
 JOBS_TABLE = "Jobs"
+HELM_RELEASES_TABLE = "HelmReleases"
 NAMESPACES_TABLE = "Namespaces"
 UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
 SCANS_RESULT_TABLE = "ScansResults"
@@ -58,13 +60,13 @@ class RobustaClient(Client):
 
     @staticmethod
     def _init_supabase_auth_client(
-        auth_url: str,
-        supabase_key: str,
-        detect_session_in_url: bool,
-        auto_refresh_token: bool,
-        persist_session: bool,
-        local_storage: Dict[str, Any],
-        headers: Dict[str, str],
+            auth_url: str,
+            supabase_key: str,
+            detect_session_in_url: bool,
+            auto_refresh_token: bool,
+            persist_session: bool,
+            local_storage: Dict[str, Any],
+            headers: Dict[str, str],
     ) -> RobustaAuthClient:
         """Creates a wrapped instance of the GoTrue Client."""
         return RobustaAuthClient(
@@ -79,15 +81,15 @@ class RobustaClient(Client):
 
 class SupabaseDal:
     def __init__(
-        self,
-        url: str,
-        key: str,
-        account_id: str,
-        email: str,
-        password: str,
-        sink_name: str,
-        cluster_name: str,
-        signing_key: str,
+            self,
+            url: str,
+            key: str,
+            account_id: str,
+            email: str,
+            password: str,
+            sink_name: str,
+            cluster_name: str,
+            signing_key: str,
     ):
         self.url = url
         self.key = key
@@ -362,6 +364,46 @@ class SupabaseDal:
             logging.error(f"Failed to delete job {job} error: {res.get('data')}")
             self.handle_supabase_error()
             raise Exception(f"remove deleted job failed. status: {status_code}")
+
+    # helm release
+    def get_active_helm_release(self) -> List[HelmRelease]:
+        res = (
+            self.client.table(HELM_RELEASES_TABLE)
+            .select("*")
+            .filter("account_id", "eq", self.account_id)
+            .filter("cluster_id", "eq", self.cluster)
+            .filter("deleted", "eq", False)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to get existing helm releases (supabase) error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+        return [HelmRelease.from_db_row(helm_release) for helm_release in res.get("data")]
+
+    def __to_db_helm_release(self, helm_release: HelmRelease) -> Dict[Any, Any]:
+        db_helm_release = helm_release.dict()
+        db_helm_release["account_id"] = self.account_id
+        db_helm_release["cluster_id"] = self.cluster
+        db_helm_release["service_key"] = helm_release.get_service_key()
+        db_helm_release["updated_at"] = "now()"
+        return db_helm_release
+
+    def publish_helm_releases(self, helm_releases: List[HelmRelease]):
+        if not helm_releases:
+            return
+
+        db_helm_releases = [self.__to_db_helm_release(helm_release) for helm_release in helm_releases]
+        logging.debug(f"[supabase] Publishing the helm_releases {db_helm_releases}")
+
+        res = self.client.table(HELM_RELEASES_TABLE).insert(db_helm_releases, upsert=True).execute()
+        if res.get("status_code") not in [200, 201]:
+            logging.error(f"Failed to persist helm_releases {helm_releases} error: {res.get('data')}")
+            self.handle_supabase_error()
+            status_code = res.get("status_code")
+            raise Exception(f"publish helm_releases failed. status: {status_code}")
 
     @staticmethod
     def __delete_patch(supabase_request_obj: QueryRequestBuilder) -> Dict[str, Any]:

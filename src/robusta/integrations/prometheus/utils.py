@@ -1,6 +1,8 @@
 import logging
-from typing import TYPE_CHECKING, List, Optional, Dict
+import os
+from typing import TYPE_CHECKING, Dict, List, Optional
 
+import requests
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError, HTTPError
 
@@ -8,6 +10,58 @@ from robusta.core.exceptions import PrometheusNotFound
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
+
+AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
+AZURE_TOKEN_ENDPOINT = os.environ.get(
+    "AZURE_TOKEN_ENDPOINT", f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/token"
+)
+
+
+class PrometheusAuthorization:
+    bearer_token: str = ""
+    azure_authorization: bool = (
+        os.environ.get("AZURE_CLIENT_ID", "")
+        or os.environ.get("AZURE_TENANT_ID", "")
+        or os.environ.get("AZURE_CLIENT_SECRET", "")
+    )
+
+    @classmethod
+    def get_authorization_headers(cls, params: Optional[PrometheusParams] = None) -> Dict:
+        if params and params.prometheus_auth:
+            return {"Authorization": params.prometheus_auth.get_secret_value()}
+        elif cls.azure_authorization:
+            return {"Authorization": (f"Bearer {cls.bearer_token}")}
+        else:
+            return {}
+
+    @classmethod
+    def request_new_token(cls) -> bool:
+        if cls.azure_authorization:
+            try:
+                res = requests.post(
+                    url=AZURE_TOKEN_ENDPOINT,
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    data={
+                        "grant_type": "client_credentials",
+                        "client_id": os.environ.get("AZURE_CLIENT_ID"),
+                        "client_secret": os.environ.get("AZURE_CLIENT_SECRET"),
+                        "resource": AZURE_RESOURCE,
+                    },
+                )
+            except Exception:
+                logging.exception("Unexpected error when trying to generate azure access token.")
+                return False
+
+            if not res.ok:
+                logging.error(f"Could not generate an azure access token. {res.reason}")
+                return False
+
+            cls.bearer_token = res.json().get("access_token")
+            logging.info("Generated new azure access token.")
+            return True
+
+        return False
+
 
 if TYPE_CHECKING:
     from prometheus_api_client import PrometheusConnect
@@ -25,11 +79,8 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
     if not url:
         raise PrometheusNotFound("Prometheus url could not be found. Add 'prometheus_url' under global_config")
 
-    headers = (
-        {"Authorization": prometheus_params.prometheus_auth.get_secret_value()}
-        if prometheus_params.prometheus_auth
-        else {}
-    )
+    headers = PrometheusAuthorization.get_authorization_headers(prometheus_params)
+
     return PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
 
 
@@ -43,6 +94,17 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
             # This query should return empty results, but is correct
             params={"query": "example", **params},
         )
+
+        if response.status_code == 401:
+            if PrometheusAuthorization.request_new_token():
+                prom.headers = PrometheusAuthorization.get_authorization_headers()
+                response = prom._session.get(
+                    f"{prom.url}/api/v1/query",
+                    verify=prom.ssl_verification,
+                    headers=prom.headers,
+                    params={"query": "example", **params},
+                )
+
         response.raise_for_status()
     except (ConnectionError, HTTPError) as e:
         raise PrometheusNotFound(

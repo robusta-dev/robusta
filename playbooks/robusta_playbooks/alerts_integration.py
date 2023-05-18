@@ -225,7 +225,7 @@ def alert_definition_enricher(alert: PrometheusKubernetesAlert):
 @action
 def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     """
-    Enrich the alert with a graph of the Prometheus query which triggered the alert.
+    Attach a graph of the Prometheus query that triggered the alert.
     """
     promql_query = alert.get_prometheus_query()
     chart = create_chart_from_prometheus_query(
@@ -241,7 +241,7 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
 @action
 def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphEnricherParams):
     """
-    Enrich the alert with a graph of a custom Prometheus query
+    Attach a graph of an arbitrary Prometheus query, specified as a parameter.
     """
     chart_values_format = ChartValuesFormat[params.chart_values_format] if params.chart_values_format else None
     graph_enrichment = create_graph_enrichment(
@@ -259,7 +259,7 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
 @action
 def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResourceGraphEnricherParams):
     """
-    Enrich the alert with a graph of a relevant resource (Pod or Node).
+    Attach a resource-usage graph. The graph is automatically fetched for the Pod/Node that triggered this action.
     """
     alert_labels = alert.alert.labels
     labels = {x: alert_labels[x] for x in alert_labels}
@@ -293,7 +293,7 @@ class TemplateParams(ActionParams):
 @action
 def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
     """
-    Enrich an alert with a paragraph to the alert’s description containing templated markdown.
+    Attach a paragraph containing templated markdown.
     You can inject any of the alert’s Prometheus labels into the markdown.
 
     A variable like $foo will be replaced by the value of the Prometheus label foo.
@@ -332,7 +332,7 @@ class LogEnricherParams(ActionParams):
 @action
 def logs_enricher(event: PodEvent, params: LogEnricherParams):
     """
-    Enrich the alert with pod logs
+    Fetch and attach Pod logs.
     The pod to fetch logs for is determined by the alert’s pod label from Prometheus.
 
     By default, if the alert has no pod this enricher will silently do nothing.

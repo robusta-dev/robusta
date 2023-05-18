@@ -9,6 +9,7 @@ import pygal
 from hikaru.model.rel_1_26 import Node
 from pydantic import BaseModel
 
+from robusta.core.external_apis.prometheus.models import PrometheusSeries
 from robusta.core.external_apis.prometheus.prometheus_cli import PrometheusQueryResult, custom_query_range
 from robusta.core.model.base_params import (
     ChartValuesFormat,
@@ -78,6 +79,36 @@ def get_resolution_from_duration(duration: timedelta) -> int:
     return _DEFAULT_RESOLUTION
 
 
+def get_target_name(series: PrometheusSeries) -> Optional[str]:
+    for label in ["container", "pod", "node"]:
+        if label in series.metric:
+            return series.metric[label]
+    return None
+
+
+def get_series_job(series: PrometheusSeries) -> Optional[str]:
+    return series.metric.get("job")
+
+
+def filter_prom_jobs_results(series_list_result: Optional[List[PrometheusSeries]]) -> Optional[List[PrometheusSeries]]:
+    if not series_list_result or len(series_list_result) == 1:
+        return series_list_result
+
+    target_names = {get_target_name(series) for series in series_list_result if get_target_name(series)}
+    return_list: List[PrometheusSeries] = []
+
+    # takes kubelet job if exists, return first job alphabetically if it doesn't
+    for target_name in target_names:
+        relevant_series = [series for series in series_list_result if get_target_name(series) == target_name]
+        relevant_kubelet_metric = [series for series in relevant_series if get_series_job(series) == "kubelet"]
+        if len(relevant_kubelet_metric) == 1:
+            return_list.append(relevant_kubelet_metric[0])
+            continue
+        sorted_relevant_series = sorted(relevant_series, key=get_series_job, reverse=False)
+        return_list.append(sorted_relevant_series[0])
+    return return_list
+
+
 def create_chart_from_prometheus_query(
     prometheus_params: PrometheusParams,
     promql_query: str,
@@ -88,6 +119,7 @@ def create_chart_from_prometheus_query(
     values_format: Optional[ChartValuesFormat] = None,
     lines: Optional[List[XAxisLine]] = [],
     chart_label_factory: Optional[ChartLabelFactory] = None,
+    filter_prom_jobs: bool = False,
 ):
     if not alert_starts_at:
         ends_at = datetime.utcnow()
@@ -132,9 +164,14 @@ def create_chart_from_prometheus_query(
     # TODO: change min_time time before  Jan 19 3001
     min_time = 32536799999
     max_time = 0
-    for i, series in enumerate(prometheus_query_result.series_list_result):
-        label = "\n".join([v for v in series.metric.values()])
 
+    series_list_result = prometheus_query_result.series_list_result
+    if filter_prom_jobs:
+        series_list_result = filter_prom_jobs_results(series_list_result)
+    for i, series in enumerate(series_list_result):
+        label = get_target_name(series)
+        if not label:
+            label = "\n".join([v for (key, v) in series.metric.items() if key != "job"])
         # If the label is empty, try to take it from the additional_label_factory
         if label == "" and chart_label_factory is not None:
             label = chart_label_factory(i)
@@ -165,6 +202,7 @@ def create_graph_enrichment(
     chart_values_format: Optional[ChartValuesFormat],
     lines: Optional[List[XAxisLine]] = [],
     chart_label_factory: Optional[ChartLabelFactory] = None,
+    filter_prom_jobs: bool = False,
 ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
@@ -177,6 +215,7 @@ def create_graph_enrichment(
         values_format=chart_values_format,
         lines=lines,
         chart_label_factory=chart_label_factory,
+        filter_prom_jobs=filter_prom_jobs,
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
@@ -196,7 +235,7 @@ def create_resource_enrichment(
     ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
     combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod"})',
+            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod"}[5m])) by (pod, job)',
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Node): ChartOptions(
@@ -204,11 +243,11 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
-            query='sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$namespace", pod=~"$pod", container=~"$container"})',
+            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod", container=~"$container"}[5m])) by (container, pod, job)',
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container!="", image!=""})',
+            query='sum(container_memory_working_set_bytes{pod=~"$pod", container!="", image!=""}) by (pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
@@ -216,7 +255,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
-            query='sum(container_memory_working_set_bytes{job="kubelet", metrics_path="/metrics/cadvisor", pod=~"$pod", container=~"$container", image!=""})',
+            query='sum(container_memory_working_set_bytes{pod=~"$pod", container=~"$container", image!=""}) by (container, pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): None,
@@ -260,5 +299,6 @@ def create_resource_enrichment(
         chart_values_format=chosen_combination.values_format,
         lines=lines,
         chart_label_factory=chart_label_factories.get(combination),
+        filter_prom_jobs=True,
     )
     return graph_enrichment
