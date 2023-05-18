@@ -37,14 +37,14 @@ def verify_slack_channel(
             channel_name_styled = typer.style(channel_name, fg=typer.colors.RED)
             typer.secho(
                 f"The channel {channel_name_styled} was not found on Slack workspace {workspace}.\n"
-                "Please verify that the channel exists.\n"
-                "If this is a private channel, verify the Robusta app was added to the channel."
-                "(See https://docs.robusta.dev/master/catalog/sinks/slack.html#sending-robusta-notifications-to-a-private-channel)"
+                f"Please verify that the channel exists.\n"
+                f"If this is a private channel, verify the Robusta app was added to the channel. "
+                f"(See https://docs.robusta.dev/master/configuration/sinks/slack.html#using-private-channels)"
             )
         return False
     except URLError:
         typer.secho(
-            "SSL certificate issue. See https://docs.robusta.dev/master/common-errors.html\n"
+            "SSL certificate issue. See https://docs.robusta.dev/master/help.html\n"
             "Use --debug for more info.",
             fg=typer.colors.RED,
         )

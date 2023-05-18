@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import shlex
 import uuid
@@ -14,11 +15,9 @@ from robusta.api import (
     ActionParams,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
-    FileBlock,
     Finding,
     FindingSource,
     FindingType,
-    MarkdownBlock,
     RobustaJob,
     ScanReportBlock,
     ScanReportRow,
@@ -27,7 +26,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye")
+IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye:v0.11.1")
 
 
 # https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/report/tally.go#L163
@@ -159,19 +158,17 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         end_time = datetime.now()
         popeye_scan = PopeyeReport(**scan["popeye"])
     except JSONDecodeError:
-        event.add_enrichment([MarkdownBlock(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")])
+        logging.error(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")
         return
     except ValidationError as e:
-        event.add_enrichment([MarkdownBlock(f"*Popeye scan job failed. Result format issue.*\n\n {e}")])
-        event.add_enrichment([FileBlock("Popeye-scan-failed.log", contents=logs.encode())])
+        logging.error(f"*Popeye scan job failed. Result format issue.*\n\n {e}")
+        logging.error(f"\n {logs}")
         return
     except Exception as e:
         if str(e) == "Failed to reach wait condition":
-            event.add_enrichment(
-                [MarkdownBlock(f"*Popeye scan job failed. The job wait condition timed out ({params.timeout}s)*")]
-            )
+            logging.error(f"*Popeye scan job failed. The job wait condition timed out ({params.timeout}s)*")
         else:
-            event.add_enrichment([MarkdownBlock(f"*Popeye scan job unexpected error.*\n {e}")])
+            logging.error(f"*Popeye scan job unexpected error.*\n {e}")
         return
 
     scan_block = ScanReportBlock(

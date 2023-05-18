@@ -1,6 +1,7 @@
 import json
 import os
 import shlex
+import logging
 import uuid
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union
@@ -161,19 +162,17 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
     except json.JSONDecodeError:
-        event.add_enrichment([MarkdownBlock(f"*KRR scan job failed. Expecting json result.*\n\n Result:\n{logs}")])
+        logging.error(f"*KRR scan job failed. Expecting json result.*\n\n Result:\n{logs}")
         return
     except ValidationError as e:
-        event.add_enrichment([MarkdownBlock(f"*KRR scan job failed. Result format issue.*\n\n {e}")])
-        event.add_enrichment([FileBlock("KRR-scan-failed.log", contents=logs.encode())])  # type: ignore
+        logging.error(f"*KRR scan job failed. Result format issue.*\n\n {e}")
+        logging.error(f"\n {logs}")
         return
     except Exception as e:
         if str(e) == "Failed to reach wait condition":
-            event.add_enrichment(
-                [MarkdownBlock(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")]
-            )
+            logging.error(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")
         else:
-            event.add_enrichment([MarkdownBlock(f"*KRR scan job unexpected error.*\n {e}")])
+            logging.error(f"*KRR scan job unexpected error.*\n {e}")
         return
 
     scan_id = str(uuid.uuid4())

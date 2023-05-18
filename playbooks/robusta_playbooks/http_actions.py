@@ -35,7 +35,7 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
     """
     function_name = "http_get"
 
-    # https://docs.robusta.dev/master/developer-guide/actions/findings-api.html
+    # https://docs.robusta.dev/master/extending/actions/findings-api.html
 
     finding = Finding(
         title=f"{action_params.url} status check",
@@ -103,7 +103,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
     """
     function_name = "http_post"
 
-    # https://docs.robusta.dev/master/developer-guide/actions/findings-api.html
+    # https://docs.robusta.dev/master/extending/actions/findings-api.html
 
     finding = Finding(
         title=f"{action_params.url} status check",
