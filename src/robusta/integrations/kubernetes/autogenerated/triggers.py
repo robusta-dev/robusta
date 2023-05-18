@@ -1105,6 +1105,67 @@ class ConfigMapUpdateTrigger(K8sBaseTrigger):
         return ConfigMapChangeEvent
 
 
+# Ingress Triggers
+class IngressAllChangesTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="Ingress",
+            operation=None,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return IngressChangeEvent
+
+
+class IngressCreateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="Ingress",
+            operation=K8sOperationType.CREATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return IngressChangeEvent
+
+
+class IngressDeleteTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="Ingress",
+            operation=K8sOperationType.DELETE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return IngressChangeEvent
+
+
+class IngressUpdateTrigger(K8sBaseTrigger):
+    def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+        super().__init__(
+            kind="Ingress",
+            operation=K8sOperationType.UPDATE,
+            name_prefix=name_prefix,
+            namespace_prefix=namespace_prefix,
+            labels_selector=labels_selector,
+        )
+
+    @staticmethod
+    def get_execution_event_type() -> type:
+        return IngressChangeEvent
+
+
 # Kubernetes Any Triggers
 class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
     def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
@@ -1197,6 +1258,10 @@ class K8sTriggers(BaseModel):
     on_horizontalpodautoscaler_create: Optional[HorizontalPodAutoscalerCreateTrigger]
     on_horizontalpodautoscaler_delete: Optional[HorizontalPodAutoscalerDeleteTrigger]
     on_horizontalpodautoscaler_update: Optional[HorizontalPodAutoscalerUpdateTrigger]
+    on_ingress_all_changes: Optional[IngressAllChangesTrigger]
+    on_ingress_create: Optional[IngressCreateTrigger]
+    on_ingress_delete: Optional[IngressDeleteTrigger]
+    on_ingress_update: Optional[IngressUpdateTrigger]
     on_job_all_changes: Optional[JobAllChangesTrigger]
     on_job_create: Optional[JobCreateTrigger]
     on_job_delete: Optional[JobDeleteTrigger]

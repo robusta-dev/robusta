@@ -19,3 +19,4 @@ resource:
   secret: false       # disabled for security reasons
   event: true  # updated on kubewatch 2.5
   coreevent: false # added on kubewatch 2.5
+  ingress: true # full support on kubewatch 2.4 (earlier versions have ingress bugs)
