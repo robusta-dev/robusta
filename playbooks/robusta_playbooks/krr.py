@@ -153,7 +153,6 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     Displays a KRR scan report.
     """
     header = PrometheusAuthorization.get_authorization_headers(params)["Authorization"]
-    logging.warning(f"running krr with url {params.prometheus_url}, {header}")
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
         containers=[
