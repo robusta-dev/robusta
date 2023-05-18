@@ -8,15 +8,15 @@ from typing import Dict, List, Literal, Optional, Union
 
 from hikaru.model.rel_1_26 import Container, PodSpec
 from pydantic import BaseModel, ValidationError, validator
-
 from robusta.api import (
     RELEASE_NAME,
-    ActionParams,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
     Finding,
     FindingSource,
     FindingType,
+    PrometheusAuthorization,
+    PrometheusParams,
     RobustaJob,
     ScanReportBlock,
     ScanReportRow,
@@ -80,7 +80,7 @@ class KRRResponse(BaseModel):
     description: Optional[str] = None
 
 
-class KRRParams(ActionParams):
+class KRRParams(PrometheusParams):
     """
     :var timeout: Time span for yielding the scan.
     :var args: KRR cli arguments.
@@ -152,14 +152,15 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     Displays a KRR scan report.
     """
-
+    header = PrometheusAuthorization.get_authorization_headers(params)["Authorization"]
+    logging.warning(f"running krr with url {params.prometheus_url}, {header}")
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
         containers=[
             Container(
                 name=to_kubernetes_name(IMAGE),
                 image=IMAGE,
-                command=["/bin/sh", "-c", f"python krr.py {params.strategy} {params.args_sanitized} -q -f json"],
+                command=["/bin/sh", "-c", f"python krr.py {params.strategy} {params.args_sanitized} -p {params.prometheus_url} --prometheus-auth-header \"{header}\" -q -f json"],
             )
         ],
         restartPolicy="Never",

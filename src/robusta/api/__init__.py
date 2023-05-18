@@ -270,6 +270,7 @@ from robusta.integrations.prometheus.models import (
 )
 from robusta.integrations.prometheus.utils import (
     AlertManagerDiscovery,
+    PrometheusAuthorization,
     PrometheusDiscovery,
     ServiceDiscovery,
     get_prometheus_connect,
