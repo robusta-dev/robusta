@@ -6,9 +6,8 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union
 
-from hikaru.model import Container, PodSpec
+from hikaru.model.rel_1_26 import Container, PodSpec
 from pydantic import BaseModel, ValidationError, validator
-
 from robusta.api import (
     RELEASE_NAME,
     ActionParams,
@@ -127,10 +126,10 @@ def priority_to_krr_severity(priority: int) -> str:
 
 def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
     return "\n".join(
-        f"{entry['resource'].upper()} Request: " +
-        f"{entry['allocated']['request']} -> " +
-        f"{entry['recommended']['request']} " +
-        f"({priority_to_krr_severity(entry['priority']['request'])})"
+        f"{entry['resource'].upper()} Request: "
+        + f"{entry['allocated']['request']} -> "
+        + f"{entry['recommended']['request']} "
+        + f"({priority_to_krr_severity(entry['priority']['request'])})"
         for entry in row.content
     )
 

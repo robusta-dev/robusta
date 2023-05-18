@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
 import hikaru
 import yaml
-from hikaru.model import *  # * import is necessary for hikaru subclasses to work
+from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclasses to work
 from pydantic import BaseModel
 
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
@@ -131,11 +131,11 @@ def does_node_have_taint(node: Node, taint_key: str) -> bool:
 class RobustaEvent:
     @classmethod
     def get_events(cls, kind: str, name: str, namespace: str = None) -> EventList:
-        field_selector = f"involvedObject.kind={kind},involvedObject.name={name}"
+        field_selector = f"regarding.kind={kind},regarding.name={name}"
         if namespace:
-            field_selector += f",involvedObject.namespace={namespace}"
+            field_selector += f",regarding.namespace={namespace}"
 
-        return Event.listEventForAllNamespaces(field_selector=field_selector).obj
+        return EventList.listEventForAllNamespaces(field_selector=field_selector).obj
 
 
 class RegexReplacementStyle(Enum):

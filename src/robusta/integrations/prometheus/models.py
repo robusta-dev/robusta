@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import unquote_plus, urlparse
 
-from hikaru.model import DaemonSet, HorizontalPodAutoscaler, Node, StatefulSet
+from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Node, StatefulSet
 from pydantic import BaseModel
 
 from robusta.core.reporting import Finding, FindingSeverity, FindingSource, FindingSubject, FindingSubjectType

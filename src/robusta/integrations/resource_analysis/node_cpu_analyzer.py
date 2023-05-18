@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from hikaru.model import Node
+from hikaru.model.rel_1_26 import Node
 
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS

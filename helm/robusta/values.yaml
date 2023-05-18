@@ -395,7 +395,7 @@ platformPlaybooks:
 
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.1
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.5
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:

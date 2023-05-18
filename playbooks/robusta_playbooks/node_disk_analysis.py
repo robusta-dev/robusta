@@ -3,7 +3,7 @@ import re
 from typing import Dict, List
 
 import humanize
-from hikaru.model import EnvVar, EnvVarSource, ObjectFieldSelector, Pod, PodList
+from hikaru.model.rel_1_26 import EnvVar, EnvVarSource, ObjectFieldSelector, Pod, PodList
 from robusta.api import ActionParams, BaseBlock, MarkdownBlock, NodeEvent, RobustaPod, TableBlock, action
 from robusta.utils.parsing import load_json
 
@@ -32,7 +32,7 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
     blocks: List[BaseBlock] = []
 
     # map pod names and namespaces by pod uid, and container names by container id
-    node_pods: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
+    node_pods: PodList = PodList.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
 
     pod_uid_to_name: Dict[str, str] = {}
     pod_uid_to_namespace: Dict[str, str] = {}

@@ -1,4 +1,4 @@
-from hikaru.model import ObjectReference, Pod
+from hikaru.model.rel_1_26 import ObjectReference, Pod
 
 from robusta.core.reporting.base import FindingSubject
 from robusta.core.reporting.consts import FindingSubjectType

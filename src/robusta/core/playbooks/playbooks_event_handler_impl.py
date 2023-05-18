@@ -44,7 +44,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event.sink_findings = sink_findings
                 except Exception:
                     logging.error(
-                        f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}"
+                        f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}",
+                        exc_info=True,
                     )
 
                 if execution_event:  # might not exist for unsupported k8s types
