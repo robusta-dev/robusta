@@ -6,7 +6,7 @@ import requests
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError, HTTPError
 
-from robusta.core.exceptions import PrometheusNotFound
+from robusta.core.exceptions import PrometheusNotFound, VictoriaMetricsNotFound
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
@@ -122,7 +122,25 @@ def __text_config_to_dict(text: str) -> Dict:
     return conf
 
 
-def get_prometheus_flags(prom: "PrometheusConnect") -> Dict:
+def get_prometheus_flags(prom: "PrometheusConnect") -> Optional[Dict]:
+    try:
+        return fetch_prometheus_flags(prom)
+    except Exception as e:
+        prometheus_exception = e
+
+    try:
+        return fetch_victoria_metrics_flags(prom)
+    except Exception as e:
+        victoria_metrics_exception = e
+
+    logging.error(
+        f"Couldn't connect to the url: {prom.url}\n\t\tPrometheus: {prometheus_exception}"
+        f"\n\t\tVictoria Metrics: {victoria_metrics_exception})")
+
+    return None
+
+
+def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
     try:
         result = {}
 
@@ -134,16 +152,19 @@ def get_prometheus_flags(prom: "PrometheusConnect") -> Dict:
             # This query should return empty results, but is correct
             params={},
         )
+        response.raise_for_status()
 
-        if response.status_code != 400:
-            response.raise_for_status()
-            result["retentionTime"] = response.json().get('data', {}).get('storage.tsdb.retention.time', "")
-            return result
+        result["retentionTime"] = response.json().get('data', {}).get('storage.tsdb.retention.time', "")
+        return result
+    except Exception as e:
+        raise PrometheusNotFound(
+            f"Couldn't connect to Prometheus found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
+        ) from e
 
-        logging.error(
-            "The prometheus endpoint `/api/v1/status/flags` does not exist. "
-            "Making an attempt to connect to VictoriaMetrics")
 
+def fetch_victoria_metrics_flags(prom: "PrometheusConnect") -> Dict:
+    try:
+        result = {}
         # connecting to VictoriaMetrics
         response = prom._session.get(
             f"{prom.url}/flags",
@@ -155,17 +176,18 @@ def get_prometheus_flags(prom: "PrometheusConnect") -> Dict:
         response.raise_for_status()
 
         configuration = __text_config_to_dict(response.text)
-        retentionPeriod = configuration.get('-retentionPeriod')
+        retention_period = configuration.get('-retentionPeriod')
 
         # if the retentionPeriod is only a number then treat it as (m)onth
         # ref: https://docs.victoriametrics.com/?highlight=-retentionPeriod#retention
-        result["retentionTime"] = retentionPeriod if not retentionPeriod.isdigit() else f"{retentionPeriod}m"
+        result["retentionTime"] = retention_period if not retention_period.isdigit() else f"{retention_period}m"
 
         return result
-    except (ConnectionError, HTTPError) as e:
-        raise PrometheusNotFound(
-            f"Couldn't connect to Prometheus found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
+    except Exception as e:
+        raise VictoriaMetricsNotFound(
+            f"Couldn't connect to VictoriaMetrics found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
         ) from e
+
 
 class ServiceDiscovery:
     cache: TTLCache = TTLCache(maxsize=1, ttl=SERVICE_CACHE_TTL_SEC)
