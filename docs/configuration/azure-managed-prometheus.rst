@@ -51,11 +51,13 @@ We will now create an Azure authentication app and get the necesssary credential
 
   runner:
     additional_env_vars:
+    - name: PROMETHEUS_SSL_ENABLED
+      value: "true"
     - name: AZURE_CLIENT_ID
       value: "<your-client-id>"
     - name: AZURE_TENANT_ID
       value: "<your-tenant-id>"
-    - name: "AZURE_CLIENT_SECRET"
+    - name: AZURE_CLIENT_SECRET
       value: "<your-client-secret>"
 
 3. Complete the `Allow your app access to your workspace <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-self-managed-grafana-azure-active-directory#allow-your-app-access-to-your-workspace>`_ step, so your app can query data from your Azure Monitor workspace.
