@@ -6,7 +6,10 @@ set -e
 
 # Settings you might want to change
 export PYTHON_BINARY=python3.9
-export PORT=5000
+export PORT=6000  # if you change this, update port_mapping in mirrord.json too
+export LOG_LEVEL=INFO
+#export TRACE_INCOMING_REQUESTS=false
+
 
 # Internal constants
 export RED='\033[0;31m'
@@ -42,7 +45,7 @@ ln -fsw $(pwd)/playbooks/pyproject.toml ./deployment/playbooks/defaults
 
 echo "Checking if runner can listen on port ${PORT}"
 if lsof -Pi :${PORT} -sTCP:LISTEN -t >/dev/null ; then
-    echo -e "${RED}Error: Port ${PORT} is already in use. Exiting.${NC}"
+    echo -e "${RED}Error: Port ${PORT} is already in use. Free up the port, or edit this script and change \$PORT. Exiting.${NC}"
     exit 1
 fi
 
@@ -58,15 +61,13 @@ if [ ! -f "$PWD/deployment/playbooks/active_playbooks.yaml" ]; then
 fi
 
 echo "Installing builtin playbooks"
-poetry run python3 -m pip install -e ./deployment/playbooks/defaults
+#poetry run python3 -m pip install -e ./deployment/playbooks/defaults
 
 export PLAYBOOKS_CONFIG_FILE_PATH=./deployment/playbooks/active_playbooks.yaml
 export INTERNAL_PLAYBOOKS_ROOT=./src/robusta/core/playbooks/internal
 export PLAYBOOKS_ROOT=./deployment/playbooks
 export REPO_LOCAL_BASE_DIR=./deployment/git_playbooks
 export INSTALLATION_NAMESPACE=default
-export TRACE_INCOMING_REQUESTS=true
-export LOG_LEVEL=DEBUG
 
-poetry run python3 -m robusta.runner.main
-
+mirrord exec -f mirrord.json -- poetry run python3 -m robusta.runner.main
+#poetry run python3 -m robusta.runner.main
