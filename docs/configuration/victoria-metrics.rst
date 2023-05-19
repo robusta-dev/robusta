@@ -106,4 +106,4 @@ Alerts silencing
 Robusta lets you silence alerts directly from your notification channels (sinks). Robusta will try to automatically find
 an AlertManager running in your cluster and use it to create silences.
 
-If Robusta can't find your AlertManager, :ref:`tell it where to find it <Setting up a custom VictoriaMetrics, AlertManager>`.
+If Robusta can't find your AlertManager, :ref:`tell it where to find it <Setting up a custom VictoriaMetrics and AlertManager>`.
