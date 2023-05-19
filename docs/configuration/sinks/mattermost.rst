@@ -81,7 +81,7 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-You should now get playbooks results in Mattermost!
+You should now get playbooks results in Mattermost! Make sure to add the bot to the required channels.
 
 
 
