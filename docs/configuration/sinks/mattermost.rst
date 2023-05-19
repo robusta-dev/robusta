@@ -39,6 +39,11 @@ Getting your mattermost webhook url
       :width: 600
       :align: center
 
+.. note::
+
+    If you are not able to use an admin bot, make sure to include `team_id` in your sink configuration.
+    Also, be aware that you won't be able to post to private channels with a non-admin bot.
+
 4. Copy the token value of the bot - it will be used to send all the messages to the channel.
 
     .. image:: /images/add_mattermost_bot_5.png
@@ -67,6 +72,7 @@ Now we're ready to configure the Mattermost sink.
             token: <YOUR BOT TOKEN> (the token we copied the first after bot creation)
             token_id: <YOUR BOT TOKEN ID> (the token id visible in bot panel)
             channel: <YOUR CHANNEL NAME> (the channel name you want to send messages to - either display name or channel name divided by hyphen (e.g. channel-name))
+            team_id: <YOUR TEAM ID> (OPTIONAL - this is only needed if your mattermost bot is not an admin)
 
 Save the file and run
 
@@ -75,7 +81,7 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-You should now get playbooks results in Mattermost!
+You should now get playbooks results in Mattermost! Make sure to add the bot to the required channels.
 
 
 
