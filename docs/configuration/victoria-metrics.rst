@@ -42,9 +42,9 @@ Below is an example AlertManager configuration. Depending on your setup, the exa
 Related Robusta Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Below are additional Robusta settings related to VictoriaMetrics and AlertManager.
+Below are additional Robusta settings related to VictoriaMetrics and AlertManager, and Grafana.
 
-Setting up a custom VictoriaMetrics and AlertManager
+Setting up a custom VictoriaMetrics and AlertManager, and Grafana
 ==========================================================
 
 If you followed the instructions on this page, VictoriaMetrics and AlertManager will know about Robusta, but Robusta might not know about them!
@@ -63,6 +63,7 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
   globalConfig:
       # add the lines below
       alertmanager_url: ""
+      grafana_url: ""
       victoriaMetrics_url: "http://VICTORIAMETRICS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
 
 Additional Authentication Headers
@@ -81,23 +82,9 @@ For AlertManager:
     globalConfig:
       alertmanager_auth: Basic <USER:PASSWORD base64-encoded> # or any other auth header
 
-SSL Verification
-----------------
-By default, Robusta does not verify the SSL certificate of the VictoriaMetrics server. To enable SSL verification, add the following to ``generated_values.yaml``:
+.. note::
 
-.. code-block:: yaml
-
-  runner:
-    additional_env_vars:
-    - name: PROMETHEUS_SSL_ENABLED
-      value: "true"
-
-To add a custom CA certificate, add the following as well:
-
-.. code-block:: yaml
-
-  runner:
-    certificate: "<YOUR BASE-64 ENCODED DATA>" # base64-encoded certificate value
+      If both a Grafana API key and AlertManager auth are defined, Robusta will use the Grafana API key
 
 
 Alerts silencing
@@ -106,4 +93,24 @@ Alerts silencing
 Robusta lets you silence alerts directly from your notification channels (sinks). Robusta will try to automatically find
 an AlertManager running in your cluster and use it to create silences.
 
-If Robusta can't find your AlertManager, :ref:`tell it where to find it <Setting up a custom VictoriaMetrics and AlertManager>`.
+If Robusta can't find your AlertManager, :ref:`tell it where to find it <Setting up a custom VictoriaMetrics and AlertManager, and Grafana>`.
+
+Grafana AlertManager
+----------------------
+If you use the AlertManager embedded in Grafana, change one more setting for Robusta to create silences.
+
+Add the following configuration to the ``globalConfig`` section in your ``generated_values.yaml`` file:
+
+.. admonition:: generated_values.yaml
+
+    .. code-block:: yaml
+
+        globalConfig:
+          grafana_api_key: <YOUR GRAFANA EDITOR API KEY>
+          alertmanager_flavor: grafana
+
+    .. note::
+
+      The Grafana api key must have ``Editor`` permission in order to create silences
+
+This is necessary due to minor API changes in the embedded AlertManager that Grafana runs.
