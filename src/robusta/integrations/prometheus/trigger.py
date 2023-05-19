@@ -2,8 +2,7 @@ import logging
 from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, NamedTuple, Optional, Type, Union
 
-from hikaru.model import HorizontalPodAutoscaler
-from hikaru.model.rel_1_16 import DaemonSet, Job, Node, NodeList, StatefulSet
+from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Job, Node, NodeList, StatefulSet
 from pydantic.main import BaseModel
 
 from robusta.core.model.env_vars import ALERT_BUILDER_WORKERS

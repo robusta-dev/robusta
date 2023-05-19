@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Union
 
 import typer
 import yaml
-from hikaru.model import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec
+from hikaru.model.rel_1_26 import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec
 from kubernetes import client, config
 from pydantic import BaseModel, Extra
 

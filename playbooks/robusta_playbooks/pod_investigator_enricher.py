@@ -3,7 +3,7 @@ import logging
 from enum import Enum
 from typing import List, Optional
 
-from hikaru.model import Pod, PodList
+from hikaru.model.rel_1_26 import Pod, PodList
 from robusta.api import (
     ActionException,
     BaseBlock,

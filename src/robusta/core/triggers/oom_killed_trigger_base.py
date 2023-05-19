@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Dict, List
 
-from hikaru.model import ContainerStatus, Pod
+from hikaru.model.rel_1_26 import ContainerStatus, Pod
 from pydantic import BaseModel
 
 from robusta.core.model.pods import find_most_recent_oom_killed_container

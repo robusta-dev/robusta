@@ -2,9 +2,8 @@ import time
 from datetime import datetime
 
 from hikaru.meta import KubernetesException
-from hikaru.model import PersistentVolumeClaim
+from hikaru.model.rel_1_26 import PersistentVolumeClaim
 from kubernetes import client
-
 from robusta.api import ActionParams, ExecutionBaseEvent, Finding, FindingType, MarkdownBlock, action
 
 
