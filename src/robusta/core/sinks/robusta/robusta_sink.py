@@ -390,7 +390,7 @@ class RobustaSink(SinkBase):
 
         # checking the status of prometheus
         try:
-            prometheus_params = PrometheusParams(prometheus_url=global_config.get("prometheus_url", ""))
+            prometheus_params = PrometheusParams(**global_config)
             prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
             check_prometheus_connection(prom=prometheus_connection, params={})
 
@@ -405,7 +405,7 @@ class RobustaSink(SinkBase):
 
         # checking the status of the alert manager
         try:
-            base_silence_params = BaseSilenceParams(alertmanager_url=global_config.get("alertmanager_url", ""))
+            base_silence_params = BaseSilenceParams(**global_config)
             get_alertmanager_silences_connection(params=base_silence_params)
             activity_stats.alertManagerConnection = True
         except Exception as e:
