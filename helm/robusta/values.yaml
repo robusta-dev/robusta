@@ -436,6 +436,8 @@ runner:
       memory: 1024Mi
     limits:
       cpu: ~
+  liveness_probe:
+  startup_probe:
   additional_env_vars: []
   additional_env_froms: []
   tolerations: []
@@ -475,11 +477,6 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 10Gi
-
-
-
-
-
   kubeProxy:
     enabled: false
   prometheus:
@@ -507,6 +504,16 @@ kube-prometheus-stack:
     resources:
       requests:
         cpu: 50m
+    # disable node-exporter on fargate because fargate doesn't allow daemonsets
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: eks.amazonaws.com/compute-type
+                  operator: NotIn
+                  values:
+                    - fargate
   prometheusOperator:
     resources:
       requests:
@@ -521,3 +528,15 @@ kube-prometheus-stack:
         cpu: 10m
 
 rsa: ~
+
+# custom parameters for OpenShift clusters
+openshift:
+  enabled: false
+  createScc: false
+  createPrivilegedScc: false
+
+  privilegedSccName: null
+  sccName: null
+
+  sccPriority: null
+  privilegedSccPriority: null
