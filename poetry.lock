@@ -811,7 +811,7 @@ files = [
 [package.dependencies]
 autopep8 = ">=1.5.5"
 black = ">=20.8b1,<=23.1.0"
-kubernetes = ">=23.6.0,<=26.1.0"
+kubernetes = "26.1.0"
 "ruamel.yaml" = ">=0.16.12"
 
 [[package]]
