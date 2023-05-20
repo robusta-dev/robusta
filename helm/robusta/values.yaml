@@ -436,6 +436,8 @@ runner:
       memory: 1024Mi
     limits:
       cpu: ~
+  liveness_probe:
+  startup_probe:
   additional_env_vars: []
   additional_env_froms: []
   tolerations: []
