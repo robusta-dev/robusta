@@ -1,13 +1,20 @@
 import os
 
 import pytz
+import json
+
+
+def load_bool(env_var, default: bool):
+    s = os.environ.get(env_var, str(default))
+    return json.loads(s.lower())
+
 
 ROBUSTA_LOGO_URL = os.environ.get("ROBUSTA_LOGO_URL", "https://platform.robusta.dev/android-chrome-512x512.png")
 PLAYBOOKS_ROOT = os.environ.get("PLAYBOOKS_ROOT", "/etc/robusta/playbooks/")
 # should be the same as the one in out Dockerfile
 DEFAULT_PLAYBOOKS_ROOT = os.environ.get("DEFAULT_PLAYBOOKS_ROOT", os.path.join(PLAYBOOKS_ROOT, "defaults"))
 # when developing playbooks, we want to install it using pip. Otherwise no need because it's pre baked into the image
-DEFAULT_PLAYBOOKS_PIP_INSTALL = bool(os.environ.get("DEFAULT_PLAYBOOKS_PIP_INSTALL", False))
+DEFAULT_PLAYBOOKS_PIP_INSTALL = load_bool("DEFAULT_PLAYBOOKS_PIP_INSTALL", False)
 
 CUSTOM_PLAYBOOKS_ROOT = os.path.join(PLAYBOOKS_ROOT, "storage")
 
@@ -67,7 +74,7 @@ WEBSOCKET_PING_INTERVAL = int(os.environ.get("WEBSOCKET_PING_INTERVAL", 120))
 # Timeout for the ping response, before killing the connection. Must be smaller than the interval
 WEBSOCKET_PING_TIMEOUT = int(os.environ.get("WEBSOCKET_PING_TIMEOUT", 30))
 
-TRACE_INCOMING_REQUESTS = bool(os.environ.get("TRACE_INCOMING_REQUESTS", False))
+TRACE_INCOMING_REQUESTS = load_bool("TRACE_INCOMING_REQUESTS", False)
 
 SERVICE_CACHE_TTL_SEC = int(os.environ.get("SERVICE_CACHE_TTL_SEC", 900))
 SERVICE_CACHE_MAX_SIZE = int(os.environ.get("SERVICE_CACHE_MAX_SIZE", 1000))
@@ -80,4 +87,4 @@ ADDITIONAL_CERTIFICATE: str = os.environ.get("CERTIFICATE", "")
 DISCOVERY_MAX_BATCHES = int(os.environ.get("DISCOVERY_MAX_BATCHES", 25))
 DISCOVERY_BATCH_SIZE = int(os.environ.get("DISCOVERY_BATCH_SIZE", 2000))
 
-DISABLE_HELM_MONITORING = bool(os.environ.get("DISABLE_HELM_MONITORING", False))
+DISABLE_HELM_MONITORING = load_bool("DISABLE_HELM_MONITORING", False)
