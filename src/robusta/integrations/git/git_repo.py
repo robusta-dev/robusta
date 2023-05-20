@@ -132,8 +132,8 @@ class GitRepo:
             logging.info(f"Cloning git repo {self.git_repo_url}. repo name {self.repo_name}")
             os.makedirs(self.repo_local_path, exist_ok=True)
             self.__exec_git_cmd(["git", "clone", self.git_repo_url, self.repo_local_path])
-            self.__exec_git_cmd(["git", "config", "--global", "user.email", "runner@robusta.dev"])
-            self.__exec_git_cmd(["git", "config", "--global", "user.name", "Robusta Runner"])
+            self.__exec_git_cmd(["git", "config", "--local", "user.email", "runner@robusta.dev"])
+            self.__exec_git_cmd(["git", "config", "--local", "user.name", "Robusta Runner"])
             if self.git_branch:
                 self.__exec_git_cmd(["git", "checkout", self.git_branch])
 
