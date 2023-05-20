@@ -38,24 +38,42 @@ global_config:
 light_actions:
 {{ toYaml  .Values.lightActions | indent 2 }}
 
+{{- /* 
+legacy playbooks errors 
 active_playbooks:
+*/ -}}
 {{- if .Values.playbooks }}
   {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}
 {{- end }}
 
 {{- if .Values.priorityBuiltinPlaybooks }}
-{{ toYaml .Values.priorityBuiltinPlaybooks | indent 2 }}
+  {{- fail "The `priorityBuiltinPlaybooks` value is deprecated. Use `playbooksMap` dictionary to create named playbooks `playbook_name: {...playbook_definition...} `  " -}}
 {{- end }}
 
 {{- if .Values.customPlaybooks }}
-{{ toYaml .Values.customPlaybooks | indent 2 }}
+  {{- fail "The `customPlaybooks` value is deprecated. Use `playbooksMap` dictionary to create named playbooks `playbook_name: {...playbook_definition...} `  " -}}
+
 {{- end }}
 
 {{- if .Values.builtinPlaybooks }}
-{{ toYaml .Values.builtinPlaybooks | indent 2 }}
+  {{- fail "The `builtinPlaybooks` value is deprecated. Use `playbooksMap` dictionary to create named playbooks `playbook_name: {...playbook_definition...} `  " -}}
 {{- end }}
 
-{{- if and .Values.enablePlatformPlaybooks .Values.platformPlaybooks }}
-{{ toYaml .Values.platformPlaybooks | indent 2 }}
+{{- if .Values.platformPlaybooks }}
+  {{- fail "The `platformPlaybooks` value is deprecated. Use `platformPlaybooksMap` dictionary to create named playbooks `playbook_name: {...playbook_definition...} `  " -}}
 {{- end }}
+
+
+{{- /* 
+{{- $enablePlatformPlaybooks := and (not (empty .Values.platformPlaybooksMap)) .Values.enablePlatformPlaybooks }}
+*/ -}}
+{{- $enablePlatformPlaybooks := .Values.enablePlatformPlaybooks }}
+{{- $playbooksWithPlatform := mergeOverwrite .Values.playbooksMap .Values.platformPlaybooksMap }}
+{{- $mergedPlaybooks := $enablePlatformPlaybooks | ternary $playbooksWithPlatform .Values.playbooksMap  }}
+
+# playbook map, built at {{ now }}
+playbooks_map:
+{{ toYaml $mergedPlaybooks | indent 2 }}
+
+
 {{ end }}

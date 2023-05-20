@@ -101,9 +101,12 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
         default_sinks: List[str],
     ):
         self.default_sinks = default_sinks
-        self.triggers_to_playbooks = defaultdict(list)
+        self.triggers_to_playbooks = defaultdict(list[PlaybookDefinition])
         self.global_config = global_config
         for playbook_def in active_playbooks:
+            #skip disabled playbooks
+            if playbook_def.disabled:
+                continue
             # Merge playbooks params with global params and default sinks
             if not playbook_def.sinks:
                 playbook_def.sinks = default_sinks.copy()
@@ -129,15 +132,16 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
                         msg = f"Action {action_def.action_name} cannot be triggered by {exec_event_type}"
                         logging.error(msg)
                         raise Exception(msg)
-
-            playbook_def.post_init()
-
+      
             # add the playbook only once for each event.
             playbooks_trigger_events = set(
                 [trigger_definition.get().get_trigger_event() for trigger_definition in playbook_def.triggers]
             )
             for event in playbooks_trigger_events:
                 self.triggers_to_playbooks[event].append(playbook_def)
+        
+        # sort playbooks for each event
+        self.triggers_to_playbooks = { event: sorted(playbooks, key= lambda pb:pb.priority) for event,playbooks in self.triggers_to_playbooks.items() }
 
     def get_playbooks(self, trigger_event: TriggerEvent) -> List[PlaybookDefinition]:
         return self.triggers_to_playbooks.get(trigger_event.get_event_name(), [])

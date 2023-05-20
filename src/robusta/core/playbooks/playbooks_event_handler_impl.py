@@ -31,21 +31,18 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             return
 
         execution_response = None
-        execution_event: Optional[ExecutionBaseEvent] = None
+        
         sink_findings: Dict[str, List[Finding]] = defaultdict(list)
         for playbook in playbooks:
             fired_trigger = self.__get_fired_trigger(trigger_event, playbook.triggers, playbook.get_id())
             if fired_trigger:
-                execution_event = None
+                
+                
                 try:
                     execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings)
-                    # sink_findings needs to be shared between playbooks.
-                    # build_execution_event returns a different instance because it's running in a child process
-                    execution_event.sink_findings = sink_findings
                 except Exception:
                     logging.error(
-                        f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}",
-                        exc_info=True,
+                        f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}"
                     )
 
                 if execution_event:  # might not exist for unsupported k8s types
@@ -61,11 +58,16 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     )
                     if playbook_resp:  # For now, only last response applies. (For simplicity reasons)
                         execution_response = playbook_resp
-                    if playbook.stop or execution_event.stop_processing:
+                        logging.info(f"playbook.name {playbook.name} sink_findings {execution_event.sink_findings}")
+                    
+                    # send to sink processor
+                    self.__handle_findings(execution_event)
+                    
+                    # halt, dont send to other playbooks
+                    if playbook.halt or execution_event.stop_processing:
                         break
-
-        if execution_event:
-            self.__handle_findings(execution_event)
+               
+                    
 
         return execution_response
 

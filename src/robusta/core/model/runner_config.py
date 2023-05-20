@@ -54,7 +54,7 @@ class RunnerConfig(BaseModel):
     ]
     light_actions: Optional[List[str]]
     global_config: Optional[dict] = {}
-    active_playbooks: Optional[List[PlaybookDefinition]] = []
+    playbooks_map: Optional[dict[str, PlaybookDefinition]] = []
 
     @validator("playbook_repos")
     def env_var_repo_keys(cls, playbook_repos: Dict[str, PlaybookRepo]):
@@ -84,3 +84,9 @@ class RunnerConfig(BaseModel):
     @validator("global_config")
     def env_var_params(cls, global_config: dict):
         return replace_env_vars_values(global_config)
+
+    @validator("playbooks_map", pre=True)
+    def create_playbook_map(cls, data: dict[str, any]):
+        # load playbook definitions, skip empty. (disabled playbooks still loaded)
+        return {name: PlaybookDefinition(name=name, **playbook) for name, playbook in data.items() if playbook is not None}
+        

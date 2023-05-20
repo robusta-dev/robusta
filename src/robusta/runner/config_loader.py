@@ -218,7 +218,7 @@ class ConfigLoader:
                 self.registry.set_sinks(sinks_registry)
 
                 telemetry = self.registry.get_telemetry()
-                telemetry.playbooks_count = len(runner_config.active_playbooks) if runner_config.active_playbooks else 0
+                telemetry.playbooks_count = len(runner_config.playbooks_map) if runner_config.playbooks_map else 0
                 telemetry.account_id = hashlib.sha256(
                     str(runner_config.global_config.get("account_id", "no_account")).encode("utf-8")
                 ).hexdigest()
@@ -244,26 +244,24 @@ class ConfigLoader:
         new_sinks = SinksRegistry.construct_new_sinks(runner_config.sinks_config, existing_sinks, registry)
         sinks_registry = SinksRegistry(new_sinks)
 
-        # TODO we will replace it with a more generic mechanism, as part of the triggers separation task
-        # First, we load the internal playbooks, then add the user activated playbooks
-        # Order matters. Internal playbooks, should be added first, and run first
-        active_playbooks = [
-            PlaybookDefinition(
-                triggers=[{"on_kubernetes_any_resource_all_changes": {}}],
-                actions=[{"cluster_discovery_updates": {}}],
-            )
-        ]
-        if runner_config.active_playbooks:
-            active_playbooks.extend(runner_config.active_playbooks)
+        active_playbooks = []
+        if runner_config.playbooks_map:
+            active_playbooks.extend(runner_config.playbooks_map.values())
         else:
             logging.warning("No active playbooks configured")
 
-        playbooks_registry = PlaybooksRegistryImpl(
-            active_playbooks,
-            actions_registry,
-            runner_config.global_config,
-            sinks_registry.default_sinks,
-        )
+        try:
+            playbooks_registry = PlaybooksRegistryImpl(
+                active_playbooks,
+                actions_registry,
+                runner_config.global_config,
+                sinks_registry.default_sinks,
+            )
+        except Exception as exp:
+            logging.error(
+                    "unknown error reloading playbooks. will try again when they next change",
+                    exc_info=True,
+                )
 
         return sinks_registry, playbooks_registry
 
