@@ -8,8 +8,7 @@ set -e
 export PYTHON_BINARY=python3.9
 export PORT=6000  # if you change this, update port_mapping in mirrord.json too
 export LOG_LEVEL=INFO
-#export TRACE_INCOMING_REQUESTS=false
-
+export TRACE_INCOMING_REQUESTS=false
 
 # Internal constants
 export RED='\033[0;31m'
@@ -61,7 +60,7 @@ if [ ! -f "$PWD/deployment/playbooks/active_playbooks.yaml" ]; then
 fi
 
 echo "Installing builtin playbooks"
-#poetry run python3 -m pip install -e ./deployment/playbooks/defaults
+poetry run python3 -m pip install -e ./deployment/playbooks/defaults
 
 export PLAYBOOKS_CONFIG_FILE_PATH=./deployment/playbooks/active_playbooks.yaml
 export INTERNAL_PLAYBOOKS_ROOT=./src/robusta/core/playbooks/internal
