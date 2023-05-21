@@ -46,6 +46,7 @@ class MattermostClient:
         response = self._send_mattermost_request(url, HttpMethod.GET)
         if not check_response_succeed(response):
             logging.error("Could not connect to Mattermost with bot account")
+            return
         response_data = response.json()
         if "system_admin" in response_data.get("roles"):
             logging.info("Using Mattermost admin bot")
@@ -77,18 +78,15 @@ class MattermostClient:
             logging.warning("Cannot update bot logo, probably bot has not enough permissions")
 
     def _init_setup(self, channel_name: str, team_name: Optional[str] = None):
-        bot_id = None
         if self.is_admin:
-            bot_id = self.get_token_owner_id()
-        if team_name and self.is_admin:
-            self.team_id = self.get_team_id(team_name)
+            self.bot_id = self.get_token_owner_id()
+            self.team_id = self.get_team_id(team_name) if team_name else None
+            if self.bot_id:
+                self.update_bot_settings(self.bot_id)
+
         self.channel_id = self.get_channel_id(channel_name)
         if not self.channel_id:
             logging.warning("No channel found, messages won't be sent")
-        if bot_id:
-            self.bot_id = bot_id
-            if self.is_admin:
-                self.update_bot_settings(bot_id)
 
     def get_channel_id(self, channel_name: str) -> Optional[str]:
         if self.is_admin:
