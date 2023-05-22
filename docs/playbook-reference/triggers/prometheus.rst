@@ -6,7 +6,7 @@ Robusta can :ref:`improve your existing Prometheus alerts <Enhanced Prometheus A
 
 Prerequisites
 ---------------
-AlertManager must be connected to Robusta. Refer to :ref:`Sending Alerts to Robusta`.
+AlertManager must be connected to Robusta. Refer to :ref:`Integrating AlertManager and Prometheus`.
 
 Triggers
 -----------
