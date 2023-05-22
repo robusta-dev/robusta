@@ -5,7 +5,7 @@ import threading
 import time
 from typing import Dict, List, Optional
 
-from hikaru.model import DaemonSet, StatefulSet, Deployment, Job, Pod, Container, Volume, ReplicaSet
+from hikaru.model.rel_1_26 import DaemonSet, StatefulSet, Deployment, Job, Pod, Container, Volume, ReplicaSet
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults, extract_total_pods, extract_ready_pods, \

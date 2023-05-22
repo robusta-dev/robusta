@@ -3,7 +3,7 @@ from collections import defaultdict
 from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, Optional, Union
 
-from hikaru.model import Deployment, DaemonSet, StatefulSet, Job, Pod, Volume, Container
+from hikaru.model.rel_1_26 import Deployment, DaemonSet, StatefulSet, Job, Pod, Volume, Container
 from kubernetes import client
 from kubernetes.client import (
     V1Container,
