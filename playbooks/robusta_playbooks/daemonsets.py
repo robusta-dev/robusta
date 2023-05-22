@@ -1,8 +1,7 @@
 import logging
 import textwrap
 
-from hikaru.model import DaemonSet, Node, NodeList
-
+from hikaru.model.rel_1_26 import DaemonSet, Node, NodeList
 from robusta.api import (
     CallbackBlock,
     CallbackChoice,

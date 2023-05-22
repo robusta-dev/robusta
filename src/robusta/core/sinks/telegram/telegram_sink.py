@@ -24,7 +24,8 @@ class TelegramSink(SinkBase):
     def __init__(self, sink_config: TelegramSinkConfigWrapper, registry):
         super().__init__(sink_config.telegram_sink, registry)
 
-        self.client = TelegramClient(sink_config.telegram_sink.chat_id, sink_config.telegram_sink.thread_id, sink_config.telegram_sink.bot_token)
+        self.client = TelegramClient(sink_config.telegram_sink.chat_id, sink_config.telegram_sink.thread_id,
+                                     sink_config.telegram_sink.bot_token)
         self.send_files = sink_config.telegram_sink.send_files
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
@@ -49,7 +50,7 @@ class TelegramSink(SinkBase):
         )
         title = finding.title.removeprefix("[RESOLVED] ")
 
-        message_content = self.__build_telegram_title(title, status, finding.severity)
+        message_content = self.__build_telegram_title(title, status, finding.severity, finding.add_silence_url)
 
         if platform_enabled:
             message_content += (
@@ -85,6 +86,8 @@ class TelegramSink(SinkBase):
         return not (isinstance(block, FileBlock) or isinstance(block, TableBlock))
 
     @classmethod
-    def __build_telegram_title(cls, title: str, status: FindingStatus, severity: FindingSeverity) -> str:
+    def __build_telegram_title(cls, title: str, status: FindingStatus, severity: FindingSeverity,
+                               add_silence_url: bool) -> str:
         icon = SEVERITY_EMOJI_MAP.get(severity, "")
-        return f"{status.to_emoji()} {status.name.lower()} - {icon} {severity.name} - *{title}*\n\n"
+        status_str: str = f"{status.to_emoji()} {status.name.lower()} - " if add_silence_url else ""
+        return f"{status_str}{icon} {severity.name} - *{title}*\n\n"

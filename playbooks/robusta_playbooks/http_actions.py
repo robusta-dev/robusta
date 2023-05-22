@@ -93,6 +93,7 @@ class HTTP_POST(ActionParams):
 
     url: str
     data: dict = None  # type: ignore
+    headers: dict = None
     get_response: Optional[bool] = False
 
 
@@ -115,7 +116,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
 
     try:
 
-        result = requests.post(action_params.url, data=action_params.data)
+        result = requests.post(action_params.url, data=action_params.data, headers=action_params.headers)
 
         if action_params.get_response:
             finding.title = f"Response received from {action_params.url} "

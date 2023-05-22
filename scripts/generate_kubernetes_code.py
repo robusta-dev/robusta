@@ -3,7 +3,7 @@ import os
 import textwrap
 from typing import TextIO
 
-KUBERNETES_VERSIONS = ["v1", "v2beta1", "v2beta2"]
+KUBERNETES_VERSIONS = ["v1"]
 KUBERNETES_RESOURCES = [
     "Pod",
     "ReplicaSet",
@@ -23,6 +23,7 @@ KUBERNETES_RESOURCES = [
     "PersistentVolumeClaim",
     "NetworkPolicy",
     "ConfigMap",
+    "Ingress",
 ]
 KUBERNETES_RESOURCES_STR = ",".join(KUBERNETES_RESOURCES)
 NON_NAMESPACED_RESOURCES = ["Node", "ClusterRole", "ClusterRoleBinding", "Namespace", "PersistentVolume"]
@@ -58,7 +59,7 @@ def autogenerate_events(f: TextIO):
         import traceback
         from dataclasses import dataclass
         from abc import abstractmethod
-        from hikaru.model import {KUBERNETES_RESOURCES_STR}
+        from hikaru.model.rel_1_26 import {KUBERNETES_RESOURCES_STR}
         from hikaru.utils import Response
         from pydantic import BaseModel
         from typing import Union, Optional, List
@@ -89,7 +90,7 @@ def autogenerate_events(f: TextIO):
             f.write(
                 textwrap.dedent(
                     f"""\
-                from hikaru.model.rel_1_16.{version} import {resource} as {version}{resource}
+                from hikaru.model.rel_1_26.{version} import {resource} as {version}{resource}
                 """
                 )
             )
@@ -278,7 +279,7 @@ def autogenerate_models(f: TextIO, version: str):
     f.write(
         textwrap.dedent(
             f"""\
-        from hikaru.model.rel_1_16.{version} import *
+        from hikaru.model.rel_1_26.{version} import *
         from robusta.integrations.kubernetes.custom_models import {CUSTOM_SUBCLASSES_NAMES_STR}
 
 

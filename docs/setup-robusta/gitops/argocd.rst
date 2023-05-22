@@ -124,3 +124,45 @@ Finally, run ``robusta logs`` from your cli and make sure there is no error.
     On some Robusta versions, the sync might fail with ``CustomResourceDefinition.apiextensions.k8s.io “prometheuses.monitoring.coreos.com” is invalid: metadata.annotations: Too long: must have at most 262144 bytes``.
 
     To solve it, use the workaround proposed `here <https://github.com/prometheus-community/helm-charts/issues/1500#issuecomment-1132907207>`_
+
+Configuring Argo Links
+-----------------------------------------
+
+For faster Kubernetes troubleshooting, add Robusta links to ArgoCD.
+
+.. image:: /images/argocd_external_urls.png
+
+Add an annotation to each Kubernetes resource with Robusta's URL:
+
+.. code-block::
+
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: my-deployment
+      annotations:
+        link.argocd.argoproj.io/external-link: "https://platform.robusta.dev/"
+
+Or link applications to their specific Robusta pages:
+
+.. code-block::
+
+    apiVersion: apps/v1
+    kind: Deployment #workload type
+    metadata:
+      name: my-deployment #workload name
+      annotations:
+        link.argocd.argoproj.io/external-link: "https://platform.robusta.dev/?namespace=%22default%22&type=%22Deployment%22&name=%22some-deployment%22&cluster=%22robusta-cluster-name%22"
+
+.. details:: What is the right Robusta URL for each application?
+
+    It's easiest to open the workload in RobustaUI and copy the URL from the browser.
+
+    You can also build the URL by hand. Edit the above URL, replacing:
+
+    * ``default`` with the workload's namespace
+    * ``Deployment`` with the workload type.  Ex: ``StatefulSets``
+    * ``some-deployment`` with the workload's name. Ex: ``my-deployment``
+    * ``robusta-cluster-name`` with your cluster's name, as defined in the Robusta Helm value ``clusterName``
+
+For more details, refer to the `Argo Documentation on External URLs. <https://argo-cd.readthedocs.io/en/stable/user-guide/external-url/>`_

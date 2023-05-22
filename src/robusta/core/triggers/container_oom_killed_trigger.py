@@ -1,6 +1,6 @@
 from typing import List
 
-from hikaru.model import ContainerStatus, Pod
+from hikaru.model.rel_1_26 import ContainerStatus, Pod
 
 from robusta.core.triggers.oom_killed_trigger_base import Exclude, OOMKilledTriggerBase
 

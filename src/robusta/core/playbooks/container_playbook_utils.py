@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from hikaru.model import Container, Pod
+from hikaru.model.rel_1_26 import Container, Pod
 
 from robusta.core.model.base_params import ResourceChartItemType, ResourceChartResourceType, ResourceGraphEnricherParams
 from robusta.core.model.pods import PodContainer

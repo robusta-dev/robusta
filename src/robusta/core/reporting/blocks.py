@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import hikaru
 from hikaru import DiffDetail, DiffType
-from hikaru.model import HikaruDocumentBase
+from hikaru.model.rel_1_26 import HikaruDocumentBase
 from pydantic import BaseModel
 
 try:

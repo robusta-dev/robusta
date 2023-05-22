@@ -8,9 +8,8 @@ from datetime import datetime
 from json import JSONDecodeError
 from typing import Dict, List, Optional
 
-from hikaru.model import Container, PodSpec
+from hikaru.model.rel_1_26 import Container, PodSpec
 from pydantic import BaseModel, ValidationError
-
 from robusta.api import (
     RELEASE_NAME,
     ActionParams,
@@ -27,7 +26,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye")
+IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye:v0.11.1")
 
 
 # https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/report/tally.go#L163

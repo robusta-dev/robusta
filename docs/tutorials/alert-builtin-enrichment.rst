@@ -20,7 +20,7 @@ Let's see each type of alert in action.
 .. * :ref:`Robusta installed with embedded Prometheus <Monitor Kubernetes from Scratch>`
 .. * :ref:`Robusta integrated with an external Prometheus <Integrating AlertManager and Prometheus>`
 
-Testing out Prometeheus alerts
+Testing out Prometheus alerts
 *********************************
 1. Deploy a broken pod that will be stuck in pending state:
 

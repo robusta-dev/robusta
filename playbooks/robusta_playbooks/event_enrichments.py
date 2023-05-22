@@ -49,12 +49,12 @@ def event_report(event: EventChangeEvent):
     """
     Create finding based on the kubernetes event
     """
-    k8s_obj = event.obj.involvedObject
+    k8s_obj = event.obj.regarding
 
     # creating the finding before the rate limiter, to use the service key for rate limiting
     finding = Finding(
         title=f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
-        description=event.obj.message,
+        description=event.obj.note,
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.INFO if event.obj.type == "Normal" else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
@@ -77,7 +77,7 @@ def event_resource_events(event: EventChangeEvent):
     if not event.get_event():
         logging.error(f"cannot run event_resource_events on alert with no events object: {event}")
         return
-    obj = event.obj.involvedObject
+    obj = event.obj.regarding
     events_table = get_resource_events_table(
         "*Related Events*",
         obj.kind,
@@ -140,9 +140,9 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                 e.reason,
                 e.type,
                 parse_kubernetes_datetime_to_ms(get_event_timestamp(e)) if get_event_timestamp(e) else 0,
-                e.involvedObject.kind,
-                e.involvedObject.name,
-                e.message,
+                e.regarding.kind,
+                e.regarding.name,
+                e.note,
             ]
             for e in events
         ]
