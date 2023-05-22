@@ -6,6 +6,11 @@ Sending Alerts to Robusta
 
 For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from AlertManager.
 
+.. note::
+
+   Robusta supports **VictoriaMetrics** as well. The instructions to use VictoriaMetrics are the same as for Prometheus.
+
+
 **If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
 
 For other setups, read on!
@@ -129,14 +134,33 @@ other services are located. If the auto-discovery isn't working, you'll configur
 
 Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
 
-.. code-block:: yaml
 
-  # this line should already exist
-  globalConfig:
-      # add the lines below
-      alertmanager_url: ""
-      grafana_url: ""
-      prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
+.. grid-item::
+
+    .. md-tab-set::
+
+        .. md-tab-item:: Prometheus
+
+            .. code-block:: yaml
+
+              # this line should already exist
+              globalConfig:
+                  # add the lines below
+                  alertmanager_url: ""
+                  grafana_url: ""
+                  prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
+
+        .. md-tab-item:: VictoriaMetrics
+
+             .. code-block:: yaml
+
+              # this line should already exist
+              globalConfig:
+                  # add the lines below
+                  alertmanager_url: ""
+                  grafana_url: ""
+                  prometheus_url: "http://VICTORIA_METRICS_SERVICE_NAME.monitoring.svc.cluster.local:8429"
+
 
 Additional Authentication Headers
 ---------------------------------
