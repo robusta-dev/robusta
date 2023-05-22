@@ -46,7 +46,6 @@
    configuration/alert-manager
    configuration/azure-managed-prometheus
    configuration/embedded-prometheus
-   configuration/victoria-metrics
    configuration/additional-settings
    configuration/defining-playbooks/index
 
