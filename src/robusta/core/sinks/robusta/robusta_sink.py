@@ -5,7 +5,7 @@ import threading
 import time
 from typing import Dict, List, Optional
 
-from hikaru.model import DaemonSet, StatefulSet, Deployment, Job, Pod, Container, Volume
+from hikaru.model import DaemonSet, StatefulSet, Deployment, Job, Pod, Container, Volume, ReplicaSet
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults, extract_total_pods, extract_ready_pods, \
@@ -165,7 +165,7 @@ class RobustaSink(SinkBase):
             if isinstance(new_resource, Deployment) \
                     or isinstance(new_resource, DaemonSet) \
                     or isinstance(new_resource, StatefulSet) \
-                    or isinstance(new_resource, Job) \
+                    or isinstance(new_resource, ReplicaSet) \
                     or isinstance(new_resource, Pod):
                 containers = extract_containers(new_resource)
                 volumes = extract_volumes(new_resource)
@@ -186,7 +186,8 @@ class RobustaSink(SinkBase):
                     ready_pods=ready_pods,
                     total_pods=total_pods,
                 )
-                self.__publish_new_services([services])
+
+                self.dal.persist_services([services])
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         resource_diffs = []
