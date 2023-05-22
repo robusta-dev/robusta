@@ -26,14 +26,23 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "leavemyyard/robusta-krr:latest")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "leavemyyard/robusta-krr:v1.0")
+
+
+SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
+ResourceType = Union[Literal["cpu", "memory"], str]
+
+
+class KRRPodData(BaseModel):
+    name: str
+    deleted: bool
 
 
 class KRRObject(BaseModel):
     cluster: Optional[str]
     name: str
     container: str
-    pods: List[str]
+    pods: List[KRRPodData]
     namespace: str
     kind: str
     allocations: Dict[str, Dict[str, Optional[float]]]
@@ -41,7 +50,7 @@ class KRRObject(BaseModel):
 
 class KRRRecommendedInfo(BaseModel):
     value: Union[float, Literal["?"], None]
-    severity: str = "UNKNOWN"
+    severity: SeverityType = "UNKNOWN"
 
     @property
     def priority(self) -> int:
@@ -53,10 +62,14 @@ class KRRRecommended(BaseModel):
     limits: Dict[str, KRRRecommendedInfo]
 
 
+KRRMetricsData = dict[ResourceType, str]
+
+
 class KRRScan(BaseModel):
     object: KRRObject
     recommended: KRRRecommended
-    severity: str = "UNKNOWN"
+    severity: SeverityType = "UNKNOWN"
+    metrics: KRRMetricsData = {}
 
     @property
     def priority(self) -> int:
@@ -66,7 +79,8 @@ class KRRScan(BaseModel):
 class KRRResponse(BaseModel):
     scans: List[KRRScan]
     score: int
-    resources: List[str] = ["cpu", "memory"]
+    resources: List[ResourceType] = ["cpu", "memory"]
+    description: Optional[str] = None
 
 
 class KRRParams(ActionParams):
@@ -98,7 +112,7 @@ class KRRParams(ActionParams):
         return shlex.quote(strategy)
 
 
-def krr_severity_to_priority(severity: str) -> int:
+def krr_severity_to_priority(severity: SeverityType) -> int:
     if severity == "CRITICAL":
         return 4
     elif severity == "WARNING":
@@ -207,6 +221,8 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                             "request": scan.recommended.requests[resource].priority,
                             "limit": scan.recommended.limits[resource].priority,
                         },
+                        "metric": scan.metrics.get(resource),
+                        "description": krr_scan.description,
                     }
                     for resource in krr_scan.resources
                 ],
