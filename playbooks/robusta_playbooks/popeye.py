@@ -91,6 +91,7 @@ class PopeyeParams(ActionParams):
     :var timeout: Time span for yielding the scan.
     :var args: Popeye cli arguments.
     :var spinach: Spinach.yaml config file to supply to the scan.
+    :var popeye_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
     :var service_account_name: The account name to use for the Popeye scan job.
     """
 
