@@ -26,7 +26,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "leavemyyard/robusta-krr:v1.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "leavemyyard/robusta-krr:v1.0.1")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
@@ -62,14 +62,18 @@ class KRRRecommended(BaseModel):
     limits: Dict[str, KRRRecommendedInfo]
 
 
-KRRMetricsData = dict[ResourceType, str]
+class KRRMetric(BaseModel):
+    query: str
+    start_time: datetime
+    end_time: datetime
+    step: str
 
 
 class KRRScan(BaseModel):
     object: KRRObject
     recommended: KRRRecommended
     severity: SeverityType = "UNKNOWN"
-    metrics: KRRMetricsData = {}
+    metrics: dict[ResourceType, KRRMetric] = {}
 
     @property
     def priority(self) -> int:
@@ -221,7 +225,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                             "request": scan.recommended.requests[resource].priority,
                             "limit": scan.recommended.limits[resource].priority,
                         },
-                        "metric": scan.metrics.get(resource),
+                        "metric": scan.metrics[resource].dict(),
                         "description": krr_scan.description,
                     }
                     for resource in krr_scan.resources
