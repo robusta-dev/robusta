@@ -84,7 +84,7 @@ def get_ui_key() -> str:
 
     while True:
         if not account_name:
-            email = typer.prompt("Enter your Google/Azure address. This will be used to login")
+            email = typer.prompt("Enter your Google/Gmail/Azure/Outlook address. This will be used to login")
             email = email.strip()
             account_name = typer.prompt("Choose your account name (e.g your organization name)")
 
