@@ -10,6 +10,7 @@ from typing import Dict, List, Optional
 
 from hikaru.model.rel_1_26 import Container, PodSpec
 from pydantic import BaseModel, ValidationError
+
 from robusta.api import (
     RELEASE_NAME,
     ActionParams,
@@ -96,6 +97,7 @@ class PopeyeParams(ActionParams):
     service_account_name: str = f"{RELEASE_NAME}-runner-service-account"
     timeout = 300
     args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
+    popeye_job_spec = {}
     spinach: str = """\
 popeye:
     excludes:
@@ -148,6 +150,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
             )
         ],
         restartPolicy="Never",
+        **params.popeye_job_spec,
     )
 
     start_time = datetime.now()
