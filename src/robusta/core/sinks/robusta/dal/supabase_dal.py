@@ -18,7 +18,7 @@ from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import Finding
-from robusta.core.reporting.blocks import ScanReportBlock, ScanReportRow
+from robusta.core.reporting.blocks import EventsBlock, ScanReportBlock, ScanReportRow
 from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 
@@ -32,6 +32,7 @@ HELM_RELEASES_TABLE = "HelmReleases"
 NAMESPACES_TABLE = "Namespaces"
 UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
 SCANS_RESULT_TABLE = "ScansResults"
+RESOURCE_EVENTS = "ResourceEvents"
 
 
 class RobustaAuthClient(SupabaseAuthClient):
@@ -60,13 +61,13 @@ class RobustaClient(Client):
 
     @staticmethod
     def _init_supabase_auth_client(
-            auth_url: str,
-            supabase_key: str,
-            detect_session_in_url: bool,
-            auto_refresh_token: bool,
-            persist_session: bool,
-            local_storage: Dict[str, Any],
-            headers: Dict[str, str],
+        auth_url: str,
+        supabase_key: str,
+        detect_session_in_url: bool,
+        auto_refresh_token: bool,
+        persist_session: bool,
+        local_storage: Dict[str, Any],
+        headers: Dict[str, str],
     ) -> RobustaAuthClient:
         """Creates a wrapped instance of the GoTrue Client."""
         return RobustaAuthClient(
@@ -81,15 +82,15 @@ class RobustaClient(Client):
 
 class SupabaseDal:
     def __init__(
-            self,
-            url: str,
-            key: str,
-            account_id: str,
-            email: str,
-            password: str,
-            sink_name: str,
-            cluster_name: str,
-            signing_key: str,
+        self,
+        url: str,
+        key: str,
+        account_id: str,
+        email: str,
+        password: str,
+        sink_name: str,
+        cluster_name: str,
+        signing_key: str,
     ):
         self.url = url
         self.key = key
@@ -143,6 +144,10 @@ class SupabaseDal:
 
     def persist_finding(self, finding: Finding):
 
+        for enrichment in finding.enrichments:
+            self.persist_platform_blocks(enrichment, finding.id)
+
+        # TODO merge scans flow with platform blocks flow.
         scans, enrichments = [], []
         for enrich in finding.enrichments:
             scans.append(enrich) if enrich.annotations.get(EnrichmentAnnotation.SCAN, False) else enrichments.append(
@@ -537,3 +542,28 @@ class SupabaseDal:
             self.handle_supabase_error()
 
         logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
+
+    def persist_events_block(self, block: EventsBlock, finding_id):
+        db_events = []
+        for row in block.render_rows():
+            event = dict(zip(block.headers, row))
+            event["account_id"] = self.account_id
+            event["cluster_id"] = self.cluster
+            event["namespace"] = block.namespace
+            event["finding_id"] = str(finding_id)
+            event.setdefault("kind", block.kind)
+            event.setdefault("name", block.resource_name)
+            db_events.append(event)
+
+        res = self.client.table(RESOURCE_EVENTS).insert(db_events).execute()
+        if res.get("status_code") not in [200, 201]:
+            msg = f"Failed to persist resource events error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+    def persist_platform_blocks(self, enrichment: Enrichment, finding_id):
+        for block in enrichment.blocks:
+            if isinstance(block, EventsBlock):
+                self.persist_events_block(block, finding_id)
+            # TODO should we add scans here

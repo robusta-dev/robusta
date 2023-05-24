@@ -15,6 +15,7 @@ from robusta.core.reporting.blocks import (
     CallbackBlock,
     CallbackChoice,
     DividerBlock,
+    EventsBlock,
     FileBlock,
     HeaderBlock,
     JsonBlock,
@@ -23,9 +24,9 @@ from robusta.core.reporting.blocks import (
     ListBlock,
     MarkdownBlock,
     PrometheusBlock,
-    TableBlock,
     ScanReportBlock,
-    ScanReportRow
+    ScanReportRow,
+    TableBlock,
 )
 
 __all__ = [
@@ -53,5 +54,5 @@ __all__ = [
     "PrometheusBlock",
     "JsonBlock",
     "ScanReportBlock",
-    "ScanReportRow"
+    "ScanReportRow",
 ]

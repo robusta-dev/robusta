@@ -213,22 +213,13 @@ class TableBlock(BaseBlock):
     table_name: str = ""
 
     def __init__(
-        self,
-        rows: List[List],
-        headers: Sequence[str] = (),
-        column_renderers: Dict = {},
-        table_name: str = "",
+        self, rows: List[List], headers: Sequence[str] = (), column_renderers: Dict = {}, table_name: str = "", **kwargs
     ):
         """
         :param rows: a list of rows. each row is a list of columns
         :param headers: names of each column
         """
-        super().__init__(
-            rows=rows,
-            headers=headers,
-            column_renderers=column_renderers,
-            table_name=table_name,
-        )
+        super().__init__(rows=rows, headers=headers, column_renderers=column_renderers, table_name=table_name, **kwargs)
 
     @classmethod
     def __calc_max_width(cls, headers, rendered_rows, table_max_width: int) -> List[int]:
@@ -428,3 +419,39 @@ class ScanReportBlock(BaseBlock):
             return "E"
         else:
             return "F"
+
+
+class EventsBlock(TableBlock):
+    """
+    Table display of a Events, Persists the events on the Robusta Platform.
+
+    Note: Wider tables appears as a file attachment on Slack, because they aren't rendered properly inline
+    """
+
+    namespace: str
+    resource_name: Optional[str] = None  # name and kind are None when included in the events.
+    kind: Optional[str] = None
+
+    def __init__(
+        self,
+        namespace: str,
+        rows: List[List],
+        headers: Sequence[str] = (),
+        resource_name: Optional[str] = None,
+        kind: Optional[str] = None,
+        column_renderers: Dict = {},
+        table_name: str = "",
+    ):
+        """
+        :param rows: a list of rows. each row is a list of columns
+        :param headers: names of each column
+        """
+        super().__init__(
+            rows=rows,
+            headers=headers,
+            column_renderers=column_renderers,
+            table_name=table_name,
+            namespace=namespace,
+            kind=kind,
+            resource_name=resource_name,
+        )
