@@ -26,7 +26,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "leavemyyard/robusta-krr:v1.0.1")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "leavemyyard/robusta-krr:v1.0.3")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
@@ -64,8 +64,8 @@ class KRRRecommended(BaseModel):
 
 class KRRMetric(BaseModel):
     query: str
-    start_time: datetime
-    end_time: datetime
+    start_time: str
+    end_time: str
     step: str
 
 
