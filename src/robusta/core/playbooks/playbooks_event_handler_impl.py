@@ -1,6 +1,7 @@
 import copy
 import logging
 import traceback
+import sys
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
@@ -44,7 +45,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     execution_event.sink_findings = sink_findings
                 except Exception:
                     logging.error(
-                        f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}"
+                        f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}",
+                        exc_info=True,
                     )
 
                 if execution_event:  # might not exist for unsupported k8s types
@@ -307,3 +309,4 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         logging.info("SIGINT handler called")
         if not self.is_healthy():  # dump stuck trace only when the runner is unhealthy
             StackTracer.dump()
+        sys.exit(0)

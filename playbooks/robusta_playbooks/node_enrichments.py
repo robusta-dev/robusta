@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from hikaru.model import Pod, PodList
+from hikaru.model.rel_1_26 import Pod, PodList
 from robusta.api import (
     ActionParams,
     BaseBlock,
@@ -50,7 +50,7 @@ def node_pods_capacity_enricher(event: NodeEvent):
         return
 
     block_list: List[BaseBlock] = []
-    pod_list: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
+    pod_list: PodList = PodList.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
 
     running_pods = [pod for pod in pod_list.items if pod.status.phase.lower() == "running"]
     pods_with_cpu_request = [pod for pod in running_pods if not has_resource_request(pod, "cpu")]
@@ -80,7 +80,7 @@ def node_running_pods_enricher(event: NodeEvent):
         return
 
     block_list: List[BaseBlock] = []
-    pod_list: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
+    pod_list: PodList = PodList.listPodForAllNamespaces(field_selector=f"spec.nodeName={node.metadata.name}").obj
 
     effected_pods_rows = [pod_row(pod) for pod in pod_list.items]
     block_list.append(

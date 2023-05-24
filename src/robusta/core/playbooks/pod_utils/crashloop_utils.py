@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 
-from hikaru.model import Pod
+from hikaru.model.rel_1_26 import Pod
 
 from robusta.core.reporting import BaseBlock, FileBlock, MarkdownBlock
 from robusta.integrations.kubernetes.custom_models import NamedRegexPattern, RegexReplacementStyle

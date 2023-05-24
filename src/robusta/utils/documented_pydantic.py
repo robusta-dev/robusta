@@ -38,7 +38,7 @@ class DocumentedModel(BaseModel):
         for doc_field in docs.fields:
             if doc_field.field_target not in cls.__fields__:
                 logging.warning(
-                    f"Docstring contains description of {doc_field.field_target} which is not a field on the model"
+                    f"The class {cls.__name__} has documentation for the `{doc_field.field_target}` field, but it doesn't exist"
                 )
                 continue
 

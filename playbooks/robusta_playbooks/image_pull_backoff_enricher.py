@@ -3,7 +3,7 @@ import logging
 from enum import Flag
 from typing import List
 
-from hikaru.model import ContainerStatus, PodStatus
+from hikaru.model.rel_1_26 import ContainerStatus, PodStatus
 from robusta.api import (
     BaseBlock,
     Finding,

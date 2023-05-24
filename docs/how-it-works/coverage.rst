@@ -20,7 +20,7 @@ Prometheus Alerts
 
 .. warning::
 
-    You must :ref:`send your Prometheus alerts to Robusta by webhook <Sending Alerts to Robusta>` for these to work.
+    You must :ref:`send your Prometheus alerts to Robusta by webhook <Integrating AlertManager and Prometheus>` for these to work.
 
 Other errors
 ----------------

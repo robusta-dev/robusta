@@ -1,12 +1,12 @@
 import json
+import logging
 import os
 import shlex
-import logging
 import uuid
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union
 
-from hikaru.model import Container, PodSpec
+from hikaru.model.rel_1_26 import Container, PodSpec
 from pydantic import BaseModel, ValidationError, validator
 
 from robusta.api import (
@@ -14,11 +14,9 @@ from robusta.api import (
     ActionParams,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
-    FileBlock,
     Finding,
     FindingSource,
     FindingType,
-    MarkdownBlock,
     RobustaJob,
     ScanReportBlock,
     ScanReportRow,
@@ -75,12 +73,14 @@ class KRRParams(ActionParams):
     :var timeout: Time span for yielding the scan.
     :var args: KRR cli arguments.
     :var serviceAccountName: The account name to use for the KRR scan job.
+    :var krr_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
     """
 
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
     strategy: str = "simple"
     args: str = ""
     timeout: int = 300
+    krr_job_spec = {}
 
     @validator("args", allow_reuse=True)
     def check_args(cls, args: str) -> str:
@@ -127,10 +127,10 @@ def priority_to_krr_severity(priority: int) -> str:
 
 def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
     return "\n".join(
-        f"{entry['resource'].upper()} Request: " +
-        f"{entry['allocated']['request']} -> " +
-        f"{entry['recommended']['request']} " +
-        f"({priority_to_krr_severity(entry['priority']['request'])})"
+        f"{entry['resource'].upper()} Request: "
+        + f"{entry['allocated']['request']} -> "
+        + f"{entry['recommended']['request']} "
+        + f"({priority_to_krr_severity(entry['priority']['request'])})"
         for entry in row.content
     )
 
@@ -151,6 +151,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             )
         ],
         restartPolicy="Never",
+        **params.krr_job_spec,
     )
 
     start_time = end_time = datetime.now()

@@ -9,7 +9,7 @@ import time
 import traceback
 from typing import List, Optional
 
-from hikaru.model import Job
+from hikaru.model.rel_1_26 import Job
 from kubernetes import config
 from kubernetes.client.api import core_v1_api
 from kubernetes.client.rest import ApiException

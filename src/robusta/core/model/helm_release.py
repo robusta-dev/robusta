@@ -24,7 +24,7 @@ class Info(BaseModel):
     deleted: str
     description: str
     status: str
-    notes: str
+    notes: Optional[str]
 
     def get_last_deployed(self):
         return datetime.strptime(self.last_deployed, '%Y-%m-%dT%H:%M:%S.%f%z')

@@ -8,7 +8,7 @@ from datetime import datetime
 from json import JSONDecodeError
 from typing import Dict, List, Optional
 
-from hikaru.model import Container, PodSpec
+from hikaru.model.rel_1_26 import Container, PodSpec
 from pydantic import BaseModel, ValidationError
 
 from robusta.api import (
@@ -27,7 +27,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye")
+IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye:v0.11.1")
 
 
 # https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/report/tally.go#L163
@@ -91,12 +91,14 @@ class PopeyeParams(ActionParams):
     :var timeout: Time span for yielding the scan.
     :var args: Popeye cli arguments.
     :var spinach: Spinach.yaml config file to supply to the scan.
+    :var popeye_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
     :var service_account_name: The account name to use for the Popeye scan job.
     """
 
     service_account_name: str = f"{RELEASE_NAME}-runner-service-account"
     timeout = 300
     args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
+    popeye_job_spec = {}
     spinach: str = """\
 popeye:
     excludes:
@@ -149,6 +151,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
             )
         ],
         restartPolicy="Never",
+        **params.popeye_job_spec,
     )
 
     start_time = datetime.now()

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from hikaru.model import Node
+from hikaru.model.rel_1_26 import Node
 
 from robusta.core.model.base_params import ResourceChartItemType, ResourceChartResourceType, ResourceGraphEnricherParams
 from robusta.core.playbooks.prometheus_enrichment_utils import create_resource_enrichment, get_node_internal_ip

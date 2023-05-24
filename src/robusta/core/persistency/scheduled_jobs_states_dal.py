@@ -4,7 +4,7 @@ from threading import Lock
 from typing import List, Optional
 
 import kubernetes
-from hikaru.model import ObjectMeta
+from hikaru.model.rel_1_26 import ObjectMeta
 
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
 from robusta.core.schedule.model import ScheduledJob

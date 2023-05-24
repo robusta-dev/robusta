@@ -3,7 +3,7 @@ import re
 from enum import Enum
 from typing import Dict, List, Optional
 
-from hikaru.model import Node, NodeList
+from hikaru.model.rel_1_26 import Node, NodeList
 
 
 class ClusterProviderType(str, Enum):

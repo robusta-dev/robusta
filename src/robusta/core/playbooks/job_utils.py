@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from hikaru.model import Job, PodList
+from hikaru.model.rel_1_26 import Job, PodList
 
 from robusta.integrations.kubernetes.custom_models import RobustaPod, build_selector_query
 

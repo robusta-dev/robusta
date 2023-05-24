@@ -11,7 +11,7 @@ Common Settings
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`book;1em;` Send Notifications
+    .. grid-item-card:: :octicon:`book;1em;` Configure Sinks
         :class-card: sd-bg-light sd-bg-text-light
         :link: configuring-sinks
         :link-type: doc

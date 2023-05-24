@@ -7,7 +7,7 @@ from time import sleep
 
 import requests
 import sentry_sdk
-from hikaru.model import NodeList
+from hikaru.model.rel_1_26 import NodeList
 
 from robusta.model.config import Registry, Telemetry
 from robusta.runner.telemetry import SinkInfo

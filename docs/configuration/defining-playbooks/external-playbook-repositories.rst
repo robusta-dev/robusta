@@ -15,7 +15,7 @@ use in :ref:`customPlaybooks<customPlaybooks>`.
 External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH.
 
 Loading Actions from Public Git Repo
-------------------------------------------
+------------------------------------------  
 
 Use HTTPs to load actions:
 
@@ -25,7 +25,8 @@ Use HTTPs to load actions:
       # add playbooks from https://github.com/robusta-dev/robusta-chaos
       my_extra_playbooks:
         url: "https://github.com/robusta-dev/robusta-chaos.git"
-
+        # optional
+        # branch: some_branch
 
 Loading Actions from Private Git Repos
 -----------------------------------------
@@ -40,12 +41,21 @@ This method works for public repos too:
       # add the same playbooks as above, this time over ssh
       my_extra_playbooks:
         url: "git@github.com:robusta-dev/robusta-chaos.git"
-        key: |-
-          -----BEGIN OPENSSH PRIVATE KEY-----
-          ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
-          -----END OPENSSH PRIVATE KEY-----
+        key: LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tL
+        # optional
+        # branch: some_branch
 
-The ``key`` parameter must contain a deployment key with ``read`` access.
+
+The ``key`` parameter must contain a ``base64`` encoded deployment key with ``read`` access.
+
+.. admonition:: Example deployment key
+
+     .. code-block:: yaml
+
+        -----BEGIN OPENSSH PRIVATE KEY-----
+        ewfrcfsfvC1rZXktdjEAAAAABG5vb.....
+        -----END OPENSSH PRIVATE KEY-----
+
 
 Handling Secrets
 *******************
@@ -67,3 +77,5 @@ Then reference it using an environment variable:
       my_extra_playbooks:
         url: "git@github.com:robusta-dev/robusta-chaos.git"
         key: "{{env.GITHUB_SSH_KEY}}"
+        # optional
+        # branch: some_branch
