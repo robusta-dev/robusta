@@ -5,13 +5,15 @@ from datetime import datetime
 import gzip
 import json
 
+from robusta.utils.parsing import normalize_datetime
+
 
 class Metadata(BaseModel):
     name: str
     version: str
-    description: str
-    apiVersion: str
-    appVersion: str
+    description: Optional[str]
+    apiVersion: Optional[str]
+    appVersion: Optional[str]
 
 
 class Chart(BaseModel):
@@ -27,10 +29,10 @@ class Info(BaseModel):
     notes: Optional[str]
 
     def get_last_deployed(self):
-        return datetime.strptime(self.last_deployed, '%Y-%m-%dT%H:%M:%S.%f%z')
+        return datetime.strptime(normalize_datetime(self.last_deployed), '%Y-%m-%dT%H:%M:%S.%f%z')
 
     def get_first_deployed(self):
-        return datetime.strptime(self.first_deployed, '%Y-%m-%dT%H:%M:%S.%f%z')
+        return datetime.strptime(normalize_datetime(self.first_deployed), '%Y-%m-%dT%H:%M:%S.%f%z')
 
 
 class HelmRelease(BaseModel):
