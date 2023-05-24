@@ -1,8 +1,10 @@
+import asyncio
 import base64
 import json
 import logging
 import threading
 import time
+from asyncio import Task
 from typing import Dict, List, Optional
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
@@ -66,11 +68,19 @@ class RobustaSink(SinkBase):
         self.last_prometheus_error_log_time = 0
         self.last_alert_manager_error_log_time = 0
 
-        self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
-
         # start cluster discovery
         self.__active = True
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
+
+        self.activity_stats = ActivityStats(
+            relayConnection=False,
+            alertManagerConnection=True,
+            prometheusConnection=True,
+            prometheusRetentionTime='',
+        )
+        self.prometheus_task: Optional[Task] = None
+        self.alertmanager_task: Optional[Task] = None
+
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
@@ -79,7 +89,7 @@ class RobustaSink(SinkBase):
         self.__jobs_cache: Optional[Dict[str, JobInfo]] = None
         self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
-        self.__thread = threading.Thread(target=self.__discover_cluster)
+        self.__thread = threading.Thread(target=lambda: asyncio.run(self.__discover_cluster()))
         self.__thread.start()
 
     def __init_service_resolver(self):
@@ -380,54 +390,72 @@ class RobustaSink(SinkBase):
 
         self.dal.publish_helm_releases(helm_releases)
 
-    def __update_cluster_status(self):
-        global_config = self.get_global_config()
-        activity_stats = ActivityStats(
-            relayConnection=False,
-            alertManagerConnection=True,
-            prometheusConnection=True,
-            prometheusRetentionTime='',
-        )
-
-        # checking the status of relay connection
-        receiver = self.registry.get_receiver()
-        if isinstance(receiver, ActionRequestReceiver):
-            activity_stats.relayConnection = receiver.healthy
-
+    async def __prometheus_connection_checks(self, global_config: dict,
+                                             cluster_status: ClusterStatus):
         # checking the status of prometheus
         try:
             prometheus_params = PrometheusParams(**global_config)
             prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
             check_prometheus_connection(prom=prometheus_connection, params={})
 
-            activity_stats.prometheusConnection = True
-
             prometheus_flags = get_prometheus_flags(prom=prometheus_connection)
             if prometheus_flags:
-                activity_stats.prometheusRetentionTime = prometheus_flags.get('retentionTime', "")
+                cluster_status.activity_stats.prometheusRetentionTime = prometheus_flags.get('retentionTime', "")
+
+            cluster_status.activity_stats.prometheusConnection = True
 
         except NoPrometheusUrlFound as e:
+            cluster_status.activity_stats.prometheusConnection = False
+
             if time.time() - self.last_alert_manager_error_log_time > PROMETHEUS_ERROR_LOG_PERIOD_SEC:
                 self.last_alert_manager_error_log_time = time.time()
                 logging.error(e)
         except Exception as e:
+            cluster_status.activity_stats.prometheusConnection = False
+
             if time.time() - self.last_prometheus_error_log_time > PROMETHEUS_ERROR_LOG_PERIOD_SEC:
                 self.last_prometheus_error_log_time = time.time()
                 logging.error(f"Failed to connect to prometheus. {e}", exc_info=True)
+        finally:
+            self.__publish_cluster_data(cluster_status)
 
+    async def __alert_manager_connection_checks(self, global_config: dict,
+                                                cluster_status: ClusterStatus):
         # checking the status of the alert manager
         try:
             base_silence_params = BaseSilenceParams(**global_config)
             get_alertmanager_silences_connection(params=base_silence_params)
-            activity_stats.alertManagerConnection = True
+            cluster_status.activity_stats.alertManagerConnection = True
+
         except NoAlertManagerUrlFound as e:
+            cluster_status.activity_stats.alertManagerConnection = False
+
             if time.time() - self.last_alert_manager_error_log_time > PROMETHEUS_ERROR_LOG_PERIOD_SEC:
                 self.last_alert_manager_error_log_time = time.time()
                 logging.error(e)
         except Exception as e:
+            cluster_status.activity_stats.alertManagerConnection = False
+
             if time.time() - self.last_alert_manager_error_log_time > PROMETHEUS_ERROR_LOG_PERIOD_SEC:
                 self.last_alert_manager_error_log_time = time.time()
                 logging.error(f"Failed to connect to the alert manager silence. {e}", exc_info=True)
+        finally:
+            self.__publish_cluster_data(cluster_status)
+
+    def __publish_cluster_data(self, cluster_status: ClusterStatus):
+        try:
+            self.dal.publish_cluster_status(cluster_status)
+            self.dal.publish_cluster_nodes(cluster_status.stats.nodes)
+        except Exception as e:
+            raise e
+
+    def __update_cluster_status(self):
+        global_config = self.get_global_config()
+
+        # checking the status of relay connection
+        receiver = self.registry.get_receiver()
+        if isinstance(receiver, ActionRequestReceiver):
+            self.activity_stats.relayConnection = receiver.healthy
 
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()
@@ -440,11 +468,18 @@ class RobustaSink(SinkBase):
                 light_actions=self.registry.get_light_actions(),
                 ttl_hours=self.ttl_hours,
                 stats=cluster_stats,
-                activity_stats=activity_stats
+                activity_stats=self.activity_stats
             )
 
-            self.dal.publish_cluster_status(cluster_status)
-            self.dal.publish_cluster_nodes(cluster_stats.nodes)
+            if not self.prometheus_task or self.prometheus_task.done():
+                self.prometheus_task = asyncio.create_task(
+                    self.__prometheus_connection_checks(global_config, cluster_status))
+
+            if not self.alertmanager_task or self.alertmanager_task.done():
+                self.alertmanager_task = asyncio.create_task(
+                    self.__alert_manager_connection_checks(global_config, cluster_status))
+
+            self.__publish_cluster_data(cluster_status)
         except Exception:
             logging.exception(
                 f"Failed to run periodic update cluster status for {self.sink_name}",
@@ -461,7 +496,7 @@ class RobustaSink(SinkBase):
             logging.error("Failed to check run history condition", exc_info=True)
             return False
 
-    def __discover_cluster(self):
+    async def __discover_cluster(self):
         logging.info("Cluster discovery initialized")
         get_history = self.__should_run_history()
         while self.__active:
@@ -479,7 +514,8 @@ class RobustaSink(SinkBase):
             # for small cluster duration is discovery_period_sec. For bigger clusters, up to 5 min
             sleep_dur = min(max(self.__discovery_period_sec, 3 * duration), 300)
             logging.debug(f"Discovery duration: {duration} next discovery in {sleep_dur}")
-            time.sleep(sleep_dur)
+
+            await asyncio.sleep(sleep_dur)
 
         logging.info(f"Service discovery for sink {self.sink_name} ended.")
 
