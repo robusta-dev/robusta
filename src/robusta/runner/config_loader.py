@@ -112,6 +112,7 @@ class ConfigLoader:
                         repo = GitRepo(
                             playbooks_repo.url,
                             playbooks_repo.key.get_secret_value(),
+                            playbooks_repo.branch
                         )
                         local_path = repo.repo_local_path
                     elif playbooks_repo.url.startswith(LOCAL_PATH_URL_PREFIX):

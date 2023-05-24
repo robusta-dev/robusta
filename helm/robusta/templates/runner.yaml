@@ -80,15 +80,24 @@ spec:
             mountPath: /etc/robusta/playbooks/storage
           {{- end }}
         livenessProbe:
+        {{- if .Values.runner.liveness_probe }}
+        {{ toYaml .Values.runner.liveness_probe | nindent 10 }}
+        {{- else }}
           httpGet:
             path: /healthz
             port: 5000
+        {{- end }}
         startupProbe:
+        {{- if .Values.runner.startup_probe }}
+        {{ toYaml .Values.runner.startup_probe | nindent 10 }}
+        {{- else }}
           httpGet:
             path: /healthz
             port: 5000
           failureThreshold: 5
           periodSeconds: 90
+        {{- end }}
+
         lifecycle:
           preStop:
             exec:

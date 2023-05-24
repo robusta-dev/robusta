@@ -1,0 +1,20 @@
+{
+  "target": {
+    "path": "deployment/robusta-runner",
+    "namespace": "default"
+  },
+  "feature": {
+    "env": {
+      "include": "nothing"
+    },
+    "fs": {
+      "mode": "local"
+    },
+    "network": {
+      "incoming": {
+        "mode": "steal",
+        "port_mapping": [[ 6000, 5000 ]]
+      }
+    }
+  }
+}

@@ -390,24 +390,22 @@ class RobustaSink(SinkBase):
 
         # checking the status of prometheus
         try:
-            prometheus_params = PrometheusParams(prometheus_url=global_config.get("prometheus_url", ""))
+            prometheus_params = PrometheusParams(**global_config)
             prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
             check_prometheus_connection(prom=prometheus_connection, params={})
 
             activity_stats.prometheusConnection = True
 
-            flag_response = get_prometheus_flags(prom=prometheus_connection)
-            if flag_response:
-                data = flag_response.get('data', None)
-                if data:
-                    activity_stats.prometheusRetentionTime = data.get('storage.tsdb.retention.time', "")
+            prometheus_flags = get_prometheus_flags(prom=prometheus_connection)
+            if prometheus_flags:
+                activity_stats.prometheusRetentionTime = prometheus_flags.get('retentionTime', "")
 
         except Exception as e:
             logging.error(f"Failed to connect to prometheus. {e}", exc_info=True)
 
         # checking the status of the alert manager
         try:
-            base_silence_params = BaseSilenceParams(alertmanager_url=global_config.get("alertmanager_url", ""))
+            base_silence_params = BaseSilenceParams(**global_config)
             get_alertmanager_silences_connection(params=base_silence_params)
             activity_stats.alertManagerConnection = True
         except Exception as e:

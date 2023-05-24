@@ -26,6 +26,7 @@ from robusta.utils.base64_utils import is_base64_encoded
 class PlaybookRepo(BaseModel):
     url: str
     key: Optional[SecretStr] = SecretStr("")
+    branch: Optional[str] = None  # when url is a git repo
     pip_install: bool = True  # Set to False, if the playbooks package is already in site-packages.
 
 

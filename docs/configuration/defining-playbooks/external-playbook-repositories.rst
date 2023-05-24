@@ -25,7 +25,8 @@ Use HTTPs to load actions:
       # add playbooks from https://github.com/robusta-dev/robusta-chaos
       my_extra_playbooks:
         url: "https://github.com/robusta-dev/robusta-chaos.git"
-
+        # optional
+        # branch: some_branch
 
 Loading Actions from Private Git Repos
 -----------------------------------------
@@ -41,6 +42,8 @@ This method works for public repos too:
       my_extra_playbooks:
         url: "git@github.com:robusta-dev/robusta-chaos.git"
         key: LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tL
+        # optional
+        # branch: some_branch
 
 
 The ``key`` parameter must contain a ``base64`` encoded deployment key with ``read`` access.
@@ -74,3 +77,5 @@ Then reference it using an environment variable:
       my_extra_playbooks:
         url: "git@github.com:robusta-dev/robusta-chaos.git"
         key: "{{env.GITHUB_SSH_KEY}}"
+        # optional
+        # branch: some_branch

@@ -1,6 +1,7 @@
 import copy
 import logging
 import traceback
+import sys
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
@@ -310,3 +311,4 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         logging.info("SIGINT handler called")
         if not self.is_healthy():  # dump stuck trace only when the runner is unhealthy
             StackTracer.dump()
+        sys.exit(0)
