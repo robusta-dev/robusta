@@ -9,6 +9,7 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
+from robusta.core.exceptions import NoAlertManagerUrlFound, NoPrometheusUrlFound
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.helm_release import HelmRelease
@@ -28,6 +29,8 @@ from robusta.integrations.prometheus.utils import get_prometheus_connect, get_pr
 from robusta.core.model.base_params import PrometheusParams
 from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_silences_connection
 
+
+PROMETHEUS_ERROR_LOG_PERIOD_SEC = 14400
 
 class RobustaSink(SinkBase):
 
@@ -60,6 +63,9 @@ class RobustaSink(SinkBase):
 
         self.first_prometheus_alert_time = 0
         self.last_send_time = 0
+        self.last_prometheus_error_log_time = 0
+        self.last_alert_manager_error_log_time = 0
+
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         # start cluster discovery
@@ -378,8 +384,8 @@ class RobustaSink(SinkBase):
         global_config = self.get_global_config()
         activity_stats = ActivityStats(
             relayConnection=False,
-            alertManagerConnection=False,
-            prometheusConnection=False,
+            alertManagerConnection=True,
+            prometheusConnection=True,
             prometheusRetentionTime='',
         )
 
@@ -400,16 +406,28 @@ class RobustaSink(SinkBase):
             if prometheus_flags:
                 activity_stats.prometheusRetentionTime = prometheus_flags.get('retentionTime', "")
 
+        except NoPrometheusUrlFound as e:
+            if time.time() - self.last_alert_manager_error_log_time > PROMETHEUS_ERROR_LOG_PERIOD_SEC:
+                self.last_alert_manager_error_log_time = time.time()
+                logging.error(e)
         except Exception as e:
-            logging.error(f"Failed to connect to prometheus. {e}", exc_info=True)
+            if time.time() - self.last_prometheus_error_log_time > PROMETHEUS_ERROR_LOG_PERIOD_SEC:
+                self.last_prometheus_error_log_time = time.time()
+                logging.error(f"Failed to connect to prometheus. {e}", exc_info=True)
 
         # checking the status of the alert manager
         try:
             base_silence_params = BaseSilenceParams(**global_config)
             get_alertmanager_silences_connection(params=base_silence_params)
             activity_stats.alertManagerConnection = True
+        except NoAlertManagerUrlFound as e:
+            if time.time() - self.last_alert_manager_error_log_time > PROMETHEUS_ERROR_LOG_PERIOD_SEC:
+                self.last_alert_manager_error_log_time = time.time()
+                logging.error(e)
         except Exception as e:
-            logging.error(f"Failed to connect to the alert manager silence. {e}", exc_info=True)
+            if time.time() - self.last_alert_manager_error_log_time > PROMETHEUS_ERROR_LOG_PERIOD_SEC:
+                self.last_alert_manager_error_log_time = time.time()
+                logging.error(f"Failed to connect to the alert manager silence. {e}", exc_info=True)
 
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()
