@@ -43,6 +43,24 @@ The results can be sent as a PDF to Slack or to the Robusta UI.
 
         robusta playbooks trigger krr_scan
 
+
+Taints, Tolerations and NodeSelectors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To set custom tolerations or a nodeSelector update your ``generated_values.yaml`` file as follows:
+
+.. code-block:: yaml
+    :name: cb-krr-set-custom-taints
+
+    global_config:
+      krr_job_spec:
+        tolerations:
+        - key: "key1"
+          operator: "Exists"
+          effect: "NoSchedule"
+        nodeSelector:
+          nodeName: "your-selector"
+
 Popeye - A Kubernetes Cluster Sanitizer
 ---------------------------------------------
 
