@@ -26,7 +26,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "leavemyyard/robusta-krr:v1.0.3")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.1")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
