@@ -24,7 +24,7 @@ class Info(BaseModel):
     first_deployed: str
     last_deployed: str
     deleted: str
-    description: str
+    description: Optional[str]
     status: str
     notes: Optional[str]
 
@@ -38,7 +38,7 @@ class Info(BaseModel):
 class HelmRelease(BaseModel):
     name: str
     info: Info
-    chart: Chart
+    chart: Optional[Chart]
     version: int
     namespace: str
     deleted: bool = False
