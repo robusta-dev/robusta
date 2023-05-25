@@ -40,7 +40,20 @@ class ContainerInfo(BaseModel):
             return None
 
     @staticmethod
-    def get_container_info(container: Union[V1Container, Container]):
+    def get_container_info(container: V1Container):
+        env = (
+            [EnvVar(name=env.name, value=env.value) for env in container.env if env.name and env.value]
+            if container.env
+            else []
+        )
+        limits = container.resources.limits if container.resources.limits else {}
+        requests = container.resources.requests if container.resources.requests else {}
+        resources = Resources(limits=limits, requests=requests)
+        return ContainerInfo(name=container.name, image=container.image,
+                             image_tag=ContainerInfo.extract_image_tag(container.image), env=env, resources=resources)
+
+    @staticmethod
+    def get_container_info_k8(container: Container):
         env = (
             [EnvVar(name=env.name, value=env.value) for env in container.env if env.name and env.value]
             if container.env

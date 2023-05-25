@@ -9,7 +9,7 @@ from hikaru.model.rel_1_26 import DaemonSet, StatefulSet, Deployment, Job, Pod, 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults, extract_total_pods, extract_ready_pods, \
-    extract_volumes, extract_containers
+    extract_volumes, extract_containers, extract_containers_k8, extract_volumes_k8
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
@@ -167,8 +167,8 @@ class RobustaSink(SinkBase):
                     or isinstance(new_resource, StatefulSet) \
                     or isinstance(new_resource, ReplicaSet) \
                     or isinstance(new_resource, Pod):
-                containers = extract_containers(new_resource)
-                volumes = extract_volumes(new_resource)
+                containers = extract_containers_k8(new_resource)
+                volumes = extract_volumes_k8(new_resource)
                 meta = new_resource.metadata
                 container_info = [ContainerInfo.get_container_info(container) for container in
                                   containers] if containers else []

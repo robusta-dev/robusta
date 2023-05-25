@@ -398,22 +398,38 @@ class Discovery:
 
 
 # This section below contains utility related to k8s python api objects (rather than hikaru)
-def extract_containers(resource) -> List[Union[V1Container, Container]]:
+def extract_containers(resource) -> List[V1Container]:
     """Extract containers from k8s python api object (not hikaru)"""
     try:
         containers = []
         if (
                 isinstance(resource, V1Deployment)
-                or isinstance(resource, Deployment)
-            or isinstance(resource, V1DaemonSet)
-            or isinstance(resource, DaemonSet)
+                or isinstance(resource, V1DaemonSet)
                 or isinstance(resource, V1StatefulSet)
-            or isinstance(resource, StatefulSet)
                 or isinstance(resource, V1Job)
+        ):
+            containers = resource.spec.template.spec.containers
+        elif isinstance(resource, V1Pod):
+            containers = resource.spec.containers
+
+        return containers
+    except Exception:  # may fail if one of the attributes is None
+        logging.error(f"Failed to extract containers from {resource}", exc_info=True)
+    return []
+
+# This section below contains utility related to k8s python api objects (rather than hikaru)
+def extract_containers_k8(resource) -> List[Container]:
+    """Extract containers from k8s python api object (not hikaru)"""
+    try:
+        containers = []
+        if (
+            isinstance(resource, Deployment)
+            or isinstance(resource, DaemonSet)
+            or isinstance(resource, StatefulSet)
             or isinstance(resource, Job)
         ):
             containers = resource.spec.template.spec.containers
-        elif isinstance(resource, V1Pod) or isinstance(resource, Pod):
+        elif isinstance(resource, Pod):
             containers = resource.spec.containers
 
         return containers
@@ -422,7 +438,14 @@ def extract_containers(resource) -> List[Union[V1Container, Container]]:
     return []
 
 
-def is_pod_ready(pod: Union[V1Pod, Pod]) -> bool:
+def is_pod_ready(pod: V1Pod) -> bool:
+    for condition in pod.status.conditions:
+        if condition.type == "Ready":
+            return condition.status.lower() == "true"
+    return False
+
+
+def is_pod_ready_k8(pod: Pod) -> bool:
     for condition in pod.status.conditions:
         if condition.type == "Ready":
             return condition.status.lower() == "true"
@@ -437,18 +460,36 @@ def is_pod_finished(pod: V1Pod) -> bool:
         return False
 
 
+def is_pod_finished_k8(pod: Pod) -> bool:
+    try:
+        # all containers in the pod have terminated, this pod should be removed by GC
+        return pod.status.phase.lower() in ["succeeded", "failed"]
+    except AttributeError:  # phase is an optional field
+        return False
+
+
 def extract_ready_pods(resource) -> int:
     try:
         if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
             return 0 if not resource.status.ready_replicas else resource.status.ready_replicas
-        elif isinstance(resource, Deployment) or isinstance(resource, StatefulSet):
-            return 0 if not resource.status.readyReplicas else resource.status.readyReplicas
         elif isinstance(resource, V1DaemonSet):
             return 0 if not resource.status.number_ready else resource.status.number_ready
+        elif isinstance(resource, V1Pod):
+            return 1 if is_pod_ready(resource) else 0
+        return 0
+    except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
+        logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
+    return 0
+
+
+def extract_ready_pods_k8(resource) -> int:
+    try:
+        if isinstance(resource, Deployment) or isinstance(resource, StatefulSet):
+            return 0 if not resource.status.readyReplicas else resource.status.readyReplicas
         elif isinstance(resource, DaemonSet):
             return 0 if not resource.status.numberReady else resource.status.numberReady
-        elif isinstance(resource, V1Pod) or isinstance(resource, Pod):
-            return 1 if is_pod_ready(resource) else 0
+        elif isinstance(resource, Pod):
+            return 1 if is_pod_ready_k8(resource) else 0
         return 0
     except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
         logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
@@ -457,14 +498,12 @@ def extract_ready_pods(resource) -> int:
 
 def extract_total_pods(resource) -> int:
     try:
-        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet) or isinstance(resource, Deployment) or isinstance(resource, StatefulSet):
+        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
             # resource.spec.replicas can be 0, default value is 1
             return resource.spec.replicas if resource.spec.replicas is not None else 1
         elif isinstance(resource, V1DaemonSet):
             return 0 if not resource.status.desired_number_scheduled else resource.status.desired_number_scheduled
-        elif isinstance(resource, DaemonSet):
-            return 0 if not resource.status.desiredNumberScheduled else resource.status.desiredNumberScheduled
-        elif isinstance(resource, V1Pod) or isinstance(resource, Pod):
+        elif isinstance(resource, V1Pod):
             return 1
         return 0
     except Exception:
@@ -472,22 +511,52 @@ def extract_total_pods(resource) -> int:
     return 1
 
 
-def extract_volumes(resource) -> List[Union[V1Volume, Volume]]:
+def extract_total_pods_k8(resource) -> int:
+    try:
+        if isinstance(resource, Deployment) or isinstance(resource, StatefulSet):
+            # resource.spec.replicas can be 0, default value is 1
+            return resource.spec.replicas if resource.spec.replicas is not None else 1
+        elif isinstance(resource, DaemonSet):
+            return 0 if not resource.status.desiredNumberScheduled else resource.status.desiredNumberScheduled
+        elif isinstance(resource, Pod):
+            return 1
+        return 0
+    except Exception:
+        logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
+    return 1
+
+
+def extract_volumes(resource) -> List[V1Volume]:
     """Extract volumes from k8s python api object (not hikaru)"""
     try:
         volumes = []
         if (
                 isinstance(resource, V1Deployment)
-                or isinstance(resource, Deployment)
-            or isinstance(resource, V1DaemonSet)
-            or isinstance(resource, DaemonSet)
+                or isinstance(resource, V1DaemonSet)
                 or isinstance(resource, V1StatefulSet)
-            or isinstance(resource, StatefulSet)
                 or isinstance(resource, V1Job)
-            or isinstance(resource, Job)
         ):
             volumes = resource.spec.template.spec.volumes
-        elif isinstance(resource, V1Pod) or isinstance(resource, Pod):
+        elif isinstance(resource, V1Pod):
+            volumes = resource.spec.volumes
+        return volumes
+    except Exception:  # may fail if one of the attributes is None
+        logging.error(f"Failed to extract volumes from {resource}", exc_info=True)
+    return []
+
+
+def extract_volumes_k8(resource) -> List[Volume]:
+    """Extract volumes from k8s python api object (not hikaru)"""
+    try:
+        volumes = []
+        if (
+                isinstance(resource, Deployment)
+                or isinstance(resource, DaemonSet)
+                or isinstance(resource, StatefulSet)
+                or isinstance(resource, Job)
+        ):
+            volumes = resource.spec.template.spec.volumes
+        elif isinstance(resource, Pod):
             volumes = resource.spec.volumes
         return volumes
     except Exception:  # may fail if one of the attributes is None
