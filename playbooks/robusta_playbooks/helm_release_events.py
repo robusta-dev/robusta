@@ -44,8 +44,8 @@ def helm_status_enricher(event: HelmReleasesEvent):
                 f"  ● *Namespace*: `{event.helm_release.namespace}`\n\n"
                 f"  ● *Status*: `{event.helm_release.info.status}`\n\n"
                 f"  ● *Revision*: `{event.helm_release.version}`\n\n"
-                f"  ● *First Deployed*: `{event.helm_release.info.get_first_deployed().strftime('%b %d, %Y, %I:%M:%S %p%z')}`\n\n"
-                f"  ● *Last Deployed*: `{event.helm_release.info.get_last_deployed().strftime('%b %d, %Y, %I:%M:%S %p%z')}`\n\n"
+                f"  ● *First Deployed*: `{event.helm_release.info.first_deployed.strftime('%b %d, %Y, %I:%M:%S %p%z')}`\n\n"
+                f"  ● *Last Deployed*: `{event.helm_release.info.last_deployed.strftime('%b %d, %Y, %I:%M:%S %p%z')}`\n\n"
                 f"{detailed_info}"
                 f"{chart_info}"
             ),

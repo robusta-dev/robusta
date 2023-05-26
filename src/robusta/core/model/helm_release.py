@@ -1,11 +1,9 @@
-from typing import Optional, List
+from typing import Optional, List, Any
 from pydantic import BaseModel
 from base64 import b64decode
 from datetime import datetime
 import gzip
 import json
-
-from robusta.utils.parsing import normalize_datetime
 
 
 class Metadata(BaseModel):
@@ -21,18 +19,12 @@ class Chart(BaseModel):
 
 
 class Info(BaseModel):
-    first_deployed: str
-    last_deployed: str
+    first_deployed: datetime
+    last_deployed: datetime
     deleted: str
     description: Optional[str]
     status: str
     notes: Optional[str]
-
-    def get_last_deployed(self):
-        return datetime.strptime(normalize_datetime(self.last_deployed), '%Y-%m-%dT%H:%M:%S.%f%z')
-
-    def get_first_deployed(self):
-        return datetime.strptime(normalize_datetime(self.first_deployed), '%Y-%m-%dT%H:%M:%S.%f%z')
 
 
 class HelmRelease(BaseModel):
@@ -44,8 +36,14 @@ class HelmRelease(BaseModel):
     deleted: bool = False
 
     @staticmethod
-    def list_to_json(releases: List["HelmRelease"]):
+    def list_to_dict(releases: List["HelmRelease"]):
         return [release.dict() for release in releases]
+
+    def dict(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        release_dict = super().dict()
+        release_dict["info"]["first_deployed"] = self.info.first_deployed.isoformat()
+        release_dict["info"]["last_deployed"] = self.info.last_deployed.isoformat()
+        return release_dict
 
     @classmethod
     def from_api_server(cls, encoded_release_data: str) -> "HelmRelease":
