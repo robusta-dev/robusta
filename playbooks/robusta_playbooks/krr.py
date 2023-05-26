@@ -26,23 +26,17 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.1")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.1.1")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
 ResourceType = Union[Literal["cpu", "memory"], str]
 
 
-class KRRPodData(BaseModel):
-    name: str
-    deleted: bool
-
-
 class KRRObject(BaseModel):
     cluster: Optional[str]
     name: str
     container: str
-    pods: List[KRRPodData]
     namespace: str
     kind: str
     allocations: Dict[str, Dict[str, Optional[float]]]
