@@ -1,4 +1,4 @@
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from pydantic import BaseModel
 from base64 import b64decode
 from datetime import datetime
@@ -39,7 +39,7 @@ class HelmRelease(BaseModel):
     def list_to_dict(releases: List["HelmRelease"]):
         return [release.dict() for release in releases]
 
-    def dict(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    def dict(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         release_dict = super().dict()
         release_dict["info"]["first_deployed"] = self.info.first_deployed.isoformat()
         release_dict["info"]["last_deployed"] = self.info.last_deployed.isoformat()
