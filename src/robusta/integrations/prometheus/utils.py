@@ -208,7 +208,7 @@ class ServiceDiscovery:
                 cls.cache[cache_key] = service_url
                 return service_url
 
-        logging.error(error_msg)
+        logging.debug(error_msg)
         return None
 
 

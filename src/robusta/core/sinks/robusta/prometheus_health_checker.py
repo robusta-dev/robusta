@@ -13,7 +13,7 @@ from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_sile
 
 class PrometheusHealthStatus(BaseModel):
     prometheus: bool = True
-    prometheus_retention_time: bool = True
+    prometheus_retention_time: bool = ''
     alertmanager: bool = True
 
 
@@ -61,8 +61,8 @@ class PrometheusHealthChecker:
             self.status.prometheus = False
             self.status.prometheus_retention_time = ""
 
-            if time.time() - self.__last_alertmanager_error_log_time > self.__prometheus_error_log_period_sec:
-                self.__last_alertmanager_error_log_time = time.time()
+            if time.time() - self.__last_prometheus_error_log_time > self.__prometheus_error_log_period_sec:
+                self.__last_prometheus_error_log_time = time.time()
                 logging.error(e)
         except Exception as e:
             self.status.prometheus = False
