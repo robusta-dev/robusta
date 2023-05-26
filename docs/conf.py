@@ -40,7 +40,6 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
-    "sphinx_copybutton",
     "sphinx_design",
     "sphinxcontrib.images",
     "autorobusta",
