@@ -59,12 +59,14 @@ class PrometheusHealthChecker:
 
         except NoPrometheusUrlFound as e:
             self.status.prometheus = False
+            self.status.prometheus_retention_time = ""
 
             if time.time() - self.__last_alertmanager_error_log_time > self.__prometheus_error_log_period_sec:
                 self.__last_alertmanager_error_log_time = time.time()
                 logging.error(e)
         except Exception as e:
             self.status.prometheus = False
+            self.status.prometheus_retention_time = ""
 
             if time.time() - self.__last_prometheus_error_log_time > self.__prometheus_error_log_period_sec:
                 self.__last_prometheus_error_log_time = time.time()
