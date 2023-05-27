@@ -200,6 +200,7 @@ playbooksMap:
     - pod_events_enricher: {}
     - default_enricher: {} 
     halt: true
+    priority: 10
 
   # name: prometheusPrometheusRuleFailuresReport
   prometheusPrometheusRuleFailuresReport:
@@ -212,6 +213,7 @@ playbooksMap:
         filter_regex: ".*Evaluating rule failed.*"
     - default_enricher: {} 
     halt: true
+    priority: 10
 
   # name: prometheusKubeCPUOvercommitReport
   prometheusKubeCPUOvercommitReport:
@@ -225,6 +227,7 @@ playbooksMap:
         name: CPU Overcommited
     - default_enricher: {} 
     halt: true
+    priority: 10
 
   # name: prometheusKubeMemoryOvercommitReport
   prometheusKubeMemoryOvercommitReport:
@@ -238,6 +241,7 @@ playbooksMap:
         name: Memory Overcommited
     - default_enricher: {} 
     halt: true
+    priority: 10
 
   # name: prometheusKubePodNotReadyReport
   prometheusKubePodNotReadyReport:
@@ -250,6 +254,7 @@ playbooksMap:
     - pod_issue_investigator: {}
     - default_enricher: {} 
     halt: true
+    priority: 10
 
   # name: prometheusKubeContainerWaitingReport
   prometheusKubeContainerWaitingReport:
@@ -261,6 +266,7 @@ playbooksMap:
     - pod_events_enricher: {}
     - default_enricher: {} 
     halt: true
+    priority: 10
 
   # name: prometheusKubeHpaReplicasMismatchReport
   prometheusKubeHpaReplicasMismatchReport:
@@ -271,6 +277,7 @@ playbooksMap:
     - hpa_mismatch_enricher: {}
     - default_enricher: {} 
     halt: true
+    priority: 10
 
   # name: prometheusKubeJobXxxReport
   prometheusKubeJobXxxReport:
@@ -287,6 +294,7 @@ playbooksMap:
     - job_pod_enricher: {}
     - default_enricher: {}  
     halt: true
+    priority: 10
 
 
   # name: prometheusKubeAggregatedAPIDownReport
@@ -298,6 +306,7 @@ playbooksMap:
     - api_service_status_enricher: {}
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # name: prometheusKubeletTooManyPodsReport
   prometheusKubeletTooManyPodsReport:
@@ -311,6 +320,7 @@ playbooksMap:
         recommended_resolution: "Verify that you defined proper resource requests for your workloads. If pods cannot be scheduled, add more nodes to your cluster."
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # name: prometheusKubeNodeNotReadyReport
   prometheusKubeNodeNotReadyReport:
@@ -325,6 +335,7 @@ playbooksMap:
     - node_dmesg_enricher: {}
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # name: prometheusKubeNodeUnreachableReport
   prometheusKubeNodeUnreachableReport:
@@ -336,6 +347,7 @@ playbooksMap:
     - node_status_enricher: {}
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # Prometheus Statefulset playbooks
   # name: prometheusKubeStatefulSetReplicasMismatchReport
@@ -350,6 +362,7 @@ playbooksMap:
     - pod_issue_investigator: {}
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # name: prometheusKubeStatefulSetUpdateNotRolledOutReport
   prometheusKubeStatefulSetUpdateNotRolledOutReport:
@@ -361,6 +374,7 @@ playbooksMap:
     - statefulset_replicas_enricher: {}
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # Prometheus Daemonset playbooks
   # name: prometheusKubeDaemonSetRolloutStuckReport
@@ -374,6 +388,7 @@ playbooksMap:
     - daemonset_status_enricher: {}
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # name: prometheusKubernetesDaemonsetMisscheduledReport
   prometheusKubernetesDaemonsetMisscheduledReport:
@@ -387,6 +402,7 @@ playbooksMap:
     - daemonset_misscheduled_analysis_enricher: {}
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # name: prometheusHostHighCpuLoadReport
   prometheusHostHighCpuLoadReport:
@@ -400,6 +416,7 @@ playbooksMap:
         item_type: Node
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # name: prometheusHostOomKillDetectedReport
   prometheusHostOomKillDetectedReport:
@@ -413,6 +430,7 @@ playbooksMap:
         item_type: Node
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # name: prometheusNodeFilesystemSpaceFillingUpReport
   prometheusNodeFilesystemSpaceFillingUpReport:
@@ -428,6 +446,7 @@ playbooksMap:
         item_type: Node
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # name: prometheusCPUThrottlingHighReport
   prometheusCPUThrottlingHighReport:
@@ -442,6 +461,7 @@ playbooksMap:
         item_type: Pod
     - default_enricher: {}  
     halt: true
+    priority: 10
 
   # name: prometheusKubernetesDeploymentReplicasMismatchReport
   prometheusKubernetesDeploymentReplicasMismatchReport:
@@ -459,17 +479,8 @@ playbooksMap:
         dependent_pod_mode: true
     - default_enricher: {}  
     halt: true
-
-  # name: prometheusCatchAllReport
-  prometheusCatchAllReport:
-    triggers:
-    - on_prometheus_alert:
-        status: "all"
-    actions:
-    - default_enricher: {}
-    priority: 100.0
-
-  # name: prometheusNodeFilesystemSpaceReport
+    priority: 10
+# name: prometheusNodeFilesystemSpaceReport
   prometheusNodeFilesystemSpaceReport:
     triggers:
     - on_prometheus_alert:
@@ -484,6 +495,19 @@ playbooksMap:
         recommended_resolution: "This is a common issue on local clusters and we recommend increasing the node disk size for your cluster to run optimally."
     - default_enricher: {}  
     halt: true
+    priority: 10
+
+  # this playbook handles all prometheus alerts that left 'unhalted' by other "on_prometheus_alert" of lower priority 
+  # name: prometheusCatchAllReport
+  prometheusCatchAllReport:
+    triggers:
+    - on_prometheus_alert:
+        status: "all"
+    actions:
+    - default_enricher: {}
+    priority: 100.0
+
+  
 
 
 # additional builtin playbooks to enable when using Robusta UI
