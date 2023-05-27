@@ -24,7 +24,6 @@ from robusta.core.model.base_params import (
     VideoEnricherParams,
 )
 from robusta.core.model.env_vars import (
-    ALERT_BUILDER_WORKERS,
     CLUSTER_STATUS_PERIOD_SEC,
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
@@ -169,10 +168,10 @@ from robusta.core.schedule.model import (
 )
 from robusta.core.sinks import SinkBase, SinkBaseParams, SinkConfigBase
 from robusta.core.sinks.kafka import KafkaSink, KafkaSinkConfigWrapper, KafkaSinkParams
+from robusta.core.triggers.helm_releases_triggers import HelmReleasesEvent, HelmReleasesTriggerEvent
 from robusta.integrations.argocd.argocd_client import ArgoCDClient
 from robusta.integrations.git.git_repo import ClusterChanges, GitRepo, GitRepoManager, SingleChange
 from robusta.integrations.grafana import Grafana
-from robusta.core.triggers.helm_releases_triggers import (HelmReleasesTriggerEvent, HelmReleasesEvent)
 from robusta.integrations.kubernetes.api_client_utils import (
     exec_commands,
     exec_shell_command,
