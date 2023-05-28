@@ -180,7 +180,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                                                                             key=prometheus_auth_secret_key)),
                   )
               ]
-        # using secret env var in krr line
+        # adding secret env var in krr pod command
         python_command += f'--prometheus-auth-header \"${env_var_auth_name}\"'
 
     spec = PodSpec(
