@@ -170,7 +170,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         env_var_auth_name = "PROMETHEUS_AUTH_HEADER"
         auth_header_b64_str = base64.b64encode(bytes(auth_header, "utf-8")).decode("utf-8")
         # creating secret for auth key
-        secret = RobustaSecret.create_safe_secret(secret_name=krr_secret_name,
+        secret = RobustaSecret.create_runner_owned_secret(secret_name=krr_secret_name,
                                                   data={prometheus_auth_secret_key: auth_header_b64_str})
         # setting env variables of krr to have secret
         env_var = [

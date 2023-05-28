@@ -381,7 +381,7 @@ class RobustaSecret(Secret):
             logging.error(f"Failed to delete secret {self.metadata.name}", exc_info=True)
 
     @staticmethod
-    def create_safe_secret(secret_name:str, data: Optional[Dict[str, str]]) -> Optional["RobustaSecret"]:
+    def create_runner_owned_secret(secret_name:str, data: Optional[Dict[str, str]]) -> Optional["RobustaSecret"]:
         """
             This secret will be auto-deleted when the runner pod is Terminated
         """
