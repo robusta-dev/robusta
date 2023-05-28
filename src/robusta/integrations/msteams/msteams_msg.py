@@ -109,7 +109,7 @@ class MsTeamsMsg:
         blocks: List[MsTeamsBase] = []
         if table_block.table_name:
             blocks.append(MsTeamsTextBlock(table_block.table_name))
-        blocks.append(MsTeamsTable(list(table_block.headers), table_block.render_rows()))
+        blocks.append(MsTeamsTable(list(table_block.headers), table_block.render_rows(), table_block.column_width))
         self.__write_to_current_section(blocks)
 
     def items_list(self, block: ListBlock):
