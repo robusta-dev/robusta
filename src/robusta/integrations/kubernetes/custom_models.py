@@ -385,7 +385,7 @@ class RobustaSecret(Secret):
         """
             This secret will be auto-deleted when the runner pod is Terminated
         """
-        runner_pods: List[Pod] = Pod.listPodForAllNamespaces(label_selector="app=robusta-runner").obj.items
+        runner_pods: List[Pod] = PodList.listPodForAllNamespaces(label_selector="app=robusta-runner").obj.items
         running_runner_pods = [pod for pod in runner_pods if pod.status.phase == "Running"]
         if len(running_runner_pods) != 1:
             raise Exception(f"Error getting runner pod from kubernetes api")
