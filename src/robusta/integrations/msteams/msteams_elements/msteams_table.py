@@ -1,30 +1,24 @@
 from typing import List
 
 from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
-from robusta.integrations.msteams.msteams_elements.msteams_column import MsTeamsColumn
 from robusta.integrations.msteams.msteams_elements.msteams_text_block import MsTeamsTextBlock
 
 
 class MsTeamsTable(MsTeamsBase):
     def __init__(self, headers: List[str], rows: List[List[str]]):
 
-        column_element = self.__create_table(headers, rows)
-        super().__init__(column_element.get_map_value())
+        super().__init__(self.getTable(headers, rows))
 
-    def __create_table(self, headers: List[str], rows: List[List[str]]) -> MsTeamsColumn:
+    def getTableCell(self, text: str):
+        return {"type": "TableCell", "items": [MsTeamsTextBlock(text).get_map_value()]}
 
-        column_element = MsTeamsColumn()
-        for index in range(len(headers)):
-            single_column = [MsTeamsTextBlock(text=headers[index], weight="bolder")]
-            single_column = single_column + self.__create_single_column_list(rows=rows, index=index)
-            column_element.add_column(items=single_column, width_stretch=True)
+    def getTableRow(self, row: List[str]):
+        return {"type": "TableRow", "cells": [self.getTableCell(i) for i in row]}
 
-        return column_element
-
-    def __create_single_column_list(self, rows: List[List[str]], index: int) -> List[map]:
-        first_row = True
-        column = []
-        for row in rows:
-            column.append(MsTeamsTextBlock(text=row[index], separator=first_row))
-            first_row = False
-        return column
+    def getTable(self, headers: List[str], rows: List[List[str]]):
+        combined_rows = [headers, *rows]
+        return {
+            "type": "Table",
+            "columns": [{"width": 1} for _ in headers],
+            "rows": [self.getTableRow(r) for r in combined_rows],
+        }
