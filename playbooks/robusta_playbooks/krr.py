@@ -7,8 +7,7 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union
 
-from hikaru.model.rel_1_26 import Container, PodSpec
-from hikaru.model import Container, EnvVar, EnvVarSource, PodSpec, SecretKeySelector
+from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, SecretKeySelector
 from pydantic import BaseModel, ValidationError, validator
 from robusta.api import (
     RELEASE_NAME,
