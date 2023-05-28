@@ -370,6 +370,40 @@ class RobustaDeployment(Deployment):
         return get_images(self.spec.template.spec.containers)
 
 
+class RobustaSecret(Secret):
+    def delete(self):
+        try:
+            self.deleteNamespacedSecret(
+                self.metadata.name,
+                self.metadata.namespace,
+            )
+        except Exception:
+            logging.error(f"Failed to delete secret {self.metadata.name}", exc_info=True)
+
+    @staticmethod
+    def create_safe_secret(secret_name:str, data: Optional[Dict[str, str]]) -> Optional["RobustaSecret"]:
+        #This secret will be auto-deleted if the runner pod is Terminated
+        runner_pods: List[Pod] = Pod.listPodForAllNamespaces(label_selector="app=robusta-runner").obj.items
+        running_runner_pods = [pod for pod in runner_pods if pod.status.phase == "Running"]
+        robusta_pod = running_runner_pods[0]
+
+        robusta_owner_reference = OwnerReference(apiVersion="v1",
+                                                 kind="Pod",
+                                                 name=robusta_pod.metadata.name,
+                                                 uid=robusta_pod.metadata.uid,
+                                                 blockOwnerDeletion=False,
+                                                 controller=True)
+        secret = RobustaSecret(
+            metadata=ObjectMeta(name=secret_name, ownerReferences=[robusta_owner_reference]),
+            data=data
+            )
+        try:
+            return secret.createNamespacedSecret(robusta_pod.metadata.namespace).obj
+        except Exception as e:
+            logging.error(f"Failed to create secret {secret_name}", exc_info=True)
+            raise e
+
+
 class RobustaJob(Job):
     def get_pods(self) -> List[RobustaPod]:
         """

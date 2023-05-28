@@ -253,6 +253,7 @@ from robusta.integrations.kubernetes.custom_models import (
     RobustaEvent,
     RobustaJob,
     RobustaPod,
+    RobustaSecret,
     build_selector_query,
     does_daemonset_have_toleration,
     does_node_have_taint,
