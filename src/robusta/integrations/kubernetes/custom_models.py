@@ -382,9 +382,14 @@ class RobustaSecret(Secret):
 
     @staticmethod
     def create_safe_secret(secret_name:str, data: Optional[Dict[str, str]]) -> Optional["RobustaSecret"]:
-        #This secret will be auto-deleted if the runner pod is Terminated
+        """
+            This secret will be auto-deleted when the runner pod is Terminated
+        """
         runner_pods: List[Pod] = Pod.listPodForAllNamespaces(label_selector="app=robusta-runner").obj.items
         running_runner_pods = [pod for pod in runner_pods if pod.status.phase == "Running"]
+        if len(running_runner_pods) != 1:
+            raise Exception(f"Error getting runner pod from kubernetes api")
+
         robusta_pod = running_runner_pods[0]
 
         robusta_owner_reference = OwnerReference(apiVersion="v1",
