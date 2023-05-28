@@ -161,20 +161,20 @@ class SupabaseDal:
             return
 
         for enrichment in enrichments:
-            res = (
-                self.client.table(EVIDENCE_TABLE)
-                .insert(
-                    ModelConversion.to_evidence_json(
-                        account_id=self.account_id,
-                        cluster_id=self.cluster,
-                        sink_name=self.sink_name,
-                        signing_key=self.signing_key,
-                        finding_id=finding.id,
-                        enrichment=enrichment,
-                    )
-                )
-                .execute()
+            evidence = ModelConversion.to_evidence_json(
+                account_id=self.account_id,
+                cluster_id=self.cluster,
+                sink_name=self.sink_name,
+                signing_key=self.signing_key,
+                finding_id=finding.id,
+                enrichment=enrichment,
             )
+
+            if not evidence:
+                continue
+
+            res = self.client.table(EVIDENCE_TABLE).insert(evidence).execute()
+
             if res.get("status_code") != 201:
                 logging.error(
                     f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"

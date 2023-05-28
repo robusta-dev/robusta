@@ -9,16 +9,16 @@ from robusta.core.reporting import (
     CallbackBlock,
     DividerBlock,
     Enrichment,
+    EventsBlock,
     FileBlock,
     Finding,
     HeaderBlock,
+    JsonBlock,
     KubernetesDiffBlock,
     ListBlock,
     MarkdownBlock,
     PrometheusBlock,
     TableBlock,
-    JsonBlock,
-    ScanReportBlock,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer
@@ -97,6 +97,8 @@ class ModelConversion:
                 structured_data.append({"type": "list", "data": block.items})
             elif isinstance(block, PrometheusBlock):
                 structured_data.append({"type": "prometheus", "data": block.data.json(), "metadata": block.metadata})
+            elif isinstance(block, EventsBlock):
+                pass
             elif isinstance(block, TableBlock):
                 if block.table_name:
                     structured_data.append(
@@ -153,6 +155,9 @@ class ModelConversion:
             else:
                 logging.error(f"cannot convert block of type {type(block)} to robusta platform format block: {block}")
                 continue  # no reason to crash the entire report
+
+        if not structured_data:
+            return {}
 
         return {
             "issue_id": str(finding_id),
