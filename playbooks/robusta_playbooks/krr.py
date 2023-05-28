@@ -155,25 +155,34 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     Displays a KRR scan report.
     """
-    KRR_SECRET_NAME = "krr-auth-secret"
-    PROMETHEUS_AUTH_SECRET_KEY = "prometheus-auth-header"
+
     headers = PrometheusAuthorization.get_authorization_headers(params)
 
     python_command = f"python krr.py {params.strategy} {params.args_sanitized} -p {params.prometheus_url} -q -f json "
 
     auth_header = headers["Authorization"] if "Authorization" in headers else ""
+
     # adding env var of auth token from Secret
     env_var = None
+    secret = None
     if auth_header:
-        ENV_VAR_AUTH_NAME = "PROMETHEUS_AUTH_HEADER"
+        krr_secret_name = "krr-auth-secret"
+        prometheus_auth_secret_key = "prometheus-auth-header"
+        env_var_auth_name = "PROMETHEUS_AUTH_HEADER"
+        auth_header_b64_str = base64.b64encode(bytes(auth_header, "utf-8")).decode("utf-8")
+        # creating secret for auth key
+        secret = RobustaSecret.create_safe_secret(secret_name=krr_secret_name,
+                                                  data={prometheus_auth_secret_key: auth_header_b64_str})
+        # setting env variables of krr to have secret
         env_var = [
                   EnvVar(
-                      name=ENV_VAR_AUTH_NAME,
-                      valueFrom=EnvVarSource(secretKeyRef=SecretKeySelector(name=KRR_SECRET_NAME,
-                                                                            key=PROMETHEUS_AUTH_SECRET_KEY)),
+                      name=env_var_auth_name,
+                      valueFrom=EnvVarSource(secretKeyRef=SecretKeySelector(name=krr_secret_name,
+                                                                            key=prometheus_auth_secret_key)),
                   )
               ]
-        python_command += f'--prometheus-auth-header \"${ENV_VAR_AUTH_NAME}\"'
+        # using secret env var in krr line
+        python_command += f'--prometheus-auth-header \"${env_var_auth_name}\"'
 
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
@@ -192,11 +201,8 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     start_time = end_time = datetime.now()
     krr_scan = krr_response = {}
     logs = None
-    secret = None
+
     try:
-        if auth_header:
-            auth_header_b64_str = base64.b64encode(bytes(auth_header, "utf-8")).decode("utf-8")
-            secret = RobustaSecret.create_safe_secret(secret_name="krr-auth-secret", data={"prometheus-auth-header": auth_header_b64_str})
         logs = RobustaJob.run_simple_job_spec(spec, "krr_job", params.timeout)
         krr_response = json.loads(logs)
         end_time = datetime.now()
