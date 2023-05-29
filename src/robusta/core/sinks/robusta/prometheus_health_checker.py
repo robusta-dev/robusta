@@ -61,20 +61,16 @@ class PrometheusHealthChecker:
 
             self.status.prometheus = True
 
-        except NoPrometheusUrlFound as e:
-            self.status.prometheus = False
-            self.status.prometheus_retention_time = ""
-
-            if time.time() - self.__last_prometheus_error_log_time > self.__prometheus_error_log_period_sec:
-                self.__last_prometheus_error_log_time = time.time()
-                logging.error(e)
         except Exception as e:
             self.status.prometheus = False
             self.status.prometheus_retention_time = ""
 
             if time.time() - self.__last_prometheus_error_log_time > self.__prometheus_error_log_period_sec:
                 self.__last_prometheus_error_log_time = time.time()
-                logging.error(f"Failed to connect to prometheus. {e}", exc_info=True)
+                is_no_prometheus_url_found = isinstance(e, NoPrometheusUrlFound)
+
+                msg = f"{e}" if is_no_prometheus_url_found else f"Failed to connect to prometheus. {e}"
+                logging.error(msg, exc_info=not is_no_prometheus_url_found)
 
     def alertmanager_connection_checks(self, global_config: dict):
         # checking the status of the alert manager
@@ -85,15 +81,12 @@ class PrometheusHealthChecker:
             get_alertmanager_silences_connection(params=base_silence_params)
             self.status.alertmanager = True
 
-        except NoAlertManagerUrlFound as e:
-            self.status.alertmanager = False
-
-            if time.time() - self.__last_alertmanager_error_log_time > self.__prometheus_error_log_period_sec:
-                self.__last_alertmanager_error_log_time = time.time()
-                logging.error(e)
         except Exception as e:
             self.status.alertmanager = False
 
             if time.time() - self.__last_alertmanager_error_log_time > self.__prometheus_error_log_period_sec:
                 self.__last_alertmanager_error_log_time = time.time()
-                logging.error(f"Failed to connect to the alert manager silence. {e}", exc_info=True)
+                is_no_alertmanager_url_found = isinstance(e, NoAlertManagerUrlFound)
+
+                msg = f"{e}" if is_no_alertmanager_url_found else f"Failed to connect to the alert manager. {e}"
+                logging.error(msg, exc_info=not is_no_alertmanager_url_found)
