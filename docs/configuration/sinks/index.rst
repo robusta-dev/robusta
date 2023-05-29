@@ -28,6 +28,8 @@ Sinks Reference
 
 Robusta can report issues and events in your Kubernetes cluster to various destinations, known as sinks.
 
+By default, Robusta sends all notifications to all sinks.
+
 **Related Topics:**
 
 * :ref:`sinks-overview`
