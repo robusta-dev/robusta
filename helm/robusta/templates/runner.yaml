@@ -108,7 +108,7 @@ spec:
             cpu: {{ .Values.runner.resources.requests.cpu }}
             memory: {{ if .Values.isSmallCluster }}"512Mi"{{ else }}{{ .Values.runner.resources.requests.memory | quote }}{{ end }}
           limits:
-            memory: {{ if .Values.isSmallCluster }}"512Mi"{{ else }}{{ .Values.runner.resources.limits.memory | quote }}{{ end }}
+            memory: {{ if .Values.isSmallCluster }}"512Mi"{{ else if .Values.runner.resources.limits.memory }}{{ .Values.runner.resources.limits.memory | quote }}{{ else }}{{ .Values.runner.resources.requests.memory | quote }}{{ end }}
             {{ if .Values.runner.resources.limits.cpu }}cpu: {{ .Values.runner.resources.limits.cpu | quote }}{{ end }}
       {{- if .Values.grafanaRenderer.enableContainer }}
       - name: grafana-renderer
@@ -125,7 +125,7 @@ spec:
             cpu: {{ .Values.grafanaRenderer.resources.requests.cpu }}
             memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else }}{{ .Values.grafanaRenderer.resources.requests.memory | quote }}{{ end }}
           limits:
-            memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else }}{{ .Values.grafanaRenderer.resources.limits.memory | quote }}{{ end }}
+            memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else if .Values.grafanaRenderer.resources.limits.memory }}{{ .Values.grafanaRenderer.resources.limits.memory | quote }}{{ else }}{{ .Values.grafanaRenderer.resources.requests.memory | quote }}{{ end }}
             {{ if .Values.grafanaRenderer.resources.limits.cpu }}cpu: {{ .Values.grafanaRenderer.resources.limits.cpu | quote }}{{ end }}
       {{- end }}
       volumes:
