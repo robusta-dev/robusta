@@ -201,7 +201,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     logs = None
 
     try:
-        logs = RobustaJob.run_simple_job_spec(spec, "krr_job", params.timeout, secret)
+        logs = RobustaJob.run_simple_job_spec(spec, "krr_job" + scan_id[:7], params.timeout, secret)
         krr_response = json.loads(logs)
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
