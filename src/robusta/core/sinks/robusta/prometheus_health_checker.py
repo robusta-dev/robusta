@@ -13,7 +13,7 @@ from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_sile
 
 class PrometheusHealthStatus(BaseModel):
     prometheus: bool = True
-    prometheus_retention_time: bool = ''
+    prometheus_retention_time: str = ''
     alertmanager: bool = True
 
 
