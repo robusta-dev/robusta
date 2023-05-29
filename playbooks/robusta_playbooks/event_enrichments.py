@@ -151,6 +151,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                     column_renderers={"time": RendererType.DATETIME},
                     headers=["reason", "type", "time", "kind", "name", "message"],
                     rows=rows,
+                    column_width=[1, 1, 1, 1, 1, 2],
                 )
             ],
             {SlackAnnotations.ATTACHMENT: True},
