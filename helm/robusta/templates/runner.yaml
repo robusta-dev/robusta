@@ -86,6 +86,7 @@ spec:
           httpGet:
             path: /healthz
             port: 5000
+          failureThreshold: 10
         {{- end }}
         startupProbe:
         {{- if .Values.runner.startup_probe }}
@@ -94,8 +95,8 @@ spec:
           httpGet:
             path: /healthz
             port: 5000
-          failureThreshold: 5
-          periodSeconds: 90
+          failureThreshold: 10
+          periodSeconds: 30
         {{- end }}
 
         lifecycle:

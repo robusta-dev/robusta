@@ -65,7 +65,7 @@ class WebApi:
 
         url = f"http://127.0.0.1:{PORT}/api/helm-releases"
         data = {
-            "data": HelmRelease.list_to_json(release_data),
+            "data": HelmRelease.list_to_dict(release_data),
         }
 
         try:
