@@ -5,6 +5,7 @@ import time
 from pydantic import BaseModel
 
 from robusta.core.exceptions import NoPrometheusUrlFound, NoAlertManagerUrlFound
+from robusta.core.model.env_vars import PROMETHEUS_ERROR_LOG_PERIOD_SEC
 from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags, \
     check_prometheus_connection
 from robusta.core.model.base_params import PrometheusParams
@@ -21,7 +22,7 @@ class PrometheusHealthChecker:
     def __init__(self, discovery_period_sec: int, global_config: dict):
         self.status: PrometheusHealthStatus = PrometheusHealthStatus()
         self.__discovery_period_sec = discovery_period_sec
-        self.__prometheus_error_log_period_sec = 14400
+        self.__prometheus_error_log_period_sec = PROMETHEUS_ERROR_LOG_PERIOD_SEC
         self.__global_config = global_config
 
         self.__last_alertmanager_error_log_time = 0
@@ -35,10 +36,13 @@ class PrometheusHealthChecker:
 
     def __run_checks(self):
         while True:
-            self.prometheus_connection_checks(self.__global_config)
-            self.alertmanager_connection_checks(self.__global_config)
+            try:
+                self.prometheus_connection_checks(self.__global_config)
+                self.alertmanager_connection_checks(self.__global_config)
 
-            time.sleep(self.__discovery_period_sec)
+                time.sleep(self.__discovery_period_sec)
+            except Exception as e:
+                logging.error(e)
 
     def prometheus_connection_checks(self, global_config: dict):
         # checking the status of prometheus
