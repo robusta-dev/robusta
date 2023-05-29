@@ -144,8 +144,13 @@ class SupabaseDal:
 
     def persist_finding(self, finding: Finding):
 
+        mute_finding = False
         for enrichment in finding.enrichments:
             self.persist_platform_blocks(enrichment, finding.id)
+            mute_finding = enrichment.annotations.get(EnrichmentAnnotation.PLATFORM_MUTE_FINDING, False)
+
+        if mute_finding:
+            return
 
         # TODO merge scans flow with platform blocks flow.
         scans, enrichments = [], []
