@@ -16,10 +16,10 @@ from robusta.api import (
     Finding,
     FindingSource,
     FindingType,
+    JobSecret,
     PrometheusAuthorization,
     PrometheusParams,
     RobustaJob,
-    RobustaSecret,
     ScanReportBlock,
     ScanReportRow,
     ScanType,
@@ -154,7 +154,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     Displays a KRR scan report.
     """
-
+    scan_id = str(uuid.uuid4())
     headers = PrometheusAuthorization.get_authorization_headers(params)
 
     python_command = f"python krr.py {params.strategy} {params.args_sanitized} -p {params.prometheus_url} -q -f json "
@@ -165,13 +165,12 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     env_var = None
     secret = None
     if auth_header:
-        krr_secret_name = "krr-auth-secret"
+        krr_secret_name = "krr-auth-secret" + scan_id
         prometheus_auth_secret_key = "prometheus-auth-header"
         env_var_auth_name = "PROMETHEUS_AUTH_HEADER"
         auth_header_b64_str = base64.b64encode(bytes(auth_header, "utf-8")).decode("utf-8")
         # creating secret for auth key
-        secret = RobustaSecret.create_runner_owned_secret(secret_name=krr_secret_name,
-                                                  data={prometheus_auth_secret_key: auth_header_b64_str})
+        secret = JobSecret(name=krr_secret_name, data={prometheus_auth_secret_key: auth_header_b64_str})
         # setting env variables of krr to have secret
         env_var = [
                   EnvVar(
@@ -202,7 +201,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     logs = None
 
     try:
-        logs = RobustaJob.run_simple_job_spec(spec, "krr_job", params.timeout)
+        logs = RobustaJob.run_simple_job_spec(spec, "krr_job", params.timeout, secret)
         krr_response = json.loads(logs)
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
@@ -219,11 +218,8 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         else:
             logging.error(f"*KRR scan job unexpected error.*\n {e}")
         return
-    finally:
-        if secret:
-            secret.delete()
 
-    scan_id = str(uuid.uuid4())
+
     scan_block = ScanReportBlock(
         title="KRR scan",
         scan_id=scan_id,

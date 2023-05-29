@@ -370,43 +370,9 @@ class RobustaDeployment(Deployment):
         return get_images(self.spec.template.spec.containers)
 
 
-class RobustaSecret(Secret):
-    def delete(self):
-        try:
-            self.deleteNamespacedSecret(
-                self.metadata.name,
-                self.metadata.namespace,
-            )
-        except Exception:
-            logging.error(f"Failed to delete secret {self.metadata.name}", exc_info=True)
-
-    @staticmethod
-    def create_runner_owned_secret(secret_name:str, data: Optional[Dict[str, str]]) -> Optional["RobustaSecret"]:
-        """
-            This secret will be auto-deleted when the runner pod is Terminated
-        """
-        runner_pods: List[Pod] = PodList.listPodForAllNamespaces(label_selector="app=robusta-runner").obj.items
-        running_runner_pods = [pod for pod in runner_pods if pod.status.phase == "Running"]
-        if len(running_runner_pods) != 1:
-            raise Exception(f"Error getting runner pod from kubernetes api")
-
-        robusta_pod = running_runner_pods[0]
-
-        robusta_owner_reference = OwnerReference(apiVersion="v1",
-                                                 kind="Pod",
-                                                 name=robusta_pod.metadata.name,
-                                                 uid=robusta_pod.metadata.uid,
-                                                 blockOwnerDeletion=False,
-                                                 controller=True)
-        secret = RobustaSecret(
-            metadata=ObjectMeta(name=secret_name, ownerReferences=[robusta_owner_reference]),
-            data=data
-            )
-        try:
-            return secret.createNamespacedSecret(robusta_pod.metadata.namespace).obj
-        except Exception as e:
-            logging.error(f"Failed to create secret {secret_name}", exc_info=True)
-            raise e
+class JobSecret(BaseModel):
+    name: str
+    data: Dict[str, str]
 
 
 class RobustaJob(Job):
@@ -429,8 +395,28 @@ class RobustaJob(Job):
             raise Exception(f"got more pods than expected for job: {pods}")
         return pods[0]
 
+    def create_job_owned_secret(self, secret: JobSecret):
+        """
+            This secret will be auto-deleted when the job is deleted
+        """
+        robusta_owner_reference = OwnerReference(apiVersion="v1",
+                                                 kind="job",
+                                                 name=self.metadata.name,
+                                                 uid=self.metadata.uid,
+                                                 blockOwnerDeletion=False,
+                                                 controller=True)
+        secret = Secret(
+            metadata=ObjectMeta(name=secret.name, ownerReferences=[robusta_owner_reference]),
+            data=secret.data
+        )
+        try:
+            return secret.createNamespacedSecret(self.metadata.namespace).obj
+        except Exception as e:
+            logging.error(f"Failed to create secret {secret.name}", exc_info=True)
+            raise e
+
     @classmethod
-    def run_simple_job_spec(cls, spec, name, timeout) -> str:
+    def run_simple_job_spec(cls, spec, name, timeout, job_secret: Optional[JobSecret]) -> str:
         job = RobustaJob(
             metadata=ObjectMeta(namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name)),
             spec=JobSpec(
@@ -443,6 +429,8 @@ class RobustaJob(Job):
         try:
             job = job.createNamespacedJob(job.metadata.namespace).obj
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
+            if job_secret:
+                job.create_job_owned_secret(job_secret)
             job: RobustaJob = wait_until_job_complete(job, timeout)
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
             pod = job.get_single_pod()
