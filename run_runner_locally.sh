@@ -4,6 +4,16 @@ set -e
 # IMPORTANT: this script was tested with poetry 1.4.2
 # Run `poetry self update 1.4.2` or try other versions at your own risk!
 
+FAST_MODE=0
+for arg in "$@"
+do
+    if [ "$arg" == "--fast-mode" ]; then
+        FAST_MODE=1
+        echo "Fast mode enabled"
+        break
+    fi
+done
+
 # Settings you might want to change
 export PYTHON_BINARY=python3.9
 export PORT=6000  # if you change this, update port_mapping in mirrord.json too
@@ -33,9 +43,10 @@ echo "Python 3.9+ and Poetry are installed."
 echo "Now setting up Robusta"
 
 poetry env use $PYTHON_BINARY
-poetry install --extras=all
-echo "All dependencies installed"
-
+if [ $FAST_MODE -eq 0 ]; then
+  poetry install --extras=all
+  echo "All dependencies installed"
+fi
 
 echo "Setting up local runner environment"
 mkdir -p deployment/playbooks/defaults
@@ -59,8 +70,10 @@ if [ ! -f "$PWD/deployment/playbooks/active_playbooks.yaml" ]; then
   exit 1
 fi
 
-echo "Installing builtin playbooks"
-poetry run python3 -m pip install -e ./deployment/playbooks/defaults
+if [ $FAST_MODE -eq 0 ]; then
+  echo "Installing builtin playbooks"
+  poetry run python3 -m pip install -e ./deployment/playbooks/defaults
+fi
 
 export PLAYBOOKS_CONFIG_FILE_PATH=./deployment/playbooks/active_playbooks.yaml
 export INTERNAL_PLAYBOOKS_ROOT=./src/robusta/core/playbooks/internal

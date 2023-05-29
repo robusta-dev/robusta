@@ -6,19 +6,20 @@ from robusta.integrations.common.requests import HttpMethod, check_response_succ
 
 _API_PREFIX = "api/v4"
 
-
 class MattermostClient:
     channel_id: str
     bot_id: str
     team_id: Optional[str]
 
-    def __init__(self, url: str, token: str, token_id: str, channel_name: str, team: Optional[str]):
+    def __init__(self, url: str, token: str, token_id: str, channel_name: str, team: Optional[str], team_id: Optional[str]):
         """
         Set the Mattermost webhook url.
         """
         self.client_url = url
         self.token = token
         self.token_id = token_id
+        self.team_id = team_id
+        self.is_admin = self.is_admin_bot()
         self._init_setup(channel_name, team)
 
     def _send_mattermost_request(self, url: str, method: HttpMethod, **kwargs):
@@ -39,6 +40,25 @@ class MattermostClient:
         response_data = response.json()
         return response_data.get("user_id")
 
+    def is_admin_bot(self):
+        endpoint = "/users/me"
+        url = self._get_full_mattermost_url(endpoint)
+        response = self._send_mattermost_request(url, HttpMethod.GET)
+        if not check_response_succeed(response):
+            logging.error("Could not connect to Mattermost with bot account")
+            return
+        response_data = response.json()
+        if "system_admin" in response_data.get("roles"):
+            logging.info("Using Mattermost admin bot")
+            return True
+        else:
+            logging.warning("Bot is not an admin. You will not be able to post to private channels.")
+            if self.team_id is None:
+                logging.error(
+                    "You need to provide 'team_id' in your configuration if your bot account is not an admin."
+                )
+            return False
+
     def update_bot_settings(self, bot_id: str):
         endpoint = f"bots/{bot_id}"
         url = self._get_full_mattermost_url(endpoint)
@@ -58,21 +78,28 @@ class MattermostClient:
             logging.warning("Cannot update bot logo, probably bot has not enough permissions")
 
     def _init_setup(self, channel_name: str, team_name: Optional[str] = None):
-        bot_id = self.get_token_owner_id()
-        self.team_id = self.get_team_id(team_name) if team_name else None
+        if self.is_admin:
+            self.bot_id = self.get_token_owner_id()
+            self.team_id = self.get_team_id(team_name) if team_name else None
+            if self.bot_id:
+                self.update_bot_settings(self.bot_id)
+
         self.channel_id = self.get_channel_id(channel_name)
         if not self.channel_id:
             logging.warning("No channel found, messages won't be sent")
-        if bot_id:
-            self.bot_id = bot_id
-            self.update_bot_settings(bot_id)
 
     def get_channel_id(self, channel_name: str) -> Optional[str]:
-        endpoint = "channels/search"
-        url = self._get_full_mattermost_url(endpoint)
-        payload = {"term": channel_name}
-        if self.team_id:
-            payload["team_ids"] = [self.team_id]
+        if self.is_admin:
+            endpoint = "channels/search"
+            url = self._get_full_mattermost_url(endpoint)
+            payload = {"term": channel_name}
+            if self.team_id:
+                payload["team_ids"] = [self.team_id]
+        else:
+            endpoint = f"teams/{self.team_id}/channels/search"
+            url = self._get_full_mattermost_url(endpoint)
+            payload = {"term": channel_name}
+
         response = self._send_mattermost_request(url, HttpMethod.POST, json=payload)
         if check_response_succeed(response):
             response = response.json()
@@ -81,6 +108,9 @@ class MattermostClient:
             return response[0].get("id")
 
     def get_team_id(self, team_name: str) -> Optional[str]:
+        if not self.is_admin:
+            logging.error("You are using a non-admin bot account, which means you need to configure 'team_id'.")
+            return
         endpoint = "teams/search"
         url = self._get_full_mattermost_url(endpoint)
         response = self._send_mattermost_request(url, HttpMethod.POST, json={"term": team_name})
