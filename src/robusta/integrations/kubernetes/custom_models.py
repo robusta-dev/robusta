@@ -400,7 +400,7 @@ class RobustaJob(Job):
             This secret will be auto-deleted when the job is deleted
         """
         robusta_owner_reference = OwnerReference(apiVersion="v1",
-                                                 kind="job",
+                                                 kind="Job",
                                                  name=self.metadata.name,
                                                  uid=self.metadata.uid,
                                                  blockOwnerDeletion=False,
