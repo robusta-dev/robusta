@@ -554,8 +554,8 @@ platformPlaybooksMap:
     sinks:
       - "robusta_ui_sink"
 
-  # name: schedulePopupScanReportRobusta
-  schedulePopupScanReportRobusta:
+  # name: schedulePopeyeScanReportRobusta
+  schedulePopeyeScanReportRobusta:
     triggers:
     - on_schedule:
         fixed_delay_repeat:

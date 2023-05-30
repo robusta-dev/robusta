@@ -38,9 +38,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             fired_trigger = self.__get_fired_trigger(trigger_event, playbook.triggers, playbook.get_id())
             if fired_trigger:
                 
-                
                 try:
                     execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings)
+                    logging.debug(f"playbook.name {playbook.name},build_execution_event {execution_event}")
                 except Exception:
                     logging.error(
                         f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}"
@@ -59,7 +59,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                     )
                     if playbook_resp:  # For now, only last response applies. (For simplicity reasons)
                         execution_response = playbook_resp
-                        logging.info(f"playbook.name {playbook.name} sink_findings {execution_event.sink_findings}")
+                        
                     
                     # send to sink processor
                     self.__handle_findings(execution_event)
