@@ -14,6 +14,7 @@ from robusta.core.reporting import (
     MarkdownBlock,
     TableBlock,
 )
+from robusta.core.reporting.base import FindingStatus
 from robusta.integrations.msteams.msteams_adaptive_card_files import MsTeamsAdaptiveCardFiles
 from robusta.integrations.msteams.msteams_elements.msteams_base import MsTeamsBase
 from robusta.integrations.msteams.msteams_elements.msteams_card import MsTeamsCard
@@ -21,8 +22,6 @@ from robusta.integrations.msteams.msteams_elements.msteams_column import MsTeams
 from robusta.integrations.msteams.msteams_elements.msteams_images import MsTeamsImages
 from robusta.integrations.msteams.msteams_elements.msteams_table import MsTeamsTable
 from robusta.integrations.msteams.msteams_elements.msteams_text_block import MsTeamsTextBlock
-
-from robusta.core.reporting.base import FindingStatus
 
 
 class MsTeamsMsg:
@@ -45,9 +44,7 @@ class MsTeamsMsg:
         title = finding.title.removeprefix("[RESOLVED] ")
         title = self.__build_msteams_title(title, status, finding.severity, finding.add_silence_url)
 
-        block = MsTeamsTextBlock(
-            text=f"{title}", font_size="extraLarge"
-        )
+        block = MsTeamsTextBlock(text=f"{title}", font_size="extraLarge")
         self.__write_to_entire_msg([block])
         if platform_enabled:  # add link to the Robusta ui, if it's configured
             silence_url = finding.get_prometheus_silence_url(account_id, cluster_name)
@@ -65,7 +62,9 @@ class MsTeamsMsg:
             self.__write_to_entire_msg([block])
 
     @classmethod
-    def __build_msteams_title(cls, title: str, status: FindingStatus, severity: FindingSeverity, add_silence_url: bool) -> str:
+    def __build_msteams_title(
+        cls, title: str, status: FindingStatus, severity: FindingSeverity, add_silence_url: bool
+    ) -> str:
         status_str: str = f"{status.to_emoji()} {status.name.lower()} - " if add_silence_url else ""
         return f"{status_str}{severity.to_emoji()} {severity.name} - **{title}**"
 
@@ -110,7 +109,7 @@ class MsTeamsMsg:
         blocks: List[MsTeamsBase] = []
         if table_block.table_name:
             blocks.append(MsTeamsTextBlock(table_block.table_name))
-        blocks.append(MsTeamsTable(list(table_block.headers), table_block.rows))
+        blocks.append(MsTeamsTable(list(table_block.headers), table_block.render_rows(), table_block.column_width))
         self.__write_to_current_section(blocks)
 
     def items_list(self, block: ListBlock):

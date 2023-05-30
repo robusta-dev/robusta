@@ -6,7 +6,7 @@ import requests
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError, HTTPError
 
-from robusta.core.exceptions import PrometheusNotFound, VictoriaMetricsNotFound
+from robusta.core.exceptions import PrometheusNotFound, VictoriaMetricsNotFound, NoPrometheusUrlFound
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
@@ -77,7 +77,7 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
     )
 
     if not url:
-        raise PrometheusNotFound("Prometheus url could not be found. Add 'prometheus_url' under global_config")
+        raise NoPrometheusUrlFound("Prometheus url could not be found. Add 'prometheus_url' under global_config")
 
     headers = PrometheusAuthorization.get_authorization_headers(prometheus_params)
 
@@ -208,7 +208,7 @@ class ServiceDiscovery:
                 cls.cache[cache_key] = service_url
                 return service_url
 
-        logging.error(error_msg)
+        logging.debug(error_msg)
         return None
 
 
