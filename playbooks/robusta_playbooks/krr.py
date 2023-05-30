@@ -157,8 +157,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     scan_id = str(uuid.uuid4())
     headers = PrometheusAuthorization.get_authorization_headers(params)
 
-    python_command = f"python krr.py {params.strategy} {params.args_sanitized} -p {params.prometheus_url} -q -f json "
-
+    python_command = f"python krr.py {params.strategy} {params.args_sanitized} -q -f json "
+    if params.prometheus_url:
+        python_command += f"-p {params.prometheus_url}"
     auth_header = headers["Authorization"] if "Authorization" in headers else ""
 
     # adding env var of auth token from Secret
