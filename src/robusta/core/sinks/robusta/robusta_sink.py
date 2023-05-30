@@ -5,23 +5,21 @@ import threading
 import time
 from typing import Dict, List, Optional
 
-from hikaru.model.rel_1_26 import DaemonSet, StatefulSet, Deployment, Job, Pod, Container, Volume, ReplicaSet
+
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
-from robusta.core.discovery.discovery import Discovery, DiscoveryResults, extract_total_pods, extract_ready_pods, \
-    extract_volumes, extract_containers, extract_containers_k8, extract_volumes_k8
+from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
+from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.pods import PodResources
-from robusta.core.model.services import ServiceInfo, ContainerInfo, VolumeInfo, ServiceConfig
-from robusta.core.reporting import KubernetesDiffBlock
-from robusta.core.reporting.base import Finding, Enrichment
-from robusta.core.reporting.consts import EnrichmentAnnotation
+from robusta.core.model.services import ServiceInfo
+from robusta.core.reporting.base import Finding
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
@@ -34,6 +32,7 @@ from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_sile
 
 
 class RobustaSink(SinkBase):
+    services_publish_lock = threading.Lock()
 
     def __init__(self, sink_config: RobustaSinkConfigWrapper, registry):
         from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
@@ -152,79 +151,65 @@ class RobustaSink(SinkBase):
             return True
         return time.time() - self.last_send_time < DISCOVERY_CHECK_THRESHOLD_SEC
 
-    def __publish_resource_diff_services(self, enrichments: List[Enrichment]):
-        for enrich in enrichments:
-            if not enrich.blocks:
-                continue
-
-            block = enrich.blocks[0]
-            if not isinstance(block, KubernetesDiffBlock):
-                continue
-
-            new_resource = block.new_obj
-            if isinstance(new_resource, Deployment) \
-                    or isinstance(new_resource, DaemonSet) \
-                    or isinstance(new_resource, StatefulSet) \
-                    or isinstance(new_resource, ReplicaSet) \
-                    or isinstance(new_resource, Pod):
-                containers = extract_containers_k8(new_resource)
-                volumes = extract_volumes_k8(new_resource)
-                meta = new_resource.metadata
-                container_info = [ContainerInfo.get_container_info(container) for container in
-                                  containers] if containers else []
-                volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
-                config = ServiceConfig(labels=meta.labels or {}, containers=container_info,
-                                       volumes=volumes_info)
-                ready_pods = extract_total_pods(new_resource)
-                total_pods = extract_ready_pods(new_resource)
-
-                services = ServiceInfo(
-                    name=meta.name,
-                    namespace=meta.namespace,
-                    service_type=new_resource.kind,
-                    service_config=config,
-                    ready_pods=ready_pods,
-                    total_pods=total_pods,
-                )
-
-                self.dal.persist_services([services])
+    def handle_service_diff(self, updated_service: ServiceInfo, operation: K8sOperationType):
+        self.__publish_single_service(updated_service, operation)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
-        resource_diffs = []
-        for enrich in finding.enrichments:
-            if enrich.annotations.get(EnrichmentAnnotation.RESOURCE_DIFF, False):
-                resource_diffs.append(enrich)
-
-        if len(resource_diffs) > 0:
-            self.__publish_resource_diff_services(resource_diffs)
-            return
-
-        # the finding is not an `is_resource_diff`
         self.dal.persist_finding(finding)
 
+    def __publish_single_service(self, new_service: ServiceInfo, operation: K8sOperationType):
+        try:
+            with self.services_publish_lock:
+                service_key = new_service.get_service_key()
+                cached_service = self.__services_cache.get(service_key, None)
+
+                # prevent service updates if the resource version in the cache is lower than the new service
+                if cached_service and cached_service.resource_version >= new_service.resource_version:
+                    return
+
+                if operation == K8sOperationType.CREATE or operation == K8sOperationType.UPDATE:
+                    # handle created/updated services
+                    self.__services_cache[service_key] = new_service
+                    self.dal.persist_services([new_service])
+
+                if operation == K8sOperationType.DELETE:
+                    if cached_service:
+                        del self.__services_cache[service_key]
+
+                    new_service.deleted = True
+                    self.dal.persist_services([new_service])
+
+        except Exception as e:
+            logging.error(f"An error occured while publishing single service: {e}", exc_info=True)
+
     def __publish_new_services(self, active_services: List[ServiceInfo]):
-        # convert to map
-        curr_services = {}
-        for service in active_services:
-            curr_services[service.get_service_key()] = service
+        try:
+            with self.services_publish_lock:
+                # convert to map
+                curr_services = {}
+                for service in active_services:
+                    curr_services[service.get_service_key()] = service
 
-        # handle deleted services
-        cache_keys = list(self.__services_cache.keys())
-        updated_services: List[ServiceInfo] = []
-        for service_key in cache_keys:
-            if not curr_services.get(service_key):  # service doesn't exist any more, delete it
-                self.__services_cache[service_key].deleted = True
-                updated_services.append(self.__services_cache[service_key])
-                del self.__services_cache[service_key]
+                # handle deleted services
+                cache_keys = list(self.__services_cache.keys())
+                updated_services: List[ServiceInfo] = []
+                for service_key in cache_keys:
+                    if not curr_services.get(service_key):  # service doesn't exist any more, delete it
+                        self.__services_cache[service_key].deleted = True
+                        updated_services.append(self.__services_cache[service_key])
+                        del self.__services_cache[service_key]
 
-        # new or changed services
-        for service_key in curr_services.keys():
-            current_service = curr_services[service_key]
-            if self.__services_cache.get(service_key) != current_service:  # service not in the cache, or changed
-                updated_services.append(current_service)
-                self.__services_cache[service_key] = current_service
+                # new or changed services
+                for service_key in curr_services.keys():
+                    current_service = curr_services[service_key]
+                    if self.__services_cache.get(
+                            service_key) != current_service:  # service not in the cache, or changed
+                        updated_services.append(current_service)
+                        self.__services_cache[service_key] = current_service
 
-        self.dal.persist_services(updated_services)
+                self.dal.persist_services(updated_services)
+        except Exception as e:
+            logging.error(f"An error occured while publishing new services: {e}")
 
     def __get_events_history(self):
         try:

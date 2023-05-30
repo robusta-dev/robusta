@@ -58,17 +58,22 @@ class Discovery:
             volumes: List[V1Volume],
             total_pods: int,
             ready_pods: int,
+            is_helm_release: Optional[bool] = None,
     ) -> ServiceInfo:
         container_info = [ContainerInfo.get_container_info(container) for container in containers] if containers else []
         volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
         config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
+        resource_version = int(meta.resource_version) if meta.resource_version else 0
+
         return ServiceInfo(
+            resource_version=resource_version,
             name=meta.name,
             namespace=meta.namespace,
             service_type=kind,
             service_config=config,
             ready_pods=ready_pods,
             total_pods=total_pods,
+            is_helm_release=is_helm_release,
         )
 
     @staticmethod
@@ -94,6 +99,7 @@ class Discovery:
                             extract_volumes(deployment),
                             extract_total_pods(deployment),
                             extract_ready_pods(deployment),
+                            is_helm_release=is_deployment_via_helm(deployment)
                         )
                         for deployment in deployments.items
                     ]
@@ -525,6 +531,49 @@ def extract_total_pods_k8(resource) -> int:
         logging.error(f"Failed to extract total pods from {resource}", exc_info=True)
     return 1
 
+
+def is_deployment_via_helm(resource):
+    try:
+        if isinstance(resource, V1Deployment):
+            annotations = resource.metadata.annotations
+            labels = resource.metadata.labels
+            return __is_deployment_via_helm(labels=labels, annotations=annotations)
+        return False
+    except Exception:
+        logging.error(f"Failed to check if deployment was done via helm {resource}", exc_info=True)
+    return False
+
+
+def is_deployment_via_helm_k8(resource):
+    try:
+        if isinstance(resource, Deployment):
+            annotations = resource.metadata.annotations
+            labels = resource.metadata.labels
+            return __is_deployment_via_helm(labels=labels, annotations=annotations)
+        return False
+    except Exception:
+        logging.error(f"Failed to check if deployment was done via helm {resource}", exc_info=True)
+    return False
+
+
+def __is_deployment_via_helm(labels: Optional[dict], annotations: Optional[dict]):
+    try:
+        if labels and labels.get('app.kubernetes.io/managed-by') == "Helm":
+            return True
+
+        helm_labels = set(key for key in labels.keys() if key.startswith('helm.') or key.startswith('meta.helm.'))
+        helm_annotations = set(key for key in annotations.keys() if key.startswith('helm.') or
+                               key.startswith('meta.helm.'))
+
+        if helm_labels or helm_annotations:
+            return True
+
+        return False
+    except Exception:
+        logging.error(
+            f"Failed to check if deployment was done via helm -> labels: {labels} | annotations: {annotations}")
+
+    return False
 
 def extract_volumes(resource) -> List[V1Volume]:
     """Extract volumes from k8s python api object (not hikaru)"""

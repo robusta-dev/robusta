@@ -197,6 +197,7 @@ class SupabaseDal:
             "config": service.service_config.dict() if service.service_config else None,
             "total_pods": service.total_pods,
             "ready_pods": service.ready_pods,
+            "is_helm_release": service.is_helm_release,
             "update_time": "now()",
         }
 
@@ -205,6 +206,8 @@ class SupabaseDal:
             return
         db_services = [self.to_service(service) for service in services]
         res = self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()
+
+        logging.debug(f"supabase persist_services publish: {db_services}")
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist services {services} error: {res.get('data')}")
             self.handle_supabase_error()
@@ -214,7 +217,7 @@ class SupabaseDal:
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
             self.client.table(SERVICES_TABLE)
-            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods")
+            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods", "is_helm_release")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -234,6 +237,7 @@ class SupabaseDal:
                 service_config=service.get("config"),
                 ready_pods=service["ready_pods"],
                 total_pods=service["total_pods"],
+                is_helm_release=service["is_helm_release"],
             )
             for service in res.get("data")
         ]

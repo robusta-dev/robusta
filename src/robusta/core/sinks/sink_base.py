@@ -1,3 +1,5 @@
+from robusta.core.model.k8s_operation_type import K8sOperationType
+from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 
@@ -36,3 +38,6 @@ class SinkBase:
         Sink health check. Concrete sinks can implement real health checks
         """
         return True
+
+    def handle_service_diff(self, updated_service: ServiceInfo, operation: K8sOperationType):
+        pass

@@ -108,6 +108,7 @@ class ServiceConfig(BaseModel):
 
 
 class ServiceInfo(BaseModel):
+    resource_version: int = 0
     name: str
     service_type: str
     namespace: str
@@ -116,6 +117,7 @@ class ServiceInfo(BaseModel):
     service_config: Optional[ServiceConfig]
     ready_pods: int = 0
     total_pods: int = 0
+    is_helm_release: Optional[bool]
 
     def get_service_key(self) -> str:
         return f"{self.namespace}/{self.service_type}/{self.name}"
