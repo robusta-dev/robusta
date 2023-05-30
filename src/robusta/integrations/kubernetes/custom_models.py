@@ -395,7 +395,7 @@ class RobustaJob(Job):
             raise Exception(f"got more pods than expected for job: {pods}")
         return pods[0]
 
-    def create_job_owned_secret(self, secret: JobSecret):
+    def create_job_owned_secret(self, job_secret: JobSecret):
         """
             This secret will be auto-deleted when the pod is Terminated
         """
@@ -408,13 +408,13 @@ class RobustaJob(Job):
                                                  blockOwnerDeletion=False,
                                                  controller=True)
         secret = Secret(
-            metadata=ObjectMeta(name=secret.name, ownerReferences=[robusta_owner_reference]),
-            data=secret.data
+            metadata=ObjectMeta(name=job_secret.name, ownerReferences=[robusta_owner_reference]),
+            data=job_secret.data
         )
         try:
             return secret.createNamespacedSecret(job_pod.metadata.namespace).obj
         except Exception as e:
-            logging.error(f"Failed to create secret {secret.name}", exc_info=True)
+            logging.error(f"Failed to create secret {job_secret.name}", exc_info=True)
             raise e
 
     @classmethod
