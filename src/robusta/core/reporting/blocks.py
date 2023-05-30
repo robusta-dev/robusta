@@ -209,12 +209,16 @@ class TableBlock(BaseBlock):
     Table display of a list of lists.
 
     Note: Wider tables appears as a file attachment on Slack, because they aren't rendered properly inline
+
+    :var column_width: Hint to sink for the portion of size each column should use. Not supported by all sinks.
+        example: [1, 1, 1, 2] use twice the size for last column.
     """
 
     rows: List[List]
     headers: Sequence[str] = ()
     column_renderers: Dict = {}
     table_name: str = ""
+    column_width: List[int] = None
 
     def __init__(
         self,
@@ -222,6 +226,7 @@ class TableBlock(BaseBlock):
         headers: Sequence[str] = (),
         column_renderers: Dict = {},
         table_name: str = "",
+        column_width: List[int] = None,
     ):
         """
         :param rows: a list of rows. each row is a list of columns
@@ -232,6 +237,7 @@ class TableBlock(BaseBlock):
             headers=headers,
             column_renderers=column_renderers,
             table_name=table_name,
+            column_width=column_width,
         )
 
     @classmethod
