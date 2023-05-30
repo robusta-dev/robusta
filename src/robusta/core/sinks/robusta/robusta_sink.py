@@ -150,8 +150,8 @@ class RobustaSink(SinkBase):
             return True
         return time.time() - self.last_send_time < DISCOVERY_CHECK_THRESHOLD_SEC
 
-    def handle_service_diff(self, updated_service: ServiceInfo, operation: K8sOperationType):
-        self.__publish_single_service(updated_service, operation)
+    def handle_service_diff(self, new_service: ServiceInfo, operation: K8sOperationType):
+        self.__publish_single_service(new_service, operation)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.dal.persist_finding(finding)

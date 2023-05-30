@@ -265,7 +265,7 @@ def resource_events_diff(event: KubernetesAnyChangeEvent):
         is_helm_release = is_deployment_via_helm_k8(new_resource) if isinstance(new_resource, Deployment) else None
         resource_version = int(meta.resourceVersion) if meta.resourceVersion else 0
 
-        updated_service = ServiceInfo(
+        new_service = ServiceInfo(
             resource_version=resource_version,
             name=meta.name,
             namespace=meta.namespace,
@@ -279,4 +279,4 @@ def resource_events_diff(event: KubernetesAnyChangeEvent):
         all_sinks = event.get_all_sinks()
         for sink_name in event.named_sinks:
             if all_sinks and all_sinks.get(sink_name, None):
-                all_sinks.get(sink_name).handle_service_diff(updated_service, operation=event.operation)
+                all_sinks.get(sink_name).handle_service_diff(new_service, operation=event.operation)

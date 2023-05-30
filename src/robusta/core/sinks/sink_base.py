@@ -39,5 +39,5 @@ class SinkBase:
         """
         return True
 
-    def handle_service_diff(self, updated_service: ServiceInfo, operation: K8sOperationType):
+    def handle_service_diff(self, new_service: ServiceInfo, operation: K8sOperationType):
         pass
