@@ -370,6 +370,11 @@ class RobustaDeployment(Deployment):
         return get_images(self.spec.template.spec.containers)
 
 
+class JobSecret(BaseModel):
+    name: str
+    data: Dict[str, str]
+
+
 class RobustaJob(Job):
     def get_pods(self) -> List[RobustaPod]:
         """
@@ -390,8 +395,30 @@ class RobustaJob(Job):
             raise Exception(f"got more pods than expected for job: {pods}")
         return pods[0]
 
+    def create_job_owned_secret(self, job_secret: JobSecret):
+        """
+            This secret will be auto-deleted when the pod is Terminated
+        """
+        # Due to inconsistant GC in K8s the OwnerReference needs to be the pod and not the job (Found in azure)
+        job_pod = self.get_single_pod()
+        robusta_owner_reference = OwnerReference(apiVersion="v1",
+                                                 kind="Pod",
+                                                 name=job_pod.metadata.name,
+                                                 uid=job_pod.metadata.uid,
+                                                 blockOwnerDeletion=False,
+                                                 controller=True)
+        secret = Secret(
+            metadata=ObjectMeta(name=job_secret.name, ownerReferences=[robusta_owner_reference]),
+            data=job_secret.data
+        )
+        try:
+            return secret.createNamespacedSecret(job_pod.metadata.namespace).obj
+        except Exception as e:
+            logging.error(f"Failed to create secret {job_secret.name}", exc_info=True)
+            raise e
+
     @classmethod
-    def run_simple_job_spec(cls, spec, name, timeout) -> str:
+    def run_simple_job_spec(cls, spec, name, timeout, job_secret: Optional[JobSecret]) -> str:
         job = RobustaJob(
             metadata=ObjectMeta(namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name)),
             spec=JobSpec(
@@ -404,6 +431,8 @@ class RobustaJob(Job):
         try:
             job = job.createNamespacedJob(job.metadata.namespace).obj
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
+            if job_secret:
+                job.create_job_owned_secret(job_secret)
             job: RobustaJob = wait_until_job_complete(job, timeout)
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
             pod = job.get_single_pod()
