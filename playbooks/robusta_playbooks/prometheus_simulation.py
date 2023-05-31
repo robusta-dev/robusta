@@ -64,7 +64,7 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
     if prometheus_event_data.service is not None:
         labels["service"] = prometheus_event_data.service
     if prometheus_event_data.job_name is not None:
-        labels["job"] = prometheus_event_data.job_name
+        labels["job_name"] = prometheus_event_data.job_name
     if prometheus_event_data.name is not None:
         labels["name"] = prometheus_event_data.name
     if prometheus_event_data.hpa is not None:

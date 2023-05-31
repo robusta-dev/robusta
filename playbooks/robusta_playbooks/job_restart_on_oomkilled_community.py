@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 import bitmath as bitmath
-from hikaru.model import Container, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec, ResourceRequirements
+from hikaru.model.rel_1_26 import Container, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec, ResourceRequirements
 from robusta.api import *
 
 
@@ -66,9 +66,7 @@ def job_restart_on_oomkilled_community(event: JobEvent, params: IncreaseResource
     for container in pod.spec.containers:
         if container.name in oomkilled_containers:
             if container.resources.limits and container.resources.requests:
-                req_memory = bitmath.parse_string_unsafe(
-                    container.resources.requests["memory"]
-                )
+                req_memory = bitmath.parse_string_unsafe(container.resources.requests["memory"])
                 max_resource = bitmath.parse_string_unsafe(params.max_resource)
                 if req_memory < max_resource:
                     keep_the_same = False
@@ -126,9 +124,7 @@ def job_restart_on_oomkilled_community(event: JobEvent, params: IncreaseResource
 
     finding.add_enrichment(
         [
-            MarkdownBlock(
-                f"*containers memory after restart*\n```\n{containers_memory_list}\n```"
-            ),
+            MarkdownBlock(f"*containers memory after restart*\n```\n{containers_memory_list}\n```"),
         ]
     )
     event.add_finding(finding)

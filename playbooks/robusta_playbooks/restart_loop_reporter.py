@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 
-from hikaru.model import ContainerStatus, PodStatus
+from hikaru.model.rel_1_26 import ContainerStatus, PodStatus
 from robusta.api import (
     ActionParams,
     BaseBlock,

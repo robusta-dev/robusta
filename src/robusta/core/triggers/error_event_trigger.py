@@ -46,7 +46,7 @@ class WarningEventTrigger(EventAllChangesTrigger):
         if not isinstance(exec_event, EventChangeEvent):
             return False
 
-        if not exec_event.obj or not exec_event.obj.involvedObject:
+        if not exec_event.obj or not exec_event.obj.regarding:
             return False
 
         if exec_event.get_event().type != "Warning":
@@ -55,7 +55,7 @@ class WarningEventTrigger(EventAllChangesTrigger):
         if self.operations and exec_event.operation.value not in self.operations:
             return False
 
-        event_content = f"{exec_event.obj.reason}{exec_event.obj.message}".lower()
+        event_content = f"{exec_event.obj.reason}{exec_event.obj.note}".lower()
         # exclude if any of the exclusions is found in the event content
         for exclusion in self.exclude:
             if exclusion.lower() in event_content:
@@ -68,8 +68,8 @@ class WarningEventTrigger(EventAllChangesTrigger):
                 return False
 
         # Perform a rate limit for this service key according to the rate_limit parameter
-        name = exec_event.obj.involvedObject.name if exec_event.obj.involvedObject.name else ""
-        namespace = exec_event.obj.involvedObject.namespace if exec_event.obj.involvedObject.namespace else ""
+        name = exec_event.obj.regarding.name if exec_event.obj.regarding.name else ""
+        namespace = exec_event.obj.regarding.namespace if exec_event.obj.regarding.namespace else ""
         service_key = TopServiceResolver.guess_service_key(name=name, namespace=namespace)
         return RateLimiter.mark_and_test(
             f"WarningEventTrigger_{playbook_id}_{exec_event.obj.reason}",

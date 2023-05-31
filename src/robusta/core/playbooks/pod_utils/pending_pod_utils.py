@@ -3,7 +3,7 @@ import re
 from enum import Enum
 from typing import List, Optional
 
-from hikaru.model import Event, EventList, Pod
+from hikaru.model.rel_1_26 import Event, EventList, Pod
 
 from robusta.core.model.pods import pod_other_requests, pod_requests
 from robusta.core.playbooks.common import get_event_timestamp
@@ -102,7 +102,7 @@ class PendingInvestigator:
         self.namespace = pod.metadata.namespace
 
         self.pod_events: EventList = EventList.listNamespacedEvent(
-            self.namespace, field_selector=f"involvedObject.name={self.pod_name}"
+            self.namespace, field_selector=f"regarding.name={self.pod_name}"
         ).obj
 
     def investigate(self) -> Optional[List[PendingPodReason]]:
@@ -115,7 +115,7 @@ class PendingInvestigator:
         ]
         if failed_scheduling_events:
             newest_failed_event = max(failed_scheduling_events, key=lambda x: get_event_timestamp(x))
-            event_message = newest_failed_event.message
+            event_message = newest_failed_event.note
 
         reasons = self.get_reason_from_failed_scheduling_event_message(event_message)
         return reasons  # return object with all reasons and message
@@ -129,7 +129,7 @@ class PendingInvestigator:
             return False
 
         regex_string = "\d+\/\d+( nodes are available\:).*"
-        return bool(re.match(regex_string, pod_event.message))
+        return bool(re.match(regex_string, pod_event.note))
 
     def get_reason_from_failed_scheduling_event_message(self, event_message: str) -> List[PendingPodReason]:
         reasons = []

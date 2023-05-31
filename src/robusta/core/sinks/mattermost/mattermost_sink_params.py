@@ -13,6 +13,7 @@ class MattermostSinkParams(SinkBaseParams):
     token_id: str
     channel: str
     team: Optional[str]
+    team_id: Optional[str]
 
     @validator("url")
     def set_http_schema(cls, url):

@@ -1,14 +1,19 @@
 Integrating AlertManager and Prometheus
 ****************************************
 
-Sending Alerts to Robusta
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from AlertManager.
+For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from AlertManager. The following instructions also work for Victoria Metrics.
 
 **If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
 
 For other setups, read on!
+
+
+Prerequisites
+----------------
+
+* Prometheus, VictoriaMetrics, or any other Prometheus-compatible metrics store
+* AlertManager
+
 
 General Instructions
 ======================
@@ -35,8 +40,11 @@ Below is an example AlertManager configuration. Depending on your setup, the exa
         route:
           routes:
             - receiver: 'robusta'
+              group_by: [ '...' ]
+              group_wait: 1s
+              group_interval: 1s
               matchers:
-                - severity =~ "info|warn|error|critical"
+                - severity =~ ".*"
               repeat_interval: 4h
               continue: true
 
@@ -106,8 +114,11 @@ If AlertManager is located outside of your Kubernetes cluster then a few more st
         route:
           routes:
           - receiver: 'robusta'
+            group_by: [ '...' ]
+            group_wait: 1s
+            group_interval: 1s
             matchers:
-              - severity =~ "info|warn|error|critical"
+              - severity =~ ".*"
             repeat_interval: 4h
             continue: true
 
@@ -129,14 +140,33 @@ other services are located. If the auto-discovery isn't working, you'll configur
 
 Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
 
-.. code-block:: yaml
 
-  # this line should already exist
-  globalConfig:
-      # add the lines below
-      alertmanager_url: ""
-      grafana_url: ""
-      prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
+.. grid-item::
+
+    .. md-tab-set::
+
+        .. md-tab-item:: Prometheus
+
+            .. code-block:: yaml
+
+              # this line should already exist
+              globalConfig:
+                  # add the lines below
+                  alertmanager_url: ""
+                  grafana_url: ""
+                  prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
+
+        .. md-tab-item:: VictoriaMetrics
+
+             .. code-block:: yaml
+
+              # this line should already exist
+              globalConfig:
+                  # add the lines below
+                  alertmanager_url: ""
+                  grafana_url: ""
+                  prometheus_url: "http://VICTORIA_METRICS_SERVICE_NAME.monitoring.svc.cluster.local:8429"
+
 
 Additional Authentication Headers
 ---------------------------------
@@ -167,7 +197,7 @@ By default, Robusta does not verify the SSL certificate of the Prometheus server
   runner:
     additional_env_vars:
     - name: PROMETHEUS_SSL_ENABLED
-      value: true
+      value: "true"
 
 To add a custom CA certificate, add the following as well:
 

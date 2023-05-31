@@ -2,7 +2,7 @@ import logging
 from enum import Enum
 from typing import Dict, List, Optional, Union
 
-from hikaru.model import Container, ContainerState, ContainerStatus, Pod
+from hikaru.model.rel_1_26 import Container, ContainerState, ContainerStatus, Pod
 from pydantic import BaseModel
 
 from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms

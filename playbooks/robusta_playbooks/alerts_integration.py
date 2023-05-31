@@ -7,8 +7,7 @@ from string import Template
 from typing import Any, Dict, List, Optional
 
 import requests
-from hikaru.model import Node
-
+from hikaru.model.rel_1_26 import Node
 from robusta.api import (
     ActionParams,
     AlertResourceGraphEnricherParams,

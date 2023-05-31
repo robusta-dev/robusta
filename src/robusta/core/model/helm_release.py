@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 from pydantic import BaseModel
 from base64 import b64decode
 from datetime import datetime
@@ -9,9 +9,9 @@ import json
 class Metadata(BaseModel):
     name: str
     version: str
-    description: str
-    apiVersion: str
-    appVersion: str
+    description: Optional[str]
+    apiVersion: Optional[str]
+    appVersion: Optional[str]
 
 
 class Chart(BaseModel):
@@ -19,31 +19,31 @@ class Chart(BaseModel):
 
 
 class Info(BaseModel):
-    first_deployed: str
-    last_deployed: str
+    first_deployed: datetime
+    last_deployed: datetime
     deleted: str
-    description: str
+    description: Optional[str]
     status: str
-    notes: str
-
-    def get_last_deployed(self):
-        return datetime.strptime(self.last_deployed, '%Y-%m-%dT%H:%M:%S.%f%z')
-
-    def get_first_deployed(self):
-        return datetime.strptime(self.first_deployed, '%Y-%m-%dT%H:%M:%S.%f%z')
+    notes: Optional[str]
 
 
 class HelmRelease(BaseModel):
     name: str
     info: Info
-    chart: Chart
+    chart: Optional[Chart]
     version: int
     namespace: str
     deleted: bool = False
 
     @staticmethod
-    def list_to_json(releases: List["HelmRelease"]):
+    def list_to_dict(releases: List["HelmRelease"]):
         return [release.dict() for release in releases]
+
+    def dict(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+        release_dict = super().dict()
+        release_dict["info"]["first_deployed"] = self.info.first_deployed.isoformat()
+        release_dict["info"]["last_deployed"] = self.info.last_deployed.isoformat()
+        return release_dict
 
     @classmethod
     def from_api_server(cls, encoded_release_data: str) -> "HelmRelease":

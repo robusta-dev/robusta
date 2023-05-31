@@ -18,15 +18,11 @@ from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
+from robusta.core.sinks.robusta.prometheus_health_checker import PrometheusHealthChecker
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
-
-from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags, \
-    check_prometheus_connection
-from robusta.core.model.base_params import PrometheusParams
-from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_silences_connection
 
 
 class RobustaSink(SinkBase):
@@ -60,11 +56,14 @@ class RobustaSink(SinkBase):
 
         self.first_prometheus_alert_time = 0
         self.last_send_time = 0
+        self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
+
+        self.__prometheus_health_checker = PrometheusHealthChecker(discovery_period_sec=self.__discovery_period_sec,
+                                                                   global_config=self.get_global_config())
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         # start cluster discovery
         self.__active = True
-        self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
@@ -375,43 +374,18 @@ class RobustaSink(SinkBase):
         self.dal.publish_helm_releases(helm_releases)
 
     def __update_cluster_status(self):
-        global_config = self.get_global_config()
+        prometheus_health_checker_status = self.__prometheus_health_checker.get_status()
         activity_stats = ActivityStats(
             relayConnection=False,
-            alertManagerConnection=False,
-            prometheusConnection=False,
-            prometheusRetentionTime='',
+            alertManagerConnection=prometheus_health_checker_status.alertmanager,
+            prometheusConnection=prometheus_health_checker_status.prometheus,
+            prometheusRetentionTime=prometheus_health_checker_status.prometheus_retention_time,
         )
 
         # checking the status of relay connection
         receiver = self.registry.get_receiver()
         if isinstance(receiver, ActionRequestReceiver):
             activity_stats.relayConnection = receiver.healthy
-
-        # checking the status of prometheus
-        try:
-            prometheus_params = PrometheusParams(prometheus_url=global_config.get("prometheus_url", ""))
-            prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
-            check_prometheus_connection(prom=prometheus_connection, params={})
-
-            activity_stats.prometheusConnection = True
-
-            flag_response = get_prometheus_flags(prom=prometheus_connection)
-            if flag_response:
-                data = flag_response.get('data', None)
-                if data:
-                    activity_stats.prometheusRetentionTime = data.get('storage.tsdb.retention.time', "")
-
-        except Exception as e:
-            logging.error(f"Failed to connect to prometheus. {e}", exc_info=True)
-
-        # checking the status of the alert manager
-        try:
-            base_silence_params = BaseSilenceParams(alertmanager_url=global_config.get("alertmanager_url", ""))
-            get_alertmanager_silences_connection(params=base_silence_params)
-            activity_stats.alertManagerConnection = True
-        except Exception as e:
-            logging.error(f"Failed to connect to the alert manager silence. {e}", exc_info=True)
 
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()

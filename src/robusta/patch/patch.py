@@ -4,10 +4,8 @@ from inspect import getmodule, signature
 from typing import Dict, List, Optional, Union, get_type_hints
 
 from hikaru import HikaruBase, HikaruDocumentBase
-from hikaru.model import VolumeProjection
-from kubernetes.client import V1APIServiceSpec
+from kubernetes.client.models.events_v1_event import EventsV1Event
 from kubernetes.client.models.v1_container_image import V1ContainerImage
-from kubernetes.client.models.v1_projected_volume_source import V1ProjectedVolumeSource
 from ruamel.yaml import YAML
 
 try:
@@ -39,27 +37,11 @@ def create_monkey_patches():
     # The patched method is due to a bug in containerd that allows for containerImages to have no names
     # which causes the kubernetes python api to throw an exception
     logging.info("Creating kubernetes ContainerImage monkey patch")
-    V1ContainerImage.names = V1ContainerImage.names.setter(names)
-    V1ProjectedVolumeSource.sources = V1ProjectedVolumeSource.sources.setter(sources)
-    V1APIServiceSpec.service = V1APIServiceSpec.service.setter(service)
+    EventsV1Event.event_time = EventsV1Event.event_time.setter(event_time)
 
 
-def service(self, service):
-    self._service = service
-
-
-def sources(self, sources):
-    if sources:
-        self._sources = sources
-    else:
-        self._sources = []
-
-
-def names(self, names):
-    if names:
-        self._names = names
-    else:
-        self._names = [""]
+def event_time(self, event_time):
+    self._event_time = event_time
 
 
 def official_plug_ins(self):
@@ -159,11 +141,8 @@ def _get_hints(cls) -> dict:
         if is_dataclass(c):
             hints.update(get_type_hints(c, globs))
     # patching ContainerImage hint to allow the names to be None due to containerd bug
-    if cls.__name__ == "ContainerImage":
-        hints["names"] = Optional[List[str]]
-    # patching ProjectedVolumeSource hint to allow the sources to be None
-    if cls.__name__ == "ProjectedVolumeSource":
-        hints["sources"] = Optional[List[VolumeProjection]]
+    if cls.__name__ == "Event":
+        hints["eventTime"] = Optional[str]
     # Caching the class hints for later use
     cls.cached_hints = hints
     return hints
