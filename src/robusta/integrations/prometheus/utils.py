@@ -6,7 +6,8 @@ import requests
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError, HTTPError
 
-from robusta.core.exceptions import PrometheusNotFound, VictoriaMetricsNotFound, NoPrometheusUrlFound
+from robusta.core.exceptions import PrometheusNotFound, VictoriaMetricsNotFound, NoPrometheusUrlFound, \
+    PrometheusFlagsConnectionError
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
@@ -133,11 +134,10 @@ def get_prometheus_flags(prom: "PrometheusConnect") -> Optional[Dict]:
     except Exception as e:
         victoria_metrics_exception = e
 
-    logging.error(
+    raise PrometheusFlagsConnectionError(
         f"Couldn't connect to the url: {prom.url}\n\t\tPrometheus: {prometheus_exception}"
-        f"\n\t\tVictoria Metrics: {victoria_metrics_exception})")
-
-    return None
+        f"\n\t\tVictoria Metrics: {victoria_metrics_exception})"
+    )
 
 
 def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
@@ -225,6 +225,9 @@ class PrometheusDiscovery(ServiceDiscovery):
                 "app=rancher-monitoring-prometheus",
                 "app=prometheus-prometheus",
                 "app.kubernetes.io/name=vmsingle",
+                "app.kubernetes.io/name=victoria-metrics-single",
+                "app.kubernetes.io/name=vmselect"
+                "app=vmselect",
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
         )
