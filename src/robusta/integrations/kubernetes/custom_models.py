@@ -397,19 +397,20 @@ class RobustaJob(Job):
 
     def create_job_owned_secret(self, job_secret: JobSecret):
         """
-            This secret will be auto-deleted when the pod is Terminated
+        This secret will be auto-deleted when the pod is Terminated
         """
         # Due to inconsistant GC in K8s the OwnerReference needs to be the pod and not the job (Found in azure)
         job_pod = self.get_single_pod()
-        robusta_owner_reference = OwnerReference(apiVersion="v1",
-                                                 kind="Pod",
-                                                 name=job_pod.metadata.name,
-                                                 uid=job_pod.metadata.uid,
-                                                 blockOwnerDeletion=False,
-                                                 controller=True)
+        robusta_owner_reference = OwnerReference(
+            apiVersion="v1",
+            kind="Pod",
+            name=job_pod.metadata.name,
+            uid=job_pod.metadata.uid,
+            blockOwnerDeletion=False,
+            controller=True,
+        )
         secret = Secret(
-            metadata=ObjectMeta(name=job_secret.name, ownerReferences=[robusta_owner_reference]),
-            data=job_secret.data
+            metadata=ObjectMeta(name=job_secret.name, ownerReferences=[robusta_owner_reference]), data=job_secret.data
         )
         try:
             return secret.createNamespacedSecret(job_pod.metadata.namespace).obj
@@ -418,7 +419,7 @@ class RobustaJob(Job):
             raise e
 
     @classmethod
-    def run_simple_job_spec(cls, spec, name, timeout, job_secret: Optional[JobSecret]) -> str:
+    def run_simple_job_spec(cls, spec, name, timeout, job_secret: Optional[JobSecret] = None) -> str:
         job = RobustaJob(
             metadata=ObjectMeta(namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name)),
             spec=JobSpec(
