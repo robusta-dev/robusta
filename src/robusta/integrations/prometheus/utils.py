@@ -230,7 +230,8 @@ class PrometheusDiscovery(ServiceDiscovery):
                 "app=prometheus-prometheus",
                 "app.kubernetes.io/name=vmsingle",
                 "app.kubernetes.io/name=victoria-metrics-single",
-                "app.kubernetes.io/name=vmselect" "app=vmselect",
+                "app.kubernetes.io/name=vmselect",
+                "app=vmselect",
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
         )
