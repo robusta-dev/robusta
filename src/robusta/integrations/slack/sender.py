@@ -1,7 +1,10 @@
 import logging
 import ssl
 import tempfile
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
+import shelve
+import time
+import datetime
 
 import certifi
 from slack_sdk import WebClient
@@ -29,6 +32,7 @@ from robusta.core.reporting.consts import SlackAnnotations, EnrichmentAnnotation
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
+from .message_history_db import MessageHistoryDB, ShelveMessageHistory
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 ACTION_LINK = "link"
@@ -53,12 +57,33 @@ class SlackSender:
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
+        self.thread_db: MessageHistoryDB = ShelveMessageHistory("slack_history.shelve")
 
         try:
             self.slack_client.auth_test()
         except SlackApiError as e:
             logging.error(f"Cannot connect to Slack API: {e}")
             raise e
+
+    @staticmethod
+    def __get_shelve_db():
+        """Returns a persistent dictionary for storing thread_ts and time sent"""
+        return shelve.open('slack_threads.db')
+
+    def __get_thread_ts(self, aggregation_key):
+        """Get the thread_ts for the aggregation_key if it was used in the last 6 hours"""
+        with self.__get_shelve_db() as db:
+            if aggregation_key in db:
+                thread_data = db[aggregation_key]
+                # Check if the message was sent within the last 6 hours
+                if time.time() - thread_data['time'] <= 6 * 60 * 60:
+                    return thread_data['thread_ts']
+        return None
+
+    def __store_thread_ts(self, aggregation_key, thread_ts):
+        """Store the thread_ts and current time for the aggregation_key"""
+        with self.__get_shelve_db() as db:
+            db[aggregation_key] = {'thread_ts': thread_ts, 'time': time.time()}
 
     def __get_action_block_for_choices(self, sink: str, choices: Dict[str, CallbackChoice] = None):
         if choices is None:
@@ -227,6 +252,7 @@ class SlackSender:
         sink_params: SlackSinkParams,
         unfurl: bool,
         status: FindingStatus,
+        aggregation_key: str
     ):
        
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
@@ -255,8 +281,10 @@ class SlackSender:
             f"message:{message}"
         )
 
+        thread_id = self.thread_db.get_message_id(aggregation_key)
+
         try:
-            self.slack_client.chat_postMessage(
+            response = self.slack_client.chat_postMessage(
                 channel=sink_params.slack_channel,
                 text=message,
                 blocks=output_blocks,
@@ -266,7 +294,34 @@ class SlackSender:
                 else None,
                 unfurl_links=unfurl,
                 unfurl_media=unfurl,
+                thread_ts=thread_id
             )
+            print(response)
+            if thread_id is None:
+                self.thread_db.set_message_id(aggregation_key, response['ts'])
+            else:
+                parent_message = self.slack_client.chat_update(
+                    channel=response["channel"],
+                    ts=thread_id,
+                    text="test"
+                )
+                now = datetime.datetime.now()
+                formatted_now = now.strftime("%Y-%m-%d %H:%M:%S")
+                parent_blocks = parent_message['message']['blocks']
+                new_block = {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"_{formatted_now}:_ *{title}*"
+                    }
+                }
+                parent_blocks.append(new_block)
+                self.slack_client.chat_update(
+                    channel=response["channel"],
+                    ts=thread_id,
+                    blocks=parent_blocks
+                )
+
         except Exception as e:
             logging.error(
                 f"error sending message to slack\ne={e}\ntext={message}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
@@ -352,4 +407,5 @@ class SlackSender:
             sink_params,
             unfurl,
             status,
+            finding.aggregation_key
         )

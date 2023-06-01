@@ -99,6 +99,7 @@ class RobustaSink(SinkBase):
         resources.extend(
             [TopLevelResource(name=job.name, namespace=job.namespace, resource_type=job.type) for job in jobs]
         )
+        # will cause error with rate limiting when UI is disabled? also service_key?
         TopServiceResolver.store_cached_resources(resources)
 
     def __assert_services_cache_initialized(self):
