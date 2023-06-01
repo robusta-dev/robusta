@@ -1,6 +1,13 @@
 API Changes
 ################################
 
+.. admonition:: Do I need to read this page?
+
+    Most Robusta users can ignore this page.
+
+    This page only applies to users who wrote custom playbook actions in Python.
+
+
 This page documents breaking changes to the Robusta API, and how to update custom playbook actions between versions.
 
 Updating to Robusta 0.10.17
