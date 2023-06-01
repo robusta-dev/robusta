@@ -134,6 +134,6 @@ def get_runner_pod(namespace: Optional[str]) -> str:
     ).stdout.strip()
 
     if not output:
-        typer.secho(f"Could not find robusta pod in namespace {namespace}. Are you missing the --namespace flag?", fg="red")
+        typer.secho(f"Could not find robusta pod in namespace {namespace}. Are you missing the --namespace flag correctly?", fg="red")
     
     return output
