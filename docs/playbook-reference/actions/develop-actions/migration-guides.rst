@@ -1,4 +1,4 @@
-API Changes
+Playbook API Changes
 ################################
 
 .. admonition:: Do I need to read this page?
@@ -10,8 +10,8 @@ API Changes
 
 This page documents breaking changes to the Robusta API, and how to update custom playbook actions between versions.
 
-Updating to Robusta 0.10.17
-================================
+Updating Custom Playbooks to Robusta 0.10.17
+===============================================
 
 In Robusta 0.10.17 we updated the Hikaru dependency to a newer version.
 
