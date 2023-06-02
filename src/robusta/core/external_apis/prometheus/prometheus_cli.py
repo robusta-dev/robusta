@@ -6,6 +6,7 @@ from prometheus_api_client import PrometheusApiClientException
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.core.model.base_params import PrometheusParams
 from robusta.integrations.prometheus.utils import check_prometheus_connection, get_prometheus_connect
+from robusta.utils.common import remove_query_string_from_url, parse_url
 
 """
 This function is copied from the python package prometheus_api_client
@@ -47,12 +48,15 @@ def custom_query_range(
 
     check_prometheus_connection(prom, params)
 
+    prometheus_url = remove_query_string_from_url(prom.url)
+    query_params = {**params, **parse_url(prometheus_url)}
+
     prometheus_result = None
     query = str(query)
     # using the query_range API to get raw data
     response = prom._session.get(
-        "{0}/api/v1/query_range".format(prom.url),
-        params={**{"query": query, "start": start, "end": end, "step": step}, **params},
+        "{0}/api/v1/query_range".format(prometheus_url),
+        params={**{"query": query, "start": start, "end": end, "step": step}, **query_params},
         verify=prom.ssl_verification,
         headers=prom.headers,
     )

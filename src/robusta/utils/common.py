@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Dict
 
 from hikaru import DiffDetail, HikaruBase
+from urllib.parse import urlparse, parse_qs
 
 
 # TODO: filter out all the managed fields crap
@@ -37,3 +38,15 @@ def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):
             pass  # in case the field doesn't exist on this object
 
     return duplication
+
+
+def remove_query_string_from_url(url: str) -> str:
+    return url.split('?')[0].rstrip('/') if url else ""
+
+
+def parse_url(url: str) -> Dict[str, str]:
+    parsed_url = urlparse(url)
+    query_string = parsed_url.query
+    query_params = parse_qs(query_string)
+    return {key: value[0] for key, value in query_params.items()}
+

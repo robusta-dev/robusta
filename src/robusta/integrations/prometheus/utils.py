@@ -14,6 +14,7 @@ from robusta.core.exceptions import (
 )
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
+from robusta.utils.common import parse_url, remove_query_string_from_url
 from robusta.utils.service_discovery import find_service_url
 
 AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
@@ -76,8 +77,7 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
     from prometheus_api_client import PrometheusConnect
 
     url: Optional[str] = (
-        prometheus_params.prometheus_url
-        if prometheus_params.prometheus_url
+        prometheus_params.prometheus_url if prometheus_params.prometheus_url
         else PrometheusDiscovery.find_prometheus_url()
     )
 
@@ -92,22 +92,25 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
 def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
     params = params or {}
     try:
+        prometheus_url = remove_query_string_from_url(prom.url)
+        query_params = {**params, **parse_url(prometheus_url)}
+
         response = prom._session.get(
-            f"{prom.url}/api/v1/query",
+            f"{prometheus_url}/api/v1/query",
             verify=prom.ssl_verification,
             headers=prom.headers,
             # This query should return empty results, but is correct
-            params={"query": "example", **params},
+            params={"query": "example", **query_params},
         )
 
         if response.status_code == 401:
             if PrometheusAuthorization.request_new_token():
                 prom.headers = PrometheusAuthorization.get_authorization_headers()
                 response = prom._session.get(
-                    f"{prom.url}/api/v1/query",
+                    f"{prometheus_url}/api/v1/query",
                     verify=prom.ssl_verification,
                     headers=prom.headers,
-                    params={"query": "example", **params},
+                    params={"query": "example", **query_params},
                 )
 
         response.raise_for_status()
@@ -147,14 +150,16 @@ def get_prometheus_flags(prom: "PrometheusConnect") -> Optional[Dict]:
 def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
     try:
         result = {}
+        prometheus_url = remove_query_string_from_url(prom.url)
+        query_params = parse_url(prometheus_url)
 
         # connecting to prometheus
         response = prom._session.get(
-            f"{prom.url}/api/v1/status/flags",
+            f"{prometheus_url}/api/v1/status/flags",
             verify=prom.ssl_verification,
             headers=prom.headers,
             # This query should return empty results, but is correct
-            params={},
+            params=query_params,
         )
         response.raise_for_status()
 
@@ -166,16 +171,19 @@ def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
         ) from e
 
 
-def fetch_victoria_metrics_flags(prom: "PrometheusConnect") -> Dict:
+def fetch_victoria_metrics_flags(vm: "PrometheusConnect") -> Dict:
     try:
         result = {}
+        victoria_metrics_url = remove_query_string_from_url(vm.url)
+        query_params = parse_url(victoria_metrics_url)
+
         # connecting to VictoriaMetrics
-        response = prom._session.get(
-            f"{prom.url}/flags",
-            verify=prom.ssl_verification,
-            headers=prom.headers,
+        response = vm._session.get(
+            f"{victoria_metrics_url}/flags",
+            verify=vm.ssl_verification,
+            headers=vm.headers,
             # This query should return empty results, but is correct
-            params={},
+            params=query_params,
         )
         response.raise_for_status()
 
@@ -189,7 +197,7 @@ def fetch_victoria_metrics_flags(prom: "PrometheusConnect") -> Dict:
         return result
     except Exception as e:
         raise VictoriaMetricsNotFound(
-            f"Couldn't connect to VictoriaMetrics found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
+            f"Couldn't connect to VictoriaMetrics found under {vm.url}\nCaused by {e.__class__.__name__}: {e})"
         ) from e
 
 
