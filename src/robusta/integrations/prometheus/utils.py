@@ -14,7 +14,7 @@ from robusta.core.exceptions import (
 )
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
-from robusta.utils.common import parse_url, remove_query_string_from_url
+from robusta.utils.common import parse_url, strip_query_string_from_url
 from robusta.utils.service_discovery import find_service_url
 
 AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
@@ -92,7 +92,7 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
 def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
     params = params or {}
     try:
-        prometheus_url = remove_query_string_from_url(prom.url)
+        prometheus_url = strip_query_string_from_url(prom.url)
         query_params = {**params, **parse_url(prometheus_url)}
 
         response = prom._session.get(
@@ -150,7 +150,7 @@ def get_prometheus_flags(prom: "PrometheusConnect") -> Optional[Dict]:
 def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
     try:
         result = {}
-        prometheus_url = remove_query_string_from_url(prom.url)
+        prometheus_url = strip_query_string_from_url(prom.url)
         query_params = parse_url(prometheus_url)
 
         # connecting to prometheus
@@ -174,7 +174,7 @@ def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
 def fetch_victoria_metrics_flags(vm: "PrometheusConnect") -> Dict:
     try:
         result = {}
-        victoria_metrics_url = remove_query_string_from_url(vm.url)
+        victoria_metrics_url = strip_query_string_from_url(vm.url)
         query_params = parse_url(victoria_metrics_url)
 
         # connecting to VictoriaMetrics

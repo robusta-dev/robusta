@@ -40,7 +40,10 @@ def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):
     return duplication
 
 
-def remove_query_string_from_url(url: str) -> str:
+def strip_query_string_from_url(url: str) -> str:
+    if not url:
+        return ''
+    
     return url.split('?')[0].rstrip('/') if url else ""
 
 
