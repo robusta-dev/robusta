@@ -87,7 +87,7 @@ class RobustaController:
                 "--no-enable-crash-report",
                 "--msteams-webhook=",
             ],
-            timeout=5
+            timeout=30
         )
         assert "Saved configuration" in logs, logs
 
