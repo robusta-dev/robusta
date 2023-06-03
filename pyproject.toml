@@ -120,3 +120,6 @@ build-backend = "poetry.core.masonry.api"
 #[tool.poetry-dynamic-versioning]
 #vcs = "git"
 #pattern = "^(?P<base>\\d+\\.\\d+\\.\\d+)"
+
+[tool.pytest.ini_options]
+filterwarnings = "ignore::DeprecationWarning"

@@ -9,7 +9,7 @@ def test_robusta_install(robusta: RobustaController, slack_channel: SlackChannel
     crashing_deployment = create_crashing_deployment()
     try:
         expected = f"Crashing pod {crashing_deployment.metadata.name}"
-        for _ in range(50):
+        for _ in range(12):
             time.sleep(10)
             if slack_channel.was_message_sent_recently(expected):
                 return

@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import shlex
 import subprocess
 import time
 from typing import Optional
@@ -26,7 +27,7 @@ class RobustaController:
             "runner.resources.requests.memory=512Mi",
         ]
 
-        logging.error(f"runner image is {self.robusta_runner_image}")
+        logging.debug(f"runner image is {self.robusta_runner_image}")
         if self.robusta_runner_image is not None:
             cmd.extend(["--set", f"runner.image={self.robusta_runner_image}"])
 
@@ -82,14 +83,16 @@ class RobustaController:
                 output_path,
                 "--robusta-api-key=",
                 "--no-enable-prometheus-stack",
-                "--no-disable-cloud-routing",
+                "--disable-cloud-routing",
+                "--no-enable-crash-report",
                 "--msteams-webhook=",
             ],
+            timeout=5
         )
         assert "Saved configuration" in logs, logs
 
     @staticmethod
-    def _run_cmd(cmd) -> str:
+    def _run_cmd(cmd, timeout=None) -> str:
         env = os.environ.copy()
 
         # in windows we need to set shell=True or else PATH is ignored and subprocess.run can't find poetry
@@ -97,14 +100,20 @@ class RobustaController:
         if os.name == "nt":
             shell = True
 
-        result = subprocess.run(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell)
-        if result.returncode:
-            logging.error(f"running command {cmd} failed with returncode={result.returncode}")
-            logging.error(f"stdout={result.stdout.decode()}")
-            logging.error(f"stderr={result.stderr.decode()}")
-            raise Exception(f"Error running robusta cli command: {cmd}")
+        cmd_for_printing = shlex.join([str(c) for c in cmd])
+        logging.debug(f"Running cmd: {cmd_for_printing}")
 
+        try:
+            result = subprocess.run(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, timeout=timeout)
+            logging.debug(f"cmd result={result}")
+        except Exception as e:
+            logging.warning(f"failure running cmd: {cmd_for_printing}")
+            raise
+
+        if result.returncode:
+            logging.error(f"running command '{cmd_for_printing}' failed with returncode={result.returncode}, stdout={result.stdout.decode()}, stderr={result.stderr.decode()}")
+            raise Exception(f"Error running robusta cli command: {result.args}")
         return result.stdout.decode()
 
-    def _run_robusta_cli_cmd(self, cmd) -> str:
-        return self._run_cmd(["poetry", "run", "robusta"] + cmd)
+    def _run_robusta_cli_cmd(self, cmd, timeout=None) -> str:
+        return self._run_cmd(["poetry", "run", "robusta"] + cmd, timeout)
