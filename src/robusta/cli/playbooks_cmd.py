@@ -156,7 +156,6 @@ def pull(
     try:
         runner_pod = get_runner_pod(namespace)
         if not runner_pod:
-            log_title("Runner pod not found.", color="red")
             return
 
         subprocess.check_call(
@@ -181,7 +180,6 @@ def list_dirs(
     try:
         runner_pod = get_runner_pod(namespace)
         if not runner_pod:
-            log_title("Runner pod not found.", color="red")
             return
 
         ls_res = subprocess.check_output(
@@ -224,7 +222,6 @@ def delete(
     try:
         runner_pod = get_runner_pod(namespace)
         if not runner_pod:
-            log_title("Runner pod not found.", color="red")
             return
 
         path_to_delete = os.path.join(PLAYBOOKS_MOUNT_LOCATION, playbooks_directory)
@@ -245,14 +242,20 @@ def print_yaml_if_not_none(key: str, json_dict: dict):
         typer.echo(f"{yaml.dump(json)}")
 
 
+# not named list as that would shadow the builtin list function
 @app.command("list")
 def list_(
     namespace: str = typer.Option(
         None,
         help=NAMESPACE_EXPLANATION,
     ),
-):  # not named list as that would shadow the builtin list function
+):  
     """list current active playbooks"""
+    # first we fetch the runner pod, as if the namespace is invalid we want an error message
+    runner_pod = get_runner_pod(namespace)
+    if not runner_pod:
+        return
+    
     typer.echo("Getting deployed playbooks list...")
     with click_spinner.spinner():
         playbooks_config = get_playbooks_config(namespace)
