@@ -122,4 +122,7 @@ build-backend = "poetry.core.masonry.api"
 #pattern = "^(?P<base>\\d+\\.\\d+\\.\\d+)"
 
 [tool.pytest.ini_options]
-filterwarnings = "ignore::DeprecationWarning"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore:::slack_sdk"
+]

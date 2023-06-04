@@ -31,30 +31,12 @@ def pytest_runtest_makereport(item, call):
     setattr(item, "report_" + report.when, report)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def slack_channel() -> SlackChannel:
     if CONFIG.PYTEST_SLACK_TOKEN is None or CONFIG.PYTEST_SLACK_CHANNEL is None:
         pytest.skip("skipping slack tests (missing environment variables)", allow_module_level=True)
 
     return SlackChannel(CONFIG.PYTEST_SLACK_TOKEN, CONFIG.PYTEST_SLACK_CHANNEL)
-
-
-@pytest.fixture
-def robusta(slack_channel: SlackChannel, tmp_path, request, pytestconfig):
-    robusta = RobustaController(pytestconfig.getoption("image"))
-    values_path = tmp_path / Path("./gen_values.yaml")
-    robusta.gen_config(
-        slack_api_key=CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN,
-        slack_channel=CONFIG.PYTEST_SLACK_CHANNEL,
-        output_path=str(values_path),
-    )
-    robusta.helm_install(values_path)
-    yield robusta
-    # see pytest_runtest_makereport above
-    if request.node.report_setup.passed and request.node.report_call.failed:
-        print("logs are: ")
-        print(robusta.get_logs())
-    robusta.helm_uninstall()
 
 
 @pytest.fixture(scope="session")
@@ -106,3 +88,22 @@ def kind_cluster(pytestconfig, tmp_path_factory):
     # Deleting the cluster after the tests are done, if --no-delete-cluster wasn't passed
     if not pytestconfig.getoption("--no-delete-cluster"):
         subprocess.check_call(["kind", "delete", "cluster", "--name", cluster_name])
+
+
+@pytest.fixture
+def robusta(slack_channel: SlackChannel, kind_cluster: str, tmp_path_factory, request, pytestconfig):
+    robusta = RobustaController(pytestconfig.getoption("image"))
+    values_path = tmp_path_factory.mktemp("gen_config", numbered=False) / "./gen_values.yaml"
+    robusta.gen_config(
+        slack_api_key=CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN,
+        slack_channel=CONFIG.PYTEST_SLACK_CHANNEL,
+        output_path=str(values_path),
+    )
+    robusta.helm_install(values_path)
+    yield robusta
+    # see pytest_runtest_makereport above
+    if request.node.report_setup.passed and request.node.report_call.failed:
+        print("logs are: ")
+        print(robusta.get_logs())
+    robusta.helm_uninstall()
+

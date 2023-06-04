@@ -11,8 +11,8 @@ def test_upload():
     config.load_kube_config()
     sleepypod = create_sleeping_deployment()
     try:
-        time.sleep(60)
         pod = RobustaPod.find_pod(sleepypod.metadata.name, "default")
+        RobustaPod.wait_for_pod_ready(pod.metadata.name, "default")
         pod.upload_file("/abc", "foo".encode())
         result = pod.exec("cat /abc")
         assert result.strip() == "foo"
