@@ -19,7 +19,7 @@ For AlertManager:
       If both a Grafana API key and AlertManager auth are defined, Robusta will use the Grafana API key
 
 SSL Verification
-----------------
+-------------------
 By default, Robusta does not verify the SSL certificate of the Prometheus server. To enable SSL verification, add the following to ``generated_values.yaml``:
 
 .. code-block:: yaml
@@ -37,7 +37,7 @@ To add a custom CA certificate, add the following as well:
     certificate: "<YOUR BASE-64 ENCODED DATA>" # base64-encoded certificate value
 
 Alerts silencing
-=================
+------------------------
 
 Robusta lets you silence alerts directly from your notification channels (sinks). Robusta will try to automatically find
 an AlertManager running in your cluster and use it to create silences.

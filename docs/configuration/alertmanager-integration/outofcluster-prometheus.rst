@@ -1,7 +1,15 @@
 Out-of-cluster Prometheus
------------------------------------------
+**************************************
 
-If AlertManager is located outside of your Kubernetes cluster then a few more steps are necessary:
+For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from AlertManager.
+
+
+**If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
+
+If AlertManager is located outside of your Kubernetes cluster, follow these steps:
+
+Configure AlertManager:
+===========================
 
 1. Enable two-way interactivity in :ref:`Robusta's configuration <Configuration Overview>` by setting ``disableCloudRouting: false``
 2. Make sure that your alerts contain a label named ``cluster_name`` which matches the :ref:`cluster_name defined in Robusta's configuration <Global Config>`. This is necessary so that the Robusta cloud knows which cluster to forward events to.
@@ -30,12 +38,12 @@ If AlertManager is located outside of your Kubernetes cluster then a few more st
             continue: true
 
 Related Robusta Settings
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+==========================
 
 Below are additional Robusta settings related to Prometheus, AlertManager, and Grafana.
 
 Setting up a custom Prometheus, AlertManager, and Grafana
-==========================================================
+-----------------------------------------------------------------
 
 If you followed the instructions on this page, Prometheus and AlertManager will know about Robusta, but Robusta might not know about them!
 
@@ -72,3 +80,6 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
               alertmanager_url: ""
               grafana_url: ""
               prometheus_url: "http://VICTORIA_METRICS_SERVICE_NAME.monitoring.svc.cluster.local:8429"
+
+
+.. include:: ./_additional_settings.rst

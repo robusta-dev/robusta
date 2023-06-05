@@ -1,6 +1,11 @@
 Azure managed Prometheus
 *************************
 
+We will integrate Robusta and Azure managed Prometheus in two steps
+
+1. Configure sending Prometheus to Robusta
+2. Configure Robusta to access Azure managed Prometheus
+
 Sending Azure Alerts to Robusta
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -12,8 +17,7 @@ To configure Azure to send alerts to Robusta:
 2. In the Azure Webhook section click ``Generate URL`` and save the generated url.
 3. Login to the Microsoft Azure Portal, go to ``alerts`` > ``Action groups``
 4. Create a new action group, or edit an existing one.
-5. Under the `Actions` tabs (**not** the Notifications tab) add a ``Webhook`` and copy the url from step 2, into the URI input.
-6. Make sure to select ``Enable the common alert schema``.
+5. Under the `Actions` tabs (**not** the Notifications tab) add a ``Webhook`` and copy the url from step 2, into the URI input. Make sure to select ``Enable the common alert schema``.
 
 .. admonition:: Why do I see a banner in the UI that "Alerts won't show up"?
     :class: warning
@@ -24,7 +28,7 @@ Configure Robusta to use Azure managed Prometheus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For certain features, Robusta needs to reach out to Prometheus and pull in extra information.
-In this section we will Create an Azure Active Directory authentication app so that Robusta can analyze and present Prometheus data.
+In this section we will configure Robusta to query Azure Prometheus and register an Azure authentication app.
 
 Get the Azure prometheus query endpoint
 =========================================

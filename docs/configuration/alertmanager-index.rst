@@ -13,21 +13,21 @@ Common Methods
 
     .. grid-item-card:: :octicon:`book;1em;` Incluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
-        :link: alert-manager
+        :link: alertmanager-integration/alert-manager
         :link-type: doc
 
         Connect Prometheus, AlertManager, Grafana, and others.
 
     .. grid-item-card:: :octicon:`book;1em;` Out of cluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
-        :link: outofcluster-prometheus
+        :link: alertmanager-integration/outofcluster-prometheus
         :link-type: doc
 
         Configure Prometheus to send alerts to Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` Azure managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
-        :link: azure-managed-prometheus
+        :link: alertmanager-integration/azure-managed-prometheus
         :link-type: doc
 
         Connect your Prometheus cluster on Azure to work with Robusta.

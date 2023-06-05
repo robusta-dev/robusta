@@ -72,3 +72,6 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
               alertmanager_url: ""
               grafana_url: ""
               prometheus_url: "http://VICTORIA_METRICS_SERVICE_NAME.monitoring.svc.cluster.local:8429"
+
+
+.. include:: ./_additional_settings.rst

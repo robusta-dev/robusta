@@ -1,4 +1,4 @@
-Integrating AlertManager
+In-cluster Prometheus
 ****************************************
 
 For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from AlertManager.
@@ -6,8 +6,11 @@ For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Rob
 
 **If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
 
-For other setups, read on!
+For AlertManager's in the same cluster as Robusta, follow these steps:
 
+
+Configure AlertManager:
+===========================
 
 Prerequisites
 ===============
@@ -130,4 +133,4 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
               grafana_url: ""
               prometheus_url: "http://VICTORIA_METRICS_SERVICE_NAME.monitoring.svc.cluster.local:8429"
 
-.. include:: ../_additional_settings.rst
+.. include:: ./_additional_settings.rst
