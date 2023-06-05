@@ -10,8 +10,10 @@ Integrating with Prometheus
 
    alert-manager
    outofcluster-prometheus
+   kube-prometheus-stack
    azure-managed-prometheus
    embedded-prometheus
+
 
 
 Follow this guide to configure External Prometheus with Robusta after :ref:`installing it <Integrate with Existing Prometheus>`.
@@ -22,7 +24,7 @@ Common Methods
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`book;1em;` Incluster Prometheus
+    .. grid-item-card:: :octicon:`book;1em;` In-cluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: alert-manager
         :link-type: doc
@@ -43,12 +45,20 @@ Common Methods
 
         Connect your Prometheus cluster on Azure to work with Robusta.
 
+
+    .. grid-item-card:: :octicon:`book;1em;` Kube Prometheus Stack
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: kube-prometheus-stack
+        :link-type: doc
+
+        Connect Robusta and Kube Prometheus Stack using secrets
+    
     .. grid-item-card:: :octicon:`book;1em;` Embedded Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: embedded-prometheus
         :link-type: doc
 
-        Learn how to use Prometheus installed automatically by Robusta.
+        Learn how to use Prometheus installed automatically by Robusta
 
 .. All Settings
 .. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

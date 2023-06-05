@@ -37,49 +37,24 @@ Configure AlertManager:
             repeat_interval: 4h
             continue: true
 
-Related Robusta Settings
-==========================
+.. admonition:: Common Mistakes
 
-Below are additional Robusta settings related to Prometheus, AlertManager, and Grafana.
+    1. Make sure the Robusta ``route`` is the first ``route`` defined. If it isn't the first route, it might not receive alerts. When a ``route`` is matched, the alert will not be sent to following routes, unless the ``route`` is configured with ``continue: true``.
+    2. Tweak the settings accordingly if:
+        * You installed Robusta in a namespace other than ``default``
+        * You named Robusta's Helm release something other than ``robusta``
 
-Setting up a custom Prometheus, AlertManager, and Grafana
------------------------------------------------------------------
+After you configure AlertManager, you can test it works properly, by creating a demo alert:
 
-If you followed the instructions on this page, Prometheus and AlertManager will know about Robusta, but Robusta might not know about them!
+.. code-block:: bash
 
-For certain features, Robusta needs to reach out to Prometheus and pull in extra information. This must
-be configured **in addition** to updating AlertManager's configuration.
+    robusta demo-alert
 
-That said, most users won't need to set this up. Robusta can usually figure out where Prometheus and
-other services are located. If the auto-discovery isn't working, you'll configure it manually.
+Within a few minutes, you should see the demo alert in the Robusta UI, Slack, and any other sinks you configured.
 
-Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
+.. admonition:: Why do I see a banner in the UI that "Alerts won't show up"?
+    :class: warning
 
-
-.. tab-set::
-
-    .. tab-item:: Prometheus
-
-        .. code-block:: yaml
-
-          # this line should already exist
-          globalConfig:
-              # add the lines below
-              alertmanager_url: ""
-              grafana_url: ""
-              prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
-
-
-    .. tab-item:: VictoriaMetrics
-
-        .. code-block:: yaml
-
-          # this line should already exist
-          globalConfig:
-              # add the lines below
-              alertmanager_url: ""
-              grafana_url: ""
-              prometheus_url: "http://VICTORIA_METRICS_SERVICE_NAME.monitoring.svc.cluster.local:8429"
-
+    This notification is displayed until AlertManager sends the first alert to Robusta.
 
 .. include:: ./_additional_settings.rst

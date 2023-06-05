@@ -1,21 +1,11 @@
-In-cluster Prometheus
-****************************************
+kube-prometheus-stack and Prometheus Operator
+*********************************************
 
-For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from AlertManager.
+If you installed kube-prometheus-stack or the Prometheus Operator **by yourself** (not via Robusta) then tell
+AlertManager about Robusta using a `Kubernetes Secret <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#managing-alertmanager-configuration>`_.
+The Prometheus Operator will pass this secret to AlertManager, which will then push alerts to Robusta by webhook.
 
-
-**If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
-
-General Instructions
-======================
-To configure Prometheus to send alerts to Robusta, add two settings to AlertManager:
-
-1. A webhook receiver for Robusta
-2. A route for the webhook receiver you added
-
-.. 3. Adding :ref:`Prometheus discovery URL<Setting up a custom Prometheus, AlertManager, and Grafana>` to Robusta
-
-Below is an example AlertManager configuration. Depending on your setup, the exact file to edit may vary. (See below.)
+To configure the secret, copy this configuration and place it in the appropriate secret.
 
 .. admonition:: AlertManager config for sending alerts to Robusta
 
@@ -57,5 +47,10 @@ Within a few minutes, you should see the demo alert in the Robusta UI, Slack, an
     :class: warning
 
     This notification is displayed until AlertManager sends the first alert to Robusta.
+
+.. admonition:: Why use a secret instead of editing AlertManagerConfig?
+
+    In theory, you can configure an AlertmanagerConfig instead of using a secret. However, this is **not** recommended.
+    It `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
 
 .. include:: ./_additional_settings.rst

@@ -1,3 +1,47 @@
+Related Robusta Settings
+==========================
+
+Below are additional Robusta settings related to Prometheus, AlertManager, and Grafana.
+
+Setting up a custom Prometheus, AlertManager, and Grafana
+-----------------------------------------------------------------
+
+If you followed the instructions on this page, Prometheus and AlertManager will know about Robusta, but Robusta might not know about them!
+
+For certain features, Robusta needs to reach out to Prometheus and pull in extra information. This must
+be configured **in addition** to updating AlertManager's configuration.
+
+That said, most users won't need to set this up. Robusta can usually figure out where Prometheus and
+other services are located. If the auto-discovery isn't working, you'll configure it manually.
+
+Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
+
+
+.. tab-set::
+
+    .. tab-item:: Prometheus
+
+        .. code-block:: yaml
+
+          # this line should already exist
+          globalConfig:
+              # add the lines below
+              alertmanager_url: ""
+              grafana_url: ""
+              prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
+
+
+    .. tab-item:: VictoriaMetrics
+
+        .. code-block:: yaml
+
+          # this line should already exist
+          globalConfig:
+              # add the lines below
+              alertmanager_url: ""
+              grafana_url: ""
+              prometheus_url: "http://VICTORIA_METRICS_SERVICE_NAME.monitoring.svc.cluster.local:8429"
+
 Additional Authentication Headers
 ---------------------------------
 If your Prometheus needs authentication, add the following to ``generated_values.yaml``:
