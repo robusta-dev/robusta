@@ -354,13 +354,17 @@ def logs(
     tail = f"--tail={tail}" if tail else ""
     context = f"--context={context}" if context else ""
     resource_name = resource_name if resource_name else get_runner_pod(namespace)
+
+    if not resource_name:
+        return
+    
     try:
         subprocess.check_call(
             f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
             shell=True,
         )
     except Exception:
-        log_title("error fetching logs; see help for more options.", color="red")
+        log_title("Error fetching logs. Did you forget to specify --namespace?", color="red")
 
 
 @app.command()
@@ -401,84 +405,84 @@ def demo_alert(
             )
             return
 
-        pod = None
-        for namespace in namespaces:
-            pods = client.CoreV1Api().list_namespaced_pod(namespace)
-            if pods.items:
-                pod = pods.items[0]
-                break
+    pod = None
+    for namespace in namespaces:
+        pods = client.CoreV1Api().list_namespaced_pod(namespace)
+        if pods.items:
+            pod = pods.items[0]
+            break
 
-        if not pod:
-            typer.secho(
-                f"Could not find any pod on namespace {namespaces}"
-                f"Please use the --namespaces parameter to specify a namespace with pods",
-                fg="red",
-            )
-            return
-
-        alert_labels = {
-            "alertname": alert,
-            "severity": "critical",
-            "pod": pod.metadata.name,
-            "namespace": pod.metadata.namespace,
-        }
-        if labels:
-            for label in labels.split(","):
-                label_key = label.split("=")[0].strip()
-                label_value = label.split("=")[1].strip()
-                alert_labels[label_key] = label_value
-
-        demo_alerts = [
-            {
-                "status": "firing",
-                "labels": alert_labels,
-                "annotations": {
-                    "summary": "This is a demo alert manager alert created by Robusta",
-                    "description": "Nothing wrong here. This alert will be resolved soon",
-                },
-            }
-        ]
-
-        command = [
-            "curl",
-            "-X",
-            "POST",
-            f"{alertmanager_url}/api/v1/alerts",
-            "-H",
-            "Content-Type: application/json",
-            "-d",
-            f"{json.dumps(demo_alerts)}",
-        ]
-
-        job: Job = Job(
-            metadata=ObjectMeta(
-                name=f"alert-job-{random.randint(0, 10000)}",
-                namespace=pod.metadata.namespace,
-            ),
-            spec=JobSpec(
-                template=PodTemplateSpec(
-                    spec=PodSpec(
-                        containers=[
-                            Container(
-                                name="alert-curl",
-                                image="curlimages/curl",
-                                command=command,
-                            )
-                        ],
-                        restartPolicy="Never",
-                    ),
-                ),
-                completions=1,
-                ttlSecondsAfterFinished=0,  # delete immediately when finished
-            ),
-        )
-        job.create()
+    if not pod:
         typer.secho(
-            f"Created Alertmanager alert: alert-name: {alert} pod: {pod.metadata.name} "
-            f"namespace: {pod.metadata.namespace}",
-            fg="green",
+            f"Could not find any pod on namespace {namespaces}"
+            f"Please use the --namespaces parameter to specify a namespace with pods",
+            fg="red",
         )
-        typer.echo("\n")
+        return
+
+    alert_labels = {
+        "alertname": alert,
+        "severity": "critical",
+        "pod": pod.metadata.name,
+        "namespace": pod.metadata.namespace,
+    }
+    if labels:
+        for label in labels.split(","):
+            label_key = label.split("=")[0].strip()
+            label_value = label.split("=")[1].strip()
+            alert_labels[label_key] = label_value
+
+    demo_alerts = [
+        {
+            "status": "firing",
+            "labels": alert_labels,
+            "annotations": {
+                "summary": "This is a demo alert manager alert created by Robusta",
+                "description": "Nothing wrong here. This alert will be resolved soon",
+            },
+        }
+    ]
+
+    command = [
+        "curl",
+        "-X",
+        "POST",
+        f"{alertmanager_url}/api/v1/alerts",
+        "-H",
+        "Content-Type: application/json",
+        "-d",
+        f"{json.dumps(demo_alerts)}",
+    ]
+
+    job: Job = Job(
+        metadata=ObjectMeta(
+            name=f"alert-job-{random.randint(0, 10000)}",
+            namespace=pod.metadata.namespace,
+        ),
+        spec=JobSpec(
+            template=PodTemplateSpec(
+                spec=PodSpec(
+                    containers=[
+                        Container(
+                            name="alert-curl",
+                            image="curlimages/curl",
+                            command=command,
+                        )
+                    ],
+                    restartPolicy="Never",
+                ),
+            ),
+            completions=1,
+            ttlSecondsAfterFinished=0,  # delete immediately when finished
+        ),
+    )
+    job.create()
+    typer.secho(
+        f"Created Alertmanager alert: alert-name: {alert} pod: {pod.metadata.name} "
+        f"namespace: {pod.metadata.namespace}",
+        fg="green",
+    )
+    typer.echo("\n")
 
 
 if __name__ == "__main__":
