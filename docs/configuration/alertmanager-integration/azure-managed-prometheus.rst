@@ -3,10 +3,11 @@ Azure managed Prometheus
 
 We will integrate Robusta and Azure managed Prometheus in two steps
 
-1. Configure sending Prometheus to Robusta
-2. Configure Robusta to access Azure managed Prometheus
+1. Configure Push integration to receive alerts.
+2. Configure Pull integration for Robusta to reach out and pull in graphs from Prometheus, to define alert silences etc.
 
-Sending Azure Alerts to Robusta
+
+Configure Push Integration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from Azure.
@@ -24,11 +25,11 @@ To configure Azure to send alerts to Robusta:
 
     This notification is displayed until the first alert to Robusta.
 
-Configure Robusta to use Azure managed Prometheus
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Configure Pull Integration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For certain features, Robusta needs to reach out to Prometheus and pull in extra information.
-In this section we will configure Robusta to query Azure Prometheus and register an Azure authentication app.
+In this section we will configure Robusta to query Prometheus and also register an Azure authentication app.
 
 Get the Azure prometheus query endpoint
 =========================================

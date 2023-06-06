@@ -6,8 +6,13 @@ For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Rob
 
 **If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
 
-General Instructions
-======================
+If AlertManager is located inside your Kubernetes cluster, you must
+
+1. Configure Push integration to receive alerts.
+2. Configure Pull integration for Robusta to reach out and pull in graphs from Prometheus, to define alert silences etc.
+
+Configure Push Integration
+============================
 To configure Prometheus to send alerts to Robusta, add two settings to AlertManager:
 
 1. A webhook receiver for Robusta

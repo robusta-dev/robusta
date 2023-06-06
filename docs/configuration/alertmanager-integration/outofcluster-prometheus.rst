@@ -6,10 +6,13 @@ For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Rob
 
 **If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
 
-If AlertManager is located outside of your Kubernetes cluster, follow these steps:
+If AlertManager is located outside of your Kubernetes cluster, you must
 
-Configure AlertManager:
-===========================
+1. Configure Push integration to recieve alerts.
+2. Configure Pull integration for Robusta to reach out and pull in graphs from Prometheus, to define alert silences etc.
+
+Configure Push Integration
+==============================
 
 1. Enable two-way interactivity in :ref:`Robusta's configuration <Configuration Overview>` by setting ``disableCloudRouting: false``
 2. Make sure that your alerts contain a label named ``cluster_name`` which matches the :ref:`cluster_name defined in Robusta's configuration <Global Config>`. This is necessary so that the Robusta cloud knows which cluster to forward events to.

@@ -15,7 +15,6 @@ Integrating with Prometheus
    embedded-prometheus
 
 
-
 Follow this guide to configure External Prometheus with Robusta after :ref:`installing it <Integrate with Existing Prometheus>`.
 
 Common Methods
