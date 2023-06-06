@@ -19,20 +19,25 @@ def get_pending_pod_blocks(pod: Pod):
     if message:
         blocks.append(MarkdownBlock(f"*Reason:* {message}"))
 
-    RESOURCE_REASONS = [PendingPodReason.NotEnoughGPU, PendingPodReason.NotEnoughCPU, PendingPodReason.NotEnoughMemory]
-    resource_related_reasons = [reason for reason in all_reasons if reason in RESOURCE_REASONS]
-    if resource_related_reasons:
-        requests = pod_requests(pod)
-        request_resources = []
-        if requests.cpu:
-            request_resources.append(f"{requests.cpu} CPU")
-        if requests.memory:
-            request_resources.append(f"{requests.memory} Memory")
-        other_requests = pod_other_requests(pod)  # for additional defined resources like GPU
-        if other_requests:
-            request_resources.extend([f"{value} {key}" for key, value in other_requests.items()])
-        resources_string = ", ".join(request_resources)
-        blocks.append(MarkdownBlock(f"*Pod requires:* {resources_string}"))
+    if all_reasons:
+        RESOURCE_REASONS = [
+            PendingPodReason.NotEnoughGPU,
+            PendingPodReason.NotEnoughCPU,
+            PendingPodReason.NotEnoughMemory,
+        ]
+        resource_related_reasons = [reason for reason in all_reasons if reason in RESOURCE_REASONS]
+        if resource_related_reasons:
+            requests = pod_requests(pod)
+            request_resources = []
+            if requests.cpu:
+                request_resources.append(f"{requests.cpu} CPU")
+            if requests.memory:
+                request_resources.append(f"{requests.memory} Memory")
+            other_requests = pod_other_requests(pod)  # for additional defined resources like GPU
+            if other_requests:
+                request_resources.extend([f"{value} {key}" for key, value in other_requests.items()])
+            resources_string = ", ".join(request_resources)
+            blocks.append(MarkdownBlock(f"*Pod requires:* {resources_string}"))
 
     return blocks
 

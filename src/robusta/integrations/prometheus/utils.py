@@ -6,7 +6,12 @@ import requests
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError, HTTPError
 
-from robusta.core.exceptions import PrometheusNotFound, VictoriaMetricsNotFound, NoPrometheusUrlFound
+from robusta.core.exceptions import (
+    NoPrometheusUrlFound,
+    PrometheusFlagsConnectionError,
+    PrometheusNotFound,
+    VictoriaMetricsNotFound,
+)
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
@@ -114,9 +119,9 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
 
 def __text_config_to_dict(text: str) -> Dict:
     conf = {}
-    lines = text.strip().split('\n')
+    lines = text.strip().split("\n")
     for line in lines:
-        key, val = line.strip().split('=')
+        key, val = line.strip().split("=")
         conf[key] = val.strip('"')
 
     return conf
@@ -133,11 +138,10 @@ def get_prometheus_flags(prom: "PrometheusConnect") -> Optional[Dict]:
     except Exception as e:
         victoria_metrics_exception = e
 
-    logging.error(
+    raise PrometheusFlagsConnectionError(
         f"Couldn't connect to the url: {prom.url}\n\t\tPrometheus: {prometheus_exception}"
-        f"\n\t\tVictoria Metrics: {victoria_metrics_exception})")
-
-    return None
+        f"\n\t\tVictoria Metrics: {victoria_metrics_exception})"
+    )
 
 
 def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
@@ -154,7 +158,7 @@ def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
         )
         response.raise_for_status()
 
-        result["retentionTime"] = response.json().get('data', {}).get('storage.tsdb.retention.time', "")
+        result["retentionTime"] = response.json().get("data", {}).get("storage.tsdb.retention.time", "")
         return result
     except Exception as e:
         raise PrometheusNotFound(
@@ -176,7 +180,7 @@ def fetch_victoria_metrics_flags(prom: "PrometheusConnect") -> Dict:
         response.raise_for_status()
 
         configuration = __text_config_to_dict(response.text)
-        retention_period = configuration.get('-retentionPeriod')
+        retention_period = configuration.get("-retentionPeriod")
 
         # if the retentionPeriod is only a number then treat it as (m)onth
         # ref: https://docs.victoriametrics.com/?highlight=-retentionPeriod#retention
@@ -190,7 +194,7 @@ def fetch_victoria_metrics_flags(prom: "PrometheusConnect") -> Dict:
 
 
 class ServiceDiscovery:
-    cache: TTLCache = TTLCache(maxsize=1, ttl=SERVICE_CACHE_TTL_SEC)
+    cache: TTLCache = TTLCache(maxsize=5, ttl=SERVICE_CACHE_TTL_SEC)
 
     @classmethod
     def find_url(cls, selectors: List[str], error_msg: str) -> Optional[str]:
@@ -225,6 +229,9 @@ class PrometheusDiscovery(ServiceDiscovery):
                 "app=rancher-monitoring-prometheus",
                 "app=prometheus-prometheus",
                 "app.kubernetes.io/name=vmsingle",
+                "app.kubernetes.io/name=victoria-metrics-single",
+                "app.kubernetes.io/name=vmselect",
+                "app=vmselect",
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
         )
