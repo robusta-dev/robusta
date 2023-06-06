@@ -143,16 +143,17 @@ class SupabaseDal:
                 raise Exception(msg)
 
     def persist_finding(self, finding: Finding):
+        mute_finding = any(
+            enrichment.annotations.get(EnrichmentAnnotation.PLATFORM_MUTE_FINDING, False)
+            for enrichment in finding.enrichments
+        )
 
-        mute_finding = False
         for enrichment in finding.enrichments:
-            self.persist_platform_blocks(enrichment, finding.id)
-            mute_finding = enrichment.annotations.get(EnrichmentAnnotation.PLATFORM_MUTE_FINDING, False)
+            self.persist_platform_blocks(enrichment, None if mute_finding else finding.id)
 
         if mute_finding:
             return
 
-        # TODO merge scans flow with platform blocks flow.
         scans, enrichments = [], []
         for enrich in finding.enrichments:
             scans.append(enrich) if enrich.annotations.get(EnrichmentAnnotation.SCAN, False) else enrichments.append(
@@ -555,7 +556,8 @@ class SupabaseDal:
             event["account_id"] = self.account_id
             event["cluster_id"] = self.cluster
             event["namespace"] = block.namespace
-            event["finding_id"] = str(finding_id)
+            if finding_id:
+                event["finding_id"] = str(finding_id)
             event.setdefault("kind", block.kind)
             event.setdefault("name", block.resource_name)
             db_events.append(event)
