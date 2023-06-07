@@ -12,10 +12,19 @@ Integrating with Prometheus
    outofcluster-prometheus
    kube-prometheus-stack
    azure-managed-prometheus
+   victoria-metrics
    embedded-prometheus
 
 
-Follow this guide to configure External Prometheus with Robusta after :ref:`installing it <Integrate with Existing Prometheus>`.
+
+For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from AlertManager. You can do this by
+
+1. Configure a push integration to recieve alerts.
+2. Configure a pull integration for Robusta to reach out and pull in graphs from Prometheus, to define alert silences etc.
+
+**If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
+
+
 
 Common Methods
 ^^^^^^^^^^^^^^^^^^
@@ -23,19 +32,26 @@ Common Methods
 .. grid:: 1 1 2 3
     :gutter: 3
 
+    .. grid-item-card:: :octicon:`book;1em;` Kube Prometheus Stack
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: kube-prometheus-stack
+        :link-type: doc
+
+        For users with an existing Kube Prometheus Stack or Prometheus Operator
+
     .. grid-item-card:: :octicon:`book;1em;` In-cluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: alert-manager
         :link-type: doc
 
-        Connect Prometheus, AlertManager, Grafana, and others.
+        For users with Prometheus and Robusta installed in the same cluster
 
     .. grid-item-card:: :octicon:`book;1em;` Out of cluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: outofcluster-prometheus
         :link-type: doc
 
-        Configure Prometheus to send alerts to Robusta
+        For users with Prometheus installed on a different cluster than Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` Azure managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
@@ -44,20 +60,20 @@ Common Methods
 
         Connect your Prometheus cluster on Azure to work with Robusta.
 
-
-    .. grid-item-card:: :octicon:`book;1em;` Kube Prometheus Stack
+    .. grid-item-card:: :octicon:`book;1em;` Victoria Metrics
         :class-card: sd-bg-light sd-bg-text-light
-        :link: kube-prometheus-stack
+        :link: victoria-metrics
         :link-type: doc
 
-        Connect Robusta and Kube Prometheus Stack using secrets
+        For users using AlertManager with Victoria Metrics
+
     
     .. grid-item-card:: :octicon:`book;1em;` Embedded Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: embedded-prometheus
         :link-type: doc
 
-        Learn how to use Prometheus installed automatically by Robusta
+        Learn to configure Prometheus already installed by Robusta
 
 .. All Settings
 .. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

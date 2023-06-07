@@ -1,11 +1,7 @@
 Azure managed Prometheus
 *************************
 
-We will integrate Robusta and Azure managed Prometheus in two steps
-
-1. Configure Push integration to receive alerts.
-2. Configure Pull integration for Robusta to reach out and pull in graphs from Prometheus, to define alert silences etc.
-
+This guide walks you through configuring your Azure managed Prometheus to push alerts to Robusta and also configuring Robusta to pull additional data when needed.
 
 Configure Push Integration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -20,7 +16,7 @@ To configure Azure to send alerts to Robusta:
 4. Create a new action group, or edit an existing one.
 5. Under the `Actions` tabs (**not** the Notifications tab) add a ``Webhook`` and copy the url from step 2, into the URI input. Make sure to select ``Enable the common alert schema``.
 
-.. admonition:: Why do I see a banner in the UI that "Alerts won't show up"?
+.. details:: Why do I see a banner in the UI that "Alerts won't show up"?
     :class: warning
 
     This notification is displayed until the first alert to Robusta.
