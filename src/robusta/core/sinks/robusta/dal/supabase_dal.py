@@ -562,7 +562,7 @@ class SupabaseDal:
             event.setdefault("name", block.resource_name)
             db_events.append(event)
 
-        res = self.client.table(RESOURCE_EVENTS).insert(db_events).execute()
+        res = self.client.table(RESOURCE_EVENTS).insert(db_events, upsert=True).execute()
         if res.get("status_code") not in [200, 201]:
             msg = f"Failed to persist resource events error: {res.get('data')}"
             logging.error(msg)
