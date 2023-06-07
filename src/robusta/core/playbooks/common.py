@@ -60,6 +60,7 @@ def get_resource_events_table(
         headers=headers,
         column_renderers={"time": RendererType.DATETIME},
         table_name=table_name,
+        column_width=[1, 1, 1, 2],
     )
 
 

@@ -205,21 +205,38 @@ class TableBlock(BaseBlock):
     Table display of a list of lists.
 
     Note: Wider tables appears as a file attachment on Slack, because they aren't rendered properly inline
+
+    :var column_width: Hint to sink for the portion of size each column should use. Not supported by all sinks.
+        example: [1, 1, 1, 2] use twice the size for last column.
     """
 
     rows: List[List]
     headers: Sequence[str] = ()
     column_renderers: Dict = {}
     table_name: str = ""
+    column_width: List[int] = None
 
     def __init__(
-        self, rows: List[List], headers: Sequence[str] = (), column_renderers: Dict = {}, table_name: str = "", **kwargs
+        self,
+        rows: List[List],
+        headers: Sequence[str] = (),
+        column_renderers: Dict = {},
+        table_name: str = "",
+        column_width: List[int] = None,
+        **kwargs,
     ):
         """
         :param rows: a list of rows. each row is a list of columns
         :param headers: names of each column
         """
-        super().__init__(rows=rows, headers=headers, column_renderers=column_renderers, table_name=table_name, **kwargs)
+        super().__init__(
+            rows=rows,
+            headers=headers,
+            column_renderers=column_renderers,
+            table_name=table_name,
+            column_width=column_width,
+            **kwargs,
+        )
 
     @classmethod
     def __calc_max_width(cls, headers, rendered_rows, table_max_width: int) -> List[int]:
@@ -441,6 +458,7 @@ class EventsBlock(TableBlock):
         kind: Optional[str] = None,
         column_renderers: Dict = {},
         table_name: str = "",
+        column_width: List[int] = None,
     ):
         """
         :param rows: a list of rows. each row is a list of columns
@@ -454,4 +472,5 @@ class EventsBlock(TableBlock):
             namespace=namespace,
             kind=kind,
             resource_name=resource_name,
+            column_width=column_width,
         )
