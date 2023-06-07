@@ -9,6 +9,7 @@ from typing import Dict, List, Literal, Optional, Union
 
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, SecretKeySelector
 from pydantic import BaseModel, ValidationError, validator
+
 from robusta.api import (
     RELEASE_NAME,
     EnrichmentAnnotation,
@@ -151,10 +152,10 @@ def format_krr_value(value: Union[float, Literal["?"], None]) -> str:
 
 def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
     return "\n".join(
-        f"{entry['resource'].upper()} Request: " +
-        f"{format_krr_value(entry['allocated']['request'])} -> " +
-        f"{format_krr_value(entry['recommended']['request'])} " +
-        f"({priority_to_krr_severity(entry['priority']['request'])})"
+        f"{entry['resource'].upper()} Request: "
+        + f"{format_krr_value(entry['allocated']['request'])} -> "
+        + f"{format_krr_value(entry['recommended']['request'])} "
+        + f"({priority_to_krr_severity(entry['priority']['request'])})"
         for entry in row.content
     )
 
@@ -184,14 +185,15 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         secret = JobSecret(name=krr_secret_name, data={prometheus_auth_secret_key: auth_header_b64_str})
         # setting env variables of krr to have secret
         env_var = [
-                  EnvVar(
-                      name=env_var_auth_name,
-                      valueFrom=EnvVarSource(secretKeyRef=SecretKeySelector(name=krr_secret_name,
-                                                                            key=prometheus_auth_secret_key)),
-                  )
-              ]
+            EnvVar(
+                name=env_var_auth_name,
+                valueFrom=EnvVarSource(
+                    secretKeyRef=SecretKeySelector(name=krr_secret_name, key=prometheus_auth_secret_key)
+                ),
+            )
+        ]
         # adding secret env var in krr pod command
-        python_command += f'--prometheus-auth-header \"${env_var_auth_name}\"'
+        python_command += f'--prometheus-auth-header "${env_var_auth_name}"'
 
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
@@ -200,7 +202,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                 name=to_kubernetes_name(IMAGE),
                 image=IMAGE,
                 command=["/bin/sh", "-c", python_command],
-                env= env_var if env_var else []
+                env=env_var if env_var else [],
             )
         ],
         restartPolicy="Never",
@@ -229,7 +231,6 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         else:
             logging.error(f"*KRR scan job unexpected error.*\n {e}")
         return
-
 
     scan_block = ScanReportBlock(
         title="KRR scan",
@@ -262,7 +263,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                             "request": scan.recommended.requests[resource].priority,
                             "limit": scan.recommended.limits[resource].priority,
                         },
-                        "metric": scan.metrics[resource].dict(),
+                        "metric": scan.metrics.get(resource).dict() if scan.metrics.get(resource) else {},
                         "description": krr_scan.description,
                     }
                     for resource in krr_scan.resources
