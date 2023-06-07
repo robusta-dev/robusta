@@ -17,6 +17,9 @@ from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TT
 from robusta.utils.service_discovery import find_service_url
 
 AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
+AZURE_METADATA_ENDPOINT = os.environ.get(
+    "AZURE_METADATA_ENDPOINT", "http://169.254.169.254/metadata/identity/oauth2/token"
+)
 AZURE_TOKEN_ENDPOINT = os.environ.get(
     "AZURE_TOKEN_ENDPOINT", f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/token"
 )
@@ -25,10 +28,8 @@ AZURE_TOKEN_ENDPOINT = os.environ.get(
 class PrometheusAuthorization:
     bearer_token: str = ""
     azure_authorization: bool = (
-        os.environ.get("AZURE_CLIENT_ID", "")
-        or os.environ.get("AZURE_TENANT_ID", "")
-        or os.environ.get("AZURE_CLIENT_SECRET", "")
-    )
+        os.environ.get("AZURE_CLIENT_ID", "") != "" and os.environ.get("AZURE_TENANT_ID", "") != ""
+    ) and (os.environ.get("AZURE_CLIENT_SECRET", "") != "" or os.environ.get("AZURE_USE_MANAGED_ID", "") != "")
 
     @classmethod
     def get_authorization_headers(cls, params: Optional[PrometheusParams] = None) -> Dict:
@@ -43,16 +44,29 @@ class PrometheusAuthorization:
     def request_new_token(cls) -> bool:
         if cls.azure_authorization:
             try:
-                res = requests.post(
-                    url=AZURE_TOKEN_ENDPOINT,
-                    headers={"Content-Type": "application/x-www-form-urlencoded"},
-                    data={
-                        "grant_type": "client_credentials",
-                        "client_id": os.environ.get("AZURE_CLIENT_ID"),
-                        "client_secret": os.environ.get("AZURE_CLIENT_SECRET"),
-                        "resource": AZURE_RESOURCE,
-                    },
-                )
+                if os.environ.get("AZURE_USE_MANAGED_ID"):
+                    res = requests.get(
+                        url=AZURE_METADATA_ENDPOINT,
+                        headers={
+                            "Metadata": "true",
+                        },
+                        data={
+                            "api-version": "2018-02-01",
+                            "client_id": os.environ.get("AZURE_CLIENT_ID"),
+                            "resource": AZURE_RESOURCE,
+                        },
+                    )
+                else:
+                    res = requests.post(
+                        url=AZURE_TOKEN_ENDPOINT,
+                        headers={"Content-Type": "application/x-www-form-urlencoded"},
+                        data={
+                            "grant_type": "client_credentials",
+                            "client_id": os.environ.get("AZURE_CLIENT_ID"),
+                            "client_secret": os.environ.get("AZURE_CLIENT_SECRET"),
+                            "resource": AZURE_RESOURCE,
+                        },
+                    )
             except Exception:
                 logging.exception("Unexpected error when trying to generate azure access token.")
                 return False
