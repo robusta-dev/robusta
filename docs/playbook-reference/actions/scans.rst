@@ -10,7 +10,7 @@ These actions can be triggered:
 * On demand, via :ref:`cli command <Manual Triggers>`.
 
 KRR - Prometheus-based Kubernetes Resource Recommendations
----------------------------------------------
+************************************************************
 
 Robustas `KRR <https://github.com/robusta-dev/krr>`_ is a CLI tool for optimizing resource allocation in Kubernetes clusters.
 It gathers pod usage data from Prometheus and recommends requests and limits for CPU and memory.
@@ -45,7 +45,7 @@ The results can be sent as a PDF to Slack or to the Robusta UI.
 
 
 Taints, Tolerations and NodeSelectors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+============================================
 
 To set custom tolerations or a nodeSelector update your ``generated_values.yaml`` file as follows:
 
@@ -62,7 +62,7 @@ To set custom tolerations or a nodeSelector update your ``generated_values.yaml`
           nodeName: "your-selector"
 
 Popeye - A Kubernetes Cluster Sanitizer
----------------------------------------------
+************************************************
 
 `Popeye <https://github.com/derailed/popeye>`_ is a utility that scans live Kubernetes clusters and reports potential issues with resources and configurations.
 By default, every instance of Robusta that's connected to the UI will run a Popeye scan on startup. Further Popeye scans can be triggered in the UI, and all scans can be viewed there.
@@ -118,7 +118,7 @@ The results can be sent as a PDF to Slack or to the Robusta UI.
         robusta playbooks trigger popeye_scan
 
 Taints, Tolerations and NodeSelectors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+============================================
 
 To set custom tolerations or a nodeSelector update your ``generated_values.yaml`` file as follows:
 
@@ -135,10 +135,12 @@ To set custom tolerations or a nodeSelector update your ``generated_values.yaml`
           nodeName: "your-selector"
 
 Troubleshooting Popeye
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+=======================
 
 Popeye scans run as Jobs in your cluster. If there are issues with a scan, troubleshoot as follows:
 
+Events
+---------------------
 * To find errors with the Popeye job run:
 
 .. code-block:: bash
@@ -146,9 +148,27 @@ Popeye scans run as Jobs in your cluster. If there are issues with a scan, troub
 
     kubectl get events --all-namespaces --field-selector=type!=Normal | grep popeye-job
 
+Logs
+---------------------
 * Additional errors can sometimes be found in the Robusta runner logs:
 
 .. code-block:: bash
     :name: cb-popeye-get-logs
 
     robusta logs
+
+
+Known issues
+---------------------
+
+``couldn't get resource list for external.metrics.k8s.io/v1beta1``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a known issue, there is a working workaround, which involves deploying a dummy workload.
+Read more about it `here <https://github.com/kedacore/keda/issues/4224#issuecomment-1426749781>`_.
+
+``exec /bin/sh: exec format error``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+At the moment, Popeye docker images are only compiled for linux/amd64 os/arch.
+This error suggests you are running the Popeye image on a different os/arch node.
