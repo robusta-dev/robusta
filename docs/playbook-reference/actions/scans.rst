@@ -139,7 +139,7 @@ Troubleshooting Popeye
 
 Popeye scans run as Jobs in your cluster. If there are issues with a scan, troubleshoot as follows:
 
-events
+Events
 """""""""""
 * To find errors with the Popeye job run:
 
@@ -158,16 +158,16 @@ Logs
     robusta logs
 
 
-Known issues:
-
-``couldn't get resource list for external.metrics.k8s.io/v1beta1``
+Known issues
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+*  ``couldn't get resource list for external.metrics.k8s.io/v1beta1``
 
 This is a known issue, there is a working workaround, which involves deploying a dummy workload.
 Read more about it `here <https://github.com/kedacore/keda/issues/4224#issuecomment-1426749781>`_.
 
-``exec /bin/sh: exec format error``
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+*  ``exec /bin/sh: exec format error``
+
 
 At the moment, Popeye docker images are only compiled for linux/amd64 os/arch.
 This error suggests you are running the Popeye image on a different os/arch node.
