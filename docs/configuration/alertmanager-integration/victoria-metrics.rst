@@ -7,12 +7,10 @@ Configure Push Integration
 ============================
 To configure Victoria Metrics to send alerts to Robusta, add two settings to AlertManager:
 
-1. A webhook receiver for Robusta
-2. A route for the webhook receiver you added
+1. A Robusta webhook receiver.
+2. A route for the newly added webhook receiver.
 
-.. 3. Adding :ref:`Prometheus discovery URL<Setting up a custom Prometheus, AlertManager, and Grafana>` to Robusta
-
-Below is an example AlertManager configuration. Depending on your setup, the exact file to edit may vary. (See below.)
+Below is an example AlertManager configuration.
 
 .. include:: ./_alertmanager-config.rst
 
@@ -31,12 +29,6 @@ Within a few minutes, you should see the demo alert in the Robusta UI, Slack, an
 
 Configuring a Pull Integration
 ====================================
-
-.. For certain features, Robusta needs to reach out to Prometheus and pull in extra information. This must
-.. be configured **in addition** to updating AlertManager's configuration.
-
-.. That said, most users won't need to set this up. Robusta can usually figure out where Prometheus and
-.. other services are located. If the auto-discovery isn't working, you'll configure it manually.
 
 Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
 

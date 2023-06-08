@@ -10,9 +10,9 @@ For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Rob
 
 To configure Azure to send alerts to Robusta:
 
-1. Login to the Robusta UI and navigate to the ``settings`` > ``advanced`` tab.
+1. Login to the Robusta UI and navigate to the ``Settings`` > ``Advanced`` tab.
 2. In the Azure Webhook section click ``Generate URL`` and save the generated url.
-3. Login to the Microsoft Azure Portal, go to ``alerts`` > ``Action groups``
+3. Login to the Microsoft Azure Portal, go to ``Alerts`` > ``Action groups``
 4. Create a new action group, or edit an existing one.
 5. Under the `Actions` tabs (**not** the Notifications tab) add a ``Webhook`` and copy the url from step 2, into the URI input. Make sure to select ``Enable the common alert schema``.
 
@@ -27,17 +27,16 @@ Configure Pull Integration
 For certain features, Robusta needs to reach out to Prometheus and pull in extra information.
 In this section we will configure Robusta to query Prometheus and also register an Azure authentication app.
 
-Get the Azure prometheus query endpoint
-=========================================
+Retrieve the Azure Prometheus query endpoint
+==============================================
 
 1. Go to `Azure Monitor workspaces <https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/microsoft.monitor%2Faccounts>`_ and chose your monitored workspace.
 2. In your monitored workspace, `overview`, find the ``Query endpoint`` and copy it.
-3. In your `generated_values.yaml` file add the query endpoint url with a 443 port:
+3. In your `generated_values.yaml` file add the query endpoint url under ``globalConfig`` with a 443 port:
 
 .. code-block:: yaml
 
-  # this line should already exist
-  globalConfig:
+  globalConfig: # this line should already exist
       prometheus_url: "<https://your-workspace.region.prometheus.monitor.azure.com>:443"
 
 Create an Azure authentication app

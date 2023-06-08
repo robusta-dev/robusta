@@ -5,14 +5,14 @@ If your Prometheus needs authentication, add the following to ``generated_values
 .. code-block:: yaml
 
   globalConfig:
-    prometheus_auth: Bearer <YOUR TOKEN> # or any other auth header
+    prometheus_auth: Bearer <YOUR TOKEN> # Replace <YOUR TOKEN> with your actual token or use any other auth header as needed
 
 For AlertManager:
 
 .. code-block:: yaml
 
     globalConfig:
-      alertmanager_auth: Basic <USER:PASSWORD base64-encoded> # or any other auth header
+      alertmanager_auth: Basic <USER:PASSWORD base64-encoded> # Replace <USER:PASSWORD base64-encoded> with your actual credentials, base64-encoded, or use any other auth header as needed
 
 .. note::
 
@@ -29,7 +29,7 @@ By default, Robusta does not verify the SSL certificate of the Prometheus server
     - name: PROMETHEUS_SSL_ENABLED
       value: "true"
 
-To add a custom CA certificate, add the following as well:
+To use a custom CA certificate, add the following to your ``generated_values.yaml`` file:
 
 .. code-block:: yaml
 
@@ -39,14 +39,13 @@ To add a custom CA certificate, add the following as well:
 Alerts silencing
 =====================
 
-Robusta lets you silence alerts directly from your notification channels (sinks). Robusta will try to automatically find
-an AlertManager running in your cluster and use it to create silences.
+Robusta allows you to silence alerts directly from your notification channels (sinks). Robusta attempts to find an AlertManager instance running in your cluster automatically and uses it to create silences.
 
-If Robusta can't find your AlertManager, :ref:`tell it where to find it <Setting up a custom Prometheus, AlertManager, and Grafana>`.
+If Robusta can't locate your AlertManager, you need to :ref:`tell it where to find it <Setting up a custom Prometheus, AlertManager, and Grafana>`
 
 Grafana AlertManager
 =====================
-If you use the AlertManager embedded in Grafana, change one more setting for Robusta to create silences.
+If you're using the AlertManager that's embedded in Grafana, you need to modify one additional setting so Robusta can create silences.
 
 Add the following configuration to the ``globalConfig`` section in your ``generated_values.yaml`` file:
 
@@ -60,6 +59,6 @@ Add the following configuration to the ``globalConfig`` section in your ``genera
 
     .. note::
 
-      The Grafana api key must have ``Editor`` permission in order to create silences
+      The Grafana API key must have the ``Editor`` role in order to create silences.
 
-This is necessary due to minor API changes in the embedded AlertManager that Grafana runs.
+This configuration is necessary because of minor API differences in the AlertManager embedded in Grafana.

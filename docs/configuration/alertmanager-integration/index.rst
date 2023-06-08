@@ -16,13 +16,14 @@ Integrating with Prometheus
    embedded-prometheus
 
 
-
-For Robusta to :ref:`enhance Prometheus alerts<Enhanced Prometheus Alerts>`, you need to
+Robusta can :ref:`enhance Prometheus alerts<Enhanced Prometheus Alerts>`. To configure this, there are two key steps:
 
 1. Configure a push integration to receive alerts.
-2. Configure a pull integration for Robusta to reach out and pull in graphs from Prometheus, to define alert silences etc.
+2. Configure a pull integration to fetch graphs.
 
-**If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
+Note: If you installed Robusta's :ref:`Embedded Prometheus Stack`, neither step is necessary. Everything is pre-configured.
+
+**If you installed Robusta's**  **then no configuration is necessary.**
 
 
 Common Methods
