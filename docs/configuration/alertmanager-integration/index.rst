@@ -23,8 +23,6 @@ Robusta can :ref:`enhance Prometheus alerts<Enhanced Prometheus Alerts>`. To con
 
 Note: If you installed Robusta's :ref:`Embedded Prometheus Stack`, neither step is necessary. Everything is pre-configured.
 
-**If you installed Robusta's**  **then no configuration is necessary.**
-
 
 Common Methods
 ^^^^^^^^^^^^^^^^^^
