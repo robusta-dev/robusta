@@ -1,33 +1,26 @@
 In-cluster Prometheus
 ****************************************
 
-This guide walks you through configuring your in-cluster Prometheus to push alerts to Robusta and also configuring Robusta to pull additional data when needed.
+This guide walks you through integrating an in-cluster Prometheus with Robusta. You will need to configure two integrations: both a push integration and a pull integration.
 
 Configure Push Integration
 ============================
-To configure Prometheus to send alerts to Robusta, add two settings to AlertManager:
-
-1. A webhook receiver for Robusta
-2. A route for the webhook receiver you added
-
-.. 3. Adding :ref:`Prometheus discovery URL<Setting up a custom Prometheus, AlertManager, and Grafana>` to Robusta
-
-Below is an example AlertManager configuration. Depending on your setup, the exact file to edit may vary. (See below.)
+A push integrations is required for AlertManager to push alerts to Robusta. To configure it, you must add a receiver and route to AlertManger's configuration:
 
 .. include:: ./_alertmanager-config.rst
 
-After you configure AlertManager, you can test it works properly, by creating a demo alert:
+To test this, we can send a dummy alert to AlertManager:
 
 .. code-block:: bash
 
     robusta demo-alert
 
-Within a few minutes, you should see the demo alert in the Robusta UI, Slack, and any other sinks you configured.
+If everything was configured properly, AlertManager will push this alert to Robusta. The alert will show up in the Robusta UI, Slack, and any other configured sinks.
 
-.. admonition:: Why do I see a banner in the UI that "Alerts won't show up"?
+.. admonition:: I configured AlertManager, but I'm still not receiving alerts?
     :class: warning
 
-    This notification is displayed until AlertManager sends the first alert to Robusta.
+    Try sending a demo-alert as described above, and check the AlertManager logs for errors. Or reach out to us on `Slack <https://bit.ly/robusta-slack>`_.
 
 .. include:: ./_pull_integration.rst
 
