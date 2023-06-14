@@ -1,9 +1,11 @@
 import copy
 import logging
-import traceback
 import sys
+import traceback
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
+
+import prometheus_client
 
 from robusta.core.exceptions import PrometheusNotFound
 from robusta.core.model.events import ExecutionBaseEvent, ExecutionContext
@@ -20,6 +22,12 @@ from robusta.model.playbook_action import PlaybookAction
 from robusta.runner.telemetry import Telemetry
 from robusta.utils.error_codes import ActionException, ErrorCodes
 from robusta.utils.stack_tracer import StackTracer
+
+playbooks_errors_count = prometheus_client.Counter("playbooks_errors", "Number of playbooks failures.")
+playbooks_summary = prometheus_client.Summary(
+    "playbooks_latency",
+    "Total playbooks process time (seconds)",
+)
 
 
 class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
@@ -171,6 +179,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             logging.error(msg)
         return {"success": False, "msg": msg, "error_code": error_code}
 
+    @playbooks_summary.time()
     def __run_playbook_actions(
         self,
         execution_event: ExecutionBaseEvent,
@@ -187,11 +196,13 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             if not registered_action:  # Might happen if manually trying to trigger incorrect action
                 msg = f"action {action.action_name} not found. Skipping for event {type(execution_event)}"
                 execution_event.response = self.__error_resp(msg, ErrorCodes.ACTION_NOT_REGISTERED.value)
+                playbooks_errors_count.inc()
                 continue
 
             if not isinstance(execution_event, registered_action.event_type):
                 msg = f"Action {action.action_name} requires {registered_action.event_type}"
                 execution_event.response = self.__error_resp(msg, ErrorCodes.EXECUTION_EVENT_MISMATCH.value)
+                playbooks_errors_count.inc()
                 continue
 
             action_with_params: bool = registered_action.params_type is not None
@@ -209,6 +220,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         f"exc={traceback.format_exc()}"
                     )
                     execution_event.response = self.__error_resp(msg, ErrorCodes.PARAMS_INSTANTIATION_FAILED.value)
+                    playbooks_errors_count.inc()
                     continue
             try:
                 if action_with_params:
@@ -223,6 +235,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 )
                 logging.error(msg)
                 execution_event.response = self.__error_resp(e.type, e.code, log=False)
+                playbooks_errors_count.inc()
             except PrometheusNotFound as e:
                 logging.error(str(e))
                 execution_event.add_enrichment(
@@ -239,6 +252,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(
                     ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.name, ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.value, log=False
                 )
+                playbooks_errors_count.inc()
             except Exception:
                 logging.error(
                     f"Failed to execute action {action.action_name} {to_safe_str(action_params)}", exc_info=True
@@ -246,6 +260,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event.response = self.__error_resp(
                     ErrorCodes.ACTION_UNEXPECTED_ERROR.name, ErrorCodes.ACTION_UNEXPECTED_ERROR.value, log=False
                 )
+                playbooks_errors_count.inc()
         return execution_event.response
 
     @classmethod
