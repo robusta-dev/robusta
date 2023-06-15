@@ -142,7 +142,8 @@ class Scheduler:
             next_delay_idx = min(job.state.exec_count, len(job.scheduling_params.delay_periods) - 1)
             next_delay = job.scheduling_params.delay_periods[next_delay_idx]
         elif isinstance(job.scheduling_params, CronScheduleRepeat):
-            next_delay = croniter(job.scheduling_params.cron_expression, time.time()).get_next() - time.time()
+            now = time.time()
+            next_delay = croniter(job.scheduling_params.cron_expression, now).get_next() - now
         else:  # FIXED_DELAY_REPEAT type
             next_delay = job.scheduling_params.seconds_delay
 
