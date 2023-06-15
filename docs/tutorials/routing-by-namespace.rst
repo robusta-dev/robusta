@@ -1,22 +1,19 @@
 Route Alerts By Namespace
 =============================
 
-By default, all Robusta notifications are sent to all :ref:`sinks <Sinks Reference>`.
+Route alerts based on Kubernetes namespace. Ideal for teams that "own" specific namespaces.
 
-In larger organization, it's common to setup a dedicated notification channel for each team and route alerts accordingly.
-
-In this guide, we'll show how to route notifications based on Kubernetes namespaces, using :ref:`sink matchers <sink-matchers>`.
+This guide can be applied to all events passing through Robusta, including forwarded Prometheus alerts.
 
 Prerequisites
 ----------------
 
-* All least one existing :ref:`sink <Sinks Reference>` must be configured.
-* If you send Prometheus alerts via Robusta, they must have appropriate ``namespace`` metadata for Robusta to route them properly. (This is pre-configured for Robusta's bundled Prometheus alerts.)
+* All least one existing :ref:`sink <Sinks Reference>`, such as Slack, Microsoft Teams, Discord, etc.
 
 Setting Up Routing
 ----------------------
 
-Let's assume you have an existing Slack sink:
+Assume you have an existing sink, in this case Slack:
 
 .. code-block:: yaml
 
@@ -26,7 +23,7 @@ Let's assume you have an existing Slack sink:
         slack_channel: app-notifications
         api_key: secret-key
 
-First, duplicate duplicate your sink. You need a unique sink for each channel you want to notify in:
+By default, the sink will receive notifications for all namespaces. Before we fix that, let's duplicate the sink, changing only the Slack channel:
 
 .. code-block:: yaml
 
@@ -40,8 +37,7 @@ First, duplicate duplicate your sink. You need a unique sink for each channel yo
         slack_channel: system-notifications
         api_key: secret-key
 
-Add a :ref:`matcher <sink-matchers>` to each sink, so it receives a subset of notifications:
-
+We now have two sinks, both receiving all notifications. Restrict the notifications for each sink by adding :ref:`matchers <sink-matchers>`:
 
 .. code-block:: yaml
 
@@ -61,8 +57,17 @@ Add a :ref:`matcher <sink-matchers>` to each sink, so it receives a subset of no
           namespace:
           - kube-system
 
-As always, apply this final configuration using a :ref:`Helm Upgrade <Simple Upgrade>`.
+Apply this final configuration using a :ref:`Helm Upgrade <Simple Upgrade>`.
 
-Now alerts will be routed according to Kubernetes namespace.
+Alerts will be now routed according to Kubernetes namespace. You can apply this method to as many sinks as you like.
+
+Troubleshooting Issues
+------------------------
+
+For this guide to work, alerts must be tagged with ``namespace`` metadata. Alerts without ``namespace`` metadata will be
+sent to default sinks (without namespace matchers) if they exist.
+
+If you forward custom Prometheus alerts to Robusta (and don't use Robusta's builtin Prometheus alerts), make sure they
+have a ``namespace`` label. Otherwise this method will not work.
 
 .. include:: _routing-further-reading.rst
