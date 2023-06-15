@@ -143,16 +143,8 @@ class SupabaseDal:
                 raise Exception(msg)
 
     def persist_finding(self, finding: Finding):
-        mute_finding = any(
-            enrichment.annotations.get(EnrichmentAnnotation.PLATFORM_MUTE_FINDING, False)
-            for enrichment in finding.enrichments
-        )
-
         for enrichment in finding.enrichments:
-            self.persist_platform_blocks(enrichment, None if mute_finding else finding.id)
-
-        if mute_finding:
-            return
+            self.persist_platform_blocks(enrichment, finding.id)
 
         scans, enrichments = [], []
         for enrich in finding.enrichments:

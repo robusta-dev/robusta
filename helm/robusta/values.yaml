@@ -361,8 +361,7 @@ platformPlaybooks:
       exclude: ["NodeSysctlChange"]
   actions:
   - event_report: {}
-  - event_resource_events:
-      platform_mute_finding: true
+  - event_resource_events: {}
   sinks:
     - "robusta_ui_sink"
 - triggers:

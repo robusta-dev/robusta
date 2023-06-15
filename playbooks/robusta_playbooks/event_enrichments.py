@@ -3,7 +3,6 @@ import logging
 from robusta.api import (
     ActionException,
     DeploymentEvent,
-    EnrichmentAnnotation,
     ErrorCodes,
     EventChangeEvent,
     EventEnricherParams,
@@ -68,7 +67,7 @@ def event_report(event: EventChangeEvent):
 
 
 @action
-def event_resource_events(event: EventChangeEvent, params: EventEnricherParams):
+def event_resource_events(event: EventChangeEvent):
     """
     Given a Kubernetes event, gather all other events on the same resource in the near past
     """
@@ -85,10 +84,7 @@ def event_resource_events(event: EventChangeEvent, params: EventEnricherParams):
     if events_table:
         event.add_enrichment(
             [events_table],
-            {
-                SlackAnnotations.ATTACHMENT: True,
-                EnrichmentAnnotation.PLATFORM_MUTE_FINDING: params.platform_mute_finding,
-            },
+            {SlackAnnotations.ATTACHMENT: True},
         )
 
 

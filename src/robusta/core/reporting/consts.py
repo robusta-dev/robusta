@@ -62,7 +62,6 @@ class FindingSubjectType(Enum):
 # Annotations
 class EnrichmentAnnotation:
     SCAN = "scan"
-    PLATFORM_MUTE_FINDING = "platform_mute_finding"
 
 
 class SlackAnnotations:

@@ -41,11 +41,7 @@ class ResourceChartResourceType(Enum):
 class ActionParams(DocumentedModel):
     """
     Base class for all Action parameter classes.
-
-    :var platform_mute_finding: platform sink will process the alert but will not create a finding.
     """
-
-    platform_mute_finding: bool = False
 
     def post_initialization(self):
         """
