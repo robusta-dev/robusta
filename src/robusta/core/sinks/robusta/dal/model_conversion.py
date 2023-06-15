@@ -9,7 +9,6 @@ from robusta.core.reporting import (
     CallbackBlock,
     DividerBlock,
     Enrichment,
-    EventsBlock,
     FileBlock,
     Finding,
     HeaderBlock,
@@ -97,8 +96,6 @@ class ModelConversion:
                 structured_data.append({"type": "list", "data": block.items})
             elif isinstance(block, PrometheusBlock):
                 structured_data.append({"type": "prometheus", "data": block.data.json(), "metadata": block.metadata})
-            elif isinstance(block, EventsBlock):
-                pass
             elif isinstance(block, TableBlock):
                 if block.table_name:
                     structured_data.append(
