@@ -451,6 +451,27 @@ class SupabaseDal:
             "status_code": response.status_code,
         }
 
+    def __upsert_do_nothing(self, table: str, params: dict) -> Dict[str, Any]:
+        """
+        Supabase client is async. Sync impl of rpc call
+        """
+        builder = self.client.table(table)  # rpc builder
+        url: str = str(builder.session.base_url).rstrip("/")
+        builder.session.headers["Prefer"] = "return=representation, resolution=ignore-duplicates"
+
+        response = requests.post(url, headers=builder.session.headers, json=params)
+        response_data = {}
+        try:
+            if response.content:
+                response_data = response.json()
+        except Exception:  # this can be okay if no data is expected
+            logging.debug("Failed to parse upsert_do_nothing response data")
+
+        return {
+            "data": response_data,
+            "status_code": response.status_code,
+        }
+
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
             logging.info("Supabase dal login")
@@ -552,7 +573,7 @@ class SupabaseDal:
             event.setdefault("name", block.resource_name)
             db_events.append(event)
 
-        res = self.client.table(RESOURCE_EVENTS).insert(db_events, upsert=True).execute()
+        res = self.__upsert_do_nothing(RESOURCE_EVENTS, db_events)
         if res.get("status_code") not in [200, 201]:
             msg = f"Failed to persist resource events error: {res.get('data')}"
             logging.error(msg)
