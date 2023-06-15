@@ -541,15 +541,13 @@ class SupabaseDal:
 
         logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
 
-    def persist_events_block(self, block: EventsBlock, finding_id):
+    def persist_events_block(self, block: EventsBlock):
         db_events = []
         for row in block.render_rows():
             event = dict(zip(block.headers, row))
             event["account_id"] = self.account_id
             event["cluster_id"] = self.cluster
             event["namespace"] = block.namespace
-            if finding_id:
-                event["finding_id"] = str(finding_id)
             event.setdefault("kind", block.kind)
             event.setdefault("name", block.resource_name)
             db_events.append(event)
@@ -564,5 +562,5 @@ class SupabaseDal:
     def persist_platform_blocks(self, enrichment: Enrichment, finding_id):
         for block in enrichment.blocks:
             if isinstance(block, EventsBlock):
-                self.persist_events_block(block, finding_id)
+                self.persist_events_block(block)
             # TODO should we add scans here
