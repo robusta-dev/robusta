@@ -110,37 +110,33 @@ class SupabaseDal:
         db_sr["cluster_id"] = self.cluster
         return db_sr
 
-    def persist_scan(self, enrichment: Enrichment):
-        for block in enrichment.blocks:
-            if not isinstance(block, ScanReportBlock):
-                continue
+    def persist_scan(self, block: ScanReportBlock):
+        db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
+        res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
+        if res.get("status_code") not in [200, 201]:
+            msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
 
-            db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
-            res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
-            if res.get("status_code") not in [200, 201]:
-                msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
-                logging.error(msg)
-                self.handle_supabase_error()
-                raise Exception(msg)
+        res = self.__rpc_patch(
+            "insert_scan_meta",
+            {
+                "_account_id": self.account_id,
+                "_cluster": self.cluster,
+                "_scan_id": block.scan_id,
+                "_scan_start": str(block.start_time),
+                "_scan_end": str(block.end_time),
+                "_type": block.type,
+                "_grade": block.score,
+            },
+        )
 
-            res = self.__rpc_patch(
-                "insert_scan_meta",
-                {
-                    "_account_id": self.account_id,
-                    "_cluster": self.cluster,
-                    "_scan_id": block.scan_id,
-                    "_scan_start": str(block.start_time),
-                    "_scan_end": str(block.end_time),
-                    "_type": block.type,
-                    "_grade": block.score,
-                },
-            )
-
-            if res.get("status_code") not in [200, 201, 204]:
-                msg = f"Failed to persist scan meta {block.scan_id} error: {res.get('data')}"
-                logging.error(msg)
-                self.handle_supabase_error()
-                raise Exception(msg)
+        if res.get("status_code") not in [200, 201, 204]:
+            msg = f"Failed to persist scan meta {block.scan_id} error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
 
     def persist_finding(self, finding: Finding):
         for enrichment in finding.enrichments:
@@ -151,9 +147,6 @@ class SupabaseDal:
             scans.append(enrich) if enrich.annotations.get(EnrichmentAnnotation.SCAN, False) else enrichments.append(
                 enrich
             )
-
-        for scan in scans:
-            self.persist_scan(scan)
 
         if (len(scans) > 0) and (len(enrichments)) == 0:
             return
@@ -584,4 +577,5 @@ class SupabaseDal:
         for block in enrichment.blocks:
             if isinstance(block, EventsBlock):
                 self.persist_events_block(block)
-            # TODO should we add scans here
+            if isinstance(block, ScanReportBlock):
+                self.persist_scan(block)
