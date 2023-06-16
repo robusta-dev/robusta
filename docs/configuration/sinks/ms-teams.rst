@@ -19,14 +19,9 @@ Configuring the MS teams sink
         sinksConfig:
         - ms_teams_sink:
             name: main_ms_teams_sink
-            webhook_url: teams channel incoming webhook  # see video below
+            webhook_url: teams-incoming-webhook  # see video below
 
-Save the file and run
-
-.. code-block:: bash
-   :name: cb-add-msteams-sink
-
-    helm upgrade robusta robusta/robusta --values=generated_values.yaml
+Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 Creating a webhook url in MS Teams
 -----------------------------------

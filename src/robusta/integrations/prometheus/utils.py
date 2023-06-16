@@ -6,13 +6,20 @@ import requests
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError, HTTPError
 
-from robusta.core.exceptions import PrometheusNotFound, VictoriaMetricsNotFound, NoPrometheusUrlFound, \
-    PrometheusFlagsConnectionError
+from robusta.core.exceptions import (
+    NoPrometheusUrlFound,
+    PrometheusFlagsConnectionError,
+    PrometheusNotFound,
+    VictoriaMetricsNotFound,
+)
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.service_discovery import find_service_url
 
 AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
+AZURE_METADATA_ENDPOINT = os.environ.get(
+    "AZURE_METADATA_ENDPOINT", "http://169.254.169.254/metadata/identity/oauth2/token"
+)
 AZURE_TOKEN_ENDPOINT = os.environ.get(
     "AZURE_TOKEN_ENDPOINT", f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/token"
 )
@@ -21,10 +28,8 @@ AZURE_TOKEN_ENDPOINT = os.environ.get(
 class PrometheusAuthorization:
     bearer_token: str = ""
     azure_authorization: bool = (
-        os.environ.get("AZURE_CLIENT_ID", "")
-        or os.environ.get("AZURE_TENANT_ID", "")
-        or os.environ.get("AZURE_CLIENT_SECRET", "")
-    )
+        os.environ.get("AZURE_CLIENT_ID", "") != "" and os.environ.get("AZURE_TENANT_ID", "") != ""
+    ) and (os.environ.get("AZURE_CLIENT_SECRET", "") != "" or os.environ.get("AZURE_USE_MANAGED_ID", "") != "")
 
     @classmethod
     def get_authorization_headers(cls, params: Optional[PrometheusParams] = None) -> Dict:
@@ -39,16 +44,29 @@ class PrometheusAuthorization:
     def request_new_token(cls) -> bool:
         if cls.azure_authorization:
             try:
-                res = requests.post(
-                    url=AZURE_TOKEN_ENDPOINT,
-                    headers={"Content-Type": "application/x-www-form-urlencoded"},
-                    data={
-                        "grant_type": "client_credentials",
-                        "client_id": os.environ.get("AZURE_CLIENT_ID"),
-                        "client_secret": os.environ.get("AZURE_CLIENT_SECRET"),
-                        "resource": AZURE_RESOURCE,
-                    },
-                )
+                if os.environ.get("AZURE_USE_MANAGED_ID"):
+                    res = requests.get(
+                        url=AZURE_METADATA_ENDPOINT,
+                        headers={
+                            "Metadata": "true",
+                        },
+                        data={
+                            "api-version": "2018-02-01",
+                            "client_id": os.environ.get("AZURE_CLIENT_ID"),
+                            "resource": AZURE_RESOURCE,
+                        },
+                    )
+                else:
+                    res = requests.post(
+                        url=AZURE_TOKEN_ENDPOINT,
+                        headers={"Content-Type": "application/x-www-form-urlencoded"},
+                        data={
+                            "grant_type": "client_credentials",
+                            "client_id": os.environ.get("AZURE_CLIENT_ID"),
+                            "client_secret": os.environ.get("AZURE_CLIENT_SECRET"),
+                            "resource": AZURE_RESOURCE,
+                        },
+                    )
             except Exception:
                 logging.exception("Unexpected error when trying to generate azure access token.")
                 return False
@@ -115,9 +133,9 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
 
 def __text_config_to_dict(text: str) -> Dict:
     conf = {}
-    lines = text.strip().split('\n')
+    lines = text.strip().split("\n")
     for line in lines:
-        key, val = line.strip().split('=')
+        key, val = line.strip().split("=")
         conf[key] = val.strip('"')
 
     return conf
@@ -154,7 +172,7 @@ def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
         )
         response.raise_for_status()
 
-        result["retentionTime"] = response.json().get('data', {}).get('storage.tsdb.retention.time', "")
+        result["retentionTime"] = response.json().get("data", {}).get("storage.tsdb.retention.time", "")
         return result
     except Exception as e:
         raise PrometheusNotFound(
@@ -176,7 +194,7 @@ def fetch_victoria_metrics_flags(prom: "PrometheusConnect") -> Dict:
         response.raise_for_status()
 
         configuration = __text_config_to_dict(response.text)
-        retention_period = configuration.get('-retentionPeriod')
+        retention_period = configuration.get("-retentionPeriod")
 
         # if the retentionPeriod is only a number then treat it as (m)onth
         # ref: https://docs.victoriametrics.com/?highlight=-retentionPeriod#retention
@@ -190,7 +208,7 @@ def fetch_victoria_metrics_flags(prom: "PrometheusConnect") -> Dict:
 
 
 class ServiceDiscovery:
-    cache: TTLCache = TTLCache(maxsize=1, ttl=SERVICE_CACHE_TTL_SEC)
+    cache: TTLCache = TTLCache(maxsize=5, ttl=SERVICE_CACHE_TTL_SEC)
 
     @classmethod
     def find_url(cls, selectors: List[str], error_msg: str) -> Optional[str]:
@@ -226,7 +244,7 @@ class PrometheusDiscovery(ServiceDiscovery):
                 "app=prometheus-prometheus",
                 "app.kubernetes.io/name=vmsingle",
                 "app.kubernetes.io/name=victoria-metrics-single",
-                "app.kubernetes.io/name=vmselect"
+                "app.kubernetes.io/name=vmselect",
                 "app=vmselect",
             ],
             error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",

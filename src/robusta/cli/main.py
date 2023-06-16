@@ -162,7 +162,7 @@ def gen_config(
         default=False,
     ):
         msteams_webhook = typer.prompt(
-            "Please insert your MsTeams webhook url. See https://docs.robusta.dev/master/automation/sinks/ms-teams.html",
+            "Please insert your MsTeams webhook url. See https://docs.robusta.dev/master/configuration/sinks/ms-teams.html",
             default=None,
         )
 
@@ -354,13 +354,17 @@ def logs(
     tail = f"--tail={tail}" if tail else ""
     context = f"--context={context}" if context else ""
     resource_name = resource_name if resource_name else get_runner_pod(namespace)
+
+    if not resource_name:
+        return
+
     try:
         subprocess.check_call(
             f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
             shell=True,
         )
     except Exception:
-        log_title("error fetching logs; see help for more options.", color="red")
+        log_title("Error fetching logs. Did you forget to specify --namespace?", color="red")
 
 
 @app.command()
