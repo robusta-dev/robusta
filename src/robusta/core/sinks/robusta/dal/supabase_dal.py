@@ -2,7 +2,7 @@ import json
 import logging
 import threading
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests
 from postgrest_py.request_builder import QueryRequestBuilder
@@ -21,6 +21,9 @@ from robusta.core.reporting.base import Finding
 from robusta.core.reporting.blocks import ScanReportBlock, ScanReportRow
 from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
+from robusta.core.sinks.robusta.rrm.account_resource import AccountResource, ResourceKind
+from robusta.core.sinks.robusta.rrm.prometheus_alert_resource_management import PrometheusAlertResourceState
+from robusta.core.sinks.robusta.rrm.resource_state import ResourceState
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -32,6 +35,7 @@ HELM_RELEASES_TABLE = "HelmReleases"
 NAMESPACES_TABLE = "Namespaces"
 UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
 SCANS_RESULT_TABLE = "ScansResults"
+ACCOUNT_RESOURCE_TABLE = "AccountResource"
 
 
 class RobustaAuthClient(SupabaseAuthClient):
@@ -537,3 +541,43 @@ class SupabaseDal:
             self.handle_supabase_error()
 
         logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
+
+    def get_account_resources(self) -> List[AccountResource]:
+        res = (
+            self.client.table(ACCOUNT_RESOURCE_TABLE)
+            .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "updated_at")
+            .filter("account_id", "eq", self.account_id)
+            .filter("deleted", "eq", False)
+            .execute()
+        )
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to get existing account resources (supabase) error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+        account_resources: List[AccountResource] = []
+        for data in res.get("data"):
+            if not data["resource_state"]:
+                continue
+
+            resource_state: Optional[ResourceState] = None
+            if data["resource_kind"] == ResourceKind.PrometheusAlert:
+                if "*" in data["clusters_target_set"] or self.cluster in data["clusters_target_set"]:
+                    resource_state = PrometheusAlertResourceState.from_dict(data["resource_state"])
+
+            if not resource_state:
+                continue
+
+            resource = AccountResource(
+                entity_id=data["entity_id"],
+                resource_kind=data["resource_kind"],
+                clusters_target_set=data["clusters_target_set"],
+                resource_state=resource_state,
+                deleted=data["deleted"],
+                updated_at=data["updated_at"],
+            )
+
+            account_resources.append(resource)
+
+        return account_resources
