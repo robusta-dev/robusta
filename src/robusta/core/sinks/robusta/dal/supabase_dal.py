@@ -20,6 +20,7 @@ from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.blocks import EventsBlock, EventsRef, ScanReportBlock, ScanReportRow
 from robusta.core.reporting.consts import EnrichmentAnnotation
+from robusta.core.sinks.robusta import RobustaSinkParams
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 
 SERVICES_TABLE = "Services"
@@ -88,7 +89,7 @@ class SupabaseDal:
         account_id: str,
         email: str,
         password: str,
-        sink_name: str,
+        sink_params: RobustaSinkParams,
         cluster_name: str,
         signing_key: str,
     ):
@@ -101,7 +102,7 @@ class SupabaseDal:
         self.password = password
         self.sign_in_time = 0
         self.sign_in()
-        self.sink_name = sink_name
+        self.sink_params = sink_params
         self.signing_key = signing_key
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
@@ -155,7 +156,7 @@ class SupabaseDal:
             evidence = ModelConversion.to_evidence_json(
                 account_id=self.account_id,
                 cluster_id=self.cluster,
-                sink_name=self.sink_name,
+                sink_name=self.sink_params.name,
                 signing_key=self.signing_key,
                 finding_id=finding.id,
                 enrichment=enrichment,
@@ -576,7 +577,7 @@ class SupabaseDal:
     def persist_platform_blocks(self, enrichment: Enrichment, finding_id):
         blocks = enrichment.blocks
         for i, block in enumerate(blocks):
-            if isinstance(block, EventsBlock):
+            if isinstance(block, EventsBlock) and self.sink_params.persist_events:
                 self.persist_events_block(block)
                 blocks[i] = EventsRef(name=block.name, namespace=block.namespace, kind=block.kind)
             if isinstance(block, ScanReportBlock):

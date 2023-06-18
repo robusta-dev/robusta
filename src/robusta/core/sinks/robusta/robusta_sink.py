@@ -33,6 +33,7 @@ class RobustaSink(SinkBase):
         super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
         self.ttl_hours = sink_config.robusta_sink.ttl_hours
+        self.persist_events = sink_config.robusta_sink.persist_events
 
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if self.account_id != robusta_token.account_id:
@@ -49,7 +50,7 @@ class RobustaSink(SinkBase):
             robusta_token.account_id,
             robusta_token.email,
             robusta_token.password,
-            sink_config.robusta_sink.name,
+            sink_config.robusta_sink,
             self.cluster_name,
             self.signing_key
         )
