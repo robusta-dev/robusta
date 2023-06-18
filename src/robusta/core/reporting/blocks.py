@@ -446,7 +446,7 @@ class EventsBlock(TableBlock):
     """
 
     namespace: str
-    resource_name: Optional[str] = None  # name and kind are None when included in the events.
+    name: Optional[str] = None  # name and kind are None when included in the events.
     kind: Optional[str] = None
 
     def __init__(
@@ -454,7 +454,7 @@ class EventsBlock(TableBlock):
         namespace: str,
         rows: List[List],
         headers: Sequence[str] = (),
-        resource_name: Optional[str] = None,
+        name: Optional[str] = None,
         kind: Optional[str] = None,
         column_renderers: Dict = {},
         table_name: str = "",
@@ -471,6 +471,12 @@ class EventsBlock(TableBlock):
             table_name=table_name,
             namespace=namespace,
             kind=kind,
-            resource_name=resource_name,
+            name=name,
             column_width=column_width,
         )
+
+
+class EventsRef(BaseModel):
+    namespace: str
+    name: str
+    kind: str

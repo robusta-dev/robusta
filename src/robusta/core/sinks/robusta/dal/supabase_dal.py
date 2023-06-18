@@ -18,7 +18,7 @@ from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import Finding
-from robusta.core.reporting.blocks import EventsBlock, ScanReportBlock, ScanReportRow
+from robusta.core.reporting.blocks import EventsBlock, EventsRef, ScanReportBlock, ScanReportRow
 from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 
@@ -563,7 +563,7 @@ class SupabaseDal:
             event["cluster_id"] = self.cluster
             event["namespace"] = block.namespace
             event.setdefault("kind", block.kind)
-            event.setdefault("name", block.resource_name)
+            event.setdefault("name", block.name)
             db_events.append(event)
 
         res = self.__upsert_do_nothing(RESOURCE_EVENTS, db_events)
@@ -574,8 +574,10 @@ class SupabaseDal:
             raise Exception(msg)
 
     def persist_platform_blocks(self, enrichment: Enrichment, finding_id):
-        for block in enrichment.blocks:
+        blocks = enrichment.blocks
+        for i, block in enumerate(blocks):
             if isinstance(block, EventsBlock):
                 self.persist_events_block(block)
+                blocks[i] = EventsRef(name=block.name, namespace=block.namespace, kind=block.kind)
             if isinstance(block, ScanReportBlock):
                 self.persist_scan(block)

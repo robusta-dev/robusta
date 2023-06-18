@@ -16,6 +16,7 @@ from robusta.core.reporting.blocks import (
     CallbackChoice,
     DividerBlock,
     EventsBlock,
+    EventsRef,
     FileBlock,
     HeaderBlock,
     JsonBlock,

@@ -53,7 +53,7 @@ def get_resource_events_table(
         for event in sorted_events
     ]
     return EventsBlock(
-        resource_name=name,
+        name=name,
         namespace=namespace,
         kind=kind,
         rows=rows,
