@@ -15,6 +15,7 @@ from robusta.core.reporting.blocks import (
     CallbackBlock,
     CallbackChoice,
     DividerBlock,
+    EventRow,
     EventsBlock,
     EventsRef,
     FileBlock,
@@ -56,4 +57,7 @@ __all__ = [
     "JsonBlock",
     "ScanReportBlock",
     "ScanReportRow",
+    "EventsBlock",
+    "EventsRef",
+    "EventsRow",
 ]

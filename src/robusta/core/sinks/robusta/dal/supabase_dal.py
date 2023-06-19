@@ -558,14 +558,11 @@ class SupabaseDal:
 
     def persist_events_block(self, block: EventsBlock):
         db_events = []
-        for row in block.render_rows():
-            event = dict(zip(block.headers, row))
-            event["account_id"] = self.account_id
-            event["cluster_id"] = self.cluster
-            event["namespace"] = block.namespace
-            event.setdefault("kind", block.kind)
-            event.setdefault("name", block.name)
-            db_events.append(event)
+        for event in block.events:
+            row = event.dict()
+            row["account_id"] = self.account_id
+            row["cluster_id"] = self.cluster
+            db_events.append(row)
 
         res = self.__upsert_do_nothing(RESOURCE_EVENTS, db_events)
         if res.get("status_code") not in [200, 201]:
@@ -577,8 +574,9 @@ class SupabaseDal:
     def persist_platform_blocks(self, enrichment: Enrichment, finding_id):
         blocks = enrichment.blocks
         for i, block in enumerate(blocks):
-            if isinstance(block, EventsBlock) and self.sink_params.persist_events:
+            if isinstance(block, EventsBlock) and self.sink_params.persist_events and block.events:
                 self.persist_events_block(block)
-                blocks[i] = EventsRef(name=block.name, namespace=block.namespace, kind=block.kind)
+                event = block.events[0]
+                blocks[i] = EventsRef(name=event.name, namespace=event.namespace, kind=event.kind.lower())
             if isinstance(block, ScanReportBlock):
                 self.persist_scan(block)

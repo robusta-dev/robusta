@@ -438,6 +438,16 @@ class ScanReportBlock(BaseBlock):
             return "F"
 
 
+class EventRow(BaseModel):
+    type: str
+    reason: str
+    message: str
+    kind: str
+    name: str
+    namespace: str
+    time: str
+
+
 class EventsBlock(TableBlock):
     """
     Table display of a Events, Persists the events on the Robusta Platform.
@@ -445,17 +455,13 @@ class EventsBlock(TableBlock):
     Note: Wider tables appears as a file attachment on Slack, because they aren't rendered properly inline
     """
 
-    namespace: str
-    name: Optional[str] = None  # name and kind are None when included in the events.
-    kind: Optional[str] = None
+    events: List[EventRow] = []
 
     def __init__(
         self,
-        namespace: str,
+        events: List[EventRow],
         rows: List[List],
         headers: Sequence[str] = (),
-        name: Optional[str] = None,
-        kind: Optional[str] = None,
         column_renderers: Dict = {},
         table_name: str = "",
         column_width: List[int] = None,
@@ -465,13 +471,11 @@ class EventsBlock(TableBlock):
         :param headers: names of each column
         """
         super().__init__(
+            events=events,
             rows=rows,
             headers=headers,
             column_renderers=column_renderers,
             table_name=table_name,
-            namespace=namespace,
-            kind=kind,
-            name=name,
             column_width=column_width,
         )
 

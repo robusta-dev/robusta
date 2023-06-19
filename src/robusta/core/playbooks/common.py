@@ -2,8 +2,8 @@ from typing import List, Optional
 
 from hikaru.model.rel_1_26 import Event, EventList
 
-from robusta.core.reporting import EventsBlock, TableBlock
-from robusta.core.reporting.custom_rendering import RendererType
+from robusta.core.reporting import EventRow, EventsBlock, TableBlock
+from robusta.core.reporting.custom_rendering import RendererType, render_value
 from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
 
 
@@ -52,10 +52,25 @@ def get_resource_events_table(
         ]
         for event in sorted_events
     ]
+
+    events = [
+        EventRow(
+            reason=event.reason,
+            type=event.type,
+            time=render_value(
+                RendererType.DATETIME,
+                parse_kubernetes_datetime_to_ms(get_event_timestamp(event)) if get_event_timestamp(event) else 0,
+            ),
+            message=event.note,
+            kind=kind.lower(),
+            name=name,
+            namespace=namespace,
+        )
+        for event in sorted_events
+    ]
+
     return EventsBlock(
-        name=name,
-        namespace=namespace,
-        kind=kind,
+        events=events,
         rows=rows,
         headers=headers,
         column_renderers={"time": RendererType.DATETIME},
