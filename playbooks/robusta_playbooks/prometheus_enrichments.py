@@ -35,8 +35,8 @@ def parse_duration(
     if isinstance(duration, PrometheusDateRange):
         return parse_timestamp_string(duration.starts_at), parse_timestamp_string(duration.ends_at)
     elif isinstance(duration, PrometheusDuration):
-        starts_at = datetime.utcnow() - timedelta(minutes=duration.duration_minutes)
-        ends_at = datetime.utcnow()
+        starts_at = datetime.utcnow().replace(microsecond=0) - timedelta(minutes=duration.duration_minutes)
+        ends_at = datetime.utcnow().replace(microsecond=0)
         return starts_at, ends_at
     logging.error("Non supported duration provided")
     return None, None
