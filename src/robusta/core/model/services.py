@@ -23,7 +23,6 @@ class Resources(BaseModel):
 class ContainerInfo(BaseModel):
     name: str
     image: str
-    image_tag: Optional[str]
     env: List[EnvVar]
     resources: Resources
 
@@ -49,8 +48,7 @@ class ContainerInfo(BaseModel):
         limits = container.resources.limits if container.resources.limits else {}
         requests = container.resources.requests if container.resources.requests else {}
         resources = Resources(limits=limits, requests=requests)
-        return ContainerInfo(name=container.name, image=container.image,
-                             image_tag=ContainerInfo.extract_image_tag(container.image), env=env, resources=resources)
+        return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources)
 
     @staticmethod
     def get_container_info_k8(container: Container) -> "ContainerInfo":
@@ -62,8 +60,7 @@ class ContainerInfo(BaseModel):
         limits = container.resources.limits if container.resources.limits else {}
         requests = container.resources.requests if container.resources.requests else {}
         resources = Resources(limits=limits, requests=requests)
-        return ContainerInfo(name=container.name, image=container.image,
-                             image_tag=ContainerInfo.extract_image_tag(container.image), env=env, resources=resources)
+        return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources)
 
     def __eq__(self, other):
         if not isinstance(other, ContainerInfo):
@@ -82,7 +79,7 @@ class VolumeInfo(BaseModel):
     persistent_volume_claim: Optional[Dict[str, str]]
 
     @staticmethod
-    def get_volume_info(volume: Union[V1Volume, Volume]):
+    def get_volume_info(volume: Union[V1Volume, Volume]) -> "VolumeInfo":
         if hasattr(volume, "persistent_volume_claim") and hasattr(volume.persistent_volume_claim, "claim_name"):
             return VolumeInfo(
                 name=volume.name, persistent_volume_claim={"claim_name": volume.persistent_volume_claim.claim_name}
@@ -103,7 +100,7 @@ class ServiceConfig(BaseModel):
         return (
             sorted(self.containers, key=lambda x: x.name) == sorted(other.containers, key=lambda x: x.name)
             and sorted(self.volumes, key=lambda x: x.name) == sorted(other.volumes, key=lambda x: x.name)
-            and sorted(self.labels, key=lambda x: x.name) == sorted(other.labels, key=lambda x: x.name)
+            and self.labels != other.labels
         )
 
 
