@@ -20,6 +20,7 @@ from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
+from robusta.core.sinks.robusta.discovery_metrics import DiscoveryMetrics
 from robusta.core.sinks.robusta.prometheus_health_checker import PrometheusHealthChecker
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
@@ -45,6 +46,7 @@ class RobustaSink(SinkBase):
                 f"Using account id from Robusta token."
             )
         self.account_id = robusta_token.account_id
+        self.__discovery_metrics = DiscoveryMetrics()
 
         self.dal = SupabaseDal(
             robusta_token.store_url,
@@ -171,7 +173,7 @@ class RobustaSink(SinkBase):
                     self.__services_cache[service_key] = new_service
                     self.dal.persist_services([new_service])
 
-                if operation == K8sOperationType.DELETE:
+                elif operation == K8sOperationType.DELETE:
                     if cached_service:
                         del self.__services_cache[service_key]
 
@@ -179,36 +181,42 @@ class RobustaSink(SinkBase):
                     self.dal.persist_services([new_service])
 
         except Exception as e:
-            logging.error(f"An error occured while publishing single service: {e}", exc_info=True)
+            logging.error(
+                f"An error occured while publishing single service: name - {new_service.name}, namespace - {new_service.namespace}  service type: {new_service.service_type}  | {e}")
 
     def __publish_new_services(self, active_services: List[ServiceInfo]):
-        try:
-            with self.services_publish_lock:
-                # convert to map
-                curr_services = {}
-                for service in active_services:
-                    curr_services[service.get_service_key()] = service
+        with self.services_publish_lock:
+            # convert to map
+            curr_services = {}
+            for service in active_services:
+                curr_services[service.get_service_key()] = service
 
-                # handle deleted services
-                cache_keys = list(self.__services_cache.keys())
-                updated_services: List[ServiceInfo] = []
-                for service_key in cache_keys:
-                    if not curr_services.get(service_key):  # service doesn't exist any more, delete it
-                        self.__services_cache[service_key].deleted = True
-                        updated_services.append(self.__services_cache[service_key])
-                        del self.__services_cache[service_key]
+            # handle deleted services
+            cache_keys = list(self.__services_cache.keys())
+            updated_services: List[ServiceInfo] = []
+            for service_key in cache_keys:
+                if not curr_services.get(service_key):  # service doesn't exist any more, delete it
+                    self.__services_cache[service_key].deleted = True
+                    updated_services.append(self.__services_cache[service_key])
+                    del self.__services_cache[service_key]
 
-                # new or changed services
-                for service_key in curr_services.keys():
-                    current_service = curr_services[service_key]
-                    if self.__services_cache.get(
-                            service_key) != current_service:  # service not in the cache, or changed
-                        updated_services.append(current_service)
-                        self.__services_cache[service_key] = current_service
+            # new or changed services
+            for service_key in curr_services.keys():
+                current_service = curr_services[service_key]
+                cached_service = self.__services_cache.get(service_key)
 
-                self.dal.persist_services(updated_services)
-        except Exception as e:
-            logging.error(f"An error occured while publishing new services: {e}")
+                # prevent service updates if the resource version in the cache is lower than the new service
+                if cached_service and cached_service.resource_version >= current_service.resource_version:
+                    return
+
+                # service not in the cache, or changed
+                if self.__services_cache.get(service_key) != current_service:
+                    updated_services.append(current_service)
+                    self.__services_cache[service_key] = current_service
+
+            self.__discovery_metrics.on_services_updated(len(updated_services))
+
+            self.dal.persist_services(updated_services)
 
     def __get_events_history(self):
         try:
@@ -352,6 +360,8 @@ class RobustaSink(SinkBase):
                 updated_nodes.append(updated_node)
                 self.__nodes_cache[node_name] = updated_node
 
+        self.__discovery_metrics.on_nodes_updated(len(updated_nodes))
+
         self.dal.publish_nodes(updated_nodes)
 
     def __safe_delete_job(self, job_key):
@@ -383,6 +393,7 @@ class RobustaSink(SinkBase):
                 updated_jobs.append(current_job)
                 self.__jobs_cache[job_key] = current_job
 
+        self.__discovery_metrics.on_jobs_updated(len(updated_jobs))
         self.dal.publish_jobs(updated_jobs)
 
     def __publish_new_helm_releases(self, active_helm_releases: List[HelmRelease]):

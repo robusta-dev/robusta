@@ -207,7 +207,6 @@ class SupabaseDal:
         db_services = [self.to_service(service) for service in services]
         res = self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()
 
-        logging.debug(f"supabase persist_services publish: {db_services}")
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist services {services} error: {res.get('data')}")
             self.handle_supabase_error()

@@ -30,8 +30,9 @@ from robusta.api import (
     list_pods_using_selector,
     parse_kubernetes_datetime_to_ms,
     KubernetesAnyChangeEvent,
-    extract_ready_pods_k8,
-    extract_total_pods_k8,
+    extract_ready_pods,
+    is_release_managed_by_helm,
+    extract_total_pods,
     ServiceConfig,
     VolumeInfo,
     ContainerInfo,
@@ -42,7 +43,6 @@ from robusta.api import (
     StatefulSet,
     DaemonSet,
     Deployment,
-    is_deployment_via_helm_k8,
     ServiceInfo
 )
 
@@ -259,10 +259,11 @@ def resource_events_diff(event: KubernetesAnyChangeEvent):
         volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
         config = ServiceConfig(labels=meta.labels or {}, containers=container_info,
                                volumes=volumes_info)
-        ready_pods = extract_total_pods_k8(new_resource)
-        total_pods = extract_ready_pods_k8(new_resource)
+        ready_pods = extract_total_pods(new_resource)
+        total_pods = extract_ready_pods(new_resource)
 
-        is_helm_release = is_deployment_via_helm_k8(new_resource) if isinstance(new_resource, Deployment) else None
+        is_helm_release = is_release_managed_by_helm(annotations=new_resource.metadata.annotations,
+                                                     labels=new_resource.metadata.labels)
         resource_version = int(meta.resourceVersion) if meta.resourceVersion else 0
 
         new_service = ServiceInfo(

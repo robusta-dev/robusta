@@ -28,7 +28,7 @@ class ContainerInfo(BaseModel):
     resources: Resources
 
     @staticmethod
-    def extract_image_tag(image_url) -> Optional[str]:
+    def extract_image_tag(image_url: str) -> Optional[str]:
         if "@" in image_url:
             # The digest is specified after the last "@" character
             return image_url.split("@")[-1]
@@ -40,7 +40,7 @@ class ContainerInfo(BaseModel):
             return None
 
     @staticmethod
-    def get_container_info(container: V1Container):
+    def get_container_info(container: V1Container) -> "ContainerInfo":
         env = (
             [EnvVar(name=env.name, value=env.value) for env in container.env if env.name and env.value]
             if container.env
@@ -53,7 +53,7 @@ class ContainerInfo(BaseModel):
                              image_tag=ContainerInfo.extract_image_tag(container.image), env=env, resources=resources)
 
     @staticmethod
-    def get_container_info_k8(container: Container):
+    def get_container_info_k8(container: Container) -> "ContainerInfo":
         env = (
             [EnvVar(name=env.name, value=env.value) for env in container.env if env.name and env.value]
             if container.env
@@ -121,3 +121,19 @@ class ServiceInfo(BaseModel):
 
     def get_service_key(self) -> str:
         return f"{self.namespace}/{self.service_type}/{self.name}"
+
+    def __eq__(self, other):
+        if not isinstance(other, ServiceInfo):
+            return NotImplemented
+
+        return (
+            self.name == other.name and
+            self.service_type == other.service_type and
+            self.namespace == other.namespace and
+            self.classification == other.classification and
+            self.is_helm_release == other.is_helm_release and
+            self.deleted == other.deleted and
+            self.service_config == other.service_config and
+            self.ready_pods == other.ready_pods and
+            self.total_pods == other.total_pods
+        )
