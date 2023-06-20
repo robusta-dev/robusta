@@ -10,9 +10,9 @@ from robusta.integrations.prometheus.utils import check_prometheus_connection, g
 class PrometheusAnalyzer:
     def __init__(self, prometheus_params: PrometheusParams, prometheus_tzinfo: Optional[tzinfo]):
         self.prom = get_prometheus_connect(prometheus_params)
-        self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+        self.default_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
 
-        check_prometheus_connection(self.prom, self.default_prometheus_params)
+        check_prometheus_connection(prom=self.prom, prometheus_params=prometheus_params, params=self.default_params)
 
         self.prometheus_tzinfo = prometheus_tzinfo or datetime.now().astimezone().tzinfo
 
@@ -22,7 +22,7 @@ class PrometheusAnalyzer:
         return self._non_timed_query(promql_query)
 
     def _non_timed_query(self, promql_query: str) -> list:
-        results = self.prom.custom_query(promql_query, self.default_prometheus_params)
+        results = self.prom.custom_query(promql_query, self.default_params)
         return results
 
     def _get_query_value(self, results: Optional[list], offset: int = 0) -> Optional[float]:
@@ -42,6 +42,6 @@ class PrometheusAnalyzer:
         start_time = end_time - duration
         step = kwargs.get("step", "1")
         results = self.prom.custom_query_range(
-            promql_query, start_time, end_time, step, {"timeout": self.default_prometheus_params["timeout"]}
+            promql_query, start_time, end_time, step, {"timeout": self.default_params["timeout"]}
         )
         return results

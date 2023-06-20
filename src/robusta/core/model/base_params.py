@@ -91,13 +91,16 @@ class PrometheusParams(ActionParams):
     """
     :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
     :var prometheus_auth: Prometheus auth header to be used in Authorization header. If omitted, we will not add any auth header
+    :var prometheus_url_query_string: Additional query string parameters to be appended to the Prometheus connection URL
 
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     :example prometheus_auth: Basic YWRtaW46cGFzc3dvcmQ=
+    :example prometheus_url_query_string: "demo-query=example-data"
     """
 
     prometheus_url: Optional[str] = None
     prometheus_auth: Optional[SecretStr] = None
+    prometheus_url_query_string: Optional[str] = None
 
     @validator("prometheus_url", allow_reuse=True)
     def validate_protocol(cls, v):
@@ -106,6 +109,12 @@ class PrometheusParams(ActionParams):
             logging.info(f"Adding protocol to prometheus_url: {v}")
         return v
 
+    @validator("prometheus_url_query_string", allow_reuse=True)
+    def validate_query_string(cls, v):
+        if v and v.startswith("?"):  # if the user configured query string is using '?'
+            v = v.lstrip("?")
+            logging.info(f"Stripping '?' off prometheus_url_query_string: {v}")
+        return v
 
 class PrometheusDuration(BaseModel):
     """
