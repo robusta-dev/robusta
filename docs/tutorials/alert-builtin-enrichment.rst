@@ -27,7 +27,7 @@ Testing out Prometheus alerts
 .. code-block:: bash
    :name: cb-apply-crashpod
 
-   kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/pending_pods/pending_pod.yaml
+   kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/pending_pods/pending_pod_resources.yaml
 
 2. Trigger a Prometheus alert immediately, skipping the normal delays:
 

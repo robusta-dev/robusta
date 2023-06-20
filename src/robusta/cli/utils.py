@@ -122,7 +122,7 @@ def get_package_name(playbooks_dir: str) -> str:
 
 
 def get_runner_pod(namespace: Optional[str]) -> str:
-    return subprocess.run(
+    output = subprocess.run(
         f"kubectl get pods {namespace_to_kubectl(namespace)} "
         f'--selector="robustaComponent=runner" '
         f"--field-selector=status.phase==Running "
@@ -132,3 +132,8 @@ def get_runner_pod(namespace: Optional[str]) -> str:
         text=True,
         capture_output=True,
     ).stdout.strip()
+
+    if not output:
+        typer.secho(f"Could not find robusta pod in namespace {namespace}. Are you missing the --namespace flag correctly?", fg="red")
+    
+    return output
