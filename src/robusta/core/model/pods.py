@@ -113,6 +113,8 @@ class PodResources(BaseModel):
             return 0.0
         if "m" in cpu:
             return round(float(cpu.replace("m", "").strip()) / 1000, 3)
+        if "k" in cpu:
+            return round(float(cpu.replace("k", "").strip()) * 1000, 3)
         return round(float(cpu), 3)
 
     @staticmethod
