@@ -162,7 +162,7 @@ def gen_config(
         default=False,
     ):
         msteams_webhook = typer.prompt(
-            "Please insert your MsTeams webhook url. See https://docs.robusta.dev/master/automation/sinks/ms-teams.html",
+            "Please insert your MsTeams webhook url. See https://docs.robusta.dev/master/configuration/sinks/ms-teams.html",
             default=None,
         )
 
@@ -357,7 +357,7 @@ def logs(
 
     if not resource_name:
         return
-    
+
     try:
         subprocess.check_call(
             f"kubectl logs {stream} {namespace_to_kubectl(namespace)} {resource_name} -c runner {since} {tail} {context}",
