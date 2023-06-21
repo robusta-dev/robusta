@@ -251,18 +251,12 @@ class ConfigLoader:
         else:
             logging.warning("No active playbooks configured")
 
-        try:
-            playbooks_registry = PlaybooksRegistryImpl(
-                active_playbooks,
-                actions_registry,
-                runner_config.global_config,
-                sinks_registry.default_sinks,
-            )
-        except Exception as exp:
-            logging.error(
-                    "unknown error reloading playbooks. will try again when they next change",
-                    exc_info=True,
-                )
+        playbooks_registry = PlaybooksRegistryImpl(
+            active_playbooks,
+            actions_registry,
+            runner_config.global_config,
+            sinks_registry.default_sinks,
+        )
 
         return sinks_registry, playbooks_registry
 

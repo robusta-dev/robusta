@@ -63,13 +63,11 @@ active_playbooks:
   {{- fail "The `platformPlaybooks` value is deprecated. Use `platformPlaybooksMap` dictionary to create named playbooks `playbook_name: {...playbook_definition...} `  " -}}
 {{- end }}
 
-
-{{- /* 
-{{- $enablePlatformPlaybooks := and (not (empty .Values.platformPlaybooksMap)) .Values.enablePlatformPlaybooks }}
-*/ -}}
-{{- $enablePlatformPlaybooks := .Values.enablePlatformPlaybooks }}
-{{- $playbooksWithPlatform := mergeOverwrite .Values.playbooksMap .Values.platformPlaybooksMap }}
-{{- $mergedPlaybooks := $enablePlatformPlaybooks | ternary $playbooksWithPlatform .Values.playbooksMap  }}
+{{- if .Values.enablePlatformPlaybooks }} 
+  {{- $mergedPlaybooks := mergeOverwrite .Values.playbooksMap .Values.platformPlaybooksMap }} 
+{{- else }} 
+  {{- $mergedPlaybooks := .Values.playbooksMap }} 
+{{ end }}
 
 # playbook map, built at {{ now }}
 playbooks_map:

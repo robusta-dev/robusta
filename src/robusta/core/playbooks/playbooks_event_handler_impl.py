@@ -32,18 +32,18 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             return
 
         execution_response = None
-        
+        execution_event: Optional[ExecutionBaseEvent] = None
         sink_findings: Dict[str, List[Finding]] = defaultdict(list)
         for playbook in playbooks:
             fired_trigger = self.__get_fired_trigger(trigger_event, playbook.triggers, playbook.get_id())
             if fired_trigger:
                 
                 try:
-                    execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings)
-                    logging.debug(f"playbook.name {playbook.name},build_execution_event {execution_event}")
+                    execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings)                    
                 except Exception:
                     logging.error(
-                        f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}"
+                        f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}",
+                        exc_info=True
                     )
 
                 if execution_event:  # might not exist for unsupported k8s types
