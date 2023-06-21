@@ -4,13 +4,14 @@ import time
 
 from kubernetes import client, config
 from robusta.core.model.env_vars import RRM_PERIOD_SEC
-from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
 from robusta.core.sinks.robusta.rrm.prometheus_alert_resource_management import \
     PrometheusAlertResourceState, PrometheusAlertResourceManagement
 
 
 # robusta resource management
 class RRM:
+    from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
+
     def __init__(self, dal: SupabaseDal, global_config: dict):
         self.dal = dal
         self.__sleep = RRM_PERIOD_SEC
