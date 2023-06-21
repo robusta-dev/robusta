@@ -13,8 +13,8 @@ class QueueMetrics:
         self.queued = prometheus_client.Counter("queued", "Number of queued events", labelnames=("queue_name",))
         self.rejected = prometheus_client.Counter("rejected", "Number of rejected events", labelnames=("queue_name",))
         self.total_process_time = prometheus_client.Summary(
-            "total_process_time",
-            "Total process time (seconds)",
+            "queue_process_time",
+            "queue process time (seconds)",
             labelnames=("queue_name",),
         )
         self.queue_size = prometheus_client.Gauge("queue_size", "Current size of the queue", labelnames=("queue_name",))

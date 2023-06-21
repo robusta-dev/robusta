@@ -36,7 +36,7 @@ import prometheus_client
 
 discovery_errors_count = prometheus_client.Counter("discovery_errors", "Number of discovery process failures.")
 discovery_process_time = prometheus_client.Summary(
-    "discovery_latency",
+    "discovery_process_time",
     "Total discovery process time (seconds)",
 )
 

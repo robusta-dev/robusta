@@ -28,7 +28,7 @@ playbooks_errors_count = prometheus_client.Counter(
     "playbooks_errors", "Number of playbooks failures.", labelnames=("source",)
 )
 playbooks_summary = prometheus_client.Summary(
-    "playbooks_latency", "Total playbooks process time (seconds)", labelnames=("source",)
+    "playbooks_process_time", "Total playbooks process time (seconds)", labelnames=("source",)
 )
 
 
