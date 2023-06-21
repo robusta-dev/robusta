@@ -87,7 +87,8 @@ playbooksPersistentVolumeSize: 4Gi
 playbooksMap:
   # priority builtin playbooks for running before all playbooks
   #don't remove it. used for internal processing !!!  !
-  k8sAnyResourceAllChangesDiscovery:
+  # name: k8sChangeTracking
+  k8sChangeTracking:
     triggers:
     - on_kubernetes_any_resource_all_changes: {}
     actions:
@@ -95,8 +96,8 @@ playbooksMap:
     priority: 0
 
   # playbooks for prometheus silencing
-  # name: prometheusAllAlertSilencing
-  prometheusAllAlertSilencing:
+  # name: prometheusNameSilencing1
+  prometheusNameSilencing1:
     triggers:
     - on_prometheus_alert:
         status: "all"
@@ -106,8 +107,8 @@ playbooksMap:
     priority: 0
 
   # Silences for small/local clusters
-  # name: prometheusAll2AlertSilencing
-  prometheusAll2AlertSilencing:
+  # name: prometheusNameSilencing2
+  prometheusNameSilencing2:
     triggers:
     - on_prometheus_alert:
         status: "all"
@@ -118,8 +119,8 @@ playbooksMap:
     priority: 1
 
   # Silences for specific providers
-  # name: prometheusGkeAlertSilencing
-  prometheusGkeAlertSilencing:
+  # name: prometheusGkeSilencing
+  prometheusGkeSilencing:
     triggers:
     - on_prometheus_alert:
         status: "all"
@@ -129,8 +130,8 @@ playbooksMap:
         names: [ "KubeletDown" ]
     priority: 1
 
-  # name: prometheusDigitalOceanAlertSilencing
-  prometheusDigitalOceanAlertSilencing:
+  # name: prometheusDigitalOceanSilencing
+  prometheusDigitalOceanSilencing:
     triggers:
     - on_prometheus_alert:
         alert_name: CPUThrottlingHigh
@@ -142,42 +143,37 @@ playbooksMap:
     priority: 1
 
   # Smart Silences
-  # name: prometheusTargetDownAlertSilencing
-  prometheusTargetDownAlertSilencing:
+  # name: prometheusTargetDownSilencing
+  prometheusTargetDownSilencing:
     triggers:
     - on_prometheus_alert:
         alert_name: TargetDown
     actions:
     - target_down_dns_silencer: {}
-    - default_enricher: {}
-    halt: true
     priority: 1
 
-  # custom user playbooks
-  # customPlaybooks: []
-
-  # builtin playbooks
-  # builtinPlaybooks:
   # playbooks for non-prometheus based monitoring
 
-  # name: k8sPodUpdateCrashLoopBackOffReport
-  k8sPodUpdateCrashLoopBackOffReport:
+  # name: k8sCrashLoopBackOffReport
+  k8sCrashLoopBackOffReport:
     triggers:
     - on_pod_crash_loop:
         restart_reason: "CrashLoopBackOff"
     actions:
     - report_crash_loop: {}
+    halt: true
 
-  # name: k8sPodUpdateImagePullBackOffReport
-  k8sPodUpdateImagePullBackOffReport:
+  # name: k8sImagePullBackOffReport:
+  k8sImagePullBackOffReport:
     triggers:
     - on_image_pull_backoff: {}
     actions:
     - image_pull_backoff_reporter: {}
+    halt: true
 
   # playbooks for non-prometheus based monitoring that use prometheus for enrichment
-  # name: k8sPodUpdateOomKilledReport
-  k8sPodUpdateOomKilledReport:
+  # name: k8sOomKilledReport
+  k8sOomKilledReport:
     triggers:
     - on_pod_oom_killed:
         rate_limit: 900
@@ -279,8 +275,8 @@ playbooksMap:
     halt: true
     priority: 10
 
-  # name: prometheusKubeJobXxxReport
-  prometheusKubeJobXxxReport:
+  # name: prometheusKubeJobStatusReport
+  prometheusKubeJobStatusReport:
     triggers:
     - on_prometheus_alert:
         alert_name: KubeJobFailed
@@ -322,8 +318,8 @@ playbooksMap:
     halt: true
     priority: 10
 
-  # name: prometheusKubeNodeNotReadyReport
-  prometheusKubeNodeNotReadyReport:
+  # name: prometheusNodeNotReadyReport
+  prometheusNodeNotReadyReport:
     triggers:
     - on_prometheus_alert:
         alert_name: KubeNodeNotReady
@@ -337,8 +333,8 @@ playbooksMap:
     halt: true
     priority: 10
 
-  # name: prometheusKubeNodeUnreachableReport
-  prometheusKubeNodeUnreachableReport:
+  # name: prometheusNodeUnreachableReport
+  prometheusNodeUnreachableReport:
     triggers:
     - on_prometheus_alert:
         alert_name: KubeNodeUnreachable
@@ -350,8 +346,8 @@ playbooksMap:
     priority: 10
 
   # Prometheus Statefulset playbooks
-  # name: prometheusKubeStatefulSetReplicasMismatchReport
-  prometheusKubeStatefulSetReplicasMismatchReport:
+  # name: prometheusStatefulSetReplicasMismatchReport
+  prometheusStatefulSetReplicasMismatchReport:
     triggers:
     - on_prometheus_alert:
         alert_name: KubeStatefulSetReplicasMismatch
@@ -364,8 +360,8 @@ playbooksMap:
     halt: true
     priority: 10
 
-  # name: prometheusKubeStatefulSetUpdateNotRolledOutReport
-  prometheusKubeStatefulSetUpdateNotRolledOutReport:
+  # name: prometheusStatefulSetUpdateNotRolledOutReport
+  prometheusStatefulSetUpdateNotRolledOutReport:
     triggers:
     - on_prometheus_alert:
         alert_name: KubeStatefulSetUpdateNotRolledOut
@@ -377,8 +373,8 @@ playbooksMap:
     priority: 10
 
   # Prometheus Daemonset playbooks
-  # name: prometheusKubeDaemonSetRolloutStuckReport
-  prometheusKubeDaemonSetRolloutStuckReport:
+  # name: prometheusDaemonSetRolloutStuckReport
+  prometheusDaemonSetRolloutStuckReport:
     triggers:
     - on_prometheus_alert:
         alert_name: KubeDaemonSetRolloutStuck
@@ -390,8 +386,8 @@ playbooksMap:
     halt: true
     priority: 10
 
-  # name: prometheusKubernetesDaemonsetMisscheduledReport
-  prometheusKubernetesDaemonsetMisscheduledReport:
+  # name: prometheusDaemonsetMisscheduledReport
+  prometheusDaemonsetMisscheduledReport:
     triggers:
     - on_prometheus_alert:
         alert_name: KubernetesDaemonsetMisscheduled
@@ -463,8 +459,8 @@ playbooksMap:
     halt: true
     priority: 10
 
-  # name: prometheusKubernetesDeploymentReplicasMismatchReport
-  prometheusKubernetesDeploymentReplicasMismatchReport:
+  # name: prometheusDeploymentReplicasMismatchReport
+  prometheusDeploymentReplicasMismatchReport:
     triggers:
     - on_prometheus_alert:
         alert_name: KubernetesDeploymentReplicasMismatch
@@ -529,8 +525,8 @@ platformPlaybooksMap:
     sinks:
       - "robusta_ui_sink"
 
-  # name: k8sResourcesChangesBabysitterReportRobusta
-  k8sResourcesChangesBabysitterReportRobusta:
+  # name: k8sBabysitterReportRobusta
+  k8sBabysitterReportRobusta:
     triggers:
       - on_deployment_all_changes: {}
       - on_daemonset_all_changes: {}
@@ -540,8 +536,8 @@ platformPlaybooksMap:
     sinks:
       - "robusta_ui_sink"
       
-  # name: k8sJobUpdateFailureReportRobusta
-  k8sJobUpdateFailureReportRobusta:
+  # name: k8sPlatformJobFailureReport
+  k8sPlatformJobFailureReport:
     triggers:
     - on_job_failure: {}
     actions:
