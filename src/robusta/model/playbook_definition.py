@@ -14,11 +14,10 @@ class PlaybookDefinition(BaseModel):
     sinks: List[str] = None  # compatibility
     triggers: List[Trigger]
     actions: List[PlaybookAction] = []
-    tags: Dict[str, str] = {}
     priority: float = math.inf
     halt: bool = False
     disabled: bool = False
-
+    _playbook_id: str = PrivateAttr()
 
     # TODO: better to be in root_validator of the PlaybookAction
     @validator('actions', pre=True, each_item=True)
@@ -34,7 +33,20 @@ class PlaybookDefinition(BaseModel):
         return self.actions
 
     def get_id(self) -> str:
-        return name
+        return self._playbook_id
 
+    def post_init(self):
+        self._playbook_id = self.__playbook_hash()
 
-        
+    def __playbook_hash(self):
+        hash_input = (
+            self.name
+            + ".".join([trigger.get().json() for trigger in self.triggers])
+            + ".".join([action.as_str() for action in self.actions])
+            + f"{self.sinks}"
+            + str(self.priority)
+            + str(self.halt)
+            + str(self.disabled)
+        )
+        return hashlib.md5(hash_input.encode()).hexdigest()
+

@@ -132,7 +132,9 @@ class PlaybooksRegistryImpl(PlaybooksRegistry):
                         msg = f"Action {action_def.action_name} cannot be triggered by {exec_event_type}"
                         logging.error(msg)
                         raise Exception(msg)
-      
+            
+            playbook_def.post_init()
+            
             # add the playbook only once for each event.
             playbooks_trigger_events = set(
                 [trigger_definition.get().get_trigger_event() for trigger_definition in playbook_def.triggers]
