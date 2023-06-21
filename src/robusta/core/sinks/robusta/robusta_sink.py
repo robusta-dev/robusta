@@ -59,9 +59,10 @@ class RobustaSink(SinkBase):
         self.last_send_time = 0
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
 
+        global_config=self.get_global_config()
         self.__prometheus_health_checker = PrometheusHealthChecker(discovery_period_sec=self.__discovery_period_sec,
-                                                                   global_config=self.get_global_config())
-        self.__rrm_checker = RRM(dal=self.dal, global_config=self.get_global_config())
+                                                                   global_config=global_config)
+        self.__rrm_checker = RRM(dal=self.dal, global_config=global_config)
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         # start cluster discovery

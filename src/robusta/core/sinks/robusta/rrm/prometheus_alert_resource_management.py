@@ -2,7 +2,7 @@ import logging
 from typing import Optional, List
 from kubernetes.client import CustomObjectsApi
 
-from robusta.core.model.env_vars import RRM_PERIOD_SEC, MAX_ALLOWED_RULES_PER_CRD, INSTALLATION_NAMESPACE
+from robusta.core.model.env_vars import RRM_PERIOD_SEC, MAX_ALLOWED_RULES_PER_CRD_ALERT, INSTALLATION_NAMESPACE
 from pydantic import BaseModel
 
 from robusta.core.sinks.robusta.rrm.resource_state import ResourceState
@@ -55,7 +55,7 @@ class PrometheusAlertResourceManagement:
 
     def __init__(self, k8_api: CustomObjectsApi):
         self.__sleep = RRM_PERIOD_SEC
-        self.__max_allowed_rules_per_crd = MAX_ALLOWED_RULES_PER_CRD
+        self.__max_allowed_rules_per_crd_alert = MAX_ALLOWED_RULES_PER_CRD_ALERT
         self.__k8_api = k8_api
         self.__label_selector_value = "robusta-resource-management"
         self.__label_selector_key = "release.app"
@@ -66,10 +66,10 @@ class PrometheusAlertResourceManagement:
         self.__version = "v1"
         self.__k8_apiVersion = f"{self.__group}/{self.__version}"
         self.__kind = "PrometheusRule"
-        self.__crd_name = "robusta-prometheus.rules"
+        self.__crd_alert_basename = "robusta-prometheus.rules"
         self.__installation_namespace = INSTALLATION_NAMESPACE
 
-    def __list_crd(self):
+    def __list_crd_alert(self):
         try:
             return self.__k8_api.list_namespaced_custom_object(
                 group=self.__group,
@@ -79,9 +79,9 @@ class PrometheusAlertResourceManagement:
                 namespace=self.__installation_namespace
             )
         except Exception as e:
-            raise f"An error occured while listing PrometheusRules CRD: {e}"
+            raise f"An error occured while listing PrometheusRules CRD alerts: {e}"
 
-    def __delete_crd(self, name: str, namespace: str):
+    def __delete_crd_alert(self, name: str, namespace: str):
         try:
             self.__k8_api.delete_namespaced_custom_object(
                 group=self.__group,
@@ -89,11 +89,14 @@ class PrometheusAlertResourceManagement:
                 plural=self.__plural,
                 name=name,
                 namespace=namespace,
+                grace_period_seconds=60  # This field is mandatory because when we delete and re-create the CRD
+                # alerts, there is a possibility of triggering resolved alerts immediately after deletion. By setting
+                # a grace period, we ensure that does not happen
             )
         except Exception as e:
-            raise f"An error occured while deleting PrometheusRules CRD: {e}"
+            raise f"An error occured while deleting PrometheusRules CRD alerts: {e}"
 
-    def __create_crd(self, name: str, rules: List[dict]) -> dict:
+    def __create_crd_alert(self, name: str, rules: List[dict]) -> dict:
         try:
             snapshot_body = {
                 "apiVersion": self.__k8_apiVersion,
@@ -125,12 +128,12 @@ class PrometheusAlertResourceManagement:
                 namespace=self.__installation_namespace
             )
         except Exception as e:
-            raise f"An error occured while creating PrometheusRules CRD: {e}"
+            raise f"An error occured while creating PrometheusRules CRD alerts: {e}"
 
     def create_prometheus_alerts(self, active_alert_rules: List[PrometheusAlertRule]):
         try:
-            local_k8_crd = self.__list_crd()
-            local_k8_rules = local_k8_crd.get("items")
+            local_k8_crd_alert = self.__list_crd_alert()
+            local_k8_rules = local_k8_crd_alert.get("items")
             sorted_local_k8_rules: List[PrometheusAlertRule] = []
             if local_k8_rules:
                 rules = []
@@ -142,21 +145,26 @@ class PrometheusAlertResourceManagement:
                 sorted_local_k8_rules = [PrometheusAlertRule.from_dict(item) for item in
                                          sorted(rules, key=lambda x: x["alert"])]
 
-            sorted_active_rules: List[PrometheusAlertRule] = []
-            if active_alert_rules:
-                sorted_active_rules = sorted(active_alert_rules, key=lambda x: x.alert)
+            sorted_active_rules = sorted(active_alert_rules, key=lambda x: x.alert)
+            # both local k8 rules and active rules from supabase are NOT same. Recreate the crd alerts(s)
+            if sorted_active_rules != sorted_local_k8_rules:
+                for obj in local_k8_rules:
+                    self.__delete_crd_alert(name=obj["metadata"]["name"], namespace=obj["metadata"]["namespace"])
+            # both local k8 rules and active rules from supabase are the same. So dont recreate the crd alerts(s)
+            else:
+                return
 
-                # both local k8 rules and active rules from supabase are NOT same. Recreate the crd(s)
-                if sorted_active_rules != sorted_local_k8_rules:
-                    for obj in local_k8_rules:
-                        self.__delete_crd(name=obj["metadata"]["name"], namespace=obj["metadata"]["namespace"])
-                # both local k8 rules and active rules from supabase are the same. So dont recreate the crd(s)
-                else:
-                    return
+            if not sorted_active_rules:
+                return
 
-            next_iteration = int((len(sorted_active_rules) / self.__max_allowed_rules_per_crd)) + 1
-            name = f"{self.__crd_name}--{next_iteration}"
-            new_crd_rules = [item.to_dict() for item in sorted_active_rules]
-            self.__create_crd(name=name, rules=new_crd_rules)
+            max_iterations = int((len(sorted_active_rules) / self.__max_allowed_rules_per_crd_alert)) + 1
+
+            for next_iteration in range(1, max_iterations + 1):
+                start_index = (next_iteration - 1) * self.__max_allowed_rules_per_crd_alert
+                end_index = next_iteration * self.__max_allowed_rules_per_crd_alert
+                name = f"{self.__crd_alert_basename}--{next_iteration}"
+
+                crd_alert_rules = [item.to_dict() for item in sorted_active_rules[start_index:end_index]]
+                self.__create_crd_alert(name=name, rules=crd_alert_rules)
         except Exception as e:
             logging.error(f"Error occured while creating prometheus alerts: {e}", exc_info=True)
