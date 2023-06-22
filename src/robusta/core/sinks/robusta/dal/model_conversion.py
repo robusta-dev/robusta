@@ -12,13 +12,12 @@ from robusta.core.reporting import (
     FileBlock,
     Finding,
     HeaderBlock,
+    JsonBlock,
     KubernetesDiffBlock,
     ListBlock,
     MarkdownBlock,
     PrometheusBlock,
     TableBlock,
-    JsonBlock,
-    ScanReportBlock,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer
@@ -96,7 +95,7 @@ class ModelConversion:
             elif isinstance(block, ListBlock):
                 structured_data.append({"type": "list", "data": block.items})
             elif isinstance(block, PrometheusBlock):
-                structured_data.append({"type": "prometheus", "data": block.data.json(), "metadata": block.metadata})
+                structured_data.append({"type": "prometheus", "data": block.data.dict(), "metadata": block.metadata})
             elif isinstance(block, TableBlock):
                 if block.table_name:
                     structured_data.append(
