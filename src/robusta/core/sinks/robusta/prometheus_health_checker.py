@@ -4,7 +4,8 @@ import time
 
 from pydantic import BaseModel
 
-from robusta.core.exceptions import NoPrometheusUrlFound, NoAlertManagerUrlFound, PrometheusFlagsConnectionError
+from robusta.core.exceptions import NoPrometheusUrlFound, NoAlertManagerUrlFound, PrometheusFlagsConnectionError, \
+    PrometheusNotFound, VictoriaMetricsNotFound, AlertsManagerNotFound
 from robusta.core.model.env_vars import PROMETHEUS_ERROR_LOG_PERIOD_SEC
 from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags, \
     check_prometheus_connection
@@ -53,16 +54,20 @@ class PrometheusHealthChecker:
             prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
             check_prometheus_connection(prom=prometheus_connection, params={})
 
+            self.status.prometheus = True
+
             prometheus_flags = get_prometheus_flags(prom=prometheus_connection)
             if prometheus_flags:
                 self.status.prometheus_retention_time = prometheus_flags.get('retentionTime', "")
             else:
                 self.status.prometheus_retention_time = ""
 
-            self.status.prometheus = True
-
         except Exception as e:
-            self.status.prometheus = False
+            if isinstance(e, NoPrometheusUrlFound) \
+                    or isinstance(e, PrometheusNotFound) \
+                    or isinstance(e, VictoriaMetricsNotFound):
+                self.status.prometheus = False
+
             self.status.prometheus_retention_time = ""
 
             if time.time() - self.__last_prometheus_error_log_time > self.__prometheus_error_log_period_sec:
@@ -83,7 +88,9 @@ class PrometheusHealthChecker:
             self.status.alertmanager = True
 
         except Exception as e:
-            self.status.alertmanager = False
+            if isinstance(e, NoAlertManagerUrlFound) \
+                    or isinstance(e, AlertsManagerNotFound):
+                self.status.alertmanager = False
 
             if time.time() - self.__last_alertmanager_error_log_time > self.__prometheus_error_log_period_sec:
                 self.__last_alertmanager_error_log_time = time.time()
