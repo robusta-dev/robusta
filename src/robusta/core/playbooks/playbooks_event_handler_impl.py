@@ -33,13 +33,13 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
         execution_response = None
         execution_event: Optional[ExecutionBaseEvent] = None
-        sink_findings: Dict[str, List[Finding]] = defaultdict(list)
+        
         for playbook in playbooks:
             fired_trigger = self.__get_fired_trigger(trigger_event, playbook.triggers, playbook.get_id())
             if fired_trigger:
                 
                 try:
-                    execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings)                    
+                    execution_event = fired_trigger.build_execution_event(trigger_event)                    
                 except Exception:
                     logging.error(
                         f"Failed to build execution event for {trigger_event.get_event_description()}, Event: {trigger_event}",
@@ -96,7 +96,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
         if sync_response:  # add the findings to the response
             execution_response["findings"] = [
-                self.__to_finding_json(finding) for finding in execution_event.sink_findings[SYNC_RESPONSE_SINK]
+                self.__to_finding_json(finding) for finding in execution_event.findings
             ]
 
         return execution_response
@@ -265,11 +265,11 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
     def __handle_findings(self, execution_event: ExecutionBaseEvent):
         sinks_info = self.registry.get_telemetry().sinks_info
 
-        for sink_name in execution_event.sink_findings.keys():
+        for sink_name in execution_event.named_sinks:
             if SYNC_RESPONSE_SINK == sink_name:
                 continue  # not a real sink, just container for findings that needs to be returned synchronously
 
-            for finding in execution_event.sink_findings[sink_name]:
+            for finding in execution_event.findings:
                 try:
                     sink = self.registry.get_sinks().sinks.get(sink_name)
                     if not sink:

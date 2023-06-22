@@ -92,9 +92,9 @@ class PrometheusAlertTrigger(BaseTrigger):
         return True
 
     def build_execution_event(
-        self, event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]]
+        self, event: PrometheusTriggerEvent
     ) -> Optional[ExecutionBaseEvent]:
-        return AlertEventBuilder.build_event(event, sink_findings)
+        return AlertEventBuilder.build_event(event)
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -131,11 +131,10 @@ class AlertEventBuilder:
 
     @staticmethod
     def _build_event_task(
-        event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]]
+        event: PrometheusTriggerEvent
     ) -> Optional[ExecutionBaseEvent]:
         labels = event.alert.labels
         execution_event = PrometheusKubernetesAlert(
-            sink_findings=sink_findings,
             alert=event.alert,
             alert_name=labels["alertname"],
             alert_severity=labels.get("severity"),
@@ -178,6 +177,6 @@ class AlertEventBuilder:
 
     @staticmethod
     def build_event(
-        event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]]
+        event: PrometheusTriggerEvent
     ) -> Optional[ExecutionBaseEvent]:
-        return AlertEventBuilder._build_event_task(event, sink_findings)
+        return AlertEventBuilder._build_event_task(event)

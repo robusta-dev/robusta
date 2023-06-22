@@ -112,7 +112,7 @@ class HelmReleaseBaseTrigger(BaseTrigger):
         return can_fire
 
     def build_execution_event(
-            self, event: HelmReleasesTriggerEvent, sink_findings: Dict[str, List[Finding]]
+        self, event: HelmReleasesTriggerEvent
     ) -> Optional[ExecutionBaseEvent]:
         if not isinstance(event, HelmReleasesTriggerEvent):
             return

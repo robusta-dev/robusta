@@ -27,7 +27,7 @@ class BaseTrigger(DocumentedModel):
         return True
 
     def build_execution_event(
-        self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
+        self, event: TriggerEvent
     ) -> Optional[ExecutionBaseEvent]:
         pass
 

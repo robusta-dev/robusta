@@ -30,7 +30,7 @@ class JobFailedTrigger(JobUpdateTrigger):
         if not isinstance(event, K8sTriggerEvent):
             return False
 
-        exec_event = self.build_execution_event(event, {})
+        exec_event = self.build_execution_event(event)
 
         if not isinstance(exec_event, JobChangeEvent):
             return False
