@@ -10,8 +10,9 @@ from robusta.core.model.env_vars import INCOMING_EVENTS_QUEUE_MAX_SIZE
 
 class QueueMetrics:
     def __init__(self):
-        self.queued = prometheus_client.Counter("queued", "Number of queued events", labelnames=("queue_name",))
-        self.rejected = prometheus_client.Counter("rejected", "Number of rejected events", labelnames=("queue_name",))
+        self.queue_event = prometheus_client.Counter(
+            "queue_event", "Number of queue events status", labelnames=("queue_name", "status")
+        )
         self.total_process_time = prometheus_client.Summary(
             "queue_process_time",
             "queue process time (seconds)",
@@ -23,12 +24,13 @@ class QueueMetrics:
         self.queue_size.labels(queue_name).set_function(queue_size_callback_fn)
 
     def on_rejected(self, queue_name):
-        self.rejected.labels(queue_name).inc()
+        self.queue_event.labels(queue_name, "rejected").inc()
 
     def on_queued(self, queue_name):
-        self.queued.labels(queue_name).inc()
+        self.queue_event.labels(queue_name, "queued").inc()
 
     def on_processed(self, queue_name, processing_time: float):
+        self.queue_event.labels(queue_name, "processed").inc()
         self.total_process_time.labels(queue_name).observe(processing_time)
 
 
