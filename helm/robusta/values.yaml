@@ -86,7 +86,7 @@ playbooksPersistentVolumeSize: 4Gi
 ###################################
 playbooksMap:
   # priority builtin playbooks for running before all playbooks
-  #don't remove it. used for internal processing !!!  !
+  # This playbook required for Robusta to function properly. Do not disable or remove it!!!
   # name: k8sChangeTracking
   k8sChangeTracking:
     triggers:
