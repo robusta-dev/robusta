@@ -41,24 +41,22 @@ Alerts silencing
 
 Robusta allows you to silence alerts directly from your notification channels (sinks). Robusta attempts to find an AlertManager instance running in your cluster automatically and uses it to create silences.
 
-If Robusta can't locate your AlertManager, you need to :ref:`tell it where to find it <Setting up a custom Prometheus, AlertManager, and Grafana>`
+If Robusta can't locate your AlertManager, you need to configure a pull integration.
 
-Grafana AlertManager
-=====================
-If you're using the AlertManager that's embedded in Grafana, you need to modify one additional setting so Robusta can create silences.
+.. Grafana AlertManager
+.. =====================
+.. If you're using the AlertManager that's embedded in Grafana, you need to modify one additional setting so Robusta can create silences. This is necessary because of minor API differences in the AlertManager embedded in Grafana.
 
-Add the following configuration to the ``globalConfig`` section in your ``generated_values.yaml`` file:
+.. Add the following configuration to the ``globalConfig`` section in your ``generated_values.yaml`` file:
 
-.. admonition:: generated_values.yaml
+.. .. admonition:: generated_values.yaml
 
-    .. code-block:: yaml
+..     .. code-block:: yaml
 
-        globalConfig:
-          grafana_api_key: <YOUR GRAFANA EDITOR API KEY>
-          alertmanager_flavor: grafana
+..         globalConfig:
+..           grafana_api_key: <YOUR GRAFANA EDITOR API KEY>
+..           alertmanager_flavor: grafana
 
-    .. note::
+..     .. note::
 
-      The Grafana API key must have the ``Editor`` role in order to create silences.
-
-This configuration is necessary because of minor API differences in the AlertManager embedded in Grafana.
+..       The Grafana API key must have the ``Editor`` role in order to create silences.

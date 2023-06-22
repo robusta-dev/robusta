@@ -8,18 +8,16 @@ Integrating with Prometheus
    :hidden:
    :maxdepth: 1
 
+   kube-prometheus-stack
    alert-manager
    outofcluster-prometheus
-   kube-prometheus-stack
    azure-managed-prometheus
    victoria-metrics
+   grafana-alert-manager
    embedded-prometheus
 
 
-Robusta can :ref:`enhance Prometheus alerts<Enhanced Prometheus Alerts>`. To configure this, there are two key steps:
-
-1. Configure a push integration to receive alerts.
-2. Configure a pull integration to fetch graphs.
+Robusta can :ref:`enhance Prometheus alerts<Enhanced Prometheus Alerts>`. To configure this, follow one of these guides.
 
 Note: If you installed Robusta's :ref:`Embedded Prometheus Stack`, neither step is necessary. Everything is pre-configured.
 
@@ -30,7 +28,7 @@ Common Methods
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`book;1em;` Kube Prometheus Stack
+    .. grid-item-card:: :octicon:`book;1em;` Kube-Prometheus-Stack
         :class-card: sd-bg-light sd-bg-text-light
         :link: kube-prometheus-stack
         :link-type: doc
@@ -42,21 +40,21 @@ Common Methods
         :link: alert-manager
         :link-type: doc
 
-        For users with Prometheus and Robusta installed in the same cluster
+        For non Kube-Prometheus-Stack users with Prometheus and Robusta in the same cluster
 
     .. grid-item-card:: :octicon:`book;1em;` Out of cluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: outofcluster-prometheus
         :link-type: doc
 
-        For users with Prometheus installed on a different cluster than Robusta
+        For users with Prometheus and Robusta on different clusters
 
     .. grid-item-card:: :octicon:`book;1em;` Azure managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: azure-managed-prometheus
         :link-type: doc
 
-        Connect your Prometheus cluster on Azure to work with Robusta.
+        Connect your Prometheus cluster on Azure to work with Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` Victoria Metrics
         :class-card: sd-bg-light sd-bg-text-light
@@ -65,7 +63,13 @@ Common Methods
 
         For users using AlertManager with Victoria Metrics
 
-    
+    .. grid-item-card:: :octicon:`book;1em;` Grafana AlertManager
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: grafana-alert-manager
+        :link-type: doc
+
+        Learn to configure Grafana's own AlertManager with Robusta
+
     .. grid-item-card:: :octicon:`book;1em;` Embedded Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: embedded-prometheus
@@ -88,4 +92,3 @@ Common Methods
 
 ..     It might be tempting to use ``helm/robusta/values.yaml`` in our GitHub repository, but this file wont work.
 ..     It contains empty placeholders filled in during releases.
-

@@ -14,18 +14,7 @@ Below is an example AlertManager configuration.
 
 .. include:: ./_alertmanager-config.rst
 
-After you configure AlertManager, you can test it works properly, by creating a demo alert:
-
-.. code-block:: bash
-
-    robusta demo-alert
-
-Within a few minutes, you should see the demo alert in the Robusta UI, Slack, and any other sinks you configured.
-
-.. admonition:: Why do I see a banner in the UI that "Alerts won't show up"?
-    :class: warning
-
-    This notification is displayed until AlertManager sends the first alert to Robusta.
+.. include:: ./_testing_integration.rst
 
 Configuring a Pull Integration
 ====================================

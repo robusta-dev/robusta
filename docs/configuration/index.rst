@@ -20,7 +20,7 @@ Common Settings
 
     .. grid-item-card:: :octicon:`book;1em;` Integrate Prometheus
         :class-card: sd-bg-light sd-bg-text-light
-        :link: alertmanager-integration/alert-manager
+        :link: alertmanager-integration/index
         :link-type: doc
 
         Connect Prometheus, AlertManager, Grafana, and others.

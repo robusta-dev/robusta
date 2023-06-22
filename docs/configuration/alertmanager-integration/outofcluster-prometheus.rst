@@ -35,18 +35,7 @@ Configure Push Integration
     .. code-annotations::
       1. Make sure the Robusta ``route`` is the first ``route`` defined. If it isn't the first route, it might not receive alerts. When a ``route`` is matched, the alert will not be sent to following routes, unless the ``route`` is configured with ``continue: true``.
 
-After you configure AlertManager, you can test it works properly, by creating a demo alert. Run:
-
-.. code-block:: bash
-
-    robusta demo-alert
-
-Within a few minutes, you should see the demo alert in the Robusta UI, Slack, and any other sinks you configured.
-
-.. details:: Why do I see a banner in the UI that "Alerts won't show up"?
-    :class: warning
-
-    This notification is displayed until AlertManager sends the first alert to Robusta.
+.. include:: ./_testing_integration.rst
 
 .. include:: ./_pull_integration.rst
 
