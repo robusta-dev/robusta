@@ -8,7 +8,7 @@ This guide can be applied to all events passing through Robusta, including forwa
 Prerequisites
 ----------------
 
-* All least one existing :ref:`sink <Sinks Reference>`, such as Slack, Microsoft Teams, Discord, etc.
+* At least one existing :ref:`sink <Sinks Reference>`, such as Slack, Microsoft Teams, Discord, etc.
 
 Setting Up Routing
 ----------------------
@@ -23,7 +23,7 @@ Assume you have an existing sink, in this case Slack:
         slack_channel: app-notifications
         api_key: secret-key
 
-By default, the sink will receive notifications for all namespaces. Before we fix that, let's duplicate the sink, changing only the Slack channel:
+By default, the sink will receive notifications for all namespaces. Let's duplicate the sink and change only the Slack channel:
 
 .. code-block:: yaml
 
