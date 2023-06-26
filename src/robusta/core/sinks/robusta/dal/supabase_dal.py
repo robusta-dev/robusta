@@ -2,10 +2,12 @@ import json
 import logging
 import threading
 import time
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
-from postgrest_py.request_builder import QueryRequestBuilder
+from postgrest_py.request_builder import QueryRequestBuilder, FilterRequestBuilder
+from postgrest_py.utils import sanitize_param
 from supabase_py import Client
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
@@ -22,8 +24,6 @@ from robusta.core.reporting.blocks import ScanReportBlock, ScanReportRow
 from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.core.sinks.robusta.rrm.account_resource import AccountResource, ResourceKind
-from robusta.core.sinks.robusta.rrm.prometheus_alert_resource_management import PrometheusAlertResourceState
-from robusta.core.sinks.robusta.rrm.resource_state import ResourceState
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -314,6 +314,16 @@ class SupabaseDal:
             status_code = res.get("status_code")
             raise Exception(f"publish nodes failed. status: {status_code}")
 
+    @staticmethod
+    def custom_filter_request_builder(frq: FilterRequestBuilder, operator: str,
+                                      criteria: str) -> FilterRequestBuilder:
+        key, val = sanitize_param(operator), f"{criteria}"
+        if key in frq.session.params:
+            frq.session.params.update({key: frq.session.params.get_list(key) + [val]})
+        else:
+            frq.session.params[key] = val
+        return frq
+
     def get_active_jobs(self) -> List[JobInfo]:
         res = (
             self.client.table(JOBS_TABLE)
@@ -542,14 +552,27 @@ class SupabaseDal:
 
         logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
 
-    def get_account_resources(self) -> List[AccountResource]:
-        res = (
-            self.client.table(ACCOUNT_RESOURCE_TABLE)
-            .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "updated_at")
-            .filter("account_id", "eq", self.account_id)
-            .filter("deleted", "eq", False)
-            .execute()
-        )
+    def get_account_resources(self, resource_kind: ResourceKind, updated_at: Optional[datetime]) \
+            -> List[AccountResource]:
+        query_builder = self.client.table(ACCOUNT_RESOURCE_TABLE) \
+            .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "updated_at") \
+            .filter("resource_kind", "eq", resource_kind) \
+            .filter("account_id", "eq", self.account_id) \
+
+        if updated_at:
+            query_builder.gt("updated_at", updated_at.isoformat())
+        else:
+            # in the initial db fetch don't include the deleted records.
+            # in the subsequent db fetch allow even the deleted records so that they can be removed from the cluster
+            query_builder.filter("deleted", "eq", False)
+
+        query_builder = SupabaseDal. \
+            custom_filter_request_builder(query_builder,
+                                          operator="or",
+                                          criteria=f"(clusters_target_set.cs.[\"*\"], clusters_target_set.cs.[\"{self.cluster}\"])")
+
+        res = query_builder.execute()
+
         if res.get("status_code") not in [200]:
             msg = f"Failed to get existing account resources (supabase) error: {res.get('data')}"
             logging.error(msg)
@@ -558,17 +581,7 @@ class SupabaseDal:
 
         account_resources: List[AccountResource] = []
         for data in res.get("data"):
-            if not data["resource_state"]:
-                continue
-
-            resource_state: Optional[ResourceState] = None
-            if data["resource_kind"] == ResourceKind.PrometheusAlert:
-                if "*" in data["clusters_target_set"] or self.cluster in data["clusters_target_set"]:
-                    resource_state = PrometheusAlertResourceState.from_dict(data["resource_state"])
-
-            if not resource_state:
-                continue
-
+            resource_state = data["resource_state"]
             resource = AccountResource(
                 entity_id=data["entity_id"],
                 resource_kind=data["resource_kind"],

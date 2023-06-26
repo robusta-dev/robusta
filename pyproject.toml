@@ -29,6 +29,7 @@ hikaru = "^1.0.1"
 click-spinner = "^0.1.10"
 pymsteams = "^0.1.16"
 supabase-py = { version = "^0.0.2", optional = true}
+postgrest-py = "0.4.0"
 tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.7.0" }
 Flask = { version = "^1.1.2", optional = true }
