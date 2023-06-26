@@ -6,7 +6,7 @@ This guide walks you through configuring your out of cluster Prometheus to push 
 Configure Push Integration
 ==============================
 
-1. Enable two-way interactivity by setting ``disableCloudRouting: false``in :ref:`Robusta's configuration <Configuration Overview>`.
+1. Enable two-way interactivity by setting ``disableCloudRouting: false`` in :ref:`Robusta's configuration <Configuration Overview>`.
 2. Make sure that your alerts contain a label named ``cluster_name`` which matches the :ref:`cluster_name defined in Robusta's configuration <Global Config>`. This is necessary so that the Robusta cloud knows which cluster to forward events to.
 3. Add the following configuration to you AlertManager:
 
