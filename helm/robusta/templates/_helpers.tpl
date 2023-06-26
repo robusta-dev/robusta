@@ -63,10 +63,10 @@ active_playbooks:
   {{- fail "The `platformPlaybooks` value is deprecated. Use `platformPlaybooksMap` dictionary to create named playbooks `playbook_name: {...playbook_definition...} `  " -}}
 {{- end }}
 
+{{- $mergedPlaybooks := .Values.playbooksMap }} 
+
 {{- if .Values.enablePlatformPlaybooks }} 
-  {{- $mergedPlaybooks := mergeOverwrite .Values.playbooksMap .Values.platformPlaybooksMap }} 
-{{- else }} 
-  {{- $mergedPlaybooks := .Values.playbooksMap }} 
+  {{- $mergedPlaybooks := mergeOverwrite $mergedPlaybooks .Values.platformPlaybooksMap }} 
 {{ end }}
 
 # playbook map, built at {{ now }}
