@@ -86,8 +86,8 @@ class KRRResponse(BaseModel):
     scans: List[KRRScan]
     score: int
     resources: List[ResourceType] = ["cpu", "memory"]
-    description: Optional[str] = None # Old KRR versions do not return this field.
-    strategy: Optional[KRRStrategyData] = None  # Old KRR versions do not return this field.
+    description: Optional[str] = None # This field is not returned by KRR < v1.2.0
+    strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
 
 
 class KRRParams(PrometheusParams):
