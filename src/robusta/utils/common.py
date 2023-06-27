@@ -41,10 +41,10 @@ def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):
     return duplication
 
 
-def parse_query_string(query_string: str) -> dict:
+def parse_query_string(query_string: str) -> Dict[str, List[str]]:
     if not query_string:
         return {}
-    query_params = parse_qs(query_string)
+    query_params = parse_qs(query_string, keep_blank_values=True)
     parsed_params = defaultdict(list)
 
     for key, values in query_params.items():
