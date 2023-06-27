@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List, Dict
 
 from hikaru import DiffDetail, HikaruBase
@@ -40,9 +41,16 @@ def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):
     return duplication
 
 
-def parse_query_string(query_string: str) -> Dict[str, str]:
+def parse_query_string(query_string: str) -> dict:
     if not query_string:
         return {}
     query_params = parse_qs(query_string)
-    return {key: value[0] for key, value in query_params.items()}
+    parsed_params = defaultdict(list)
+
+    for key, values in query_params.items():
+        for value in values:
+            parsed_params[key].append(value)
+
+    return parsed_params
+
 
