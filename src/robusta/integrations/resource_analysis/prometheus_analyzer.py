@@ -12,7 +12,7 @@ class PrometheusAnalyzer:
         self.prom = get_prometheus_connect(prometheus_params)
         self.default_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
 
-        check_prometheus_connection(prom=self.prom, prometheus_params=prometheus_params, params=self.default_params)
+        check_prometheus_connection(prom=self.prom, params=self.default_params)
 
         self.prometheus_tzinfo = prometheus_tzinfo or datetime.now().astimezone().tzinfo
 

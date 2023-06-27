@@ -52,10 +52,10 @@ class PrometheusHealthChecker:
 
             prometheus_params = PrometheusParams(**global_config)
             prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
-            check_prometheus_connection(prom=prometheus_connection, prometheus_params=prometheus_params, params={})
+            check_prometheus_connection(prom=prometheus_connection, params={})
 
             if self.__check_prometheus_flags:
-                prometheus_flags = get_prometheus_flags(prom=prometheus_connection, prometheus_params=prometheus_params)
+                prometheus_flags = get_prometheus_flags(prom=prometheus_connection)
                 if prometheus_flags:
                     self.status.prometheus_retention_time = prometheus_flags.get('retentionTime', "")
 

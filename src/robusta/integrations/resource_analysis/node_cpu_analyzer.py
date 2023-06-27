@@ -17,7 +17,7 @@ class NodeCpuAnalyzer:
         self.internal_ip = next(addr.address for addr in self.node.status.addresses if addr.type == "InternalIP")
         self.prom = get_prometheus_connect(prometheus_params)
         self.default_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
-        check_prometheus_connection(prom=self.prom, prometheus_params=prometheus_params, params=self.default_params)
+        check_prometheus_connection(prom=self.prom, params=self.default_params)
 
     def get_total_cpu_usage(self, other_method=False):
         """

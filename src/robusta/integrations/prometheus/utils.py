@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 import requests
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError, HTTPError
+from requests.sessions import merge_setting
 
 from robusta.core.exceptions import (
     NoPrometheusUrlFound,
@@ -100,21 +101,21 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
 
     headers = PrometheusAuthorization.get_authorization_headers(prometheus_params)
 
-    return PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
+    prom = PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
+    query_string_params = parse_query_string(prometheus_params.prometheus_url_query_string)
+    prom._session.params = merge_setting(prom._session.params, query_string_params)
 
+    return prom
 
-def check_prometheus_connection(prom: "PrometheusConnect", prometheus_params: PrometheusParams, params: dict = None):
+def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
     params = params or {}
     try:
-        query_string_params = parse_query_string(prometheus_params.prometheus_url_query_string)
-        query_params = {**params, **query_string_params}
-
         response = prom._session.get(
             f"{prom.url}/api/v1/query",
             verify=prom.ssl_verification,
             headers=prom.headers,
             # This query should return empty results, but is correct
-            params={"query": "example", **query_params},
+            params={"query": "example", **params},
         )
 
         if response.status_code == 401:
@@ -124,7 +125,7 @@ def check_prometheus_connection(prom: "PrometheusConnect", prometheus_params: Pr
                     f"{prom.url}/api/v1/query",
                     verify=prom.ssl_verification,
                     headers=prom.headers,
-                    params={"query": "example", **query_params},
+                    params={"query": "example", **params},
                 )
 
         response.raise_for_status()
@@ -144,14 +145,14 @@ def __text_config_to_dict(text: str) -> Dict:
     return conf
 
 
-def get_prometheus_flags(prom: "PrometheusConnect", prometheus_params: PrometheusParams) -> Optional[Dict]:
+def get_prometheus_flags(prom: "PrometheusConnect") -> Optional[Dict]:
     try:
-        return fetch_prometheus_flags(prom=prom, prometheus_params=prometheus_params)
+        return fetch_prometheus_flags(prom=prom)
     except Exception as e:
         prometheus_exception = e
 
     try:
-        return fetch_victoria_metrics_flags(vm=prom, prometheus_params=prometheus_params)
+        return fetch_victoria_metrics_flags(vm=prom)
     except Exception as e:
         victoria_metrics_exception = e
 
@@ -161,10 +162,9 @@ def get_prometheus_flags(prom: "PrometheusConnect", prometheus_params: Prometheu
     )
 
 
-def fetch_prometheus_flags(prom: "PrometheusConnect", prometheus_params: PrometheusParams) -> Dict:
+def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
     try:
         result = {}
-        query_string_params = parse_query_string(prometheus_params.prometheus_url_query_string)
 
         # connecting to prometheus
         response = prom._session.get(
@@ -172,7 +172,7 @@ def fetch_prometheus_flags(prom: "PrometheusConnect", prometheus_params: Prometh
             verify=prom.ssl_verification,
             headers=prom.headers,
             # This query should return empty results, but is correct
-            params=query_string_params,
+            params={},
         )
         response.raise_for_status()
 
@@ -184,18 +184,16 @@ def fetch_prometheus_flags(prom: "PrometheusConnect", prometheus_params: Prometh
         ) from e
 
 
-def fetch_victoria_metrics_flags(vm: "PrometheusConnect", prometheus_params: PrometheusParams) -> Dict:
+def fetch_victoria_metrics_flags(vm: "PrometheusConnect") -> Dict:
     try:
         result = {}
-        query_string_params = parse_query_string(prometheus_params.prometheus_url_query_string)
-
         # connecting to VictoriaMetrics
         response = vm._session.get(
             f"{vm.url}/flags",
             verify=vm.ssl_verification,
             headers=vm.headers,
             # This query should return empty results, but is correct
-            params=query_string_params,
+            params={},
         )
         response.raise_for_status()
 
