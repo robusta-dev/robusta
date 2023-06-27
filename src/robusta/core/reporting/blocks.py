@@ -223,6 +223,7 @@ class TableBlock(BaseBlock):
         column_renderers: Dict = {},
         table_name: str = "",
         column_width: List[int] = None,
+        **kwargs,
     ):
         """
         :param rows: a list of rows. each row is a list of columns
@@ -234,6 +235,7 @@ class TableBlock(BaseBlock):
             column_renderers=column_renderers,
             table_name=table_name,
             column_width=column_width,
+            **kwargs,
         )
 
     @classmethod
@@ -434,3 +436,51 @@ class ScanReportBlock(BaseBlock):
             return "E"
         else:
             return "F"
+
+
+class EventRow(BaseModel):
+    type: str
+    reason: str
+    message: str
+    kind: str
+    name: str
+    namespace: str
+    time: str
+
+
+class EventsBlock(TableBlock):
+    """
+    Table display of a Events, Persists the events on the Robusta Platform.
+
+    Note: Wider tables appears as a file attachment on Slack, because they aren't rendered properly inline
+    """
+
+    events: List[EventRow] = []
+
+    def __init__(
+        self,
+        events: List[EventRow],
+        rows: List[List],
+        headers: Sequence[str] = (),
+        column_renderers: Dict = {},
+        table_name: str = "",
+        column_width: List[int] = None,
+    ):
+        """
+        :param rows: a list of rows. each row is a list of columns
+        :param headers: names of each column
+        """
+        super().__init__(
+            events=events,
+            rows=rows,
+            headers=headers,
+            column_renderers=column_renderers,
+            table_name=table_name,
+            column_width=column_width,
+        )
+
+
+class EventsRef(BaseModel):
+    namespace: str
+    name: str
+    kind: str

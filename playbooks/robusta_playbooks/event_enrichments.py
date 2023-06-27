@@ -82,7 +82,10 @@ def event_resource_events(event: EventChangeEvent):
         obj.namespace,
     )
     if events_table:
-        event.add_enrichment([events_table], {SlackAnnotations.ATTACHMENT: True})
+        event.add_enrichment(
+            [events_table],
+            {SlackAnnotations.ATTACHMENT: True},
+        )
 
 
 @action
