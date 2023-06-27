@@ -1,7 +1,9 @@
 import json
 import logging
 import re
+import time
 from enum import Enum, auto
+from kubernetes.client import ApiException
 from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
 import hikaru
@@ -358,6 +360,23 @@ class RobustaPod(Pod):
         """Read pod definition from the API server"""
         return Pod.readNamespacedPod(name, namespace).obj
 
+    @staticmethod
+    def wait_for_pod_ready(pod_name: str, namespace: str, timeout: int = 60) -> "RobustaPod":
+        """
+        Waits for the pod to be in Running state
+        """
+        for _ in range(timeout):  # retry for up to timeout seconds
+            try:
+                pod = RobustaPod().read(pod_name, namespace)
+                if pod.status.phase == 'Running':
+                    return pod
+            except ApiException as e:
+                if e.status != 404:  # re-raise the exception if it's not a NotFound error
+                    raise
+            time.sleep(1)
+        else:
+            raise RuntimeError(f"Pod {pod_name} in namespace {namespace} is not ready after {timeout} seconds")
+
 
 class RobustaDeployment(Deployment):
     @classmethod
@@ -368,6 +387,24 @@ class RobustaDeployment(Deployment):
 
     def get_images(self) -> Dict[str, str]:
         return get_images(self.spec.template.spec.containers)
+
+    @staticmethod
+    def wait_for_deployment_ready(name: str, namespace: str, timeout: int = 60) -> "RobustaDeployment":
+        """
+        Waits for the deployment to be ready, i.e., the expected number of pods are running.
+        """
+        for _ in range(timeout):  # retry for up to timeout seconds
+            try:
+                deployment = RobustaDeployment().read(name, namespace)
+                if deployment.status.readyReplicas == deployment.spec.replicas:
+                    return deployment
+            except ApiException as e:
+                if e.status != 404:  # re-raise the exception if it's not a NotFound error
+                    raise
+            time.sleep(1)
+        else:
+            raise RuntimeError(
+                f"Deployment {name} in namespace {namespace} is not ready after {timeout} seconds")
 
 
 class JobSecret(BaseModel):

@@ -10,26 +10,28 @@ from robusta.core.model.env_vars import INCOMING_EVENTS_QUEUE_MAX_SIZE
 
 class QueueMetrics:
     def __init__(self):
-        self.queued = prometheus_client.Counter("queued", "Number of queued events", labelnames=("queue_name",))
-        self.processed = prometheus_client.Counter(
-            "processed", "Number of processed events", labelnames=("queue_name",)
+        self.queue_event = prometheus_client.Counter(
+            "queue_event", "Number of queue events status", labelnames=("queue_name", "status")
         )
-        self.rejected = prometheus_client.Counter("rejected", "Number of rejected events", labelnames=("queue_name",))
         self.total_process_time = prometheus_client.Summary(
-            "total_process_time",
-            "Total process time (seconds)",
+            "queue_process_time",
+            "queue process time (seconds)",
             labelnames=("queue_name",),
         )
+        self.queue_size = prometheus_client.Gauge("queue_size", "Current size of the queue", labelnames=("queue_name",))
+
+    def size_callback(self, queue_name, queue_size_callback_fn):
+        self.queue_size.labels(queue_name).set_function(queue_size_callback_fn)
 
     def on_rejected(self, queue_name):
-        self.rejected.labels([queue_name]).inc()
+        self.queue_event.labels(queue_name, "rejected").inc()
 
     def on_queued(self, queue_name):
-        self.queued.labels([queue_name]).inc()
+        self.queue_event.labels(queue_name, "queued").inc()
 
     def on_processed(self, queue_name, processing_time: float):
-        self.processed.labels([queue_name]).inc()
-        self.total_process_time.labels([queue_name]).observe(processing_time)
+        self.queue_event.labels(queue_name, "processed").inc()
+        self.total_process_time.labels(queue_name).observe(processing_time)
 
 
 class TaskQueue(Queue):
@@ -39,6 +41,7 @@ class TaskQueue(Queue):
         self.name = name
         self.num_workers = num_workers
         self.metrics = metrics
+        self.metrics.size_callback(self.name, lambda: self._qsize())
         self.__start_workers()
 
     def add_task(self, task, *args, **kwargs):

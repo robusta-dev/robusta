@@ -186,7 +186,7 @@ class SlackSender:
         elif isinstance(block, ScanReportBlock):
             raise AssertionError("to_slack() should never be called on a ScanReportBlock")
         else:
-            logging.error(f"cannot convert block of type {type(block)} to slack format block: {block}")
+            logging.warning(f"cannot convert block of type {type(block)} to slack format block: {block}")
             return []  # no reason to crash the entire report
 
     def __upload_file_to_slack(self, block: FileBlock) -> str:

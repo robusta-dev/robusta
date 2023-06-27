@@ -5,7 +5,7 @@ import os
 import shlex
 import uuid
 from datetime import datetime
-from typing import Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, SecretKeySelector
 from pydantic import BaseModel, ValidationError, validator
@@ -77,11 +77,17 @@ class KRRScan(BaseModel):
         return krr_severity_to_priority(self.severity)
 
 
+class KRRStrategyData(BaseModel):
+    name: str
+    settings: dict[str, Any]
+
+
 class KRRResponse(BaseModel):
     scans: List[KRRScan]
     score: int
     resources: List[ResourceType] = ["cpu", "memory"]
-    description: Optional[str] = None
+    description: Optional[str] = None # This field is not returned by KRR < v1.2.0
+    strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
 
 
 class KRRParams(PrometheusParams):
@@ -265,6 +271,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                         },
                         "metric": scan.metrics.get(resource).dict() if scan.metrics.get(resource) else {},
                         "description": krr_scan.description,
+                        "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
                     }
                     for resource in krr_scan.resources
                 ],
