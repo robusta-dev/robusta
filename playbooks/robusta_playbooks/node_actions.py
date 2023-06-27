@@ -9,7 +9,7 @@ from robusta.api import ActionException, ErrorCodes, MarkdownBlock, NodeEvent, a
 @action
 def cordon(event: NodeEvent):
     """
-    Cordon a node
+    Cordon, Taints a node as unschedulable.
     """
     node = event.get_node()
     if not node:
@@ -29,7 +29,7 @@ def cordon(event: NodeEvent):
 @action
 def uncordon(event: NodeEvent):
     """
-    Unordon a node
+    Unordon, Taints a node as schedulable.
     """
     node = event.get_node()
     if not node:
@@ -48,6 +48,10 @@ def uncordon(event: NodeEvent):
 
 @action
 def drain(event: NodeEvent):
+    """
+    Drain, taints a node as unschedulable, and evicts all pods from a node.
+    DaemonSets pod are skipped, as they tolerant unschedulable nodes by default.
+    """
     cordon(event)
 
     node = event.get_node()
