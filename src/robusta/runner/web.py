@@ -28,8 +28,8 @@ class Web:
     @staticmethod
     def init(event_handler: PlaybooksEventHandler, loader: ConfigLoader):
         Web.metrics = QueueMetrics()
-        Web.api_server_queue = TaskQueue(name="api server queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics)
-        Web.alerts_queue = TaskQueue(name="alerts queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics)
+        Web.api_server_queue = TaskQueue(name="api_server_queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics)
+        Web.alerts_queue = TaskQueue(name="alerts_queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics)
         Web.event_handler = event_handler
         Web.loader = loader
 

@@ -32,6 +32,13 @@ from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
 from robusta.utils.cluster_provider_discovery import cluster_provider
+import prometheus_client
+
+discovery_errors_count = prometheus_client.Counter("discovery_errors", "Number of discovery process failures.")
+discovery_process_time = prometheus_client.Summary(
+    "discovery_process_time",
+    "Total discovery process time (seconds)",
+)
 
 
 class DiscoveryResults(BaseModel):
@@ -313,6 +320,8 @@ class Discovery:
         )
 
     @staticmethod
+    @discovery_errors_count.count_exceptions()
+    @discovery_process_time.time()
     def discover_resources() -> DiscoveryResults:
         try:
             future = Discovery.executor.submit(Discovery.discovery_process)
