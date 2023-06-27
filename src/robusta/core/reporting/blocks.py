@@ -118,6 +118,8 @@ class KubernetesDiffBlock(BaseBlock):
     diffs: List[DiffDetail]
     old: Optional[str]
     new: Optional[str]
+    old_obj: Optional[HikaruDocumentBase]
+    new_obj: Optional[HikaruDocumentBase]
     resource_name: Optional[str]
     num_additions: Optional[int]
     num_deletions: Optional[int]
@@ -147,6 +149,8 @@ class KubernetesDiffBlock(BaseBlock):
             diffs=interesting_diffs,
             old=self._obj_to_content(old),
             new=self._obj_to_content(new),
+            old_obj=old,
+            new_obj=new,
             resource_name=resource_name,
             num_additions=num_additions,
             num_deletions=num_deletions,
