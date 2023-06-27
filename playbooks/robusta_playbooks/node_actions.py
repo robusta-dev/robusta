@@ -48,8 +48,6 @@ def uncordon(event: NodeEvent):
 
 @action
 def drain(event: NodeEvent):
-
-    # Equivalent to running kubectl drain --ignore-daemonsets --delete-emptydir-data
     cordon(event)
 
     node = event.get_node()
