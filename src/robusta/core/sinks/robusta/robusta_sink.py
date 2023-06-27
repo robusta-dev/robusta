@@ -207,7 +207,7 @@ class RobustaSink(SinkBase):
 
                 # prevent service updates if the resource version in the cache is lower than the new service
                 if cached_service and cached_service.resource_version >= current_service.resource_version:
-                    return
+                    continue
 
                 # service not in the cache, or changed
                 if self.__services_cache.get(service_key) != current_service:

@@ -27,18 +27,6 @@ class ContainerInfo(BaseModel):
     resources: Resources
 
     @staticmethod
-    def extract_image_tag(image_url: str) -> Optional[str]:
-        if "@" in image_url:
-            # The digest is specified after the last "@" character
-            return image_url.split("@")[-1]
-        elif ":" in image_url:
-            # The tag is specified after the last colon
-            return image_url.split(":")[-1]
-        else:
-            # No tag specified
-            return None
-
-    @staticmethod
     def get_container_info(container: V1Container) -> "ContainerInfo":
         env = (
             [EnvVar(name=env.name, value=env.value) for env in container.env if env.name and env.value]
