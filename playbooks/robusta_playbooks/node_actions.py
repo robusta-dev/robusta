@@ -3,7 +3,7 @@ from typing import List
 from kubernetes import client
 from kubernetes.client import V1OwnerReference, V1PodList
 
-from robusta.api import ActionException, ErrorCodes, MarkdownBlock, NodeEvent, action
+from robusta.api import ActionException, ErrorCodes, FileBlock, MarkdownBlock, NodeEvent, action
 
 
 @action
@@ -49,14 +49,22 @@ def uncordon(event: NodeEvent):
 @action
 def drain(event: NodeEvent):
     """
-    Drain, taints a node as unschedulable, and evicts all pods from a node.
+    Drain, taints a node as unschedulable, and evicts all pods from the node.
     DaemonSets pod are skipped, as they tolerant unschedulable nodes by default.
     """
     cordon(event)
 
     node = event.get_node()
     api = client.CoreV1Api()
-    pods: V1PodList = api.list_pod_for_all_namespaces(watch=False, field_selector=f"spec.nodeName={node.metadata.name}")
+    try:
+        pods: V1PodList = api.list_pod_for_all_namespaces(
+            watch=False, field_selector=f"spec.nodeName={node.metadata.name}"
+        )
+    except Exception as e:
+        uncordon(event)
+        raise ActionException(
+            ErrorCodes.ACTION_UNEXPECTED_ERROR, f"Failed to list pods for drain action Uncordoning.\n{e}"
+        )
 
     msg = ""
     for pod in pods.items:
@@ -77,4 +85,11 @@ def drain(event: NodeEvent):
             msg += f"Error evicting {namespace}/Pod/{name} {e}\n"
             continue
 
-    event.add_enrichment([MarkdownBlock(f"drain node {node.metadata.name} \n\n {msg}")])
+    event.add_enrichment(
+        [
+            FileBlock(
+                filename=f"Drain {node.metadata.name} report.log",
+                contents=f"drain node {node.metadata.name} \n\n{msg}".encode(),
+            )
+        ]
+    )
