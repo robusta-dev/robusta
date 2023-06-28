@@ -15,6 +15,7 @@ class RobustaToken(BaseModel):
 class RobustaSinkParams(SinkBaseParams):
     token: str
     ttl_hours: int = 4380  # Time before unactive cluster data is deleted. 6 Months default.
+    persist_events: bool = False
 
 
 class RobustaSinkConfigWrapper(SinkConfigBase):

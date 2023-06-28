@@ -34,3 +34,18 @@ a delay of 150 seconds the first time, 160 the second, and 170 the third.
           delay_periods: [150, 160, 170]
 
 The first delay cannot be less than 120 seconds. If you define less, 120 seconds will be used instead.
+
+
+Cron based
+----------------------
+
+If you want to run a playbook on a `cron schedule <https://crontab.guru/>`_, you can use the following:
+
+.. code-block:: yaml
+
+    triggers:
+    - on_schedule:
+        cron_schedule_repeat:
+          cron_expression: "0 12 * * 1" # every Monday at 12:00
+
+If the first run should be in less than 120 seconds, the trigger will fire 120 seconds after the playbook is first configured.

@@ -45,7 +45,7 @@ def custom_query_range(
     end = round(end_time.timestamp())
     params = params or {}
 
-    check_prometheus_connection(prom, params)
+    check_prometheus_connection(prom=prom, params=params)
 
     prometheus_result = None
     query = str(query)

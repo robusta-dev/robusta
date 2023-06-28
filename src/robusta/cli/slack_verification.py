@@ -41,6 +41,8 @@ def verify_slack_channel(
                 f"If this is a private channel, verify the Robusta app was added to the channel. "
                 f"(See https://docs.robusta.dev/master/configuration/sinks/slack.html#using-private-channels)"
             )
+        else:
+            typer.secho(f"Unknown Slack error: {e.response.data['error']}")
         return False
     except URLError:
         typer.secho(

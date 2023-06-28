@@ -20,8 +20,9 @@ from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import Finding
-from robusta.core.reporting.blocks import ScanReportBlock, ScanReportRow
+from robusta.core.reporting.blocks import EventsBlock, EventsRef, ScanReportBlock, ScanReportRow
 from robusta.core.reporting.consts import EnrichmentAnnotation
+from robusta.core.sinks.robusta import RobustaSinkParams
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.core.sinks.robusta.rrm.account_resource import AccountResource, ResourceKind
 
@@ -35,6 +36,7 @@ HELM_RELEASES_TABLE = "HelmReleases"
 NAMESPACES_TABLE = "Namespaces"
 UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
 SCANS_RESULT_TABLE = "ScansResults"
+RESOURCE_EVENTS = "ResourceEvents"
 ACCOUNT_RESOURCE_TABLE = "AccountResource"
 
 
@@ -64,13 +66,13 @@ class RobustaClient(Client):
 
     @staticmethod
     def _init_supabase_auth_client(
-            auth_url: str,
-            supabase_key: str,
-            detect_session_in_url: bool,
-            auto_refresh_token: bool,
-            persist_session: bool,
-            local_storage: Dict[str, Any],
-            headers: Dict[str, str],
+        auth_url: str,
+        supabase_key: str,
+        detect_session_in_url: bool,
+        auto_refresh_token: bool,
+        persist_session: bool,
+        local_storage: Dict[str, Any],
+        headers: Dict[str, str],
     ) -> RobustaAuthClient:
         """Creates a wrapped instance of the GoTrue Client."""
         return RobustaAuthClient(
@@ -85,15 +87,15 @@ class RobustaClient(Client):
 
 class SupabaseDal:
     def __init__(
-            self,
-            url: str,
-            key: str,
-            account_id: str,
-            email: str,
-            password: str,
-            sink_name: str,
-            cluster_name: str,
-            signing_key: str,
+        self,
+        url: str,
+        key: str,
+        account_id: str,
+        email: str,
+        password: str,
+        sink_params: RobustaSinkParams,
+        cluster_name: str,
+        signing_key: str,
     ):
         self.url = url
         self.key = key
@@ -104,7 +106,7 @@ class SupabaseDal:
         self.password = password
         self.sign_in_time = 0
         self.sign_in()
-        self.sink_name = sink_name
+        self.sink_params = sink_params
         self.signing_key = signing_key
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
@@ -113,39 +115,37 @@ class SupabaseDal:
         db_sr["cluster_id"] = self.cluster
         return db_sr
 
-    def persist_scan(self, enrichment: Enrichment):
-        for block in enrichment.blocks:
-            if not isinstance(block, ScanReportBlock):
-                continue
+    def persist_scan(self, block: ScanReportBlock):
+        db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
+        res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
+        if res.get("status_code") not in [200, 201]:
+            msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
 
-            db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
-            res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
-            if res.get("status_code") not in [200, 201]:
-                msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
-                logging.error(msg)
-                self.handle_supabase_error()
-                raise Exception(msg)
+        res = self.__rpc_patch(
+            "insert_scan_meta",
+            {
+                "_account_id": self.account_id,
+                "_cluster": self.cluster,
+                "_scan_id": block.scan_id,
+                "_scan_start": str(block.start_time),
+                "_scan_end": str(block.end_time),
+                "_type": block.type,
+                "_grade": block.score,
+            },
+        )
 
-            res = self.__rpc_patch(
-                "insert_scan_meta",
-                {
-                    "_account_id": self.account_id,
-                    "_cluster": self.cluster,
-                    "_scan_id": block.scan_id,
-                    "_scan_start": str(block.start_time),
-                    "_scan_end": str(block.end_time),
-                    "_type": block.type,
-                    "_grade": block.score,
-                },
-            )
-
-            if res.get("status_code") not in [200, 201, 204]:
-                msg = f"Failed to persist scan meta {block.scan_id} error: {res.get('data')}"
-                logging.error(msg)
-                self.handle_supabase_error()
-                raise Exception(msg)
+        if res.get("status_code") not in [200, 201, 204]:
+            msg = f"Failed to persist scan meta {block.scan_id} error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
 
     def persist_finding(self, finding: Finding):
+        for enrichment in finding.enrichments:
+            self.persist_platform_blocks(enrichment, finding.id)
 
         scans, enrichments = [], []
         for enrich in finding.enrichments:
@@ -153,27 +153,24 @@ class SupabaseDal:
                 enrich
             )
 
-        for scan in scans:
-            self.persist_scan(scan)
-
         if (len(scans) > 0) and (len(enrichments)) == 0:
             return
 
         for enrichment in enrichments:
-            res = (
-                self.client.table(EVIDENCE_TABLE)
-                .insert(
-                    ModelConversion.to_evidence_json(
-                        account_id=self.account_id,
-                        cluster_id=self.cluster,
-                        sink_name=self.sink_name,
-                        signing_key=self.signing_key,
-                        finding_id=finding.id,
-                        enrichment=enrichment,
-                    )
-                )
-                .execute()
+            evidence = ModelConversion.to_evidence_json(
+                account_id=self.account_id,
+                cluster_id=self.cluster,
+                sink_name=self.sink_params.name,
+                signing_key=self.signing_key,
+                finding_id=finding.id,
+                enrichment=enrichment,
             )
+
+            if not evidence:
+                continue
+
+            res = self.client.table(EVIDENCE_TABLE).insert(evidence).execute()
+
             if res.get("status_code") != 201:
                 logging.error(
                     f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"
@@ -201,6 +198,7 @@ class SupabaseDal:
             "config": service.service_config.dict() if service.service_config else None,
             "total_pods": service.total_pods,
             "ready_pods": service.ready_pods,
+            "is_helm_release": service.is_helm_release,
             "update_time": "now()",
         }
 
@@ -209,6 +207,7 @@ class SupabaseDal:
             return
         db_services = [self.to_service(service) for service in services]
         res = self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()
+
         if res.get("status_code") not in [200, 201]:
             logging.error(f"Failed to persist services {services} error: {res.get('data')}")
             self.handle_supabase_error()
@@ -218,7 +217,7 @@ class SupabaseDal:
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
             self.client.table(SERVICES_TABLE)
-            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods")
+            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods", "is_helm_release")
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -238,6 +237,7 @@ class SupabaseDal:
                 service_config=service.get("config"),
                 ready_pods=service["ready_pods"],
                 total_pods=service["total_pods"],
+                is_helm_release=service["is_helm_release"],
             )
             for service in res.get("data")
         ]
@@ -462,6 +462,27 @@ class SupabaseDal:
             "status_code": response.status_code,
         }
 
+    def __upsert_do_nothing(self, table: str, params: dict) -> Dict[str, Any]:
+        """
+        Supabase client is async. Sync impl of rpc call
+        """
+        builder = self.client.table(table)  # rpc builder
+        url: str = str(builder.session.base_url).rstrip("/")
+        builder.session.headers["Prefer"] = "return=representation, resolution=ignore-duplicates"
+
+        response = requests.post(url, headers=builder.session.headers, json=params)
+        response_data = {}
+        try:
+            if response.content:
+                response_data = response.json()
+        except Exception:  # this can be okay if no data is expected
+            logging.debug("Failed to parse upsert_do_nothing response data")
+
+        return {
+            "data": response_data,
+            "status_code": response.status_code,
+        }
+
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
             logging.info("Supabase dal login")
@@ -551,6 +572,31 @@ class SupabaseDal:
             self.handle_supabase_error()
 
         logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
+
+    def persist_events_block(self, block: EventsBlock):
+        db_events = []
+        for event in block.events:
+            row = event.dict(exclude_none=True)
+            row["account_id"] = self.account_id
+            row["cluster_id"] = self.cluster
+            db_events.append(row)
+
+        res = self.__upsert_do_nothing(RESOURCE_EVENTS, db_events)
+        if res.get("status_code") not in [200, 201]:
+            msg = f"Failed to persist resource events error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+    def persist_platform_blocks(self, enrichment: Enrichment, finding_id):
+        blocks = enrichment.blocks
+        for i, block in enumerate(blocks):
+            if isinstance(block, EventsBlock) and self.sink_params.persist_events and block.events:
+                self.persist_events_block(block)
+                event = block.events[0]
+                blocks[i] = EventsRef(name=event.name, namespace=event.namespace, kind=event.kind.lower())
+            if isinstance(block, ScanReportBlock):
+                self.persist_scan(block)
 
     def get_account_resources(self, resource_kind: ResourceKind, updated_at: Optional[datetime]) \
             -> List[AccountResource]:
