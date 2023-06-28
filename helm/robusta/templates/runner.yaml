@@ -183,7 +183,7 @@ spec:
       port: 80
       targetPort: 5000
 ---
-{{ if and (.Values.enableServiceMonitors) (.Capabilities.APIVersions.Has "monitoring.coreos1.com/v1/ServiceMonitor") }}
+{{ if and (.Values.enableServiceMonitors) (or (.Values.enablePrometheusStack) (.Capabilities.APIVersions.Has "monitoring.coreos1.com/v1/ServiceMonitor") ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
