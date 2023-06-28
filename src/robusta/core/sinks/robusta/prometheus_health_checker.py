@@ -28,6 +28,7 @@ class PrometheusHealthChecker:
 
         self.__last_alertmanager_error_log_time = 0
         self.__last_prometheus_error_log_time = 0
+        self.__check_prometheus_flags = True
 
         self.__thread = threading.Thread(target=self.__run_checks)
         self.__thread.start()
@@ -56,11 +57,12 @@ class PrometheusHealthChecker:
 
             self.status.prometheus = True
 
-            prometheus_flags = get_prometheus_flags(prom=prometheus_connection)
-            if prometheus_flags:
-                self.status.prometheus_retention_time = prometheus_flags.get('retentionTime', "")
-            else:
-                self.status.prometheus_retention_time = ""
+            if self.__check_prometheus_flags:
+                prometheus_flags = get_prometheus_flags(prom=prometheus_connection)
+                if prometheus_flags:
+                    self.status.prometheus_retention_time = prometheus_flags.get('retentionTime', "")
+
+            self.__check_prometheus_flags = False
 
         except Exception as e:
             if isinstance(e, NoPrometheusUrlFound) \
