@@ -562,7 +562,7 @@ class SupabaseDal:
     def persist_events_block(self, block: EventsBlock):
         db_events = []
         for event in block.events:
-            row = event.dict()
+            row = event.dict(exclude_none=True)
             row["account_id"] = self.account_id
             row["cluster_id"] = self.cluster
             db_events.append(row)
