@@ -443,13 +443,13 @@ class ScanReportBlock(BaseBlock):
 
 
 class EventRow(BaseModel):
-    type: str
-    reason: str
-    message: str
+    type: Optional[str]
+    reason: Optional[str]
+    message: Optional[str]
     kind: str
     name: str
     namespace: str
-    time: str
+    time: Optional[str]
 
 
 class EventsBlock(TableBlock):
