@@ -155,6 +155,8 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
                   alertmanager_url: ""
                   grafana_url: ""
                   prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
+                  # Additional query string parameters to be appended to the Prometheus connection URL (optional)
+                  prometheus_url_query_string: "demo-query=example-data&another-query=value"
 
         .. md-tab-item:: VictoriaMetrics
 

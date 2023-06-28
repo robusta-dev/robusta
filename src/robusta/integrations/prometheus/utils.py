@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 import requests
 from cachetools import TTLCache
 from requests.exceptions import ConnectionError, HTTPError
+from requests.sessions import merge_setting
 
 from robusta.core.exceptions import (
     NoPrometheusUrlFound,
@@ -14,6 +15,7 @@ from robusta.core.exceptions import (
 )
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
+from robusta.utils.common import parse_query_string
 from robusta.utils.service_discovery import find_service_url
 
 AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
@@ -90,8 +92,7 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
     from prometheus_api_client import PrometheusConnect
 
     url: Optional[str] = (
-        prometheus_params.prometheus_url
-        if prometheus_params.prometheus_url
+        prometheus_params.prometheus_url if prometheus_params.prometheus_url
         else PrometheusDiscovery.find_prometheus_url()
     )
 
@@ -100,8 +101,11 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
 
     headers = PrometheusAuthorization.get_authorization_headers(prometheus_params)
 
-    return PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
+    prom = PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
+    query_string_params = parse_query_string(prometheus_params.prometheus_url_query_string)
+    prom._session.params = merge_setting(prom._session.params, query_string_params)
 
+    return prom
 
 def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
     params = params or {}
@@ -143,12 +147,12 @@ def __text_config_to_dict(text: str) -> Dict:
 
 def get_prometheus_flags(prom: "PrometheusConnect") -> Optional[Dict]:
     try:
-        return fetch_prometheus_flags(prom)
+        return fetch_prometheus_flags(prom=prom)
     except Exception as e:
         prometheus_exception = e
 
     try:
-        return fetch_victoria_metrics_flags(prom)
+        return fetch_victoria_metrics_flags(vm=prom)
     except Exception as e:
         victoria_metrics_exception = e
 
@@ -180,14 +184,14 @@ def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
         ) from e
 
 
-def fetch_victoria_metrics_flags(prom: "PrometheusConnect") -> Dict:
+def fetch_victoria_metrics_flags(vm: "PrometheusConnect") -> Dict:
     try:
         result = {}
         # connecting to VictoriaMetrics
-        response = prom._session.get(
-            f"{prom.url}/flags",
-            verify=prom.ssl_verification,
-            headers=prom.headers,
+        response = vm._session.get(
+            f"{vm.url}/flags",
+            verify=vm.ssl_verification,
+            headers=vm.headers,
             # This query should return empty results, but is correct
             params={},
         )
@@ -203,7 +207,7 @@ def fetch_victoria_metrics_flags(prom: "PrometheusConnect") -> Dict:
         return result
     except Exception as e:
         raise VictoriaMetricsNotFound(
-            f"Couldn't connect to VictoriaMetrics found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
+            f"Couldn't connect to VictoriaMetrics found under {vm.url}\nCaused by {e.__class__.__name__}: {e})"
         ) from e
 
 

@@ -60,7 +60,7 @@ class FindingSubjectType(Enum):
 
 
 # Annotations
-class EnrichmentAnnotation(Enum):
+class EnrichmentAnnotation:
     SCAN = "scan"
 
 

@@ -17,6 +17,7 @@ from robusta.core.reporting.base import (
     FindingSubjectType,
     VideoLink,
 )
+from robusta.core.sinks import SinkBase
 from robusta.integrations.scheduled.playbook_scheduler import PlaybooksScheduler
 
 
@@ -48,6 +49,7 @@ class ExecutionBaseEvent:
     sink_findings: Dict[str, List[Finding]] = field(default_factory=lambda: defaultdict(list))
     # Target sinks for this execution event. Each playbook may have a different list of target sinks.
     named_sinks: Optional[List[str]] = None
+    all_sinks: Optional[Dict[str, SinkBase]] = None
     #  Response returned to caller. For admission or manual triggers for example
     response: Dict[str, Any] = None  # type: ignore
     stop_processing: bool = False
@@ -69,6 +71,12 @@ class ExecutionBaseEvent:
     def create_default_finding(self) -> Finding:
         """Create finding default fields according to the event type"""
         return Finding(title="Robusta notification", aggregation_key="Generic finding key")
+
+    def set_all_sinks(self, all_sinks: Dict[str, SinkBase]):
+        self.all_sinks = all_sinks
+
+    def get_all_sinks(self):
+        return self.all_sinks
 
     def __prepare_sinks_findings(self):
         finding_id: uuid.UUID = uuid.uuid4()
