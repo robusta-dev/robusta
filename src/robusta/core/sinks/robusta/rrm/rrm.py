@@ -19,6 +19,7 @@ class RRM:
         self.__k8_api = client.CustomObjectsApi()
         self.__prometheus_alert_resource_management = PrometheusAlertResourceManagement(k8_api=self.__k8_api,
                                                                                         dal=self.dal)
+        self.__prometheus_alert_resource_management.first_run()
 
         self.__thread = threading.Thread(target=self.__run_checks)
         self.__thread.start()

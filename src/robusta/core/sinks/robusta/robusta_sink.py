@@ -56,7 +56,8 @@ class RobustaSink(SinkBase):
             robusta_token.account_id,
             robusta_token.email,
             robusta_token.password,
-            sink_config.robusta_sink,
+            sink_config.robusta_sink.name,
+            sink_config.robusta_sink.persist_events,
             self.cluster_name,
             self.signing_key
         )

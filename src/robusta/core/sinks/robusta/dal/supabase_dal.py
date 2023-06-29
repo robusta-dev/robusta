@@ -22,7 +22,6 @@ from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.blocks import EventsBlock, EventsRef, ScanReportBlock, ScanReportRow
 from robusta.core.reporting.consts import EnrichmentAnnotation
-from robusta.core.sinks.robusta import RobustaSinkParams
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.core.sinks.robusta.rrm.account_resource import AccountResource, ResourceKind
 
@@ -93,7 +92,8 @@ class SupabaseDal:
         account_id: str,
         email: str,
         password: str,
-        sink_params: RobustaSinkParams,
+        sink_name: str,
+        persist_events: bool,
         cluster_name: str,
         signing_key: str,
     ):
@@ -106,7 +106,8 @@ class SupabaseDal:
         self.password = password
         self.sign_in_time = 0
         self.sign_in()
-        self.sink_params = sink_params
+        self.sink_name = sink_name
+        self.persist_events = persist_events
         self.signing_key = signing_key
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
@@ -160,7 +161,7 @@ class SupabaseDal:
             evidence = ModelConversion.to_evidence_json(
                 account_id=self.account_id,
                 cluster_id=self.cluster,
-                sink_name=self.sink_params.name,
+                sink_name=self.sink_name,
                 signing_key=self.signing_key,
                 finding_id=finding.id,
                 enrichment=enrichment,
@@ -591,7 +592,7 @@ class SupabaseDal:
     def persist_platform_blocks(self, enrichment: Enrichment, finding_id):
         blocks = enrichment.blocks
         for i, block in enumerate(blocks):
-            if isinstance(block, EventsBlock) and self.sink_params.persist_events and block.events:
+            if isinstance(block, EventsBlock) and self.persist_events and block.events:
                 self.persist_events_block(block)
                 event = block.events[0]
                 blocks[i] = EventsRef(name=event.name, namespace=event.namespace, kind=event.kind.lower())
@@ -612,10 +613,10 @@ class SupabaseDal:
             # in the subsequent db fetch allow even the deleted records so that they can be removed from the cluster
             query_builder.filter("deleted", "eq", False)
 
-        query_builder = SupabaseDal. \
-            custom_filter_request_builder(query_builder,
-                                          operator="or",
-                                          criteria=f"(clusters_target_set.cs.[\"*\"], clusters_target_set.cs.[\"{self.cluster}\"])")
+            query_builder = SupabaseDal. \
+                custom_filter_request_builder(query_builder,
+                                              operator="or",
+                                              criteria=f"(clusters_target_set.cs.[\"*\"], clusters_target_set.cs.[\"{self.cluster}\"])")
 
         res = query_builder.execute()
 
