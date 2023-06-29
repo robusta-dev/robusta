@@ -1,3 +1,4 @@
+import logging
 import textwrap
 from typing import List
 
@@ -15,6 +16,7 @@ class WebhookSink(SinkBase):
         super().__init__(sink_config.webhook_sink, registry)
 
         self.url = sink_config.webhook_sink.url
+        self.headers = sink_config.webhook_sink.headers
         self.size_limit = sink_config.webhook_sink.size_limit
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
@@ -49,7 +51,11 @@ class WebhookSink(SinkBase):
                 break
             message += wrapped
 
-        requests.post(self.url, data=message)
+        try:
+            r = requests.post(self.url, data=message, headers=self.headers)
+            r.raise_for_status()
+        except Exception:
+            logging.exception(f"Webhook request error\n headers: \n{self.headers}")
 
     @classmethod
     def __to_clear_text(cls, markdown_text: str) -> str:
