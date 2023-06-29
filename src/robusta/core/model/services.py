@@ -37,7 +37,9 @@ class ContainerInfo(BaseModel):
         limits = container.resources.limits if container.resources.limits else {}
         requests = container.resources.requests if container.resources.requests else {}
         resources = Resources(limits=limits, requests=requests)
-        return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources)
+        ports = [p.container_port for p in container.ports] if container.ports else []
+        return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources, ports=ports)
+
 
     @staticmethod
     def get_container_info_k8(container: Container) -> "ContainerInfo":
@@ -49,7 +51,7 @@ class ContainerInfo(BaseModel):
         limits = container.resources.limits if container.resources.limits else {}
         requests = container.resources.requests if container.resources.requests else {}
         resources = Resources(limits=limits, requests=requests)
-        ports = [p.container_port for p in container.ports] if container.ports else []
+        ports = [p.containerPort for p in container.ports] if container.ports else []
         return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources, ports=ports)
 
     def __eq__(self, other):
