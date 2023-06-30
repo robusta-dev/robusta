@@ -101,12 +101,11 @@ class PrometheusAlertResourceManagement:
 
             for obj in local_prometheus_crd_files_list:
                 name = obj["metadata"]["name"]
-                self.__replace_crd_alert(name=name, rules=[])
                 self.__delete_crd_alert(name=name)
         except Exception as e:
             logging.error(f"An error occured while first run PrometheusRules CRD alerts: {e}")
 
-    def __get_crd_alert_bucket_index(self, next_index: int):
+    def __get_prometheus_file_name(self, next_index: int):
         return f"{self.__crd_alert_basename}--{next_index}"
 
     def __is_of_this_cluster(self, clusters_target_set: List[str] = []):
@@ -120,14 +119,9 @@ class PrometheusAlertResourceManagement:
 
             new_entities: List[PrometheusAlertsEntity] = []
 
-            # if there are no existing crd alerts or if this is very first run then `next_alert_bucket_index` is 1
+            local_prometheus_crd_bucket_map = self.__get_local_prometheus_crd_files_bucket_map()
             next_alert_bucket_index = 1
-            local_prometheus_crd_files_map = self.__get_local_prometheus_crd_files_rules_map()
-            if self.__latest_updated_at:
-                local_prometheus_crd_files_map_keys = list(local_prometheus_crd_files_map.keys())
-                next_alert_bucket_index = len(local_prometheus_crd_files_map_keys)
-
-            current_bucket_rules_count = 0
+            items_added_to_next_bucket = 0
             for resource in prometheus_alert_resources:
                 if self.__latest_updated_at is None or resource.updated_at > self.__latest_updated_at:
                     self.__latest_updated_at = resource.updated_at
@@ -135,9 +129,12 @@ class PrometheusAlertResourceManagement:
                 if not resource.resource_state or resource.resource_kind != ResourceKind.PrometheusAlert:
                     continue
 
+                # if the entity exists in the cache
                 existing_cached_entity = self.__prometheus_alert_entities_cache.get(resource.entity_id)
                 if existing_cached_entity:
-                    deleted = resource.deleted or not self.__is_of_this_cluster\
+                    # mark the entity as deleted, if it has been deleted or
+                    # mark it for deletion if the cluster_target_set of the entity no longer contains this cluster name
+                    deleted = resource.deleted or not self.__is_of_this_cluster \
                         (clusters_target_set=resource.clusters_target_set)
 
                     next_entity = PrometheusAlertsEntity(
@@ -151,27 +148,44 @@ class PrometheusAlertResourceManagement:
                     )
                     new_entities.append(next_entity)
                 else:
-                    not_of_this_cluster = not self.__is_of_this_cluster\
-                        (clusters_target_set=resource.clusters_target_set)
-
+                    # if the new entities does not belong to this cluster then ignore
+                    not_of_this_cluster = not self.__is_of_this_cluster(clusters_target_set=
+                                                                        resource.clusters_target_set)
                     if not_of_this_cluster:
                         continue
 
-                    next_crd_alert_bucket_name = self.__get_crd_alert_bucket_index(
-                        next_index=next_alert_bucket_index)
-                    if not current_bucket_rules_count:
-                        # check if the total count of rules in the next index has crossed the allowed max rules per crd
-                        # if yes, then increment the next_alert_bucket_index by 1
-                        alert_rules = local_prometheus_crd_files_map.get(next_crd_alert_bucket_name, [])
-                        current_bucket_rules_count = len(alert_rules)
+                    # iterate through every bucket whenever there is are new entities to make sure we fill the
+                    # empty or partially filled buckets first then proceed to create a new bucket if required
+                    sliced_local_prometheus_rules = list(local_prometheus_crd_bucket_map.items())[
+                                                    next_alert_bucket_index - 1:]
+                    append_to_an_exisiting_bucket = False
 
-                    if current_bucket_rules_count >= self.__max_allowed_rules_per_crd_alert:
-                        next_alert_bucket_index += 1
-                        current_bucket_rules_count = 0
-                        next_crd_alert_bucket_name = self.__get_crd_alert_bucket_index(
-                            next_index=next_alert_bucket_index)
-                    else:
-                        current_bucket_rules_count += 1
+                    # if there are partially filled buckets left or empty buckets left then scan through then
+                    # determine the remaining slots for the rules and fill them up
+                    if sliced_local_prometheus_rules:
+                        for key, cached_rules in sliced_local_prometheus_rules:
+                            total_items_in_next_bucket = items_added_to_next_bucket + len(cached_rules)
+
+                            # if the total items in the "bucket of interest" has been filled
+                            # then move over to the next bucket
+                            if total_items_in_next_bucket >= self.__max_allowed_rules_per_crd_alert:
+                                next_alert_bucket_index += 1
+                                items_added_to_next_bucket = 0
+                            else:
+                                # if the bucket isnt filled then increment the items count
+                                items_added_to_next_bucket += 1
+                                append_to_an_exisiting_bucket = True
+                                break
+
+                    # if the slots in the existing bucket were exhausted then work out the next possible crd file index
+                    if not append_to_an_exisiting_bucket:
+                        if items_added_to_next_bucket >= self.__max_allowed_rules_per_crd_alert:
+                            next_alert_bucket_index += 1
+                            items_added_to_next_bucket = 1
+                        else:
+                            items_added_to_next_bucket += 1
+
+                    next_crd_alert_bucket_name = self.__get_prometheus_file_name(next_index=next_alert_bucket_index)
 
                     next_entity = PrometheusAlertsEntity(
                         bucket_name=next_crd_alert_bucket_name,
@@ -196,20 +210,22 @@ class PrometheusAlertResourceManagement:
                     return alert
         return None
 
-    def __get_local_prometheus_crd_files_rules_map(self) -> Dict[str, List[dict]]:
+    # Get a map of Prometheus CRD bucket files and their associated rules
+    def __get_local_prometheus_crd_files_bucket_map(self) -> Dict[str, List[dict]]:
         output: Dict[str, List[dict]] = defaultdict(list)
         for value in self.__prometheus_alert_entities_cache.values():
             output[value.bucket_name].append(value.resource_state.rule.to_dict())
 
         return output
 
+    # Get a map of rules of new Prometheus alert entities after scanning the existing CRD buckets
     def __get_rules_map(self, new_entities: List[PrometheusAlertsEntity]) -> Dict[str, List[dict]]:
-        local_prometheus_crd_files_rules_map = self.__get_local_prometheus_crd_files_rules_map()
-        unaltered_buckets = list(local_prometheus_crd_files_rules_map.keys())
+        local_prometheus_crd_bucket_map = self.__get_local_prometheus_crd_files_bucket_map()
+        unaltered_buckets = list(local_prometheus_crd_bucket_map.keys())
 
         for new_entity in new_entities:
             cached_alert_entity = self.__prometheus_alert_entities_cache.get(new_entity.entity_id)
-            rules = local_prometheus_crd_files_rules_map.get(new_entity.bucket_name, [])
+            rules = local_prometheus_crd_bucket_map.get(new_entity.bucket_name, [])
 
             # the new resource exists in the local cache
             # so update the existing rule or delete them if it has been updated
@@ -227,16 +243,15 @@ class PrometheusAlertResourceManagement:
                     if new_entity.bucket_name in unaltered_buckets:
                         unaltered_buckets.remove(new_entity.bucket_name)
 
-                local_prometheus_crd_files_rules_map[new_entity.bucket_name] = rules
+                local_prometheus_crd_bucket_map[new_entity.bucket_name] = rules
 
-            # the new resource DOES NOT exist in the local cache
-            # so create a new
+            # the new resource DOES NOT exist in the local cache so create a new one
             else:
                 if new_entity.deleted:
                     continue
 
                 rules.append(new_entity.resource_state.rule.to_dict())
-                local_prometheus_crd_files_rules_map[new_entity.bucket_name] = rules
+                local_prometheus_crd_bucket_map[new_entity.bucket_name] = rules
                 self.__prometheus_alert_entities_cache[new_entity.entity_id] = new_entity
 
                 if new_entity.bucket_name in unaltered_buckets:
@@ -244,9 +259,9 @@ class PrometheusAlertResourceManagement:
 
         # remove the unaltered buckets from the final output to prevent updating an unaltered crd alert files
         for bucket in unaltered_buckets:
-            del local_prometheus_crd_files_rules_map[bucket]
+            del local_prometheus_crd_bucket_map[bucket]
 
-        return local_prometheus_crd_files_rules_map
+        return local_prometheus_crd_bucket_map
 
     def __create_prometheus_alert_resources(self, new_entities: List[PrometheusAlertsEntity]):
         try:
@@ -336,6 +351,7 @@ class PrometheusAlertResourceManagement:
                 plural=self.__plural,
                 name=name,
                 namespace=self.__installation_namespace,
+                grace_period_seconds=60
             )
         except Exception as e:
             raise f"An error occured while deleting PrometheusRules CRD alerts: {e}"
