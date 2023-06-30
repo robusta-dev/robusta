@@ -10,13 +10,20 @@ class JobStatus(Enum):
     DONE = 3
 
 
-class FixedDelayRepeat(BaseModel):
+class BaseDelayRepeat(BaseModel):
+    pass
+
+class FixedDelayRepeat(BaseDelayRepeat):
     repeat: int = -1  # default to run forever
     seconds_delay: int
 
 
-class DynamicDelayRepeat(BaseModel):
+class DynamicDelayRepeat(BaseDelayRepeat):
     delay_periods: List[int]
+
+
+class CronScheduleRepeat(BaseDelayRepeat):
+    cron_expression: str
 
 
 class JobState(BaseModel):
@@ -30,7 +37,7 @@ class ScheduledJob(BaseModel):
     runnable_name: str
     runnable_params: dict
     state: JobState
-    scheduling_params: Union[FixedDelayRepeat, DynamicDelayRepeat]
+    scheduling_params: Union[FixedDelayRepeat, DynamicDelayRepeat, CronScheduleRepeat]
     replace_existing: bool = False
     standalone_task: bool = False  # standalone task, is a task, that once fired, will run until it ends, as opposed to non standalone tasks,
     # that are tied to the generating playbook lifecycle

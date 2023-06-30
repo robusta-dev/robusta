@@ -69,7 +69,7 @@ lightActions:
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
-enableServiceMonitors: false
+enableServiceMonitors: true
 monitorHelmReleases: true
 
 # disable messages routed by Robusta cloud
@@ -377,6 +377,14 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 - triggers:
+    - on_deployment_all_changes: {}
+    - on_daemonset_all_changes: {}
+    - on_statefulset_all_changes: {}
+    - on_replicaset_all_changes: {}
+    - on_pod_all_changes: {}
+  actions:
+    - resource_events_diff: {}
+- triggers:
   - on_job_failure: {}
   actions:
   - create_finding:
@@ -394,6 +402,18 @@ platformPlaybooks:
         seconds_delay: 120
   actions:
   - popeye_scan: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
+  - on_schedule:
+      fixed_delay_repeat:
+        repeat: 1
+        seconds_delay: 120
+  - on_schedule:
+      cron_schedule_repeat:
+        cron_expression: "0 12 * * 1" # every Monday at 12:00
+  actions:
+  - krr_scan: {}
   sinks:
     - "robusta_ui_sink"
 

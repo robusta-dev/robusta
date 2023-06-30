@@ -118,6 +118,8 @@ class KubernetesDiffBlock(BaseBlock):
     diffs: List[DiffDetail]
     old: Optional[str]
     new: Optional[str]
+    old_obj: Optional[HikaruDocumentBase]
+    new_obj: Optional[HikaruDocumentBase]
     resource_name: Optional[str]
     num_additions: Optional[int]
     num_deletions: Optional[int]
@@ -147,6 +149,8 @@ class KubernetesDiffBlock(BaseBlock):
             diffs=interesting_diffs,
             old=self._obj_to_content(old),
             new=self._obj_to_content(new),
+            old_obj=old,
+            new_obj=new,
             resource_name=resource_name,
             num_additions=num_additions,
             num_deletions=num_deletions,
@@ -223,6 +227,7 @@ class TableBlock(BaseBlock):
         column_renderers: Dict = {},
         table_name: str = "",
         column_width: List[int] = None,
+        **kwargs,
     ):
         """
         :param rows: a list of rows. each row is a list of columns
@@ -234,6 +239,7 @@ class TableBlock(BaseBlock):
             column_renderers=column_renderers,
             table_name=table_name,
             column_width=column_width,
+            **kwargs,
         )
 
     @classmethod
@@ -434,3 +440,51 @@ class ScanReportBlock(BaseBlock):
             return "E"
         else:
             return "F"
+
+
+class EventRow(BaseModel):
+    type: Optional[str]
+    reason: Optional[str]
+    message: Optional[str]
+    kind: str
+    name: str
+    namespace: str
+    time: Optional[str]
+
+
+class EventsBlock(TableBlock):
+    """
+    Table display of a Events, Persists the events on the Robusta Platform.
+
+    Note: Wider tables appears as a file attachment on Slack, because they aren't rendered properly inline
+    """
+
+    events: List[EventRow] = []
+
+    def __init__(
+        self,
+        events: List[EventRow],
+        rows: List[List],
+        headers: Sequence[str] = (),
+        column_renderers: Dict = {},
+        table_name: str = "",
+        column_width: List[int] = None,
+    ):
+        """
+        :param rows: a list of rows. each row is a list of columns
+        :param headers: names of each column
+        """
+        super().__init__(
+            events=events,
+            rows=rows,
+            headers=headers,
+            column_renderers=column_renderers,
+            table_name=table_name,
+            column_width=column_width,
+        )
+
+
+class EventsRef(BaseModel):
+    namespace: str
+    name: str
+    kind: str

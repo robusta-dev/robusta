@@ -57,6 +57,7 @@ class KRRRecommendedInfo(BaseModel):
 class KRRRecommended(BaseModel):
     requests: Dict[str, KRRRecommendedInfo]
     limits: Dict[str, KRRRecommendedInfo]
+    info: Dict[str, Optional[str]]
 
 
 class KRRMetric(BaseModel):
