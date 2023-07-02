@@ -23,7 +23,8 @@ from robusta.core.reporting.base import Finding
 from robusta.core.reporting.blocks import EventsBlock, EventsRef, ScanReportBlock, ScanReportRow
 from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
-from robusta.core.sinks.robusta.rrm.account_resource import AccountResource, ResourceKind
+from robusta.core.sinks.robusta.rrm.types import AccountResource, ResourceKind
+
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
