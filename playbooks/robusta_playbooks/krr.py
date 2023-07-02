@@ -7,9 +7,8 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, SecretKeySelector
+from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from pydantic import BaseModel, ValidationError, validator
-
 from robusta.api import (
     RELEASE_NAME,
     EnrichmentAnnotation,
@@ -30,6 +29,7 @@ from robusta.api import (
 )
 
 IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.2.1")
+KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "2Gi")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
@@ -201,7 +201,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         ]
         # adding secret env var in krr pod command
         python_command += f'--prometheus-auth-header "${env_var_auth_name}"'
-
+    resources = ResourceRequirements(
+        limits={"memory": (str(KRR_MEMORY_LIMIT))},
+    )
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
         containers=[
@@ -210,6 +212,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                 image=IMAGE,
                 command=["/bin/sh", "-c", python_command],
                 env=env_var if env_var else [],
+                resources=resources,
             )
         ],
         restartPolicy="Never",

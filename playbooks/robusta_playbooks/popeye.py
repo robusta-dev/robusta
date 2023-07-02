@@ -8,7 +8,7 @@ from datetime import datetime
 from json import JSONDecodeError
 from typing import Dict, List, Optional
 
-from hikaru.model.rel_1_26 import Container, PodSpec
+from hikaru.model.rel_1_26 import Container, PodSpec, ResourceRequirements
 from pydantic import BaseModel, ValidationError
 
 from robusta.api import (
@@ -28,6 +28,7 @@ from robusta.api import (
 )
 
 IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye:v0.11.1")
+POPEYE_MEMORY_LIMIT: str = os.getenv("POPEYE_MEMORY_LIMIT", "2Gi")
 
 
 # https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/report/tally.go#L163
@@ -137,6 +138,9 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     """
 
     sanitize_args = shlex.join(shlex.split(params.args))
+    resources = ResourceRequirements(
+        limits={"memory": (str(POPEYE_MEMORY_LIMIT))},
+    )
     spec = PodSpec(
         serviceAccountName=params.service_account_name,
         containers=[
@@ -148,6 +152,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
                     "-c",
                     f"echo '{params.spinach}' > ~/spinach.yaml && popeye -f ~/spinach.yaml {sanitize_args} -o json --force-exit-zero",
                 ],
+                resources=resources,
             )
         ],
         restartPolicy="Never",
