@@ -1,3 +1,23 @@
+# Cheat Sheet
+
+Run tests faster by re-using resoures from the last run (this is less "clean" but typically fine):
+
+```bash
+./build_and_test.sh --fast-mode
+```
+
+Run a specific test: 
+
+```bash
+./build_and_test.sh -k test_foo
+```
+
+Run all tests in a specific file:
+
+```bash
+./build_and_test.sh tests/test_slack.py
+```
+
 # Overview
 We use `pytest`. We have two categories of tests:
 

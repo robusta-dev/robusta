@@ -28,6 +28,8 @@ Sinks Reference
 
 Robusta can report issues and events in your Kubernetes cluster to various destinations, known as sinks.
 
+By default, Robusta sends all notifications to all sinks.
+
 **Related Topics:**
 
 * :ref:`sinks-overview`
@@ -118,3 +120,5 @@ Click a sink for setup instructions.
 
 
 **Need support for a new sink?** `Tell us and we'll add it. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
+
+You can also :ref:`add the sink yourself <Developing a New Sink>` and open a PR.

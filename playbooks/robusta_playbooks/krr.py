@@ -1,39 +1,45 @@
+import base64
 import json
+import logging
 import os
 import shlex
-import logging
 import uuid
 from datetime import datetime
-from typing import Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
-from hikaru.model.rel_1_26 import Container, PodSpec
+from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, SecretKeySelector
 from pydantic import BaseModel, ValidationError, validator
+
 from robusta.api import (
     RELEASE_NAME,
-    ActionParams,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
-    FileBlock,
     Finding,
     FindingSource,
     FindingType,
-    MarkdownBlock,
+    JobSecret,
+    PrometheusAuthorization,
+    PrometheusParams,
     RobustaJob,
     ScanReportBlock,
     ScanReportRow,
     ScanType,
     action,
+    format_unit,
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "leavemyyard/robusta-krr:latest")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.2.1")
+
+
+SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
+ResourceType = Union[Literal["cpu", "memory"], str]
 
 
 class KRRObject(BaseModel):
     cluster: Optional[str]
     name: str
     container: str
-    pods: List[str]
     namespace: str
     kind: str
     allocations: Dict[str, Dict[str, Optional[float]]]
@@ -41,7 +47,7 @@ class KRRObject(BaseModel):
 
 class KRRRecommendedInfo(BaseModel):
     value: Union[float, Literal["?"], None]
-    severity: str = "UNKNOWN"
+    severity: SeverityType = "UNKNOWN"
 
     @property
     def priority(self) -> int:
@@ -51,35 +57,53 @@ class KRRRecommendedInfo(BaseModel):
 class KRRRecommended(BaseModel):
     requests: Dict[str, KRRRecommendedInfo]
     limits: Dict[str, KRRRecommendedInfo]
+    info: Dict[str, Optional[str]]
+
+
+class KRRMetric(BaseModel):
+    query: str
+    start_time: str
+    end_time: str
+    step: str
 
 
 class KRRScan(BaseModel):
     object: KRRObject
     recommended: KRRRecommended
-    severity: str = "UNKNOWN"
+    severity: SeverityType = "UNKNOWN"
+    metrics: dict[ResourceType, KRRMetric] = {}
 
     @property
     def priority(self) -> int:
         return krr_severity_to_priority(self.severity)
 
 
+class KRRStrategyData(BaseModel):
+    name: str
+    settings: dict[str, Any]
+
+
 class KRRResponse(BaseModel):
     scans: List[KRRScan]
     score: int
-    resources: List[str] = ["cpu", "memory"]
+    resources: List[ResourceType] = ["cpu", "memory"]
+    description: Optional[str] = None # This field is not returned by KRR < v1.2.0
+    strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
 
 
-class KRRParams(ActionParams):
+class KRRParams(PrometheusParams):
     """
     :var timeout: Time span for yielding the scan.
     :var args: KRR cli arguments.
     :var serviceAccountName: The account name to use for the KRR scan job.
+    :var krr_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
     """
 
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
     strategy: str = "simple"
     args: str = ""
     timeout: int = 300
+    krr_job_spec = {}
 
     @validator("args", allow_reuse=True)
     def check_args(cls, args: str) -> str:
@@ -98,7 +122,7 @@ class KRRParams(ActionParams):
         return shlex.quote(strategy)
 
 
-def krr_severity_to_priority(severity: str) -> int:
+def krr_severity_to_priority(severity: SeverityType) -> int:
     if severity == "CRITICAL":
         return 4
     elif severity == "WARNING":
@@ -124,11 +148,20 @@ def priority_to_krr_severity(priority: int) -> str:
         return "UNKNOWN"
 
 
+def format_krr_value(value: Union[float, Literal["?"], None]) -> str:
+    if value is None:
+        return "unset"
+    elif isinstance(value, str):
+        return "?"
+    else:
+        return format_unit(value)
+
+
 def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
     return "\n".join(
         f"{entry['resource'].upper()} Request: "
-        + f"{entry['allocated']['request']} -> "
-        + f"{entry['recommended']['request']} "
+        + f"{format_krr_value(entry['allocated']['request'])} -> "
+        + f"{format_krr_value(entry['recommended']['request'])} "
         + f"({priority_to_krr_severity(entry['priority']['request'])})"
         for entry in row.content
     )
@@ -139,6 +172,35 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     Displays a KRR scan report.
     """
+    scan_id = str(uuid.uuid4())
+    headers = PrometheusAuthorization.get_authorization_headers(params)
+
+    python_command = f"python krr.py {params.strategy} {params.args_sanitized} -q -f json "
+    if params.prometheus_url:
+        python_command += f"-p {params.prometheus_url}"
+    auth_header = headers["Authorization"] if "Authorization" in headers else ""
+
+    # adding env var of auth token from Secret
+    env_var = None
+    secret = None
+    if auth_header:
+        krr_secret_name = "krr-auth-secret" + scan_id
+        prometheus_auth_secret_key = "prometheus-auth-header"
+        env_var_auth_name = "PROMETHEUS_AUTH_HEADER"
+        auth_header_b64_str = base64.b64encode(bytes(auth_header, "utf-8")).decode("utf-8")
+        # creating secret for auth key
+        secret = JobSecret(name=krr_secret_name, data={prometheus_auth_secret_key: auth_header_b64_str})
+        # setting env variables of krr to have secret
+        env_var = [
+            EnvVar(
+                name=env_var_auth_name,
+                valueFrom=EnvVarSource(
+                    secretKeyRef=SecretKeySelector(name=krr_secret_name, key=prometheus_auth_secret_key)
+                ),
+            )
+        ]
+        # adding secret env var in krr pod command
+        python_command += f'--prometheus-auth-header "${env_var_auth_name}"'
 
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
@@ -146,10 +208,12 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             Container(
                 name=to_kubernetes_name(IMAGE),
                 image=IMAGE,
-                command=["/bin/sh", "-c", f"python krr.py {params.strategy} {params.args_sanitized} -q -f json"],
+                command=["/bin/sh", "-c", python_command],
+                env=env_var if env_var else [],
             )
         ],
         restartPolicy="Never",
+        **params.krr_job_spec,
     )
 
     start_time = end_time = datetime.now()
@@ -157,7 +221,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     logs = None
 
     try:
-        logs = RobustaJob.run_simple_job_spec(spec, "krr_job", params.timeout)
+        logs = RobustaJob.run_simple_job_spec(spec, "krr_job" + scan_id, params.timeout, secret)
         krr_response = json.loads(logs)
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
@@ -175,7 +239,6 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             logging.error(f"*KRR scan job unexpected error.*\n {e}")
         return
 
-    scan_id = str(uuid.uuid4())
     scan_block = ScanReportBlock(
         title="KRR scan",
         scan_id=scan_id,
@@ -207,6 +270,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                             "request": scan.recommended.requests[resource].priority,
                             "limit": scan.recommended.limits[resource].priority,
                         },
+                        "metric": scan.metrics.get(resource).dict() if scan.metrics.get(resource) else {},
+                        "description": krr_scan.description,
+                        "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
                     }
                     for resource in krr_scan.resources
                 ],

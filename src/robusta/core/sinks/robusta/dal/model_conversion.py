@@ -9,16 +9,16 @@ from robusta.core.reporting import (
     CallbackBlock,
     DividerBlock,
     Enrichment,
+    EventsRef,
     FileBlock,
     Finding,
     HeaderBlock,
+    JsonBlock,
     KubernetesDiffBlock,
     ListBlock,
     MarkdownBlock,
     PrometheusBlock,
     TableBlock,
-    JsonBlock,
-    ScanReportBlock,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer
@@ -150,9 +150,14 @@ class ModelConversion:
                 structured_data.append({"type": "callbacks", "data": callbacks})
             elif isinstance(block, JsonBlock):
                 structured_data.append({"type": "json", "data": block.json_str})
+            elif isinstance(block, EventsRef):
+                structured_data.append({"type": "events_ref", "data": block.dict()})
             else:
                 logging.error(f"cannot convert block of type {type(block)} to robusta platform format block: {block}")
                 continue  # no reason to crash the entire report
+
+        if not structured_data:
+            return {}
 
         return {
             "issue_id": str(finding_id),

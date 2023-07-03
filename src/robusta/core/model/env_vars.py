@@ -1,7 +1,7 @@
+import json
 import os
 
 import pytz
-import json
 
 
 def load_bool(env_var, default: bool):
@@ -32,7 +32,6 @@ INTERNAL_PLAYBOOKS_ROOT = os.environ.get("INTERNAL_PLAYBOOKS_ROOT", "/app/src/ro
 DEFAULT_TIMEZONE = pytz.timezone(os.environ.get("DEFAULT_TIMEZONE", "UTC"))
 NUM_EVENT_THREADS = int(os.environ.get("NUM_EVENT_THREADS", 20))
 INCOMING_EVENTS_QUEUE_MAX_SIZE = int(os.environ.get("INCOMING_EVENTS_QUEUE_MAX_SIZE", 500))
-ALERT_BUILDER_WORKERS = int(os.environ.get("ALERT_BUILDER_WORKERS", 5))
 
 FLOAT_PRECISION_LIMIT = int(os.environ.get("FLOAT_PRECISION_LIMIT", 11))
 
@@ -88,3 +87,5 @@ DISCOVERY_MAX_BATCHES = int(os.environ.get("DISCOVERY_MAX_BATCHES", 25))
 DISCOVERY_BATCH_SIZE = int(os.environ.get("DISCOVERY_BATCH_SIZE", 2000))
 
 DISABLE_HELM_MONITORING = load_bool("DISABLE_HELM_MONITORING", False)
+
+PROMETHEUS_ERROR_LOG_PERIOD_SEC = int(os.environ.get("DISCOVERY_MAX_BATCHES", 14400))

@@ -76,7 +76,7 @@ class HelmReleaseBaseTrigger(BaseTrigger):
         if self.namespace and event.helm_release.namespace != self.namespace:
             return False
 
-        last_deployed_utc = event.helm_release.info.get_last_deployed().astimezone(pytz.utc)
+        last_deployed_utc = event.helm_release.info.last_deployed.astimezone(pytz.utc)
 
         if self.duration:
             # if the last deployed time is lesser than the `duration` time then dont append to the filtered list

@@ -20,6 +20,7 @@ questions or open a `GitHub issue <https://github.com/robusta-dev/robusta/issues
    triggers-and-events
    utility-functions
    documenting-actions
+   migration-guides
 
 Playbook Guides
 ^^^^^^^^^^^^^^^
