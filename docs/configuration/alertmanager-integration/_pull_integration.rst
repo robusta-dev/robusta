@@ -5,7 +5,7 @@ Configuring a Pull Integration
 .. be configured **in addition** to updating AlertManager's configuration.
 
 .. That said, most users won't need to set this up.Robusta can usually figure out where Prometheus and
-.. other services are located. If the auto-discovery isn't working, you'll configure it manually. 
+.. other services are located. If the auto-discovery isn't working, you'll configure it manually.
 
 Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
 
@@ -14,6 +14,11 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
     # this line should already exist
     globalConfig:
         # add the lines below
-        alertmanager_url: ""
+        alertmanager_url: "http://ALERT_MANAGER_SERVICE_NAME.NAMESPACE.svc.cluster.local:9093" # (1)
         grafana_url: ""
-        prometheus_url: "http://PROMETHEUS_SERVICE_NAME.monitoring.svc.cluster.local:9090"
+        prometheus_url: "http://PROMETHEUS_SERVICE_NAME.NAMESPACE.svc.cluster.local:9090" # (2)
+        # Additional query string parameters to be appended to the Prometheus connection URL (optional)
+        prometheus_url_query_string: "demo-query=example-data&another-query=value"
+.. code-annotations::
+    1. Example: http://alertmanager-Helm_release_name-kube-prometheus-alertmanager.default.svc.cluster.local:9093.
+    2. Example: http://Helm_Release_Name-kube-prometheus-prometheus.default.svc.cluster.local:9090
