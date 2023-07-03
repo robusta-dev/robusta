@@ -16,7 +16,11 @@ class WebhookSink(SinkBase):
         super().__init__(sink_config.webhook_sink, registry)
 
         self.url = sink_config.webhook_sink.url
-        self.headers = sink_config.webhook_sink.headers
+        self.headers = (
+            {"Authorization": sink_config.webhook_sink.authorization.get_secret_value()}
+            if sink_config.webhook_sink.authorization
+            else None
+        )
         self.size_limit = sink_config.webhook_sink.size_limit
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
