@@ -143,9 +143,10 @@ builtinPlaybooks:
       rate_limit: 3600
   actions:
   - pod_oom_killer_enricher: {}
-  - oomkilled_container_graph_enricher:
-      resource_type: Memory
+  - logs_enricher: {}
   - pod_node_graph_enricher:
+      resource_type: Memory
+  - oomkilled_container_graph_enricher:
       resource_type: Memory
   stop: true
 
