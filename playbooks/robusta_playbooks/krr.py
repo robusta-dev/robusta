@@ -28,7 +28,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.2.1")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.3.2")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 
 
@@ -87,7 +87,7 @@ class KRRResponse(BaseModel):
     scans: List[KRRScan]
     score: int
     resources: List[ResourceType] = ["cpu", "memory"]
-    description: Optional[str] = None # This field is not returned by KRR < v1.2.0
+    description: Optional[str] = None  # This field is not returned by KRR < v1.2.0
     strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
 
 
@@ -210,6 +210,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             Container(
                 name=to_kubernetes_name(IMAGE),
                 image=IMAGE,
+                imagePullPolicy="Always",
                 command=["/bin/sh", "-c", python_command],
                 env=env_var if env_var else [],
                 resources=resources,
