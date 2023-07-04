@@ -3,6 +3,11 @@ Integrating AlertManager and Prometheus
 
 For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from AlertManager. The following instructions also work for Victoria Metrics.
 
+.. note::
+
+   Robusta supports **VictoriaMetrics** as well. The instructions to use VictoriaMetrics are the same as for Prometheus.
+
+
 **If you installed Robusta's** :ref:`Embedded Prometheus Stack` **then no configuration is necessary.**
 
 For other setups, read on!
