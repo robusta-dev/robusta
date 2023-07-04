@@ -1,5 +1,4 @@
 import logging
-import re
 import time
 from collections import defaultdict
 from datetime import datetime
@@ -8,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import requests
 from hikaru.model.rel_1_26 import Node
+
 from robusta.api import (
     ActionParams,
     AlertResourceGraphEnricherParams,
@@ -20,6 +20,7 @@ from robusta.api import (
     FileBlock,
     Finding,
     FindingSource,
+    KubernetesResourceEvent,
     ListBlock,
     MarkdownBlock,
     NamedRegexPattern,
@@ -284,30 +285,39 @@ class TemplateParams(ActionParams):
     """
     :var template: The enrichment templated markdown text
 
-    :example template: "The alertname is $alertname and the pod is $pod"
+    :example template: <https://platform.robusta.dev/?namespace="{$namespace}"&type="{$kind}"&name="{$name}|my-link>
     """
 
     template: str = ""
 
 
 @action
-def template_enricher(alert: PrometheusKubernetesAlert, params: TemplateParams):
+def template_enricher(event: KubernetesResourceEvent, params: TemplateParams):
     """
     Attach a paragraph containing templated markdown.
-    You can inject any of the alert’s Prometheus labels into the markdown.
+    You can inject the k8s subject info and additionally on Prometheus alerts, any of the alert’s Prometheus labels.
 
-    A variable like $foo will be replaced by the value of the Prometheus label foo.
-    If a label isn’t present then the text “<missing>” will be used instead.
+    Common variables to use are ${name}, ${kind}, ${namespace}, and ${node}
 
-    Common variables to use are $alertname, $deployment, $namespace, and $node
+    A variable like ${foo} will be replaced by the value of info/label foo.
+    If it isn’t present then the text “<missing>” will be used instead.
+
+    Check example for adding a template link.
 
     The template can include all markdown directives supported by Slack.
     Note that Slack markdown links use a different format than GitHub.
     """
     labels: Dict[str, Any] = defaultdict(lambda: "<missing>")
-    labels.update(alert.alert.labels)
+    if isinstance(event, PrometheusKubernetesAlert):
+        labels.update(event.alert.labels)
+        labels.update(vars(event.get_alert_subject()))
+        labels["kind"] = labels["subject_type"].value
+    elif isinstance(event, KubernetesResourceEvent):
+        labels.update(vars(event.get_subject()))
+        labels["kind"] = labels["subject_type"].value
+
     template = Template(params.template)
-    alert.add_enrichment(
+    event.add_enrichment(
         [MarkdownBlock(template.safe_substitute(labels))],
     )
 
