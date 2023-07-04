@@ -63,6 +63,9 @@ lightActions:
 - popeye_scan
 - krr_scan
 - handle_alertmanager_event
+- drain
+- cordon
+- uncordon
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
