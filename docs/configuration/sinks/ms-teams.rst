@@ -1,15 +1,15 @@
-MS teams
+MS Teams
 ##########
 
-Robusta can report issues and events in your Kubernetes cluster to a MS teams webhook.
+Robusta can report issues and events in your Kubernetes cluster to a MS Teams webhook.
 
 .. image:: /images/deployment-babysitter-teams.png
     :width: 600
     :align: center
 
-To configure a MS teams sink we need a webhook URL for the target teams channel. You can configure it in MS teams channel connectors.
+To configure a MS Teams sink we need a webhook URL for the target teams channel. You can configure it in MS Teams channel connectors.
 
-Configuring the MS teams sink
+Configuring the MS Teams sink
 ------------------------------------------------
 
 .. admonition:: Add this to your generated_values.yaml
