@@ -50,7 +50,7 @@ def uncordon(event: NodeEvent):
 def drain(event: NodeEvent):
     """
     Drain, taints a node as unschedulable, and evicts all pods from the node.
-    DaemonSets pod are skipped, as they tolerant unschedulable nodes by default.
+    DaemonSets pods are skipped, as they tolerant unschedulable nodes by default.
     """
     cordon(event)
 
