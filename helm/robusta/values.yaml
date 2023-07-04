@@ -403,10 +403,6 @@ platformPlaybooks:
     - "robusta_ui_sink"
 - triggers:
   - on_schedule:
-      fixed_delay_repeat:
-        repeat: 1
-        seconds_delay: 120
-  - on_schedule:
       cron_schedule_repeat:
         cron_expression: "0 12 * * 1" # every Monday at 12:00
   actions:
