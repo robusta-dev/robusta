@@ -95,7 +95,9 @@ class ModelConversion:
             elif isinstance(block, ListBlock):
                 structured_data.append({"type": "list", "data": block.items})
             elif isinstance(block, PrometheusBlock):
-                structured_data.append({"type": "prometheus", "data": block.data.dict(), "metadata": block.metadata})
+                structured_data.append(
+                    {"type": "prometheus", "data": block.data.dict(), "metadata": block.metadata, "version": 1.0}
+                )
             elif isinstance(block, TableBlock):
                 if block.table_name:
                     structured_data.append(
