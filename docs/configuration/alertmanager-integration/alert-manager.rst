@@ -5,7 +5,9 @@ This guide walks you through integrating an in-cluster Prometheus with Robusta. 
 
 Configure Push Integration
 ============================
-A push integration is required for AlertManager to push alerts to Robusta. To configure it, you must add a receiver and route to AlertManager's configuration:
+A push integration is required for AlertManager to push alerts to Robusta. To configure it, you must add a receiver and route to AlertManager's configuration.
+
+Copy the configuration below to the appropriate AlertManager config file:
 
 .. include:: ./_alertmanager-config.rst
 

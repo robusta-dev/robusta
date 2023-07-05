@@ -5,33 +5,33 @@ Robusta can optionally install an embedded Prometheus stack with pre-configured 
 
 We provide defaults that were fine-tuned for low-noise and out-of-the-box integration with Robusta playbooks.
 
-Default alerts were tested on the following clusters, to identify and remove false positives:
+.. Default alerts were tested on the following clusters, to identify and remove false positives.
 
 .. TODO: show table with testing results.
 
-Alerts are based on excellent work done in the kubernetes-mixin project, with additional modifications by Robusta.
+Alerts are based on excellent work done in the `kubernetes-mixin <https://github.com/kubernetes-monitoring/kubernetes-mixin>`_ project, with additional modifications by Robusta.
 
 Enabling the Embedded Prometheus
 -----------------------------------
-By default, Robusta is installed without Prometheus and without default alerts. To enable them:
+By default, Robusta is installed without Prometheus and without default alerts. To enable them add the line below to your ``generated_values.yaml``:
 
 .. code-block:: yaml
 
     enablePrometheusStack: true
 
-This setting is recommended if don't have Prometheus installed on your cluster.
+This setting is recommended if you don't have Prometheus installed on your cluster.
 
 Prometheus retention period
 ------------------------------
 Robusta UI uses Prometheus data for showing graphs.
 To keep storage usage low, Prometheus keeps the data only for 14-15 days.
 
-To change how long Prometheus saves the data, set the retention in your `generated_values.yaml` file:
+To change how long Prometheus saves the data, set the retention in your ``generated_values.yaml`` file:
 
 .. code-block:: yaml
 
       prometheus:
         prometheusSpec:
-          retention: 15d
+          retention: 15d #change the number of days here
 
-If you're not using Robusta's embedded Prometheus, refer to `the official Prometheus docs <https://prometheus.io/docs/prometheus/latest/storage/#operational-aspects>`_ for documentation on retention periods.
+If you're not using Robusta's embedded Prometheus, refer to `the official Prometheus docs <https://prometheus.io/docs/prometheus/latest/storage/#operational-aspects>`_ for guidance on retention periods.

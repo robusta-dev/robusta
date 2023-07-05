@@ -11,8 +11,7 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
 
 .. code-block:: yaml
 
-    # this line should already exist
-    globalConfig:
+    globalConfig: # this line should already exist
         # add the lines below
         alertmanager_url: "http://ALERT_MANAGER_SERVICE_NAME.NAMESPACE.svc.cluster.local:9093" # (1)
         grafana_url: ""

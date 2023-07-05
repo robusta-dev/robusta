@@ -29,7 +29,7 @@ By default, Robusta does not verify the SSL certificate of the Prometheus server
     - name: PROMETHEUS_SSL_ENABLED
       value: "true"
 
-To use a custom CA certificate, add the following to the ``generated_values.yaml`` file:
+To use a custom Certificate Authority(CA) certificate, add the following to the ``generated_values.yaml`` file:
 
 .. code-block:: yaml
 
@@ -39,9 +39,9 @@ To use a custom CA certificate, add the following to the ``generated_values.yaml
 Alerts silencing
 =====================
 
-Robusta enables the silencing of alerts directly from notification channels (sinks) Robusta attempts to find an AlertManager instance running in your cluster automatically and uses it to create silences.
+Robusta provides the functionality to silence alerts directly from various notification channels(sinks). It proactively seeks out an AlertManager instance and utilizes it to establish silences.
 
-If Robusta can't locate the AlertManager, a pull integration must be configured.
+In the event that Robusta is unable to identify the AlertManager, a pull integration becomes necessary. Please refer to the 'Configuring a Pull Integration' section of this document to configure it.
 
 .. Grafana AlertManager
 .. =====================

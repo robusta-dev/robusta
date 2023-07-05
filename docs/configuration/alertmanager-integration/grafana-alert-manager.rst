@@ -7,6 +7,8 @@ Configure Push Integration
 ============================
 A push integrations is required for AlertManager to push alerts to Robusta. To configure it, you must add a receiver and route to AlertManger's configuration:
 
+Copy the configuration below to the appropriate AlertManager config file:
+
 .. include:: ./_alertmanager-config.rst
 
 .. include:: ./_testing_integration.rst
@@ -23,7 +25,7 @@ Add the following configuration to the ``globalConfig`` section in your ``genera
 
     .. code-block:: yaml
 
-        globalConfig:
+        globalConfig: # this line should already exist
           grafana_api_key: <YOUR GRAFANA EDITOR API KEY>
           alertmanager_flavor: grafana
 

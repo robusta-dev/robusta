@@ -28,7 +28,7 @@ For certain features, Robusta needs to reach out to Prometheus and pull metrics.
 
 You can configure this one of two ways:
 
-.. details:: Option #1 Create an Azure Active Directory authentication app
+.. details:: Option #1: Create an Azure Active Directory authentication app
 
   **Pros:**
     - Quick setup. Just need to create an app, get the credentials and add them to the manifests
@@ -38,20 +38,20 @@ You can configure this one of two ways:
     - Need the client secret in the kubernetes manifests
     - Client secret expires, you need to manage its rotation
 
-.. details:: Option #2 Use kubelet Managed Identity
+.. details:: Option #2: Use kubelet Managed Identity
 
   **Pros:**
     * Quick setup. Get the Managed Identity Client ID and add them to the manifests
     * No need to manage secrets. Removing the password element decreases the risk of the credentials being compromised
   **Cons:**
-    * Managed Identity is bound to the whole VMSS, so other pods can use it if they know the client ID
+    * Managed Identity is bound to the entire VMSS, which means that other pods can use it if they have the client ID
 
 Retrieve the Azure Prometheus query endpoint
 ==============================================
 
 1. Go to `Azure Monitor workspaces <https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/microsoft.monitor%2Faccounts>`_ and choose your monitored workspace.
 2. In your monitored workspace, `overview`, find the ``Query endpoint`` and copy it.
-3. In your `generated_values.yaml` file add the query endpoint url under ``globalConfig`` with a 443 port:
+3. In your `generated_values.yaml` file add the query endpoint URL under ``globalConfig`` with a 443 port:
 
 .. code-block:: yaml
 
@@ -61,7 +61,7 @@ Retrieve the Azure Prometheus query endpoint
 Option #1: Create an Azure authentication app
 ==============================================
 
-We will now create an Azure authentication app and get the necesssary credentials so Robusta can access Prometheus data.
+We will now create an Azure authentication app and get the necessary credentials so Robusta can access Prometheus data.
 
 1. Follow this Azure guide to `Register an app with Azure Active Directory <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-self-managed-grafana-azure-active-directory#register-an-app-with-azure-active-directory>`_
 
@@ -80,12 +80,12 @@ We will now create an Azure authentication app and get the necesssary credential
     - name: AZURE_CLIENT_SECRET
       value: "<your-client-secret>"
 
-3. Complete the `Allow your app access to your workspace <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-self-managed-grafana-azure-active-directory#allow-your-app-access-to-your-workspace>`_ step, so your app can query data from your Azure Monitor workspace.
+3. Complete the step `Allow your app access to your workspace <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-self-managed-grafana-azure-active-directory#allow-your-app-access-to-your-workspace>`_, so your app can query data from your Azure Monitor workspace.
 
 Option #2: Use Kubelet's Managed Identity
 ==============================================
 
-We will now use the Kubelet's Managed Identity so Robusta can access Prometheus data. Alternatively, you can create a new User Assigned Managed Identity and bind it to the underlying VMSS. This guide will use the Kubelet's Managed Identity.
+This guide will use the Kubelet's Managed Identity so Robusta can access Prometheus data. Alternatively, you can create a new User Assigned Managed Identity and bind it to the underlying VMSS.
 
 1. Get the AKS kubelet's Managed Identity Client ID:
 
@@ -115,5 +115,5 @@ We will now use the Kubelet's Managed Identity so Robusta can access Prometheus 
    c. Select Monitoring Data Reader and select Next.
    d. For Assign access to, select Managed identity.
    e. Select + Select members.
-   f. Select the Managed Identity you got from step 1
+   f. Select the Managed Identity you got from step 1.
    g. Select Review + assign to save the configuration.

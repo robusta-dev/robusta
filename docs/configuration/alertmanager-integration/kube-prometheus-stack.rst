@@ -6,7 +6,7 @@ Kube-Prometheus-Stack and Prometheus Operator
 
 .. Here's a step-by-step guide on how to integrate your Kube Prometheus Stack with Robusta.
 
-This guide walks you through integrating your Kube-Prometheus-Stack or the Prometheus Operator with Robusta. You will need to configure two integrations: both a push integration and a pull integration.
+This guide walks you through integrating your Kube-Prometheus-Stack, or the Prometheus Operator with Robusta. You will need to configure two integrations: both a push integration and a pull integration.
 
 .. You must inform the AlertManager about Robusta using a `Kubernetes Secret <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#managing-alertmanager-configuration>`_. The Prometheus Operator will pass this secret to AlertManager, which will then push alerts to Robusta by webhook.
 
@@ -25,8 +25,7 @@ Copy the configuration below and place it in the appropriate Kubernetes Secret.
 
 .. details:: Why use a secret instead of editing AlertManagerConfig?
 
-    In theory, you can configure an AlertmanagerConfig instead of using a secret. However, this is **not** recommended.
-    It `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
+    In theory, you can configure an AlertmanagerConfig instead of using a secret. However, this is **not** recommended as it `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
 
 .. include:: ./_pull_integration.rst
 
