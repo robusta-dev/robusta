@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional, Union
 from urllib.error import HTTPError, URLError
 
 import requests
@@ -92,7 +92,7 @@ class HTTP_POST(ActionParams):
     """
 
     url: str
-    data: dict = None  # type: ignore
+    data: Union[dict, str, bytes, List[tuple]] = None  # type: ignore
     headers: dict = None
     get_response: Optional[bool] = False
 
@@ -161,7 +161,7 @@ class HTTP_PUT(ActionParams):
     """
 
     url: str
-    data: dict = None  # type: ignore
+    data: Union[dict, str, bytes, List[tuple]] = None  # type: ignore
     headers: dict = None
     get_response: Optional[bool] = False
 
