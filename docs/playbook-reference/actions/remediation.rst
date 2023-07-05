@@ -14,6 +14,8 @@ Robusta includes actions that modify Kubernetes resources in your cluster. See a
 
 .. robusta-action:: playbooks.robusta_playbooks.autoscaler.alert_on_hpa_reached_limit on_horizontalpodautoscaler_update
 
+.. robusta-action:: playbooks.robusta_playbooks.workload_actions.rollout_restart on_prometheus_alert
+
 Node
 *****************
 

@@ -19,7 +19,7 @@ from robusta.api import (
 def rollout_restart(event: KubernetesResourceEvent):
     """
     Performs rollout restart on a kubernetes workload.
-    Supports deployment, daemonset and statefulset
+    Supports deployments, daemonsets and statefulsets related events.
     """
     resource = event.get_resource()
     if resource.kind not in ["Deployment", "DaemonSet", "StatefulSet"]:
