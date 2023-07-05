@@ -63,10 +63,13 @@ lightActions:
 - popeye_scan
 - krr_scan
 - handle_alertmanager_event
+- drain
+- cordon
+- uncordon
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
-enableServiceMonitors: false
+enableServiceMonitors: true
 monitorHelmReleases: true
 
 # disable messages routed by Robusta cloud
@@ -140,7 +143,7 @@ builtinPlaybooks:
 # playbooks for non-prometheus based monitoring that use prometheus for enrichment
 - triggers:
   - on_pod_oom_killed:
-      rate_limit: 900
+      rate_limit: 3600
   actions:
   - pod_oom_killer_enricher: {}
   - oomkilled_container_graph_enricher:
@@ -374,6 +377,14 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 - triggers:
+    - on_deployment_all_changes: {}
+    - on_daemonset_all_changes: {}
+    - on_statefulset_all_changes: {}
+    - on_replicaset_all_changes: {}
+    - on_pod_all_changes: {}
+  actions:
+    - resource_events_diff: {}
+- triggers:
   - on_job_failure: {}
   actions:
   - create_finding:
@@ -391,6 +402,14 @@ platformPlaybooks:
         seconds_delay: 120
   actions:
   - popeye_scan: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
+  - on_schedule:
+      cron_schedule_repeat:
+        cron_expression: "0 12 * * 1" # every Monday at 12:00
+  actions:
+  - krr_scan: {}
   sinks:
     - "robusta_ui_sink"
 
