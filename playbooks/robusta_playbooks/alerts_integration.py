@@ -285,7 +285,7 @@ class TemplateParams(ActionParams):
     """
     :var template: The enrichment templated markdown text
 
-    :example template: <https://platform.robusta.dev/?namespace="{$namespace}"&type="{$kind}"&name="{$name}|my-link>
+    :example template: <https://platform.robusta.dev/?namespace="${namespace}"&type="${kind}"&name="${name}"|my-link>
     """
 
     template: str = ""
