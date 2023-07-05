@@ -66,6 +66,7 @@ lightActions:
 - drain
 - cordon
 - uncordon
+- rollout_restart
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
