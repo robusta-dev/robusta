@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Union
@@ -27,20 +26,26 @@ class BaseResourceManager:
         self._timestamp = None
         self._resource_kind = resource_kind
 
+    # get the latest timestamp to use
     def get_updated_ts(self) -> datetime:
         return self._timestamp
 
+    # get resource kind
     def get_resource_kind(self) -> ResourceKind:
         return self._resource_kind
 
-    def create_resource(self, resource: AccountResource) -> Union[ResourceEntry , None]:
+    # create resources
+    def create_resource(self, resource: AccountResource) -> Union[ResourceEntry, None]:
         pass
 
-    def update_resource(self, resource: AccountResource, old_entry: ResourceEntry) -> Union[ResourceEntry , None]:
+    # update resources
+    def update_resource(self, resource: AccountResource, old_entry: ResourceEntry) -> Union[ResourceEntry, None]:
         pass
 
-    def delete_resource(self, resource: AccountResource, old_entry: ResourceEntry) -> bool:
+    # delete resources
+    def delete_resource(self, resource: AccountResource, old_entry: ResourceEntry) -> True:
         pass
 
-    def init_resources(self) -> None:
+    # initialize resources
+    def init_resources(self):
         pass

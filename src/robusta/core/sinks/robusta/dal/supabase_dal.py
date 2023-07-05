@@ -618,7 +618,7 @@ class SupabaseDal:
                 custom_filter_request_builder(query_builder,
                                               operator="or",
                                               criteria=f"(clusters_target_set.cs.[\"*\"], clusters_target_set.cs.[\"{self.cluster}\"])")
-
+        query_builder = query_builder.order(column="updated_at", desc=False)
         res = query_builder.execute()
 
         if res.get("status_code") not in [200]:

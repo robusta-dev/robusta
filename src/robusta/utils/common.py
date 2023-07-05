@@ -54,3 +54,8 @@ def parse_query_string(query_string: str) -> Dict[str, List[str]]:
     return parsed_params
 
 
+def index_of(array: list, predicate):
+    for i in range(len(array)):
+        if predicate(array[i]):
+            return i
+    return None
