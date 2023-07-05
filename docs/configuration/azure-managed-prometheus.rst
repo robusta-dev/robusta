@@ -20,25 +20,48 @@ To configure Azure to send alerts to Robusta:
 
     This notification is displayed until the first alert to Robusta.
 
-Configure Robusta to use Azure managed Prometheus
+Configure Robusta to use Azure Managed Prometheus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For certain features, Robusta needs to reach out to Prometheus so that Robusta can analyze and present Prometheus data.
-In order to authenticate against the Azure managed Prometheus service, you have two options:
+Azure saves Prometheus metrics in an Azure Monitor Workspace. Robusta can access this data by using the Azure Monitor Workspace Query endpoint.
+
+In order to authenticate against the Azure Monitor Workspace Query endpoint, you have multiple options:
+
 - Create an Azure Active Directory authentication app (Option #1)
+
   - Pros:
+
     - Quick setup. Just need to create an app, get the credentials and add them to the manifests
     - Other pods can't use the Service Principal without having the secret
+
   - Cons:
+
     - Requires a service principal (Azure AD permission)
     - Need the client secret in the kubernetes manifests
     - Client secret expires, you need to manage its rotation
+
 - Use Kubelet's Managed Identity (Option #2)
+
   - Pros:
+
     - Quick setup. Get the Managed Identity Client ID and add them to the manifests
     - No need to manage secrets. Removing the password element decreases the risk of the credentials being compromised
+
   - Cons:
+
     - Managed Identity is bound to the whole VMSS, so other pods can use it if they know the client ID
+
+- Use Azure AD Workload Identity (Option #3)
+
+  - Pros:
+
+    - Most secure option as Managed Identity is only bound to the pod. No other pods can use it
+    - No need to manage secrets. Removing the password element decreases the risk of the credentials being compromised
+
+  - Cons:
+
+    - Extra setup needed: need AKS cluster with Workload Identity add-on enabled, get the OIDC issuer URL and add it to the manifests
 
 Get the Azure prometheus query endpoint
 =========================================
@@ -59,7 +82,6 @@ Option #1: Create an Azure authentication app
 We will now create an Azure authentication app and get the necesssary credentials so Robusta can access Prometheus data.
 
 1. Follow this Azure guide to `Register an app with Azure Active Directory <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-self-managed-grafana-azure-active-directory#register-an-app-with-azure-active-directory>`_
-
 2. In your generated_values.yaml file add the following environment variables from the previous step.
 
 .. code-block:: yaml
@@ -105,10 +127,64 @@ We will now use the Kubelet's Managed Identity so Robusta can access Prometheus 
 
 3. Give access to your Managed Identity on your workspace:
 
-   a. Open the Access Control (IAM) page for your Azure Monitor workspace in the Azure portal.
-   b. Select Add role assignment.
-   c. Select Monitoring Data Reader and select Next.
-   d. For Assign access to, select Managed identity.
-   e. Select + Select members.
-   f. Select the Managed Identity you got from step 1
-   g. Select Review + assign to save the configuration.
+   #. Open the Access Control (IAM) page for your Azure Monitor workspace in the Azure portal.
+   #. Select Add role assignment.
+   #. Select Monitoring Data Reader and select Next.
+   #. For Assign access to, select Managed identity.
+   #. Select + Select members.
+   #. Select the Managed Identity you got from step 1
+   #. Select Review + assign to save the configuration.
+
+Option #3: Use Azure Workload Identity
+==============================================
+
+We will create a new Managed Identity and bound it to Robusta's Service Account so Robusta can access Prometheus data.
+
+1. Requirements
+
+AKS cluster needs to have Workload Identity add-on and OIDC issuer enabled. You can use `--enable-oidc-issuer --enable-workload-identity` with `az aks create` or `az aks update` to enable them.
+
+2. Create a new Managed Identity. Change the Identity name, resource group and location to match your environment.
+
+.. code-block:: bash
+
+  export SUBSCRIPTION="$(az account show --query id --output tsv)"
+  az identity create --name "robusta-id" --resource-group "robusta-dev" --location "eastus" --subscription "${SUBSCRIPTION}"
+  az identity show --name "robusta-id" --resource-group "robusta-dev" -query clientId -o tsv # keep this value for the step #3
+
+3. In your generated_values.yaml file add the following environment variables from the previous step.
+
+.. code-block:: yaml
+
+  runner:
+    additional_env_vars:
+    - name: PROMETHEUS_SSL_ENABLED
+      value: "true"
+    - name: AZURE_USE_WORKLOAD_ID
+      value: "true"
+    - name: AZURE_CLIENT_ID
+      value: "<your-client-id>"
+    - name: AZURE_TENANT_ID
+      value: "<your-tenant-id>"
+  azure:
+    workloadIdentity:
+      enabled: true
+
+4. Federate the Service Account with the Managed Identity. Replace the values with the ones from the step #1.
+
+.. code-block:: bash
+
+  export AKS_OIDC_ISSUER="$(az aks show -g <resource-group> -n <cluster-name> --query "oidcIssuerProfile.issuerUrl" -otsv)" # Replace with the corresponding values of your AKS clusters.
+  ROBUSTA_NAMESPACE="robusta"
+  ROBUSTA_SERVICE_ACCOUNT="robusta-runner-service-account"
+  az identity federated-credential create --name "robusta-federated-id" --identity-name "robusta-id" --resource-group "robusta-dev" --issuer ${AKS_OIDC_ISSUER} --subject system:serviceaccount:$ROBUSTA_NAMESPACE:$ROBUSTA_SERVICE_ACCOUNT
+
+5. Give access to your Managed Identity on your workspace:
+
+   #. Open the Access Control (IAM) page for your Azure Monitor workspace in the Azure portal.
+   #. Select Add role assignment.
+   #. Select Monitoring Data Reader and select Next.
+   #. For Assign access to, select Managed identity.
+   #. Select + Select members.
+   #. Select the Managed Identity you got from step 2
+   #. Select Review + assign to save the configuration.

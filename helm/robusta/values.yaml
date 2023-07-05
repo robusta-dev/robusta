@@ -560,3 +560,8 @@ openshift:
 
   sccPriority: null
   privilegedSccPriority: null
+
+# custom parameters for Azure Managed Prometheus Service
+azure:
+  workloadIdentity:
+    enabled: false
