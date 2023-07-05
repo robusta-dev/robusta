@@ -35,7 +35,7 @@ def rollout_restart(event: KubernetesResourceEvent):
             "template": {
                 "metadata": {
                     "annotations": {
-                        "kubectl.kubernetes.io/restartedAt": datetime.datetime.utcnow()
+                        "robusta.kubernetes.io/restartedAt": datetime.datetime.utcnow()
                         .replace(tzinfo=pytz.UTC)
                         .isoformat()
                     }
@@ -45,6 +45,12 @@ def rollout_restart(event: KubernetesResourceEvent):
     }
     try:
         if isinstance(resource, Deployment):
+            if resource.spec.paused:
+                event.add_enrichment(
+                    [MarkdownBlock(f"can't restart paused deployment/{namespace}/{name} (run rollout resume first).")]
+                )
+                return
+
             api.patch_namespaced_deployment(name=name, namespace=namespace, body=body)
         elif isinstance(resource, DaemonSet):
             api.patch_namespaced_daemon_set(name=name, namespace=namespace, body=body)
