@@ -40,6 +40,7 @@ class FindingSubjectType(Enum):
 
     @staticmethod
     def from_kind(kind: str):
+        kind = kind.lower()
         if kind == "deployment":
             return FindingSubjectType.TYPE_DEPLOYMENT
         elif kind == "node":
