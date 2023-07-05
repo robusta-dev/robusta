@@ -63,6 +63,9 @@ lightActions:
 - popeye_scan
 - krr_scan
 - handle_alertmanager_event
+- drain
+- cordon
+- uncordon
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
@@ -402,10 +405,6 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 - triggers:
-  - on_schedule:
-      fixed_delay_repeat:
-        repeat: 1
-        seconds_delay: 120
   - on_schedule:
       cron_schedule_repeat:
         cron_expression: "0 12 * * 1" # every Monday at 12:00
