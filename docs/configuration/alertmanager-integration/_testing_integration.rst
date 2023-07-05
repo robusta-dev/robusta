@@ -1,4 +1,4 @@
-To test this, we can send a dummy alert to AlertManager:
+To test this, you can send a dummy alert to AlertManager:
 
 .. code-block:: bash
 
@@ -9,8 +9,8 @@ If everything was configured properly, AlertManager will push this alert to Robu
 .. details:: I configured AlertManager, but I'm still not receiving alerts?
     :class: warning
 
-    Try sending a demo-alert as described above, and check the AlertManager logs for errors. Or reach out to us on `Slack <https://bit.ly/robusta-slack>`_.
+    Try sending a demo-alert as described above, and check the AlertManager logs for errors. You can also reach out to us on `Slack <https://bit.ly/robusta-slack>`_.
 
     Other places to look for errors
-        1. kube-prometheus-operator logs
-        2. AlertManager UI status page
+        1. Check the kube-prometheus-operator logs.
+        2. Check the AlertManager UI status page.

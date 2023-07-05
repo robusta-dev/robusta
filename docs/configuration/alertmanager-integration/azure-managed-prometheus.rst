@@ -22,27 +22,29 @@ To configure Azure to send alerts to Robusta:
     This notification is displayed until the first alert to Robusta.
 
 Configure Pull Integration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+===============================
 
 For certain features, Robusta needs to reach out to Prometheus and pull metrics.
 
 You can configure this one of two ways:
 
-1. Create an Azure Active Directory authentication app
-  - Pros:
+.. details:: Option #1 Create an Azure Active Directory authentication app
+
+  **Pros:**
     - Quick setup. Just need to create an app, get the credentials and add them to the manifests
     - Other pods can't use the Service Principal without having the secret
-  - Cons:
+  **Cons:**
     - Requires a service principal (Azure AD permission)
     - Need the client secret in the kubernetes manifests
     - Client secret expires, you need to manage its rotation
 
-2. Use kubelet Managed Identity (Option #2)
-  - Pros:
-    - Quick setup. Get the Managed Identity Client ID and add them to the manifests
-    - No need to manage secrets. Removing the password element decreases the risk of the credentials being compromised
-  - Cons:
-    - Managed Identity is bound to the whole VMSS, so other pods can use it if they know the client ID
+.. details:: Option #2 Use kubelet Managed Identity
+
+  **Pros:**
+    * Quick setup. Get the Managed Identity Client ID and add them to the manifests
+    * No need to manage secrets. Removing the password element decreases the risk of the credentials being compromised
+  **Cons:**
+    * Managed Identity is bound to the whole VMSS, so other pods can use it if they know the client ID
 
 Retrieve the Azure Prometheus query endpoint
 ==============================================

@@ -14,7 +14,7 @@ A push integrations is required for AlertManager to push alerts to Robusta. To c
 .. include:: ./_pull_integration.rst
 
 Configure Alert Silencing
-=====================
+==============================
 For Robusta to create silences, you need to modify one additional setting. This is necessary because of minor API differences in the AlertManager embedded in Grafana.
 
 Add the following configuration to the ``globalConfig`` section in your ``generated_values.yaml`` file:

@@ -11,8 +11,11 @@
         route: # (1)
           routes:
             - receiver: 'robusta'
+              group_by: [ '...' ]
+              group_wait: 1s
+              group_interval: 1s
               matchers:
-                - severity =~ "info|warn|error|critical"
+                - severity =~ ".*"
               repeat_interval: 4h
               continue: true # (3)
 

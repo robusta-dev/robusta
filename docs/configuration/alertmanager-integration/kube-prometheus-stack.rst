@@ -13,11 +13,11 @@ This guide walks you through integrating your Kube-Prometheus-Stack or the Prome
 Configure Push Integration
 ============================
 
-You must inform the AlertManager about Robusta using a `Kubernetes Secret <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#managing-alertmanager-configuration>`_. The Prometheus Operator will pass this secret to AlertManager, which will then push alerts to Robusta by webhook.
+The AlertManager must be informed about Robusta using a `Kubernetes Secret <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#managing-alertmanager-configuration>`_. The Prometheus Operator will pass this secret to AlertManager, which will then push alerts to Robusta by webhook.
 
-To configure it, you must add a receiver and route to AlertManger's configuration.
+To configure it, you must add a receiver and route to AlertManager's configuration.
 
-Copy the below configuration and place it in the appropriate Kubernetes Secret.
+Copy the configuration below and place it in the appropriate Kubernetes Secret.
 
 .. include:: ./_alertmanager-config.rst
 

@@ -1,13 +1,13 @@
 Additional Authentication Headers
 =================================
-If your Prometheus needs authentication, add the following to ``generated_values.yaml``:
+If Prometheus requires authentication, add the following to ``generated_values.yaml``:
 
 .. code-block:: yaml
 
   globalConfig:
     prometheus_auth: Bearer <YOUR TOKEN> # Replace <YOUR TOKEN> with your actual token or use any other auth header as needed
 
-For AlertManager:
+AlertManager authentication, add the following to ``generated_values.yaml``.
 
 .. code-block:: yaml
 
@@ -29,7 +29,7 @@ By default, Robusta does not verify the SSL certificate of the Prometheus server
     - name: PROMETHEUS_SSL_ENABLED
       value: "true"
 
-To use a custom CA certificate, add the following to your ``generated_values.yaml`` file:
+To use a custom CA certificate, add the following to the ``generated_values.yaml`` file:
 
 .. code-block:: yaml
 
@@ -39,9 +39,9 @@ To use a custom CA certificate, add the following to your ``generated_values.yam
 Alerts silencing
 =====================
 
-Robusta allows you to silence alerts directly from your notification channels (sinks). Robusta attempts to find an AlertManager instance running in your cluster automatically and uses it to create silences.
+Robusta enables the silencing of alerts directly from notification channels (sinks) Robusta attempts to find an AlertManager instance running in your cluster automatically and uses it to create silences.
 
-If Robusta can't locate your AlertManager, you need to configure a pull integration.
+If Robusta can't locate the AlertManager, a pull integration must be configured.
 
 .. Grafana AlertManager
 .. =====================

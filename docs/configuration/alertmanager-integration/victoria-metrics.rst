@@ -27,9 +27,11 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
         # this line should already exist
         globalConfig:
             # add the lines below
-            alertmanager_url: ""
+            alertmanager_url: "http://ALERT_MANAGER_SERVICE_NAME.NAMESPACE.svc.cluster.local:9093"
             grafana_url: ""
-            prometheus_url: "http://VICTORIA_METRICS_SERVICE_NAME.monitoring.svc.cluster.local:8429"
+            prometheus_url: "http://VICTORIA_METRICS_SERVICE_NAME.NAMESPACE.svc.cluster.local:8429"
+             # Additional query string parameters to be appended to the Prometheus connection URL (optional)
+            prometheus_url_query_string: "demo-query=example-data&another-query=value"
 
 
 .. include:: ./_additional_settings.rst
