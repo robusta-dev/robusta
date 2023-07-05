@@ -151,3 +151,72 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
             ]
         )
         event.add_finding(finding)
+
+class HTTP_PUT(ActionParams):
+    """
+    :var url: In cluster target url.
+    :var get_response: (optional) (Default: False) Send results to sink.
+    :var data: (optional) Dictionary, list of tuples, bytes, or file-like
+        object to send in the body of request.
+    """
+
+    url: str
+    data: dict = None  # type: ignore
+    headers: dict = None
+    get_response: Optional[bool] = False
+
+
+@action
+def http_put(event: ExecutionBaseEvent, action_params: HTTP_PUT):
+    """
+    Run an http PUT against a url
+    """
+    function_name = "http_put"
+
+    # https://docs.robusta.dev/master/extending/actions/findings-api.html
+
+    finding = Finding(
+        title=f"{action_params.url} status check",
+        source=FindingSource.MANUAL,
+        aggregation_key=function_name,
+        finding_type=FindingType.REPORT,
+        failure=False,
+    )
+
+    try:
+
+        result = requests.put(action_params.url, data=action_params.data, headers=action_params.headers)
+
+        if action_params.get_response:
+            finding.title = f"Response received from {action_params.url} "
+            finding.add_enrichment(
+                [
+                    FileBlock("Response.txt: ", result.text.encode()),
+                ]
+            )
+            event.add_finding(finding)
+
+    except HTTPError as e:
+        finding.title = f"{action_params.url} is un-reachable"
+        finding.add_enrichment(
+            [
+                MarkdownBlock(f"*Status Code*\n```\n{e.code}\n```"),
+            ]
+        )
+        event.add_finding(finding)
+    except URLError as e:
+        finding.title = f"{action_params.url} is un-reachable"
+        finding.add_enrichment(
+            [
+                MarkdownBlock(f"*Reason*\n```\n{e.reason}\n```"),
+            ]
+        )
+        event.add_finding(finding)
+    except Exception as e:
+        finding.title = f"{action_params.url} is un-reachable"
+        finding.add_enrichment(
+            [
+                MarkdownBlock(f"*Error*\n```\n{e}\n```"),
+            ]
+        )
+        event.add_finding(finding)
