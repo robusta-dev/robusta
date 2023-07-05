@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, Union
 from kubernetes import client, config
 from kubernetes.client import exceptions
@@ -92,7 +93,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                     grace_period_seconds=60
                 )
         except Exception as e:
-            raise f"An error occured while initializing PrometheusRules CRD resources: {e}"
+            logging.error(f"An error occured while initializing PrometheusRules CRD resources: {e}", exc_info=True)
 
     # fetch the first available slot in the crd files
     def __find_available_crd_slot(self) -> int:
@@ -140,7 +141,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 )
             self.__cdr_slots_len[slot] += 1
         except Exception as e:
-            raise f"An error occured while replacing PrometheusRules CRD alert: {e}"
+            raise f"An error occured while replacing PrometheusRules CRD alert => entity: {resource}. Error: {e}"
 
     # modify and apply rules to crd file
     def __modify_rule(self, slot: int, resource: AccountResource):
@@ -169,7 +170,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 body=crd_obj,
             )
         except Exception as e:
-            raise f"An error occured while modify PrometheusRules CRD alert: {e}"
+            raise f"An error occured while modify PrometheusRules CRD alert => entity: {resource}. Error: {e}"
 
     def __write_first_rule(self, slot: int, rule):
         try:
@@ -178,7 +179,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 body=PrometheusAlertResourceManager.__create_prometheus_rule_template(slot, [rule]),
             )
         except Exception as e:
-            raise f"An error occured while writing first rule to PrometheusRules CRD alert: {e}"
+            raise f"An error occured while writing first rule to PrometheusRules CRD alert => rule: {rule}. Error: {e}"
 
     # delete an existing rule from the crd file
     def __delete_rule(self, slot, resource: AccountResource):
@@ -205,4 +206,4 @@ class PrometheusAlertResourceManager(BaseResourceManager):
 
             self.__cdr_slots_len[slot] = max(0, self.__cdr_slots_len[slot] - 1)
         except Exception as e:
-            raise f"An error occured while deleting rule to PrometheusRules CRD alert: {e}"
+            raise f"An error occured while deleting rule to PrometheusRules CRD alert => entity: {resource}. Error: {e}"

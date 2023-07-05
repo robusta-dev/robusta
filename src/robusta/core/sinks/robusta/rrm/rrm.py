@@ -37,28 +37,35 @@ class RRM:
 
     def __periodic_loop(self):
         for res_man in self.__resource_managers:
-            resources: list[AccountResource] = self.dal.get_account_resources(
-                resource_kind=res_man.get_resource_kind(),
-                updated_at=res_man.get_updated_ts())
+            resource_kind = res_man.get_resource_kind()
 
-            for resource in resources:
-                entity_id = resource.entity_id
-                # if this resource is already tracked by __entries
-                if entity_id in self.__entries:
-                    # just deleted or it is not in cluster anymore => remove it
-                    if resource.deleted or not self.__in_cluster(resource.clusters_target_set):
-                        if res_man.delete_resource(resource, self.__entries[entity_id]):
-                            del self.__entries[entity_id]
+            try:
+                resources: list[AccountResource] = self.dal.get_account_resources(
+                    resource_kind=resource_kind,
+                    updated_at=res_man.get_updated_ts())
+
+                for resource in resources:
+                    entity_id = resource.entity_id
+                    # if this resource is already tracked by __entries
+                    if entity_id in self.__entries:
+                        # just deleted or it is not in cluster anymore => remove it
+                        if resource.deleted or not self.__in_cluster(resource.clusters_target_set):
+                            if res_man.delete_resource(resource, self.__entries[entity_id]):
+                                del self.__entries[entity_id]
+                        else:
+                            entry = res_man.update_resource(resource, self.__entries[entity_id])
+                            if entry is not None:
+                                self.__entries[entity_id] = entry
                     else:
-                        entry = res_man.update_resource(resource, self.__entries[entity_id])
+                        # if the resource is not of the cluster then skip it
+                        if resource.deleted or not self.__in_cluster(resource.clusters_target_set):
+                            return
+
+                        # new resource
+                        entry = res_man.create_resource(resource)
                         if entry is not None:
                             self.__entries[entity_id] = entry
-                else:
-                    # if the resource is not of the cluster then skip it
-                    if resource.deleted or not self.__in_cluster(resource.clusters_target_set):
-                        return
-
-                    # new resource
-                    entry = res_man.create_resource(resource)
-                    if entry is not None:
-                        self.__entries[entity_id] = entry
+            except Exception as e:
+                logging.error(
+                    f"An error occured while running rrm periodic checks. Resource_kind => {resource_kind}. Error: {e}",
+                    exc_info=True)
