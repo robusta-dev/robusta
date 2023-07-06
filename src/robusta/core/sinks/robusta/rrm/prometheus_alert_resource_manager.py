@@ -78,6 +78,12 @@ class PrometheusAlertResourceManager(BaseResourceManager):
 
     # initialize the resources
     def init_resources(self) -> bool:
+        """Initialize the resources
+
+        If the API call fails, the initialization method will make additional attempts to list and delete
+        the custom objects. If these attempts also fail, we will remove the failed resources from
+        the __resource_managers list, rendering them inert.
+        """
 
         for itr in range(0, self.init_resources_max_attempts):
             try:
@@ -104,8 +110,9 @@ class PrometheusAlertResourceManager(BaseResourceManager):
 
         return False
 
-    # fetch the first available slot in the crd files
     def __find_available_crd_slot(self) -> int:
+        """Fetch the first available slot in the crd files"""
+
         slot = index_of(self.__cdr_slots_len, lambda l: l < MAX_ALLOWED_RULES_PER_CRD_ALERT)
         if slot is not None:
             return slot
@@ -113,8 +120,9 @@ class PrometheusAlertResourceManager(BaseResourceManager):
         self.__cdr_slots_len.append(0)
         return len(self.__cdr_slots_len) - 1
 
-    # append rules to the crd files
     def __append_rule(self, slot: int, resource: AccountResource):
+        """Append rules to the crd files"""
+
         name = PrometheusAlertResourceManager.__crd_name(slot)
 
         rule = resource.resource_state.get('rule', {})
@@ -144,8 +152,9 @@ class PrometheusAlertResourceManager(BaseResourceManager):
         except Exception as e:
             raise f"An error occurred while replacing PrometheusRules CRD alert => entity: {resource}. Error: {e}"
 
-    # modify and apply rules to crd file
     def __modify_rule(self, slot: int, resource: AccountResource):
+        """Modify and apply rules to crd file"""
+
         try:
             name = PrometheusAlertResourceManager.__crd_name(slot)
 
@@ -183,8 +192,9 @@ class PrometheusAlertResourceManager(BaseResourceManager):
         except Exception as e:
             raise f"An error occurred while writing first rule to PrometheusRules CRD alert => rule: {rule}. Error: {e}"
 
-    # delete an existing rule from the crd file
     def __delete_rule(self, slot, resource: AccountResource):
+        """Delete an existing rule from the crd file"""
+
         try:
             name = PrometheusAlertResourceManager.__crd_name(slot)
 
