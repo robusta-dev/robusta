@@ -6,6 +6,7 @@ import hikaru
 import kubernetes.client.exceptions
 from hikaru.model.rel_1_26 import ContainerState, ContainerStatus, Pod, PodList
 from pydantic import BaseModel
+
 from robusta.api import (
     ActionException,
     ActionParams,
@@ -46,6 +47,7 @@ class RelatedContainer(BaseModel):
     restarts: int
     status: Optional[str] = None
     created: Optional[str] = None
+    ports: List[int] = []
 
 
 class RelatedPod(BaseModel):
@@ -155,6 +157,7 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
                 restarts=getattr(containerStatus, "restartCount", 0),
                 status=stateStr,
                 created=getattr(state, "startedAt", None),
+                ports=[p.containerPort for p in container.ports] if container.ports else [],
             )
         )
 
