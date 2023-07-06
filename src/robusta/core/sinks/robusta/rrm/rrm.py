@@ -22,7 +22,10 @@ class RRM:
 
     def __thread_loop(self):
         for res_man in self.__resource_managers:
-            res_man.init_resources()
+            result = res_man.init_resources()
+
+            if not result:
+                self.__resource_managers.remove(res_man)
 
         while True:
             try:
@@ -67,5 +70,5 @@ class RRM:
                             self.__entries[entity_id] = entry
             except Exception as e:
                 logging.error(
-                    f"An error occured while running rrm periodic checks. Resource_kind => {resource_kind}. Error: {e}",
+                    f"An error occurred while running rrm periodic checks. Resource_kind => {resource_kind}. Error: {e}",
                     exc_info=True)

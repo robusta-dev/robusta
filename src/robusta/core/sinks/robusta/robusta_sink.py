@@ -187,7 +187,7 @@ class RobustaSink(SinkBase):
 
         except Exception as e:
             logging.error(
-                f"An error occured while publishing single service: name - {new_service.name}, namespace - {new_service.namespace}  service type: {new_service.service_type}  | {e}")
+                f"An error occurred while publishing single service: name - {new_service.name}, namespace - {new_service.namespace}  service type: {new_service.service_type}  | {e}")
 
     def __publish_new_services(self, active_services: List[ServiceInfo]):
         with self.services_publish_lock:
@@ -248,11 +248,11 @@ class RobustaSink(SinkBase):
                 timeout_delay=30,
             )
             if response != 200:
-                logging.error("Error occured while sending `helm release trigger event`")
+                logging.error("Error occurred while sending `helm release trigger event`")
             else:
                 logging.debug("Sent `helm release` trigger event.")
         except Exception:
-            logging.error("Error occured while sending `helm release` trigger event", exc_info=True)
+            logging.error("Error occurred while sending `helm release` trigger event", exc_info=True)
 
     def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
