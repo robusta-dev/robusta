@@ -15,6 +15,7 @@
 
    multi-cluster
    upgrade
+   configuration-secrets
    supported-clusters
    node-selector
    proxies

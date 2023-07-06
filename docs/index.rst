@@ -42,7 +42,6 @@
    configuration/index
    configuration/configuring-sinks
    🔔 Sinks Reference <configuration/sinks/index>
-   configuration/configuration-secrets
    configuration/alert-manager
    configuration/azure-managed-prometheus
    configuration/embedded-prometheus
