@@ -23,7 +23,7 @@ from robusta.core.reporting.base import Finding
 from robusta.core.sinks.robusta.discovery_metrics import DiscoveryMetrics
 from robusta.core.sinks.robusta.prometheus_health_checker import PrometheusHealthChecker
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
-from robusta.core.sinks.robusta.rrm.rrm import RRM
+#from robusta.core.sinks.robusta.rrm.rrm import RRM
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
@@ -69,7 +69,7 @@ class RobustaSink(SinkBase):
         global_config=self.get_global_config()
         self.__prometheus_health_checker = PrometheusHealthChecker(discovery_period_sec=self.__discovery_period_sec,
                                                                    global_config=global_config)
-        self.__rrm_checker = RRM(dal=self.dal)
+        #self.__rrm_checker = RRM(dal=self.dal)
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         # start cluster discovery
