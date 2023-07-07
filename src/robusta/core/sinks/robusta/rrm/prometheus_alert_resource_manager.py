@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, List
 from kubernetes import client, config
 import time
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, MAX_ALLOWED_RULES_PER_CRD_ALERT
@@ -24,7 +24,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
         super().__init__(ResourceKind.PrometheusAlert)
 
         self.init_resources_max_attempts = 3
-        self.__cdr_slots_len: list[int] = []
+        self.__cdr_slots_len: List[int] = []
         config.load_kube_config()
         self.__k8_api = client.CustomObjectsApi()
 

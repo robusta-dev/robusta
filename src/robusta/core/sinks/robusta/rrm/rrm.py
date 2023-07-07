@@ -1,21 +1,22 @@
 import logging
 import threading
 import time
+from typing import List
 
 from robusta.core.model.env_vars import RRM_PERIOD_SEC
-from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountingResourceFetcher
+from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
 from robusta.core.sinks.robusta.rrm.prometheus_alert_resource_manager import PrometheusAlertResourceManager
 from robusta.core.sinks.robusta.rrm.types import AccountResource, BaseResourceManager, ResourceEntry
 
 
 # robusta resource management
 class RRM:
-    def __init__(self, dal: AccountingResourceFetcher, cluster: str):
+    def __init__(self, dal: AccountResourceFetcher, cluster: str):
         self.dal = dal
         self.cluster = cluster
         self.__sleep = RRM_PERIOD_SEC
 
-        self.__resource_managers: list[BaseResourceManager] = [PrometheusAlertResourceManager()]
+        self.__resource_managers: List[BaseResourceManager] = [PrometheusAlertResourceManager()]
         self.__entries = dict[str, ResourceEntry]()
 
         self.__thread = threading.Thread(target=self.__thread_loop)
@@ -36,7 +37,7 @@ class RRM:
             except Exception as e:
                 logging.error(e)
 
-    def __in_cluster(self, clusters_target_set: list[str] = []):
+    def __in_cluster(self, clusters_target_set: List[str] = []):
         return "*" in clusters_target_set or self.cluster in clusters_target_set
 
     def __periodic_loop(self):
@@ -44,7 +45,7 @@ class RRM:
             resource_kind = res_man.get_resource_kind()
 
             try:
-                resources: list[AccountResource] = self.dal.get_account_resources(
+                resources: List[AccountResource] = self.dal.get_account_resources(
                     resource_kind=resource_kind, updated_at=res_man.get_updated_ts()
                 )
 
