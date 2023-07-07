@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List, Optional
 
-from core.sinks.robusta.rrm.types import AccountResource, ResourceKind
+from robusta.core.sinks.robusta.rrm.types import AccountResource, ResourceKind
 
 
 class AccountingResourceFetcher(ABC):
