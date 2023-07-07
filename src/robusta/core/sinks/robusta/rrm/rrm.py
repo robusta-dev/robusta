@@ -2,16 +2,18 @@ import logging
 import threading
 import time
 
+from core.sinks.robusta.rrm.account_resource_fetcher import AccountingResourceFetcher
+
 from robusta.core.model.env_vars import RRM_PERIOD_SEC
-from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
 from robusta.core.sinks.robusta.rrm.prometheus_alert_resource_manager import PrometheusAlertResourceManager
 from robusta.core.sinks.robusta.rrm.types import AccountResource, BaseResourceManager, ResourceEntry
 
 
 # robusta resource management
 class RRM:
-    def __init__(self, dal: SupabaseDal):
+    def __init__(self, dal: AccountingResourceFetcher, cluster: str):
         self.dal = dal
+        self.cluster = cluster
         self.__sleep = RRM_PERIOD_SEC
 
         self.__resource_managers: list[BaseResourceManager] = [PrometheusAlertResourceManager()]
@@ -36,7 +38,7 @@ class RRM:
                 logging.error(e)
 
     def __in_cluster(self, clusters_target_set: list[str] = []):
-        return "*" in clusters_target_set or self.dal.cluster in clusters_target_set
+        return "*" in clusters_target_set or self.cluster in clusters_target_set
 
     def __periodic_loop(self):
         for res_man in self.__resource_managers:
@@ -44,8 +46,8 @@ class RRM:
 
             try:
                 resources: list[AccountResource] = self.dal.get_account_resources(
-                    resource_kind=resource_kind,
-                    updated_at=res_man.get_updated_ts())
+                    resource_kind=resource_kind, updated_at=res_man.get_updated_ts()
+                )
 
                 for resource in resources:
                     entity_id = resource.entity_id
@@ -71,4 +73,5 @@ class RRM:
             except Exception as e:
                 logging.error(
                     f"An error occurred while running rrm periodic checks. Resource_kind => {resource_kind}. Error: {e}",
-                    exc_info=True)
+                    exc_info=True,
+                )

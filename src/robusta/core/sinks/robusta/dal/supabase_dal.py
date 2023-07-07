@@ -6,7 +6,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
-from postgrest_py.request_builder import QueryRequestBuilder, FilterRequestBuilder
+from core.sinks.robusta.rrm.account_resource_fetcher import AccountingResourceFetcher
+from postgrest_py.request_builder import FilterRequestBuilder, QueryRequestBuilder
 from postgrest_py.utils import sanitize_param
 from supabase_py import Client
 from supabase_py.lib.auth_client import SupabaseAuthClient
@@ -24,7 +25,6 @@ from robusta.core.reporting.blocks import EventsBlock, EventsRef, ScanReportBloc
 from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.core.sinks.robusta.rrm.types import AccountResource, ResourceKind
-
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -85,7 +85,7 @@ class RobustaClient(Client):
         )
 
 
-class SupabaseDal:
+class SupabaseDal(AccountingResourceFetcher):
     def __init__(
         self,
         url: str,
@@ -219,7 +219,9 @@ class SupabaseDal:
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
             self.client.table(SERVICES_TABLE)
-            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods", "is_helm_release")
+            .select(
+                "name", "type", "namespace", "classification", "config", "ready_pods", "total_pods", "is_helm_release"
+            )
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -317,8 +319,7 @@ class SupabaseDal:
             raise Exception(f"publish nodes failed. status: {status_code}")
 
     @staticmethod
-    def custom_filter_request_builder(frq: FilterRequestBuilder, operator: str,
-                                      criteria: str) -> FilterRequestBuilder:
+    def custom_filter_request_builder(frq: FilterRequestBuilder, operator: str, criteria: str) -> FilterRequestBuilder:
         key, val = sanitize_param(operator), f"{criteria}"
         if key in frq.session.params:
             frq.session.params.update({key: frq.session.params.get_list(key) + [val]})
@@ -600,13 +601,15 @@ class SupabaseDal:
             if isinstance(block, ScanReportBlock):
                 self.persist_scan(block)
 
-    def get_account_resources(self, resource_kind: ResourceKind, updated_at: Optional[datetime]) \
-            -> List[AccountResource]:
-        query_builder = self.client.table(ACCOUNT_RESOURCE_TABLE) \
-            .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "updated_at") \
-            .filter("resource_kind", "eq", resource_kind) \
-            .filter("account_id", "eq", self.account_id) \
-
+    def get_account_resources(
+        self, resource_kind: ResourceKind, updated_at: Optional[datetime]
+    ) -> List[AccountResource]:
+        query_builder = (
+            self.client.table(ACCOUNT_RESOURCE_TABLE)
+            .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "updated_at")
+            .filter("resource_kind", "eq", resource_kind)
+            .filter("account_id", "eq", self.account_id)
+        )
         if updated_at:
             query_builder.gt("updated_at", updated_at.isoformat())
         else:
@@ -614,10 +617,11 @@ class SupabaseDal:
             # in the subsequent db fetch allow even the deleted records so that they can be removed from the cluster
             query_builder.filter("deleted", "eq", False)
 
-            query_builder = SupabaseDal. \
-                custom_filter_request_builder(query_builder,
-                                              operator="or",
-                                              criteria=f"(clusters_target_set.cs.[\"*\"], clusters_target_set.cs.[\"{self.cluster}\"])")
+            query_builder = SupabaseDal.custom_filter_request_builder(
+                query_builder,
+                operator="or",
+                criteria=f'(clusters_target_set.cs.["*"], clusters_target_set.cs.["{self.cluster}"])',
+            )
         query_builder = query_builder.order(column="updated_at", desc=False)
         res = query_builder.execute()
 
