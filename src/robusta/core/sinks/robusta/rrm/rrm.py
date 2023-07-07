@@ -2,9 +2,8 @@ import logging
 import threading
 import time
 
-from core.sinks.robusta.rrm.account_resource_fetcher import AccountingResourceFetcher
-
 from robusta.core.model.env_vars import RRM_PERIOD_SEC
+from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountingResourceFetcher
 from robusta.core.sinks.robusta.rrm.prometheus_alert_resource_manager import PrometheusAlertResourceManager
 from robusta.core.sinks.robusta.rrm.types import AccountResource, BaseResourceManager, ResourceEntry
 
