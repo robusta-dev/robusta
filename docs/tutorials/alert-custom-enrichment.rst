@@ -7,8 +7,6 @@ We now configure a Robusta playbook to enhance a Prometheus alert.
 
 Prerequisites
 ---------------------------------
-
-.. Complete the previous tutorial, :ref:`Define Custom Prometheus Alerts`.
 You must have some Prometheus alerts already defined. Ex: HostHighCpuLoad
 
 

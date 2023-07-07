@@ -1,3 +1,5 @@
+:orphan:
+
 .. _define-alerts:
 
 Define Custom Prometheus Alerts
