@@ -47,6 +47,13 @@ Next time a Liveness probe fails, you will get notified.
         :alt: Failing Kubernetes liveness probe notification on Slack
         :align: center
 
+Apply the following command the simulate a failing liveness probe.
+
+.. code-block:: yaml
+
+    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/liveness_probe_fail/failing_liveness_probe.yaml
+
+
 Let's explore each part of the above playbook in depth.
 
 Understanding Triggers
@@ -58,7 +65,7 @@ Going back to the above example, we saw the trigger ``on_kubernetes_warning_even
 Breaking down the name, you'll notice the format ``on_<resource_type>_<operation>``. This is a general pattern.
 ``on_kubernetes_warning_event_create`` fires when new Warning Events (``kubectl get events --all-namespaces --field-selector type=Warning``) are created.
 
-The trigger also had an *include* filter, limiting which Warning Events cause the playbook to run.
+The trigger also had an *include* filter, limiting which Warning Events cause the playbook to run. In this case its a Liveness probe event.
 See each trigger's documentation to learn which filters are supported.
 
 Common Triggers
@@ -124,4 +131,4 @@ Each action is compatible with a subset of event types.
 
 For instance, ``logs_enricher`` requires an event with a Pod object, such as *PrometheusAlert*, *PodEvent*, or *PodChangeEvent*.
 
-Refer to docs for each action, to see supported events.
+Refer to docs :ref:`for each action <Actions Reference>` , to see supported events.

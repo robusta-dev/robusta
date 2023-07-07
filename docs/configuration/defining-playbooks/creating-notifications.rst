@@ -5,7 +5,7 @@ Playbooks can generate notifications to *let a human know* about something in yo
 
 A *Finding* is Robusta's term for a notification.
 
-This guide explains how to create and modify Findings in :ref:`customPlaybooks <customPlaybooks>`.
+This guide explains how to create and modify *Findings* in :ref:`customPlaybooks <customPlaybooks>`.
 
 Creating Notifications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -82,7 +82,7 @@ No worries. In cases like this, a default Finding (notification) is created when
 is set automatically based on the event that triggered the action.
 
 This means that the order of actions within a playbook is important! Put ``create_finding`` before other actions, so that subsequent actions
-already have a Finding to work with. If you first ``pod_graph_enricher`` before ``create_finding``, you'll end up with
+already have a Finding to work with. If you put ``pod_graph_enricher`` before ``create_finding``, you'll end up with
 two notification messages - one created implicitly by calling ``pod_graph_enricher`` and one created
 explicitly by ``create_finding``.
 

@@ -63,6 +63,10 @@ lightActions:
 - popeye_scan
 - krr_scan
 - handle_alertmanager_event
+- drain
+- cordon
+- uncordon
+- rollout_restart
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
@@ -143,9 +147,10 @@ builtinPlaybooks:
       rate_limit: 3600
   actions:
   - pod_oom_killer_enricher: {}
-  - oomkilled_container_graph_enricher:
-      resource_type: Memory
+  - logs_enricher: {}
   - pod_node_graph_enricher:
+      resource_type: Memory
+  - oomkilled_container_graph_enricher:
       resource_type: Memory
   stop: true
 
@@ -402,10 +407,6 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 - triggers:
-  - on_schedule:
-      fixed_delay_repeat:
-        repeat: 1
-        seconds_delay: 120
   - on_schedule:
       cron_schedule_repeat:
         cron_expression: "0 12 * * 1" # every Monday at 12:00
