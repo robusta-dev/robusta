@@ -20,9 +20,9 @@
               continue: true # (3)
 
     .. code-annotations::
-      1. Include ``route`` as the first ``route`` to guarantee it receives alerts. If it isn't the first route, verify that all previous routes have ``continue: true``.
-      2. This assumes Robusta was installed in the `default` namespace, using a Helm release named ``robusta``.
-          * If the namespace is ``foobar``, replace `default` with ``foobar``
+      1. Put Robusta's route as the first route, to guarantee it receives alerts. If you can't do so, you must guarantee all previous routes set ``continue: true`` set.
+      2. This assumes Robusta was installed in the ``default`` namespace, using a Helm release named ``robusta``.
+          * If the namespace is ``foobar``, replace ``default`` with ``foobar``
           * If the Helm release is named ``robert`` then replace ``robusta`` with ``robert``
       3. Keep sending alerts to receivers defined after Robusta.
       4. Important, so Robusta knows when alerts are resolved.

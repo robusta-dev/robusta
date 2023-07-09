@@ -1,32 +1,28 @@
 Embedded Prometheus Stack
 ============================
 
-Robusta can optionally install an embedded Prometheus stack with pre-configured alerts.
+Robusta can install an embedded Prometheus stack with pre-configured alerts.
 
-We provide defaults that were fine-tuned for low-noise and out-of-the-box integration with Robusta playbooks.
+It includes defaults alerts that we fine-tuned in advance, as well as prebuilt Robusta playbooks.
 
-.. Default alerts were tested on the following clusters, to identify and remove false positives.
-
-.. TODO: show table with testing results.
-
-Alerts are based on excellent work done in the `kubernetes-mixin <https://github.com/kubernetes-monitoring/kubernetes-mixin>`_ project, with additional modifications by Robusta.
+This option is highly recommended, but disabled by default, as many users already have Prometheus installed.
 
 Enabling the Embedded Prometheus
 -----------------------------------
-By default, Robusta is installed without Prometheus and without default alerts. To enable them add the line below to your ``generated_values.yaml``:
+Add to ``generated_values.yaml``:
 
 .. code-block:: yaml
 
     enablePrometheusStack: true
 
-This setting is recommended if you don't have Prometheus installed on your cluster.
+Apply the change by performing a :ref:`Helm Upgrade <Simple Upgrade>`.
 
-Prometheus retention period
+Change the retention period
 ------------------------------
-Robusta UI uses Prometheus data for showing graphs.
-To keep storage usage low, Prometheus keeps the data only for 14-15 days.
 
-To change how long Prometheus saves the data, set the retention in your ``generated_values.yaml`` file:
+By default, Prometheus stores data for 14-15 days.
+
+You can modify retention times in ``generated_values.yaml``:
 
 .. code-block:: yaml
 
@@ -34,4 +30,4 @@ To change how long Prometheus saves the data, set the retention in your ``genera
         prometheusSpec:
           retention: 15d #change the number of days here
 
-If you're not using Robusta's embedded Prometheus, refer to `the official Prometheus docs <https://prometheus.io/docs/prometheus/latest/storage/#operational-aspects>`_ for guidance on retention periods.
+Apply the change by performing a :ref:`Helm Upgrade <Simple Upgrade>`.

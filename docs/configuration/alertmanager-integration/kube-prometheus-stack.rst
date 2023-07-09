@@ -1,21 +1,21 @@
 kube-prometheus-stack
 *********************************************
 
-Connect an existing kube-prometheus-stack to Robusta, by configuring two integrations: a push integration and a pull integration.
+Already running kube-prometheus-stack? Connect it to Robusta.
+
+You will need to configure two integrations: a push integration and a pull integration. (Both are necessary.)
 
 Configure Push Integration
 ============================
 
-Configure AlertManger to push alerts to Robusta, by editing the `AlertManager config Secret <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#managing-alertmanager-configuration>`_, and adding a receiver and route:
+A push integration sends alerts to Robusta. To configure it, edit `AlertManager's config Secret <https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/alerting.md#managing-alertmanager-configuration>`_:
 
 .. include:: ./_alertmanager-config.rst
 
-.. include:: ./_testing_integration.rst
-
 .. details:: Why use a secret instead of editing AlertManagerConfig?
 
-    In theory, you can configure an AlertmanagerConfig instead of using a secret. However, this is **not** recommended as it `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
+    In theory, you can modify the AlertmanagerConfig instead. However, this is **not** recommended as it `will only forward alerts from one namespace <https://github.com/prometheus-operator/prometheus-operator/issues/3750>`_.
+
+.. include:: ./_testing_integration.rst
 
 .. include:: ./_pull_integration.rst
-
-.. include:: ./_additional_settings.rst

@@ -1,17 +1,16 @@
 Grafana AlertManager
 ****************************************
 
-This guide walks you through integrating a `Grafana AlertManager <https://grafana.com/docs/grafana/latest/alerting/fundamentals/alertmanager/>`_ with Robusta. You will need to configure two integrations: both a push integration and a pull integration.
+If you use Grafana alerts, you're using a `special instance of AlertManager embedded inside Grafana <https://grafana.com/docs/grafana/latest/alerting/fundamentals/alertmanager/>`_.
+
+To integrate that AlertManager with Robusta, you will need to configure both a push and a pull integration, as follows.
 
 Configure Push Integration
 ============================
-A push integrations is required for AlertManager to push alerts to Robusta. To configure it, you must add a receiver and route to AlertManger's configuration:
 
-Copy the configuration below to the appropriate AlertManager config file:
+A push integration sends alerts from Grafana to Robusta. To configure it:
 
 .. include:: ./_alertmanager-config.rst
-
-.. include:: ./_testing_integration.rst
 
 .. include:: ./_pull_integration.rst
 
@@ -32,5 +31,3 @@ Add the following configuration to the ``globalConfig`` section in your ``genera
     .. note::
 
       The Grafana API key must have the ``Editor`` role in order to create silences.
-
-.. include:: ./_additional_settings.rst

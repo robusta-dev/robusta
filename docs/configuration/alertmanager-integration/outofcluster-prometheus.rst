@@ -1,13 +1,18 @@
-Out-of-cluster Prometheus
+Centralized Prometheus
 **************************************
-This guide walks you through integrating an out-of-cluster Prometheus with Robusta. You will need to configure two integrations: both a push integration and a pull integration.
+
+Follow this guide to connect Robusta to a central Prometheus, running outside the cluster monitored by Robusta.
+
+You will need to configure two integrations: a push integration and a pull integration. (Both are necessary.)
 
 Configure Push Integration
 ==============================
 
-1. Enable two-way interactivity by setting ``disableCloudRouting: false`` in the ``generated_values.yaml`` file.
-2. Make sure that your alerts contain a label named ``cluster_name`` which matches the :ref:`cluster_name defined in Robusta's configuration <Global Config>`. This is necessary so that the Robusta cloud knows which cluster to forward events to.
-3. Add the following configuration to your AlertManager:
+A push integration lets your central Prometheus send alerts to Robusta, as if they were in the same cluster:
+
+1. Enable cloud-routing of alerts by setting ``disableCloudRouting: false`` in ``generated_values.yaml``.
+2. Verify that all alerts contain a label named ``cluster_name``, matching the :ref:`cluster_name defined in Robusta's configuration <Global Config>`. This is necessary to identify which robusta-runner should receive alerts.
+3. Edit the configuration for your centralized AlertManager:
 
 .. admonition:: alertmanager.yaml
 
@@ -43,4 +48,15 @@ Configure Push Integration
 
 .. include:: ./_pull_integration.rst
 
-.. include:: ./_additional_settings.rst
+Filtering Prometheus Queries by Cluster
+-----------------------------------------------------
+
+If the same centralized Prometheus is used for many clusters, you will want to add a cluster name to all queries.
+
+You can do so with the ``prometheus_url_query_string`` parameter, shown below:
+
+.. code-block:: yaml
+
+  globalConfig:
+    # Additional query string parameters to be appended to the Prometheus connection URL (optional)
+    prometheus_url_query_string: "cluster=prod1&x=y"

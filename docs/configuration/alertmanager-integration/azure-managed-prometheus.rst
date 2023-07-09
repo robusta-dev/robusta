@@ -6,9 +6,7 @@ This guide walks you through integrating your Azure managed Prometheus with Robu
 Configure Push Integration
 ===============================
 
-For Robusta to :ref:`improve Prometheus alerts<Enhanced Prometheus Alerts>`, Robusta has to first receive those alerts from Azure.
-
-To configure Azure to send alerts to Robusta:
+A push integration sends Azure Managed Prometheus alerts to Robusta. To configure it:
 
 1. Login to the Robusta UI and navigate to the ``Settings`` > ``Advanced`` tab.
 2. In the Azure Webhook section click ``Generate URL`` and save the generated url.
@@ -24,9 +22,9 @@ To configure Azure to send alerts to Robusta:
 Configure Pull Integration
 ===============================
 
-For certain features, Robusta needs to reach out to Prometheus and pull metrics.
+A pull integration lets Robusta pull metrics from Azure Managed Prometheus.
 
-You can configure this one of two ways:
+This can be configured either of two ways:
 
 .. details:: Option #1: Create an Azure Active Directory authentication app
 
@@ -49,6 +47,8 @@ You can configure this one of two ways:
 Retrieve the Azure Prometheus query endpoint
 ==============================================
 
+Whichever method you choose, you will need an Azure Prometheus query endpoint:
+
 1. Go to `Azure Monitor workspaces <https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/microsoft.monitor%2Faccounts>`_ and choose your monitored workspace.
 2. In your monitored workspace, `overview`, find the ``Query endpoint`` and copy it.
 3. In your `generated_values.yaml` file add the query endpoint URL under ``globalConfig`` with a 443 port:
@@ -61,11 +61,11 @@ Retrieve the Azure Prometheus query endpoint
 Option #1: Create an Azure authentication app
 ==============================================
 
-We will now create an Azure authentication app and get the necessary credentials so Robusta can access Prometheus data.
+Create an Azure authentication app and get credentials for Robusta to access Prometheus data:
 
-1. Follow this Azure guide to `Register an app with Azure Active Directory <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-self-managed-grafana-azure-active-directory#register-an-app-with-azure-active-directory>`_
+1. Follow the Azure guide to `register an app with Azure Active Directory <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-self-managed-grafana-azure-active-directory#register-an-app-with-azure-active-directory>`_
 
-2. In your generated_values.yaml file add the following environment variables from the previous step.
+2. In your generated_values.yaml file add environment variables from the previous step.
 
 .. code-block:: yaml
 
@@ -80,12 +80,13 @@ We will now create an Azure authentication app and get the necessary credentials
     - name: AZURE_CLIENT_SECRET
       value: "<your-client-secret>"
 
-3. Complete the step `Allow your app access to your workspace <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-self-managed-grafana-azure-active-directory#allow-your-app-access-to-your-workspace>`_, so your app can query data from your Azure Monitor workspace.
+3. Complete the step `allow your app access to your workspace <https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/prometheus-self-managed-grafana-azure-active-directory#allow-your-app-access-to-your-workspace>`_, so your app can query data from your Azure Monitor workspace.
 
 Option #2: Use Kubelet's Managed Identity
 ==============================================
 
-This guide will use the Kubelet's Managed Identity so Robusta can access Prometheus data. Alternatively, you can create a new User Assigned Managed Identity and bind it to the underlying VMSS.
+Instead of creating an Azure authentication app, you can use kubelet's Managed Identity to access Prometheus.
+(As a variation on this, you can also create a new User Assigned Managed Identity and bind it to the underlying VMSS.)
 
 1. Get the AKS kubelet's Managed Identity Client ID:
 

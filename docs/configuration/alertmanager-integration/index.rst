@@ -17,7 +17,7 @@ Integrating with Prometheus
    embedded-prometheus
 
 
-Robusta can :ref:`enhance Prometheus alerts<Enhanced Prometheus Alerts>`. Instructions below.
+Robusta can :ref:`enhance Prometheus alerts<Enhanced Prometheus Alerts>`. To set this up, see below.
 
 If you installed Robusta's :ref:`Embedded Prometheus Stack`, no setup necessary.
 
@@ -33,46 +33,46 @@ Setup Instructions
         :link: kube-prometheus-stack
         :link-type: doc
 
-        In-cluster Prometheus, using Prometheus Operator
+        kube-prometheus-stack, in the same cluster as Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` In-cluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: alert-manager
         :link-type: doc
 
-        In-cluster Prometheus, not kube-prometheus-stack
+        Prometheus, in the same cluster as Robusta
 
-    .. grid-item-card:: :octicon:`book;1em;` Out of cluster Prometheus
+    .. grid-item-card:: :octicon:`book;1em;` Centralized Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: outofcluster-prometheus
         :link-type: doc
 
-        Prometheus in a separate cluster from Robusta
+        Prometheus, in a different cluster than Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` Azure Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: azure-managed-prometheus
         :link-type: doc
 
-        Azure's Prometheus offering
+        Special instructions when using Azure Managed Prometheus
 
     .. grid-item-card:: :octicon:`book;1em;` Victoria Metrics
         :class-card: sd-bg-light sd-bg-text-light
         :link: victoria-metrics
         :link-type: doc
 
-        Prometheus Compatible, Robusta Compatible
+        Victoria Metrics, in the same cluster as Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` Grafana AlertManager
         :class-card: sd-bg-light sd-bg-text-light
         :link: grafana-alert-manager
         :link-type: doc
 
-        For anyone using Grafana alerts
+        Special instructions when using Grafana alerts
 
     .. grid-item-card:: :octicon:`book;1em;` Embedded Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: embedded-prometheus
         :link-type: doc
 
-        Robusta's embedded Prometheus Stack
+        Prometheus, installed as part of Robusta's installation
