@@ -48,7 +48,7 @@ Build the docs locally:
 
     1. ``poetry: command not found`` - Make sure you have `Poetry <https://python-poetry.org/docs/>`_ installed and run ``source $HOME/.poetry/env`` in Linux environments to set the poetry environment variables.
 
-    2. ``sphinx-build: command not found`` - Make sure you have `Sphinx <https://www.sphinx-doc.org/en/master/usage/getting-started/installation.html>`_ installed.
+    2. ``sphinx-build: command not found`` - Make sure you have `Sphinx <https://www.sphinx-doc.org/en/master/usage/getting-started/installation.html>`__ installed.
 
     3. ``OSError: [Errno 98] Address already in use`` - Use the ``--port <Number>`` argument, with a port of your choice. Example: ``./docs_autobuild.sh --port 8822``
 

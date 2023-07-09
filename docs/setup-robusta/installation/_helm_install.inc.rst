@@ -1,3 +1,5 @@
+.. updated to .inc.rst because of "WARNING: duplicate label"
+
 Install with Helm
 ------------------------------
 
@@ -65,7 +67,7 @@ On some clusters this can take a while, so don't panic if it appears stuck:
         Install as usual, :ref:`then grant relevant permissions<openshift-permissions>`.
 
         .. code-block:: bash
-            :name: cb-helm-install-test-clusters
+            :name: cb-helm-install-openshift
 
             helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
             helm install robusta robusta/robusta -f ./generated_values.yaml --set clusterName=<YOUR_CLUSTER_NAME> --set isSmallCluster=true
