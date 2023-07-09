@@ -1,4 +1,4 @@
-Configuring a Pull Integration
+Configure Pull Integration
 ====================================
 
 .. For certain features, Robusta needs to reach out to Prometheus and pull in extra information. This must

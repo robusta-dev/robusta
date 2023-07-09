@@ -13,7 +13,7 @@ Copy the configuration below to the appropriate AlertManager config file:
 
 .. include:: ./_testing_integration.rst
 
-Configuring a Pull Integration
+Configure Pull Integration
 ====================================
 
 Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.

@@ -41,7 +41,7 @@ Alerts silencing
 
 Robusta provides the functionality to silence alerts directly from various notification channels(sinks). It proactively seeks out an AlertManager instance and utilizes it to establish silences.
 
-In the event that Robusta is unable to identify the AlertManager, a pull integration becomes necessary. Please refer to the 'Configuring a Pull Integration' section of this document to configure it.
+In the event that Robusta is unable to identify the AlertManager, a pull integration becomes necessary. Refer to 'Configure Pull Integration' above.
 
 .. Grafana AlertManager
 .. =====================

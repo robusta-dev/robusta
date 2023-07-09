@@ -17,78 +17,62 @@ Integrating with Prometheus
    embedded-prometheus
 
 
-Robusta can :ref:`enhance Prometheus alerts<Enhanced Prometheus Alerts>`. To configure this, follow one of these guides.
+Robusta can :ref:`enhance Prometheus alerts<Enhanced Prometheus Alerts>`. Instructions below.
 
-Note: If you installed Robusta's :ref:`Embedded Prometheus Stack`, none of these steps are necessary. Everything is pre-configured.
+If you installed Robusta's :ref:`Embedded Prometheus Stack`, no setup necessary.
 
 
-Common Methods
+Setup Instructions
 ^^^^^^^^^^^^^^^^^^
 
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`book;1em;` Kube-Prometheus-Stack
+    .. grid-item-card:: :octicon:`book;1em;` kube-prometheus-stack
         :class-card: sd-bg-light sd-bg-text-light
         :link: kube-prometheus-stack
         :link-type: doc
 
-        For users with an existing Kube Prometheus Stack, or Prometheus Operator.
+        In-cluster Prometheus, using Prometheus Operator
 
     .. grid-item-card:: :octicon:`book;1em;` In-cluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: alert-manager
         :link-type: doc
 
-        For users who have Prometheus and Robusta in the same cluster but do not use Kube-Prometheus-Stack.
+        In-cluster Prometheus, not kube-prometheus-stack
 
     .. grid-item-card:: :octicon:`book;1em;` Out of cluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: outofcluster-prometheus
         :link-type: doc
 
-        For users running Prometheus and Robusta on separate clusters.
+        Prometheus in a separate cluster from Robusta
 
-    .. grid-item-card:: :octicon:`book;1em;` Azure managed Prometheus
+    .. grid-item-card:: :octicon:`book;1em;` Azure Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: azure-managed-prometheus
         :link-type: doc
 
-        For users wanting to connect their Prometheus cluster on Azure to work with Robusta.
+        Azure's Prometheus offering
 
     .. grid-item-card:: :octicon:`book;1em;` Victoria Metrics
         :class-card: sd-bg-light sd-bg-text-light
         :link: victoria-metrics
         :link-type: doc
 
-        For users using AlertManager with Victoria Metrics.
+        Prometheus Compatible, Robusta Compatible
 
     .. grid-item-card:: :octicon:`book;1em;` Grafana AlertManager
         :class-card: sd-bg-light sd-bg-text-light
         :link: grafana-alert-manager
         :link-type: doc
 
-        For users wishing to configure Grafana's AlertManager to work with Robusta.
+        For anyone using Grafana alerts
 
     .. grid-item-card:: :octicon:`book;1em;` Embedded Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: embedded-prometheus
         :link-type: doc
 
-        For users wanting to configure the Prometheus that is already installed by Robusta.
-
-.. All Settings
-.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. All of Robusta's settings are listed as Helm chart values:
-
-.. .. code-block:: yaml
-
-..     helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-..     helm show values robusta/robusta
-
-.. .. admonition:: Avoid using the values.yaml file on GitHub
-..     :class: warning
-
-..     It might be tempting to use ``helm/robusta/values.yaml`` in our GitHub repository, but this file wont work.
-..     It contains empty placeholders filled in during releases.
+        Robusta's embedded Prometheus Stack
