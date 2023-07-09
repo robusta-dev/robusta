@@ -34,4 +34,20 @@
 
   }, false);
 </script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+{% endblock %}
+
+{% block footer %}
+{{ super () }}
+<script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+<script type="text/javascript">
+  docsearch({
+    appId: "EEWU58CJVX",
+    apiKey: "1e0a4fd3280ea795eff47d8f760398ca",
+    indexName: "robusta",
+    container: '#welcome-to-the-robusta-docs',
+    debug: false, // Set debug to true if you want to inspect the modal
+    insights: true
+  });
+</script>
 {% endblock %}
