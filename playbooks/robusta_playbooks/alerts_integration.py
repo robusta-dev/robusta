@@ -446,11 +446,21 @@ def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
 
 
 class GenericLogParams(LogEnricherParams):
+    """
+    :var selectors: List of specific label selectors to retrieve logs from
+    """
+
     selectors: List[str]
 
 
 @action
 def generic_logs_enricher(event: ExecutionBaseEvent, params: GenericLogParams):
+    """
+    Generic enricher to fetch and attach pod logs.
+
+    The logs are fetched for the pod determined by the label selector field in the parameters.
+    """
+
     api = client.CoreV1Api()
     matching_pods: List[V1Pod] = []
     for selector in params.selectors:
