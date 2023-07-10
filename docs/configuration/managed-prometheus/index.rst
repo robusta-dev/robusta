@@ -1,6 +1,6 @@
 :hide-toc:
 
-Managed Prometheus Reference Reference
+Externally Managed Prometheus
 ==================
 
 .. toctree::
@@ -19,6 +19,10 @@ Click a Prometheus for setup instructions.
 .. grid:: 1 1 2 3
     :gutter: 3
 
+    .. grid-item-card:: :octicon:`cpu;1em;` GKE
+        :class-card: sd-bg-light sd-bg-text-light
+        :link:  ../alert-manager.html#setting-up-a-custom-prometheus-alertmanager-and-grafana
+
     .. grid-item-card:: :octicon:`cpu;1em;` Azure
         :class-card: sd-bg-light sd-bg-text-light
         :link: azure-managed-prometheus
@@ -29,10 +33,7 @@ Click a Prometheus for setup instructions.
         :link:  corlogix-managed-prometheus
         :link-type: doc
 
-    .. grid-item-card:: :octicon:`cpu;1em;` :ref:`../alert-manager<Out-of-cluster Prometheus Installations>` GKE
-        :class-card: sd-bg-light sd-bg-text-light
-
     .. grid-item-card:: :octicon:`cpu;1em;` EKS (Coming Soon)
         :class-card: sd-bg-light sd-bg-text-light
 
-**Need support for a different type of managed Prometheus?** `Tell us and we'll add it. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=Managed%Prometheus:>`_
+**Need support for a different type of managed Prometheus?** `Tell us and we'll add it. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=Prometheus%20Support:>`_
