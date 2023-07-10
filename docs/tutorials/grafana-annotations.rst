@@ -1,3 +1,5 @@
+:orphan:
+
 Remediate Alerts
 ===================
 

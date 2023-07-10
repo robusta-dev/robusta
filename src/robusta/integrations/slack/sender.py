@@ -21,11 +21,11 @@ from robusta.core.reporting.blocks import (
     LinksBlock,
     ListBlock,
     MarkdownBlock,
+    ScanReportBlock,
     TableBlock,
-    ScanReportBlock
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
-from robusta.core.reporting.consts import SlackAnnotations, EnrichmentAnnotation
+from robusta.core.reporting.consts import EnrichmentAnnotation, SlackAnnotations
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
@@ -228,7 +228,7 @@ class SlackSender:
         unfurl: bool,
         status: FindingStatus,
     ):
-       
+
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
             file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
@@ -296,7 +296,7 @@ class SlackSender:
         if finding.add_silence_url:
             links.append(
                 LinkProp(
-                    text="Silence 🔕",
+                    text="Configure Silences 🔕",
                     url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
                 )
             )
