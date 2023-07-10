@@ -2,11 +2,13 @@ import logging
 import time
 from collections import defaultdict
 from datetime import datetime
+from kubernetes import client
 from string import Template
 from typing import Any, Dict, List, Optional
 
 import requests
 from hikaru.model.rel_1_26 import Node
+from kubernetes.client import V1PodList, exceptions, V1Pod, V1PodStatus
 
 from robusta.api import (
     ActionParams,
@@ -37,6 +39,9 @@ from robusta.api import (
     create_graph_enrichment,
     create_resource_enrichment,
     get_node_internal_ip,
+    ActionException,
+    ErrorCodes,
+    RobustaPod
 )
 
 
@@ -280,7 +285,6 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
     )
     alert.add_enrichment([graph_enrichment])
 
-
 class TemplateParams(ActionParams):
     """
     :var template: The enrichment templated markdown text
@@ -439,3 +443,66 @@ def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
             )
         ]
     )
+
+
+class GenericLogParams(LogEnricherParams):
+    selectors: List[str]
+
+
+@action
+def generic_logs_enricher(event: ExecutionBaseEvent, params: GenericLogParams):
+    api = client.CoreV1Api()
+    matching_pods: List[V1Pod] = []
+    for selector in params.selectors:
+        try:
+            pods: V1PodList = api.list_pod_for_all_namespaces(label_selector=selector)
+            if pods.items:
+                matching_pods = pods.items
+                break
+        except Exception as e:
+            if not (isinstance(e, exceptions.ApiException) and e.status == 404):
+                raise ActionException(
+                    ErrorCodes.ACTION_UNEXPECTED_ERROR, f"Failed to list pods for generic log enricher.\n{e}"
+                )
+
+    if not matching_pods:
+        logging.warning(f"[generic_logs_enricher] failed to find any matching pods for the selectors: {params.selectors}")
+
+    if matching_pods:
+        for pod in matching_pods:
+            container: str = pod.spec.containers[0].name
+            status: V1PodStatus = pod.status
+            all_statuses = (status.container_statuses or []) + (status.init_container_statuses or [])
+            if params.container_name:
+                container = params.container_name
+            elif any(_status.name == event.get_subject().container for _status in all_statuses):
+                # support alerts with a container label, make sure its related to this pod.
+                container = event.get_subject().container
+
+            tries: int = 2
+            backoff_seconds: int = 2
+            regex_replacement_style = (
+                RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
+            )
+
+            for _ in range(tries - 1):
+                if container is None:
+                    container = pod.spec.containers[0].name
+
+                log_data = RobustaPod.find_logs(
+                    name=pod.metadata.name,
+                    namespace=pod.metadata.namespace,
+                    container=container,
+                    regex_replacer_patterns=params.regex_replacer_patterns,
+                    regex_replacement_style=regex_replacement_style,
+                    filter_regex=params.filter_regex,
+                    previous=params.previous,
+                )
+                if not log_data:
+                    logging.info("log data is empty, retrying...")
+                    time.sleep(backoff_seconds)
+                    continue
+                event.add_enrichment(
+                    [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
+                )
+                break

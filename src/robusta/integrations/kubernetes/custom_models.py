@@ -166,23 +166,23 @@ class RobustaPod(Pod):
 
         return exec_shell_command(self.metadata.name, shell_command, self.metadata.namespace, container)
 
-    def get_logs(
-        self,
-        container=None,
-        previous=None,
-        tail_lines=None,
-        regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None,
-        regex_replacement_style: Optional[RegexReplacementStyle] = None,
-        filter_regex: Optional[str] = None,
+    @staticmethod
+    def find_logs(
+            name: str,
+            namespace: str,
+            container=None,
+            previous=None,
+            tail_lines=None,
+            regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None,
+            regex_replacement_style: Optional[RegexReplacementStyle] = None,
+            filter_regex: Optional[str] = None,
     ) -> str:
         """
         Fetch pod logs, can replace sensitive data in the logs using a regex
         """
-        if container is None:
-            container = self.spec.containers[0].name
         pods_logs = get_pod_logs(
-            self.metadata.name,
-            self.metadata.namespace,
+            name,
+            namespace,
             container,
             previous,
             tail_lines,
@@ -206,6 +206,29 @@ class RobustaPod(Pod):
                     pods_logs = re.sub(replacer.regex, same_length_asterisks, pods_logs)
 
         return pods_logs
+
+    def get_logs(
+            self,
+            container=None,
+            previous=None,
+            tail_lines=None,
+            regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None,
+            regex_replacement_style: Optional[RegexReplacementStyle] = None,
+            filter_regex: Optional[str] = None,
+    ) -> str:
+        if container is None:
+            container = self.spec.containers[0].name
+
+        return RobustaPod.find_logs(
+            name=self.metadata.name,
+            namespace=self.metadata.namespace,
+            container=container,
+            previous=previous,
+            tail_lines=tail_lines,
+            regex_replacer_patterns=regex_replacer_patterns,
+            regex_replacement_style=regex_replacement_style,
+            filter_regex=filter_regex, )
+
 
     @staticmethod
     def exec_in_java_pod(
