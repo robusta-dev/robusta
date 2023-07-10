@@ -20,19 +20,21 @@ By default, every instance of Robusta that's connected to the UI will run a KRR 
 With or without the UI, you can configure additional scans on a :ref:`schedule <Scheduled>`.
 The results can be sent as a PDF to Slack or to the Robusta UI.
 
-.. grid-item::
+.. grid:: 1 1 1 1
 
-    .. md-tab-set::
+    .. grid-item::
 
-        .. md-tab-item:: Slack
+        .. md-tab-set::
 
-            .. image:: /images/krr_slack_example.png
-                :width: 1000px
+            .. md-tab-item:: Slack
 
-        .. md-tab-item:: Robusta UI
+                .. image:: /images/krr_slack_example.png
+                    :width: 1000px
 
-            .. image:: /images/krr_example.png
-                :width: 1000px
+            .. md-tab-item:: Robusta UI
+
+                .. image:: /images/krr_example.png
+                    :width: 1000px
 
 
 .. robusta-action:: playbooks.robusta_playbooks.krr.krr_scan on_schedule
@@ -90,19 +92,21 @@ With or without the UI, you can configure additional scans on a :ref:`schedule <
 
 The results can be sent as a PDF to Slack or to the Robusta UI.
 
-.. grid-item::
+.. grid:: 1 1 1 1
 
-    .. md-tab-set::
+    .. grid-item::
 
-        .. md-tab-item:: Slack
+        .. md-tab-set::
 
-            .. image:: /images/popeye_slack_example.png
-                :width: 1000px
+            .. md-tab-item:: Slack
 
-        .. md-tab-item:: Robusta UI
+                .. image:: /images/popeye_slack_example.png
+                    :width: 1000px
 
-            .. image:: /images/popeye_example.png
-                :width: 1000px
+            .. md-tab-item:: Robusta UI
+
+                .. image:: /images/popeye_example.png
+                    :width: 1000px
 
 
 .. Note::

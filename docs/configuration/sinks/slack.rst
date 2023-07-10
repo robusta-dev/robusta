@@ -93,4 +93,4 @@ your own. This is not recommended for most companies due to the added complexity
 .. warning::
 
     When using a custom Slack app, callback buttons are not supported due to complexities in how Slack handles incoming
-    messages. :ref:`Contact us if you need assistance. <help>`
+    messages. :ref:`Contact us if you need assistance. <Getting Support>`
