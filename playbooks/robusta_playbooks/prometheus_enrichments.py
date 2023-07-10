@@ -1,10 +1,11 @@
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
-from prometheus_api_client import PrometheusApiClientException
 from kubernetes import client
 from kubernetes.client.models.v1_service import V1Service
+from prometheus_api_client import PrometheusApiClientException
 from robusta.api import (
     ExecutionBaseEvent,
     MarkdownBlock,
@@ -15,8 +16,10 @@ from robusta.api import (
     PrometheusQueryParams,
     PrometheusQueryResult,
     action,
+    prepare_promql_query,
     run_prometheus_query,
 )
+from robusta.core.model.env_vars import ADDITIONAL_PROMETHEUS_LABELS
 
 
 def parse_timestamp_string(date_string: str) -> Optional[datetime]:
@@ -58,9 +61,14 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
         raise Exception("Invalid request, verify the duration times are of format '%Y-%m-%d %H:%M:%S %Z'")
         return
     try:
+        if ADDITIONAL_PROMETHEUS_LABELS and params.promql_query_with_label_support:
+            labels = {"additional_labels": ADDITIONAL_PROMETHEUS_LABELS}
+            promql_query = prepare_promql_query(labels, params.promql_query_with_label_support)
+        else:
+            promql_query = params.promql_query
         prometheus_result = run_prometheus_query(
             prometheus_params=params,
-            promql_query=params.promql_query,
+            promql_query=promql_query,
             starts_at=starts_at,
             ends_at=ends_at,
         )
