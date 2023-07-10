@@ -77,13 +77,15 @@ class PrometheusAlertResourceManager(BaseResourceManager):
         return True
 
     # initialize the resources
-    def init_resources(self) -> bool:
+    def init_resources(self):
         """Initialize the resources
 
         If the API call fails, the initialization method will make additional attempts to list and delete
         the custom objects. If these attempts also fail, we will remove the failed resources from
         the __resource_managers list, rendering them inert.
         """
+
+        exception: Optional[Exception] = None
 
         for itr in range(0, self.init_resources_max_attempts):
             try:
@@ -101,14 +103,15 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                         name=name,
                         grace_period_seconds=60
                     )
-                return True
             except Exception as e:
+                exception = e
                 logging.error(
                     f"An error occurred while initializing PrometheusRules CRD resources: {e}. Attempting again..",
                     exc_info=True)
                 time.sleep(5)
 
-        return False
+        if exception:
+            raise exception
 
     def __find_available_crd_slot(self) -> int:
         """Fetch the first available slot in the crd files"""

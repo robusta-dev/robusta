@@ -49,7 +49,7 @@ class BaseResourceManager:
 
         pass
 
-    def init_resources(self) -> bool:
+    def init_resources(self):
         """Initialize resources"""
 
         pass

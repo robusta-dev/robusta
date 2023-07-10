@@ -24,10 +24,13 @@ class RRM:
 
     def __thread_loop(self):
         for res_man in self.__resource_managers:
-            result = res_man.init_resources()
-
-            if not result:
+            try:
+                res_man.init_resources()
+            except Exception:
                 self.__resource_managers.remove(res_man)
+                logging.warning(
+                    f"Unable to initialize the `{res_man.get_resource_kind()}` PrometheusRules CRD resources. Skipping it",
+                    exc_info=True)
 
         while True:
             try:
