@@ -4,7 +4,7 @@ Corlogix managed Prometheus
 Get the Corlogix prometheus query endpoint
 =========================================
 
-1. Go to `Corlogix Documentation <https://coralogix.com/docs/grafana-plugin/#block-1778265e-61c2-4362-9060-533d158857d7`_ and choose the relevant PromQL Endpoint.
+1. Go to `Corlogix Documentation <https://coralogix.com/docs/grafana-plugin/#block-1778265e-61c2-4362-9060-533d158857d7>`_ and choose the relevant PromQL Endpoint.
 2. In your `generated_values.yaml` file add the endpoint url:
 
 .. code-block:: yaml
