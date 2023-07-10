@@ -1,8 +1,6 @@
-.. _sinks-reference:
-
 :hide-toc:
 
-Sinks Reference
+Managed Prometheus Reference Reference
 ==================
 
 .. toctree::
@@ -16,7 +14,7 @@ Robusta enables seamless integration with several externally managed Prometheus 
 
 Supported Externally Managed Prometheus Instances
 ^^^^^^^^^^^^^^^^^^^^^
-Click a sink for setup instructions.
+Click a Prometheus for setup instructions.
 
 .. grid:: 1 1 2 3
     :gutter: 3
