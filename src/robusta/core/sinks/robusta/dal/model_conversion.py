@@ -97,7 +97,7 @@ class ModelConversion:
                 structured_data.append({"type": "list", "data": block.items})
             elif isinstance(block, PrometheusBlock):
                 structured_data.append(
-                    {"type": "prometheus", "data": block.data.dict(), "metadata": block.metadata, "version": 1.0}
+                    {"type": "prometheus", "data": block.data.json(), "metadata": block.metadata, "version": 1.0}
                 )
             elif isinstance(block, TableBlock):
                 if block.table_name:
@@ -134,7 +134,7 @@ class ModelConversion:
                 )
             elif isinstance(block, CallbackBlock):
                 callbacks = []
-                for (text, callback) in block.choices.items():
+                for text, callback in block.choices.items():
                     callbacks.append(
                         {
                             "text": text,
