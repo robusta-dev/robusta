@@ -18,8 +18,9 @@ from robusta.core.model.base_params import (
     ResourceChartResourceType,
 )
 from robusta.core.model.env_vars import (
-    ADDITIONAL_PROMETHEUS_LABELS,
     FLOAT_PRECISION_LIMIT,
+    PROMETHEUS_CLUSTER_LABEL_NAME,
+    PROMETHEUS_CLUSTER_LABEL_VALUE,
     PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
 )
 from robusta.core.reporting.blocks import FileBlock
@@ -208,10 +209,11 @@ def create_graph_enrichment(
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
 ) -> FileBlock:
-    if ADDITIONAL_PROMETHEUS_LABELS:
+    if PROMETHEUS_CLUSTER_LABEL_VALUE:
         if not labels:
             labels = {}
-        labels["additional_labels"] = ADDITIONAL_PROMETHEUS_LABELS
+        cluster_label = f'{PROMETHEUS_CLUSTER_LABEL_NAME}="{PROMETHEUS_CLUSTER_LABEL_VALUE}"'
+        labels["additional_labels"] = cluster_label
     promql_query = prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
         prometheus_params,
