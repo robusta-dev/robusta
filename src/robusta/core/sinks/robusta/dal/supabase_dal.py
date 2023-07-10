@@ -1,13 +1,11 @@
 import json
 import logging
-import threading
 import time
 from typing import Any, Dict, List
 
 import requests
-from postgrest_py.request_builder import QueryRequestBuilder
-from supabase_py import Client
-from supabase_py.lib.auth_client import SupabaseAuthClient
+from postgrest._sync.request_builder import SyncQueryRequestBuilder
+from supabase import Client
 
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
@@ -36,51 +34,6 @@ SCANS_RESULT_TABLE = "ScansResults"
 RESOURCE_EVENTS = "ResourceEvents"
 
 
-class RobustaAuthClient(SupabaseAuthClient):
-    def _set_timeout(*args, **kwargs):
-        """Set timer task"""
-        # _set_timeout isn't implemented in gotrue client. it's required for the jwt refresh token timer task
-        # https://github.com/supabase/gotrue-py/blob/49c092e3a4a6d7bb5e1c08067a4c42cc2f74b5cc/gotrue/client.py#L242
-        # callback, timeout_ms
-        threading.Timer(args[2] / 1000, args[1]).start()
-
-
-class RobustaClient(Client):
-    def _get_auth_headers(self) -> Dict[str, str]:
-        auth = getattr(self, "auth", None)
-        session = auth.current_session if auth else None
-        if session and session["access_token"]:
-            access_token = auth.session()["access_token"]
-        else:
-            access_token = self.supabase_key
-
-        headers: Dict[str, str] = {
-            "apiKey": self.supabase_key,
-            "Authorization": f"Bearer {access_token}",
-        }
-        return headers
-
-    @staticmethod
-    def _init_supabase_auth_client(
-        auth_url: str,
-        supabase_key: str,
-        detect_session_in_url: bool,
-        auto_refresh_token: bool,
-        persist_session: bool,
-        local_storage: Dict[str, Any],
-        headers: Dict[str, str],
-    ) -> RobustaAuthClient:
-        """Creates a wrapped instance of the GoTrue Client."""
-        return RobustaAuthClient(
-            url=auth_url,
-            auto_refresh_token=auto_refresh_token,
-            detect_session_in_url=detect_session_in_url,
-            persist_session=persist_session,
-            local_storage=local_storage,
-            headers=headers,
-        )
-
-
 class SupabaseDal:
     def __init__(
         self,
@@ -97,11 +50,12 @@ class SupabaseDal:
         self.key = key
         self.account_id = account_id
         self.cluster = cluster_name
-        self.client = RobustaClient(url, key)
+        self.client = Client(url, key)
         self.email = email
         self.password = password
         self.sign_in_time = 0
         self.sign_in()
+        self.client.auth.initialize()
         self.sink_params = sink_params
         self.signing_key = signing_key
 
@@ -213,7 +167,9 @@ class SupabaseDal:
     def get_active_services(self) -> List[ServiceInfo]:
         res = (
             self.client.table(SERVICES_TABLE)
-            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods", "is_helm_release")
+            .select(
+                "name", "type", "namespace", "classification", "config", "ready_pods", "total_pods", "is_helm_release"
+            )
             .filter("account_id", "eq", self.account_id)
             .filter("cluster", "eq", self.cluster)
             .filter("deleted", "eq", False)
@@ -406,7 +362,7 @@ class SupabaseDal:
             raise Exception(f"publish helm_releases failed. status: {status_code}")
 
     @staticmethod
-    def __delete_patch(supabase_request_obj: QueryRequestBuilder) -> Dict[str, Any]:
+    def __delete_patch(supabase_request_obj: SyncQueryRequestBuilder) -> Dict[str, Any]:
         """
         supabase_py's QueryBuilder has a bug for delete where the response 204 (no content)
         is attempted to be converted to a json, which throws an error every time
@@ -473,7 +429,8 @@ class SupabaseDal:
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
             logging.info("Supabase dal login")
             self.sign_in_time = time.time()
-            self.client.auth.sign_in(email=self.email, password=self.password)
+            res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
+            self.client.postgrest.auth(res.session.access_token)
 
     def handle_supabase_error(self):
         """Workaround for Gotrue bug in refresh token."""
