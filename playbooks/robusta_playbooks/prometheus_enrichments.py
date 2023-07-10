@@ -61,9 +61,10 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
         raise Exception("Invalid request, verify the duration times are of format '%Y-%m-%d %H:%M:%S %Z'")
         return
     try:
-        if ADDITIONAL_PROMETHEUS_LABELS and params.promql_query_with_label_support:
+        if ADDITIONAL_PROMETHEUS_LABELS and params.add_additional_labels:
             labels = {"additional_labels": ADDITIONAL_PROMETHEUS_LABELS}
-            promql_query = prepare_promql_query(labels, params.promql_query_with_label_support)
+            promql_query = params.promql_query.replace("}", ", $additional_labels }")
+            promql_query = prepare_promql_query(labels, promql_query)
         else:
             promql_query = params.promql_query
         prometheus_result = run_prometheus_query(

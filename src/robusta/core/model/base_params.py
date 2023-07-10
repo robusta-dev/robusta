@@ -116,6 +116,7 @@ class PrometheusParams(ActionParams):
             logging.info(f"Stripping '?' off prometheus_url_query_string: {v}")
         return v
 
+
 class PrometheusDuration(BaseModel):
     """
     :var duration_minutes: the amount of minutes back you want results for
@@ -140,11 +141,13 @@ class PrometheusDateRange(BaseModel):
 class PrometheusQueryParams(PrometheusParams):
     """
     :var promql_query: the prometheusql query you want to run
+    :var add_additional_labels: adds the additional labels (if defined) to the query
     :var duration: the duration of the query
 
     """
 
     promql_query: str
+    add_additional_labels: bool = True
     duration: Union[PrometheusDateRange, PrometheusDuration]
 
 
