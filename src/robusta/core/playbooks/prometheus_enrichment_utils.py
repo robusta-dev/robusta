@@ -17,12 +17,7 @@ from robusta.core.model.base_params import (
     ResourceChartItemType,
     ResourceChartResourceType,
 )
-from robusta.core.model.env_vars import (
-    FLOAT_PRECISION_LIMIT,
-    PROMETHEUS_CLUSTER_LABEL_NAME,
-    PROMETHEUS_CLUSTER_LABEL_VALUE,
-    PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
-)
+from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 from robusta.core.reporting.blocks import FileBlock
 from robusta.core.reporting.custom_rendering import charts_style
 
@@ -197,6 +192,15 @@ def create_chart_from_prometheus_query(
     return chart
 
 
+def get_additional_labels_str(prometheus_params: PrometheusParams) -> str:
+    additional_labels = ""
+    if not prometheus_params.prometheus_additional_labels:
+        return additional_labels
+    for key, value in prometheus_params.prometheus_additional_labels.items():
+        additional_labels += f', {key}="{value}"'
+    return additional_labels
+
+
 def create_graph_enrichment(
     start_at: datetime,
     labels: Dict[Any, Any],
@@ -211,12 +215,7 @@ def create_graph_enrichment(
 ) -> FileBlock:
     if not labels:
         labels = {}
-    if PROMETHEUS_CLUSTER_LABEL_VALUE:
-        cluster_label = f'{PROMETHEUS_CLUSTER_LABEL_NAME}="{PROMETHEUS_CLUSTER_LABEL_VALUE}"'
-    else:
-        # removes the additional label
-        cluster_label = ""
-    labels["additional_labels"] = cluster_label
+    labels["additional_labels"] = get_additional_labels_str(prometheus_params)
     promql_query = prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
         prometheus_params,
@@ -248,32 +247,32 @@ def create_resource_enrichment(
     ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
     combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod", $additional_labels}[5m])) by (pod, job)',
+            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod"$additional_labels}[5m])) by (pod, job)',
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Node): ChartOptions(
-            query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", $additional_labels} != 0',
+            query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"$additional_labels} != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
-            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod", container=~"$container", $additional_labels}[5m])) by (container, pod, job)',
+            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod", container=~"$container"$additional_labels}[5m])) by (container, pod, job)',
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(container_memory_working_set_bytes{pod=~"$pod", container!="", image!="", $additional_labels}) by (pod, job)',
+            query='sum(container_memory_working_set_bytes{pod=~"$pod", container!="", image!=""$additional_labels}) by (pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
-            query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", $additional_labels} != 0',
+            query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"$additional_labels} != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
-            query='sum(container_memory_working_set_bytes{pod=~"$pod", container=~"$container", image!="" , $additional_labels}) by (container, pod, job)',
+            query='sum(container_memory_working_set_bytes{pod=~"$pod", container=~"$container", image!=""$additional_labels}) by (container, pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): None,
         (ResourceChartResourceType.Disk, ResourceChartItemType.Node): ChartOptions(
-            query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", $additional_labels})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", $additional_labels})) != 0))',
+            query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+"$additional_labels})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+"$additional_labels})) != 0))',
             values_format=ChartValuesFormat.Percentage,
         ),
     }

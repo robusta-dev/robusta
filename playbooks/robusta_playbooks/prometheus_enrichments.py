@@ -16,10 +16,10 @@ from robusta.api import (
     PrometheusQueryParams,
     PrometheusQueryResult,
     action,
+    get_additional_labels_str,
     prepare_promql_query,
     run_prometheus_query,
 )
-from robusta.core.model.env_vars import PROMETHEUS_CLUSTER_LABEL_NAME, PROMETHEUS_CLUSTER_LABEL_VALUE
 
 
 def parse_timestamp_string(date_string: str) -> Optional[datetime]:
@@ -61,10 +61,9 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
         raise Exception("Invalid request, verify the duration times are of format '%Y-%m-%d %H:%M:%S %Z'")
         return
     try:
-        if PROMETHEUS_CLUSTER_LABEL_VALUE and params.add_additional_labels:
-            cluster_label = f'{PROMETHEUS_CLUSTER_LABEL_NAME}="{PROMETHEUS_CLUSTER_LABEL_VALUE}"'
-            labels = {"additional_labels": cluster_label}
-            promql_query = params.promql_query.replace("}", ", $additional_labels }")
+        if params.prometheus_additional_labels and params.add_additional_labels:
+            labels = {"additional_labels": get_additional_labels_str(params)}
+            promql_query = params.promql_query.replace("}", "$additional_labels}")
             promql_query = prepare_promql_query(labels, promql_query)
         else:
             promql_query = params.promql_query

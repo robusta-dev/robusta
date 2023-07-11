@@ -113,6 +113,7 @@ from robusta.core.playbooks.prometheus_enrichment_utils import (
     create_chart_from_prometheus_query,
     create_graph_enrichment,
     create_resource_enrichment,
+    get_additional_labels_str,
     get_node_internal_ip,
     prepare_promql_query,
     run_prometheus_query,

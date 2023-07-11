@@ -27,7 +27,6 @@ from robusta.api import (
     format_unit,
     to_kubernetes_name,
 )
-from robusta.core.model.env_vars import PROMETHEUS_CLUSTER_LABEL_NAME, PROMETHEUS_CLUSTER_LABEL_VALUE
 
 IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.3.2")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
@@ -175,16 +174,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     scan_id = str(uuid.uuid4())
     headers = PrometheusAuthorization.get_authorization_headers(params)
-    additional_flags = ""
-    if PROMETHEUS_CLUSTER_LABEL_NAME and "--prometheus-label" not in params.args_sanitized:
-        additional_flags += f"--prometheus-label {PROMETHEUS_CLUSTER_LABEL_NAME}"
-    if (
-        PROMETHEUS_CLUSTER_LABEL_VALUE
-        and "-l" not in params.args_sanitized
-        and "--prometheus-cluster-label" not in params.args_sanitized
-    ):
-        additional_flags += f" -l {PROMETHEUS_CLUSTER_LABEL_VALUE}"
-    python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} -q -f json "
+    python_command = f"python krr.py {params.strategy} {params.args_sanitized} -q -f json "
     if params.prometheus_url:
         python_command += f"-p {params.prometheus_url}"
     auth_header = headers["Authorization"] if "Authorization" in headers else ""

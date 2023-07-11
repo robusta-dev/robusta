@@ -1,6 +1,6 @@
 import logging
 from enum import Enum, auto
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, SecretStr, validator
 
@@ -92,15 +92,21 @@ class PrometheusParams(ActionParams):
     :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
     :var prometheus_auth: Prometheus auth header to be used in Authorization header. If omitted, we will not add any auth header
     :var prometheus_url_query_string: Additional query string parameters to be appended to the Prometheus connection URL
+    :var prometheus_additional_labels: A dictionary of additional labels needed for multi-cluster prometheus
 
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     :example prometheus_auth: Basic YWRtaW46cGFzc3dvcmQ=
     :example prometheus_url_query_string: "demo-query=example-data"
+    :example prometheus_additional_labels:
+               - cluster: 'cluster-2-test'
+               - env: 'prod'
+
     """
 
     prometheus_url: Optional[str] = None
     prometheus_auth: Optional[SecretStr] = None
     prometheus_url_query_string: Optional[str] = None
+    prometheus_additional_labels: Optional[Dict[str, str]] = None
 
     @validator("prometheus_url", allow_reuse=True)
     def validate_protocol(cls, v):
