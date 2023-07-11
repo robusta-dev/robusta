@@ -24,8 +24,8 @@ Optional Settings
 ---------------------------
 * ``issue_type`` : [Optional - default: ``Task``] Jira ticket type
 * ``dedups`` : [Optional - default: ``fingerprint``] Tickets deduplication parameter. By default, Only one issue per ``fingerprint`` will be created. There can be more than one value to use. Possible values are: fingerprint, cluster_name, title, node, type, source, namespace, creation_date etc
-* ``project_type_id_override`` : [Optional - default: None] If available, will override the ``project_name`` configuration. Follow these `instructions <https://confluence.atlassian.com/jirakb/how-to-get-project-id-from-the-jira-user-interface-827341414.html>`_ to get your project id.
-* ``issue_type_id_override`` : [Optional - default: None] If available, will override the ``issue_type`` configuration. Follow these `instructions <https://confluence.atlassian.com/jirakb/finding-the-id-for-issue-types-646186508.html>`_ to get your issue id.
+* ``project_type_id_override`` : [Optional - default: None] If available, will override the ``project_name`` configuration. Follow these `instructions <https://confluence.atlassian.com/jirakb/how-to-get-project-id-from-the-jira-user-interface-827341414.html>`__ to get your project id.
+* ``issue_type_id_override`` : [Optional - default: None] If available, will override the ``issue_type`` configuration. Follow these `instructions <https://confluence.atlassian.com/jirakb/finding-the-id-for-issue-types-646186508.html>`__ to get your issue id.
 
 Configuring the Jira sink
 ------------------------------------------------
