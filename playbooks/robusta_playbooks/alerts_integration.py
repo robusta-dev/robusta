@@ -445,7 +445,7 @@ def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
     )
 
 
-class GenericLogParams(LogEnricherParams):
+class ForeignLogParams(LogEnricherParams):
     """
     :var selectors: List of specific label selectors to retrieve logs from
     """
@@ -454,7 +454,7 @@ class GenericLogParams(LogEnricherParams):
 
 
 @action
-def generic_logs_enricher(event: ExecutionBaseEvent, params: GenericLogParams):
+def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
     """
     Generic enricher to fetch and attach pod logs.
 
@@ -472,11 +472,11 @@ def generic_logs_enricher(event: ExecutionBaseEvent, params: GenericLogParams):
         except Exception as e:
             if not (isinstance(e, exceptions.ApiException) and e.status == 404):
                 raise ActionException(
-                    ErrorCodes.ACTION_UNEXPECTED_ERROR, f"Failed to list pods for generic log enricher.\n{e}"
+                    ErrorCodes.ACTION_UNEXPECTED_ERROR, f"Failed to list pods for foreign log enricher.\n{e}"
                 )
 
     if not matching_pods:
-        logging.warning(f"[generic_logs_enricher] failed to find any matching pods for the selectors: {params.selectors}")
+        logging.warning(f"[foreign_logs_enricher] failed to find any matching pods for the selectors: {params.selectors}")
 
     if matching_pods:
         for pod in matching_pods:

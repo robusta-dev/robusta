@@ -27,6 +27,11 @@ source code) and uses that to generate the docs in a standard format. You can mo
     After adding an action to Robusta, you should update the relevant `actions page <https://github.com/robusta-dev/robusta/tree/master/docs/automation/actions>`_
     and add one line with a ``robusta-action`` directive for your new action. From there, everything else is automated.
 
+Adding Screenshot
+----------------------------
+To include screenshot of the action, the image should be placed inside the `playbooks/robusta_playbooks/images` directory with the same name as the action.
+
+
 Annotating your source code
 ----------------------------
 
