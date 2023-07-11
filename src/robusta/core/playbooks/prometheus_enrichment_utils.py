@@ -209,11 +209,14 @@ def create_graph_enrichment(
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
 ) -> FileBlock:
+    if not labels:
+        labels = {}
     if PROMETHEUS_CLUSTER_LABEL_VALUE:
-        if not labels:
-            labels = {}
         cluster_label = f'{PROMETHEUS_CLUSTER_LABEL_NAME}="{PROMETHEUS_CLUSTER_LABEL_VALUE}"'
-        labels["additional_labels"] = cluster_label
+    else:
+        # removes the additional label
+        cluster_label = ""
+    labels["additional_labels"] = cluster_label
     promql_query = prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
         prometheus_params,
