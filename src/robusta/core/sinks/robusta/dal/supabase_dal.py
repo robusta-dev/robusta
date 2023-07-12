@@ -3,6 +3,7 @@ import logging
 import time
 from typing import Any, Dict, List
 
+import requests
 from supabase import Client
 
 from robusta.core.model.cluster_status import ClusterStatus
@@ -73,7 +74,7 @@ class SupabaseDal:
             raise
 
         try:
-            self.client.rpc(
+            self.__rpc_patch(
                 "insert_scan_meta",
                 {
                     "_account_id": self.account_id,
@@ -84,7 +85,7 @@ class SupabaseDal:
                     "_type": block.type,
                     "_grade": block.score,
                 },
-            ).execute()
+            )
         except Exception as e:
             logging.error(f"Failed to persist scan meta {block.scan_id} error: {e}")
             self.handle_supabase_error()
@@ -445,6 +446,7 @@ class SupabaseDal:
             "_node_count": node_count,
         }
         try:
+            # new rpc can be used with void rpcs or rpcs with ResponseAPI interface.
             self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data).execute()
         except Exception as e:
             logging.error(f"Failed to publish node count {data} error: {e}")
@@ -476,3 +478,26 @@ class SupabaseDal:
                 blocks[i] = EventsRef(name=event.name, namespace=event.namespace, kind=event.kind.lower())
             if isinstance(block, ScanReportBlock):
                 self.persist_scan(block)
+
+    def __rpc_patch(self, func_name: str, params: dict) -> Dict[str, Any]:
+        """
+        Supabase client is async. Sync impl of rpc call
+        """
+        headers = self.client.table("").session.headers
+        url: str = f"{self.client.rest_url}/rpc/{func_name}"
+        logging.info(url)
+        response = requests.post(url, headers=headers, json=params)
+
+        logging.info(f"headers {headers}")
+        response.raise_for_status()
+        response_data = {}
+        try:
+            if response.content:
+                response_data = response.json()
+        except Exception:  # this can be okay if no data is expected
+            logging.debug("Failed to parse delete response data")
+
+        return {
+            "data": response_data,
+            "status_code": response.status_code,
+        }
