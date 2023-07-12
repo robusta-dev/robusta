@@ -485,7 +485,7 @@ class SupabaseDal:
         """
         headers = self.client.table("").session.headers
         url: str = f"{self.client.rest_url}/rpc/{func_name}"
-        logging.info(url)
+
         response = requests.post(url, headers=headers, json=params)
 
         logging.info(f"headers {headers}")
