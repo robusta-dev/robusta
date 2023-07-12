@@ -73,7 +73,7 @@ files = [
 name = "attrs"
 version = "23.1.0"
 description = "Classes Without Boilerplate"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -3624,4 +3624,4 @@ all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "dulwich"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "a1605e8390a02030fbe27da5f83afbc8e36d36bb2a24ae093efcfba110fadc9d"
+content-hash = "a10fccfce2f10d3fdc3533d6421dae01ba9113b91408ea9fb0bef5bdfdc3433d"
