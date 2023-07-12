@@ -273,7 +273,7 @@ class Finding(Filterable):
     def get_prometheus_silence_url(self, account_id: str, cluster_name: str) -> str:
         labels: Dict[str, str] = {"alertname": self.aggregation_key, "cluster": cluster_name, "account": account_id}
         kind: Optional[str] = self.subject.subject_type.value
-        if kind and kind == "node":
+        if kind == "node":
             pass
         else:
             if self.subject.namespace:
