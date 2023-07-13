@@ -1,11 +1,10 @@
 import logging
-import os
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
+from prometheus_api_client import PrometheusApiClientException
 from kubernetes import client
 from kubernetes.client.models.v1_service import V1Service
-from prometheus_api_client import PrometheusApiClientException
 from robusta.api import (
     ExecutionBaseEvent,
     MarkdownBlock,
@@ -16,8 +15,6 @@ from robusta.api import (
     PrometheusQueryParams,
     PrometheusQueryResult,
     action,
-    get_additional_labels_str,
-    prepare_promql_query,
     run_prometheus_query,
 )
 

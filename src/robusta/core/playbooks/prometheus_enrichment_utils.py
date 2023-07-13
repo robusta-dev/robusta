@@ -30,7 +30,7 @@ class XAxisLine(BaseModel):
     value: float
 
 
-def prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
+def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
     labels: Dict[Any, Any] = defaultdict(lambda: "<missing>")
     labels.update(provided_labels)
     template = Template(promql_query_template)
@@ -50,7 +50,7 @@ def run_prometheus_query(
         raise Exception("Invalid timerange specified for the prometheus query.")
 
     if prometheus_params.prometheus_additional_labels and prometheus_params.add_additional_labels:
-        promql_query = promql_query.replace("}", get_additional_labels_str(prometheus_params))
+        promql_query = promql_query.replace("}", __get_additional_labels_str(prometheus_params))
 
     query_duration = ends_at - starts_at
     resolution = get_resolution_from_duration(query_duration)
@@ -195,7 +195,7 @@ def create_chart_from_prometheus_query(
     return chart
 
 
-def get_additional_labels_str(prometheus_params: PrometheusParams) -> str:
+def __get_additional_labels_str(prometheus_params: PrometheusParams) -> str:
     additional_labels = ""
     if not prometheus_params.prometheus_additional_labels:
         return additional_labels
@@ -216,7 +216,7 @@ def create_graph_enrichment(
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
 ) -> FileBlock:
-    promql_query = prepare_promql_query(labels, promql_query)
+    promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
         prometheus_params,
         promql_query,
