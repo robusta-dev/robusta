@@ -49,6 +49,9 @@ def run_prometheus_query(
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
 
+    if prometheus_params.prometheus_additional_labels and prometheus_params.add_additional_labels:
+        promql_query = promql_query.replace("}", get_additional_labels_str(prometheus_params))
+
     query_duration = ends_at - starts_at
     resolution = get_resolution_from_duration(query_duration)
     increment = max(query_duration.total_seconds() / resolution, 1.0)
@@ -213,9 +216,6 @@ def create_graph_enrichment(
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
 ) -> FileBlock:
-    if not labels:
-        labels = {}
-    labels["additional_labels"] = get_additional_labels_str(prometheus_params)
     promql_query = prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
         prometheus_params,
@@ -247,32 +247,32 @@ def create_resource_enrichment(
     ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
     combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod"$additional_labels}[5m])) by (pod, job)',
+            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod"}[5m])) by (pod, job)',
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Node): ChartOptions(
-            query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"$additional_labels} != 0',
+            query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
-            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod", container=~"$container"$additional_labels}[5m])) by (container, pod, job)',
+            query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod", container=~"$container"}[5m])) by (container, pod, job)',
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(container_memory_working_set_bytes{pod=~"$pod", container!="", image!=""$additional_labels}) by (pod, job)',
+            query='sum(container_memory_working_set_bytes{pod=~"$pod", container!="", image!=""}) by (pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
-            query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"$additional_labels} != 0',
+            query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
-            query='sum(container_memory_working_set_bytes{pod=~"$pod", container=~"$container", image!=""$additional_labels}) by (container, pod, job)',
+            query='sum(container_memory_working_set_bytes{pod=~"$pod", container=~"$container", image!=""}) by (container, pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): None,
         (ResourceChartResourceType.Disk, ResourceChartItemType.Node): ChartOptions(
-            query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+"$additional_labels})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+"$additional_labels})) != 0))',
+            query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+"})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+"})) != 0))',
             values_format=ChartValuesFormat.Percentage,
         ),
     }
