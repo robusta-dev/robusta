@@ -61,7 +61,7 @@ For example:
         regex_replacement_style: SAME_LENGTH_ASTERISKS # You can also use NAMED
         regex_replacer_patterns:
           - name: MySecretPort
-              regex: "my secret port \d+"
+              regex: "my secret port \\d+"
           - name: UUID
               regex: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 

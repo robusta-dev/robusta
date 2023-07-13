@@ -224,14 +224,24 @@ class Finding(Filterable):
 
     def get_investigate_uri(self, account_id: str, cluster_name: Optional[str] = None):
         uri_path = self._map_service_to_uri()
-        params = {
-            "account": account_id,
-            "clusters": f'["{cluster_name}"]' if cluster_name else None,
-            "namespaces": f'["{self.subject.namespace}"]' if self.subject.namespace else None,
-            "kind": self.service.resource_type if self.service else None,
-            "name": self.service.name if self.service else None,
-            "names": f'["{self.aggregation_key}"]' if self.aggregation_key else None,
-        }
+        kind = self.service.resource_type if self.service else None
+        if kind and kind.lower() == "job":
+            params = {
+                "account": account_id,
+                "cluster": f'"{cluster_name}"' if cluster_name else None,
+                "namespace": f'"{self.subject.namespace}"' if self.subject.namespace else None,
+                "name": f'"{self.service.name}"' if self.service else None,
+            }
+        else:
+            params = {
+                "account": account_id,
+                "clusters": f'["{cluster_name}"]' if cluster_name else None,
+                "namespaces": f'["{self.subject.namespace}"]' if self.subject.namespace else None,
+                "kind": kind,
+                "name": self.service.name if self.service else None,
+                "names": f'["{self.aggregation_key}"]' if self.aggregation_key else None,
+            }
+
         params = {k: v for k, v in params.items() if v is not None}
         uri_path = f"{uri_path}?{urlencode(params)}"
         return f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
@@ -262,18 +272,21 @@ class Finding(Filterable):
 
     def get_prometheus_silence_url(self, account_id: str, cluster_name: str) -> str:
         labels: Dict[str, str] = {"alertname": self.aggregation_key, "cluster": cluster_name, "account": account_id}
-        if self.subject.namespace:
-            labels["namespace"] = self.subject.namespace
-
-        if self.silence_labels and self.silence_labels.get("service"):
-            labels["service"] = self.silence_labels["service"]
-
-        # In prometheus job is related to the scrape target.
-        # Kubernetes jobs are stored in job_name.
         kind: Optional[str] = self.subject.subject_type.value
-        if kind and self.subject.name:
-            kind = "job_name" if kind == "job" else kind
-            labels[kind] = self.subject.name
+        if kind == "node":
+            pass
+        else:
+            if self.subject.namespace:
+                labels["namespace"] = self.subject.namespace
+
+            if self.silence_labels and self.silence_labels.get("service"):
+                labels["service"] = self.silence_labels["service"]
+
+            # In prometheus, job is related to the scrape target.
+            # Kubernetes jobs are stored in job_name.
+            if kind and self.subject.name:
+                kind = "job_name" if kind == "job" else kind
+                labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
         # New label added here should be added to the UI silence create whitelist as well.

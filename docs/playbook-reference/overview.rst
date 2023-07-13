@@ -1,6 +1,5 @@
 :hide-toc:
 
-.. _playbook-reference:
 
 Overview
 ===========
@@ -10,7 +9,7 @@ List of all :ref:`Triggers <Triggers Reference>` and :ref:`Actions <Actions Refe
 This is a *quick reference* section. It assumes you read:
 
 * :ref:`What are Playbooks?`
-* :ref:`How to Define Playbooks<Defining Playbooks>`
+* :ref:`How to Define Playbooks <Defining Playbooks>`
 
 In this Section
 ---------------

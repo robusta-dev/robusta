@@ -49,7 +49,7 @@ extensions = [
     "sphinx_reredirects",
 ]
 
-suppress_warnings = ['autosectionlabel.*']
+suppress_warnings = ["autosectionlabel.*"]
 
 # sphinx redirects from old docs
 
@@ -70,7 +70,7 @@ redirects = {
     "user-guide/alert-manager.html": "/master/configuration/alert-manager.html",
     "catalog/sinks/webhook.html": "/master/configuration/sinks/webhook.html",
     "catalog/sinks/PagerDuty.html": "/master/configuration/sinks/PagerDuty.html",
-    "catalog/actions/event-enrichment.html": "/master/playbook-reference/actions/event-enrichment.html"
+    "catalog/actions/event-enrichment.html": "/master/playbook-reference/actions/event-enrichment.html",
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
@@ -123,7 +123,7 @@ author = "Natan Yellin"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**/*.inc.rst", "**/*.jinja"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 # pygments_style = "manni"
