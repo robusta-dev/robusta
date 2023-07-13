@@ -272,18 +272,21 @@ class Finding(Filterable):
 
     def get_prometheus_silence_url(self, account_id: str, cluster_name: str) -> str:
         labels: Dict[str, str] = {"alertname": self.aggregation_key, "cluster": cluster_name, "account": account_id}
-        if self.subject.namespace:
-            labels["namespace"] = self.subject.namespace
-
-        if self.silence_labels and self.silence_labels.get("service"):
-            labels["service"] = self.silence_labels["service"]
-
-        # In prometheus job is related to the scrape target.
-        # Kubernetes jobs are stored in job_name.
         kind: Optional[str] = self.subject.subject_type.value
-        if kind and self.subject.name:
-            kind = "job_name" if kind == "job" else kind
-            labels[kind] = self.subject.name
+        if kind == "node":
+            pass
+        else:
+            if self.subject.namespace:
+                labels["namespace"] = self.subject.namespace
+
+            if self.silence_labels and self.silence_labels.get("service"):
+                labels["service"] = self.silence_labels["service"]
+
+            # In prometheus, job is related to the scrape target.
+            # Kubernetes jobs are stored in job_name.
+            if kind and self.subject.name:
+                kind = "job_name" if kind == "job" else kind
+                labels[kind] = self.subject.name
 
         labels["referer"] = "sink"
         # New label added here should be added to the UI silence create whitelist as well.
