@@ -134,7 +134,7 @@ class ModelConversion:
                 )
             elif isinstance(block, CallbackBlock):
                 callbacks = []
-                for text, callback in block.choices.items():
+                for (text, callback) in block.choices.items():
                     callbacks.append(
                         {
                             "text": text,

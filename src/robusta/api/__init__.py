@@ -1,12 +1,3 @@
-from hikaru.model.rel_1_26 import Container, DaemonSet, Deployment, Pod, ReplicaSet, StatefulSet, Volume
-
-from robusta.core.discovery.discovery import (
-    extract_containers_k8,
-    extract_ready_pods,
-    extract_total_pods,
-    extract_volumes_k8,
-    is_release_managed_by_helm,
-)
 from robusta.core.discovery.resource_names import ResourceNameLister
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.core.model.base_params import (
@@ -75,6 +66,9 @@ from robusta.core.model.env_vars import (
     WEBSOCKET_PING_INTERVAL,
     WEBSOCKET_PING_TIMEOUT,
 )
+from robusta.core.discovery.discovery import extract_containers_k8, extract_volumes_k8, extract_total_pods, \
+    extract_ready_pods, is_release_managed_by_helm
+from hikaru.model.rel_1_26 import DaemonSet, StatefulSet, Deployment, Pod, Container, Volume, ReplicaSet
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.model.pods import (
@@ -113,9 +107,7 @@ from robusta.core.playbooks.prometheus_enrichment_utils import (
     create_chart_from_prometheus_query,
     create_graph_enrichment,
     create_resource_enrichment,
-    get_additional_labels_str,
     get_node_internal_ip,
-    prepare_promql_query,
     run_prometheus_query,
 )
 from robusta.core.playbooks.trigger import (

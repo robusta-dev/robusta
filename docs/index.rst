@@ -43,8 +43,8 @@
    configuration/configuring-sinks
    🔔 Sinks Reference <configuration/sinks/index>
    configuration/alert-manager
+   configuration/azure-managed-prometheus
    configuration/embedded-prometheus
-   Externally Managed Prometheus <configuration/managed-prometheus/index>
    configuration/additional-settings
    configuration/defining-playbooks/index
 
