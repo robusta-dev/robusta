@@ -487,15 +487,13 @@ class SupabaseDal:
         url: str = f"{self.client.rest_url}/rpc/{func_name}"
 
         response = requests.post(url, headers=headers, json=params)
-
-        logging.info(f"headers {headers}")
         response.raise_for_status()
         response_data = {}
         try:
             if response.content:
                 response_data = response.json()
         except Exception:  # this can be okay if no data is expected
-            logging.debug("Failed to parse delete response data")
+            logging.debug("Failed to parse rpc response data")
 
         return {
             "data": response_data,
