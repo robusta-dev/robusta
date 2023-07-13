@@ -42,8 +42,6 @@ class PrometheusAuthorization:
             return {"Authorization": params.prometheus_auth.get_secret_value()}
         elif cls.azure_authorization:
             return {"Authorization": (f"Bearer {cls.bearer_token}")}
-        elif CORLOGIX_PROMETHEUS_TOKEN:
-            return {"token": CORLOGIX_PROMETHEUS_TOKEN}
         else:
             return {}
 
