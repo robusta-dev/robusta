@@ -25,6 +25,7 @@ from robusta.api import (
     action,
     get_event_timestamp,
     get_job_all_pods,
+    is_pod_finished,
     get_resource_events,
     get_resource_events_table,
     list_pods_using_selector,
@@ -246,14 +247,18 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
     """
     event.add_video_link(VideoLink(url=params.url, name=params.name))
 
+
 @action
 def resource_events_diff(event: KubernetesAnyChangeEvent):
     new_resource = event.obj
-    if isinstance(new_resource, Deployment) \
-            or isinstance(new_resource, DaemonSet) \
-            or isinstance(new_resource, StatefulSet) \
-            or isinstance(new_resource, ReplicaSet) \
-            or isinstance(new_resource, Pod):
+
+    if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)) \
+            and not event.obj.metadata.ownerReferences:
+        if isinstance(new_resource, Pod) and is_pod_finished(new_resource):
+            return
+        if isinstance(new_resource, ReplicaSet) and not new_resource.spec.replicas:
+            return
+
         containers = extract_containers_k8(new_resource)
         volumes = extract_volumes_k8(new_resource)
         meta = new_resource.metadata
