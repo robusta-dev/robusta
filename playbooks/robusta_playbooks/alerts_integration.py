@@ -343,15 +343,7 @@ class LogEnricherParams(ActionParams):
     filter_regex: Optional[str] = None
 
 
-@action
-def logs_enricher(event: PodEvent, params: LogEnricherParams):
-    """
-    Fetch and attach Pod logs.
-    The pod to fetch logs for is determined by the alert’s pod label from Prometheus.
-
-    By default, if the alert has no pod this enricher will silently do nothing.
-    """
-    pod = event.get_pod()
+def start_log_enrichment(event: ExecutionBaseEvent, params: LogEnricherParams, pod: RobustaPod, ):
     if pod is None:
         if params.warn_on_missing_label:
             event.add_enrichment(
@@ -359,7 +351,7 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
             )
         return
 
-    container: str = pod.spec.containers[0].name
+    container: str = ""
     all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
     if params.container_name:
         container = params.container_name
@@ -373,6 +365,8 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     )
 
+    if not container and pod.spec.containers:
+        container = pod.spec.containers[0].name
     for _ in range(tries - 1):
         log_data = pod.get_logs(
             container=container,
@@ -385,11 +379,27 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
             logging.info("log data is empty, retrying...")
             time.sleep(backoff_seconds)
             continue
+
+        log_name = pod.metadata.name
+        log_name += f"/{container}"
         event.add_enrichment(
-            [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
+            [FileBlock(f"{log_name}.log", log_data.encode())],
         )
         break
 
+
+@action
+def logs_enricher(event: PodEvent, params: LogEnricherParams):
+    """
+    Fetch and attach Pod logs.
+    The pod to fetch logs for is determined by the alert’s pod label from Prometheus.
+
+    By default, if the alert has no pod this enricher will silently do nothing.
+    """
+    pod = event.get_pod()
+
+    logging.info(f"received a logs_enricher action: {params}")
+    start_log_enrichment(event=event, params=params, pod=pod)
 
 class SearchTermParams(ActionParams):
     """
@@ -421,7 +431,6 @@ def show_stackoverflow_search(event: ExecutionBaseEvent, params: SearchTermParam
             [MarkdownBlock(f'Sorry, StackOverflow doesn\'t know anything about "{params.search_term}"')]
         )
     event.add_finding(finding)
-
 
 @action
 def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
@@ -463,6 +472,9 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
 
     api = client.CoreV1Api()
     matching_pods: List[V1Pod] = []
+
+    logging.info(f"received a foreign_logs_enricher action: {params}")
+
     for selector in params.selectors:
         try:
             pods: V1PodList = api.list_pod_for_all_namespaces(label_selector=selector)
@@ -472,47 +484,14 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
         except Exception as e:
             if not (isinstance(e, exceptions.ApiException) and e.status == 404):
                 raise ActionException(
-                    ErrorCodes.ACTION_UNEXPECTED_ERROR, f"Failed to list pods for foreign log enricher.\n{e}"
+                    ErrorCodes.ACTION_UNEXPECTED_ERROR, f"[foreign_logs_enricher] Failed to list pods for foreign log enricher.\n{e}"
                 )
 
     if not matching_pods:
         logging.warning(f"[foreign_logs_enricher] failed to find any matching pods for the selectors: {params.selectors}")
+        return
+    for matching_pod in matching_pods:
+        pod = RobustaPod().read(matching_pod.metadata.name, matching_pod.metadata.namespace)
 
-    if matching_pods:
-        for pod in matching_pods:
-            container: str = pod.spec.containers[0].name
-            status: V1PodStatus = pod.status
-            all_statuses = (status.container_statuses or []) + (status.init_container_statuses or [])
-            if params.container_name:
-                container = params.container_name
-            elif any(_status.name == event.get_subject().container for _status in all_statuses):
-                # support alerts with a container label, make sure its related to this pod.
-                container = event.get_subject().container
+        start_log_enrichment(event=event, params=params, pod=pod)
 
-            tries: int = 2
-            backoff_seconds: int = 2
-            regex_replacement_style = (
-                RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
-            )
-
-            for _ in range(tries - 1):
-                if container is None:
-                    container = pod.spec.containers[0].name
-
-                log_data = RobustaPod.find_logs(
-                    name=pod.metadata.name,
-                    namespace=pod.metadata.namespace,
-                    container=container,
-                    regex_replacer_patterns=params.regex_replacer_patterns,
-                    regex_replacement_style=regex_replacement_style,
-                    filter_regex=params.filter_regex,
-                    previous=params.previous,
-                )
-                if not log_data:
-                    logging.info("log data is empty, retrying...")
-                    time.sleep(backoff_seconds)
-                    continue
-                event.add_enrichment(
-                    [FileBlock(f"{pod.metadata.name}/{container}.log", log_data.encode())],
-                )
-                break
