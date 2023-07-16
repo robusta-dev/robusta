@@ -25,6 +25,7 @@ AZURE_METADATA_ENDPOINT = os.environ.get(
 AZURE_TOKEN_ENDPOINT = os.environ.get(
     "AZURE_TOKEN_ENDPOINT", f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/token"
 )
+CORLOGIX_PROMETHEUS_TOKEN = os.environ.get("CORLOGIX_PROMETHEUS_TOKEN")
 
 
 class PrometheusAuthorization:
@@ -35,7 +36,9 @@ class PrometheusAuthorization:
 
     @classmethod
     def get_authorization_headers(cls, params: Optional[PrometheusParams] = None) -> Dict:
-        if params and params.prometheus_auth:
+        if CORLOGIX_PROMETHEUS_TOKEN:
+            return {"token": CORLOGIX_PROMETHEUS_TOKEN}
+        elif params and params.prometheus_auth:
             return {"Authorization": params.prometheus_auth.get_secret_value()}
         elif cls.azure_authorization:
             return {"Authorization": (f"Bearer {cls.bearer_token}")}
@@ -92,7 +95,8 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
     from prometheus_api_client import PrometheusConnect
 
     url: Optional[str] = (
-        prometheus_params.prometheus_url if prometheus_params.prometheus_url
+        prometheus_params.prometheus_url
+        if prometheus_params.prometheus_url
         else PrometheusDiscovery.find_prometheus_url()
     )
 
@@ -106,6 +110,7 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
     prom._session.params = merge_setting(prom._session.params, query_string_params)
 
     return prom
+
 
 def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
     params = params or {}
