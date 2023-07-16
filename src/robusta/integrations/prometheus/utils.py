@@ -127,7 +127,7 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
             params={"query": "example", **params},
         )
 
-        if response.status_code in (401, 400):
+        if response.status_code == 401:
             if PrometheusAuthorization.request_new_token():
                 prom.headers = PrometheusAuthorization.get_authorization_headers()
                 response = prom._session.get(
