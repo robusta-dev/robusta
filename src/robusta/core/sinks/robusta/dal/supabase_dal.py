@@ -4,7 +4,7 @@ import time
 from typing import Any, Dict, List
 
 import requests
-from supabase import Client
+from supabase import create_client
 
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
@@ -49,12 +49,12 @@ class SupabaseDal:
         self.key = key
         self.account_id = account_id
         self.cluster = cluster_name
-        self.client = Client(url, key)
+        self.client = create_client(url, key)
         self.email = email
         self.password = password
         self.sign_in_time = 0
         self.sign_in()
-        self.client.auth.initialize()
+        self.client.auth.on_auth_state_change(self.__update_token_patch)
         self.sink_params = sink_params
         self.signing_key = signing_key
 
@@ -370,6 +370,7 @@ class SupabaseDal:
             logging.info("Supabase dal login")
             self.sign_in_time = time.time()
             res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
+            self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
             self.client.postgrest.auth(res.session.access_token)
 
     def handle_supabase_error(self):
@@ -499,3 +500,8 @@ class SupabaseDal:
             "data": response_data,
             "status_code": response.status_code,
         }
+
+    def __update_token_patch(self, event, session):
+        logging.debug(f"Event {event}, Session {session}")
+        if session and event == "TOKEN_REFRESHED":
+            self.client.postgrest.auth(session.access_token)
