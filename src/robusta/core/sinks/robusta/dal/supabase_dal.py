@@ -1,13 +1,10 @@
 import json
 import logging
-import threading
 import time
 from typing import Any, Dict, List
 
 import requests
-from postgrest_py.request_builder import QueryRequestBuilder
-from supabase_py import Client
-from supabase_py.lib.auth_client import SupabaseAuthClient
+from supabase import create_client
 
 from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
@@ -36,51 +33,6 @@ SCANS_RESULT_TABLE = "ScansResults"
 RESOURCE_EVENTS = "ResourceEvents"
 
 
-class RobustaAuthClient(SupabaseAuthClient):
-    def _set_timeout(*args, **kwargs):
-        """Set timer task"""
-        # _set_timeout isn't implemented in gotrue client. it's required for the jwt refresh token timer task
-        # https://github.com/supabase/gotrue-py/blob/49c092e3a4a6d7bb5e1c08067a4c42cc2f74b5cc/gotrue/client.py#L242
-        # callback, timeout_ms
-        threading.Timer(args[2] / 1000, args[1]).start()
-
-
-class RobustaClient(Client):
-    def _get_auth_headers(self) -> Dict[str, str]:
-        auth = getattr(self, "auth", None)
-        session = auth.current_session if auth else None
-        if session and session["access_token"]:
-            access_token = auth.session()["access_token"]
-        else:
-            access_token = self.supabase_key
-
-        headers: Dict[str, str] = {
-            "apiKey": self.supabase_key,
-            "Authorization": f"Bearer {access_token}",
-        }
-        return headers
-
-    @staticmethod
-    def _init_supabase_auth_client(
-        auth_url: str,
-        supabase_key: str,
-        detect_session_in_url: bool,
-        auto_refresh_token: bool,
-        persist_session: bool,
-        local_storage: Dict[str, Any],
-        headers: Dict[str, str],
-    ) -> RobustaAuthClient:
-        """Creates a wrapped instance of the GoTrue Client."""
-        return RobustaAuthClient(
-            url=auth_url,
-            auto_refresh_token=auto_refresh_token,
-            detect_session_in_url=detect_session_in_url,
-            persist_session=persist_session,
-            local_storage=local_storage,
-            headers=headers,
-        )
-
-
 class SupabaseDal:
     def __init__(
         self,
@@ -97,11 +49,12 @@ class SupabaseDal:
         self.key = key
         self.account_id = account_id
         self.cluster = cluster_name
-        self.client = RobustaClient(url, key)
+        self.client = create_client(url, key)
         self.email = email
         self.password = password
         self.sign_in_time = 0
         self.sign_in()
+        self.client.auth.on_auth_state_change(self.__update_token_patch)
         self.sink_params = sink_params
         self.signing_key = signing_key
 
@@ -113,31 +66,30 @@ class SupabaseDal:
 
     def persist_scan(self, block: ScanReportBlock):
         db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
-        res = self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
-        if res.get("status_code") not in [200, 201]:
-            msg = f"Failed to persist scan {block.scan_id} error: {res.get('data')}"
-            logging.error(msg)
+        try:
+            self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
+        except Exception as e:
+            logging.error(f"Failed to persist scan {block.scan_id} error: {e}")
             self.handle_supabase_error()
-            raise Exception(msg)
+            raise
 
-        res = self.__rpc_patch(
-            "insert_scan_meta",
-            {
-                "_account_id": self.account_id,
-                "_cluster": self.cluster,
-                "_scan_id": block.scan_id,
-                "_scan_start": str(block.start_time),
-                "_scan_end": str(block.end_time),
-                "_type": block.type,
-                "_grade": block.score,
-            },
-        )
-
-        if res.get("status_code") not in [200, 201, 204]:
-            msg = f"Failed to persist scan meta {block.scan_id} error: {res.get('data')}"
-            logging.error(msg)
+        try:
+            self.__rpc_patch(
+                "insert_scan_meta",
+                {
+                    "_account_id": self.account_id,
+                    "_cluster": self.cluster,
+                    "_scan_id": block.scan_id,
+                    "_scan_start": str(block.start_time),
+                    "_scan_end": str(block.end_time),
+                    "_type": block.type,
+                    "_grade": block.score,
+                },
+            )
+        except Exception as e:
+            logging.error(f"Failed to persist scan meta {block.scan_id} error: {e}")
             self.handle_supabase_error()
-            raise Exception(msg)
+            raise
 
     def persist_finding(self, finding: Finding):
         for enrichment in finding.enrichments:
@@ -165,20 +117,18 @@ class SupabaseDal:
             if not evidence:
                 continue
 
-            res = self.client.table(EVIDENCE_TABLE).insert(evidence).execute()
-
-            if res.get("status_code") != 201:
-                logging.error(
-                    f"Failed to persist finding {finding.id} enrichment {enrichment} error: {res.get('data')}"
-                )
-
-        res = (
-            self.client.table(ISSUES_TABLE)
-            .insert(ModelConversion.to_finding_json(self.account_id, self.cluster, finding))
-            .execute()
-        )
-        if res.get("status_code") != 201:
-            logging.error(f"Failed to persist finding {finding.id} error: {res.get('data')}")
+            try:
+                self.client.table(EVIDENCE_TABLE).insert(evidence).execute()
+            except Exception as e:
+                logging.error(f"Failed to persist finding {finding.id} enrichment {enrichment} error: {e}")
+        try:
+            (
+                self.client.table(ISSUES_TABLE)
+                .insert(ModelConversion.to_finding_json(self.account_id, self.cluster, finding))
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to persist finding {finding.id} error: {e}")
             self.handle_supabase_error()
 
     def to_service(self, service: ServiceInfo) -> Dict[Any, Any]:
@@ -201,29 +151,39 @@ class SupabaseDal:
     def persist_services(self, services: List[ServiceInfo]):
         if not services:
             return
-        db_services = [self.to_service(service) for service in services]
-        res = self.client.table(SERVICES_TABLE).insert(db_services, upsert=True).execute()
 
-        if res.get("status_code") not in [200, 201]:
-            logging.error(f"Failed to persist services {services} error: {res.get('data')}")
+        db_services = [self.to_service(service) for service in services]
+        try:
+            self.client.table(SERVICES_TABLE).upsert(db_services).execute()
+        except Exception as e:
+            logging.error(f"Failed to persist services {services} error: {e}")
             self.handle_supabase_error()
-            status_code = res.get("status_code")
-            raise Exception(f"publish service failed. status: {status_code}")
+            raise
 
     def get_active_services(self) -> List[ServiceInfo]:
-        res = (
-            self.client.table(SERVICES_TABLE)
-            .select("name", "type", "namespace", "classification", "config", "ready_pods", "total_pods", "is_helm_release")
-            .filter("account_id", "eq", self.account_id)
-            .filter("cluster", "eq", self.cluster)
-            .filter("deleted", "eq", False)
-            .execute()
-        )
-        if res.get("status_code") not in [200]:
-            msg = f"Failed to get existing services (supabase) error: {res.get('data')}"
-            logging.error(msg)
+        try:
+            res = (
+                self.client.table(SERVICES_TABLE)
+                .select(
+                    "name",
+                    "type",
+                    "namespace",
+                    "classification",
+                    "config",
+                    "ready_pods",
+                    "total_pods",
+                    "is_helm_release",
+                )
+                .filter("account_id", "eq", self.account_id)
+                .filter("cluster", "eq", self.cluster)
+                .filter("deleted", "eq", False)
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to get existing services (supabase) error: {e}")
             self.handle_supabase_error()
-            raise Exception(msg)
+            raise
+
         return [
             ServiceInfo(
                 name=service["name"],
@@ -235,40 +195,40 @@ class SupabaseDal:
                 total_pods=service["total_pods"],
                 is_helm_release=service["is_helm_release"],
             )
-            for service in res.get("data")
+            for service in res.data
         ]
 
     def has_cluster_findings(self) -> bool:
-        res = (
-            self.client.table(ISSUES_TABLE)
-            .select("*")
-            .filter("account_id", "eq", self.account_id)
-            .filter("cluster", "eq", self.cluster)
-            .limit(1)
-            .execute()
-        )
-        if res.get("status_code") not in [200]:
-            msg = f"Failed to check cluster issues: {res.get('data')}"
-            logging.error(msg)
+        try:
+            res = (
+                self.client.table(ISSUES_TABLE)
+                .select("*")
+                .filter("account_id", "eq", self.account_id)
+                .filter("cluster", "eq", self.cluster)
+                .limit(1)
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to check cluster issues: {e}")
             self.handle_supabase_error()
-            raise Exception(msg)
+            raise
 
-        return len(res.get("data")) > 0
+        return len(res.data) > 0
 
     def get_active_nodes(self) -> List[NodeInfo]:
-        res = (
-            self.client.table(NODES_TABLE)
-            .select("*")
-            .filter("account_id", "eq", self.account_id)
-            .filter("cluster_id", "eq", self.cluster)
-            .filter("deleted", "eq", False)
-            .execute()
-        )
-        if res.get("status_code") not in [200]:
-            msg = f"Failed to get existing nodes (supabase) error: {res.get('data')}"
-            logging.error(msg)
+        try:
+            res = (
+                self.client.table(NODES_TABLE)
+                .select("*")
+                .filter("account_id", "eq", self.account_id)
+                .filter("cluster_id", "eq", self.cluster)
+                .filter("deleted", "eq", False)
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to get existing nodes (supabase) error: {e}")
             self.handle_supabase_error()
-            raise Exception(msg)
+            raise
 
         return [
             NodeInfo(
@@ -288,7 +248,7 @@ class SupabaseDal:
                 external_ip=node["external_ip"],
                 node_info=json.loads(node["node_info"]),
             )
-            for node in res.get("data")
+            for node in res.data
         ]
 
     def __to_db_node(self, node: NodeInfo) -> Dict[Any, Any]:
@@ -303,29 +263,29 @@ class SupabaseDal:
             return
 
         db_nodes = [self.__to_db_node(node) for node in nodes]
-        res = self.client.table(NODES_TABLE).insert(db_nodes, upsert=True).execute()
-        if res.get("status_code") not in [200, 201]:
-            logging.error(f"Failed to persist node {nodes} error: {res.get('data')}")
+        try:
+            self.client.table(NODES_TABLE).upsert(db_nodes).execute()
+        except Exception as e:
+            logging.error(f"Failed to persist node {nodes} error: {e}")
             self.handle_supabase_error()
-            status_code = res.get("status_code")
-            raise Exception(f"publish nodes failed. status: {status_code}")
+            raise
 
     def get_active_jobs(self) -> List[JobInfo]:
-        res = (
-            self.client.table(JOBS_TABLE)
-            .select("*")
-            .filter("account_id", "eq", self.account_id)
-            .filter("cluster_id", "eq", self.cluster)
-            .filter("deleted", "eq", False)
-            .execute()
-        )
-        if res.get("status_code") not in [200]:
-            msg = f"Failed to get existing jobs (supabase) error: {res.get('data')}"
-            logging.error(msg)
+        try:
+            res = (
+                self.client.table(JOBS_TABLE)
+                .select("*")
+                .filter("account_id", "eq", self.account_id)
+                .filter("cluster_id", "eq", self.cluster)
+                .filter("deleted", "eq", False)
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to get existing jobs (supabase) error: {e}")
             self.handle_supabase_error()
-            raise Exception(msg)
+            raise
 
-        return [JobInfo.from_db_row(job) for job in res.get("data")]
+        return [JobInfo.from_db_row(job) for job in res.data]
 
     def __to_db_job(self, job: JobInfo) -> Dict[Any, Any]:
         db_job = job.dict()
@@ -340,48 +300,48 @@ class SupabaseDal:
             return
 
         db_jobs = [self.__to_db_job(job) for job in jobs]
-        res = self.client.table(JOBS_TABLE).insert(db_jobs, upsert=True).execute()
-        if res.get("status_code") not in [200, 201]:
-            logging.error(f"Failed to persist jobs {jobs} error: {res.get('data')}")
+        try:
+            self.client.table(JOBS_TABLE).upsert(db_jobs).execute()
+        except Exception as e:
+            logging.error(f"Failed to persist jobs {jobs} error: {e}")
             self.handle_supabase_error()
-            status_code = res.get("status_code")
-            raise Exception(f"publish jobs failed. status: {status_code}")
+            raise
 
     def remove_deleted_job(self, job: JobInfo):
         if not job:
             return
 
-        res = self.__delete_patch(
-            self.client.table(JOBS_TABLE)
-            .delete()
-            .eq("account_id", self.account_id)
-            .eq("cluster_id", self.cluster)
-            .eq("service_key", job.get_service_key())
-        )
-        status_code = res.get("status_code")
-        valid_deleted_statuses = [204, 200, 202]
-        if status_code not in valid_deleted_statuses:
-            logging.error(f"Failed to delete job {job} error: {res.get('data')}")
+        try:
+            (
+                self.client.table(JOBS_TABLE)
+                .delete()
+                .eq("account_id", self.account_id)
+                .eq("cluster_id", self.cluster)
+                .eq("service_key", job.get_service_key())
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to delete job {job} error: {e}")
             self.handle_supabase_error()
-            raise Exception(f"remove deleted job failed. status: {status_code}")
+            raise
 
     # helm release
     def get_active_helm_release(self) -> List[HelmRelease]:
-        res = (
-            self.client.table(HELM_RELEASES_TABLE)
-            .select("*")
-            .filter("account_id", "eq", self.account_id)
-            .filter("cluster_id", "eq", self.cluster)
-            .filter("deleted", "eq", False)
-            .execute()
-        )
-        if res.get("status_code") not in [200]:
-            msg = f"Failed to get existing helm releases (supabase) error: {res.get('data')}"
-            logging.error(msg)
+        try:
+            res = (
+                self.client.table(HELM_RELEASES_TABLE)
+                .select("*")
+                .filter("account_id", "eq", self.account_id)
+                .filter("cluster_id", "eq", self.cluster)
+                .filter("deleted", "eq", False)
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to get existing helm releases (supabase) error: {e}")
             self.handle_supabase_error()
-            raise Exception(msg)
+            raise
 
-        return [HelmRelease.from_db_row(helm_release) for helm_release in res.get("data")]
+        return [HelmRelease.from_db_row(helm_release) for helm_release in res.data]
 
     def __to_db_helm_release(self, helm_release: HelmRelease) -> Dict[Any, Any]:
         db_helm_release = helm_release.dict()
@@ -398,82 +358,20 @@ class SupabaseDal:
         db_helm_releases = [self.__to_db_helm_release(helm_release) for helm_release in helm_releases]
         logging.debug(f"[supabase] Publishing the helm_releases {db_helm_releases}")
 
-        res = self.client.table(HELM_RELEASES_TABLE).insert(db_helm_releases, upsert=True).execute()
-        if res.get("status_code") not in [200, 201]:
-            logging.error(f"Failed to persist helm_releases {helm_releases} error: {res.get('data')}")
+        try:
+            self.client.table(HELM_RELEASES_TABLE).upsert(db_helm_releases).execute()
+        except Exception as e:
+            logging.error(f"Failed to persist helm_releases {helm_releases} error: {e}")
             self.handle_supabase_error()
-            status_code = res.get("status_code")
-            raise Exception(f"publish helm_releases failed. status: {status_code}")
-
-    @staticmethod
-    def __delete_patch(supabase_request_obj: QueryRequestBuilder) -> Dict[str, Any]:
-        """
-        supabase_py's QueryBuilder has a bug for delete where the response 204 (no content)
-        is attempted to be converted to a json, which throws an error every time
-        """
-        url: str = str(supabase_request_obj.session.base_url).rstrip("/")
-
-        # postgres_py (which supabase cli uses) adds quotation marks around params with the characters ",.:()"
-        # supabase does not support this format
-        query: str = str(supabase_request_obj.session.params).replace("%22", "")
-        response = requests.delete(f"{url}?{query}", headers=supabase_request_obj.session.headers)
-        response_data = ""
-        try:
-            response_data = response.json()
-        except Exception:  # this can be okay if no data is expected
-            logging.debug("Failed to parse delete response data")
-
-        return {
-            "data": response_data,
-            "status_code": response.status_code,
-        }
-
-    def __rpc_patch(self, func_name: str, params: dict) -> Dict[str, Any]:
-        """
-        Supabase client is async. Sync impl of rpc call
-        """
-        builder = self.client.table(f"rpc/{func_name}")  # rpc builder
-        url: str = str(builder.session.base_url).rstrip("/")
-
-        response = requests.post(url, headers=builder.session.headers, json=params)
-        response_data = {}
-        try:
-            if response.content:
-                response_data = response.json()
-        except Exception:  # this can be okay if no data is expected
-            logging.debug("Failed to parse delete response data")
-
-        return {
-            "data": response_data,
-            "status_code": response.status_code,
-        }
-
-    def __upsert_do_nothing(self, table: str, params: dict) -> Dict[str, Any]:
-        """
-        Supabase client is async. Sync impl of rpc call
-        """
-        builder = self.client.table(table)  # rpc builder
-        url: str = str(builder.session.base_url).rstrip("/")
-        builder.session.headers["Prefer"] = "return=representation, resolution=ignore-duplicates"
-
-        response = requests.post(url, headers=builder.session.headers, json=params)
-        response_data = {}
-        try:
-            if response.content:
-                response_data = response.json()
-        except Exception:  # this can be okay if no data is expected
-            logging.debug("Failed to parse upsert_do_nothing response data")
-
-        return {
-            "data": response_data,
-            "status_code": response.status_code,
-        }
+            raise
 
     def sign_in(self):
         if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
             logging.info("Supabase dal login")
             self.sign_in_time = time.time()
-            self.client.auth.sign_in(email=self.email, password=self.password)
+            res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
+            self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
+            self.client.postgrest.auth(res.session.access_token)
 
     def handle_supabase_error(self):
         """Workaround for Gotrue bug in refresh token."""
@@ -500,31 +398,28 @@ class SupabaseDal:
         return db_cluster_status
 
     def publish_cluster_status(self, cluster_status: ClusterStatus):
-        res = (
-            self.client.table(CLUSTERS_STATUS_TABLE)
-            .insert(self.to_db_cluster_status(cluster_status), upsert=True)
-            .execute()
-        )
-        if res.get("status_code") not in [200, 201]:
-            logging.error(f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {res.get('data')}")
+        try:
+            (self.client.table(CLUSTERS_STATUS_TABLE).upsert(self.to_db_cluster_status(cluster_status)).execute())
+        except Exception as e:
+            logging.error(f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {e}")
             self.handle_supabase_error()
 
     def get_active_namespaces(self) -> List[NamespaceInfo]:
-        res = (
-            self.client.table(NAMESPACES_TABLE)
-            .select("*")
-            .filter("account_id", "eq", self.account_id)
-            .filter("cluster_id", "eq", self.cluster)
-            .filter("deleted", "eq", False)
-            .execute()
-        )
-        if res.get("status_code") not in [200]:
-            msg = f"Failed to get existing namespaces (supabase) error: {res.get('data')}"
-            logging.error(msg)
+        try:
+            res = (
+                self.client.table(NAMESPACES_TABLE)
+                .select("*")
+                .filter("account_id", "eq", self.account_id)
+                .filter("cluster_id", "eq", self.cluster)
+                .filter("deleted", "eq", False)
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to get existing namespaces (supabase) error: {e}")
             self.handle_supabase_error()
-            raise Exception(f"get active namespaces failed. status: {res.get('status_code')}")
+            raise
 
-        return [NamespaceInfo.from_db_row(namespace) for namespace in res.get("data")]
+        return [NamespaceInfo.from_db_row(namespace) for namespace in res.data]
 
     def __to_db_namespace(self, namespace: NamespaceInfo) -> Dict[Any, Any]:
         db_job = namespace.dict()
@@ -538,12 +433,12 @@ class SupabaseDal:
             return
 
         db_namespaces = [self.__to_db_namespace(namespace) for namespace in namespaces]
-        res = self.client.table(NAMESPACES_TABLE).insert(db_namespaces, upsert=True).execute()
-        if res.get("status_code") not in [200, 201]:
-            logging.error(f"Failed to persist namespaces {namespaces} error: {res.get('data')}")
+        try:
+            self.client.table(NAMESPACES_TABLE).upsert(db_namespaces).execute()
+        except Exception as e:
+            logging.error(f"Failed to persist namespaces {namespaces} error: {e}")
             self.handle_supabase_error()
-            status_code = res.get("status_code")
-            raise Exception(f"publish namespaces failed. status: {status_code}")
+            raise
 
     def publish_cluster_nodes(self, node_count: int):
         data = {
@@ -551,10 +446,11 @@ class SupabaseDal:
             "_cluster_id": self.cluster,
             "_node_count": node_count,
         }
-        res = self.__rpc_patch(UPDATE_CLUSTER_NODE_COUNT, data)
-
-        if res.get("status_code") not in [200, 201, 204]:
-            logging.error(f"Failed to publish node count {data} error: {res.get('data')}")
+        try:
+            # new rpc can be used with void rpcs or rpcs with ResponseAPI interface.
+            self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data).execute()
+        except Exception as e:
+            logging.error(f"Failed to publish node count {data} error: {e}")
             self.handle_supabase_error()
 
         logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
@@ -567,12 +463,12 @@ class SupabaseDal:
             row["cluster_id"] = self.cluster
             db_events.append(row)
 
-        res = self.__upsert_do_nothing(RESOURCE_EVENTS, db_events)
-        if res.get("status_code") not in [200, 201]:
-            msg = f"Failed to persist resource events error: {res.get('data')}"
-            logging.error(msg)
+        try:
+            self.client.table(RESOURCE_EVENTS).upsert(db_events, ignore_duplicates=True).execute()
+        except Exception as e:
+            logging.error(f"Failed to persist resource events error: {e}")
             self.handle_supabase_error()
-            raise Exception(msg)
+            raise
 
     def persist_platform_blocks(self, enrichment: Enrichment, finding_id):
         blocks = enrichment.blocks
@@ -583,3 +479,29 @@ class SupabaseDal:
                 blocks[i] = EventsRef(name=event.name, namespace=event.namespace, kind=event.kind.lower())
             if isinstance(block, ScanReportBlock):
                 self.persist_scan(block)
+
+    def __rpc_patch(self, func_name: str, params: dict) -> Dict[str, Any]:
+        """
+        Supabase client is async. Sync impl of rpc call
+        """
+        headers = self.client.table("").session.headers
+        url: str = f"{self.client.rest_url}/rpc/{func_name}"
+
+        response = requests.post(url, headers=headers, json=params)
+        response.raise_for_status()
+        response_data = {}
+        try:
+            if response.content:
+                response_data = response.json()
+        except Exception:  # this can be okay if no data is expected
+            logging.debug("Failed to parse rpc response data")
+
+        return {
+            "data": response_data,
+            "status_code": response.status_code,
+        }
+
+    def __update_token_patch(self, event, session):
+        logging.debug(f"Event {event}, Session {session}")
+        if session and event == "TOKEN_REFRESHED":
+            self.client.postgrest.auth(session.access_token)
