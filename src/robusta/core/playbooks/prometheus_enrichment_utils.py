@@ -50,7 +50,7 @@ def run_prometheus_query(
         raise Exception("Invalid timerange specified for the prometheus query.")
 
     if prometheus_params.prometheus_additional_labels and prometheus_params.add_additional_labels:
-        promql_query = promql_query.replace("}", __get_additional_labels_str(prometheus_params))
+        promql_query = promql_query.replace("}", __get_additional_labels_str(prometheus_params) + "}")
 
     query_duration = ends_at - starts_at
     resolution = get_resolution_from_duration(query_duration)

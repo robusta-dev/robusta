@@ -93,6 +93,7 @@ class PrometheusParams(ActionParams):
     :var prometheus_auth: Prometheus auth header to be used in Authorization header. If omitted, we will not add any auth header
     :var prometheus_url_query_string: Additional query string parameters to be appended to the Prometheus connection URL
     :var prometheus_additional_labels: A dictionary of additional labels needed for multi-cluster prometheus
+    :var add_additional_labels: adds the additional labels (if defined) to the query
 
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     :example prometheus_auth: Basic YWRtaW46cGFzc3dvcmQ=
@@ -107,6 +108,7 @@ class PrometheusParams(ActionParams):
     prometheus_auth: Optional[SecretStr] = None
     prometheus_url_query_string: Optional[str] = None
     prometheus_additional_labels: Optional[Dict[str, str]] = None
+    add_additional_labels: bool = True
 
     @validator("prometheus_url", allow_reuse=True)
     def validate_protocol(cls, v):
@@ -147,13 +149,11 @@ class PrometheusDateRange(BaseModel):
 class PrometheusQueryParams(PrometheusParams):
     """
     :var promql_query: the prometheusql query you want to run
-    :var add_additional_labels: adds the additional labels (if defined) to the query
     :var duration: the duration of the query
 
     """
 
     promql_query: str
-    add_additional_labels: bool = True
     duration: Union[PrometheusDateRange, PrometheusDuration]
 
 

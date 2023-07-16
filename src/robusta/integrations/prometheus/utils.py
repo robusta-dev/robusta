@@ -25,7 +25,7 @@ AZURE_METADATA_ENDPOINT = os.environ.get(
 AZURE_TOKEN_ENDPOINT = os.environ.get(
     "AZURE_TOKEN_ENDPOINT", f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/token"
 )
-CORLOGIX_PROMETHEUS_TOKEN = os.environ.get("CORLOGIX_PROMETHEUS_TOKEN")
+CORALOGIX_PROMETHEUS_TOKEN = os.environ.get("CORALOGIX_PROMETHEUS_TOKEN")
 
 
 class PrometheusAuthorization:
@@ -36,8 +36,8 @@ class PrometheusAuthorization:
 
     @classmethod
     def get_authorization_headers(cls, params: Optional[PrometheusParams] = None) -> Dict:
-        if CORLOGIX_PROMETHEUS_TOKEN:
-            return {"token": CORLOGIX_PROMETHEUS_TOKEN}
+        if CORALOGIX_PROMETHEUS_TOKEN:
+            return {"token": CORALOGIX_PROMETHEUS_TOKEN}
         elif params and params.prometheus_auth:
             return {"Authorization": params.prometheus_auth.get_secret_value()}
         elif cls.azure_authorization:
@@ -127,7 +127,7 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
             params={"query": "example", **params},
         )
 
-        if response.status_code == 401:
+        if response.status_code in (401, 400):
             if PrometheusAuthorization.request_new_token():
                 prom.headers = PrometheusAuthorization.get_authorization_headers()
                 response = prom._session.get(
