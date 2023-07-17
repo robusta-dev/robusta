@@ -448,7 +448,7 @@ class EventRow(BaseModel):
     message: Optional[str]
     kind: str
     name: str
-    namespace: str
+    namespace: Optional[str]
     time: Optional[str]
 
 
@@ -485,6 +485,6 @@ class EventsBlock(TableBlock):
 
 
 class EventsRef(BaseModel):
-    namespace: str
+    namespace: Optional[str]
     name: str
     kind: str
