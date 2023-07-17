@@ -3,7 +3,9 @@ import os
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 import requests
+from botocore.auth import SigV4Auth
 from cachetools import TTLCache
+from prometheus_api_client import PrometheusApiClientException
 from requests.exceptions import ConnectionError, HTTPError
 from requests.sessions import merge_setting
 
@@ -13,6 +15,7 @@ from robusta.core.exceptions import (
     PrometheusNotFound,
     VictoriaMetricsNotFound,
 )
+from robusta.core.external_apis.prometheus.custom_connect import AWSPrometheusConnect
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.common import parse_query_string
@@ -26,6 +29,10 @@ AZURE_TOKEN_ENDPOINT = os.environ.get(
     "AZURE_TOKEN_ENDPOINT", f"https://login.microsoftonline.com/{os.environ.get('AZURE_TENANT_ID')}/oauth2/token"
 )
 CORALOGIX_PROMETHEUS_TOKEN = os.environ.get("CORALOGIX_PROMETHEUS_TOKEN")
+AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+AWS_SERVICE_NAME = os.environ.get("AWS_SERVICE_NAME")
+AWS_REGION = os.environ.get("AWS_REGION")
 
 
 class PrometheusAuthorization:
@@ -104,8 +111,18 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
         raise NoPrometheusUrlFound("Prometheus url could not be found. Add 'prometheus_url' under global_config")
 
     headers = PrometheusAuthorization.get_authorization_headers(prometheus_params)
-
-    prom = PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
+    if AWS_ACCESS_KEY:
+        prom = AWSPrometheusConnect(
+            access_key=AWS_ACCESS_KEY,
+            secret_key=AWS_SECRET_ACCESS_KEY,
+            service_name=AWS_SERVICE_NAME,
+            region=AWS_REGION,
+            url=url,
+            disable_ssl=not PROMETHEUS_SSL_ENABLED,
+            headers=headers,
+        )
+    else:
+        prom = PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
     query_string_params = parse_query_string(prometheus_params.prometheus_url_query_string)
     prom._session.params = merge_setting(prom._session.params, query_string_params)
 
@@ -116,14 +133,18 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
     params = params or {}
     try:
         prom.headers = PrometheusAuthorization.get_authorization_headers()
-        response = prom._session.get(
-            f"{prom.url}/api/v1/query",
-            verify=prom.ssl_verification,
-            headers=prom.headers,
-            # This query should return empty results, but is correct
-            params={"query": "example", **params},
-        )
-
+        if isinstance(prom, AWSPrometheusConnect):
+            # will throw exception if not 200
+            return prom.custom_query(query="example")
+        else:
+            response = prom._session.get(
+                f"{prom.url}/api/v1/query",
+                verify=prom.ssl_verification,
+                headers=prom.headers,
+                # This query should return empty results, but is correct
+                params={"query": "example", **params},
+                context={},
+            )
         if response.status_code == 401:
             if PrometheusAuthorization.request_new_token():
                 prom.headers = PrometheusAuthorization.get_authorization_headers()
@@ -135,7 +156,7 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
                 )
 
         response.raise_for_status()
-    except (ConnectionError, HTTPError) as e:
+    except (ConnectionError, HTTPError, PrometheusApiClientException) as e:
         raise PrometheusNotFound(
             f"Couldn't connect to Prometheus found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
         ) from e

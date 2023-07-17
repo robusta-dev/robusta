@@ -4,18 +4,27 @@ import time
 
 from pydantic import BaseModel
 
-from robusta.core.exceptions import NoPrometheusUrlFound, NoAlertManagerUrlFound, PrometheusFlagsConnectionError, \
-    PrometheusNotFound, VictoriaMetricsNotFound, AlertsManagerNotFound
-from robusta.core.model.env_vars import PROMETHEUS_ERROR_LOG_PERIOD_SEC
-from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags, \
-    check_prometheus_connection
+from robusta.core.exceptions import (
+    AlertsManagerNotFound,
+    NoAlertManagerUrlFound,
+    NoPrometheusUrlFound,
+    PrometheusFlagsConnectionError,
+    PrometheusNotFound,
+    VictoriaMetricsNotFound,
+)
 from robusta.core.model.base_params import PrometheusParams
+from robusta.core.model.env_vars import PROMETHEUS_ERROR_LOG_PERIOD_SEC
+from robusta.integrations.prometheus.utils import (
+    check_prometheus_connection,
+    get_prometheus_connect,
+    get_prometheus_flags,
+)
 from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_silences_connection
 
 
 class PrometheusHealthStatus(BaseModel):
     prometheus: bool = True
-    prometheus_retention_time: str = ''
+    prometheus_retention_time: str = ""
     alertmanager: bool = True
 
 
@@ -53,6 +62,7 @@ class PrometheusHealthChecker:
 
             prometheus_params = PrometheusParams(**global_config)
             prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
+
             check_prometheus_connection(prom=prometheus_connection, params={})
 
             self.status.prometheus = True
@@ -60,22 +70,25 @@ class PrometheusHealthChecker:
             if self.__check_prometheus_flags:
                 prometheus_flags = get_prometheus_flags(prom=prometheus_connection)
                 if prometheus_flags:
-                    self.status.prometheus_retention_time = prometheus_flags.get('retentionTime', "")
+                    self.status.prometheus_retention_time = prometheus_flags.get("retentionTime", "")
 
             self.__check_prometheus_flags = False
 
         except Exception as e:
-            if isinstance(e, NoPrometheusUrlFound) \
-                    or isinstance(e, PrometheusNotFound) \
-                    or isinstance(e, VictoriaMetricsNotFound):
+            if (
+                isinstance(e, NoPrometheusUrlFound)
+                or isinstance(e, PrometheusNotFound)
+                or isinstance(e, VictoriaMetricsNotFound)
+            ):
                 self.status.prometheus = False
 
             self.status.prometheus_retention_time = ""
 
             if time.time() - self.__last_prometheus_error_log_time > self.__prometheus_error_log_period_sec:
                 self.__last_prometheus_error_log_time = time.time()
-                prometheus_connection_error = isinstance(e, NoPrometheusUrlFound) \
-                                              or isinstance(e, PrometheusFlagsConnectionError)
+                prometheus_connection_error = isinstance(e, NoPrometheusUrlFound) or isinstance(
+                    e, PrometheusFlagsConnectionError
+                )
 
                 msg = f"{e}" if prometheus_connection_error else f"Failed to connect to prometheus. {e}"
                 logging.error(msg, exc_info=not prometheus_connection_error)
@@ -90,8 +103,7 @@ class PrometheusHealthChecker:
             self.status.alertmanager = True
 
         except Exception as e:
-            if isinstance(e, NoAlertManagerUrlFound) \
-                    or isinstance(e, AlertsManagerNotFound):
+            if isinstance(e, NoAlertManagerUrlFound) or isinstance(e, AlertsManagerNotFound):
                 self.status.alertmanager = False
 
             if time.time() - self.__last_alertmanager_error_log_time > self.__prometheus_error_log_period_sec:

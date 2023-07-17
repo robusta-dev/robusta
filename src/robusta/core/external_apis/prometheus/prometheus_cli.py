@@ -1,8 +1,9 @@
-from datetime import datetime
 from typing import Any, Dict, Optional
 
+from botocore.auth import *
 from prometheus_api_client import PrometheusApiClientException
 
+from robusta.core.external_apis.prometheus.custom_connect import AWSPrometheusConnect
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.core.model.base_params import PrometheusParams
 from robusta.integrations.prometheus.utils import check_prometheus_connection, get_prometheus_connect
@@ -13,9 +14,8 @@ git repo: https://github.com/4n4nd/prometheus-api-client-python
 It used to return only the result and not the resultType leading for less safe and clear code
 """
 
+
 # TODO: Replace this with our own prometheus client that handles return types and errors better
-
-
 def custom_query_range(
     prometheus_params: PrometheusParams,
     query: str,
@@ -45,10 +45,14 @@ def custom_query_range(
     end = round(end_time.timestamp())
     params = params or {}
 
+    if isinstance(prom, AWSPrometheusConnect):
+        return prom.custom_query_range(prometheus_params, query, start_time, end_time, step, params)
+
     check_prometheus_connection(prom=prom, params=params)
 
     prometheus_result = None
     query = str(query)
+
     # using the query_range API to get raw data
     response = prom._session.get(
         "{0}/api/v1/query_range".format(prom.url),
