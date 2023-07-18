@@ -97,7 +97,7 @@ def drain(event: NodeEvent):
     event.add_enrichment(
         [
             MarkdownBlock(
-                f"Drain node {node.metadata.name} \n Evicting {evicting} pod(s), deleting {deleting} pod(s), skipping {skipping} pod(s) and {errors} Error(s)."
+                f"Drain node {node.metadata.name} \nEvicting {evicting} pod(s), deleting {deleting} pod(s), skipping {skipping} pod(s) and {errors} Error(s)."
             ),
             FileBlock(
                 filename=f"Drain {node.metadata.name} report.log",
