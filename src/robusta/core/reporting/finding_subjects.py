@@ -17,7 +17,12 @@ class KubeObjFindingSubject(FindingSubject):
         if not finding_subject_type:
             finding_subject_type = FindingSubjectType.from_kind(obj.kind)
         super(KubeObjFindingSubject, self).__init__(
-            obj.metadata.name, finding_subject_type, obj.metadata.namespace, node_name
+            name=obj.metadata.name,
+            subject_type=finding_subject_type,
+            namespace=obj.metadata.namespace,
+            node=node_name,
+            labels=obj.metadata.labels,
+            annotations=obj.metadata.annotations,
         )
 
     @staticmethod
@@ -38,8 +43,10 @@ class KubeObjFindingSubject(FindingSubject):
 class PodFindingSubject(FindingSubject):
     def __init__(self, pod: Pod = None):
         super(PodFindingSubject, self).__init__(
-            pod.metadata.name,
-            FindingSubjectType.TYPE_POD,
-            pod.metadata.namespace,
-            pod.spec.nodeName,
+            name=pod.metadata.name,
+            subject_type=FindingSubjectType.TYPE_POD,
+            namespace=pod.metadata.namespace,
+            node=pod.spec.nodeName,
+            labels=pod.metadata.labels,
+            annotations=pod.metadata.annotations,
         )
