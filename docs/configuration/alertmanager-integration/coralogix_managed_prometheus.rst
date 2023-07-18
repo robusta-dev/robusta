@@ -16,6 +16,9 @@ A pull integration lets Robusta pull metrics from Coralogix Managed Prometheus.
   # this line should already exist
   globalConfig:
       prometheus_url: "<YOUR_PROM_API_LINK_HERE>" #for example https://prom-api.coralogix.com
+      # To add any labels that are relevant to the specific cluster uncomment and change the lines below (optional)
+      # prometheus_additional_labels:
+      #   cluster: 'CLUSTER_NAME_HERE'
 
 3. On the Coralogix site, go to Data Flow -> Api Keys and copy the 'Logs Query Key'
 
