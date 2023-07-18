@@ -121,7 +121,7 @@ class Filterable:
 
     @staticmethod
     def __value_match(value: Union[str, Dict[str, str]], expression: Union[str, Dict]) -> bool:
-        if isinstance(value, str):
+        if isinstance(value, str) and isinstance(expression, str):
             return bool(re.match(expression, value))
         elif isinstance(value, Dict) and isinstance(expression, Dict):  # value is Dict[str, str], expression is a Dict
             return expression.items() <= value.items()
