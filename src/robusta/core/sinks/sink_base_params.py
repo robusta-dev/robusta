@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 from pydantic import BaseModel, root_validator
 
@@ -31,16 +31,6 @@ class SinkBaseParams(BaseModel):
             return [cls.__selectors_dict(matcher) for matcher in matchers]
         else:
             return cls.__selectors_dict(matchers)
-
-    @classmethod
-    def __parse_matcher(cls, matcher_attr) -> Optional[Union[Dict, List[Dict]]]:
-        if isinstance(matcher_attr, str):
-            return cls.__selectors_dict(matcher_attr)
-        elif isinstance(matcher_attr, List):
-            return [cls.__selectors_dict(selector) for selector in matcher_attr]
-        else:
-            logging.error(f"Illegal matcher type {matcher_attr}. Matcher will be ignored")
-        return {}
 
     @staticmethod
     def __selectors_dict(selectors: str) -> Dict:
