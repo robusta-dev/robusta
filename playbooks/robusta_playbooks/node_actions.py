@@ -67,6 +67,7 @@ def drain(event: NodeEvent):
         )
 
     msg = ""
+    evicting = skipping = deleting = errors = 0
     for pod in pods.items:
         name = pod.metadata.name
         namespace = pod.metadata.namespace
@@ -74,22 +75,33 @@ def drain(event: NodeEvent):
         owner_list: List[V1OwnerReference] = pod.metadata.owner_references if pod.metadata.owner_references else []
         if any(owner.kind == "DaemonSet" for owner in owner_list):
             msg += f"Skipping {namespace}/DaemonSet/{name}\n"
+            skipping += 1
             continue
 
         try:
             body = client.V1Eviction(metadata=client.V1ObjectMeta(name=name, namespace=namespace))
             api.create_namespaced_pod_eviction(name, namespace, body, pretty="True")
-            action = "Evicting" if owner_list else "Deleting"
+            action = "Evicting"
+            if owner_list:
+                evicting += 1
+            else:
+                action = "Deleting"
+                deleting += 1
+
             msg += f"{action} {namespace}/Pod/{name}\n"
         except Exception as e:
             msg += f"Error evicting {namespace}/Pod/{name} {e}\n"
+            errors += 1
             continue
 
     event.add_enrichment(
         [
+            MarkdownBlock(
+                f"Drain node {node.metadata.name} \n Evicting {evicting} pod(s), deleting {deleting} pod(s), skipping {skipping} pod(s) and {errors} Error(s)."
+            ),
             FileBlock(
                 filename=f"Drain {node.metadata.name} report.log",
                 contents=f"drain node {node.metadata.name} \n\n{msg}".encode(),
-            )
+            ),
         ]
     )
