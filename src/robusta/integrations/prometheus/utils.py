@@ -92,12 +92,8 @@ if TYPE_CHECKING:
 
 
 def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusConnect":
-    import urllib3
     from prometheus_api_client import PrometheusConnect
 
-    # urllib3 will spam a warning if this is disabled
-    if not PROMETHEUS_SSL_ENABLED:
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     url: Optional[str] = (
         prometheus_params.prometheus_url
         if prometheus_params.prometheus_url
