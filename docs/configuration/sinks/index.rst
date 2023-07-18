@@ -19,6 +19,7 @@ Sinks Reference
    Opsgenie
    PagerDuty
    VictorOps
+   YandexMessenger
    jira
    webhook
    file
@@ -90,6 +91,11 @@ Click a sink for setup instructions.
     .. grid-item-card:: :octicon:`cpu;1em;` VictorOps
         :class-card: sd-bg-light sd-bg-text-light
         :link: VictorOps
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Yandex Messenger
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: YandexMessenger
         :link-type: doc
 
     .. grid-item-card:: :octicon:`cpu;1em;` Jira
