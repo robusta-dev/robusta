@@ -115,6 +115,7 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
 def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
     params = params or {}
     try:
+        prom.headers = PrometheusAuthorization.get_authorization_headers()
         response = prom._session.get(
             f"{prom.url}/api/v1/query",
             verify=prom.ssl_verification,
