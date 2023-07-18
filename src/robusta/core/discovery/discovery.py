@@ -409,6 +409,12 @@ class Discovery:
         except Exception:
             logging.error("Failed to count jobs", exc_info=True)
 
+        k8s_version: str = None
+        try:
+            k8s_version = client.VersionApi().get_code().git_version
+        except Exception:
+            logging.exception("Failed to get k8s server version")
+
         return ClusterStats(
             deployments=deploy_count,
             statefulsets=sts_count,
@@ -418,6 +424,7 @@ class Discovery:
             nodes=node_count,
             jobs=job_count,
             provider=cluster_provider.get_cluster_provider(),
+            k8s_version=k8s_version
         )
 
 
