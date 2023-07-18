@@ -45,45 +45,50 @@ A push integration sends Coralogix alerts to Robusta.
 To configure it:
 
 1. In the Coralogix site go to Data Flow and in the Webhook section click ``Webhook``.
-2. In the url put https://api.robusta.dev/integrations/generic/alertmanager
-4. Select the Post Method
+2. In the url insert:
+
+.. code-block::
+
+    https://api.robusta.dev/integrations/generic/alertmanager
+
+3. Select the Post Method.
 4. In the Edit headers replace it with
 
 .. code-block:: json
 
-{
-  "Content-Type": "application/json",
-  "Authorization": "Bearer <TOKEN>" # where token is '<ACCOUNT_ID> <SIGNING_KEY>'
-}
+    {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer <TOKEN>" # where token is '<ACCOUNT_ID> <SIGNING_KEY>'
+    }
 
 5. In Edit body add
 
 .. code-block:: json
 
-{
-  "externalURL": "",
-  "groupKey": "{}/{}:{}",
-  "version": "1",
-  "status": "firing",
-  "receiver": "robusta receiver",
-  "alerts": [
     {
-      "description": "$ALERT_DESCRIPTION",
+      "externalURL": "",
+      "groupKey": "{}/{}:{}",
+      "version": "1",
       "status": "firing",
-      "endsAt": "$EVENT_TIMESTAMP_MS",
-      "startsAt": "$EVENT_TIMESTAMP_MS",
-      "generatorURL": "$ALERT_URL",
-      "annotations": {},
-      "labels": {
-        "cluster_name": "MY_CLUSTER_NAME", # make sure to add your cluster name here for this webhook
-        "alertname": "$ALERT_NAME",
-        "alert_url": "$ALERT_URL"
-        # Add any additional alert specific fields here
-        # see here for more parameters https://coralogix.com/docs/alert-webhooks/#custom-alert-webhooks
-      }
+      "receiver": "robusta receiver",
+      "alerts": [
+        {
+          "description": "$ALERT_DESCRIPTION",
+          "status": "firing",
+          "endsAt": "$EVENT_TIMESTAMP_MS",
+          "startsAt": "$EVENT_TIMESTAMP_MS",
+          "generatorURL": "$ALERT_URL",
+          "annotations": {},
+          "labels": {
+            "cluster_name": "MY_CLUSTER_NAME", # make sure to add your cluster name here for this webhook
+            "alertname": "$ALERT_NAME",
+            "alert_url": "$ALERT_URL"
+            # Add any additional alert specific fields here
+            # see here for more parameters https://coralogix.com/docs/alert-webhooks/#custom-alert-webhooks
+          }
+        }
+      ]
     }
-  ]
-}
 
 6. Click the 'Test Config' button and check your robusta sinks that you received an alert
 7. Click Save
