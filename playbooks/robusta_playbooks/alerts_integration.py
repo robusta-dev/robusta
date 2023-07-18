@@ -456,10 +456,10 @@ def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
 
 class ForeignLogParams(LogEnricherParams):
     """
-    :var selectors: List of specific label selectors to retrieve logs from
+    :var label_selectors: List of specific label selectors to retrieve logs from
     """
 
-    selectors: List[str]
+    label_selectors: List[str]
 
 
 @action
@@ -475,7 +475,7 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
 
     logging.info(f"received a foreign_logs_enricher action: {params}")
 
-    for selector in params.selectors:
+    for selector in params.label_selectors:
         try:
             pods: V1PodList = api.list_pod_for_all_namespaces(label_selector=selector)
             if pods.items:
@@ -488,7 +488,7 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
                 )
 
     if not matching_pods:
-        logging.warning(f"[foreign_logs_enricher] failed to find any matching pods for the selectors: {params.selectors}")
+        logging.warning(f"[foreign_logs_enricher] failed to find any matching pods for the selectors: {params.label_selectors}")
         return
     for matching_pod in matching_pods:
         pod = RobustaPod().read(matching_pod.metadata.name, matching_pod.metadata.namespace)
