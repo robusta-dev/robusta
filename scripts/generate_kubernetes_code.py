@@ -167,6 +167,8 @@ def autogenerate_events(f: TextIO):
                     subject_type=FindingSubjectType.from_kind(self.obj.kind),
                     namespace=self.obj.metadata.namespace,
                     node=KubeObjFindingSubject.get_node_name(self.obj),
+                    labels=self.obj.metadata.labels,
+                    annotations=self.obj.metadata.annotations,
                 )
 
             @classmethod
@@ -245,6 +247,8 @@ def autogenerate_events(f: TextIO):
                         subject_type=FindingSubjectType.from_kind(self.obj.kind),
                         namespace=self.obj.metadata.namespace,
                         node=KubeObjFindingSubject.get_node_name(self.obj),
+                        labels=self.obj.metadata.labels,
+                        annotations=self.obj.metadata.annotations,
                     )
 
 
@@ -263,6 +267,8 @@ def autogenerate_events(f: TextIO):
                         subject_type=FindingSubjectType.from_kind(self.obj.kind),
                         namespace=self.obj.metadata.namespace,
                         node=KubeObjFindingSubject.get_node_name(self.obj),
+                        labels=self.obj.metadata.labels,
+                        annotations=self.obj.metadata.annotations,
                     )
 
 

@@ -106,18 +106,28 @@ class Enrichment:
 
 class Filterable:
     @property
-    def attribute_map(self) -> Dict[str, str]:
+    def attribute_map(self) -> Dict[str, Union[str, Dict[str, str]]]:
         raise NotImplementedError
 
     def get_invalid_attributes(self, attributes: List[str]) -> List:
         return list(set(attributes) - set(self.attribute_map))
 
-    def attribute_matches(self, attribute: str, expression: Union[str, List[str]]) -> bool:
-        value = self.attribute_map[attribute]
-        if isinstance(expression, str):
-            return bool(re.match(expression, value))
+    def attribute_matches(self, attribute: str, expression: Union[str, List[str], Dict, List[Dict]]) -> bool:
+        value: Union[str, Dict[str, str]] = self.attribute_map[attribute]
+        if isinstance(expression, str) or isinstance(expression, Dict):
+            return Filterable.__value_match(value, expression)
         else:  # expression is list of values
-            return value in expression
+            return any([Filterable.__value_match(value, single_exp) for single_exp in expression])
+
+    @staticmethod
+    def __value_match(value: Union[str, Dict[str, str]], expression: Union[str, Dict]) -> bool:
+        if isinstance(value, str) and isinstance(expression, str):
+            return bool(re.match(expression, value))
+        elif isinstance(value, Dict) and isinstance(expression, Dict):  # value is Dict[str, str], expression is a Dict
+            return expression.items() <= value.items()
+        else:
+            logging.error(f"Failed to evaluate matcher. Finding value: {value} matcher: {expression}")
+            return False
 
     def matches(self, requirements: Dict[str, Union[str, List[str]]]) -> bool:
         invalid_attributes = self.get_invalid_attributes(list(requirements.keys()))
@@ -139,12 +149,16 @@ class FindingSubject:
         namespace: str = None,
         node: str = None,
         container: Optional[str] = None,
+        labels: Optional[Dict[str, str]] = None,
+        annotations: Optional[Dict[str, str]] = None,
     ):
         self.name = name
         self.subject_type = subject_type
         self.namespace = namespace
         self.node = node
         self.container = container
+        self.labels = labels or {}
+        self.annotations = annotations or {}
 
     def __str__(self):
         if self.namespace is not None:
@@ -202,7 +216,7 @@ class Finding(Filterable):
         self.dirty = False
 
     @property
-    def attribute_map(self) -> Dict[str, str]:
+    def attribute_map(self) -> Dict[str, Union[str, Dict[str, str]]]:
         return {
             "title": str(self.title),
             "identifier": str(self.aggregation_key),
@@ -213,6 +227,8 @@ class Finding(Filterable):
             "namespace": str(self.subject.namespace),
             "node": str(self.subject.node),
             "name": str(self.subject.name),
+            "labels": self.subject.labels,
+            "annotations": self.subject.annotations,
         }
 
     def _map_service_to_uri(self):
