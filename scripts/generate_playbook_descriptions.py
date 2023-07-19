@@ -1,3 +1,12 @@
+# This script loads and inspects playbooks from a given directory. It defines a `PlaybookDescription` class that stores information about a playbook function, including its name, documentation, source code, and parameters. The script also includes functions for inspecting the signature of a playbook function to extract information about its parameters and generating a JSON schema for the parameters.
+
+# The `load_scripts` function takes in the path to the root directory containing the playbooks as an argument. It searches for all Python files in the directory and attempts to load them as modules. For each loaded module, it searches for functions that have been decorated with the `__playbook` attribute and extracts information about them using the `PlaybookDescription` class. The resulting descriptions are printed to the console in JSON format.
+
+# The `main` function sets up an argument parser to accept the path to the playbooks directory as a command-line argument and calls the `load_scripts` function with the provided path.
+
+# This script can be used to generate documentation for a collection of playbooks by providing it with the path to the directory containing the playbooks. The resulting JSON output can be further processed to generate human-readable documentation in various formats.
+
+
 import argparse
 import glob
 import importlib
