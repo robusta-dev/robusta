@@ -12,6 +12,7 @@ Integrating with Prometheus
    alert-manager
    outofcluster-prometheus
    azure-managed-prometheus
+   coralogix_managed_prometheus
    victoria-metrics
    grafana-alert-manager
    embedded-prometheus
@@ -55,6 +56,13 @@ Setup Instructions
         :link-type: doc
 
         Special instructions when using Azure Managed Prometheus
+
+    .. grid-item-card:: :octicon:`book;1em;` Coralogix Managed Prometheus
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: coralogix_managed_prometheus
+        :link-type: doc
+
+        Special instructions when using Coralogix Managed Prometheus
 
     .. grid-item-card:: :octicon:`book;1em;` Victoria Metrics
         :class-card: sd-bg-light sd-bg-text-light
