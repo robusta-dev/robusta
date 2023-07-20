@@ -13,6 +13,10 @@ To configure it, add the following to ``generated_values.yaml`` and :ref:`update
         grafana_url: ""
         prometheus_url: "http://PROMETHEUS_SERVICE_NAME.NAMESPACE.svc.cluster.local:9090" # (2)
 
+        # Add any labels that are relevant to the specific cluster (optional)
+        # prometheus_additional_labels:
+        #   cluster: 'CLUSTER_NAME_HERE'
+
 .. code-annotations::
     1. Example: http://alertmanager-Helm_release_name-kube-prometheus-alertmanager.default.svc.cluster.local:9093.
     2. Example: http://Helm_Release_Name-kube-prometheus-prometheus.default.svc.cluster.local:9090
