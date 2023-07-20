@@ -3,6 +3,7 @@ from typing import Optional, List
 from kubernetes import client, config
 import time
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, MAX_ALLOWED_RULES_PER_CRD_ALERT
+from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
 from robusta.core.sinks.robusta.rrm.types import AccountResource, BaseResourceManager, ResourceEntry, ResourceKind
 from robusta.utils.common import index_of
 
@@ -20,9 +21,10 @@ CRD_PARAMS = {
 
 
 class PrometheusAlertResourceManager(BaseResourceManager):
-    def __init__(self) -> None:
+    def __init__(self, dal: AccountResourceFetcher, account_id: str) -> None:
         super().__init__(ResourceKind.PrometheusAlert)
-
+        self.dal = dal
+        self.account_id = account_id
         self.init_resources_max_attempts = 3
         self.__cdr_slots_len: List[int] = []
         config.load_kube_config()
@@ -89,15 +91,26 @@ class PrometheusAlertResourceManager(BaseResourceManager):
 
         for itr in range(0, self.init_resources_max_attempts):
             try:
+                # fetch the account information
+                account = self.dal.get_account(account_id=self.account_id)
+
+                # if the alerts config has been installed for the cluster
+                # then loop through the whole prometheus rules crds and delete them since they are already present
+                # on the supabase db
+                has_alerts_config_installed = False
+                if account:
+                    has_alerts_config_installed = account.has_alerts_config_installed
+
                 # fetch the available crd files and then delete them in the first run
                 crd_obj = self.__k8_api.list_namespaced_custom_object(
                     **CRD_PARAMS,
-                    label_selector="release.app=robusta-resource-management",
+                    label_selector="release.app=robusta-resource-management" if not has_alerts_config_installed else ""
                 )
 
                 items = crd_obj["items"]
                 for obj in items:
                     name = obj["metadata"]["name"]
+
                     self.__k8_api.delete_namespaced_custom_object(
                         **CRD_PARAMS,
                         name=name,
@@ -129,7 +142,8 @@ class PrometheusAlertResourceManager(BaseResourceManager):
         name = PrometheusAlertResourceManager.__crd_name(slot)
 
         rule = resource.resource_state.get('rule', {})
-        rule = {**rule, "labels": {**rule.get("labels", {}), "entity_id": resource.entity_id}}
+        labels = rule.get("labels", {}) or {}
+        rule = {**rule, "labels": {**labels, "entity_id": resource.entity_id}}
 
         crd_obj = None
         try:
@@ -175,7 +189,8 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 return
 
             rule = resource.resource_state.get('rule', {})
-            rule = {**rule, "labels": {**rule.get("labels", {}), "entity_id": resource.entity_id}}
+            labels = rule.get("labels", {}) or {}
+            rule = {**rule, "labels": {**labels, "entity_id": resource.entity_id}}
             crd_obj["spec"]["groups"][0]["rules"][index] = rule
 
             self.__k8_api.replace_namespaced_custom_object(

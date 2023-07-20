@@ -11,12 +11,14 @@ from robusta.core.sinks.robusta.rrm.types import AccountResource, BaseResourceMa
 
 # robusta resource management
 class RRM:
-    def __init__(self, dal: AccountResourceFetcher, cluster: str):
+    def __init__(self, dal: AccountResourceFetcher, cluster: str, account_id: str):
         self.dal = dal
         self.cluster = cluster
+        self.account_id = account_id
         self.__sleep = RRM_PERIOD_SEC
 
-        self.__resource_managers: List[BaseResourceManager] = [PrometheusAlertResourceManager()]
+        self.__resource_managers: List[BaseResourceManager] = \
+            [PrometheusAlertResourceManager(dal=self.dal, account_id=self.account_id)]
         self.__entries = dict[str, ResourceEntry]()
 
         self.__thread = threading.Thread(target=self.__thread_loop)

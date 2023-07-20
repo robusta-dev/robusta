@@ -176,6 +176,15 @@ def gen_config(
             )
         )
 
+    if enable_prometheus_stack is None:
+        typer.echo(
+            f"""Robusta can use {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)} as an alert source."""
+        )
+
+        enable_prometheus_stack = typer.confirm(
+            f"""If you haven't installed it yet, Robusta can install a pre-configured {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)}.\nWould you like to do so?"""
+        )
+
     enable_platform_playbooks = False
     # we have a slightly different flow here than the other options so that pytest can pass robusta_api_key="" to skip
     # asking the question
@@ -184,7 +193,7 @@ def gen_config(
             "Configure Robusta UI sink? This is HIGHLY recommended.",
             default=True,
         ):
-            robusta_api_key = get_ui_key()
+            robusta_api_key = get_ui_key(enable_prometheus_stack=enable_prometheus_stack)
         else:
             robusta_api_key = ""
 
@@ -208,15 +217,6 @@ def gen_config(
         except Exception:
             if debug:
                 typer.secho(traceback.format_exc())
-
-    if enable_prometheus_stack is None:
-        typer.echo(
-            f"""Robusta can use {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)} as an alert source."""
-        )
-
-        enable_prometheus_stack = typer.confirm(
-            f"""If you haven't installed it yet, Robusta can install a pre-configured {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)}.\nWould you like to do so?"""
-        )
 
     if disable_cloud_routing is None:
         disable_cloud_routing = not typer.confirm(

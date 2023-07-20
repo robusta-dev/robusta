@@ -11,7 +11,7 @@ from postgrest_py.utils import sanitize_param
 from supabase_py import Client
 from supabase_py.lib.auth_client import SupabaseAuthClient
 
-from robusta.core.model.cluster_status import ClusterStatus
+from robusta.core.model.cluster_status import ClusterStatus, Account
 from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
@@ -38,6 +38,7 @@ UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
 SCANS_RESULT_TABLE = "ScansResults"
 RESOURCE_EVENTS = "ResourceEvents"
 ACCOUNT_RESOURCE_TABLE = "AccountResource"
+ACCOUNTS_TABLE = "Accounts"
 
 
 class RobustaAuthClient(SupabaseAuthClient):
@@ -646,3 +647,21 @@ class SupabaseDal(AccountResourceFetcher):
             account_resources.append(resource)
 
         return account_resources
+
+    def get_account(self, account_id: str) -> Optional[Account]:
+        res = (
+            self.client.table(ACCOUNTS_TABLE)
+            .select("*")
+            .filter("id", "eq", self.account_id)
+        ).execute()
+
+        if res.get("status_code") not in [200]:
+            msg = f"Failed to get existing account (supabase) error: {res.get('data')}"
+            logging.error(msg)
+            self.handle_supabase_error()
+            raise Exception(msg)
+
+        for data in res.get("data"):
+            return Account(**data)
+
+        return None
