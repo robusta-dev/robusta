@@ -227,6 +227,7 @@ class SlackSender:
         sink_params: SlackSinkParams,
         unfurl: bool,
         status: FindingStatus,
+        channel: str,
     ):
 
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
@@ -249,6 +250,7 @@ class SlackSender:
 
         logging.debug(
             f"--sending to slack--\n"
+            f"channel:{channel}\n"
             f"title:{title}\n"
             f"blocks: {output_blocks}\n"
             f"attachment_blocks: {report_attachment_blocks}\n"
@@ -257,7 +259,7 @@ class SlackSender:
 
         try:
             self.slack_client.chat_postMessage(
-                channel=sink_params.slack_channel,
+                channel=channel,
                 text=message,
                 blocks=output_blocks,
                 display_as_bot=True,
@@ -352,4 +354,5 @@ class SlackSender:
             sink_params,
             unfurl,
             status,
+            sink_params.get_slack_channel(self.cluster_name, finding.subject.labels, finding.subject.annotations),
         )
