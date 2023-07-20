@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 import requests
 from botocore.auth import SigV4Auth
 from cachetools import TTLCache
-from prometheus_api_client import PrometheusApiClientException
 from requests.exceptions import ConnectionError, HTTPError
 from requests.sessions import merge_setting
 
@@ -15,7 +14,6 @@ from robusta.core.exceptions import (
     PrometheusNotFound,
     VictoriaMetricsNotFound,
 )
-from robusta.core.external_apis.prometheus.custom_connect import AWSPrometheusConnect
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.common import parse_query_string
@@ -101,6 +99,8 @@ if TYPE_CHECKING:
 def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusConnect":
     from prometheus_api_client import PrometheusConnect
 
+    from robusta.core.external_apis.prometheus.custom_connect import AWSPrometheusConnect
+
     url: Optional[str] = (
         prometheus_params.prometheus_url
         if prometheus_params.prometheus_url
@@ -130,6 +130,8 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
 
 
 def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
+    from prometheus_api_client import PrometheusApiClientException
+
     params = params or {}
     try:
         prom.headers = PrometheusAuthorization.get_authorization_headers()
