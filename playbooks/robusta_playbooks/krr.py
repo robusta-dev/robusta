@@ -28,7 +28,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.3.2")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.4.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 
 
@@ -174,7 +174,7 @@ def get_krr_additional_flags(params: KRRParams) -> str:
     if any(label in params.args_sanitized for label in ["--prometheus-label", "-l", "--prometheus-cluster-label"]):
         # a label is already defined in the args
         return ""
-    key, value = params.prometheus_additional_labels.items()[0]
+    key, value = next(iter(params.prometheus_additional_labels.items()))
     return f"--prometheus-label {key} -l {value}"
 
 
