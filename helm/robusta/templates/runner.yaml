@@ -115,7 +115,7 @@ spec:
             optional: true
         - name: auth-config-secret
           secret:
-            secretName: robusta-auth-config-secret
+            secretName: {{ default "robusta-auth-config-secret" .Values.rsa.existingSecret }}
             optional: true
         {{- if .Values.playbooksPersistentVolume }}
         - name: persistent-playbooks-storage

@@ -1,4 +1,4 @@
-{{- if .Values.rsa }}
+{{- if and .Values.rsa (not .Values.rsa.existingSecret) }}
 apiVersion: v1
 kind: Secret
 metadata:
