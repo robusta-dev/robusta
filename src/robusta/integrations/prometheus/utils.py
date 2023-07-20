@@ -97,6 +97,7 @@ if TYPE_CHECKING:
 
 
 def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusConnect":
+    # due to cli import dependency errors without prometheus package installed
     from prometheus_api_client import PrometheusConnect
 
     from robusta.core.external_apis.prometheus.custom_connect import AWSPrometheusConnect
@@ -130,7 +131,10 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusCo
 
 
 def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
+    # due to cli import dependency errors without prometheus package installed
     from prometheus_api_client import PrometheusApiClientException
+
+    from robusta.core.external_apis.prometheus.custom_connect import AWSPrometheusConnect
 
     params = params or {}
     try:
