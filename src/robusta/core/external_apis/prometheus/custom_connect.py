@@ -4,8 +4,7 @@ import requests
 from botocore.auth import *
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
-from prometheus_api_client.exceptions import PrometheusApiClientException
-from prometheus_api_client.prometheus_connect import PrometheusConnect
+from prometheus_api_client import PrometheusApiClientException, PrometheusConnect
 
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.core.model.base_params import PrometheusParams
