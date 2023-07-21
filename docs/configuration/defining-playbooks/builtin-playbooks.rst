@@ -1,3 +1,5 @@
+:orphan:
+
 Builtin Playbooks
 ####################
 
@@ -6,7 +8,7 @@ Robusta includes builtin playbooks that:
 * Enhance common Prometheus alerts
 * Complement Prometheus with direct APIServer monitoring
 
-You can view builtin playbooks in the default Helm values. 
+You can view builtin playbooks in the default Helm values.
 
 In this guide, we explain the default configuration.
 
@@ -34,4 +36,4 @@ Robusta uses *silencer* actions to flag false positive alerts and prevent them f
 
 Silencers are just regular actions that call a special silencing API in their code.
 
-To define your own silencers, refer to the :ref:`Silencing Prometheus Alerts` tutorial.
+To define your own silencers, refer to the :ref:`Silence alert` action.

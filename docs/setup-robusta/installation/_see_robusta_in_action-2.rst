@@ -1,5 +1,6 @@
 .. currently unused, I hope to clean this up and integrate it later
 
+:orphan:
 See Robusta in action
 ------------------------------
 
@@ -26,7 +27,7 @@ Want to see for yourself why Robusta alerts are better? Run these commands that 
 .. .. admonition:: Example Slack Message
 
 ..     .. image:: /images/simulatedprometheusalert.png
-      
+
 Testing out APIServer alerts
 ****************************
 
