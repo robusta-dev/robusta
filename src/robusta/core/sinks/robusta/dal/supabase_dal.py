@@ -652,7 +652,7 @@ class SupabaseDal(AccountResourceFetcher):
         res = (
             self.client.table(ACCOUNTS_TABLE)
             .select("*")
-            .filter("id", "eq", self.account_id)
+            .filter("id", "eq", account_id)
         ).execute()
 
         if res.get("status_code") not in [200]:

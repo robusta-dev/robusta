@@ -52,6 +52,14 @@ class GlobalConfig(BaseModel):
     account_id: str = ""
 
 
+class KubePrometheusDefaultRules(BaseModel):
+    create: bool
+
+
+class KubePrometheusStack(BaseModel):
+    defaultRules: KubePrometheusDefaultRules
+
+
 class HelmValues(BaseModel, extra=Extra.allow):
     globalConfig: GlobalConfig
     sinksConfig: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]]
@@ -65,6 +73,25 @@ class HelmValues(BaseModel, extra=Extra.allow):
     grafanaRenderer: Dict = None
     runner: Dict = None
     rsa: RSAKeyPair = None
+    enableManagedPrometheusAlerts: bool = False
+    kubePrometheusStack: Optional[KubePrometheusStack] = None
+
+    def __init__(self, **data):
+        if 'enableManagedPrometheusAlerts' in data:
+            data['kubePrometheusStack'] = {
+                "defaultRules": {
+                    "create": False
+                }
+            }
+
+        super().__init__(**data)
+
+    def dict(self, *args, **kwargs) -> Dict:
+        result = super().dict(*args, **kwargs)
+        if 'kubePrometheusStack' in result:
+            result['kube-prometheus-stack'] = result['kubePrometheusStack']
+            result.pop('kubePrometheusStack')
+        return result
 
 
 def get_slack_channel() -> str:
@@ -238,6 +265,7 @@ def gen_config(
         globalConfig=GlobalConfig(signing_key=signing_key, account_id=account_id),
         sinksConfig=sinks_config,
         enablePrometheusStack=enable_prometheus_stack,
+        enableManagedPrometheusAlerts=enable_prometheus_stack,
         disableCloudRouting=disable_cloud_routing,
         enablePlatformPlaybooks=enable_platform_playbooks,
         rsa=gen_rsa_pair(),

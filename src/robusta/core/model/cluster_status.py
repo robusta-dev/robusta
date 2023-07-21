@@ -36,6 +36,5 @@ class Account(BaseModel):
     id: str
     account_type: int
     is_test_account: bool
-    has_alerts_config_installed: Optional[bool] = False
     name: Optional[str]
     creation_date: datetime

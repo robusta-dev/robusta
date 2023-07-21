@@ -70,6 +70,7 @@ lightActions:
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
+enableManagedPrometheusAlerts: false
 enableServiceMonitors: true
 monitorHelmReleases: true
 

@@ -6,6 +6,11 @@ playbook_repos:
 {{- fail "At least one sink must be defined!" }}
 {{- end }}
 
+{{- $defaultRulesCreate := index .Values "kube-prometheus-stack" "defaultRules" "create" }}
+{{- if and .Values.enableManagedPrometheusAlerts (not (eq $defaultRulesCreate false)) }}
+{{- fail "`kube-prometheus-stack.defaultRules.create` must be `false` when `enableManagedPrometheusAlerts` is set to `true`." }}
+{{- end }}
+
 {{- if or .Values.slackApiKey .Values.robustaApiKey }}
 {{- /* support old values files, prior to chart version 0.8.9 */}}
 sinks_config:

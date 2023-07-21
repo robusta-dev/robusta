@@ -21,10 +21,9 @@ CRD_PARAMS = {
 
 
 class PrometheusAlertResourceManager(BaseResourceManager):
-    def __init__(self, dal: AccountResourceFetcher, account_id: str) -> None:
+    def __init__(self, dal: AccountResourceFetcher) -> None:
         super().__init__(ResourceKind.PrometheusAlert)
         self.dal = dal
-        self.account_id = account_id
         self.init_resources_max_attempts = 3
         self.__cdr_slots_len: List[int] = []
         config.load_kube_config()
@@ -91,20 +90,10 @@ class PrometheusAlertResourceManager(BaseResourceManager):
 
         for itr in range(0, self.init_resources_max_attempts):
             try:
-                # fetch the account information
-                account = self.dal.get_account(account_id=self.account_id)
-
-                # if the alerts config has been installed for the cluster
-                # then loop through the whole prometheus rules crds and delete them since they are already present
-                # on the supabase db
-                has_alerts_config_installed = False
-                if account:
-                    has_alerts_config_installed = account.has_alerts_config_installed
-
                 # fetch the available crd files and then delete them in the first run
                 crd_obj = self.__k8_api.list_namespaced_custom_object(
                     **CRD_PARAMS,
-                    label_selector="release.app=robusta-resource-management" if not has_alerts_config_installed else ""
+                    label_selector="release.app=robusta-resource-management"
                 )
 
                 items = crd_obj["items"]
