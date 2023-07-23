@@ -5,12 +5,107 @@ from botocore.auth import *
 from botocore.awsrequest import AWSRequest
 from botocore.credentials import Credentials
 from prometheus_api_client import PrometheusApiClientException, PrometheusConnect
+from requests.exceptions import ConnectionError, HTTPError
 
 from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
 from robusta.core.model.base_params import PrometheusParams
+from src.robusta.core.exceptions import PrometheusFlagsConnectionError, PrometheusNotFound, VictoriaMetricsNotFound
+from src.robusta.core.external_apis.prometheus.auth import PrometheusAuthorization
+from src.robusta.core.external_apis.prometheus.models import PrometheusApis, PrometheusConfig
 
 
-class AWSPrometheusConnect(PrometheusConnect):
+class CustomPrometheusConnect(PrometheusConnect):
+    def __init__(self, config: PrometheusConfig):
+        super().__init__(url=config.url, disable_ssl=config.disable_ssl, headers=config.headers)
+        self.config = config
+
+    def check_prometheus_connection(self, params: dict = None):
+        params = params or {}
+        try:
+            if isinstance(self, AWSPrometheusConnect):
+                # will throw exception if not 200
+                return self.custom_query(query="example")
+            else:
+                response = self._session.get(
+                    f"{self.url}/api/v1/query",
+                    verify=self.ssl_verification,
+                    headers=self.headers,
+                    # This query should return empty results, but is correct
+                    params={"query": "example", **params},
+                    context={},
+                )
+            if response.status_code == 401:
+                if PrometheusAuthorization.request_new_token(self.config):
+                    self.headers = PrometheusAuthorization.get_authorization_headers(self.config)
+                    response = self._session.get(
+                        f"{self.url}/api/v1/query",
+                        verify=self.ssl_verification,
+                        headers=self.headers,
+                        params={"query": "example", **params},
+                    )
+
+            response.raise_for_status()
+        except (ConnectionError, HTTPError, PrometheusApiClientException) as e:
+            raise PrometheusNotFound(
+                f"Couldn't connect to Prometheus found under {self.url}\nCaused by {e.__class__.__name__}: {e})"
+            ) from e
+
+    def __text_config_to_dict(self, text: str) -> Dict:
+        conf = {}
+        lines = text.strip().split("\n")
+        for line in lines:
+            key, val = line.strip().split("=")
+            conf[key] = val.strip('"')
+
+        return conf
+
+    def get_prometheus_flags(self) -> Optional[Dict]:
+        try:
+            if PrometheusApis.FLAGS in self.config.supported_apis:
+                return self.fetch_prometheus_flags()
+            if PrometheusApis.VM_FLAGS in self.config.supported_apis:
+                return self.fetch_victoria_metrics_flags()
+        except Exception as e:
+            service_name = "Prometheus" if PrometheusApis.FLAGS in self.config.supported_apis else "Victoria Metrics"
+            raise PrometheusFlagsConnectionError(f"Couldn't connect to the url: {self.url}\n\t\t{service_name}: {e}")
+
+    def fetch_prometheus_flags(self) -> Dict:
+        try:
+            response = self._session.get(
+                f"{self.url}/api/v1/status/flags",
+                verify=self.ssl_verification,
+                headers=self.headers,
+                # This query should return empty results, but is correct
+                params={},
+            )
+            response.raise_for_status()
+            return response.json().get("data", {})
+        except Exception as e:
+            raise PrometheusNotFound(
+                f"Couldn't connect to Prometheus found under {self.url}\nCaused by {e.__class__.__name__}: {e})"
+            ) from e
+
+    def fetch_victoria_metrics_flags(self) -> Dict:
+        try:
+            # connecting to VictoriaMetrics
+            response = self._session.get(
+                f"{self.url}/flags",
+                verify=self.ssl_verification,
+                headers=self.headers,
+                # This query should return empty results, but is correct
+                params={},
+            )
+            response.raise_for_status()
+
+            configuration = self.__text_config_to_dict(response.text)
+            return configuration
+        except Exception as e:
+            raise VictoriaMetricsNotFound(
+                f"Couldn't connect to VictoriaMetrics found under {self.url}\nCaused by {e.__class__.__name__}: {e})"
+            ) from e
+
+
+class AWSPrometheusConnect(CustomPrometheusConnect):
     def __init__(self, access_key: str, secret_key: str, region: str, service_name: str, **kwargs):
         super().__init__(**kwargs)
         self._credentials = Credentials(access_key, secret_key)

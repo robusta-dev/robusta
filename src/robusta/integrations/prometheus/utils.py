@@ -18,6 +18,13 @@ from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_SSL_ENABLED, SERVICE_CACHE_TTL_SEC
 from robusta.utils.common import parse_query_string
 from robusta.utils.service_discovery import find_service_url
+from src.robusta.core.external_apis.prometheus.models import (
+    AWSPrometheusConfig,
+    AzurePrometheusConfig,
+    CoralogixPrometheusConfig,
+    PrometheusConfig,
+    VictoriaMetricsPrometheusConfig,
+)
 
 AZURE_RESOURCE = os.environ.get("AZURE_RESOURCE", "https://prometheus.monitor.azure.com")
 AZURE_METADATA_ENDPOINT = os.environ.get(
@@ -31,6 +38,7 @@ AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 AWS_SERVICE_NAME = os.environ.get("AWS_SERVICE_NAME")
 AWS_REGION = os.environ.get("AWS_REGION")
+VICTORIA_METRICS_CONFIGURED = os.environ.get("VICTORIA_METRICS_CONFIGURED", "false").lower() == "true"
 
 
 class PrometheusAuthorization:
@@ -96,45 +104,66 @@ if TYPE_CHECKING:
     from prometheus_api_client import PrometheusConnect
 
 
-def get_prometheus_connect(prometheus_params: PrometheusParams) -> "PrometheusConnect":
-    # due to cli import dependency errors without prometheus package installed
-    from prometheus_api_client import PrometheusConnect
-
-    from robusta.core.external_apis.prometheus.custom_connect import AWSPrometheusConnect
-
+def generate_prometheus_config(prometheus_params: PrometheusParams) -> PrometheusConfig:
+    is_victoria_metrics = VICTORIA_METRICS_CONFIGURED
     url: Optional[str] = (
         prometheus_params.prometheus_url
         if prometheus_params.prometheus_url
         else PrometheusDiscovery.find_prometheus_url()
     )
-
+    if not url:
+        url = PrometheusDiscovery.find_vm_url()
+        is_victoria_metrics = is_victoria_metrics is not None
     if not url:
         raise NoPrometheusUrlFound("Prometheus url could not be found. Add 'prometheus_url' under global_config")
-
-    headers = PrometheusAuthorization.get_authorization_headers(prometheus_params)
+    baseconfig = {
+        "url": url,
+        "disable_ssl": not PROMETHEUS_SSL_ENABLED,
+        "additional_labels": prometheus_params.prometheus_additional_labels,
+        "prometheus_url_query_string": prometheus_params.prometheus_url_query_string,
+    }
+    # aws config
     if AWS_ACCESS_KEY:
-        prom = AWSPrometheusConnect(
+        return AWSPrometheusConfig(
             access_key=AWS_ACCESS_KEY,
-            secret_key=AWS_SECRET_ACCESS_KEY,
+            secret_access_key=AWS_SECRET_ACCESS_KEY,
             service_name=AWS_SERVICE_NAME,
-            region=AWS_REGION,
-            url=url,
-            disable_ssl=not PROMETHEUS_SSL_ENABLED,
-            headers=headers,
+            aws_region=AWS_REGION,
+            **baseconfig,
         )
-    else:
-        prom = PrometheusConnect(url=url, disable_ssl=not PROMETHEUS_SSL_ENABLED, headers=headers)
-    query_string_params = parse_query_string(prometheus_params.prometheus_url_query_string)
-    prom._session.params = merge_setting(prom._session.params, query_string_params)
+    # coralogix config
+    if CORALOGIX_PROMETHEUS_TOKEN:
+        return CoralogixPrometheusConfig(**baseconfig, prometheus_token=CORALOGIX_PROMETHEUS_TOKEN)
+    # Azure config
+    if os.environ.get("AZURE_USE_MANAGED_ID"):
+        return AzurePrometheusConfig(
+            **baseconfig,
+            azure_resource=AZURE_RESOURCE,
+            azure_metadata_endpoint=AZURE_METADATA_ENDPOINT,
+            azure_token_endpoint=AZURE_TOKEN_ENDPOINT,
+            azure_use_managed_id=os.environ.get("AZURE_USE_MANAGED_ID"),
+            azure_client_id=os.environ.get("AZURE_CLIENT_ID"),
+            azure_client_secret=os.environ.get("AZURE_CLIENT_SECRET"),
+        )
+    if is_victoria_metrics:
+        return VictoriaMetricsPrometheusConfig(**baseconfig)
+    return PrometheusConfig(**baseconfig)
 
-    return prom
+
+def get_prometheus_connect(prometheus_params: PrometheusParams) -> "CustomPrometheusConnect":
+    # due to cli import dependency errors without prometheus package installed
+    from src.robusta.core.external_apis.prometheus.utils import get_custom_prometheus_connect
+
+    config = generate_prometheus_config(prometheus_params)
+
+    return get_custom_prometheus_connect(config)
 
 
-def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
+def check_prometheus_connection(prom: "CustomPrometheusConnect", params: dict = None):
     # due to cli import dependency errors without prometheus package installed
     from prometheus_api_client import PrometheusApiClientException
 
-    from robusta.core.external_apis.prometheus.custom_connect import AWSPrometheusConnect
+    from src.robusta.core.external_apis.prometheus.custom_connect import AWSPrometheusConnect
 
     params = params or {}
     try:
@@ -168,80 +197,11 @@ def check_prometheus_connection(prom: "PrometheusConnect", params: dict = None):
         ) from e
 
 
-def __text_config_to_dict(text: str) -> Dict:
-    conf = {}
-    lines = text.strip().split("\n")
-    for line in lines:
-        key, val = line.strip().split("=")
-        conf[key] = val.strip('"')
-
-    return conf
-
-
-def get_prometheus_flags(prom: "PrometheusConnect") -> Optional[Dict]:
-    try:
-        return fetch_prometheus_flags(prom=prom)
-    except Exception as e:
-        prometheus_exception = e
-
-    try:
-        return fetch_victoria_metrics_flags(vm=prom)
-    except Exception as e:
-        victoria_metrics_exception = e
-
-    raise PrometheusFlagsConnectionError(
-        f"Couldn't connect to the url: {prom.url}\n\t\tPrometheus: {prometheus_exception}"
-        f"\n\t\tVictoria Metrics: {victoria_metrics_exception})"
-    )
-
-
-def fetch_prometheus_flags(prom: "PrometheusConnect") -> Dict:
-    try:
-        result = {}
-
-        # connecting to prometheus
-        response = prom._session.get(
-            f"{prom.url}/api/v1/status/flags",
-            verify=prom.ssl_verification,
-            headers=prom.headers,
-            # This query should return empty results, but is correct
-            params={},
-        )
-        response.raise_for_status()
-
-        result["retentionTime"] = response.json().get("data", {}).get("storage.tsdb.retention.time", "")
-        return result
-    except Exception as e:
-        raise PrometheusNotFound(
-            f"Couldn't connect to Prometheus found under {prom.url}\nCaused by {e.__class__.__name__}: {e})"
-        ) from e
-
-
-def fetch_victoria_metrics_flags(vm: "PrometheusConnect") -> Dict:
-    try:
-        result = {}
-        # connecting to VictoriaMetrics
-        response = vm._session.get(
-            f"{vm.url}/flags",
-            verify=vm.ssl_verification,
-            headers=vm.headers,
-            # This query should return empty results, but is correct
-            params={},
-        )
-        response.raise_for_status()
-
-        configuration = __text_config_to_dict(response.text)
-        retention_period = configuration.get("-retentionPeriod")
-
-        # if the retentionPeriod is only a number then treat it as (m)onth
-        # ref: https://docs.victoriametrics.com/?highlight=-retentionPeriod#retention
-        result["retentionTime"] = retention_period if not retention_period.isdigit() else f"{retention_period}m"
-
-        return result
-    except Exception as e:
-        raise VictoriaMetricsNotFound(
-            f"Couldn't connect to VictoriaMetrics found under {vm.url}\nCaused by {e.__class__.__name__}: {e})"
-        ) from e
+def get_prometheus_flags(prom: "CustomPrometheusConnect") -> Optional[Dict]:
+    data = prom.get_prometheus_flags()
+    if not data:
+        return
+    return data.get("storage.tsdb.retention.time", "") or data.get("-retentionPeriod", "")
 
 
 class ServiceDiscovery:
@@ -279,12 +239,20 @@ class PrometheusDiscovery(ServiceDiscovery):
                 "app=prometheus-msteams",
                 "app=rancher-monitoring-prometheus",
                 "app=prometheus-prometheus",
+            ],
+            error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
+        )
+
+    @classmethod
+    def find_vm_url(cls) -> Optional[str]:
+        return super().find_url(
+            selectors=[
                 "app.kubernetes.io/name=vmsingle",
                 "app.kubernetes.io/name=victoria-metrics-single",
                 "app.kubernetes.io/name=vmselect",
                 "app=vmselect",
             ],
-            error_msg="Prometheus url could not be found. Add 'prometheus_url' under global_config",
+            error_msg="Victoria Metrics url could not be found. Add 'prometheus_url' under global_config",
         )
 
 
