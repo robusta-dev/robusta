@@ -11,7 +11,7 @@ import typer
 
 from robusta.cli.backend_profile import backend_profile
 from robusta.cli.utils import log_title
-from robusta.core.model.env_vars import PROMETHEUS_ENABLED
+from robusta.core.model.env_vars import MANAGED_PROMETHEUS_ALERTS_ENABLED
 
 app = typer.Typer(add_completion=False)
 
@@ -79,7 +79,7 @@ def get_alternative_name(account_name: str) -> str:
     return alternative_name
 
 
-def get_ui_key(enable_prometheus_stack: bool) -> str:
+def get_ui_key(managed_prometheus_alerts_enabled: bool) -> str:
     account_name = ""
     email = ""
 
@@ -94,7 +94,7 @@ def get_ui_key(enable_prometheus_stack: bool) -> str:
             json={
                 "account_name": account_name,
                 "email": email,
-                "prometheus_enabled": enable_prometheus_stack,
+                "managed_prometheus_alerts_enabled": managed_prometheus_alerts_enabled,
             },
         )
         if res.status_code == 201:
@@ -136,7 +136,7 @@ def get_ui_key(enable_prometheus_stack: bool) -> str:
 @app.command()
 def ui():
     """Generate a Robusta API key for the UI"""
-    ui_key = get_ui_key(enable_prometheus_stack=PROMETHEUS_ENABLED)
+    ui_key = get_ui_key(managed_prometheus_alerts_enabled=MANAGED_PROMETHEUS_ALERTS_ENABLED)
     if ui_key:
         yaml = textwrap.dedent(
             f"""\

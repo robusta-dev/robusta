@@ -220,7 +220,7 @@ def gen_config(
             "Configure Robusta UI sink? This is HIGHLY recommended.",
             default=True,
         ):
-            robusta_api_key = get_ui_key(enable_prometheus_stack=enable_prometheus_stack)
+            robusta_api_key = get_ui_key(managed_prometheus_alerts_enabled=enable_prometheus_stack)
         else:
             robusta_api_key = ""
 
