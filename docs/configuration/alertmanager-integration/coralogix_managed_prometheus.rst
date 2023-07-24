@@ -32,6 +32,8 @@ A pull integration lets Robusta pull metrics from Coralogix Managed Prometheus.
 
   runner:
     additional_env_vars:
+    - name: PROMETHEUS_SSL_ENABLED
+      value: "true"
     - name: CORALOGIX_PROMETHEUS_TOKEN
       valueFrom:
         secretKeyRef:
