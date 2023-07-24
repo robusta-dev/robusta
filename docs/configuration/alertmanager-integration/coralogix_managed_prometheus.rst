@@ -45,7 +45,7 @@ Configure Push Integration
 
 A push integration sends Coralogix alerts to Robusta.
 
-.. note:: Many of the fields supported in Alertmanager might exist in Coralogix alerts
+.. note:: Many of the fields supported in Alertmanager dont in Coralogix alerts
 
 To configure it:
 
