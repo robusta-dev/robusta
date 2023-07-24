@@ -463,6 +463,8 @@ runner:
   annotations: {}
   nodeSelector: ~
   customClusterRoleRules: []
+  extraVolumes: []
+  extraVolumeMounts: []
 
 kube-prometheus-stack:
   alertmanager:

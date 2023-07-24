@@ -79,6 +79,9 @@ spec:
           - name: persistent-playbooks-storage
             mountPath: /etc/robusta/playbooks/storage
           {{- end }}
+          {{- if .Values.runner.extraVolumeMounts }}
+{{ toYaml .Values.runner.extraVolumeMounts | indent 12 }}
+          {{- end }}
         lifecycle:
           preStop:
             exec:
@@ -109,6 +112,9 @@ spec:
             {{ if .Values.grafanaRenderer.resources.limits.cpu }}cpu: {{ .Values.grafanaRenderer.resources.limits.cpu | quote }}{{ end }}
       {{- end }}
       volumes:
+      {{- if .Values.runner.extraVolumes }}
+{{ toYaml .Values.runner.extraVolumes | indent 8 }}
+      {{- end }}
         - name: playbooks-config-secret
           secret:
             secretName: robusta-playbooks-config-secret
