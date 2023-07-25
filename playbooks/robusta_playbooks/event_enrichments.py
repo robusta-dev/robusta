@@ -265,10 +265,9 @@ def resource_events_diff(event: KubernetesAnyChangeEvent):
         container_info = [ContainerInfo.get_container_info_k8(container) for container in
                           containers] if containers else []
         volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
-        config = ServiceConfig(labels=meta.labels or {}, containers=container_info,
-                               volumes=volumes_info)
-        ready_pods = extract_total_pods(new_resource)
-        total_pods = extract_ready_pods(new_resource)
+        config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
+        ready_pods = extract_ready_pods(new_resource)
+        total_pods = extract_total_pods(new_resource)
 
         is_helm_release = is_release_managed_by_helm(annotations=new_resource.metadata.annotations,
                                                      labels=new_resource.metadata.labels)
