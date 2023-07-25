@@ -3,7 +3,7 @@ from collections import defaultdict
 from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, Optional, Union
 
-from hikaru.model.rel_1_26 import Deployment, DaemonSet, StatefulSet, Job, Pod, Volume, Container
+from hikaru.model.rel_1_26 import Deployment, DaemonSet, StatefulSet, Job, Pod, ReplicaSet, Volume, Container
 from kubernetes import client
 from kubernetes.client import (
     V1Container,
@@ -70,7 +70,8 @@ class Discovery:
         container_info = [ContainerInfo.get_container_info(container) for container in containers] if containers else []
         volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
         config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
-        resource_version = int(meta.resource_version) if meta.resource_version else 0
+        version = getattr(meta, "resource_version", None) or getattr(meta, "resourceVersion", None)
+        resource_version = int(version) if version else 0
 
         return ServiceInfo(
             resource_version=resource_version,
@@ -82,6 +83,17 @@ class Discovery:
             total_pods=total_pods,
             is_helm_release=is_helm_release,
         )
+
+    @staticmethod
+    def create_service_info(obj: Union[Deployment, DaemonSet, StatefulSet, Pod, ReplicaSet]) -> ServiceInfo:
+        return Discovery.__create_service_info(
+            obj.metadata,
+            obj.kind,
+            extract_containers(obj),
+            extract_volumes(obj),
+            extract_total_pods(obj),
+            extract_ready_pods(obj),
+            is_helm_release=is_release_managed_by_helm(annotations=obj.metadata.annotations, labels=obj.metadata.labels))
 
     @staticmethod
     def discovery_process() -> DiscoveryResults:

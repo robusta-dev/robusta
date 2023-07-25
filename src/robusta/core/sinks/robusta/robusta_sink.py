@@ -3,11 +3,11 @@ import json
 import logging
 import threading
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
-
+from hikaru.model.rel_1_26 import Node
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
@@ -26,7 +26,7 @@ from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrap
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
-
+from robusta.api import Deployment, Pod, DaemonSet, StatefulSet, ReplicaSet
 
 class RobustaSink(SinkBase):
     services_publish_lock = threading.Lock()
@@ -153,8 +153,11 @@ class RobustaSink(SinkBase):
             return True
         return time.time() - self.last_send_time < DISCOVERY_CHECK_THRESHOLD_SEC
 
-    def handle_service_diff(self, new_service: ServiceInfo, operation: K8sOperationType):
-        self.__publish_single_service(new_service, operation)
+    def handle_service_diff(self, new_resource: Union[Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, V1Node], operation: K8sOperationType):
+        if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)):
+            self.__publish_single_service(Discovery.create_service_info(new_resource), operation)
+        elif isinstance(new_resource, Node):
+            self.__update_node(new_resource, operation)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.dal.persist_finding(finding)
@@ -302,15 +305,16 @@ class RobustaSink(SinkBase):
         )
 
     @classmethod
-    def __to_node_info(cls, node: V1Node) -> Dict:
-        node_info = node.status.node_info.to_dict() if node.status.node_info else {}
+    def __to_node_info(cls, node: Union[V1Node, Node]) -> Dict:
+        info = getattr(node.status, "node_info", None) or getattr(node.status, "nodeInfo", None)
+        node_info = info.to_dict() if info else {}
         node_info["labels"] = node.metadata.labels or {}
         node_info["annotations"] = node.metadata.annotations or {}
         node_info["addresses"] = [addr.address for addr in node.status.addresses] if node.status.addresses else []
         return node_info
 
     @classmethod
-    def __from_api_server_node(cls, api_server_node: V1Node, pod_requests_list: List[PodResources]) -> NodeInfo:
+    def __from_api_server_node(cls, api_server_node: Union[V1Node, Node], pod_requests_list: List[PodResources]) -> NodeInfo:
         addresses = api_server_node.status.addresses or []
         external_addresses = [address for address in addresses if "externalip" in address.type.lower()]
         external_ip = ",".join([addr.address for addr in external_addresses])
@@ -320,9 +324,12 @@ class RobustaSink(SinkBase):
         taints = ",".join([cls.__to_taint_str(taint) for taint in node_taints])
         capacity = api_server_node.status.capacity or {}
         allocatable = api_server_node.status.allocatable or {}
+        # V1Node and Node use snake case and camelCase respectively, handle this for more than 1 word attributes. 
+        creation_ts = getattr(api_server_node.metadata, "creation_timestamp", None) or getattr(api_server_node.metadata, "creationTimestamp", None)
+        version = getattr(api_server_node.metadata, "resource_version", None) or getattr(api_server_node.metadata, "resourceVersion", None)
         return NodeInfo(
             name=api_server_node.metadata.name,
-            node_creation_time=str(api_server_node.metadata.creation_timestamp),
+            node_creation_time=str(creation_ts),
             internal_ip=internal_ip,
             external_ip=external_ip,
             taints=taints,
@@ -336,6 +343,7 @@ class RobustaSink(SinkBase):
             pods_count=len(pod_requests_list),
             pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
             node_info=cls.__to_node_info(api_server_node),
+            resource_version=int(version) if version else 0
         )
 
     def __publish_new_nodes(self, current_nodes: V1NodeList, node_requests: Dict[str, List[PodResources]]):
@@ -524,3 +532,33 @@ class RobustaSink(SinkBase):
 
     def get_global_config(self) -> dict:
         return self.registry.get_global_config()
+
+    def __update_node(self, new_node: Node, operation: K8sOperationType):
+        # missing some of discovery pods info, skipping.
+        if operation == K8sOperationType.CREATE:
+            return
+
+        with self.services_publish_lock:
+            name = new_node.metadata.name
+            cache = self.__nodes_cache.get(name, None)
+            if cache is None:
+                return
+
+            # prevent service updates if the resource version in the cache is lower than the new service
+            if cache.resource_version >= int(new_node.metadata.resourceVersion):
+                return
+
+            new_info = self.__from_api_server_node(new_node, [])
+            new_info.memory_allocated = cache.memory_allocated
+            new_info.cpu_allocated = cache.cpu_allocated
+            new_info.pods_count = cache.pods_count
+            new_info.pods = cache.pods
+
+            if operation == K8sOperationType.UPDATE:
+                self.__nodes_cache[name] = new_info
+            elif operation == K8sOperationType.DELETE:
+                self.__services_cache.pop(name, None)
+                new_info.deleted = True
+
+            self.dal.publish_nodes([new_info])
+            self.__discovery_metrics.on_nodes_updated(1)

@@ -44,8 +44,12 @@ from robusta.api import (
     StatefulSet,
     DaemonSet,
     Deployment,
-    ServiceInfo
+    ServiceInfo,
+    
 )
+
+from hikaru.model.rel_1_26 import Node
+
 
 class ExtendedEventEnricherParams(EventEnricherParams):
     """
@@ -251,41 +255,16 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
 @action
 def resource_events_diff(event: KubernetesAnyChangeEvent):
     new_resource = event.obj
+    logging.info(type(new_resource))
+    logging.info(new_resource)
+    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node)):
+        return
+    elif isinstance(new_resource, Pod) and (new_resource.metadata.owner_references or is_pod_finished(new_resource)):
+        return
+    elif isinstance(new_resource, ReplicaSet) and (new_resource.metadata.owner_references or new_resource.spec.replicas == 0):
+        return
 
-    if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)) \
-            and not event.obj.metadata.ownerReferences:
-        if isinstance(new_resource, Pod) and is_pod_finished(new_resource):
-            return
-        if isinstance(new_resource, ReplicaSet) and not new_resource.spec.replicas:
-            return
-
-        containers = extract_containers_k8(new_resource)
-        volumes = extract_volumes_k8(new_resource)
-        meta = new_resource.metadata
-        container_info = [ContainerInfo.get_container_info_k8(container) for container in
-                          containers] if containers else []
-        volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
-        config = ServiceConfig(labels=meta.labels or {}, containers=container_info,
-                               volumes=volumes_info)
-        ready_pods = extract_total_pods(new_resource)
-        total_pods = extract_ready_pods(new_resource)
-
-        is_helm_release = is_release_managed_by_helm(annotations=new_resource.metadata.annotations,
-                                                     labels=new_resource.metadata.labels)
-        resource_version = int(meta.resourceVersion) if meta.resourceVersion else 0
-
-        new_service = ServiceInfo(
-            resource_version=resource_version,
-            name=meta.name,
-            namespace=meta.namespace,
-            service_type=new_resource.kind,
-            service_config=config,
-            ready_pods=ready_pods,
-            total_pods=total_pods,
-            is_helm_release=is_helm_release
-        )
-
-        all_sinks = event.get_all_sinks()
-        for sink_name in event.named_sinks:
-            if all_sinks and all_sinks.get(sink_name, None):
-                all_sinks.get(sink_name).handle_service_diff(new_service, operation=event.operation)
+    all_sinks = event.get_all_sinks()
+    for sink_name in event.named_sinks:
+        if all_sinks and all_sinks.get(sink_name, None):
+            all_sinks.get(sink_name).handle_service_diff(new_resource, operation=event.operation)
