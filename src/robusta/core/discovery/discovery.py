@@ -409,6 +409,12 @@ class Discovery:
         except Exception:
             logging.error("Failed to count jobs", exc_info=True)
 
+        k8s_version: str = None
+        try:
+            k8s_version = client.VersionApi().get_code().git_version
+        except Exception:
+            logging.exception("Failed to get k8s server version")
+
         return ClusterStats(
             deployments=deploy_count,
             statefulsets=sts_count,
@@ -418,6 +424,7 @@ class Discovery:
             nodes=node_count,
             jobs=job_count,
             provider=cluster_provider.get_cluster_provider(),
+            k8s_version=k8s_version
         )
 
 
@@ -478,13 +485,13 @@ def is_pod_ready(pod) -> bool:
     return False
 
 
-def is_pod_finished(pod: V1Pod) -> bool:
+def is_pod_finished(pod) -> bool:
     try:
-        # all containers in the pod have terminated, this pod should be removed by GC
-        return pod.status.phase.lower() in ["succeeded", "failed"]
+        if isinstance(pod, V1Pod) or isinstance(pod, Pod):
+            # all containers in the pod have terminated, this pod should be removed by GC
+            return pod.status.phase.lower() in ["succeeded", "failed"]
     except AttributeError:  # phase is an optional field
         return False
-
 
 def extract_ready_pods(resource) -> int:
     try:

@@ -28,7 +28,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.3.2")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.4.1")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 
 
@@ -167,6 +167,17 @@ def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
     )
 
 
+def get_krr_additional_flags(params: KRRParams) -> str:
+    if not params.prometheus_additional_labels or len(params.prometheus_additional_labels) != 1:
+        # only one label is supported to be passed to krr currently
+        return ""
+    if any(label in params.args_sanitized for label in ["--prometheus-label", "-l", "--prometheus-cluster-label"]):
+        # a label is already defined in the args
+        return ""
+    key, value = next(iter(params.prometheus_additional_labels.items()))
+    return f"--prometheus-label {key} -l {value}"
+
+
 @action
 def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
@@ -174,8 +185,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     scan_id = str(uuid.uuid4())
     headers = PrometheusAuthorization.get_authorization_headers(params)
+    additional_flags = get_krr_additional_flags(params)
 
-    python_command = f"python krr.py {params.strategy} {params.args_sanitized} -q -f json "
+    python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} -q -f json "
     if params.prometheus_url:
         python_command += f"-p {params.prometheus_url}"
     auth_header = headers["Authorization"] if "Authorization" in headers else ""

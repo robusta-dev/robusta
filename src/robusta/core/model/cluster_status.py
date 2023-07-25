@@ -12,6 +12,7 @@ class ClusterStats(BaseModel):
     nodes: int
     jobs: int
     provider: str
+    k8s_version: Optional[str] = None
 
 
 class ActivityStats(BaseModel):

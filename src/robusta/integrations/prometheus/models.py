@@ -118,36 +118,56 @@ class PrometheusKubernetesAlert(
         namespace: Optional[str] = self.label_namespace
         node_name: Optional[str] = None
         container: Optional[str] = self.alert.labels.get("container")
+        labels = {}
+        annotations = {}
         if self.deployment:
             subject_type = FindingSubjectType.TYPE_DEPLOYMENT
             name = self.deployment.metadata.name
             namespace = self.deployment.metadata.namespace
+            labels = self.deployment.metadata.labels
+            annotations = self.deployment.metadata.annotations
         elif self.daemonset:
             subject_type = FindingSubjectType.TYPE_DAEMONSET
             name = self.daemonset.metadata.name
             namespace = self.daemonset.metadata.namespace
+            labels = self.daemonset.metadata.labels
+            annotations = self.daemonset.metadata.annotations
         elif self.statefulset:
             subject_type = FindingSubjectType.TYPE_STATEFULSET
             name = self.statefulset.metadata.name
             namespace = self.statefulset.metadata.namespace
+            labels = self.statefulset.metadata.labels
+            annotations = self.statefulset.metadata.annotations
         elif self.node:
             subject_type = FindingSubjectType.TYPE_NODE
             name = self.node.metadata.name
             node_name = self.node.metadata.name
+            labels = self.node.metadata.labels
+            annotations = self.node.metadata.annotations
         elif self.pod:
             subject_type = FindingSubjectType.TYPE_POD
             name = self.pod.metadata.name
             namespace = self.pod.metadata.namespace
             node_name = self.pod.spec.nodeName
+            labels = self.pod.metadata.labels
+            annotations = self.pod.metadata.annotations
         elif self.job:
             subject_type = FindingSubjectType.TYPE_JOB
             name = self.job.metadata.name
             namespace = self.job.metadata.namespace
+            labels = self.job.metadata.labels
+            annotations = self.job.metadata.annotations
         elif self.hpa:
             subject_type = FindingSubjectType.TYPE_HPA
             name = self.hpa.metadata.name
+            labels = self.hpa.metadata.labels
+            annotations = self.hpa.metadata.annotations
 
-        return FindingSubject(name, subject_type, namespace, node_name, container)
+        # Add alert labels and annotations. On duplicates, alert labels/annotations are taken
+        labels = {**labels, **self.alert.labels}
+        annotations = {**annotations, **self.alert.annotations}
+
+        return FindingSubject(name, subject_type, namespace, node_name, container, labels, annotations)
 
     def create_default_finding(self) -> Finding:
         alert_subject = self.get_alert_subject()

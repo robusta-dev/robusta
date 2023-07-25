@@ -67,7 +67,7 @@ from robusta.core.model.env_vars import (
     WEBSOCKET_PING_TIMEOUT,
 )
 from robusta.core.discovery.discovery import extract_containers_k8, extract_volumes_k8, extract_total_pods, \
-    extract_ready_pods, is_release_managed_by_helm
+    extract_ready_pods, is_release_managed_by_helm, is_pod_finished
 from hikaru.model.rel_1_26 import DaemonSet, StatefulSet, Deployment, Pod, Container, Volume, ReplicaSet
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.model.k8s_operation_type import K8sOperationType
