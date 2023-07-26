@@ -255,8 +255,6 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
 @action
 def resource_events_diff(event: KubernetesAnyChangeEvent):
     new_resource = event.obj
-    logging.info(type(new_resource))
-    logging.info(new_resource)
     if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node)):
         return
     elif isinstance(new_resource, Pod) and (new_resource.metadata.owner_references or is_pod_finished(new_resource)):

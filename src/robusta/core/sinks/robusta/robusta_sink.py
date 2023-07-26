@@ -534,7 +534,7 @@ class RobustaSink(SinkBase):
         return self.registry.get_global_config()
 
     def __update_node(self, new_node: Node, operation: K8sOperationType):
-        # missing some of discovery pods info, skipping.
+        # cant get the extra pods discovery info.
         if operation == K8sOperationType.CREATE:
             return
 
@@ -544,8 +544,7 @@ class RobustaSink(SinkBase):
             if cache is None:
                 return
 
-            # prevent service updates if the resource version in the cache is lower than the new service
-            if cache.resource_version >= int(new_node.metadata.resourceVersion):
+            if cache.resource_version >= int(new_node.metadata.resourceVersion or 0):
                 return
 
             new_info = self.__from_api_server_node(new_node, [])
