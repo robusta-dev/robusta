@@ -153,7 +153,7 @@ class RobustaSink(SinkBase):
             return True
         return time.time() - self.last_send_time < DISCOVERY_CHECK_THRESHOLD_SEC
 
-    def handle_service_diff(self, new_resource: Union[Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, V1Node], operation: K8sOperationType):
+    def handle_service_diff(self, new_resource: Union[Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Node], operation: K8sOperationType):
         if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)):
             self.__publish_single_service(Discovery.create_service_info(new_resource), operation)
         elif isinstance(new_resource, Node):
