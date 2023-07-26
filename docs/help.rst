@@ -70,6 +70,13 @@ contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-
     For more info see:
     https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate
 
+.. details:: unknown field in com.coreos.monitoring.v1.Prometheus.spec, ValidationError(Prometheus.spec)
+
+    This indicate a potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
+
+    Follow our upgrade guide for upgrading the CRDs:
+    :ref:`Upgrading from older versions (0.10.17 and below)`.
+
 .. details:: robusta-runner isn't working or has exceptions
 
     Check the pod's memory consumption. If necessary, increase the memory request in the Helm values:
