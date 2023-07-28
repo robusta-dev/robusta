@@ -54,6 +54,7 @@ class GlobalConfig(BaseModel):
 
 class KubePrometheusDefaultRules(BaseModel):
     create: bool
+    rules: Dict[str, bool]
 
 
 class KubePrometheusStack(BaseModel):
@@ -80,7 +81,36 @@ class HelmValues(BaseModel, extra=Extra.allow):
         if 'enableManagedPrometheusAlerts' in data:
             data['kubePrometheusStack'] = {
                 "defaultRules": {
-                    "create": False
+                    "create": True,
+                    "rules": {
+                        "node": True,
+                        "k8s": True,
+                        "kubelet": True,
+                        "kubeApiserverHistogram": True,
+                        "kubeApiserverAvailability": True,
+                        "kubeSchedulerRecording": True,
+                        "kubePrometheusGeneral": True,
+                        "kubeApiserverBurnrate": True,
+                        "nodeExporterRecording": True,
+                        "kubePrometheusNodeRecording": True,
+                        "alertmanager": False,
+                        "etcd": False,
+                        "configReloaders": False,
+                        "general": False,
+                        "kubeApiserverSlos": False,
+                        "kubeControllerManager": False,
+                        "kubeProxy": False,
+                        "kubernetesApps": False,
+                        "kubernetesResources": False,
+                        "kubernetesStorage": False,
+                        "kubernetesSystem": False,
+                        "kubeSchedulerAlerting": False,
+                        "kubeStateMetrics": False,
+                        "network": False,
+                        "nodeExporterAlerting": False,
+                        "prometheus": False,
+                        "prometheusOperator": False
+                    }
                 }
             }
 

@@ -1,8 +1,11 @@
 import json
 import logging
 import time
-from typing import Any, Dict, List
-
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+import requests
+from postgrest.base_request_builder import BaseFilterRequestBuilder
+from postgrest.utils import sanitize_param
 from supabase import create_client
 
 from robusta.core.model.cluster_status import ClusterStatus, Account
@@ -165,12 +168,12 @@ class SupabaseDal(AccountResourceFetcher):
             raise
 
     def get_active_services(self) -> List[ServiceInfo]:
-        try:res = (
-            self.client.table(SERVICES_TABLE)
-            .select(
-                "name", "type", "namespace", "classification", "config", "ready_pods", "total_pods", "is_helm_release"
-            ,
-                )
+        try:
+            res = (
+                self.client.table(SERVICES_TABLE)
+                .select(
+                    "name", "type", "namespace", "classification", "config", "ready_pods", "total_pods",
+                    "is_helm_release")
                 .filter("account_id", "eq", self.account_id)
                 .filter("cluster", "eq", self.cluster)
                 .filter("deleted", "eq", False)
@@ -268,12 +271,10 @@ class SupabaseDal(AccountResourceFetcher):
             raise
 
     @staticmethod
-    def custom_filter_request_builder(frq: FilterRequestBuilder, operator: str, criteria: str) -> FilterRequestBuilder:
+    def custom_filter_request_builder(frq: BaseFilterRequestBuilder, operator: str, criteria: str) -> BaseFilterRequestBuilder:
         key, val = sanitize_param(operator), f"{criteria}"
-        if key in frq.session.params:
-            frq.session.params.update({key: frq.session.params.get_list(key) + [val]})
-        else:
-            frq.session.params[key] = val
+        frq.params = frq.params.set(key, val)
+
         return frq
 
     def get_active_jobs(self) -> List[JobInfo]:
@@ -489,35 +490,37 @@ class SupabaseDal(AccountResourceFetcher):
     def get_account_resources(
         self, resource_kind: ResourceKind, updated_at: Optional[datetime]
     ) -> List[AccountResource]:
-        query_builder = (
-            self.client.table(ACCOUNT_RESOURCE_TABLE)
-            .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "updated_at")
-            .filter("resource_kind", "eq", resource_kind)
-            .filter("account_id", "eq", self.account_id)
-        )
-        if updated_at:
-            query_builder.gt("updated_at", updated_at.isoformat())
-        else:
-            # in the initial db fetch don't include the deleted records.
-            # in the subsequent db fetch allow even the deleted records so that they can be removed from the cluster
-            query_builder.filter("deleted", "eq", False)
 
-            query_builder = SupabaseDal.custom_filter_request_builder(
-                query_builder,
-                operator="or",
-                criteria=f'(clusters_target_set.cs.["*"], clusters_target_set.cs.["{self.cluster}"])',
+        try:
+            query_builder = (
+                self.client.table(ACCOUNT_RESOURCE_TABLE)
+                .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "updated_at")
+                .filter("resource_kind", "eq", resource_kind)
+                .filter("account_id", "eq", self.account_id)
             )
-        query_builder = query_builder.order(column="updated_at", desc=False)
-        res = query_builder.execute()
+            if updated_at:
+                query_builder.gt("updated_at", updated_at.isoformat())
+            else:
+                # in the initial db fetch don't include the deleted records.
+                # in the subsequent db fetch allow even the deleted records so that they can be removed from the cluster
+                query_builder.filter("deleted", "eq", False)
 
-        if res.get("status_code") not in [200]:
-            msg = f"Failed to get existing account resources (supabase) error: {res.get('data')}"
+                query_builder = SupabaseDal.custom_filter_request_builder(
+                    query_builder,
+                    operator="or",
+                    criteria=f'(clusters_target_set.cs.["*"], clusters_target_set.cs.["{self.cluster}"])',
+                )
+            query_builder = query_builder.order(column="updated_at", desc=False)
+
+            res = query_builder.execute()
+        except Exception as e:
+            msg = f"Failed to get existing account resources (supabase) error: {e}"
             logging.error(msg)
             self.handle_supabase_error()
             raise Exception(msg)
 
         account_resources: List[AccountResource] = []
-        for data in res.get("data"):
+        for data in res.data:
             resource_state = data["resource_state"]
             resource = AccountResource(
                 entity_id=data["entity_id"],
@@ -533,19 +536,19 @@ class SupabaseDal(AccountResourceFetcher):
         return account_resources
 
     def get_account(self, account_id: str) -> Optional[Account]:
-        res = (
-            self.client.table(ACCOUNTS_TABLE)
-            .select("*")
-            .filter("id", "eq", account_id)
-        ).execute()
-
-        if res.get("status_code") not in [200]:
-            msg = f"Failed to get existing account (supabase) error: {res.get('data')}"
+        try:
+            res = (
+                self.client.table(ACCOUNTS_TABLE)
+                .select("*")
+                .filter("id", "eq", account_id)
+            ).execute()
+        except Exception as e:
+            msg = f"Failed to get existing account (supabase) error: {e}"
             logging.error(msg)
             self.handle_supabase_error()
             raise Exception(msg)
 
-        for data in res.get("data"):
+        for data in res.data:
             return Account(**data)
 
         return None
