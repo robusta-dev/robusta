@@ -178,7 +178,7 @@ class RobustaPod(Pod):
         """
         Fetch pod logs, can replace sensitive data in the logs using a regex
         """
-        if container is None:
+        if not container and self.spec.containers:
             container = self.spec.containers[0].name
         pods_logs = get_pod_logs(
             self.metadata.name,
