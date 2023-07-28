@@ -5,6 +5,14 @@ import streamlit as st
 import streamlit_pydantic as sp
 import yaml
 from pydantic import BaseModel, Field
+from collections import defaultdict
+from robusta.api import Action
+
+from robusta.core.playbooks.generation import ExamplesGenerator
+
+# creating this is slightly expensive so we create one global instance and re-use it
+generator = ExamplesGenerator()
+triggers = dict((v, k) for k, v in generator.triggers_to_yaml.items())
 
 st.set_page_config(
     page_title="Playbook Builder",
@@ -28,19 +36,7 @@ action_expander = st.expander(
 action_parameter_expander = st.expander("Configure Action", expanded=st.session_state.expander_state[3])
 playbook_expander = st.expander(":scroll: Playbook", expanded=st.session_state.expander_state[4])
 
-
-# Temporary code
-class K8sBaseTrigger(BaseModel):
-    kind: str
-    name_prefix: str = Field(None, description="Give it a value")
-    namespace_prefix: str = Field(None, description="Name of a specific namespace")
-    labels_selector: str = None
-
-
-class SomeOtherTriggerParams(BaseModel):
-    namespace_prefix: str = None
-    labels_selector: str = None
-
+trigger_to_actions = defaultdict(list)
 
 class PrometheusParams(BaseModel):
     """
@@ -132,20 +128,6 @@ class LogEnricherParams(ActionParams):
     previous: bool = False
     filter_regex: Optional[str] = None
 
-
-triggers = {
-    "on_oom_kill": {
-        "about": "Fires when a Pod is crash looping. It has the following parameters:",
-        "available_actions": ["logs_enricher", "template_enricher"],
-        "params": K8sBaseTrigger,
-    },
-    "pod_restart": {
-        "about": "Fires when a Pod is updated. Creations and deletions are excluded.",
-        "available_actions": ["template_enricher"],
-        "params": K8sBaseTrigger,
-    },
-}
-
 actions = {
     "logs_enricher": {
         "about": """Fetch and attach Pod logs. The pod to fetch logs for is determined by the alert’s pod label from Prometheus.
@@ -164,9 +146,8 @@ actions = {
 
 # TRIGGER
 with trigger_expander:
-
     trigger_name = st.selectbox("Type to search", triggers.keys(), key="trigger")
-    st.markdown(triggers[trigger_name]["about"])
+    #st.markdown(triggers[trigger_name]["about"])
 
     if st.button("Continue", key="button1"):
         st.session_state.expander_state = [False, True, False, False, False]
@@ -176,7 +157,7 @@ with trigger_expander:
 # TRIGGER PARAMETER
 with trigger_parameter_expander:
     # st.header("Available Parameters")
-    trigger_data = sp.pydantic_input(key=f"trigger_form-{trigger_name}", model=triggers[trigger_name]["params"])
+    trigger_data = sp.pydantic_input(key=f"trigger_form-{trigger_name}", model=triggers[trigger_name])
 
     if st.button("Continue", key="button2"):
         st.session_state.expander_state = [False, False, True, False, False]
@@ -186,7 +167,7 @@ with trigger_parameter_expander:
 # ACTION
 with action_expander:
 
-    action_name = st.selectbox("Choose an action", triggers[trigger_name]["available_actions"], key="actions")
+    action_name = st.selectbox("Choose an action", trigger_to_actions[trigger_name], key="actions")
 
     st.markdown(actions[action_name]["about"])
 

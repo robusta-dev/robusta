@@ -6,7 +6,14 @@ import os
 from typing import Callable
 
 from pydantic import BaseModel
+from robusta.api import Action
 
+from robusta.core.playbooks.generation import ExamplesGenerator
+
+# creating this is slightly expensive so we create one global instance and re-use it
+generator = ExamplesGenerator()
+triggers = dict((v, k) for k, v in generator.triggers_to_yaml.items())
+print(triggers)
 
 class PlaybookDescription(BaseModel):
     function_name: str
@@ -32,13 +39,11 @@ def get_params_schema(func):
     return action_params.schema()
 
 
-def load_scripts(scripts_root):
-    # install_requirements(os.path.join(scripts_root, 'requirements.txt'))
-
+def find_playbook_actions(scripts_root):
     python_files = glob.glob(f"{scripts_root}/*.py")
 
     for script in python_files:
-        print(f"loading playbooks {script}")
+        print(f"found playbook file: {script}")
         filename = os.path.basename(script)
         (module_name, ext) = os.path.splitext(filename)
         spec = importlib.util.spec_from_file_location(module_name, script)
@@ -47,9 +52,13 @@ def load_scripts(scripts_root):
 
         playbooks = inspect.getmembers(
             module,
-            lambda f: inspect.isfunction(f) and getattr(f, "__playbook", None) is not None,
+            lambda f: Action.is_action(f),
         )
         for _, func in playbooks:
+            print("found playbook", func)
+            action = Action(func)
+            print("action", action)
+
             description = PlaybookDescription(
                 function_name=func.__name__,
                 builtin_trigger_params=func.__playbook["default_trigger_params"],
@@ -62,11 +71,10 @@ def load_scripts(scripts_root):
 
 
 def main():
-    # TODO Arik - Need to be fixed in order to expose actions schema
     parser = argparse.ArgumentParser(description="Generate playbook descriptions")
-    parser.add_argument("directory", type=str, help="directory containing the playbooks")
+    parser.add_argument("--directory", type=str, help="directory containing the playbooks", default="./playbooks/robusta_playbooks")
     args = parser.parse_args()
-    load_scripts(args.directory)
+    find_playbook_actions(args.directory)
 
 
 if __name__ == "__main__":
