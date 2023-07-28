@@ -10,11 +10,6 @@ from robusta.api import Action
 
 from robusta.core.playbooks.generation import ExamplesGenerator
 
-# creating this is slightly expensive so we create one global instance and re-use it
-generator = ExamplesGenerator()
-triggers = dict((v, k) for k, v in generator.triggers_to_yaml.items())
-print(triggers)
-
 class PlaybookDescription(BaseModel):
     function_name: str
     docs: str = None
@@ -41,6 +36,7 @@ def get_params_schema(func):
 
 def find_playbook_actions(scripts_root):
     python_files = glob.glob(f"{scripts_root}/*.py")
+    actions = []
 
     for script in python_files:
         print(f"found playbook file: {script}")
@@ -57,24 +53,30 @@ def find_playbook_actions(scripts_root):
         for _, func in playbooks:
             print("found playbook", func)
             action = Action(func)
-            print("action", action)
+            actions.append(action)
 
-            description = PlaybookDescription(
-                function_name=func.__name__,
-                builtin_trigger_params=func.__playbook["default_trigger_params"],
-                docs=inspect.getdoc(func),
-                src=inspect.getsource(func),
-                src_file=inspect.getsourcefile(func),
-                action_params=get_params_schema(func),
-            )
-            print(description.json(), "\n\n")
+            #description = PlaybookDescription(
+            #    function_name=func.__name__,
+            #    builtin_trigger_params=func.__playbook["default_trigger_params"],
+            #    docs=inspect.getdoc(func),
+            #    src=inspect.getsource(func),
+            #    src_file=inspect.getsourcefile(func),
+            #    action_params=get_params_schema(func),
+            #)
+            #print(description.json(), "\n\n")
+
+    return actions
 
 
 def main():
     parser = argparse.ArgumentParser(description="Generate playbook descriptions")
     parser.add_argument("--directory", type=str, help="directory containing the playbooks", default="./playbooks/robusta_playbooks")
     args = parser.parse_args()
-    find_playbook_actions(args.directory)
+    actions = find_playbook_actions(args.directory)
+    generator = ExamplesGenerator()
+    triggers = generator.get_all_triggers()
+    trigger_to_actions = generator.get_triggers_to_actions(actions)
+    print(trigger_to_actions)
 
 
 if __name__ == "__main__":

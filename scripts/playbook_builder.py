@@ -1,3 +1,4 @@
+# run with poetry run streamlit run scripts/playbook_builder.py
 from collections import OrderedDict
 from typing import List, Optional
 
@@ -8,11 +9,13 @@ from pydantic import BaseModel, Field
 from collections import defaultdict
 from robusta.api import Action
 
-from robusta.core.playbooks.generation import ExamplesGenerator
+from robusta.core.playbooks.generation import ExamplesGenerator, find_playbook_actions
 
-# creating this is slightly expensive so we create one global instance and re-use it
 generator = ExamplesGenerator()
-triggers = dict((v, k) for k, v in generator.triggers_to_yaml.items())
+triggers = generator.get_all_triggers()
+actions = find_playbook_actions("./playbooks/robusta_playbooks")
+actions_by_name = { a.action_name : a for a in actions }
+triggers_to_actions = generator.get_triggers_to_actions(actions)
 
 st.set_page_config(
     page_title="Playbook Builder",
@@ -35,113 +38,6 @@ action_expander = st.expander(
 )
 action_parameter_expander = st.expander("Configure Action", expanded=st.session_state.expander_state[3])
 playbook_expander = st.expander(":scroll: Playbook", expanded=st.session_state.expander_state[4])
-
-trigger_to_actions = defaultdict(list)
-
-class PrometheusParams(BaseModel):
-    """
-    :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
-    :var prometheus_auth: Prometheus auth header to be used in Authorization header. If omitted, we will not add any auth header
-
-    :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
-    :example prometheus_auth: Basic YWRtaW46cGFzc3dvcmQ=
-    """
-
-    prometheus_url: Optional[str] = None
-    prometheus_auth: Optional[str] = None
-
-
-class ResourceGraphEnricherParams(PrometheusParams):
-    """
-    :var resource_type: one of: CPU, Memory, Disk (see ResourceChartResourceType)
-    :var graph_duration_minutes: Graph duration is minutes. Default is 60.
-
-    :example resource_type: Memory
-    """
-
-    resource_type: str
-    graph_duration_minutes: int = 60
-
-    previous: bool = Field(False, description="descr text")
-
-
-class CustomGraphEnricherParams(PrometheusParams):
-    """
-    :var promql_query: Promql query. You can use $pod, $node and $node_internal_ip to template (see example). For more information, see https://prometheus.io/docs/prometheus/latest/querying/basics/
-    :var graph_title: A nicer name for the Prometheus query.
-    :var graph_duration_minutes: Graph duration is minutes.
-    :var chart_values_format: Customize the y-axis labels with one of: Plain, Bytes, Percentage (see ChartValuesFormat)
-
-    :example promql_query: instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0
-    :example graph_title: CPU Usage for this nod
-    """
-
-    promql_query: str
-    graph_title: Optional[str] = None
-    graph_duration_minutes: int = 60
-    chart_values_format: str = "Plain"
-
-
-class ActionParams(BaseModel):
-    """
-    Base class for all Action parameter classes.
-    """
-
-    def post_initialization(self):
-        """
-        This function can be used to run post initialization logic on the action params
-        """
-        pass
-
-    pass
-
-
-class GitAuditParams(ActionParams):
-    """
-    :var cluster_name: This cluster name. Changes will be audited under this cluster name.
-    :var git_url: Audit Git repository url.
-    :var git_key: Git repository deployment key with *write* access. To set this up `generate a private/public key pair for GitHub <https://docs.github.com/en/developers/overview/managing-deploy-keys#setup-2>`_.
-    :var ignored_changes: List of changes that shouldn't be audited.
-
-    :example git_url: "git@github.com:arikalon1/robusta-audit.git"
-    """
-
-    cluster_name: str
-    git_url: str = Field(..., description="Example: https://hello.dev")
-    git_key: str
-    ignored_changes: str
-
-
-class LogEnricherParams(ActionParams):
-    """
-    :var container_name: Specific container to get logs from
-    :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
-    :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
-    :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
-    :var filter_regex: only shows lines that match the regex
-    """
-
-    container_name: Optional[str]
-    warn_on_missing_label: bool = False
-    regex_replacer_patterns: Optional[List] = None
-    regex_replacement_style: Optional[str] = None
-    previous: bool = False
-    filter_regex: Optional[str] = None
-
-actions = {
-    "logs_enricher": {
-        "about": """Fetch and attach Pod logs. The pod to fetch logs for is determined by the alert’s pod label from Prometheus.
-                 By default, if the alert has no pod this enricher will silently do nothing.""",
-        "params": LogEnricherParams,
-    },
-    "template_enricher": {
-        "about": """Enrich the finding with the node's status conditions.
-                 Can help troubleshooting Node issues.""",
-        "params": PrometheusParams,
-    },
-}
-
-# End temporary code
 
 
 # TRIGGER
@@ -166,10 +62,10 @@ with trigger_parameter_expander:
 
 # ACTION
 with action_expander:
+    relevant_actions = [a.action_name for a in triggers_to_actions[trigger_name]]
+    action_name = st.selectbox("Choose an action", relevant_actions, key="actions")
 
-    action_name = st.selectbox("Choose an action", trigger_to_actions[trigger_name], key="actions")
-
-    st.markdown(actions[action_name]["about"])
+    #st.markdown(actions[action_name]["about"])
 
     if st.button("Continue", key="button3"):
         st.session_state.expander_state = [False, False, False, True, False]
@@ -179,7 +75,7 @@ with action_expander:
 # ACTION PARAMETER
 with action_parameter_expander:
 
-    action_data = sp.pydantic_input(key=f"action_form-{action_name}", model=actions[action_name]["params"])
+    action_data = sp.pydantic_input(key=f"action_form-{action_name}", model=actions_by_name[action_name].params_type)
 
     if st.button("Continue", key="button4"):
         st.session_state.expander_state = [False, False, False, False, True]
