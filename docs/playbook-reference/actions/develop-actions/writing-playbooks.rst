@@ -1,16 +1,15 @@
 The Basics
 ################################
 
-Introduction
-------------------
-You can add your own playbook actions to Robusta with Python.
+Setting up a development environment
+--------------------------------------
 
-Please consider sharing your playbooks with the community.
+Install the ``robusta-cli`` package locally, so you have autocompletion in your IDE. This is really important, at the playbooks API is not yet fully documented online.
 
 Implementing your first playbook
 -------------------------------------------------------------
 
-Lets write a playbook action in Python:
+Create a python file named ``my_action.py`` with the following contents:
 
 .. code-block:: python
 
@@ -30,8 +29,7 @@ Lets write a playbook action in Python:
             FileBlock("crashing-pod.log", pod_logs)
         ])
 
-You'll need to package up the code as a playbook repository and load it into Robusta.
-Refer to :ref:`Loading External Actions`.
+Package up your code as a playbook repository and load it into Robusta. See instructions in :ref:`Creating Playbook Repositories`.
 
 Using your action
 -------------------------------------------------------------
@@ -151,17 +149,6 @@ A playbook can stop Robusta from running further actions by setting ``event.stop
        if DONT RUN ANYTHING ELSE ON THIS EVENT:
            event.stop_processing = True  # no need to run any other playbook or action
            return
-
-Credits
---------------------
-Robusta uses many open source libraries, but two of them outshine all others:
-
-1. `Hikaru <https://hikaru.readthedocs.io/>`_
-2. `Pydantic <https://pydantic-docs.helpmanual.io/>`_
-
-We owe a special thank you to Tom Carroll and Samuel Colvin.
-
-A further thank you is due to the countless developers who created other libraries we use. You rock.
 
 Common gotchas
 -------------------
