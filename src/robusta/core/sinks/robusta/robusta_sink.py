@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Union
 
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
-from hikaru.model.rel_1_26 import Node
+from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
@@ -26,7 +26,7 @@ from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrap
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
-from robusta.api import Deployment, Pod, DaemonSet, StatefulSet, ReplicaSet
+
 
 class RobustaSink(SinkBase):
     services_publish_lock = threading.Lock()
