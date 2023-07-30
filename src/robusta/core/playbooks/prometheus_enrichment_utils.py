@@ -49,6 +49,9 @@ def run_prometheus_query(
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
 
+    if prometheus_params.prometheus_additional_labels and prometheus_params.add_additional_labels:
+        promql_query = promql_query.replace("}", __get_additional_labels_str(prometheus_params) + "}")
+
     query_duration = ends_at - starts_at
     resolution = get_resolution_from_duration(query_duration)
     increment = max(query_duration.total_seconds() / resolution, 1.0)
@@ -192,6 +195,15 @@ def create_chart_from_prometheus_query(
     return chart
 
 
+def __get_additional_labels_str(prometheus_params: PrometheusParams) -> str:
+    additional_labels = ""
+    if not prometheus_params.prometheus_additional_labels:
+        return additional_labels
+    for key, value in prometheus_params.prometheus_additional_labels.items():
+        additional_labels += f', {key}="{value}"'
+    return additional_labels
+
+
 def create_graph_enrichment(
     start_at: datetime,
     labels: Dict[Any, Any],
@@ -239,7 +251,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Node): ChartOptions(
-            query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0',
+            query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
@@ -251,7 +263,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
-            query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0',
+            query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
@@ -260,7 +272,7 @@ def create_resource_enrichment(
         ),
         (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): None,
         (ResourceChartResourceType.Disk, ResourceChartItemType.Node): ChartOptions(
-            query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+", cluster=""})) != 0))',
+            query='sum(sort_desc(1 -(max without (mountpoint, fstype) (node_filesystem_avail_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+"})/max without (mountpoint, fstype) (node_filesystem_size_bytes{job="node-exporter", fstype!="", instance=~"$node_internal_ip:[0-9]+"})) != 0))',
             values_format=ChartValuesFormat.Percentage,
         ),
     }

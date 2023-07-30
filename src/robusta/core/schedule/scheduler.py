@@ -4,9 +4,10 @@ import threading
 import time
 from collections import defaultdict
 from typing import List
+from croniter import croniter
 
 from robusta.core.persistency.scheduled_jobs_states_dal import SchedulerDal
-from robusta.core.schedule.model import DynamicDelayRepeat, JobStatus, ScheduledJob, SchedulingInfo
+from robusta.core.schedule.model import DynamicDelayRepeat, JobStatus, ScheduledJob, SchedulingInfo, CronScheduleRepeat
 
 # this initial delay is important for when the robusta-runner version is updated
 # at the same time a scheduled playbook is added to the configuration
@@ -125,6 +126,8 @@ class Scheduler:
     def __is_job_done(self, job: ScheduledJob) -> bool:
         if isinstance(job.scheduling_params, DynamicDelayRepeat):
             return job.state.exec_count >= len(job.scheduling_params.delay_periods)
+        elif isinstance(job.scheduling_params, CronScheduleRepeat):
+            return False
         else:  # default, FIXED_DELAY_REPEAT
             return (job.state.exec_count >= job.scheduling_params.repeat) and job.scheduling_params.repeat != -1
 
@@ -138,6 +141,9 @@ class Scheduler:
         if isinstance(job.scheduling_params, DynamicDelayRepeat):
             next_delay_idx = min(job.state.exec_count, len(job.scheduling_params.delay_periods) - 1)
             next_delay = job.scheduling_params.delay_periods[next_delay_idx]
+        elif isinstance(job.scheduling_params, CronScheduleRepeat):
+            now = time.time()
+            next_delay = croniter(job.scheduling_params.cron_expression, now).get_next() - now
         else:  # FIXED_DELAY_REPEAT type
             next_delay = job.scheduling_params.seconds_delay
 

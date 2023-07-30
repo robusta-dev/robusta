@@ -22,12 +22,38 @@ Alternatively, generate a key by running ``robusta integrations slack`` and set 
          name: main_slack_sink
          api_key: MY SLACK KEY
          slack_channel: MY SLACK CHANNEL
+         channel_override: DYNAMIC SLACK CHANNEL OVERRIDE (Optional)
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 .. note::
 
     You can change the slack_channel at any time in ``generated_values.yaml``. No need to re-run ``robusta integrations slack``.
+
+Dynamic Slack Channels
+-------------------------------------------------------------------
+
+You can set the ``Slack`` channel dynamically, based on the ``cluster name`` or a value of a specific ``label`` or ``annotation``.
+
+This can be done using the optional ``channel_override`` sink parameter.
+
+Allowed values for this parameters are:
+
+- ``cluster_name`` - The Slack channel will be the Robusta ``cluster_name``
+- ``labels.foo`` - The Slack channel will be taken from a ``label`` value with the key ``foo``. If no such label, the default channel will be used.
+- ``annotations.anno`` - The Slack channel will be taken from an ``annotation`` value with the key ``anno``. If no such annotation, the default channel will be used.
+
+For example:
+
+.. code-block:: yaml
+
+     sinks_config:
+     # slack integration params
+     - slack_sink:
+         name: main_slack_sink
+         api_key: xoxb-112...
+         slack_channel: my-fallback-channel
+         channel_override: "labels.slack"
 
 Using Private Channels
 -------------------------------------------------------------------
@@ -93,4 +119,4 @@ your own. This is not recommended for most companies due to the added complexity
 .. warning::
 
     When using a custom Slack app, callback buttons are not supported due to complexities in how Slack handles incoming
-    messages. :ref:`Contact us if you need assistance. <help>`
+    messages. :ref:`Contact us if you need assistance. <Getting Support>`

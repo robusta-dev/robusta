@@ -1,6 +1,6 @@
 import logging
 from enum import Enum, auto
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, SecretStr, validator
 
@@ -91,19 +91,37 @@ class PrometheusParams(ActionParams):
     """
     :var prometheus_url: Prometheus url. If omitted, we will try to find a prometheus instance in the same cluster
     :var prometheus_auth: Prometheus auth header to be used in Authorization header. If omitted, we will not add any auth header
+    :var prometheus_url_query_string: Additional query string parameters to be appended to the Prometheus connection URL
+    :var prometheus_additional_labels: A dictionary of additional labels needed for multi-cluster prometheus
+    :var add_additional_labels: adds the additional labels (if defined) to the query
 
     :example prometheus_url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
     :example prometheus_auth: Basic YWRtaW46cGFzc3dvcmQ=
+    :example prometheus_url_query_string: "demo-query=example-data"
+    :example prometheus_additional_labels:
+               - cluster: 'cluster-2-test'
+               - env: 'prod'
+
     """
 
     prometheus_url: Optional[str] = None
     prometheus_auth: Optional[SecretStr] = None
+    prometheus_url_query_string: Optional[str] = None
+    prometheus_additional_labels: Optional[Dict[str, str]] = None
+    add_additional_labels: bool = True
 
     @validator("prometheus_url", allow_reuse=True)
     def validate_protocol(cls, v):
         if v and not v.startswith("http"):  # if the user configured url without http(s)
             v = f"http://{v}"
             logging.info(f"Adding protocol to prometheus_url: {v}")
+        return v
+
+    @validator("prometheus_url_query_string", allow_reuse=True)
+    def validate_query_string(cls, v):
+        if v and v.startswith("?"):  # if the user configured query string is using '?'
+            v = v.lstrip("?")
+            logging.info(f"Stripping '?' off prometheus_url_query_string: {v}")
         return v
 
 

@@ -19,6 +19,7 @@ Sinks Reference
    Opsgenie
    PagerDuty
    VictorOps
+   YandexMessenger
    jira
    webhook
    file
@@ -92,6 +93,11 @@ Click a sink for setup instructions.
         :link: VictorOps
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` Yandex Messenger
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: YandexMessenger
+        :link-type: doc
+
     .. grid-item-card:: :octicon:`cpu;1em;` Jira
         :class-card: sd-bg-light sd-bg-text-light
         :link: jira
@@ -120,3 +126,5 @@ Click a sink for setup instructions.
 
 
 **Need support for a new sink?** `Tell us and we'll add it. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
+
+You can also :ref:`add the sink yourself <Developing a New Sink>` and open a PR.

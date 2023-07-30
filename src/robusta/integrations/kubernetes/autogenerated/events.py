@@ -2,25 +2,40 @@
 
 import logging
 import traceback
-from dataclasses import dataclass
 from abc import abstractmethod
-from hikaru.model.rel_1_26 import Pod,ReplicaSet,DaemonSet,Deployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,Job,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress
-from hikaru.utils import Response
-from pydantic import BaseModel
-from typing import Union, Optional, List
-from ..base_event import K8sBaseChangeEvent
-from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
-from ....core.reporting.base import FindingSubject
-from ....core.reporting.consts import FindingSubjectType, FindingSource
-from ....core.reporting.finding_subjects import KubeObjFindingSubject
-from  robusta.integrations.kubernetes.custom_models import RobustaPod,RobustaDeployment,RobustaJob
+from dataclasses import dataclass
+from typing import List, Optional, Union
+
+from hikaru.model.rel_1_26 import (
+    ClusterRole,
+    ClusterRoleBinding,
+    ConfigMap,
+    DaemonSet,
+    Deployment,
+    Event,
+    HorizontalPodAutoscaler,
+    Ingress,
+    Job,
+    Namespace,
+    NetworkPolicy,
+    Node,
+    PersistentVolume,
+    PersistentVolumeClaim,
+    Pod,
+    ReplicaSet,
+    Service,
+    ServiceAccount,
+    StatefulSet,
+)
 from hikaru.model.rel_1_26.v1 import ClusterRole as v1ClusterRole
 from hikaru.model.rel_1_26.v1 import ClusterRoleBinding as v1ClusterRoleBinding
 from hikaru.model.rel_1_26.v1 import ConfigMap as v1ConfigMap
 from hikaru.model.rel_1_26.v1 import DaemonSet as v1DaemonSet
 from hikaru.model.rel_1_26.v1 import Deployment as v1Deployment
 from hikaru.model.rel_1_26.v1 import Event as v1Event
-from hikaru.model.rel_1_26.v1 import HorizontalPodAutoscaler as v1HorizontalPodAutoscaler
+from hikaru.model.rel_1_26.v1 import (
+    HorizontalPodAutoscaler as v1HorizontalPodAutoscaler,
+)
 from hikaru.model.rel_1_26.v1 import Ingress as v1Ingress
 from hikaru.model.rel_1_26.v1 import Job as v1Job
 from hikaru.model.rel_1_26.v1 import Namespace as v1Namespace
@@ -33,7 +48,20 @@ from hikaru.model.rel_1_26.v1 import ReplicaSet as v1ReplicaSet
 from hikaru.model.rel_1_26.v1 import Service as v1Service
 from hikaru.model.rel_1_26.v1 import ServiceAccount as v1ServiceAccount
 from hikaru.model.rel_1_26.v1 import StatefulSet as v1StatefulSet
+from hikaru.utils import Response
+from pydantic import BaseModel
 
+from robusta.integrations.kubernetes.custom_models import (
+    RobustaDeployment,
+    RobustaJob,
+    RobustaPod,
+)
+
+from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
+from ....core.reporting.base import FindingSubject
+from ....core.reporting.consts import FindingSource, FindingSubjectType
+from ....core.reporting.finding_subjects import KubeObjFindingSubject
+from ..base_event import K8sBaseChangeEvent
 
 LOADERS_MAPPINGS = {
     "pod": (True, RobustaPod.readNamespacedPod),
@@ -79,13 +107,83 @@ class ResourceAttributes(ExecutionEventBaseParams):
 
 @dataclass
 class KubernetesResourceEvent(ExecutionBaseEvent):
-    obj: Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress]] = None
+    obj: Optional[
+        Union[
+            RobustaPod,
+            ReplicaSet,
+            DaemonSet,
+            RobustaDeployment,
+            StatefulSet,
+            Service,
+            Event,
+            HorizontalPodAutoscaler,
+            Node,
+            ClusterRole,
+            ClusterRoleBinding,
+            RobustaJob,
+            Namespace,
+            ServiceAccount,
+            PersistentVolume,
+            PersistentVolumeClaim,
+            NetworkPolicy,
+            ConfigMap,
+            Ingress,
+        ]
+    ] = None
 
-    def __init__(self, obj: Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress], named_sinks: List[str]):
+    def __init__(
+        self,
+        obj: Union[
+            RobustaPod,
+            ReplicaSet,
+            DaemonSet,
+            RobustaDeployment,
+            StatefulSet,
+            Service,
+            Event,
+            HorizontalPodAutoscaler,
+            Node,
+            ClusterRole,
+            ClusterRoleBinding,
+            RobustaJob,
+            Namespace,
+            ServiceAccount,
+            PersistentVolume,
+            PersistentVolumeClaim,
+            NetworkPolicy,
+            ConfigMap,
+            Ingress,
+        ],
+        named_sinks: List[str],
+    ):
         super().__init__(named_sinks=named_sinks)
         self.obj = obj
 
-    def get_resource(self) -> Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress]]:
+    def get_resource(
+        self,
+    ) -> Optional[
+        Union[
+            RobustaPod,
+            ReplicaSet,
+            DaemonSet,
+            RobustaDeployment,
+            StatefulSet,
+            Service,
+            Event,
+            HorizontalPodAutoscaler,
+            Node,
+            ClusterRole,
+            ClusterRoleBinding,
+            RobustaJob,
+            Namespace,
+            ServiceAccount,
+            PersistentVolume,
+            PersistentVolumeClaim,
+            NetworkPolicy,
+            ConfigMap,
+            Ingress,
+        ]
+    ]:
         return self.obj
 
     def get_subject(self) -> FindingSubject:
@@ -94,6 +192,8 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
     @classmethod
@@ -103,11 +203,7 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
     @staticmethod
     def from_params(params: ResourceAttributes) -> Optional["KubernetesResourceEvent"]:
         try:
-            obj = ResourceLoader.read_resource(
-                kind=params.kind,
-                name=params.name,
-                namespace=params.namespace
-            ).obj
+            obj = ResourceLoader.read_resource(kind=params.kind, name=params.name, namespace=params.namespace).obj
         except Exception:
             logging.error(f"Could not load resource {params}", exc_info=True)
             return None
@@ -116,10 +212,78 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
 
 @dataclass
 class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
-    obj: Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1ConfigMap,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Ingress,v1Namespace,v1NetworkPolicy,v1Node,v1PersistentVolume,v1PersistentVolumeClaim,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet]] = None
-    old_obj: Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1ConfigMap,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Ingress,v1Namespace,v1NetworkPolicy,v1Node,v1PersistentVolume,v1PersistentVolumeClaim,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet]] = None
+    obj: Optional[
+        Union[
+            RobustaDeployment,
+            RobustaJob,
+            RobustaPod,
+            v1ClusterRole,
+            v1ClusterRoleBinding,
+            v1ConfigMap,
+            v1DaemonSet,
+            v1Event,
+            v1HorizontalPodAutoscaler,
+            v1Ingress,
+            v1Namespace,
+            v1NetworkPolicy,
+            v1Node,
+            v1PersistentVolume,
+            v1PersistentVolumeClaim,
+            v1ReplicaSet,
+            v1Service,
+            v1ServiceAccount,
+            v1StatefulSet,
+        ]
+    ] = None
+    old_obj: Optional[
+        Union[
+            RobustaDeployment,
+            RobustaJob,
+            RobustaPod,
+            v1ClusterRole,
+            v1ClusterRoleBinding,
+            v1ConfigMap,
+            v1DaemonSet,
+            v1Event,
+            v1HorizontalPodAutoscaler,
+            v1Ingress,
+            v1Namespace,
+            v1NetworkPolicy,
+            v1Node,
+            v1PersistentVolume,
+            v1PersistentVolumeClaim,
+            v1ReplicaSet,
+            v1Service,
+            v1ServiceAccount,
+            v1StatefulSet,
+        ]
+    ] = None
 
-    def get_resource(self) -> Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1ConfigMap,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Ingress,v1Namespace,v1NetworkPolicy,v1Node,v1PersistentVolume,v1PersistentVolumeClaim,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet]]:
+    def get_resource(
+        self,
+    ) -> Optional[
+        Union[
+            RobustaDeployment,
+            RobustaJob,
+            RobustaPod,
+            v1ClusterRole,
+            v1ClusterRoleBinding,
+            v1ConfigMap,
+            v1DaemonSet,
+            v1Event,
+            v1HorizontalPodAutoscaler,
+            v1Ingress,
+            v1Namespace,
+            v1NetworkPolicy,
+            v1Node,
+            v1PersistentVolume,
+            v1PersistentVolumeClaim,
+            v1ReplicaSet,
+            v1Service,
+            v1ServiceAccount,
+            v1StatefulSet,
+        ]
+    ]:
         return self.obj
 
 
@@ -151,8 +315,9 @@ class PodEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -169,6 +334,8 @@ class PodChangeEvent(PodEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -200,8 +367,9 @@ class ReplicaSetEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -218,6 +386,8 @@ class ReplicaSetChangeEvent(ReplicaSetEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -249,8 +419,9 @@ class DaemonSetEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -267,6 +438,8 @@ class DaemonSetChangeEvent(DaemonSetEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -298,8 +471,9 @@ class DeploymentEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -316,6 +490,8 @@ class DeploymentChangeEvent(DeploymentEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -347,8 +523,9 @@ class StatefulSetEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -365,6 +542,8 @@ class StatefulSetChangeEvent(StatefulSetEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -396,8 +575,9 @@ class ServiceEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -414,6 +594,8 @@ class ServiceChangeEvent(ServiceEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -445,8 +627,9 @@ class EventEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -463,6 +646,8 @@ class EventChangeEvent(EventEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -482,7 +667,9 @@ class HorizontalPodAutoscalerEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: HorizontalPodAutoscalerAttributes) -> Optional["HorizontalPodAutoscalerEvent"]:
         try:
-            obj = HorizontalPodAutoscaler.readNamespacedHorizontalPodAutoscaler(name=params.name, namespace=params.namespace).obj
+            obj = HorizontalPodAutoscaler.readNamespacedHorizontalPodAutoscaler(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load HorizontalPodAutoscaler {params}", exc_info=True)
             return None
@@ -494,8 +681,9 @@ class HorizontalPodAutoscalerEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -512,12 +700,13 @@ class HorizontalPodAutoscalerChangeEvent(HorizontalPodAutoscalerEvent, Kubernete
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
 class NodeAttributes(ExecutionEventBaseParams):
     name: str
-
 
 
 @dataclass
@@ -543,8 +732,9 @@ class NodeEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -561,12 +751,13 @@ class NodeChangeEvent(NodeEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
 class ClusterRoleAttributes(ExecutionEventBaseParams):
     name: str
-
 
 
 @dataclass
@@ -592,8 +783,9 @@ class ClusterRoleEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -610,12 +802,13 @@ class ClusterRoleChangeEvent(ClusterRoleEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
 class ClusterRoleBindingAttributes(ExecutionEventBaseParams):
     name: str
-
 
 
 @dataclass
@@ -641,8 +834,9 @@ class ClusterRoleBindingEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -659,6 +853,8 @@ class ClusterRoleBindingChangeEvent(ClusterRoleBindingEvent, KubernetesAnyChange
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -690,8 +886,9 @@ class JobEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -708,12 +905,13 @@ class JobChangeEvent(JobEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
 class NamespaceAttributes(ExecutionEventBaseParams):
     name: str
-
 
 
 @dataclass
@@ -739,8 +937,9 @@ class NamespaceEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -757,6 +956,8 @@ class NamespaceChangeEvent(NamespaceEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -788,8 +989,9 @@ class ServiceAccountEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -806,12 +1008,13 @@ class ServiceAccountChangeEvent(ServiceAccountEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
 class PersistentVolumeAttributes(ExecutionEventBaseParams):
     name: str
-
 
 
 @dataclass
@@ -837,8 +1040,9 @@ class PersistentVolumeEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -855,6 +1059,8 @@ class PersistentVolumeChangeEvent(PersistentVolumeEvent, KubernetesAnyChangeEven
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -874,7 +1080,9 @@ class PersistentVolumeClaimEvent(KubernetesResourceEvent):
     @staticmethod
     def from_params(params: PersistentVolumeClaimAttributes) -> Optional["PersistentVolumeClaimEvent"]:
         try:
-            obj = PersistentVolumeClaim.readNamespacedPersistentVolumeClaim(name=params.name, namespace=params.namespace).obj
+            obj = PersistentVolumeClaim.readNamespacedPersistentVolumeClaim(
+                name=params.name, namespace=params.namespace
+            ).obj
         except Exception:
             logging.error(f"Could not load PersistentVolumeClaim {params}", exc_info=True)
             return None
@@ -886,8 +1094,9 @@ class PersistentVolumeClaimEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -904,6 +1113,8 @@ class PersistentVolumeClaimChangeEvent(PersistentVolumeClaimEvent, KubernetesAny
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -935,8 +1146,9 @@ class NetworkPolicyEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -953,6 +1165,8 @@ class NetworkPolicyChangeEvent(NetworkPolicyEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -984,8 +1198,9 @@ class ConfigMapEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -1002,6 +1217,8 @@ class ConfigMapChangeEvent(ConfigMapEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
@@ -1033,8 +1250,9 @@ class IngressEvent(KubernetesResourceEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
-
 
 
 @dataclass
@@ -1051,28 +1269,29 @@ class IngressChangeEvent(IngressEvent, KubernetesAnyChangeEvent):
             subject_type=FindingSubjectType.from_kind(self.obj.kind),
             namespace=self.obj.metadata.namespace,
             node=KubeObjFindingSubject.get_node_name(self.obj),
+            labels=self.obj.metadata.labels,
+            annotations=self.obj.metadata.annotations,
         )
 
 
-
 KIND_TO_EVENT_CLASS = {
-    'pod': PodChangeEvent,
-    'replicaset': ReplicaSetChangeEvent,
-    'daemonset': DaemonSetChangeEvent,
-    'deployment': DeploymentChangeEvent,
-    'statefulset': StatefulSetChangeEvent,
-    'service': ServiceChangeEvent,
-    'event': EventChangeEvent,
-    'horizontalpodautoscaler': HorizontalPodAutoscalerChangeEvent,
-    'node': NodeChangeEvent,
-    'clusterrole': ClusterRoleChangeEvent,
-    'clusterrolebinding': ClusterRoleBindingChangeEvent,
-    'job': JobChangeEvent,
-    'namespace': NamespaceChangeEvent,
-    'serviceaccount': ServiceAccountChangeEvent,
-    'persistentvolume': PersistentVolumeChangeEvent,
-    'persistentvolumeclaim': PersistentVolumeClaimChangeEvent,
-    'networkpolicy': NetworkPolicyChangeEvent,
-    'configmap': ConfigMapChangeEvent,
-    'ingress': IngressChangeEvent
+    "pod": PodChangeEvent,
+    "replicaset": ReplicaSetChangeEvent,
+    "daemonset": DaemonSetChangeEvent,
+    "deployment": DeploymentChangeEvent,
+    "statefulset": StatefulSetChangeEvent,
+    "service": ServiceChangeEvent,
+    "event": EventChangeEvent,
+    "horizontalpodautoscaler": HorizontalPodAutoscalerChangeEvent,
+    "node": NodeChangeEvent,
+    "clusterrole": ClusterRoleChangeEvent,
+    "clusterrolebinding": ClusterRoleBindingChangeEvent,
+    "job": JobChangeEvent,
+    "namespace": NamespaceChangeEvent,
+    "serviceaccount": ServiceAccountChangeEvent,
+    "persistentvolume": PersistentVolumeChangeEvent,
+    "persistentvolumeclaim": PersistentVolumeClaimChangeEvent,
+    "networkpolicy": NetworkPolicyChangeEvent,
+    "configmap": ConfigMapChangeEvent,
+    "ingress": IngressChangeEvent,
 }

@@ -5,11 +5,10 @@ import os
 import shlex
 import uuid
 from datetime import datetime
-from typing import Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
-from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, SecretKeySelector
+from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from pydantic import BaseModel, ValidationError, validator
-
 from robusta.api import (
     RELEASE_NAME,
     EnrichmentAnnotation,
@@ -29,7 +28,8 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.2.1")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.4.1")
+KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
@@ -57,6 +57,7 @@ class KRRRecommendedInfo(BaseModel):
 class KRRRecommended(BaseModel):
     requests: Dict[str, KRRRecommendedInfo]
     limits: Dict[str, KRRRecommendedInfo]
+    info: Dict[str, Optional[str]]
 
 
 class KRRMetric(BaseModel):
@@ -77,11 +78,17 @@ class KRRScan(BaseModel):
         return krr_severity_to_priority(self.severity)
 
 
+class KRRStrategyData(BaseModel):
+    name: str
+    settings: dict[str, Any]
+
+
 class KRRResponse(BaseModel):
     scans: List[KRRScan]
     score: int
     resources: List[ResourceType] = ["cpu", "memory"]
-    description: Optional[str] = None
+    description: Optional[str] = None  # This field is not returned by KRR < v1.2.0
+    strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
 
 
 class KRRParams(PrometheusParams):
@@ -160,6 +167,17 @@ def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
     )
 
 
+def get_krr_additional_flags(params: KRRParams) -> str:
+    if not params.prometheus_additional_labels or len(params.prometheus_additional_labels) != 1:
+        # only one label is supported to be passed to krr currently
+        return ""
+    if any(label in params.args_sanitized for label in ["--prometheus-label", "-l", "--prometheus-cluster-label"]):
+        # a label is already defined in the args
+        return ""
+    key, value = next(iter(params.prometheus_additional_labels.items()))
+    return f"--prometheus-label {key} -l {value}"
+
+
 @action
 def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
@@ -167,8 +185,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     scan_id = str(uuid.uuid4())
     headers = PrometheusAuthorization.get_authorization_headers(params)
+    additional_flags = get_krr_additional_flags(params)
 
-    python_command = f"python krr.py {params.strategy} {params.args_sanitized} -q -f json "
+    python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} -q -f json "
     if params.prometheus_url:
         python_command += f"-p {params.prometheus_url}"
     auth_header = headers["Authorization"] if "Authorization" in headers else ""
@@ -194,15 +213,19 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         ]
         # adding secret env var in krr pod command
         python_command += f'--prometheus-auth-header "${env_var_auth_name}"'
-
+    resources = ResourceRequirements(
+        limits={"memory": (str(KRR_MEMORY_LIMIT))},
+    )
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
         containers=[
             Container(
                 name=to_kubernetes_name(IMAGE),
                 image=IMAGE,
+                imagePullPolicy="Always",
                 command=["/bin/sh", "-c", python_command],
                 env=env_var if env_var else [],
+                resources=resources,
             )
         ],
         restartPolicy="Never",
@@ -265,6 +288,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                         },
                         "metric": scan.metrics.get(resource).dict() if scan.metrics.get(resource) else {},
                         "description": krr_scan.description,
+                        "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
                     }
                     for resource in krr_scan.resources
                 ],

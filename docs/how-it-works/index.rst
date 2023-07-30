@@ -66,7 +66,7 @@ Track Failing Kubernetes Jobs
 
 Robusta can generate alerts by listening to the APIServer, rather than just improving existing Prometheus alerts.
 
-This is useful is you don't have Prometheus, and for cases when writing Prometheus alerts is awkward.
+This is useful if you don't have Prometheus, and for cases when writing Prometheus alerts is awkward.
 
 Lets notify in Slack when a Kubernetes Job fails:
 
