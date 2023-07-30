@@ -5,36 +5,39 @@ import threading
 import time
 from typing import Dict, List, Optional
 
+
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
+from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
+from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
+from robusta.core.sinks.robusta.discovery_metrics import DiscoveryMetrics
+from robusta.core.sinks.robusta.prometheus_health_checker import PrometheusHealthChecker
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
 
-from robusta.integrations.prometheus.utils import get_prometheus_connect, get_prometheus_flags, \
-    check_prometheus_connection
-from robusta.core.model.base_params import PrometheusParams
-from robusta.utils.silence_utils import BaseSilenceParams, get_alertmanager_silences_connection
-
 
 class RobustaSink(SinkBase):
+    services_publish_lock = threading.Lock()
+
     def __init__(self, sink_config: RobustaSinkConfigWrapper, registry):
         from robusta.core.sinks.robusta.dal.supabase_dal import SupabaseDal
 
         super().__init__(sink_config.robusta_sink, registry)
         self.token = sink_config.robusta_sink.token
         self.ttl_hours = sink_config.robusta_sink.ttl_hours
+        self.persist_events = sink_config.robusta_sink.persist_events
 
         robusta_token = RobustaToken(**json.loads(base64.b64decode(self.token)))
         if self.account_id != robusta_token.account_id:
@@ -44,6 +47,7 @@ class RobustaSink(SinkBase):
                 f"Using account id from Robusta token."
             )
         self.account_id = robusta_token.account_id
+        self.__discovery_metrics = DiscoveryMetrics()
 
         self.dal = SupabaseDal(
             robusta_token.store_url,
@@ -51,24 +55,28 @@ class RobustaSink(SinkBase):
             robusta_token.account_id,
             robusta_token.email,
             robusta_token.password,
-            sink_config.robusta_sink.name,
+            sink_config.robusta_sink,
             self.cluster_name,
             self.signing_key
         )
 
         self.first_prometheus_alert_time = 0
         self.last_send_time = 0
+        self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
+
+        self.__prometheus_health_checker = PrometheusHealthChecker(discovery_period_sec=self.__discovery_period_sec,
+                                                                   global_config=self.get_global_config())
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         # start cluster discovery
         self.__active = True
-        self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
         # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
         # helps differentiate between no jobs, to not initialized
         self.__jobs_cache: Optional[Dict[str, JobInfo]] = None
+        self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
         self.__thread = threading.Thread(target=self.__discover_cluster)
         self.__thread.start()
@@ -118,6 +126,13 @@ class RobustaSink(SinkBase):
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
 
+    def __assert_helm_releases_cache_initialized(self):
+        if self.__helm_releases_cache is None:
+            logging.info("Initializing helm releases cache")
+            self.__helm_releases_cache: Dict[str, HelmRelease] = {}
+            for helm_release in self.dal.get_active_helm_release():
+                self.__helm_releases_cache[helm_release.get_service_key()] = helm_release
+
     def __assert_namespaces_cache_initialized(self):
         if not self.__namespaces_cache:
             logging.info("Initializing namespaces cache")
@@ -127,6 +142,7 @@ class RobustaSink(SinkBase):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__jobs_cache = None
+        self.__helm_releases_cache = None
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
 
     def stop(self):
@@ -137,32 +153,71 @@ class RobustaSink(SinkBase):
             return True
         return time.time() - self.last_send_time < DISCOVERY_CHECK_THRESHOLD_SEC
 
+    def handle_service_diff(self, new_service: ServiceInfo, operation: K8sOperationType):
+        self.__publish_single_service(new_service, operation)
+
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.dal.persist_finding(finding)
 
+    def __publish_single_service(self, new_service: ServiceInfo, operation: K8sOperationType):
+        try:
+            with self.services_publish_lock:
+                service_key = new_service.get_service_key()
+                cached_service = self.__services_cache.get(service_key, None)
+
+                # prevent service updates if the resource version in the cache is lower than the new service
+                if cached_service and cached_service.resource_version >= new_service.resource_version:
+                    return
+
+                if operation == K8sOperationType.CREATE or operation == K8sOperationType.UPDATE:
+                    # handle created/updated services
+                    self.__services_cache[service_key] = new_service
+                    self.dal.persist_services([new_service])
+
+                elif operation == K8sOperationType.DELETE:
+                    if cached_service:
+                        del self.__services_cache[service_key]
+
+                    new_service.deleted = True
+                    self.dal.persist_services([new_service])
+
+        except Exception as e:
+            logging.error(
+                f"An error occured while publishing single service: name - {new_service.name}, namespace - {new_service.namespace}  service type: {new_service.service_type}  | {e}")
+
     def __publish_new_services(self, active_services: List[ServiceInfo]):
-        # convert to map
-        curr_services = {}
-        for service in active_services:
-            curr_services[service.get_service_key()] = service
+        with self.services_publish_lock:
+            # convert to map
+            curr_services = {}
+            for service in active_services:
+                curr_services[service.get_service_key()] = service
 
-        # handle deleted services
-        cache_keys = list(self.__services_cache.keys())
-        updated_services: List[ServiceInfo] = []
-        for service_key in cache_keys:
-            if not curr_services.get(service_key):  # service doesn't exist any more, delete it
-                self.__services_cache[service_key].deleted = True
-                updated_services.append(self.__services_cache[service_key])
-                del self.__services_cache[service_key]
+            # handle deleted services
+            cache_keys = list(self.__services_cache.keys())
+            updated_services: List[ServiceInfo] = []
+            for service_key in cache_keys:
+                if not curr_services.get(service_key):  # service doesn't exist any more, delete it
+                    self.__services_cache[service_key].deleted = True
+                    updated_services.append(self.__services_cache[service_key])
+                    del self.__services_cache[service_key]
 
-        # new or changed services
-        for service_key in curr_services.keys():
-            current_service = curr_services[service_key]
-            if self.__services_cache.get(service_key) != current_service:  # service not in the cache, or changed
-                updated_services.append(current_service)
-                self.__services_cache[service_key] = current_service
+            # new or changed services
+            for service_key in curr_services.keys():
+                current_service = curr_services[service_key]
+                cached_service = self.__services_cache.get(service_key)
 
-        self.dal.persist_services(updated_services)
+                # prevent service updates if the resource version in the cache is lower than the new service
+                if cached_service and cached_service.resource_version >= current_service.resource_version:
+                    continue
+
+                # service not in the cache, or changed
+                if self.__services_cache.get(service_key) != current_service:
+                    updated_services.append(current_service)
+                    self.__services_cache[service_key] = current_service
+
+            self.__discovery_metrics.on_services_updated(len(updated_services))
+
+            self.dal.persist_services(updated_services)
 
     def __get_events_history(self):
         try:
@@ -180,7 +235,22 @@ class RobustaSink(SinkBase):
         except Exception:
             logging.error("Error getting events history", exc_info=True)
 
-    def __discover_resources(self):
+    def __send_helm_release_events(self, release_data: List[HelmRelease]):
+        try:
+            logging.debug("Sending helm release events")
+            response = WebApi.send_helm_release_events(
+                release_data=release_data,
+                retries=4,
+                timeout_delay=30,
+            )
+            if response != 200:
+                logging.error("Error occured while sending `helm release trigger event`")
+            else:
+                logging.debug("Sent `helm release` trigger event.")
+        except Exception:
+            logging.error("Error occured while sending `helm release` trigger event", exc_info=True)
+
+    def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
         try:
             results: DiscoveryResults = Discovery.discover_resources()
@@ -194,6 +264,9 @@ class RobustaSink(SinkBase):
             self.__assert_jobs_cache_initialized()
             self.__publish_new_jobs(results.jobs)
 
+            self.__assert_helm_releases_cache_initialized()
+            self.__publish_new_helm_releases(results.helm_releases)
+
             self.__assert_namespaces_cache_initialized()
             self.__publish_new_namespaces(results.namespaces)
 
@@ -201,6 +274,8 @@ class RobustaSink(SinkBase):
             RobustaSink.__save_resolver_resources(
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
             )
+
+            return results
 
         except Exception:
             # we had an error during discovery. Reset caches to align the data with the storage
@@ -286,6 +361,8 @@ class RobustaSink(SinkBase):
                 updated_nodes.append(updated_node)
                 self.__nodes_cache[node_name] = updated_node
 
+        self.__discovery_metrics.on_nodes_updated(len(updated_nodes))
+
         self.dal.publish_nodes(updated_nodes)
 
     def __safe_delete_job(self, job_key):
@@ -317,46 +394,46 @@ class RobustaSink(SinkBase):
                 updated_jobs.append(current_job)
                 self.__jobs_cache[job_key] = current_job
 
+        self.__discovery_metrics.on_jobs_updated(len(updated_jobs))
         self.dal.publish_jobs(updated_jobs)
 
+    def __publish_new_helm_releases(self, active_helm_releases: List[HelmRelease]):
+        curr_helm_releases = {}
+        for helm_release in active_helm_releases:
+            curr_helm_releases[helm_release.get_service_key()] = helm_release
+
+        # handle deleted helm release
+        cache_keys = list(self.__helm_releases_cache.keys())
+        helm_releases: List[HelmRelease] = []
+        for helm_release_key in cache_keys:
+            if not curr_helm_releases.get(helm_release_key):  # helm release doesn't exist any more, delete it
+                self.__helm_releases_cache[helm_release_key].deleted = True
+                helm_releases.append(self.__helm_releases_cache[helm_release_key])
+                del self.__helm_releases_cache[helm_release_key]
+
+        # new or changed helm release
+        for helm_release_key in curr_helm_releases.keys():
+            current_helm_release = curr_helm_releases[helm_release_key]
+            if self.__helm_releases_cache.get(
+                    helm_release_key) != current_helm_release:  # helm_release not in the cache, or changed
+                helm_releases.append(current_helm_release)
+                self.__helm_releases_cache[helm_release_key] = current_helm_release
+
+        self.dal.publish_helm_releases(helm_releases)
+
     def __update_cluster_status(self):
-        global_config = self.get_global_config()
+        prometheus_health_checker_status = self.__prometheus_health_checker.get_status()
         activity_stats = ActivityStats(
             relayConnection=False,
-            alertManagerConnection=False,
-            prometheusConnection=False,
-            prometheusRetentionTime='',
+            alertManagerConnection=prometheus_health_checker_status.alertmanager,
+            prometheusConnection=prometheus_health_checker_status.prometheus,
+            prometheusRetentionTime=prometheus_health_checker_status.prometheus_retention_time,
         )
 
         # checking the status of relay connection
         receiver = self.registry.get_receiver()
         if isinstance(receiver, ActionRequestReceiver):
             activity_stats.relayConnection = receiver.healthy
-
-        # checking the status of prometheus
-        try:
-            prometheus_params = PrometheusParams(prometheus_url=global_config.get("prometheus_url", ""))
-            prometheus_connection = get_prometheus_connect(prometheus_params=prometheus_params)
-            check_prometheus_connection(prom=prometheus_connection, params={})
-
-            activity_stats.prometheusConnection = True
-
-            flag_response = get_prometheus_flags(prom=prometheus_connection)
-            if flag_response:
-                data = flag_response.get('data', None)
-                if data:
-                    activity_stats.prometheusRetentionTime = data.get('storage.tsdb.retention.time', "")
-
-        except Exception as e:
-            logging.error(f"Failed to connect to prometheus. {e}", exc_info=True)
-
-        # checking the status of the alert manager
-        try:
-            base_silence_params = BaseSilenceParams(alertmanager_url=global_config.get("alertmanager_url", ""))
-            get_alertmanager_silences_connection(params=base_silence_params)
-            activity_stats.alertManagerConnection = True
-        except Exception as e:
-            logging.error(f"Failed to connect to the alert manager silence. {e}", exc_info=True)
 
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()
@@ -396,10 +473,14 @@ class RobustaSink(SinkBase):
         while self.__active:
             start_t = time.time()
             self.__periodic_cluster_status()
-            self.__discover_resources()
+            discovery_results = self.__discover_resources()
             if get_history:
                 self.__get_events_history()
                 get_history = False
+
+            if discovery_results and discovery_results.helm_releases:
+                self.__send_helm_release_events(release_data=discovery_results.helm_releases)
+
             duration = round(time.time() - start_t)
             # for small cluster duration is discovery_period_sec. For bigger clusters, up to 5 min
             sleep_dur = min(max(self.__discovery_period_sec, 3 * duration), 300)

@@ -49,6 +49,10 @@ spec:
           - name: CLOUD_ROUTING
             value: "False"
           {{- end }}
+          {{- if not .Values.monitorHelmReleases }}
+          - name: DISABLE_HELM_MONITORING
+            value: "True"
+          {{- end }}
           - name: RUNNER_VERSION
             value: {{ .Chart.AppVersion }}
           - name: CERTIFICATE
@@ -75,10 +79,6 @@ spec:
           - name: persistent-playbooks-storage
             mountPath: /etc/robusta/playbooks/storage
           {{- end }}
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 5000
         lifecycle:
           preStop:
             exec:
@@ -88,7 +88,7 @@ spec:
             cpu: {{ .Values.runner.resources.requests.cpu }}
             memory: {{ if .Values.isSmallCluster }}"512Mi"{{ else }}{{ .Values.runner.resources.requests.memory | quote }}{{ end }}
           limits:
-            memory: {{ if .Values.isSmallCluster }}"512Mi"{{ else }}{{ .Values.runner.resources.requests.memory | quote }}{{ end }}
+            memory: {{ if .Values.isSmallCluster }}"512Mi"{{ else if .Values.runner.resources.limits.memory }}{{ .Values.runner.resources.limits.memory | quote }}{{ else }}{{ .Values.runner.resources.requests.memory | quote }}{{ end }}
             {{ if .Values.runner.resources.limits.cpu }}cpu: {{ .Values.runner.resources.limits.cpu | quote }}{{ end }}
       {{- if .Values.grafanaRenderer.enableContainer }}
       - name: grafana-renderer
@@ -105,7 +105,7 @@ spec:
             cpu: {{ .Values.grafanaRenderer.resources.requests.cpu }}
             memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else }}{{ .Values.grafanaRenderer.resources.requests.memory | quote }}{{ end }}
           limits:
-            memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else }}{{ .Values.grafanaRenderer.resources.requests.memory | quote }}{{ end }}
+            memory: {{ if .Values.isSmallCluster }}"64Mi"{{ else if .Values.grafanaRenderer.resources.limits.memory }}{{ .Values.grafanaRenderer.resources.limits.memory | quote }}{{ else }}{{ .Values.grafanaRenderer.resources.requests.memory | quote }}{{ end }}
             {{ if .Values.grafanaRenderer.resources.limits.cpu }}cpu: {{ .Values.grafanaRenderer.resources.limits.cpu | quote }}{{ end }}
       {{- end }}
       volumes:
@@ -153,6 +153,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Release.Name }}-runner
+    target: robusta-runner
 spec:
   selector:
     app: {{ .Release.Name }}-runner
@@ -162,7 +163,7 @@ spec:
       port: 80
       targetPort: 5000
 ---
-{{ if .Values.enableServiceMonitors }}
+{{ if and (.Values.enableServiceMonitors) (or (.Values.enablePrometheusStack) (.Capabilities.APIVersions.Has "monitoring.coreos1.com/v1/ServiceMonitor") ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -178,6 +179,8 @@ spec:
   selector:
     matchLabels:
       app: {{ .Release.Name }}-runner
+  targetLabels:
+    - target
 {{ end }}
 ---
 {{ if .Values.runner.sentry_dsn }}

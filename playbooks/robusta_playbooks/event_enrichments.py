@@ -17,19 +17,34 @@ from robusta.api import (
     KubernetesResourceEvent,
     MarkdownBlock,
     PodEvent,
+    RendererType,
     SlackAnnotations,
     TableBlock,
     VideoEnricherParams,
     VideoLink,
-    RendererType,
     action,
+    get_event_timestamp,
     get_job_all_pods,
+    is_pod_finished,
+    get_resource_events,
     get_resource_events_table,
     list_pods_using_selector,
     parse_kubernetes_datetime_to_ms,
-    get_event_timestamp, 
-    get_resource_events
-    
+    KubernetesAnyChangeEvent,
+    extract_ready_pods,
+    is_release_managed_by_helm,
+    extract_total_pods,
+    ServiceConfig,
+    VolumeInfo,
+    ContainerInfo,
+    extract_volumes_k8,
+    extract_containers_k8,
+    Pod,
+    ReplicaSet,
+    StatefulSet,
+    DaemonSet,
+    Deployment,
+    ServiceInfo
 )
 
 class ExtendedEventEnricherParams(EventEnricherParams):
@@ -46,12 +61,12 @@ def event_report(event: EventChangeEvent):
     """
     Create finding based on the kubernetes event
     """
-    k8s_obj = event.obj.involvedObject
+    k8s_obj = event.obj.regarding
 
     # creating the finding before the rate limiter, to use the service key for rate limiting
     finding = Finding(
         title=f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
-        description=event.obj.message,
+        description=event.obj.note,
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.INFO if event.obj.type == "Normal" else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
@@ -74,7 +89,7 @@ def event_resource_events(event: EventChangeEvent):
     if not event.get_event():
         logging.error(f"cannot run event_resource_events on alert with no events object: {event}")
         return
-    obj = event.obj.involvedObject
+    obj = event.obj.regarding
     events_table = get_resource_events_table(
         "*Related Events*",
         obj.kind,
@@ -82,7 +97,10 @@ def event_resource_events(event: EventChangeEvent):
         obj.namespace,
     )
     if events_table:
-        event.add_enrichment([events_table], {SlackAnnotations.ATTACHMENT: True})
+        event.add_enrichment(
+            [events_table],
+            {SlackAnnotations.ATTACHMENT: True},
+        )
 
 
 @action
@@ -137,9 +155,9 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                 e.reason,
                 e.type,
                 parse_kubernetes_datetime_to_ms(get_event_timestamp(e)) if get_event_timestamp(e) else 0,
-                e.involvedObject.kind,
-                e.involvedObject.name,
-                e.message,
+                e.regarding.kind,
+                e.regarding.name,
+                e.note,
             ]
             for e in events
         ]
@@ -151,6 +169,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                     column_renderers={"time": RendererType.DATETIME},
                     headers=["reason", "type", "time", "kind", "name", "message"],
                     rows=rows,
+                    column_width=[1, 1, 1, 1, 1, 2],
                 )
             ],
             {SlackAnnotations.ATTACHMENT: True},
@@ -227,3 +246,45 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
     Attaches a video links to the finding
     """
     event.add_video_link(VideoLink(url=params.url, name=params.name))
+
+
+@action
+def resource_events_diff(event: KubernetesAnyChangeEvent):
+    new_resource = event.obj
+
+    if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)) \
+            and not event.obj.metadata.ownerReferences:
+        if isinstance(new_resource, Pod) and is_pod_finished(new_resource):
+            return
+        if isinstance(new_resource, ReplicaSet) and not new_resource.spec.replicas:
+            return
+
+        containers = extract_containers_k8(new_resource)
+        volumes = extract_volumes_k8(new_resource)
+        meta = new_resource.metadata
+        container_info = [ContainerInfo.get_container_info_k8(container) for container in
+                          containers] if containers else []
+        volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
+        config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
+        ready_pods = extract_ready_pods(new_resource)
+        total_pods = extract_total_pods(new_resource)
+
+        is_helm_release = is_release_managed_by_helm(annotations=new_resource.metadata.annotations,
+                                                     labels=new_resource.metadata.labels)
+        resource_version = int(meta.resourceVersion) if meta.resourceVersion else 0
+
+        new_service = ServiceInfo(
+            resource_version=resource_version,
+            name=meta.name,
+            namespace=meta.namespace,
+            service_type=new_resource.kind,
+            service_config=config,
+            ready_pods=ready_pods,
+            total_pods=total_pods,
+            is_helm_release=is_helm_release
+        )
+
+        all_sinks = event.get_all_sinks()
+        for sink_name in event.named_sinks:
+            if all_sinks and all_sinks.get(sink_name, None):
+                all_sinks.get(sink_name).handle_service_diff(new_service, operation=event.operation)

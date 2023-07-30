@@ -21,6 +21,7 @@ class FindingSource(Enum):
     KUBERNETES_API_SERVER = "kubernetes_api_server"
     PROMETHEUS = "prometheus"
     MANUAL = "manual"
+    HELM_RELEASE = "helm_release"
     CALLBACK = "callback"
     SCHEDULER = "scheduler"
 
@@ -35,9 +36,11 @@ class FindingSubjectType(Enum):
     TYPE_DAEMONSET = "daemonset"
     TYPE_STATEFULSET = "statefulset"
     TYPE_HPA = "horizontalpodautoscaler"
+    TYPE_HELM_RELEASES = "helmreleases"
 
     @staticmethod
     def from_kind(kind: str):
+        kind = kind.lower()
         if kind == "deployment":
             return FindingSubjectType.TYPE_DEPLOYMENT
         elif kind == "node":
@@ -52,11 +55,13 @@ class FindingSubjectType(Enum):
             return FindingSubjectType.TYPE_STATEFULSET
         elif kind == "horizontalpodautoscaler":
             return FindingSubjectType.TYPE_HPA
+        elif kind == "helmreleases":
+            return FindingSubjectType.TYPE_HELM_RELEASES
         return FindingSubjectType.TYPE_NONE
 
 
 # Annotations
-class EnrichmentAnnotation(Enum):
+class EnrichmentAnnotation:
     SCAN = "scan"
 
 

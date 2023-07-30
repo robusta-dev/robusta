@@ -19,6 +19,7 @@ from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkConfigW
 from robusta.core.sinks.victorops.victorops_sink_params import VictoropsConfigWrapper
 from robusta.core.sinks.webex.webex_sink_params import WebexSinkConfigWrapper
 from robusta.core.sinks.webhook.webhook_sink_params import WebhookSinkConfigWrapper
+from robusta.core.sinks.yamessenger.yamessenger_sink_params import YaMessengerSinkConfigWrapper
 from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.utils.base64_utils import is_base64_encoded
 
@@ -26,6 +27,7 @@ from robusta.utils.base64_utils import is_base64_encoded
 class PlaybookRepo(BaseModel):
     url: str
     key: Optional[SecretStr] = SecretStr("")
+    branch: Optional[str] = None  # when url is a git repo
     pip_install: bool = True  # Set to False, if the playbooks package is already in site-packages.
 
 
@@ -47,6 +49,7 @@ class RunnerConfig(BaseModel):
                 DiscordSinkConfigWrapper,
                 MattermostSinkConfigWrapper,
                 WebexSinkConfigWrapper,
+                YaMessengerSinkConfigWrapper,
                 JiraSinkConfigWrapper,
                 FileSinkConfigWrapper,
             ]

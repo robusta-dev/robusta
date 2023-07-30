@@ -21,11 +21,11 @@ from robusta.core.reporting.blocks import (
     LinksBlock,
     ListBlock,
     MarkdownBlock,
+    ScanReportBlock,
     TableBlock,
-    ScanReportBlock
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
-from robusta.core.reporting.consts import SlackAnnotations, EnrichmentAnnotation
+from robusta.core.reporting.consts import EnrichmentAnnotation, SlackAnnotations
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
@@ -186,7 +186,7 @@ class SlackSender:
         elif isinstance(block, ScanReportBlock):
             raise AssertionError("to_slack() should never be called on a ScanReportBlock")
         else:
-            logging.error(f"cannot convert block of type {type(block)} to slack format block: {block}")
+            logging.warning(f"cannot convert block of type {type(block)} to slack format block: {block}")
             return []  # no reason to crash the entire report
 
     def __upload_file_to_slack(self, block: FileBlock) -> str:
@@ -227,8 +227,9 @@ class SlackSender:
         sink_params: SlackSinkParams,
         unfurl: bool,
         status: FindingStatus,
+        channel: str,
     ):
-       
+
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
             file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
@@ -249,6 +250,7 @@ class SlackSender:
 
         logging.debug(
             f"--sending to slack--\n"
+            f"channel:{channel}\n"
             f"title:{title}\n"
             f"blocks: {output_blocks}\n"
             f"attachment_blocks: {report_attachment_blocks}\n"
@@ -257,7 +259,7 @@ class SlackSender:
 
         try:
             self.slack_client.chat_postMessage(
-                channel=sink_params.slack_channel,
+                channel=channel,
                 text=message,
                 blocks=output_blocks,
                 display_as_bot=True,
@@ -296,7 +298,7 @@ class SlackSender:
         if finding.add_silence_url:
             links.append(
                 LinkProp(
-                    text="Silence 🔕",
+                    text="Configure Silences 🔕",
                     url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
                 )
             )
@@ -352,4 +354,5 @@ class SlackSender:
             sink_params,
             unfurl,
             status,
+            sink_params.get_slack_channel(self.cluster_name, finding.subject.labels, finding.subject.annotations),
         )

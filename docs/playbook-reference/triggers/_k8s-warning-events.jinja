@@ -1,0 +1,61 @@
+{% from "playbook-reference//triggers/_k8s-generic-macro.jinja" import render_custom_trigger %}
+{% macro render_warning_event_examples(resource_name, trigger_name, description, verb_for_finding) %}
+
+    .. md-tab-set::
+
+        .. md-tab-item:: Simple Example
+
+            .. code-block:: yaml
+
+                customPlaybooks:
+                  triggers:
+                  - {{ trigger_name }}: {}
+                  actions:
+                  - create_finding: # (1)
+                      title: "WarningEvent {{ verb_for_finding }}: $name!"
+                      aggregation_key: "warning_events_{{ verb_for_finding }}"
+
+            .. code-annotations::
+                1. A common action that creates a notification. See :ref:`create_finding<create_finding>`.
+
+        .. md-tab-item:: Inclusion Filter Example
+
+            .. code-block:: yaml
+
+                customPlaybooks:
+                  triggers:
+                  - {{ trigger_name }}:
+                      include: ["ImagePullBackOff"] # (2)
+                  actions:
+                  - create_finding: # (1)
+                      title: "WarningEvent {{ verb_for_finding }}: $name!"
+                      aggregation_key: "warning_events_{{ verb_for_finding }}"
+
+            .. code-annotations::
+                1. A common action that creates a notification. See :ref:`create_finding<create_finding>`.
+                2. The *Reason* and *Message* must include this text. Matching is case-insensitive.
+
+
+        .. md-tab-item:: Exclusion Filter Example
+
+            .. code-block:: yaml
+
+                customPlaybooks:
+                  triggers:
+                  - {{ trigger_name }}:
+                      exclude: ["NodeSysctlChange", "TooManyPods"] # (2)
+                  actions:
+                  - create_finding: # (1)
+                      title: "WarningEvent {{ verb_for_finding }}: $name!"
+                      aggregation_key: "warning_events_{{ verb_for_finding }}"
+
+            .. code-annotations::
+                1. A common action that creates a notification. See :ref:`create_finding<create_finding>`.
+                2. The *Reason* or *Message* must exclude this text. Matching is case-insensitive.
+
+{% endmacro %}
+
+{{ render_custom_trigger('Kubernetes Warning Event', 'on_kubernetes_warning_event_create', '``on_kubernetes_warning_event_create`` fires when a Kubernetes Warning Event is created', 'created', related_actions, render_warning_event_examples ) }}
+{{ render_custom_trigger('Kubernetes Warning Event', 'on_kubernetes_warning_event_update', "``on_kubernetes_warning_event_update`` fires when a Kubernetes Warning Event is updated. This is rarely useful, as Warning Events usually aren't updated after creation.", 'updated', related_actions, render_warning_event_examples ) }}
+{{ render_custom_trigger('Kubernetes Warning Event', 'on_kubernetes_warning_event_deleted', '``on_kubernetes_warning_event_deleted`` fires when a Kubernetes Warning Event is deleted. This is rarely useful, as usually the creation of Warning Events is more interesting.', 'deleted', related_actions, render_warning_event_examples ) }}
+{{ render_custom_trigger('Kubernetes Warning Event', 'on_kubernetes_warning_event', '``on_kubernetes_warning_event`` fires when a Kubernetes Warning Event is modified in any way. This is rarely useful, as usually only the creation of Warning Events is interesting.', 'modified', related_actions, render_warning_event_examples ) }}

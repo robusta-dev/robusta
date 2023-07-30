@@ -62,10 +62,16 @@ lightActions:
 - status_enricher
 - popeye_scan
 - krr_scan
+- handle_alertmanager_event
+- drain
+- cordon
+- uncordon
+- rollout_restart
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
-enableServiceMonitors: false
+enableServiceMonitors: true
+monitorHelmReleases: true
 
 # disable messages routed by Robusta cloud
 disableCloudRouting: false
@@ -138,12 +144,13 @@ builtinPlaybooks:
 # playbooks for non-prometheus based monitoring that use prometheus for enrichment
 - triggers:
   - on_pod_oom_killed:
-      rate_limit: 900
+      rate_limit: 3600
   actions:
   - pod_oom_killer_enricher: {}
-  - oomkilled_container_graph_enricher:
-      resource_type: Memory
+  - logs_enricher: {}
   - pod_node_graph_enricher:
+      resource_type: Memory
+  - oomkilled_container_graph_enricher:
       resource_type: Memory
   stop: true
 
@@ -187,11 +194,13 @@ builtinPlaybooks:
   actions:
   - logs_enricher: {}
   - pod_events_enricher: {}
+  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:
       alert_name: KubeContainerWaiting
   actions:
+  - pod_issue_investigator: {}
   - pod_events_enricher: {}
 
 - triggers:
@@ -252,6 +261,7 @@ builtinPlaybooks:
   - resource_events_enricher:
       dependent_pod_mode: true
   - statefulset_replicas_enricher: {}
+  - pod_issue_investigator: {}
 
 - triggers:
   - on_prometheus_alert:
@@ -320,11 +330,13 @@ builtinPlaybooks:
   - on_prometheus_alert:
       alert_name: KubeDeploymentReplicasMismatch
   actions:
+  - pod_issue_investigator: {}
   - deployment_events_enricher:
       included_types: ["Warning"]
   - deployment_events_enricher:
       included_types: ["Warning", "Normal"]
       dependent_pod_mode: true
+
 - triggers:
   - on_prometheus_alert:
       status: "all"
@@ -361,10 +373,19 @@ platformPlaybooks:
     - on_deployment_all_changes: {}
     - on_daemonset_all_changes: {}
     - on_statefulset_all_changes: {}
+    - on_ingress_all_changes: {}
   actions:
     - resource_babysitter: {}
   sinks:
     - "robusta_ui_sink"
+- triggers:
+    - on_deployment_all_changes: {}
+    - on_daemonset_all_changes: {}
+    - on_statefulset_all_changes: {}
+    - on_replicaset_all_changes: {}
+    - on_pod_all_changes: {}
+  actions:
+    - resource_events_diff: {}
 - triggers:
   - on_job_failure: {}
   actions:
@@ -385,10 +406,18 @@ platformPlaybooks:
   - popeye_scan: {}
   sinks:
     - "robusta_ui_sink"
+- triggers:
+  - on_schedule:
+      cron_schedule_repeat:
+        cron_expression: "0 12 * * 1" # every Monday at 12:00
+  actions:
+  - krr_scan: {}
+  sinks:
+    - "robusta_ui_sink"
 
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.1
+  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.5
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:
@@ -433,6 +462,7 @@ runner:
   tolerations: []
   annotations: {}
   nodeSelector: ~
+  customClusterRoleRules: []
 
 kube-prometheus-stack:
   alertmanager:
@@ -441,9 +471,9 @@ kube-prometheus-stack:
       global:
         resolve_timeout: 5m
       route:
-        group_by: [ 'job' ]
-        group_wait: 30s
-        group_interval: 5m
+        group_by: [ '...' ]
+        group_wait: 1s
+        group_interval: 1s
         repeat_interval: 4h
         receiver: 'robusta'
         routes:
@@ -467,11 +497,6 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 10Gi
-
-
-
-
-
   kubeProxy:
     enabled: false
   prometheus:
@@ -499,6 +524,16 @@ kube-prometheus-stack:
     resources:
       requests:
         cpu: 50m
+    # disable node-exporter on fargate because fargate doesn't allow daemonsets
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: eks.amazonaws.com/compute-type
+                  operator: NotIn
+                  values:
+                    - fargate
   prometheusOperator:
     resources:
       requests:
@@ -513,3 +548,15 @@ kube-prometheus-stack:
         cpu: 10m
 
 rsa: ~
+
+# custom parameters for OpenShift clusters
+openshift:
+  enabled: false
+  createScc: false
+  createPrivilegedScc: false
+
+  privilegedSccName: null
+  sccName: null
+
+  sccPriority: null
+  privilegedSccPriority: null

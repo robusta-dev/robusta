@@ -85,6 +85,8 @@ class PydanticModelDirective(SphinxDirective):
         for field in fields:
             desc = sphinx.addnodes.desc()
             node.append(desc)
+            desc["domain"] = "robusta"
+            desc["objtype"] = "model"
             desc.extend(cls.__document_field_signature(field, show_optionality))
             desc.extend(cls.__document_field_content(field, show_code, show_optionality))
 
@@ -114,7 +116,10 @@ class PydanticModelDirective(SphinxDirective):
         content = sphinx.addnodes.desc_content()
 
         if field.field_info.description:
-            content.append(nodes.paragraph(text=field.field_info.description))
+            for line in field.field_info.description.splitlines():
+                if line == "|":
+                    line = "\n"
+                content.append(nodes.paragraph(text=line))
 
         if show_code:
             content.extend(cls.__document_field_example(field))
@@ -335,24 +340,10 @@ class RobustaActionDirective(SphinxDirective):
 
     @classmethod
     def __get_triggers(cls, supported_triggers: List[str], recommended_trigger: Optional[str]):
-        if ExamplesGenerator.SUBTRIGGER_MARKER in supported_triggers:
-            has_subtriggers = True
-            supported_triggers.remove(ExamplesGenerator.SUBTRIGGER_MARKER)
-        else:
-            has_subtriggers = False
-
         if recommended_trigger is not None and recommended_trigger not in supported_triggers:
             supported_triggers.insert(0, recommended_trigger)
 
         rst = [f"* :ref:`{t} <{cls.__get_ref_for_trigger(t)}>`" for t in supported_triggers]
-        if has_subtriggers:
-            rst.extend(
-                [
-                    "",
-                    "Or any other inheriting trigger. See :ref:`Trigger-Action Compatibility` for details",
-                    "",
-                ]
-            )
         return rst
 
     def __get_description(self, action_definition: Action):

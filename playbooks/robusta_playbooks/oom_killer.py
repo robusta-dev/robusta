@@ -1,11 +1,11 @@
 import abc
 import logging
+import time
 from datetime import datetime, timedelta
 from typing import List, Optional
 
 import pydantic
-from hikaru.model import Node, Pod, PodList, ResourceRequirements
-
+from hikaru.model.rel_1_26 import Node, Pod, PodList, ResourceRequirements
 from robusta.api import (
     Finding,
     FindingSeverity,
@@ -47,8 +47,16 @@ CONTAINER_MEMORY_THRESHOLD = 0.92
 NODE_MEMORY_THRESHOLD = 0.95
 
 
+class OOMGraphEnricherParams(ResourceGraphEnricherParams):
+    """
+    :var delay_graph_s: the amount of seconds to delay getting the graph inorder to record the memory spike
+    """
+
+    delay_graph_s: int = 0
+
+
 @action
-def oomkilled_container_graph_enricher(event: PodEvent, params: ResourceGraphEnricherParams):
+def oomkilled_container_graph_enricher(event: PodEvent, params: OOMGraphEnricherParams):
     """
     Get a graph of a specific resource for this pod. Note: "Disk" Resource is not supported.
     """
@@ -60,7 +68,8 @@ def oomkilled_container_graph_enricher(event: PodEvent, params: ResourceGraphEnr
     if not oomkilled_container:
         logging.error("Unable to find oomkilled container")
         return
-
+    if params.delay_graph_s > 0:
+        time.sleep(params.delay_graph_s)
     container_graph = create_container_graph(params, pod, oomkilled_container.container, show_limit=True)
     event.add_enrichment([container_graph])
 
@@ -210,7 +219,9 @@ class OomKillsExtractor:
         self.oom_kill_reason_investigator = oom_kill_reason_investigator
 
     def extract_oom_kills(self) -> List[OomKill]:
-        results: PodList = Pod.listPodForAllNamespaces(field_selector=f"spec.nodeName={self.node.metadata.name}").obj
+        results: PodList = PodList.listPodForAllNamespaces(
+            field_selector=f"spec.nodeName={self.node.metadata.name}"
+        ).obj
 
         oom_kills: List[OomKill] = []
         for pod in results.items:

@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from hikaru.model import Node
+from hikaru.model.rel_1_26 import Node
 
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
@@ -16,8 +16,8 @@ class NodeCpuAnalyzer:
         self.range_size = range_size
         self.internal_ip = next(addr.address for addr in self.node.status.addresses if addr.type == "InternalIP")
         self.prom = get_prometheus_connect(prometheus_params)
-        self.default_prometheus_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
-        check_prometheus_connection(self.prom, self.default_prometheus_params)
+        self.default_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+        check_prometheus_connection(prom=self.prom, params=self.default_params)
 
     def get_total_cpu_usage(self, other_method=False):
         """
@@ -54,7 +54,7 @@ class NodeCpuAnalyzer:
         :return: a dict of {[pod_name] : [cpu_usage in the 0-1 range] }
         """
         query = self._build_query_for_containerized_cpu_usage(False, normalize_by_cpu_count)
-        result = self.prom.custom_query(query, params=self.default_prometheus_params)
+        result = self.prom.custom_query(query, params=self.default_params)
         pod_value_pairs = [(r["metric"]["pod"], float(r["value"][1])) for r in result]
         pod_value_pairs = [(k, v) for (k, v) in pod_value_pairs if v >= threshold]
         pod_value_pairs.sort(key=lambda x: x[1], reverse=True)
@@ -63,14 +63,14 @@ class NodeCpuAnalyzer:
 
     def get_per_pod_cpu_request(self):
         query = f'sum by (pod)(kube_pod_container_resource_requests_cpu_cores{{node="{self.node.metadata.name}"}})'
-        result = self.prom.custom_query(query, params=self.default_prometheus_params)
+        result = self.prom.custom_query(query, params=self.default_params)
         return dict((r["metric"]["pod"], float(r["value"][1])) for r in result)
 
     def _query(self, query):
         """
         Runs a simple query returning a single metric and returns that metric
         """
-        result = self.prom.custom_query(query, params=self.default_prometheus_params)
+        result = self.prom.custom_query(query, params=self.default_params)
         return float(result[0]["value"][1])
 
     def _build_query_for_containerized_cpu_usage(self, total, normalized_by_cpu_count):

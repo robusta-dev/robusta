@@ -1,8 +1,8 @@
 import logging
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
-from hikaru.model import Container, ContainerState, ContainerStatus, Pod
+from hikaru.model.rel_1_26 import Container, ContainerState, ContainerStatus, Pod
 from pydantic import BaseModel
 
 from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime_to_ms
@@ -14,15 +14,37 @@ k8s_memory_factors = {
     "K": 1000,
     "M": 1000 * 1000,
     "G": 1000 * 1000 * 1000,
-    "P": 1000 * 1000 * 1000 * 1000,
-    "E": 1000 * 1000 * 1000 * 1000 * 1000,
+    "T": 1000 * 1000 * 1000 * 1000,
+    "P": 1000 * 1000 * 1000 * 1000 * 1000,
+    "E": 1000 * 1000 * 1000 * 1000 * 1000 * 1000,
     "k": 1024,
     "Ki": 1024,
     "Mi": 1024 * 1024,
     "Gi": 1024 * 1024 * 1024,
-    "Pi": 1024 * 1024 * 1024 * 1024,
-    "Ei": 1024 * 1024 * 1024 * 1024 * 1024,
+    "Ti": 1024 * 1024 * 1024 * 1024,
+    "Pi": 1024 * 1024 * 1024 * 1024 * 1024,
+    "Ei": 1024 * 1024 * 1024 * 1024 * 1024 * 1024,
 }
+
+
+def format_unit(x: Union[float, int]) -> str:
+    """Converts an integer to a string with respect of units."""
+
+    base = 1024
+    if x < 1:
+        return f"{int(x*1000)}m"
+
+    if x < 500:  # assume cpu. No more than 500 cpus. Assuming no 500 bytes memory allocation
+        return f"{x}"
+
+    binary_units = ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei"]
+
+    x = int(x)
+    for i, unit in enumerate(binary_units):
+        if x < base ** (i + 1) or i == len(binary_units) - 1 or x / base ** (i + 1) < 10:
+            return f"{x/base**i:.0f}{unit}"
+    return f"{x/6**i:.0f}{unit}"
+
 
 ResourceAttributes = Enum("ResourceAttributes", "requests limits")
 
@@ -71,7 +93,7 @@ class PodContainer:
             if container_name == container.name:
                 return container
         return None
-    
+
     @staticmethod
     def get_status(pod: Pod, container_name: str) -> Optional[ContainerStatus]:
         for status in pod.status.containerStatuses:
@@ -82,8 +104,8 @@ class PodContainer:
 
 class PodResources(BaseModel):
     pod_name: str
-    cpu: float
-    memory: int
+    cpu: float  # whole cores
+    memory: int  # Mb
 
     @staticmethod
     def parse_cpu(cpu: str) -> float:
@@ -91,6 +113,8 @@ class PodResources(BaseModel):
             return 0.0
         if "m" in cpu:
             return round(float(cpu.replace("m", "").strip()) / 1000, 3)
+        if "k" in cpu:
+            return round(float(cpu.replace("k", "").strip()) * 1000, 3)
         return round(float(cpu), 3)
 
     @staticmethod
@@ -132,6 +156,34 @@ def pod_requests(pod: Pod) -> PodResources:
 
 def pod_limits(pod: Pod) -> PodResources:
     return pod_resources(pod, ResourceAttributes.limits)
+
+
+def pod_other_limits(pod: Pod) -> Dict[str, float]:
+    # for additional defined resources like GPU
+    return pod_other_resources(pod, ResourceAttributes.limits)
+
+
+def pod_other_requests(pod: Pod) -> Dict[str, float]:
+    # for additional defined resources like GPU
+    return pod_other_resources(pod, ResourceAttributes.requests)
+
+
+def pod_other_resources(pod: Pod, resource_attribute: ResourceAttributes) -> Dict[str, float]:
+    standard_resources = ["cpu", "memory"]
+    total_resources: Dict[str, float] = {}
+    for container in pod.spec.containers:
+        try:
+            requests = container.object_at_path(["resources", resource_attribute.name])  # requests or limits
+            for resource_type in requests.keys():
+                if resource_type in standard_resources:
+                    continue
+                if resource_type not in total_resources:
+                    total_resources[resource_type] = float(requests[resource_type])
+                else:
+                    total_resources[resource_type] += float(requests[resource_type])
+        except Exception:
+            logging.error(f"failed to parse {resource_attribute.name} {container.resources}", exc_info=True)
+    return total_resources
 
 
 def pod_resources(pod: Pod, resource_attribute: ResourceAttributes) -> PodResources:

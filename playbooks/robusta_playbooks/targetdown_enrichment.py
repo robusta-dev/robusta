@@ -2,15 +2,14 @@ import json
 import logging
 from typing import List
 
-from hikaru.model import DeploymentList
+from hikaru.model.rel_1_26 import DeploymentList
 from robusta.api import PrometheusKubernetesAlert, TimedPrometheusParams, action, list_available_services
 
 
 def has_dns_deployment(namespace: str, job: str) -> bool:
     labels: List[str] = [f"k8s-app = {job}", f"app.kubernetes.io/name={job}", f"app={job}"]
     for label in labels:
-        deployments: DeploymentList = \
-            DeploymentList.listNamespacedDeployment(namespace, label_selector=label).obj
+        deployments: DeploymentList = DeploymentList.listNamespacedDeployment(namespace, label_selector=label).obj
         if len(deployments.items) > 0:
             return True
     return False
@@ -27,8 +26,8 @@ def target_down_dns_silencer(alert: PrometheusKubernetesAlert):
     """
     Silences the prometheus TargetDown alert if the dns service doesn't exist or if the wrong dns is configured
     """
-    job = alert.get_alert_label('job')
-    service = alert.get_alert_label('service')
+    job = alert.get_alert_label("job")
+    service = alert.get_alert_label("service")
     if job not in ["coredns", "kube-dns"]:
         return
     res = list_available_services("kube-system")
@@ -44,7 +43,7 @@ def target_down_dns_silencer(alert: PrometheusKubernetesAlert):
             dns_service_found = True
             break
 
-    other_dns = 'kube-dns' if job == "coredns" else 'coredns'
+    other_dns = "kube-dns" if job == "coredns" else "coredns"
     # wrong dns is set up i.e. coredns when should be kube-dns
     if has_dns_deployment(alert.label_namespace, other_dns):
         silence_reason = f"{ other_dns} should be configured instead"
@@ -67,8 +66,8 @@ def target_down_dns_enricher(alert: PrometheusKubernetesAlert, params: TimedProm
 
     ::note: Deprecated
     """
-    job = alert.get_alert_label('job')
-    service = alert.get_alert_label('service')
+    job = alert.get_alert_label("job")
+    service = alert.get_alert_label("service")
     if job not in ["corens", "kube-dns"]:
         return
     res = list_available_services("kube-system")

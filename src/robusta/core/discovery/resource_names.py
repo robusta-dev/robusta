@@ -50,6 +50,10 @@ LISTERS = {  # TODO add ingress and cronjobs once upgrading the k8s client versi
         list_all=client.CoreV1Api().list_config_map_for_all_namespaces,
         list_namespaced=client.CoreV1Api().list_namespaced_config_map,
     ),
+    "ingress": ResourceLister(
+        list_all=client.NetworkingV1Api().list_ingress_for_all_namespaces,
+        list_namespaced=client.NetworkingV1Api().list_namespaced_ingress,
+    ),
 }
 
 

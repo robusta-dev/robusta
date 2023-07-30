@@ -1,8 +1,9 @@
 import logging
 from collections import defaultdict
 from concurrent.futures.process import ProcessPoolExecutor
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
+from hikaru.model.rel_1_26 import Deployment, DaemonSet, StatefulSet, Job, Pod, Volume, Container
 from kubernetes import client
 from kubernetes.client import (
     V1Container,
@@ -25,11 +26,20 @@ from pydantic import BaseModel
 
 from robusta.core.discovery import utils
 from robusta.core.model.cluster_status import ClusterStats
-from robusta.core.model.env_vars import DISCOVERY_BATCH_SIZE, DISCOVERY_MAX_BATCHES, DISCOVERY_PROCESS_TIMEOUT_SEC
+from robusta.core.model.env_vars import DISCOVERY_BATCH_SIZE, DISCOVERY_MAX_BATCHES, DISCOVERY_PROCESS_TIMEOUT_SEC, \
+    DISABLE_HELM_MONITORING
+from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
 from robusta.utils.cluster_provider_discovery import cluster_provider
+import prometheus_client
+
+discovery_errors_count = prometheus_client.Counter("discovery_errors", "Number of discovery process failures.")
+discovery_process_time = prometheus_client.Summary(
+    "discovery_process_time",
+    "Total discovery process time (seconds)",
+)
 
 
 class DiscoveryResults(BaseModel):
@@ -38,6 +48,7 @@ class DiscoveryResults(BaseModel):
     node_requests: Dict = {}
     jobs: List[JobInfo] = []
     namespaces: List[NamespaceInfo] = []
+    helm_releases: List[HelmRelease] = []
 
     class Config:
         arbitrary_types_allowed = True
@@ -48,23 +59,28 @@ class Discovery:
 
     @staticmethod
     def __create_service_info(
-        meta: V1ObjectMeta,
-        kind: str,
-        containers: List[V1Container],
-        volumes: List[V1Volume],
-        total_pods: int,
-        ready_pods: int,
+            meta: V1ObjectMeta,
+            kind: str,
+            containers: List[V1Container],
+            volumes: List[V1Volume],
+            total_pods: int,
+            ready_pods: int,
+            is_helm_release: bool = False,
     ) -> ServiceInfo:
         container_info = [ContainerInfo.get_container_info(container) for container in containers] if containers else []
         volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
         config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
+        resource_version = int(meta.resource_version) if meta.resource_version else 0
+
         return ServiceInfo(
+            resource_version=resource_version,
             name=meta.name,
             namespace=meta.namespace,
             service_type=kind,
             service_config=config,
             ready_pods=ready_pods,
             total_pods=total_pods,
+            is_helm_release=is_helm_release,
         )
 
     @staticmethod
@@ -90,6 +106,8 @@ class Discovery:
                             extract_volumes(deployment),
                             extract_total_pods(deployment),
                             extract_ready_pods(deployment),
+                            is_helm_release=is_release_managed_by_helm(annotations=deployment.metadata.annotations,
+                                                                       labels=deployment.metadata.labels)
                         )
                         for deployment in deployments.items
                     ]
@@ -113,6 +131,8 @@ class Discovery:
                             extract_volumes(statefulset),
                             extract_total_pods(statefulset),
                             extract_ready_pods(statefulset),
+                            is_helm_release=is_release_managed_by_helm(annotations=statefulset.metadata.annotations,
+                                                                       labels=statefulset.metadata.labels)
                         )
                         for statefulset in statefulsets.items
                     ]
@@ -136,6 +156,8 @@ class Discovery:
                             extract_volumes(daemonset),
                             extract_total_pods(daemonset),
                             extract_ready_pods(daemonset),
+                            is_helm_release=is_release_managed_by_helm(annotations=daemonset.metadata.annotations,
+                                                                       labels=daemonset.metadata.labels)
                         )
                         for daemonset in daemonsets.items
                     ]
@@ -159,6 +181,8 @@ class Discovery:
                             extract_volumes(replicaset),
                             extract_total_pods(replicaset),
                             extract_ready_pods(replicaset),
+                            is_helm_release=is_release_managed_by_helm(annotations=replicaset.metadata.annotations,
+                                                                       labels=replicaset.metadata.labels)
                         )
                         for replicaset in replicasets.items
                         if not replicaset.metadata.owner_references and replicaset.spec.replicas > 0
@@ -185,6 +209,8 @@ class Discovery:
                                 extract_volumes(pod),
                                 extract_total_pods(pod),
                                 extract_ready_pods(pod),
+                                is_helm_release=is_release_managed_by_helm(annotations=pod.metadata.annotations,
+                                                                           labels=pod.metadata.labels)
                             )
                         )
 
@@ -236,8 +262,8 @@ class Discovery:
                             pod_meta.name
                             for pod_meta in pods_metadata
                             if (
-                                (job.metadata.namespace == pod_meta.namespace)
-                                and (job_labels.items() <= (pod_meta.labels or {}).items())
+                                    (job.metadata.namespace == pod_meta.namespace)
+                                    and (job_labels.items() <= (pod_meta.labels or {}).items())
                             )
                         ]
 
@@ -253,6 +279,40 @@ class Discovery:
                 exc_info=True,
             )
             raise e
+
+        helm_releases_map: dict[str, HelmRelease] = {}
+        if not DISABLE_HELM_MONITORING:
+            # discover helm state
+            try:
+                continue_ref: Optional[str] = None
+                for _ in range(DISCOVERY_MAX_BATCHES):
+                    secrets = client.CoreV1Api().list_secret_for_all_namespaces(label_selector=f"owner=helm",
+                                                                                _continue=continue_ref)
+                    if not secrets.items:
+                        break
+
+                    for secret_item in secrets.items:
+                        release_data = secret_item.data.get("release", None)
+                        if not release_data:
+                            continue
+
+                        try:
+                            decoded_release_row = HelmRelease.from_api_server(secret_item.data['release'])
+                            # we use map here to deduplicate and pick only the latest release data
+                            helm_releases_map[decoded_release_row.get_service_key()] = decoded_release_row
+                        except Exception as e:
+                            logging.error(f"an error occured while decoding helm releases: {e}")
+
+                    continue_ref = secrets.metadata._continue
+                    if not continue_ref:
+                        break
+
+            except Exception as e:
+                logging.error(
+                    "Failed to run periodic helm discovery",
+                    exc_info=True,
+                )
+                raise e
 
         # discover namespaces
         try:
@@ -272,9 +332,12 @@ class Discovery:
             node_requests=node_requests,
             jobs=active_jobs,
             namespaces=namespaces,
+            helm_releases=list(helm_releases_map.values())
         )
 
     @staticmethod
+    @discovery_errors_count.count_exceptions()
+    @discovery_process_time.time()
     def discover_resources() -> DiscoveryResults:
         try:
             future = Discovery.executor.submit(Discovery.discovery_process)
@@ -346,6 +409,12 @@ class Discovery:
         except Exception:
             logging.error("Failed to count jobs", exc_info=True)
 
+        k8s_version: str = None
+        try:
+            k8s_version = client.VersionApi().get_code().git_version
+        except Exception:
+            logging.exception("Failed to get k8s server version")
+
         return ClusterStats(
             deployments=deploy_count,
             statefulsets=sts_count,
@@ -355,6 +424,7 @@ class Discovery:
             nodes=node_count,
             jobs=job_count,
             provider=cluster_provider.get_cluster_provider(),
+            k8s_version=k8s_version
         )
 
 
@@ -364,10 +434,10 @@ def extract_containers(resource) -> List[V1Container]:
     try:
         containers = []
         if (
-            isinstance(resource, V1Deployment)
-            or isinstance(resource, V1DaemonSet)
-            or isinstance(resource, V1StatefulSet)
-            or isinstance(resource, V1Job)
+                isinstance(resource, V1Deployment)
+                or isinstance(resource, V1DaemonSet)
+                or isinstance(resource, V1StatefulSet)
+                or isinstance(resource, V1Job)
         ):
             containers = resource.spec.template.spec.containers
         elif isinstance(resource, V1Pod):
@@ -379,29 +449,65 @@ def extract_containers(resource) -> List[V1Container]:
     return []
 
 
-def is_pod_ready(pod: V1Pod) -> bool:
-    for condition in pod.status.conditions:
+# This section below contains utility related to k8s python api objects (rather than hikaru)
+def extract_containers_k8(resource) -> List[Container]:
+    """Extract containers from k8s python api object (not hikaru)"""
+    try:
+        containers = []
+        if (
+                isinstance(resource, Deployment)
+                or isinstance(resource, DaemonSet)
+                or isinstance(resource, StatefulSet)
+                or isinstance(resource, Job)
+        ):
+            containers = resource.spec.template.spec.containers
+        elif isinstance(resource, Pod):
+            containers = resource.spec.containers
+
+        return containers
+    except Exception:  # may fail if one of the attributes is None
+        logging.error(f"Failed to extract containers from {resource}", exc_info=True)
+    return []
+
+
+def is_pod_ready(pod) -> bool:
+    conditions = []
+    if isinstance(pod, V1Pod):
+        conditions = pod.status.conditions
+
+    if isinstance(pod, Pod):
+        conditions = pod.status.conditions
+
+    for condition in conditions:
         if condition.type == "Ready":
             return condition.status.lower() == "true"
+
     return False
 
 
-def is_pod_finished(pod: V1Pod) -> bool:
+def is_pod_finished(pod) -> bool:
     try:
-        # all containers in the pod have terminated, this pod should be removed by GC
-        return pod.status.phase.lower() in ["succeeded", "failed"]
+        if isinstance(pod, V1Pod) or isinstance(pod, Pod):
+            # all containers in the pod have terminated, this pod should be removed by GC
+            return pod.status.phase.lower() in ["succeeded", "failed"]
     except AttributeError:  # phase is an optional field
         return False
 
-
 def extract_ready_pods(resource) -> int:
     try:
-        if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
+        if isinstance(resource, Deployment) or isinstance(resource, StatefulSet):
+            return 0 if not resource.status.readyReplicas else resource.status.readyReplicas
+        elif isinstance(resource, DaemonSet):
+            return 0 if not resource.status.numberReady else resource.status.numberReady
+        elif isinstance(resource, Pod):
+            return 1 if is_pod_ready(resource) else 0
+        elif isinstance(resource, V1Pod):
+            return 1 if is_pod_ready(resource) else 0
+        elif isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
             return 0 if not resource.status.ready_replicas else resource.status.ready_replicas
         elif isinstance(resource, V1DaemonSet):
             return 0 if not resource.status.number_ready else resource.status.number_ready
-        elif isinstance(resource, V1Pod):
-            return 1 if is_pod_ready(resource) else 0
+
         return 0
     except Exception:  # fields may not exist if all the pods are not ready - example: deployment crashpod
         logging.error(f"Failed to extract ready pods from {resource}", exc_info=True)
@@ -410,6 +516,13 @@ def extract_ready_pods(resource) -> int:
 
 def extract_total_pods(resource) -> int:
     try:
+        if isinstance(resource, Deployment) or isinstance(resource, StatefulSet):
+            # resource.spec.replicas can be 0, default value is 1
+            return resource.spec.replicas if resource.spec.replicas is not None else 1
+        elif isinstance(resource, DaemonSet):
+            return 0 if not resource.status.desiredNumberScheduled else resource.status.desiredNumberScheduled
+        elif isinstance(resource, Pod):
+            return 1
         if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
             # resource.spec.replicas can be 0, default value is 1
             return resource.spec.replicas if resource.spec.replicas is not None else 1
@@ -423,18 +536,59 @@ def extract_total_pods(resource) -> int:
     return 1
 
 
+def is_release_managed_by_helm(labels: Optional[dict], annotations: Optional[dict]) -> bool:
+    try:
+        if labels:
+            if labels.get('app.kubernetes.io/managed-by') == "Helm":
+                return True
+
+            helm_labels = set(key for key in labels.keys() if key.startswith('helm.') or key.startswith('meta.helm.'))
+            if helm_labels:
+                return True
+
+        if annotations:
+            helm_annotations = set(key for key in annotations.keys() if key.startswith('helm.') or
+                                   key.startswith('meta.helm.'))
+            if helm_annotations:
+                return True
+    except Exception:
+        logging.error(
+            f"Failed to check if deployment was done via helm -> labels: {labels} | annotations: {annotations}")
+
+    return False
+
+
 def extract_volumes(resource) -> List[V1Volume]:
     """Extract volumes from k8s python api object (not hikaru)"""
     try:
         volumes = []
         if (
-            isinstance(resource, V1Deployment)
-            or isinstance(resource, V1DaemonSet)
-            or isinstance(resource, V1StatefulSet)
-            or isinstance(resource, V1Job)
+                isinstance(resource, V1Deployment)
+                or isinstance(resource, V1DaemonSet)
+                or isinstance(resource, V1StatefulSet)
+                or isinstance(resource, V1Job)
         ):
             volumes = resource.spec.template.spec.volumes
         elif isinstance(resource, V1Pod):
+            volumes = resource.spec.volumes
+        return volumes
+    except Exception:  # may fail if one of the attributes is None
+        logging.error(f"Failed to extract volumes from {resource}", exc_info=True)
+    return []
+
+
+def extract_volumes_k8(resource) -> List[Volume]:
+    """Extract volumes from k8s python api object (not hikaru)"""
+    try:
+        volumes = []
+        if (
+                isinstance(resource, Deployment)
+                or isinstance(resource, DaemonSet)
+                or isinstance(resource, StatefulSet)
+                or isinstance(resource, Job)
+        ):
+            volumes = resource.spec.template.spec.volumes
+        elif isinstance(resource, Pod):
             volumes = resource.spec.volumes
         return volumes
     except Exception:  # may fail if one of the attributes is None

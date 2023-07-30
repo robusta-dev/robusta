@@ -8,7 +8,7 @@ from uuid import UUID
 import requests
 from pydantic import BaseModel, SecretStr, validator
 
-from robusta.core.exceptions import AlertsManagerNotFound
+from robusta.core.exceptions import AlertsManagerNotFound, NoAlertManagerUrlFound
 from robusta.core.model.base_params import ActionParams
 from robusta.integrations.prometheus.utils import AlertManagerDiscovery, ServiceDiscovery
 
@@ -103,6 +103,8 @@ class AddSilenceParams(BaseSilenceParams):
 def get_alertmanager_silences_connection(params: BaseSilenceParams):
     alertmanager_url = get_alertmanager_url(params)
 
+    if not alertmanager_url:
+        raise NoAlertManagerUrlFound("AlertManager url could not be found. Add 'alertmanager_url' under global_config")
     try:
         response = requests.get(
             f"{alertmanager_url}{get_alertmanager_url_path(SilenceOperation.LIST, params)}",

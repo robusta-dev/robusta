@@ -57,4 +57,4 @@ jobs:
             PYTEST_SLACK_TOKEN: ${{ secrets.PYTEST_SLACK_TOKEN }}
             PYTEST_IN_CLUSTER_SLACK_TOKEN: ${{ secrets.PYTEST_IN_CLUSTER_SLACK_TOKEN }}
           run: |
-            pytest -s
+            pytest -s --image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:test-${{ github.sha }}'

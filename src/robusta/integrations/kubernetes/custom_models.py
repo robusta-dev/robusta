@@ -1,12 +1,14 @@
 import json
 import logging
 import re
+import time
 from enum import Enum, auto
+from kubernetes.client import ApiException
 from typing import Dict, List, Optional, Tuple, Type, TypeVar
 
 import hikaru
 import yaml
-from hikaru.model import *  # * import is necessary for hikaru subclasses to work
+from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclasses to work
 from pydantic import BaseModel
 
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
@@ -131,11 +133,11 @@ def does_node_have_taint(node: Node, taint_key: str) -> bool:
 class RobustaEvent:
     @classmethod
     def get_events(cls, kind: str, name: str, namespace: str = None) -> EventList:
-        field_selector = f"involvedObject.kind={kind},involvedObject.name={name}"
+        field_selector = f"regarding.kind={kind},regarding.name={name}"
         if namespace:
-            field_selector += f",involvedObject.namespace={namespace}"
+            field_selector += f",regarding.namespace={namespace}"
 
-        return Event.listEventForAllNamespaces(field_selector=field_selector).obj
+        return EventList.listEventForAllNamespaces(field_selector=field_selector).obj
 
 
 class RegexReplacementStyle(Enum):
@@ -176,7 +178,7 @@ class RobustaPod(Pod):
         """
         Fetch pod logs, can replace sensitive data in the logs using a regex
         """
-        if container is None:
+        if not container and self.spec.containers:
             container = self.spec.containers[0].name
         pods_logs = get_pod_logs(
             self.metadata.name,
@@ -358,6 +360,23 @@ class RobustaPod(Pod):
         """Read pod definition from the API server"""
         return Pod.readNamespacedPod(name, namespace).obj
 
+    @staticmethod
+    def wait_for_pod_ready(pod_name: str, namespace: str, timeout: int = 60) -> "RobustaPod":
+        """
+        Waits for the pod to be in Running state
+        """
+        for _ in range(timeout):  # retry for up to timeout seconds
+            try:
+                pod = RobustaPod().read(pod_name, namespace)
+                if pod.status.phase == 'Running':
+                    return pod
+            except ApiException as e:
+                if e.status != 404:  # re-raise the exception if it's not a NotFound error
+                    raise
+            time.sleep(1)
+        else:
+            raise RuntimeError(f"Pod {pod_name} in namespace {namespace} is not ready after {timeout} seconds")
+
 
 class RobustaDeployment(Deployment):
     @classmethod
@@ -368,6 +387,29 @@ class RobustaDeployment(Deployment):
 
     def get_images(self) -> Dict[str, str]:
         return get_images(self.spec.template.spec.containers)
+
+    @staticmethod
+    def wait_for_deployment_ready(name: str, namespace: str, timeout: int = 60) -> "RobustaDeployment":
+        """
+        Waits for the deployment to be ready, i.e., the expected number of pods are running.
+        """
+        for _ in range(timeout):  # retry for up to timeout seconds
+            try:
+                deployment = RobustaDeployment().read(name, namespace)
+                if deployment.status.readyReplicas == deployment.spec.replicas:
+                    return deployment
+            except ApiException as e:
+                if e.status != 404:  # re-raise the exception if it's not a NotFound error
+                    raise
+            time.sleep(1)
+        else:
+            raise RuntimeError(
+                f"Deployment {name} in namespace {namespace} is not ready after {timeout} seconds")
+
+
+class JobSecret(BaseModel):
+    name: str
+    data: Dict[str, str]
 
 
 class RobustaJob(Job):
@@ -390,8 +432,31 @@ class RobustaJob(Job):
             raise Exception(f"got more pods than expected for job: {pods}")
         return pods[0]
 
+    def create_job_owned_secret(self, job_secret: JobSecret):
+        """
+        This secret will be auto-deleted when the pod is Terminated
+        """
+        # Due to inconsistant GC in K8s the OwnerReference needs to be the pod and not the job (Found in azure)
+        job_pod = self.get_single_pod()
+        robusta_owner_reference = OwnerReference(
+            apiVersion="v1",
+            kind="Pod",
+            name=job_pod.metadata.name,
+            uid=job_pod.metadata.uid,
+            blockOwnerDeletion=False,
+            controller=True,
+        )
+        secret = Secret(
+            metadata=ObjectMeta(name=job_secret.name, ownerReferences=[robusta_owner_reference]), data=job_secret.data
+        )
+        try:
+            return secret.createNamespacedSecret(job_pod.metadata.namespace).obj
+        except Exception as e:
+            logging.error(f"Failed to create secret {job_secret.name}", exc_info=True)
+            raise e
+
     @classmethod
-    def run_simple_job_spec(cls, spec, name, timeout) -> str:
+    def run_simple_job_spec(cls, spec, name, timeout, job_secret: Optional[JobSecret] = None) -> str:
         job = RobustaJob(
             metadata=ObjectMeta(namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name)),
             spec=JobSpec(
@@ -404,6 +469,8 @@ class RobustaJob(Job):
         try:
             job = job.createNamespacedJob(job.metadata.namespace).obj
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
+            if job_secret:
+                job.create_job_owned_secret(job_secret)
             job: RobustaJob = wait_until_job_complete(job, timeout)
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
             pod = job.get_single_pod()

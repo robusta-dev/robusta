@@ -1,0 +1,45 @@
+{{- if (and .Values.openshift.enabled .Values.openshift.createPrivilegedScc) }}
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: {{ .Release.Name }}-scc-privileged
+  labels:
+    app: {{ .Release.Name }}
+  annotations:
+    kubernetes.io/description: {{ .Release.Name }}-scc provides the features required to run robusta enhanced debuggers for Java, Python, and node host capabilities
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: true
+allowHostPorts: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: true
+allowedCapabilities:
+- SYS_PTRACE
+- SYS_ADMIN
+defaultAddCapabilities: null
+fsGroup:
+  type: RunAsAny
+groups: []
+priority: {{ .Values.privilegedSccPriority }}
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+- KILL
+- MKNOD
+- SETUID
+- SETGID
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+supplementalGroups:
+  type: RunAsAny
+users: []
+volumes:
+- configMap
+- downwardAPI
+- emptyDir
+- persistentVolumeClaim
+- secret
+- hostPath
+{{- end }}

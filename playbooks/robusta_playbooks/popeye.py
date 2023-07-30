@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import shlex
 import uuid
@@ -7,7 +8,7 @@ from datetime import datetime
 from json import JSONDecodeError
 from typing import Dict, List, Optional
 
-from hikaru.model import Container, PodSpec
+from hikaru.model.rel_1_26 import Container, PodSpec, ResourceRequirements
 from pydantic import BaseModel, ValidationError
 
 from robusta.api import (
@@ -15,11 +16,9 @@ from robusta.api import (
     ActionParams,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
-    FileBlock,
     Finding,
     FindingSource,
     FindingType,
-    MarkdownBlock,
     RobustaJob,
     ScanReportBlock,
     ScanReportRow,
@@ -28,7 +27,8 @@ from robusta.api import (
     to_kubernetes_name,
 )
 
-IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye")
+IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye:v0.11.1")
+POPEYE_MEMORY_LIMIT: str = os.getenv("POPEYE_MEMORY_LIMIT", "1Gi")
 
 
 # https://github.com/derailed/popeye/blob/22d0830c2c2000f46137b703276786c66ac90908/internal/report/tally.go#L163
@@ -92,12 +92,14 @@ class PopeyeParams(ActionParams):
     :var timeout: Time span for yielding the scan.
     :var args: Popeye cli arguments.
     :var spinach: Spinach.yaml config file to supply to the scan.
+    :var popeye_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
     :var service_account_name: The account name to use for the Popeye scan job.
     """
 
     service_account_name: str = f"{RELEASE_NAME}-runner-service-account"
     timeout = 300
     args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
+    popeye_job_spec = {}
     spinach: str = """\
 popeye:
     excludes:
@@ -136,6 +138,9 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     """
 
     sanitize_args = shlex.join(shlex.split(params.args))
+    resources = ResourceRequirements(
+        limits={"memory": (str(POPEYE_MEMORY_LIMIT))},
+    )
     spec = PodSpec(
         serviceAccountName=params.service_account_name,
         containers=[
@@ -147,9 +152,11 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
                     "-c",
                     f"echo '{params.spinach}' > ~/spinach.yaml && popeye -f ~/spinach.yaml {sanitize_args} -o json --force-exit-zero",
                 ],
+                resources=resources,
             )
         ],
         restartPolicy="Never",
+        **params.popeye_job_spec,
     )
 
     start_time = datetime.now()
@@ -160,19 +167,17 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         end_time = datetime.now()
         popeye_scan = PopeyeReport(**scan["popeye"])
     except JSONDecodeError:
-        event.add_enrichment([MarkdownBlock(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")])
+        logging.error(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")
         return
     except ValidationError as e:
-        event.add_enrichment([MarkdownBlock(f"*Popeye scan job failed. Result format issue.*\n\n {e}")])
-        event.add_enrichment([FileBlock("Popeye-scan-failed.log", contents=logs.encode())])
+        logging.error(f"*Popeye scan job failed. Result format issue.*\n\n {e}")
+        logging.error(f"\n {logs}")
         return
     except Exception as e:
         if str(e) == "Failed to reach wait condition":
-            event.add_enrichment(
-                [MarkdownBlock(f"*Popeye scan job failed. The job wait condition timed out ({params.timeout}s)*")]
-            )
+            logging.error(f"*Popeye scan job failed. The job wait condition timed out ({params.timeout}s)*")
         else:
-            event.add_enrichment([MarkdownBlock(f"*Popeye scan job unexpected error.*\n {e}")])
+            logging.error(f"*Popeye scan job unexpected error.*\n {e}")
         return
 
     scan_block = ScanReportBlock(

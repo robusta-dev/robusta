@@ -1,6 +1,6 @@
 import logging
 
-from hikaru.model import (
+from hikaru.model.rel_1_26 import (
     Container,
     ObjectMeta,
     PersistentVolumeClaim,
@@ -10,7 +10,6 @@ from hikaru.model import (
     Volume,
     VolumeMount,
 )
-
 from robusta.api import (
     FileBlock,
     Finding,
@@ -29,7 +28,7 @@ def volume_analysis(event: PersistentVolumeEvent):
     This action shows you the files present on your persistent volume
     """
     function_name = "volume_analysis"
-    # https://docs.robusta.dev/master/developer-guide/actions/findings-api.html
+    # https://docs.robusta.dev/master/extending/actions/findings-api.html
     finding = Finding(
         title="Persistent Volume content",
         source=FindingSource.MANUAL,
