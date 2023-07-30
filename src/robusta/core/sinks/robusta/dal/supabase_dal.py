@@ -447,8 +447,7 @@ class SupabaseDal:
             "_node_count": node_count,
         }
         try:
-            # new rpc can be used with void rpcs or rpcs with ResponseAPI interface.
-            self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data).execute()
+            self.__rpc_patch(UPDATE_CLUSTER_NODE_COUNT, data)
         except Exception as e:
             logging.error(f"Failed to publish node count {data} error: {e}")
             self.handle_supabase_error()
