@@ -462,6 +462,7 @@ runner:
   tolerations: []
   annotations: {}
   nodeSelector: ~
+  customClusterRoleRules: []
 
 kube-prometheus-stack:
   alertmanager:
