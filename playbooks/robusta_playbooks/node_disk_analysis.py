@@ -57,7 +57,7 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
     # run disk-tools on node and parse its json output
     disk_info_str = RobustaPod.run_debugger_pod(
         node.metadata.name,
-        pod_image="us-central1-docker.pkg.dev/genuine-flight-317411/devel/disk-tools:alpha-1.4",
+        pod_image="us-central1-docker.pkg.dev/genuine-flight-317411/devel/disk-tools:1.4",
         env=[
             EnvVar(
                 name="CURRENT_POD_UID",
