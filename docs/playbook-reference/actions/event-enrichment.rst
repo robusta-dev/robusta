@@ -42,6 +42,9 @@ These actions can add context to any pod-related event, be it from ``on_promethe
 
 .. robusta-action:: playbooks.robusta_playbooks.pod_troubleshooting.pod_ps
 
+.. robusta-action:: playbooks.robusta_playbooks.image_pull_backoff_enricher.image_pull_backoff_reporter
+
+
 Pod Enrichers (Crashes)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

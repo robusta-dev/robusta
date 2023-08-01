@@ -96,6 +96,30 @@ The following triggers are available for crashing Pods:
           - oomkilled_container_graph_enricher:
               resource_type: Memory
 
+
+.. _on_image_pull_backoff:
+
+.. details:: on_image_pull_backoff
+
+    ``on_image_pull_backoff`` fires when a Pod has ImagePullBackoff state. It has the following parameters:
+
+    * ``rate_limit``: Limit firing to once every `rate_limit` seconds
+    * ``fire_delay``: Fire only if the pod is running for more than fire_delay seconds.
+    * ``name_prefix``: Name of the pod (or a prefix of it)
+    * ``namespace_prefix``: Namespace the pod is in (or a prefix of it)
+    * ``labels_selector``: See :ref:`Common Filters`
+
+    An example playbook using the :ref:`image_pull_backoff_reporter<image_pull_backoff_reporter>` action to gather details about the issue:
+
+    .. code-block:: yaml
+
+        customPlaybooks:
+        - triggers:
+          - on_image_pull_backoff: {}
+          actions:
+          - image_pull_backoff_reporter: {}
+
+
 For triggers that fire on any Pod change, see :ref:`Pod Triggers`.
 
 Job Failure Triggers
@@ -154,7 +178,7 @@ Low-level triggers fire on the raw creation, deletion, and modification of resou
 compared to other triggers, as they fire on even the smallest change to a resource.
 
 .. jinja::
-  :inline-ctx: { "resource_name" : "Pod", "related_actions" : ["Pod Enrichers", "pod_events_enricher"] }
+  :inline-ctx: { "resource_name" : "Pod", "related_actions" : ["Pod Enrichers (General)", "pod_events_enricher"] }
   :header_update_levels:
   :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
