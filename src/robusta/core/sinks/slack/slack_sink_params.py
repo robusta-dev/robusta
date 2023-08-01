@@ -14,6 +14,7 @@ class SlackSinkParams(SinkBaseParams):
     slack_channel: str
     api_key: str
     channel_override: Optional[str] = None
+    max_log_file_limit_kb: int = 1000
 
     @validator("channel_override")
     def valid_channel_override(cls, v: str):
