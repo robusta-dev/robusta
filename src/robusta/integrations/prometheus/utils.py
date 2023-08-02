@@ -61,6 +61,19 @@ class PrometheusAuthorization:
                             "resource": AZURE_RESOURCE,
                         },
                     )
+                elif os.environ.get("AZURE_USE_WORKLOAD_ID"):
+                    token = open("/var/run/secrets/azure/tokens/azure-identity-token", "r").read()
+                    res = requests.post(
+                        url=AZURE_TOKEN_ENDPOINT,
+                        headers={"Content-Type": "application/x-www-form-urlencoded"},
+                        data={
+                            "grant_type": "client_credentials",
+                            "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+                            "client_assertion": token,
+                            "client_id": os.environ.get("AZURE_CLIENT_ID"),
+                            "scope": f"{AZURE_RESOURCE}/.default",
+                        },
+                    )
                 else:
                     res = requests.post(
                         url=AZURE_TOKEN_ENDPOINT,
@@ -72,8 +85,8 @@ class PrometheusAuthorization:
                             "resource": AZURE_RESOURCE,
                         },
                     )
-            except Exception:
-                logging.exception("Unexpected error when trying to generate azure access token.")
+            except Exception as e:
+                logging.exception("Unexpected error when trying to generate azure access token: %s", e.message)
                 return False
 
             if not res.ok:

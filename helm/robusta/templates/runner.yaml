@@ -15,6 +15,10 @@ spec:
       labels:
         app: {{ .Release.Name }}-runner
         robustaComponent: "runner"
+      {{- if .Values.azure.workloadIdentity.enabled }}
+      annotations:
+        azure.workload.identity/use: "true"
+      {{- end }}
       {{- if .Values.runner.annotations }}
       annotations: {{ toYaml .Values.runner.annotations | nindent 8 }}
       {{- end }}
