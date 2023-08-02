@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
-from robusta.integrations.prometheus.utils import check_prometheus_connection, get_prometheus_connect
+from robusta.integrations.prometheus.utils import get_prometheus_connect
 
 
 class PrometheusAnalyzer:
@@ -12,7 +12,7 @@ class PrometheusAnalyzer:
         self.prom = get_prometheus_connect(prometheus_params)
         self.default_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
 
-        check_prometheus_connection(prom=self.prom, params=self.default_params)
+        self.prom.check_prometheus_connection(params=self.default_params)
 
         self.prometheus_tzinfo = prometheus_tzinfo or datetime.now().astimezone().tzinfo
 
