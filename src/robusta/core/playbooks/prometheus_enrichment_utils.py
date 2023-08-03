@@ -148,7 +148,7 @@ def create_chart_from_prometheus_query(
 
     chart.x_label_rotation = 35
     chart.truncate_label = -1
-    chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%I:%M:%S %p on %d, %b")
+    chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M")
 
     value_formatters = {
         ChartValuesFormat.Plain: lambda val: str(val),

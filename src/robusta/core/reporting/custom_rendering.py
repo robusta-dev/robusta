@@ -31,5 +31,5 @@ def charts_style():
         opacity=".6",
         opacity_hover=".9",
         transition="400ms ease-in",
-        colors=("#0DC291", "#FF5959", "#4b00ad", "#2a0065", "#1e0047"),
+        colors=("#9747FF", "#FF5959", "#4b00ad", "#2a0065", "#1e0047"),
     )
