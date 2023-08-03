@@ -2,15 +2,15 @@ import logging
 import time
 from collections import defaultdict
 from datetime import datetime
-from kubernetes import client
 from string import Template
 from typing import Any, Dict, List, Optional
 
 import requests
 from hikaru.model.rel_1_26 import Node
-from kubernetes.client import V1PodList, exceptions, V1Pod, V1PodStatus
-
+from kubernetes import client
+from kubernetes.client import V1Pod, V1PodList, V1PodStatus, exceptions
 from robusta.api import (
+    ActionException,
     ActionParams,
     AlertResourceGraphEnricherParams,
     CallbackBlock,
@@ -18,6 +18,7 @@ from robusta.api import (
     ChartValuesFormat,
     CustomGraphEnricherParams,
     Emojis,
+    ErrorCodes,
     ExecutionBaseEvent,
     FileBlock,
     Finding,
@@ -32,6 +33,7 @@ from robusta.api import (
     RegexReplacementStyle,
     ResourceChartItemType,
     ResourceChartResourceType,
+    RobustaPod,
     SlackAnnotations,
     TableBlock,
     action,
@@ -39,9 +41,6 @@ from robusta.api import (
     create_graph_enrichment,
     create_resource_enrichment,
     get_node_internal_ip,
-    ActionException,
-    ErrorCodes,
-    RobustaPod
 )
 
 
@@ -285,6 +284,7 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
     )
     alert.add_enrichment([graph_enrichment])
 
+
 class TemplateParams(ActionParams):
     """
     :var template: The enrichment templated markdown text
@@ -343,7 +343,11 @@ class LogEnricherParams(ActionParams):
     filter_regex: Optional[str] = None
 
 
-def start_log_enrichment(event: ExecutionBaseEvent, params: LogEnricherParams, pod: RobustaPod, ):
+def start_log_enrichment(
+    event: ExecutionBaseEvent,
+    params: LogEnricherParams,
+    pod: RobustaPod,
+):
     if pod is None:
         if params.warn_on_missing_label:
             event.add_enrichment(
@@ -383,7 +387,7 @@ def start_log_enrichment(event: ExecutionBaseEvent, params: LogEnricherParams, p
         log_name = pod.metadata.name
         log_name += f"/{container}"
         event.add_enrichment(
-            [FileBlock(f"{log_name}.log", log_data.encode())],
+            [ZippedFileBlock(f"{log_name}.log", log_data.encode())],
         )
         break
 
@@ -400,6 +404,7 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
 
     logging.info(f"received a logs_enricher action: {params}")
     start_log_enrichment(event=event, params=params, pod=pod)
+
 
 class SearchTermParams(ActionParams):
     """
@@ -431,6 +436,7 @@ def show_stackoverflow_search(event: ExecutionBaseEvent, params: SearchTermParam
             [MarkdownBlock(f'Sorry, StackOverflow doesn\'t know anything about "{params.search_term}"')]
         )
     event.add_finding(finding)
+
 
 @action
 def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
@@ -484,14 +490,16 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
         except Exception as e:
             if not (isinstance(e, exceptions.ApiException) and e.status == 404):
                 raise ActionException(
-                    ErrorCodes.ACTION_UNEXPECTED_ERROR, f"[foreign_logs_enricher] Failed to list pods for foreign log enricher.\n{e}"
+                    ErrorCodes.ACTION_UNEXPECTED_ERROR,
+                    f"[foreign_logs_enricher] Failed to list pods for foreign log enricher.\n{e}",
                 )
 
     if not matching_pods:
-        logging.warning(f"[foreign_logs_enricher] failed to find any matching pods for the selectors: {params.label_selectors}")
+        logging.warning(
+            f"[foreign_logs_enricher] failed to find any matching pods for the selectors: {params.label_selectors}"
+        )
         return
     for matching_pod in matching_pods:
         pod = RobustaPod().read(matching_pod.metadata.name, matching_pod.metadata.namespace)
 
         start_log_enrichment(event=event, params=params, pod=pod)
-

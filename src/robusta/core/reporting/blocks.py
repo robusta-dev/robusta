@@ -3,6 +3,7 @@
 # 1. We use pydantic and not dataclasses so that field types are validated
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
+import gzip
 import json
 import textwrap
 from copy import deepcopy
@@ -75,6 +76,16 @@ class FileBlock(BaseBlock):
         :param contents: the file's contents
         """
         super().__init__(filename=filename, contents=contents)
+
+
+class ZippedFileBlock(FileBlock):
+    """
+    A zipped file of any type. Used for images, log files, binary files, and more.
+    """
+
+    def zip(self):
+        self.filename = self.filename + ".gz"
+        self.contents = gzip.compress(self.contents)
 
 
 class HeaderBlock(BaseBlock):

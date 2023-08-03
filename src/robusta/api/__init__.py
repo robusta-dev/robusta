@@ -142,6 +142,7 @@ from robusta.core.reporting import (
     ScanReportRow,
     TableBlock,
     VideoLink,
+    ZippedFileBlock,
 )
 from robusta.core.reporting.action_requests import (
     ActionRequestBody,

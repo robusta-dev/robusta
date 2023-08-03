@@ -13,6 +13,7 @@ from robusta.api import (
     PrometheusKubernetesAlert,
     SlackAnnotations,
     TableBlock,
+    ZippedFileBlock,
     action,
     get_job_latest_pod,
     get_resource_events_table,
@@ -182,7 +183,7 @@ def job_pod_enricher(event: JobEvent, params: JobPodEnricherParams):
         log_data = pod.get_logs()
         if log_data:
             event.add_enrichment(
-                [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
+                [ZippedFileBlock(f"{pod.metadata.name}.log", log_data.encode())],
             )
 
 
