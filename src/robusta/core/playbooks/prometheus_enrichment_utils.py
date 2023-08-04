@@ -168,6 +168,8 @@ def create_chart_from_prometheus_query(
     min_time = 32536799999
     max_time = 0
 
+    # We use the [graph_colors_list] to map colors corresponding to matching line labels.
+    graph_colors_list: List[str] = []
     series_list_result = prometheus_query_result.series_list_result
     if filter_prom_jobs:
         series_list_result = filter_prom_jobs_results(series_list_result)
@@ -186,12 +188,25 @@ def create_chart_from_prometheus_query(
             values.append((timestamp, value))
         min_time = min(min_time, min(series.timestamps))
         max_time = max(max_time, max(series.timestamps))
+
+        graph_colors_list.append("#9747FF")
         chart.add(label, values)
 
     assert lines is not None
     for line in lines:
+        if line.label == "Memory Limit" \
+                or line.label == "CPU Limit":
+            graph_colors_list.append("#FF5959")
+        if line.label == "Request Limit":
+            graph_colors_list.append("#0DC291")
+
         value = [(min_time, line.value), (max_time, line.value)]
         chart.add(line.label, value)
+
+    # Once we have mapped all the fixes and colors to specific lines,
+    # we will set the colors in the chart configuration.
+    graph_colors_list.extend(["#9747FF", "#2a0065", "#1e0047"])
+    chart.config.style.graph_colors = tuple(graph_colors_list),
     return chart
 
 

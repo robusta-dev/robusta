@@ -20,7 +20,13 @@ def create_container_graph(params: ResourceGraphEnricherParams, pod: Pod, contai
         if params.resource_type == "Memory" and limits > 0:
             memory_limit_in_bytes = limits * 1024 * 1024
             limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
-            limit_lines = [limit_line]
+            limit_lines.append(limit_line)
+
+            if requests > 0:
+                request_limit_in_bytes = requests * 1024 * 1024
+                limit_line = XAxisLine(label="Request Limit", value=request_limit_in_bytes)
+                limit_lines.append(limit_line)
+
     graph_enrichment = create_resource_enrichment(
         start_at,
         labels,

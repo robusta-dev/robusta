@@ -14,6 +14,7 @@ from robusta.api import (
     create_resource_enrichment,
     pod_limits,
 )
+from robusta.core.model.pods import pod_requests
 
 
 @action
@@ -33,13 +34,24 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
     limit_lines = []
     if params.display_limits:
         resource_limits = pod_limits(pod)
+        request_limits = pod_requests(pod)
         if params.resource_type == "CPU" and resource_limits.cpu > 0:
             limit_line = XAxisLine(label="CPU Limit", value=resource_limits.cpu)
-            limit_lines = [limit_line]
+            limit_lines.append(limit_line)
+            if request_limits.cpu > 0:
+                request_memory_limit_in_bytes = request_limits.cpu
+                limit_line = XAxisLine(label="Request Limit", value=request_memory_limit_in_bytes)
+                limit_lines.append(limit_line)
+
         elif params.resource_type == "Memory" and resource_limits.memory > 0:
             memory_limit_in_bytes = resource_limits.memory * 1024 * 1024
             limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
-            limit_lines = [limit_line]
+            limit_lines.append(limit_line)
+            if request_limits.memory > 0:
+                request_memory_limit_in_bytes = request_limits.memory * 1024 * 1024
+                limit_line = XAxisLine(label="Request Limit", value=request_memory_limit_in_bytes)
+                limit_lines.append(limit_line)
+
     graph_enrichment = create_resource_enrichment(
         start_at,
         labels,
