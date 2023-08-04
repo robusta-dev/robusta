@@ -2,7 +2,15 @@ import prometheus_client
 
 
 class DiscoveryMetrics:
-    def __init__(self):
+    __instance = None
+
+    def __new__(cls):
+        if cls.__instance is None:
+            cls.__instance = super().__new__(cls)
+            cls.__instance._initialize_metrics()
+        return cls.__instance
+
+    def _initialize_metrics(self):
         self.services_updated = prometheus_client.Gauge("services_updated", "Number of services updated")
         self.jobs_updated = prometheus_client.Gauge("jobs_updated", "Number of jobs updated")
         self.nodes_updated = prometheus_client.Gauge("nodes_updated", "Number of nodes updated")
