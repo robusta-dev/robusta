@@ -137,9 +137,59 @@ def create_chart_from_prometheus_query(
         raise Exception(
             f"Unsupported query result for robusta chart, Type received: {prometheus_query_result.result_type}, type supported 'matrix'"
         )
+
+    # fix a pygal bug which causes infinite loops due to rounding errors with floating points
+    # TODO: change min_time time before  Jan 19 3001
+    min_time = 32536799999
+    max_time = 0
+
+    # We use the [graph_plot_color_list] to map colors corresponding to matching line labels on [plot_list].
+    plot_list: List[Tuple[str, List[Tuple]]] = []
+    graph_plot_color_list: List[str] = []
+    series_list_result = prometheus_query_result.series_list_result
+    if filter_prom_jobs:
+        series_list_result = filter_prom_jobs_results(series_list_result)
+    for i, series in enumerate(series_list_result):
+        label = get_target_name(series)
+        if not label:
+            label = "\n".join([v for (key, v) in series.metric.items() if key != "job"])
+        # If the label is empty, try to take it from the additional_label_factory
+        if label == "" and chart_label_factory is not None:
+            label = chart_label_factory(i)
+
+        values = []
+        for index in range(len(series.values)):
+            timestamp = series.timestamps[index]
+            value = round(float(series.values[index]), FLOAT_PRECISION_LIMIT)
+            values.append((timestamp, value))
+        min_time = min(min_time, min(series.timestamps))
+        max_time = max(max_time, max(series.timestamps))
+
+        plot_list.append((label, values))
+        graph_plot_color_list.append("#9747FF")
+
+    assert lines is not None
+    for line in lines:
+        value = [(min_time, line.value), (max_time, line.value)]
+
+        if line.label == "Memory Limit" \
+                or line.label == "CPU Limit":
+            plot_list.append((line.label, value))
+            graph_plot_color_list.append("#FF5959")
+
+        elif line.label == "Memory Request" \
+                or line.label == "CPU Request":
+            plot_list.append((line.label, value))
+            graph_plot_color_list.append("#0DC291")
+
+        else:
+            plot_list.append((line.label, value))
+            graph_plot_color_list.append("#2a0065")
+
+    graph_plot_color_list.extend(["#1e0047", "#2a0065"])
     chart = pygal.XY(
         show_dots=True,
-        style=charts_style(),
+        style=charts_style(graph_colors=tuple(graph_plot_color_list)),
         truncate_legend=15,
         include_x_axis=include_x_axis,
         width=1280,
@@ -163,50 +213,10 @@ def create_chart_from_prometheus_query(
         chart.title = chart_title
     else:
         chart.title = promql_query
-    # fix a pygal bug which causes infinite loops due to rounding errors with floating points
-    # TODO: change min_time time before  Jan 19 3001
-    min_time = 32536799999
-    max_time = 0
 
-    # We use the [graph_colors_list] to map colors corresponding to matching line labels.
-    graph_colors_list: List[str] = []
-    series_list_result = prometheus_query_result.series_list_result
-    if filter_prom_jobs:
-        series_list_result = filter_prom_jobs_results(series_list_result)
-    for i, series in enumerate(series_list_result):
-        label = get_target_name(series)
-        if not label:
-            label = "\n".join([v for (key, v) in series.metric.items() if key != "job"])
-        # If the label is empty, try to take it from the additional_label_factory
-        if label == "" and chart_label_factory is not None:
-            label = chart_label_factory(i)
+    for plot in plot_list:
+        chart.add(plot[0], plot[1])
 
-        values = []
-        for index in range(len(series.values)):
-            timestamp = series.timestamps[index]
-            value = round(float(series.values[index]), FLOAT_PRECISION_LIMIT)
-            values.append((timestamp, value))
-        min_time = min(min_time, min(series.timestamps))
-        max_time = max(max_time, max(series.timestamps))
-
-        graph_colors_list.append("#9747FF")
-        chart.add(label, values)
-
-    assert lines is not None
-    for line in lines:
-        if line.label == "Memory Limit" \
-                or line.label == "CPU Limit":
-            graph_colors_list.append("#FF5959")
-        if line.label == "Request Limit":
-            graph_colors_list.append("#0DC291")
-
-        value = [(min_time, line.value), (max_time, line.value)]
-        chart.add(line.label, value)
-
-    # Once we have mapped all the fixes and colors to specific lines,
-    # we will set the colors in the chart configuration.
-    graph_colors_list.extend(["#9747FF", "#2a0065", "#1e0047"])
-    chart.config.style.graph_colors = tuple(graph_colors_list),
     return chart
 
 
