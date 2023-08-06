@@ -5,6 +5,7 @@ from hikaru.model.rel_1_26 import Pod, PodList
 from robusta.api import (
     ActionParams,
     BaseBlock,
+    FileBlock,
     Finding,
     FindingSeverity,
     FindingSource,
@@ -16,7 +17,6 @@ from robusta.api import (
     ResourceGraphEnricherParams,
     RobustaPod,
     TableBlock,
-    ZippedFileBlock,
     action,
     create_node_graph_enrichment,
 )
@@ -151,7 +151,7 @@ def node_dmesg_enricher(event: NodeEvent):
     exec_result = RobustaPod.exec_on_node(pod_name="dmesg_pod", node_name=node.metadata.name, cmd="dmesg")
     if exec_result:
         event.add_enrichment(
-            [ZippedFileBlock(f"dmesg.log", exec_result.encode())],
+            [FileBlock(f"dmesg.log", exec_result.encode())],
         )
 
 

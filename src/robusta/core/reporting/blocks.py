@@ -83,7 +83,11 @@ class ZippedFileBlock(FileBlock):
     A zipped file of any type. Used for images, log files, binary files, and more.
     """
 
+    should_zip: bool = True
+
     def zip(self):
+        if not self.should_zip:
+            return
         self.filename = self.filename + ".gz"
         self.contents = gzip.compress(self.contents)
 
@@ -330,7 +334,7 @@ class TableBlock(BaseBlock):
         if self.column_renderers is None:
             return self.rows
         new_rows = deepcopy(self.rows)
-        for (column_name, renderer_type) in self.column_renderers.items():
+        for column_name, renderer_type in self.column_renderers.items():
             column_idx = self.headers.index(column_name)
             for row in new_rows:
                 row[column_idx] = render_value(renderer_type, row[column_idx])

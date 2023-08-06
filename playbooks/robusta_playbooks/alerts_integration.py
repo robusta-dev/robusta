@@ -43,6 +43,7 @@ from robusta.api import (
     create_resource_enrichment,
     get_node_internal_ip,
 )
+from robusta.core.model.base_params import LogEnricherParams
 
 
 class SeverityParams(ActionParams):
@@ -327,23 +328,6 @@ def template_enricher(event: KubernetesResourceEvent, params: TemplateParams):
     )
 
 
-class LogEnricherParams(ActionParams):
-    """
-    :var container_name: Specific container to get logs from
-    :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
-    :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
-    :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
-    :var filter_regex: only shows lines that match the regex
-    """
-
-    container_name: Optional[str]
-    warn_on_missing_label: bool = False
-    regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
-    regex_replacement_style: Optional[str] = None
-    previous: bool = False
-    filter_regex: Optional[str] = None
-
-
 def start_log_enrichment(
     event: ExecutionBaseEvent,
     params: LogEnricherParams,
@@ -388,7 +372,11 @@ def start_log_enrichment(
         log_name = pod.metadata.name
         log_name += f"/{container}"
         event.add_enrichment(
-            [ZippedFileBlock(f"{log_name}.log", log_data.encode())],
+            [
+                ZippedFileBlock(
+                    filename=f"{pod.metadata.name}.log", contents=log_data.encode(), should_zip=params.compress_logs
+                )
+            ],
         )
         break
 
