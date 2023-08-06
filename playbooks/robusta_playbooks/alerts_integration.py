@@ -36,6 +36,7 @@ from robusta.api import (
     RobustaPod,
     SlackAnnotations,
     TableBlock,
+    ZippedFileBlock,
     action,
     create_chart_from_prometheus_query,
     create_graph_enrichment,
