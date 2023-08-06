@@ -165,7 +165,7 @@ class RobustaPod(Pod):
         container=None,
         previous=None,
         tail_lines=None,
-        regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None,
+        regex_replacer_patterns: Optional[List["NamedRegexPattern"]] = None,
         regex_replacement_style: Optional[RegexReplacementStyle] = None,
         filter_regex: Optional[str] = None,
     ) -> str:

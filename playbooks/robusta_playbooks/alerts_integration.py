@@ -391,7 +391,7 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
     """
     pod = event.get_pod()
 
-    logging.info(f"received a logs_enricher action: {params}")
+    logging.debug(f"received a logs_enricher action: {params}")
     start_log_enrichment(event=event, params=params, pod=pod)
 
 
@@ -468,7 +468,7 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
     api = client.CoreV1Api()
     matching_pods: List[V1Pod] = []
 
-    logging.info(f"received a foreign_logs_enricher action: {params}")
+    logging.debug(f"received a foreign_logs_enricher action: {params}")
 
     for selector in params.label_selectors:
         try:
