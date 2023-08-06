@@ -8,6 +8,7 @@ from robusta.api import (
     EventEnricherParams,
     FileBlock,
     JobEvent,
+    LogEnricherParams,
     MarkdownBlock,
     PodContainer,
     PrometheusKubernetesAlert,
@@ -20,7 +21,6 @@ from robusta.api import (
     get_resource_events_table,
     to_kubernetes_name,
 )
-from robusta.core.model.base_params import LogEnricherParams
 
 
 class JobParams(ActionParams):

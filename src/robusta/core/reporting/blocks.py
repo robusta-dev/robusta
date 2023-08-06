@@ -70,12 +70,21 @@ class FileBlock(BaseBlock):
     filename: str
     contents: bytes
 
-    def __init__(self, filename: str, contents: bytes):
+    def __init__(
+        self,
+        filename: str,
+        contents: bytes,
+        **kwargs,
+    ):
         """
         :param filename: the file's name
         :param contents: the file's contents
         """
-        super().__init__(filename=filename, contents=contents)
+        super().__init__(
+            filename=filename,
+            contents=contents,
+            **kwargs,
+        )
 
 
 class ZippedFileBlock(FileBlock):
@@ -84,6 +93,14 @@ class ZippedFileBlock(FileBlock):
     """
 
     should_zip: bool = True
+
+    def __init__(self, filename: str, contents: bytes, should_zip: bool):
+        """
+        :param filename: the file's name
+        :param contents: the file's contents
+        :param should_zip: if the data should be zipped before it
+        """
+        super().__init__(filename=filename, contents=contents, should_zip=should_zip)
 
     def zip(self):
         if not self.should_zip:

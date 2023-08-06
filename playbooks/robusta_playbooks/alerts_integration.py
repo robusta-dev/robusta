@@ -25,6 +25,7 @@ from robusta.api import (
     FindingSource,
     KubernetesResourceEvent,
     ListBlock,
+    LogEnricherParams,
     MarkdownBlock,
     NamedRegexPattern,
     PodEvent,
@@ -43,7 +44,6 @@ from robusta.api import (
     create_resource_enrichment,
     get_node_internal_ip,
 )
-from robusta.core.model.base_params import LogEnricherParams
 
 
 class SeverityParams(ActionParams):

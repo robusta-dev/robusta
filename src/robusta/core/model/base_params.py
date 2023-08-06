@@ -257,6 +257,15 @@ class EventEnricherParams(ActionParams):
     included_types: List[str] = ["Warning", "Normal"]
 
 
+class NamedRegexPattern(BaseModel):
+    """
+    A named regex pattern
+    """
+
+    name: str = "Redacted"
+    regex: str
+
+
 class LogEnricherParams(ActionParams):
     """
     :var container_name: Specific container to get logs from
