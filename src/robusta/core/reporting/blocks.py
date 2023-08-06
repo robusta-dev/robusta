@@ -5,6 +5,7 @@
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import gzip
 import json
+import logging
 import textwrap
 from copy import deepcopy
 from datetime import datetime
@@ -105,8 +106,13 @@ class ZippedFileBlock(FileBlock):
     def zip(self):
         if not self.should_zip:
             return
-        self.filename = self.filename + ".gz"
-        self.contents = gzip.compress(self.contents)
+
+        try:
+            self.contents = gzip.compress(self.contents)
+            self.filename = self.filename + ".gz"
+        except Exception as exc:
+            logging.error(f"Unexpected error occurred while zipping file {self.filename}")
+            logging.exception(exc)
 
 
 class HeaderBlock(BaseBlock):
