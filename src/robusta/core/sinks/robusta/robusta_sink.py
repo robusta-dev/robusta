@@ -1,16 +1,16 @@
 import base64
 import json
 import logging
+import sys
 import threading
 import time
 from typing import Dict, List, Optional
-
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
-from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
+from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
@@ -26,6 +26,7 @@ from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrap
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
+from robusta.utils.stack_tracer import StackTracer
 
 
 class RobustaSink(SinkBase):
@@ -57,15 +58,16 @@ class RobustaSink(SinkBase):
             robusta_token.password,
             sink_config.robusta_sink,
             self.cluster_name,
-            self.signing_key
+            self.signing_key,
         )
 
         self.first_prometheus_alert_time = 0
         self.last_send_time = 0
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
 
-        self.__prometheus_health_checker = PrometheusHealthChecker(discovery_period_sec=self.__discovery_period_sec,
-                                                                   global_config=self.get_global_config())
+        self.__prometheus_health_checker = PrometheusHealthChecker(
+            discovery_period_sec=self.__discovery_period_sec, global_config=self.get_global_config()
+        )
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         # start cluster discovery
@@ -79,6 +81,7 @@ class RobustaSink(SinkBase):
         self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
         self.__thread = threading.Thread(target=self.__discover_cluster)
+        self.__thread = threading.Thread(target=self.__discovery_watchdog)
         self.__thread.start()
 
     def __init_service_resolver(self):
@@ -183,7 +186,8 @@ class RobustaSink(SinkBase):
 
         except Exception as e:
             logging.error(
-                f"An error occured while publishing single service: name - {new_service.name}, namespace - {new_service.namespace}  service type: {new_service.service_type}  | {e}")
+                f"An error occured while publishing single service: name - {new_service.name}, namespace - {new_service.namespace}  service type: {new_service.service_type}  | {e}"
+            )
 
     def __publish_new_services(self, active_services: List[ServiceInfo]):
         with self.services_publish_lock:
@@ -414,8 +418,9 @@ class RobustaSink(SinkBase):
         # new or changed helm release
         for helm_release_key in curr_helm_releases.keys():
             current_helm_release = curr_helm_releases[helm_release_key]
-            if self.__helm_releases_cache.get(
-                    helm_release_key) != current_helm_release:  # helm_release not in the cache, or changed
+            if (
+                self.__helm_releases_cache.get(helm_release_key) != current_helm_release
+            ):  # helm_release not in the cache, or changed
                 helm_releases.append(current_helm_release)
                 self.__helm_releases_cache[helm_release_key] = current_helm_release
 
@@ -446,7 +451,7 @@ class RobustaSink(SinkBase):
                 light_actions=self.registry.get_light_actions(),
                 ttl_hours=self.ttl_hours,
                 stats=cluster_stats,
-                activity_stats=activity_stats
+                activity_stats=activity_stats,
             )
 
             self.dal.publish_cluster_status(cluster_status)
@@ -466,6 +471,17 @@ class RobustaSink(SinkBase):
         except Exception:
             logging.error("Failed to check run history condition", exc_info=True)
             return False
+
+    def __discovery_watchdog(self):
+        logging.info("Cluster discovery watchdog initialized")
+        while self.__active:
+            if not self.is_healthy():
+                # TODO: create error finding here
+                logging.info("Unhealthy discovery, restarting runner")
+                StackTracer.dump()
+                sys.exit(0)
+            time.sleep(DISCOVERY_CHECK_THRESHOLD_SEC)
+        logging.warning("Watchdog finished")
 
     def __discover_cluster(self):
         logging.info("Cluster discovery initialized")
