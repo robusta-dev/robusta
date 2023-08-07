@@ -81,8 +81,9 @@ class RobustaSink(SinkBase):
         self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
         self.__thread = threading.Thread(target=self.__discover_cluster)
-        self.__thread = threading.Thread(target=self.__discovery_watchdog)
+        self.__watchdog_thread = threading.Thread(target=self.__discovery_watchdog)
         self.__thread.start()
+        self.__watchdog_thread.start()
 
     def __init_service_resolver(self):
         """
