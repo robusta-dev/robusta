@@ -479,7 +479,7 @@ class RobustaSink(SinkBase):
             if not self.is_healthy():
                 # TODO: create error finding here
                 logging.info("Unhealthy discovery, restarting runner")
-                StackTracer.dump()
+                StackTracer.dump(traces=1)
                 sys.exit(0)
             time.sleep(DISCOVERY_CHECK_THRESHOLD_SEC)
         logging.warning("Watchdog finished")
