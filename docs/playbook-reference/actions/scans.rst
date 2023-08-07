@@ -54,7 +54,7 @@ To set custom tolerations or a nodeSelector update your ``generated_values.yaml`
 .. code-block:: yaml
     :name: cb-krr-set-custom-taints
 
-    global_config:
+    globalConfig:
       krr_job_spec:
         tolerations:
         - key: "key1"
@@ -129,7 +129,7 @@ To set custom tolerations or a nodeSelector update your ``generated_values.yaml`
 .. code-block:: yaml
     :name: cb-popeye-set-custom-taints
 
-    global_config:
+    globalConfig:
       popeye_job_spec:
         tolerations:
         - key: "key1"
