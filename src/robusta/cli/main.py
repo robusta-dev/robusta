@@ -83,16 +83,6 @@ class HelmValues(BaseModel, extra=Extra.allow):
                 "defaultRules": {
                     "create": True,
                     "rules": {
-                        "node": True,
-                        "k8s": True,
-                        "kubelet": True,
-                        "kubeApiserverHistogram": True,
-                        "kubeApiserverAvailability": True,
-                        "kubeSchedulerRecording": True,
-                        "kubePrometheusGeneral": True,
-                        "kubeApiserverBurnrate": True,
-                        "nodeExporterRecording": True,
-                        "kubePrometheusNodeRecording": True,
                         "alertmanager": False,
                         "etcd": False,
                         "configReloaders": False,
