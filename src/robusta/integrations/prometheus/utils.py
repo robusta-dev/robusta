@@ -66,15 +66,17 @@ def generate_prometheus_config(prometheus_params: PrometheusParams) -> Prometheu
     if CORALOGIX_PROMETHEUS_TOKEN:
         return CoralogixPrometheusConfig(**baseconfig, prometheus_token=CORALOGIX_PROMETHEUS_TOKEN)
     # Azure config
-    if os.environ.get("AZURE_USE_MANAGED_ID"):
+    azure_managed_id = os.environ.get("AZURE_USE_MANAGED_ID")
+    azure_client_secret = os.environ.get("AZURE_CLIENT_SECRET")
+    if azure_managed_id or azure_client_secret:
         return AzurePrometheusConfig(
             **baseconfig,
             azure_resource=AZURE_RESOURCE,
             azure_metadata_endpoint=AZURE_METADATA_ENDPOINT,
             azure_token_endpoint=AZURE_TOKEN_ENDPOINT,
-            azure_use_managed_id=os.environ.get("AZURE_USE_MANAGED_ID"),
+            azure_use_managed_id=azure_managed_id,
             azure_client_id=os.environ.get("AZURE_CLIENT_ID"),
-            azure_client_secret=os.environ.get("AZURE_CLIENT_SECRET"),
+            azure_client_secret=azure_client_secret,
         )
     if is_victoria_metrics:
         return VictoriaMetricsPrometheusConfig(**baseconfig)
