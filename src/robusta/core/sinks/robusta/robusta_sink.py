@@ -477,12 +477,12 @@ class RobustaSink(SinkBase):
         logging.info("Cluster discovery watchdog initialized")
         is_initial_health_check = True
         while self.__active:
-            if not self.is_healthy():
+            # if the initial thread is stuck it will register as "Healthy"
             initial_discovery_stuck = not is_initial_health_check and self.last_send_time == 0
             if not self.is_healthy() or initial_discovery_stuck:
                 logging.info("Unhealthy discovery, restarting runner")
                 StackTracer.dump(traces=1)
-                # sys.exit does not work within child thread and the parent thread isnt the correct one for thread.interrupt_main
+                # sys.exit and thread.interrupt_main doest stop robusta
                 os._exit(1)
             is_initial_health_check = False
             time.sleep(DISCOVERY_CHECK_THRESHOLD_SEC)
