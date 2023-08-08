@@ -201,7 +201,8 @@ class Finding(Filterable):
         self.subject = subject
         self.enrichments: List[Enrichment] = []
         self.video_links: List[VideoLink] = []
-        self.service = TopServiceResolver.guess_cached_resource(name=subject.name, namespace=subject.namespace)
+        self.service = TopServiceResolver.guess_cached_resource(
+            name=subject.name, namespace=subject.namespace, kind=subject.subject_type.value)
         self.service_key = self.service.get_resource_key() if self.service else ""
         uri_path = f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"

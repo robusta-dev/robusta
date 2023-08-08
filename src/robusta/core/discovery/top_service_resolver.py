@@ -51,20 +51,29 @@ class TopServiceResolver:
     # TODO remove this guess function
     # temporary try to guess who the owner service is.
     @classmethod
-    def guess_service_key(cls, name: str, namespace: str) -> str:
-        resource = cls.guess_cached_resource(name, namespace)
+    def guess_service_key(cls, name: str, namespace: str, kind: str) -> str:
+        resource = cls.guess_cached_resource(name, namespace, kind=kind)
         return resource.get_resource_key() if resource else ""
 
     # TODO remove this guess function
     # temporary try to guess who the owner service is.
     @classmethod
-    def guess_cached_resource(cls, name: str, namespace: str) -> Optional[TopLevelResource]:
+    def guess_cached_resource(cls, name: str, namespace: str, kind: str,) \
+            -> Optional[TopLevelResource]:
         if name is None or namespace is None:
             return None
 
+        kind = kind.lower()
+
         for cached_resource in cls.__namespace_to_resource[namespace]:
-            if name.startswith(cached_resource.name):
-                return cached_resource
+            if kind == "pod" \
+                    or kind == "replicaset":
+                if name.startswith(cached_resource.name):
+                    return cached_resource
+            else:
+                if name == cached_resource.name:
+                    return cached_resource
+
         return None
 
     @classmethod

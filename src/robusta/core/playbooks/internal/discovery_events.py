@@ -78,7 +78,7 @@ def create_debug_event_finding(event: Event):
         ),
         creation_date=get_event_timestamp(event),
     )
-    finding.service_key = TopServiceResolver.guess_service_key(name=k8s_obj.name, namespace=k8s_obj.namespace)
+    finding.service_key = TopServiceResolver.guess_service_key(name=k8s_obj.name, namespace=k8s_obj.namespace, kind=k8s_obj.kind)
     return finding
 
 
