@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Union, get_type_hints
 from hikaru import HikaruBase, HikaruDocumentBase
 from kubernetes.client.models.events_v1_event import EventsV1Event
 from kubernetes.client.models.v1_container_image import V1ContainerImage
+from kubernetes.client.rest import logger
 from ruamel.yaml import YAML
 
 try:
@@ -39,9 +40,14 @@ def create_monkey_patches():
     logging.info("Creating kubernetes ContainerImage monkey patch")
     EventsV1Event.event_time = EventsV1Event.event_time.setter(event_time)
 
+    # patching rest.py issue in kubernetes client https://github.com/kubernetes-client/python/issues/1867
+    logger.debug = debug_patch
 
 def event_time(self, event_time):
     self._event_time = event_time
+
+def debug_patch(*args):
+    pass
 
 
 def official_plug_ins(self):
