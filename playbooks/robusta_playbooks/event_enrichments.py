@@ -48,7 +48,7 @@ from robusta.api import (
     
 )
 
-from hikaru.model.rel_1_26 import Node
+from hikaru.model.rel_1_26 import Node, Job
 
 
 class ExtendedEventEnricherParams(EventEnricherParams):
@@ -255,7 +255,7 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
 @action
 def resource_events_diff(event: KubernetesAnyChangeEvent):
     new_resource = event.obj
-    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node)):
+    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node, Job)):
         return
     elif isinstance(new_resource, Pod) and (new_resource.metadata.owner_references or is_pod_finished(new_resource)):
         return

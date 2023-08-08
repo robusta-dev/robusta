@@ -385,6 +385,7 @@ platformPlaybooks:
     - on_replicaset_all_changes: {}
     - on_pod_all_changes: {}
     - on_node_all_changes: {}
+    - on_job_all_changes: {}
   actions:
     - resource_events_diff: {}
 - triggers:
