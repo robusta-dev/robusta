@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
+from hikaru.model.rel_1_26 import Job
 from kubernetes.client import V1Container, V1Job, V1JobSpec, V1JobStatus, V1PodSpec
 from pydantic import BaseModel
 
@@ -44,18 +45,19 @@ class JobStatus(BaseModel):
     conditions: List[JobCondition]
 
     @staticmethod
-    def from_api_server(job: V1Job) -> "JobStatus":
+    def from_api_server(job: Union[V1Job, Job]) -> "JobStatus":
         job_status: V1JobStatus = job.status
         job_conditions: List[JobCondition] = [
             JobCondition(type=condition.type, message=condition.message)
             for condition in (job_status.conditions or [])
             if condition.status.lower() == "true"
         ]
+        completion_time = getattr(job_status, "completion_time", None) or getattr(job_status, "completionTime", None)
         return JobStatus(
             active=job_status.active or 0,
             failed=job_status.failed or 0,
             succeeded=job_status.succeeded or 0,
-            completion_time=str(job_status.completion_time),
+            completion_time=str(completion_time),
             conditions=job_conditions,
             failed_time=str(JobStatus._extract_failed_time(job_status)),
         )
@@ -65,7 +67,9 @@ class JobStatus(BaseModel):
         try:
             for condition in job_status.conditions:
                 if condition.status.lower() == "true" and condition.type == "Failed":
-                    return condition.last_transition_time
+                    return getattr(condition, "last_transition_time", None) or getattr(
+                        condition, "lastTransitionTime", None
+                    )
         except (
             AttributeError,
             TypeError,
@@ -83,25 +87,27 @@ class JobData(BaseModel):
     parents: Optional[List[str]]
 
     @staticmethod
-    def _get_job_parents(job: V1Job) -> List[str]:
+    def _get_job_parents(job: Union[V1Job, Job]) -> List[str]:
         try:
-            if not job.metadata or not job.metadata.owner_references:
-                return []
-            return [owner_reference.name for owner_reference in job.metadata.owner_references]
+            owner_references = getattr(job.metadata, "owner_references", []) or getattr(
+                job.metadata, "ownerReferences", []
+            )
+            return [owner_ref.name for owner_ref in owner_references]
         except Exception:
             return []
 
     @staticmethod
-    def from_api_server(job: V1Job, pods: List[str]) -> "JobData":
+    def from_api_server(job: Union[V1Job, Job], pods: List[str]) -> "JobData":
         job_spec: V1JobSpec = job.spec
         pod_spec: V1PodSpec = job_spec.template.spec
         pod_containers: List[JobContainer] = [
             JobContainer.from_api_server(container) for container in pod_spec.containers
         ]
+
         return JobData(
-            backoff_limit=job_spec.backoff_limit,
+            backoff_limit=getattr(job_spec, "backoff_limit", None) or getattr(job_spec, "backoffLimit"),
             tolerations=[toleration.to_dict() for toleration in (pod_spec.tolerations or [])],
-            node_selector=pod_spec.node_selector,
+            node_selector=getattr(pod_spec, "node_selector", {}) or getattr(pod_spec, "nodeSelector", {}),
             labels=job.metadata.labels,
             containers=pod_containers,
             pods=pods,
@@ -154,16 +160,19 @@ class JobInfo(BaseModel):
         )
 
     @staticmethod
-    def from_api_server(job: V1Job, pods: List[str]) -> "JobInfo":
+    def from_api_server(job: Union[V1Job, Job], pods: List[str]) -> "JobInfo":
         containers = job.spec.template.spec.containers
         requests: ContainerResources = utils.containers_resources_sum(containers, ResourceAttributes.requests)
         status = JobStatus.from_api_server(job)
         job_data = JobData.from_api_server(job, pods)
         completions = job.spec.completions if job.spec.completions is not None else 1
+        creation_ts = getattr(job.metadata, "creation_timestamp", None) or getattr(
+            job.metadata, "creationTimestamp", None
+        )
         return JobInfo(
             name=job.metadata.name,
             namespace=job.metadata.namespace,
-            created_at=str(job.metadata.creation_timestamp),
+            created_at=str(creation_ts),
             cpu_req=requests.cpu,
             mem_req=requests.memory,
             completions=completions,

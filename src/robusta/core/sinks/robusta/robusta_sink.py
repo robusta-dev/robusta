@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Union
 
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
-from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod
+from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Job
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ClusterStatus, ClusterStats, ActivityStats
@@ -158,6 +158,8 @@ class RobustaSink(SinkBase):
             self.__publish_single_service(Discovery.create_service_info(new_resource), operation)
         elif isinstance(new_resource, Node):
             self.__update_node(new_resource, operation)
+        elif isinstance(new_resource, Job):
+            self.__update_job(new_resource, operation)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.dal.persist_finding(finding)
@@ -561,3 +563,29 @@ class RobustaSink(SinkBase):
 
             self.dal.publish_nodes([new_info])
             self.__discovery_metrics.on_nodes_updated(1)
+
+    def __update_job(self, new_job: Job, operation: K8sOperationType):
+
+        new_info = JobInfo.from_api_server(new_job, [])
+        job_key = new_info.get_service_key()
+        with self.services_publish_lock:
+            if operation == K8sOperationType.UPDATE:
+                old_info = self.__jobs_cache.get(job_key, None)
+                if old_info is None:  # Update may occur after delete.
+                    return
+
+                new_info.job_data = old_info.job_data
+                self.__jobs_cache[job_key] = new_info
+                self.dal.publish_jobs([new_info])
+                self.__discovery_metrics.on_jobs_updated(1)
+                return
+
+            if operation == K8sOperationType.CREATE:
+                self.__jobs_cache[job_key] = new_info
+                self.dal.publish_jobs([new_info])
+                self.__discovery_metrics.on_jobs_updated(1)
+                return
+            if operation == K8sOperationType.DELETE:
+                self.__safe_delete_job(job_key)
+                self.__discovery_metrics.on_jobs_updated(1)
+                return
