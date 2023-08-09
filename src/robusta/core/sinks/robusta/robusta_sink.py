@@ -487,6 +487,7 @@ class RobustaSink(SinkBase):
                 logging.info("Unhealthy discovery, restarting runner")
                 # sys.exit and thread.interrupt_main doest stop robusta
                 os.kill(os.getpid(), signal.SIGINT)
+                return
             is_initial_health_check = False
             time.sleep(DISCOVERY_CHECK_THRESHOLD_SEC)
         logging.warning("Watchdog finished")
