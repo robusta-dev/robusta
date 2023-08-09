@@ -12,6 +12,8 @@ class WarningEventTrigger(EventAllChangesTrigger):
     operations: List[str] = None
     exclude: List[str] = None
     include: List[str] = None
+    min_count: int = 0
+    firing_time_s: int = 0
 
     def __init__(
         self,
@@ -22,6 +24,8 @@ class WarningEventTrigger(EventAllChangesTrigger):
         operations: List[str] = None,
         exclude: List[str] = (),
         include: List[str] = (),
+        min_count: int = 0,
+        firing_time_s: int = 0,
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -32,6 +36,8 @@ class WarningEventTrigger(EventAllChangesTrigger):
         self.operations = operations
         self.exclude = exclude
         self.include = include
+        self.min_count = min_count
+        self.firing_time_s = firing_time_s
 
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         should_fire = super().should_fire(event, playbook_id)
@@ -54,6 +60,13 @@ class WarningEventTrigger(EventAllChangesTrigger):
 
         if self.operations and exec_event.operation.value not in self.operations:
             return False
+
+        if exec_event.obj.series:
+            if exec_event.obj.series.count < self.min_count:
+                return False
+            duration_s = (exec_event.obj.series.last_observed_time - exec_event.obj.event_time).total_seconds()
+            if duration_s < self.firing_time_s:
+                return False
 
         event_content = f"{exec_event.obj.reason}{exec_event.obj.note}".lower()
         # exclude if any of the exclusions is found in the event content
