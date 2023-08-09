@@ -16,15 +16,29 @@ def create_container_graph(params: ResourceGraphEnricherParams, pod: Pod, contai
     start_at = datetime.now()
     limit_lines = []
     if show_limit:
-        requests, limits = PodContainer.get_memory_resources(container)
-        if params.resource_type == "Memory" and limits > 0:
-            memory_limit_in_bytes = limits * 1024 * 1024
-            limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
-            limit_lines.append(limit_line)
+        if params.resource_type == "Memory":
+            requests, limits = PodContainer.get_memory_resources(container)
+            if limits > 0:
+                memory_limit_in_bytes = limits * 1024 * 1024
+                limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
+                limit_lines.append(limit_line)
 
             if requests > 0:
                 request_limit_in_bytes = requests * 1024 * 1024
                 limit_line = XAxisLine(label="Memory Request", value=request_limit_in_bytes)
+                limit_lines.append(limit_line)
+
+        if params.resource_type == "CPU":
+            requests, limits = PodContainer.get_cpu_resources(container)
+
+            if limits > 0:
+                cpu_limit_in_bytes = limits * 1024 * 1024
+                limit_line = XAxisLine(label="CPU Limit", value=cpu_limit_in_bytes)
+                limit_lines.append(limit_line)
+
+            if requests > 0:
+                request_limit_in_bytes = requests * 1024 * 1024
+                limit_line = XAxisLine(label="CPU Request", value=request_limit_in_bytes)
                 limit_lines.append(limit_line)
 
     graph_enrichment = create_resource_enrichment(

@@ -34,21 +34,24 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
     limit_lines = []
     if params.display_limits:
         resource_limits = pod_limits(pod)
-        request_limits = pod_requests(pod)
-        if params.resource_type == "CPU" and resource_limits.cpu > 0:
-            limit_line = XAxisLine(label="CPU Limit", value=resource_limits.cpu)
-            limit_lines.append(limit_line)
-            if request_limits.cpu > 0:
-                request_memory_limit_in_bytes = request_limits.cpu
-                limit_line = XAxisLine(label="CPU Request", value=request_memory_limit_in_bytes)
+        resource_requests = pod_requests(pod)
+        if params.resource_type == "CPU":
+            if resource_limits.cpu > 0:
+                cpu_limit_in_bytes = resource_limits.cpu * 1024 * 1024
+                limit_line = XAxisLine(label="CPU Limit", value=cpu_limit_in_bytes)
+                limit_lines.append(limit_line)
+            if resource_requests.cpu > 0:
+                request_cpu_limit_in_bytes = resource_requests.cpu * 1024 * 1024
+                limit_line = XAxisLine(label="CPU Request", value=request_cpu_limit_in_bytes)
                 limit_lines.append(limit_line)
 
-        elif params.resource_type == "Memory" and resource_limits.memory > 0:
-            memory_limit_in_bytes = resource_limits.memory * 1024 * 1024
-            limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
-            limit_lines.append(limit_line)
-            if request_limits.memory > 0:
-                request_memory_limit_in_bytes = request_limits.memory * 1024 * 1024
+        elif params.resource_type == "Memory":
+            if resource_limits.memory > 0:
+                memory_limit_in_bytes = resource_limits.memory * 1024 * 1024
+                limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
+                limit_lines.append(limit_line)
+            if resource_requests.memory > 0:
+                request_memory_limit_in_bytes = resource_requests.memory * 1024 * 1024
                 limit_line = XAxisLine(label="Memory Request", value=request_memory_limit_in_bytes)
                 limit_lines.append(limit_line)
 
