@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import os
+import signal
 import threading
 import time
 from typing import Dict, List, Optional
@@ -479,11 +480,13 @@ class RobustaSink(SinkBase):
         while self.__active:
             # if the initial thread is stuck it will register as "Healthy"
             initial_discovery_stuck = not is_initial_health_check and self.last_send_time == 0
+            # if is not healthy we will get the stack dump from sigint handler
+            if initial_discovery_stuck:
+                StackTracer.dump(traces=1)
             if not self.is_healthy() or initial_discovery_stuck:
                 logging.info("Unhealthy discovery, restarting runner")
-                StackTracer.dump(traces=1)
                 # sys.exit and thread.interrupt_main doest stop robusta
-                os._exit(1)
+                os.kill(os.getpid(), signal.SIGINT)
             is_initial_health_check = False
             time.sleep(DISCOVERY_CHECK_THRESHOLD_SEC)
         logging.warning("Watchdog finished")
