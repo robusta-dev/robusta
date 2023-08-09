@@ -257,9 +257,9 @@ def resource_events_diff(event: KubernetesAnyChangeEvent):
     new_resource = event.obj
     if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node, Job)):
         return
-    elif isinstance(new_resource, Pod) and (new_resource.metadata.owner_references or is_pod_finished(new_resource)):
+    elif isinstance(new_resource, Pod) and (new_resource.metadata.ownerReferences or is_pod_finished(new_resource)):
         return
-    elif isinstance(new_resource, ReplicaSet) and (new_resource.metadata.owner_references or new_resource.spec.replicas == 0):
+    elif isinstance(new_resource, ReplicaSet) and (new_resource.metadata.ownerReferences or new_resource.spec.replicas == 0):
         return
 
     all_sinks = event.get_all_sinks()
