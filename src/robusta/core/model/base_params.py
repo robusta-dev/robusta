@@ -282,4 +282,4 @@ class LogEnricherParams(ActionParams):
     regex_replacement_style: Optional[str] = None
     previous: bool = False
     filter_regex: Optional[str] = None
-    compress_logs: bool = False
+    compress_logs: bool = True
