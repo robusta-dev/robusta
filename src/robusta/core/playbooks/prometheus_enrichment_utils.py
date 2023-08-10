@@ -7,10 +7,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import humanize
 import pygal
 from hikaru.model.rel_1_26 import Node
+from prometrix import PrometheusQueryResult, PrometheusSeries
 from pydantic import BaseModel
 
-from robusta.core.external_apis.prometheus.models import PrometheusSeries
-from robusta.core.external_apis.prometheus.prometheus_cli import PrometheusQueryResult, custom_query_range
 from robusta.core.model.base_params import (
     ChartValuesFormat,
     PrometheusParams,
@@ -36,6 +35,30 @@ def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_templat
     template = Template(promql_query_template)
     promql_query = template.safe_substitute(labels)
     return promql_query
+
+
+from datetime import datetime
+from typing import Any, Dict, Optional
+
+from robusta.integrations.prometheus.utils import get_prometheus_connect
+
+
+def custom_query_range(
+    prometheus_params: PrometheusParams,
+    query: str,
+    start_time: datetime,
+    end_time: datetime,
+    step: str,
+    params: Optional[Dict[str, Any]] = None,
+) -> PrometheusQueryResult:
+    """
+    This function wraps prometheus custom_query_range
+    """
+    prom = get_prometheus_connect(prometheus_params)
+    params = params or {}
+    prom.check_prometheus_connection(params)
+    result = prom.custom_query_range(query=query, start_time=start_time, end_time=end_time, step=step, params=params)
+    return PrometheusQueryResult(data=result)
 
 
 def get_node_internal_ip(node: Node) -> str:

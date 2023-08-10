@@ -256,6 +256,8 @@ class SupabaseDal:
         db_node["account_id"] = self.account_id
         db_node["cluster_id"] = self.cluster
         db_node["updated_at"] = "now()"
+        del db_node["resource_version"]
+
         return db_node
 
     def publish_nodes(self, nodes: List[NodeInfo]):

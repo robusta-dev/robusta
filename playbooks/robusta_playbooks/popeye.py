@@ -10,7 +10,6 @@ from typing import Dict, List, Optional
 
 from hikaru.model.rel_1_26 import Container, PodSpec, ResourceRequirements
 from pydantic import BaseModel, ValidationError
-
 from robusta.api import (
     RELEASE_NAME,
     ActionParams,
@@ -90,7 +89,8 @@ def scan_row_content_to_string(row: ScanReportRow) -> str:
 class PopeyeParams(ActionParams):
     """
     :var timeout: Time span for yielding the scan.
-    :var args: Popeye cli arguments.
+    :var args: Deprecated - Popeye cli arguments.
+    :var popeye_args: Popeye cli arguments.
     :var spinach: Spinach.yaml config file to supply to the scan.
     :var popeye_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
     :var service_account_name: The account name to use for the Popeye scan job.
@@ -98,7 +98,8 @@ class PopeyeParams(ActionParams):
 
     service_account_name: str = f"{RELEASE_NAME}-runner-service-account"
     timeout = 300
-    args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
+    args: Optional[str] = None
+    popeye_args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
     popeye_job_spec = {}
     spinach: str = """\
 popeye:
@@ -136,8 +137,11 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     """
     Displays a popeye scan report.
     """
-
-    sanitize_args = shlex.join(shlex.split(params.args))
+    if params.args:
+        logging.warning("The args param for popeye_scan has been deprecated, use popeye_args instead.")
+        sanitize_args = shlex.join(shlex.split(params.args))
+    else:
+        sanitize_args = shlex.join(shlex.split(params.popeye_args))
     resources = ResourceRequirements(
         limits={"memory": (str(POPEYE_MEMORY_LIMIT))},
     )

@@ -2,9 +2,10 @@ import logging
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
 
-from prometheus_api_client import PrometheusApiClientException
 from kubernetes import client
 from kubernetes.client.models.v1_service import V1Service
+from prometheus_api_client import PrometheusApiClientException
+from prometrix import PrometheusQueryResult
 from robusta.api import (
     ExecutionBaseEvent,
     MarkdownBlock,
@@ -13,7 +14,6 @@ from robusta.api import (
     PrometheusDuration,
     PrometheusKubernetesAlert,
     PrometheusQueryParams,
-    PrometheusQueryResult,
     action,
     run_prometheus_query,
 )
