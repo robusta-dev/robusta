@@ -80,23 +80,22 @@ class FileBlock(BaseBlock):
         """
         Truncates the log file by removing lines from the beginning until its size is within the given limit.
         """
-        content_length = len(self.contents)
+        decoded_content = self.contents.decode('utf-8')
+        content_length = len(decoded_content)
 
         if content_length <= max_file_size_bytes:
             return self.contents
 
-        lines = self.contents.decode('utf-8')
-        lines = lines.splitlines()
+        lines = decoded_content.splitlines()
         byte_length_newline = len('\n'.encode('utf-8'))
 
         truncated_lines: List[str] = []
         for idx, line in enumerate(lines):
-            line_content_length = len(line.encode('utf-8'))
-            line_content_length = line_content_length + byte_length_newline
+            line_content_length = len(line) + byte_length_newline
 
             content_length -= line_content_length
-            if (content_length + byte_length_newline) <= max_file_size_bytes:
-                truncated_lines = lines[idx:]
+            if content_length <= max_file_size_bytes:
+                truncated_lines = lines[idx+1:]
                 break
 
         return "\n".join(truncated_lines).encode('utf-8')

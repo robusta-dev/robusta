@@ -22,7 +22,7 @@ Alternatively, generate a key by running ``robusta integrations slack`` and set 
          name: main_slack_sink
          api_key: MY SLACK KEY
          slack_channel: MY SLACK CHANNEL
-         max_log_file_limit_kb: 1000 # (Optional) The maximum allowed file size for log files (in kilobytes) uploaded to the Slack channel. Default: 1000.
+         max_log_file_limit_kb: 1000 # (Optional) The maximum allowed file size for "snippets" (in kilobytes) uploaded to the Slack channel. Larger files can be sent to Slack, but they may not be viewable directly within the Slack. Default: 1000.
          channel_override: DYNAMIC SLACK CHANNEL OVERRIDE (Optional)
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
