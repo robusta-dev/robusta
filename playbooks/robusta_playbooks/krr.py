@@ -95,14 +95,16 @@ class KRRResponse(BaseModel):
 class KRRParams(PrometheusParams):
     """
     :var timeout: Time span for yielding the scan.
-    :var args: KRR cli arguments.
+    :var args: Deprecated -  KRR cli arguments.
+    :var krr_args: KRR cli arguments.
     :var serviceAccountName: The account name to use for the KRR scan job.
     :var krr_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
     """
 
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
     strategy: str = "simple"
-    args: str = ""
+    args: Optional[str] = None
+    krr_args: str = ""
     timeout: int = 300
     krr_job_spec = {}
 
@@ -116,7 +118,10 @@ class KRRParams(PrometheusParams):
 
     @property
     def args_sanitized(self) -> str:
-        return shlex.join(shlex.split(self.args))
+        if self.args:
+            logging.warning("The args param for krr_scan has been deprecated, use krr_args instead.")
+            return shlex.join(shlex.split(self.args))
+        return shlex.join(shlex.split(self.krr_args))
 
     @validator("strategy", allow_reuse=True)
     def check_strategy(cls, strategy: str) -> str:
