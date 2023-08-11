@@ -3,9 +3,11 @@ import time
 from collections import defaultdict
 from typing import Dict, List, Optional
 
+from hikaru.model.rel_1_26 import OwnerReference
 from pydantic.main import BaseModel
 
 from robusta.core.model.env_vars import RESOURCE_UPDATES_CACHE_TTL_SEC
+from robusta.integrations.kubernetes.custom_models import RobustaPod
 
 
 class TopLevelResource(BaseModel):
@@ -55,6 +57,12 @@ class TopServiceResolver:
         resource = cls.guess_cached_resource(name, namespace, kind=kind)
         return resource.get_resource_key() if resource else ""
 
+    @classmethod
+    def get_pod_owner_reference(cls, name: str, namespace: str) -> OwnerReference:
+        robusta_pod = RobustaPod.find_pod(name, namespace)
+
+        return robusta_pod.metadata.ownerReferences[0] if robusta_pod.metadata.ownerReferences else None
+
     # TODO remove this guess function
     # temporary try to guess who the owner service is.
     @classmethod
@@ -65,12 +73,29 @@ class TopServiceResolver:
 
         kind = kind.lower()
 
+        # Check if an owner reference is available for the service
+        owner_reference: Optional[OwnerReference] = None
+        if kind == "pod":
+            # If the service is a pod, attempt to find its owner reference
+            owner_reference = TopServiceResolver.get_pod_owner_reference(name=name, namespace=namespace)
         for cached_resource in cls.__namespace_to_resource[namespace]:
-            if kind == "pod" \
-                    or kind == "replicaset":
+            if kind == "pod" and owner_reference:
+                owner_ref_kind = owner_reference.kind.lower()
+                owner_ref_name = owner_reference.name
+                # If the service is a pod and an owner reference exists
+                # And if the name matches the cached resource's name, return the cached resource
+                if (owner_ref_kind == "pod"
+                        or owner_ref_kind == "replicaset") \
+                        and owner_ref_name == cached_resource.name:
+                    return cached_resource
+            elif kind == "pod" or kind == "replicaset":
+                # If the service is a pod (and does not have owner_reference) or a replicaset
+                # Check if the cached resource's name starts with the provided name
                 if name.startswith(cached_resource.name):
                     return cached_resource
             else:
+                # For other service kinds
+                # Check if the provided name matches the cached resource's name
                 if name == cached_resource.name:
                     return cached_resource
 

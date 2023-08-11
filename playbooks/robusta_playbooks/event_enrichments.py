@@ -31,21 +31,11 @@ from robusta.api import (
     list_pods_using_selector,
     parse_kubernetes_datetime_to_ms,
     KubernetesAnyChangeEvent,
-    extract_ready_pods,
-    is_release_managed_by_helm,
-    extract_total_pods,
-    ServiceConfig,
-    VolumeInfo,
-    ContainerInfo,
-    extract_volumes_k8,
-    extract_containers_k8,
     Pod,
     ReplicaSet,
     StatefulSet,
     DaemonSet,
     Deployment,
-    ServiceInfo,
-    
 )
 
 from hikaru.model.rel_1_26 import Node
@@ -255,7 +245,7 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
 @action
 def resource_events_diff(event: KubernetesAnyChangeEvent):
     new_resource = event.obj
-    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node)):
+    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node, Pod, ReplicaSet)):
         return
     elif isinstance(new_resource, Pod) and (new_resource.metadata.ownerReferences or is_pod_finished(new_resource)):
         return
