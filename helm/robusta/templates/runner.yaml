@@ -53,6 +53,10 @@ spec:
           - name: DISABLE_HELM_MONITORING
             value: "True"
           {{- end }}
+          {{- if .Values.scaleAlertsProcessing }}
+          - name: ALERTS_WORKERS_POOL
+            value: "True"
+          {{- end }}
           - name: RUNNER_VERSION
             value: {{ .Chart.AppVersion }}
           - name: CERTIFICATE
