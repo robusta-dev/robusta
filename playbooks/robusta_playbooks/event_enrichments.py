@@ -4,7 +4,6 @@ from hikaru.model.rel_1_26 import Job, Node
 
 from robusta.api import (
     ActionException,
-    ContainerInfo,
     DaemonSet,
     Deployment,
     DeploymentEvent,
@@ -26,25 +25,17 @@ from robusta.api import (
     PodEvent,
     RendererType,
     ReplicaSet,
-    ServiceConfig,
-    ServiceInfo,
     SlackAnnotations,
     StatefulSet,
     TableBlock,
     VideoEnricherParams,
     VideoLink,
-    VolumeInfo,
     action,
-    extract_containers_k8,
-    extract_ready_pods,
-    extract_total_pods,
-    extract_volumes_k8,
     get_event_timestamp,
     get_job_all_pods,
     get_resource_events,
     get_resource_events_table,
     is_pod_finished,
-    is_release_managed_by_helm,
     list_pods_using_selector,
     parse_kubernetes_datetime_to_ms,
 )
@@ -254,7 +245,7 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
 @action
 def resource_events_diff(event: KubernetesAnyChangeEvent):
     new_resource = event.obj
-    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node, Job)):
+    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node, Job, Pod, ReplicaSet)):
         return
     elif isinstance(new_resource, Pod) and (new_resource.metadata.ownerReferences or is_pod_finished(new_resource)):
         return
