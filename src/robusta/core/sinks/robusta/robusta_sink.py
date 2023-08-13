@@ -12,7 +12,12 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
-from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
+from robusta.core.model.env_vars import (
+    CLUSTER_STATUS_PERIOD_SEC,
+    DISCOVERY_CHECK_THRESHOLD_SEC,
+    DISCOVERY_PERIOD_SEC,
+    DISCOVERY_WATCHDOG_CHECK_SEC,
+)
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
@@ -429,6 +434,7 @@ class RobustaSink(SinkBase):
         self.dal.publish_helm_releases(helm_releases)
 
     def __update_cluster_status(self):
+        self.last_send_time = time.time()
         prometheus_health_checker_status = self.__prometheus_health_checker.get_status()
         activity_stats = ActivityStats(
             relayConnection=False,
@@ -476,20 +482,13 @@ class RobustaSink(SinkBase):
 
     def __discovery_watchdog(self):
         logging.info("Cluster discovery watchdog initialized")
-        is_initial_health_check = True
         while self.__active:
-            # if the initial thread is stuck it will register as "Healthy"
-            initial_discovery_stuck = not is_initial_health_check and self.last_send_time == 0
-            # if is not healthy we will get the stack dump from sigint handler
-            if initial_discovery_stuck:
-                StackTracer.dump(traces=1)
-            if not self.is_healthy() or initial_discovery_stuck:
+            if not self.is_healthy():
                 logging.info("Unhealthy discovery, restarting runner")
                 # sys.exit and thread.interrupt_main doest stop robusta
                 os.kill(os.getpid(), signal.SIGINT)
                 return
-            is_initial_health_check = False
-            time.sleep(DISCOVERY_CHECK_THRESHOLD_SEC)
+            time.sleep(DISCOVERY_WATCHDOG_CHECK_SEC)
         logging.warning("Watchdog finished")
 
     def __discover_cluster(self):
@@ -521,7 +520,6 @@ class RobustaSink(SinkBase):
             self.first_prometheus_alert_time = time.time()
 
         if time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC or first_alert:
-            self.last_send_time = time.time()
             self.__update_cluster_status()
 
     def __publish_new_namespaces(self, namespaces: List[NamespaceInfo]):
