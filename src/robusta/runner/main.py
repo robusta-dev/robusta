@@ -2,6 +2,8 @@ import signal
 
 from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
+    ALERT_BUILDER_WORKERS,
+    ALERTS_WORKERS_POOL,
     ENABLE_TELEMETRY,
     ROBUSTA_TELEMETRY_ENDPOINT,
     SEND_ADDITIONAL_TELEMETRY,
@@ -38,6 +40,9 @@ def main():
         )
     else:
         logging.info("Telemetry is disabled.")
+
+    if ALERTS_WORKERS_POOL:
+        logging.info(f"Running alerts workers pool of {ALERT_BUILDER_WORKERS}")
 
     Web.init(event_handler, loader)
     signal.signal(signal.SIGINT, event_handler.handle_sigint)
