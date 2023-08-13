@@ -45,7 +45,7 @@ from robusta.api import (
     DaemonSet,
     Deployment,
     ServiceInfo,
-    
+
 )
 
 from hikaru.model.rel_1_26 import Node
@@ -255,7 +255,7 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
 @action
 def resource_events_diff(event: KubernetesAnyChangeEvent):
     new_resource = event.obj
-    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node)):
+    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node, Pod, ReplicaSet)):
         return
     elif isinstance(new_resource, Pod) and (new_resource.metadata.ownerReferences or is_pod_finished(new_resource)):
         return
