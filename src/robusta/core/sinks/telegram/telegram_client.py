@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Union
 
 import requests
 
@@ -9,8 +10,8 @@ TELEGRAM_BASE_URL = os.environ.get("TELEGRAM_BASE_URL", "https://api.telegram.or
 
 
 class TelegramClient:
-    def __init__(self, chat_id: int, thread_id: int, bot_token: str):
-        self.chat_id = chat_id
+    def __init__(self, chat_id: Union[int, str], thread_id: int, bot_token: str):
+        self.chat_id = int(chat_id)
         self.thread_id = thread_id
         self.bot_token = bot_token
 
