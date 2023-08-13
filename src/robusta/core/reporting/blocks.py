@@ -22,7 +22,8 @@ except ImportError:
         raise ImportError("Please install tabulate to use the TableBlock")
 
 
-from robusta.core.external_apis.prometheus.models import PrometheusQueryResult
+from prometrix import PrometheusQueryResult
+
 from robusta.core.model.env_vars import PRINTED_TABLE_MAX_WIDTH
 from robusta.core.reporting.base import BaseBlock
 from robusta.core.reporting.consts import ScanType
@@ -319,7 +320,7 @@ class TableBlock(BaseBlock):
         if self.column_renderers is None:
             return self.rows
         new_rows = deepcopy(self.rows)
-        for (column_name, renderer_type) in self.column_renderers.items():
+        for column_name, renderer_type in self.column_renderers.items():
             column_idx = self.headers.index(column_name)
             for row in new_rows:
                 row[column_idx] = render_value(renderer_type, row[column_idx])

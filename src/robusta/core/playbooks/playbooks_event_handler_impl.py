@@ -7,8 +7,8 @@ from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
 import prometheus_client
+from prometrix import PrometheusNotFound
 
-from robusta.core.exceptions import PrometheusNotFound
 from robusta.core.model.events import ExecutionBaseEvent, ExecutionContext
 from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
 from robusta.core.playbooks.playbook_utils import merge_global_params, to_safe_str
