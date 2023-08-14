@@ -16,7 +16,7 @@ from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.model.namespaces import NamespaceInfo
-from robusta.core.model.nodes import NodeInfo
+from robusta.core.model.nodes import NodeInfo, NodeSystemInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
@@ -309,7 +309,8 @@ class RobustaSink(SinkBase):
     @classmethod
     def __to_node_info(cls, node: Union[V1Node, Node]) -> Dict:
         info = getattr(node.status, "node_info", None) or getattr(node.status, "nodeInfo", None)
-        node_info = info.to_dict() if info else {}
+        node_info = {}
+        node_info["system"] = NodeSystemInfo(**info.to_dict()).dict() if info else {}
         node_info["labels"] = node.metadata.labels or {}
         node_info["annotations"] = node.metadata.annotations or {}
         node_info["addresses"] = [addr.address for addr in node.status.addresses] if node.status.addresses else []
@@ -536,28 +537,31 @@ class RobustaSink(SinkBase):
         return self.registry.get_global_config()
 
     def __update_node(self, new_node: Node, operation: K8sOperationType):
-        # cant get the extra pods discovery info.
-        if operation == K8sOperationType.CREATE:
-            return
-
         with self.services_publish_lock:
-            name = new_node.metadata.name
-            cache = self.__nodes_cache.get(name, None)
-            if cache is None:
-                return
+            if operation == K8sOperationType.CREATE:
+                new_info = self.__from_api_server_node(new_node, [])
+                name = new_node.metadata.name
+                self.__nodes_cache[name] = new_info
+            elif operation == K8sOperationType.UPDATE:
+                name = new_node.metadata.name
+                cache = self.__nodes_cache.get(name, None)
+                if cache is None:
+                    return
 
-            if cache.resource_version >= int(new_node.metadata.resourceVersion or 0):
-                return
+                if cache.resource_version >= int(new_node.metadata.resourceVersion or 0):
+                    return
 
-            new_info = self.__from_api_server_node(new_node, [])
-            new_info.memory_allocated = cache.memory_allocated
-            new_info.cpu_allocated = cache.cpu_allocated
-            new_info.pods_count = cache.pods_count
-            new_info.pods = cache.pods
+                new_info = self.__from_api_server_node(new_node, [])
+                new_info.memory_allocated = cache.memory_allocated
+                new_info.cpu_allocated = cache.cpu_allocated
+                new_info.pods_count = cache.pods_count
+                new_info.pods = cache.pods
+                if new_info == cache:
+                    return
 
-            if operation == K8sOperationType.UPDATE:
                 self.__nodes_cache[name] = new_info
             elif operation == K8sOperationType.DELETE:
+                name = new_node.metadata.name
                 self.__services_cache.pop(name, None)
                 new_info.deleted = True
 
@@ -575,6 +579,9 @@ class RobustaSink(SinkBase):
                     return
 
                 new_info.job_data = old_info.job_data
+                if new_info == old_info:
+                    return
+
                 self.__jobs_cache[job_key] = new_info
                 self.dal.publish_jobs([new_info])
                 self.__discovery_metrics.on_jobs_updated(1)

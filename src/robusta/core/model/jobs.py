@@ -104,8 +104,9 @@ class JobData(BaseModel):
             JobContainer.from_api_server(container) for container in pod_spec.containers
         ]
 
+        backoff_lim = job_spec.backoff_limit if hasattr(job_spec, "backoff_limit") else job_spec.backoffLimit
         return JobData(
-            backoff_limit=getattr(job_spec, "backoff_limit", None) or getattr(job_spec, "backoffLimit"),
+            backoff_limit=backoff_lim,
             tolerations=[toleration.to_dict() for toleration in (pod_spec.tolerations or [])],
             node_selector=getattr(pod_spec, "node_selector", {}) or getattr(pod_spec, "nodeSelector", {}),
             labels=job.metadata.labels,
