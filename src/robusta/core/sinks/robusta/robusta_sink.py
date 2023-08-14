@@ -7,7 +7,7 @@ import time
 from typing import Dict, List, Optional, Union
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
-from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod
+from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Job
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
@@ -21,7 +21,7 @@ from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.model.namespaces import NamespaceInfo
-from robusta.core.model.nodes import NodeInfo
+from robusta.core.model.nodes import NodeInfo, NodeSystemInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
@@ -167,6 +167,8 @@ class RobustaSink(SinkBase):
             self.__publish_single_service(Discovery.create_service_info(new_resource), operation)
         elif isinstance(new_resource, Node):
             self.__update_node(new_resource, operation)
+        elif isinstance(new_resource, Job):
+            self.__update_job(new_resource, operation)
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.dal.persist_finding(finding)
@@ -317,7 +319,8 @@ class RobustaSink(SinkBase):
     @classmethod
     def __to_node_info(cls, node: Union[V1Node, Node]) -> Dict:
         info = getattr(node.status, "node_info", None) or getattr(node.status, "nodeInfo", None)
-        node_info = info.to_dict() if info else {}
+        node_info = {}
+        node_info["system"] = NodeSystemInfo(**info.to_dict()).dict() if info else {}
         node_info["labels"] = node.metadata.labels or {}
         node_info["annotations"] = node.metadata.annotations or {}
         node_info["addresses"] = [addr.address for addr in node.status.addresses] if node.status.addresses else []
@@ -557,30 +560,62 @@ class RobustaSink(SinkBase):
         return self.registry.get_global_config()
 
     def __update_node(self, new_node: Node, operation: K8sOperationType):
-        # cant get the extra pods discovery info.
-        if operation == K8sOperationType.CREATE:
-            return
-
         with self.services_publish_lock:
-            name = new_node.metadata.name
-            cache = self.__nodes_cache.get(name, None)
-            if cache is None:
-                return
+            if operation == K8sOperationType.CREATE:
+                new_info = self.__from_api_server_node(new_node, [])
+                name = new_node.metadata.name
+                self.__nodes_cache[name] = new_info
+            elif operation == K8sOperationType.UPDATE:
+                name = new_node.metadata.name
+                cache = self.__nodes_cache.get(name, None)
+                if cache is None:
+                    return
 
-            if cache.resource_version >= int(new_node.metadata.resourceVersion or 0):
-                return
+                if cache.resource_version >= int(new_node.metadata.resourceVersion or 0):
+                    return
 
-            new_info = self.__from_api_server_node(new_node, [])
-            new_info.memory_allocated = cache.memory_allocated
-            new_info.cpu_allocated = cache.cpu_allocated
-            new_info.pods_count = cache.pods_count
-            new_info.pods = cache.pods
+                new_info = self.__from_api_server_node(new_node, [])
+                new_info.memory_allocated = cache.memory_allocated
+                new_info.cpu_allocated = cache.cpu_allocated
+                new_info.pods_count = cache.pods_count
+                new_info.pods = cache.pods
+                if new_info == cache:
+                    return
 
-            if operation == K8sOperationType.UPDATE:
                 self.__nodes_cache[name] = new_info
             elif operation == K8sOperationType.DELETE:
+                name = new_node.metadata.name
                 self.__services_cache.pop(name, None)
                 new_info.deleted = True
 
             self.dal.publish_nodes([new_info])
             self.__discovery_metrics.on_nodes_updated(1)
+
+    def __update_job(self, new_job: Job, operation: K8sOperationType):
+
+        new_info = JobInfo.from_api_server(new_job, [])
+        job_key = new_info.get_service_key()
+        with self.services_publish_lock:
+            if operation == K8sOperationType.UPDATE:
+                old_info = self.__jobs_cache.get(job_key, None)
+                if old_info is None:  # Update may occur after delete.
+                    return
+
+                new_info.job_data = old_info.job_data
+                if new_info == old_info:
+                    return
+
+                self.__jobs_cache[job_key] = new_info
+                self.dal.publish_jobs([new_info])
+                self.__discovery_metrics.on_jobs_updated(1)
+                return
+
+            if operation == K8sOperationType.CREATE:
+                self.__jobs_cache[job_key] = new_info
+                self.dal.publish_jobs([new_info])
+                self.__discovery_metrics.on_jobs_updated(1)
+                return
+            if operation == K8sOperationType.DELETE:
+                self.__safe_delete_job(job_key)
+                self.__discovery_metrics.on_jobs_updated(1)
+                return
