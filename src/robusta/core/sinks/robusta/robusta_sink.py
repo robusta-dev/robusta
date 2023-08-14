@@ -484,9 +484,10 @@ class RobustaSink(SinkBase):
         logging.info("Cluster discovery watchdog initialized")
         while self.__active:
             if not self.is_healthy():
-                logging.info("Unhealthy discovery, restarting runner")
+                logging.warning(f"Unhealthy discovery, restarting runner")
+                StackTracer.dump()
                 # sys.exit and thread.interrupt_main doest stop robusta
-                os.kill(os.getpid(), signal.SIGINT)
+                os._exit(0)
                 return
             time.sleep(DISCOVERY_WATCHDOG_CHECK_SEC)
         logging.warning("Watchdog finished")
