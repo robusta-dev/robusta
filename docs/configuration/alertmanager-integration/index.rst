@@ -12,6 +12,7 @@ Integrating with Prometheus
    alert-manager
    outofcluster-prometheus
    azure-managed-prometheus
+   eks-managed-prometheus
    coralogix_managed_prometheus
    victoria-metrics
    grafana-alert-manager
@@ -56,6 +57,13 @@ Setup Instructions
         :link-type: doc
 
         Special instructions when using Azure Managed Prometheus
+
+    .. grid-item-card:: :octicon:`book;1em;` EKS Managed Prometheus
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: eks-managed-prometheus
+        :link-type: doc
+
+        Special instructions when using EKS Managed Prometheus
 
     .. grid-item-card:: :octicon:`book;1em;` Coralogix Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
