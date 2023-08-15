@@ -30,12 +30,6 @@ Setup Instructions
 .. grid:: 1 1 2 3
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`book;1em;` kube-prometheus-stack
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: kube-prometheus-stack
-        :link-type: doc
-
-        kube-prometheus-stack, in the same cluster as Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` In-cluster Prometheus
         :class-card: sd-bg-light sd-bg-text-light
