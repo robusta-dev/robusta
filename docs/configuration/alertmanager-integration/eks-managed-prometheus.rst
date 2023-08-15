@@ -8,7 +8,7 @@ Configure Pull Integration
 
 A pull integration lets Robusta pull metrics from EKS Managed Prometheus.
 
-1. Create an aws access key, `See guide here <https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html>`_ .
+1. Create an aws access key, `See guide here <https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html>`_.
 
 2. Create a secret in your cluster with your access key and secret access key named `aws-secret-key`.
 
@@ -42,4 +42,3 @@ A pull integration lets Robusta pull metrics from EKS Managed Prometheus.
       value: "aps" # <SERVICE NAME HERE>, it is usually aps
     - name: AWS_REGION
       value: <REGION_OF_WORKSPACE_HERE>
-
