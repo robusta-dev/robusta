@@ -166,8 +166,8 @@ class RocketchatSender:
 
                 table_rows.append(f"● {row[0]} `{row[1]}`")
 
-            table_str = "\n".join(table_rows)
-            table_str = f"{block.table_name} \n{table_str}"
+            table_str = "\n\n\n".join(table_rows)
+            table_str = f"{block.table_name} \n\n{table_str}"
             return self.__to_rocketchat_markdown(MarkdownBlock(table_str), status=status, has_attachment=has_attachment)
 
         return self.__to_rocketchat_markdown(block.to_markdown(), status=status, has_attachment=has_attachment)
@@ -224,9 +224,7 @@ class RocketchatSender:
             f.flush()
 
             try:
-                result = self.rocketchat_client.rooms_upload(rid=self.room_id,
-                                                             file=f.name,
-                                                             msg=message)
+                result = self.rocketchat_client.rooms_upload(rid=self.room_id, file=f.name, msg=message,)
 
                 result.raise_for_status()
 
@@ -248,7 +246,7 @@ class RocketchatSender:
                     f"error uploading files to rocketchat\ne={e}\nuser_id: {self.user_id}\nserver_url: {self.server_url}"
                 )
 
-    def prepare_rocketchat_text(self, message: str, files: List[FileBlock] = []):
+    def prepare_rocketchat_text(self, message: str, files: List[FileBlock] = []) -> str:
         if files:
             messages = []
             for file_block in files:
@@ -305,6 +303,7 @@ class RocketchatSender:
 
             result = self.rocketchat_client.chat_send_message(
                 message={
+                    "bot": True,
                     "msg": message,
                     "rid": self.room_id,
                     "blocks": output_blocks,
@@ -398,5 +397,5 @@ class RocketchatSender:
             finding.title,
             sink_params,
             status,
-            sink_params.get_rocketchat_channel(self.cluster_name, finding.subject.labels, finding.subject.annotations),
+            sink_params.get_rocketchat_channel(),
         )
