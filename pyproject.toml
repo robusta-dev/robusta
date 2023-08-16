@@ -64,6 +64,7 @@ PyJWT = "2.4.0"
 fpdf2 = "^2.7.1"
 attrs = "^23.1.0"
 prometrix = "0.1.10"
+rocketchat-api = "^1.30.0"
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
 pytest = "^6.2.4"
