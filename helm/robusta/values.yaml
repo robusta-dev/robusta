@@ -469,6 +469,7 @@ runner:
   annotations: {}
   nodeSelector: ~
   customClusterRoleRules: []
+  imagePullSecrets: []
 
 kube-prometheus-stack:
   alertmanager:
