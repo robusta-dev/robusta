@@ -34,3 +34,10 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
 
         # Additional query string parameters to be appended to the Prometheus connection URL (optional)
         # prometheus_url_query_string: "demo-query=example-data&another-query=value"
+
+        # Create alert silencing when using Grafana alerts (optional)
+        # grafana_api_key: <YOUR GRAFANA EDITOR API KEY> # (1)
+        # alertmanager_flavor: grafana
+
+.. code-annotations::
+    1. This is necessary for Robusta to create silences when using Grafana Alerts, because of minor API differences in the AlertManager embedded in Grafana.

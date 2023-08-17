@@ -22,6 +22,10 @@ Configure Pull Integration
   ...
     prometheus_url: EKS_PROMETHEUS_URL
 
+    # Create silences when using Grafana alerts (optional)
+    # grafana_api_key: <YOUR GRAFANA EDITOR API KEY> # (1)
+    # alertmanager_flavor: grafana
+
   runner:
     additional_env_vars:
     - name: PROMETHEUS_SSL_ENABLED
@@ -42,3 +46,6 @@ Configure Pull Integration
       value: "aps" # <SERVICE NAME HERE>, it is usually aps
     - name: AWS_REGION
       value: <REGION_OF_WORKSPACE_HERE>
+
+.. code-annotations::
+    1. This is necessary for Robusta to create silences when using Grafana Alerts, because of minor API differences in the AlertManager embedded in Grafana.

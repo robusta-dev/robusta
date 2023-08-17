@@ -20,6 +20,14 @@ A pull integration lets Robusta pull metrics from Coralogix Managed Prometheus.
       # prometheus_additional_labels:
       #   cluster: 'CLUSTER_NAME_HERE'
 
+      # Create alert silencing when using Grafana alerts (optional)
+      # grafana_api_key: <YOUR GRAFANA EDITOR API KEY> # (1)
+      # alertmanager_flavor: grafana
+
+.. code-annotations::
+    1. This is necessary for Robusta to create silences when using Grafana Alerts, because of minor API differences in the AlertManager embedded in Grafana.
+
+
 3. On the Coralogix site, go to Data Flow -> Api Keys and copy the 'Logs Query Key'
 
 .. note:: If one does not exist you will have to generate a new one by clicking 'GENERATE NEW API KEY'
