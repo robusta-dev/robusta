@@ -11,15 +11,21 @@ To configure it, add the following to ``generated_values.yaml`` and :ref:`update
         # add the lines below
         alertmanager_url: "http://ALERT_MANAGER_SERVICE_NAME.NAMESPACE.svc.cluster.local:9093" # (1)
         grafana_url: ""
+
         prometheus_url: "http://PROMETHEUS_SERVICE_NAME.NAMESPACE.svc.cluster.local:9090" # (2)
 
         # Add any labels that are relevant to the specific cluster (optional)
         # prometheus_additional_labels:
         #   cluster: 'CLUSTER_NAME_HERE'
 
+        # Create alert silencing when using Grafana alerts (optional)
+        # grafana_api_key: <YOUR GRAFANA EDITOR API KEY> # (3)
+        # alertmanager_flavor: grafana
+
 .. code-annotations::
     1. Example: http://alertmanager-Helm_release_name-kube-prometheus-alertmanager.default.svc.cluster.local:9093.
     2. Example: http://Helm_Release_Name-kube-prometheus-prometheus.default.svc.cluster.local:9090
+    3. This is necessary for Robusta to create silences when using Grafana Alerts, because of minor API differences in the AlertManager embedded in Grafana.
 
 You can optionally setup authentication, SSL verification, and other parameters described below.
 
