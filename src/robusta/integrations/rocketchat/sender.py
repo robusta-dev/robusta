@@ -216,7 +216,7 @@ class RocketchatSender:
             logging.warning(f"cannot convert block of type {type(block)} to rocketchat format block: {block}")
             return []  # no reason to crash the entire report
 
-    def __upload_file_to_rocketchat(self, block: FileBlock, message: Optional[str]):
+    def __upload_file_to_rocketchat(self, block: FileBlock, message: Optional[str], tmid: str):
         """Upload a file to rocketchat and return a link to it"""
         with tempfile.TemporaryDirectory() as temp_dir:
             f = open(os.path.join(temp_dir, block.filename), 'wb')
@@ -224,7 +224,7 @@ class RocketchatSender:
             f.flush()
 
             try:
-                result = self.rocketchat_client.rooms_upload(rid=self.room_id, file=f.name, msg=message,)
+                result = self.rocketchat_client.rooms_upload(rid=self.room_id, file=f.name, msg=message, tmid=tmid)
 
                 result.raise_for_status()
 
@@ -233,20 +233,20 @@ class RocketchatSender:
                     f"error uploading file to rocketchat\ne={e}\nuser_id: {self.user_id}\nserver_url: {self.server_url}\nf.name: {f.name}"
                 )
 
-    def upload_rocketchat_files(self, message: Optional[str], files: List[FileBlock] = []):
+    def upload_rocketchat_files(self, message: Optional[str], message_id: str, files: List[FileBlock] = [], ):
         if files:
             try:
                 for file_block in files:
                     # so skip empty file
                     if len(file_block.contents) == 0:
                         continue
-                    self.__upload_file_to_rocketchat(block=file_block, message=message)
+                    self.__upload_file_to_rocketchat(block=file_block, message=message, tmid=message_id)
             except Exception as e:
                 logging.error(
                     f"error uploading files to rocketchat\ne={e}\nuser_id: {self.user_id}\nserver_url: {self.server_url}"
                 )
 
-    def prepare_rocketchat_text(self, message: str, files: List[FileBlock] = []) -> str:
+    def prepare_rocketchat_text(self, message: str, files: List[FileBlock] = []) -> Optional[str]:
         if files:
             messages = []
             for file_block in files:
@@ -258,10 +258,9 @@ class RocketchatSender:
             message = f"{message}\n{file_references}"
 
         if len(message) == 0:
-            return "empty-message"
+            return None
 
         return Transformer.apply_length_limit(message, MAX_BLOCK_CHARS)
-
 
     def __send_blocks_to_rocketchat(
             self,
@@ -291,6 +290,13 @@ class RocketchatSender:
         for block in report_attachment_blocks:
             attachment_blocks.extend(self.__to_rocketchat(block, sink_params.name, status=status, has_attachment=True))
 
+        # Add a note about attached files being available in a thread if there's a file attachment.
+        if message:
+            attachment_blocks.append({
+                "text": "**You can find the attached files in the thread of this message.**",
+            })
+
+
         logging.debug(
             f"--sending to rocketchat--\n"
             f"channel:{channel}\n"
@@ -300,22 +306,24 @@ class RocketchatSender:
             f"message: {message}\n"
         )
         try:
-
             result = self.rocketchat_client.chat_send_message(
                 message={
                     "bot": True,
-                    "msg": message,
                     "rid": self.room_id,
                     "blocks": output_blocks,
                     "attachments": attachment_blocks,
                 }
             )
-
             result.raise_for_status()
+            result = result.json()
 
-            self.upload_rocketchat_files(message=message, files=file_blocks)
+            message_id = result.get("message", {}).get("_id", None)
 
+            if not message_id:
+                raise Exception(
+                    f"Invalid rocket chat 'message_id' for user_id: {self.user_id}, server_url: {self.server_url}")
 
+            self.upload_rocketchat_files(message=message, message_id=message_id, files=file_blocks)
         except Exception as e:
             logging.error(
                 f"error sending message to rocketchat\ne={e}\n\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}\nuser_id: {self.user_id}\nserver_url: {self.server_url}"
