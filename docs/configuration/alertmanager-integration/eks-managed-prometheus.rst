@@ -3,10 +3,12 @@ EKS managed Prometheus
 
 This guide walks you through integrating your EKS managed Prometheus with Robusta.
 
-You will need to configure a pull integration that lets Robusta pull metrics from EKS Managed Prometheus.
+You'll need to configure both a push and pull integration. This guide only covers integrating the pull integration.
 
 Configure Pull Integration
 ===============================
+
+A pull integration lets Robusta pull metrics from EKS Managed Prometheus.
 
 1. Create an AWS access key, `See guide here <https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html>`_.
 
