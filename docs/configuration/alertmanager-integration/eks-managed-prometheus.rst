@@ -3,7 +3,9 @@ EKS managed Prometheus
 
 This guide walks you through integrating your EKS managed Prometheus with Robusta.
 
+
 You'll need to configure both a push and pull integration. This guide only covers integrating the pull integration.
+
 
 Configure Pull Integration
 ===============================
