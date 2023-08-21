@@ -1,6 +1,7 @@
 In-cluster Prometheus
 ****************************************
 
+
 Are you already running Prometheus in the same cluster as Robusta? Follow this guide to connect your Prometheus to Robusta. If not, refer to :ref:`Centralized Prometheus` documentation to integrate out-of-cluster Prometheus with Robusta.
 
 You will need to configure two integrations: a push integration and a pull integration. (Both are necessary.)
