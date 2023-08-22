@@ -3,12 +3,12 @@ import logging
 import re
 import time
 from enum import Enum, auto
-from kubernetes.client import ApiException
-from typing import Dict, List, Optional, Tuple, Type, TypeVar
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, TypeVar
 
 import hikaru
 import yaml
 from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclasses to work
+from kubernetes.client import ApiException
 from pydantic import BaseModel
 
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
@@ -24,6 +24,9 @@ from robusta.integrations.kubernetes.api_client_utils import (
 )
 from robusta.integrations.kubernetes.templates import get_deployment_yaml
 from robusta.utils.parsing import load_json
+
+if TYPE_CHECKING:
+    from src.robusta.core.model.base_params import NamedRegexPattern
 
 S = TypeVar("S")
 T = TypeVar("T")
@@ -149,15 +152,6 @@ class RegexReplacementStyle(Enum):
     NAMED = auto()
 
 
-class NamedRegexPattern(BaseModel):
-    """
-    A named regex pattern
-    """
-
-    name: str = "Redacted"
-    regex: str
-
-
 class RobustaPod(Pod):
     def exec(self, shell_command: str, container: str = None) -> str:
         """Execute a command inside the pod"""
@@ -171,7 +165,7 @@ class RobustaPod(Pod):
         container=None,
         previous=None,
         tail_lines=None,
-        regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None,
+        regex_replacer_patterns: Optional[List["NamedRegexPattern"]] = None,
         regex_replacement_style: Optional[RegexReplacementStyle] = None,
         filter_regex: Optional[str] = None,
     ) -> str:
@@ -368,7 +362,7 @@ class RobustaPod(Pod):
         for _ in range(timeout):  # retry for up to timeout seconds
             try:
                 pod = RobustaPod().read(pod_name, namespace)
-                if pod.status.phase == 'Running':
+                if pod.status.phase == "Running":
                     return pod
             except ApiException as e:
                 if e.status != 404:  # re-raise the exception if it's not a NotFound error
@@ -403,8 +397,7 @@ class RobustaDeployment(Deployment):
                     raise
             time.sleep(1)
         else:
-            raise RuntimeError(
-                f"Deployment {name} in namespace {namespace} is not ready after {timeout} seconds")
+            raise RuntimeError(f"Deployment {name} in namespace {namespace} is not ready after {timeout} seconds")
 
 
 class JobSecret(BaseModel):

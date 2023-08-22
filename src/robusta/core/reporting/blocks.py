@@ -3,7 +3,9 @@
 # 1. We use pydantic and not dataclasses so that field types are validated
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
+import gzip
 import json
+import logging
 import textwrap
 from copy import deepcopy
 from datetime import datetime
@@ -70,12 +72,48 @@ class FileBlock(BaseBlock):
     filename: str
     contents: bytes
 
-    def __init__(self, filename: str, contents: bytes):
+    def __init__(
+        self,
+        filename: str,
+        contents: bytes,
+        **kwargs,
+    ):
         """
         :param filename: the file's name
         :param contents: the file's contents
         """
-        super().__init__(filename=filename, contents=contents)
+        super().__init__(
+            filename=filename,
+            contents=contents,
+            **kwargs,
+        )
+
+
+class ZippedFileBlock(FileBlock):
+    """
+    A zipped file of any type. Used for images, log files, binary files, and more.
+    """
+
+    should_zip: bool = True
+
+    def __init__(self, filename: str, contents: bytes, should_zip: bool):
+        """
+        :param filename: the file's name
+        :param contents: the file's contents
+        :param should_zip: if the data should be zipped before it
+        """
+        super().__init__(filename=filename, contents=contents, should_zip=should_zip)
+
+    def zip(self):
+        if not self.should_zip:
+            return
+
+        try:
+            self.contents = gzip.compress(self.contents)
+            self.filename = self.filename + ".gz"
+        except Exception as exc:
+            logging.error(f"Unexpected error occurred while zipping file {self.filename}")
+            logging.exception(exc)
 
 
 class HeaderBlock(BaseBlock):
