@@ -55,7 +55,9 @@ For example:
          slack_channel: my-fallback-channel
          channel_override: "labels.slack"
 
-A replacement pattern is also allowed, for example:
+A replacement pattern is also allowed, using ``$`` sign, before the variable.
+
+For example:
 
 .. code-block:: yaml
 
@@ -65,7 +67,7 @@ A replacement pattern is also allowed, for example:
          name: main_slack_sink
          api_key: xoxb-112...
          slack_channel: my-fallback-channel
-         channel_override: "{{ cluster_name }}-alerts-{{ labels.env }}"
+         channel_override: "$cluster_name-alerts-$labels.env"
 
 
 
