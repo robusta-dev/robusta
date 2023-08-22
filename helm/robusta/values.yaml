@@ -436,6 +436,7 @@ kubewatch:
   tolerations: []
   annotations: {}
   nodeSelector: ~
+  imagePullSecrets: []
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
