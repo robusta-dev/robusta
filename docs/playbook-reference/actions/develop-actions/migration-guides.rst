@@ -45,7 +45,7 @@ Change your imports from ``hikaru.model`` to ``hikaru.model.rel_1_26``.
 
 
 Update all Kubernetes listing functions
---------------------------------------
+-------------------------------------------
 
 Resource-listing functions have moved. For example, ``Deployment.listNamespacedDeployment`` is now ``DeploymentList.listNamespacedDeployment``.
 
