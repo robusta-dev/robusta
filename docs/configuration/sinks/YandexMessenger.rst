@@ -14,7 +14,7 @@ Obtaining your Bot token
 Follow the quickstart guide in the Yandex Messenger `docs <https://botapi.messenger.yandex.net/docs/#quickstart-guide>`_ to create a new Yandex Messenger bot, and obtain its OAuth token.
 
 Adding your Bot to your chat/channel and obtaining the chat ID
-------------------------------------------------
+------------------------------------------------------------------
 Before using the sink, you must add your Bot to the target chat or channel as an administrator.
 
 You also need to get the chat ID. It has the following format ``<integer>/<integer>/<uuid>`` and can be obtained by opening the chat or channel in the web version of Yandex Messenger and url-decoding the last fragment of the page URL path.

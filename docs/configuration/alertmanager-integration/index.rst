@@ -8,7 +8,6 @@ Integrating with Prometheus
    :hidden:
    :maxdepth: 1
 
-   kube-prometheus-stack
    alert-manager
    outofcluster-prometheus
    azure-managed-prometheus
