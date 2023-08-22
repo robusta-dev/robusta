@@ -8,11 +8,14 @@ from robusta.api import (
     EventEnricherParams,
     FileBlock,
     JobEvent,
+    LogEnricherParams,
     MarkdownBlock,
     PodContainer,
     PrometheusKubernetesAlert,
+    RegexReplacementStyle,
     SlackAnnotations,
     TableBlock,
+    ZippedFileBlock,
     action,
     get_job_latest_pod,
     get_resource_events_table,
@@ -138,7 +141,7 @@ def job_events_enricher(event: JobEvent, params: EventEnricherParams):
         event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
 
 
-class JobPodEnricherParams(EventEnricherParams):
+class JobPodEnricherParams(EventEnricherParams, LogEnricherParams):
     """
     :var events: Add the events of the related pod
     :var logs: Add the logs of the related pod
@@ -179,10 +182,22 @@ def job_pod_enricher(event: JobEvent, params: JobPodEnricherParams):
             event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
 
     if params.logs:
-        log_data = pod.get_logs()
+        regex_replacement_style = (
+            RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
+        )
+        log_data = pod.get_logs(
+            regex_replacer_patterns=params.regex_replacer_patterns,
+            regex_replacement_style=regex_replacement_style,
+            filter_regex=params.filter_regex,
+            previous=params.previous,
+        )
         if log_data:
             event.add_enrichment(
-                [FileBlock(f"{pod.metadata.name}.log", log_data.encode())],
+                [
+                    ZippedFileBlock(
+                        filename=f"{pod.metadata.name}.log", contents=log_data.encode(), should_zip=params.compress_logs
+                    )
+                ],
             )
 
 
