@@ -99,6 +99,7 @@ class PopeyeParams(ActionParams):
     service_account_name: str = f"{RELEASE_NAME}-runner-service-account"
     timeout = 300
     args: Optional[str] = None
+    custom_annotations: Optional[Dict[str, str]] = None
     popeye_args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
     popeye_job_spec = {}
     spinach: str = """\
@@ -166,7 +167,9 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     start_time = datetime.now()
     logs = None
     try:
-        logs = RobustaJob.run_simple_job_spec(spec, "popeye_job", params.timeout)
+        logs = RobustaJob.run_simple_job_spec(
+            spec, "popeye_job", params.timeout, custom_annotations=params.custom_annotations
+        )
         scan = json.loads(logs)
         end_time = datetime.now()
         popeye_scan = PopeyeReport(**scan["popeye"])

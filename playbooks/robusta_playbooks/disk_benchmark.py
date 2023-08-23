@@ -38,6 +38,7 @@ class DiskBenchmarkParams(ActionParams):
     namespace: str = INSTALLATION_NAMESPACE
     disk_size: str = "10Gi"
     storage_class_name: str
+    custom_annotations: Optional[Dict[str, str]] = None
 
 
 def format_float_per2(f_param):
@@ -94,7 +95,8 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
         )
 
         json_output = json.loads(
-            RobustaJob.run_simple_job_spec(spec, name, 120 + action_params.test_seconds).replace("'", '"')
+            RobustaJob.run_simple_job_spec(spec, name, 120 + action_params.test_seconds).replace("'", '"'),
+            custom_annotations=action_params.custom_annotations,
         )
         job = json_output["jobs"][0]
 
