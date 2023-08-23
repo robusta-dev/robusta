@@ -449,9 +449,18 @@ class RobustaJob(Job):
             raise e
 
     @classmethod
-    def run_simple_job_spec(cls, spec, name, timeout, job_secret: Optional[JobSecret] = None) -> str:
+    def run_simple_job_spec(
+        cls,
+        spec,
+        name,
+        timeout,
+        job_secret: Optional[JobSecret] = None,
+        custom_annotations: Optional[Dict[str, str]] = None,
+    ) -> str:
         job = RobustaJob(
-            metadata=ObjectMeta(namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name)),
+            metadata=ObjectMeta(
+                namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name), annotations=custom_annotations
+            ),
             spec=JobSpec(
                 backoffLimit=0,
                 template=PodTemplateSpec(

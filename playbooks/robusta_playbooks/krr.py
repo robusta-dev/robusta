@@ -104,6 +104,7 @@ class KRRParams(PrometheusParams):
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
     strategy: str = "simple"
     args: Optional[str] = None
+    custom_annotations: Optional[Dict[str, str]] = None
     krr_args: str = ""
     timeout: int = 300
     krr_job_spec = {}
@@ -302,7 +303,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     logs = None
 
     try:
-        logs = RobustaJob.run_simple_job_spec(spec, "krr_job" + scan_id, params.timeout, secret)
+        logs = RobustaJob.run_simple_job_spec(
+            spec, "krr_job" + scan_id, params.timeout, secret, krr_scan.custom_annotations
+        )
         krr_response = json.loads(logs)
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
