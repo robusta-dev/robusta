@@ -1,16 +1,10 @@
 :hide-toc:
 
-.. _playbook-reference:
 
 Overview
 ===========
 
-List of all :ref:`Triggers <Triggers Reference>` and :ref:`Actions <Actions Reference>`.
-
-This is a *quick reference* section. It assumes you read:
-
-* :ref:`What are Playbooks?`
-* :ref:`How to Define Playbooks<Defining Playbooks>`
+Discover the builtin :ref:`Triggers <Triggers Reference>` and :ref:`Actions <Actions Reference>`.
 
 In this Section
 ---------------
@@ -18,12 +12,12 @@ In this Section
 .. grid::
     :gutter: 3
 
-    .. grid-item-card:: ⚡️ Triggers Reference
+    .. grid-item-card:: ⚡️ All Triggers
         :class-card: sd-bg-light sd-bg-text-light
         :link: triggers/index
         :link-type: doc
 
-    .. grid-item-card:: 💥 Actions Reference
+    .. grid-item-card:: 💥 All Actions
         :class-card: sd-bg-light sd-bg-text-light
         :link: actions/index
         :link-type: doc
@@ -34,12 +28,22 @@ Elsewhere in the Docs
 .. grid::
     :gutter: 3
 
+    .. grid-item-card:: What are Playbooks?
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: ../how-it-works/index
+        :link-type: doc
+
+    .. grid-item-card:: Defining Playbooks
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: ../configuration/defining-playbooks/index
+        :link-type: doc
+
+    .. grid-item-card:: 🎓 Playbook Tutorials
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: playbook-tutorials
+        :link-type: ref
+
     .. grid-item-card:: 🔔 Sinks Reference
         :class-card: sd-bg-light sd-bg-text-light
         :link: sinks-reference
-        :link-type: ref
-
-    .. grid-item-card:: 🎓 Tutorials
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: playbook-tutorials
         :link-type: ref
