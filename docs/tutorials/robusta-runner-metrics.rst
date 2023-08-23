@@ -1,12 +1,20 @@
 Monitoring Robusta with Prometheus
 ======================================
 
-Metrics
-************
+Robusta Metrics Graphs
+**************************
 
-Robusta runner supports Prometheus and exposes performance and error metrics on the /metrics endpoint.
+Robusta runner supports Prometheus and exposes performance and error metrics on the `/metrics` endpoint.
 
-This guide will help you setup Robusta so you can observe the collected monitoring data on the Robusta platform.
+After Prometheus discovers the ServiceMonitor, the robusta-runner page in the UI will automatically include graphs as shown below.
+
+.. image:: /images/robusta-metrics.png
+  :align: center
+
+This guide will help you setup Robusta to observe the collected monitoring data on the Robusta platform.
+
+Exposing Robusta metrics endpoint
+***********************************
 
 Once Robusta is running, port forward to its pod using
 
@@ -73,10 +81,10 @@ The response will look similar to the following snippet, and include the metrics
   queue_size{queue_name="alerts_queue"} 0.0
   ...
 
-Configure Prometheus monitoring
+Configuring Prometheus monitoring
 *************************************
 
-* First, check which labels are discovered by your Prometheus, run:
+First, verify the discovered by your Prometheus, run:
 
 .. code-block:: bash
 
@@ -91,7 +99,7 @@ The response will look similar to this
       release: robusta # this label must exists on ServiceMonitors in order to be discovered.
   shards: 1
 
-* Robusta helm installation will deploy the following ServiceMonitor CRD into your cluster:
+Robusta helm installation will deploy the following ServiceMonitor CRD into your cluster:
 
 .. Note::
 
@@ -118,10 +126,4 @@ The response will look similar to this
 
 Adjust the Robusta ServiceMontior labels so they match the Prometheus CRD.
 
-Robusta Metrics Graphs
-*************************************
-
-After Prometheus discovers the ServiceMontior the Robusta runner app page will include the metrics graphs.
-
-.. image:: /images/robusta-metrics.png
-  :align: center
+Now the metrics graph should be visible on the Robusta UI.
