@@ -6,7 +6,7 @@ Robusta Metrics Graphs
 
 Robusta runner supports Prometheus and exposes performance and error metrics on the `/metrics` endpoint.
 
-After Prometheus discovers the ServiceMontior, Robusta runner app page will include the metrics graphs like the example below.
+After Prometheus discovers the ServiceMonitor, the robusta-runner page in the UI will automatically include graphs as shown below.
 
 .. image:: /images/robusta-metrics.png
   :align: center
