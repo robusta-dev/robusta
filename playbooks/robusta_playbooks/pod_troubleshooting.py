@@ -71,7 +71,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
     if not pod:
         logging.info(f"python_profiler - pod not found for event: {event}")
         return
-    processes = pod.get_processes()
+    processes = pod.get_processes(custom_annotations=action_params.custom_annotations)
     debugger = RobustaPod.create_debugger_pod(
         pod.metadata.name, pod.spec.nodeName, custom_annotations=action_params.custom_annotations
     )
@@ -113,7 +113,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
 
 
 @action
-def pod_ps(event: PodEvent):
+def pod_ps(event: PodEvent, params: PodRunningParams):
     """
     Fetch the list of running processes in a pod.
     """
@@ -124,7 +124,7 @@ def pod_ps(event: PodEvent):
 
     logging.info(f"getting info for: {pod.metadata.name}")
 
-    processes = pod.get_processes()
+    processes = pod.get_processes(custom_annotations=params.custom_annotations)
     finding = Finding(
         title=f"Processes in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
@@ -198,7 +198,9 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
         return
 
     cmd = f"debug-toolkit memory --seconds={params.seconds} {process.pid}"
-    output = RobustaPod.exec_in_debugger_pod(pod.metadata.name, pod.spec.nodeName, cmd)
+    output = RobustaPod.exec_in_debugger_pod(
+        pod.metadata.name, pod.spec.nodeName, cmd, custom_annotations=params.custom_annotations
+    )
     snapshot = PythonMemorySnapshot(**load_json(output))
 
     blocks = [
@@ -323,9 +325,7 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
         f"debug-toolkit stack-trace {pid} --amount={params.traces_amount} --sleep-duration-s={params.sleep_duration_s}"
     )
     output = RobustaPod.exec_in_debugger_pod(
-        pod.metadata.name,
-        pod.spec.nodeName,
-        cmd,
+        pod.metadata.name, pod.spec.nodeName, cmd, custom_annotations=params.custom_annotations
     )
     blocks = []
     try:
@@ -459,9 +459,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     cmd = f"debug-toolkit debugger {process.pid} --port {params.port}"
     output = load_json(
         RobustaPod.exec_in_debugger_pod(
-            pod.metadata.name,
-            pod.spec.nodeName,
-            cmd,
+            pod.metadata.name, pod.spec.nodeName, cmd, custom_annotations=params.custom_annotations
         )
     )
     finding.add_enrichment(

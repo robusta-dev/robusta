@@ -203,9 +203,15 @@ class RobustaPod(Pod):
 
     @staticmethod
     def exec_in_java_pod(
-        pod_name: str, node_name: str, debug_cmd=None, override_jtk_image: str = JAVA_DEBUGGER_IMAGE
+        pod_name: str,
+        node_name: str,
+        debug_cmd=None,
+        override_jtk_image: str = JAVA_DEBUGGER_IMAGE,
+        custom_annotations: Optional[Dict[str, str]] = None,
     ) -> str:
-        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, debug_cmd, debug_image=override_jtk_image)
+        return RobustaPod.exec_in_debugger_pod(
+            pod_name, node_name, debug_cmd, debug_image=override_jtk_image, custom_annotations=custom_annotations
+        )
 
     @staticmethod
     def create_debugger_pod(
@@ -261,9 +267,9 @@ class RobustaPod(Pod):
         return debugger
 
     @staticmethod
-    def exec_on_node(pod_name: str, node_name: str, cmd):
+    def exec_on_node(pod_name: str, node_name: str, cmd, custom_annotations: Optional[Dict[str, str]] = None):
         command = f'nsenter -t 1 -a "{cmd}"'
-        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, command)
+        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, command, custom_annotations=custom_annotations)
 
     @staticmethod
     def run_debugger_pod(
@@ -313,12 +319,13 @@ class RobustaPod(Pod):
         runtime, container_id = status.containerID.split("://")
         return container_id
 
-    def get_processes(self) -> List[Process]:
+    def get_processes(self, custom_annotations: Optional[Dict[str, str]] = None) -> List[Process]:
         container_ids = " ".join([self.extract_container_id(s) for s in self.status.containerStatuses])
         output = RobustaPod.exec_in_debugger_pod(
             self.metadata.name,
             self.spec.nodeName,
             f"debug-toolkit pod-ps {self.metadata.uid} {container_ids}",
+            custom_annotations=custom_annotations,
         )
         processes = ProcessList(**load_json(output))
         return processes.processes
