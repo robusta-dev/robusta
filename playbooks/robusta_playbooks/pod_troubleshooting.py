@@ -2,13 +2,11 @@
 import json
 import logging
 import textwrap
-from typing import List
+from typing import Dict, List, Optional
 
 import humanize
 from pydantic import BaseModel
-
 from robusta.api import (
-    ActionParams,
     CallbackBlock,
     CallbackChoice,
     DividerBlock,
@@ -20,6 +18,7 @@ from robusta.api import (
     MarkdownBlock,
     PodEvent,
     PodFindingSubject,
+    PodRunningParams,
     ProcessFinder,
     ProcessParams,
     ProcessType,
@@ -45,7 +44,7 @@ class StackTraceObject(BaseModel):
     trace: str = None  # type: ignore
 
 
-class StartProfilingParams(ActionParams):
+class StartProfilingParams(PodRunningParams):
     """
     :var seconds: Profiling duration.
     :var process_name: Profiled process name prefix.
@@ -73,7 +72,9 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
         logging.info(f"python_profiler - pod not found for event: {event}")
         return
     processes = pod.get_processes()
-    debugger = RobustaPod.create_debugger_pod(pod.metadata.name, pod.spec.nodeName)
+    debugger = RobustaPod.create_debugger_pod(
+        pod.metadata.name, pod.spec.nodeName, custom_annotations=action_params.custom_annotations
+    )
 
     try:
         finding = Finding(

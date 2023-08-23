@@ -14,17 +14,17 @@ from hikaru.model.rel_1_26 import (
 )
 from robusta.api import (
     INSTALLATION_NAMESPACE,
-    ActionParams,
     ExecutionBaseEvent,
     Finding,
     FindingType,
     MarkdownBlock,
+    PodRunningParams,
     RobustaJob,
     action,
 )
 
 
-class DiskBenchmarkParams(ActionParams):
+class DiskBenchmarkParams(PodRunningParams):
     """
     :var pvc_name: Name of the pvc created for the benchmark.
     :var test_seconds: The benchmark duration.
@@ -38,7 +38,6 @@ class DiskBenchmarkParams(ActionParams):
     namespace: str = INSTALLATION_NAMESPACE
     disk_size: str = "10Gi"
     storage_class_name: str
-    custom_annotations: Optional[Dict[str, str]] = None
 
 
 def format_float_per2(f_param):

@@ -1,14 +1,14 @@
 import logging
 import re
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import humanize
 from hikaru.model.rel_1_26 import EnvVar, EnvVarSource, ObjectFieldSelector, Pod, PodList
-from robusta.api import ActionParams, BaseBlock, MarkdownBlock, NodeEvent, RobustaPod, TableBlock, action
+from robusta.api import BaseBlock, MarkdownBlock, NodeEvent, PodRunningParams, RobustaPod, TableBlock, action
 from robusta.utils.parsing import load_json
 
 
-class DiskAnalyzerParams(ActionParams):
+class DiskAnalyzerParams(PodRunningParams):
     show_pods: bool = True
     show_containers: bool = False
 
@@ -65,6 +65,7 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
             )
         ],
         mount_host_root=True,
+        custom_annotations=params.custom_annotations,
     )
     # The code for the disk-tools image can be found in https://github.com/robusta-dev/disk-tools
     # Please refer to this code in order to see the structure of the json that is returned

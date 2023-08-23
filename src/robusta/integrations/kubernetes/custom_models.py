@@ -215,6 +215,7 @@ class RobustaPod(Pod):
         debug_cmd=None,
         env: Optional[List[EnvVar]] = None,
         mount_host_root: bool = False,
+        custom_annotations: Optional[Dict[str, str]] = None,
     ) -> "RobustaPod":
         """
         Creates a debugging pod with high privileges
@@ -232,6 +233,7 @@ class RobustaPod(Pod):
             metadata=ObjectMeta(
                 name=to_kubernetes_name(pod_name, "debug-"),
                 namespace=INSTALLATION_NAMESPACE,
+                annotations=custom_annotations,
             ),
             spec=PodSpec(
                 serviceAccountName=f"{RELEASE_NAME}-runner-service-account",
@@ -265,10 +267,19 @@ class RobustaPod(Pod):
 
     @staticmethod
     def run_debugger_pod(
-        node_name: str, pod_image: str, env: Optional[List[EnvVar]] = None, mount_host_root: bool = False
+        node_name: str,
+        pod_image: str,
+        env: Optional[List[EnvVar]] = None,
+        mount_host_root: bool = False,
+        custom_annotations: Optional[Dict[str, str]] = None,
     ) -> str:
         debugger = RobustaPod.create_debugger_pod(
-            node_name, node_name, pod_image, env=env, mount_host_root=mount_host_root
+            node_name,
+            node_name,
+            pod_image,
+            env=env,
+            mount_host_root=mount_host_root,
+            custom_annotations=custom_annotations,
         )
         try:
             pod_name = debugger.metadata.name
@@ -282,8 +293,16 @@ class RobustaPod(Pod):
             RobustaPod.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)
 
     @staticmethod
-    def exec_in_debugger_pod(pod_name: str, node_name: str, cmd, debug_image=PYTHON_DEBUGGER_IMAGE) -> str:
-        debugger = RobustaPod.create_debugger_pod(pod_name, node_name, debug_image)
+    def exec_in_debugger_pod(
+        pod_name: str,
+        node_name: str,
+        cmd,
+        debug_image=PYTHON_DEBUGGER_IMAGE,
+        custom_annotations: Optional[Dict[str, str]] = None,
+    ) -> str:
+        debugger = RobustaPod.create_debugger_pod(
+            pod_name, node_name, debug_image, custom_annotations=custom_annotations
+        )
         try:
             return debugger.exec(cmd)
         finally:

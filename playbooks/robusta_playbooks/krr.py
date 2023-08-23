@@ -18,6 +18,7 @@ from robusta.api import (
     FindingSource,
     FindingType,
     JobSecret,
+    PodRunningParams,
     PrometheusParams,
     RobustaJob,
     ScanReportBlock,
@@ -92,7 +93,7 @@ class KRRResponse(BaseModel):
     strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
 
 
-class KRRParams(PrometheusParams):
+class KRRParams(PrometheusParams, PodRunningParams):
     """
     :var timeout: Time span for yielding the scan.
     :var args: Deprecated -  KRR cli arguments.
@@ -104,7 +105,6 @@ class KRRParams(PrometheusParams):
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
     strategy: str = "simple"
     args: Optional[str] = None
-    custom_annotations: Optional[Dict[str, str]] = None
     krr_args: str = ""
     timeout: int = 300
     krr_job_spec = {}
