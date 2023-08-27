@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.base_trigger import TriggerEvent
+from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.playbook_action import PlaybookAction
 from robusta.runner.telemetry import Telemetry
 
@@ -41,6 +42,11 @@ class PlaybooksEventHandler(ABC):
     @abstractmethod
     def get_global_config(self) -> dict:
         """Return runner global config"""
+        pass
+
+    @abstractmethod
+    def get_relabel_config(self) -> List[AlertRelabel]:
+        """Return runner alert relabel config"""
         pass
 
     @abstractmethod

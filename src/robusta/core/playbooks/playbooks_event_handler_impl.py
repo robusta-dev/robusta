@@ -18,6 +18,7 @@ from robusta.core.reporting import MarkdownBlock
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.consts import SYNC_RESPONSE_SINK
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
+from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.config import Registry
 from robusta.model.playbook_action import PlaybookAction
 from robusta.runner.telemetry import Telemetry
@@ -315,6 +316,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def get_global_config(self) -> dict:
         return self.registry.get_global_config()
+
+    def get_relabel_config(self) -> List[AlertRelabel]:
+        return self.registry.get_relabel_config()
 
     def get_light_actions(self) -> List[str]:
         return self.registry.get_light_actions()

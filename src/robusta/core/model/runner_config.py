@@ -1,7 +1,7 @@
+import base64
 from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, SecretStr, validator
-import base64
 
 from robusta.core.playbooks.playbook_utils import get_env_replacement, replace_env_vars_values
 from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
@@ -20,6 +20,7 @@ from robusta.core.sinks.victorops.victorops_sink_params import VictoropsConfigWr
 from robusta.core.sinks.webex.webex_sink_params import WebexSinkConfigWrapper
 from robusta.core.sinks.webhook.webhook_sink_params import WebhookSinkConfigWrapper
 from robusta.core.sinks.yamessenger.yamessenger_sink_params import YaMessengerSinkConfigWrapper
+from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.utils.base64_utils import is_base64_encoded
 
@@ -58,6 +59,7 @@ class RunnerConfig(BaseModel):
     light_actions: Optional[List[str]]
     global_config: Optional[dict] = {}
     active_playbooks: Optional[List[PlaybookDefinition]] = []
+    alert_relabel: Optional[List[AlertRelabel]] = []
 
     @validator("playbook_repos")
     def env_var_repo_keys(cls, playbook_repos: Dict[str, PlaybookRepo]):
@@ -79,7 +81,7 @@ class RunnerConfig(BaseModel):
 
         secret_value_replacement = playbook_repo.key.get_secret_value()
         if is_base64_encoded(secret_value_replacement):
-            playbook_repo.key = SecretStr(base64.b64decode(secret_value_replacement).decode('utf-8'))
+            playbook_repo.key = SecretStr(base64.b64decode(secret_value_replacement).decode("utf-8"))
         else:
             playbook_repo.key = SecretStr(secret_value_replacement)
         return playbook_repo

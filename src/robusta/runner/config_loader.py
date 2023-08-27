@@ -50,9 +50,9 @@ class ConfigLoader:
     # |- playbook_dir2
     #    |--- ...
     def __init__(
-            self,
-            registry: Registry,
-            event_handler: PlaybooksEventHandler,
+        self,
+        registry: Registry,
+        event_handler: PlaybooksEventHandler,
     ):
         self.config_file_path = PLAYBOOKS_CONFIG_FILE_PATH
         self.registry = registry
@@ -100,20 +100,16 @@ class ConfigLoader:
         return package_name
 
     def __load_playbooks_repos(
-            self,
-            actions_registry: ActionsRegistry,
-            playbooks_repos: Dict[str, PlaybookRepo],
+        self,
+        actions_registry: ActionsRegistry,
+        playbooks_repos: Dict[str, PlaybookRepo],
     ):
         playbook_packages = []
         for playbook_package, playbooks_repo in playbooks_repos.items():
             try:
                 if playbooks_repo.pip_install:  # skip playbooks that are already in site-packages
                     if playbooks_repo.url.startswith(GIT_SSH_PREFIX) or playbooks_repo.url.startswith(GIT_HTTPS_PREFIX):
-                        repo = GitRepo(
-                            playbooks_repo.url,
-                            playbooks_repo.key.get_secret_value(),
-                            playbooks_repo.branch
-                        )
+                        repo = GitRepo(playbooks_repo.url, playbooks_repo.key.get_secret_value(), playbooks_repo.branch)
                         local_path = repo.repo_local_path
                     elif playbooks_repo.url.startswith(LOCAL_PATH_URL_PREFIX):
                         local_path = playbooks_repo.url.replace(LOCAL_PATH_URL_PREFIX, "")
@@ -165,6 +161,7 @@ class ConfigLoader:
                     return
                 cluster_provider.init_provider_discovery()
                 self.registry.set_global_config(runner_config.global_config)
+                self.registry.set_relabel_config(runner_config.alert_relabel)
                 action_registry = ActionsRegistry()
                 # reordering playbooks repos, so that the internal and default playbooks will be loaded first
                 # It allows to override these, with playbooks loaded afterwards
@@ -235,11 +232,11 @@ class ConfigLoader:
 
     @classmethod
     def __prepare_runtime_config(
-            cls,
-            runner_config: RunnerConfig,
-            sinks_registry: SinksRegistry,
-            actions_registry: ActionsRegistry,
-            registry: Registry,
+        cls,
+        runner_config: RunnerConfig,
+        sinks_registry: SinksRegistry,
+        actions_registry: ActionsRegistry,
+        registry: Registry,
     ) -> (SinksRegistry, PlaybooksRegistry):
         existing_sinks = sinks_registry.get_all() if sinks_registry else {}
         new_sinks = SinksRegistry.construct_new_sinks(runner_config.sinks_config, existing_sinks, registry)
