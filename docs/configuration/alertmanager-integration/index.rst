@@ -52,12 +52,12 @@ Setup Instructions
 
         Special instructions when using Azure Managed Prometheus
 
-    .. grid-item-card:: :octicon:`book;1em;` EKS Managed Prometheus
+    .. grid-item-card:: :octicon:`book;1em;` AWS Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: eks-managed-prometheus
         :link-type: doc
 
-        Special instructions when using EKS Managed Prometheus
+        Special instructions when using AWS Managed Prometheus
 
     .. grid-item-card:: :octicon:`book;1em;` Coralogix Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light

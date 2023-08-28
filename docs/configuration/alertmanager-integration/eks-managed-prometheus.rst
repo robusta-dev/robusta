@@ -1,20 +1,20 @@
-EKS managed Prometheus
+AWS Managed Prometheus
 *************************
 
-This guide walks you through integrating your EKS managed Prometheus with Robusta.
+This guide walks you through integrating your AWS Managed Prometheus with Robusta.
 
 You'll need to configure both a push and pull integration. This guide only covers integrating the pull integration.
 
 Configure Pull Integration
 ===============================
 
-A pull integration lets Robusta pull metrics from EKS Managed Prometheus.
+A pull integration lets Robusta pull metrics from AWS Managed Prometheus.
 
 1. Create an AWS access key, `See guide here <https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html>`_.
 
 2. In your cluster, create a secret with your access key and secret access key, named `aws-secret-key`.
 
-3. Collect the URL for your EKS managed Prometheus workspace.
+3. Collect the URL for your AWS Managed Prometheus workspace.
 
 4. Append the following to your `generated_values.yaml` file.
 
@@ -22,7 +22,7 @@ A pull integration lets Robusta pull metrics from EKS Managed Prometheus.
 
   globalConfig:
   ...
-    prometheus_url: EKS_PROMETHEUS_URL
+    prometheus_url: AWS_PROMETHEUS_URL
 
     # Create silences when using Grafana alerts (optional)
     # grafana_api_key: <YOUR GRAFANA EDITOR API KEY> # (1)
