@@ -43,6 +43,9 @@ global_config:
 {{ toYaml .Values.globalConfig | indent 2 }}
   {{- end }}
 
+alert_relabel:
+{{ toYaml  .Values.alertRelabel | indent 2 }}
+
 light_actions:
 {{ toYaml  .Values.lightActions | indent 2 }}
 

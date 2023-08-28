@@ -156,7 +156,7 @@ class AlertEventBuilder:
                 resource = mapping.hikaru_class().read(name=resource_name, namespace=namespace)
                 setattr(execution_event, mapping.attribute_name, resource)
                 logging.info(
-                    f"Successfully loaded Kubernetes resource {resource_name} for alert {execution_event.alert_name}"
+                    f"Loaded k8s {mapping.prometheus_label} {resource_name} for alert {execution_event.alert_name}"
                 )
             except Exception as e:
                 reason = getattr(e, "reason", "NA")
