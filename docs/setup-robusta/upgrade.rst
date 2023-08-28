@@ -7,7 +7,7 @@ What type of upgrade do I need?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You need a :ref:`Manual Upgrade` when both:
 
-* Robusta's old version is lower than 0.10.17 (run ``helm list`` to check)
+* Robusta installation fails with ``com.coreos.monitoring.v1.Prometheus.spec`` error.
 * The embedded Prometheus is enabled (``enablePrometheusStack: true``)
 
 In all other cases, do a :ref:`Simple Upgrade`.
