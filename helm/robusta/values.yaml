@@ -24,6 +24,9 @@ globalConfig:
   account_id: ""
   signing_key: ""
 
+# see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
+alertRelabel: []
+
 # safe actions to enable authenticated users to run
 lightActions:
 - related_pods
