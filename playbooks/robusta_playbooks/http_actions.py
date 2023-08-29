@@ -31,7 +31,7 @@ class HTTP_GET(ActionParams):
 @action
 def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
     """
-    Run an http GET against a url
+    Run an http GET against a url, from within the cluster. Optionally, send the response as a finding.
     """
     function_name = "http_get"
 
@@ -100,7 +100,7 @@ class HTTP_POST(ActionParams):
 @action
 def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
     """
-    Run an http POST against a url
+    Run an http POST against a url, from within the cluster. Optionally, send the response as a finding.
     """
     function_name = "http_post"
 
@@ -152,6 +152,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
         )
         event.add_finding(finding)
 
+
 class HTTP_PUT(ActionParams):
     """
     :var url: In cluster target url.
@@ -169,7 +170,7 @@ class HTTP_PUT(ActionParams):
 @action
 def http_put(event: ExecutionBaseEvent, action_params: HTTP_PUT):
     """
-    Run an http PUT against a url
+    Run an http PUT against a url, from within the cluster. Optionally, send the response as a finding.
     """
     function_name = "http_put"
 

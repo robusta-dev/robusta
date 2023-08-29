@@ -1,5 +1,5 @@
 Coralogix Managed Prometheus
-*************************
+********************************
 
 This guide walks you through integrating your Coralogix managed Prometheus with Robusta. You will need to configure two integrations: both a pull integration and a push integration.
 
