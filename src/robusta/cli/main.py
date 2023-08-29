@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import random
 import subprocess
 import time
@@ -7,14 +8,14 @@ import traceback
 import uuid
 from typing import Dict, List, Optional, Union
 
+import certifi
 import typer
 import yaml
 from hikaru.model.rel_1_26 import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec
 from kubernetes import client, config
 from pydantic import BaseModel, Extra
+from requests import get
 
-import certifi
-import os
 from robusta._version import __version__
 from robusta.cli.auth import RSAKeyPair
 from robusta.cli.auth import app as auth_commands
@@ -32,6 +33,7 @@ from robusta.core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrap
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta.integrations.prometheus.utils import AlertManagerDiscovery
+
 ADDITIONAL_CERTIFICATE: str = os.environ.get("CERTIFICATE", "")
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
 
@@ -509,5 +511,52 @@ def demo_alert(
     typer.echo("\n")
 
 
+@app.command()
+def tg_sink(
+    bot_token: str = typer.Option(
+        None, help="Telegram bot token. Don't have one yet? Check this page on how to get the Bot Token: "
+    )
+):
+    """Get all the active Telegram Bot Chat ID's"""
+    url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+    response = get(url).json()
+
+    chat_status = {}
+    bot_groups = []
+
+    if bot_token is None:
+        print("Please enter the Bot token")
+        return
+
+    for i in range(len(response["result"])):
+        item = response["result"][i]
+        if "my_chat_member" in item:
+            chat_id = item["my_chat_member"]["chat"]["id"]
+            chat_title = item["my_chat_member"]["chat"]["title"]
+            status = item["my_chat_member"].get("new_chat_member", {}).get("status", "")
+
+            if chat_id not in chat_status.keys():
+                chat_status[chat_id] = [chat_title, status]
+            else:
+                chat_status[chat_id][1] = status
+
+    # Add chat_id and title to bot_groups if the latest status is 'administrator'
+    for chat_id, chat_data in chat_status.items():
+        if chat_data[1] == "administrator":
+            bot_groups.append([chat_data[0], chat_id])
+
+    """A list of all groups where the bot is administrator bot_groups = [[Title, Chat ID, Bot status]]"""
+    for group in bot_groups:
+        print(f"Group: {group[0]}\tChat ID: {group[1]}\tBot Status: Administrator")
+
+
 if __name__ == "__main__":
     app()
+
+    # for chat_id, chat_data in chat_status.items():
+    #     if chat_data[1] == 'administrator':
+    #         bot_groups.append([chat_data[0], chat_id, chat_data[1]])
+
+    # """A list of all groups where the bot is administrator bot_groups = [[Title, Chat ID, Bot status]]"""
+    # for group in bot_groups:
+    #     print(f"Group: {group[0]}\tChat ID: {group[1]}\tBot Status: Administrator")
