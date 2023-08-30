@@ -130,32 +130,3 @@ It is best to define this in a `global config <https://docs.robusta.dev/master/u
           regex: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
 Place these values inside Robusta's Helm values and perform a :ref:`Helm Upgrade <Simple Upgrade>`.
-
-Bundled Prometheus and Grafana Settings
-***********************************************
-
-Robusta can be installed with Prometheus and Grafana included. This is powered by ``kube-prometheus-stack``.
-
-To customize the bundled ``kube-prometheus-stack``, explore the chart `values.yaml <https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml>`_ file.
-
-
-Grafana Persistent Data
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To set persistent data on the bundled Grafana deployment, modify Robusta ``generated_values.yaml`` file accordingly:
-
-.. code-block:: yaml
-
-  globalConfig:
-    signing_key: <REDACTED>
-    account_id: <REDACTED>
-  sinksConfig:
-  - robusta_sink:
-      name: robusta_ui_sink
-      token: <REDACTED>
-  ...
-  # Customize settings
-  kube-prometheus-stack:
-    grafana:
-      persistence:
-        enabled: true
