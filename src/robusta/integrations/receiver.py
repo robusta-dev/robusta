@@ -6,7 +6,7 @@ import logging
 import os
 import time
 from threading import Thread
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Union
 from uuid import UUID
 
 from concurrent.futures import ThreadPoolExecutor
@@ -166,6 +166,17 @@ class ActionRequestReceiver:
                 exc_info=True,
             )
 
+    @staticmethod
+    def _parse_websocket_message(
+        message: Union[str, bytes, bytearray]
+    ) -> Union[SlackActionsMessage, ExternalActionRequest]:
+        message_dict = json.loads(message)
+
+        try:
+            return SlackActionsMessage.parse_raw(message)  # this is slack callback format
+        except ValidationError:
+            return ExternalActionRequest(**message_dict)
+
     def on_message(self, ws: websocket.WebSocketApp, message: str) -> None:
         """Callback for incoming websocket message from relay.
 
@@ -175,20 +186,19 @@ class ActionRequestReceiver:
         """
 
         try:
-            message_dict = json.loads(message)
-            try:
-                slack_message = SlackActionsMessage.parse_raw(message)  # this is slack callback format
-                # slack callbacks have a list of 'actions'. Within each action there a 'value' field,
-                # which container the actual action details we need to run.
-                # This wrapper format is part of the slack API, and cannot be changed by us.
-                for slack_action_request in slack_message.actions:
-                    self._process_action(slack_action_request.value, validate_timestamp=False)
-
-            except ValidationError: # assume it's ActionRequest format
-                action_request = ExternalActionRequest(**message_dict)
-                self._process_action(action_request, validate_timestamp=False)
+            incoming_event = self._parse_websocket_message(message)
         except Exception:
             logging.error(f"Failed to parse incoming event {message}", exc_info=True)
+            return
+
+        if isinstance(incoming_event, SlackActionsMessage):
+            # slack callbacks have a list of 'actions'. Within each action there a 'value' field,
+            # which container the actual action details we need to run.
+            # This wrapper format is part of the slack API, and cannot be changed by us.
+            for slack_action_request in incoming_event.actions:
+                self._process_action(slack_action_request.value, validate_timestamp=True)
+        else:
+            self._process_action(incoming_event, validate_timestamp=True)
 
     @staticmethod
     def _stringify_incoming_event(incoming_event) -> str:
