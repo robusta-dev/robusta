@@ -196,7 +196,7 @@ class ActionRequestReceiver:
             # which container the actual action details we need to run.
             # This wrapper format is part of the slack API, and cannot be changed by us.
             for slack_action_request in incoming_event.actions:
-                self._process_action(slack_action_request.value, validate_timestamp=True)
+                self._process_action(slack_action_request.value, validate_timestamp=False)
         else:
             self._process_action(incoming_event, validate_timestamp=True)
 
