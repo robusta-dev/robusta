@@ -51,7 +51,7 @@ class SlackActionRequest(BaseModel):
     value: ExternalActionRequest
 
     @validator("value", pre=True, always=True)
-    def validate_value(cls, v: str | dict) -> dict:
+    def validate_value(cls, v: Union[str, dict]) -> dict:
         # Slack might send the value as a stringified json, so we need to parse it before validation
         if isinstance(v, str):
             return json.loads(v)
