@@ -38,7 +38,7 @@ Apply the change by performing a :ref:`Helm Upgrade <Simple Upgrade>`.
 Grafana Persistent Data
 ------------------------------
 
-Add to ``generated_values.yaml``:
+To allow the Grafana dashboard to persist after the Grafana instance restarts, you could add to ``generated_values.yaml``:
 
 .. code-block:: yaml
 
