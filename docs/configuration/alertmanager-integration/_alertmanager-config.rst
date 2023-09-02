@@ -6,7 +6,7 @@
           - name: 'robusta'
             webhook_configs:
               - url: 'http://robusta-runner.default.svc.cluster.local/api/alerts' # (2)
-                send_resolved: true # (4)
+                sendResolved: true # (4)
 
         route: # (1)
           routes:
