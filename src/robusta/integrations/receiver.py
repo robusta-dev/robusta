@@ -52,7 +52,7 @@ class SlackActionRequest(BaseModel):
 
     @validator("value", pre=True, always=True)
     def validate_value(cls, v: Union[str, dict]) -> dict:
-        # Slack might send the value as a stringified json, so we need to parse it before validation
+        # Slack value is sent as a stringified json, so we need to parse it before validation
         if isinstance(v, str):
             return json.loads(v)
         return v
@@ -170,12 +170,11 @@ class ActionRequestReceiver:
     def _parse_websocket_message(
         message: Union[str, bytes, bytearray]
     ) -> Union[SlackActionsMessage, ExternalActionRequest]:
-        message_dict = json.loads(message)
 
         try:
             return SlackActionsMessage.parse_raw(message)  # this is slack callback format
         except ValidationError:
-            return ExternalActionRequest(**message_dict)
+            return ExternalActionRequest.parse_raw(message)
 
     def on_message(self, ws: websocket.WebSocketApp, message: str) -> None:
         """Callback for incoming websocket message from relay.
