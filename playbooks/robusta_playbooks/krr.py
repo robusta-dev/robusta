@@ -29,7 +29,7 @@ from robusta.api import (
 )
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.4.1")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.6.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 
 
@@ -250,6 +250,33 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
             )
         )
 
+    if isinstance(prom_config, AWSPrometheusConfig):
+        krr_secrets.extend(
+            [
+                KRRSecret(
+                    env_var_name="AWS_KEY",
+                    secret_key="aws-key",
+                    secret_value=prom_config.access_key,
+                    command_flag="--eks-access-key",
+                ),
+                KRRSecret(
+                    env_var_name="AWS_SECRET",
+                    secret_key="aws-secret",
+                    secret_value=prom_config.secret_access_key,
+                    command_flag="--eks-secret-key",
+                ),
+            ]
+        )
+    if isinstance(prom_config, CoralogixPrometheusConfig):
+        krr_secrets.append(
+            KRRSecret(
+                env_var_name="CORALOGIX_TOKEN",
+                secret_key="coralogix_token",
+                secret_value=prom_config.prometheus_token,
+                command_flag="--coralogix-token",
+            )
+        )
+
     return krr_secrets
 
 
@@ -269,6 +296,8 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     # adding env var of auth token from Secret
     env_var = []
     krr_secrets = _generate_prometheus_secrets(prom_config)
+    python_command += " " + _generate_cmd_line_args(prom_config)
+
     # creating secrets for auth
     secret = _generate_krr_job_secret(scan_id, krr_secrets)
     # setting env variables of krr to have secret
@@ -276,7 +305,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         env_var = _generate_krr_env_vars(krr_secrets, secret.name)
         # adding secret env var in krr pod command
         python_command += " " + _generate_additional_env_args(krr_secrets)
-    logging.debug(f"krr command {python_command}")
+    logging.debug(f"krr command '{python_command}'")
 
     resources = ResourceRequirements(
         limits={"memory": (str(KRR_MEMORY_LIMIT))},
