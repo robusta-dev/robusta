@@ -65,6 +65,7 @@ class DiscoveryResults(BaseModel):
 
 DISCOVERY_PIPE = "/tmp/discovery_pipe"
 SHUTDOWN_SIGNAL = "shutdown"
+STACKDUMP_SIGNAL = "stackdump"
 
 
 class Discovery:
@@ -83,11 +84,11 @@ class Discovery:
             )
 
     @staticmethod
-    def send_stack_dump_signal():
+    def send_signal_to_pipe(signal):
         try:
             with open(DISCOVERY_PIPE, mode="w") as pipe:
                 logging.info("Sending signal to discovery thread")
-                pipe.write(SHUTDOWN_SIGNAL)
+                pipe.write(signal)
                 pipe.close()
         except Exception:
             logging.error("error writing pipe", exc_info=True)
@@ -98,13 +99,10 @@ class Discovery:
             with open(DISCOVERY_PIPE) as pipe:
                 while True:
                     data = pipe.read()
-                    if len(data) == 0:
-                        logging.warning("stackdump pipe closed")
-                        break
-                    logging.debug('Read signal: "{0}"'.format(data))
-                    if SHUTDOWN_SIGNAL in data:
+                    if STACKDUMP_SIGNAL in data:
                         logging.info("discovery process stack trace")
                         StackTracer.dump()
+                    return
         except Exception:
             logging.error("error reading pipe", exc_info=True)
 
@@ -401,7 +399,7 @@ class Discovery:
                 exc_info=True,
             )
             raise e
-
+        Discovery.send_signal_to_pipe(SHUTDOWN_SIGNAL)
         return DiscoveryResults(
             services=active_services,
             nodes=current_nodes,

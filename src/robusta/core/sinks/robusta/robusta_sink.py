@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Union
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Job
-from robusta.core.discovery.discovery import Discovery, DiscoveryResults
+from robusta.core.discovery.discovery import STACKDUMP_SIGNAL, Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
 from robusta.core.model.env_vars import (
@@ -509,7 +509,7 @@ class RobustaSink(SinkBase):
 
     def __signal_discovery_process_stackdump(self):
         # This is its own thread incase the pipe write becomes stuck
-        threading.Thread(target=Discovery.send_stack_dump_signal).start()
+        threading.Thread(target=Discovery.send_signal_to_pipe, args=(STACKDUMP_SIGNAL,)).start()
         time.sleep(30)
 
     def __discovery_watchdog(self):
