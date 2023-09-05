@@ -91,6 +91,8 @@ class RobustaSink(SinkBase):
         self.__thread.start()
         self.__watchdog_thread.start()
 
+        Discovery.init_discovery_error_pipes()
+
     def __init_service_resolver(self):
         """
         Init service resolver from the service stored in storage.
@@ -505,11 +507,17 @@ class RobustaSink(SinkBase):
             logging.error("Failed to check run history condition", exc_info=True)
             return False
 
+    def __signal_discovery_process_stackdump(self):
+        # This is its own thread incase the pipe write becomes stuck
+        threading.Thread(target=Discovery.send_stack_dump_signal).start()
+        time.sleep(30)
+
     def __discovery_watchdog(self):
         logging.info("Cluster discovery watchdog initialized")
         while self.__active:
             if not self.is_healthy():
                 logging.warning(f"Unhealthy discovery, restarting runner")
+                self.__signal_discovery_process_stackdump()
                 StackTracer.dump()
                 # sys.exit and thread.interrupt_main doest stop robusta
                 os._exit(0)

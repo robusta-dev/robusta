@@ -1,4 +1,5 @@
 import logging
+import threading
 from collections import defaultdict
 from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, Optional, Union
@@ -60,8 +61,50 @@ class DiscoveryResults(BaseModel):
         arbitrary_types_allowed = True
 
 
+
+DISCOVERY_PIPE = "/tmp/discovery_pipe"
+SHUTDOWN_SIGNAL = "shutdown"
+
+
 class Discovery:
     executor = ProcessPoolExecutor(max_workers=1)  # always 1 discovery process
+
+    @staticmethod
+    def init_discovery_error_pipes():
+        try:
+            os.mkfifo(DISCOVERY_PIPE)
+        except FileExistsError:
+            pass
+        except Exception:
+            logging.error(
+                "Failed to create discovery pipes",
+                exc_info=True,
+            )
+
+    @staticmethod
+    def send_stack_dump_signal():
+        try:
+            with open(DISCOVERY_PIPE, mode="w") as fifo:
+                logging.info("Sending signal to discovery thread")
+                fifo.write(SHUTDOWN_SIGNAL)
+                fifo.close()
+        except Exception:
+            logging.error("error writing pipe", exc_info=True)
+
+    @staticmethod
+    def stack_dump_on_signal():
+        try:
+            with open(DISCOVERY_PIPE) as fifo:
+                while True:
+                    data = fifo.read()
+                    if len(data) == 0:
+                        break
+                    logging.debug('Read signal: "{0}"'.format(data))
+                    if SHUTDOWN_SIGNAL in data:
+                        logging.info("discovery process stack trace")
+                        StackTracer.dump()
+        except Exception:
+            logging.error("error reading pipe", exc_info=True)
 
     @staticmethod
     def __create_service_info(
@@ -106,6 +149,7 @@ class Discovery:
 
     @staticmethod
     def discovery_process() -> DiscoveryResults:
+        threading.Thread(target=Discovery.stack_dump_on_signal).start()
         pods_metadata: List[V1ObjectMeta] = []
         node_requests = defaultdict(list)  # map between node name, to request of pods running on it
         active_services: List[ServiceInfo] = []
