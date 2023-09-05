@@ -40,6 +40,7 @@ from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
 from robusta.utils.cluster_provider_discovery import cluster_provider
+from robusta.utils.stack_tracer import StackTracer
 
 discovery_errors_count = prometheus_client.Counter("discovery_errors", "Number of discovery process failures.")
 discovery_process_time = prometheus_client.Summary(
@@ -59,7 +60,6 @@ class DiscoveryResults(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-
 
 
 DISCOVERY_PIPE = "/tmp/discovery_pipe"
@@ -84,20 +84,21 @@ class Discovery:
     @staticmethod
     def send_stack_dump_signal():
         try:
-            with open(DISCOVERY_PIPE, mode="w") as fifo:
+            with open(DISCOVERY_PIPE, mode="w") as pipe:
                 logging.info("Sending signal to discovery thread")
-                fifo.write(SHUTDOWN_SIGNAL)
-                fifo.close()
+                pipe.write(SHUTDOWN_SIGNAL)
+                pipe.close()
         except Exception:
             logging.error("error writing pipe", exc_info=True)
 
     @staticmethod
     def stack_dump_on_signal():
         try:
-            with open(DISCOVERY_PIPE) as fifo:
+            with open(DISCOVERY_PIPE) as pipe:
                 while True:
-                    data = fifo.read()
+                    data = pipe.read()
                     if len(data) == 0:
+                        logging.warning("stackdump pipe closed")
                         break
                     logging.debug('Read signal: "{0}"'.format(data))
                     if SHUTDOWN_SIGNAL in data:
