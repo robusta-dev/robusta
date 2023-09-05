@@ -180,7 +180,7 @@ class RobustaSink(SinkBase):
                 cached_service = self.__services_cache.get(service_key, None)
 
                 # prevent service updates if the resource version in the cache is lower than the new service
-                if cached_service and cached_service.resource_version >= new_service.resource_version:
+                if cached_service and cached_service.resource_version > new_service.resource_version:
                     return
 
                 if operation == K8sOperationType.CREATE or operation == K8sOperationType.UPDATE:
@@ -222,7 +222,7 @@ class RobustaSink(SinkBase):
                 cached_service = self.__services_cache.get(service_key)
 
                 # prevent service updates if the resource version in the cache is lower than the new service
-                if cached_service and cached_service.resource_version >= current_service.resource_version:
+                if cached_service and cached_service.resource_version > current_service.resource_version:
                     continue
 
                 # service not in the cache, or changed
@@ -337,7 +337,7 @@ class RobustaSink(SinkBase):
         taints = ",".join([cls.__to_taint_str(taint) for taint in node_taints])
         capacity = api_server_node.status.capacity or {}
         allocatable = api_server_node.status.allocatable or {}
-        # V1Node and Node use snake case and camelCase respectively, handle this for more than 1 word attributes. 
+        # V1Node and Node use snake case and camelCase respectively, handle this for more than 1 word attributes.
         creation_ts = getattr(api_server_node.metadata, "creation_timestamp", None) or getattr(api_server_node.metadata, "creationTimestamp", None)
         version = getattr(api_server_node.metadata, "resource_version", None) or getattr(api_server_node.metadata, "resourceVersion", None)
         return NodeInfo(
@@ -571,7 +571,7 @@ class RobustaSink(SinkBase):
                 if cache is None:
                     return
 
-                if cache.resource_version >= int(new_node.metadata.resourceVersion or 0):
+                if cache.resource_version > int(new_node.metadata.resourceVersion or 0):
                     return
 
                 new_info = self.__from_api_server_node(new_node, [])
