@@ -6,7 +6,8 @@ on:
 jobs:
   build:
     name: Welcome new contributor 🎉
-    permissions: write-all
+    permissions:
+      issues: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/first-interaction@v1
