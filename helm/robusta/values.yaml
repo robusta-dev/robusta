@@ -453,6 +453,11 @@ grafanaRenderer:
     limits:
       cpu: ~
 
+# parameters for the robusta runner service account
+runnerServiceAccount:
+  # image pull secrets added to the runner service account. Any pod using the service account will get those
+  imagePullSecrets: []
+
 # parameters for the robusta runner
 runner:
   image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.0.0
