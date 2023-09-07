@@ -561,8 +561,8 @@ class RobustaSink(SinkBase):
 
     def __update_node(self, new_node: Node, operation: K8sOperationType):
         with self.services_publish_lock:
+            new_info = self.__from_api_server_node(new_node, [])
             if operation == K8sOperationType.CREATE:
-                new_info = self.__from_api_server_node(new_node, [])
                 name = new_node.metadata.name
                 self.__nodes_cache[name] = new_info
             elif operation == K8sOperationType.UPDATE:
@@ -574,7 +574,6 @@ class RobustaSink(SinkBase):
                 if cache.resource_version > int(new_node.metadata.resourceVersion or 0):
                     return
 
-                new_info = self.__from_api_server_node(new_node, [])
                 new_info.memory_allocated = cache.memory_allocated
                 new_info.cpu_allocated = cache.cpu_allocated
                 new_info.pods_count = cache.pods_count
