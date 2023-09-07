@@ -73,6 +73,7 @@ Now lets use the HelmRepository to create a HelmRelease of Robusta.
 .. code-block:: bash
 
         flux create helmrelease robusta \
+            --namespace robusta \
             --chart=robusta \
             --source=HelmRepository/robusta \
             --chart-version="VERSION" \
