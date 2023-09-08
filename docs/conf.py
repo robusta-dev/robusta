@@ -71,6 +71,8 @@ redirects = {
     "catalog/sinks/webhook.html": "/master/configuration/sinks/webhook.html",
     "catalog/sinks/PagerDuty.html": "/master/configuration/sinks/PagerDuty.html",
     "catalog/actions/event-enrichment.html": "/master/playbook-reference/actions/event-enrichment.html",
+    "docs/configuration/alert-manager.html": "/master/configuration/alertmanager-integration/index.html",
+    "docs/configuration/embedded-prometheus.rst": "master/configuration/alertmanager-integration/embedded-prometheus.html",
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja

@@ -24,6 +24,9 @@ globalConfig:
   account_id: ""
   signing_key: ""
 
+# see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
+alertRelabel: []
+
 # safe actions to enable authenticated users to run
 lightActions:
 - related_pods
@@ -75,6 +78,10 @@ monitorHelmReleases: true
 
 # disable messages routed by Robusta cloud
 disableCloudRouting: false
+
+# scale alerts processing.
+# Used to support clusters with high load of alerts. When used, the runner will consume more memory
+scaleAlertsProcessing: False
 
 # Enable loading playbooks to a persistent volume
 playbooksPersistentVolume: false
@@ -384,6 +391,8 @@ platformPlaybooks:
     - on_statefulset_all_changes: {}
     - on_replicaset_all_changes: {}
     - on_pod_all_changes: {}
+    - on_node_all_changes: {}
+    - on_job_all_changes: {}
   actions:
     - resource_events_diff: {}
 - triggers:
@@ -430,6 +439,7 @@ kubewatch:
   tolerations: []
   annotations: {}
   nodeSelector: ~
+  imagePullSecrets: []
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -442,6 +452,11 @@ grafanaRenderer:
       memory: 512Mi
     limits:
       cpu: ~
+
+# parameters for the robusta runner service account
+runnerServiceAccount:
+  # image pull secrets added to the runner service account. Any pod using the service account will get those
+  imagePullSecrets: []
 
 # parameters for the robusta runner
 runner:
@@ -463,6 +478,7 @@ runner:
   annotations: {}
   nodeSelector: ~
   customClusterRoleRules: []
+  imagePullSecrets: []
 
 kube-prometheus-stack:
   alertmanager:

@@ -25,6 +25,7 @@ class OpsGenieSink(SinkBase):
         self.teams = sink_config.opsgenie_sink.teams
         self.tags = sink_config.opsgenie_sink.tags
 
+        opsgenie_sdk.configuration.Configuration.set_default(None)
         self.conf = opsgenie_sdk.configuration.Configuration()
         self.conf.api_key["Authorization"] = self.api_key
 

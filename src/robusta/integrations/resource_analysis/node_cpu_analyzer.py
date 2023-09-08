@@ -4,11 +4,10 @@ from hikaru.model.rel_1_26 import Node
 
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_REQUEST_TIMEOUT_SECONDS
-from robusta.integrations.prometheus.utils import check_prometheus_connection, get_prometheus_connect
+from robusta.integrations.prometheus.utils import get_prometheus_connect
 
 
 class NodeCpuAnalyzer:
-
     # TODO: perhaps we should handle this more elegantly by first loading all the data into a pandas dataframe
     # and then slicing it different ways
     def __init__(self, node: Node, prometheus_params: PrometheusParams, range_size="5m"):
@@ -17,7 +16,7 @@ class NodeCpuAnalyzer:
         self.internal_ip = next(addr.address for addr in self.node.status.addresses if addr.type == "InternalIP")
         self.prom = get_prometheus_connect(prometheus_params)
         self.default_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
-        check_prometheus_connection(prom=self.prom, params=self.default_params)
+        self.prom.check_prometheus_connection(params=self.default_params)
 
     def get_total_cpu_usage(self, other_method=False):
         """

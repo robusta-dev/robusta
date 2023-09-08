@@ -3,8 +3,9 @@ from typing import List, Optional
 
 from hikaru.model.rel_1_26 import Pod
 
+from robusta.core.model.base_params import NamedRegexPattern
 from robusta.core.reporting import BaseBlock, FileBlock, MarkdownBlock
-from robusta.integrations.kubernetes.custom_models import NamedRegexPattern, RegexReplacementStyle
+from robusta.integrations.kubernetes.custom_models import RegexReplacementStyle
 
 
 def get_crash_report_blocks(

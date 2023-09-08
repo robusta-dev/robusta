@@ -2,15 +2,15 @@ import logging
 import time
 from collections import defaultdict
 from datetime import datetime
-from kubernetes import client
 from string import Template
 from typing import Any, Dict, List, Optional
 
 import requests
 from hikaru.model.rel_1_26 import Node
-from kubernetes.client import V1PodList, exceptions, V1Pod, V1PodStatus
-
+from kubernetes import client
+from kubernetes.client import V1Pod, V1PodList, V1PodStatus, exceptions
 from robusta.api import (
+    ActionException,
     ActionParams,
     AlertResourceGraphEnricherParams,
     CallbackBlock,
@@ -18,12 +18,14 @@ from robusta.api import (
     ChartValuesFormat,
     CustomGraphEnricherParams,
     Emojis,
+    ErrorCodes,
     ExecutionBaseEvent,
     FileBlock,
     Finding,
     FindingSource,
     KubernetesResourceEvent,
     ListBlock,
+    LogEnricherParams,
     MarkdownBlock,
     NamedRegexPattern,
     PodEvent,
@@ -32,16 +34,15 @@ from robusta.api import (
     RegexReplacementStyle,
     ResourceChartItemType,
     ResourceChartResourceType,
+    RobustaPod,
     SlackAnnotations,
     TableBlock,
+    ZippedFileBlock,
     action,
     create_chart_from_prometheus_query,
     create_graph_enrichment,
     create_resource_enrichment,
     get_node_internal_ip,
-    ActionException,
-    ErrorCodes,
-    RobustaPod
 )
 
 
@@ -285,6 +286,7 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
     )
     alert.add_enrichment([graph_enrichment])
 
+
 class TemplateParams(ActionParams):
     """
     :var template: The enrichment templated markdown text
@@ -326,24 +328,11 @@ def template_enricher(event: KubernetesResourceEvent, params: TemplateParams):
     )
 
 
-class LogEnricherParams(ActionParams):
-    """
-    :var container_name: Specific container to get logs from
-    :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
-    :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
-    :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
-    :var filter_regex: only shows lines that match the regex
-    """
-
-    container_name: Optional[str]
-    warn_on_missing_label: bool = False
-    regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
-    regex_replacement_style: Optional[str] = None
-    previous: bool = False
-    filter_regex: Optional[str] = None
-
-
-def start_log_enrichment(event: ExecutionBaseEvent, params: LogEnricherParams, pod: RobustaPod, ):
+def start_log_enrichment(
+    event: ExecutionBaseEvent,
+    params: LogEnricherParams,
+    pod: RobustaPod,
+):
     if pod is None:
         if params.warn_on_missing_label:
             event.add_enrichment(
@@ -383,7 +372,11 @@ def start_log_enrichment(event: ExecutionBaseEvent, params: LogEnricherParams, p
         log_name = pod.metadata.name
         log_name += f"/{container}"
         event.add_enrichment(
-            [FileBlock(f"{log_name}.log", log_data.encode())],
+            [
+                ZippedFileBlock(
+                    filename=f"{pod.metadata.name}.log", contents=log_data.encode(), should_zip=params.compress_logs
+                )
+            ],
         )
         break
 
@@ -398,8 +391,9 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
     """
     pod = event.get_pod()
 
-    logging.info(f"received a logs_enricher action: {params}")
+    logging.debug(f"received a logs_enricher action: {params}")
     start_log_enrichment(event=event, params=params, pod=pod)
+
 
 class SearchTermParams(ActionParams):
     """
@@ -431,6 +425,7 @@ def show_stackoverflow_search(event: ExecutionBaseEvent, params: SearchTermParam
             [MarkdownBlock(f'Sorry, StackOverflow doesn\'t know anything about "{params.search_term}"')]
         )
     event.add_finding(finding)
+
 
 @action
 def stack_overflow_enricher(alert: PrometheusKubernetesAlert):
@@ -473,7 +468,7 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
     api = client.CoreV1Api()
     matching_pods: List[V1Pod] = []
 
-    logging.info(f"received a foreign_logs_enricher action: {params}")
+    logging.debug(f"received a foreign_logs_enricher action: {params}")
 
     for selector in params.label_selectors:
         try:
@@ -484,14 +479,16 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
         except Exception as e:
             if not (isinstance(e, exceptions.ApiException) and e.status == 404):
                 raise ActionException(
-                    ErrorCodes.ACTION_UNEXPECTED_ERROR, f"[foreign_logs_enricher] Failed to list pods for foreign log enricher.\n{e}"
+                    ErrorCodes.ACTION_UNEXPECTED_ERROR,
+                    f"[foreign_logs_enricher] Failed to list pods for foreign log enricher.\n{e}",
                 )
 
     if not matching_pods:
-        logging.warning(f"[foreign_logs_enricher] failed to find any matching pods for the selectors: {params.label_selectors}")
+        logging.warning(
+            f"[foreign_logs_enricher] failed to find any matching pods for the selectors: {params.label_selectors}"
+        )
         return
     for matching_pod in matching_pods:
         pod = RobustaPod().read(matching_pod.metadata.name, matching_pod.metadata.namespace)
 
         start_log_enrichment(event=event, params=params, pod=pod)
-
