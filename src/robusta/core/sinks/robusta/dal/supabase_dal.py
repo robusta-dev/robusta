@@ -40,16 +40,16 @@ ACCOUNTS_TABLE = "Accounts"
 
 class SupabaseDal(AccountResourceFetcher):
     def __init__(
-        self,
-        url: str,
-        key: str,
-        account_id: str,
-        email: str,
-        password: str,
-        sink_name: str,
-        persist_events: bool,
-        cluster_name: str,
-        signing_key: str,
+            self,
+            url: str,
+            key: str,
+            account_id: str,
+            email: str,
+            password: str,
+            sink_name: str,
+            persist_events: bool,
+            cluster_name: str,
+            signing_key: str,
     ):
         self.url = url
         self.key = key
@@ -271,7 +271,8 @@ class SupabaseDal(AccountResourceFetcher):
             raise
 
     @staticmethod
-    def custom_filter_request_builder(frq: BaseFilterRequestBuilder, operator: str, criteria: str) -> BaseFilterRequestBuilder:
+    def custom_filter_request_builder(frq: BaseFilterRequestBuilder, operator: str,
+                                      criteria: str) -> BaseFilterRequestBuilder:
         key, val = sanitize_param(operator), f"{criteria}"
         frq.params = frq.params.set(key, val)
 
@@ -488,13 +489,13 @@ class SupabaseDal(AccountResourceFetcher):
                 self.persist_scan(block)
 
     def get_account_resources(
-        self, resource_kind: ResourceKind, updated_at: Optional[datetime]
+            self, resource_kind: ResourceKind, updated_at: Optional[datetime]
     ) -> List[AccountResource]:
-
         try:
             query_builder = (
                 self.client.table(ACCOUNT_RESOURCE_TABLE)
-                .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "updated_at")
+                .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "enabled",
+                        "updated_at")
                 .filter("resource_kind", "eq", resource_kind)
                 .filter("account_id", "eq", self.account_id)
             )
@@ -504,6 +505,7 @@ class SupabaseDal(AccountResourceFetcher):
                 # in the initial db fetch don't include the deleted records.
                 # in the subsequent db fetch allow even the deleted records so that they can be removed from the cluster
                 query_builder.filter("deleted", "eq", False)
+                query_builder.filter("enabled", "eq", True)
 
                 query_builder = SupabaseDal.custom_filter_request_builder(
                     query_builder,
@@ -528,6 +530,7 @@ class SupabaseDal(AccountResourceFetcher):
                 clusters_target_set=data["clusters_target_set"],
                 resource_state=resource_state,
                 deleted=data["deleted"],
+                enabled=data["enabled"],
                 updated_at=data["updated_at"],
             )
 

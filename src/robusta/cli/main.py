@@ -52,15 +52,6 @@ class GlobalConfig(BaseModel):
     account_id: str = ""
 
 
-class KubePrometheusDefaultRules(BaseModel):
-    create: bool
-    rules: Dict[str, bool]
-
-
-class KubePrometheusStack(BaseModel):
-    defaultRules: KubePrometheusDefaultRules
-
-
 class HelmValues(BaseModel, extra=Extra.allow):
     globalConfig: GlobalConfig
     sinksConfig: List[Union[SlackSinkConfigWrapper, RobustaSinkConfigWrapper, MsTeamsSinkConfigWrapper]]
@@ -74,44 +65,6 @@ class HelmValues(BaseModel, extra=Extra.allow):
     grafanaRenderer: Dict = None
     runner: Dict = None
     rsa: RSAKeyPair = None
-    enableManagedPrometheusAlerts: bool = False
-    kubePrometheusStack: Optional[KubePrometheusStack] = None
-
-    def __init__(self, **data):
-        if 'enableManagedPrometheusAlerts' in data:
-            data['kubePrometheusStack'] = {
-                "defaultRules": {
-                    "create": True,
-                    "rules": {
-                        "alertmanager": False,
-                        "etcd": False,
-                        "configReloaders": False,
-                        "general": False,
-                        "kubeApiserverSlos": False,
-                        "kubeControllerManager": False,
-                        "kubeProxy": False,
-                        "kubernetesApps": False,
-                        "kubernetesResources": False,
-                        "kubernetesStorage": False,
-                        "kubernetesSystem": False,
-                        "kubeSchedulerAlerting": False,
-                        "kubeStateMetrics": False,
-                        "network": False,
-                        "nodeExporterAlerting": False,
-                        "prometheus": False,
-                        "prometheusOperator": False
-                    }
-                }
-            }
-
-        super().__init__(**data)
-
-    def dict(self, *args, **kwargs) -> Dict:
-        result = super().dict(*args, **kwargs)
-        if 'kubePrometheusStack' in result:
-            result['kube-prometheus-stack'] = result['kubePrometheusStack']
-            result.pop('kubePrometheusStack')
-        return result
 
 
 def get_slack_channel() -> str:
@@ -223,15 +176,6 @@ def gen_config(
             )
         )
 
-    if enable_prometheus_stack is None:
-        typer.echo(
-            f"""Robusta can use {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)} as an alert source."""
-        )
-
-        enable_prometheus_stack = typer.confirm(
-            f"""If you haven't installed it yet, Robusta can install a pre-configured {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)}.\nWould you like to do so?"""
-        )
-
     enable_platform_playbooks = False
     # we have a slightly different flow here than the other options so that pytest can pass robusta_api_key="" to skip
     # asking the question
@@ -240,7 +184,7 @@ def gen_config(
             "Configure Robusta UI sink? This is HIGHLY recommended.",
             default=True,
         ):
-            robusta_api_key = get_ui_key(managed_prometheus_alerts_enabled=enable_prometheus_stack)
+            robusta_api_key = get_ui_key()
         else:
             robusta_api_key = ""
 
@@ -265,6 +209,15 @@ def gen_config(
             if debug:
                 typer.secho(traceback.format_exc())
 
+    if enable_prometheus_stack is None:
+        typer.echo(
+            f"""Robusta can use {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)} as an alert source."""
+        )
+
+        enable_prometheus_stack = typer.confirm(
+            f"""If you haven't installed it yet, Robusta can install a pre-configured {typer.style("Prometheus", fg=typer.colors.YELLOW, bold=True)}.\nWould you like to do so?"""
+        )
+
     if disable_cloud_routing is None:
         disable_cloud_routing = not typer.confirm(
             "Would you like to enable two-way interactivity (e.g. fix-it buttons in Slack) via Robusta's cloud?"
@@ -285,7 +238,6 @@ def gen_config(
         globalConfig=GlobalConfig(signing_key=signing_key, account_id=account_id),
         sinksConfig=sinks_config,
         enablePrometheusStack=enable_prometheus_stack,
-        enableManagedPrometheusAlerts=enable_prometheus_stack,
         disableCloudRouting=disable_cloud_routing,
         enablePlatformPlaybooks=enable_platform_playbooks,
         rsa=gen_rsa_pair(),

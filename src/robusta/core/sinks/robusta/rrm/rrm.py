@@ -5,8 +5,9 @@ from typing import List
 
 from robusta.core.model.env_vars import RRM_PERIOD_SEC
 from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
-from robusta.core.sinks.robusta.rrm.prometheus_alert_resource_manager import PrometheusAlertResourceManager
-from robusta.core.sinks.robusta.rrm.types import AccountResource, BaseResourceManager, ResourceEntry
+from robusta.core.sinks.robusta.rrm.prometheus_alert_resource_manager import \
+    PrometheusAlertResourceManager
+from robusta.core.sinks.robusta.rrm.types import BaseResourceManager, ResourceKind
 
 
 # robusta resource management
@@ -16,9 +17,8 @@ class RRM:
         self.cluster = cluster
         self.__sleep = RRM_PERIOD_SEC
 
-        self.__resource_managers: List[BaseResourceManager] = \
-            [PrometheusAlertResourceManager(dal=self.dal)]
-        self.__entries = dict[str, ResourceEntry]()
+        self.__resource_managers: List[BaseResourceManager] = [
+            PrometheusAlertResourceManager(resource_kind=ResourceKind.PrometheusAlert, cluster=self.cluster)]
 
         self.__thread = threading.Thread(target=self.__thread_loop)
         self.__thread.start()
@@ -26,7 +26,7 @@ class RRM:
     def __thread_loop(self):
         for res_man in self.__resource_managers:
             try:
-                res_man.init_resources()
+                res_man.init_resources(updated_at=None)
             except Exception:
                 self.__resource_managers.remove(res_man)
                 logging.warning(
@@ -41,41 +41,15 @@ class RRM:
             except Exception as e:
                 logging.error(e)
 
-    def __in_cluster(self, clusters_target_set: List[str] = []):
-        return "*" in clusters_target_set or self.cluster in clusters_target_set
-
     def __periodic_loop(self):
         for res_man in self.__resource_managers:
             resource_kind = res_man.get_resource_kind()
-
             try:
-                resources: List[AccountResource] = self.dal.get_account_resources(
-                    resource_kind=resource_kind, updated_at=res_man.get_updated_ts()
-                )
+                account_resources = self.dal \
+                    .get_account_resources(resource_kind=resource_kind,
+                                           updated_at=res_man.get_last_updated_at())
 
-                for resource in resources:
-                    entity_id = resource.entity_id
-                    # if this resource is already tracked by __entries
-                    if entity_id in self.__entries:
-                        # just deleted or it is not in cluster anymore => remove it
-                        if resource.deleted or not self.__in_cluster(resource.clusters_target_set):
-                            if res_man.delete_resource(resource, self.__entries[entity_id]):
-                                del self.__entries[entity_id]
-                        else:
-                            entry = res_man.update_resource(resource, self.__entries[entity_id])
-                            if entry is not None:
-                                self.__entries[entity_id] = entry
-                    else:
-                        # if the resource is not of the cluster then skip it
-                        if resource.deleted or not self.__in_cluster(resource.clusters_target_set):
-                            return
+                res_man.make(account_resources)
 
-                        # new resource
-                        entry = res_man.create_resource(resource)
-                        if entry is not None:
-                            self.__entries[entity_id] = entry
             except Exception as e:
-                logging.error(
-                    f"An error occurred while running rrm periodic checks. Resource_kind => {resource_kind}. Error: {e}",
-                    exc_info=True,
-                )
+                logging.error(f"Failed to get Account Resource. {e}", exc_info=True)
