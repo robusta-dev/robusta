@@ -7,10 +7,11 @@ from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_REQUESTS
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
-from robusta.core.triggers.helm_releases_triggers import IncomingHelmReleasesEventPayload, HelmReleasesTriggerEvent
+from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
-from robusta.integrations.prometheus.models import AlertManagerEvent
+from robusta.integrations.prometheus.models import AlertManagerEvent, PrometheusAlert
 from robusta.integrations.prometheus.trigger import PrometheusTriggerEvent
+from robusta.model.alert_relabel_config import AlertRelabelOp
 from robusta.runner.config_loader import ConfigLoader
 from robusta.utils.task_queue import QueueMetrics, TaskQueue
 
@@ -37,6 +38,17 @@ class Web:
     def run():
         app.run(host="0.0.0.0", port=PORT, use_reloader=False)
 
+    @classmethod
+    def _relabel_alert(cls, alert: PrometheusAlert) -> PrometheusAlert:
+        for relabel in cls.event_handler.get_relabel_config():
+            source_value = alert.labels.get(relabel.source, None)
+            if source_value:
+                alert.labels[relabel.target] = source_value
+                if relabel.operation == AlertRelabelOp.Replace:
+                    del alert.labels[relabel.source]
+
+        return alert
+
     @staticmethod
     @app.route("/api/alerts", methods=["POST"])
     def handle_alert_event():
@@ -44,6 +56,7 @@ class Web:
         Web._trace_incoming("alerts", req_json)
         alert_manager_event = AlertManagerEvent(**req_json)
         for alert in alert_manager_event.alerts:
+            alert = Web._relabel_alert(alert)
             Web.alerts_queue.add_task(Web.event_handler.handle_trigger, PrometheusTriggerEvent(alert=alert))
 
         Web.event_handler.get_telemetry().last_alert_at = str(datetime.now())
@@ -54,13 +67,12 @@ class Web:
     def handle_helm_releases():
         req_json = request.get_json()
         Web._trace_incoming("received helm release trigger events via api", req_json)
-        logging.debug(
-            f"received helm release trigger events via api\n"
-        )
+        logging.debug("received helm release trigger events via api\n")
         helm_release_payload = IncomingHelmReleasesEventPayload.parse_obj(req_json)
         for helm_release in helm_release_payload.data:
-            Web.api_server_queue.add_task(Web.event_handler.handle_trigger,
-                                          HelmReleasesTriggerEvent(helm_release=helm_release))
+            Web.api_server_queue.add_task(
+                Web.event_handler.handle_trigger, HelmReleasesTriggerEvent(helm_release=helm_release)
+            )
         return jsonify(success=True)
 
     @staticmethod
@@ -103,7 +115,7 @@ class Web:
             return jsonify()
         else:
             logging.error("Runner health check failed")
-            return abort(code=500)
+            return abort(status=500, code=500)
 
     @staticmethod
     def _trace_incoming(api: str, incoming_request):

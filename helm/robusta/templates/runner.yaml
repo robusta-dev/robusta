@@ -21,6 +21,10 @@ spec:
     spec:
       serviceAccountName: {{ .Release.Name }}-runner-service-account
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      {{- if .Values.runner.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.runner.imagePullSecrets | nindent 6 }}
+      {{- end }}
       containers:
       - name: runner
         image: {{ .Values.runner.image }}
@@ -51,6 +55,10 @@ spec:
           {{- end }}
           {{- if not .Values.monitorHelmReleases }}
           - name: DISABLE_HELM_MONITORING
+            value: "True"
+          {{- end }}
+          {{- if .Values.scaleAlertsProcessing }}
+          - name: ALERTS_WORKERS_POOL
             value: "True"
           {{- end }}
           - name: RUNNER_VERSION

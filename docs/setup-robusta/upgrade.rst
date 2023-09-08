@@ -7,7 +7,7 @@ What type of upgrade do I need?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 You need a :ref:`Manual Upgrade` when both:
 
-* Robusta's old version is lower than 0.10.17 (run ``helm list`` to check)
+* Robusta installation fails with ``com.coreos.monitoring.v1.Prometheus.spec`` error.
 * The embedded Prometheus is enabled (``enablePrometheusStack: true``)
 
 In all other cases, do a :ref:`Simple Upgrade`.
@@ -53,8 +53,9 @@ Why are manual upgrades necessary?
 Robusta bundles kube-prometheus-stack, which uses `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_.
 Helm can't update CRDs, so we update them ourselves. See the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_ for details.
 
-Upgrading from older versions (0.10.17 and below)
+Upgrading from older versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Follow the steps below to fix any issues with old CRDs
 
 1. The node-exporter daemonset and admission webhooks needs to be manually removed prior to upgrading:
 

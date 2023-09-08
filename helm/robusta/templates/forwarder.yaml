@@ -20,6 +20,10 @@ spec:
     spec:
       serviceAccountName: {{ .Release.Name }}-forwarder-service-account
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      {{- if .Values.kubewatch.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.kubewatch.imagePullSecrets | nindent 6 }}
+      {{- end }}
       containers:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch

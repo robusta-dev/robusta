@@ -37,7 +37,7 @@ You can set the ``Slack`` channel dynamically, based on the ``cluster name`` or 
 
 This can be done using the optional ``channel_override`` sink parameter.
 
-Allowed values for this parameters are:
+Allowed values for this parameter are:
 
 - ``cluster_name`` - The Slack channel will be the Robusta ``cluster_name``
 - ``labels.foo`` - The Slack channel will be taken from a ``label`` value with the key ``foo``. If no such label, the default channel will be used.
@@ -54,6 +54,22 @@ For example:
          api_key: xoxb-112...
          slack_channel: my-fallback-channel
          channel_override: "labels.slack"
+
+A replacement pattern is also allowed, using ``$`` sign, before the variable.
+
+For example:
+
+.. code-block:: yaml
+
+     sinks_config:
+     # slack integration params
+     - slack_sink:
+         name: main_slack_sink
+         api_key: xoxb-112...
+         slack_channel: my-fallback-channel
+         channel_override: "$cluster_name-alerts-$labels.env"
+
+
 
 Using Private Channels
 -------------------------------------------------------------------

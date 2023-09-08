@@ -27,6 +27,33 @@ clusters, make sure you change ``cluster_name`` accordingly. The other values sh
 If you need to generate the secret values yourself, use cryptographically secure strings with at least 128 bits of
 randomness.
 
+Relabel Prometheus Alerts
+-----------------------------
+
+The ``alertRelabel`` helm value allows relabeling Prometheus alerts processed by Robusta.
+You can add a new label based on existing label, or replace existing label with a new one.
+
+Relabel has 3 attributes:
+
+* ``source``: Use the value from this label
+* ``target``: This label will contain the value from ``source``
+* ``operation``: Operation can be ``add`` (default) or ``replace``.
+
+For example:
+
+.. code-block:: yaml
+
+    alertRelabel:
+      - source: "pod_name"
+        target: "pod"
+        operation: "add"
+      - source: "deployment_name"
+        target: "deployment"
+        operation: "replace"
+      - source: "job_name"
+        target: "job"
+
+
 Two-way Interactivity
 ------------------------
 
