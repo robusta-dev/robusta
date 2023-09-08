@@ -22,7 +22,7 @@ Alternatively, generate a key by running ``robusta integrations slack`` and set 
          name: main_slack_sink
          api_key: MY SLACK KEY
          slack_channel: MY SLACK CHANNEL
-         max_log_file_limit_kb: 1000 # (Optional) The maximum allowed file size for "snippets" (in kilobytes) uploaded to the Slack channel. Larger files can be sent to Slack, but they may not be viewable directly within the Slack. Default: 1000.
+         max_log_file_limit_kb: <Optional> # (Default: 1000) The maximum allowed file size for "snippets" (in kilobytes) uploaded to the Slack channel. Larger files can be sent to Slack, but they may not be viewable directly within the Slack.
          channel_override: DYNAMIC SLACK CHANNEL OVERRIDE (Optional)
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
@@ -54,7 +54,6 @@ For example:
          name: main_slack_sink
          api_key: xoxb-112...
          slack_channel: my-fallback-channel
-         max_log_file_limit_kb: 1000
          channel_override: "labels.slack"
 
 A replacement pattern is also allowed, using ``$`` sign, before the variable.
