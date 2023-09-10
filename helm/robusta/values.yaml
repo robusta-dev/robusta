@@ -23,6 +23,7 @@ globalConfig:
   prometheus_url: ""
   account_id: ""
   signing_key: ""
+  custom_annotations: []
 
 # safe actions to enable authenticated users to run
 lightActions:
