@@ -489,9 +489,7 @@ class RobustaJob(Job):
             ),
             spec=JobSpec(
                 backoffLimit=0,
-                template=PodTemplateSpec(
-                    spec=spec,
-                ),
+                template=PodTemplateSpec(spec=spec, metadata=ObjectMeta(annotations=custom_annotations)),
             ),
         )
         try:
