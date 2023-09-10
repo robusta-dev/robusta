@@ -3,10 +3,6 @@ Miscellaneous
 
 These actions are useful for general Kubernetes troubleshooting and everything else.
 
-Networking
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. robusta-action:: playbooks.robusta_playbooks.networking.incluster_ping
-
 ArgoCD
 ^^^^^^^^^^^^^^
 
@@ -33,4 +29,3 @@ Stress Testing and Chaos Engineering
 
 .. robusta-action:: playbooks.robusta_playbooks.prometheus_simulation.prometheus_alert
     :manual-trigger-only:
-

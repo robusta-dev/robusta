@@ -11,6 +11,7 @@ Actions Reference
    event-enrichment
    remediation
    change-tracking
+   networking
    grafana
    python-troubleshooting
    java-troubleshooting
