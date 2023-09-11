@@ -192,11 +192,7 @@ def job_pod_enricher(event: JobEvent, params: JobPodEnricherParams):
         )
         if log_data:
             event.add_enrichment(
-                [
-                    FileBlock(
-                        filename=f"{pod.metadata.name}.log", contents=log_data.encode(), should_zip=params.compress_logs
-                    )
-                ],
+                [FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())],
             )
 
 

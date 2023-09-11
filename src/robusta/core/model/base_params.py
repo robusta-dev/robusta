@@ -273,7 +273,6 @@ class LogEnricherParams(ActionParams):
     :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
     :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
     :var filter_regex: only shows lines that match the regex
-    :var compress_logs: compresses the logs if true, this is currently only implemented for robusta sinks
     """
 
     container_name: Optional[str]
@@ -282,4 +281,3 @@ class LogEnricherParams(ActionParams):
     regex_replacement_style: Optional[str] = None
     previous: bool = False
     filter_regex: Optional[str] = None
-    compress_logs: bool = True
