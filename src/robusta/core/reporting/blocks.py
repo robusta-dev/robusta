@@ -103,7 +103,10 @@ class FileBlock(BaseBlock):
         """
         Truncates the log file by removing lines from the beginning until its size is within the given limit.
         """
-        decoded_content = self.contents.decode('utf-8')
+        # we don't want to truncate other files like images
+        if not self.is_text_file():
+            return self.contents
+
         decoded_content = self.contents.decode("utf-8")
         content_length = len(decoded_content)
 
