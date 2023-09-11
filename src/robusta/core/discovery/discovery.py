@@ -78,7 +78,7 @@ class Discovery:
             with open(DISCOVERY_STACKTRACE_FILE, "x"):
                 logging.info("Sending signal to discovery thread")
         except Exception:
-            logging.error("error sending signal", exc_info=True)
+            logging.error("error creating stack trace", exc_info=True)
 
     @staticmethod
     def stack_dump_on_signal():
@@ -90,7 +90,7 @@ class Discovery:
                     return
                 time.sleep(DISCOVERY_STACKTRACE_TIMEOUT_S)
         except Exception:
-            logging.error("error reading pipe", exc_info=True)
+            logging.error("error getting stack trace", exc_info=True)
 
     @staticmethod
     def __create_service_info(
