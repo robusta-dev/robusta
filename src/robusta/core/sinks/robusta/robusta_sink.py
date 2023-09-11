@@ -162,13 +162,24 @@ class RobustaSink(SinkBase):
             return True
         return time.time() - self.last_send_time < DISCOVERY_CHECK_THRESHOLD_SEC
 
-    def handle_service_diff(self, new_resource: Union[Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Node], operation: K8sOperationType):
-        if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)):
-            self.__publish_single_service(Discovery.create_service_info(new_resource), operation)
-        elif isinstance(new_resource, Node):
-            self.__update_node(new_resource, operation)
-        elif isinstance(new_resource, Job):
-            self.__update_job(new_resource, operation)
+    def handle_service_diff(
+        self,
+        new_resource: Union[Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Node],
+        operation: K8sOperationType,
+    ):
+        try:
+            if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)):
+                self.__publish_single_service(Discovery.create_service_info(new_resource), operation)
+            elif isinstance(new_resource, Node):
+                self.__update_node(new_resource, operation)
+            elif isinstance(new_resource, Job):
+                self.__update_job(new_resource, operation)
+        except Exception:
+            self.__reset_caches()
+            logging.error(
+                f"Failed to handle_service_diff for resource {new_resource.metadata.name}",
+                exc_info=True,
+            )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.dal.persist_finding(finding)
