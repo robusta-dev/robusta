@@ -15,7 +15,6 @@ from robusta.api import (
     RegexReplacementStyle,
     SlackAnnotations,
     TableBlock,
-    ZippedFileBlock,
     action,
     get_job_latest_pod,
     get_resource_events_table,
@@ -194,7 +193,7 @@ def job_pod_enricher(event: JobEvent, params: JobPodEnricherParams):
         if log_data:
             event.add_enrichment(
                 [
-                    ZippedFileBlock(
+                    FileBlock(
                         filename=f"{pod.metadata.name}.log", contents=log_data.encode(), should_zip=params.compress_logs
                     )
                 ],

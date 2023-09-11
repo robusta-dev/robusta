@@ -88,18 +88,30 @@ class FileBlock(BaseBlock):
             **kwargs,
         )
 
-    def truncate_content(self,  max_file_size_bytes: int) -> bytes:
+    def is_text_file(self):
+        return self.filename.endswith((".txt", ".log"))
+
+    def zip(self):
+        try:
+            self.contents = gzip.compress(self.contents)
+            self.filename = self.filename + ".gz"
+        except Exception as exc:
+            logging.error(f"Unexpected error occurred while zipping file {self.filename}")
+            logging.exception(exc)
+
+    def truncate_content(self, max_file_size_bytes: int) -> bytes:
         """
         Truncates the log file by removing lines from the beginning until its size is within the given limit.
         """
         decoded_content = self.contents.decode('utf-8')
+        decoded_content = self.contents.decode("utf-8")
         content_length = len(decoded_content)
 
         if content_length <= max_file_size_bytes:
             return self.contents
 
         lines = decoded_content.splitlines()
-        byte_length_newline = len('\n'.encode('utf-8'))
+        byte_length_newline = len("\n".encode("utf-8"))
 
         truncated_lines: List[str] = []
         for idx, line in enumerate(lines):
@@ -107,37 +119,10 @@ class FileBlock(BaseBlock):
 
             content_length -= line_content_length
             if content_length <= max_file_size_bytes:
-                truncated_lines = lines[idx+1:]
+                truncated_lines = lines[idx + 1 :]
                 break
 
-        return "\n".join(truncated_lines).encode('utf-8')
-
-
-class ZippedFileBlock(FileBlock):
-    """
-    A zipped file of any type. Used for images, log files, binary files, and more.
-    """
-
-    should_zip: bool = True
-
-    def __init__(self, filename: str, contents: bytes, should_zip: bool):
-        """
-        :param filename: the file's name
-        :param contents: the file's contents
-        :param should_zip: if the data should be zipped before it
-        """
-        super().__init__(filename=filename, contents=contents, should_zip=should_zip)
-
-    def zip(self):
-        if not self.should_zip:
-            return
-
-        try:
-            self.contents = gzip.compress(self.contents)
-            self.filename = self.filename + ".gz"
-        except Exception as exc:
-            logging.error(f"Unexpected error occurred while zipping file {self.filename}")
-            logging.exception(exc)
+        return "\n".join(truncated_lines).encode("utf-8")
 
 
 class HeaderBlock(BaseBlock):
