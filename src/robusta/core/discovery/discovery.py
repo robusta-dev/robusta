@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+import time
 from collections import defaultdict
 from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, Optional, Union
@@ -63,46 +64,31 @@ class DiscoveryResults(BaseModel):
         arbitrary_types_allowed = True
 
 
-DISCOVERY_PIPE = "/tmp/discovery_pipe"
-SHUTDOWN_SIGNAL = "shutdown"
-STACKDUMP_SIGNAL = "stackdump"
+DISCOVERY_STACKTRACE_FILE = "make_discovery_stacktrace"
+DISCOVERY_STACKTRACE_TIMEOUT_S = int(os.environ.get("DISCOVERY_STACKTRACE_TIMEOUT_S", 10))
 
 
 class Discovery:
     executor = ProcessPoolExecutor(max_workers=1)  # always 1 discovery process
+    stacktrace_thread_active = False
 
     @staticmethod
-    def init_discovery_error_pipes():
+    def create_stacktrace():
         try:
-            os.mkfifo(DISCOVERY_PIPE)
-        except FileExistsError:
-            pass
-        except Exception:
-            logging.error(
-                "Failed to create discovery pipes",
-                exc_info=True,
-            )
-
-    @staticmethod
-    def send_signal_to_pipe(signal):
-        try:
-            with open(DISCOVERY_PIPE, mode="w") as pipe:
+            with open(DISCOVERY_STACKTRACE_FILE, "x"):
                 logging.info("Sending signal to discovery thread")
-                pipe.write(signal)
-                pipe.close()
         except Exception:
-            logging.error("error writing pipe", exc_info=True)
+            logging.error("error sending signal", exc_info=True)
 
     @staticmethod
     def stack_dump_on_signal():
         try:
-            with open(DISCOVERY_PIPE) as pipe:
-                while True:
-                    data = pipe.read()
-                    if STACKDUMP_SIGNAL in data:
-                        logging.info("discovery process stack trace")
-                        StackTracer.dump()
+            while Discovery.stacktrace_thread_active:
+                if os.path.exists(DISCOVERY_STACKTRACE_FILE):
+                    logging.info("discovery process stack trace")
+                    StackTracer.dump()
                     return
+                time.sleep(DISCOVERY_STACKTRACE_TIMEOUT_S)
         except Exception:
             logging.error("error reading pipe", exc_info=True)
 
@@ -149,6 +135,7 @@ class Discovery:
 
     @staticmethod
     def discovery_process() -> DiscoveryResults:
+        Discovery.stacktrace_thread_active = True
         threading.Thread(target=Discovery.stack_dump_on_signal).start()
         pods_metadata: List[V1ObjectMeta] = []
         node_requests = defaultdict(list)  # map between node name, to request of pods running on it
@@ -399,7 +386,7 @@ class Discovery:
                 exc_info=True,
             )
             raise e
-        Discovery.send_signal_to_pipe(SHUTDOWN_SIGNAL)
+        Discovery.stacktrace_thread_active = False
         return DiscoveryResults(
             services=active_services,
             nodes=current_nodes,
