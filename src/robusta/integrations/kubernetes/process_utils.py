@@ -23,7 +23,7 @@ class ProcessFinder:
         self.pod = pod
         self.filters = filters
         self.process_type = process_type
-        self.all_processes = pod.get_processes()
+        self.all_processes = pod.get_processes(custom_annotations=filters.custom_annotations)
         self.matching_processes = self.__get_matches(self.all_processes, filters, process_type)
 
     def get_match_or_report_error(

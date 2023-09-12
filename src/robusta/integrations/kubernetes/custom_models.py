@@ -203,9 +203,15 @@ class RobustaPod(Pod):
 
     @staticmethod
     def exec_in_java_pod(
-        pod_name: str, node_name: str, debug_cmd=None, override_jtk_image: str = JAVA_DEBUGGER_IMAGE
+        pod_name: str,
+        node_name: str,
+        debug_cmd=None,
+        override_jtk_image: str = JAVA_DEBUGGER_IMAGE,
+        custom_annotations: Optional[Dict[str, str]] = None,
     ) -> str:
-        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, debug_cmd, debug_image=override_jtk_image)
+        return RobustaPod.exec_in_debugger_pod(
+            pod_name, node_name, debug_cmd, debug_image=override_jtk_image, custom_annotations=custom_annotations
+        )
 
     @staticmethod
     def create_debugger_pod(
@@ -215,6 +221,7 @@ class RobustaPod(Pod):
         debug_cmd=None,
         env: Optional[List[EnvVar]] = None,
         mount_host_root: bool = False,
+        custom_annotations: Optional[Dict[str, str]] = None,
     ) -> "RobustaPod":
         """
         Creates a debugging pod with high privileges
@@ -232,6 +239,7 @@ class RobustaPod(Pod):
             metadata=ObjectMeta(
                 name=to_kubernetes_name(pod_name, "debug-"),
                 namespace=INSTALLATION_NAMESPACE,
+                annotations=custom_annotations,
             ),
             spec=PodSpec(
                 serviceAccountName=f"{RELEASE_NAME}-runner-service-account",
@@ -259,16 +267,25 @@ class RobustaPod(Pod):
         return debugger
 
     @staticmethod
-    def exec_on_node(pod_name: str, node_name: str, cmd):
+    def exec_on_node(pod_name: str, node_name: str, cmd, custom_annotations: Optional[Dict[str, str]] = None):
         command = f'nsenter -t 1 -a "{cmd}"'
-        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, command)
+        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, command, custom_annotations=custom_annotations)
 
     @staticmethod
     def run_debugger_pod(
-        node_name: str, pod_image: str, env: Optional[List[EnvVar]] = None, mount_host_root: bool = False
+        node_name: str,
+        pod_image: str,
+        env: Optional[List[EnvVar]] = None,
+        mount_host_root: bool = False,
+        custom_annotations: Optional[Dict[str, str]] = None,
     ) -> str:
         debugger = RobustaPod.create_debugger_pod(
-            node_name, node_name, pod_image, env=env, mount_host_root=mount_host_root
+            node_name,
+            node_name,
+            pod_image,
+            env=env,
+            mount_host_root=mount_host_root,
+            custom_annotations=custom_annotations,
         )
         try:
             pod_name = debugger.metadata.name
@@ -282,8 +299,16 @@ class RobustaPod(Pod):
             RobustaPod.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)
 
     @staticmethod
-    def exec_in_debugger_pod(pod_name: str, node_name: str, cmd, debug_image=PYTHON_DEBUGGER_IMAGE) -> str:
-        debugger = RobustaPod.create_debugger_pod(pod_name, node_name, debug_image)
+    def exec_in_debugger_pod(
+        pod_name: str,
+        node_name: str,
+        cmd,
+        debug_image=PYTHON_DEBUGGER_IMAGE,
+        custom_annotations: Optional[Dict[str, str]] = None,
+    ) -> str:
+        debugger = RobustaPod.create_debugger_pod(
+            pod_name, node_name, debug_image, custom_annotations=custom_annotations
+        )
         try:
             return debugger.exec(cmd)
         finally:
@@ -294,12 +319,13 @@ class RobustaPod(Pod):
         runtime, container_id = status.containerID.split("://")
         return container_id
 
-    def get_processes(self) -> List[Process]:
+    def get_processes(self, custom_annotations: Optional[Dict[str, str]] = None) -> List[Process]:
         container_ids = " ".join([self.extract_container_id(s) for s in self.status.containerStatuses])
         output = RobustaPod.exec_in_debugger_pod(
             self.metadata.name,
             self.spec.nodeName,
             f"debug-toolkit pod-ps {self.metadata.uid} {container_ids}",
+            custom_annotations=custom_annotations,
         )
         processes = ProcessList(**load_json(output))
         return processes.processes
@@ -449,14 +475,21 @@ class RobustaJob(Job):
             raise e
 
     @classmethod
-    def run_simple_job_spec(cls, spec, name, timeout, job_secret: Optional[JobSecret] = None) -> str:
+    def run_simple_job_spec(
+        cls,
+        spec,
+        name,
+        timeout,
+        job_secret: Optional[JobSecret] = None,
+        custom_annotations: Optional[Dict[str, str]] = None,
+    ) -> str:
         job = RobustaJob(
-            metadata=ObjectMeta(namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name)),
+            metadata=ObjectMeta(
+                namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name), annotations=custom_annotations
+            ),
             spec=JobSpec(
                 backoffLimit=0,
-                template=PodTemplateSpec(
-                    spec=spec,
-                ),
+                template=PodTemplateSpec(spec=spec, metadata=ObjectMeta(annotations=custom_annotations)),
             ),
         )
         try:

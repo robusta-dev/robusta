@@ -52,6 +52,14 @@ class ActionParams(DocumentedModel):
     pass
 
 
+class PodRunningParams(ActionParams):
+    """
+    :var url: custom annotations to be used for the running pod/job
+    """
+
+    custom_annotations: Optional[Dict[str, str]] = None
+
+
 class VideoEnricherParams(ActionParams):
     """
     :var url: Url to the external video that should be added to a finding
@@ -77,7 +85,7 @@ class FindingKeyParams(ActionParams):
     finding_key: str = "DEFAULT"
 
 
-class BashParams(ActionParams):
+class BashParams(PodRunningParams):
     """
     :var bash_command: Bash command to execute on the target.
 
@@ -240,7 +248,7 @@ class GrafanaAnnotationParams(GrafanaParams):
     custom_tags: List[str] = None
 
 
-class ProcessParams(ActionParams):
+class ProcessParams(PodRunningParams):
     """
     :var process_substring: process name (or substring).
     :var pid: pid

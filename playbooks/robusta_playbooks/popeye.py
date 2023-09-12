@@ -12,12 +12,12 @@ from hikaru.model.rel_1_26 import Container, PodSpec, ResourceRequirements
 from pydantic import BaseModel, ValidationError
 from robusta.api import (
     RELEASE_NAME,
-    ActionParams,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
     Finding,
     FindingSource,
     FindingType,
+    PodRunningParams,
     RobustaJob,
     ScanReportBlock,
     ScanReportRow,
@@ -86,7 +86,7 @@ def scan_row_content_to_string(row: ScanReportRow) -> str:
     return txt
 
 
-class PopeyeParams(ActionParams):
+class PopeyeParams(PodRunningParams):
     """
     :var timeout: Time span for yielding the scan.
     :var args: Deprecated - Popeye cli arguments.
@@ -166,7 +166,9 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     start_time = datetime.now()
     logs = None
     try:
-        logs = RobustaJob.run_simple_job_spec(spec, "popeye_job", params.timeout)
+        logs = RobustaJob.run_simple_job_spec(
+            spec, "popeye_job", params.timeout, custom_annotations=params.custom_annotations
+        )
         scan = json.loads(logs)
         end_time = datetime.now()
         popeye_scan = PopeyeReport(**scan["popeye"])

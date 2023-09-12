@@ -22,6 +22,7 @@ from robusta.core.model.base_params import (
     LogEnricherParams,
     NamedRegexPattern,
     PodResourceGraphEnricherParams,
+    PodRunningParams,
     ProcessParams,
     PrometheusDateRange,
     PrometheusDuration,
