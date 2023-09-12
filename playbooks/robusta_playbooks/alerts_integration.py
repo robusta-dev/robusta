@@ -37,7 +37,6 @@ from robusta.api import (
     RobustaPod,
     SlackAnnotations,
     TableBlock,
-    ZippedFileBlock,
     action,
     create_chart_from_prometheus_query,
     create_graph_enrichment,
@@ -372,11 +371,7 @@ def start_log_enrichment(
         log_name = pod.metadata.name
         log_name += f"/{container}"
         event.add_enrichment(
-            [
-                ZippedFileBlock(
-                    filename=f"{pod.metadata.name}.log", contents=log_data.encode(), should_zip=params.compress_logs
-                )
-            ],
+            [FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())],
         )
         break
 

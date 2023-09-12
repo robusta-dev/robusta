@@ -29,7 +29,6 @@ from robusta.core.reporting.blocks import (
     ScanReportBlock,
     ScanReportRow,
     TableBlock,
-    ZippedFileBlock,
 )
 
 __all__ = [
