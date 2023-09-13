@@ -50,7 +50,7 @@ class OverrideGraph(BaseModel):
     resource_type: str
     item_type: str
     query: str
-    values_format: str
+    values_format: Optional[str]
 
 
 class ActionParams(DocumentedModel):

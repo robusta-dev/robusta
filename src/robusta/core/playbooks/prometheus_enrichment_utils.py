@@ -258,6 +258,16 @@ def create_graph_enrichment(
     return FileBlock(svg_name, chart.render())
 
 
+def get_default_values_format(combination: ResourceKey) -> ChartValuesFormat:
+    if combination[1] == ResourceChartItemType.Node:
+        return ChartValuesFormat.Percentage
+    elif combination[0] == ResourceChartResourceType.CPU:
+        return ChartValuesFormat.CPUUsage
+    elif combination[0] == ResourceChartResourceType.Memory:
+        return ChartValuesFormat.Bytes
+    return ChartValuesFormat.Plain
+
+
 def __get_override_chart(prometheus_params: PrometheusParams, combination: ResourceKey) -> Optional[ChartOptions]:
     if not prometheus_params.prometheus_graphs_overrides:
         return
@@ -270,8 +280,12 @@ def __get_override_chart(prometheus_params: PrometheusParams, combination: Resou
 
     if len(combinations) == 0:
         return None
+    if not combinations[0].values_format:
+        values_format = get_default_values_format(combinations[0])
+    else:
+        values_format = ChartValuesFormat[combinations[0].values_format]
 
-    return ChartOptions(query=combinations[0].query, values_format=ChartValuesFormat[combinations[0].values_format])
+    return ChartOptions(query=combinations[0].query, values_format=values_format)
 
 
 def create_resource_enrichment(
