@@ -22,6 +22,7 @@ from robusta.core.reporting.custom_rendering import charts_style
 
 ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
 ChartLabelFactory = Callable[[int], str]
+ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
 
 
 class XAxisLine(BaseModel):
@@ -257,6 +258,22 @@ def create_graph_enrichment(
     return FileBlock(svg_name, chart.render())
 
 
+def __get_override_chart(prometheus_params: PrometheusParams, combination: ResourceKey) -> Optional[ChartOptions]:
+    if not prometheus_params.prometheus_graphs_overrides:
+        return
+    combinations = [
+        override
+        for override in prometheus_params.prometheus_graphs_overrides
+        if ResourceChartResourceType[override.resource_type] == combination[0]
+        and ResourceChartItemType[override.item_type] == combination[1]
+    ]
+
+    if len(combinations) == 0:
+        return None
+
+    return ChartOptions(query=combinations[0].query, values_format=ChartValuesFormat[combinations[0].values_format])
+
+
 def create_resource_enrichment(
     starts_at: datetime,
     labels: Dict[Any, Any],
@@ -267,7 +284,6 @@ def create_resource_enrichment(
     lines: Optional[List[XAxisLine]] = [],
     title_override: Optional[str] = None,
 ) -> FileBlock:
-    ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
     combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
             query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod"}[5m])) by (pod, job)',
@@ -300,7 +316,12 @@ def create_resource_enrichment(
         ),
     }
     combination = (resource_type, item_type)
-    chosen_combination = combinations[combination]
+
+    # trying to use override combination
+    chosen_combination = __get_override_chart(prometheus_params, combination)
+    if not chosen_combination:
+        chosen_combination = combinations[combination]
+
     if not chosen_combination:
         raise AttributeError(f"The following combination for resource chart is not supported: {combination}")
     values_format_text = "Utilization" if chosen_combination.values_format == ChartValuesFormat.Percentage else "Usage"
