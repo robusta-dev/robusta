@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Tuple
 
 from robusta.core.model.env_vars import DEFAULT_TIMEZONE
 
@@ -14,7 +15,9 @@ def render_value(renderer: RendererType, value):
     raise Exception(f"Unsupported renderer type {renderer}")
 
 
-def charts_style():
+def charts_style(
+        graph_colors: Tuple = ("#9747FF", "#FF5959", "#0DC291", "#2a0065", "#1e0047"),
+):
     from pygal.style import Style
 
     return Style(
@@ -31,5 +34,5 @@ def charts_style():
         opacity=".6",
         opacity_hover=".9",
         transition="400ms ease-in",
-        colors=("#9747FF", "#7d17ff", "#4b00ad", "#2a0065", "#1e0047"),
+        colors=graph_colors,
     )

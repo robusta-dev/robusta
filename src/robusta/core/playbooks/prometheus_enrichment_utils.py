@@ -160,37 +160,15 @@ def create_chart_from_prometheus_query(
         raise Exception(
             f"Unsupported query result for robusta chart, Type received: {prometheus_query_result.result_type}, type supported 'matrix'"
         )
-    chart = pygal.XY(
-        show_dots=True,
-        style=charts_style(),
-        truncate_legend=15,
-        include_x_axis=include_x_axis,
-        width=1280,
-        height=720,
-    )
 
-    chart.x_label_rotation = 35
-    chart.truncate_label = -1
-    chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%I:%M:%S %p on %d, %b")
-
-    value_formatters = {
-        ChartValuesFormat.Plain: lambda val: str(val),
-        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
-        ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
-        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
-    }
-    chart_values_format = values_format if values_format else ChartValuesFormat.Plain
-    chart.value_formatter = value_formatters[chart_values_format]
-
-    if chart_title:
-        chart.title = chart_title
-    else:
-        chart.title = promql_query
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
     # TODO: change min_time time before  Jan 19 3001
     min_time = 32536799999
     max_time = 0
 
+    # We use the [graph_plot_color_list] to map colors corresponding to matching line labels on [plot_list].
+    plot_list: List[Tuple[str, List[Tuple]]] = []
+    graph_plot_color_list: List[str] = []
     series_list_result = prometheus_query_result.series_list_result
     if filter_prom_jobs:
         series_list_result = filter_prom_jobs_results(series_list_result)
@@ -209,12 +187,59 @@ def create_chart_from_prometheus_query(
             values.append((timestamp, value))
         min_time = min(min_time, min(series.timestamps))
         max_time = max(max_time, max(series.timestamps))
-        chart.add(label, values)
+
+        plot_list.append((label, values))
+        graph_plot_color_list.append("#9747FF")
 
     assert lines is not None
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
-        chart.add(line.label, value)
+
+        if line.label == "Memory Limit" \
+                or line.label == "CPU Limit":
+            plot_list.append((line.label, value))
+            graph_plot_color_list.append("#FF5959")
+
+        elif line.label == "Memory Request" \
+                or line.label == "CPU Request":
+            plot_list.append((line.label, value))
+            graph_plot_color_list.append("#0DC291")
+
+        else:
+            plot_list.append((line.label, value))
+            graph_plot_color_list.append("#2a0065")
+
+    graph_plot_color_list.extend(["#1e0047", "#2a0065"])
+    chart = pygal.XY(
+        show_dots=True,
+        style=charts_style(graph_colors=tuple(graph_plot_color_list)),
+        truncate_legend=15,
+        include_x_axis=include_x_axis,
+        width=1280,
+        height=720,
+    )
+
+    chart.x_label_rotation = 35
+    chart.truncate_label = -1
+    chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M")
+
+    value_formatters = {
+        ChartValuesFormat.Plain: lambda val: str(val),
+        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
+        ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
+        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
+    }
+    chart_values_format = values_format if values_format else ChartValuesFormat.Plain
+    chart.value_formatter = value_formatters[chart_values_format]
+
+    if chart_title:
+        chart.title = chart_title
+    else:
+        chart.title = promql_query
+
+    for plot in plot_list:
+        chart.add(plot[0], plot[1])
+
     return chart
 
 
