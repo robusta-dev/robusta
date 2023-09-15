@@ -22,6 +22,7 @@ from robusta.core.model.base_params import (
     LogEnricherParams,
     NamedRegexPattern,
     PodResourceGraphEnricherParams,
+    PodRunningParams,
     ProcessParams,
     PrometheusDateRange,
     PrometheusDuration,
@@ -151,7 +152,6 @@ from robusta.core.reporting import (
     ScanReportRow,
     TableBlock,
     VideoLink,
-    ZippedFileBlock,
 )
 from robusta.core.reporting.action_requests import (
     ActionRequestBody,

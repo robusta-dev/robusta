@@ -23,6 +23,7 @@ globalConfig:
   prometheus_url: ""
   account_id: ""
   signing_key: ""
+  custom_annotations: []
 
 # see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
 alertRelabel: []

@@ -52,6 +52,14 @@ class ActionParams(DocumentedModel):
     pass
 
 
+class PodRunningParams(ActionParams):
+    """
+    :var url: custom annotations to be used for the running pod/job
+    """
+
+    custom_annotations: Optional[Dict[str, str]] = None
+
+
 class VideoEnricherParams(ActionParams):
     """
     :var url: Url to the external video that should be added to a finding
@@ -77,7 +85,7 @@ class FindingKeyParams(ActionParams):
     finding_key: str = "DEFAULT"
 
 
-class BashParams(ActionParams):
+class BashParams(PodRunningParams):
     """
     :var bash_command: Bash command to execute on the target.
 
@@ -240,7 +248,7 @@ class GrafanaAnnotationParams(GrafanaParams):
     custom_tags: List[str] = None
 
 
-class ProcessParams(ActionParams):
+class ProcessParams(PodRunningParams):
     """
     :var process_substring: process name (or substring).
     :var pid: pid
@@ -273,7 +281,6 @@ class LogEnricherParams(ActionParams):
     :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
     :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
     :var filter_regex: only shows lines that match the regex
-    :var compress_logs: compresses the logs if true, this is currently only implemented for robusta sinks
     """
 
     container_name: Optional[str]
@@ -282,4 +289,3 @@ class LogEnricherParams(ActionParams):
     regex_replacement_style: Optional[str] = None
     previous: bool = False
     filter_regex: Optional[str] = None
-    compress_logs: bool = True

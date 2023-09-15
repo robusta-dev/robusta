@@ -19,7 +19,6 @@ from robusta.core.reporting import (
     MarkdownBlock,
     PrometheusBlock,
     TableBlock,
-    ZippedFileBlock,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer
@@ -92,10 +91,9 @@ class ModelConversion:
                 )
             elif isinstance(block, DividerBlock):
                 structured_data.append({"type": "divider"})
-            elif isinstance(block, ZippedFileBlock):
-                block.zip()
-                structured_data.append(ModelConversion.get_file_object(block))
             elif isinstance(block, FileBlock):
+                if block.is_text_file():
+                    block.zip()
                 structured_data.append(ModelConversion.get_file_object(block))
             elif isinstance(block, HeaderBlock):
                 structured_data.append({"type": "header", "data": block.text})

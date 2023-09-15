@@ -60,7 +60,6 @@ Run the following command to add Robusta Helm chart as a Flux HelmRepository.
         flux create source helm robusta \
             --url https://robusta-charts.storage.googleapis.com \
             --namespace robusta \
-            --chart robusta \
             --export > robusta-helm.yaml
 
 - **--namespace:** Specified namespace should be present in the cluster.
@@ -74,6 +73,7 @@ Now lets use the HelmRepository to create a HelmRelease of Robusta.
 .. code-block:: bash
 
         flux create helmrelease robusta \
+            --namespace robusta \
             --chart=robusta \
             --source=HelmRepository/robusta \
             --chart-version="VERSION" \
