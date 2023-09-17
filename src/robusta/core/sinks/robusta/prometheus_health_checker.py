@@ -81,12 +81,12 @@ class PrometheusHealthChecker:
 
             if time.time() - self.__last_prometheus_error_log_time > self.__prometheus_error_log_period_sec:
                 self.__last_prometheus_error_log_time = time.time()
-                prometheus_connection_error = isinstance(e, NoPrometheusUrlFound) or isinstance(
-                    e, PrometheusFlagsConnectionError
-                )
-
-                msg = f"{e}" if prometheus_connection_error else f"Failed to connect to prometheus. {e}"
-                logging.error(msg, exc_info=not prometheus_connection_error)
+                if isinstance(e, PrometheusFlagsConnectionError):
+                    logging.info("Failed to get Prometheus flags")
+                else:
+                    prometheus_connection_error = isinstance(e, NoPrometheusUrlFound)
+                    msg = f"{e}" if prometheus_connection_error else f"Failed to connect to prometheus. {e}"
+                    logging.error(msg, exc_info=not prometheus_connection_error)
 
     def alertmanager_connection_checks(self, global_config: dict):
         # checking the status of the alert manager
