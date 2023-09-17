@@ -480,6 +480,8 @@ runner:
   nodeSelector: ~
   customClusterRoleRules: []
   imagePullSecrets: []
+  extraVolumes: []
+  extraVolumeMounts: []
 
 kube-prometheus-stack:
   alertmanager:

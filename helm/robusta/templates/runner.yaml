@@ -91,6 +91,9 @@ spec:
           - name: persistent-playbooks-storage
             mountPath: /etc/robusta/playbooks/storage
           {{- end }}
+          {{- with .Values.runner.extraVolumeMounts }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
         lifecycle:
           preStop:
             exec:
@@ -133,6 +136,9 @@ spec:
         - name: persistent-playbooks-storage
           persistentVolumeClaim:
             claimName: persistent-playbooks-pv-claim
+        {{- end }}
+        {{- with .Values.runner.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- if .Values.runner.nodeSelector }}
       nodeSelector: {{ toYaml .Values.runner.nodeSelector | nindent 8 }}
