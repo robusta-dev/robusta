@@ -54,7 +54,7 @@ class ActionParams(DocumentedModel):
 
 class PodRunningParams(ActionParams):
     """
-    :var url: custom annotations to be used for the running pod/job
+    :var custom_annotations: custom annotations to be used for the running pod/job
     """
 
     custom_annotations: Optional[Dict[str, str]] = None

@@ -5,9 +5,10 @@ from typing import Any, Dict, List
 
 import requests
 from supabase import create_client
+from supabase.lib.client_options import ClientOptions
 
 from robusta.core.model.cluster_status import ClusterStatus
-from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC
+from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC, SUPABASE_TIMEOUT_SECONDS
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
@@ -49,7 +50,8 @@ class SupabaseDal:
         self.key = key
         self.account_id = account_id
         self.cluster = cluster_name
-        self.client = create_client(url, key)
+        options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS)
+        self.client = create_client(url, key, options)
         self.email = email
         self.password = password
         self.sign_in_time = 0
