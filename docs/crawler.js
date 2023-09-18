@@ -27,11 +27,13 @@ new Crawler({
               lvl5: ["article h6", "h6"],
               content: ["article p, article li, article code"],
               pageRank: (() => {
-                if (url.pathname.includes("/installation/")) {
+                if (url.pathname.includes("/installation/index.html")) {
                   return 10;
-                } else if (url.pathname.includes("/actions/index.html")) {
+                } else if (url.pathname.includes("/triggers/kubernetes.html")) {
                   return 9;
-                } else if (url.pathname.includes("triggers-and-events.html")) {
+                } else if (
+                  url.pathname.includes("/actions/event-enrichment.html")
+                ) {
                   return 8;
                 }
                 return 1;
