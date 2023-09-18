@@ -145,7 +145,7 @@ class SupabaseDal:
             "total_pods": service.total_pods,
             "ready_pods": service.ready_pods,
             "is_helm_release": service.is_helm_release,
-            "is_healthy": service.total_pods == service.ready_pods,
+            "healthy": service.total_pods == service.ready_pods,
             "update_time": "now()",
         }
 
@@ -257,7 +257,7 @@ class SupabaseDal:
         db_node["account_id"] = self.account_id
         db_node["cluster_id"] = self.cluster
         db_node["updated_at"] = "now()"
-        db_node["is_healthy"] = "Ready:True" in node.conditions
+        db_node["healthy"] = "Ready:True" in node.conditions
         del db_node["resource_version"]
 
         return db_node
@@ -297,7 +297,7 @@ class SupabaseDal:
         db_job["cluster_id"] = self.cluster
         db_job["service_key"] = job.get_service_key()
         db_job["updated_at"] = "now()"
-        db_job["is_healthy"] = self.is_job_healthy(job)
+        db_job["healthy"] = self.is_job_healthy(job)
         return db_job
 
     def is_job_healthy(self, job: JobInfo) -> bool:
