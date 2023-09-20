@@ -73,6 +73,7 @@ class RobustaSink(SinkBase):
         self.__prometheus_health_checker = PrometheusHealthChecker(
             discovery_period_sec=self.__discovery_period_sec, global_config=self.get_global_config()
         )
+        self.__pods_running_count: int = 0
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         # start cluster discovery
@@ -153,6 +154,7 @@ class RobustaSink(SinkBase):
         self.__jobs_cache = None
         self.__helm_releases_cache = None
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
+        self.__pods_running_count = 0
 
     def stop(self):
         self.__active = False
@@ -296,6 +298,7 @@ class RobustaSink(SinkBase):
             self.__assert_namespaces_cache_initialized()
             self.__publish_new_namespaces(results.namespaces)
 
+            self.__pods_running_count = results.pods_running_count
             # save the cached services for the resolver.
             RobustaSink.__save_resolver_resources(
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
@@ -484,7 +487,7 @@ class RobustaSink(SinkBase):
             )
 
             self.dal.publish_cluster_status(cluster_status)
-            self.dal.publish_cluster_nodes(cluster_stats.nodes)
+            self.dal.publish_cluster_nodes(cluster_stats.nodes, self.__pods_running_count)
         except Exception:
             logging.exception(
                 f"Failed to run periodic update cluster status for {self.sink_name}",

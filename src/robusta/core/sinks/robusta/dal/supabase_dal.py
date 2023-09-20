@@ -452,11 +452,12 @@ class SupabaseDal:
             self.handle_supabase_error()
             raise
 
-    def publish_cluster_nodes(self, node_count: int):
+    def publish_cluster_nodes(self, node_count: int, pod_count: int):
         data = {
             "_account_id": self.account_id,
             "_cluster_id": self.cluster,
             "_node_count": node_count,
+            "_pod_count": pod_count,
         }
         try:
             self.__rpc_patch(UPDATE_CLUSTER_NODE_COUNT, data)

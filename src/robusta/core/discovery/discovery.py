@@ -54,6 +54,7 @@ class DiscoveryResults(BaseModel):
     jobs: List[JobInfo] = []
     namespaces: List[NamespaceInfo] = []
     helm_releases: List[HelmRelease] = []
+    pods_running_count: int = 0
 
     class Config:
         arbitrary_types_allowed = True
@@ -218,6 +219,7 @@ class Discovery:
 
             # discover pods
             continue_ref = None
+            pods_running_count = 0
             for _ in range(DISCOVERY_MAX_BATCHES):
                 pods: V1PodList = client.CoreV1Api().list_pod_for_all_namespaces(
                     limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
@@ -242,6 +244,8 @@ class Discovery:
                     pod_status = pod.status.phase
                     if pod_status in ["Running", "Unknown", "Pending"] and pod.spec.node_name:
                         node_requests[pod.spec.node_name].append(utils.k8s_pod_requests(pod))
+                    if pod_status == "Running":
+                        pods_running_count += 1
 
                 continue_ref = pods.metadata._continue
                 if not continue_ref:
@@ -359,6 +363,7 @@ class Discovery:
             jobs=active_jobs,
             namespaces=namespaces,
             helm_releases=list(helm_releases_map.values()),
+            pods_running_count=pods_running_count,
         )
 
     @staticmethod
