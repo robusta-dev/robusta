@@ -524,7 +524,7 @@ def should_report_pod(pod: Union[Pod, V1Pod]) -> bool:
         # Reporting unowned pods
         return True
     elif DISCOVERY_POD_OWNED_PODS:
-        non_pod_owners = [reference for reference in owner_references if reference.type.lower() != "pod"]
+        non_pod_owners = [reference for reference in owner_references if reference.kind.lower() != "pod"]
         # we report only if there are no owner references or they are pod owner refereces
         return len(non_pod_owners) == 0
     # we don't report pods with owner references
