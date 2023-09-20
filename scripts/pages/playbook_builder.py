@@ -1,20 +1,20 @@
 # run with poetry run streamlit run scripts/playbook_builder.py
 from collections import OrderedDict
-from typing import List, Optional
 
 import streamlit as st
 import streamlit_pydantic as sp
 import yaml
-from pydantic import BaseModel, Field
-from collections import defaultdict
-from robusta.api import Action
 
+# from robusta.api import Action
 from robusta.core.playbooks.generation import ExamplesGenerator, find_playbook_actions
+
+# from typing import List, Optional
+# from pydantic import BaseModel, Field
 
 generator = ExamplesGenerator()
 triggers = generator.get_all_triggers()
 actions = find_playbook_actions("./playbooks/robusta_playbooks")
-actions_by_name = { a.action_name : a for a in actions }
+actions_by_name = {a.action_name: a for a in actions}
 triggers_to_actions = generator.get_triggers_to_actions(actions)
 
 st.set_page_config(
@@ -39,16 +39,14 @@ action_expander = st.expander(
 action_parameter_expander = st.expander("Configure Action", expanded=st.session_state.expander_state[3])
 playbook_expander = st.expander(":scroll: Playbook", expanded=st.session_state.expander_state[4])
 
-
 # TRIGGER
 with trigger_expander:
     trigger_name = st.selectbox("Type to search", triggers.keys(), key="trigger")
-    #st.markdown(triggers[trigger_name]["about"])
+    # st.markdown(triggers[trigger_name]["about"])
 
     if st.button("Continue", key="button1"):
         st.session_state.expander_state = [False, True, False, False, False]
         st.experimental_rerun()
-
 
 # TRIGGER PARAMETER
 with trigger_parameter_expander:
@@ -59,28 +57,30 @@ with trigger_parameter_expander:
         st.session_state.expander_state = [False, False, True, False, False]
         st.experimental_rerun()
 
-
 # ACTION
 with action_expander:
     relevant_actions = [a.action_name for a in triggers_to_actions[trigger_name]]
     action_name = st.selectbox("Choose an action", relevant_actions, key="actions")
 
-    #st.markdown(actions[action_name]["about"])
+    # st.markdown(actions[action_name]["about"])
 
     if st.button("Continue", key="button3"):
         st.session_state.expander_state = [False, False, False, True, False]
         st.experimental_rerun()
 
-
 # ACTION PARAMETER
 with action_parameter_expander:
+    action_obj = actions_by_name.get(action_name, None)
 
-    action_data = sp.pydantic_input(key=f"action_form-{action_name}", model=actions_by_name[action_name].params_type)
-
-    if st.button("Continue", key="button4"):
+    if action_obj and hasattr(action_obj, "params_type") and hasattr(action_obj.params_type, "schema"):
+        action_data = sp.pydantic_input(key=f"action_form-{action_name}", model=action_obj.params_type)
+        if st.button("Continue", key="button4"):
+            st.session_state.expander_state = [False, False, False, False, True]
+            st.experimental_rerun()
+    else:
+        st.markdown("This action doesn't have any parameters")
         st.session_state.expander_state = [False, False, False, False, True]
         st.experimental_rerun()
-
 
 # DISPLAY PLAYBOOK
 with playbook_expander:
@@ -99,3 +99,5 @@ with playbook_expander:
     )
 
     st.code(yaml.dump(playbook))
+
+# st.write(st.session_state)
