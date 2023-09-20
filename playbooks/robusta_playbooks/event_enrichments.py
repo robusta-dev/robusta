@@ -1,7 +1,6 @@
 import logging
 
 from hikaru.model.rel_1_26 import Job, Node
-
 from robusta.api import (
     ActionException,
     DaemonSet,
@@ -35,9 +34,9 @@ from robusta.api import (
     get_job_all_pods,
     get_resource_events,
     get_resource_events_table,
-    is_pod_finished,
     list_pods_using_selector,
     parse_kubernetes_datetime_to_ms,
+    should_report_pod,
 )
 
 
@@ -247,7 +246,7 @@ def resource_events_diff(event: KubernetesAnyChangeEvent):
     new_resource = event.obj
     if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node, Job, Pod, ReplicaSet)):
         return
-    elif isinstance(new_resource, Pod) and (new_resource.metadata.ownerReferences or is_pod_finished(new_resource)):
+    elif isinstance(new_resource, Pod) and (not should_report_pod(new_resource)):
         return
     elif isinstance(new_resource, ReplicaSet) and (
         new_resource.metadata.ownerReferences or new_resource.spec.replicas == 0
