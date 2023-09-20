@@ -7,6 +7,7 @@ from robusta.core.discovery.discovery import (
     extract_volumes_k8,
     is_pod_finished,
     is_release_managed_by_helm,
+    should_report_pod,
 )
 from robusta.core.discovery.resource_names import ResourceNameLister
 from robusta.core.model.base_params import (
