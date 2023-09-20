@@ -46,10 +46,18 @@ class PrometheusAlertAnnotations(BaseModel):
     runbook_url: Optional[str]
     summary: Optional[str]
 
+    class Config:
+        extra = "allow"
+
 
 class PrometheusAlertLabels(BaseModel):
     severity: Optional[str]
     entity_id: str
+    short: Optional[str]
+    long: Optional[str]
+
+    class Config:
+        extra = "allow"
 
 
 class PrometheusAlertRule(BaseModel):
