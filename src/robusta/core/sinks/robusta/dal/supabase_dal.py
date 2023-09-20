@@ -4,6 +4,7 @@ import time
 from typing import Any, Dict, List
 
 import requests
+from postgrest.types import ReturnMethod
 from supabase import create_client
 from supabase.lib.client_options import ClientOptions
 
@@ -69,7 +70,7 @@ class SupabaseDal:
     def persist_scan(self, block: ScanReportBlock):
         db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
         try:
-            self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults).execute()
+            self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist scan {block.scan_id} error: {e}")
             self.handle_supabase_error()
@@ -120,13 +121,16 @@ class SupabaseDal:
                 continue
 
             try:
-                self.client.table(EVIDENCE_TABLE).insert(evidence).execute()
+                self.client.table(EVIDENCE_TABLE).insert(evidence, returning=ReturnMethod.minimal).execute()
             except Exception as e:
                 logging.error(f"Failed to persist finding {finding.id} enrichment {enrichment} error: {e}")
         try:
             (
                 self.client.table(ISSUES_TABLE)
-                .insert(ModelConversion.to_finding_json(self.account_id, self.cluster, finding))
+                .insert(
+                    ModelConversion.to_finding_json(self.account_id, self.cluster, finding),
+                    returning=ReturnMethod.minimal,
+                )
                 .execute()
             )
         except Exception as e:
@@ -156,7 +160,7 @@ class SupabaseDal:
 
         db_services = [self.to_service(service) for service in services]
         try:
-            self.client.table(SERVICES_TABLE).upsert(db_services).execute()
+            self.client.table(SERVICES_TABLE).upsert(db_services, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist services {services} error: {e}")
             self.handle_supabase_error()
@@ -268,7 +272,7 @@ class SupabaseDal:
 
         db_nodes = [self.__to_db_node(node) for node in nodes]
         try:
-            self.client.table(NODES_TABLE).upsert(db_nodes).execute()
+            self.client.table(NODES_TABLE).upsert(db_nodes, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist node {nodes} error: {e}")
             self.handle_supabase_error()
@@ -305,7 +309,7 @@ class SupabaseDal:
 
         db_jobs = [self.__to_db_job(job) for job in jobs]
         try:
-            self.client.table(JOBS_TABLE).upsert(db_jobs).execute()
+            self.client.table(JOBS_TABLE).upsert(db_jobs, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist jobs {jobs} error: {e}")
             self.handle_supabase_error()
@@ -318,7 +322,7 @@ class SupabaseDal:
         try:
             (
                 self.client.table(JOBS_TABLE)
-                .delete()
+                .delete(returning=ReturnMethod.minimal)
                 .eq("account_id", self.account_id)
                 .eq("cluster_id", self.cluster)
                 .eq("service_key", job.get_service_key())
@@ -363,7 +367,7 @@ class SupabaseDal:
         logging.debug(f"[supabase] Publishing the helm_releases {db_helm_releases}")
 
         try:
-            self.client.table(HELM_RELEASES_TABLE).upsert(db_helm_releases).execute()
+            self.client.table(HELM_RELEASES_TABLE).upsert(db_helm_releases, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist helm_releases {helm_releases} error: {e}")
             self.handle_supabase_error()
@@ -403,7 +407,11 @@ class SupabaseDal:
 
     def publish_cluster_status(self, cluster_status: ClusterStatus):
         try:
-            (self.client.table(CLUSTERS_STATUS_TABLE).upsert(self.to_db_cluster_status(cluster_status)).execute())
+            (
+                self.client.table(CLUSTERS_STATUS_TABLE)
+                .upsert(self.to_db_cluster_status(cluster_status), returning=ReturnMethod.minimal)
+                .execute()
+            )
         except Exception as e:
             logging.error(f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {e}")
             self.handle_supabase_error()
@@ -438,7 +446,7 @@ class SupabaseDal:
 
         db_namespaces = [self.__to_db_namespace(namespace) for namespace in namespaces]
         try:
-            self.client.table(NAMESPACES_TABLE).upsert(db_namespaces).execute()
+            self.client.table(NAMESPACES_TABLE).upsert(db_namespaces, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist namespaces {namespaces} error: {e}")
             self.handle_supabase_error()
@@ -467,7 +475,9 @@ class SupabaseDal:
             db_events.append(row)
 
         try:
-            self.client.table(RESOURCE_EVENTS).upsert(db_events, ignore_duplicates=True).execute()
+            self.client.table(RESOURCE_EVENTS).upsert(
+                db_events, ignore_duplicates=True, returning=ReturnMethod.minimal
+            ).execute()
         except Exception as e:
             logging.error(f"Failed to persist resource events error: {e}")
             self.handle_supabase_error()
