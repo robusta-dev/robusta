@@ -2,17 +2,20 @@ import copy
 import logging
 import time
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 from kubernetes import client
+from kubernetes.client import ApiException
 
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, MAX_ALLOWED_RULES_PER_CRD_ALERT, RRM_PERIOD_SEC
-from robusta.core.sinks.robusta.rrm.types import BaseResourceManager, PrometheusAlertRule, ResourceKind, \
-    AccountResource, PrometheusAlertResourceState
+from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
+from robusta.core.sinks.robusta.rrm.base_resource_manager import BaseResourceManager
+from robusta.core.sinks.robusta.rrm.types import PrometheusAlertRule, ResourceKind, \
+    AccountResource, PrometheusAlertResourceState, AccountResourceStatusType, AccountResourceStatusInfo
 
 
 class PrometheusAlertResourceManager(BaseResourceManager):
-    def __init__(self, resource_kind: ResourceKind, cluster: str):
-        super().__init__(resource_kind, cluster)
+    def __init__(self, resource_kind: ResourceKind, cluster: str, dal: AccountResourceFetcher, ):
+        super().__init__(resource_kind, cluster, dal=dal)
         self.__sleep = RRM_PERIOD_SEC
         self.__max_allowed_rules_per_crd = MAX_ALLOWED_RULES_PER_CRD_ALERT
         self.__label_selector_value = "robusta-resource-management"
@@ -78,7 +81,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
     def __in_cluster(self, clusters_target_set: List[str] = []) -> bool:
         return "*" in clusters_target_set or self.cluster in clusters_target_set
 
-    def make(self, account_resources: List[AccountResource]):
+    def prepare(self, account_resources: List[AccountResource]):
         prometheus_rules_map = self.__get_flattened_crd_files_cache_map()
 
         try:
@@ -100,12 +103,27 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                         .from_dict(resource.resource_state, entity_id=resource.entity_id)
                     prometheus_rules_map[resource.entity_id] = resource_state.rule
 
-            self.start(active_alert_rules=list(prometheus_rules_map.values()))
+            synced_item_count = self.start(active_alert_rules=list(prometheus_rules_map.values()))
+
+            if synced_item_count > 0:
+                self.set_account_resource_status(status_type=AccountResourceStatusType.success, info=None)
 
         except Exception as e:
+            # if there was an error in applying these alerts then let the alert resource manager to fetch all the account related alerts again
+            self.set_last_updated_at(updated_at=None)
+
+            if isinstance(e, ApiException):
+                info = AccountResourceStatusInfo(error=e.body)
+                self.set_account_resource_status(status_type=AccountResourceStatusType.error, info=info)
+            else:
+                self.set_account_resource_status(status_type=AccountResourceStatusType.error, info=None)
+
             logging.error(f"Error occured while making prometheus alerts: {e}", exc_info=True)
 
-    def start(self, active_alert_rules: List[PrometheusAlertRule]):
+            raise e
+
+    def start(self, active_alert_rules: List[PrometheusAlertRule]) -> int:
+        synced_item_count = 0
         try:
             sorted_active_rules: List[PrometheusAlertRule] = sorted(active_alert_rules, key=lambda x: x.alert)
 
@@ -122,9 +140,14 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 name = f"{self.__crd_name}--{next_iteration}"
 
                 sliced_alerts = sorted_active_rules[start_index:end_index]
-                self.__create_crd_file(name=name, alerts=sliced_alerts)
+                _, item_length = self.__create_crd_file(name=name, alerts=sliced_alerts)
+                synced_item_count += item_length
+
+            return synced_item_count
         except Exception as e:
             logging.error(f"Error occured while creating prometheus alerts: {e}", exc_info=True)
+
+            raise e
 
     def __get_snapshot_body(self, name: str, rules: List[dict]):
         return {
@@ -186,13 +209,13 @@ class PrometheusAlertResourceManager(BaseResourceManager):
             else:
                 raise e
 
-    def __create_crd_file(self, name: str, alerts: List[PrometheusAlertRule]) -> Optional[dict]:
+    def __create_crd_file(self, name: str, alerts: List[PrometheusAlertRule]) -> Tuple[Optional[dict], int]:
         # Retrieve the cached alerts based on the given name, if it exists.
         cached_alerts: Optional[List[PrometheusAlertRule]] = self.__crd_files_cache.get(name)
 
         # If the provided alerts are the same as the cached items, do nothing and return None.
         if alerts == cached_alerts:
-            return None
+            return None, 0
 
         self.__crd_files_cache[name] = alerts
         rules = [rule.to_dict() for rule in alerts]
@@ -218,7 +241,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                     body=existing_obj,
                     namespace=self.__installation_namespace,
                     name=name
-                )
+                ), len(rules)
             else:
                 # If the custom object doesn't exist, create a new one.
                 return self.__k8_api.create_namespaced_custom_object(
@@ -227,7 +250,11 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                     plural=self.__plural,
                     body=self.__get_snapshot_body(name=name, rules=rules),
                     namespace=self.__installation_namespace
-                )
+                ), len(rules)
 
         except Exception as e:
-            raise f"An error occured while creating PrometheusRules CRD: {e} "
+            # if there was an error in applying these alerts then reset the __crd_files_cache
+            self.__crd_files_cache = {}
+            logging.error(f"An error occured while creating PrometheusRules CRD: {e} ")
+
+            raise e

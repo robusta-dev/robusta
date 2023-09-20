@@ -5,9 +5,10 @@ from typing import List
 
 from robusta.core.model.env_vars import RRM_PERIOD_SEC
 from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
+from robusta.core.sinks.robusta.rrm.base_resource_manager import BaseResourceManager
 from robusta.core.sinks.robusta.rrm.prometheus_alert_resource_manager import \
     PrometheusAlertResourceManager
-from robusta.core.sinks.robusta.rrm.types import BaseResourceManager, ResourceKind
+from robusta.core.sinks.robusta.rrm.types import ResourceKind
 
 
 # robusta resource management
@@ -18,7 +19,7 @@ class RRM:
         self.__sleep = RRM_PERIOD_SEC
 
         self.__resource_managers: List[BaseResourceManager] = [
-            PrometheusAlertResourceManager(resource_kind=ResourceKind.PrometheusAlert, cluster=self.cluster)]
+            PrometheusAlertResourceManager(resource_kind=ResourceKind.PrometheusAlert, cluster=self.cluster, dal=dal)]
 
         self.__thread = threading.Thread(target=self.__thread_loop)
         self.__thread.start()
@@ -49,7 +50,7 @@ class RRM:
                     .get_account_resources(resource_kind=resource_kind,
                                            updated_at=res_man.get_last_updated_at())
 
-                res_man.make(account_resources)
+                res_man.prepare(account_resources)
 
             except Exception as e:
                 logging.error(f"Failed to get Account Resource. {e}", exc_info=True)

@@ -4,6 +4,25 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
+class AccountResourceStatusInfo(BaseModel):
+    error: Optional[str]
+
+
+class AccountResourceStatusType(str, Enum):
+    error = "error"
+    success = "success"
+
+
+class AccountResourceStatus(BaseModel):
+    account_id: str
+    cluster_id: str
+    status: Optional[AccountResourceStatusType]
+    info: Optional[AccountResourceStatusInfo]
+    synced_revision: Optional[datetime]
+    latest_revision: Optional[datetime]
+    updated_at: datetime
+
+
 class ResourceKind(str, Enum):
     PrometheusAlert = "PrometheusAlert"
 
@@ -78,27 +97,3 @@ class PrometheusAlertResourceState(ResourceState):
     def from_dict(data: dict, entity_id: str):
         rule = PrometheusAlertRule.from_supabase_dict(data.get("rule"), entity_id=entity_id)
         return PrometheusAlertResourceState(rule=rule)
-
-
-class BaseResourceManager:
-    def __init__(self, resource_kind: ResourceKind, cluster: str):
-        self.__last_updated_at = None
-        self._resource_kind = resource_kind
-        self.cluster = cluster
-
-    def init_resources(self, updated_at: Optional[datetime]):
-        pass
-
-    def get_resource_kind(self) -> ResourceKind:
-        return self._resource_kind
-
-    def set_last_updated_at(self, updated_at: Optional[datetime]):
-        self.__last_updated_at = updated_at
-
-    def get_last_updated_at(self) -> Optional[datetime]:
-        return self.__last_updated_at
-
-    def make(self, account_resources: List[AccountResource]):
-        """Initialize resources"""
-
-        pass

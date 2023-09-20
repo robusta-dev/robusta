@@ -20,6 +20,7 @@ class ActivityStats(BaseModel):
     alertManagerConnection: bool
     prometheusConnection: bool
     prometheusRetentionTime: str
+    managedPrometheusAlerts: bool
 
 
 class ClusterStatus(BaseModel):

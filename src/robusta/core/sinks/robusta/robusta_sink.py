@@ -10,7 +10,8 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 from robusta.core.discovery.discovery import Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
-from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC
+from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC, \
+    MANAGED_PROMETHEUS_ALERTS_ENABLED
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
@@ -420,7 +421,7 @@ class RobustaSink(SinkBase):
         for helm_release_key in curr_helm_releases.keys():
             current_helm_release = curr_helm_releases[helm_release_key]
             if (
-                self.__helm_releases_cache.get(helm_release_key) != current_helm_release
+                    self.__helm_releases_cache.get(helm_release_key) != current_helm_release
             ):  # helm_release not in the cache, or changed
                 helm_releases.append(current_helm_release)
                 self.__helm_releases_cache[helm_release_key] = current_helm_release
@@ -434,6 +435,7 @@ class RobustaSink(SinkBase):
             alertManagerConnection=prometheus_health_checker_status.alertmanager,
             prometheusConnection=prometheus_health_checker_status.prometheus,
             prometheusRetentionTime=prometheus_health_checker_status.prometheus_retention_time,
+            managedPrometheusAlerts=MANAGED_PROMETHEUS_ALERTS_ENABLED
         )
 
         # checking the status of relay connection

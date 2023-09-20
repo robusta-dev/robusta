@@ -21,7 +21,8 @@ from robusta.core.reporting.blocks import EventsBlock, EventsRef, ScanReportBloc
 from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
-from robusta.core.sinks.robusta.rrm.types import AccountResource, ResourceKind
+from robusta.core.sinks.robusta.rrm.types import AccountResource, ResourceKind, \
+    AccountResourceStatusType, AccountResourceStatusInfo
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -35,6 +36,7 @@ UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
 SCANS_RESULT_TABLE = "ScansResults"
 RESOURCE_EVENTS = "ResourceEvents"
 ACCOUNT_RESOURCE_TABLE = "AccountResource"
+ACCOUNT_RESOURCE_STATUS_TABLE = "AccountResourceStatus"
 ACCOUNTS_TABLE = "Accounts"
 
 
@@ -538,23 +540,35 @@ class SupabaseDal(AccountResourceFetcher):
 
         return account_resources
 
-    def get_account(self, account_id: str) -> Optional[Account]:
+    def __to_db_account_resource_status(self,
+                                        status_type: Optional[AccountResourceStatusType],
+                                        info: Optional[AccountResourceStatusInfo]) -> Dict[Any, Any]:
+
+        data = {
+            "account_id": self.account_id,
+            "cluster_id": self.cluster,
+            "status": status_type,
+            "info": info.dict() if info else None,
+            "updated_at": "now()",
+            "latest_revision": "now()"}
+
+        if status_type != AccountResourceStatusType.error:
+            data["synced_revision"] = "now()"
+
+        return data
+
+    def set_account_resource_status(
+            self, status_type: Optional[AccountResourceStatusType],
+            info: Optional[AccountResourceStatusInfo]
+    ):
         try:
-            res = (
-                self.client.table(ACCOUNTS_TABLE)
-                .select("*")
-                .filter("id", "eq", account_id)
-            ).execute()
+            data = self.__to_db_account_resource_status(status_type=status_type, info=info)
+
+            self.client.table(ACCOUNT_RESOURCE_STATUS_TABLE).upsert(data).execute()
         except Exception as e:
-            msg = f"Failed to get existing account (supabase) error: {e}"
-            logging.error(msg)
+            logging.error(f"Failed to persist resource events error: {e}")
             self.handle_supabase_error()
-            raise Exception(msg)
-
-        for data in res.data:
-            return Account(**data)
-
-        return None
+            raise
 
     def __rpc_patch(self, func_name: str, params: dict) -> Dict[str, Any]:
         """
