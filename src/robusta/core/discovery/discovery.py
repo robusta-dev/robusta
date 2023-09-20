@@ -511,12 +511,15 @@ def is_pod_ready(pod) -> bool:
     return False
 
 
-def should_report_pod(pod: Pod) -> bool:
-    if not pod.metadata.owner_references:
+def should_report_pod(pod: Union[Pod, V1Pod]) -> bool:
+    if isinstance(pod, V1Pod):
+        owner_references = pod.metadata.owner_references
+    else:
+        owner_references = pod.metadata.ownerReferences
+    if not owner_references:
         return not is_pod_finished(pod)
     elif DISCOVERY_POD_OWNED_PODS:
-        pod.metadata.owner_references and len(pod.metadata.owner_references)
-        non_pod_owners = [reference for reference in pod.metadata.owner_references if reference.type.lower() != "pod"]
+        non_pod_owners = [reference for reference in owner_references if reference.type.lower() != "pod"]
         # we report only if there are no owner references or they are pod owner refereces, and pod isnt finished
         return len(non_pod_owners) == 0 and not is_pod_finished(pod)
     return False
