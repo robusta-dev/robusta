@@ -38,6 +38,21 @@ class ResourceChartResourceType(Enum):
     Disk = auto()
 
 
+class OverrideGraph(BaseModel):
+    """
+    A class for overriding prometheus graphs
+    :var resource_type: one of: CPU, Memory, Disk (see ResourceChartResourceType)
+    :var item_type: one of: Pod, Node (see ResourceChartItemType)
+    :var query: the prometheusql query you want to run
+    :var values_format: Customize the y-axis labels with one of: Plain, Bytes, Percentage (see ChartValuesFormat)
+    """
+
+    resource_type: str
+    item_type: str
+    query: str
+    values_format: Optional[str]
+
+
 class ActionParams(DocumentedModel):
     """
     Base class for all Action parameter classes.
@@ -117,6 +132,7 @@ class PrometheusParams(ActionParams):
     prometheus_url_query_string: Optional[str] = None
     prometheus_additional_labels: Optional[Dict[str, str]] = None
     add_additional_labels: bool = True
+    prometheus_graphs_overrides: Optional[List[OverrideGraph]] = None
 
     @validator("prometheus_url", allow_reuse=True)
     def validate_protocol(cls, v):
