@@ -281,7 +281,7 @@ def __get_override_chart(prometheus_params: PrometheusParams, combination: Resou
     if len(combinations) == 0:
         return None
     if not combinations[0].values_format:
-        values_format = get_default_values_format(combinations[0])
+        values_format = get_default_values_format(combination)
     else:
         values_format = ChartValuesFormat[combinations[0].values_format]
 
