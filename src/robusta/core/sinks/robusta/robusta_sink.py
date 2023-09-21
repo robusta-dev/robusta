@@ -156,16 +156,6 @@ class RobustaSink(SinkBase):
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
         self.__pods_running_count = 0
 
-    def __is_caches_initiated(self) -> bool:
-        return (
-            len(self.__services_cache) > 0
-            and len(self.__nodes_cache) > 0
-            and len(self.__namespaces_cache) > 0
-            # since you can have a cluster with no jobs or helm the cache is initialized differently for them
-            and self.__jobs_cache is not None
-            and self.__helm_releases_cache is not None
-        )
-
     def stop(self):
         self.__active = False
 
@@ -180,14 +170,12 @@ class RobustaSink(SinkBase):
         operation: K8sOperationType,
     ):
         try:
-            if not self.__is_caches_initiated():
-                logging.debug(f"Ignoring service diff, caches not initialized. \n {operation} {new_resource}")
-                return
             if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)):
                 self.__publish_single_service(Discovery.create_service_info(new_resource), operation)
             elif isinstance(new_resource, Node):
                 self.__update_node(new_resource, operation)
-            elif isinstance(new_resource, Job):
+            # if the jobs cache isn't initalized you will have exceptions in __update_job
+            elif isinstance(new_resource, Job) and self.__jobs_cache is not None:
                 self.__update_job(new_resource, operation)
         except Exception:
             self.__reset_caches()
