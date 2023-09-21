@@ -381,8 +381,15 @@ platformPlaybooks:
     - on_deployment_all_changes: {}
     - on_daemonset_all_changes: {}
     - on_statefulset_all_changes: {}
+  actions:
+    - resource_babysitter: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
     - on_ingress_all_changes: {}
   actions:
+    - customise_finding:
+        title: Ingress Changes
     - resource_babysitter: {}
   sinks:
     - "robusta_ui_sink"
