@@ -391,7 +391,7 @@ platformPlaybooks:
     - resource_babysitter: {}
     - customise_finding:
         title: Ingress Changes
-        aggregation_key: ingress_changes
+        aggregation_key: IngressChange
   sinks:
     - "robusta_ui_sink"
 - triggers:
