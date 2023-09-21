@@ -154,6 +154,9 @@ class RobustaSink(SinkBase):
         self.__helm_releases_cache = None
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
 
+    def __is_caches_initiated(self) -> bool:
+        return len(self.__services_cache) > 0 and len(self.__nodes_cache) > 0 and len(self.__namespaces_cache) > 0
+
     def stop(self):
         self.__active = False
 
@@ -168,6 +171,9 @@ class RobustaSink(SinkBase):
         operation: K8sOperationType,
     ):
         try:
+            if not self.__is_caches_initiated():
+                logging.debug(f"Ignoring service diff, caches not initialized. \n {operation} {new_resource}")
+                return
             if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)):
                 self.__publish_single_service(Discovery.create_service_info(new_resource), operation)
             elif isinstance(new_resource, Node):
