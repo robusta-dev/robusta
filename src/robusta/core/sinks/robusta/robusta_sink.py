@@ -601,7 +601,7 @@ class RobustaSink(SinkBase):
                 self.__nodes_cache[name] = new_info
             elif operation == K8sOperationType.DELETE:
                 name = new_node.metadata.name
-                self.__services_cache.pop(name, None)
+                self.__nodes_cache.pop(name, None)
                 new_info.deleted = True
 
             self.dal.publish_nodes([new_info])
