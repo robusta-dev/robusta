@@ -302,7 +302,7 @@ class SupabaseDal:
 
     def is_job_healthy(self, job: JobInfo) -> bool:
         is_running = job.status.active > 0
-        is_completed = [condition for condition in job.conditions if condition.type == "Complete"]
+        is_completed = [condition for condition in job.status.conditions if condition.type == "Complete"]
         return is_running or len(is_completed) > 0
 
     def publish_jobs(self, jobs: List[JobInfo]):
