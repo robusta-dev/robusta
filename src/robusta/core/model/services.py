@@ -40,7 +40,6 @@ class ContainerInfo(BaseModel):
         ports = [p.container_port for p in container.ports] if container.ports else []
         return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources, ports=ports)
 
-
     @staticmethod
     def get_container_info_k8(container: Container) -> "ContainerInfo":
         env = (
@@ -92,7 +91,7 @@ class ServiceConfig(BaseModel):
         return (
             sorted(self.containers, key=lambda x: x.name) == sorted(other.containers, key=lambda x: x.name)
             and sorted(self.volumes, key=lambda x: x.name) == sorted(other.volumes, key=lambda x: x.name)
-            and self.labels != other.labels
+            and self.labels == other.labels
         )
 
 
@@ -116,13 +115,13 @@ class ServiceInfo(BaseModel):
             return NotImplemented
 
         return (
-            self.name == other.name and
-            self.service_type == other.service_type and
-            self.namespace == other.namespace and
-            self.classification == other.classification and
-            self.is_helm_release == other.is_helm_release and
-            self.deleted == other.deleted and
-            self.service_config == other.service_config and
-            self.ready_pods == other.ready_pods and
-            self.total_pods == other.total_pods
+            self.name == other.name
+            and self.service_type == other.service_type
+            and self.namespace == other.namespace
+            and self.classification == other.classification
+            and self.is_helm_release == other.is_helm_release
+            and self.deleted == other.deleted
+            and self.service_config == other.service_config
+            and self.ready_pods == other.ready_pods
+            and self.total_pods == other.total_pods
         )
