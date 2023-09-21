@@ -64,7 +64,7 @@ class DiscoveryResults(BaseModel):
         arbitrary_types_allowed = True
 
 
-DISCOVERY_STACKTRACE_FILE = "make_discovery_stacktrace"
+DISCOVERY_STACKTRACE_FILE = "/tmp/make_discovery_stacktrace"
 DISCOVERY_STACKTRACE_TIMEOUT_S = int(os.environ.get("DISCOVERY_STACKTRACE_TIMEOUT_S", 10))
 
 
