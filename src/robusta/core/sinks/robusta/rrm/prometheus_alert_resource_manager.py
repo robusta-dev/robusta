@@ -1,5 +1,6 @@
 import copy
 import logging
+import math
 import time
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
@@ -125,12 +126,16 @@ class PrometheusAlertResourceManager(BaseResourceManager):
             # we calculate the number of iterations required. This calculation is
             # based on dividing the total number of active rules by the maximum
             # rules permitted per CRD.
-            max_iterations = int((len(sorted_active_rules) / self.__max_allowed_rules_per_crd)) + 1
 
-            for next_iteration in range(1, max_iterations + 1):
-                start_index = (next_iteration - 1) * self.__max_allowed_rules_per_crd
-                end_index = next_iteration * self.__max_allowed_rules_per_crd
-                name = f"{self.__crd_name}--{next_iteration}"
+            if self.__max_allowed_rules_per_crd == 0:
+                max_iterations = 0
+            else:
+                max_iterations = math.ceil(len(sorted_active_rules) / self.__max_allowed_rules_per_crd)
+
+            for next_iteration in range(0, max_iterations):
+                start_index = next_iteration * self.__max_allowed_rules_per_crd
+                end_index = (next_iteration + 1) * self.__max_allowed_rules_per_crd
+                name = f"{self.__crd_name}--{(next_iteration + 1)}"
 
                 sliced_alerts = sorted_active_rules[start_index:end_index]
                 _, item_length = self.__create_crd_file(name=name, alerts=sliced_alerts)
