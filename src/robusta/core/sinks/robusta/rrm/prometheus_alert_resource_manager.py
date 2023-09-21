@@ -59,15 +59,8 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 items = crd_obj["items"]
                 for obj in items:
                     name = obj["metadata"]["name"]
+                    self.__delete_crd_file(name=name)
 
-                    self.__k8_api.delete_namespaced_custom_object(
-                        group=self.__group,
-                        version=self.__version,
-                        plural=self.__plural,
-                        namespace=self.__installation_namespace,
-                        name=name,
-                        grace_period_seconds=60
-                    )
             except Exception as e:
                 exception = e
                 logging.error(
@@ -142,6 +135,19 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 sliced_alerts = sorted_active_rules[start_index:end_index]
                 _, item_length = self.__create_crd_file(name=name, alerts=sliced_alerts)
                 synced_item_count += item_length
+
+            # When a user disables or deletes alerts from the sass platform, they may be
+            # removed from [active_alert_rules] and consequently from the cluster
+            # In certain edge cases, there's a possibility that these rules aren't entirely
+            # cleared from the cluster or cache.
+            # This typically happens when the [max_iterations] value is smaller than the size of the cached dictionary.
+            # As a result, the above loop might not cover all crd file buckets, leaving
+            # behind residual rules in both the cluster and cache.
+            # The loop below ensures these residues are effectively cleaned up.
+            cached_length = len(self.__crd_files_cache.keys())
+            for next_iteration in range(max_iterations + 1, cached_length + 1):
+                name = f"{self.__crd_name}--{next_iteration}"
+                self.__delete_crd_file(name=name)
 
             return synced_item_count
         except Exception as e:
@@ -256,5 +262,22 @@ class PrometheusAlertResourceManager(BaseResourceManager):
             # if there was an error in applying these alerts then reset the __crd_files_cache
             self.__crd_files_cache = {}
             logging.error(f"An error occured while creating PrometheusRules CRD: {e} ")
+
+            raise e
+
+    def __delete_crd_file(self, name: str):
+        try:
+            self.__k8_api.delete_namespaced_custom_object(
+                group=self.__group,
+                version=self.__version,
+                plural=self.__plural,
+                namespace=self.__installation_namespace,
+                name=name,
+                grace_period_seconds=60
+            )
+            self.__crd_files_cache.pop(name, None)
+
+        except Exception as e:
+            logging.error(f"An error occured while deleting the PrometheusRules CRD: {e} ")
 
             raise e
