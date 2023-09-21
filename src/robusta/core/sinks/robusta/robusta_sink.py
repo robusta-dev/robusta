@@ -155,7 +155,14 @@ class RobustaSink(SinkBase):
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
 
     def __is_caches_initiated(self) -> bool:
-        return len(self.__services_cache) > 0 and len(self.__nodes_cache) > 0 and len(self.__namespaces_cache) > 0
+        return (
+            len(self.__services_cache) > 0
+            and len(self.__nodes_cache) > 0
+            and len(self.__namespaces_cache) > 0
+            # since you can have a cluster with no jobs or helm the cache is initialized differently for them
+            and self.__jobs_cache is not None
+            and self.__helm_releases_cache is not None
+        )
 
     def stop(self):
         self.__active = False
