@@ -8,7 +8,7 @@ from typing import Dict, List, Optional, Union
 
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Job
-from robusta.core.discovery.discovery import Discovery, DiscoveryResults
+from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
 from robusta.core.model.env_vars import (
@@ -505,11 +505,17 @@ class RobustaSink(SinkBase):
             logging.error("Failed to check run history condition", exc_info=True)
             return False
 
+    def __signal_discovery_process_stackdump(self):
+        Discovery.create_stacktrace()
+        # the max time the thread takes to check for the stack trace + stacktrace max time est.
+        time.sleep(2 * DISCOVERY_STACKTRACE_TIMEOUT_S + 10)
+
     def __discovery_watchdog(self):
         logging.info("Cluster discovery watchdog initialized")
         while self.__active:
             if not self.is_healthy():
                 logging.warning(f"Unhealthy discovery, restarting runner")
+                self.__signal_discovery_process_stackdump()
                 StackTracer.dump()
                 # sys.exit and thread.interrupt_main doest stop robusta
                 os._exit(0)

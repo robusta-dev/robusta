@@ -1,4 +1,7 @@
 import logging
+import os
+import threading
+import time
 from collections import defaultdict
 from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, Optional, Union
@@ -39,6 +42,7 @@ from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
 from robusta.utils.cluster_provider_discovery import cluster_provider
+from robusta.utils.stack_tracer import StackTracer
 
 discovery_errors_count = prometheus_client.Counter("discovery_errors", "Number of discovery process failures.")
 discovery_process_time = prometheus_client.Summary(
@@ -60,8 +64,33 @@ class DiscoveryResults(BaseModel):
         arbitrary_types_allowed = True
 
 
+DISCOVERY_STACKTRACE_FILE = "/tmp/make_discovery_stacktrace"
+DISCOVERY_STACKTRACE_TIMEOUT_S = int(os.environ.get("DISCOVERY_STACKTRACE_TIMEOUT_S", 10))
+
+
 class Discovery:
     executor = ProcessPoolExecutor(max_workers=1)  # always 1 discovery process
+    stacktrace_thread_active = False
+
+    @staticmethod
+    def create_stacktrace():
+        try:
+            with open(DISCOVERY_STACKTRACE_FILE, "x"):
+                logging.info("Sending signal to discovery thread")
+        except Exception:
+            logging.error("error creating stack trace", exc_info=True)
+
+    @staticmethod
+    def stack_dump_on_signal():
+        try:
+            while Discovery.stacktrace_thread_active:
+                if os.path.exists(DISCOVERY_STACKTRACE_FILE):
+                    logging.info("discovery process stack trace")
+                    StackTracer.dump()
+                    return
+                time.sleep(DISCOVERY_STACKTRACE_TIMEOUT_S)
+        except Exception:
+            logging.error("error getting stack trace", exc_info=True)
 
     @staticmethod
     def __create_service_info(
@@ -106,6 +135,8 @@ class Discovery:
 
     @staticmethod
     def discovery_process() -> DiscoveryResults:
+        Discovery.stacktrace_thread_active = True
+        threading.Thread(target=Discovery.stack_dump_on_signal).start()
         pods_metadata: List[V1ObjectMeta] = []
         node_requests = defaultdict(list)  # map between node name, to request of pods running on it
         active_services: List[ServiceInfo] = []
@@ -355,7 +386,7 @@ class Discovery:
                 exc_info=True,
             )
             raise e
-
+        Discovery.stacktrace_thread_active = False
         return DiscoveryResults(
             services=active_services,
             nodes=current_nodes,
