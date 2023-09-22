@@ -7,10 +7,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import humanize
 import pygal
 from hikaru.model.rel_1_26 import Node
+from prometrix import PrometheusQueryResult, PrometheusSeries
 from pydantic import BaseModel
 
-from robusta.core.external_apis.prometheus.models import PrometheusSeries
-from robusta.core.external_apis.prometheus.prometheus_cli import PrometheusQueryResult, custom_query_range
 from robusta.core.model.base_params import (
     ChartValuesFormat,
     PrometheusParams,
@@ -23,6 +22,7 @@ from robusta.core.reporting.custom_rendering import charts_style
 
 ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
 ChartLabelFactory = Callable[[int], str]
+ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
 
 
 class XAxisLine(BaseModel):
@@ -36,6 +36,30 @@ def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_templat
     template = Template(promql_query_template)
     promql_query = template.safe_substitute(labels)
     return promql_query
+
+
+from datetime import datetime
+from typing import Any, Dict, Optional
+
+from robusta.integrations.prometheus.utils import get_prometheus_connect
+
+
+def custom_query_range(
+    prometheus_params: PrometheusParams,
+    query: str,
+    start_time: datetime,
+    end_time: datetime,
+    step: str,
+    params: Optional[Dict[str, Any]] = None,
+) -> PrometheusQueryResult:
+    """
+    This function wraps prometheus custom_query_range
+    """
+    prom = get_prometheus_connect(prometheus_params)
+    params = params or {}
+    prom.check_prometheus_connection(params)
+    result = prom.custom_query_range(query=query, start_time=start_time, end_time=end_time, step=step, params=params)
+    return PrometheusQueryResult(data=result)
 
 
 def get_node_internal_ip(node: Node) -> str:
@@ -137,37 +161,15 @@ def create_chart_from_prometheus_query(
         raise Exception(
             f"Unsupported query result for robusta chart, Type received: {prometheus_query_result.result_type}, type supported 'matrix'"
         )
-    chart = pygal.XY(
-        show_dots=True,
-        style=charts_style(),
-        truncate_legend=15,
-        include_x_axis=include_x_axis,
-        width=1280,
-        height=720,
-    )
 
-    chart.x_label_rotation = 35
-    chart.truncate_label = -1
-    chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%I:%M:%S %p on %d, %b")
-
-    value_formatters = {
-        ChartValuesFormat.Plain: lambda val: str(val),
-        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
-        ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
-        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
-    }
-    chart_values_format = values_format if values_format else ChartValuesFormat.Plain
-    chart.value_formatter = value_formatters[chart_values_format]
-
-    if chart_title:
-        chart.title = chart_title
-    else:
-        chart.title = promql_query
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
     # TODO: change min_time time before  Jan 19 3001
     min_time = 32536799999
     max_time = 0
 
+    # We use the [graph_plot_color_list] to map colors corresponding to matching line labels on [plot_list].
+    plot_list: List[Tuple[str, List[Tuple]]] = []
+    graph_plot_color_list: List[str] = []
     series_list_result = prometheus_query_result.series_list_result
     if filter_prom_jobs:
         series_list_result = filter_prom_jobs_results(series_list_result)
@@ -186,12 +188,59 @@ def create_chart_from_prometheus_query(
             values.append((timestamp, value))
         min_time = min(min_time, min(series.timestamps))
         max_time = max(max_time, max(series.timestamps))
-        chart.add(label, values)
+
+        plot_list.append((label, values))
+        graph_plot_color_list.append("#9747FF")
 
     assert lines is not None
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
-        chart.add(line.label, value)
+
+        if line.label == "Memory Limit" \
+                or line.label == "CPU Limit":
+            plot_list.append((line.label, value))
+            graph_plot_color_list.append("#FF5959")
+
+        elif line.label == "Memory Request" \
+                or line.label == "CPU Request":
+            plot_list.append((line.label, value))
+            graph_plot_color_list.append("#0DC291")
+
+        else:
+            plot_list.append((line.label, value))
+            graph_plot_color_list.append("#2a0065")
+
+    graph_plot_color_list.extend(["#1e0047", "#2a0065"])
+    chart = pygal.XY(
+        show_dots=True,
+        style=charts_style(graph_colors=tuple(graph_plot_color_list)),
+        truncate_legend=15,
+        include_x_axis=include_x_axis,
+        width=1280,
+        height=720,
+    )
+
+    chart.x_label_rotation = 35
+    chart.truncate_label = -1
+    chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M")
+
+    value_formatters = {
+        ChartValuesFormat.Plain: lambda val: str(val),
+        ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
+        ChartValuesFormat.Percentage: lambda val: f"{(100 * val):.1f}%",
+        ChartValuesFormat.CPUUsage: lambda val: f"{(1000 * val):.1f}m",
+    }
+    chart_values_format = values_format if values_format else ChartValuesFormat.Plain
+    chart.value_formatter = value_formatters[chart_values_format]
+
+    if chart_title:
+        chart.title = chart_title
+    else:
+        chart.title = promql_query
+
+    for plot in plot_list:
+        chart.add(plot[0], plot[1])
+
     return chart
 
 
@@ -234,6 +283,36 @@ def create_graph_enrichment(
     return FileBlock(svg_name, chart.render())
 
 
+def get_default_values_format(combination: ResourceKey) -> ChartValuesFormat:
+    if combination[1] == ResourceChartItemType.Node:
+        return ChartValuesFormat.Percentage
+    elif combination[0] == ResourceChartResourceType.CPU:
+        return ChartValuesFormat.CPUUsage
+    elif combination[0] == ResourceChartResourceType.Memory:
+        return ChartValuesFormat.Bytes
+    return ChartValuesFormat.Plain
+
+
+def __get_override_chart(prometheus_params: PrometheusParams, combination: ResourceKey) -> Optional[ChartOptions]:
+    if not prometheus_params.prometheus_graphs_overrides:
+        return
+    combinations = [
+        override
+        for override in prometheus_params.prometheus_graphs_overrides
+        if ResourceChartResourceType[override.resource_type] == combination[0]
+        and ResourceChartItemType[override.item_type] == combination[1]
+    ]
+
+    if len(combinations) == 0:
+        return None
+    if not combinations[0].values_format:
+        values_format = get_default_values_format(combination)
+    else:
+        values_format = ChartValuesFormat[combinations[0].values_format]
+
+    return ChartOptions(query=combinations[0].query, values_format=values_format)
+
+
 def create_resource_enrichment(
     starts_at: datetime,
     labels: Dict[Any, Any],
@@ -244,7 +323,6 @@ def create_resource_enrichment(
     lines: Optional[List[XAxisLine]] = [],
     title_override: Optional[str] = None,
 ) -> FileBlock:
-    ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
     combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
             query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod"}[5m])) by (pod, job)',
@@ -277,7 +355,12 @@ def create_resource_enrichment(
         ),
     }
     combination = (resource_type, item_type)
-    chosen_combination = combinations[combination]
+
+    # trying to use override combination
+    chosen_combination = __get_override_chart(prometheus_params, combination)
+    if not chosen_combination:
+        chosen_combination = combinations[combination]
+
     if not chosen_combination:
         raise AttributeError(f"The following combination for resource chart is not supported: {combination}")
     values_format_text = "Utilization" if chosen_combination.values_format == ChartValuesFormat.Percentage else "Usage"

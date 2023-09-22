@@ -3,7 +3,6 @@ from typing import List
 
 from hikaru.model.rel_1_26 import Pod, PodList
 from robusta.api import (
-    ActionParams,
     BaseBlock,
     FileBlock,
     Finding,
@@ -14,6 +13,7 @@ from robusta.api import (
     MarkdownBlock,
     NodeChangeEvent,
     NodeEvent,
+    PodRunningParams,
     ResourceGraphEnricherParams,
     RobustaPod,
     TableBlock,
@@ -140,7 +140,7 @@ def node_status_enricher(event: NodeEvent):
 
 
 @action
-def node_dmesg_enricher(event: NodeEvent):
+def node_dmesg_enricher(event: NodeEvent, params: PodRunningParams):
     """
     Gets the dmesg from a node
     """
@@ -148,7 +148,9 @@ def node_dmesg_enricher(event: NodeEvent):
     if not node:
         logging.error(f"node_dmesg_enricher was called on event without node : {event}")
         return
-    exec_result = RobustaPod.exec_on_node(pod_name="dmesg_pod", node_name=node.metadata.name, cmd="dmesg")
+    exec_result = RobustaPod.exec_on_node(
+        pod_name="dmesg_pod", node_name=node.metadata.name, cmd="dmesg", custom_annotations=params.custom_annotations
+    )
     if exec_result:
         event.add_enrichment(
             [FileBlock(f"dmesg.log", exec_result.encode())],

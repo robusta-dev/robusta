@@ -69,6 +69,12 @@ class PodContainer:
         return requests.memory, limits.memory
 
     @staticmethod
+    def get_cpu_resources(container: Container) -> (int, int):
+        requests = PodContainer.get_resources(container, ResourceAttributes.requests)
+        limits = PodContainer.get_resources(container, ResourceAttributes.limits)
+        return requests.cpu, limits.cpu
+
+    @staticmethod
     def get_requests(container: Container) -> ContainerResources:
         return PodContainer.get_resources(container, ResourceAttributes.requests)
 

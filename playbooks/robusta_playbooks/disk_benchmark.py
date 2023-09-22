@@ -14,17 +14,17 @@ from hikaru.model.rel_1_26 import (
 )
 from robusta.api import (
     INSTALLATION_NAMESPACE,
-    ActionParams,
     ExecutionBaseEvent,
     Finding,
     FindingType,
     MarkdownBlock,
+    PodRunningParams,
     RobustaJob,
     action,
 )
 
 
-class DiskBenchmarkParams(ActionParams):
+class DiskBenchmarkParams(PodRunningParams):
     """
     :var pvc_name: Name of the pvc created for the benchmark.
     :var test_seconds: The benchmark duration.
@@ -94,7 +94,9 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
         )
 
         json_output = json.loads(
-            RobustaJob.run_simple_job_spec(spec, name, 120 + action_params.test_seconds).replace("'", '"')
+            RobustaJob.run_simple_job_spec(
+                spec, name, 120 + action_params.test_seconds, custom_annotations=action_params.custom_annotations
+            ).replace("'", '"'),
         )
         job = json_output["jobs"][0]
 

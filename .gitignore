@@ -15,7 +15,6 @@ staging.environment.env
 *.env
 .run
 dist/**/*
-generated_values.yaml
 generated_values*.yaml
 .isort.cfg
 skaffold.dev.yaml

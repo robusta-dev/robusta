@@ -1,14 +1,21 @@
 import base64
 import json
 import logging
+import os
 import threading
 import time
-from typing import Dict, List, Optional
-
+from typing import Dict, List, Optional, Union
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
-
-from robusta.core.discovery.discovery import Discovery, DiscoveryResults
+from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Job
+from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
+from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
+from robusta.core.model.env_vars import (
+    CLUSTER_STATUS_PERIOD_SEC,
+    DISCOVERY_CHECK_THRESHOLD_SEC,
+    DISCOVERY_PERIOD_SEC,
+    DISCOVERY_WATCHDOG_CHECK_SEC,
+)
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC, \
     MANAGED_PROMETHEUS_ALERTS_ENABLED
@@ -16,7 +23,7 @@ from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.model.namespaces import NamespaceInfo
-from robusta.core.model.nodes import NodeInfo
+from robusta.core.model.nodes import NodeInfo, NodeSystemInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
@@ -27,6 +34,7 @@ from robusta.core.sinks.robusta.rrm.rrm import RRM
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
+from robusta.utils.stack_tracer import StackTracer
 
 
 class RobustaSink(SinkBase):
@@ -71,6 +79,7 @@ class RobustaSink(SinkBase):
             discovery_period_sec=self.__discovery_period_sec, global_config=global_config
         )
         self.__rrm_checker = RRM(dal=self.dal, cluster=self.cluster_name, account_id=self.account_id)
+        self.__pods_running_count: int = 0
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
         # start cluster discovery
@@ -84,7 +93,9 @@ class RobustaSink(SinkBase):
         self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
         self.__thread = threading.Thread(target=self.__discover_cluster)
+        self.__watchdog_thread = threading.Thread(target=self.__discovery_watchdog)
         self.__thread.start()
+        self.__watchdog_thread.start()
 
     def __init_service_resolver(self):
         """
@@ -149,6 +160,7 @@ class RobustaSink(SinkBase):
         self.__jobs_cache = None
         self.__helm_releases_cache = None
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
+        self.__pods_running_count = 0
 
     def stop(self):
         self.__active = False
@@ -158,8 +170,25 @@ class RobustaSink(SinkBase):
             return True
         return time.time() - self.last_send_time < DISCOVERY_CHECK_THRESHOLD_SEC
 
-    def handle_service_diff(self, new_service: ServiceInfo, operation: K8sOperationType):
-        self.__publish_single_service(new_service, operation)
+    def handle_service_diff(
+        self,
+        new_resource: Union[Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Node],
+        operation: K8sOperationType,
+    ):
+        try:
+            if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)):
+                self.__publish_single_service(Discovery.create_service_info(new_resource), operation)
+            elif isinstance(new_resource, Node):
+                self.__update_node(new_resource, operation)
+            # if the jobs cache isn't initalized you will have exceptions in __update_job
+            elif isinstance(new_resource, Job) and self.__jobs_cache is not None:
+                self.__update_job(new_resource, operation)
+        except Exception:
+            self.__reset_caches()
+            logging.error(
+                f"Failed to handle_service_diff for resource {new_resource.metadata.name}",
+                exc_info=True,
+            )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         self.dal.persist_finding(finding)
@@ -171,7 +200,7 @@ class RobustaSink(SinkBase):
                 cached_service = self.__services_cache.get(service_key, None)
 
                 # prevent service updates if the resource version in the cache is lower than the new service
-                if cached_service and cached_service.resource_version >= new_service.resource_version:
+                if cached_service and cached_service.resource_version > new_service.resource_version:
                     return
 
                 if operation == K8sOperationType.CREATE or operation == K8sOperationType.UPDATE:
@@ -213,7 +242,7 @@ class RobustaSink(SinkBase):
                 cached_service = self.__services_cache.get(service_key)
 
                 # prevent service updates if the resource version in the cache is lower than the new service
-                if cached_service and cached_service.resource_version >= current_service.resource_version:
+                if cached_service and cached_service.resource_version > current_service.resource_version:
                     continue
 
                 # service not in the cache, or changed
@@ -276,6 +305,7 @@ class RobustaSink(SinkBase):
             self.__assert_namespaces_cache_initialized()
             self.__publish_new_namespaces(results.namespaces)
 
+            self.__pods_running_count = results.pods_running_count
             # save the cached services for the resolver.
             RobustaSink.__save_resolver_resources(
                 list(self.__services_cache.values()), list(self.__jobs_cache.values())
@@ -308,15 +338,17 @@ class RobustaSink(SinkBase):
         )
 
     @classmethod
-    def __to_node_info(cls, node: V1Node) -> Dict:
-        node_info = node.status.node_info.to_dict() if node.status.node_info else {}
+    def __to_node_info(cls, node: Union[V1Node, Node]) -> Dict:
+        info = getattr(node.status, "node_info", None) or getattr(node.status, "nodeInfo", None)
+        node_info = {}
+        node_info["system"] = NodeSystemInfo(**info.to_dict()).dict() if info else {}
         node_info["labels"] = node.metadata.labels or {}
         node_info["annotations"] = node.metadata.annotations or {}
         node_info["addresses"] = [addr.address for addr in node.status.addresses] if node.status.addresses else []
         return node_info
 
     @classmethod
-    def __from_api_server_node(cls, api_server_node: V1Node, pod_requests_list: List[PodResources]) -> NodeInfo:
+    def __from_api_server_node(cls, api_server_node: Union[V1Node, Node], pod_requests_list: List[PodResources]) -> NodeInfo:
         addresses = api_server_node.status.addresses or []
         external_addresses = [address for address in addresses if "externalip" in address.type.lower()]
         external_ip = ",".join([addr.address for addr in external_addresses])
@@ -326,9 +358,12 @@ class RobustaSink(SinkBase):
         taints = ",".join([cls.__to_taint_str(taint) for taint in node_taints])
         capacity = api_server_node.status.capacity or {}
         allocatable = api_server_node.status.allocatable or {}
+        # V1Node and Node use snake case and camelCase respectively, handle this for more than 1 word attributes.
+        creation_ts = getattr(api_server_node.metadata, "creation_timestamp", None) or getattr(api_server_node.metadata, "creationTimestamp", None)
+        version = getattr(api_server_node.metadata, "resource_version", None) or getattr(api_server_node.metadata, "resourceVersion", None)
         return NodeInfo(
             name=api_server_node.metadata.name,
-            node_creation_time=str(api_server_node.metadata.creation_timestamp),
+            node_creation_time=str(creation_ts),
             internal_ip=internal_ip,
             external_ip=external_ip,
             taints=taints,
@@ -342,6 +377,7 @@ class RobustaSink(SinkBase):
             pods_count=len(pod_requests_list),
             pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
             node_info=cls.__to_node_info(api_server_node),
+            resource_version=int(version) if version else 0
         )
 
     def __publish_new_nodes(self, current_nodes: V1NodeList, node_requests: Dict[str, List[PodResources]]):
@@ -429,6 +465,7 @@ class RobustaSink(SinkBase):
         self.dal.publish_helm_releases(helm_releases)
 
     def __update_cluster_status(self):
+        self.last_send_time = time.time()
         prometheus_health_checker_status = self.__prometheus_health_checker.get_status()
         activity_stats = ActivityStats(
             relayConnection=False,
@@ -458,7 +495,7 @@ class RobustaSink(SinkBase):
             )
 
             self.dal.publish_cluster_status(cluster_status)
-            self.dal.publish_cluster_nodes(cluster_stats.nodes)
+            self.dal.publish_cluster_nodes(cluster_stats.nodes, self.__pods_running_count)
         except Exception:
             logging.exception(
                 f"Failed to run periodic update cluster status for {self.sink_name}",
@@ -474,6 +511,24 @@ class RobustaSink(SinkBase):
         except Exception:
             logging.error("Failed to check run history condition", exc_info=True)
             return False
+
+    def __signal_discovery_process_stackdump(self):
+        Discovery.create_stacktrace()
+        # the max time the thread takes to check for the stack trace + stacktrace max time est.
+        time.sleep(2 * DISCOVERY_STACKTRACE_TIMEOUT_S + 10)
+
+    def __discovery_watchdog(self):
+        logging.info("Cluster discovery watchdog initialized")
+        while self.__active:
+            if not self.is_healthy():
+                logging.warning(f"Unhealthy discovery, restarting runner")
+                self.__signal_discovery_process_stackdump()
+                StackTracer.dump()
+                # sys.exit and thread.interrupt_main doest stop robusta
+                os._exit(0)
+                return
+            time.sleep(DISCOVERY_WATCHDOG_CHECK_SEC)
+        logging.warning("Watchdog finished")
 
     def __discover_cluster(self):
         logging.info("Cluster discovery initialized")
@@ -504,7 +559,6 @@ class RobustaSink(SinkBase):
             self.first_prometheus_alert_time = time.time()
 
         if time.time() - self.last_send_time > CLUSTER_STATUS_PERIOD_SEC or first_alert:
-            self.last_send_time = time.time()
             self.__update_cluster_status()
 
     def __publish_new_namespaces(self, namespaces: List[NamespaceInfo]):
@@ -532,3 +586,63 @@ class RobustaSink(SinkBase):
 
     def get_global_config(self) -> dict:
         return self.registry.get_global_config()
+
+    def __update_node(self, new_node: Node, operation: K8sOperationType):
+        with self.services_publish_lock:
+            new_info = self.__from_api_server_node(new_node, [])
+            if operation == K8sOperationType.CREATE:
+                name = new_node.metadata.name
+                self.__nodes_cache[name] = new_info
+            elif operation == K8sOperationType.UPDATE:
+                name = new_node.metadata.name
+                cache = self.__nodes_cache.get(name, None)
+                if cache is None:
+                    return
+
+                if cache.resource_version > int(new_node.metadata.resourceVersion or 0):
+                    return
+
+                new_info.memory_allocated = cache.memory_allocated
+                new_info.cpu_allocated = cache.cpu_allocated
+                new_info.pods_count = cache.pods_count
+                new_info.pods = cache.pods
+                if new_info == cache:
+                    return
+
+                self.__nodes_cache[name] = new_info
+            elif operation == K8sOperationType.DELETE:
+                name = new_node.metadata.name
+                self.__nodes_cache.pop(name, None)
+                new_info.deleted = True
+
+            self.dal.publish_nodes([new_info])
+            self.__discovery_metrics.on_nodes_updated(1)
+
+    def __update_job(self, new_job: Job, operation: K8sOperationType):
+
+        new_info = JobInfo.from_api_server(new_job, [])
+        job_key = new_info.get_service_key()
+        with self.services_publish_lock:
+            if operation == K8sOperationType.UPDATE:
+                old_info = self.__jobs_cache.get(job_key, None)
+                if old_info is None:  # Update may occur after delete.
+                    return
+
+                new_info.job_data = old_info.job_data
+                if new_info == old_info:
+                    return
+
+                self.__jobs_cache[job_key] = new_info
+                self.dal.publish_jobs([new_info])
+                self.__discovery_metrics.on_jobs_updated(1)
+                return
+
+            if operation == K8sOperationType.CREATE:
+                self.__jobs_cache[job_key] = new_info
+                self.dal.publish_jobs([new_info])
+                self.__discovery_metrics.on_jobs_updated(1)
+                return
+            if operation == K8sOperationType.DELETE:
+                self.__safe_delete_job(job_key)
+                self.__discovery_metrics.on_jobs_updated(1)
+                return

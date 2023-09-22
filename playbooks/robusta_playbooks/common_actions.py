@@ -31,6 +31,7 @@ class FindingOverrides(ActionParams):
     title: Optional[str] = None
     description: Optional[str] = None
     severity: Optional[str] = None
+    aggregation_key: Optional[str] = None
 
 
 @action
@@ -50,7 +51,9 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
     title = Template(params.title).safe_substitute(labels) if params.title else None
     description = Template(params.description).safe_substitute(labels) if params.description else None
 
-    event.override_finding_attributes(title, description, severity)
+    aggregation_key = Template(params.aggregation_key).safe_substitute(labels) if params.aggregation_key else None
+
+    event.override_finding_attributes(title, description, severity, aggregation_key)
 
 
 class FindingFields(ActionParams):

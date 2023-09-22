@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import hikaru
 import kubernetes.client.exceptions
@@ -47,7 +47,7 @@ class RelatedContainer(BaseModel):
     restarts: int
     status: Optional[str] = None
     created: Optional[str] = None
-    ports: List[int] = []
+    ports: List[Any] = []
 
 
 class RelatedPod(BaseModel):
@@ -157,7 +157,7 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
                 restarts=getattr(containerStatus, "restartCount", 0),
                 status=stateStr,
                 created=getattr(state, "startedAt", None),
-                ports=[p.containerPort for p in container.ports] if container.ports else [],
+                ports=[port.to_dict() for port in container.ports] if container.ports else [],
             )
         )
 

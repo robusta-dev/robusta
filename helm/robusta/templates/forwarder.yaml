@@ -12,14 +12,19 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/kubewatch-configmap.yaml") . | sha256sum }}
+        {{- if .Values.kubewatch.annotations }} {{ toYaml .Values.kubewatch.annotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.globalConfig.custom_annotations }} {{ toYaml .Values.globalConfig.custom_annotations | nindent 8 }}
+        {{- end }}
       labels:
         app: {{ .Release.Name }}-forwarder
-      {{- if .Values.kubewatch.annotations }}
-      annotations: {{ toYaml .Values.kubewatch.annotations | nindent 8 }}
-      {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-forwarder-service-account
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      {{- if .Values.kubewatch.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.kubewatch.imagePullSecrets | nindent 6 }}
+      {{- end }}
       containers:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
