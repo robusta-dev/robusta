@@ -75,7 +75,7 @@ new Crawler({
             aggregateContent: true,
             recordVersion: "v3",
           })
-          .map((record) => JSON.parse(JSON.stringify(record).replace("¶", "")));
+          .map((record) => JSON.parse(JSON.stringify(record).replaceAll("¶", "")));
       },
     },
   ],
