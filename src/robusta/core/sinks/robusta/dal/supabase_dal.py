@@ -61,6 +61,8 @@ class SupabaseDal:
         self.sink_params = sink_params
         self.signing_key = signing_key
 
+        self.set_cluster_active(True)
+
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
         db_sr = scanResult.dict()
         db_sr["account_id"] = self.account_id
@@ -527,3 +529,16 @@ class SupabaseDal:
         logging.debug(f"Event {event}, Session {session}")
         if session and event == "TOKEN_REFRESHED":
             self.client.postgrest.auth(session.access_token)
+
+    def set_cluster_active(self, active: bool) -> None:
+        try:
+            (
+                self.client.table(CLUSTERS_STATUS_TABLE)
+                .update({"active": active})
+                .eq("cluster_id", self.cluster)
+                .eq("account_id", self.account_id)
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to set cluster status active=False error: {e}")
+            self.handle_supabase_error()

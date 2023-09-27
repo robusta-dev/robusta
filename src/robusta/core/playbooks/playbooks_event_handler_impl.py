@@ -17,6 +17,7 @@ from robusta.core.playbooks.trigger import Trigger
 from robusta.core.reporting import MarkdownBlock
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.consts import SYNC_RESPONSE_SINK
+from robusta.core.sinks.robusta import RobustaSink
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.config import Registry
@@ -336,6 +337,11 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def handle_sigint(self, sig, frame):
         logging.info("SIGINT handler called")
+
         if not self.is_healthy():  # dump stuck trace only when the runner is unhealthy
             StackTracer.dump()
+
+        for sink in self.registry.get_sinks().get_sinks_by_type(RobustaSink):
+            sink.dal.set_cluster_active(False)
+
         sys.exit(0)

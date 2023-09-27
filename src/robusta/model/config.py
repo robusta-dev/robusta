@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional, Type, TypeVar
 
 from robusta.core.model.env_vars import PROMETHEUS_ENABLED, RUNNER_VERSION
 from robusta.core.playbooks.actions_registry import ActionsRegistry
@@ -17,6 +17,8 @@ from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.runner.telemetry import Telemetry
 from robusta.utils.function_hashes import get_function_hash
 
+_SINK_TYPE = TypeVar("_SINK_TYPE", bound=SinkBase)
+
 
 class SinksRegistry:
     def __init__(self, sinks: Dict[str, SinkBase]):
@@ -30,6 +32,9 @@ class SinksRegistry:
     def get_sink_by_name(self, sink_name: str) -> Optional[SinkBase]:
         return self.sinks.get(sink_name)
 
+    def get_sinks_by_type(self, SinkType: Type[_SINK_TYPE]) -> Iterable[_SINK_TYPE]:
+        return (sink for sink in self.sinks.values() if isinstance(sink.params, SinkType))
+
     def get_all(self) -> Dict[str, SinkBase]:
         return self.sinks
 
@@ -40,7 +45,6 @@ class SinksRegistry:
         existing_sinks: Dict[str, SinkBase],
         registry,
     ) -> Dict[str, SinkBase]:
-
         new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
         # remove deleted sinks
         deleted_sink_names = [sink_name for sink_name in existing_sinks.keys() if sink_name not in new_sink_names]
