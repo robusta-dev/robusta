@@ -392,6 +392,12 @@ builtinPlaybooks:
 
 - triggers:
   - on_prometheus_alert:
+      alert_name: KubeVersionMismatch
+  actions:
+  - version_mismatch_enricher: {}
+
+- triggers:
+  - on_prometheus_alert:
       status: "all"
   actions:
   - default_enricher: {}
