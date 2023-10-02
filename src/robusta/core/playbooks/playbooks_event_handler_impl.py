@@ -336,6 +336,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         return all(sink.is_healthy() for sink in sinks_registry.get_all().values())
 
     def set_cluster_active(self, active: bool):
+        logging.info(f"Setting cluster active to {active}")
         for sink in self.registry.get_sinks().get_all().values():
             sink.set_cluster_active(active)
 
