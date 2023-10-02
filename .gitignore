@@ -19,3 +19,4 @@ generated_values*.yaml
 .isort.cfg
 skaffold.dev.yaml
 tests/last_used_tag.txt
+pytest.ini
