@@ -335,13 +335,15 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
             return True
         return all(sink.is_healthy() for sink in sinks_registry.get_all().values())
 
+    def set_cluster_active(self, active: bool):
+        for sink in self.registry.get_sinks().get_all().values():
+            sink.set_cluster_active(active)
+
     def handle_sigint(self, sig, frame):
         logging.info("SIGINT handler called")
 
         if not self.is_healthy():  # dump stuck trace only when the runner is unhealthy
             StackTracer.dump()
 
-        for sink in self.registry.get_sinks().get_sinks_by_type(RobustaSink):
-            sink.dal.set_cluster_active(False)
-
+        self.set_cluster_active(False)
         sys.exit(0)

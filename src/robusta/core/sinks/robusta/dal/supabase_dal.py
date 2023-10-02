@@ -61,8 +61,6 @@ class SupabaseDal:
         self.sink_params = sink_params
         self.signing_key = signing_key
 
-        self.set_cluster_active(True)
-
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
         db_sr = scanResult.dict()
         db_sr["account_id"] = self.account_id

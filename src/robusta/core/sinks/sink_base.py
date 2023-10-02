@@ -42,3 +42,6 @@ class SinkBase:
 
     def handle_service_diff(self, new_obj: Any, operation: K8sOperationType):
         pass
+
+    def set_cluster_active(self, active: bool):
+        pass
