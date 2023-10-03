@@ -32,6 +32,7 @@ Define your own alerts. Customize the data shown in alert notifications.
    playbook-job-failure
    playbook-failed-liveness
    playbook-track-changes
+   playbook-track-deployment-image-changes
    alert-custom-prometheus
    alert-custom-enrichment
 
