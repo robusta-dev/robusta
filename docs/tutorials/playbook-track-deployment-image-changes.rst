@@ -1,6 +1,6 @@
 .. TODO: add a tutorial for tracking ingresses
 
-Get notified when deployment image changes
+Track Deployment Image Changes
 #############################################
 
 We all don't want a surprise breakdown of our servers caused by a problematic image. Tracking the change of an image helps you verify successful application updates, debug issues and prevent unauthorized changes.
