@@ -346,5 +346,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         if not self.is_healthy():  # dump stuck trace only when the runner is unhealthy
             StackTracer.dump()
 
+        receiver = self.registry.get_receiver()
+        if receiver is not None:
+            receiver.stop()
+
         self.set_cluster_active(False)
         sys.exit(0)
