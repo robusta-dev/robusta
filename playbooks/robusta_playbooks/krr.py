@@ -45,6 +45,7 @@ class KRRObject(BaseModel):
     namespace: str
     kind: str
     allocations: Dict[str, Dict[str, Optional[float]]]
+    warnings: List[str] = []
 
 
 class KRRRecommendedInfo(BaseModel):
@@ -387,6 +388,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                         "metric": scan.metrics.get(resource).dict() if scan.metrics.get(resource) else {},
                         "description": krr_scan.description,
                         "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
+                        "warnings": scan.object.warnings,
                     }
                     for resource in krr_scan.resources
                 ],
