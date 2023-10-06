@@ -70,7 +70,7 @@ def oomkilled_container_graph_enricher(event: PodEvent, params: OOMGraphEnricher
         return
     if params.delay_graph_s > 0:
         time.sleep(params.delay_graph_s)
-    container_graph = create_container_graph(params, pod, oomkilled_container.container, show_limit=True)
+    container_graph = create_container_graph(params, pod, oomkilled_container, show_limit=True)
     event.add_enrichment([container_graph])
 
 
