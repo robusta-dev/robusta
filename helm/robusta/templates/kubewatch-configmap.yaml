@@ -8,4 +8,8 @@ data:
     handler:
       cloudevent:
         url: "http://{{ .Release.Name }}-runner:80/api/handle"
+{{- if .Values.kubewatch.config.resource }}
+{{ toYaml .Values.kubewatch.config | indent 4 }}
+{{ else }}
 {{ .Files.Get "kubewatch.yaml" | indent 4}}
+{{- end }}
