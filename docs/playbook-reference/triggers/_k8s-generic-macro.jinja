@@ -26,7 +26,7 @@
             .. code-block:: yaml
 
                 customPlaybooks:
-                  triggers:
+                - triggers:
                   - {{ trigger_name }}: {}
                   actions:
                   - create_finding: # (1)
@@ -41,7 +41,7 @@
             .. code-block:: yaml
 
                 customPlaybooks:
-                  triggers:
+                - triggers:
                   - {{ trigger_name }}:
                       name_prefix: "my-resource" # (2)
                       namespace_prefix: "kube-system" # (3)
