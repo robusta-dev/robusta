@@ -1,6 +1,6 @@
 .. TODO: add a tutorial for tracking ingresses
 
-Track Kubernetes Changes
+Track Deployment Replica Changes
 ############################################
 
 Let's track changes to Kubernetes objects using Robusta. Notifications will be sent to a :ref:`Sinks <Sinks Reference>`, like Slack or MSTeams.
