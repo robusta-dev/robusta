@@ -3,22 +3,22 @@
 Track Kubernetes Changes
 ############################################
 
-Change tracking is useful in organizations where multiple teams deploy to the same cluster. For example:
+Robusta lets you get notifications when Kubernetes resources are updated. Users can setup personalized notifications for any Deployment, ReplicaSet, or other resource, ensuring you get notified when new versions are rolled out or other engineers change something important in the cluster. For example
 
 * **DevOps and Platform Teams:** Track all changes to Ingresses and other sensitive cluster resources.
 * **Developers:** Get notified each time your application is deployed to production.
 * **Security and DevSecOps:** Assorted use cases.
 
 .. Let's track changes to Kubernetes objects using Robusta. Notifications will be sent to a :ref:`Sinks <Sinks Reference>`, like Slack or MSTeams.
-
+.. Users can choose what to track and what information to recieve in an alert using Playbooks. :ref:`Read more about playbooks<What are Playbooks?>`
 
 Steps to track changes
 --------------------------
-1. Define a custom playbook
-2. Specify which Kubernetes object to track
-3. Only track certain YAML fields and filter out noisy changes
-4. Send a diff of exactly what changed
-5. Optional - Route the changes to specific destinations(Sinks)
+1. Define a custom template with when the alert should fire and what data you want. This personalized template is called a :ref:`"custom playbook"<Playbook Basics>`.
+2. Specify which Kubernetes object to track.
+3. Only track certain YAML fields and filter out noisy changes.
+4. Send a diff of exactly what changed.
+5. Optional - Route the changes to specific destinations(Sinks).
 
 
 Kubernetes Change Tracking Use Cases
