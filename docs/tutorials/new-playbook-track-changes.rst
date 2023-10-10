@@ -3,23 +3,30 @@
 Track Kubernetes Changes
 ############################################
 
-Robusta lets you get notifications when Kubernetes resources are updated. Users can setup personalized notifications for any Deployment, ReplicaSet, or other resource, ensuring you get notified when new versions are rolled out or other engineers change something important in the cluster. For example
+Robusta lets you get notifications when Kubernetes resources are updated. Users can setup personalized notifications for any Deployment, ReplicaSet, or other resource, ensuring you get notified when new versions are rolled out or other engineers change something important in the cluster. This feature is especially useful for various roles:
 
-* **DevOps and Platform Teams:** Track all changes to Ingresses and other sensitive cluster resources.
-* **Developers:** Get notified each time your application is deployed to production.
-* **Security and DevSecOps:** Assorted use cases.
+* **DevOps and Platform Teams** can track all changes to Ingresses and other sensitive cluster resources.
+* **Developers** will receive notifications each time their application is deployed to production.
+* **Security and DevSecOps** professionals benefit from assorted use cases, such as monitoring changes to security settings.
 
 .. Let's track changes to Kubernetes objects using Robusta. Notifications will be sent to a :ref:`Sinks <Sinks Reference>`, like Slack or MSTeams.
 .. Users can choose what to track and what information to recieve in an alert using Playbooks. :ref:`Read more about playbooks<What are Playbooks?>`
 
-Steps to track changes
---------------------------
-1. Define a custom template with when the alert should fire and what data you want. This personalized template is called a :ref:`"custom playbook"<Playbook Basics>`.
-2. Specify which Kubernetes object to track.
-3. Only track certain YAML fields and filter out noisy changes.
-4. Send a diff of exactly what changed.
-5. Optional - Route the changes to specific destinations(Sinks).
+.. Steps to track changes
+.. --------------------------
+.. 1. Define a custom template with when the alert should fire and what data you want. This personalized template is called a :ref:`"custom playbook"<Playbook Basics>`.
+.. 2. Specify which Kubernetes object to track.
+.. 3. Only track certain YAML fields and filter out noisy changes.
+.. 4. Send a diff of exactly what changed.
+.. 5. Optional - Route the changes to specific destinations(Sinks).
 
+How to Track Changes in Kubernetes Resources
+---------------------------------------------
+1. **Create a Custom Playbook**: Start by defining a personalized template that specifies when the alert should fire and what data you'd like to see. This is your "custom playbook."
+2. **Select Kubernetes Object**: In your custom playbook, specify which Kubernetes resource you want to monitor, such as Deployment or ReplicaSet.
+3. **Filter YAML Fields**: Choose specific YAML fields to track in order to avoid unnecessary alerts. Add these field filters to your custom playbook.
+4. **Set Up Change Detection**: Configure your playbook to send a 'diff' that shows exactly what changed in the selected Kubernetes object.
+5. **Route Alerts (Optional)**: If needed, direct these change notifications to specific destinations, also known as 'Sinks', by adding this information to your custom playbook.
 
 Kubernetes Change Tracking Use Cases
 --------------------------------------
@@ -28,16 +35,7 @@ Let's explore practical use cases for Kubernetes change tracking.
 
 Use Case 1: Alert on Deployment Image Change
 ***********************************************
-
-**Scenario**: When a Deployment's image is changed, you want to get notified with information about the change.
-
-**Solution**:
-
-1. Create a custom playbook
-2. Add the `on_deployment_update` trigger. It notifies you on all deployment changes.
-3. Use the `resource_babysitter` action with `images` in the `fields_to_monitor` option. This elimiates noisy changes.
-4. Optional - Route alerts to specific sinks
-
+**Scenario**: You want to be notified when a Deployment's image is changed.
 
 **Implementation**:
 
@@ -54,6 +52,13 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
             fields_to_monitor: ["images"]
       sinks:
       - some_sink_name #Optional
+
+.. details:: How does it work?
+
+  1. **Initialize Custom Playbook**: Create a custom playbook where you'll define your alert rules and conditions.
+  2. **Set the Trigger**: Inside your custom playbook, add the `on_deployment_update` trigger. This ensures you'll get notifications for all changes to deployments.
+  3. **Specify What to Monitor**: In the same playbook, use the `resource_babysitter` action and set `images` in the `fields_to_monitor` option. This filters out any irrelevant changes, focusing only on image updates.
+  4. **Route Alerts (Optional)**: Optionally, you can also specify in your playbook where you'd like these alerts to be sent by defining 'sinks'.
 
 Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
@@ -82,14 +87,6 @@ A Robusta notification will arrive in your configured :ref:`sinks <Sinks Referen
 Use Case 2: Alert on Kubernetes Job Failure
 ***********************************************
 **Scenario**: When a Kubernetes Job is failed, you want an alert with information related to the failed job.
-
-**Solution**:
-
-1. Create a custom playbook
-2. Add the `on_job_failure` trigger. It notifies you when a job is failed.
-3. Use the `create_finding` action to create an alert wih the title `Job Failed`.
-4. Add `job_info_enricher`, `job_events_enricher`, `job_pod_enricher` to gather additional information to be sent with the alert.
-5. Optional - Route alerts to specific sinks
 
 .. admonition:: Avoid Duplicate Alerts
 
@@ -121,6 +118,15 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
     3. :ref:`job_info_enricher<job_info_enricher>` fetches the Jobs status and information
     4. :ref:`job_events_enricher<job_events_enricher>` runs ``kubectl get events``, finds Events related to the Job, and attaches them
     5. :ref:`job_pod_enricher<job_pod_enricher>` finds Pods that were part of the Job. It attaches Pod-level information like Pod logs
+
+.. details:: How does it work?
+
+  1. **Initialize Custom Playbook**: Start by creating a custom playbook where you will outline the rules for when and how you'll be alerted.
+  2. **Set Up the Failure Trigger**: In your custom playbook, add the `on_job_failure` trigger. This will notify you specifically when a job fails.
+  3. **Configure Alert Creation**: Within the same playbook, use the `create_finding` action and set the alert title to `Job Failed`. This will generate the actual alert.
+  4. **Include Additional Information**: Add `job_info_enricher`, `job_events_enricher`, and `job_pod_enricher` to your playbook. These gather more details that will accompany your alert for comprehensive information.
+  5. **Route Alerts (Optional)**: If desired, specify in your playbook where to send these alerts by adding 'sinks'.
+
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
