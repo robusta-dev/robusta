@@ -1,6 +1,4 @@
-/** @format */
-
-// This is the code example for the crawler configuration file for https://crawler.algolia.com/
+// This is a backup of the crawler configuration for https://crawler.algolia.com/
 new Crawler({
   rateLimit: 8,
   maxDepth: 10,
@@ -66,7 +64,10 @@ new Crawler({
                   lvl5: ["article h6", "h6"],
                   content: ["article p, article li, article code"],
                   pageRank: (() => {
-                    if (url.pathname.includes("/installation/index.html")) {
+                    if (
+                      url.pathname.includes("/installation/index.html") ||
+                      url.pathname.includes("/setup-robusta/upgrade.html")
+                    ) {
                       return 10;
                     }
                     return 1;
@@ -75,7 +76,9 @@ new Crawler({
             aggregateContent: true,
             recordVersion: "v3",
           })
-          .map((record) => JSON.parse(JSON.stringify(record).replaceAll("¶", "")));
+          .map((record) =>
+            JSON.parse(JSON.stringify(record).replaceAll("¶", ""))
+          );
       },
     },
   ],
@@ -83,7 +86,14 @@ new Crawler({
   initialIndexSettings: {
     robusta: {
       attributesForFaceting: ["type", "lang"],
-      attributesToRetrieve: ["hierarchy", "content", "anchor", "url", "url_without_anchor", "type"],
+      attributesToRetrieve: [
+        "hierarchy",
+        "content",
+        "anchor",
+        "url",
+        "url_without_anchor",
+        "type",
+      ],
       attributesToHighlight: ["hierarchy", "content"],
       attributesToSnippet: ["content:10"],
       camelCaseAttributes: ["hierarchy", "content"],
@@ -99,8 +109,20 @@ new Crawler({
       ],
       distinct: true,
       attributeForDistinct: "url",
-      customRanking: ["desc(weight.pageRank)", "desc(weight.level)", "asc(weight.position)"],
-      ranking: ["words", "filters", "typo", "attribute", "proximity", "exact", "custom"],
+      customRanking: [
+        "desc(weight.pageRank)",
+        "desc(weight.level)",
+        "asc(weight.position)",
+      ],
+      ranking: [
+        "words",
+        "filters",
+        "typo",
+        "attribute",
+        "proximity",
+        "exact",
+        "custom",
+      ],
       highlightPreTag: '<span class="algolia-docsearch-suggestion--highlight">',
       highlightPostTag: "</span>",
       minWordSizefor1Typo: 3,

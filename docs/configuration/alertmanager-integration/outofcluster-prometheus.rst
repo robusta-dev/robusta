@@ -1,7 +1,7 @@
 Centralized Prometheus
 **************************************
 
-Follow this guide to connect Robusta to a central Prometheus, running outside the cluster monitored by Robusta.
+Follow this guide to connect Robusta to a central Prometheus (e.g. Thanos/Mimir), running outside the cluster monitored by Robusta.
 
 You will need to configure two integrations: a push integration and a pull integration. (Both are necessary.)
 

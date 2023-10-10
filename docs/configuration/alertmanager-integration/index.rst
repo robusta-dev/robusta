@@ -36,42 +36,42 @@ Setup Instructions
         :link: alert-manager
         :link-type: doc
 
-        Prometheus, in the same cluster as Robusta
+        Prometheus, running in the same K8s cluster as Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` Centralized Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: outofcluster-prometheus
         :link-type: doc
 
-        Prometheus, in a different cluster than Robusta
+        Prometheus, Thanos, Mimir, etc, not running in the same K8s cluster as Robusta
 
     .. grid-item-card:: :octicon:`book;1em;` Azure Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: azure-managed-prometheus
         :link-type: doc
 
-        Special instructions when using Azure Managed Prometheus
+        Azure Monitor managed service for Prometheus
 
     .. grid-item-card:: :octicon:`book;1em;` AWS Managed Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: eks-managed-prometheus
         :link-type: doc
 
-        Special instructions when using AWS Managed Prometheus
+        Amazon Managed Service for Prometheus
 
-    .. grid-item-card:: :octicon:`book;1em;` Coralogix Managed Prometheus
+    .. grid-item-card:: :octicon:`book;1em;` Coralogix
         :class-card: sd-bg-light sd-bg-text-light
         :link: coralogix_managed_prometheus
         :link-type: doc
 
-        Special instructions when using Coralogix Managed Prometheus
+        Coralogix Managed Prometheus
 
     .. grid-item-card:: :octicon:`book;1em;` Victoria Metrics
         :class-card: sd-bg-light sd-bg-text-light
         :link: victoria-metrics
         :link-type: doc
 
-        Victoria Metrics, in the same cluster as Robusta
+        VictoriaMetrics, running in the same K8s cluster as Robusta
 
 
     .. grid-item-card:: :octicon:`book;1em;` Embedded Prometheus
@@ -79,7 +79,7 @@ Setup Instructions
         :link: embedded-prometheus
         :link-type: doc
 
-        Prometheus, installed as part of Robusta's installation
+        All-in-one package of Robusta + kube-prometheus-stack (optional)
 
     .. .. grid-item-card:: :octicon:`book;1em;` Grafana AlertManager
     ..     :class-card: sd-bg-light sd-bg-text-light

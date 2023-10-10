@@ -60,6 +60,7 @@ redirects = {
     "user-guide/configuration.html": "/master/configuration/index.html",
     "architecture.html": "/master/how-it-works/architecture.html",
     "upgrade.html": "/master/setup-robusta/upgrade.html",
+    "oss-vs-saas.html": "/master/how-it-works/oss-vs-saas.html",
     "developer-guide/actions/findings-api.html": "/master/playbook-reference/actions/develop-actions/findings-api.html",
     "tutorials/my-first-custom-action.html": "/master/playbook-reference/actions/develop-actions/index.html",
     "user-guide/self-hosting.html": "/master/how-it-works/oss-vs-saas.html",
@@ -72,7 +73,7 @@ redirects = {
     "catalog/sinks/PagerDuty.html": "/master/configuration/sinks/PagerDuty.html",
     "catalog/actions/event-enrichment.html": "/master/playbook-reference/actions/event-enrichment.html",
     "docs/configuration/alert-manager.html": "/master/configuration/alertmanager-integration/index.html",
-    "docs/configuration/embedded-prometheus.rst": "master/configuration/alertmanager-integration/embedded-prometheus.html",
+    "docs/configuration/embedded-prometheus.rst": "/master/configuration/alertmanager-integration/embedded-prometheus.html",
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
