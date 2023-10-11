@@ -20,7 +20,7 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
 
     customPlaybooks:
     - triggers:
-      - on_job_failure: {}  # (1)
+      - on_job_failure: {} # (1)
       actions:
       - create_finding: # (2)
           title: "Job Failed"
