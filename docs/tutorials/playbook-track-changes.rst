@@ -73,67 +73,66 @@ A Robusta notification will arrive in your configured :ref:`sinks <Sinks Referen
   :width: 600
   :align: center
 
-Use Case 2: Notification on Kubernetes Job Failure
-*******************************************************
-**Scenario**: You want to be notified when a Kubernetes job is failed.
+.. Use Case 2: Notification on Kubernetes Job Failure
+.. *******************************************************
+.. **Scenario**: You want to be notified when a Kubernetes job is failed.
 
-.. admonition:: Avoid Duplicate Alerts
+.. .. admonition:: Avoid Duplicate Alerts
 
-    If you installed Robusta with the embedded Prometheus stack, you don't need to configure this playbook. It's configured by default.
-
-
-**Implementation**:
-
-Add the following YAML to the ``customPlaybooks`` Helm value:
-
-.. code-block:: yaml
-
-    customPlaybooks:
-    - triggers:
-      - on_job_failure: {} # (1)
-      actions:
-      - create_finding: # (2)
-          title: "Job Failed"
-          aggregation_key: "job_failure"
-      - job_info_enricher: {} # (3)
-      - job_events_enricher: {} # (4)
-      - job_pod_enricher: {} # (5)
-      sinks:
-      - some_sink_name
-
-.. code-annotations::
-    1. :ref:`on_job_failure<on_job_failure>` fires once for each failed Kubernetes Job
-    2. :ref:`create_finding<create_finding>` generates a notification message
-    3. :ref:`job_info_enricher<job_info_enricher>` fetches the Jobs status and information
-    4. :ref:`job_events_enricher<job_events_enricher>` runs ``kubectl get events``, finds Events related to the Job, and attaches them
-    5. :ref:`job_pod_enricher<job_pod_enricher>` finds Pods that were part of the Job. It attaches Pod-level information like Pod logs
-
-.. details:: How does it work?
-
-  1. **Initialize Custom Playbook**: Create a custom playbook where you'll define the rules for when and how you'll be notified.
-  2. **Set Up the Failure Trigger**: In your custom playbook, add the `on_job_failure` trigger. This will notify you specifically when a job fails.
-  3. **Configure Notification Creation**: Within the same playbook, use the `create_finding` action and set the title to `Job Failed`. This will generate the actual notification.
-  4. **Include Additional Information**: Add `job_info_enricher`, `job_events_enricher`, and `job_pod_enricher` to your playbook. These gather more details that will accompany your notification.
-  5. **Route Notifications (Optional)**: If desired, specify in your playbook where to send these notifications by adding 'sinks'.
+..     If you installed Robusta with the embedded Prometheus stack, you don't need to configure this playbook. It's configured by default.
 
 
-Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
+.. **Implementation**:
 
-**Note**: You can also use the :ref:`Sink Matchers<sink-matchers>` to route notifications instead of explicitly specifying a sink in the playbook.
+.. Add the following YAML to the ``customPlaybooks`` Helm value:
 
-**Testing**:
-Deploy a failing job. The job will fail after 60 seconds, then attempt to run again. After two attempts, it will fail for good.
+.. .. code-block:: yaml
 
-.. code-block:: yaml
+..     customPlaybooks:
+..     - triggers:
+..       - on_job_failure: {} # (1)
+..       actions:
+..       - create_finding: # (2)
+..           title: "Job Failed"
+..           aggregation_key: "job_failure"
+..       - job_info_enricher: {} # (3)
+..       - job_events_enricher: {} # (4)
+..       - job_pod_enricher: {} # (5)
+..       sinks:
+..       - some_sink_name
 
-    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/job_failure/job_crash.yaml
+..     1. :ref:`on_job_failure<on_job_failure>` fires once for each failed Kubernetes Job
+..     2. :ref:`create_finding<create_finding>` generates a notification message
+..     3. :ref:`job_info_enricher<job_info_enricher>` fetches the Jobs status and information
+..     4. :ref:`job_events_enricher<job_events_enricher>` runs ``kubectl get events``, finds Events related to the Job, and attaches them
+..     5. :ref:`job_pod_enricher<job_pod_enricher>` finds Pods that were part of the Job. It attaches Pod-level information like Pod logs
+
+.. .. details:: How does it work?
+
+..   1. **Initialize Custom Playbook**: Create a custom playbook where you'll define the rules for when and how you'll be notified.
+..   2. **Set Up the Failure Trigger**: In your custom playbook, add the `on_job_failure` trigger. This will notify you specifically when a job fails.
+..   3. **Configure Notification Creation**: Within the same playbook, use the `create_finding` action and set the title to `Job Failed`. This will generate the actual notification.
+..   4. **Include Additional Information**: Add `job_info_enricher`, `job_events_enricher`, and `job_pod_enricher` to your playbook. These gather more details that will accompany your notification.
+..   5. **Route Notifications (Optional)**: If desired, specify in your playbook where to send these notifications by adding 'sinks'.
 
 
-**Sample Alert**:
+.. Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
-.. image:: /images/failingjobs.png
-    :alt: Failing Kubernetes jobs notification on Slack
-    :align: center
+.. **Note**: You can also use the :ref:`Sink Matchers<sink-matchers>` to route notifications instead of explicitly specifying a sink in the playbook.
+
+.. **Testing**:
+.. Deploy a failing job. The job will fail after 60 seconds, then attempt to run again. After two attempts, it will fail for good.
+
+.. .. code-block:: yaml
+
+..     kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/job_failure/job_crash.yaml
+
+
+.. **Sample Alert**:
+
+.. .. image:: /images/failingjobs.png
+..     :alt: Failing Kubernetes jobs notification on Slack
+..     :align: center
 
 
 Cleanup

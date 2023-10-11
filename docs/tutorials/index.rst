@@ -30,6 +30,7 @@ Define your own alerts. Customize the data shown in alert notifications.
    :maxdepth: 1
 
    playbook-track-changes
+   playbook-job-failure
    playbook-failed-liveness
    alert-custom-prometheus
    alert-custom-enrichment
