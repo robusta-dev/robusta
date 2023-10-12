@@ -60,8 +60,8 @@ Run the following YAML files to simulate a deployment image change
 
 .. code-block:: yaml
 
-  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/deployment_image_change/before_image_change.yaml
-  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/deployment_image_change/after_image_change.yaml
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/deployment_image_change/before_image_change.yaml
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/deployment_image_change/after_image_change.yaml
 
 A Robusta notification will arrive in your configured :ref:`sinks <Sinks Reference>`, showing exactly what changed in the deployment.
 
@@ -111,8 +111,8 @@ Run the following commands to simulate ingress changes:
 
 .. code-block:: yaml
 
-  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/ingress_port_path_change/before_port_path_change.yaml
-  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/ingress_port_path_change/after_port_path_change.yaml
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/ingress_port_path_change/before_port_path_change.yaml
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/ingress_port_path_change/after_port_path_change.yaml
 
 A Robusta notification will arrive in your configured :ref:`sinks <Sinks Reference>`, showing exactly what changed in the ingress.
 
