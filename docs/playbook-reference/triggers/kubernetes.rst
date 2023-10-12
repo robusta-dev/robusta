@@ -210,6 +210,11 @@ For triggers that fire only on Pod errors, see :ref:`Crashing Pod Triggers`.
   :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
 
 .. jinja::
+  :inline-ctx: { "resource_name" : "Ingress", "related_actions" : [] }
+  :header_update_levels:
+  :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
+
+.. jinja::
   :inline-ctx: { "resource_name" : "Event", "related_actions" : ["Event Enrichers"] }
   :header_update_levels:
   :file: playbook-reference/triggers/_k8s-generic-triggers.jinja
