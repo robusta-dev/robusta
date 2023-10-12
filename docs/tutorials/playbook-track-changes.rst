@@ -1,5 +1,3 @@
-.. TODO: add a tutorial for tracking ingresses
-
 Track Kubernetes Changes
 ############################################
 
@@ -37,7 +35,7 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
         - on_deployment_update: {}
       actions:
         - resource_babysitter:
-            omitted_fields: []
+            omitted_fields: [] # You can specify any fields here that you don't want to monitor
             fields_to_monitor: ["images"]
       sinks:
       - some_sink_name #Optional
@@ -62,8 +60,8 @@ Run the following YAML files to simulate a deployment image change
 
 .. code-block:: yaml
 
-  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/deployment_image_change/before_image_change.yaml
-  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/deployment_image_change/after_image_change.yaml
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/deployment_image_change/before_image_change.yaml
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/deployment_image_change/after_image_change.yaml
 
 A Robusta notification will arrive in your configured :ref:`sinks <Sinks Reference>`, showing exactly what changed in the deployment.
 
@@ -72,6 +70,61 @@ A Robusta notification will arrive in your configured :ref:`sinks <Sinks Referen
 .. image:: /images/deployment-image-change.png
   :width: 600
   :align: center
+
+
+Use Case 2: Notification on Ingress Port or Path Change
+*****************************************************************
+**Scenario**: You want to be notified when an Ingress port or path is changed.
+
+**Implementation**:
+
+Add the following YAML to the ``customPlaybooks`` Helm value:
+
+.. code-block:: yaml
+
+    customPlaybooks:
+    - triggers:
+        - on_ingress_all_changes: {}
+      actions:
+        - resource_babysitter:
+            omitted_fields: []  # You can specify any fields here that you don't want to monitor
+            fields_to_monitor: ["path", "port"]
+      sinks:
+      - some_sink_name  # Replace with your sink name
+
+.. details:: How does it work?
+
+  1. **Initialize Custom Playbook**: Create a custom playbook where you'll outline the rules for when and how you'll be notified.
+  2. **Set Up the Ingress Trigger**: In your custom playbook, add the `on_ingress_all_changes` trigger. This ensures you'll receive notifications for all ingress changes.
+  3. **Specify Fields to Monitor**: Use the `resource_babysitter` action within the same playbook and set `path` and `port` in the `fields_to_monitor` option. This filters out irrelevant changes and focuses on path and port updates.
+  4. **Route Notifications (Optional)**: Optionally, specify in your playbook where these notifications should be sent by defining 'sinks'.
+
+Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+**Note**: You can also use the :ref:`Sink Matchers<sink-matchers>` to route notifications instead of explicitly specifying a sink in the playbook.
+
+**Testing**:
+
+Create, modify, or delete an ingress in your cluster.
+
+Run the following commands to simulate ingress changes:
+
+.. code-block:: yaml
+
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/ingress_port_path_change/before_port_path_change.yaml
+  kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/ingress_port_path_change/after_port_path_change.yaml
+
+A Robusta notification will arrive in your configured :ref:`sinks <Sinks Reference>`, showing exactly what changed in the ingress.
+
+**Sample Alert**:
+
+.. image:: /images/ingress-image-change.png
+  :width: 600
+  :align: center
+
+Cleanup
+------------------------------
+Remove the playbook you added based on your specific use case from the ``customPlaybooks`` in your ``generated_values.yaml`` file. Then, perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 .. Use Case 2: Notification on Kubernetes Job Failure
 .. *******************************************************
@@ -133,8 +186,3 @@ A Robusta notification will arrive in your configured :ref:`sinks <Sinks Referen
 .. .. image:: /images/failingjobs.png
 ..     :alt: Failing Kubernetes jobs notification on Slack
 ..     :align: center
-
-
-Cleanup
-------------------------------
-Remove the playbook you added based on your specific use case from the ``customPlaybooks`` in your ``generated_values.yaml`` file. Then, perform a :ref:`Helm Upgrade <Simple Upgrade>`.
