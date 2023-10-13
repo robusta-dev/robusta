@@ -102,15 +102,15 @@ class MattermostClient:
 
         response = self._send_mattermost_request(url, HttpMethod.POST, json=payload)
         if check_response_succeed(response):
-                response = response.json()
-                if not len(response):
-                    return None
-                # Search can return mulitple channels, check the name
-                for chan in response:
-                    if chan["name"] == channel_name:
-                        return chan["id"]
-            else:
-                logging.error("Received error response from MM on channel search: {str(response)}")
+            response = response.json()
+            if not len(response):
+                return None
+            # Search can return mulitple channels, check the name
+            for chan in response:
+                if chan["name"] == channel_name:
+                    return chan["id"]
+        else:
+            logging.error("Received error response from MM on channel search: {str(response)}")
 
     def get_team_id(self, team_name: str) -> Optional[str]:
         if not self.is_admin:
