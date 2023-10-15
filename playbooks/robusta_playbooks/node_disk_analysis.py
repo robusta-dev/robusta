@@ -1,10 +1,20 @@
 import logging
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import humanize
-from hikaru.model.rel_1_26 import EnvVar, EnvVarSource, ObjectFieldSelector, Pod, PodList
-from robusta.api import BaseBlock, MarkdownBlock, NodeEvent, PodRunningParams, RobustaPod, TableBlock, action
+from hikaru.model.rel_1_26 import EnvVar, EnvVarSource, ObjectFieldSelector, PodList
+
+from robusta.api import (
+    IMAGE_REGISTRY,
+    BaseBlock,
+    MarkdownBlock,
+    NodeEvent,
+    PodRunningParams,
+    RobustaPod,
+    TableBlock,
+    action,
+)
 from robusta.utils.parsing import load_json
 
 
@@ -57,7 +67,7 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
     # run disk-tools on node and parse its json output
     disk_info_str = RobustaPod.run_debugger_pod(
         node.metadata.name,
-        pod_image="us-central1-docker.pkg.dev/genuine-flight-317411/devel/disk-tools:1.4",
+        pod_image=f"{IMAGE_REGISTRY}/disk-tools:1.4",
         env=[
             EnvVar(
                 name="CURRENT_POD_UID",

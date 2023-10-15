@@ -31,7 +31,11 @@ spec:
       {{- end }}
       containers:
       - name: runner
+        {{- if .Values.runner.image }}
         image: {{ .Values.runner.image }}
+        {{ else }}
+        image: {{ .Values.image.registry }}/{{ .Values.runner.imageName }}
+        {{- end }}
         imagePullPolicy: {{ .Values.runner.imagePullPolicy }}
         securityContext:
           allowPrivilegeEscalation: false
@@ -69,6 +73,8 @@ spec:
             value: {{ .Chart.AppVersion }}
           - name: CERTIFICATE
             value: {{ .Values.runner.certificate }}
+          - name: IMAGE_REGISTRY
+            value: {{ .Values.image.registry }}
           {{- if kindIs "string" .Values.runner.additional_env_vars }}
           {{- fail "The `additional_env_vars` string value is deprecated. Change the `additional_env_vars` value to an array" -}}
           {{- end }}
@@ -107,7 +113,11 @@ spec:
             {{ if .Values.runner.resources.limits.cpu }}cpu: {{ .Values.runner.resources.limits.cpu | quote }}{{ end }}
       {{- if .Values.grafanaRenderer.enableContainer }}
       - name: grafana-renderer
+        {{- if .Values.grafanaRenderer.image }}
         image: {{ .Values.grafanaRenderer.image }}
+        {{ else }}
+        image: {{ .Values.image.registry }}/{{ .Values.grafanaRenderer.imageName }}
+        {{- end }}
         imagePullPolicy: {{ .Values.grafanaRenderer.imagePullPolicy }}
         securityContext:
           privileged: false
