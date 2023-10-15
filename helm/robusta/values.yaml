@@ -433,9 +433,13 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
+image:
+  registry: us-central1-docker.pkg.dev/genuine-flight-317411/devel
+
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.5
+  image: ~  # image can be used to override image.registry/imageName
+  imageName: kubewatch:v2.5
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:
@@ -476,7 +480,8 @@ kubewatch:
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
   enableContainer: false
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:7
+  image: ~  # image can be used to override image.registry/imageName
+  imageName: grafana-renderer:7
   imagePullPolicy: IfNotPresent
   resources:
     requests:
@@ -492,7 +497,8 @@ runnerServiceAccount:
 
 # parameters for the robusta runner
 runner:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.0.0
+  image: ~  # image can be used to override image.registry/imageName
+  imageName: robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
   log_level: INFO
   sentry_dsn: https://53b627690db14de7b02095407596fa16@o1120648.ingest.sentry.io/6156573
