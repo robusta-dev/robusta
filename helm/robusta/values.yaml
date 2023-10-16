@@ -15,7 +15,7 @@ clusterZone: ""
 
 automountServiceAccountToken: true
 
-# see https://docs.robusta.dev/master/user-guide/configuration.html#global-config
+# see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
 globalConfig:
   grafana_url: ""
   grafana_api_key: ""
