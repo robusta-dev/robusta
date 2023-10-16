@@ -14,11 +14,10 @@ new Crawler({
       indexName: "robusta",
       pathsToMatch: ["https://docs.robusta.dev/master/**"],
       recordExtractor: ({ helpers, url }) => {
-        return helpers.docsearch(
-          url.pathname.includes("/triggers/")
-            ? {
-                recordProps: url.pathname.includes("/triggers/")
-                ? {
+        return helpers
+          .docsearch({
+            recordProps: url.pathname.includes("/triggers/")
+              ? {
                   lvl0: {
                     selectors: [],
                     defaultValue: "Triggers",
@@ -27,7 +26,9 @@ new Crawler({
                   lvl2: ["details summary"],
                   content: ["details *:not(summary)"],
                   pageRank: 9,
-                } : url.pathname.includes("/actions/") ? {
+                }
+              : url.pathname.includes("/actions/")
+              ? {
                   lvl0: {
                     selectors: [],
                     defaultValue: "Actions",
@@ -36,7 +37,9 @@ new Crawler({
                   lvl2: [".admonition .admonition-title"],
                   content: [".admonition *:not(.admonition-title)"],
                   pageRank: 8,
-                } : url.pathname.includes("/sinks/") ? {
+                }
+              : url.pathname.includes("/sinks/")
+              ? {
                   lvl0: {
                     selectors: [],
                     defaultValue: "Sinks",
@@ -48,7 +51,8 @@ new Crawler({
                   lvl5: ["article h5", "h5"],
                   content: ["article p, article li, article code"],
                   pageRank: 7,
-                } : {
+                }
+              : {
                   lvl0: {
                     selectors: ["article h1", "head > title"],
                     defaultValue: "Documentation",
