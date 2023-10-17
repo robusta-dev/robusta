@@ -519,6 +519,8 @@ runner:
   imagePullSecrets: []
   extraVolumes: []
   extraVolumeMounts: []
+  serviceMonitor:
+    path: /metrics
 
 kube-prometheus-stack:
   alertmanager:
