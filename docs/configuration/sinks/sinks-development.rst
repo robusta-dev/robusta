@@ -22,17 +22,17 @@ It contains explanations of the types of findings your sink will have to process
 How Sinks are Implemented
 --------------------------
 
-Sinks are located under the directory `src/robusta/core/sinks <https://github.com/robusta-dev/robusta/tree/master/src/robusta/core/sinks>`_.
+Sinks are located in `src/robusta/core/sinks <https://github.com/robusta-dev/robusta/tree/master/src/robusta/core/sinks>`_.
+Each sink consists of a sink class and a config class. Optionally, helpers are used from `src/robusta/integrations <https://github.com/robusta-dev/robusta/tree/master/src/robusta/integrations>`_.
 
-There are two necessary things you must provide when implementing a new sink:
+To implement a new sink you must:
 
-1. The sink itself.
-2. The sink’s configuration.
+1. :ref:`Build Robusta from source <Build from Source>`
+2. Add a new Python module inside `src/robusta/core/sinks <https://github.com/robusta-dev/robusta/tree/master/src/robusta/core/sinks>`_ containing your sink’s source code
+3. Implement a sink config class
+4. Implement a sink class
 
-You can use helper classes and methods defined in `src/robusta/integrations <https://github.com/robusta-dev/robusta/tree/master/src/robusta/integrations>`_.
-
-To start with, create a new Python module inside the `src/robusta/core/sinks <https://github.com/robusta-dev/robusta/tree/master/src/robusta/core/sinks>`_
-folder that will contain all your sink’s source code.
+Let's take a closer look at steps 3 and 4.
 
 Implementing The Config Class
 --------------------------------------------

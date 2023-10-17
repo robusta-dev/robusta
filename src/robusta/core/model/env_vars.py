@@ -99,3 +99,5 @@ PROMETHEUS_ERROR_LOG_PERIOD_SEC = int(os.environ.get("DISCOVERY_MAX_BATCHES", 14
 RRM_PERIOD_SEC = int(os.environ.get("RRM_PERIOD_SEC", 90))
 
 MAX_ALLOWED_RULES_PER_CRD_ALERT = int(os.environ.get("MAX_ALLOWED_RULES_PER_CRD_ALERT", 600))
+
+IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "us-central1-docker.pkg.dev/genuine-flight-317411/devel")

@@ -28,7 +28,11 @@ spec:
       containers:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
+        {{- if .Values.kubewatch.image }}
         image: {{ .Values.kubewatch.image }}
+        {{ else }}
+        image: {{ .Values.image.registry }}/{{ .Values.kubewatch.imageName }}
+        {{- end }}
         imagePullPolicy: {{ .Values.kubewatch.imagePullPolicy }}
         env:
           - name: KW_CONFIG
@@ -46,7 +50,7 @@ spec:
           capabilities: {}
           privileged: false
           readOnlyRootFilesystem: false
-          runAsUser: 1000    
+          runAsUser: 1000
         resources:
           requests:
             cpu: {{ .Values.kubewatch.resources.requests.cpu }}

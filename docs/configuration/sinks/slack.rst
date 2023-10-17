@@ -92,10 +92,10 @@ To do so in :ref:`custom playbooks <customPlaybooks>` mention the ``@username`` 
 .. code-block::
 
     customPlaybooks:
-    - actions:
-      triggers:
+    - triggers:
       - on_kubernetes_warning_event:
           include: ["TooManyPods"]
+      actions:
       - create_finding:
           aggregation_key: "too-many-pods-warning"
           severity: HIGH
