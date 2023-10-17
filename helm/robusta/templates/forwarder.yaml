@@ -18,6 +18,9 @@ spec:
         {{- end }}
       labels:
         app: {{ .Release.Name }}-forwarder
+        {{- with .Values.kubewatch.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-forwarder-service-account
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
