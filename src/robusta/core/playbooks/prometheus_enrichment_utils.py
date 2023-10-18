@@ -218,8 +218,8 @@ def create_chart_from_prometheus_query(
         min_time = min(min_time, min(series.timestamps))
         max_time = max(max_time, max(series.timestamps))
 
-        plot_data = PlotData(plot=(label, values), color="#708889", show_dots=False,
-                             stroke_style={'width': 6, 'dasharray': '3, 6', 'linecap': 'round',
+        plot_data = PlotData(plot=(label, values), color="#3F3F3F", show_dots=False,
+                             stroke_style={'width': 8, 'dasharray': '8', 'linecap': 'round',
                                            'linejoin': 'round'},)
         plot_data_list.append(plot_data)
 
