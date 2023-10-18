@@ -10,7 +10,9 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
+
 from robusta.api import (
+    IMAGE_REGISTRY,
     RELEASE_NAME,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
@@ -26,11 +28,10 @@ from robusta.api import (
     ScanType,
     action,
     format_unit,
-    to_kubernetes_name,
 )
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.6.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.6.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 
 
@@ -45,6 +46,7 @@ class KRRObject(BaseModel):
     namespace: str
     kind: str
     allocations: Dict[str, Dict[str, Optional[float]]]
+    warnings: List[str] = []
 
 
 class KRRRecommendedInfo(BaseModel):
@@ -387,6 +389,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                         "metric": scan.metrics.get(resource).dict() if scan.metrics.get(resource) else {},
                         "description": krr_scan.description,
                         "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
+                        "warnings": scan.object.warnings,
                     }
                     for resource in krr_scan.resources
                 ],

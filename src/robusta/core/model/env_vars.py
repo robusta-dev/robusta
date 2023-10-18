@@ -94,3 +94,5 @@ DISCOVERY_POD_OWNED_PODS = load_bool("DISCOVERY_POD_OWNED_PODS", False)
 DISABLE_HELM_MONITORING = load_bool("DISABLE_HELM_MONITORING", False)
 
 PROMETHEUS_ERROR_LOG_PERIOD_SEC = int(os.environ.get("DISCOVERY_MAX_BATCHES", 14400))
+
+IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "us-central1-docker.pkg.dev/genuine-flight-317411/devel")

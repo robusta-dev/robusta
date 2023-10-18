@@ -29,9 +29,9 @@ Define your own alerts. Customize the data shown in alert notifications.
 .. toctree::
    :maxdepth: 1
 
+   playbook-track-changes
    playbook-job-failure
    playbook-failed-liveness
-   playbook-track-changes
    alert-custom-prometheus
    alert-custom-enrichment
 
