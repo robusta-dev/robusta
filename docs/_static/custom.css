@@ -284,3 +284,15 @@ h2, h3 {
 .sd-tab-set>label {
     font-size: 16px;
 }
+
+.DocSearch-Hit-source {
+    font-size: 1.25em !important;
+}
+
+.DocSearch-Hit-title {
+    font-size: 1.10em !important;
+}
+
+.DocSearch-Hit-path {
+    font-size: 1em !important;
+}

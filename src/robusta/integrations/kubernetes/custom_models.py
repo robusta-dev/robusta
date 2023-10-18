@@ -11,7 +11,7 @@ from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclass
 from kubernetes.client import ApiException
 from pydantic import BaseModel
 
-from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
+from robusta.core.model.env_vars import IMAGE_REGISTRY, INSTALLATION_NAMESPACE, RELEASE_NAME
 from robusta.integrations.kubernetes.api_client_utils import (
     SUCCEEDED_STATE,
     exec_shell_command,
@@ -33,8 +33,8 @@ T = TypeVar("T")
 
 
 # TODO: import these from the python-tools project
-PYTHON_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v5.0"
-JAVA_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:jattach"
+PYTHON_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/debug-toolkit:v5.0"
+JAVA_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/java-toolkit-11:jattach"
 
 
 class Process(BaseModel):
