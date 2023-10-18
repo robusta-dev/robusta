@@ -231,12 +231,10 @@ def create_chart_from_prometheus_query(
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
 
-        if line.label == "Memory Limit" \
-                or line.label == "CPU Limit":
+        if "Limit" in line.label:
             plot_data = PlotData(plot=(line.label, value), color="#FF5959")
 
-        elif line.label == "Memory Request" \
-                or line.label == "CPU Request":
+        elif "Request" in line.label:
             plot_data = PlotData(plot=(line.label, value), color="#0DC291")
 
         elif line.label == "OOM Kill Time":
