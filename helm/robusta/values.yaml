@@ -15,7 +15,7 @@ clusterZone: ""
 
 automountServiceAccountToken: true
 
-# see https://docs.robusta.dev/master/user-guide/configuration.html#global-config
+# see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
 globalConfig:
   grafana_url: ""
   grafana_api_key: ""
@@ -433,9 +433,13 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
+image:
+  registry: us-central1-docker.pkg.dev/genuine-flight-317411/devel
+
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.5
+  image: ~  # image can be used to override image.registry/imageName
+  imageName: kubewatch:v2.5
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:
@@ -449,11 +453,35 @@ kubewatch:
   annotations: {}
   nodeSelector: ~
   imagePullSecrets: []
+  config:
+    namespace: ""
+    resource:
+      deployment: true
+      replicationcontroller: false  # 0.10.12 disabled because not supported on the runner
+      replicaset: true
+      daemonset: true
+      statefulset: true
+      services: true
+      pod: true
+      job: true
+      node: true
+      hpa: true
+      clusterrole: true
+      clusterrolebinding: true
+      serviceaccount: true
+      persistentvolume: true
+      namespace: true
+      configmap: true # 0.9.17
+      secret: false       # disabled for security reasons
+      event: true  # updated on kubewatch 2.5
+      coreevent: false # added on kubewatch 2.5
+      ingress: true # full support on kubewatch 2.4 (earlier versions have ingress bugs)
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
   enableContainer: false
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:7
+  image: ~  # image can be used to override image.registry/imageName
+  imageName: grafana-renderer:7
   imagePullPolicy: IfNotPresent
   resources:
     requests:
@@ -469,7 +497,8 @@ runnerServiceAccount:
 
 # parameters for the robusta runner
 runner:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.0.0
+  image: ~  # image can be used to override image.registry/imageName
+  imageName: robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
   log_level: INFO
   sentry_dsn: https://53b627690db14de7b02095407596fa16@o1120648.ingest.sentry.io/6156573
