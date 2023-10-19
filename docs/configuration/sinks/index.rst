@@ -26,6 +26,7 @@ Sinks Reference
    webex
    kafka
    sinks-development
+   rocketchat
 
 Robusta can report issues and events in your Kubernetes cluster to various destinations, known as sinks.
 
