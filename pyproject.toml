@@ -92,7 +92,7 @@ sphinx-immaterial = { git = "https://github.com/robusta-dev/robusta-immaterial.g
 # As it does not work witn sphynx-immaterial, we need to exclude it from the dev dependencies
 # Please, install it manually if you need to run flake8
 # flake8 = "5.0.4"
-black = "21.5b2"
+black = "22.3.0"
 mypy = "0.991"
 isort = "5.10.1"
 absolufy-imports = "^0.3.1"

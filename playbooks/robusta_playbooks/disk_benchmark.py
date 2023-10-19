@@ -12,19 +12,21 @@ from hikaru.model.rel_1_26 import (
     Volume,
     VolumeMount,
 )
+
 from robusta.api import (
+    IMAGE_REGISTRY,
     INSTALLATION_NAMESPACE,
-    ActionParams,
     ExecutionBaseEvent,
     Finding,
     FindingType,
     MarkdownBlock,
+    PodRunningParams,
     RobustaJob,
     action,
 )
 
 
-class DiskBenchmarkParams(ActionParams):
+class DiskBenchmarkParams(PodRunningParams):
     """
     :var pvc_name: Name of the pvc created for the benchmark.
     :var test_seconds: The benchmark duration.
@@ -62,7 +64,7 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
     try:
         pvc.createNamespacedPersistentVolumeClaim(action_params.namespace)
         pv_name = "robusta-benchmark-pv"
-        image = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-fio-benchmark"
+        image = f"{IMAGE_REGISTRY}/robusta-fio-benchmark"
         name = "robusta-fio-disk-benchmark"
         mount_path = "/robusta/data"
         spec = PodSpec(
@@ -94,7 +96,9 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
         )
 
         json_output = json.loads(
-            RobustaJob.run_simple_job_spec(spec, name, 120 + action_params.test_seconds).replace("'", '"')
+            RobustaJob.run_simple_job_spec(
+                spec, name, 120 + action_params.test_seconds, custom_annotations=action_params.custom_annotations
+            ).replace("'", '"'),
         )
         job = json_output["jobs"][0]
 

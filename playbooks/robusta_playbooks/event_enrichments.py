@@ -1,7 +1,10 @@
 import logging
 
+from hikaru.model.rel_1_26 import Job, Node
 from robusta.api import (
     ActionException,
+    DaemonSet,
+    Deployment,
     DeploymentEvent,
     ErrorCodes,
     EventChangeEvent,
@@ -14,41 +17,27 @@ from robusta.api import (
     FindingSubjectType,
     FindingType,
     KubeObjFindingSubject,
+    KubernetesAnyChangeEvent,
     KubernetesResourceEvent,
     MarkdownBlock,
+    Pod,
     PodEvent,
     RendererType,
+    ReplicaSet,
     SlackAnnotations,
+    StatefulSet,
     TableBlock,
     VideoEnricherParams,
     VideoLink,
     action,
     get_event_timestamp,
     get_job_all_pods,
-    is_pod_finished,
     get_resource_events,
     get_resource_events_table,
     list_pods_using_selector,
     parse_kubernetes_datetime_to_ms,
-    KubernetesAnyChangeEvent,
-    extract_ready_pods,
-    is_release_managed_by_helm,
-    extract_total_pods,
-    ServiceConfig,
-    VolumeInfo,
-    ContainerInfo,
-    extract_volumes_k8,
-    extract_containers_k8,
-    Pod,
-    ReplicaSet,
-    StatefulSet,
-    DaemonSet,
-    Deployment,
-    ServiceInfo,
-    
+    should_report_pod,
 )
-
-from hikaru.model.rel_1_26 import Node
 
 
 class ExtendedEventEnricherParams(EventEnricherParams):
@@ -255,11 +244,13 @@ def external_video_enricher(event: ExecutionBaseEvent, params: VideoEnricherPara
 @action
 def resource_events_diff(event: KubernetesAnyChangeEvent):
     new_resource = event.obj
-    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node)):
+    if not isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, Node, Job, Pod, ReplicaSet)):
         return
-    elif isinstance(new_resource, Pod) and (new_resource.metadata.ownerReferences or is_pod_finished(new_resource)):
+    elif isinstance(new_resource, Pod) and (not should_report_pod(new_resource)):
         return
-    elif isinstance(new_resource, ReplicaSet) and (new_resource.metadata.ownerReferences or new_resource.spec.replicas == 0):
+    elif isinstance(new_resource, ReplicaSet) and (
+        new_resource.metadata.ownerReferences or new_resource.spec.replicas == 0
+    ):
         return
 
     all_sinks = event.get_all_sinks()

@@ -10,7 +10,9 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
+
 from robusta.api import (
+    IMAGE_REGISTRY,
     RELEASE_NAME,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
@@ -18,6 +20,7 @@ from robusta.api import (
     FindingSource,
     FindingType,
     JobSecret,
+    PodRunningParams,
     PrometheusParams,
     RobustaJob,
     ScanReportBlock,
@@ -25,11 +28,10 @@ from robusta.api import (
     ScanType,
     action,
     format_unit,
-    to_kubernetes_name,
 )
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.5.1-pre")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.6.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 
 
@@ -44,6 +46,7 @@ class KRRObject(BaseModel):
     namespace: str
     kind: str
     allocations: Dict[str, Dict[str, Optional[float]]]
+    warnings: List[str] = []
 
 
 class KRRRecommendedInfo(BaseModel):
@@ -92,7 +95,7 @@ class KRRResponse(BaseModel):
     strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
 
 
-class KRRParams(PrometheusParams):
+class KRRParams(PrometheusParams, PodRunningParams):
     """
     :var timeout: Time span for yielding the scan.
     :var args: Deprecated -  KRR cli arguments.
@@ -276,6 +279,7 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
                 command_flag="--coralogix-token",
             )
         )
+
     return krr_secrets
 
 
@@ -296,6 +300,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     env_var = []
     krr_secrets = _generate_prometheus_secrets(prom_config)
     python_command += " " + _generate_cmd_line_args(prom_config)
+
     # creating secrets for auth
     secret = _generate_krr_job_secret(scan_id, krr_secrets)
     # setting env variables of krr to have secret
@@ -303,7 +308,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         env_var = _generate_krr_env_vars(krr_secrets, secret.name)
         # adding secret env var in krr pod command
         python_command += " " + _generate_additional_env_args(krr_secrets)
-    logging.debug(f"krr command {python_command}")
+    logging.debug(f"krr command '{python_command}'")
 
     resources = ResourceRequirements(
         limits={"memory": (str(KRR_MEMORY_LIMIT))},
@@ -329,7 +334,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     logs = None
 
     try:
-        logs = RobustaJob.run_simple_job_spec(spec, "krr_job" + scan_id, params.timeout, secret)
+        logs = RobustaJob.run_simple_job_spec(
+            spec, "krr_job" + scan_id, params.timeout, secret, custom_annotations=params.custom_annotations
+        )
         krr_response = json.loads(logs)
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
@@ -378,9 +385,11 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                             "request": scan.recommended.requests[resource].priority,
                             "limit": scan.recommended.limits[resource].priority,
                         },
+                        "info": scan.recommended.info.get(resource),
                         "metric": scan.metrics.get(resource).dict() if scan.metrics.get(resource) else {},
                         "description": krr_scan.description,
                         "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
+                        "warnings": scan.object.warnings,
                     }
                     for resource in krr_scan.resources
                 ],

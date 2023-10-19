@@ -2,7 +2,9 @@ from datetime import datetime
 from typing import Dict, Optional
 
 import requests
-from robusta.api import ActionParams, AlertManagerEvent, ExecutionBaseEvent, action, PORT
+
+from robusta.api import PORT, ActionParams, AlertManagerEvent, ExecutionBaseEvent, action
+
 
 class PrometheusAlertParams(ActionParams):
     """
@@ -19,6 +21,7 @@ class PrometheusAlertParams(ActionParams):
     :var severity: Simulated alert severity.
     :var description: Simulated alert description.
     :var generator_url: Prometheus generator_url. Some enrichers, use this attribute to query Prometheus.
+    :var labels: Additional alert labels. For example: "key1: val1, key2: val2"
     """
 
     alert_name: str
@@ -38,6 +41,7 @@ class PrometheusAlertParams(ActionParams):
     description: str = "simulated prometheus alert"
     summary: Optional[str]
     generator_url = ""
+    labels: Optional[str] = None
 
 
 @action
@@ -73,6 +77,10 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
         labels["statefulset"] = prometheus_event_data.statefulset_name
     if prometheus_event_data.daemonset_name is not None:
         labels["daemonset"] = prometheus_event_data.daemonset_name
+    if prometheus_event_data.labels is not None:
+        for label in prometheus_event_data.labels.split(","):
+            key, val = label.split(":")
+            labels[key.strip()] = val.strip()
 
     annotations = {
         "description": prometheus_event_data.description,

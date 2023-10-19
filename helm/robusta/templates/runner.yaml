@@ -15,15 +15,27 @@ spec:
       labels:
         app: {{ .Release.Name }}-runner
         robustaComponent: "runner"
-      {{- if .Values.runner.annotations }}
-      annotations: {{ toYaml .Values.runner.annotations | nindent 8 }}
+      {{- if or .Values.runner.annotations .Values.globalConfig.custom_annotations }}
+      annotations:
+        {{- if .Values.runner.annotations}} {{ toYaml .Values.runner.annotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.globalConfig.custom_annotations }} {{ toYaml .Values.globalConfig.custom_annotations | nindent 8 }}
+        {{- end }}
       {{- end }}
     spec:
       serviceAccountName: {{ .Release.Name }}-runner-service-account
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
+      {{- if .Values.runner.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.runner.imagePullSecrets | nindent 6 }}
+      {{- end }}
       containers:
       - name: runner
+        {{- if .Values.runner.image }}
         image: {{ .Values.runner.image }}
+        {{ else }}
+        image: {{ .Values.image.registry }}/{{ .Values.runner.imageName }}
+        {{- end }}
         imagePullPolicy: {{ .Values.runner.imagePullPolicy }}
         securityContext:
           allowPrivilegeEscalation: false
@@ -61,6 +73,8 @@ spec:
             value: {{ .Chart.AppVersion }}
           - name: CERTIFICATE
             value: {{ .Values.runner.certificate }}
+          - name: IMAGE_REGISTRY
+            value: {{ .Values.image.registry }}
           {{- if kindIs "string" .Values.runner.additional_env_vars }}
           {{- fail "The `additional_env_vars` string value is deprecated. Change the `additional_env_vars` value to an array" -}}
           {{- end }}
@@ -83,6 +97,9 @@ spec:
           - name: persistent-playbooks-storage
             mountPath: /etc/robusta/playbooks/storage
           {{- end }}
+          {{- with .Values.runner.extraVolumeMounts }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
         lifecycle:
           preStop:
             exec:
@@ -96,7 +113,11 @@ spec:
             {{ if .Values.runner.resources.limits.cpu }}cpu: {{ .Values.runner.resources.limits.cpu | quote }}{{ end }}
       {{- if .Values.grafanaRenderer.enableContainer }}
       - name: grafana-renderer
+        {{- if .Values.grafanaRenderer.image }}
         image: {{ .Values.grafanaRenderer.image }}
+        {{ else }}
+        image: {{ .Values.image.registry }}/{{ .Values.grafanaRenderer.imageName }}
+        {{- end }}
         imagePullPolicy: {{ .Values.grafanaRenderer.imagePullPolicy }}
         securityContext:
           privileged: false
@@ -125,6 +146,9 @@ spec:
         - name: persistent-playbooks-storage
           persistentVolumeClaim:
             claimName: persistent-playbooks-pv-claim
+        {{- end }}
+        {{- with .Values.runner.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- if .Values.runner.nodeSelector }}
       nodeSelector: {{ toYaml .Values.runner.nodeSelector | nindent 8 }}
@@ -167,7 +191,7 @@ spec:
       port: 80
       targetPort: 5000
 ---
-{{ if and (.Values.enableServiceMonitors) (or (.Values.enablePrometheusStack) (.Capabilities.APIVersions.Has "monitoring.coreos1.com/v1/ServiceMonitor") ) }}
+{{ if and (.Values.enableServiceMonitors) (or (.Values.enablePrometheusStack) (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") ) }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

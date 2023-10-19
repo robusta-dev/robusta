@@ -3,7 +3,9 @@
 # 1. We use pydantic and not dataclasses so that field types are validated
 # 2. We add __init__ methods ourselves for convenience. Without our own __init__ method, something like
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
+import gzip
 import json
+import logging
 import textwrap
 from copy import deepcopy
 from datetime import datetime
@@ -70,12 +72,60 @@ class FileBlock(BaseBlock):
     filename: str
     contents: bytes
 
-    def __init__(self, filename: str, contents: bytes):
+    def __init__(
+        self,
+        filename: str,
+        contents: bytes,
+        **kwargs,
+    ):
         """
         :param filename: the file's name
         :param contents: the file's contents
         """
-        super().__init__(filename=filename, contents=contents)
+        super().__init__(
+            filename=filename,
+            contents=contents,
+            **kwargs,
+        )
+
+    def is_text_file(self):
+        return self.filename.endswith((".txt", ".log"))
+
+    def zip(self):
+        try:
+            self.contents = gzip.compress(self.contents)
+            self.filename = self.filename + ".gz"
+        except Exception as exc:
+            logging.error(f"Unexpected error occurred while zipping file {self.filename}")
+            logging.exception(exc)
+
+    def truncate_content(self, max_file_size_bytes: int) -> bytes:
+        """
+        Truncates the log file by removing lines from the beginning until its size is within the given limit.
+        """
+        # we don't want to truncate other files like images
+        if not self.is_text_file():
+            return self.contents
+
+        decoded_content = self.contents.decode("utf-8")
+        content_length = len(decoded_content)
+
+        if content_length <= max_file_size_bytes:
+            return self.contents
+
+        lines = decoded_content.splitlines()
+        byte_length_newline = len("\n".encode("utf-8"))
+
+        truncated_lines: List[str] = []
+        for idx, line in enumerate(lines):
+            line_content_length = len(line) + byte_length_newline
+
+            content_length -= line_content_length
+            if content_length <= max_file_size_bytes:
+                truncated_lines = lines[idx + 1 :]
+                break
+
+        return "\n".join(truncated_lines).encode("utf-8")
 
 
 class HeaderBlock(BaseBlock):

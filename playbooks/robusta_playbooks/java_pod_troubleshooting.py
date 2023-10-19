@@ -1,6 +1,6 @@
 import logging
 import traceback
-from typing import Callable, List
+from typing import Callable, Dict, List, Optional
 
 from robusta.api import (
     CallbackBlock,
@@ -124,7 +124,7 @@ def run_jdk_command_on_pid(
 
     jdk_cmd = f"{cmd} {params.pid}"
     try:
-        jdk_output = run_java_toolkit_command(jdk_cmd, pod, params.jtk_image)
+        jdk_output = run_java_toolkit_command(jdk_cmd, pod, custom_annotations=params.custom_annotations)
         finding.add_enrichment(
             [
                 MarkdownBlock(f"{aggregation_key} ran on process {params.pid}"),
@@ -137,7 +137,9 @@ def run_jdk_command_on_pid(
         event.add_finding(finding)
 
 
-def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod, override_jtk_image: str):
+def run_java_toolkit_command(
+    jdk_cmd: str, pod: RobustaPod, override_jtk_image: str, custom_annotations: Optional[Dict[str, str]]
+):
     java_toolkit_cmd = f"java-toolkit {jdk_cmd}"
     if override_jtk_image:
         return RobustaPod.exec_in_java_pod(
@@ -145,8 +147,11 @@ def run_java_toolkit_command(jdk_cmd: str, pod: RobustaPod, override_jtk_image: 
             pod.spec.nodeName,
             java_toolkit_cmd,
             override_jtk_image=override_jtk_image,
+            custom_annotations=custom_annotations,
         )
-    return RobustaPod.exec_in_java_pod(pod.metadata.name, pod.spec.nodeName, java_toolkit_cmd)
+    return RobustaPod.exec_in_java_pod(
+        pod.metadata.name, pod.spec.nodeName, java_toolkit_cmd, custom_annotations=custom_annotations
+    )
 
 
 def add_jdk_choices_to_finding(finding: Finding, params: JavaParams, pids: List[int], pod: RobustaPod) -> Finding:
