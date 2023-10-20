@@ -46,8 +46,8 @@ def main():
 
     Web.init(event_handler, loader)
 
-    event_handler.set_cluster_active(True)
     signal.signal(signal.SIGINT, event_handler.handle_sigint)
+    event_handler.set_cluster_active(True)
     Web.run()  # blocking
     loader.close()
 

@@ -532,7 +532,7 @@ class SupabaseDal:
         try:
             (
                 self.client.table(CLUSTERS_STATUS_TABLE)
-                .update({"active": active})
+                .update({"active": active, "updated_at": "now()"})
                 .eq("cluster_id", self.cluster)
                 .eq("account_id", self.account_id)
                 .execute()
