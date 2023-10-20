@@ -63,6 +63,7 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
             promql_query=params.promql_query,
             starts_at=starts_at,
             ends_at=ends_at,
+            step=params.step,
         )
         event.add_enrichment(
             [PrometheusBlock(data=prometheus_result, query=params.promql_query)],
