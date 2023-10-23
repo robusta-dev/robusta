@@ -23,8 +23,8 @@ def charts_style(
     from pygal.style import Style
 
     return Style(
-        background="#F2F2F2",
-        plot_background="#F2F2F2",
+        background="#FFFFFF",
+        plot_background="#FFFFFF",
         value_background="rgba(229, 229, 229, 1)",
         foreground="#607D8B",
         foreground_strong="#607D8B",
@@ -41,12 +41,10 @@ def charts_style(
 
 
 class PlotCustomCSS:
-    _instance = None
     _css_file_path = None
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(PlotCustomCSS, cls).__new__(cls)
+    def __init__(self):
+        if PlotCustomCSS._css_file_path is None:
             try:
                 custom_css = '''
                   {{ id }}.title {
@@ -69,12 +67,10 @@ class PlotCustomCSS:
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.css') as f:
                     f.write(custom_css.encode('utf-8'))
                     f.flush()
-                    cls._css_file_path = f.name
+                    PlotCustomCSS._css_file_path = f.name
             except Exception as e:
                 logging.error(f"Error during initializing PlotCustomCSS: {e}", exc_info=True)
-                cls._css_file_path = None
-
-        return cls._instance
+                PlotCustomCSS._css_file_path = None
 
     def get_css_file_path(self) -> Optional[str]:
         return self._css_file_path
