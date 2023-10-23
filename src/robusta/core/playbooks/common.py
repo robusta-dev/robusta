@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 
 from hikaru.model.rel_1_26 import Event, EventList
@@ -81,13 +82,30 @@ def get_resource_events_table(
 
 def get_event_timestamp(event: Event):
     if event.deprecatedLastTimestamp:
-        return event.deprecatedLastTimestamp
+        t = event.deprecatedLastTimestamp
+
+        logging.info(f"get_event_timestamp `deprecatedLastTimestamp` {t}")
+        return t
     elif event.eventTime:
-        return event.eventTime
+        t = event.eventTime
+
+        logging.info(f"get_event_timestamp `eventTime` {t}")
+
+        return t
     elif event.deprecatedFirstTimestamp:
-        return event.deprecatedFirstTimestamp
+        t = event.deprecatedFirstTimestamp
+
+        logging.info(f"get_event_timestamp `deprecatedFirstTimestamp` {t}")
+
+        return t
     if event.metadata.creationTimestamp:
-        return event.metadata.creationTimestamp
+        t = event.metadata.creationTimestamp
+
+        logging.info(f"get_event_timestamp `creationTimestamp` {t}")
+
+        return t
+
+    logging.info(f"get_event_timestamp `event` {event}")
     return
 
 

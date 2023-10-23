@@ -77,7 +77,7 @@ WEBSOCKET_PING_INTERVAL = int(os.environ.get("WEBSOCKET_PING_INTERVAL", 120))
 # Timeout for the ping response, before killing the connection. Must be smaller than the interval
 WEBSOCKET_PING_TIMEOUT = int(os.environ.get("WEBSOCKET_PING_TIMEOUT", 30))
 
-TRACE_INCOMING_REQUESTS = load_bool("TRACE_INCOMING_REQUESTS", False)
+TRACE_INCOMING_REQUESTS = load_bool("TRACE_INCOMING_REQUESTS", True)
 
 SERVICE_CACHE_TTL_SEC = int(os.environ.get("SERVICE_CACHE_TTL_SEC", 900))
 SERVICE_CACHE_MAX_SIZE = int(os.environ.get("SERVICE_CACHE_MAX_SIZE", 1000))
@@ -96,3 +96,5 @@ DISABLE_HELM_MONITORING = load_bool("DISABLE_HELM_MONITORING", False)
 PROMETHEUS_ERROR_LOG_PERIOD_SEC = int(os.environ.get("DISCOVERY_MAX_BATCHES", 14400))
 
 IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "us-central1-docker.pkg.dev/genuine-flight-317411/devel")
+
+LOG_LEVEL = "DEBUG"
