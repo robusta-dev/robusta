@@ -2,6 +2,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import hikaru
+from hikaru import HikaruBase
 from pydantic import BaseModel, PrivateAttr
 
 from robusta.core.model.events import ExecutionBaseEvent
@@ -92,6 +93,14 @@ class K8sBaseTrigger(BaseTrigger):
         return True
 
     @classmethod
+    def __load_hikaru_obj(cls, obj: Dict[Any, Any], model_class: type) -> HikaruBase:
+        if obj:
+            metadata = obj.get("metadata")
+            if metadata:
+                metadata["managedFields"] = None
+        return hikaru.from_dict(obj, cls=model_class)
+
+    @classmethod
     def __parse_kubernetes_objs(cls, k8s_payload: IncomingK8sEventPayload):
         model_class = get_api_version(k8s_payload.apiVersion).get(k8s_payload.kind)
         if model_class is None:
@@ -101,10 +110,11 @@ class K8sBaseTrigger(BaseTrigger):
             logging.error(msg)
             raise ModelNotFoundException(msg)
 
-        obj = hikaru.from_dict(k8s_payload.obj, cls=model_class)
+        obj = cls.__load_hikaru_obj(k8s_payload.obj, model_class)
+
         old_obj = None
         if k8s_payload.oldObj is not None:
-            old_obj = hikaru.from_dict(k8s_payload.oldObj, cls=model_class)
+            old_obj = cls.__load_hikaru_obj(k8s_payload.oldObj, model_class)
         return obj, old_obj
 
     def build_execution_event(

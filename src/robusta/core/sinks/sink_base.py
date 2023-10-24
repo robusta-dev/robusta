@@ -1,5 +1,6 @@
+from typing import Any
+
 from robusta.core.model.k8s_operation_type import K8sOperationType
-from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 
@@ -39,5 +40,8 @@ class SinkBase:
         """
         return True
 
-    def handle_service_diff(self, new_service: ServiceInfo, operation: K8sOperationType):
+    def handle_service_diff(self, new_obj: Any, operation: K8sOperationType):
+        pass
+
+    def set_cluster_active(self, active: bool):
         pass

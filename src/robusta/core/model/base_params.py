@@ -38,6 +38,21 @@ class ResourceChartResourceType(Enum):
     Disk = auto()
 
 
+class OverrideGraph(BaseModel):
+    """
+    A class for overriding prometheus graphs
+    :var resource_type: one of: CPU, Memory, Disk (see ResourceChartResourceType)
+    :var item_type: one of: Pod, Node (see ResourceChartItemType)
+    :var query: the prometheusql query you want to run
+    :var values_format: Customize the y-axis labels with one of: Plain, Bytes, Percentage (see ChartValuesFormat)
+    """
+
+    resource_type: str
+    item_type: str
+    query: str
+    values_format: Optional[str]
+
+
 class ActionParams(DocumentedModel):
     """
     Base class for all Action parameter classes.
@@ -50,6 +65,14 @@ class ActionParams(DocumentedModel):
         pass
 
     pass
+
+
+class PodRunningParams(ActionParams):
+    """
+    :var custom_annotations: custom annotations to be used for the running pod/job
+    """
+
+    custom_annotations: Optional[Dict[str, str]] = None
 
 
 class VideoEnricherParams(ActionParams):
@@ -77,7 +100,7 @@ class FindingKeyParams(ActionParams):
     finding_key: str = "DEFAULT"
 
 
-class BashParams(ActionParams):
+class BashParams(PodRunningParams):
     """
     :var bash_command: Bash command to execute on the target.
 
@@ -109,6 +132,7 @@ class PrometheusParams(ActionParams):
     prometheus_url_query_string: Optional[str] = None
     prometheus_additional_labels: Optional[Dict[str, str]] = None
     add_additional_labels: bool = True
+    prometheus_graphs_overrides: Optional[List[OverrideGraph]] = None
 
     @validator("prometheus_url", allow_reuse=True)
     def validate_protocol(cls, v):
@@ -150,11 +174,12 @@ class PrometheusQueryParams(PrometheusParams):
     """
     :var promql_query: the prometheusql query you want to run
     :var duration: the duration of the query
-
+    :var step: (str) Query resolution step width in duration format or float number of seconds - i.e 100s, 3d, 2w, 170.3
     """
 
     promql_query: str
     duration: Union[PrometheusDateRange, PrometheusDuration]
+    step: Optional[str]
 
 
 class TimedPrometheusParams(PrometheusParams):
@@ -240,7 +265,7 @@ class GrafanaAnnotationParams(GrafanaParams):
     custom_tags: List[str] = None
 
 
-class ProcessParams(ActionParams):
+class ProcessParams(PodRunningParams):
     """
     :var process_substring: process name (or substring).
     :var pid: pid
@@ -255,3 +280,29 @@ class ProcessParams(ActionParams):
 class EventEnricherParams(ActionParams):
     max_events: int = 8
     included_types: List[str] = ["Warning", "Normal"]
+
+
+class NamedRegexPattern(BaseModel):
+    """
+    A named regex pattern
+    """
+
+    name: str = "Redacted"
+    regex: str
+
+
+class LogEnricherParams(ActionParams):
+    """
+    :var container_name: Specific container to get logs from
+    :var warn_on_missing_label: Send a warning if the alert doesn't have a pod label
+    :var regex_replacer_patterns: regex patterns to replace text, for example for security reasons (Note: Replacements are executed in the given order)
+    :var regex_replacement_style: one of SAME_LENGTH_ASTERISKS or NAMED (See RegexReplacementStyle)
+    :var filter_regex: only shows lines that match the regex
+    """
+
+    container_name: Optional[str]
+    warn_on_missing_label: bool = False
+    regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None
+    regex_replacement_style: Optional[str] = None
+    previous: bool = False
+    filter_regex: Optional[str] = None

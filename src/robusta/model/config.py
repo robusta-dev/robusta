@@ -12,6 +12,7 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.sink_factory import SinkFactory
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.integrations.scheduled.playbook_scheduler_manager import PlaybooksSchedulerManager
+from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.runner.telemetry import Telemetry
 from robusta.utils.function_hashes import get_function_hash
@@ -39,7 +40,6 @@ class SinksRegistry:
         existing_sinks: Dict[str, SinkBase],
         registry,
     ) -> Dict[str, SinkBase]:
-
         new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
         # remove deleted sinks
         deleted_sink_names = [sink_name for sink_name in existing_sinks.keys() if sink_name not in new_sink_names]
@@ -157,6 +157,7 @@ class Registry:
     _scheduler = None
     _receiver: ActionRequestReceiver = None
     _global_config = dict()
+    _alert_relabel_config: List[AlertRelabel] = []
     _telemetry: Telemetry = Telemetry(
         runner_version=RUNNER_VERSION,
         prometheus_enabled=PROMETHEUS_ENABLED,
@@ -206,3 +207,9 @@ class Registry:
 
     def get_global_config(self) -> Dict:
         return self._global_config
+
+    def set_relabel_config(self, config: List[AlertRelabel]):
+        self._alert_relabel_config = config
+
+    def get_relabel_config(self) -> List[AlertRelabel]:
+        return self._alert_relabel_config

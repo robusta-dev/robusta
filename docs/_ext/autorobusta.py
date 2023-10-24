@@ -126,12 +126,8 @@ class PydanticModelDirective(SphinxDirective):
 
         if typing.get_origin(field.type_) == typing.Union:
             possible_types = get_possible_types(field.type_)
-            paragraph = nodes.paragraph(text="each entry is one of the following:")
+            paragraph = nodes.paragraph(text=f"each entry is one of the following:{possible_types}")
             content.append(paragraph)
-            for t in possible_types:
-                if isinstance(None, t):
-                    continue
-                content.extend(cls.__document_model(t, show_code, show_optionality))
 
         elif issubclass(field.type_, BaseModel):
             paragraph = nodes.paragraph(text="each entry contains:")

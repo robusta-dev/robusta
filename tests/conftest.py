@@ -33,7 +33,7 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.fixture(scope="session")
 def slack_channel() -> SlackChannel:
-    if CONFIG.PYTEST_SLACK_TOKEN is None or CONFIG.PYTEST_SLACK_CHANNEL is None:
+    if not(CONFIG.PYTEST_SLACK_TOKEN and CONFIG.PYTEST_SLACK_CHANNEL):
         pytest.skip("skipping slack tests (missing environment variables)", allow_module_level=True)
 
     return SlackChannel(CONFIG.PYTEST_SLACK_TOKEN, CONFIG.PYTEST_SLACK_CHANNEL)

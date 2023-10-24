@@ -8,7 +8,7 @@
             .. code-block:: yaml
 
                 customPlaybooks:
-                  triggers:
+                - triggers:
                   - {{ trigger_name }}: {}
                   actions:
                   - create_finding: # (1)
@@ -23,7 +23,7 @@
             .. code-block:: yaml
 
                 customPlaybooks:
-                  triggers:
+                - triggers:
                   - {{ trigger_name }}:
                       include: ["ImagePullBackOff"] # (2)
                   actions:
@@ -41,7 +41,7 @@
             .. code-block:: yaml
 
                 customPlaybooks:
-                  triggers:
+                - triggers:
                   - {{ trigger_name }}:
                       exclude: ["NodeSysctlChange", "TooManyPods"] # (2)
                   actions:
