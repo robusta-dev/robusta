@@ -174,11 +174,12 @@ class PrometheusQueryParams(PrometheusParams):
     """
     :var promql_query: the prometheusql query you want to run
     :var duration: the duration of the query
-
+    :var step: (str) Query resolution step width in duration format or float number of seconds - i.e 100s, 3d, 2w, 170.3
     """
 
     promql_query: str
     duration: Union[PrometheusDateRange, PrometheusDuration]
+    step: Optional[str]
 
 
 class TimedPrometheusParams(PrometheusParams):

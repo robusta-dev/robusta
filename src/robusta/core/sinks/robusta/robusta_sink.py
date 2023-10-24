@@ -91,6 +91,9 @@ class RobustaSink(SinkBase):
         self.__thread.start()
         self.__watchdog_thread.start()
 
+    def set_cluster_active(self, active: bool):
+        self.dal.set_cluster_active(active)
+
     def __init_service_resolver(self):
         """
         Init service resolver from the service stored in storage.
@@ -342,7 +345,9 @@ class RobustaSink(SinkBase):
         return node_info
 
     @classmethod
-    def __from_api_server_node(cls, api_server_node: Union[V1Node, Node], pod_requests_list: List[PodResources]) -> NodeInfo:
+    def __from_api_server_node(
+        cls, api_server_node: Union[V1Node, Node], pod_requests_list: List[PodResources]
+    ) -> NodeInfo:
         addresses = api_server_node.status.addresses or []
         external_addresses = [address for address in addresses if "externalip" in address.type.lower()]
         external_ip = ",".join([addr.address for addr in external_addresses])
@@ -353,8 +358,12 @@ class RobustaSink(SinkBase):
         capacity = api_server_node.status.capacity or {}
         allocatable = api_server_node.status.allocatable or {}
         # V1Node and Node use snake case and camelCase respectively, handle this for more than 1 word attributes.
-        creation_ts = getattr(api_server_node.metadata, "creation_timestamp", None) or getattr(api_server_node.metadata, "creationTimestamp", None)
-        version = getattr(api_server_node.metadata, "resource_version", None) or getattr(api_server_node.metadata, "resourceVersion", None)
+        creation_ts = getattr(api_server_node.metadata, "creation_timestamp", None) or getattr(
+            api_server_node.metadata, "creationTimestamp", None
+        )
+        version = getattr(api_server_node.metadata, "resource_version", None) or getattr(
+            api_server_node.metadata, "resourceVersion", None
+        )
         return NodeInfo(
             name=api_server_node.metadata.name,
             node_creation_time=str(creation_ts),
@@ -371,7 +380,7 @@ class RobustaSink(SinkBase):
             pods_count=len(pod_requests_list),
             pods=",".join([pod_req.pod_name for pod_req in pod_requests_list]),
             node_info=cls.__to_node_info(api_server_node),
-            resource_version=int(version) if version else 0
+            resource_version=int(version) if version else 0,
         )
 
     def __publish_new_nodes(self, current_nodes: V1NodeList, node_requests: Dict[str, List[PodResources]]):
@@ -612,7 +621,6 @@ class RobustaSink(SinkBase):
             self.__discovery_metrics.on_nodes_updated(1)
 
     def __update_job(self, new_job: Job, operation: K8sOperationType):
-
         new_info = JobInfo.from_api_server(new_job, [])
         job_key = new_info.get_service_key()
         with self.services_publish_lock:

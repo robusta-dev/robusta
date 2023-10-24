@@ -45,7 +45,9 @@ def main():
         logging.info(f"Running alerts workers pool of {ALERT_BUILDER_WORKERS}")
 
     Web.init(event_handler, loader)
+
     signal.signal(signal.SIGINT, event_handler.handle_sigint)
+    event_handler.set_cluster_active(True)
     Web.run()  # blocking
     loader.close()
 
