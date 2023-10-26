@@ -276,7 +276,7 @@ def create_chart_from_prometheus_query(
     chart.truncate_label = -1
     chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M")
     chart.legend_at_bottom = True
-    chart.legend_at_bottom_columns = 3
+    chart.legend_at_bottom_columns = 5
     chart.legend_box_size = 8
     value_formatters = {
         ChartValuesFormat.Plain: lambda val: str(val),
