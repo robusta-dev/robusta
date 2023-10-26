@@ -22,16 +22,7 @@ triggers_to_actions = generator.get_triggers_to_actions(actions)
 
 def display_playbook_builder():
 
-    # if "current_page" not in st.session_state:
-    #     st.session_state.current_page = "playbook_builder"
-
-    # if ss.get('button_clicked', False):  # If button was clicked
-    #     ss.button_clicked = False  # Reset the flag
-    # if "buttondemo" in st.session_state:
-    #     st.session_state.buttondemo = False
-
     st.title(":wrench: Playbook Builder", anchor=None)
-    print("TITLE IS HERE")
     if "expander_state" not in st.session_state:
         st.session_state.expander_state = [True, False, False, False, False]
 
@@ -47,14 +38,10 @@ def display_playbook_builder():
     action_parameter_expander = st.expander("Configure Action", expanded=st.session_state.expander_state[3])
     playbook_expander = st.expander(":scroll: Playbook", expanded=st.session_state.expander_state[4])
 
-    print("PLAYBOOK BUILDER POST EXPANDERS")
-
     # TRIGGER
     with trigger_expander:
-        print("TRIGGERS")
 
         trigger_name = st.selectbox("Type to search", triggers.keys(), key="trigger")
-        # st.markdown(triggers[trigger_name]["about"])
 
         if st.button("Continue", key="button1"):
             st.session_state.expander_state = [False, True, False, False, False]
@@ -62,8 +49,7 @@ def display_playbook_builder():
 
     # TRIGGER PARAMETER
     with trigger_parameter_expander:
-        print("TRIGGER PARAMETERS")
-        # st.header("Available Parameters")
+        st.header("Available Parameters")
         trigger_data = sp.pydantic_input(key=f"trigger_form-{trigger_name}", model=triggers[trigger_name])
 
         if st.button("Continue", key="button2"):
@@ -72,11 +58,10 @@ def display_playbook_builder():
 
     # ACTION
     with action_expander:
-        print("DEMO ACTIONS")
         relevant_actions = [a.action_name for a in triggers_to_actions[trigger_name]]
         action_name = st.selectbox("Choose an action", relevant_actions, key="actions")
 
-        # st.markdown(actions[action_name]["about"])
+        # st.markdown[action_name]["about"])
 
         if st.button("Continue", key="button3"):
             st.session_state.expander_state = [False, False, False, True, False]
@@ -95,11 +80,9 @@ def display_playbook_builder():
             st.markdown("This action doesn't have any parameters")
             st.session_state.expander_state = [False, False, False, False, True]
             action_data = None
-            # st.experimental_rerun()          <----------------------------BUG
 
     # DISPLAY PLAYBOOK
     with playbook_expander:
-        print("Display Playbooks")
 
         st.markdown(
             "Add this code to your **generated_values.yaml** and [upgrade Robusta](https://docs.robusta.dev/external-prom-docs/setup-robusta/upgrade.html)"
