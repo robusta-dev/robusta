@@ -3,7 +3,7 @@ import threading
 import time
 from typing import List
 
-from robusta.core.model.env_vars import RRM_PERIOD_SEC
+from robusta.core.model.env_vars import RRM_PERIOD_SEC, MANAGED_PROMETHEUS_ALERTS_ENABLED
 from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
 from robusta.core.sinks.robusta.rrm.base_resource_manager import BaseResourceManager
 from robusta.core.sinks.robusta.rrm.prometheus_alert_resource_manager import \
@@ -19,7 +19,10 @@ class RRM:
         self.__sleep = RRM_PERIOD_SEC
 
         self.__resource_managers: List[BaseResourceManager] = [
-            PrometheusAlertResourceManager(resource_kind=ResourceKind.PrometheusAlert, cluster=self.cluster, dal=dal)]
+            PrometheusAlertResourceManager(
+                resource_kind=ResourceKind.PrometheusAlert, cluster=self.cluster,
+                dal=dal)
+            ] if MANAGED_PROMETHEUS_ALERTS_ENABLED else []
 
         self.__thread = threading.Thread(target=self.__thread_loop)
         self.__thread.start()
