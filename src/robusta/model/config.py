@@ -40,7 +40,6 @@ class SinksRegistry:
         existing_sinks: Dict[str, SinkBase],
         registry,
     ) -> Dict[str, SinkBase]:
-
         new_sink_names = [sink_config.get_name() for sink_config in new_sinks_config]
         # remove deleted sinks
         deleted_sink_names = [sink_name for sink_name in existing_sinks.keys() if sink_name not in new_sink_names]

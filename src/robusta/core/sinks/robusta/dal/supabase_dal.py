@@ -617,3 +617,16 @@ class SupabaseDal(AccountResourceFetcher):
         logging.debug(f"Event {event}, Session {session}")
         if session and event == "TOKEN_REFRESHED":
             self.client.postgrest.auth(session.access_token)
+
+    def set_cluster_active(self, active: bool) -> None:
+        try:
+            (
+                self.client.table(CLUSTERS_STATUS_TABLE)
+                .update({"active": active, "updated_at": "now()"})
+                .eq("cluster_id", self.cluster)
+                .eq("account_id", self.account_id)
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Failed to set cluster status active=False error: {e}")
+            self.handle_supabase_error()
