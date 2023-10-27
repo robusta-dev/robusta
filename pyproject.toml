@@ -21,7 +21,7 @@ robusta = "robusta.cli.main:app"
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 typer = "^0.4.1"
 colorlog = "^5.0.1"
 pydantic = "^1.8.1"
@@ -112,6 +112,8 @@ all = ["Flask", "grafana-api", "watchdog", "dulwich", "better-exceptions", "Cair
 [tool.poetry.group.dev.dependencies]
 sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
 sphinx-reredirects = "^0.1.1"
+streamlit = "^1.25.0"
+streamlit-pydantic = "^0.6.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

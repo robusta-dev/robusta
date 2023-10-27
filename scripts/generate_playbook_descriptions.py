@@ -6,7 +6,9 @@ import os
 from typing import Callable
 
 from pydantic import BaseModel
+from robusta.api import Action
 
+from robusta.core.playbooks.generation import ExamplesGenerator
 
 class PlaybookDescription(BaseModel):
     function_name: str
@@ -32,13 +34,12 @@ def get_params_schema(func):
     return action_params.schema()
 
 
-def load_scripts(scripts_root):
-    # install_requirements(os.path.join(scripts_root, 'requirements.txt'))
-
+def find_playbook_actions(scripts_root):
     python_files = glob.glob(f"{scripts_root}/*.py")
+    actions = []
 
     for script in python_files:
-        print(f"loading playbooks {script}")
+        print(f"found playbook file: {script}")
         filename = os.path.basename(script)
         (module_name, ext) = os.path.splitext(filename)
         spec = importlib.util.spec_from_file_location(module_name, script)
@@ -47,26 +48,35 @@ def load_scripts(scripts_root):
 
         playbooks = inspect.getmembers(
             module,
-            lambda f: inspect.isfunction(f) and getattr(f, "__playbook", None) is not None,
+            lambda f: Action.is_action(f),
         )
         for _, func in playbooks:
-            description = PlaybookDescription(
-                function_name=func.__name__,
-                builtin_trigger_params=func.__playbook["default_trigger_params"],
-                docs=inspect.getdoc(func),
-                src=inspect.getsource(func),
-                src_file=inspect.getsourcefile(func),
-                action_params=get_params_schema(func),
-            )
-            print(description.json(), "\n\n")
+            print("found playbook", func)
+            action = Action(func)
+            actions.append(action)
+
+            #description = PlaybookDescription(
+            #    function_name=func.__name__,
+            #    builtin_trigger_params=func.__playbook["default_trigger_params"],
+            #    docs=inspect.getdoc(func),
+            #    src=inspect.getsource(func),
+            #    src_file=inspect.getsourcefile(func),
+            #    action_params=get_params_schema(func),
+            #)
+            #print(description.json(), "\n\n")
+
+    return actions
 
 
 def main():
-    # TODO Arik - Need to be fixed in order to expose actions schema
     parser = argparse.ArgumentParser(description="Generate playbook descriptions")
-    parser.add_argument("directory", type=str, help="directory containing the playbooks")
+    parser.add_argument("--directory", type=str, help="directory containing the playbooks", default="./playbooks/robusta_playbooks")
     args = parser.parse_args()
-    load_scripts(args.directory)
+    actions = find_playbook_actions(args.directory)
+    generator = ExamplesGenerator()
+    triggers = generator.get_all_triggers()
+    trigger_to_actions = generator.get_triggers_to_actions(actions)
+    print(trigger_to_actions)
 
 
 if __name__ == "__main__":
