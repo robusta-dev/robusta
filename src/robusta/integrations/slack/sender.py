@@ -189,15 +189,17 @@ class SlackSender:
             logging.warning(f"cannot convert block of type {type(block)} to slack format block: {block}")
             return []  # no reason to crash the entire report
 
-    def __upload_file_to_slack(self, block: FileBlock) -> str:
+    def __upload_file_to_slack(self, block: FileBlock, max_log_file_limit_kb: int) -> str:
+        truncated_content = block.truncate_content(max_file_size_bytes=max_log_file_limit_kb * 1000)
+
         """Upload a file to slack and return a link to it"""
         with tempfile.NamedTemporaryFile() as f:
-            f.write(block.contents)
+            f.write(truncated_content)
             f.flush()
             result = self.slack_client.files_upload(title=block.filename, file=f.name, filename=block.filename)
             return result["file"]["permalink"]
 
-    def prepare_slack_text(self, message: str, files: List[FileBlock] = []):
+    def prepare_slack_text(self, message: str, max_log_file_limit_kb: int, files: List[FileBlock] = []):
         if files:
             # it's a little annoying but it seems like files need to be referenced in `title` and not just `blocks`
             # in order to be actually shared. well, I'm actually not sure about that, but when I tried adding the files
@@ -208,7 +210,7 @@ class SlackSender:
                 # slack throws an error if you write empty files, so skip it
                 if len(file_block.contents) == 0:
                     continue
-                permalink = self.__upload_file_to_slack(file_block)
+                permalink = self.__upload_file_to_slack(file_block, max_log_file_limit_kb=max_log_file_limit_kb)
                 uploaded_files.append(f"* <{permalink} | {file_block.filename}>")
 
             file_references = "\n".join(uploaded_files)
@@ -240,7 +242,8 @@ class SlackSender:
         file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
         file_blocks.extend(Transformer.tableblock_to_fileblocks(report_attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
 
-        message = self.prepare_slack_text(title, file_blocks)
+        message = self.prepare_slack_text(title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb,
+                                          files=file_blocks)
         output_blocks = []
         for block in other_blocks:
             output_blocks.extend(self.__to_slack(block, sink_params.name))

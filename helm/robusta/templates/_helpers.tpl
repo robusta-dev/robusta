@@ -6,6 +6,14 @@ playbook_repos:
 {{- fail "At least one sink must be defined!" }}
 {{- end }}
 
+{{- range .Values.sinksConfig }}
+  {{- if .robusta_sink }}
+    {{- if $.Values.disableCloudRouting }}
+      {{- fail "You cannot set `disableCloudRouting: true` when the Robusta UI sink (robusta_sink) is enabled, as this flag breaks the UI's behavior.\nPlease remove `disableCloudRouting: true` to continue installing." -}}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
 {{- if or .Values.slackApiKey .Values.robustaApiKey }}
 {{- /* support old values files, prior to chart version 0.8.9 */}}
 sinks_config:
@@ -34,6 +42,9 @@ global_config:
   {{- if .Values.globalConfig }}
 {{ toYaml .Values.globalConfig | indent 2 }}
   {{- end }}
+
+alert_relabel:
+{{ toYaml  .Values.alertRelabel | indent 2 }}
 
 light_actions:
 {{ toYaml  .Values.lightActions | indent 2 }}

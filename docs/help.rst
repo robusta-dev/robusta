@@ -72,10 +72,9 @@ contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-
 
 .. details:: unknown field in com.coreos.monitoring.v1.Prometheus.spec, ValidationError(Prometheus.spec)
 
-    This indicate a potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
+    This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
 
-    Follow our upgrade guide for upgrading the CRDs:
-    :ref:`Upgrading from older versions (0.10.17 and below)`.
+    Follow this guide for :ref:`upgrading CRDs from an older version <Upgrading from older versions>`.
 
 .. details:: robusta-runner isn't working or has exceptions
 

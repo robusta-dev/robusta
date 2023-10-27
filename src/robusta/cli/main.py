@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import random
 import subprocess
 import time
@@ -7,6 +8,7 @@ import traceback
 import uuid
 from typing import Dict, List, Optional, Union
 
+import certifi
 import typer
 import yaml
 from hikaru.model.rel_1_26 import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec
@@ -31,8 +33,30 @@ from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrap
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta.integrations.prometheus.utils import AlertManagerDiscovery
 
+ADDITIONAL_CERTIFICATE: str = os.environ.get("CERTIFICATE", "")
 # TODO - separate shared classes to a separated shared repo, to remove dependencies between the cli and runner
 
+
+def cert_already_exists(new_cert: bytes) -> bool:
+    with open(certifi.where(), "r") as outfile:
+        return str(new_cert, "utf-8") in outfile.read()
+
+
+def add_custom_certificate(custom_ca: str):
+    if custom_ca:
+        new_cert = base64.b64decode(custom_ca)
+        if not cert_already_exists(new_cert):
+            with open(certifi.where(), "ab") as outfile:
+                outfile.write(base64.b64decode(custom_ca))
+                return True
+        else:
+            typer.secho("using custom certificate", fg="green")
+
+    return False
+
+
+if add_custom_certificate(ADDITIONAL_CERTIFICATE):
+    typer.secho("using custom certificate", fg="green")
 
 app = typer.Typer(add_completion=False)
 app.add_typer(playbooks_commands, name="playbooks", help="Playbooks commands menu")
@@ -200,7 +224,8 @@ def gen_config(
         disable_cloud_routing = False
 
     slack_feedback_heads_up_message: Optional[str] = None
-    if slack_integration_configured:
+    # When using custom certificates we do not want to add the extra slack message.
+    if slack_integration_configured and not ADDITIONAL_CERTIFICATE:
         try:
             slack_feedback_heads_up_message = SlackFeedbackMessagesSender(
                 slack_api_key, slack_channel, account_id, debug
@@ -389,6 +414,7 @@ def demo_alert(
         help="Additional alert labels. Comma separated list. For example: env=prod,team=infra ",
     ),
     kube_config: str = typer.Option(None, help="Kube config file path override."),
+    image: str = typer.Option("curlimages/curl", help="Docker image with curl support."),
 ):
     """
     Create a demo alert on AlertManager.
@@ -465,7 +491,7 @@ def demo_alert(
                     containers=[
                         Container(
                             name="alert-curl",
-                            image="curlimages/curl",
+                            image=image,
                             command=command,
                         )
                     ],

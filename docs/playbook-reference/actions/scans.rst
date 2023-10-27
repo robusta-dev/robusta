@@ -54,7 +54,7 @@ To set custom tolerations or a nodeSelector update your ``generated_values.yaml`
 .. code-block:: yaml
     :name: cb-krr-set-custom-taints
 
-    global_config:
+    globalConfig:
       krr_job_spec:
         tolerations:
         - key: "key1"
@@ -76,19 +76,19 @@ With or without the UI, you can configure additional scans on a :ref:`schedule <
 
     customPlaybooks:
     - triggers:
-    - on_schedule:
-        fixed_delay_repeat:
+      - on_schedule:
+          fixed_delay_repeat:
             repeat: 1 # number of times to run or -1 to run forever
             seconds_delay: 604800 # 1 week
-    actions:
-    - popeye_scan:
-        spinach: |
-          popeye:
+      actions:
+      - popeye_scan:
+          spinach: |
+            popeye:
               excludes:
                   v1/pods:
                   - name: rx:kube-system
-    sinks:
-        - "robusta_ui_sink"
+      sinks:
+      - "robusta_ui_sink"
 
 The results can be sent as a PDF to Slack or to the Robusta UI.
 
@@ -129,7 +129,7 @@ To set custom tolerations or a nodeSelector update your ``generated_values.yaml`
 .. code-block:: yaml
     :name: cb-popeye-set-custom-taints
 
-    global_config:
+    globalConfig:
       popeye_job_spec:
         tolerations:
         - key: "key1"

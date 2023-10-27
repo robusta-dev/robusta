@@ -62,6 +62,14 @@ class ModelConversion:
         return finding_json
 
     @staticmethod
+    def get_file_object(block: FileBlock):
+        last_dot_idx = block.filename.rindex(".")
+        return {
+            "type": block.filename[last_dot_idx + 1 :],
+            "data": str(base64.b64encode(block.contents)),
+        }
+
+    @staticmethod
     def to_evidence_json(
         account_id: str,
         cluster_id: str,
@@ -84,13 +92,9 @@ class ModelConversion:
             elif isinstance(block, DividerBlock):
                 structured_data.append({"type": "divider"})
             elif isinstance(block, FileBlock):
-                last_dot_idx = block.filename.rindex(".")
-                structured_data.append(
-                    {
-                        "type": block.filename[last_dot_idx + 1 :],
-                        "data": str(base64.b64encode(block.contents)),
-                    }
-                )
+                if block.is_text_file():
+                    block.zip()
+                structured_data.append(ModelConversion.get_file_object(block))
             elif isinstance(block, HeaderBlock):
                 structured_data.append({"type": "header", "data": block.text})
             elif isinstance(block, ListBlock):
@@ -134,7 +138,7 @@ class ModelConversion:
                 )
             elif isinstance(block, CallbackBlock):
                 callbacks = []
-                for (text, callback) in block.choices.items():
+                for text, callback in block.choices.items():
                     callbacks.append(
                         {
                             "text": text,

@@ -85,22 +85,25 @@
                     {{ alt.name }}
                   </a>
                 </li>
-                {% endfor %}
+              {% endfor %}
             </ul>
           </div>
         </div>
       </div>
     {% endif %}
 
-    <!-- Button to open search modal -->
-    {% if "search" in config["plugins"] %}
-      <label class="md-header__button md-icon" for="__search">
-        {% include ".icons/material/magnify.svg" %}
-      </label>
-
-      <!-- Search interface -->
-      {% include "partials/search.html" %}
-    {% endif %}
+    <!-- Algolia search -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
+    <div id="docsearch"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@docsearch/js@3"></script>
+    <script>
+      docsearch({
+        container: '#docsearch',
+        appId: 'EEWU58CJVX',
+        indexName: 'robusta',
+        apiKey: 'e77d73e819e13d5b207909ee81891826',
+      });
+    </script>
 
     <!-- Repository information -->
     {% if config.repo_url %}

@@ -3,15 +3,15 @@ import logging
 import re
 import time
 from enum import Enum, auto
-from kubernetes.client import ApiException
-from typing import Dict, List, Optional, Tuple, Type, TypeVar
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, TypeVar
 
 import hikaru
 import yaml
 from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclasses to work
+from kubernetes.client import ApiException
 from pydantic import BaseModel
 
-from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, RELEASE_NAME
+from robusta.core.model.env_vars import IMAGE_REGISTRY, INSTALLATION_NAMESPACE, RELEASE_NAME
 from robusta.integrations.kubernetes.api_client_utils import (
     SUCCEEDED_STATE,
     exec_shell_command,
@@ -25,13 +25,16 @@ from robusta.integrations.kubernetes.api_client_utils import (
 from robusta.integrations.kubernetes.templates import get_deployment_yaml
 from robusta.utils.parsing import load_json
 
+if TYPE_CHECKING:
+    from src.robusta.core.model.base_params import NamedRegexPattern
+
 S = TypeVar("S")
 T = TypeVar("T")
 
 
 # TODO: import these from the python-tools project
-PYTHON_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/debug-toolkit:v5.0"
-JAVA_DEBUGGER_IMAGE = "us-central1-docker.pkg.dev/genuine-flight-317411/devel/java-toolkit-11:jattach"
+PYTHON_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/debug-toolkit:v5.0"
+JAVA_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/java-toolkit-11:jattach"
 
 
 class Process(BaseModel):
@@ -149,15 +152,6 @@ class RegexReplacementStyle(Enum):
     NAMED = auto()
 
 
-class NamedRegexPattern(BaseModel):
-    """
-    A named regex pattern
-    """
-
-    name: str = "Redacted"
-    regex: str
-
-
 class RobustaPod(Pod):
     def exec(self, shell_command: str, container: str = None) -> str:
         """Execute a command inside the pod"""
@@ -171,7 +165,7 @@ class RobustaPod(Pod):
         container=None,
         previous=None,
         tail_lines=None,
-        regex_replacer_patterns: Optional[List[NamedRegexPattern]] = None,
+        regex_replacer_patterns: Optional[List["NamedRegexPattern"]] = None,
         regex_replacement_style: Optional[RegexReplacementStyle] = None,
         filter_regex: Optional[str] = None,
     ) -> str:
@@ -209,9 +203,15 @@ class RobustaPod(Pod):
 
     @staticmethod
     def exec_in_java_pod(
-        pod_name: str, node_name: str, debug_cmd=None, override_jtk_image: str = JAVA_DEBUGGER_IMAGE
+        pod_name: str,
+        node_name: str,
+        debug_cmd=None,
+        override_jtk_image: str = JAVA_DEBUGGER_IMAGE,
+        custom_annotations: Optional[Dict[str, str]] = None,
     ) -> str:
-        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, debug_cmd, debug_image=override_jtk_image)
+        return RobustaPod.exec_in_debugger_pod(
+            pod_name, node_name, debug_cmd, debug_image=override_jtk_image, custom_annotations=custom_annotations
+        )
 
     @staticmethod
     def create_debugger_pod(
@@ -221,6 +221,7 @@ class RobustaPod(Pod):
         debug_cmd=None,
         env: Optional[List[EnvVar]] = None,
         mount_host_root: bool = False,
+        custom_annotations: Optional[Dict[str, str]] = None,
     ) -> "RobustaPod":
         """
         Creates a debugging pod with high privileges
@@ -238,6 +239,7 @@ class RobustaPod(Pod):
             metadata=ObjectMeta(
                 name=to_kubernetes_name(pod_name, "debug-"),
                 namespace=INSTALLATION_NAMESPACE,
+                annotations=custom_annotations,
             ),
             spec=PodSpec(
                 serviceAccountName=f"{RELEASE_NAME}-runner-service-account",
@@ -265,16 +267,25 @@ class RobustaPod(Pod):
         return debugger
 
     @staticmethod
-    def exec_on_node(pod_name: str, node_name: str, cmd):
+    def exec_on_node(pod_name: str, node_name: str, cmd, custom_annotations: Optional[Dict[str, str]] = None):
         command = f'nsenter -t 1 -a "{cmd}"'
-        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, command)
+        return RobustaPod.exec_in_debugger_pod(pod_name, node_name, command, custom_annotations=custom_annotations)
 
     @staticmethod
     def run_debugger_pod(
-        node_name: str, pod_image: str, env: Optional[List[EnvVar]] = None, mount_host_root: bool = False
+        node_name: str,
+        pod_image: str,
+        env: Optional[List[EnvVar]] = None,
+        mount_host_root: bool = False,
+        custom_annotations: Optional[Dict[str, str]] = None,
     ) -> str:
         debugger = RobustaPod.create_debugger_pod(
-            node_name, node_name, pod_image, env=env, mount_host_root=mount_host_root
+            node_name,
+            node_name,
+            pod_image,
+            env=env,
+            mount_host_root=mount_host_root,
+            custom_annotations=custom_annotations,
         )
         try:
             pod_name = debugger.metadata.name
@@ -288,8 +299,16 @@ class RobustaPod(Pod):
             RobustaPod.deleteNamespacedPod(debugger.metadata.name, debugger.metadata.namespace)
 
     @staticmethod
-    def exec_in_debugger_pod(pod_name: str, node_name: str, cmd, debug_image=PYTHON_DEBUGGER_IMAGE) -> str:
-        debugger = RobustaPod.create_debugger_pod(pod_name, node_name, debug_image)
+    def exec_in_debugger_pod(
+        pod_name: str,
+        node_name: str,
+        cmd,
+        debug_image=PYTHON_DEBUGGER_IMAGE,
+        custom_annotations: Optional[Dict[str, str]] = None,
+    ) -> str:
+        debugger = RobustaPod.create_debugger_pod(
+            pod_name, node_name, debug_image, custom_annotations=custom_annotations
+        )
         try:
             return debugger.exec(cmd)
         finally:
@@ -300,12 +319,13 @@ class RobustaPod(Pod):
         runtime, container_id = status.containerID.split("://")
         return container_id
 
-    def get_processes(self) -> List[Process]:
+    def get_processes(self, custom_annotations: Optional[Dict[str, str]] = None) -> List[Process]:
         container_ids = " ".join([self.extract_container_id(s) for s in self.status.containerStatuses])
         output = RobustaPod.exec_in_debugger_pod(
             self.metadata.name,
             self.spec.nodeName,
             f"debug-toolkit pod-ps {self.metadata.uid} {container_ids}",
+            custom_annotations=custom_annotations,
         )
         processes = ProcessList(**load_json(output))
         return processes.processes
@@ -368,7 +388,7 @@ class RobustaPod(Pod):
         for _ in range(timeout):  # retry for up to timeout seconds
             try:
                 pod = RobustaPod().read(pod_name, namespace)
-                if pod.status.phase == 'Running':
+                if pod.status.phase == "Running":
                     return pod
             except ApiException as e:
                 if e.status != 404:  # re-raise the exception if it's not a NotFound error
@@ -403,8 +423,7 @@ class RobustaDeployment(Deployment):
                     raise
             time.sleep(1)
         else:
-            raise RuntimeError(
-                f"Deployment {name} in namespace {namespace} is not ready after {timeout} seconds")
+            raise RuntimeError(f"Deployment {name} in namespace {namespace} is not ready after {timeout} seconds")
 
 
 class JobSecret(BaseModel):
@@ -456,14 +475,21 @@ class RobustaJob(Job):
             raise e
 
     @classmethod
-    def run_simple_job_spec(cls, spec, name, timeout, job_secret: Optional[JobSecret] = None) -> str:
+    def run_simple_job_spec(
+        cls,
+        spec,
+        name,
+        timeout,
+        job_secret: Optional[JobSecret] = None,
+        custom_annotations: Optional[Dict[str, str]] = None,
+    ) -> str:
         job = RobustaJob(
-            metadata=ObjectMeta(namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name)),
+            metadata=ObjectMeta(
+                namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name), annotations=custom_annotations
+            ),
             spec=JobSpec(
                 backoffLimit=0,
-                template=PodTemplateSpec(
-                    spec=spec,
-                ),
+                template=PodTemplateSpec(spec=spec, metadata=ObjectMeta(annotations=custom_annotations)),
             ),
         )
         try:

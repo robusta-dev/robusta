@@ -8,8 +8,11 @@ from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
+from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
+
 from robusta.api import (
+    IMAGE_REGISTRY,
     RELEASE_NAME,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
@@ -17,7 +20,7 @@ from robusta.api import (
     FindingSource,
     FindingType,
     JobSecret,
-    PrometheusAuthorization,
+    PodRunningParams,
     PrometheusParams,
     RobustaJob,
     ScanReportBlock,
@@ -25,11 +28,12 @@ from robusta.api import (
     ScanType,
     action,
     format_unit,
-    to_kubernetes_name,
 )
+from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", "us-central1-docker.pkg.dev/genuine-flight-317411/devel/krr:v1.4.1")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.6.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
+KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "1Gi")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
@@ -43,6 +47,7 @@ class KRRObject(BaseModel):
     namespace: str
     kind: str
     allocations: Dict[str, Dict[str, Optional[float]]]
+    warnings: List[str] = []
 
 
 class KRRRecommendedInfo(BaseModel):
@@ -91,17 +96,19 @@ class KRRResponse(BaseModel):
     strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
 
 
-class KRRParams(PrometheusParams):
+class KRRParams(PrometheusParams, PodRunningParams):
     """
     :var timeout: Time span for yielding the scan.
-    :var args: KRR cli arguments.
+    :var args: Deprecated -  KRR cli arguments.
+    :var krr_args: KRR cli arguments.
     :var serviceAccountName: The account name to use for the KRR scan job.
     :var krr_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
     """
 
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
     strategy: str = "simple"
-    args: str = ""
+    args: Optional[str] = None
+    krr_args: str = ""
     timeout: int = 300
     krr_job_spec = {}
 
@@ -115,7 +122,10 @@ class KRRParams(PrometheusParams):
 
     @property
     def args_sanitized(self) -> str:
-        return shlex.join(shlex.split(self.args))
+        if self.args:
+            logging.warning("The args param for krr_scan has been deprecated, use krr_args instead.")
+            return shlex.join(shlex.split(self.args))
+        return shlex.join(shlex.split(self.krr_args))
 
     @validator("strategy", allow_reuse=True)
     def check_strategy(cls, strategy: str) -> str:
@@ -178,53 +188,146 @@ def get_krr_additional_flags(params: KRRParams) -> str:
     return f"--prometheus-label {key} -l {value}"
 
 
+class KRRSecret(BaseModel):
+    env_var_name: str
+    secret_key: str
+    secret_value: str
+    command_flag: str
+
+    def __init__(self, env_var_name: str, secret_key: str, secret_value: str, command_flag: str):
+        secret_b64_str = base64.b64encode(bytes(secret_value, "utf-8")).decode("utf-8")
+        super().__init__(
+            env_var_name=env_var_name, secret_key=secret_key, secret_value=secret_b64_str, command_flag=command_flag
+        )
+
+
+def _generate_krr_job_secret(scan_id: str, krr_secrets: Optional[List[KRRSecret]]) -> Optional[JobSecret]:
+    if not krr_secrets:
+        return None
+    krr_secret_name = "krr-auth-secret" + scan_id
+    data = {secret.secret_key: secret.secret_value for secret in krr_secrets}
+    return JobSecret(name=krr_secret_name, data=data)
+
+
+def _generate_krr_env_vars(krr_secrets: Optional[List[KRRSecret]], secret_name: Optional[str]) -> Optional[EnvVar]:
+    if not krr_secrets or not secret_name:
+        return None
+    return [
+        EnvVar(
+            name=secret.env_var_name,
+            valueFrom=EnvVarSource(secretKeyRef=SecretKeySelector(name=secret_name, key=secret.secret_key)),
+        )
+        for secret in krr_secrets
+    ]
+
+
+def _generate_additional_env_args(krr_secrets: Optional[List[KRRSecret]]) -> Optional[str]:
+    if not krr_secrets:
+        return None
+    return " ".join(f"{secret.command_flag} ${secret.env_var_name}" for secret in krr_secrets)
+
+
+def _generate_cmd_line_args(prom_config: PrometheusConfig) -> str:
+    additional_cmd_line_args = ""
+    if isinstance(prom_config, AWSPrometheusConfig):
+        additional_cmd_line_args += (
+            "--eks-managed-prom"
+            + f" --eks-managed-prom-region {prom_config.aws_region}"
+            + f" --eks-service-name {prom_config.service_name}"
+        )
+    return additional_cmd_line_args
+
+
+def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecret]:
+    krr_secrets = []
+
+    # needed for custom bearer token or Azure
+    headers = PrometheusAuthorization.get_authorization_headers(prom_config)
+    auth_header = headers["Authorization"] if "Authorization" in headers else ""
+    if auth_header:
+        krr_secrets.append(
+            KRRSecret(
+                env_var_name="PROMETHEUS_AUTH_HEADER",
+                secret_key="prometheus-auth-header",
+                secret_value=auth_header,
+                command_flag="--prometheus-auth-header",
+            )
+        )
+
+    if isinstance(prom_config, AWSPrometheusConfig):
+        krr_secrets.extend(
+            [
+                KRRSecret(
+                    env_var_name="AWS_KEY",
+                    secret_key="aws-key",
+                    secret_value=prom_config.access_key,
+                    command_flag="--eks-access-key",
+                ),
+                KRRSecret(
+                    env_var_name="AWS_SECRET",
+                    secret_key="aws-secret",
+                    secret_value=prom_config.secret_access_key,
+                    command_flag="--eks-secret-key",
+                ),
+            ]
+        )
+    if isinstance(prom_config, CoralogixPrometheusConfig):
+        krr_secrets.append(
+            KRRSecret(
+                env_var_name="CORALOGIX_TOKEN",
+                secret_key="coralogix_token",
+                secret_value=prom_config.prometheus_token,
+                command_flag="--coralogix-token",
+            )
+        )
+
+    return krr_secrets
+
+
 @action
 def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     """
     Displays a KRR scan report.
     """
     scan_id = str(uuid.uuid4())
-    headers = PrometheusAuthorization.get_authorization_headers(params)
+    prom_config = generate_prometheus_config(params)
     additional_flags = get_krr_additional_flags(params)
 
     python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} -q -f json "
     if params.prometheus_url:
         python_command += f"-p {params.prometheus_url}"
-    auth_header = headers["Authorization"] if "Authorization" in headers else ""
 
     # adding env var of auth token from Secret
-    env_var = None
-    secret = None
-    if auth_header:
-        krr_secret_name = "krr-auth-secret" + scan_id
-        prometheus_auth_secret_key = "prometheus-auth-header"
-        env_var_auth_name = "PROMETHEUS_AUTH_HEADER"
-        auth_header_b64_str = base64.b64encode(bytes(auth_header, "utf-8")).decode("utf-8")
-        # creating secret for auth key
-        secret = JobSecret(name=krr_secret_name, data={prometheus_auth_secret_key: auth_header_b64_str})
-        # setting env variables of krr to have secret
-        env_var = [
-            EnvVar(
-                name=env_var_auth_name,
-                valueFrom=EnvVarSource(
-                    secretKeyRef=SecretKeySelector(name=krr_secret_name, key=prometheus_auth_secret_key)
-                ),
-            )
-        ]
+    env_var = []
+    krr_secrets = _generate_prometheus_secrets(prom_config)
+    python_command += " " + _generate_cmd_line_args(prom_config)
+
+    # creating secrets for auth
+    secret = _generate_krr_job_secret(scan_id, krr_secrets)
+    # setting env variables of krr to have secret
+    if secret:
+        env_var = _generate_krr_env_vars(krr_secrets, secret.name)
         # adding secret env var in krr pod command
-        python_command += f'--prometheus-auth-header "${env_var_auth_name}"'
+        python_command += " " + _generate_additional_env_args(krr_secrets)
+    logging.debug(f"krr command '{python_command}'")
+
     resources = ResourceRequirements(
-        limits={"memory": (str(KRR_MEMORY_LIMIT))},
+        limits={
+            "memory": (str(KRR_MEMORY_LIMIT)),
+        },
+        requests={
+            "memory": (str(KRR_MEMORY_REQUEST)),
+        },
     )
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
         containers=[
             Container(
-                name=to_kubernetes_name(IMAGE),
+                name="krr",
                 image=IMAGE,
                 imagePullPolicy="Always",
                 command=["/bin/sh", "-c", python_command],
-                env=env_var if env_var else [],
+                env=env_var,
                 resources=resources,
             )
         ],
@@ -237,7 +340,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     logs = None
 
     try:
-        logs = RobustaJob.run_simple_job_spec(spec, "krr_job" + scan_id, params.timeout, secret)
+        logs = RobustaJob.run_simple_job_spec(
+            spec, "krr_job" + scan_id, params.timeout, secret, custom_annotations=params.custom_annotations
+        )
         krr_response = json.loads(logs)
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
@@ -286,9 +391,11 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
                             "request": scan.recommended.requests[resource].priority,
                             "limit": scan.recommended.limits[resource].priority,
                         },
+                        "info": scan.recommended.info.get(resource),
                         "metric": scan.metrics.get(resource).dict() if scan.metrics.get(resource) else {},
                         "description": krr_scan.description,
                         "strategy": krr_scan.strategy.dict() if krr_scan.strategy else None,
+                        "warnings": scan.object.warnings,
                     }
                     for resource in krr_scan.resources
                 ],

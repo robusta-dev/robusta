@@ -29,9 +29,9 @@ Define your own alerts. Customize the data shown in alert notifications.
 .. toctree::
    :maxdepth: 1
 
+   playbook-track-changes
    playbook-job-failure
    playbook-failed-liveness
-   playbook-track-changes
    alert-custom-prometheus
    alert-custom-enrichment
 
@@ -80,3 +80,12 @@ Troubleshoot, debug, and profile Kubernetes applications faster.
 .. Automatically deleting pods
 .. Automatically running jobs
 .. Monitor PVCs https://robustaco.slack.com/archives/C034F1Y1C4S/p1676815178255829
+
+
+Prometheus Graphs
+----------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   robusta-runner-metrics

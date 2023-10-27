@@ -15,7 +15,7 @@ clusterZone: ""
 
 automountServiceAccountToken: true
 
-# see https://docs.robusta.dev/master/user-guide/configuration.html#global-config
+# see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
 globalConfig:
   grafana_url: ""
   grafana_api_key: ""
@@ -23,6 +23,10 @@ globalConfig:
   prometheus_url: ""
   account_id: ""
   signing_key: ""
+  custom_annotations: []
+
+# see https://docs.robusta.dev/master/user-guide/configuration/additional-settings.html#relabel-prometheus-alerts
+alertRelabel: []
 
 # safe actions to enable authenticated users to run
 lightActions:
@@ -75,6 +79,10 @@ monitorHelmReleases: true
 
 # disable messages routed by Robusta cloud
 disableCloudRouting: false
+
+# scale alerts processing.
+# Used to support clusters with high load of alerts. When used, the runner will consume more memory
+scaleAlertsProcessing: False
 
 # Enable loading playbooks to a persistent volume
 playbooksPersistentVolume: false
@@ -373,9 +381,17 @@ platformPlaybooks:
     - on_deployment_all_changes: {}
     - on_daemonset_all_changes: {}
     - on_statefulset_all_changes: {}
+  actions:
+    - resource_babysitter: {}
+  sinks:
+    - "robusta_ui_sink"
+- triggers:
     - on_ingress_all_changes: {}
   actions:
     - resource_babysitter: {}
+    - customise_finding:
+        title: Ingress Changes
+        aggregation_key: IngressChange
   sinks:
     - "robusta_ui_sink"
 - triggers:
@@ -384,6 +400,8 @@ platformPlaybooks:
     - on_statefulset_all_changes: {}
     - on_replicaset_all_changes: {}
     - on_pod_all_changes: {}
+    - on_node_all_changes: {}
+    - on_job_all_changes: {}
   actions:
     - resource_events_diff: {}
 - triggers:
@@ -415,9 +433,13 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
+image:
+  registry: us-central1-docker.pkg.dev/genuine-flight-317411/devel
+
 # parameters for the robusta forwarder deployment
 kubewatch:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/kubewatch:v2.5
+  image: ~  # image can be used to override image.registry/imageName
+  imageName: kubewatch:v2.5
   imagePullPolicy: IfNotPresent
   pprof: True
   resources:
@@ -430,11 +452,36 @@ kubewatch:
   tolerations: []
   annotations: {}
   nodeSelector: ~
+  imagePullSecrets: []
+  config:
+    namespace: ""
+    resource:
+      deployment: true
+      replicationcontroller: false  # 0.10.12 disabled because not supported on the runner
+      replicaset: true
+      daemonset: true
+      statefulset: true
+      services: true
+      pod: true
+      job: true
+      node: true
+      hpa: true
+      clusterrole: true
+      clusterrolebinding: true
+      serviceaccount: true
+      persistentvolume: true
+      namespace: true
+      configmap: true # 0.9.17
+      secret: false       # disabled for security reasons
+      event: true  # updated on kubewatch 2.5
+      coreevent: false # added on kubewatch 2.5
+      ingress: true # full support on kubewatch 2.4 (earlier versions have ingress bugs)
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
   enableContainer: false
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/grafana-renderer:7
+  image: ~  # image can be used to override image.registry/imageName
+  imageName: grafana-renderer:7
   imagePullPolicy: IfNotPresent
   resources:
     requests:
@@ -443,9 +490,15 @@ grafanaRenderer:
     limits:
       cpu: ~
 
+# parameters for the robusta runner service account
+runnerServiceAccount:
+  # image pull secrets added to the runner service account. Any pod using the service account will get those
+  imagePullSecrets: []
+
 # parameters for the robusta runner
 runner:
-  image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:0.0.0
+  image: ~  # image can be used to override image.registry/imageName
+  imageName: robusta-runner:0.0.0
   imagePullPolicy: IfNotPresent
   log_level: INFO
   sentry_dsn: https://53b627690db14de7b02095407596fa16@o1120648.ingest.sentry.io/6156573
@@ -463,6 +516,9 @@ runner:
   annotations: {}
   nodeSelector: ~
   customClusterRoleRules: []
+  imagePullSecrets: []
+  extraVolumes: []
+  extraVolumeMounts: []
 
 kube-prometheus-stack:
   alertmanager:

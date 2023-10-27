@@ -5,8 +5,6 @@ A Complete Python Action
 
     It is recommended to read :ref:`The Basics` before starting this guide.
 
-Robusta can be extended in Python if the :ref:`built-in actions<Actions Reference>` don't do what you need.
-
 In this tutorial, we will write a custom action. For educational purposes, we'll automate the investigation of a made-up (but realistic) error scenario.
 
 The scenario

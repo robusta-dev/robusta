@@ -26,7 +26,6 @@ typer = "^0.4.1"
 colorlog = "^5.0.1"
 pydantic = "^1.8.1"
 kubernetes = "^26.1.0"
-hikaru = "^1.0.1"
 click-spinner = "^0.1.10"
 pymsteams = "^0.1.16"
 supabase = { version = "^1.0.3", optional = true }
@@ -38,7 +37,6 @@ watchdog =  { version = "^2.1.0", optional = true }
 better-exceptions = { version =  "^0.3.3", optional = true }
 CairoSVG = { version = "^2.5.2", optional = true }
 kafka-python = { version = "^2.0.2", optional = true }
-prometheus-api-client = { version = "^0.4.2", optional = true }
 datadog-api-client = { version = "^1.2.0", optional = true }
 dpath = "^2.0.5"
 websocket-client = "1.3.3"
@@ -64,6 +62,8 @@ cryptography = "^36.0.0"
 PyJWT = "2.4.0"
 fpdf2 = "^2.7.1"
 attrs = "^23.1.0"
+prometrix = "0.1.10"
+hikaru-model-26 = "^1.1.1"
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
 pytest = "^6.2.4"
@@ -91,7 +91,7 @@ sphinx-immaterial = { git = "https://github.com/robusta-dev/robusta-immaterial.g
 # As it does not work witn sphynx-immaterial, we need to exclude it from the dev dependencies
 # Please, install it manually if you need to run flake8
 # flake8 = "5.0.4"
-black = "21.5b2"
+black = "22.3.0"
 mypy = "0.991"
 isort = "5.10.1"
 absolufy-imports = "^0.3.1"
