@@ -63,5 +63,5 @@ def display_demo_playbook():
         st.markdown(
             "on_ingress_all_changes is triggered for every change in an ingress. The resource_babysitter action sends you the changed field and details of what changed."
         )
-        st.image("./docs/images/deployment-image-change.png")
+        st.image("./docs/images/ingress-image-change.png")
         st.button("Use Playbook", key="but_ingress_change", on_click=ingress_change_options)
