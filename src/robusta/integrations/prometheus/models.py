@@ -1,8 +1,10 @@
+import logging
 import re
+import html
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from urllib.parse import unquote_plus, urlparse
+from urllib.parse import urlparse, parse_qs, unquote
 
 from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Node, StatefulSet
 from pydantic import BaseModel
@@ -101,8 +103,25 @@ class PrometheusKubernetesAlert(
         """
         Gets the prometheus query that defines this alert.
         """
-        url = urlparse(self.alert.generatorURL)
-        return re.match(r"g0.expr=(.*)&g0.tab=1", unquote_plus(url.query)).group(1)
+        url = self.alert.generatorURL
+        if not url:
+            return ""
+
+        try:
+            # decode HTML entities to convert &#43; like representations to characters
+            url = html.unescape(url)
+            parsed_url = urlparse(url)
+            query_params = parse_qs(parsed_url.query)
+
+            q_expr = query_params.get('g0.expr', [])
+            if len(q_expr) < 1 or not q_expr[0]:
+                return ""
+
+            return unquote(q_expr[0])
+
+        except Exception as e:
+            logging.error(f"An error occured in 'get_prometheus_query' | URL: {url} | Error: {e}")
+            return ""
 
     def get_description(self) -> str:
         annotations = self.alert.annotations

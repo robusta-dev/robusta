@@ -95,7 +95,7 @@ def get_node_internal_ip(node: Node) -> str:
 
 
 def run_prometheus_query(
-    prometheus_params: PrometheusParams, promql_query: str, starts_at: datetime, ends_at: datetime
+    prometheus_params: PrometheusParams, promql_query: str, starts_at: datetime, ends_at: datetime, step: Optional[str]
 ) -> PrometheusQueryResult:
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
@@ -105,13 +105,14 @@ def run_prometheus_query(
 
     query_duration = ends_at - starts_at
     resolution = get_resolution_from_duration(query_duration)
-    increment = max(query_duration.total_seconds() / resolution, 1.0)
+
+    step = step if step else str(max(query_duration.total_seconds() / resolution, 1.0))
     return custom_query_range(
         prometheus_params,
         promql_query,
         starts_at,
         ends_at,
-        str(increment),
+        step,
         {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
     )
 
@@ -183,7 +184,7 @@ def create_chart_from_prometheus_query(
         alert_duration = ends_at - alert_starts_at
         graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
         starts_at = ends_at - graph_duration
-    prometheus_query_result = run_prometheus_query(prometheus_params, promql_query, starts_at, ends_at)
+    prometheus_query_result = run_prometheus_query(prometheus_params, promql_query, starts_at, ends_at, step=None)
     if prometheus_query_result.result_type != "matrix":
         raise Exception(
             f"Unsupported query result for robusta chart, Type received: {prometheus_query_result.result_type}, type supported 'matrix'"

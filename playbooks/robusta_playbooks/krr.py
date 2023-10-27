@@ -33,6 +33,7 @@ from robusta.integrations.prometheus.utils import generate_prometheus_config
 
 IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.6.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
+KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "1Gi")
 
 
 SeverityType = Literal["CRITICAL", "WARNING", "OK", "GOOD", "UNKNOWN"]
@@ -311,7 +312,12 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     logging.debug(f"krr command '{python_command}'")
 
     resources = ResourceRequirements(
-        limits={"memory": (str(KRR_MEMORY_LIMIT))},
+        limits={
+            "memory": (str(KRR_MEMORY_LIMIT)),
+        },
+        requests={
+            "memory": (str(KRR_MEMORY_REQUEST)),
+        },
     )
     spec = PodSpec(
         serviceAccountName=params.serviceAccountName,
