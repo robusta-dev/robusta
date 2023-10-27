@@ -2,7 +2,7 @@ from pages import demo_playbooks, playbook_builder
 from streamlit import session_state as ss
 
 if "current_page" not in ss:
-    ss["current_page"] = "demo_playbooks"
+    ss.current_page = "demo_playbooks"
 
 if "playbook_chosen" not in ss:
     ss.playbook_chosen = False

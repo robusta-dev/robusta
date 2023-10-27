@@ -15,7 +15,17 @@ actions_by_name = {a.action_name: a for a in actions}
 triggers_to_actions = generator.get_triggers_to_actions(actions)
 
 
+def go_back():
+
+    for key in st.session_state.keys():
+        if key != "current_page":
+            del st.session_state[key]
+        ss.current_page = "demo_playbooks"
+
+
 def display_playbook_builder():
+
+    st.button(":point_left: Choose a Playbook", key="choose_playbook", on_click=go_back)
 
     st.title(":wrench: Playbook Builder", anchor=None)
     if "expander_state" not in ss:
@@ -54,7 +64,7 @@ def display_playbook_builder():
     # ACTION
     with action_expander:
         relevant_actions = [a.action_name for a in triggers_to_actions[trigger_name]]
-        action_name = st.selectbox("Choose an action", relevant_actions, key="actions")
+        action_name = st.selectbox("Choose an action", relevant_actions, key="action")
 
         if st.button("Continue", key="button3"):
             ss.expander_state = [False, False, False, True, False]
