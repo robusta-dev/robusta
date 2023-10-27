@@ -45,8 +45,9 @@ def create_container_graph(params: ResourceGraphEnricherParams, pod: Pod, oomkil
                 limit_line = XAxisLine(label="Request", value=request_limit_in_bytes)
                 limit_lines.append(limit_line)
 
-        if oomkilled_container.state.running is None and \
+        if oomkilled_container.state.terminated and \
                 oomkilled_container.state.terminated.reason == "OOMKilled" and \
+                oom_killed_status.terminated and \
                 oom_killed_status.terminated.finishedAt:
             oom_killed_datetime = parse_kubernetes_datetime(oom_killed_status.terminated.finishedAt)
             limit_line = YAxisLine(label="OOM Kill Time", value=oom_killed_datetime.timestamp())

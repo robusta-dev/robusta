@@ -50,12 +50,6 @@ class PlotData:
         self.show_dots = show_dots
         self.dots_size = dots_size
 
-    plot: Tuple[str, List[Tuple]]
-    color: str
-    stroke_style: Dict[str, Any]
-    show_dots: bool
-    dots_size: Optional[str]
-
 
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
     labels: Dict[Any, Any] = defaultdict(lambda: "<missing>")
