@@ -98,5 +98,6 @@ class OpsGenieSink(SinkBase):
 
     @classmethod
     def __enrichments_as_text(cls, enrichments: List[Enrichment]) -> str:
-        text_arr = [Transformer.to_html(enrichment.blocks) for enrichment in enrichments]
+        transformer = Transformer()
+        text_arr = [transformer.to_html(enrichment.blocks) for enrichment in enrichments]
         return "---\n".join(text_arr)
