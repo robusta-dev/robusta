@@ -50,7 +50,7 @@ def display_playbook_builder():
 
         if st.button("Continue", key="button1"):
             ss.expander_state = [False, True, False, False, False]
-            st.experimental_rerun()
+            st.rerun()
 
     # TRIGGER PARAMETER
     with trigger_parameter_expander:
@@ -59,7 +59,7 @@ def display_playbook_builder():
 
         if st.button("Continue", key="button2"):
             ss.expander_state = [False, False, True, False, False]
-            st.experimental_rerun()
+            st.rerun()
 
     # ACTION
     with action_expander:
@@ -68,8 +68,7 @@ def display_playbook_builder():
 
         if st.button("Continue", key="button3"):
             ss.expander_state = [False, False, False, True, False]
-            st.experimental_rerun()
-
+            st.rerun()
     # ACTION PARAMETER
     with action_parameter_expander:
         action_obj = actions_by_name.get(action_name, None)
@@ -78,7 +77,7 @@ def display_playbook_builder():
             action_data = sp.pydantic_input(key=f"action_form-{action_name}", model=action_obj.params_type)
             if st.button("Continue", key="button4"):
                 ss.expander_state = [False, False, False, False, True]
-                st.experimental_rerun()
+                st.rerun()
         else:
             st.markdown("This action doesn't have any parameters")
             ss.expander_state = [False, False, False, False, True]
