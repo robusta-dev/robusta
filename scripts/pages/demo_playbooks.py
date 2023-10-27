@@ -5,7 +5,7 @@ from streamlit import session_state as ss
 def update_changes():
     ss.current_page = "playbook_builder"
     ss.expander_state = [False, False, False, False, True]
-    ss.playbook_choosen = True
+    ss.playbook_chosen = True
 
 
 def release_fail_options():
@@ -34,7 +34,7 @@ def display_demo_playbook():
     )
     st.title("Demo Playbooks", anchor=None)
 
-    if "expander_state" not in st.session_state:
+    if "expander_state" not in ss:
         ss.expander_state = [True, False, False, False, False]
     if "triggers" not in ss:
         ss.triggers = ""
