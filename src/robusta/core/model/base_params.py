@@ -195,11 +195,11 @@ class CustomGraphEnricherParams(PrometheusParams):
     """
     :var promql_query: Promql query. You can use $pod, $node and $node_internal_ip to template (see example). For more information, see https://prometheus.io/docs/prometheus/latest/querying/basics/
     :var graph_title: A nicer name for the Prometheus query.
-    :var graph_duration_minutes: Graph duration is minutes.
+    :var graph_duration_minutes: How many minutes of data to fetch before the current time
     :var chart_values_format: Customize the y-axis labels with one of: Plain, Bytes, Percentage (see ChartValuesFormat)
 
     :example promql_query: instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", cluster=""} != 0
-    :example graph_title: CPU Usage for this nod
+    :example graph_title: CPU Usage for this node
     """
 
     promql_query: str

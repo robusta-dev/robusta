@@ -1,10 +1,10 @@
 import logging
 import sys
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Literal
 from datetime import datetime
 import pytz
 from attr import dataclass
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.model.helm_release import HelmRelease
@@ -13,9 +13,13 @@ from robusta.core.reporting import Finding, FindingSeverity
 from robusta.utils.rate_limiter import RateLimiter
 from robusta.utils.server_start import ServerStart
 
+# TODO: can we just use a Literal for both versions? Need to check it doesn't break anything
 UNHEALTHY_STATUSES = ["pending-install", "pending-upgrade", "pending-rollback", "uninstalling"]
+UNHEALTHY_STATUSES_LITERAL = Literal["pending-install", "pending-upgrade", "pending-rollback", "uninstalling"]
 FAILED_STATUSES = ["failed", "unknown"]
+FAILED_STATUSES_LITERAL = Literal["failed", "unknown"]
 DEPLOYED_STATUSES = ["deployed"]
+DEPLOYED_STATUSES_LITERAL = Literal["deployed"]
 
 class IncomingHelmReleasesEventPayload(BaseModel):
     """
@@ -56,11 +60,11 @@ class HelmReleasesEvent(ExecutionBaseEvent):
 
 
 class HelmReleaseBaseTrigger(BaseTrigger):
-    statuses: List[str]
-    rate_limit: int
-    names: Optional[List[str]]
-    namespace: Optional[str]
-    duration: Optional[int]
+    statuses: List[str] = Field(description="Helm status this trigger fires on")
+    rate_limit: int = Field(description="How often should the trigger re-fire if the Helm release remains in this status?")
+    names: Optional[List[str]] = Field(description="Optional. Only monitor Helm releases with these names.")
+    namespace: Optional[str] = Field(description="Optional. Only monitor Helm releases in this namespace")
+    duration: Optional[int] = Field(description="How long must the Helm release be in this status before firing")
 
     def get_trigger_event(self):
         return HelmReleasesTriggerEvent.__name__
@@ -127,40 +131,18 @@ class HelmReleaseBaseTrigger(BaseTrigger):
 
 
 class HelmReleaseUnhealthyTrigger(HelmReleaseBaseTrigger):
-    def __init__(self,
-                 rate_limit: int,
-                 names: List[str] = [],
-                 namespace: str = None,
-                 duration: int = 900, ):
-        super().__init__(
-            statuses=UNHEALTHY_STATUSES,
-            names=names,
-            namespace=namespace,
-            duration=duration,
-            rate_limit=rate_limit,
-        )
+    statuses: UNHEALTHY_STATUSES_LITERAL
+    duration: Literal[900]
 
 
 class HelmReleaseFailTrigger(HelmReleaseBaseTrigger):
-    def __init__(self, names: List[str] = [], namespace: str = None, rate_limit: int = sys.maxsize):
-        super().__init__(
-            statuses=FAILED_STATUSES,
-            names=names,
-            namespace=namespace,
-            duration=0,
-            rate_limit=rate_limit,
-        )
+    statuses: FAILED_STATUSES_LITERAL
+    duration: Literal[0]
 
 
 class HelmReleaseDeployTrigger(HelmReleaseBaseTrigger):
-    def __init__(self, names: List[str] = [], namespace: str = None, rate_limit: int = sys.maxsize):
-        super().__init__(
-            statuses=DEPLOYED_STATUSES,
-            names=names,
-            namespace=namespace,
-            duration=0,
-            rate_limit=rate_limit,
-        )
+    statuses: DEPLOYED_STATUSES_LITERAL
+    duration: Literal[0]
 
 
 class HelmReleaseTriggers(BaseModel):

@@ -1,9 +1,10 @@
 import logging
 from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, NamedTuple, Optional, Type, Union
+from enum import Enum
 
 from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Job, Node, NodeList, StatefulSet
-from pydantic.main import BaseModel
+from pydantic.main import BaseModel, Field
 
 from robusta.core.model.env_vars import ALERT_BUILDER_WORKERS, ALERTS_WORKERS_POOL
 from robusta.core.model.events import ExecutionBaseEvent
@@ -50,17 +51,23 @@ MAPPINGS = [
 ]
 
 
+class AlertStatus(str, Enum):
+    FIRING = "firing"
+    RESOLVED = "resolved"
+    ALL = "all"
+
+
 class PrometheusAlertTrigger(BaseTrigger):
     """
     :var status: one of "firing", "resolved", or "all"
     """
 
-    alert_name: str = None
-    status: str = "firing"
-    pod_name_prefix: str = None
-    namespace_prefix: str = None
-    instance_name_prefix: str = None
-    k8s_providers: Optional[List[str]]
+    alert_name: str = Field(default=None, description="Only respond to alerts with this name")
+    status: AlertStatus = AlertStatus.FIRING
+    pod_name_prefix: str = Field(default=None, description="Optional. Only respond to alerts with a 'pod' label that has this prefix")
+    namespace_prefix: str = Field(default=None, description="Optional. Only respond to alerts with a 'namespace' label that has this prefix")
+    instance_name_prefix: str = Field(default=None, description="Optional. Only respond to alerts with a 'instance' label that has this prefix")
+    k8s_providers: Optional[List[str]] = Field(description="Optional. Only fire this trigger on clusters from a certain provider (e.g. EKS)")
 
     def get_trigger_event(self):
         return PrometheusTriggerEvent.__name__

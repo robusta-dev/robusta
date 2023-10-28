@@ -338,7 +338,7 @@ def autogenerate_triggers(f: TextIO):
     f.write(
         textwrap.dedent(
             """\
-        from typing import Optional, Dict
+        from typing import Optional, Dict, Literal
         from pydantic import BaseModel
         from robusta.integrations.kubernetes.base_triggers import K8sBaseTrigger
         from robusta.core.model.k8s_operation_type import K8sOperationType
@@ -357,14 +357,8 @@ def autogenerate_triggers(f: TextIO):
                 textwrap.dedent(
                     f"""\
             class {resource}{get_trigger_class_name(trigger_name)}Trigger(K8sBaseTrigger):
-                def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
-                    super().__init__(
-                        kind=\"{resource}\",
-                        operation={operation_type},
-                        name_prefix=name_prefix,
-                        namespace_prefix=namespace_prefix,
-                        labels_selector=labels_selector,
-                    )
+                kind: Literal[str] = \"{resource}\"
+                operation: Literal[K8sOperationType] = {operation_type}
 
                 @staticmethod
                 def get_execution_event_type() -> type:
@@ -387,14 +381,8 @@ def autogenerate_triggers(f: TextIO):
             textwrap.dedent(
                 f"""\
         class KubernetesAny{get_trigger_class_name(trigger_name)}Trigger(K8sBaseTrigger):
-            def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
-                super().__init__(
-                    kind=\"Any\",
-                    operation={operation_type},
-                    name_prefix=name_prefix,
-                    namespace_prefix=namespace_prefix,
-                    labels_selector=labels_selector,
-                )
+            kind: Literal[str] = \"{resource}\"
+            operation: Literal[K8sOperationType] = {operation_type}
 
             @staticmethod
             def get_execution_event_type() -> type:

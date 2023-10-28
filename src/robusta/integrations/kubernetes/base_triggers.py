@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 import hikaru
 from hikaru import HikaruBase
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, PrivateAttr, Field
 
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.model.k8s_operation_type import K8sOperationType
@@ -40,11 +40,11 @@ class K8sTriggerEvent(TriggerEvent):
 
 
 class K8sBaseTrigger(BaseTrigger):
-    kind: str
+    kind: str = Field(description="The kind of Kubernetes object. For example, 'Pod'")
     operation: K8sOperationType = None
-    name_prefix: str = None
-    namespace_prefix: str = None
-    labels_selector: str = None
+    name_prefix: str = Field(default=None, description="Only fire this trigger on resources with a matching name")
+    namespace_prefix: str = Field(default=None, description="Only fire this trigger on resources with a matching namespace")
+    labels_selector: str = Field(default=None, description="Only fire this trigger on resources with matching labels")
     _labels_map: Dict = PrivateAttr()
 
     def __init__(self, *args, **data):
