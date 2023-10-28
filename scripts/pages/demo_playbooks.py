@@ -6,7 +6,6 @@ def update_changes(trigger, action):
     ss.trigger = trigger
     ss.action = action
     ss.current_page = "playbook_builder"
-    ss.expander_state = [False, False, False, False, True]
     ss.playbook_chosen = True
 
 
@@ -18,8 +17,6 @@ def display_demo_playbook():
     )
     st.title("Demo Playbooks", anchor=None)
 
-    if "expander_state" not in ss:
-        ss.expander_state = [True, False, False, False, False]
     if "trigger" not in ss:
         ss.trigger = ""
     if "action" not in ss:
