@@ -41,7 +41,6 @@ def display_playbook_builder():
     if "expander_state" not in ss:
         ss.expander_state = ExpanderState.TRIGGER
 
-    print("expander_state is", ss.expander_state)
     # initialize expanders
     trigger_expander = st.expander(
         ":zap: Trigger - A trigger is an event that starts your Playbook",
@@ -71,7 +70,7 @@ def display_playbook_builder():
 
     # TRIGGER PARAMETER
     with trigger_parameter_expander:
-        st.header("Available Parameters")
+        #st.header("Available Parameters")
         trigger_data = sp.pydantic_input(key=f"trigger_form-{trigger_name}", model=triggers[trigger_name])
         st.button("Continue", key="button2", on_click=set_expander_state, args=[ExpanderState.ACTION])
 
