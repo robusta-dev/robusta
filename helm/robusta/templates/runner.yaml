@@ -15,6 +15,9 @@ spec:
       labels:
         app: {{ .Release.Name }}-runner
         robustaComponent: "runner"
+        {{- with .Values.runner.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- if or .Values.runner.annotations .Values.globalConfig.custom_annotations }}
       annotations:
         {{- if .Values.runner.annotations}} {{ toYaml .Values.runner.annotations | nindent 8 }}
