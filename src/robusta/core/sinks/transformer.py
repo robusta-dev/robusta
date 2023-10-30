@@ -1,3 +1,4 @@
+import logging
 import re
 import urllib.parse
 from collections import defaultdict
@@ -96,7 +97,7 @@ class Transformer:
         return re.sub(r"\*([^\*]*)\*", r"**\1**", markdown_data)
 
     @classmethod
-    def __markdown_to_html(cls, mrkdwn_text: str) -> str:
+    def __markdown_to_html(cls, mrkdwn_text: str, html_class: str = None) -> str:
         # replace links: from <http://url|name> to <a href="url">name</a>
         mrkdwn_links = re.findall(r"<[^\\|]*\|[^\>]*>", mrkdwn_text)
         for link in mrkdwn_links:
@@ -109,34 +110,48 @@ class Transformer:
 
         # Note - markdown2 should be used after slack links already converted, otherwise it's getting corrupted!
         # Convert other markdown content
-        return markdown2.markdown(mrkdwn_text)
+        if html_class:
+            # TODO this will most probably apply to *all* <p> elements, while we're
+            # really only interested with the topmost one.
+            extras = {"html-classes": {"p": html_class}}
+        else:
+            extras = {}
+        return markdown2.markdown(mrkdwn_text, extras=extras)
 
-    @classmethod
-    def to_html(cls, blocks: List[BaseBlock]) -> str:
-        lines = []
-        for block in blocks:
-            if isinstance(block, MarkdownBlock):
-                if not block.text:
-                    continue
-                lines.append(f"{cls.__markdown_to_html(block.text)}")
-            elif isinstance(block, DividerBlock):
-                lines.append("-------------------")
-            elif isinstance(block, JsonBlock):
-                lines.append(block.json_str)
-            elif isinstance(block, KubernetesDiffBlock):
-                for diff in block.diffs:
-                    lines.append(
-                        cls.__markdown_to_html(f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}")
-                    )
-            elif isinstance(block, HeaderBlock):
-                lines.append(f"<strong>{block.text}</strong>")
-            elif isinstance(block, ListBlock):
-                lines.extend(cls.__markdown_to_html(block.to_markdown().text))
-            elif isinstance(block, TableBlock):
-                if block.table_name:
-                    lines.append(cls.__markdown_to_html(block.table_name))
-                lines.append(tabulate(block.render_rows(), headers=block.headers, tablefmt="html").replace("\n", ""))
-        return "\n".join(lines)
+    def to_html(self, blocks: List[BaseBlock]) -> str:
+        return "\n".join(self.block_to_html(block) for block in blocks)
+
+    def block_to_html(self, block: BaseBlock) -> str:
+        if isinstance(block, MarkdownBlock):
+            if block.text:
+                return self.__markdown_to_html(block.text, getattr(block, "html_class"))
+            else:
+                return ""
+        elif isinstance(block, DividerBlock):
+            return "-------------------"
+        elif isinstance(block, JsonBlock):
+            return block.json_str
+        elif isinstance(block, KubernetesDiffBlock):
+            return "\n".join(
+                self.__markdown_to_html(f"*{'.'.join(diff.path)}*: {diff.other_value} ==> {diff.value}")
+                for diff in block.diffs
+            )
+        elif isinstance(block, HeaderBlock):
+            return f"<strong>{block.text}</strong>"
+        elif isinstance(block, ListBlock):
+            return self.__markdown_to_html(block.to_markdown().text)
+        elif isinstance(block, TableBlock):
+            if block.table_name:
+                name_part = self.__markdown_to_html(block.table_name)
+            else:
+                name_part = ""
+            return name_part + tabulate(block.render_rows(), headers=block.headers, tablefmt="html").replace("\n", "")
+        elif isinstance(block, ScanReportBlock):
+            logging.warning("block_to_html should never be called with a ScanReportBlock instance")
+            return ""
+        else:
+            logging.warning(f"Unsupported block type ({type(block)}) found when rendering HTML")
+            return ""
 
     @classmethod
     def to_standard_markdown(cls, blocks: List[BaseBlock]) -> str:
@@ -178,7 +193,6 @@ class Transformer:
 
     @staticmethod
     def scanReportBlock_to_fileblock(block: BaseBlock) -> BaseBlock:
-
         if not isinstance(block, ScanReportBlock):
             return block
 
@@ -243,7 +257,6 @@ class Transformer:
             sections[item.kind][f"{item.name}/{item.namespace}"].append(item)
 
         for kind, grouped_issues in sections.items():
-
             rows = [["Priority", "Name", "Namespace", "Issues"]]
             for group, scanRes in grouped_issues.items():
                 n, ns = group.split("/", 1)
