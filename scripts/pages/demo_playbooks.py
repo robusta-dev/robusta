@@ -28,7 +28,7 @@ def display_demo_playbook():
 
     with release_fail_expander:
         st.markdown(
-            "on_helm_release_fail is triggered when a Helm release enters a failed state. This is a one-time trigger, meaning that it only fires once when the release fails."
+            "When a Helm release enters failed state the on_helm_release_fail trigger is fired. Using the information from the trigger, helm_status_enricher is run to add more information to the alert"
         )
         st.image("./docs/images/helm-release-failed.png")
         st.button(
@@ -39,7 +39,7 @@ def display_demo_playbook():
 
     with deployment_change_expander:
         st.markdown(
-            "on_deployment_update is triggered for every deployment updated. When this happens the resource_babysitter action sends you the changed field and details of what changed."
+            "When a deployment changes, the on_deployment_update trigger is fired. An alert is sent with data from the resource_babysitter action based on your customization."
         )
         st.image("./docs/images/deployment-image-change.png")
         st.button(
@@ -50,7 +50,7 @@ def display_demo_playbook():
 
     with ingress_change_expander:
         st.markdown(
-            "on_ingress_all_changes is triggered for every change in an ingress. The resource_babysitter action sends you the changed field and details of what changed."
+            "When an ingress changes, the on_ingress_all_changes trigger is fired. An alert is sent with data from the resource_babysitter action based on your customization."
         )
         st.image("./docs/images/ingress-image-change.png")
         st.button(
