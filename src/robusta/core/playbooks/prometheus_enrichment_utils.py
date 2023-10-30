@@ -397,7 +397,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
-            query='instance:node_memory_utilisation:ratio{namespace="$namespace", job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} != 0',
+            query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
