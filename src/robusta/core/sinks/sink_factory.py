@@ -6,6 +6,8 @@ from robusta.core.sinks.file.file_sink import FileSink
 from robusta.core.sinks.file.file_sink_params import FileSinkConfigWrapper
 from robusta.core.sinks.jira import JiraSink, JiraSinkConfigWrapper
 from robusta.core.sinks.kafka import KafkaSink, KafkaSinkConfigWrapper
+from robusta.core.sinks.mail.mail_sink import MailSink
+from robusta.core.sinks.mail.mail_sink_params import MailSinkConfigWrapper
 from robusta.core.sinks.mattermost import MattermostSink, MattermostSinkConfigWrapper
 from robusta.core.sinks.msteams import MsTeamsSink, MsTeamsSinkConfigWrapper
 from robusta.core.sinks.opsgenie import OpsGenieSink, OpsGenieSinkConfigWrapper
@@ -42,6 +44,7 @@ class SinkFactory:
         YaMessengerSinkConfigWrapper: YaMessengerSink,
         JiraSinkConfigWrapper: JiraSink,
         FileSinkConfigWrapper: FileSink,
+        MailSinkConfigWrapper: MailSink,
     }
 
     @classmethod

@@ -16,6 +16,7 @@ from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWr
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper
 from robusta.core.sinks.rocketchat.rocketchat_sink_params import RocketchatSinkConfigWrapper
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper
+from robusta.core.sinks.mail.mail_sink_params import MailSinkConfigWrapper
 from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkConfigWrapper
 from robusta.core.sinks.victorops.victorops_sink_params import VictoropsConfigWrapper
 from robusta.core.sinks.webex.webex_sink_params import WebexSinkConfigWrapper
@@ -55,6 +56,7 @@ class RunnerConfig(BaseModel):
                 YaMessengerSinkConfigWrapper,
                 JiraSinkConfigWrapper,
                 FileSinkConfigWrapper,
+                MailSinkConfigWrapper,
             ]
         ]
     ]
@@ -69,7 +71,6 @@ class RunnerConfig(BaseModel):
 
     @staticmethod
     def _replace_env_var_in_playbook_repo(playbook_repo: PlaybookRepo):
-
         url_env_var_replacement = get_env_replacement(playbook_repo.url)
         if url_env_var_replacement:
             playbook_repo.url = url_env_var_replacement
