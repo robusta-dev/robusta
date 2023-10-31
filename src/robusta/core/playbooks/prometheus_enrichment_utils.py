@@ -259,14 +259,27 @@ def create_chart_from_prometheus_query(
         height=500,
     )
 
-    interval = max_y_value / 4
-    chart.y_labels = [round(i * interval) for i in range(5)]
-    chart.y_labels_major = [i for i in chart.y_labels if i % 1 == 0]
+    y_axis_division = 5
+    # Calculate the maximum Y value with an added 20% padding
+    max_y_value_with_padding = max_y_value + (max_y_value*0.20)
 
+    # Calculate the interval between each Y-axis label
+    interval = max_y_value_with_padding / (y_axis_division - 1)
 
+    if values_format == ChartValuesFormat.Percentage:
+        # Calculate the Y-axis labels, shift to percentage, and round to the nearest whole number percentage
+        chart.y_labels = [round((i * interval) * 100) / 100 for i in range(y_axis_division)]
+    else:
+        # For non-percentage formats, round the Y-axis labels to the nearest whole number
+        chart.y_labels = [round(i * interval) for i in range(y_axis_division)]
+
+    chart.y_labels_major = chart.y_labels
+    chart.range = (0, max_y_value_with_padding)
     chart.show_x_guides = True
     chart.show_y_guides = True
     chart.spacing = 20
+    chart.margin_top = 10
+    chart.margin_bottom = 50
     chart.x_label_rotation = 35
     chart.truncate_label = -1
     chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M")
