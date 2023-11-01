@@ -9,8 +9,6 @@ from robusta.core.model.env_vars import SLACK_TABLE_COLUMNS_LIMIT
 from robusta.core.reporting.base import Emojis, Finding, FindingStatus
 from robusta.core.reporting.blocks import (
     BaseBlock,
-    CallbackBlock,
-    CallbackChoice,
     DividerBlock,
     FileBlock,
     HeaderBlock,
@@ -22,7 +20,7 @@ from robusta.core.reporting.blocks import (
     ScanReportBlock,
     TableBlock,
 )
-from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
+
 from robusta.core.reporting.consts import EnrichmentAnnotation, SlackAnnotations
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.rocketchat.rocketchat_sink_params import RocketchatSinkParams
@@ -35,62 +33,22 @@ MAX_BLOCK_CHARS = 3000
 
 
 class RocketchatSender:
-    def __init__(self, token: str, server_url: str, user_id: str, account_id: str, cluster_name: str, signing_key: str):
+    def __init__(self, channel: str, token: str, server_url: str, user_id: str, account_id: str, cluster_name: str,
+                 signing_key: str):
         self.server_url = server_url
         self.user_id = user_id
-        self.room_id = ""
+        self.channel = channel
+        self.room_id = None
         """
         Connect to Rocketchat and verify that the Rocketchat token is valid.
         Return True on success, False on failure
         """
         self.rocketchat_client = RocketChat(user_id=user_id,
                                             auth_token=token,
-                                            server_url=server_url, )
+                                            server_url=server_url)
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
-
-        try:
-            rooms_info = self.rocketchat_client.rooms_info(room_name="ganesh-tests")
-            rooms_info.raise_for_status()
-
-            response = rooms_info.json()
-            self.room_id = response.get("room", {}).get("_id", None)
-
-            if not self.room_id:
-                raise Exception(f"Invalid rocket chat room_id for user_id: {user_id}, server_url: {server_url}")
-
-        except Exception as e:
-            logging.error(f"Cannot connect to Rocketchat API for user_id: {user_id}, server_url: {server_url} | {e}")
-            raise e
-
-    def __get_action_block_for_choices(self, sink: str, choices: Dict[str, CallbackChoice] = None):
-        if choices is None:
-            return []
-
-        buttons = []
-        for (i, (text, callback_choice)) in enumerate(choices.items()):
-            buttons.append(
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": text,
-                    },
-                    "style": "primary",
-                    "action_id": f"{ACTION_TRIGGER_PLAYBOOK}_{i}",
-                    "value": ExternalActionRequestBuilder.create_for_func(
-                        callback_choice,
-                        sink,
-                        text,
-                        self.account_id,
-                        self.cluster_name,
-                        self.signing_key,
-                    ).json(),
-                }
-            )
-
-        return [{"type": "actions", "elements": buttons}]
 
     def __to_rocketchat_links(self, links: List[LinkProp]) -> List[RocketchatBlock]:
         if len(links) == 0:
@@ -113,8 +71,7 @@ class RocketchatSender:
         return [{"type": "actions", "elements": buttons}]
 
     def __to_rocketchat_diff(self, block: KubernetesDiffBlock, sink_name: str, status: FindingStatus,
-                             has_attachment: bool) -> List[
-        RocketchatBlock]:
+                             has_attachment: bool) -> List[RocketchatBlock]:
         # this can happen when a block.old=None or block.new=None - e.g. the resource was added or deleted
         if not block.diffs:
             return []
@@ -181,7 +138,7 @@ class RocketchatSender:
                 return []
             return [{"type": "divider"}]
         elif isinstance(block, FileBlock):
-            raise AssertionError("to_rocketchat() should never be called on a FileBlock")
+            raise "to_rocketchat() should never be called on a FileBlock"
         elif isinstance(block, HeaderBlock):
             if has_attachment:
                 return [
@@ -206,17 +163,16 @@ class RocketchatSender:
             return self.__to_rocketchat_markdown(block.to_markdown(), status=status, has_attachment=has_attachment)
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_rocketchat_diff(block, sink_name, status=status, has_attachment=has_attachment)
-        elif isinstance(block, CallbackBlock):
-            return self.__get_action_block_for_choices(sink_name, block.choices)
         elif isinstance(block, LinksBlock):
             return self.__to_rocketchat_links(block.links)
         elif isinstance(block, ScanReportBlock):
-            raise AssertionError("to_rocketchat() should never be called on a ScanReportBlock")
+            raise "to_rocketchat() should never be called on a ScanReportBlock"
         else:
             logging.warning(f"cannot convert block of type {type(block)} to rocketchat format block: {block}")
             return []  # no reason to crash the entire report
 
     def __upload_file_to_rocketchat(self, block: FileBlock, message: Optional[str], tmid: str):
+
         """Upload a file to rocketchat and return a link to it"""
         with tempfile.TemporaryDirectory() as temp_dir:
             f = open(os.path.join(temp_dir, block.filename), 'wb')
@@ -233,34 +189,38 @@ class RocketchatSender:
                     f"error uploading file to rocketchat\ne={e}\nuser_id: {self.user_id}\nserver_url: {self.server_url}\nf.name: {f.name}"
                 )
 
-    def upload_rocketchat_files(self, message: Optional[str], message_id: str, files: List[FileBlock] = [], ):
-        if files:
-            try:
-                for file_block in files:
-                    # so skip empty file
-                    if len(file_block.contents) == 0:
-                        continue
-                    self.__upload_file_to_rocketchat(block=file_block, message=message, tmid=message_id)
-            except Exception as e:
-                logging.error(
-                    f"error uploading files to rocketchat\ne={e}\nuser_id: {self.user_id}\nserver_url: {self.server_url}"
-                )
-
-    def prepare_rocketchat_text(self, message: str, files: List[FileBlock] = []) -> Optional[str]:
-        if files:
-            messages = []
+    def upload_rocketchat_files(self, message: Optional[str], message_id: str, files: List[FileBlock], ):
+        try:
             for file_block in files:
-                # slack throws an error if you write empty files, so skip it
+                # so skip empty file
                 if len(file_block.contents) == 0:
                     continue
+                self.__upload_file_to_rocketchat(block=file_block, message=message, tmid=message_id)
+        except Exception as e:
+            logging.error(
+                f"error uploading files to rocketchat\ne={e}\nuser_id: {self.user_id}\nserver_url: {self.server_url}"
+            )
 
-            file_references = "\n".join(messages)
-            message = f"{message}\n{file_references}"
+    def __fetch_room_id(self):
+        try:
+            if self.room_id:
+                return
 
-        if len(message) == 0:
-            return None
+            rooms_info = self.rocketchat_client.rooms_info(room_name=self.channel)
+            rooms_info.raise_for_status()
 
-        return Transformer.apply_length_limit(message, MAX_BLOCK_CHARS)
+            response = rooms_info.json()
+            self.room_id = response.get("room", {}).get("_id", None)
+
+
+            if not self.room_id:
+                raise Exception(
+                    f"Invalid rocket chat room_id for user_id: {self.user_id}, server_url: {self.server_url}")
+
+        except Exception as e:
+            logging.error(
+                f"Cannot connect to Rocketchat API for user_id: {self.user_id}, server_url: {self.server_url} | {e}")
+            raise e
 
     def __send_blocks_to_rocketchat(
             self,
@@ -282,7 +242,6 @@ class RocketchatSender:
         file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
         file_blocks.extend(Transformer.tableblock_to_fileblocks(report_attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
 
-        message = self.prepare_rocketchat_text(title, file_blocks)
         output_blocks = []
         for block in other_blocks:
             output_blocks.extend(self.__to_rocketchat(block, sink_params.name, status=status, has_attachment=False))
@@ -291,11 +250,10 @@ class RocketchatSender:
             attachment_blocks.extend(self.__to_rocketchat(block, sink_params.name, status=status, has_attachment=True))
 
         # Add a note about attached files being available in a thread if there's a file attachment.
-        if message:
+        if file_blocks:
             attachment_blocks.append({
                 "text": "**You can find the attached files in the thread of this message.**",
             })
-
 
         logging.debug(
             f"--sending to rocketchat--\n"
@@ -303,7 +261,6 @@ class RocketchatSender:
             f"title:{title}\n"
             f"blocks: {output_blocks}\n"
             f"attachment_blocks: {report_attachment_blocks}\n"
-            f"message: {message}\n"
         )
         try:
             result = self.rocketchat_client.chat_send_message(
@@ -316,17 +273,18 @@ class RocketchatSender:
             )
             result.raise_for_status()
             result = result.json()
-
             message_id = result.get("message", {}).get("_id", None)
 
             if not message_id:
                 raise Exception(
                     f"Invalid rocket chat 'message_id' for user_id: {self.user_id}, server_url: {self.server_url}")
 
-            self.upload_rocketchat_files(message=message, message_id=message_id, files=file_blocks)
+            if file_blocks:
+                upload_message = Transformer.apply_length_limit(title, MAX_BLOCK_CHARS)
+                self.upload_rocketchat_files(message=upload_message, message_id=message_id, files=file_blocks)
         except Exception as e:
             logging.error(
-                f"error sending message to rocketchat\ne={e}\n\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}\nuser_id: {self.user_id}\nserver_url: {self.server_url}"
+                f"error sending message to rocketchat\ne={e}\n\nreason={result.text}\n\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
 
     def __create_finding_header(self, finding: Finding, status: FindingStatus, platform_enabled: bool) -> MarkdownBlock:
@@ -341,7 +299,6 @@ class RocketchatSender:
         return MarkdownBlock(f"{status_str} {sev.to_emoji()} `{sev.name.lower()}` {title}")
 
     def __create_links(self, finding: Finding):
-
         links: List[LinkProp] = []
         links.append(
             LinkProp(
@@ -369,6 +326,8 @@ class RocketchatSender:
             sink_params: RocketchatSinkParams,
             platform_enabled: bool,
     ):
+        self.__fetch_room_id()
+
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
 

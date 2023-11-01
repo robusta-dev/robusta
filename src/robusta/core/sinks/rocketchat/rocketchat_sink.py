@@ -11,7 +11,7 @@ class RocketchatSink(SinkBase):
         self.token = sink_config.rocketchat_sink.token
         self.server_url = sink_config.rocketchat_sink.server_url
         self.user_id = sink_config.rocketchat_sink.user_id
-        self.rocketchat_sender = RocketchatSender(token=self.token, server_url=self.server_url, user_id=self.user_id,
+        self.rocketchat_sender = RocketchatSender(token=self.token, channel=self.channel, server_url=self.server_url, user_id=self.user_id,
                                                   account_id=self.account_id, cluster_name=self.cluster_name,
                                                   signing_key=self.signing_key)
 

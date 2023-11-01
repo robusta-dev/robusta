@@ -6,33 +6,38 @@ Robusta can report issues and events in your Kubernetes cluster to Rocket.Chat.
 .. image:: /images/rocketchat1.png
   :width: 600
 
-Connecting Rocket.Chat
+
+Prerequisites
 ------------------------------------------------
 
-To set up the Rocket.Chat sink, you'll need the following information:
-
-* Personal Access Token
-
-* User ID
-
-* Channel name
+Before you begin setting up the Rocket.Chat sink, ensure you have the following information ready:
 
 * Server URL
+* Personal Access Token
+* User ID
+* Channel name
 
+**Rocket.Chat Server Setup**
 
-Follow these steps to generate the `Personal Access Token` and `User ID`:
+First, you need to set up a Rocket.Chat server. If you haven't done this yet, you can find detailed information on deploying on-prem servers at the following URL: `Rocket.Chat Installation Guide <https://www.rocket.chat/install>`_.
 
-* Log in to your Rocket.Chat server using a valid username and password.
+Or if you prefer using RocketChat's cloud SaaS platform, you can follow the instructions at this URL: `Rocket.Chat Cloud Setup <https://cloud.rocket.chat>`_.
 
-*  Click on your avatar and select `My Account`.
+**Generating Personal Access Token and User ID**
 
-*  Navigate to Profile > Preferences > Personal Access Tokens.
+Follow these steps to generate the required `Personal Access Token` and `User ID`:
 
-*  Check the `Ignore Two Factor Authentication` option.
+1. Log in to your Rocket.Chat server using your valid username and password.
 
-*  Fill in the `Add new Personal Access Token` text field and click the `Add` button.
+2. Click on your avatar and select `My Account` from the menu.
 
-*  Copy the provided `Personal Access Token` and `User ID`.
+3. Navigate to `Profile` > `Personal Access Tokens`.
+
+4. Check the `Ignore Two Factor Authentication` option if enabled.
+
+5. Fill in the `Add new Personal Access Token` text field and click the `Add` button.
+
+6. Copy the provided `Personal Access Token` and `User ID` for later use.
 
 
 .. image:: /images/rocketchat2.png
