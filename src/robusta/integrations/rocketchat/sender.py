@@ -171,7 +171,7 @@ class RocketchatSender:
             logging.warning(f"cannot convert block of type {type(block)} to rocketchat format block: {block}")
             return []  # no reason to crash the entire report
 
-    def __upload_file_to_rocketchat(self, block: FileBlock, message: Optional[str], tmid: str):
+    def __upload_file_to_rocketchat(self, block: FileBlock, tmid: str):
 
         """Upload a file to rocketchat and return a link to it"""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -180,7 +180,7 @@ class RocketchatSender:
             f.flush()
 
             try:
-                result = self.rocketchat_client.rooms_upload(rid=self.room_id, file=f.name, msg=message, tmid=tmid)
+                result = self.rocketchat_client.rooms_upload(rid=self.room_id, file=f.name, tmid=tmid)
 
                 result.raise_for_status()
 
@@ -189,13 +189,13 @@ class RocketchatSender:
                     f"error uploading file to rocketchat\ne={e}\nuser_id: {self.user_id}\nserver_url: {self.server_url}\nf.name: {f.name}"
                 )
 
-    def upload_rocketchat_files(self, message: Optional[str], message_id: str, files: List[FileBlock], ):
+    def upload_rocketchat_files(self, message_id: str, files: List[FileBlock], ):
         try:
             for file_block in files:
                 # so skip empty file
                 if len(file_block.contents) == 0:
                     continue
-                self.__upload_file_to_rocketchat(block=file_block, message=message, tmid=message_id)
+                self.__upload_file_to_rocketchat(block=file_block, tmid=message_id)
         except Exception as e:
             logging.error(
                 f"error uploading files to rocketchat\ne={e}\nuser_id: {self.user_id}\nserver_url: {self.server_url}"
@@ -211,7 +211,6 @@ class RocketchatSender:
 
             response = rooms_info.json()
             self.room_id = response.get("room", {}).get("_id", None)
-
 
             if not self.room_id:
                 raise Exception(
@@ -280,8 +279,7 @@ class RocketchatSender:
                     f"Invalid rocket chat 'message_id' for user_id: {self.user_id}, server_url: {self.server_url}")
 
             if file_blocks:
-                upload_message = Transformer.apply_length_limit(title, MAX_BLOCK_CHARS)
-                self.upload_rocketchat_files(message=upload_message, message_id=message_id, files=file_blocks)
+                self.upload_rocketchat_files(message_id=message_id, files=file_blocks)
         except Exception as e:
             logging.error(
                 f"error sending message to rocketchat\ne={e}\n\nreason={result.text}\n\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
