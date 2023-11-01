@@ -34,7 +34,7 @@ pymsteams = "^0.1.16"
 supabase = { version = "^1.0.3", optional = true }
 tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.7.0" }
-Flask = { version = "^1.1.2", optional = true }
+Flask = { version = "^3.0.0", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
 better-exceptions = { version =  "^0.3.3", optional = true }
@@ -107,9 +107,6 @@ types-PyYAML = "^6.0.0"
 types-click-spinner = "^0.1.10"
 types-toml = "^0.10.2"
 types-tabulate = "^0.8.10"
-
-# There is a bug in jinga2 and markupsafe (explicitly markupsafe 2.1.1)
-markupsafe = "2.0.1"
 
 [tool.poetry.extras]
 all = ["Flask", "grafana-api", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk", "poetry-core"]
