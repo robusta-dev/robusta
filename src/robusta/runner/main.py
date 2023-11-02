@@ -13,7 +13,7 @@ from robusta.core.playbooks.playbooks_event_handler_impl import PlaybooksEventHa
 from robusta.model.config import Registry
 from robusta.patch.patch import create_monkey_patches
 from robusta.runner.config_loader import ConfigLoader
-from robusta.runner.log_init import init_logging, logging
+from robusta.runner.log_init import init_json_logging, init_logging, logging
 from robusta.runner.ssl_utils import add_custom_certificate
 from robusta.runner.telemetry_service import TelemetryLevel, TelemetryService
 from robusta.runner.web import Web
@@ -22,6 +22,7 @@ from robusta.utils.server_start import ServerStart
 
 def main():
     init_logging()
+    init_json_logging()
     ServerStart.set()
     if add_custom_certificate(ADDITIONAL_CERTIFICATE):
         logging.info("added custom certificate")

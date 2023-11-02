@@ -56,6 +56,8 @@ spec:
             value: {{ .Values.runner.sendAdditionalTelemetry | quote }}
           - name: LOG_LEVEL
             value: {{ .Values.runner.log_level }}
+          - name: ENABLE_JSON_LOGGING
+            value: {{ .Values.runner.enableJsonLogging | quote}}
           - name: INSTALLATION_NAMESPACE
             valueFrom:
               fieldRef:

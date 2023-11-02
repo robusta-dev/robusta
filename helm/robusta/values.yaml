@@ -503,6 +503,7 @@ runner:
   log_level: INFO
   sentry_dsn: https://53b627690db14de7b02095407596fa16@o1120648.ingest.sentry.io/6156573
   sendAdditionalTelemetry: false
+  enableJsonLogging: false
   certificate: "" # base64 encoded
   resources:
     requests:
