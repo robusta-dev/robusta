@@ -10,6 +10,7 @@ from prometrix import (
     PrometheusConfig,
     VictoriaMetricsPrometheusConfig,
 )
+from prometrix.connect.custom_connect import CustomPrometheusConnect
 
 from robusta.core.exceptions import NoPrometheusUrlFound
 from robusta.core.model.base_params import PrometheusParams
@@ -83,7 +84,7 @@ def generate_prometheus_config(prometheus_params: PrometheusParams) -> Prometheu
     return PrometheusConfig(**baseconfig)
 
 
-def get_prometheus_connect(prometheus_params: PrometheusParams) -> "CustomPrometheusConnect":
+def get_prometheus_connect(prometheus_params: PrometheusParams) -> CustomPrometheusConnect:
     # due to cli import dependency errors without prometheus package installed
     from prometrix import get_custom_prometheus_connect
 
@@ -92,7 +93,7 @@ def get_prometheus_connect(prometheus_params: PrometheusParams) -> "CustomPromet
     return get_custom_prometheus_connect(config)
 
 
-def get_prometheus_flags(prom: "CustomPrometheusConnect") -> Optional[Dict]:
+def get_prometheus_flags(prom: CustomPrometheusConnect) -> Optional[Dict]:
     """
     This returns the prometheus flags and stores the prometheus retention time in retentionTime
     """

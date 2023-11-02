@@ -1,10 +1,11 @@
 import logging
 from datetime import datetime
 
-from flask import Flask, abort, jsonify, request
+from flask import Flask, abort, jsonify, request, Response
 from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
+from playbooks.robusta_playbooks.prometheus_enrichments import get_prometheus_all_available_metrics
 from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_REQUESTS
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
@@ -74,6 +75,20 @@ class Web:
                 Web.event_handler.handle_trigger, HelmReleasesTriggerEvent(helm_release=helm_release)
             )
         return jsonify(success=True)
+
+    @staticmethod
+    @app.route("/api/prometheus/all_available_metrics", methods=["POST"])
+    def handle_promtheus() -> Response:
+        req_json = request.get_json()
+        Web._trace_incoming("received prometheus/all_available_metrics request via api", req_json)
+        logging.debug("received prometheus/all_available_metrics request via api\n")
+
+        try:
+            metrics = get_prometheus_all_available_metrics(global_config=Web.loader.registry.get_global_config())
+            return jsonify(success=True, metrics=metrics)
+        except:
+            return jsonify(success=False)
+
 
     @staticmethod
     @app.route("/api/handle", methods=["POST"])

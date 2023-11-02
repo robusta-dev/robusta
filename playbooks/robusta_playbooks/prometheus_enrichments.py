@@ -17,6 +17,7 @@ from robusta.api import (
     action,
     run_prometheus_query,
 )
+from robusta.core.model.base_params import PrometheusParams
 
 
 def parse_timestamp_string(date_string: str) -> Optional[datetime]:
@@ -101,3 +102,15 @@ def prometheus_rules_enricher(alert: PrometheusKubernetesAlert):
     kubelet_error_string = get_duplicate_kubelet_msg(alert.get_alert_label("rule_group"))
     if kubelet_error_string:
         alert.add_enrichment([MarkdownBlock(kubelet_error_string)])
+
+
+def get_prometheus_all_available_metrics(global_config: dict) -> List[str]:
+    from robusta.integrations.prometheus.utils import get_prometheus_connect
+
+    try:
+        prometheus_params = PrometheusParams(**global_config)
+
+        return get_prometheus_connect(prometheus_params=prometheus_params).all_metrics()
+
+    except Exception as e:
+        raise Exception(f"An error occured while fetching the prometheus metrics: {e}")
