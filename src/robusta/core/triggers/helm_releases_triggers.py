@@ -1,6 +1,8 @@
+import enum
+
 import logging
 import sys
-from typing import Optional, List, Dict, Literal
+from typing import Optional, List, Dict, Literal, Set
 from datetime import datetime
 import pytz
 from attr import dataclass
@@ -13,13 +15,12 @@ from robusta.core.reporting import Finding, FindingSeverity
 from robusta.utils.rate_limiter import RateLimiter
 from robusta.utils.server_start import ServerStart
 
-# TODO: can we just use a Literal for both versions? Need to check it doesn't break anything
-UNHEALTHY_STATUSES = ["pending-install", "pending-upgrade", "pending-rollback", "uninstalling"]
-UNHEALTHY_STATUSES_LITERAL = Literal["pending-install", "pending-upgrade", "pending-rollback", "uninstalling"]
-FAILED_STATUSES = ["failed", "unknown"]
-FAILED_STATUSES_LITERAL = Literal["failed", "unknown"]
-DEPLOYED_STATUSES = ["deployed"]
-DEPLOYED_STATUSES_LITERAL = Literal["deployed"]
+
+class HelmStatuses (enum.Enum):
+    UNHEALTHY = ["pending-install", "pending-upgrade", "pending-rollback", "uninstalling"]
+    FAILED = ["failed", "unknown"]
+    DEPLOYED = ["deployed"]
+
 
 class IncomingHelmReleasesEventPayload(BaseModel):
     """
@@ -53,14 +54,14 @@ class HelmReleasesEvent(ExecutionBaseEvent):
         return FindingSeverity.HIGH
 
     def get_aggregation_key(self):
-        if self.helm_release.info.status in UNHEALTHY_STATUSES:
+        if self.helm_release.info.status in HelmStatuses.UNHEALTHY.value:
             return "Helm Release Unhealthy"
 
         return "Helm Release Info"
 
 
 class HelmReleaseBaseTrigger(BaseTrigger):
-    statuses: List[str] = Field(description="Helm status this trigger fires on")
+    statuses: Set[str] = Field(description="Helm status this trigger fires on")
     rate_limit: int = Field(description="How often should the trigger re-fire if the Helm release remains in this status?")
     names: Optional[List[str]] = Field(description="Optional. Only monitor Helm releases with these names.")
     namespace: Optional[str] = Field(description="Optional. Only monitor Helm releases in this namespace")
@@ -94,7 +95,7 @@ class HelmReleaseBaseTrigger(BaseTrigger):
         pod_start_time_delta_seconds = (start_time_utc - last_deployed_utc).total_seconds()
         dont_fire = False
 
-        if event.helm_release.info.status in UNHEALTHY_STATUSES:
+        if event.helm_release.info.status in HelmStatuses.UNHEALTHY.value:
             rate_limiter_id = f"{event.helm_release.namespace}:{event.helm_release.name}"
         else:
             rate_limiter_id = f"{event.helm_release.namespace}:{event.helm_release.name}-{last_deployed_utc.isoformat()}"
@@ -131,18 +132,18 @@ class HelmReleaseBaseTrigger(BaseTrigger):
 
 
 class HelmReleaseUnhealthyTrigger(HelmReleaseBaseTrigger):
-    statuses: UNHEALTHY_STATUSES_LITERAL
+    statuses: Literal[HelmStatuses.UNHEALTHY] = HelmStatuses.UNHEALTHY
     duration: Literal[900]
 
 
 class HelmReleaseFailTrigger(HelmReleaseBaseTrigger):
-    statuses: FAILED_STATUSES_LITERAL
-    duration: Literal[0]
+    statuses: Literal[HelmStatuses.FAILED] = HelmStatuses.FAILED
+    duration: Literal[0] = 0
 
 
 class HelmReleaseDeployTrigger(HelmReleaseBaseTrigger):
-    statuses: DEPLOYED_STATUSES_LITERAL
-    duration: Literal[0]
+    statuses: Literal[HelmStatuses.DEPLOYED] = HelmStatuses.DEPLOYED
+    duration: Literal[0] = 0
 
 
 class HelmReleaseTriggers(BaseModel):

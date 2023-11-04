@@ -357,7 +357,7 @@ def autogenerate_triggers(f: TextIO):
                 textwrap.dedent(
                     f"""\
             class {resource}{get_trigger_class_name(trigger_name)}Trigger(K8sBaseTrigger):
-                kind: Literal[str] = \"{resource}\"
+                kind: Literal[\"{resource}\"] = \"{resource}\"
                 operation: Literal[K8sOperationType] = {operation_type}
 
                 @staticmethod
@@ -381,7 +381,7 @@ def autogenerate_triggers(f: TextIO):
             textwrap.dedent(
                 f"""\
         class KubernetesAny{get_trigger_class_name(trigger_name)}Trigger(K8sBaseTrigger):
-            kind: Literal[str] = \"{resource}\"
+            kind: Literal[\"{resource}\"] = \"{resource}\"
             operation: Literal[K8sOperationType] = {operation_type}
 
             @staticmethod
