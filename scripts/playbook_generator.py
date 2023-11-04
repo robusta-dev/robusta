@@ -111,22 +111,26 @@ def display_playbook_builder():
     if "expander_state" not in ss:
         ss.expander_state = ExpanderState.TRIGGER
 
+    # there seems to be a streamlit bug with how enums are stored in session state
+    # we work around by recreating the enum. without this, equality checks on the enum always return False
+    expander_state = ExpanderState(ss.expander_state.value)
+
     # initialize expanders
     trigger_expander = st.expander(
         ":zap: Trigger - A trigger is an event that starts your Playbook",
-        expanded=ss.expander_state == ExpanderState.TRIGGER,
+        expanded=expander_state == ExpanderState.TRIGGER,
     )
     trigger_parameter_expander = st.expander(
-        "Configure Trigger", expanded=ss.expander_state == ExpanderState.TRIGGER_PARAMS
+        "Configure Trigger", expanded=expander_state == ExpanderState.TRIGGER_PARAMS
     )
     action_expander = st.expander(
         ":boom: Action - An action is an event a Playbook performs after it starts",
-        expanded=ss.expander_state == ExpanderState.ACTION,
+        expanded=expander_state == ExpanderState.ACTION,
     )
     action_parameter_expander = st.expander(
-        "Configure Action", expanded=ss.expander_state == ExpanderState.ACTION_PARAMS
+        "Configure Action", expanded=expander_state == ExpanderState.ACTION_PARAMS
     )
-    playbook_expander = st.expander(":scroll: Playbook", expanded=ss.expander_state == ExpanderState.YAML)
+    playbook_expander = st.expander(":scroll: Playbook", expanded=expander_state == ExpanderState.YAML)
 
     # TRIGGER
     with trigger_expander:
