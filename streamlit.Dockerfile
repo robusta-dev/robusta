@@ -22,4 +22,4 @@ RUN poetry config virtualenvs.create false
 RUN poetry install --extras "all"
 
 # Command to run Streamlit when the container starts
-CMD ["streamlit", "run", "./scripts/main_app.py"]
+CMD ["streamlit", "run", "./scripts/playbook_generator.py"]
