@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Literal, Set
 from datetime import datetime
 import pytz
 from attr import dataclass
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.model.helm_release import HelmRelease
@@ -61,11 +61,15 @@ class HelmReleasesEvent(ExecutionBaseEvent):
 
 
 class HelmReleaseBaseTrigger(BaseTrigger):
-    statuses: Set[str] = Field(description="Helm status this trigger fires on")
+    _statuses: Set[str] = PrivateAttr()
     rate_limit: int = Field(description="How often should the trigger re-fire if the Helm release remains in this status?")
     names: Optional[List[str]] = Field(description="Optional. Only monitor Helm releases with these names.")
     namespace: Optional[str] = Field(description="Optional. Only monitor Helm releases in this namespace")
     duration: Optional[int] = Field(description="How long must the Helm release be in this status before firing")
+
+    def __init__(self, statuses, **kwargs):
+        self._statuses = statuses
+        super().__init__(**kwargs)
 
     def get_trigger_event(self):
         return HelmReleasesTriggerEvent.__name__
@@ -74,7 +78,7 @@ class HelmReleaseBaseTrigger(BaseTrigger):
         if not isinstance(event, HelmReleasesTriggerEvent):
             return False
 
-        if self.statuses and event.helm_release.info.status not in self.statuses:
+        if self._statuses and event.helm_release.info.status not in self._statuses:
             return False
         if self.names and event.helm_release.name not in self.names:
             return False
@@ -132,18 +136,24 @@ class HelmReleaseBaseTrigger(BaseTrigger):
 
 
 class HelmReleaseUnhealthyTrigger(HelmReleaseBaseTrigger):
-    statuses: Literal[HelmStatuses.UNHEALTHY] = HelmStatuses.UNHEALTHY
-    duration: Literal[900]
+    duration: Literal[900] = 900
+
+    def __init__(self, **kwargs):
+        super().__init__(HelmStatuses.UNHEALTHY, **kwargs)
 
 
 class HelmReleaseFailTrigger(HelmReleaseBaseTrigger):
-    statuses: Literal[HelmStatuses.FAILED] = HelmStatuses.FAILED
     duration: Literal[0] = 0
+
+    def __init__(self, **kwargs):
+        super().__init__(HelmStatuses.FAILED, **kwargs)
 
 
 class HelmReleaseDeployTrigger(HelmReleaseBaseTrigger):
-    statuses: Literal[HelmStatuses.DEPLOYED] = HelmStatuses.DEPLOYED
     duration: Literal[0] = 0
+
+    def __init__(self, **kwargs):
+        super().__init__(HelmStatuses.DEPLOYED, **kwargs)
 
 
 class HelmReleaseTriggers(BaseModel):
