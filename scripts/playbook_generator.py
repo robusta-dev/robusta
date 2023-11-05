@@ -1,13 +1,18 @@
 # run with poetry run streamlit run scripts/playbook_generator.py or use the streamlit.Dockerfile
+# to get streamlit-pydantic to not show something, it needs to be a Literal or a PrivateAttr
+# if a Literal, it still must have a default value
+# TODO: filter out BaseExecutionEvent actions that don't make sense like `add_silence`
+# TODO: perhaps mark certain actions as recommended
 
 from collections import OrderedDict
+from typing import List, Set, Optional, Literal
 from enum import Enum
 
 import streamlit as st
 import streamlit_pydantic as sp
 import yaml
 from streamlit import session_state as ss
-
+from pydantic import BaseModel
 from robusta.core.playbooks.generation import ExamplesGenerator, find_playbook_actions
 
 st.set_page_config(
@@ -132,6 +137,9 @@ def display_playbook_builder():
     )
     playbook_expander = st.expander(":scroll: Playbook", expanded=expander_state == ExpanderState.YAML)
 
+    trigger_ready = False
+    action_ready = False
+
     # TRIGGER
     with trigger_expander:
         trigger_name = st.selectbox("Type to search", triggers.keys(), key="trigger")
@@ -140,7 +148,13 @@ def display_playbook_builder():
     # TRIGGER PARAMETER
     with trigger_parameter_expander:
         # st.header("Available Parameters")
-        trigger_data = sp.pydantic_input(key=f"trigger_form-{trigger_name}", model=triggers[trigger_name])
+        trigger_data = sp.pydantic_input(key=f"trigger_form-{trigger_name}", model=triggers[trigger_name], ignore_empty_values=True)
+
+        try:
+            trigger_data = triggers[trigger_name](**trigger_data).dict(exclude_defaults=True)
+            trigger_ready = True
+        except:
+            pass
         st.button("Continue", key="button2", on_click=set_expander_state, args=[ExpanderState.ACTION])
 
     # ACTION
@@ -153,14 +167,26 @@ def display_playbook_builder():
     with action_parameter_expander:
         action_obj = actions_by_name.get(action_name, None)
         if action_obj and hasattr(action_obj, "params_type") and hasattr(action_obj.params_type, "schema"):
-            action_data = sp.pydantic_input(key=f"action_form-{action_name}", model=action_obj.params_type)
+            action_data = sp.pydantic_input(key=f"action_form-{action_name}", model=action_obj.params_type, ignore_empty_values=True)
+            try:
+                action_data = action_obj.params_type(**action_data).dict(exclude_defaults=True)
+                action_ready = True
+            except:
+                pass
         else:
             st.markdown("This action doesn't have any parameters")
             action_data = None
+            action_ready = True
+
         st.button("Continue", key="button4", on_click=set_expander_state, args=[ExpanderState.YAML])
 
     # DISPLAY PLAYBOOK
     with playbook_expander:
+        if not trigger_ready:
+            st.warning("Error: mandatory Trigger fields are missing!")
+        if not action_ready:
+            st.warning("Error: mandatory Action fields are missing!")
+
         st.markdown(
             "Add this code to your **generated_values.yaml** and [upgrade Robusta](https://docs.robusta.dev/external-prom-docs/setup-robusta/upgrade.html)"
         )
