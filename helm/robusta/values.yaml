@@ -559,6 +559,9 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
+          memory: 2Gi
+        limits:
+          memory: 2Gi
       storage:
         volumeClaimTemplate:
           spec:

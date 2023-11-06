@@ -288,6 +288,17 @@ def gen_config(
             },
         ]
 
+    if is_small_cluster:
+        setattr(values, "kube-prometheus-stack", {})
+        stack = getattr(values, "kube-prometheus-stack")
+        stack["alertmanager"] = {
+            "alertmanagerSpec": {"resources": {"requests": {"memory": "128Mi"}, "limits": {"memory": "128Mi"}}},
+        }
+        stack["prometheus-node-exporter"] = {
+            "resources": {"requests": {"memory": "50Mi"}, "limits": {"memory": "50Mi"}}
+        }
+        stack["kube-state-metrics"] = {"resources": {"requests": {"memory": "256Mi"}, "limits": {"memory": "256Mi"}}}
+
     write_values_file(output_path, values)
 
     if robusta_api_key:
