@@ -6,14 +6,18 @@
 
 from collections import OrderedDict
 from typing import List, Set, Optional, Literal
-from enum import Enum
+from enum import Enum, StrEnum
 
+import streamlit_antd_components as sac
 import streamlit as st
 import streamlit_pydantic as sp
 import yaml
 from streamlit import session_state as ss
 from pydantic import BaseModel
+from streamlit_extras.stylable_container import stylable_container
+
 from robusta.core.playbooks.generation import ExamplesGenerator, find_playbook_actions
+
 
 st.set_page_config(
     page_title="Playbook Generator",
@@ -98,110 +102,135 @@ actions_by_name = {a.action_name: a for a in actions}
 triggers_to_actions = generator.get_triggers_to_actions(actions)
 
 
-class ExpanderState(Enum):
-    TRIGGER = 1
-    TRIGGER_PARAMS = 2
-    ACTION = 3
-    ACTION_PARAMS = 4
-    YAML = 5
+class Screens(StrEnum):
+    TRIGGER = "Choose Trigger"
+    ACTION = "Choose Action"
+    YAML = "Apply Configuration"
+
+    def to_index(self):
+        return [Screens.TRIGGER, Screens.ACTION, Screens.YAML].index(self)
+
+    @classmethod
+    def get_current_screen(cls):
+        if "current_screen" not in ss:
+            return cls.TRIGGER
+
+        # there seems to be a streamlit bug with how enums are stored in session state
+        # we work around by recreating the enum. without this, equality checks on the enum always return False
+        return cls(ss.current_screen.value)
+
+    @classmethod
+    def set_current_screen(cls, new_screen):
+        ss.current_screen = new_screen
 
 
-def set_expander_state(state: ExpanderState):
-    ss.expander_state = state
+def display_triggers():
+    st.info(":zap: Triggers are events that cause a playbook to start running")
+    ss["trigger_name"] = st.selectbox(
+        "Choose a trigger",
+        triggers.keys(),
+        key="trigger",
+        placeholder="Type to search",
+        index=None
+    )
+    if ss["trigger_name"] is None:
+        return
+
+    with stylable_container(
+            key="green_button",
+            css_styles="""
+                        {
+                            border: 1px solid rgba(49, 51, 63, 0.2);
+                            border-radius: 0.5rem;
+                            padding: calc(1em - 1px);
+                            box-sizing: content-box;
+                        }
+                        """,
+    ):
+        st.header(f"*{ss['trigger_name']}* settings")
+        ss["trigger_data"] = sp.pydantic_form(
+            key=f"trigger_form-{ss['trigger_name']}",
+            model=triggers[ss['trigger_name']],
+            ignore_empty_values=True,
+            group_optional_fields="expander"
+        )
+        try:
+            ss['trigger_data'] = triggers[ss['trigger_name']](**ss['trigger_data']).dict(exclude_defaults=True)
+            ss['trigger_ready'] = True
+        except:
+            pass
+
+    st.button(
+        "Continue",
+        key="button1",
+        on_click=Screens.set_current_screen,
+        args=[Screens.ACTION],
+        disabled=ss["trigger_name"] is None
+    )
 
 
 def display_playbook_builder():
     st.button(":point_left: Choose a Playbook template", key="choose_playbook_btn", on_click=go_to_demo_playbooks)
     st.title(":wrench: Playbook Builder", anchor=None)
-    if "expander_state" not in ss:
-        ss.expander_state = ExpanderState.TRIGGER
 
-    # there seems to be a streamlit bug with how enums are stored in session state
-    # we work around by recreating the enum. without this, equality checks on the enum always return False
-    expander_state = ExpanderState(ss.expander_state.value)
+    current_screen = Screens.get_current_screen()
 
-    # initialize expanders
-    trigger_expander = st.expander(
-        ":zap: Trigger - A trigger is an event that starts your Playbook",
-        expanded=expander_state == ExpanderState.TRIGGER,
+    step = sac.steps(
+        items=[
+            sac.StepsItem(title=Screens.TRIGGER),
+            sac.StepsItem(title=Screens.ACTION),
+            sac.StepsItem(title=Screens.YAML),
+        ], index=current_screen.to_index(), format_func='title'
     )
-    trigger_parameter_expander = st.expander(
-        "Configure Trigger", expanded=expander_state == ExpanderState.TRIGGER_PARAMS
-    )
-    action_expander = st.expander(
-        ":boom: Action - An action is an event a Playbook performs after it starts",
-        expanded=expander_state == ExpanderState.ACTION,
-    )
-    action_parameter_expander = st.expander(
-        "Configure Action", expanded=expander_state == ExpanderState.ACTION_PARAMS
-    )
-    playbook_expander = st.expander(":scroll: Playbook", expanded=expander_state == ExpanderState.YAML)
 
-    trigger_ready = False
-    action_ready = False
+    if step == Screens.TRIGGER:
+        display_triggers()
 
-    # TRIGGER
-    with trigger_expander:
-        trigger_name = st.selectbox("Type to search", triggers.keys(), key="trigger")
-        st.button("Continue", key="button1", on_click=set_expander_state, args=[ExpanderState.TRIGGER_PARAMS])
-
-    # TRIGGER PARAMETER
-    with trigger_parameter_expander:
-        # st.header("Available Parameters")
-        trigger_data = sp.pydantic_input(key=f"trigger_form-{trigger_name}", model=triggers[trigger_name], ignore_empty_values=True)
-
-        try:
-            trigger_data = triggers[trigger_name](**trigger_data).dict(exclude_defaults=True)
-            trigger_ready = True
-        except:
-            pass
-        st.button("Continue", key="button2", on_click=set_expander_state, args=[ExpanderState.ACTION])
-
-    # ACTION
-    with action_expander:
-        relevant_actions = [a.action_name for a in triggers_to_actions[trigger_name]]
-        action_name = st.selectbox("Choose an action", relevant_actions, key="action")
-        st.button("Continue", key="button3", on_click=set_expander_state, args=[ExpanderState.ACTION_PARAMS])
-
-    # ACTION PARAMETER
-    with action_parameter_expander:
-        action_obj = actions_by_name.get(action_name, None)
+    elif step == Screens.ACTION:
+        st.info(":zap: Actions are what the playbook *does* - they can collect data or execute remediations")
+        relevant_actions = [a.action_name for a in triggers_to_actions[ss['trigger_name']]]
+        ss['action_name'] = st.selectbox("Choose an action", relevant_actions, key="action")
+        action_obj = actions_by_name.get(ss['action_name'], None)
         if action_obj and hasattr(action_obj, "params_type") and hasattr(action_obj.params_type, "schema"):
-            action_data = sp.pydantic_input(key=f"action_form-{action_name}", model=action_obj.params_type, ignore_empty_values=True)
+            action_data = sp.pydantic_form(
+                key=f"action_form-{ss['action_name']}",
+                model=action_obj.params_type,
+                ignore_empty_values=True,
+                group_optional_fields="expander"
+            )
             try:
-                action_data = action_obj.params_type(**action_data).dict(exclude_defaults=True)
-                action_ready = True
+                ss['action_data'] = action_obj.params_type(**action_data).dict(exclude_defaults=True)
+                ss['action_ready'] = True
             except:
                 pass
         else:
             st.markdown("This action doesn't have any parameters")
-            action_data = None
-            action_ready = True
+            ss['action_data'] = None
+            ss['action_ready'] = True
+        st.button("Continue", key="button2", on_click=Screens.set_current_screen, args=[Screens.YAML])
 
-        st.button("Continue", key="button4", on_click=set_expander_state, args=[ExpanderState.YAML])
-
-    # DISPLAY PLAYBOOK
-    with playbook_expander:
-        if not trigger_ready:
+    elif step == Screens.YAML:
+        st.info(":scroll: Add this YAML to Robusta's Helm values to configure your playbook")
+        if not ss['trigger_ready']:
             st.warning("Error: mandatory Trigger fields are missing!")
-        if not action_ready:
+        if not ss['action_ready']:
             st.warning("Error: mandatory Action fields are missing!")
 
         st.markdown(
             "Add this code to your **generated_values.yaml** and [upgrade Robusta](https://docs.robusta.dev/external-prom-docs/setup-robusta/upgrade.html)"
         )
 
-        if action_data is None:
+        if ss['action_data'] is None:
             playbook = {
                 "customPlaybooks": [
-                    OrderedDict([("triggers", [{trigger_name: trigger_data}]), ("actions", [{action_name: {}}])])
+                    OrderedDict([("triggers", [{ss['trigger_name']: ss['trigger_data']}]), ("actions", [{ss['action_name']: {}}])])
                 ]
             }
         else:
             playbook = {
                 "customPlaybooks": [
                     OrderedDict(
-                        [("triggers", [{trigger_name: trigger_data}]), ("actions", [{action_name: action_data}])]
+                        [("triggers", [{ss['trigger_name']: ss['trigger_data']}]), ("actions", [{ss['action_name']: ss['action_data']}])]
                     )
                 ]
             }
