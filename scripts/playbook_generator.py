@@ -14,7 +14,6 @@ import streamlit_pydantic as sp
 import yaml
 from streamlit import session_state as ss
 from pydantic import BaseModel
-from streamlit_extras.stylable_container import stylable_container
 
 from robusta.core.playbooks.generation import ExamplesGenerator, find_playbook_actions
 from custom_streamlit_pydantic import modified_pydantic_form, GroupOptionalFieldsStrategy
