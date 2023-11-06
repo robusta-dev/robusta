@@ -177,7 +177,7 @@ def display_playbook_builder():
         display_triggers()
 
 
-    # TODO: move this part to a function like display_triggers()
+    # TODO: move this part to a function like display_triggers(). this requires not just moving it to a function, but updating the code to use modified_pydantic_form etc
     elif step == Screens.ACTION:
         print("display actions")
         st.info(":zap: Actions are what the playbook *does* - they can collect data or execute remediations")
