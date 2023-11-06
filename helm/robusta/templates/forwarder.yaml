@@ -28,6 +28,10 @@ spec:
       imagePullSecrets:
       {{- toYaml .Values.kubewatch.imagePullSecrets | nindent 6 }}
       {{- end }}
+      {{- if .Values.kubewatch.securityContext.pod }}
+      securityContext:
+      {{- toYaml .Values.kubewatch.securityContext.pod | nindent 6 }}
+      {{- end }}
       containers:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
@@ -48,12 +52,17 @@ spec:
         volumeMounts:
           - name: robusta-kubewatch-config
             mountPath: /config
+        {{- if .Values.kubewatch.securityContext.container }}
+        securityContext:
+        {{- toYaml .Values.kubewatch.securityContext.container | nindent 10 }}
+        {{ else }}
         securityContext:
           allowPrivilegeEscalation: false
           capabilities: {}
           privileged: false
           readOnlyRootFilesystem: false
           runAsUser: 1000
+        {{- end }}
         resources:
           requests:
             cpu: {{ .Values.kubewatch.resources.requests.cpu }}

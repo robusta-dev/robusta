@@ -479,6 +479,9 @@ kubewatch:
       event: true  # updated on kubewatch 2.5
       coreevent: false # added on kubewatch 2.5
       ingress: true # full support on kubewatch 2.4 (earlier versions have ingress bugs)
+  securityContext:
+    pod: ~
+    container: ~
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -522,6 +525,9 @@ runner:
   imagePullSecrets: []
   extraVolumes: []
   extraVolumeMounts: []
+  securityContext:
+    pod: ~
+    container: ~
 
 kube-prometheus-stack:
   alertmanager:
