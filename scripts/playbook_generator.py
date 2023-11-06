@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from streamlit_extras.stylable_container import stylable_container
 
 from robusta.core.playbooks.generation import ExamplesGenerator, find_playbook_actions
-
+from custom_streamlit_pydantic import modified_pydantic_form, GroupOptionalFieldsStrategy
 
 st.set_page_config(
     page_title="Playbook Generator",
@@ -121,51 +121,41 @@ class Screens(StrEnum):
 
     @classmethod
     def set_current_screen(cls, new_screen):
+        old_screen = ss.get("current_screen")
         ss.current_screen = new_screen
+        if new_screen != old_screen:
+            st.rerun()
 
 
 def display_triggers():
+    trigger_names = list(triggers.keys())
+    if ss.get("trigger_name") is not None:
+        index = trigger_names.index(ss["trigger_name"])
+    else:
+        index = None
+
     st.info(":zap: Triggers are events that cause a playbook to start running")
     ss["trigger_name"] = st.selectbox(
         "Choose a trigger",
-        triggers.keys(),
+        trigger_names,
         key="trigger",
         placeholder="Type to search",
-        index=None
+        index=index
     )
     if ss["trigger_name"] is None:
         return
 
-    with stylable_container(
-            key="green_button",
-            css_styles="""
-                        {
-                            border: 1px solid rgba(49, 51, 63, 0.2);
-                            border-radius: 0.5rem;
-                            padding: calc(1em - 1px);
-                            box-sizing: content-box;
-                        }
-                        """,
-    ):
-        st.header(f"*{ss['trigger_name']}* settings")
-        ss["trigger_data"] = sp.pydantic_form(
-            key=f"trigger_form-{ss['trigger_name']}",
-            model=triggers[ss['trigger_name']],
-            ignore_empty_values=True,
-            group_optional_fields="expander"
-        )
-        try:
-            ss['trigger_data'] = triggers[ss['trigger_name']](**ss['trigger_data']).dict(exclude_defaults=True)
-            ss['trigger_ready'] = True
-        except:
-            pass
+    # use an instance with previous form data if it exists, otherwise use the model class
+    trigger_data = ss.get("trigger_data") or triggers[ss["trigger_name"]]
 
-    st.button(
-        "Continue",
-        key="button1",
-        on_click=Screens.set_current_screen,
-        args=[Screens.ACTION],
-        disabled=ss["trigger_name"] is None
+    ss["trigger_data"] = modified_pydantic_form(
+        key=f"trigger_form-{ss['trigger_name']}",
+        model=triggers[ss['trigger_name']],
+        ignore_empty_values=True,
+        group_optional_fields="expander",
+        title=f"*{ss['trigger_name']}* settings",
+        submit_label="Continue",
+        on_submit=lambda: Screens.set_current_screen(Screens.ACTION)
     )
 
 
@@ -184,9 +174,13 @@ def display_playbook_builder():
     )
 
     if step == Screens.TRIGGER:
+        print("display triggers")
         display_triggers()
 
+
+    # TODO: move this part to a function like display_triggers()
     elif step == Screens.ACTION:
+        print("display actions")
         st.info(":zap: Actions are what the playbook *does* - they can collect data or execute remediations")
         relevant_actions = [a.action_name for a in triggers_to_actions[ss['trigger_name']]]
         ss['action_name'] = st.selectbox("Choose an action", relevant_actions, key="action")
@@ -211,7 +205,7 @@ def display_playbook_builder():
 
     elif step == Screens.YAML:
         st.info(":scroll: Add this YAML to Robusta's Helm values to configure your playbook")
-        if not ss['trigger_ready']:
+        if not ss['trigger_data']:
             st.warning("Error: mandatory Trigger fields are missing!")
         if not ss['action_ready']:
             st.warning("Error: mandatory Action fields are missing!")
@@ -220,6 +214,7 @@ def display_playbook_builder():
             "Add this code to your **generated_values.yaml** and [upgrade Robusta](https://docs.robusta.dev/external-prom-docs/setup-robusta/upgrade.html)"
         )
 
+        trigger_dict = ss["trigger_data"].dict(exclude_defaults=True)
         if ss['action_data'] is None:
             playbook = {
                 "customPlaybooks": [
