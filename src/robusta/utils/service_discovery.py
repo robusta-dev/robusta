@@ -4,6 +4,8 @@ from kubernetes import client
 from kubernetes.client import V1ServiceList
 from kubernetes.client.models.v1_service import V1Service
 
+from robusta.core.model.env_vars import CLUSTER_DOMAIN
+
 
 def find_service_url(label_selector):
     """
@@ -18,6 +20,6 @@ def find_service_url(label_selector):
     name = svc.metadata.name
     namespace = svc.metadata.namespace
     port = svc.spec.ports[0].port
-    url = f"http://{name}.{namespace}.svc.cluster.local:{port}"
+    url = f"http://{name}.{namespace}.svc.{CLUSTER_DOMAIN}:{port}"
     logging.info(f"discovered service with label-selector: `{label_selector}` at url: `{url}`")
     return url
