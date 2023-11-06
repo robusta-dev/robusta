@@ -50,8 +50,8 @@ fi
 
 echo "Setting up local runner environment"
 mkdir -p deployment/playbooks/defaults
-ln -fsw $(pwd)/playbooks/robusta_playbooks/ ./deployment/playbooks/defaults
-ln -fsw $(pwd)/playbooks/pyproject.toml ./deployment/playbooks/defaults
+ln -fs $(pwd)/playbooks/robusta_playbooks/ ./deployment/playbooks/defaults
+ln -fs $(pwd)/playbooks/pyproject.toml ./deployment/playbooks/defaults
 
 echo "Checking if runner can listen on port ${PORT}"
 if lsof -Pi :${PORT} -sTCP:LISTEN -t >/dev/null ; then

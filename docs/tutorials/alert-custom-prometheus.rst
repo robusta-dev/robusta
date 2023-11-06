@@ -59,7 +59,7 @@ Deploy a broken Pod that will deliberately trigger the Prometheus alert we defin
 
 .. code-block:: bash
 
-    kubectl apply -f <some example from our demo repo>
+    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/cpu_throttling/throttling.yaml
 
 By default, Prometheus doesn't send alerts immediately. It waits X seconds to avoid sending flaky alerts that fire
 temporarily and then immediately stop.
@@ -78,11 +78,13 @@ We can wait for the alert to fire or we can speed things up and simulate the ale
 
 .. code-block:: bash
 
-    Show alert simulation
+    robusta playbooks trigger prometheus_alert alert_name=CPUThrottlingHigh pod_name=webapp-deployment-dcffd6bcc-qqs2k
 
 Once the alert fires, a notification arrives in your configured sinks:
 
-.. TODO example image
+.. image:: /images/highcputhrottling.png
+  :width: 600
+  :align: center
 
 Enriching the Alert
 ------------------------------------
