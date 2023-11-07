@@ -204,7 +204,7 @@ metadata:
   labels:
     # this label is how the Prometheus installed with Robusta finds ServiceMonitors
     release: {{ .Release.Name }}
-    {{- with .Values.runner.serviceMonitor.labels }}
+    {{- with .Values.runner.serviceMonitor.additionalLabels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
