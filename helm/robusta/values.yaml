@@ -13,6 +13,9 @@ sinksConfig: []
 clusterName: ""
 clusterZone: ""
 
+global:
+  clusterDomain: "cluster.local"
+
 automountServiceAccountToken: true
 
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
@@ -542,7 +545,7 @@ kube-prometheus-stack:
         - name: 'null'
         - name:  'robusta'
           webhook_configs:
-            - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.cluster.local/api/alerts'
+            - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}/api/alerts'
               send_resolved: true
     alertmanagerSpec:
       resources:
@@ -606,6 +609,9 @@ kube-prometheus-stack:
         cpu: 10m
 
 rsa: ~
+  # @param existingSecret Name of existing secret containing the rsa keys
+  # NOTE: Must contain the keys `pub` and `prv`
+  # existingSecret: my-robusta-rsa-keys
 
 # custom parameters for OpenShift clusters
 openshift:

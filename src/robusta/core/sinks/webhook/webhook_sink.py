@@ -51,12 +51,12 @@ class WebhookSink(SinkBase):
                 {line}
                 """
             )
-            if len(message) + len(wrapped) >= self.size_limit:
+            if len(message.encode('utf-8')) + len(wrapped.encode('utf8')) >= self.size_limit:
                 break
             message += wrapped
 
         try:
-            r = requests.post(self.url, data=message, headers=self.headers)
+            r = requests.post(self.url, data=message.encode('utf-8'), headers=self.headers)
             r.raise_for_status()
         except Exception:
             logging.exception(f"Webhook request error\n headers: \n{self.headers}")

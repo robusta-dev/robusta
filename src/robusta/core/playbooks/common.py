@@ -79,7 +79,7 @@ def get_resource_events_table(
     )
 
 
-def get_event_timestamp(event: Event):
+def get_event_timestamp(event: Event) -> Optional[str]:
     if event.deprecatedLastTimestamp:
         return event.deprecatedLastTimestamp
     elif event.eventTime:

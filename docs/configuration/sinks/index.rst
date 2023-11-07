@@ -26,6 +26,7 @@ Sinks Reference
    webex
    kafka
    sinks-development
+   rocketchat
 
 Robusta can report issues and events in your Kubernetes cluster to various destinations, known as sinks.
 
@@ -123,6 +124,15 @@ Click a sink for setup instructions.
         :link: kafka
         :link-type: doc
 
+    .. grid-item-card:: :octicon:`cpu;1em;` Rocket.Chat
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: rocketchat
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Mail
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: mail
+        :link-type: doc
 
 
 **Need support for a new sink?** `Tell us and we'll add it. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_

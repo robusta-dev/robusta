@@ -1,10 +1,10 @@
 import logging
 from typing import List, Tuple
 
-from hikaru.model.rel_1_26 import Container, Job, JobSpec, JobStatus, ObjectMeta, PodSpec, PodTemplateSpec
+from hikaru.model.rel_1_26 import Container, EnvVar, Job, JobSpec, JobStatus, ObjectMeta, PodSpec, PodTemplateSpec
+
 from robusta.api import (
     ActionParams,
-    EnvVar,
     EventEnricherParams,
     FileBlock,
     JobEvent,
