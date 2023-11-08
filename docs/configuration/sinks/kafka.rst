@@ -18,6 +18,8 @@ Configuring the Kafka sink
 
 .. admonition:: Add this to your generated_values.yaml if configuring with authentication
 
+   `additional auth options <https://kafka-python.readthedocs.io/en/master/apidoc/KafkaProducer.html#kafkaproducer>`_
+
    .. code-block:: yaml
 
         sinksConfig:
