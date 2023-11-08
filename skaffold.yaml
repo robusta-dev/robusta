@@ -1,31 +1,20 @@
-apiVersion: skaffold/v4beta6
+apiVersion: skaffold/v2beta20
 kind: Config
 metadata:
   name: robusta
 build:
   artifacts:
-    - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-      context: .
-      docker:
-        dockerfile: Dockerfile
+  - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+    context: .
+    docker:
+      dockerfile: Dockerfile
+  local:
+    concurrency: 0
   # this is very important. we need to use inputDigest so that different developers don't build the same tags
   # and interfere with one another's work (e.g. when building and then running pytest you want to test the version
   # you built and not a version someone else built with the same tag)
   tagPolicy:
     inputDigest: {}
-  local:
-    concurrency: 0
-
-manifests:
-  helm:
-    releases:
-      - name: robusta
-        chartPath: helm/robusta
-        valuesFiles:
-          - deployment/generated_values.yaml
-        setValueTemplates:
-          runner.image: '{{.IMAGE_FULLY_QUALIFIED_us_central1_docker_pkg_dev_genuine_flight_317411_devel_robusta_runner}}'
-
 deploy:
   helm:
     releases:
@@ -33,45 +22,46 @@ deploy:
         chartPath: helm/robusta
         valuesFiles:
           - deployment/generated_values.yaml
-        setValueTemplates:
-          runner.image: '{{.IMAGE_FULLY_QUALIFIED_us_central1_docker_pkg_dev_genuine_flight_317411_devel_robusta_runner}}'
+        artifactOverrides:
+          runner.image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
 
 portForward:
-  - resourceType: deployment
-    resourceName: robusta-runner
-    port: 5000
-    localPort: 5000
+- resourceType: deployment
+  resourceName: robusta-runner
+  port: 5000
+  localPort: 5000
+
 
 profiles:
-  - name: apple-m1-dev
-    build:
-      artifacts:
-        - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-          context: .
-          custom:
-            buildCommand: ./build_on_apple_m1.sh
-      local:
-        concurrency: 0
-  - name: arm
-    build:
-      artifacts:
-        - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-          context: .
-          custom:
-            buildCommand: ./build_with_arm.sh
-  - name: gcloud-build
-    build:
-      artifacts:
-        - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-          context: .
-          docker:
-            dockerfile: Dockerfile
-      googleCloudBuild:
+- name: apple-m1-dev
+  build:
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        custom:
+          buildCommand: ./build_on_apple_m1.sh
+    local:
+      concurrency: 0
+- name: arm
+  build:
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        custom:
+          buildCommand: ./build_with_arm.sh
+- name: gcloud-build
+  build:
+    googleCloudBuild:
         projectId: genuine-flight-317411
-  - name: release
-    build:
-      artifacts:
-        - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-          context: .
-          custom:
-            buildCommand: ./build_release.sh
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        docker:
+          dockerfile: Dockerfile
+- name: release
+  build:
+    artifacts:
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
+        context: .
+        custom:
+          buildCommand: ./build_release.sh
