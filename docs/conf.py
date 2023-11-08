@@ -222,6 +222,7 @@ html_favicon = "_static/favicon.png"
 
 html_favicon = "_static/faviconNew.svg"
 
+html_extra_path = ['robots.txt']
 
 def setup(app):
     app.add_css_file("custom.css")
