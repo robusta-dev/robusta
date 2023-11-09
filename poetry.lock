@@ -2095,20 +2095,22 @@ twisted = ["twisted"]
 
 [[package]]
 name = "prometrix"
-version = "0.1.10"
-description = ""
+version = "0.1.13"
+description = "A Python Prometheus client for all Prometheus instances."
 optional = false
-python-versions = ">=3.8,<4.0"
-files = [
-    {file = "prometrix-0.1.10-py3-none-any.whl", hash = "sha256:5caa0ee06d49d7ad1f881614edb81fe4b2f47f730bcd4286209627fdc41d550d"},
-    {file = "prometrix-0.1.10.tar.gz", hash = "sha256:9ed61c0b77b503d38ce9c66d70742ad81a84b7afc6fbf63e8dbba9316b41a4df"},
-]
+python-versions = "^3.8"
+files = []
+develop = true
 
 [package.dependencies]
-boto3 = ">=1.28.15,<2.0.0"
-botocore = ">=1.31.15,<2.0.0"
-prometheus-api-client = ">=0.5.3,<0.6.0"
-pydantic = ">=1.8.1,<2.0.0"
+boto3 = "^1.28.15"
+botocore = "^1.31.15"
+prometheus-api-client = "^0.5.3"
+pydantic = "^1.8.1"
+
+[package.source]
+type = "directory"
+url = "../prometrix"
 
 [[package]]
 name = "py"
@@ -2571,21 +2573,6 @@ files = [
 
 [package.dependencies]
 requests = ">=2.0.1,<3.0.0"
-
-[[package]]
-name = "rocketchat-api"
-version = "1.30.0"
-description = "Python API wrapper for Rocket.Chat"
-optional = false
-python-versions = "*"
-files = [
-    {file = "rocketchat_API-1.30.0-py3-none-any.whl", hash = "sha256:58b21b14b2186324e5d0c91b87e928822f55fbd6d3bfc14af308e4db0740fc4d"},
-    {file = "rocketchat_API-1.30.0.tar.gz", hash = "sha256:1f521289598c7fd7fa5762adcd90b387b1c9ec9cb969b2ab793ec8010bd7b5fd"},
-]
-
-[package.dependencies]
-packaging = "*"
-requests = "*"
 
 [[package]]
 name = "rsa"
@@ -3727,4 +3714,4 @@ all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "dulwich"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8, <3.11"
-content-hash = "2ef66b62cb0a6a4dd9bb34085fce403ce09ee66545a8b0d241781422d666f946"
+content-hash = "bd3a47cda2502d297100c97c2de155ef08472d2067d8ec7b08f398c676197da5"
