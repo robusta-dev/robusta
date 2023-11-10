@@ -59,8 +59,10 @@ def pod_issue_investigator(event: KubernetesResourceEvent):
         logging.info(f"No pod issues discovered for {resource.kind} {resource.metadata.name}")
         return
     # Investigate first issue found
-    pod_issue = detect_pod_issue(pods_with_issues[0])
-    report_pod_issue(event, pods_with_issues, pod_issue)
+    first_pod = pods_with_issues[0]
+    pod_issue = detect_pod_issue(first_pod)
+    pod_issue_details = get_pod_issue_details(first_pod)
+    report_pod_issue(event, pods_with_issues, pod_issue, pod_issue_details)
 
 
 def detect_pod_issue(pod: Pod) -> PodIssue:
@@ -73,6 +75,13 @@ def detect_pod_issue(pod: Pod) -> PodIssue:
     elif is_pod_pending(pod):
         return PodIssue.Pending
     return PodIssue.NoneDetected
+
+
+def get_pod_issue_details(pod: Pod) -> str:
+    # Works/should work only or KubeContainerWaiting and KubePodNotReady
+    # Note: in line with the old code in pod_issue_investigator, we only get the message for
+    # the first of possibly many misbehaving containers.
+    return pod.status.containerStatuses[0].state.waiting.message
 
 
 def is_pod_pending(pod: Pod) -> bool:
@@ -124,7 +133,7 @@ def has_image_pull_issue(pod: Pod) -> bool:
     return len(image_pull_statuses) > 0
 
 
-def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue):
+def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue, issue_details: str):
     # find pods with issues
     pods_with_issue = [pod for pod in pods if detect_pod_issue(pod) == issue]
     pod_names = [pod.metadata.name for pod in pods_with_issue]
@@ -144,6 +153,7 @@ def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: Pod
         blocks.append(MarkdownBlock(f"\n\n*{pod_names[0]}* was picked for investigation\n"))
         blocks.extend(additional_blocks)
         event.add_enrichment(blocks)
+        event.add_enrichment(MarkdownBlock(f"\n\nProblem cause: {issue_details}"))
 
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
