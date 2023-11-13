@@ -126,8 +126,25 @@ class Screens(StrEnum):
             st.rerun()
 
 
+HOT_TRIGGERS = ["on_prometheus_alert"]
+
+
+def format_trigger_name(trigger_name):
+    if trigger_name in HOT_TRIGGERS:
+        return f"{trigger_name} 🔥"
+    return trigger_name
+
+
+def sort_trigger_names(trigger_names):
+    hot_triggers = [t for t in trigger_names if t in HOT_TRIGGERS]
+    regular_triggers = [t for t in trigger_names if t not in HOT_TRIGGERS]
+    return hot_triggers + regular_triggers
+
+
 def display_triggers():
     trigger_names = list(triggers.keys())
+    trigger_names = sort_trigger_names(trigger_names)
+
     if ss.get("trigger_name") is not None:
         index = trigger_names.index(ss["trigger_name"])
     else:

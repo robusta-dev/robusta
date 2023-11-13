@@ -4,6 +4,7 @@ from typing import Type, Optional, TypeVar, Callable
 from pydantic import BaseModel, ValidationError, parse_obj_as
 from streamlit_pydantic import pydantic_input
 from streamlit_pydantic.ui_renderer import GroupOptionalFieldsStrategy
+from streamlit_extras.stylable_container import stylable_container
 
 # Define generic type to allow autocompletion for the model fields
 T = TypeVar("T", bound=BaseModel)
@@ -36,10 +37,21 @@ def modified_pydantic_form(
         Optional[BaseModel]: An instance of the given input class,
             if the submit button is used and the input data passes the Pydantic validation.
     """
-    # TODO: replace with a visual container from streamlit_extras due to https://github.com/LukasMasuch/streamlit-pydantic/issues/39
-    with st.form(key=key, clear_on_submit=clear_on_submit):
+    # we can't use pydantic_form because of https://github.com/LukasMasuch/streamlit-pydantic/issues/39
+    # so we design our own container for all elements, just like a form would
+    with stylable_container(
+            key=key,
+            css_styles="""
+                        {
+                            border: 1px solid rgba(49, 51, 63, 0.2);
+                            border-radius: 0.5rem;
+                            padding: calc(1em - 1px);
+                            box-sizing: content-box;
+                        }
+                        """,
+    ):
         if title is not None:
-            st.header(title)
+            st.subheader(title)
 
         input_state = pydantic_input(
             key,
@@ -48,7 +60,7 @@ def modified_pydantic_form(
             lowercase_labels=lowercase_labels,
             ignore_empty_values=ignore_empty_values,
         )
-        submit_button = st.form_submit_button(label=submit_label)
+        submit_button = st.button(label=submit_label)
 
         if submit_button:
             try:
