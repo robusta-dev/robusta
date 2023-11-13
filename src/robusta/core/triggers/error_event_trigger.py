@@ -16,26 +16,6 @@ class WarningEventTrigger(EventAllChangesTrigger):
     exclude: List[str] = Field(default=None, description="Ignore Events containing any of these strings")
     include: List[str] = Field(default=None, description="Only monitor Events containing one of these strings")
 
-    def __init__(
-        self,
-        name_prefix: str = None,
-        namespace_prefix: str = None,
-        labels_selector: str = None,
-        rate_limit: int = 3600,
-        operations: List[str] = None,
-        exclude: List[str] = (),
-        include: List[str] = (),
-    ):
-        super().__init__(
-            name_prefix=name_prefix,
-            namespace_prefix=namespace_prefix,
-            labels_selector=labels_selector,
-        )
-        self.rate_limit = rate_limit
-        self.operations = operations
-        self.exclude = exclude
-        self.include = include
-
     def should_fire(self, event: TriggerEvent, playbook_id: str):
         should_fire = super().should_fire(event, playbook_id)
         if not should_fire:
