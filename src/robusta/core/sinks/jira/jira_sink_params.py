@@ -13,6 +13,10 @@ class JiraSinkParams(SinkBaseParams):
     project_name: str
     project_type_id_override: Optional[int]
     issue_type_id_override: Optional[int]
+    sendResolved: Optional[bool]
+    reopenIssues: Optional[bool]
+    doneStatusName: Optional[str] = "Done"
+    reopenStatusName: Optional[str] = "To Do"
 
 
 class JiraSinkConfigWrapper(SinkConfigBase):

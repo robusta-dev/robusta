@@ -27,6 +27,12 @@ Optional Settings
 * ``project_type_id_override`` : [Optional - default: None] If available, will override the ``project_name`` configuration. Follow these `instructions <https://confluence.atlassian.com/jirakb/how-to-get-project-id-from-the-jira-user-interface-827341414.html>`__ to get your project id.
 * ``issue_type_id_override`` : [Optional - default: None] If available, will override the ``issue_type`` configuration. Follow these `instructions <https://confluence.atlassian.com/jirakb/finding-the-id-for-issue-types-646186508.html>`__ to get your issue id.
 
+Following optional settings only work for Prometheus alerts:
+* ``sendResolved`` : [Optional - default: false] If true, will transition a Jira issue to "Done" when the alert event contains a "solved" status.
+* ``reopenIssues`` : [Optional - default: false] If true, will reopen a "Done" Jira issue when an alerts fire with the same fingerprint. If false, a new issue will be created.
+* ``doneStatusName`` : [Optional - default: 'Done'] The name of the "Done" status in Jira. Will be used to identify "Done" tasks in Jira.
+* ``reopenStatusName`` : [Optional - default: 'To Do'] The name of the "To Do" status in Jira. Will be used to identify "To Do" tasks in Jira.
+
 Configuring the Jira sink
 ------------------------------------------------
 
