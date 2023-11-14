@@ -30,8 +30,7 @@ randomness.
 Relabel Prometheus Alerts
 -----------------------------
 
-The ``alertRelabel`` helm value allows relabeling Prometheus alerts processed by Robusta.
-You can add a new label based on existing label, or replace existing label with a new one.
+The ``alertRelabel`` helm value changes the way Prometheus alerts are mapped to Kubernetes resources.
 
 Relabel has 3 attributes:
 

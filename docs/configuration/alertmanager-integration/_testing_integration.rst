@@ -19,3 +19,10 @@ If everything is setup properly, this alert will reach Robusta. It will show up 
     3. AlertManager UI status page - verify that your config was picked up
 
     Reach out on `Slack <https://bit.ly/robusta-slack>`_ for assistance.
+
+.. details:: Robusta isn't mapping alerts to Kubernetes resources
+    :class: warning
+
+    Robusta enriches alerts with Kubernetes and log data using Prometheus labels for mapping.
+    Standard label names are used by default. If your setup differs, you can
+    :ref:`customize this mapping <Relabel Prometheus Alerts>` to fit your environment.
