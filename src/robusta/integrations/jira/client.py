@@ -173,7 +173,7 @@ class JiraClient:
         payload = {
             "transition": {"id": f"{transition_id}"},
         }
-        logging.debug(f"Transitioning issue {issue_id} with payload: {payload}")
+        logging.debug(f"Transitioning issue {issue_id} to {status_name} status with payload: {payload}")
         response = self._call_jira_api(url, http_method=HttpMethod.POST, json=payload) or {}
         logging.debug(f"Transitioned issue with response {response}")
 
@@ -231,7 +231,7 @@ class JiraClient:
             "fields": {"summary": summary, "description": description},
         }
 
-        logging.debug(f"Update issue with payload: {payload}")
+        logging.debug(f"Update issue '{issue_id}' with payload: {payload}")
         response = self._call_jira_api(url, http_method=HttpMethod.PUT, json=payload) or {}
         logging.debug(response)
 
