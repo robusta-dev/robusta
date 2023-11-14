@@ -48,6 +48,7 @@ class RelatedContainer(BaseModel):
     status: Optional[str] = None
     created: Optional[str] = None
     ports: List[Any] = []
+    status_details: Optional[str] = None
 
 
 class RelatedPod(BaseModel):
@@ -64,6 +65,7 @@ class RelatedPod(BaseModel):
     addresses: str
     containers: List[RelatedContainer]
     status: Optional[str] = None
+    status_reason: Optional[str] = None
 
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node"]
@@ -87,6 +89,7 @@ def to_pod_row(pod: Pod, cluster_name: str) -> List:
         addresses,
         len(pod.spec.containers),
         pod.status.phase,
+        pod.status.reason,
     ]
 
 
@@ -95,7 +98,6 @@ def get_related_pods(resource) -> list[Pod]:
     if kind not in supported_resources:
         raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {kind}")
 
-    pods = []
     if kind == "Job":
         job_pods = get_job_all_pods(resource)
         pods = job_pods if job_pods else []
@@ -128,6 +130,7 @@ def to_pod_obj(pod: Pod, cluster: str) -> RelatedPod:
         addresses=addresses,
         containers=get_pod_containers(pod),
         status=pod.status.phase,
+        status_reason=pod.status.reason,
     )
 
 
@@ -146,6 +149,7 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
                 if state is not None:
                     stateStr = s
                     break
+        status_details = getattr(state, "messsage", None) if state else None
 
         containers.append(
             RelatedContainer(
@@ -156,6 +160,7 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
                 memoryRequest=requests.memory,
                 restarts=getattr(containerStatus, "restartCount", 0),
                 status=stateStr,
+                status_details=status_details,
                 created=getattr(state, "startedAt", None),
                 ports=[port.to_dict() for port in container.ports] if container.ports else [],
             )
@@ -197,6 +202,7 @@ def related_pods(event: KubernetesResourceEvent, params: RelatedPodParams):
                         "addresses",
                         "containers",
                         "status",
+                        "status reason",
                     ],
                     rows=rows,
                 )
