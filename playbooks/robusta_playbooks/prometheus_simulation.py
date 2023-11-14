@@ -23,6 +23,7 @@ class PrometheusAlertParams(ActionParams):
     :var generator_url: Prometheus generator_url. Some enrichers, use this attribute to query Prometheus.
     :var labels: Additional alert labels. For example: "key1: val1, key2: val2"
     :var runbook_url: Simulated alert runbook_url. For example: "https//my-runbook-url.dev"
+    :var fingerprint: Simulated alert fingerprint. For example: "my-unique-fingerprint"
     """
 
     alert_name: str
@@ -43,6 +44,7 @@ class PrometheusAlertParams(ActionParams):
     summary: Optional[str]
     generator_url = ""
     runbook_url: Optional[str] = None
+    fingerprint: Optional[str] = None
     labels: Optional[str] = None
 
 
@@ -104,6 +106,7 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
                     "startsAt": datetime.now(),
                     "generatorURL": prometheus_event_data.generator_url,
                     "runbookURL": prometheus_event_data.runbook_url,
+                    "fingerprint": prometheus_event_data.fingerprint,
                     "labels": labels,
                     "annotations": annotations,
                 }
