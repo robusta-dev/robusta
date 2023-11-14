@@ -38,6 +38,7 @@ from robusta.core.model.base_params import (
 )
 from robusta.core.model.env_vars import (
     ALERT_BUILDER_WORKERS,
+    CLUSTER_DOMAIN,
     CLUSTER_STATUS_PERIOD_SEC,
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
