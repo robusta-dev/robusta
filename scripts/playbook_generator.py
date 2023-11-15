@@ -59,6 +59,8 @@ def display_demo_playbook():
         ss["action_data"] = ""
     if "trigger_data" not in ss:
         ss["trigger_data"] = ""
+    if "action_ready" not in ss:
+        ss["action_ready"] = False
 
     release_fail_expander = st.expander(":zap: Get notified when a Helm release fails", expanded=False)
     deployment_change_expander = st.expander(":zap: Get notified when a deployment changes", expanded=False)
