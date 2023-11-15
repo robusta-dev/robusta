@@ -5,18 +5,18 @@
 # TODO: perhaps mark certain actions as recommended
 
 from collections import OrderedDict
-from typing import List, Set, Optional, Literal
 from enum import Enum, StrEnum
+from typing import List, Literal, Optional, Set
 
-import streamlit_antd_components as sac
 import streamlit as st
+import streamlit_antd_components as sac
 import streamlit_pydantic as sp
 import yaml
-from streamlit import session_state as ss
+from custom_streamlit_pydantic import GroupOptionalFieldsStrategy, modified_pydantic_form
 from pydantic import BaseModel
+from streamlit import session_state as ss
 
 from robusta.core.playbooks.generation import ExamplesGenerator, find_playbook_actions
-from custom_streamlit_pydantic import modified_pydantic_form, GroupOptionalFieldsStrategy
 
 st.set_page_config(
     page_title="Playbook Generator",
@@ -25,8 +25,8 @@ st.set_page_config(
 
 
 def update_changes(trigger, action):
-    ss.trigger = trigger
-    ss.action = action
+    ss["trigger_name"] = trigger
+    ss["action_name"] = action
     ss.current_page = "playbook_builder"
     ss.playbook_chosen = True
 
@@ -51,10 +51,14 @@ def display_demo_playbook():
 
     st.title("Demo Playbooks", anchor=None)
 
-    if "trigger" not in ss:
-        ss.trigger = ""
-    if "action" not in ss:
-        ss.action = ""
+    if "trigger_name" not in ss:
+        ss["trigger_name"] = "on_helm_release_fail"
+    if "action_name" not in ss:
+        ss["action_name"] = ""
+    if "action_data" not in ss:
+        ss["action_data"] = ""
+    if "trigger_data" not in ss:
+        ss["trigger_data"] = ""
 
     release_fail_expander = st.expander(":zap: Get notified when a Helm release fails", expanded=False)
     deployment_change_expander = st.expander(":zap: Get notified when a deployment changes", expanded=False)
@@ -135,11 +139,7 @@ def display_triggers():
 
     st.info(":zap: Triggers are events that cause a playbook to start running")
     ss["trigger_name"] = st.selectbox(
-        "Choose a trigger",
-        trigger_names,
-        key="trigger",
-        placeholder="Type to search",
-        index=index
+        "Choose a trigger", trigger_names, key="trigger", placeholder="Type to search", index=index
     )
     if ss["trigger_name"] is None:
         return
@@ -149,13 +149,51 @@ def display_triggers():
 
     ss["trigger_data"] = modified_pydantic_form(
         key=f"trigger_form-{ss['trigger_name']}",
-        model=triggers[ss['trigger_name']],
+        model=triggers[ss["trigger_name"]],
         ignore_empty_values=True,
         group_optional_fields="expander",
         title=f"*{ss['trigger_name']}* settings",
         submit_label="Continue",
-        on_submit=lambda: Screens.set_current_screen(Screens.ACTION)
+        on_submit=lambda: Screens.set_current_screen(Screens.ACTION),
     )
+
+
+def display_actions():
+    action_names = list(actions_by_name.keys())
+
+    st.info(":zap: Actions are what the playbook *does* - they can collect data or execute remediations")
+    relevant_actions = [a.action_name for a in triggers_to_actions[ss["trigger_name"]]]
+
+    if ss.get("action_name") is not None:
+        index = relevant_actions.index(ss["action_name"])
+    else:
+        index = 0
+
+    ss["action_name"] = st.selectbox(
+        "Choose an action", relevant_actions, key="actiontest", placeholder="Type to search", index=index
+    )
+    action_obj = actions_by_name.get(ss["action_name"], None)
+    if action_obj and hasattr(action_obj, "params_type") and hasattr(action_obj.params_type, "schema"):
+        ss["action_data"] = modified_pydantic_form(
+            key=f"action_form-{ss['action_name']}-test",
+            model=action_obj.params_type,
+            ignore_empty_values=True,
+            group_optional_fields="expander",
+            title=f"*{ss['action_name']}* settings",
+            submit_label="Submit",
+            on_submit=lambda: Screens.set_current_screen(Screens.YAML),
+        )
+        try:
+            ss["action_data"] = action_obj.params_type(**action_data).dict(exclude_defaults=True)
+            ss["action_ready"] = True
+        except:
+            pass
+
+    else:
+        st.markdown("This action doesn't have any parameters")
+        ss["action_data"] = None
+        ss["action_ready"] = True
+    st.button("Continue", key="button2-test", on_click=Screens.set_current_screen, args=[Screens.YAML])
 
 
 def display_playbook_builder():
@@ -169,44 +207,48 @@ def display_playbook_builder():
             sac.StepsItem(title=Screens.TRIGGER),
             sac.StepsItem(title=Screens.ACTION),
             sac.StepsItem(title=Screens.YAML),
-        ], index=current_screen.to_index(), format_func='title'
+        ],
+        index=current_screen.to_index(),
+        format_func="title",
     )
 
     if step == Screens.TRIGGER:
         print("display triggers")
         display_triggers()
 
-
     # TODO: move this part to a function like display_triggers(). this requires not just moving it to a function, but updating the code to use modified_pydantic_form etc
     elif step == Screens.ACTION:
-        print("display actions")
-        st.info(":zap: Actions are what the playbook *does* - they can collect data or execute remediations")
-        relevant_actions = [a.action_name for a in triggers_to_actions[ss['trigger_name']]]
-        ss['action_name'] = st.selectbox("Choose an action", relevant_actions, key="action")
-        action_obj = actions_by_name.get(ss['action_name'], None)
-        if action_obj and hasattr(action_obj, "params_type") and hasattr(action_obj.params_type, "schema"):
-            action_data = sp.pydantic_form(
-                key=f"action_form-{ss['action_name']}",
-                model=action_obj.params_type,
-                ignore_empty_values=True,
-                group_optional_fields="expander"
-            )
-            try:
-                ss['action_data'] = action_obj.params_type(**action_data).dict(exclude_defaults=True)
-                ss['action_ready'] = True
-            except:
-                pass
-        else:
-            st.markdown("This action doesn't have any parameters")
-            ss['action_data'] = None
-            ss['action_ready'] = True
-        st.button("Continue", key="button2", on_click=Screens.set_current_screen, args=[Screens.YAML])
+        display_actions()
+
+        # OLD CODE
+        # st.info(":zap: Actions are what the playbook *does* - they can collect data or execute remediations")
+        # relevant_actions = [a.action_name for a in triggers_to_actions[ss['trigger_name']]]
+        # ss['action_name'] = st.selectbox("Choose an action", relevant_actions, key="action")
+        # action_obj = actions_by_name.get(ss['action_name'], None)
+        # if action_obj and hasattr(action_obj, "params_type") and hasattr(action_obj.params_type, "schema"):
+        #     action_data = sp.pydantic_form(
+        #         key=f"action_form-{ss['action_name']}",
+        #         model=action_obj.params_type,
+        #         ignore_empty_values=True,
+        #         group_optional_fields="expander"
+        #     )
+        #     try:
+        #         ss['action_data'] = action_obj.params_type(**action_data).dict(exclude_defaults=True)
+        #         ss['action_ready'] = True
+        #     except:
+        #         pass
+        # else:
+        #     st.markdown("This action doesn't have any parameters")
+        #     ss['action_data'] = None
+        #     ss['action_ready'] = True
+        # st.button("Continue", key="button2", on_click=Screens.set_current_screen, args=[Screens.YAML])
 
     elif step == Screens.YAML:
+
         st.info(":scroll: Add this YAML to Robusta's Helm values to configure your playbook")
-        if not ss['trigger_data']:
+        if not ss["trigger_data"]:
             st.warning("Error: mandatory Trigger fields are missing!")
-        if not ss['action_ready']:
+        if not ss["action_ready"]:
             st.warning("Error: mandatory Action fields are missing!")
 
         st.markdown(
@@ -214,17 +256,25 @@ def display_playbook_builder():
         )
 
         trigger_dict = ss["trigger_data"].dict(exclude_defaults=True)
-        if ss['action_data'] is None:
+        if ss["action_data"] is None:
             playbook = {
                 "customPlaybooks": [
-                    OrderedDict([("triggers", [{ss['trigger_name']: ss['trigger_data']}]), ("actions", [{ss['action_name']: {}}])])
+                    OrderedDict(
+                        [
+                            ("triggers", [{ss["trigger_name"]: ss["trigger_data"]}]),
+                            ("actions", [{ss["action_name"]: {}}]),
+                        ]
+                    )
                 ]
             }
         else:
             playbook = {
                 "customPlaybooks": [
                     OrderedDict(
-                        [("triggers", [{ss['trigger_name']: ss['trigger_data']}]), ("actions", [{ss['action_name']: ss['action_data']}])]
+                        [
+                            ("triggers", [{ss["trigger_name"]: ss["trigger_data"]}]),
+                            ("actions", [{ss["action_name"]: ss["action_data"]}]),
+                        ]
                     )
                 ]
             }
