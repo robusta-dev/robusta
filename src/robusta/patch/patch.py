@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Union, get_type_hints
 
 from hikaru import HikaruBase, HikaruDocumentBase
 from kubernetes.client.models.events_v1_event import EventsV1Event
-from kubernetes.client.models.v1_container_image import V1ContainerImage
+from kubernetes.client.models.v1_pod_failure_policy_rule import V1PodFailurePolicyRule
 from ruamel.yaml import YAML
 
 try:
@@ -38,6 +38,19 @@ def create_monkey_patches():
     # which causes the kubernetes python api to throw an exception
     logging.info("Creating kubernetes ContainerImage monkey patch")
     EventsV1Event.event_time = EventsV1Event.event_time.setter(event_time)
+    patch_on_pod_conditions()
+
+
+def patch_on_pod_conditions():
+    # This fixes https://github.com/kubernetes-client/python/issues/2056 before the
+    # k8s people take care of it (it's urgent for us).
+
+    logging.info("Creating kubernetes PodFailurePolicyRUle.on_pod_conditions monkey patch")
+
+    def patched_setter(self, on_pod_conditions):
+        self._on_pod_conditions = on_pod_conditions
+
+    V1PodFailurePolicyRule.on_pod_conditions = V1PodFailurePolicyRule.on_pod_conditions.setter(patched_setter)
 
 
 def event_time(self, event_time):
