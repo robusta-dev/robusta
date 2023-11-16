@@ -42,7 +42,10 @@ If you'd like to run the Slack tests, you will need two Slack tokens:
 1. A regular Slack token generated with `robusta gen-config` that Robusta will send messages to Slack with.
 2. A high-permission Slack token that you create and only you have access to. The tests use this to read and verify the messages that Robusta sends to Slack. 
 
-The two tokens must be for the same Slack workspace. You can generate the latter token as follows:
+The two tokens must be for the same Slack workspace.
+
+If you work for Robusta, you can find the 2nd token in our password vault, under the title "tests/config.env".
+If you don't have access to this, you can generate the 2nd token as follows:
 
 1. Create a new Slack application at https://api.slack.com/apps/
 2. Grant your application the following scopes:

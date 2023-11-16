@@ -106,7 +106,7 @@ class MailSender:
     def __create_finding_header(self, finding: Finding, status: FindingStatus) -> MarkdownBlock:
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
-        status_name = "Prometheus Firing Alert" if status == FindingStatus.FIRING else "Resolved"
+        status_name: str = "Prometheus Alert Firing" if status == FindingStatus.FIRING else "Resolved"
         status_str: str = f"{status.to_emoji()} `{status_name}`" if finding.add_silence_url else ""
         return with_attr(
             MarkdownBlock(
