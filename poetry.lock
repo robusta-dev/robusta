@@ -2095,13 +2095,13 @@ twisted = ["twisted"]
 
 [[package]]
 name = "prometrix"
-version = "0.1.14"
+version = "0.1.15"
 description = "A Python Prometheus client for all Prometheus instances."
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "prometrix-0.1.14-py3-none-any.whl", hash = "sha256:eaa1a77c09a8ef62055ff61bcad4ae5e1d408077eb3a416b6a6ad5c2a6643405"},
-    {file = "prometrix-0.1.14.tar.gz", hash = "sha256:cd5ebb5745f9ca91dd8adf731a0e690fba41e9c9b4df70a1ca60642052d96ac6"},
+    {file = "prometrix-0.1.15-py3-none-any.whl", hash = "sha256:8bb6b22cec8b40c1689c99c3405fd3e5381481afb2a54a9fe40c3b09ca7116ed"},
+    {file = "prometrix-0.1.15.tar.gz", hash = "sha256:e22463b1313e77773c34fc36f6e914e4facdbb9ab05d105acf35e62094bb17a2"},
 ]
 
 [package.dependencies]
@@ -3727,4 +3727,4 @@ all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "dulwich"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8, <3.11"
-content-hash = "35b8f35ba7c73344b259b145ef78b0969399e7ce93ccb1d501fc78bca058e1da"
+content-hash = "5b69f57e15d68e522cc698d0b83aba21e2edd602c38e4f05a9c7f7a5e9ac90f4"
