@@ -74,7 +74,7 @@ class RobustaController:
                 "gen-config",
                 "--cluster-name",
                 "test-cluster",
-                "--no-is-small-cluster",
+                # "--no-is-small-cluster",
                 "--slack-api-key",
                 slack_api_key,
                 "--slack-channel",
@@ -87,7 +87,7 @@ class RobustaController:
                 "--no-enable-crash-report",
                 "--msteams-webhook=",
             ],
-            timeout=30
+            timeout=30,
         )
         assert "Saved configuration" in logs, logs
 
@@ -104,14 +104,18 @@ class RobustaController:
         logging.debug(f"Running cmd: {cmd_for_printing}")
 
         try:
-            result = subprocess.run(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, timeout=timeout)
+            result = subprocess.run(
+                cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, timeout=timeout
+            )
             logging.debug(f"cmd result={result}")
         except Exception as e:
             logging.warning(f"failure running cmd: {cmd_for_printing}")
             raise
 
         if result.returncode:
-            logging.error(f"running command '{cmd_for_printing}' failed with returncode={result.returncode}, stdout={result.stdout.decode()}, stderr={result.stderr.decode()}")
+            logging.error(
+                f"running command '{cmd_for_printing}' failed with returncode={result.returncode}, stdout={result.stdout.decode()}, stderr={result.stderr.decode()}"
+            )
             raise Exception(f"Error running robusta cli command: {result.args}")
         return result.stdout.decode()
 
