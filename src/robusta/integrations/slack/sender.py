@@ -282,7 +282,7 @@ class SlackSender:
         sev = finding.severity
         if finding.source == FindingSource.PROMETHEUS:
             status_name: str = (
-                "{status.to_emoji()} `Prometheus Alert Firing`"
+                f"{status.to_emoji()} `Prometheus Alert Firing`"
                 if status == FindingStatus.FIRING
                 else "*Prometheus resolved*"
             )
