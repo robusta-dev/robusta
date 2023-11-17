@@ -528,6 +528,8 @@ runner:
   securityContext:
     pod: ~
     container: ~
+  serviceMonitor:
+    path: /metrics
 
 kube-prometheus-stack:
   alertmanager:
