@@ -62,29 +62,29 @@ def modified_pydantic_form(
         )
         submit_button = st.button(label=submit_label)
 
-        if submit_button:
-            try:
-                result = None
-                # check if the model is an instance before parsing
-                if isinstance(model, BaseModel):
-                    result = parse_obj_as(model.__class__, input_state)
-                else:
-                    result = parse_obj_as(model, input_state)
+        try:
+            result = None
+            # check if the model is an instance before parsing
+            if isinstance(model, BaseModel):
+                result = parse_obj_as(model.__class__, input_state)
+            else:
+                result = parse_obj_as(model, input_state)
 
-                if on_submit is not None:
-                    on_submit()
-                    return result
+            if submit_button and on_submit is not None:
+                on_submit()
+            return result
 
-            except ValidationError as ex:
-                error_text = "**Whoops! There were some problems with your input:**"
-                for error in ex.errors():
-                    if "loc" in error and "msg" in error:
-                        location = ".".join(error["loc"]).replace("__root__.", "")  # type: ignore
-                        error_msg = f"**{location}:** " + error["msg"]
-                        error_text += "\n\n" + error_msg
-                    else:
-                        # Fallback
-                        error_text += "\n\n" + str(error)
-                st.error(error_text)
+        except ValidationError as ex:
+            if not submit_button:
                 return None
-    return None
+            error_text = "**Whoops! There were some problems with your input:**"
+            for error in ex.errors():
+                if "loc" in error and "msg" in error:
+                    location = ".".join(error["loc"]).replace("__root__.", "")  # type: ignore
+                    error_msg = f"**{location}:** " + error["msg"]
+                    error_text += "\n\n" + error_msg
+                else:
+                    # Fallback
+                    error_text += "\n\n" + str(error)
+            st.error(error_text)
+            return None
