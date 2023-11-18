@@ -172,6 +172,9 @@ def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
         f"{entry['resource'].upper()} Request: "
         + f"{format_krr_value(entry['allocated']['request'])} -> "
         + f"{format_krr_value(entry['recommended']['request'])} "
+        + f"\n{entry['resource'].upper()} Limit: "
+        + f"{format_krr_value(entry['allocated']['limit'])} -> "
+        + f"{format_krr_value(entry['recommended']['limit'])} "
         + f"({priority_to_krr_severity(entry['priority']['request'])})"
         for entry in row.content
     )

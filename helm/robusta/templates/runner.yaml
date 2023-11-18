@@ -145,7 +145,8 @@ spec:
             optional: true
         - name: auth-config-secret
           secret:
-            secretName: {{ default "robusta-auth-config-secret" .Values.rsa.existingSecret }}
+            {{- $subBloc := .Values.rsa | default dict }}
+            secretName: {{ default "robusta-auth-config-secret" $subBloc.existingSecret }}
             optional: true
         {{- if .Values.playbooksPersistentVolume }}
         - name: persistent-playbooks-storage
@@ -203,12 +204,29 @@ metadata:
   name: robusta-runner-service-monitor
   labels:
     # this label is how the Prometheus installed with Robusta finds ServiceMonitors
-    # TODO: we probably need to add custom labels here for a Prometheus installed separately
     release: {{ .Release.Name }}
+    {{- with .Values.runner.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   endpoints:
-    - path: /metrics
+    - path: {{ .Values.runner.serviceMonitor.path }}
       port: http
+      {{- if .Values.runner.serviceMonitor.interval }}
+      interval: {{ .Values.runner.serviceMonitor.interval }}
+      {{- end }}
+      {{- if .Values.runner.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.runner.serviceMonitor.scrapeTimeout }}
+      {{- end }}
+      {{- if .Values.runner.serviceMonitor.relabelings }}
+      relabelings: {{- tpl (toYaml .Values.runner.serviceMonitor.relabelings) . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.runner.serviceMonitor.metricRelabelings }}
+      metricRelabelings: {{- tpl (toYaml .Values.runner.serviceMonitor.metricRelabelings) . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.runner.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.runner.serviceMonitor.honorLabels }}
+      {{- end }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}-runner
