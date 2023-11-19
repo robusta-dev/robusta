@@ -154,7 +154,8 @@ spec:
             optional: true
         - name: auth-config-secret
           secret:
-            secretName: {{ default "robusta-auth-config-secret" .Values.rsa.existingSecret }}
+            {{- $subBloc := .Values.rsa | default dict }}
+            secretName: {{ default "robusta-auth-config-secret" $subBloc.existingSecret }}
             optional: true
         {{- if .Values.playbooksPersistentVolume }}
         - name: persistent-playbooks-storage

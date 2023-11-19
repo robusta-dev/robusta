@@ -52,6 +52,9 @@ spec:
         volumeMounts:
           - name: robusta-kubewatch-config
             mountPath: /config
+          {{- with .Values.kubewatch.extraVolumeMounts }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
         {{- if .Values.kubewatch.securityContext.container }}
         securityContext:
         {{- toYaml .Values.kubewatch.securityContext.container | nindent 10 }}
@@ -74,6 +77,9 @@ spec:
         - name:  robusta-kubewatch-config
           configMap:
             name: {{ .Release.Name }}-kubewatch-config
+        {{- with .Values.kubewatch.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- if .Values.kubewatch.nodeSelector }}
       nodeSelector: {{ toYaml .Values.kubewatch.nodeSelector | nindent 8 }}
       {{- end }}
