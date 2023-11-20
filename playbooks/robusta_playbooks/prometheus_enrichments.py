@@ -60,7 +60,9 @@ def get_prometheus_all_available_metrics(prometheus_params: PrometheusParams) ->
         return prom.all_metrics()
 
     except Exception as e:
-        raise Exception(f"An error occurred while fetching all available Prometheus metrics: {e}")
+        logging.error("An error occurred while fetching all available Prometheus metrics", exc_info=True)
+        raise e
+
 
 
 class PrometheusGetSeriesParams(PrometheusParams):
@@ -89,8 +91,8 @@ def get_prometheus_series(prometheus_params: PrometheusGetSeriesParams) -> dict:
                                start_time=prometheus_params.start_time)
 
     except Exception as e:
-        raise Exception(f"Failed to fetch Prometheus series for match criteria {prometheus_params.match} "
-                        f"within the time range {prometheus_params.start_time} - {prometheus_params.end_time}: {e}")
+        logging.error(f"Failed to fetch Prometheus series for match criteria {prometheus_params.match} within the time range {prometheus_params.start_time} - {prometheus_params.end_time}", exc_info=True)
+        raise e
 
 
 @action
