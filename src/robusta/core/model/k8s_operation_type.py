@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class K8sOperationType(Enum):
+class K8sOperationType(StrEnum):
     CREATE = "create"
     UPDATE = "update"
     DELETE = "delete"
