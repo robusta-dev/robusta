@@ -480,8 +480,13 @@ kubewatch:
       coreevent: false # added on kubewatch 2.5
       ingress: true # full support on kubewatch 2.4 (earlier versions have ingress bugs)
   securityContext:
-    pod: ~
-    container: ~
+    container:
+      allowPrivilegeEscalation: false
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+      runAsUser: 1000
+    pod: {}
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -495,6 +500,9 @@ grafanaRenderer:
       memory: 512Mi
     limits:
       cpu: ~
+  securityContext:
+    container:
+      privileged: false
 
 # parameters for the robusta runner service account
 runnerServiceAccount:
@@ -525,11 +533,15 @@ runner:
   imagePullSecrets: []
   extraVolumes: []
   extraVolumeMounts: []
-  securityContext:
-    pod: ~
-    container: ~
   serviceMonitor:
     path: /metrics
+  securityContext:
+    container:
+      allowPrivilegeEscalation: false
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+    pod: {}
 
 kube-prometheus-stack:
   alertmanager:
