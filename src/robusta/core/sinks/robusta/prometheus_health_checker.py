@@ -2,14 +2,13 @@ import logging
 import threading
 import time
 
-from prometrix import PrometheusNotFound, VictoriaMetricsNotFound
+from prometrix import PrometheusNotFound, VictoriaMetricsNotFound, PrometheusFlagsConnectionError
 from pydantic import BaseModel
 
 from robusta.core.exceptions import (
     AlertsManagerNotFound,
     NoAlertManagerUrlFound,
     NoPrometheusUrlFound,
-    PrometheusFlagsConnectionError,
 )
 from robusta.core.model.base_params import PrometheusParams
 from robusta.core.model.env_vars import PROMETHEUS_ERROR_LOG_PERIOD_SEC
