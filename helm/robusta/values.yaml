@@ -13,6 +13,9 @@ sinksConfig: []
 clusterName: ""
 clusterZone: ""
 
+global:
+  clusterDomain: "cluster.local"
+
 automountServiceAccountToken: true
 
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
@@ -477,6 +480,9 @@ kubewatch:
       event: true  # updated on kubewatch 2.5
       coreevent: false # added on kubewatch 2.5
       ingress: true # full support on kubewatch 2.4 (earlier versions have ingress bugs)
+  securityContext:
+    pod: ~
+    container: ~
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -520,6 +526,11 @@ runner:
   imagePullSecrets: []
   extraVolumes: []
   extraVolumeMounts: []
+  securityContext:
+    pod: ~
+    container: ~
+  serviceMonitor:
+    path: /metrics
 
 kube-prometheus-stack:
   alertmanager:
@@ -541,7 +552,7 @@ kube-prometheus-stack:
         - name: 'null'
         - name:  'robusta'
           webhook_configs:
-            - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.cluster.local/api/alerts'
+            - url: 'http://robusta-runner.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}/api/alerts'
               send_resolved: true
     alertmanagerSpec:
       resources:

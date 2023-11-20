@@ -41,6 +41,7 @@ from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
+from robusta.patch.patch import patch_on_pod_conditions
 from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.stack_tracer import StackTracer
 
@@ -135,6 +136,7 @@ class Discovery:
 
     @staticmethod
     def discovery_process() -> DiscoveryResults:
+        patch_on_pod_conditions()
         Discovery.stacktrace_thread_active = True
         threading.Thread(target=Discovery.stack_dump_on_signal).start()
         pods_metadata: List[V1ObjectMeta] = []

@@ -110,7 +110,7 @@ class MattermostClient:
                 if chan["name"] == channel_name:
                     return chan["id"]
         else:
-            logging.error("Received error response from MM on channel search: {str(response)}")
+            logging.error(f"Received error response from MM on channel search: {str(response)}")
 
     def get_team_id(self, team_name: str) -> Optional[str]:
         if not self.is_admin:
