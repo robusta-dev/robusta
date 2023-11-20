@@ -32,10 +32,6 @@ spec:
       imagePullSecrets:
       {{- toYaml .Values.runner.imagePullSecrets | nindent 6 }}
       {{- end }}
-      {{- if .Values.runner.securityContext.pod }}
-      securityContext:
-      {{- toYaml .Values.runner.securityContext.pod | nindent 6 }}
-      {{- end }}
       containers:
       - name: runner
         {{- if .Values.runner.image }}
@@ -44,15 +40,9 @@ spec:
         image: {{ .Values.image.registry }}/{{ .Values.runner.imageName }}
         {{- end }}
         imagePullPolicy: {{ .Values.runner.imagePullPolicy }}
-        {{- if .Values.runner.securityContext.container }}
+        {{- if .Values.runner.containerSecurityContext }}
         securityContext:
-        {{- toYaml .Values.runner.securityContext.container | nindent 10 }}
-        {{ else }}
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities: {}
-          privileged: false
-          readOnlyRootFilesystem: false
+          {{- toYaml .Values.runner.containerSecurityContext | nindent 10 }}
         {{- end }}
         env:
           - name: PLAYBOOKS_CONFIG_FILE_PATH
@@ -133,8 +123,10 @@ spec:
         image: {{ .Values.image.registry }}/{{ .Values.grafanaRenderer.imageName }}
         {{- end }}
         imagePullPolicy: {{ .Values.grafanaRenderer.imagePullPolicy }}
+        {{- if .Values.grafanaRenderer.containerSecurityContext }}
         securityContext:
-          privileged: false
+          {{- toYaml .Values.grafanaRenderer.containerSecurityContext | nindent 10 }}
+        {{- end }}
         lifecycle:
           preStop:
             exec:
@@ -173,6 +165,10 @@ spec:
       {{- end }}
       {{- if .Values.runner.tolerations }}
       tolerations:  {{ toYaml .Values.runner.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.runner.securityContext }}
+      securityContext:
+        {{- toYaml .Values.runner.securityContext | nindent 8 }}
       {{- end }}
 {{- if .Values.playbooksPersistentVolume }}
 ---

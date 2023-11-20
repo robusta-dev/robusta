@@ -28,10 +28,6 @@ spec:
       imagePullSecrets:
       {{- toYaml .Values.kubewatch.imagePullSecrets | nindent 6 }}
       {{- end }}
-      {{- if .Values.kubewatch.securityContext.pod }}
-      securityContext:
-      {{- toYaml .Values.kubewatch.securityContext.pod | nindent 6 }}
-      {{- end }}
       containers:
       - name: kubewatch
         # this is a custom version of kubewatch built from https://github.com/aantn/kubewatch
@@ -52,19 +48,9 @@ spec:
         volumeMounts:
           - name: robusta-kubewatch-config
             mountPath: /config
-          {{- with .Values.kubewatch.extraVolumeMounts }}
-          {{- toYaml . | nindent 10 }}
-          {{- end }}
-        {{- if .Values.kubewatch.securityContext.container }}
+        {{- if .Values.kubewatch.containerSecurityContext }}
         securityContext:
-        {{- toYaml .Values.kubewatch.securityContext.container | nindent 10 }}
-        {{ else }}
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities: {}
-          privileged: false
-          readOnlyRootFilesystem: false
-          runAsUser: 1000
+          {{- toYaml .Values.kubewatch.containerSecurityContext | nindent 10 }}
         {{- end }}
         resources:
           requests:
@@ -77,9 +63,6 @@ spec:
         - name:  robusta-kubewatch-config
           configMap:
             name: {{ .Release.Name }}-kubewatch-config
-        {{- with .Values.kubewatch.extraVolumes }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
       {{- if .Values.kubewatch.nodeSelector }}
       nodeSelector: {{ toYaml .Values.kubewatch.nodeSelector | nindent 8 }}
       {{- end }}
@@ -88,4 +71,8 @@ spec:
       {{- end }}
       {{- if .Values.kubewatch.tolerations }}
       tolerations:  {{ toYaml .Values.kubewatch.tolerations | nindent 8 }}
+      {{- end }}
+      {{- if .Values.kubewatch.securityContext }}
+      securityContext:
+        {{- toYaml .Values.kubewatch.securityContext | nindent 8 }}
       {{- end }}
