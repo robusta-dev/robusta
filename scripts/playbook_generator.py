@@ -168,10 +168,10 @@ def display_triggers():
     if ss["trigger_name"] is None:
         return
 
-    trigger_data = ss["trigger_data"] or triggers[ss["trigger_name"]]
+    initial_data = ss["trigger_data"] or triggers[ss["trigger_name"]]
     ss["trigger_data"] = modified_pydantic_form(
         key=f"trigger_form-{ss['trigger_name']}",
-        model=trigger_data,
+        model=initial_data,
         ignore_empty_values=True,
         group_optional_fields="expander",
         title=f"*{ss['trigger_name']}* settings",
