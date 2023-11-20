@@ -33,9 +33,7 @@ from hikaru.model.rel_1_26.v1 import ConfigMap as v1ConfigMap
 from hikaru.model.rel_1_26.v1 import DaemonSet as v1DaemonSet
 from hikaru.model.rel_1_26.v1 import Deployment as v1Deployment
 from hikaru.model.rel_1_26.v1 import Event as v1Event
-from hikaru.model.rel_1_26.v1 import (
-    HorizontalPodAutoscaler as v1HorizontalPodAutoscaler,
-)
+from hikaru.model.rel_1_26.v1 import HorizontalPodAutoscaler as v1HorizontalPodAutoscaler
 from hikaru.model.rel_1_26.v1 import Ingress as v1Ingress
 from hikaru.model.rel_1_26.v1 import Job as v1Job
 from hikaru.model.rel_1_26.v1 import Namespace as v1Namespace
@@ -51,11 +49,7 @@ from hikaru.model.rel_1_26.v1 import StatefulSet as v1StatefulSet
 from hikaru.utils import Response
 from pydantic import BaseModel
 
-from robusta.integrations.kubernetes.custom_models import (
-    RobustaDeployment,
-    RobustaJob,
-    RobustaPod,
-)
+from robusta.integrations.kubernetes.custom_models import RobustaDeployment, RobustaJob, RobustaPod
 
 from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
 from ....core.reporting.base import FindingSubject

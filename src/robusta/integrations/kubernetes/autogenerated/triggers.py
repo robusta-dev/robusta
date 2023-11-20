@@ -12,7 +12,7 @@ from robusta.integrations.kubernetes.base_triggers import K8sBaseTrigger
 # Pod Triggers
 class PodAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["Pod"] = "Pod"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -21,7 +21,7 @@ class PodAllChangesTrigger(K8sBaseTrigger):
 
 class PodCreateTrigger(K8sBaseTrigger):
     kind: Literal["Pod"] = "Pod"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -30,7 +30,7 @@ class PodCreateTrigger(K8sBaseTrigger):
 
 class PodDeleteTrigger(K8sBaseTrigger):
     kind: Literal["Pod"] = "Pod"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -39,7 +39,7 @@ class PodDeleteTrigger(K8sBaseTrigger):
 
 class PodUpdateTrigger(K8sBaseTrigger):
     kind: Literal["Pod"] = "Pod"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -49,7 +49,7 @@ class PodUpdateTrigger(K8sBaseTrigger):
 # ReplicaSet Triggers
 class ReplicaSetAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["ReplicaSet"] = "ReplicaSet"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -58,7 +58,7 @@ class ReplicaSetAllChangesTrigger(K8sBaseTrigger):
 
 class ReplicaSetCreateTrigger(K8sBaseTrigger):
     kind: Literal["ReplicaSet"] = "ReplicaSet"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -67,7 +67,7 @@ class ReplicaSetCreateTrigger(K8sBaseTrigger):
 
 class ReplicaSetDeleteTrigger(K8sBaseTrigger):
     kind: Literal["ReplicaSet"] = "ReplicaSet"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -76,7 +76,7 @@ class ReplicaSetDeleteTrigger(K8sBaseTrigger):
 
 class ReplicaSetUpdateTrigger(K8sBaseTrigger):
     kind: Literal["ReplicaSet"] = "ReplicaSet"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -86,7 +86,7 @@ class ReplicaSetUpdateTrigger(K8sBaseTrigger):
 # DaemonSet Triggers
 class DaemonSetAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["DaemonSet"] = "DaemonSet"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -95,7 +95,7 @@ class DaemonSetAllChangesTrigger(K8sBaseTrigger):
 
 class DaemonSetCreateTrigger(K8sBaseTrigger):
     kind: Literal["DaemonSet"] = "DaemonSet"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -104,7 +104,7 @@ class DaemonSetCreateTrigger(K8sBaseTrigger):
 
 class DaemonSetDeleteTrigger(K8sBaseTrigger):
     kind: Literal["DaemonSet"] = "DaemonSet"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -113,7 +113,7 @@ class DaemonSetDeleteTrigger(K8sBaseTrigger):
 
 class DaemonSetUpdateTrigger(K8sBaseTrigger):
     kind: Literal["DaemonSet"] = "DaemonSet"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -123,7 +123,7 @@ class DaemonSetUpdateTrigger(K8sBaseTrigger):
 # Deployment Triggers
 class DeploymentAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["Deployment"] = "Deployment"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -132,7 +132,7 @@ class DeploymentAllChangesTrigger(K8sBaseTrigger):
 
 class DeploymentCreateTrigger(K8sBaseTrigger):
     kind: Literal["Deployment"] = "Deployment"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -141,7 +141,7 @@ class DeploymentCreateTrigger(K8sBaseTrigger):
 
 class DeploymentDeleteTrigger(K8sBaseTrigger):
     kind: Literal["Deployment"] = "Deployment"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -150,7 +150,7 @@ class DeploymentDeleteTrigger(K8sBaseTrigger):
 
 class DeploymentUpdateTrigger(K8sBaseTrigger):
     kind: Literal["Deployment"] = "Deployment"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -160,7 +160,7 @@ class DeploymentUpdateTrigger(K8sBaseTrigger):
 # StatefulSet Triggers
 class StatefulSetAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["StatefulSet"] = "StatefulSet"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -169,7 +169,7 @@ class StatefulSetAllChangesTrigger(K8sBaseTrigger):
 
 class StatefulSetCreateTrigger(K8sBaseTrigger):
     kind: Literal["StatefulSet"] = "StatefulSet"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -178,7 +178,7 @@ class StatefulSetCreateTrigger(K8sBaseTrigger):
 
 class StatefulSetDeleteTrigger(K8sBaseTrigger):
     kind: Literal["StatefulSet"] = "StatefulSet"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -187,7 +187,7 @@ class StatefulSetDeleteTrigger(K8sBaseTrigger):
 
 class StatefulSetUpdateTrigger(K8sBaseTrigger):
     kind: Literal["StatefulSet"] = "StatefulSet"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -197,7 +197,7 @@ class StatefulSetUpdateTrigger(K8sBaseTrigger):
 # Service Triggers
 class ServiceAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["Service"] = "Service"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -206,7 +206,7 @@ class ServiceAllChangesTrigger(K8sBaseTrigger):
 
 class ServiceCreateTrigger(K8sBaseTrigger):
     kind: Literal["Service"] = "Service"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -215,7 +215,7 @@ class ServiceCreateTrigger(K8sBaseTrigger):
 
 class ServiceDeleteTrigger(K8sBaseTrigger):
     kind: Literal["Service"] = "Service"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -224,7 +224,7 @@ class ServiceDeleteTrigger(K8sBaseTrigger):
 
 class ServiceUpdateTrigger(K8sBaseTrigger):
     kind: Literal["Service"] = "Service"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -234,7 +234,7 @@ class ServiceUpdateTrigger(K8sBaseTrigger):
 # Event Triggers
 class EventAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["Event"] = "Event"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -243,7 +243,7 @@ class EventAllChangesTrigger(K8sBaseTrigger):
 
 class EventCreateTrigger(K8sBaseTrigger):
     kind: Literal["Event"] = "Event"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -252,7 +252,7 @@ class EventCreateTrigger(K8sBaseTrigger):
 
 class EventDeleteTrigger(K8sBaseTrigger):
     kind: Literal["Event"] = "Event"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -261,7 +261,7 @@ class EventDeleteTrigger(K8sBaseTrigger):
 
 class EventUpdateTrigger(K8sBaseTrigger):
     kind: Literal["Event"] = "Event"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -271,7 +271,7 @@ class EventUpdateTrigger(K8sBaseTrigger):
 # HorizontalPodAutoscaler Triggers
 class HorizontalPodAutoscalerAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["HorizontalPodAutoscaler"] = "HorizontalPodAutoscaler"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -280,7 +280,7 @@ class HorizontalPodAutoscalerAllChangesTrigger(K8sBaseTrigger):
 
 class HorizontalPodAutoscalerCreateTrigger(K8sBaseTrigger):
     kind: Literal["HorizontalPodAutoscaler"] = "HorizontalPodAutoscaler"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -289,7 +289,7 @@ class HorizontalPodAutoscalerCreateTrigger(K8sBaseTrigger):
 
 class HorizontalPodAutoscalerDeleteTrigger(K8sBaseTrigger):
     kind: Literal["HorizontalPodAutoscaler"] = "HorizontalPodAutoscaler"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -298,7 +298,7 @@ class HorizontalPodAutoscalerDeleteTrigger(K8sBaseTrigger):
 
 class HorizontalPodAutoscalerUpdateTrigger(K8sBaseTrigger):
     kind: Literal["HorizontalPodAutoscaler"] = "HorizontalPodAutoscaler"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -308,7 +308,7 @@ class HorizontalPodAutoscalerUpdateTrigger(K8sBaseTrigger):
 # Node Triggers
 class NodeAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["Node"] = "Node"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -317,7 +317,7 @@ class NodeAllChangesTrigger(K8sBaseTrigger):
 
 class NodeCreateTrigger(K8sBaseTrigger):
     kind: Literal["Node"] = "Node"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -326,7 +326,7 @@ class NodeCreateTrigger(K8sBaseTrigger):
 
 class NodeDeleteTrigger(K8sBaseTrigger):
     kind: Literal["Node"] = "Node"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -335,7 +335,7 @@ class NodeDeleteTrigger(K8sBaseTrigger):
 
 class NodeUpdateTrigger(K8sBaseTrigger):
     kind: Literal["Node"] = "Node"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -345,7 +345,7 @@ class NodeUpdateTrigger(K8sBaseTrigger):
 # ClusterRole Triggers
 class ClusterRoleAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["ClusterRole"] = "ClusterRole"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -354,7 +354,7 @@ class ClusterRoleAllChangesTrigger(K8sBaseTrigger):
 
 class ClusterRoleCreateTrigger(K8sBaseTrigger):
     kind: Literal["ClusterRole"] = "ClusterRole"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -363,7 +363,7 @@ class ClusterRoleCreateTrigger(K8sBaseTrigger):
 
 class ClusterRoleDeleteTrigger(K8sBaseTrigger):
     kind: Literal["ClusterRole"] = "ClusterRole"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -372,7 +372,7 @@ class ClusterRoleDeleteTrigger(K8sBaseTrigger):
 
 class ClusterRoleUpdateTrigger(K8sBaseTrigger):
     kind: Literal["ClusterRole"] = "ClusterRole"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -382,7 +382,7 @@ class ClusterRoleUpdateTrigger(K8sBaseTrigger):
 # ClusterRoleBinding Triggers
 class ClusterRoleBindingAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["ClusterRoleBinding"] = "ClusterRoleBinding"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -391,7 +391,7 @@ class ClusterRoleBindingAllChangesTrigger(K8sBaseTrigger):
 
 class ClusterRoleBindingCreateTrigger(K8sBaseTrigger):
     kind: Literal["ClusterRoleBinding"] = "ClusterRoleBinding"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -400,7 +400,7 @@ class ClusterRoleBindingCreateTrigger(K8sBaseTrigger):
 
 class ClusterRoleBindingDeleteTrigger(K8sBaseTrigger):
     kind: Literal["ClusterRoleBinding"] = "ClusterRoleBinding"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -409,7 +409,7 @@ class ClusterRoleBindingDeleteTrigger(K8sBaseTrigger):
 
 class ClusterRoleBindingUpdateTrigger(K8sBaseTrigger):
     kind: Literal["ClusterRoleBinding"] = "ClusterRoleBinding"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -419,7 +419,7 @@ class ClusterRoleBindingUpdateTrigger(K8sBaseTrigger):
 # Job Triggers
 class JobAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["Job"] = "Job"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -428,7 +428,7 @@ class JobAllChangesTrigger(K8sBaseTrigger):
 
 class JobCreateTrigger(K8sBaseTrigger):
     kind: Literal["Job"] = "Job"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -437,7 +437,7 @@ class JobCreateTrigger(K8sBaseTrigger):
 
 class JobDeleteTrigger(K8sBaseTrigger):
     kind: Literal["Job"] = "Job"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -446,7 +446,7 @@ class JobDeleteTrigger(K8sBaseTrigger):
 
 class JobUpdateTrigger(K8sBaseTrigger):
     kind: Literal["Job"] = "Job"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -456,7 +456,7 @@ class JobUpdateTrigger(K8sBaseTrigger):
 # Namespace Triggers
 class NamespaceAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["Namespace"] = "Namespace"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -465,7 +465,7 @@ class NamespaceAllChangesTrigger(K8sBaseTrigger):
 
 class NamespaceCreateTrigger(K8sBaseTrigger):
     kind: Literal["Namespace"] = "Namespace"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -474,7 +474,7 @@ class NamespaceCreateTrigger(K8sBaseTrigger):
 
 class NamespaceDeleteTrigger(K8sBaseTrigger):
     kind: Literal["Namespace"] = "Namespace"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -483,7 +483,7 @@ class NamespaceDeleteTrigger(K8sBaseTrigger):
 
 class NamespaceUpdateTrigger(K8sBaseTrigger):
     kind: Literal["Namespace"] = "Namespace"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -493,7 +493,7 @@ class NamespaceUpdateTrigger(K8sBaseTrigger):
 # ServiceAccount Triggers
 class ServiceAccountAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["ServiceAccount"] = "ServiceAccount"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -502,7 +502,7 @@ class ServiceAccountAllChangesTrigger(K8sBaseTrigger):
 
 class ServiceAccountCreateTrigger(K8sBaseTrigger):
     kind: Literal["ServiceAccount"] = "ServiceAccount"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -511,7 +511,7 @@ class ServiceAccountCreateTrigger(K8sBaseTrigger):
 
 class ServiceAccountDeleteTrigger(K8sBaseTrigger):
     kind: Literal["ServiceAccount"] = "ServiceAccount"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -520,7 +520,7 @@ class ServiceAccountDeleteTrigger(K8sBaseTrigger):
 
 class ServiceAccountUpdateTrigger(K8sBaseTrigger):
     kind: Literal["ServiceAccount"] = "ServiceAccount"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -530,7 +530,7 @@ class ServiceAccountUpdateTrigger(K8sBaseTrigger):
 # PersistentVolume Triggers
 class PersistentVolumeAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["PersistentVolume"] = "PersistentVolume"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -539,7 +539,7 @@ class PersistentVolumeAllChangesTrigger(K8sBaseTrigger):
 
 class PersistentVolumeCreateTrigger(K8sBaseTrigger):
     kind: Literal["PersistentVolume"] = "PersistentVolume"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -548,7 +548,7 @@ class PersistentVolumeCreateTrigger(K8sBaseTrigger):
 
 class PersistentVolumeDeleteTrigger(K8sBaseTrigger):
     kind: Literal["PersistentVolume"] = "PersistentVolume"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -557,7 +557,7 @@ class PersistentVolumeDeleteTrigger(K8sBaseTrigger):
 
 class PersistentVolumeUpdateTrigger(K8sBaseTrigger):
     kind: Literal["PersistentVolume"] = "PersistentVolume"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -567,7 +567,7 @@ class PersistentVolumeUpdateTrigger(K8sBaseTrigger):
 # PersistentVolumeClaim Triggers
 class PersistentVolumeClaimAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["PersistentVolumeClaim"] = "PersistentVolumeClaim"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -576,7 +576,7 @@ class PersistentVolumeClaimAllChangesTrigger(K8sBaseTrigger):
 
 class PersistentVolumeClaimCreateTrigger(K8sBaseTrigger):
     kind: Literal["PersistentVolumeClaim"] = "PersistentVolumeClaim"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -585,7 +585,7 @@ class PersistentVolumeClaimCreateTrigger(K8sBaseTrigger):
 
 class PersistentVolumeClaimDeleteTrigger(K8sBaseTrigger):
     kind: Literal["PersistentVolumeClaim"] = "PersistentVolumeClaim"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -594,7 +594,7 @@ class PersistentVolumeClaimDeleteTrigger(K8sBaseTrigger):
 
 class PersistentVolumeClaimUpdateTrigger(K8sBaseTrigger):
     kind: Literal["PersistentVolumeClaim"] = "PersistentVolumeClaim"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -604,7 +604,7 @@ class PersistentVolumeClaimUpdateTrigger(K8sBaseTrigger):
 # NetworkPolicy Triggers
 class NetworkPolicyAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["NetworkPolicy"] = "NetworkPolicy"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -613,7 +613,7 @@ class NetworkPolicyAllChangesTrigger(K8sBaseTrigger):
 
 class NetworkPolicyCreateTrigger(K8sBaseTrigger):
     kind: Literal["NetworkPolicy"] = "NetworkPolicy"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -622,7 +622,7 @@ class NetworkPolicyCreateTrigger(K8sBaseTrigger):
 
 class NetworkPolicyDeleteTrigger(K8sBaseTrigger):
     kind: Literal["NetworkPolicy"] = "NetworkPolicy"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -631,7 +631,7 @@ class NetworkPolicyDeleteTrigger(K8sBaseTrigger):
 
 class NetworkPolicyUpdateTrigger(K8sBaseTrigger):
     kind: Literal["NetworkPolicy"] = "NetworkPolicy"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -641,7 +641,7 @@ class NetworkPolicyUpdateTrigger(K8sBaseTrigger):
 # ConfigMap Triggers
 class ConfigMapAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["ConfigMap"] = "ConfigMap"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -650,7 +650,7 @@ class ConfigMapAllChangesTrigger(K8sBaseTrigger):
 
 class ConfigMapCreateTrigger(K8sBaseTrigger):
     kind: Literal["ConfigMap"] = "ConfigMap"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -659,7 +659,7 @@ class ConfigMapCreateTrigger(K8sBaseTrigger):
 
 class ConfigMapDeleteTrigger(K8sBaseTrigger):
     kind: Literal["ConfigMap"] = "ConfigMap"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -668,7 +668,7 @@ class ConfigMapDeleteTrigger(K8sBaseTrigger):
 
 class ConfigMapUpdateTrigger(K8sBaseTrigger):
     kind: Literal["ConfigMap"] = "ConfigMap"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -678,7 +678,7 @@ class ConfigMapUpdateTrigger(K8sBaseTrigger):
 # Ingress Triggers
 class IngressAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["Ingress"] = "Ingress"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -687,7 +687,7 @@ class IngressAllChangesTrigger(K8sBaseTrigger):
 
 class IngressCreateTrigger(K8sBaseTrigger):
     kind: Literal["Ingress"] = "Ingress"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -696,7 +696,7 @@ class IngressCreateTrigger(K8sBaseTrigger):
 
 class IngressDeleteTrigger(K8sBaseTrigger):
     kind: Literal["Ingress"] = "Ingress"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -705,7 +705,7 @@ class IngressDeleteTrigger(K8sBaseTrigger):
 
 class IngressUpdateTrigger(K8sBaseTrigger):
     kind: Literal["Ingress"] = "Ingress"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -715,7 +715,7 @@ class IngressUpdateTrigger(K8sBaseTrigger):
 # Kubernetes Any Triggers
 class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
     kind: Literal["Ingress"] = "Ingress"
-    operation: Literal[K8sOperationType] = None
+    operation: Literal[None] = None
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -724,7 +724,7 @@ class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
 
 class KubernetesAnyCreateTrigger(K8sBaseTrigger):
     kind: Literal["Ingress"] = "Ingress"
-    operation: Literal[K8sOperationType] = K8sOperationType.CREATE
+    operation: Literal[K8sOperationType.CREATE] = K8sOperationType.CREATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -733,7 +733,7 @@ class KubernetesAnyCreateTrigger(K8sBaseTrigger):
 
 class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
     kind: Literal["Ingress"] = "Ingress"
-    operation: Literal[K8sOperationType] = K8sOperationType.DELETE
+    operation: Literal[K8sOperationType.DELETE] = K8sOperationType.DELETE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -742,7 +742,7 @@ class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
 
 class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
     kind: Literal["Ingress"] = "Ingress"
-    operation: Literal[K8sOperationType] = K8sOperationType.UPDATE
+    operation: Literal[K8sOperationType.UPDATE] = K8sOperationType.UPDATE
 
     @staticmethod
     def get_execution_event_type() -> type:
@@ -751,6 +751,7 @@ class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
 
 # K8s Trigger class
 class K8sTriggers(BaseModel):
+
     on_clusterrole_all_changes: Optional[ClusterRoleAllChangesTrigger]
     on_clusterrole_create: Optional[ClusterRoleCreateTrigger]
     on_clusterrole_delete: Optional[ClusterRoleDeleteTrigger]
