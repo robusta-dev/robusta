@@ -113,7 +113,7 @@ all = ["Flask", "grafana-api", "watchdog", "dulwich", "better-exceptions", "Cair
 sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
 sphinx-reredirects = "^0.1.1"
 streamlit = "^1.25.0"
-streamlit-pydantic = "^0.6.0"
+streamlit-pydantic = { git = "https://github.com/robusta-dev/streamlit-pydantic.git", branch = "robusta-fix" }
 streamlit-extras = "^0.3.4"
 streamlit-antd-components = "^0.2.3"
 
