@@ -1,7 +1,7 @@
 import datetime
 import logging
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from hikaru.model.rel_1_26 import Pod, PodList
 from robusta.api import (
@@ -59,8 +59,10 @@ def pod_issue_investigator(event: KubernetesResourceEvent):
         logging.info(f"No pod issues discovered for {resource.kind} {resource.metadata.name}")
         return
     # Investigate first issue found
-    pod_issue = detect_pod_issue(pods_with_issues[0])
-    report_pod_issue(event, pods_with_issues, pod_issue)
+    first_pod = pods_with_issues[0]
+    pod_issue = detect_pod_issue(first_pod)
+    message, reason = get_pod_issue_message_and_reason(first_pod)
+    report_pod_issue(event, pods_with_issues, pod_issue, message, reason)
 
 
 def detect_pod_issue(pod: Pod) -> PodIssue:
@@ -73,6 +75,18 @@ def detect_pod_issue(pod: Pod) -> PodIssue:
     elif is_pod_pending(pod):
         return PodIssue.Pending
     return PodIssue.NoneDetected
+
+
+def get_pod_issue_message_and_reason(pod: Pod) -> Tuple[Optional[str], Optional[str]]:
+    # Works/should work only or KubeContainerWaiting and KubePodNotReady
+    # Note: in line with the old code in pod_issue_investigator, we only get the message for
+    # the first of possibly many misbehaving containers.
+    if pod.status.containerStatuses:
+        if pod.status.containerStatuses[0].state.waiting:
+            return (
+                pod.status.containerStatuses[0].state.waiting.message,
+                pod.status.containerStatuses[0].state.waiting.reason,
+            )
 
 
 def is_pod_pending(pod: Pod) -> bool:
@@ -124,7 +138,9 @@ def has_image_pull_issue(pod: Pod) -> bool:
     return len(image_pull_statuses) > 0
 
 
-def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue):
+def report_pod_issue(
+    event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue, message: Optional[str], reason: Optional[str]
+):
     # find pods with issues
     pods_with_issue = [pod for pod in pods if detect_pod_issue(pod) == issue]
     pod_names = [pod.metadata.name for pod in pods_with_issue]
@@ -144,6 +160,11 @@ def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: Pod
         blocks.append(MarkdownBlock(f"\n\n*{pod_names[0]}* was picked for investigation\n"))
         blocks.extend(additional_blocks)
         event.add_enrichment(blocks)
+
+    if reason:
+        if message is None:
+            message = "unknown"
+        event.add_enrichment([MarkdownBlock(f"\n\n{reason}: {message}")])
 
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
