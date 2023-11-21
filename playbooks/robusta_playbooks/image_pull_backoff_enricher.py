@@ -15,7 +15,10 @@ from robusta.api import (
     action,
     get_image_pull_backoff_blocks,
 )
-from robusta.core.playbooks.pod_utils.imagepull_utils import get_image_pull_backoff_container_statuses
+from robusta.core.playbooks.pod_utils.imagepull_utils import (
+    get_image_pull_backoff_container_statuses,
+    get_pod_issue_message_and_reason,
+)
 from robusta.core.reporting import MarkdownBlock
 
 
@@ -52,22 +55,6 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
     pod_name = pod.metadata.name
     namespace = pod.metadata.namespace
 
-    blocks: List[BaseBlock] = get_image_pull_backoff_blocks(pod)
-
-    if not blocks:
-        # There have been no ImagePullBackoff statuses recorded. Display reason+message instead.
-        # Note the following call also pulls in containers with ErrImagePull statuses.
-        for container_status in get_image_pull_backoff_container_statuses(pod.status):
-            error_reason = container_status.state.waiting.reason
-            error_message = container_status.state.waiting.message
-            blocks.extend(
-                [
-                    MarkdownBlock(f"Error: {error_reason}"),
-                    MarkdownBlock(f"Error message: {error_message}"),
-                    MarkdownBlock(f"*Image:* {container_status.image}"),
-                ]
-            )
-
     finding = Finding(
         title=f"Failed to pull at least one image in pod {pod_name} in namespace {namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
@@ -75,5 +62,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
         aggregation_key="image_pull_backoff_reporter",
         subject=PodFindingSubject(pod),
     )
-    finding.add_enrichment(blocks)
+    message, reason = get_pod_issue_message_and_reason(pod)
+    if reason:
+        finding.add_enrichment([MarkdownBlock(f"{message}: {reason}")])
     event.add_finding(finding)
