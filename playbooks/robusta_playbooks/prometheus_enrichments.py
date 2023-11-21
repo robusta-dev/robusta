@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime, timedelta
 from typing import List, Optional, Tuple, Union
@@ -6,6 +7,8 @@ from kubernetes import client
 from kubernetes.client.models.v1_service import V1Service
 from prometheus_api_client import PrometheusApiClientException
 from prometrix import PrometheusQueryResult
+from robusta.integrations.prometheus.utils import get_prometheus_connect
+
 from robusta.api import (
     ExecutionBaseEvent,
     MarkdownBlock,
@@ -17,6 +20,8 @@ from robusta.api import (
     action,
     run_prometheus_query,
 )
+from robusta.core.model.base_params import PrometheusParams, ActionParams
+from robusta.core.reporting import JsonBlock
 
 
 def parse_timestamp_string(date_string: str) -> Optional[datetime]:
@@ -40,6 +45,54 @@ def parse_duration(
         return starts_at, ends_at
     logging.error("Non supported duration provided")
     return None, None
+
+
+@action
+def prometheus_all_available_metrics(event: ExecutionBaseEvent, prometheus_params: PrometheusParams):
+    result = get_prometheus_all_available_metrics(prometheus_params=prometheus_params)
+
+    event.add_enrichment([JsonBlock(json.dumps({"metrics": result}))])
+
+
+def get_prometheus_all_available_metrics(prometheus_params: PrometheusParams) -> List[str]:
+    try:
+        prom = get_prometheus_connect(prometheus_params=prometheus_params)
+        return prom.all_metrics()
+
+    except Exception as e:
+        logging.error("An error occurred while fetching all available Prometheus metrics", exc_info=True)
+        raise e
+
+
+
+class PrometheusGetSeriesParams(PrometheusParams):
+    """
+    :var match: List of Prometheus series selectors.
+    :var start_time: Optional start time for the query as datetime.
+    :var end_time: Optional end time for the query as datetime.
+    """
+
+    match: List[str]
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+
+
+@action
+def prometheus_get_series(event: ExecutionBaseEvent, prometheus_params: PrometheusGetSeriesParams):
+    result = get_prometheus_series(prometheus_params=prometheus_params)
+
+    event.add_enrichment([JsonBlock(json.dumps({"series": result}))])
+
+
+def get_prometheus_series(prometheus_params: PrometheusGetSeriesParams) -> dict:
+    try:
+        prom = get_prometheus_connect(prometheus_params=prometheus_params)
+        return prom.get_series(match=prometheus_params.match, end_time=prometheus_params.end_time,
+                               start_time=prometheus_params.start_time)
+
+    except Exception as e:
+        logging.error(f"Failed to fetch Prometheus series for match criteria {prometheus_params.match} within the time range {prometheus_params.start_time} - {prometheus_params.end_time}", exc_info=True)
+        raise e
 
 
 @action
