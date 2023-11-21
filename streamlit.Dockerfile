@@ -1,5 +1,5 @@
 # Use the specific version of Python as the base image
-FROM python:3.10.12
+FROM python:3.11.5
 
 
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -

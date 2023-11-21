@@ -65,6 +65,7 @@ def display_demo_playbook():
     release_fail_expander = st.expander(":zap: Get notified when a Helm release fails", expanded=False)
     deployment_change_expander = st.expander(":zap: Get notified when a deployment changes", expanded=False)
     ingress_change_expander = st.expander(":zap: Get notified when an ingress changes", expanded=False)
+    hpa_max_expander = st.expander(":zap: Get notified when a HPA reaches max replicas", expanded=False)
 
     with release_fail_expander:
         st.markdown(
@@ -97,6 +98,17 @@ def display_demo_playbook():
             "Use Playbook",
             key="but_ingress_change",
             on_click=lambda: update_changes("on_ingress_all_changes", "resource_babysitter"),
+        )
+    with hpa_max_expander:
+        st.markdown(
+            "When a HPA reaches its maximum replicas, the on_horizontalpodautoscaler_update trigger is fired. An alert is sent using alert_on_hpa_reached_limit action asking you to increase the value of maxReplicas."
+            
+        )
+        st.image("./docs/images/alert_on_hpa_reached_limit1.png")
+        st.button(
+            "Use Playbook",
+            key="but_hpa_max",
+            on_click=lambda: update_changes("on_horizontalpodautoscaler_update", "alert_on_hpa_reached_limit"),
         )
 
 
@@ -156,7 +168,7 @@ def display_triggers():
     if ss.get("trigger_name") is not None:
         index = trigger_names.index(ss["trigger_name"])
     else:
-        index = None
+        index = 0
 
     st.info(":zap: Triggers are events that cause a playbook to start running")
     ss["trigger_name"] = st.selectbox(
@@ -187,10 +199,10 @@ def display_actions():
     st.info(":zap: Actions are what the playbook *does* - they can collect data or execute remediations")
     relevant_actions = [a.action_name for a in triggers_to_actions[ss["trigger_name"]]]
 
-    if ss.get("action_name") is not None:
+    if ss.get("action_name") is not None and ss.get("action_name") in relevant_actions:
         index = relevant_actions.index(ss["action_name"])
     else:
-        index = None
+        index = 0
 
     ss["action_name"] = st.selectbox(
         "Choose an action", relevant_actions, key="actiontest", placeholder="Type to search", index=index
@@ -207,7 +219,7 @@ def display_actions():
             ignore_empty_values=True,
             group_optional_fields="expander",
             title=f"*{ss['action_name']}* settings",
-            submit_label="Submit",
+            submit_label="Continue",
             on_submit=lambda: Screens.set_current_screen(Screens.YAML),
         )
 
