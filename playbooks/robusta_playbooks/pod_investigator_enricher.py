@@ -155,9 +155,10 @@ def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: Pod
         blocks.append(MarkdownBlock(f"\n\n*{pod_names[0]}* was picked for investigation\n"))
         blocks.extend(additional_blocks)
         event.add_enrichment(blocks)
-        if issue_details is None:
-            issue_details = "unknown"
-        event.add_enrichment([MarkdownBlock(f"\n\nProblem cause: {issue_details}")])
+
+    if issue_details is None:
+        issue_details = "unknown"
+    event.add_enrichment([MarkdownBlock(f"\n\n{reason}: {issue_details}")])
 
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
