@@ -48,7 +48,8 @@ class RelatedContainer(BaseModel):
     status: Optional[str] = None
     created: Optional[str] = None
     ports: List[Any] = []
-    statusDetails: Optional[str] = None
+    statusMessage: Optional[str] = None
+    statusReason: Optional[str] = None
 
 
 class RelatedPod(BaseModel):
@@ -149,7 +150,6 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
                 if state is not None:
                     stateStr = s
                     break
-        status_details = getattr(state, "messsage", None) if state else None
 
         containers.append(
             RelatedContainer(
@@ -160,7 +160,8 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
                 memoryRequest=requests.memory,
                 restarts=getattr(containerStatus, "restartCount", 0),
                 status=stateStr,
-                statusDetails=status_details,
+                statusMessage=getattr(state, "messsage", None) if state else None,
+                statusReason=getattr(state, "reason", None) if state else None,
                 created=getattr(state, "startedAt", None),
                 ports=[port.to_dict() for port in container.ports] if container.ports else [],
             )
