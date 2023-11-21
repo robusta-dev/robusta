@@ -48,7 +48,7 @@ class RelatedContainer(BaseModel):
     status: Optional[str] = None
     created: Optional[str] = None
     ports: List[Any] = []
-    status_details: Optional[str] = None
+    statusDetails: Optional[str] = None
 
 
 class RelatedPod(BaseModel):
@@ -65,7 +65,7 @@ class RelatedPod(BaseModel):
     addresses: str
     containers: List[RelatedContainer]
     status: Optional[str] = None
-    status_reason: Optional[str] = None
+    statusReason: Optional[str] = None
 
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node"]
@@ -130,7 +130,7 @@ def to_pod_obj(pod: Pod, cluster: str) -> RelatedPod:
         addresses=addresses,
         containers=get_pod_containers(pod),
         status=pod.status.phase,
-        status_reason=pod.status.reason,
+        statusReason=pod.status.reason,
     )
 
 
@@ -160,7 +160,7 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
                 memoryRequest=requests.memory,
                 restarts=getattr(containerStatus, "restartCount", 0),
                 status=stateStr,
-                status_details=status_details,
+                statusDetails=status_details,
                 created=getattr(state, "startedAt", None),
                 ports=[port.to_dict() for port in container.ports] if container.ports else [],
             )
