@@ -77,11 +77,13 @@ def detect_pod_issue(pod: Pod) -> PodIssue:
     return PodIssue.NoneDetected
 
 
-def get_pod_issue_details(pod: Pod) -> str:
+def get_pod_issue_details(pod: Pod) -> Optional[str]:
     # Works/should work only or KubeContainerWaiting and KubePodNotReady
     # Note: in line with the old code in pod_issue_investigator, we only get the message for
     # the first of possibly many misbehaving containers.
-    return pod.status.containerStatuses[0].state.waiting.message
+    if pod.status.containerStatuses:
+        if pod.status.containerStatuses[0].state.waiting:
+            return pod.status.containerStatuses[0].state.waiting.message
 
 
 def is_pod_pending(pod: Pod) -> bool:
@@ -133,7 +135,7 @@ def has_image_pull_issue(pod: Pod) -> bool:
     return len(image_pull_statuses) > 0
 
 
-def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue, issue_details: str):
+def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue, issue_details: Optional[str]):
     # find pods with issues
     pods_with_issue = [pod for pod in pods if detect_pod_issue(pod) == issue]
     pod_names = [pod.metadata.name for pod in pods_with_issue]
@@ -153,7 +155,9 @@ def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: Pod
         blocks.append(MarkdownBlock(f"\n\n*{pod_names[0]}* was picked for investigation\n"))
         blocks.extend(additional_blocks)
         event.add_enrichment(blocks)
-        event.add_enrichment(MarkdownBlock(f"\n\nProblem cause: {issue_details}"))
+        if issue_details is None:
+            issue_details = "unknown"
+        event.add_enrichment([MarkdownBlock(f"\n\nProblem cause: {issue_details}")])
 
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
