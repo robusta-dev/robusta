@@ -352,15 +352,15 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     except json.JSONDecodeError:
         logging.error(f"*KRR scan job failed. Expecting json result.*\n\n Result:\n{logs}")
         return
-    except ValidationError as e:
-        logging.error(f"*KRR scan job failed. Result format issue.*\n\n {e}")
+    except ValidationError:
+        logging.error("*KRR scan job failed. Result format issue.*\n\n", exc_info=True)
         logging.error(f"\n {logs}")
         return
     except Exception as e:
         if str(e) == "Failed to reach wait condition":
-            logging.error(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")
+            logging.error(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*", exc_info=True)
         else:
-            logging.error(f"*KRR scan job unexpected error.*\n {e}")
+            logging.error(f"*KRR scan job unexpected error.*\n {e}", exc_info=True)
         return
 
     scan_block = ScanReportBlock(
