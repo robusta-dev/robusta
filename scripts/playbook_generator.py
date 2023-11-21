@@ -6,8 +6,7 @@
 
 from collections import OrderedDict
 from typing import List, Set, Optional, Literal
-from enum import Enum
-from strenum import StrEnum
+from enum import Enum, StrEnum
 
 import streamlit_antd_components as sac
 import streamlit as st
@@ -191,11 +190,15 @@ def display_actions():
     if ss.get("action_name") is not None:
         index = relevant_actions.index(ss["action_name"])
     else:
-        index = 0
+        index = None
 
     ss["action_name"] = st.selectbox(
         "Choose an action", relevant_actions, key="actiontest", placeholder="Type to search", index=index
     )
+
+    if ss["action_name"] is None:
+        return
+
     action_obj = actions_by_name.get(ss["action_name"], None)
     if action_obj and hasattr(action_obj, "params_type") and hasattr(action_obj.params_type, "schema"):
         ss["action_data"] = modified_pydantic_form(
@@ -207,18 +210,15 @@ def display_actions():
             submit_label="Submit",
             on_submit=lambda: Screens.set_current_screen(Screens.YAML),
         )
-        try:
-            ss["action_data"] = action_obj.params_type(**action_data).dict(exclude_defaults=True)
-            ss["action_ready"] = True
-        except:
-            ss["action_ready"] = True
-            pass
+
+        ss["action_ready"] = True
 
     else:
         st.markdown("This action doesn't have any parameters")
         ss["action_data"] = None
         ss["action_ready"] = True
-    st.button("Continue", key="button2-test", on_click=Screens.set_current_screen, args=[Screens.YAML])
+        st.button("Continue", key="button2-test", on_click=Screens.set_current_screen, args=[Screens.YAML])
+
 
 def display_playbook_builder():
     st.button(":point_left: Choose a Playbook template", key="choose_playbook_btn", on_click=go_to_demo_playbooks)
@@ -256,10 +256,10 @@ def display_playbook_builder():
         )
 
         trigger_dict = ss["trigger_data"].dict(exclude_defaults=True)
-        action_data = ss['action_data'] or {}
+        action_dict = ss["action_data"].dict(exclude_defaults=True) if ss["action_data"] else {}
         playbook = {
             "customPlaybooks": [
-                OrderedDict([("triggers", [{ss['trigger_name']: trigger_dict}]), ("actions", [{ss['action_name']: {}}])])
+                OrderedDict([("triggers", [{ss['trigger_name']: trigger_dict}]), ("actions", [{ss['action_name']: action_dict}])])
             ]
         }
         yaml.add_representer(
