@@ -60,7 +60,7 @@ def modified_pydantic_form(
             lowercase_labels=lowercase_labels,
             ignore_empty_values=ignore_empty_values,
         )
-        submit_button = st.button(label=submit_label)
+        submit_button = st.button(label=submit_label, on_click=on_submit)
 
         try:
             result = None
@@ -70,8 +70,6 @@ def modified_pydantic_form(
             else:
                 result = parse_obj_as(model, input_state)
 
-            if submit_button and on_submit is not None:
-                on_submit()
             return result
 
         except ValidationError as ex:

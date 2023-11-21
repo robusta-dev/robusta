@@ -129,8 +129,10 @@ class Screens(StrEnum):
     def set_current_screen(cls, new_screen):
         old_screen = ss.get("current_screen")
         ss.current_screen = new_screen
-        if new_screen != old_screen:
-            st.rerun()
+        # we need to do things this way and not with st.rerun() because st.rerun() terminates execution immediately
+        # meaning this run will not complete and we won't parse the input properly before st.rerun() happens
+        # so we essentially do a deferred rerun
+        ss.rerun_necessary = True
 
 
 HOT_TRIGGERS = ["on_prometheus_alert"]
@@ -179,6 +181,7 @@ def display_triggers():
         on_submit=lambda: Screens.set_current_screen(Screens.ACTION)
     )
 
+
 def display_actions():
     action_names = list(actions_by_name.keys())
 
@@ -217,7 +220,6 @@ def display_actions():
         ss["action_ready"] = True
     st.button("Continue", key="button2-test", on_click=Screens.set_current_screen, args=[Screens.YAML])
 
-
 def display_playbook_builder():
     st.button(":point_left: Choose a Playbook template", key="choose_playbook_btn", on_click=go_to_demo_playbooks)
     st.title(":wrench: Playbook Builder", anchor=None)
@@ -229,14 +231,20 @@ def display_playbook_builder():
             sac.StepsItem(title=Screens.TRIGGER),
             sac.StepsItem(title=Screens.ACTION),
             sac.StepsItem(title=Screens.YAML),
-        ], index=current_screen.to_index(), format_func='title'
+        ],
+        index=current_screen.to_index(),
+        format_func='title',
     )
 
-    if step == Screens.TRIGGER:
+    new_screen = Screens(step)
+    if new_screen != current_screen:
+        Screens.set_current_screen(new_screen)
+
+    if new_screen == Screens.TRIGGER:
         display_triggers()
-    elif step == Screens.ACTION:
+    elif new_screen == Screens.ACTION:
         display_actions()
-    elif step == Screens.YAML:
+    elif new_screen == Screens.YAML:
         st.info(":scroll: Add this YAML to Robusta's Helm values to configure your playbook")
         if not ss['trigger_data']:
             st.warning("Error: mandatory Trigger fields are missing!")
@@ -266,8 +274,15 @@ if __name__ == "__main__":
     if "current_page" not in ss:
         ss.current_page = "demo_playbooks"
 
+    if "rerun_necessary" not in ss:
+        ss.rerun_necessary = False
+
     if ss.current_page == "demo_playbooks":
         display_demo_playbook()
 
     elif ss.current_page == "playbook_builder":
         display_playbook_builder()
+
+    if ss.rerun_necessary:
+        ss.rerun_necessary = False
+        st.rerun()
