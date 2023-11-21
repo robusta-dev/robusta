@@ -1,3 +1,5 @@
+# Build with docker build -t playbook_gen_app -f playbook-gen.Dockerfile .
+# Run using docker run -it --rm -p 8501:8501 -v ${PWD}:/robusta playbook_gen_app
 # Use the specific version of Python as the base image
 FROM python:3.11.5
 
