@@ -559,9 +559,9 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
-          memory: 2Gi
+          memory: 128Mi
         limits:
-          memory: 2Gi
+          memory: 128Mi
       storage:
         volumeClaimTemplate:
           spec:
@@ -576,6 +576,9 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
+          memory: 2Gi
+        limits:
+          memory: 2Gi
       retention: 15d
       # we set a value slightly lower than the 100Gi below
       # the retentionSize uses the suffix GB but it is really Gi units

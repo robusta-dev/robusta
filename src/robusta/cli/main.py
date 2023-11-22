@@ -289,10 +289,10 @@ def gen_config(
         ]
 
     if is_small_cluster:
-        setattr(values, "kube-prometheus-stack", {})
-        stack = getattr(values, "kube-prometheus-stack")
-        stack["alertmanager"] = {
-            "alertmanagerSpec": {"resources": {"requests": {"memory": "128Mi"}, "limits": {"memory": "128Mi"}}},
+        setattr(values, "prometheus", {})
+        prometheus = getattr(values, "prometheus")
+        prometheus["prometheusSpec"] = {
+            "resources": {"requests": {"memory": "300Mi"}, "limits": {"memory": "300Mi"}},
         }
 
     write_values_file(output_path, values)
