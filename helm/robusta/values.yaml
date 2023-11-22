@@ -596,6 +596,9 @@ kube-prometheus-stack:
     resources:
       requests:
         cpu: 50m
+        memory: 50Mi
+      limits:
+        memory: 50Mi
     # disable node-exporter on fargate because fargate doesn't allow daemonsets
     affinity:
       nodeAffinity:
@@ -618,6 +621,9 @@ kube-prometheus-stack:
     resources:
       requests:
         cpu: 10m
+        memory: 256Mi
+      limit:
+        memory: 256Mi
 
 rsa: ~
   # @param existingSecret Name of existing secret containing the rsa keys
