@@ -18,6 +18,7 @@ from robusta.api import (
     get_pending_pod_blocks,
     parse_kubernetes_datetime_to_ms,
 )
+from robusta.core.playbooks.pod_utils.imagepull_utils import get_pod_issue_message_and_reason
 
 
 class PodIssue(str, Enum):
@@ -75,18 +76,6 @@ def detect_pod_issue(pod: Pod) -> PodIssue:
     elif is_pod_pending(pod):
         return PodIssue.Pending
     return PodIssue.NoneDetected
-
-
-def get_pod_issue_message_and_reason(pod: Pod) -> Tuple[Optional[str], Optional[str]]:
-    # Works/should work only or KubeContainerWaiting and KubePodNotReady
-    # Note: in line with the old code in pod_issue_investigator, we only get the message for
-    # the first of possibly many misbehaving containers.
-    if pod.status.containerStatuses:
-        if pod.status.containerStatuses[0].state.waiting:
-            return (
-                pod.status.containerStatuses[0].state.waiting.message,
-                pod.status.containerStatuses[0].state.waiting.reason,
-            )
 
 
 def is_pod_pending(pod: Pod) -> bool:
@@ -162,9 +151,6 @@ def report_pod_issue(
         event.add_enrichment(blocks)
 
     if reason:
-        # Update findings' descriptions.
-        if message is None:
-            message = "unknown"
         event.extend_description(f"{reason}: {message}")
 
 
