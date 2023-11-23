@@ -1,3 +1,4 @@
+import json
 import logging
 import textwrap
 from typing import List
@@ -16,6 +17,7 @@ class WebhookSink(SinkBase):
         super().__init__(sink_config.webhook_sink, registry)
 
         self.url = sink_config.webhook_sink.url
+        self.format = sink_config.webhook_sink.format
         self.headers = (
             {"Authorization": sink_config.webhook_sink.authorization.get_secret_value()}
             if sink_config.webhook_sink.authorization
@@ -24,6 +26,14 @@ class WebhookSink(SinkBase):
         self.size_limit = sink_config.webhook_sink.size_limit
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
+        if self.format == "text":
+            self.__write_text(finding, platform_enabled)
+        elif self.format == "json":
+            self.__write_json(finding, platform_enabled)
+        else:
+            logging.exception(f"Webhook format {self.format} is not supported")
+
+    def __write_text(self, finding: Finding, platform_enabled: bool):
         message_lines: List[str] = [finding.title]
         if platform_enabled:
             message_lines.append(f"Investigate: {finding.get_investigate_uri(self.account_id, self.cluster_name)}")
@@ -57,6 +67,33 @@ class WebhookSink(SinkBase):
 
         try:
             r = requests.post(self.url, data=message.encode('utf-8'), headers=self.headers)
+            r.raise_for_status()
+        except Exception:
+            logging.exception(f"Webhook request error\n headers: \n{self.headers}")
+
+    def __write_json(self, finding: Finding, platform_enabled: bool):
+        finding_dict = json.loads(json.dumps(finding, default=lambda o: getattr(o, '__dict__', str(o))))
+
+        if platform_enabled:
+            finding_dict["investigate"] = finding.get_investigate_uri(self.account_id, self.cluster_name)
+
+            if finding.add_silence_url:
+                finding_dict["silence"] = finding.get_prometheus_silence_url(self.account_id, self.cluster_name)
+
+        message = {}
+        message_length = 0
+
+        for key, value in finding_dict.items():
+            pair_length = len(json.dumps({key: value}).encode('utf-8'))
+
+            if message_length + pair_length <= self.size_limit:
+                message[key] = value
+                message_length += pair_length
+            else:
+                break
+
+        try:
+            r = requests.post(self.url, json=message, headers=self.headers)
             r.raise_for_status()
         except Exception:
             logging.exception(f"Webhook request error\n headers: \n{self.headers}")

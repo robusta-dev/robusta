@@ -8,6 +8,7 @@ class WebhookSinkParams(SinkBaseParams):
     url: str
     size_limit: int = 4096
     authorization: SecretStr = None
+    format: str = "text"
 
 
 class WebhookSinkConfigWrapper(SinkConfigBase):
