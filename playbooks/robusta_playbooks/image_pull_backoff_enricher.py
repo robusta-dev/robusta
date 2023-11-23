@@ -67,5 +67,5 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
     finding.add_enrichment(blocks)
     message, reason = get_pod_issue_message_and_reason(pod)
     if reason:
-        finding.add_enrichment([MarkdownBlock(f"{message}: {reason}")])
+        finding.add_enrichment([MarkdownBlock(f"{reason}: {message}")])
     event.add_finding(finding)
