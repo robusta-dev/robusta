@@ -55,6 +55,8 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
     pod_name = pod.metadata.name
     namespace = pod.metadata.namespace
 
+    blocks: List[BaseBlock] = get_image_pull_backoff_blocks(pod)
+
     finding = Finding(
         title=f"Failed to pull at least one image in pod {pod_name} in namespace {namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
@@ -62,6 +64,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
         aggregation_key="image_pull_backoff_reporter",
         subject=PodFindingSubject(pod),
     )
+    finding.add_enrichment(blocks)
     message, reason = get_pod_issue_message_and_reason(pod)
     if reason:
         finding.add_enrichment([MarkdownBlock(f"{message}: {reason}")])
