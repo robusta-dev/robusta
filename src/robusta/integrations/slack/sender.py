@@ -282,9 +282,9 @@ class SlackSender:
         sev = finding.severity
         if finding.source == FindingSource.PROMETHEUS:
             status_name: str = (
-                f"{status.to_emoji()} `Prometheus Alert Firing`"
+                f"{status.to_emoji()} `Prometheus Alert Firing` {status.to_emoji()}"
                 if status == FindingStatus.FIRING
-                else "*Prometheus resolved*"
+                else f"{status.to_emoji()} *Prometheus resolved*"
             )
         elif finding.source == FindingSource.KUBERNETES_API_SERVER:
             status_name: str = "👀 *K8s event detected*"
@@ -292,8 +292,10 @@ class SlackSender:
             status_name: str = "👀 *Notification*"
         if platform_enabled:
             title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
-        status_str: str = f"{status_name}" if finding.add_silence_url else ""
-        return MarkdownBlock(f"{status_str} {sev.to_emoji()} `{sev.name.lower()}` {title}")
+        return MarkdownBlock(
+            f"""{status_name} {sev.to_emoji()} *{sev.name.capitalize()}*  
+{title}"""
+        )
 
     def __create_links(self, finding: Finding):
         links: List[LinkProp] = []
