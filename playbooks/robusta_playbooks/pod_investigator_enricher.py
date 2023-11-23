@@ -165,14 +165,7 @@ def report_pod_issue(
         # Update findings' descriptions.
         if message is None:
             message = "unknown"
-        # The code below is essentially a specialized version of ExcutionBaseEvent.override_finding_attributes
-        for sink in event.named_sinks:
-            for finding in event.sink_findings[sink]:
-                msg = f"{reason}: {message}"
-                if not finding.description:
-                    finding.description = msg
-                else:
-                    finding.description += f"\n\n{msg}"
+        event.extend_description(f"{reason}: {message}")
 
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
