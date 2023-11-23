@@ -43,28 +43,9 @@ For example, Slack can be configured to receive high-severity messages in a spec
         match:
           namespace: [prod]
           severity: [HIGH]
+          # more options available - see below
 
-The above example defines match conditions by both ``namespace`` and ``severity``. When multiple conditions are present, all must be satisfied.
-
-By default, every message is sent to every matching sink. To change this behaviour, you can mark a sink as :ref:`non-default <Non-default sinks>`.
-
-Matches Can Be Lists Or Regexes
-********************************************
-
-Every *match* rule supports both regular expressions and a list of exact values:
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
-        api_key: secret-key
-        # AND between namespace and severity and labels
-        match:
-          namespace: ^prod$ # match the "prod" namespace exactly
-          severity: [HIGH, LOW] # either HIGH or LOW (or logic)
-          labels: "foo=bar,instance=123"
+When multiple match conditions are present, all must be satisfied.
 
 The following attributes can be included in a *match* block:
 
@@ -97,7 +78,27 @@ The following attributes can be included in a *match* block:
 
     Ask us in Slack if you need help.
 
-The regular expressions must be in the `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_, as passed to `re.match <https://docs.python.org/3/library/re.html#re.match>`_.
+By default, every message is sent to every matching sink. To change this behaviour, you can mark a sink as :ref:`non-default <Non-default sinks>`.
+
+Matches Can Be Lists Or Regexes
+********************************************
+
+Every *match* rule supports both regular expressions and a list of exact values:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: prod_slack_sink
+        slack_channel: prod-notifications
+        api_key: secret-key
+        # AND between namespace and severity and labels
+        match:
+          namespace: ^prod$ # match the "prod" namespace exactly
+          severity: [HIGH, LOW] # either HIGH or LOW (or logic)
+          labels: "foo=bar,instance=123"
+
+Regular expressions must be in `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_, as passed to `re.match <https://docs.python.org/3/library/re.html#re.match>`_.
 
 
 Or Between Matches
