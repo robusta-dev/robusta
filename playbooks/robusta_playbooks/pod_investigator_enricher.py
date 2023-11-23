@@ -162,9 +162,10 @@ def report_pod_issue(
         event.add_enrichment(blocks)
 
     if reason:
+        # Update findings' descriptions.
         if message is None:
             message = "unknown"
-        event.add_enrichment([MarkdownBlock(f"\n\n{reason}: {message}")])
+        event.extend_description(f"{reason}: {message}")
 
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
