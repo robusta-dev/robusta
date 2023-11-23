@@ -288,6 +288,13 @@ def gen_config(
             },
         ]
 
+    if is_small_cluster:
+        setattr(values, "kube-prometheus-stack", {})
+        kube_stack = getattr(values, "kube-prometheus-stack")
+        kube_stack["prometheus"] = {
+            "prometheusSpec": {"resources": {"requests": {"memory": "300Mi"}, "limits": {"memory": "300Mi"}}},
+        }
+
     write_values_file(output_path, values)
 
     if robusta_api_key:

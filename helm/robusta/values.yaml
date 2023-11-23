@@ -559,6 +559,9 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
+          memory: 128Mi
+        limits:
+          memory: 128Mi
       storage:
         volumeClaimTemplate:
           spec:
@@ -573,6 +576,9 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
+          memory: 2Gi
+        limits:
+          memory: 2Gi
       retention: 15d
       # we set a value slightly lower than the 100Gi below
       # the retentionSize uses the suffix GB but it is really Gi units
@@ -593,6 +599,9 @@ kube-prometheus-stack:
     resources:
       requests:
         cpu: 50m
+        memory: 50Mi
+      limits:
+        memory: 50Mi
     # disable node-exporter on fargate because fargate doesn't allow daemonsets
     affinity:
       nodeAffinity:
@@ -615,6 +624,9 @@ kube-prometheus-stack:
     resources:
       requests:
         cpu: 10m
+        memory: 256Mi
+      limit:
+        memory: 256Mi
 
 rsa: ~
   # @param existingSecret Name of existing secret containing the rsa keys
