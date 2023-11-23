@@ -11,6 +11,7 @@ class SinkBaseParams(BaseModel):
     send_svg: bool = False
     default: bool = True
     match: dict = {}
+    stop: bool = False  # Stop processing if this sink has been matched
 
     @root_validator
     def env_values_validation(cls, values: Dict):

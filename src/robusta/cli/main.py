@@ -217,9 +217,10 @@ def gen_config(
         token = json.loads(base64.b64decode(robusta_api_key))
         account_id = token.get("account_id", account_id)
 
-        sinks_config.append(
+        # Make sure the UI sink (if enabled) is the first one. See MAIN-1088.
+        sinks_config = [
             RobustaSinkConfigWrapper(robusta_sink=RobustaSinkParams(name="robusta_ui_sink", token=robusta_api_key))
-        )
+        ] + sinks_config
         enable_platform_playbooks = True
         disable_cloud_routing = False
 
