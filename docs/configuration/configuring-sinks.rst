@@ -157,6 +157,15 @@ routed to the sink only from :ref:`customPlaybooks that explicitly name this sin
 
 Here too, matchers apply as usual and perform further filtering.
 
+Execution order & stopping it
+*********************************
+
+Findings are sent to sinks that accept them synchronously (ie one is sent only after
+sending the previous is finished). The order in which they are sent is determined by
+the order of sinks being defined in your `generated_values.yaml` file. For each sink
+definition, you can add a `stop: true` field in this yaml file, which will cause the
+sending process to stop as soon as this sink is matched and findings are sent to it.
+
 Examples
 ^^^^^^^^^^^
 
