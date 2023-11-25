@@ -68,11 +68,13 @@ Developing Playbooks Locally
 
 Alert Simulation
 ^^^^^^^^^^^^^^^^^^
-When developing locally, it can be useful to simulate Prometheus alerts:
+To simulate a Prometheus alerts and cause relevant playbooks to run:
 
 .. code-block::
 
-    poetry run robusta playbooks trigger --dry-run prometheus_alert alert_name=KubePodCrashLooping namespace=default pod_name=example-pod
+    poetry run robusta demo-alert --alert=Test123
+
+If running multiple times in a row, change something each time so AlertManager doesn't supress retransmissions.
 
 CLI Development
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
