@@ -52,7 +52,10 @@ For faster code changes, you can run Robusta on your local computer:
 
 Developing Playbooks Locally
 ---------------------------------
-Follow the instructions for local development above. Then edit ``deployment/playbooks/active_playbooks.yaml`` to add the local path to your custom playbooks. For example:
+
+1. Create a local dev environment with the instructions above
+
+2. Edit ``deployment/playbooks/active_playbooks.yaml`` to reference a custom playbook directory, as follows:
 
 .. code-block::
 
@@ -60,6 +63,8 @@ Follow the instructions for local development above. Then edit ``deployment/play
     playbook_repos:
       chatgpt_robusta_actions:
         url: "file:///path/to/kubernetes-chatgpt-bot"
+
+3. Any time you change playbook code, trigger a reload: ``touch deployment/playbooks/active_playbooks.yaml``
 
 Alert Simulation
 ^^^^^^^^^^^^^^^^^^
