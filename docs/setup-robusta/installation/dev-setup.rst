@@ -64,7 +64,7 @@ Developing Playbooks Locally
       chatgpt_robusta_actions:
         url: "file:///path/to/kubernetes-chatgpt-bot"
 
-3. Any time you change playbook code, trigger a reload: ``touch deployment/playbooks/active_playbooks.yaml``
+3. After changing playbook code, trigger a reload: ``touch deployment/playbooks/active_playbooks.yaml``
 
 Alert Simulation
 ^^^^^^^^^^^^^^^^^^
