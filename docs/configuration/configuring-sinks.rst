@@ -17,6 +17,7 @@ Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value:
     - ms_teams_sink:                  # sink type
         name: my_teams_sink           # arbitrary name
         webhook_url: <placeholder>    # a sink-specific parameter
+        stop: false                   # optional (see `Routing Alerts to only one Sink`)
         match: {}                     # optional routing rules (see below)
         default: true                 # optional (see below)
 
@@ -25,6 +26,28 @@ To add a sink, update ``sinksConfig`` according to the instructions in :ref:`Sin
 Configure as many sinks as you like.
 
 .. _sink-matchers:
+
+
+Routing Alerts to only one Sink
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, alerts are sent to all sinks that matches the alerts.
+
+To prevent sending alerts to more sinks after the current one, you can specify ``stop: true``
+
+The sinks evaluation order, is the order defined in ``generated_values.yaml``.
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: production_sink
+        slack_channel: production-notifications
+        api_key: secret-key
+        match:
+          namespace: production
+        stop: true
+
 
 Routing Alerts to Specific Sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -156,15 +179,6 @@ To prevent a sink from receiving most notifications, you can set ``default: fals
 routed to the sink only from :ref:`customPlaybooks that explicitly name this sink <Alternative Routing Methods>`.
 
 Here too, matchers apply as usual and perform further filtering.
-
-Execution order & stopping it
-*********************************
-
-Findings are sent to sinks that accept them synchronously (ie one is sent only after
-sending the previous is finished). The order in which they are sent is determined by
-the order of sinks being defined in your `generated_values.yaml` file. For each sink
-definition, you can add a `stop: true` field in this yaml file, which will cause the
-sending process to stop as soon as this sink is matched and findings are sent to it.
 
 Examples
 ^^^^^^^^^^^
