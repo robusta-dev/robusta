@@ -50,6 +50,10 @@ class RelatedContainer(BaseModel):
     ports: List[Any] = []
     statusMessage: Optional[str] = None
     statusReason: Optional[str] = None
+    terminatedReason: Optional[str] = None
+    terminatedExitCode: Optional[int] = None
+    terminatedStarted: Optional[str] = None
+    terminatedFinished: Optional[str] = None
 
 
 class RelatedPod(BaseModel):
@@ -142,6 +146,8 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
         limits = PodContainer.get_limits(container)
         containerStatus: Optional[ContainerStatus] = PodContainer.get_status(pod, container.name)
         currentState: Optional[ContainerState] = getattr(containerStatus, "state", None)
+        lastState: Optional[ContainerStateTerminated] = getattr(containerStatus, "lastState", None)
+        terminated_state = getattr(lastState, "terminated", None)
         stateStr: str = "waiting"
         state = None
         if currentState:
@@ -160,10 +166,14 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
                 memoryRequest=requests.memory,
                 restarts=getattr(containerStatus, "restartCount", 0),
                 status=stateStr,
-                statusMessage=getattr(state, "messsage", None) if state else None,
+                statusMessage=getattr(state, "message", None) if state else None,
                 statusReason=getattr(state, "reason", None) if state else None,
                 created=getattr(state, "startedAt", None),
                 ports=[port.to_dict() for port in container.ports] if container.ports else [],
+                terminatedReason=getattr(terminated_state, "reason", None),
+                terminatedExitCode=getattr(terminated_state, "exitCode", None),
+                terminatedStarted=getattr(terminated_state, "startedAt", None),
+                terminatedFinished=getattr(terminated_state, "finishedAt", None),
             )
         )
 
