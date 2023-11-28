@@ -1,10 +1,10 @@
+import html
 import logging
 import re
-import html
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import parse_qs, unquote, urlparse
 
 from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Node, StatefulSet
 from pydantic import BaseModel
@@ -113,7 +113,7 @@ class PrometheusKubernetesAlert(
             parsed_url = urlparse(url)
             query_params = parse_qs(parsed_url.query)
 
-            q_expr = query_params.get('g0.expr', [])
+            q_expr = query_params.get("g0.expr", [])
             if len(q_expr) < 1 or not q_expr[0]:
                 return ""
 
@@ -126,10 +126,13 @@ class PrometheusKubernetesAlert(
     def get_description(self) -> str:
         annotations = self.alert.annotations
         clean_description = ""
+        runbook_url = ""
         if annotations.get("description"):
             # remove "LABELS = map[...]" from the description as we already add a TableBlock with labels
             clean_description = re.sub(r"LABELS = map\[.*\]$", "", annotations["description"])
-        return clean_description
+            if annotations.get("runbook_url"):
+                runbook_url = annotations.get("runbook_url")
+        return clean_description + f"\n Runbook URL: {runbook_url}"
 
     def get_alert_subject(self) -> FindingSubject:
         subject_type: FindingSubjectType = FindingSubjectType.TYPE_NONE
