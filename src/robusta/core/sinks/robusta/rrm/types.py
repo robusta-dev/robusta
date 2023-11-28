@@ -37,51 +37,15 @@ class AccountResource(BaseModel):
     updated_at: datetime
 
 
-class ResourceState(BaseModel):
-    pass
-
-
-class PrometheusAlertAnnotations(BaseModel):
-    description: Optional[str]
-    runbook_url: Optional[str]
-    summary: Optional[str]
-
-    class Config:
-        extra = "allow"
-
-
-class PrometheusAlertLabels(BaseModel):
-    severity: Optional[str]
-    entity_id: str
-    short: Optional[str]
-    long: Optional[str]
-
-    class Config:
-        extra = "allow"
-
-
 class PrometheusAlertRule(BaseModel):
     alert: str
-    annotations: Optional[PrometheusAlertAnnotations]
+    annotations: dict
     expr: str
     duration: Optional[str]
-    labels: PrometheusAlertLabels
+    labels: dict
 
     @staticmethod
-    def from_supabase_dict(data: dict, entity_id: str):
-        labels = data.get("labels", {})
-        labels["entity_id"] = entity_id
-
-        return PrometheusAlertRule(
-            alert=data.get("alert"),
-            annotations=data.get("annotations"),
-            expr=data.get("expr"),
-            duration=data.get("for"),
-            labels=labels,
-        )
-
-    @staticmethod
-    def from_local_k8_cluster_dict(data: dict):
+    def from_supabase_dict(data: dict):
         return PrometheusAlertRule(
             alert=data.get("alert"),
             annotations=data.get("annotations"),
@@ -96,12 +60,3 @@ class PrometheusAlertRule(BaseModel):
         del result["duration"]
 
         return result
-
-
-class PrometheusAlertResourceState(ResourceState):
-    rule: PrometheusAlertRule
-
-    @staticmethod
-    def from_dict(data: dict, entity_id: str):
-        rule = PrometheusAlertRule.from_supabase_dict(data.get("rule"), entity_id=entity_id)
-        return PrometheusAlertResourceState(rule=rule)

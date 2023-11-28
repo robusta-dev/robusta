@@ -1,9 +1,8 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 
 from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
-from robusta.core.sinks.robusta.rrm.types import ResourceKind, AccountResourceStatusType, AccountResource, \
-    AccountResourceStatusInfo
+from robusta.core.sinks.robusta.rrm.types import ResourceKind, AccountResourceStatusType, AccountResourceStatusInfo
 
 
 class BaseResourceManager:
@@ -13,25 +12,14 @@ class BaseResourceManager:
         self.cluster = cluster
         self.dal = dal
 
-    def init_resources(self, updated_at: Optional[datetime]):
-        pass
-
-    def get_resource_kind(self) -> ResourceKind:
-        return self._resource_kind
-
     def set_last_updated_at(self, updated_at: Optional[datetime]):
         self.__last_updated_at = updated_at
 
     def set_account_resource_status(
             self, status_type: Optional[AccountResourceStatusType],
-            info: Optional[AccountResourceStatusInfo]
+            info: Optional[AccountResourceStatusInfo],
     ):
-        self.dal.set_account_resource_status(status_type=status_type, info=info)
+        self.dal.set_account_resource_status(status_type=status_type, info=info, last_updated_at=self.__last_updated_at)
 
     def get_last_updated_at(self) -> Optional[datetime]:
         return self.__last_updated_at
-
-    def prepare(self, account_resources: List[AccountResource]):
-        """Initialize resources"""
-
-        pass

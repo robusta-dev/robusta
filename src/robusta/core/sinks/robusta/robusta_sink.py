@@ -9,16 +9,12 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Job
 from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
-from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
 from robusta.core.model.env_vars import (
-    CLUSTER_STATUS_PERIOD_SEC,
-    DISCOVERY_CHECK_THRESHOLD_SEC,
-    DISCOVERY_PERIOD_SEC,
     DISCOVERY_WATCHDOG_CHECK_SEC,
 )
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
 from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC, \
-    MANAGED_PROMETHEUS_ALERTS_ENABLED
+    MANAGED_CONFIGURATION_ENABLED
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
@@ -481,7 +477,7 @@ class RobustaSink(SinkBase):
             alertManagerConnection=prometheus_health_checker_status.alertmanager,
             prometheusConnection=prometheus_health_checker_status.prometheus,
             prometheusRetentionTime=prometheus_health_checker_status.prometheus_retention_time,
-            managedPrometheusAlerts=MANAGED_PROMETHEUS_ALERTS_ENABLED
+            managedPrometheusAlerts=MANAGED_CONFIGURATION_ENABLED
         )
 
         # checking the status of relay connection

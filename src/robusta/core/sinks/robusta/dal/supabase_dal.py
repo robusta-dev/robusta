@@ -1,6 +1,7 @@
 import json
 import logging
 import time
+from collections import defaultdict
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 import requests
@@ -10,7 +11,7 @@ from postgrest.types import ReturnMethod
 from supabase import create_client
 from supabase.lib.client_options import ClientOptions
 
-from robusta.core.model.cluster_status import ClusterStatus, Account
+from robusta.core.model.cluster_status import ClusterStatus
 from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC, SUPABASE_TIMEOUT_SECONDS
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
@@ -39,7 +40,6 @@ SCANS_RESULT_TABLE = "ScansResults"
 RESOURCE_EVENTS = "ResourceEvents"
 ACCOUNT_RESOURCE_TABLE = "AccountResource"
 ACCOUNT_RESOURCE_STATUS_TABLE = "AccountResourceStatus"
-ACCOUNTS_TABLE = "Accounts"
 
 
 class SupabaseDal(AccountResourceFetcher):
@@ -513,23 +513,28 @@ class SupabaseDal(AccountResourceFetcher):
                 self.persist_scan(block)
 
     def get_account_resources(
-            self, resource_kind: ResourceKind, updated_at: Optional[datetime]
-    ) -> List[AccountResource]:
+            self,
+            resource_kind: Optional[ResourceKind] = None,
+            updated_at: Optional[datetime] = None,
+    ) -> Dict[ResourceKind, List[AccountResource]]:
         try:
             query_builder = (
                 self.client.table(ACCOUNT_RESOURCE_TABLE)
                 .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "enabled",
                         "updated_at")
-                .filter("resource_kind", "eq", resource_kind)
-                .filter("account_id", "eq", self.account_id)
+                .eq("account_id", self.account_id)
             )
+
+            if resource_kind:
+                query_builder.eq("resource_kind", resource_kind)
+
             if updated_at:
                 query_builder.gt("updated_at", updated_at.isoformat())
             else:
                 # in the initial db fetch don't include the deleted records.
                 # in the subsequent db fetch allow even the deleted records so that they can be removed from the cluster
-                query_builder.filter("deleted", "eq", False)
-                query_builder.filter("enabled", "eq", True)
+                query_builder.eq("deleted", False)
+                query_builder.eq("enabled", True)
 
                 query_builder = SupabaseDal.custom_filter_request_builder(
                     query_builder,
@@ -540,55 +545,62 @@ class SupabaseDal(AccountResourceFetcher):
 
             res = query_builder.execute()
         except Exception as e:
-            msg = f"Failed to get existing account resources (supabase) error: {e}"
-            logging.error(msg)
+            msg = f"Failed to get existing account resources (supabase) error"
+            logging.error(msg, exc_info=True)
             self.handle_supabase_error()
-            raise Exception(msg)
+            raise e
 
-        account_resources: List[AccountResource] = []
+        account_resources_map: Dict[ResourceKind, List[AccountResource]] = defaultdict(list)
+
         for data in res.data:
-            resource_state = data["resource_state"]
             resource = AccountResource(
                 entity_id=data["entity_id"],
                 resource_kind=data["resource_kind"],
                 clusters_target_set=data["clusters_target_set"],
-                resource_state=resource_state,
+                resource_state=data["resource_state"],
                 deleted=data["deleted"],
                 enabled=data["enabled"],
                 updated_at=data["updated_at"],
             )
 
-            account_resources.append(resource)
+            account_resources_map[resource.resource_kind].append(resource)
 
-        return account_resources
+        return dict(account_resources_map)
 
-    def __to_db_account_resource_status(self,
-                                        status_type: Optional[AccountResourceStatusType],
-                                        info: Optional[AccountResourceStatusInfo]) -> Dict[Any, Any]:
-
+    def __to_db_account_resource_status(
+            self,
+            status_type: AccountResourceStatusType,
+            last_updated_at: datetime,
+            info: Optional[AccountResourceStatusInfo] = None,
+    ) -> Dict[Any, Any]:
+        last_updated_at_iso = last_updated_at.isoformat()
         data = {
             "account_id": self.account_id,
             "cluster_id": self.cluster,
             "status": status_type,
             "info": info.dict() if info else None,
             "updated_at": "now()",
-            "latest_revision": "now()"}
+            "latest_revision": last_updated_at_iso,
+        }
 
         if status_type != AccountResourceStatusType.error:
-            data["synced_revision"] = "now()"
+            data["synced_revision"] = last_updated_at_iso
 
         return data
 
     def set_account_resource_status(
-            self, status_type: Optional[AccountResourceStatusType],
-            info: Optional[AccountResourceStatusInfo]
+            self,
+            status_type: AccountResourceStatusType,
+            info: Optional[AccountResourceStatusInfo],
+            last_updated_at: datetime
     ):
         try:
-            data = self.__to_db_account_resource_status(status_type=status_type, info=info)
+            data = self.__to_db_account_resource_status(status_type=status_type, info=info,
+                                                        last_updated_at=last_updated_at)
 
             self.client.table(ACCOUNT_RESOURCE_STATUS_TABLE).upsert(data).execute()
         except Exception as e:
-            logging.error(f"Failed to persist resource events error: {e}")
+            logging.error(f"Failed to set account resource status to {status_type}", exc_info=True)
             self.handle_supabase_error()
             raise
 

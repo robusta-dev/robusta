@@ -37,10 +37,3 @@ def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):
             pass  # in case the field doesn't exist on this object
 
     return duplication
-
-
-def index_of(array: list, predicate):
-    for i in range(len(array)):
-        if predicate(array[i]):
-            return i
-    return None
