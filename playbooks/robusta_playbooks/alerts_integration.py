@@ -41,7 +41,7 @@ from robusta.api import (
     create_resource_enrichment,
     get_node_internal_ip,
 )
-from robusta.core.playbooks.oom_kiler_utils import logs_enricher, start_log_enrichment
+from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
 
 
 class SeverityParams(ActionParams):

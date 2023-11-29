@@ -26,7 +26,7 @@ from robusta.api import (
     pod_most_recent_oom_killed_container,
 )
 from robusta.core.model.base_params import PrometheusParams, OomKillParams, LogEnricherParams
-from robusta.core.playbooks.oom_kiler_utils import logs_enricher
+from robusta.core.playbooks.oom_killer_utils import logs_enricher
 from robusta.integrations.resource_analysis.memory_analyzer import MemoryAnalyzer
 
 
