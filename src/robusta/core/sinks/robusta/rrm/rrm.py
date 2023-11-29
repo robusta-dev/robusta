@@ -36,12 +36,17 @@ class RRM:
                     self.__last_updated_at = resources[-1].updated_at
                     self.__alert_resource_manager.set_last_updated_at(updated_at=self.__last_updated_at)
                     self.__alert_resource_manager.set_account_resource_status(
-                        status_type=AccountResourceStatusType.success, info=None)
+                        status_type=AccountResourceStatusType.success,
+                        info=None
+                    )
                 except Exception:
                     logging.error("RRM Alerts config threw an error while executing `start_syncing_alerts`",
                                   exc_info=True)
 
     def __thread_start(self):
+        if not MANAGED_CONFIGURATION_ENABLED:
+            return
+
         while True:
             try:
                 self.__periodic_loop()
