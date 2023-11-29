@@ -637,7 +637,7 @@ kube-prometheus-stack:
       requests:
         cpu: 10m
         memory: 256Mi
-      limit:
+      limits:
         memory: 256Mi
 
 rsa: ~
