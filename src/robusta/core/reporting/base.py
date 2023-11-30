@@ -24,6 +24,7 @@ class Emojis(Enum):
     Explain = "📘"
     Recommend = "🛠"
     Alert = "🚨"
+    Runbook = "📜"
 
 
 class FindingSeverity(Enum):
