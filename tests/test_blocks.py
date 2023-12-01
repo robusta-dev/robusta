@@ -65,7 +65,8 @@ def create_finding_with_all_blocks():
     obj = Pod(metadata=ObjectMeta(name="theName", namespace="the-namespace"))
     obj2 = Pod(metadata=ObjectMeta(name="theName", namespace="the-namespace2"))
     diff_detail = obj.diff(obj2)
-    kubernetes_diff_block = KubernetesDiffBlock(diff_detail, obj, obj2, "sample_kubernetes_diff_block", "default")
+    kubernetes_diff_block = KubernetesDiffBlock(diff_detail, obj, obj2,
+                                                "sample_kubernetes_diff_block", kind=obj.kind, namespace="default")
 
     json_block = JsonBlock(json.dumps({"key": "value"}))
 
