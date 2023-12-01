@@ -306,3 +306,7 @@ class LogEnricherParams(ActionParams):
     regex_replacement_style: Optional[str] = None
     previous: bool = False
     filter_regex: Optional[str] = None
+
+
+class OomKillParams(ActionParams):
+    attach_logs: Optional[bool] = False
