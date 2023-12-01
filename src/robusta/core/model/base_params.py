@@ -309,4 +309,4 @@ class LogEnricherParams(ActionParams):
 
 
 class OomKillParams(ActionParams):
-    attach_logs: Optional[bool] = True
+    attach_logs: Optional[bool] = False
