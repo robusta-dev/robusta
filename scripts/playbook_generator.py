@@ -112,7 +112,12 @@ def display_demo_playbook():
         )
 
 
-generator = ExamplesGenerator()
+@st.cache_data
+def get_examples_generator():
+    return ExamplesGenerator()
+
+
+generator = get_examples_generator()
 triggers = generator.get_all_triggers()
 actions = find_playbook_actions("./playbooks/robusta_playbooks")
 actions_by_name = {a.action_name: a for a in actions}
