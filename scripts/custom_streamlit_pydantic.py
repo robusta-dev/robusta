@@ -13,6 +13,7 @@ T = TypeVar("T", bound=BaseModel)
 def modified_pydantic_form(
     key: str,
     model: Type[T],
+    initial_data: Optional[T] = None,
     submit_label: str = "Submit",
     clear_on_submit: bool = False,
     group_optional_fields: GroupOptionalFieldsStrategy = "no",  # type: ignore
@@ -25,7 +26,8 @@ def modified_pydantic_form(
 
     Args:
         key (str): A string that identifies the form. Each form must have its own key.
-        model (Type[BaseModel]): The input model. Either a class or instance based on Pydantic `BaseModel` or Python `dataclass`.
+        model (Type[BaseModel]): The input model. A class that inherits from Pydantic's `BaseModel`
+        initial_data (Optional[BaseModel]): If not None, an instance of the model that will provide initial data
         submit_label (str): A short label explaining to the user what this button is for. Defaults to “Submit”.
         clear_on_submit (bool): If True, all widgets inside the form will be reset to their default values after the user presses the Submit button. Defaults to False.
         group_optional_fields (str, optional): If `sidebar`, optional input elements will be rendered on the sidebar.
@@ -37,6 +39,12 @@ def modified_pydantic_form(
         Optional[BaseModel]: An instance of the given input class,
             if the submit button is used and the input data passes the Pydantic validation.
     """
+    if initial_data is not None:
+        if isinstance(initial_data, model):
+            model = initial_data
+        else:
+            print(f"Ignoring initial_data because it doesn't match model. model={model}, initial_data={initial_data}")
+
     # we can't use pydantic_form because of https://github.com/LukasMasuch/streamlit-pydantic/issues/39
     # so we design our own container for all elements, just like a form would
     with stylable_container(

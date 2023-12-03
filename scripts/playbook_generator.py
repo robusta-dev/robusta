@@ -27,6 +27,8 @@ st.set_page_config(
 def update_changes(trigger, action):
     ss["trigger_name"] = trigger
     ss["action_name"] = action
+    ss["action_ready"] = False
+    # TODO: trigger_ready
     ss.current_page = "playbook_builder"
     ss.playbook_chosen = True
 
@@ -46,21 +48,11 @@ def go_to_demo_playbooks():
 
 
 def display_demo_playbook():
-
     st.button(":point_right: Create a custom Playbooks ", key="playbook_builder_btn", on_click=go_to_playbook_builder)
-
     st.title("Demo Playbooks", anchor=None)
 
     if "trigger_name" not in ss:
         ss["trigger_name"] = "on_helm_release_fail"
-    if "action_name" not in ss:
-        ss["action_name"] = ""
-    if "action_data" not in ss:
-        ss["action_data"] = ""
-    if "trigger_data" not in ss:
-        ss["trigger_data"] = ""
-    if "action_ready" not in ss:
-        ss["action_ready"] = ""
 
     release_fail_expander = st.expander(":zap: Get notified when a Helm release fails", expanded=False)
     deployment_change_expander = st.expander(":zap: Get notified when a deployment changes", expanded=False)
@@ -151,45 +143,61 @@ class Screens(StrEnum):
         ss.rerun_necessary = True
 
 
-HOT_TRIGGERS = ["on_prometheus_alert"]
+POPULAR_TRIGGERS = ["on_prometheus_alert"]
+POPULAR_ACTIONS = ["pod_bash_enricher"]
 
 
-def format_trigger_name(trigger_name):
-    if trigger_name in HOT_TRIGGERS:
-        return f"{trigger_name} 🔥"
-    return trigger_name
+def format_combobox_option(option_name, popular_options):
+    if option_name in popular_options:
+        return f":fire: {option_name}"
+    return option_name
 
 
-def sort_trigger_names(trigger_names):
-    hot_triggers = [t for t in trigger_names if t in HOT_TRIGGERS]
-    regular_triggers = [t for t in trigger_names if t not in HOT_TRIGGERS]
-    return hot_triggers + regular_triggers
+def sort_combobox_options(options, popular_options):
+    relevant_popular_options = [t for t in options if t in popular_options]
+    other_options = [t for t in options if t not in popular_options]
+    return relevant_popular_options + other_options
+
+
+def custom_selectbox(
+        label,
+        options,
+        default_option,
+        popular_options,
+        key):
+    sorted_options = sort_combobox_options(options, popular_options)
+    if default_option is not None:
+        index = sorted_options.index(default_option)
+    else:
+        index = 0
+    value = st.selectbox(label, sorted_options, key=key, placeholder="Type to search", index=index)
+
+    # for some reason without this, after making a choice the combobox is not updated to show the new choice
+    # instead it keeps the old value - this possibly is a result of the default_option parameter... not sure
+    if value != default_option:
+        ss.rerun_necessary = True
+    return value
 
 
 def display_triggers():
     trigger_names = list(triggers.keys())
-    trigger_names = sort_trigger_names(trigger_names)
-
-    if ss.get("trigger_name") is not None:
-        index = trigger_names.index(ss["trigger_name"])
-    else:
-        index = 0
-
     st.info(":zap: Triggers are events that cause a playbook to start running")
-    ss["trigger_name"] = st.selectbox(
+
+    ss["trigger_name"] = custom_selectbox(
         "Choose a trigger",
         trigger_names,
-        key="trigger",
-        placeholder="Type to search",
-        index=index
+        ss.get("trigger_name"),
+        POPULAR_TRIGGERS,
+        "triggers-combo"
     )
     if ss["trigger_name"] is None:
         return
 
-    initial_data = ss.get("trigger_data") or triggers[ss["trigger_name"]]
+    trigger_model = triggers[ss["trigger_name"]]
     ss["trigger_data"] = modified_pydantic_form(
         key=f"trigger_form-{ss['trigger_name']}",
-        model=initial_data,
+        model=trigger_model,
+        initial_data=ss.get("trigger_data"),
         ignore_empty_values=True,
         group_optional_fields="expander",
         title=f"*{ss['trigger_name']}* settings",
@@ -199,42 +207,43 @@ def display_triggers():
 
 
 def display_actions():
-    action_names = list(actions_by_name.keys())
-
     st.info(":zap: Actions are what the playbook *does* - they can collect data or execute remediations")
     relevant_actions = [a.action_name for a in triggers_to_actions[ss["trigger_name"]]]
 
-    if ss.get("action_name") is not None and ss.get("action_name") in relevant_actions:
-        index = relevant_actions.index(ss["action_name"])
-    else:
-        index = 0
+    # if the user changed triggers and the action is no longer relevant - discard it
+    if ss.get("action_name") not in relevant_actions:
+        ss["action_name"] = None
 
-    ss["action_name"] = st.selectbox(
-        "Choose an action", relevant_actions, key="actiontest", placeholder="Type to search", index=index
+    ss["action_name"] = custom_selectbox(
+        "Choose an action",
+        relevant_actions,
+        ss.get("action_name"),
+        POPULAR_ACTIONS,
+        key="actions-combo"
     )
 
     if ss["action_name"] is None:
         return
 
-    action_obj = actions_by_name.get(ss["action_name"], None)
-    if action_obj and hasattr(action_obj, "params_type") and hasattr(action_obj.params_type, "schema"):
-        ss["action_data"] = modified_pydantic_form(
-            key=f"action_form-{ss['action_name']}-test",
-            model=action_obj.params_type,
-            ignore_empty_values=True,
-            group_optional_fields="expander",
-            title=f"*{ss['action_name']}* settings",
-            submit_label="Continue",
-            on_submit=lambda: Screens.set_current_screen(Screens.YAML),
-        )
-
-        ss["action_ready"] = True
-
-    else:
+    action_obj = actions_by_name[ss["action_name"]]
+    if not action_obj or not hasattr(action_obj, "params_type") or not hasattr(action_obj.params_type, "schema"):
         st.markdown("This action doesn't have any parameters")
         ss["action_data"] = None
         ss["action_ready"] = True
-        st.button("Continue", key="button2-test", on_click=Screens.set_current_screen, args=[Screens.YAML])
+        st.button("Continue", key="actions-continue-no-params", on_click=Screens.set_current_screen, args=[Screens.YAML])
+        return
+
+    ss["action_data"] = modified_pydantic_form(
+        key=f"action_form-{ss['action_name']}",
+        model=action_obj.params_type,
+        initial_data=ss.get("action_data"),
+        ignore_empty_values=True,
+        group_optional_fields="expander",
+        title=f"*{ss['action_name']}* settings",
+        submit_label="Continue",
+        on_submit=lambda: Screens.set_current_screen(Screens.YAML),
+    )
+    ss["action_ready"] = True
 
 
 def display_playbook_builder():
