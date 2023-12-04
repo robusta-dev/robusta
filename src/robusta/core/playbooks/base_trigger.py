@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.reporting.base import Finding
+from robusta.patch.patch import create_monkey_patches
 from robusta.utils.documented_pydantic import DocumentedModel
 
 
@@ -33,7 +34,13 @@ class BaseTrigger(DocumentedModel):
     def build_execution_event(
         self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
-        return build_execution_event_process_pool.submit(self._build_execution_event, event, sink_findings).result()
+        return build_execution_event_process_pool.submit(
+            self._build_execution_event_trampoline, event, sink_findings
+        ).result()
+
+    def _build_execution_event_trampoline(self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]):
+        create_monkey_patches()
+        return self._build_execution_event(event, sink_findings)
 
     def _build_execution_event(
         self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
