@@ -210,7 +210,7 @@ class JiraSender:
                 )
 
         # Add runbook_url to issue markdown if present
-        if finding.subject.annotations["runbook_url"]:
+        if finding.subject.annotations.get("runbook_url", None):
             runbook_url = finding.subject.annotations["runbook_url"]
             actions.append(to_paragraph("🔎 Runbook URL", [{"type": "link", "attrs": {"href": runbook_url}}]))
 
@@ -238,7 +238,7 @@ class JiraSender:
         )
 
         # Default priority is "Major" if not a standard severity is given
-        severity = SEVERITY_JIRA_ID[finding.severity] or "Major"
+        severity = SEVERITY_JIRA_ID.get(finding.severity, "Major")
 
         self.client.manage_issue(
             {
