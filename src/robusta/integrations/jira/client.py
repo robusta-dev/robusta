@@ -95,9 +95,6 @@ class JiraClient:
         logging.debug(response)
         return response.get("transitions", [])
 
-    def _get_dict_field(self, issue, field, default_value):
-        return self._get_nested_property(issue, field, default_value)
-
     def _get_nested_property(self, my_dict, key, default=None):
         keys = key.split(".")
         current = my_dict
@@ -110,7 +107,7 @@ class JiraClient:
         return current
 
     def _check_issue_done(self, issue):
-        issue_status = self._get_dict_field(issue, "fields.status.name", "")
+        issue_status = self._get_nested_property(issue, "fields.status.name", "")
         return issue_status.lower() == self.doneStatusName.lower()
 
     def _get_issue_for_labels(self, labels):
@@ -163,7 +160,7 @@ class JiraClient:
         return self._call_jira_api(url, params=query) or []
 
     def transition_issue(self, issue, status_name):
-        issue_id = self._get_dict_field(issue, "id", -1)
+        issue_id = self._get_nested_property(issue, "id", -1)
         endpoint = f"issue/{issue_id}/transitions"
         url = self._get_full_jira_url(endpoint)
         transition_id = self._get_transition_id(issue_id, status_name)
@@ -178,7 +175,7 @@ class JiraClient:
         logging.debug(f"Transitioned issue with response {response}")
 
     def comment_issue(self, issue):
-        issue_id = self._get_dict_field(issue, "id", -1)
+        issue_id = self._get_nested_property(issue, "id", -1)
         endpoint = f"issue/{issue_id}/comment"
         url = self._get_full_jira_url(endpoint)
         payload = {
@@ -221,9 +218,9 @@ class JiraClient:
             self.add_attachment(issue_id, issue_attachments)
 
     def update_issue(self, issue, issue_data):
-        issue_id = self._get_dict_field(issue, "id", -1)
-        summary = self._get_dict_field(issue_data, "summary", "")
-        description = self._get_dict_field(issue_data, "description", "")
+        issue_id = self._get_nested_property(issue, "id", -1)
+        summary = self._get_nested_property(issue_data, "summary", "")
+        description = self._get_nested_property(issue_data, "description", "")
         endpoint = f"issue/{issue_id}"
         url = self._get_full_jira_url(endpoint)
 
@@ -237,8 +234,8 @@ class JiraClient:
 
     def manage_issue(self, issue_data, alert_data, issue_attachments=None):
         existing_issue = self._get_issue_for_labels(issue_data.get("labels", [])) or []
-        status = self._get_dict_field(alert_data, "status", -1)
-        source = self._get_dict_field(alert_data, "source", None)
+        status = self._get_nested_property(alert_data, "status", -1)
+        source = self._get_nested_property(alert_data, "source", None)
         alert_resolved = status == FindingStatus.RESOLVED
         is_prometheus_alert = source == FindingSource.PROMETHEUS
 
