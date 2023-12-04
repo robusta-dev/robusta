@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import time
+from concurrent.futures.process import ProcessPoolExecutor
 from threading import Thread
 from typing import Dict, Optional, List, Union
 from uuid import UUID
@@ -55,11 +56,14 @@ class SlackActionRequest(BaseModel):
         # Slack value is sent as a stringified json, so we need to parse it before validation
         return json.loads(v)
 
+
 class SlackActionsMessage(BaseModel):
     actions: List[SlackActionRequest]
 
 
 class ActionRequestReceiver:
+    process_executor = ProcessPoolExecutor(max_workers=1)  # always 1 discovery process
+
     def __init__(self, event_handler: PlaybooksEventHandler):
         self.event_handler = event_handler
         self.active = True
@@ -67,6 +71,7 @@ class ActionRequestReceiver:
         self.cluster_name = self.event_handler.get_global_config().get("cluster_name")
         self.auth_provider = AuthProvider()
         self.healthy = False
+        self.thread_executor = None
 
         self.ws = websocket.WebSocketApp(
             WEBSOCKET_RELAY_ADDRESS,
@@ -74,8 +79,6 @@ class ActionRequestReceiver:
             on_message=self.on_message,
             on_error=self.on_error,
         )
-
-        self._executor = ThreadPoolExecutor(max_workers=WEBSOCKET_THREADPOOL_SIZE)
 
         if not self.account_id or not self.cluster_name:
             logging.error(
@@ -153,7 +156,14 @@ class ActionRequestReceiver:
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
 
     def _process_action(self, action: ExternalActionRequest, validate_timestamp: bool) -> None:
-        self._executor.submit(self._process_action_sync, action, validate_timestamp)
+        # TODO non-static; args
+        self.process_executor.submit(self._process_action_sync_process, action, validate_timestamp)
+
+    def _process_action_sync_process(self, action: ExternalActionRequest, validate_timestamp: bool):
+        if self.thread_executor is None:
+            self.thread_executor = ThreadPoolExecutor(max_workers=WEBSOCKET_THREADPOOL_SIZE)
+        # We're always inside the same process, so this refers to the one and only thread pool there is.
+        self.thread_executor.submit(self._process_action_sync, action, validate_timestamp)
 
     def _process_action_sync(self, action: ExternalActionRequest, validate_timestamp: bool) -> None:
         try:
@@ -168,7 +178,6 @@ class ActionRequestReceiver:
     def _parse_websocket_message(
         message: Union[str, bytes, bytearray]
     ) -> Union[SlackActionsMessage, ExternalActionRequest]:
-
         try:
             return SlackActionsMessage.parse_raw(message)  # this is slack callback format
         except ValidationError:
@@ -276,7 +285,7 @@ class ActionRequestReceiver:
 
     @staticmethod
     def validate_action_request_signature(
-            action_request: ExternalActionRequest, signing_key: str
+        action_request: ExternalActionRequest, signing_key: str
     ) -> ValidationResponse:
         generated_signature = sign_action_request(action_request.body, signing_key)
         if hmac.compare_digest(generated_signature, action_request.signature):
@@ -330,7 +339,7 @@ class ActionRequestReceiver:
 
     @classmethod
     def __extract_key_and_validate(
-            cls, encrypted: str, private_key: RSAPrivateKey, body: ActionRequestBody
+        cls, encrypted: str, private_key: RSAPrivateKey, body: ActionRequestBody
     ) -> (bool, Optional[UUID]):
         try:
             plain = private_key.decrypt(
