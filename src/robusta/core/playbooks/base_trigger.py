@@ -21,8 +21,13 @@ class TriggerEvent(BaseModel):
 
 
 class BaseTrigger(DocumentedModel):
-    # TODO what should the pool size be?
-    executor = ProcessPoolExecutor(max_workers=1)
+    def __new__(cls, *args, **kwargs):
+        # Perform any pydantic-related class building code before creating the
+        # executor. Otherwise obscure errors related to pickling _thread.lock ensue.
+        cls = super().__new__(cls)
+        # TODO what should the pool size be?
+        cls._executor = ProcessPoolExecutor(max_workers=1)
+        return cls
 
     def get_trigger_event(self) -> str:
         pass
@@ -33,7 +38,7 @@ class BaseTrigger(DocumentedModel):
     def build_execution_event(
         self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
-        return BaseTrigger.executor.submit(self._build_execution_event, event, sink_findings)
+        return BaseTrigger._executor.submit(self._build_execution_event, event, sink_findings)
 
     def _build_execution_event(
         self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
