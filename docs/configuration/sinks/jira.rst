@@ -29,7 +29,7 @@ Optional Settings
 
 Following optional settings only work for Prometheus alerts:
 
-* ``sendResolved`` : [Optional - default: false] If true, will transition a Jira issue to "Done" when the alert event contains a "solved" status.
+* ``sendResolved`` : [Optional - default: false] If true, will transition a Jira issue to "Done" when the alert event contains a "resolved" status.
 * ``reopenIssues`` : [Optional - default: false] If true, will reopen a "Done" Jira issue when an alerts fire with the same fingerprint. If false, a new issue will be created.
 * ``doneStatusName`` : [Optional - default: 'Done'] The name of the "Done" status in Jira. Will be used to identify "Done" tasks in Jira.
 * ``reopenStatusName`` : [Optional - default: 'To Do'] The name of the "To Do" status in Jira. Will be used to identify "To Do" tasks in Jira.

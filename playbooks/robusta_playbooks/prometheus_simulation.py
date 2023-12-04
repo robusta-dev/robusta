@@ -22,7 +22,7 @@ class PrometheusAlertParams(ActionParams):
     :var description: Simulated alert description.
     :var generator_url: Prometheus generator_url. Some enrichers, use this attribute to query Prometheus.
     :var labels: Additional alert labels. For example: "key1: val1, key2: val2"
-    :var runbook_url: Simulated alert runbook_url. For example: "https//my-runbook-url.dev"
+    :var runbook_url: Simulated alert runbook_url. For example: "https://my-runbook-url.dev"
     :var fingerprint: Simulated alert fingerprint. For example: "my-unique-fingerprint"
     """
 
