@@ -1,4 +1,5 @@
 import abc
+from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, Optional, Type
 
 from pydantic import BaseModel
@@ -20,6 +21,9 @@ class TriggerEvent(BaseModel):
 
 
 class BaseTrigger(DocumentedModel):
+    # TODO what should the pool size be?
+    executor = ProcessPoolExecutor(max_workers=1)
+
     def get_trigger_event(self) -> str:
         pass
 
@@ -29,7 +33,13 @@ class BaseTrigger(DocumentedModel):
     def build_execution_event(
         self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
-        pass
+        return BaseTrigger.executor.submit(self._build_execution_event, event, sink_findings)
+
+    def _build_execution_event(
+        self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
+    ) -> Optional[ExecutionBaseEvent]:
+        # This is meant for running in a separate process
+        raise NotImplementedError
 
     @staticmethod
     def get_execution_event_type() -> Type[ExecutionBaseEvent]:

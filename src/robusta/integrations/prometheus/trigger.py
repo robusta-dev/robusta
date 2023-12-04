@@ -93,7 +93,7 @@ class PrometheusAlertTrigger(BaseTrigger):
 
         return True
 
-    def build_execution_event(
+    def _build_execution_event(
         self, event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
         return AlertEventBuilder.build_event(event, sink_findings)

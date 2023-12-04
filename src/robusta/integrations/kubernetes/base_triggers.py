@@ -117,7 +117,7 @@ class K8sBaseTrigger(BaseTrigger):
             old_obj = cls.__load_hikaru_obj(k8s_payload.oldObj, model_class)
         return obj, old_obj
 
-    def build_execution_event(
+    def _build_execution_event(
         self, event: K8sTriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
         # we can't use self.get_execution_event_type() because for KubernetesAnyAllChangesTrigger we need to filter out
