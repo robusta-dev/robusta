@@ -33,7 +33,7 @@ class BaseTrigger(DocumentedModel):
     def build_execution_event(
         self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
-        return build_execution_event_process_pool.submit(self._build_execution_event, event, sink_findings)
+        return build_execution_event_process_pool.submit(self._build_execution_event, event, sink_findings).result()
 
     def _build_execution_event(
         self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
