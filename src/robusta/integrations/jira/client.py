@@ -257,7 +257,8 @@ class JiraClient:
                 else:
                     self.update_issue(existing_issue, issue_data)
         else:
-            self.create_issue(issue_data, issue_attachments)
+            if not alert_resolved:
+                self.create_issue(issue_data, issue_attachments)
 
     def add_attachment(self, issue_id, issue_attachments):
         endpoint = f"issue/{issue_id}/attachments"
