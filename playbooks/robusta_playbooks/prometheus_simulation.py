@@ -43,8 +43,8 @@ class PrometheusAlertParams(ActionParams):
     description: str = "simulated prometheus alert"
     summary: Optional[str]
     generator_url = ""
-    runbook_url: Optional[str] = None
-    fingerprint: Optional[str] = None
+    runbook_url: Optional[str] = ""
+    fingerprint: Optional[str] = ""
     labels: Optional[str] = None
 
 
