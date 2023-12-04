@@ -28,6 +28,7 @@ Optional Settings
 * ``issue_type_id_override`` : [Optional - default: None] If available, will override the ``issue_type`` configuration. Follow these `instructions <https://confluence.atlassian.com/jirakb/finding-the-id-for-issue-types-646186508.html>`__ to get your issue id.
 
 Following optional settings only work for Prometheus alerts:
+
 * ``sendResolved`` : [Optional - default: false] If true, will transition a Jira issue to "Done" when the alert event contains a "solved" status.
 * ``reopenIssues`` : [Optional - default: false] If true, will reopen a "Done" Jira issue when an alerts fire with the same fingerprint. If false, a new issue will be created.
 * ``doneStatusName`` : [Optional - default: 'Done'] The name of the "Done" status in Jira. Will be used to identify "Done" tasks in Jira.
