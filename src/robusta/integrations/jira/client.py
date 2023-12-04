@@ -174,7 +174,7 @@ class JiraClient:
         response = self._call_jira_api(url, http_method=HttpMethod.POST, json=payload) or {}
         logging.debug(f"Transitioned issue with response {response}")
 
-    def comment_issue(self, issue):
+    def comment_issue(self, issue, text):
         issue_id = self._get_nested_property(issue, "id", -1)
         endpoint = f"issue/{issue_id}/comment"
         url = self._get_full_jira_url(endpoint)
@@ -184,7 +184,7 @@ class JiraClient:
                     {
                         "content": [
                             {
-                                "text": "Issue was marked as resolved by the Alertmanager",
+                                "text": text,
                                 "type": "text",
                             }
                         ],
@@ -239,7 +239,11 @@ class JiraClient:
         alert_resolved = status == FindingStatus.RESOLVED
         is_prometheus_alert = source == FindingSource.PROMETHEUS
 
-        if existing_issue and is_prometheus_alert:
+        if not is_prometheus_alert:
+            # It's not an alert fired from Prometheus, we simply create
+            # a Jira issue without other logic involved
+            self.create_issue(issue_data, issue_attachments)
+        elif existing_issue:
             issue_done = self._check_issue_done(existing_issue)
 
             if issue_done:
@@ -251,9 +255,12 @@ class JiraClient:
                 else:
                     self.create_issue(issue_data, issue_attachments)
             else:
-                if alert_resolved and self.sendResolved:
-                    self.transition_issue(existing_issue, self.doneStatusName)
-                    self.comment_issue(existing_issue)
+                if alert_resolved:
+                    if self.sendResolved:
+                        self.transition_issue(existing_issue, self.doneStatusName)
+                        self.comment_issue(existing_issue, "Issue was marked as resolved by the Alertmanager")
+                    else:
+                        logging.warn("Alert is resolved but 'sendResolved' is false, so we don't update Jira")
                 else:
                     self.update_issue(existing_issue, issue_data)
         else:
