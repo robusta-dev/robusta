@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from cachetools import TTLCache
 from prometrix import (
@@ -32,10 +32,6 @@ AWS_REGION = os.environ.get("AWS_REGION")
 VICTORIA_METRICS_CONFIGURED = os.environ.get("VICTORIA_METRICS_CONFIGURED", "false").lower() == "true"
 
 
-if TYPE_CHECKING:
-    from prometheus_api_client import PrometheusConnect
-
-
 def generate_prometheus_config(prometheus_params: PrometheusParams) -> PrometheusConfig:
     is_victoria_metrics = VICTORIA_METRICS_CONFIGURED
     url: Optional[str] = (
@@ -53,8 +49,10 @@ def generate_prometheus_config(prometheus_params: PrometheusParams) -> Prometheu
         "disable_ssl": not PROMETHEUS_SSL_ENABLED,
         "additional_labels": prometheus_params.prometheus_additional_labels,
         "prometheus_url_query_string": prometheus_params.prometheus_url_query_string,
-        "prometheus_auth": prometheus_params.prometheus_auth.get_secret_value(),
     }
+    if prometheus_params.prometheus_auth:
+        baseconfig["prometheus_auth"] = prometheus_params.prometheus_auth.get_secret_value()
+
     # aws config
     if AWS_ACCESS_KEY:
         return AWSPrometheusConfig(
