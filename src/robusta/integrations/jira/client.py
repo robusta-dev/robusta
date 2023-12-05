@@ -264,7 +264,7 @@ class JiraClient:
                         self.transition_issue(issue_id, self.doneStatusName)
                         self.comment_issue(issue_id, "Issue was marked as resolved by the Alertmanager")
                     else:
-                        logging.warn("Alert is resolved but 'sendResolved' is false, so we don't update Jira")
+                        logging.info("Alert is resolved but 'sendResolved' is false, so we don't update Jira")
                 else:
                     self.update_issue(issue_id, issue_data)
         else:
