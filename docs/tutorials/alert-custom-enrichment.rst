@@ -3,11 +3,9 @@ Enrich Custom Prometheus Alerts
 
 .. In the last tutorial we defined a custom Prometheus alert.
 
-We now configure a Robusta playbook to enhance a Prometheus alert.
+Robusta lets you customize and enrich your notifications. This feature is extremely useful if you want to run some scripts to gather more information or add internal/external references.
 
-Prerequisites
----------------------------------
-You must have some Prometheus alerts already defined. Ex: HostHighCpuLoad
+
 
 Custom Alert Enrichment Use Cases
 -----------------------------------------
@@ -20,7 +18,11 @@ Use Case 1: Run a Bash Script When Alert is Fired
 
 **Implementation**:
 
-Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert:
+Prerequisites:
+
+* You must have some Prometheus alerts already defined. Ex: HostHighCpuLoad
+
+Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert.
 
 Add the following YAML to the ``customPlaybooks`` Helm value:
 
@@ -40,6 +42,11 @@ Use Case 2: Add References URL's for Docs/Websites/Applications
 **Scenario**: You want to add reference links along with your alert for your internal docs to provide exact steps to fix the issue.
 
 **Implementation**:
+
+Prerequisites:
+
+* Kube-Prometheus-Stack installed with Robusta or seperately.
+* Robusta installed and configured.
 
 Creating a Custom Alert
 ============================
@@ -92,6 +99,8 @@ Create a PrometheusRule and add your alert.
 Add Reference URL's
 =======================
 
+Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert:
+
 Add the following YAML to the ``customPlaybooks`` Helm value:
 
 .. code-block:: yaml
@@ -112,8 +121,9 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
           :github: Adjust CPU requests <https://github.com/YourRepository/|in the `Prod-sre` repository>
           :notion: Internal Docs on <https://notion.com/path-to-docs/|Customizing CPU requests>
 
+.. note::
 
-**Note**: You should add `custom slack emoji's <https://slack.com/intl/en-gb/help/articles/206870177-Add-customised-emoji-and-aliases-to-your-workspace>`_ to your work space before adding emoji's to your alerts.
+   You should add `custom slack emoji's <https://slack.com/intl/en-gb/help/articles/206870177-Add-customised-emoji-and-aliases-to-your-workspace>`_ to your work space before adding emoji's to your alerts.
 
 **Sample Alert**:
 
