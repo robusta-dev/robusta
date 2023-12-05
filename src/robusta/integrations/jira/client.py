@@ -159,8 +159,7 @@ class JiraClient:
         query = {"jql": search_params}
         return self._call_jira_api(url, params=query) or []
 
-    def transition_issue(self, issue, status_name):
-        issue_id = self._get_nested_property(issue, "id", -1)
+    def transition_issue(self, issue_id, status_name):
         endpoint = f"issue/{issue_id}/transitions"
         url = self._get_full_jira_url(endpoint)
         transition_id = self._get_transition_id(issue_id, status_name)
@@ -174,8 +173,7 @@ class JiraClient:
         response = self._call_jira_api(url, http_method=HttpMethod.POST, json=payload) or {}
         logging.debug(f"Transitioned issue with response {response}")
 
-    def comment_issue(self, issue, text):
-        issue_id = self._get_nested_property(issue, "id", -1)
+    def comment_issue(self, issue_id, text):
         endpoint = f"issue/{issue_id}/comment"
         url = self._get_full_jira_url(endpoint)
         payload = {
@@ -217,8 +215,7 @@ class JiraClient:
         if issue_id and issue_attachments:
             self.add_attachment(issue_id, issue_attachments)
 
-    def update_issue(self, issue, issue_data):
-        issue_id = self._get_nested_property(issue, "id", -1)
+    def update_issue(self, issue_id, issue_data):
         summary = self._get_nested_property(issue_data, "summary", "")
         description = self._get_nested_property(issue_data, "description", "")
         endpoint = f"issue/{issue_id}"
@@ -245,24 +242,27 @@ class JiraClient:
             self.create_issue(issue_data, issue_attachments)
         elif existing_issue:
             issue_done = self._check_issue_done(existing_issue)
+            issue_id = self._get_nested_property(existing_issue, "id", -1)
 
             if issue_done:
                 if alert_resolved:
-                    logging.warn("Ignoring resolved alert that is already 'done' in Jira")
+                    logging.info(
+                        f"Ignoring resolved alert that is already 'done' in Jira for issue with id '{issue_id}'"
+                    )
                 elif self.reopenIssues:
-                    self.transition_issue(existing_issue, self.reopenStatusName)
-                    self.update_issue(existing_issue, issue_data)
+                    self.transition_issue(issue_id, self.reopenStatusName)
+                    self.update_issue(issue_id, issue_data)
                 else:
                     self.create_issue(issue_data, issue_attachments)
             else:
                 if alert_resolved:
                     if self.sendResolved:
-                        self.transition_issue(existing_issue, self.doneStatusName)
-                        self.comment_issue(existing_issue, "Issue was marked as resolved by the Alertmanager")
+                        self.transition_issue(issue_id, self.doneStatusName)
+                        self.comment_issue(issue_id, "Issue was marked as resolved by the Alertmanager")
                     else:
                         logging.warn("Alert is resolved but 'sendResolved' is false, so we don't update Jira")
                 else:
-                    self.update_issue(existing_issue, issue_data)
+                    self.update_issue(issue_id, issue_data)
         else:
             if not alert_resolved:
                 self.create_issue(issue_data, issue_attachments)
