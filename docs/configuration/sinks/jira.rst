@@ -33,6 +33,7 @@ Following optional settings only work for Prometheus alerts:
 * ``reopenIssues`` : [Optional - default: false] If true, will reopen a "Done" Jira issue when an alerts fire with the same fingerprint. If false, a new issue will be created.
 * ``doneStatusName`` : [Optional - default: 'Done'] The name of the "Done" status in Jira. Will be used to identify "Done" tasks in Jira.
 * ``reopenStatusName`` : [Optional - default: 'To Do'] The name of the "To Do" status in Jira. Will be used to identify "To Do" tasks in Jira.
+* ``noReopenResolution`` : [Optional - default: ''] The name of a target Jira resolution that, if present on a Jira issue, prevents Robusta from re-opening it. If this value is present, it makes Robusta ignore the ``reopenStatusName`` config.
 
 Configuring the Jira sink
 ------------------------------------------------

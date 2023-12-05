@@ -28,6 +28,7 @@ class JiraClient:
         self.reopenIssues = self.params.reopenIssues
         self.doneStatusName = self.params.doneStatusName
         self.reopenStatusName = self.params.reopenStatusName
+        self.noReopenResolution = self.params.noReopenResolution
         if jira_params.issue_type_id_override:
             self.default_issue_type_id = jira_params.issue_type_id_override
         else:
@@ -243,12 +244,15 @@ class JiraClient:
         elif existing_issue:
             issue_done = self._check_issue_done(existing_issue)
             issue_id = self._get_nested_property(existing_issue, "id", -1)
+            issue_resolution = self._get_nested_property(existing_issue, "fields.resolution.name", "")
 
             if issue_done:
                 if alert_resolved:
                     logging.info(
                         f"Ignoring resolved alert that is already 'done' in Jira for issue with id '{issue_id}'"
                     )
+                elif self.noReopenResolution and issue_resolution == self.noReopenResolution:
+                    logging.info(f"Jira issue '{issue_id}' has '{issue_resolution}' resolution, we won't re-open it")
                 elif self.reopenIssues:
                     self.transition_issue(issue_id, self.reopenStatusName)
                     self.update_issue(issue_id, issue_data)

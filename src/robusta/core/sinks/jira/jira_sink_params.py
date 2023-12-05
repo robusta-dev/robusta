@@ -17,6 +17,7 @@ class JiraSinkParams(SinkBaseParams):
     reopenIssues: Optional[bool]
     doneStatusName: Optional[str] = "Done"
     reopenStatusName: Optional[str] = "To Do"
+    noReopenResolution: Optional[str] = ""
 
 
 class JiraSinkConfigWrapper(SinkConfigBase):
