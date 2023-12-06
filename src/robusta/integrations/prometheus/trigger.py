@@ -1,11 +1,9 @@
 import logging
-from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, NamedTuple, Optional, Type, Union
 
 from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Job, Node, NodeList, StatefulSet
 from pydantic.main import BaseModel
 
-from robusta.core.model.env_vars import ALERT_BUILDER_WORKERS, ALERTS_WORKERS_POOL
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.playbooks.base_trigger import BaseTrigger, TriggerEvent
 from robusta.core.reporting.base import Finding
@@ -108,8 +106,6 @@ class PrometheusAlertTriggers(BaseModel):
 
 
 class AlertEventBuilder:
-    executor = ProcessPoolExecutor(max_workers=ALERT_BUILDER_WORKERS)
-
     @classmethod
     def __find_node_by_ip(cls, ip) -> Optional[Node]:
         nodes: NodeList = NodeList.listNode().obj
@@ -184,8 +180,4 @@ class AlertEventBuilder:
     def build_event(
         event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
-        if ALERTS_WORKERS_POOL:
-            future = AlertEventBuilder.executor.submit(AlertEventBuilder._build_event_task, event, sink_findings)
-            return future.result()
-        else:
-            return AlertEventBuilder._build_event_task(event, sink_findings)
+        return AlertEventBuilder._build_event_task(event, sink_findings)

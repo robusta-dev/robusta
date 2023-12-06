@@ -41,7 +41,7 @@ from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
-from robusta.patch.patch import patch_on_pod_conditions
+from robusta.patch.patch import create_monkey_patches
 from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.stack_tracer import StackTracer
 
@@ -136,7 +136,7 @@ class Discovery:
 
     @staticmethod
     def discovery_process() -> DiscoveryResults:
-        patch_on_pod_conditions()
+        create_monkey_patches()
         Discovery.stacktrace_thread_active = True
         threading.Thread(target=Discovery.stack_dump_on_signal).start()
         pods_metadata: List[V1ObjectMeta] = []
@@ -349,7 +349,7 @@ class Discovery:
                 continue_ref: Optional[str] = None
                 for _ in range(DISCOVERY_MAX_BATCHES):
                     secrets = client.CoreV1Api().list_secret_for_all_namespaces(
-                        label_selector=f"owner=helm", _continue=continue_ref
+                        label_selector="owner=helm", _continue=continue_ref
                     )
                     if not secrets.items:
                         break

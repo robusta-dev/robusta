@@ -51,7 +51,7 @@ def patch_on_pod_conditions():
     # This fixes https://github.com/kubernetes-client/python/issues/2056 before the
     # k8s people take care of it (it's urgent for us).
 
-    logging.info("Creating kubernetes PodFailurePolicyRUle.on_pod_conditions monkey patch")
+    logging.debug("Creating kubernetes PodFailurePolicyRUle.on_pod_conditions monkey patch")
 
     def patched_setter(self, on_pod_conditions):
         self._on_pod_conditions = on_pod_conditions

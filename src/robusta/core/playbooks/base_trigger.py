@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Type
 
 from pydantic import BaseModel
 
+from robusta.core.model.env_vars import EVENT_PARSING_WORKERS
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.reporting.base import Finding
 from robusta.patch.patch import create_monkey_patches
@@ -21,7 +22,7 @@ class TriggerEvent(BaseModel):
         return "NA"
 
 
-build_execution_event_process_pool = ProcessPoolExecutor(max_workers=2)
+build_execution_event_process_pool = ProcessPoolExecutor(max_workers=EVENT_PARSING_WORKERS)
 
 
 class BaseTrigger(DocumentedModel):
