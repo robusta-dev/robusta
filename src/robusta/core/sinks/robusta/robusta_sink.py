@@ -6,8 +6,9 @@ import threading
 import time
 from typing import Dict, List, Optional, Union
 
+from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
-from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Job
+
 from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
@@ -413,9 +414,11 @@ class RobustaSink(SinkBase):
     def __safe_delete_job(self, job_key):
         try:
             # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
-            self.__jobs_cache[job_key].deleted = True
-            self.dal.remove_deleted_job(self.__jobs_cache[job_key])
-            del self.__jobs_cache[job_key]
+            job_info = self.__jobs_cache.get(job_key, None)
+            if job_info:
+                job_info.deleted = True
+                self.dal.remove_deleted_job(job_info)
+                del self.__jobs_cache[job_key]
         except Exception:
             logging.error(f"Failed to delete job with service key {job_key}", exc_info=True)
 
@@ -523,7 +526,7 @@ class RobustaSink(SinkBase):
         logging.info("Cluster discovery watchdog initialized")
         while self.__active:
             if not self.is_healthy():
-                logging.warning(f"Unhealthy discovery, restarting runner")
+                logging.warning("Unhealthy discovery, restarting runner")
                 self.__signal_discovery_process_stackdump()
                 StackTracer.dump()
                 # sys.exit and thread.interrupt_main doest stop robusta
