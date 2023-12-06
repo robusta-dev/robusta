@@ -37,6 +37,12 @@ def check_response_succeed(response):
     ]
 
 
+def check_response_no_content(response):
+    return response and response.status_code in [
+        HTTPStatus.NO_CONTENT,
+    ]
+
+
 def process_request(url: str, method: HttpMethod, **kwargs) -> requests.Response:
     """
     Function to abort request if request to external

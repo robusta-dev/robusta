@@ -47,6 +47,7 @@ class TestTransformer:
                     old=None,
                     new=None,
                     name="abcd",
+                    kind="Deployment"
                 ),
                 "<p><b></b>: None ==&gt; None</p>\n",
             ),

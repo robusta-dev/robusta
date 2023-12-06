@@ -165,7 +165,6 @@ class KubernetesDiffBlock(BaseBlock):
     """
     A diff between two versions of a Kubernetes object
     """
-
     diffs: List[DiffDetail]
     old: Optional[str]
     new: Optional[str]
@@ -175,6 +174,7 @@ class KubernetesDiffBlock(BaseBlock):
     num_additions: Optional[int]
     num_deletions: Optional[int]
     num_modifications: Optional[int]
+    kind: str
 
     # note that interesting_diffs might be a subset of the full diff between old and new
     def __init__(
@@ -183,6 +183,7 @@ class KubernetesDiffBlock(BaseBlock):
         old: Optional[HikaruDocumentBase],
         new: Optional[HikaruDocumentBase],
         name: str,
+        kind: str,
         namespace: str = None,
     ):
         """
@@ -206,18 +207,39 @@ class KubernetesDiffBlock(BaseBlock):
             num_additions=num_additions,
             num_deletions=num_deletions,
             num_modifications=num_modifications,
+            kind=kind,
         )
 
     def get_description(self):
-        if self.old is None:
-            return "Resource created"
-        elif self.new is None:
-            return "Resource deleted"
+        if not self.old:
+            return f"{self.kind} created"
+        elif not self.new:
+            return f"{self.kind} deleted"
         else:
-            return (
-                f"Updates to significant fields: {self.num_additions} additions, {self.num_deletions} deletions, "
-                f"{self.num_modifications} changes."
-            )
+            return self.__updated_description()
+
+    def __updated_description(self):
+        length = 5
+        updated_fields = []
+        for diff in self.diffs:
+            if diff.path:
+                # Stripping any integer values like '0', '1', '2', etc. from the path array which denotes array
+                # indices. eg: ['spec', 'template', 'spec', 'containers', '0', 'image']
+                stripped_path = [path for path in diff.path if not path.isdigit()]
+                if stripped_path:
+                    updated_fields.append(stripped_path[-1])
+
+        updated_fields_str = ""
+        if updated_fields:
+            updated_fields_str = f"\n ● Attributes: "
+
+            updated_fields_len = len(updated_fields)
+            if updated_fields_len < length:
+                updated_fields_str += f"{', '.join(updated_fields)}"
+            else:
+                updated_fields_str += f"{', '.join(updated_fields[:length])} ... (and {updated_fields_len - length} more)"
+
+        return f"{self.kind} updated{updated_fields_str}"
 
     @staticmethod
     def _obj_to_content(obj: Optional[HikaruDocumentBase]):

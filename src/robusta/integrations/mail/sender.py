@@ -13,7 +13,7 @@ from robusta.core.reporting.blocks import (
     MarkdownBlock,
     ScanReportBlock,
 )
-from robusta.core.reporting.consts import EnrichmentAnnotation
+from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource
 from robusta.core.sinks.transformer import Transformer
 
 
@@ -65,7 +65,12 @@ class MailSender:
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
         if finding.description:
-            blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
+            if finding.source == FindingSource.PROMETHEUS:
+                blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
+            elif finding.source == FindingSource.KUBERNETES_API_SERVER:
+                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}"))
+            else:
+                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
 
         for enrichment in finding.enrichments:
             if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):

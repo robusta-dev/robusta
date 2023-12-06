@@ -24,6 +24,7 @@ class Emojis(Enum):
     Explain = "📘"
     Recommend = "🛠"
     Alert = "🚨"
+    K8Notification = "👀"
 
 
 class FindingSeverity(Enum):

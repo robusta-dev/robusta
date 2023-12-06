@@ -13,6 +13,7 @@ from robusta.core.reporting import (
     MarkdownBlock,
     TableBlock,
 )
+from robusta.core.reporting.base import FindingStatus
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.jira.jira_sink_params import JiraSinkParams
 from robusta.integrations.jira.client import JiraClient
@@ -28,6 +29,13 @@ SEVERITY_COLOR_MAP = {
     FindingSeverity.MEDIUM: "#e48301",
     FindingSeverity.LOW: "#ffdc06",
     FindingSeverity.INFO: "#05aa01",
+}
+# Jira priorities, see: https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-priorities/#api-group-issue-priorities
+SEVERITY_JIRA_ID = {
+    FindingSeverity.HIGH: "Critical",
+    FindingSeverity.MEDIUM: "Major",
+    FindingSeverity.LOW: "Minor",
+    FindingSeverity.INFO: "Minor",
 }
 
 STRONG_MARK_REGEX = r"\*{1}[\w|\s\d%!><=\-:;@#$%^&()\.\,\]\[\\\/'\"]+\*{1}"
@@ -89,6 +97,7 @@ class JiraSender:
         print(self.params.dedups)
         logging.info(self.params.dedups)
         self.client = JiraClient(self.params)
+        self.sendResolved = self.params.sendResolved
 
     def _markdown_to_jira(self, text):
         # Using priority queue to determine which markdown to eject first. Bigger text -
@@ -200,6 +209,11 @@ class JiraSender:
                     to_paragraph(f"🎬 {video_link.name}", [{"type": "link", "attrs": {"href": video_link.url}}])
                 )
 
+        # Add runbook_url to issue markdown if present
+        if finding.subject.annotations.get("runbook_url", None):
+            runbook_url = finding.subject.annotations["runbook_url"]
+            actions.append(to_paragraph("🔎 Runbook URL", [{"type": "link", "attrs": {"href": runbook_url}}]))
+
         actions = [{"type": "paragraph", "content": actions}]
         # first add finding description block
         if finding.description:
@@ -219,11 +233,20 @@ class JiraSender:
             elif attr == "cluster_name":
                 labels.append(self.cluster_name)
 
-        self.client.create_issue(
+        status: FindingStatus = (
+            FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
+        )
+
+        # Default priority is "Major" if not a standard severity is given
+        severity = SEVERITY_JIRA_ID.get(finding.severity, "Major")
+
+        self.client.manage_issue(
             {
                 "description": {"type": "doc", "version": 1, "content": actions + output_blocks},
                 "summary": finding.title,
                 "labels": labels,
+                "priority": {"name": severity},
             },
+            {"status": status, "source": finding.source},
             file_blocks,
         )
