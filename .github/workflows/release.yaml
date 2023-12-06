@@ -90,7 +90,7 @@ jobs:
         curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
         poetry config virtualenvs.create false
         poetry install --extras "all"
-        poetry publish --build -u ${{ secrets.PYPI_ACCOUNT_TOKEN }} -p ${{ secrets.PYPI_PROJECT_TOKEN }}
+        poetry publish --build -u __token__ -p ${{ secrets.PYPI_PROJECT_TOKEN }}
 
     - name: Save artifact with helm chart
       uses: actions/upload-artifact@v2
