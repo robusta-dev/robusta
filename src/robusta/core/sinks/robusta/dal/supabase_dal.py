@@ -47,6 +47,10 @@ class SupabaseDal:
         cluster_name: str,
         signing_key: str,
     ):
+        httpx_logger = logging.getLogger("httpx")
+        if httpx_logger:
+            httpx_logger.setLevel(logging.WARNING)
+
         self.url = url
         self.key = key
         self.account_id = account_id
