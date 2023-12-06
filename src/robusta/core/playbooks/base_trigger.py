@@ -21,7 +21,7 @@ class TriggerEvent(BaseModel):
         return "NA"
 
 
-build_execution_event_process_pool = ProcessPoolExecutor(max_workers=1)
+build_execution_event_process_pool = ProcessPoolExecutor(max_workers=2)
 
 
 class BaseTrigger(DocumentedModel):
