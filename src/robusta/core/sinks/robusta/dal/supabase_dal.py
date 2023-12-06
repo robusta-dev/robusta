@@ -477,7 +477,7 @@ class SupabaseDal:
             logging.error(f"Failed to publish node count {data} error: {e}")
             self.handle_supabase_error()
 
-        logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
+        logging.debug(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
 
     def persist_events_block(self, block: EventsBlock):
         db_events = []

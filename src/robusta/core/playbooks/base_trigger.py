@@ -1,10 +1,13 @@
 import abc
+from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, Optional, Type
 
 from pydantic import BaseModel
 
+from robusta.core.model.env_vars import EVENT_PARSING_WORKERS
 from robusta.core.model.events import ExecutionBaseEvent
 from robusta.core.reporting.base import Finding
+from robusta.patch.patch import create_monkey_patches
 from robusta.utils.documented_pydantic import DocumentedModel
 
 
@@ -19,6 +22,9 @@ class TriggerEvent(BaseModel):
         return "NA"
 
 
+build_execution_event_process_pool = ProcessPoolExecutor(max_workers=EVENT_PARSING_WORKERS)
+
+
 class BaseTrigger(DocumentedModel):
     def get_trigger_event(self) -> str:
         pass
@@ -29,7 +35,19 @@ class BaseTrigger(DocumentedModel):
     def build_execution_event(
         self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
-        pass
+        return build_execution_event_process_pool.submit(
+            self._build_execution_event_trampoline, event, sink_findings
+        ).result()
+
+    def _build_execution_event_trampoline(self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]):
+        create_monkey_patches()
+        return self._build_execution_event(event, sink_findings)
+
+    def _build_execution_event(
+        self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
+    ) -> Optional[ExecutionBaseEvent]:
+        # This is meant for running in a separate process
+        raise NotImplementedError
 
     @staticmethod
     def get_execution_event_type() -> Type[ExecutionBaseEvent]:

@@ -21,8 +21,13 @@ except ImportError:  # pragma: no cover
 
 NoneType = type(None)
 
+monkey_patches_applied = False
+
 
 def create_monkey_patches():
+    global monkey_patches_applied
+    if monkey_patches_applied:
+        return
     # The 2 patched Hikaru methods are very expensive CPU wise. We patched them, and using cached attributes
     # on the hikaru class, so that we perform the expensive procedure only once
     logging.info("Creating hikaru monkey patches")
@@ -39,13 +44,14 @@ def create_monkey_patches():
     logging.info("Creating kubernetes ContainerImage monkey patch")
     EventsV1Event.event_time = EventsV1Event.event_time.setter(event_time)
     patch_on_pod_conditions()
+    monkey_patches_applied = True
 
 
 def patch_on_pod_conditions():
     # This fixes https://github.com/kubernetes-client/python/issues/2056 before the
     # k8s people take care of it (it's urgent for us).
 
-    logging.info("Creating kubernetes PodFailurePolicyRUle.on_pod_conditions monkey patch")
+    logging.debug("Creating kubernetes PodFailurePolicyRUle.on_pod_conditions monkey patch")
 
     def patched_setter(self, on_pod_conditions):
         self._on_pod_conditions = on_pod_conditions
