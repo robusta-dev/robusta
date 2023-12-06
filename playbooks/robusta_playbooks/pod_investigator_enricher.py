@@ -1,7 +1,7 @@
 import datetime
 import logging
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from hikaru.model.rel_1_26 import Pod, PodList
 from robusta.api import (
@@ -18,6 +18,7 @@ from robusta.api import (
     get_pending_pod_blocks,
     parse_kubernetes_datetime_to_ms,
 )
+from robusta.core.playbooks.pod_utils.imagepull_utils import get_pod_issue_message_and_reason
 
 
 class PodIssue(str, Enum):
@@ -59,8 +60,10 @@ def pod_issue_investigator(event: KubernetesResourceEvent):
         logging.info(f"No pod issues discovered for {resource.kind} {resource.metadata.name}")
         return
     # Investigate first issue found
-    pod_issue = detect_pod_issue(pods_with_issues[0])
-    report_pod_issue(event, pods_with_issues, pod_issue)
+    first_pod = pods_with_issues[0]
+    pod_issue = detect_pod_issue(first_pod)
+    message, reason = get_pod_issue_message_and_reason(first_pod)
+    report_pod_issue(event, pods_with_issues, pod_issue, message, reason)
 
 
 def detect_pod_issue(pod: Pod) -> PodIssue:
@@ -124,7 +127,9 @@ def has_image_pull_issue(pod: Pod) -> bool:
     return len(image_pull_statuses) > 0
 
 
-def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue):
+def report_pod_issue(
+    event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue, message: Optional[str], reason: Optional[str]
+):
     # find pods with issues
     pods_with_issue = [pod for pod in pods if detect_pod_issue(pod) == issue]
     pod_names = [pod.metadata.name for pod in pods_with_issue]
@@ -144,6 +149,9 @@ def report_pod_issue(event: KubernetesResourceEvent, pods: List[Pod], issue: Pod
         blocks.append(MarkdownBlock(f"\n\n*{pod_names[0]}* was picked for investigation\n"))
         blocks.extend(additional_blocks)
         event.add_enrichment(blocks)
+
+    if reason:
+        event.extend_description(f"{reason}: {message}")
 
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:

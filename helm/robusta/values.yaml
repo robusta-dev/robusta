@@ -74,6 +74,8 @@ lightActions:
 - cordon
 - uncordon
 - rollout_restart
+- prometheus_all_available_metrics
+- prometheus_get_series
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
@@ -157,8 +159,8 @@ builtinPlaybooks:
   - on_pod_oom_killed:
       rate_limit: 3600
   actions:
-  - pod_oom_killer_enricher: {}
-  - logs_enricher: {}
+  - pod_oom_killer_enricher:
+      attach_logs: true
   - pod_node_graph_enricher:
       resource_type: Memory
   - oomkilled_container_graph_enricher:
@@ -479,6 +481,14 @@ kubewatch:
       event: true  # updated on kubewatch 2.5
       coreevent: false # added on kubewatch 2.5
       ingress: true # full support on kubewatch 2.4 (earlier versions have ingress bugs)
+  securityContext:
+    container:
+      allowPrivilegeEscalation: false
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+      runAsUser: 1000
+    pod: {}
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -492,6 +502,9 @@ grafanaRenderer:
       memory: 512Mi
     limits:
       cpu: ~
+  securityContext:
+    container:
+      privileged: false
 
 # parameters for the robusta runner service account
 runnerServiceAccount:
@@ -522,6 +535,15 @@ runner:
   imagePullSecrets: []
   extraVolumes: []
   extraVolumeMounts: []
+  serviceMonitor:
+    path: /metrics
+  securityContext:
+    container:
+      allowPrivilegeEscalation: false
+      capabilities: {}
+      privileged: false
+      readOnlyRootFilesystem: false
+    pod: {}
 
 kube-prometheus-stack:
   alertmanager:
@@ -549,6 +571,9 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
+          memory: 128Mi
+        limits:
+          memory: 128Mi
       storage:
         volumeClaimTemplate:
           spec:
@@ -563,6 +588,9 @@ kube-prometheus-stack:
       resources:
         requests:
           cpu: 50m
+          memory: 2Gi
+        limits:
+          memory: 2Gi
       retention: 15d
       # we set a value slightly lower than the 100Gi below
       # the retentionSize uses the suffix GB but it is really Gi units
@@ -583,6 +611,9 @@ kube-prometheus-stack:
     resources:
       requests:
         cpu: 50m
+        memory: 50Mi
+      limits:
+        memory: 50Mi
     # disable node-exporter on fargate because fargate doesn't allow daemonsets
     affinity:
       nodeAffinity:
@@ -605,6 +636,9 @@ kube-prometheus-stack:
     resources:
       requests:
         cpu: 10m
+        memory: 256Mi
+      limits:
+        memory: 256Mi
 
 rsa: ~
   # @param existingSecret Name of existing secret containing the rsa keys

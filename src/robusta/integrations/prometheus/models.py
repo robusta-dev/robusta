@@ -113,7 +113,7 @@ class PrometheusKubernetesAlert(
             parsed_url = urlparse(url)
             query_params = parse_qs(parsed_url.query)
 
-            q_expr = query_params.get('g0.expr', [])
+            q_expr = query_params.get("g0.expr", [])
             if len(q_expr) < 1 or not q_expr[0]:
                 return ""
 

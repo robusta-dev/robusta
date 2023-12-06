@@ -14,7 +14,3 @@ class NoAlertManagerUrlFound(Exception):
     """Exception, when AlertManager url is incorrect"""
 
     pass
-
-
-class PrometheusFlagsConnectionError(Exception):
-    """Exception, when Prometheus flag or AlertManager flag api cannot be reached"""

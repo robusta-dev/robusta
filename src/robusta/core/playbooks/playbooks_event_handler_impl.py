@@ -307,10 +307,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         # Each sink has a different findings, but enrichments are shared
                         finding_copy = copy.deepcopy(finding)
                         sink.write_finding(finding_copy, self.registry.get_sinks().platform_enabled)
-
-                        sink_info = sinks_info[sink_name]
-                        sink_info.type = sink.__class__.__name__
-                        sink_info.findings_count += 1
+                        if sink.params.stop:
+                            return
 
                 except Exception:  # Failure to send to one sink shouldn't fail all
                     logging.error(f"Failed to publish finding to sink {sink_name}", exc_info=True)

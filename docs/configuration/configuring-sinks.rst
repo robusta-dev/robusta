@@ -17,6 +17,7 @@ Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value:
     - ms_teams_sink:                  # sink type
         name: my_teams_sink           # arbitrary name
         webhook_url: <placeholder>    # a sink-specific parameter
+        stop: false                   # optional (see `Routing Alerts to only one Sink`)
         match: {}                     # optional routing rules (see below)
         default: true                 # optional (see below)
 
@@ -25,6 +26,28 @@ To add a sink, update ``sinksConfig`` according to the instructions in :ref:`Sin
 Configure as many sinks as you like.
 
 .. _sink-matchers:
+
+
+Routing Alerts to only one Sink
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, alerts are sent to all sinks that matches the alerts.
+
+To prevent sending alerts to more sinks after the current one, you can specify ``stop: true``
+
+The sinks evaluation order, is the order defined in ``generated_values.yaml``.
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: production_sink
+        slack_channel: production-notifications
+        api_key: secret-key
+        match:
+          namespace: production
+        stop: true
+
 
 Routing Alerts to Specific Sinks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -43,28 +66,9 @@ For example, Slack can be configured to receive high-severity messages in a spec
         match:
           namespace: [prod]
           severity: [HIGH]
+          # more options available - see below
 
-The above example defines match conditions by both ``namespace`` and ``severity``. When multiple conditions are present, all must be satisfied.
-
-By default, every message is sent to every matching sink. To change this behaviour, you can mark a sink as :ref:`non-default <Non-default sinks>`.
-
-Matches Can Be Lists Or Regexes
-********************************************
-
-Every *match* rule supports both regular expressions and a list of exact values:
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
-        api_key: secret-key
-        # AND between namespace and severity and labels
-        match:
-          namespace: ^prod$ # match the "prod" namespace exactly
-          severity: [HIGH, LOW] # either HIGH or LOW (or logic)
-          labels: "foo=bar,instance=123"
+When multiple match conditions are present, all must be satisfied.
 
 The following attributes can be included in a *match* block:
 
@@ -97,7 +101,27 @@ The following attributes can be included in a *match* block:
 
     Ask us in Slack if you need help.
 
-The regular expressions must be in the `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_, as passed to `re.match <https://docs.python.org/3/library/re.html#re.match>`_.
+By default, every message is sent to every matching sink. To change this behaviour, you can mark a sink as :ref:`non-default <Non-default sinks>`.
+
+Matches Can Be Lists Or Regexes
+********************************************
+
+Every *match* rule supports both regular expressions and a list of exact values:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: prod_slack_sink
+        slack_channel: prod-notifications
+        api_key: secret-key
+        # AND between namespace and severity and labels
+        match:
+          namespace: ^prod$ # match the "prod" namespace exactly
+          severity: [HIGH, LOW] # either HIGH or LOW (or logic)
+          labels: "foo=bar,instance=123"
+
+Regular expressions must be in `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_, as passed to `re.match <https://docs.python.org/3/library/re.html#re.match>`_.
 
 
 Or Between Matches
