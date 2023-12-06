@@ -249,13 +249,23 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
     Attach a graph of an arbitrary Prometheus query, specified as a parameter.
     """
     chart_values_format = ChartValuesFormat[params.chart_values_format] if params.chart_values_format else None
+
+    graph_title = None
+    if params.graph_title:
+        labels: Dict[str, Any] = defaultdict(lambda: "<missing>")
+        labels.update(alert.alert.labels)
+        labels.update(vars(alert.get_alert_subject()))
+
+        template = Template(params.graph_title)
+        graph_title = template.safe_substitute(labels)
+
     graph_enrichment = create_graph_enrichment(
         alert.alert.startsAt,
         alert.alert.labels,
         params.promql_query,
         prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
-        graph_title=params.graph_title,
+        graph_title=graph_title,
         chart_values_format=chart_values_format,
     )
     alert.add_enrichment([graph_enrichment])

@@ -434,7 +434,7 @@ def demo_alert(
         alertmanager_url = AlertManagerDiscovery.find_alert_manager_url()
         if not alertmanager_url:
             typer.secho(
-                "Alertmanager service could not be auto-discovered. " "Please use the --alertmanager_url parameter",
+                "Alertmanager service could not be auto-discovered. " "Please use the --alertmanager-url parameter",
                 fg="red",
             )
             return
