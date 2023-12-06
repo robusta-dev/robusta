@@ -105,7 +105,6 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
                     "endsAt": datetime.now(),
                     "startsAt": datetime.now(),
                     "generatorURL": prometheus_event_data.generator_url,
-                    "runbookURL": prometheus_event_data.runbook_url,
                     "fingerprint": prometheus_event_data.fingerprint,
                     "labels": labels,
                     "annotations": annotations,
