@@ -222,8 +222,14 @@ class KubernetesDiffBlock(BaseBlock):
         length = 5
         updated_fields = []
         for diff in self.diffs:
-            last_path = diff.path[-2] if len(diff.path) > 1 else diff.path[-1]
-            updated_fields.append(last_path)
+            if diff.path:
+                # Stripping any integer values like '0', '1', '2', etc. from the path array which denotes array
+                # indices. eg: ['spec', 'template', 'spec', 'containers', '0', 'image']
+                stripped_path = [path for path in diff.path if not path.isdigit()]
+                if stripped_path:
+                    # Use second-to-last element if available, otherwise the last element
+                    last_path = stripped_path[-2] if len(stripped_path) > 1 else stripped_path[-1]
+                    updated_fields.append(last_path)
 
         updated_fields_str = ""
         if updated_fields:
