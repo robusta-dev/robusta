@@ -3,7 +3,7 @@
 # if a Literal, it still must have a default value
 # TODO: filter out BaseExecutionEvent actions that don't make sense like `add_silence`
 # TODO: perhaps mark certain actions as recommended
-
+import textwrap
 from collections import OrderedDict
 from typing import List, Set, Optional, Literal
 from enum import Enum, StrEnum
@@ -318,6 +318,18 @@ def display_playbook_builder():
         )
 
         st.code(yaml.dump(playbook))
+
+        if ss["trigger_name"] == "on_prometheus_alert":
+            with st.expander("Test this playbook"):
+                st.markdown(textwrap.dedent("""\
+                    You can simulate a Prometheus alert by running:
+                    
+                    ```
+                    poetry run robusta demo-alert --alert=Test123
+                    ```
+                    
+                    If running multiple times in a row, change something each time so AlertManager doesn't supress retransmissions.
+                    """))
 
 
 if __name__ == "__main__":
