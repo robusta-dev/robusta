@@ -68,7 +68,7 @@ def display_demo_playbook():
         st.markdown(
             "*Trigger:* on_prometheus_alert\n\n*Action:* alert_handling_job"
         )
-        st.image("./docs/images/helm-release-failed.png")
+        st.image("./docs/images/alert-handling-job.png")
         st.button(
             "Use Playbook",
             key="but_prometheus_remediation",
