@@ -48,16 +48,32 @@ def go_to_demo_playbooks():
 
 
 def display_demo_playbook():
-    st.button(":point_right: Create a custom Playbooks ", key="playbook_builder_btn", on_click=go_to_playbook_builder)
-    st.title("Demo Playbooks", anchor=None)
+    st.header("Start from Scratch")
+    st.button(":point_right: Create a custom playbook", key="playbook_builder_btn", on_click=go_to_playbook_builder)
+    st.header("Start from Template", anchor=None)
 
     if "trigger_name" not in ss:
         ss["trigger_name"] = "on_helm_release_fail"
 
+    st.subheader("Take action...")
+    alert_remediation_expander = st.expander(":zap: Run a K8s Job in response to a Prometheus alert", expanded=False)
+
+    st.subheader("Get notified...")
     release_fail_expander = st.expander(":zap: Get notified when a Helm release fails", expanded=False)
     deployment_change_expander = st.expander(":zap: Get notified when a deployment changes", expanded=False)
     ingress_change_expander = st.expander(":zap: Get notified when an ingress changes", expanded=False)
     hpa_max_expander = st.expander(":zap: Get notified when a HPA reaches max replicas", expanded=False)
+
+    with alert_remediation_expander:
+        st.markdown(
+            "*Trigger:* on_prometheus_alert\n\n*Action:* alert_handling_job"
+        )
+        st.image("./docs/images/helm-release-failed.png")
+        st.button(
+            "Use Playbook",
+            key="but_prometheus_remediation",
+            on_click=lambda: update_changes("on_prometheus_alert", "alert_handling_job"),
+        )
 
     with release_fail_expander:
         st.markdown(
@@ -194,6 +210,11 @@ def display_triggers():
         return
 
     trigger_model = triggers[ss["trigger_name"]]
+    # we don't actually have docs on the triggers today, so no point in outputing docs
+    #if trigger_model.__doc__:
+    #    with st.expander(f"Docs for {trigger_model}"):
+    #        st.markdown(trigger_model.__doc__)
+
     ss["trigger_data"] = modified_pydantic_form(
         key=f"trigger_form-{ss['trigger_name']}",
         model=trigger_model,
@@ -226,7 +247,11 @@ def display_actions():
         return
 
     action_obj = actions_by_name[ss["action_name"]]
-    if not action_obj or not hasattr(action_obj, "params_type") or not hasattr(action_obj.params_type, "schema"):
+    if action_obj.func.__doc__:
+        with st.expander(f"Docs for {ss['action_name']}"):
+            st.markdown(action_obj.func.__doc__)
+
+    if not hasattr(action_obj, "params_type") or not hasattr(action_obj.params_type, "schema"):
         st.markdown("This action doesn't have any parameters")
         ss["action_data"] = None
         ss["action_ready"] = True
