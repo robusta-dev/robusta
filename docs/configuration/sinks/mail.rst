@@ -15,6 +15,9 @@ notifications. You can configure the "mailto" field described below using
 the convenient and sophisticated syntax provided by Apprise. For more details
 `see here <https://github.com/caronc/apprise/wiki/Notify_email>`_.
 
+.. image:: /images/mail_sink1.png
+  :width: 640
+
 Configuring the mail sink
 ------------------------------------------------
 
