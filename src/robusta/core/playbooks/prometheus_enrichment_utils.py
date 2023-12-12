@@ -263,6 +263,7 @@ def create_chart_from_prometheus_query(
     if min_time == HIGHEST_END:  # no data on time series
         min_time = starts_at
         max_time = ends_at
+        logging.info(f"[graph_enrichment] -- min_time == HIGHEST_END, So setting min_time and max_time")
 
     for line in lines:
         if isinstance(line, XAxisLine) and line.value > max_y_value:
