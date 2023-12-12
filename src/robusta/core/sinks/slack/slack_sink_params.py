@@ -43,7 +43,6 @@ class SlackSinkParams(SinkBaseParams):
         return {cls.normalize_key_string(k):v for k, v in metadata.items()}
 
     def get_slack_channel(self, cluster_name: str, labels: Dict, annotations: Dict) -> str:
-        logging.info(f"[get_slack_channel] - channel_override: {self.channel_override}\n\ncluster_name: {cluster_name}\n\nlabels: {labels}\n\nAnnotations: {annotations}\n\n")
         if self.channel_override:
             channel = self.channel_override
             # Labels
@@ -58,7 +57,6 @@ class SlackSinkParams(SinkBaseParams):
             annots.update(annotations)
             normalized_annots = self.normalize_dict_keys(annots)
             channel = Template(channel).safe_substitute(normalized_annots)
-            logging.info(f"Final channel: {channel}")
             if MISSING not in channel:
                 return channel
 
