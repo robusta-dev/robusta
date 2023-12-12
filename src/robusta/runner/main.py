@@ -1,3 +1,4 @@
+import os
 import signal
 
 from robusta.core.model.env_vars import (
@@ -19,6 +20,14 @@ from robusta.utils.server_start import ServerStart
 
 
 def main():
+    if os.fork():
+        # parent process, pid 1
+        os.wait()
+        return
+    else:
+        # child process; create a process group to conveniently terminate the process
+        # along with subprocesses if need be
+        os.setpgrp()
     init_logging()
     ServerStart.set()
     if add_custom_certificate(ADDITIONAL_CERTIFICATE):

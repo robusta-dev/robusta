@@ -54,16 +54,4 @@ class SinkFactory:
         SinkClass = cls.__sink_config_mapping.get(type(sink_config))
         if SinkClass is None:
             raise Exception(f"Sink not supported {type(sink_config)}")
-        try:
-            return SinkClass(sink_config, registry)
-        except Exception:
-            # In case a sink cannot be initialized (perhaps due to an ephemeral
-            # problem like transient network error), terminate the runner process
-            # as fast as possible. k8s should take care of restarting the relevant
-            # pod then and hopefully make the runner functional.
-            import os
-
-            logging.exception(
-                f"[{os.getpid()}] Could not initialize sink {type(sink_config)}, shutting down the runner"
-            )
-            sys.exit(1)
+        return SinkClass(sink_config, registry)
