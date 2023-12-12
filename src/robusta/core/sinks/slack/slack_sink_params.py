@@ -1,7 +1,7 @@
 from collections import defaultdict
 from string import Template
 from typing import Dict, Optional
-
+import logging
 import regex
 from pydantic import validator
 
@@ -35,16 +35,30 @@ class SlackSinkParams(SinkBaseParams):
                 )
                 raise ValueError(err_msg)
         return v
+    
+    def normalize_key_string(cls, s: str) -> str:
+        return s.replace('.', '').replace('/', '')
+    
+    def normalize_dict_keys(cls, metadata: Dict) -> Dict:
+        return {cls.normalize_key_string(k):v for k, v in metadata.items()}
 
     def get_slack_channel(self, cluster_name: str, labels: Dict, annotations: Dict) -> str:
+        logging.info(f"[get_slack_channel] - channel_override: {self.channel_override}\n\ncluster_name: {cluster_name}\n\nlabels: {labels}\n\nAnnotations: {annotations}\n\n")
         if self.channel_override:
+            channel = self.channel_override
+            # Labels
+            channel = channel.replace(LABELS_PREF, "")
             labels.update({CLUSTER_PREF: cluster_name})
-            channel = self.channel_override.replace(LABELS_PREF, "")
-            channel = Template(channel).safe_substitute(labels)
+            channel = self.normalize_key_string(channel)
+            normalized_labels = self.normalize_dict_keys(labels)
+            channel = Template(channel).safe_substitute(normalized_labels)
+            # Annotations 
             channel = channel.replace(ANNOTATIONS_PREF, "")
             annots = defaultdict(lambda: MISSING)
             annots.update(annotations)
-            channel = Template(channel).safe_substitute(annots)
+            normalized_annots = self.normalize_dict_keys(annots)
+            channel = Template(channel).safe_substitute(normalized_annots)
+            logging.info(f"Final channel: {channel}")
             if MISSING not in channel:
                 return channel
 
