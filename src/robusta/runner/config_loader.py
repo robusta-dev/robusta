@@ -54,7 +54,6 @@ class ConfigLoader:
         registry: Registry,
         event_handler: PlaybooksEventHandler,
     ):
-        logging.warning("ConfigLoader.__init__")
         self.config_file_path = PLAYBOOKS_CONFIG_FILE_PATH
         self.registry = registry
         self.event_handler = event_handler
@@ -231,8 +230,6 @@ class ConfigLoader:
                     exc_info=True,
                 )
                 # Die and hope that the k8s-initiated restart will bring things back to normal.
-                # die()
-                logging.error(f"XXXXX {os.getpgid(0)}")
                 os.killpg(os.getpgid(0), signal.SIGTERM)
 
     @classmethod

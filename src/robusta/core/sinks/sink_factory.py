@@ -1,5 +1,3 @@
-import logging
-import sys
 from typing import Dict, Type
 
 from robusta.core.sinks.datadog import DataDogSink, DataDogSinkConfigWrapper

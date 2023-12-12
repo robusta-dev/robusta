@@ -315,7 +315,7 @@ class RobustaSink(SinkBase):
             # we had an error during discovery. Reset caches to align the data with the storage
             self.__reset_caches()
             logging.error(
-                f"[{os.getpid()}] Failed to run publish discovery for {self.sink_name}",
+                f"Failed to run publish discovery for {self.sink_name}",
                 exc_info=True,
             )
 
