@@ -4,7 +4,8 @@ from typing import List
 
 import apprise
 from apprise import NotifyFormat, NotifyType
-from apprise.attachment import AttachFile
+from apprise.attachment.AttachFile import AttachFile
+from apprise.AppriseAttachment import AppriseAttachment
 
 from robusta.core.reporting.base import BaseBlock, Emojis, Finding, FindingStatus
 from robusta.core.reporting.blocks import (
@@ -12,7 +13,6 @@ from robusta.core.reporting.blocks import (
     LinksBlock,
     LinkProp,
     MarkdownBlock,
-    ScanReportBlock,
 )
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource
 from robusta.core.sinks.transformer import Transformer
@@ -69,7 +69,9 @@ class MailSender:
             if finding.source == FindingSource.PROMETHEUS:
                 blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
             elif finding.source == FindingSource.KUBERNETES_API_SERVER:
-                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}"))
+                blocks.append(
+                    MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}")
+                )
             else:
                 blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
 
@@ -82,7 +84,7 @@ class MailSender:
         html_body = self.__build_html(transformer.to_html(blocks).strip())
 
         ap_obj = apprise.Apprise()
-        attachments = apprise.AppriseAttachment()
+        attachments = AppriseAttachment()
         attachment_files = []
         try:
             for file_block in transformer.file_blocks:
