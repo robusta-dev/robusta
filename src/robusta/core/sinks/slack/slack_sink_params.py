@@ -1,7 +1,6 @@
 from collections import defaultdict
 from string import Template
 from typing import Dict, Optional
-import logging
 import regex
 from pydantic import validator
 
