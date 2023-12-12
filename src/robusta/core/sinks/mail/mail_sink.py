@@ -6,6 +6,10 @@ from robusta.integrations.mail.sender import MailSender
 
 class MailSink(SinkBase):
     def __init__(self, sink_config: MailSinkConfigWrapper, registry):
+        import random
+
+        if random.random() < 0.75:
+            raise Exception("a random error")
         super().__init__(sink_config.mail_sink, registry)
         self.sender = MailSender(
             sink_config.mail_sink.mailto,

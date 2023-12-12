@@ -61,5 +61,9 @@ class SinkFactory:
             # problem like transient network error), terminate the runner process
             # as fast as possible. k8s should take care of restarting the relevant
             # pod then and hopefully make the runner functional.
-            logging.exception(f"Could not initialize sink {type(sink_config)}, shutting down the runner")
+            import os
+
+            logging.exception(
+                f"[{os.getpid()}] Could not initialize sink {type(sink_config)}, shutting down the runner"
+            )
             sys.exit(1)

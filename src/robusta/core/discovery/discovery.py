@@ -409,7 +409,7 @@ class Discovery:
         except Exception as e:
             # We've seen this and believe the process is killed due to oom kill
             # The process pool becomes not usable, so re-creating it
-            logging.error("Discovery process internal error")
+            logging.error(f"[{os.getpid()}] Discovery process internal error")
             Discovery.executor.shutdown()
             Discovery.executor = ProcessPoolExecutor(max_workers=1)
             logging.info("Initialized new discovery pool")
