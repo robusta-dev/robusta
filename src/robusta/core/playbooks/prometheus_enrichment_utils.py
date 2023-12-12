@@ -261,8 +261,8 @@ def create_chart_from_prometheus_query(
         plot_data_list.append(plot_data)
 
     if min_time == HIGHEST_END:  # no data on time series
-        min_time = starts_at
-        max_time = ends_at
+        min_time = starts_at.timestamp()
+        max_time = ends_at.timestamp()
         logging.info(f"[graph_enrichment] -- min_time == HIGHEST_END, So setting min_time and max_time")
 
     for line in lines:
