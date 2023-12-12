@@ -1,7 +1,7 @@
 import logging
 import math
 from collections import defaultdict, namedtuple
-from datetime import  timedelta
+from datetime import datetime, timedelta
 from string import Template
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -19,7 +19,8 @@ from robusta.core.model.base_params import (
 )
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 from robusta.core.reporting.blocks import FileBlock
-from robusta.core.reporting.custom_rendering import charts_style, PlotCustomCSS
+from robusta.core.reporting.custom_rendering import PlotCustomCSS, charts_style
+from robusta.integrations.prometheus.utils import get_prometheus_connect
 
 ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
 ChartLabelFactory = Callable[[int], str]
@@ -37,13 +38,15 @@ class YAxisLine(BaseModel):
 
 
 class PlotData:
-    def __init__(self, plot: Tuple[str, List[Tuple]],
-                 color: str,
-                 stroke_style: Optional[Dict[str, Any]] = None,
-                 stroke: Optional[bool] = True,
-                 show_dots: bool = True,
-                 dots_size: Optional[int] = None,
-                 ):
+    def __init__(
+        self,
+        plot: Tuple[str, List[Tuple]],
+        color: str,
+        stroke_style: Optional[Dict[str, Any]] = None,
+        stroke: Optional[bool] = True,
+        show_dots: bool = True,
+        dots_size: Optional[int] = None,
+    ):
         self.plot = plot
         self.color = color
         self.stroke_style = stroke_style
@@ -58,12 +61,6 @@ def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_templat
     template = Template(promql_query_template)
     promql_query = template.safe_substitute(labels)
     return promql_query
-
-
-from datetime import datetime
-from typing import Any, Dict, Optional
-
-from robusta.integrations.prometheus.utils import get_prometheus_connect
 
 
 def custom_query_range(
@@ -196,7 +193,6 @@ def create_chart_from_prometheus_query(
         graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
         starts_at = ends_at - graph_duration
 
-
         logging.info(f"[graph_enrichment] -- alert_starts_at -- ends_at : {ends_at}")
         logging.info(f"[graph_enrichment] -- alert_starts_at -- alert_duration : {alert_duration}")
         logging.info(f"[graph_enrichment] -- alert_starts_at -- graph_duration : {graph_duration}")
@@ -213,8 +209,11 @@ def create_chart_from_prometheus_query(
 
     # fix a pygal bug which causes infinite loops due to rounding errors with floating points
     # TODO: change min_time time before  Jan 19 3001
-    min_time = ends_at.timestamp()
-    max_time = starts_at.timestamp()
+    HIGHEST_END = 32536799999
+    LOWEST_START = 0
+
+    min_time = HIGHEST_END
+    max_time = LOWEST_START
 
     logging.info(f"[graph_enrichment]-- (1) min_time : {min_time}")
     logging.info(f"[graph_enrichment]-- (1) max_time : {max_time}")
@@ -238,7 +237,7 @@ def create_chart_from_prometheus_query(
         # If the label is empty, try to take it from the additional_label_factory
         if label == "" and chart_label_factory is not None:
             label = chart_label_factory(i)
-            logging.info(f"[graph_enrichment]-- (label == \"\" and chart_label_factory is not None) label : {label}")
+            logging.info(f'[graph_enrichment]-- (label == "" and chart_label_factory is not None) label : {label}')
 
         values = []
         for index in range(len(series.values)):
@@ -253,10 +252,17 @@ def create_chart_from_prometheus_query(
         logging.info(f"[graph_enrichment]-- (2) min_time : {min_time}")
         logging.info(f"[graph_enrichment]-- (2) max_time : {max_time}")
 
-        plot_data = PlotData(plot=(label, values), color="#3F3F3F", show_dots=False,
-                             stroke_style={'width': 8, 'dasharray': '8', 'linecap': 'round',
-                                           'linejoin': 'round'},)
+        plot_data = PlotData(
+            plot=(label, values),
+            color="#3F3F3F",
+            show_dots=False,
+            stroke_style={"width": 8, "dasharray": "8", "linecap": "round", "linejoin": "round"},
+        )
         plot_data_list.append(plot_data)
+
+    if min_time == HIGHEST_END:  # no data on time series
+        min_time = starts_at
+        max_time = ends_at
 
     for line in lines:
         if isinstance(line, XAxisLine) and line.value > max_y_value:
@@ -276,15 +282,16 @@ def create_chart_from_prometheus_query(
             plot_data = PlotData(plot=(line.label, value), color="#0DC291")
             logging.info(f"[graph_enrichment]-- Request : {value}")
 
-
         elif line.label == "OOM Kill Time":
             value = [(line.value, max_y_value), (line.value, 0)]
             logging.info(f"[graph_enrichment]-- OOM Kill Time : {value}")
 
-
-            plot_data = PlotData(plot=(line.label, value), color="#FF5959", show_dots=False,
-                                 stroke_style={'width': 6, 'dasharray': '3, 6', 'linecap': 'round',
-                                               'linejoin': 'round'})
+            plot_data = PlotData(
+                plot=(line.label, value),
+                color="#FF5959",
+                show_dots=False,
+                stroke_style={"width": 6, "dasharray": "3, 6", "linecap": "round", "linejoin": "round"},
+            )
 
         else:
             plot_data = PlotData(plot=(line.label, value), color="#2a0065")
@@ -296,7 +303,7 @@ def create_chart_from_prometheus_query(
     graph_plot_color_list.extend(["#1e0047", "#2a0065"])
     config = pygal.Config()
     custom_css = PlotCustomCSS().get_css_file_path()
-    config.css.append(f'file://{custom_css}')
+    config.css.append(f"file://{custom_css}")
     chart = pygal.XY(
         config,
         show_dots=True,
@@ -309,11 +316,10 @@ def create_chart_from_prometheus_query(
 
     y_axis_division = 5
     # Calculate the maximum Y value with an added 20% padding
-    max_y_value_with_padding = max_y_value + (max_y_value*0.20)
+    max_y_value_with_padding = max_y_value + (max_y_value * 0.20)
 
     # Calculate the interval between each Y-axis label
     interval = max_y_value_with_padding / (y_axis_division - 1)
-
 
     logging.info(f"[graph_enrichment]-- max_y_value_with_padding : {max_y_value_with_padding}")
     logging.info(f"[graph_enrichment]-- interval : {interval}")
@@ -325,7 +331,6 @@ def create_chart_from_prometheus_query(
     else:
         # For non-percentage formats, round the Y-axis labels to the nearest whole number
         chart.y_labels = [round(i * interval) for i in range(y_axis_division)]
-
 
     logging.info(f"[graph_enrichment]-- chart.y_labels : {chart.y_labels}")
 
