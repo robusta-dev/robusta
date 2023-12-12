@@ -3,8 +3,7 @@ Enrich Custom Prometheus Alerts
 
 .. In the last tutorial we defined a custom Prometheus alert.
 
-Robusta lets you customize and enrich your notifications. This feature is extremely useful if you want to run some scripts to gather more information or add internal/external references.
-
+Robusta can take your Prometheus alerts and add extra context to them, so you can respond to alerts faster and without digging elsewhere for information. In this tutorial, you will learn how to enrich alerts with two practical examples.
 
 
 Custom Alert Enrichment Use Cases
@@ -12,17 +11,17 @@ Custom Alert Enrichment Use Cases
 Let's explore practical use cases for custom alert enrichment
 
 
-Use Case 1: Run a Bash Script When Alert is Fired
+Use Case 1: Enrich Alerts by Running a Bash Script
 *******************************************************
 **Scenario**: You want to run a bash command to gather additonal information along with the alert.
 
-**Implementation**:
-
-Prerequisites:
+**Prerequisites**:
 
 * You must have some Prometheus alerts already defined. Ex: HostHighCpuLoad
 
-Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert.
+**Implementation**:
+
+Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert. ## PEnding
 
 Add the following YAML to the ``customPlaybooks`` Helm value:
 
@@ -37,67 +36,17 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
          bash_command: ps aux
 
 
-Use Case 2: Add References URL's for Docs/Websites/Applications
-******************************************************************
+Use Case 2:  Link Alerts to External Docs
+*********************************************
 **Scenario**: You want to add reference links along with your alert for your internal docs to provide exact steps to fix the issue.
 
-**Implementation**:
-
-Prerequisites:
+**Prerequisites**:
 
 * Kube-Prometheus-Stack installed with Robusta or seperately.
 * Robusta installed and configured.
+* Custom alert created following :ref:`Create Custom Alerting Rule <Creating a Custom Alerting Rule>` or any predefined alert.
 
-Creating a Custom Alert
-============================
-
-First we will create a custom alert and add it to Prometheus. You can skip this step if you already have an alert.
-
-To create a custom alert on Kube-Prometheus-Stack we use the ``PrometheusRule`` CRD. First we will update Prometheus to recognize rules which are added directly as Custom Resources.
-
-Add the following config to your Robusta generated_values.yaml if you are using kube-prometheus-stack installed by Robusta. Otherwise remove ``kube-prometheus-stack:`` and add the config to your values file.
-
-.. code-block:: yaml
-
-    kube-prometheus-stack:
-      prometheus:
-        ruleNamespaceSelector: {} # (1)
-        ruleSelector: {} # (2)
-        ruleSelectorNilUsesHelmValues: false # (3)
-
-.. code-annotations::
-    1. Add a namespace if you want Prometheus to identify rules created in specific namespaces. Leave ``{}`` to detect rules from any namespace.
-    2. Add a label if you want Prometheus to detect rules with a specific selector. Leave ``{}`` to detect rules with any label.
-    3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using values helm values file.
-
-Create a PrometheusRule and add your alert.
-
-.. code-block:: yaml
-
-  apiVersion: monitoring.coreos.com/v1
-  kind: PrometheusRule
-  metadata:
-    name: container-cpu-alert
-    labels:
-      prometheus: kube-prometheus
-      role: alert-rules
-  spec:
-    groups:
-      - name: container-cpu-usage
-        rules:
-          - alert: KubeContainerCPURequestAlert
-            expr: |
-              (rate(container_cpu_usage_seconds_total{container="stress"}[5m]) /
-              on (container) kube_pod_container_resource_requests{resource="cpu", container="stress"}) > 0.75
-            for: 1m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Container CPU usage is above 75% of request for 5 minutes"
-              description: "The container is using more than 75% of its requested CPU for 5 minutes."
-
-Add Reference URL's
-=======================
+**Implementation**:
 
 Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert:
 
