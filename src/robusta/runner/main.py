@@ -21,13 +21,16 @@ from robusta.utils.server_start import ServerStart
 
 def main():
     if os.fork():
-        # parent process, pid 1
+        # parent process, pid 1 in our deployment scenario. Wait for the forked "main"
+        # process to exit (if it ever does) and exit ourselves, effectively causing
+        # the image to terminate.
         os.wait()
         return
-    else:
-        # child process; create a process group to conveniently terminate the process
-        # along with subprocesses if need be
-        os.setpgrp()
+
+    # child process; create a process group to conveniently terminate the process
+    # along with subprocesses if need be
+    os.setpgrp()
+
     init_logging()
     ServerStart.set()
     if add_custom_certificate(ADDITIONAL_CERTIFICATE):
