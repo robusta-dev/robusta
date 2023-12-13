@@ -229,7 +229,8 @@ class ConfigLoader:
                     "Error (re)loading playbooks/related resources, exiting.",
                     exc_info=True,
                 )
-                # Die and hope that the k8s-initiated restart will bring things back to normal.
+                # Kill the whole process group (which means this process and all of its descendant
+                # processes). Hopefully the k8s-initiated restart will bring things back to normal.
                 os.killpg(os.getpgid(0), signal.SIGTERM)
 
     @classmethod
