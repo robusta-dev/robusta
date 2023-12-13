@@ -72,6 +72,7 @@ Alert Simulation
 To simulate a Prometheus alerts and cause relevant playbooks to run:
 
 .. code-block::
+    
     poetry run robusta demo-alert --alert=Test123 --labels=label1=123,label2=abc
 
 If running multiple times in a row, change a label value each time so that AlertManager doesn't supress retransmissions.
