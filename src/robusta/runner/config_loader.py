@@ -230,7 +230,7 @@ class ConfigLoader:
                     exc_info=True,
                 )
                 # Kill the whole process group (which means this process and all of its descendant
-                # processes). Hopefully the k8s-initiated restart will bring things back to normal.
+                # processes). The rest of the runner shutdown happens in robusta.runner.process_setup.
                 os.killpg(os.getpgid(0), signal.SIGTERM)
 
     @classmethod
