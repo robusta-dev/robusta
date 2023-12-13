@@ -168,7 +168,6 @@ def create_chart_from_prometheus_query(
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
 ):
-
     logging.info(f"[graph_enrichment] -- params -- promql_query : {promql_query}")
     logging.info(f"[graph_enrichment] -- params -- alert_starts_at : {alert_starts_at}")
     logging.info(f"[graph_enrichment] -- params -- include_x_axis : {include_x_axis}")
@@ -264,6 +263,8 @@ def create_chart_from_prometheus_query(
         min_time = starts_at.timestamp()
         max_time = ends_at.timestamp()
         logging.info(f"[graph_enrichment] -- min_time == HIGHEST_END, So setting min_time and max_time")
+        logging.info(f"[graph_enrichment] -- min_time == HIGHEST_END min_time : {min_time}")
+        logging.info(f"[graph_enrichment] -- max_time == HIGHEST_END min_time : {max_time}")
 
     for line in lines:
         if isinstance(line, XAxisLine) and line.value > max_y_value:
@@ -271,7 +272,6 @@ def create_chart_from_prometheus_query(
 
     logging.info(f"[graph_enrichment]-- max_y_value : {max_y_value}")
 
-    assert lines is not None
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
 
@@ -315,28 +315,37 @@ def create_chart_from_prometheus_query(
         height=500,
     )
 
-    y_axis_division = 5
-    # Calculate the maximum Y value with an added 20% padding
-    max_y_value_with_padding = max_y_value + (max_y_value * 0.20)
+    if len(plot_data_list):
+        logging.info(f"plot_data_list is available, plot_data_list length: {len(plot_data_list)}")
 
-    # Calculate the interval between each Y-axis label
-    interval = max_y_value_with_padding / (y_axis_division - 1)
+        y_axis_division = 5
+        # Calculate the maximum Y value with an added 20% padding
+        max_y_value_with_padding = max_y_value + (max_y_value * 0.20)
 
-    logging.info(f"[graph_enrichment]-- max_y_value_with_padding : {max_y_value_with_padding}")
-    logging.info(f"[graph_enrichment]-- interval : {interval}")
+        # Calculate the interval between each Y-axis label
+        interval = max_y_value_with_padding / (y_axis_division - 1)
 
-    if values_format == ChartValuesFormat.Percentage:
-        # Calculate the Y-axis labels, shift to percentage, and round to the nearest whole number percentage
-        chart.y_labels = [round((i * interval) * 100) / 100 for i in range(y_axis_division)]
+        logging.info(f"[graph_enrichment]-- max_y_value_with_padding : {max_y_value_with_padding}")
+        logging.info(f"[graph_enrichment]-- interval : {interval}")
 
+        chart.range = (0, max_y_value_with_padding)
+
+        if values_format == ChartValuesFormat.Percentage:
+            # Calculate the Y-axis labels, shift to percentage, and round to the nearest whole number percentage
+            chart.y_labels = [round((i * interval) * 100) / 100 for i in range(y_axis_division)]
+
+        else:
+            # For non-percentage formats, round the Y-axis labels to the nearest whole number
+            chart.y_labels = [round(i * interval) for i in range(y_axis_division)]
+            logging.info(f"[graph_enrichment]-- chart.y_labels : {chart.y_labels}")
+
+        chart.y_labels_major = chart.y_labels
     else:
-        # For non-percentage formats, round the Y-axis labels to the nearest whole number
-        chart.y_labels = [round(i * interval) for i in range(y_axis_division)]
+        logging.info(f"plot_data_list is empty")
 
-    logging.info(f"[graph_enrichment]-- chart.y_labels : {chart.y_labels}")
+        chart.y_labels = []
+        chart.show_minor_y_labels = False
 
-    chart.y_labels_major = chart.y_labels
-    chart.range = (0, max_y_value_with_padding)
     chart.show_x_guides = True
     chart.show_y_guides = True
     chart.spacing = 20
