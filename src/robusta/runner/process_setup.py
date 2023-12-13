@@ -8,7 +8,8 @@ def process_setup():
         # utilitze any CPU) for the forked "main" process to exit (if it ever does)
         os.wait()
         # At this point we are sure no subprocesses are running, so we can safely
-        # exit the pid 1 process, effectively causing the image to terminate.
+        # exit the pid 1 process, effectively causing the Docker image (and thus
+        # the k8s pod) to terminate.
         sys.exit(1)
 
     # Child process; create a process group to conveniently terminate the process
