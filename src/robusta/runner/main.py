@@ -1,4 +1,3 @@
-import os
 import signal
 
 from robusta.core.model.env_vars import (
@@ -13,6 +12,7 @@ from robusta.model.config import Registry
 from robusta.patch.patch import create_monkey_patches
 from robusta.runner.config_loader import ConfigLoader
 from robusta.runner.log_init import init_logging, logging
+from robusta.runner.process_setup import process_setup
 from robusta.runner.ssl_utils import add_custom_certificate
 from robusta.runner.telemetry_service import TelemetryLevel, TelemetryService
 from robusta.runner.web import Web
@@ -20,17 +20,7 @@ from robusta.utils.server_start import ServerStart
 
 
 def main():
-    if os.fork():
-        # parent process, pid 1 in our deployment scenario. Wait for the forked "main"
-        # process to exit (if it ever does) and exit ourselves, effectively causing
-        # the image to terminate.
-        os.wait()
-        return
-
-    # child process; create a process group to conveniently terminate the process
-    # along with subprocesses if need be
-    os.setpgrp()
-
+    process_setup()
     init_logging()
     ServerStart.set()
     if add_custom_certificate(ADDITIONAL_CERTIFICATE):
