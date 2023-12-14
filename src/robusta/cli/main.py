@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Union
 import certifi
 import typer
 import yaml
-from hikaru.model.rel_1_26 import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec
+from hikaru.model.rel_1_26 import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec, SecurityContext
 from kubernetes import client, config
 from pydantic import BaseModel, Extra
 
@@ -501,6 +501,7 @@ def demo_alert(
                             name="alert-curl",
                             image=image,
                             command=command,
+                            securityContext=SecurityContext(runAsUser=2000),
                         )
                     ],
                     restartPolicy="Never",
