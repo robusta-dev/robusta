@@ -3,6 +3,7 @@ import importlib.util
 import logging
 import os
 import pkgutil
+import signal
 import subprocess
 import sys
 import threading
@@ -40,7 +41,6 @@ from robusta.utils.file_system_watcher import FileSystemWatcher
 
 
 class ConfigLoader:
-
     # the structure on disk is:
     # root_playbook_path/
     # |- playbook_dir1
@@ -147,7 +147,7 @@ class ConfigLoader:
                 # Reload is required for modules that are already loaded
                 m = importlib.reload(importlib.import_module(module_name))
                 playbook_actions = getmembers(m, Action.is_action)
-                for (action_name, action_func) in playbook_actions:
+                for action_name, action_func in playbook_actions:
                     actions_registry.add_action(action_func)
             except Exception:
                 logging.error(f"failed to module {playbooks_module}", exc_info=True)
@@ -226,9 +226,12 @@ class ConfigLoader:
 
             except Exception:
                 logging.error(
-                    "unknown error reloading playbooks. will try again when they next change",
+                    "Error (re)loading playbooks/related resources, exiting.",
                     exc_info=True,
                 )
+                # Kill the whole process group (which means this process and all of its descendant
+                # processes). The rest of the runner shutdown happens in robusta.runner.process_setup.
+                os.killpg(os.getpgid(0), signal.SIGTERM)
 
     @classmethod
     def __prepare_runtime_config(
