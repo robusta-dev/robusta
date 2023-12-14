@@ -452,6 +452,7 @@ kubewatch:
       cpu: 10m
       memory: 512Mi
     limits:
+      memory: 512Mi
       cpu: ~
   additional_env_vars: []
   tolerations: []
