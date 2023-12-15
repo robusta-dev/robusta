@@ -42,7 +42,7 @@ class SlackSinkParams(SinkBaseParams):
         result = s.replace(ANNOTATIONS_PREF, '').replace(LABELS_PREF, '')
         # Use regular expression to find and replace inside "${}"
         result = re.sub(r'\$\{[^}]+\}', repl, result)
-        result = re.sub(rf'\${ANNOTATIONS_PREF}', repl, result)
+        result = re.sub(rf'\$({ANNOTATIONS_PREF})|({LABELS_PREF})', repl, result)
         return result
     
     def normalize_key_string(cls, s: str) -> str:
