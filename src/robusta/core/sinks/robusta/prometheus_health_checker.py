@@ -62,7 +62,6 @@ class PrometheusHealthChecker:
             self.status.prometheus = True
 
             if self.__check_prometheus_flags:
-                logging.info("--------> get_prometheus_flags")
                 prometheus_flags = get_prometheus_flags(prom=prometheus_connection)
                 if prometheus_flags:
                     self.status.prometheus_retention_time = prometheus_flags.get("retentionTime", "")
