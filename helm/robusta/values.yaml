@@ -20,6 +20,7 @@ automountServiceAccountToken: true
 
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
 globalConfig:
+  check_prometheus_flags: true
   grafana_url: ""
   grafana_api_key: ""
   grafana_dashboard_uid: ""
