@@ -3,7 +3,6 @@ from string import Template
 from typing import Dict, Optional
 import regex
 from pydantic import validator
-import re
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
 
@@ -41,8 +40,8 @@ class SlackSinkParams(SinkBaseParams):
         
         result = s.replace(ANNOTATIONS_PREF, '').replace(LABELS_PREF, '')
         # Use regular expression to find and replace inside "${}"
-        result = re.sub(r'\$\{[^}]+\}', repl, result)
-        result = re.sub(rf'\$({ANNOTATIONS_PREF})|({LABELS_PREF})', repl, result)
+        result = regex.sub(r'\$\{[^}]+\}', repl, result)
+        result = regex.sub(rf'\$({ANNOTATIONS_PREF})|({LABELS_PREF})', repl, result)
         return result
     
     def normalize_key_string(cls, s: str) -> str:
