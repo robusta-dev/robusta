@@ -250,7 +250,13 @@ class ConfigLoader:
         # Order matters. Internal playbooks, should be added first, and run first
         active_playbooks = [
             PlaybookDefinition(
-                triggers=[{"on_kubernetes_any_resource_all_changes": {}}],
+                triggers=[
+                    {
+                        "on_kubernetes_resource_operation": {
+                            "resources": ["deployment", "replicaset", "daemonset", "statefulset", "pod", "job"]
+                        }
+                    }
+                ],
                 actions=[{"cluster_discovery_updates": {}}],
             )
         ]

@@ -20,17 +20,18 @@ from robusta.core.playbooks.common import get_event_timestamp, get_events_list
 @action
 def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
     if (
-        event.operation in [K8sOperationType.CREATE, K8sOperationType.UPDATE]
-        and event.obj.kind in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Pod", "Job"]
+        event.obj.kind in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Pod", "Job"]
         and not event.obj.metadata.ownerReferences
     ):
-        TopServiceResolver.add_cached_resource(
-            TopLevelResource(
-                name=event.obj.metadata.name,
-                resource_type=event.obj.kind,
-                namespace=event.obj.metadata.namespace,
-            )
+        resource = TopLevelResource(
+            name=event.obj.metadata.name,
+            resource_type=event.obj.kind,
+            namespace=event.obj.metadata.namespace,
         )
+        if event.operation in [K8sOperationType.CREATE, K8sOperationType.UPDATE]:
+            TopServiceResolver.add_cached_resource(resource)
+        elif event.operation == K8sOperationType.DELETE:
+            TopServiceResolver.remove_cached_resource(resource)
 
 
 @action

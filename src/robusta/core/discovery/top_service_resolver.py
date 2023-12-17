@@ -74,3 +74,10 @@ class TopServiceResolver:
             cls.__recent_resource_updates[resource.get_resource_key()] = CachedResourceInfo(
                 resource=resource, event_time=time.time()
             )
+
+    @classmethod
+    def remove_cached_resource(cls, resource: TopLevelResource):
+        if resource in cls.__namespace_to_resource[resource.namespace]:
+            cls.__namespace_to_resource[resource.namespace].remove(resource)
+        with cls.__cached_updates_lock:
+            cls.__recent_resource_updates.pop(resource.get_resource_key(), None)
