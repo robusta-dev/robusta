@@ -12,6 +12,7 @@ Sinks Reference
    slack
    ms-teams
    RobustaUI
+   mail
    telegram
    discord
    DataDog
@@ -27,6 +28,7 @@ Sinks Reference
    kafka
    sinks-development
    rocketchat
+
 
 Robusta can report issues and events in your Kubernetes cluster to various destinations, known as sinks.
 

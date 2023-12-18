@@ -50,11 +50,32 @@ For faster code changes, you can run Robusta on your local computer:
 
     You must have a cluster with Robusta installed for this to work. The runner needs a configuration file to run and it extracts it from your existing cluster.
 
-Additional tips:
+Developing Playbooks Locally
+---------------------------------
 
-* If you want to develop playbooks locally, configure ``playbookRepos`` with a local path to your playbooks directory.
-* Your local runner wont incoming Kubernetes changes or Prometheus alerts.
-* For instructions on simulating Prometheus alerts, try ``poetry run robusta playbooks trigger --dry-run prometheus_alert alert_name=KubePodCrashLooping namespace=default pod_name=example-pod``
+1. Create a local dev environment with the instructions above
+
+2. Edit ``deployment/playbooks/active_playbooks.yaml`` to reference a custom playbook directory, as follows:
+
+.. code-block::
+
+    # to develop a local clone of https://github.com/robusta-dev/kubernetes-chatgpt-bot
+    playbook_repos:
+      chatgpt_robusta_actions:
+        url: "file:///path/to/kubernetes-chatgpt-bot"
+
+3. After changing playbook code, trigger a reload: ``touch deployment/playbooks/active_playbooks.yaml``
+
+Alert Simulation
+^^^^^^^^^^^^^^^^^^
+
+To simulate a Prometheus alerts and cause relevant playbooks to run:
+
+.. code-block::
+    
+    poetry run robusta demo-alert --alert=Test123 --labels=label1=123,label2=abc
+
+If running multiple times in a row, change a label value each time so that AlertManager doesn't supress retransmissions.
 
 CLI Development
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -117,10 +117,10 @@ If you can't use the `official Slack app <https://slack.com/apps/A0214S5PHB4-rob
 your own. This is not recommended for most companies due to the added complexity.
 
 1. `Create a new Slack app. <https://api.slack.com/apps?new_app=1>`_
-2. Enable Socket mode in your Slack App and copy the websocket token into the Robusta deployment yaml.
-3. Under "OAuth and Permissions" add the following scopes: chat:write, files:write, incoming-webhook, and channels:history
-4. Under "Event Subscriptions" add bot user events for message.channels and press "Save Changes"
-5. Click "Install into Workspace"
+2. Enable Socket mode in your Slack App.
+3. Under "OAuth and Permissions" add the following scopes: chat:write, chat:write.public, files:write, incoming-webhook, and channels:history.
+4. Under "Event Subscriptions" add bot user events for message.channels and press "Save Changes".
+5. Click "Install into Workspace".
 6. Copy the ``Bot User OAuth Token`` from "OAuth and Permissions".
 7. Add the token to SinksConfig in your `generated_values.yaml` file.
 

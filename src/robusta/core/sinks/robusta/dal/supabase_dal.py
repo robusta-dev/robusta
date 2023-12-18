@@ -55,6 +55,10 @@ class SupabaseDal(AccountResourceFetcher):
             cluster_name: str,
             signing_key: str,
     ):
+        httpx_logger = logging.getLogger("httpx")
+        if httpx_logger:
+            httpx_logger.setLevel(logging.WARNING)
+
         self.url = url
         self.key = key
         self.account_id = account_id
@@ -483,7 +487,7 @@ class SupabaseDal(AccountResourceFetcher):
             logging.error(f"Failed to publish node count {data} error: {e}")
             self.handle_supabase_error()
 
-        logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
+        logging.debug(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
 
     def persist_events_block(self, block: EventsBlock):
         db_events = []

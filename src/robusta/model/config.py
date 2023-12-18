@@ -51,32 +51,27 @@ class SinksRegistry:
         new_sinks = existing_sinks.copy()
         # create new sinks, or update existing if changed
         for sink_config in new_sinks_config:
-            try:
-                # temporary workaround to skip the default and unconfigured robusta token
-                if (
-                    isinstance(sink_config, RobustaSinkConfigWrapper)
-                    and sink_config.robusta_sink.token == "<ROBUSTA_ACCOUNT_TOKEN>"
-                ):
-                    continue
-                if sink_config.get_name() not in new_sinks.keys():
-                    logging.info(f"Adding {type(sink_config)} sink named {sink_config.get_name()}")
-                    new_sinks[sink_config.get_name()] = SinkFactory.create_sink(sink_config, registry)
-                elif (
-                    sink_config.get_params() != new_sinks[sink_config.get_name()].params
-                    or new_sinks[sink_config.get_name()].is_global_config_changed()
-                ):
-                    config_change_msg = (
-                        "due to global config change"
-                        if new_sinks[sink_config.get_name()].is_global_config_changed()
-                        else "due to param change"
-                    )
-                    logging.info(
-                        f"Updating {type(sink_config)} sink named {sink_config.get_name()} {config_change_msg}"
-                    )
-                    new_sinks[sink_config.get_name()].stop()
-                    new_sinks[sink_config.get_name()] = SinkFactory.create_sink(sink_config, registry)
-            except Exception as e:
-                logging.error(f"Error configuring sink {sink_config.get_name()} of type {type(sink_config)}: {e}")
+            # temporary workaround to skip the default and unconfigured robusta token
+            if (
+                isinstance(sink_config, RobustaSinkConfigWrapper)
+                and sink_config.robusta_sink.token == "<ROBUSTA_ACCOUNT_TOKEN>"
+            ):
+                continue
+            if sink_config.get_name() not in new_sinks.keys():
+                logging.info(f"Adding {type(sink_config)} sink named {sink_config.get_name()}")
+                new_sinks[sink_config.get_name()] = SinkFactory.create_sink(sink_config, registry)
+            elif (
+                sink_config.get_params() != new_sinks[sink_config.get_name()].params
+                or new_sinks[sink_config.get_name()].is_global_config_changed()
+            ):
+                config_change_msg = (
+                    "due to global config change"
+                    if new_sinks[sink_config.get_name()].is_global_config_changed()
+                    else "due to param change"
+                )
+                logging.info(f"Updating {type(sink_config)} sink named {sink_config.get_name()} {config_change_msg}")
+                new_sinks[sink_config.get_name()].stop()
+                new_sinks[sink_config.get_name()] = SinkFactory.create_sink(sink_config, registry)
 
         return new_sinks
 

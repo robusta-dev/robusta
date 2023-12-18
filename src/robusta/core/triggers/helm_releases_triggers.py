@@ -17,6 +17,7 @@ UNHEALTHY_STATUSES = ["pending-install", "pending-upgrade", "pending-rollback", 
 FAILED_STATUSES = ["failed", "unknown"]
 DEPLOYED_STATUSES = ["deployed"]
 
+
 class IncomingHelmReleasesEventPayload(BaseModel):
     """
     The format of incoming payloads containing helm release events. This is mostly used for deserialization.
@@ -33,8 +34,10 @@ class HelmReleasesTriggerEvent(TriggerEvent):
         return HelmReleasesTriggerEvent.__name__
 
     def get_event_description(self) -> str:
-        return f"HelmReleases-{self.helm_release.namespace}/{self.helm_release.name}/{self.helm_release.chart.metadata.version}-" \
-               f"{self.helm_release.info.status}"
+        return (
+            f"HelmReleases-{self.helm_release.namespace}/{self.helm_release.name}/{self.helm_release.chart.metadata.version}-"
+            f"{self.helm_release.info.status}"
+        )
 
 
 @dataclass
@@ -93,7 +96,9 @@ class HelmReleaseBaseTrigger(BaseTrigger):
         if event.helm_release.info.status in UNHEALTHY_STATUSES:
             rate_limiter_id = f"{event.helm_release.namespace}:{event.helm_release.name}"
         else:
-            rate_limiter_id = f"{event.helm_release.namespace}:{event.helm_release.name}-{last_deployed_utc.isoformat()}"
+            rate_limiter_id = (
+                f"{event.helm_release.namespace}:{event.helm_release.name}-{last_deployed_utc.isoformat()}"
+            )
             # if the server start time is greater than the last deployement time of the release then dont fire the trigger
             # eg:   start -> 5pm, last_deployed -> 6pm, delta -> - 1hr. => fire
             #       start -> 3pm, last_deployed -> 2pm, delta -> 1hr. => dont_fire
@@ -111,8 +116,8 @@ class HelmReleaseBaseTrigger(BaseTrigger):
 
         return can_fire
 
-    def build_execution_event(
-            self, event: HelmReleasesTriggerEvent, sink_findings: Dict[str, List[Finding]]
+    def _build_execution_event(
+        self, event: HelmReleasesTriggerEvent, sink_findings: Dict[str, List[Finding]]
     ) -> Optional[ExecutionBaseEvent]:
         if not isinstance(event, HelmReleasesTriggerEvent):
             return
@@ -127,11 +132,13 @@ class HelmReleaseBaseTrigger(BaseTrigger):
 
 
 class HelmReleaseUnhealthyTrigger(HelmReleaseBaseTrigger):
-    def __init__(self,
-                 rate_limit: int,
-                 names: List[str] = [],
-                 namespace: str = None,
-                 duration: int = 900, ):
+    def __init__(
+        self,
+        rate_limit: int,
+        names: List[str] = [],
+        namespace: str = None,
+        duration: int = 900,
+    ):
         super().__init__(
             statuses=UNHEALTHY_STATUSES,
             names=names,

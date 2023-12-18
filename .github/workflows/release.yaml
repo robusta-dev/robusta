@@ -67,7 +67,7 @@ jobs:
 
     - name: Build with skaffold
       run: ./skaffold build --profile release --file-output=container-ids.json --tag='${{env.RELEASE_VER}}'
-      
+
 
     - name: Save artifact with tags of built containers
       uses: actions/upload-artifact@v2
@@ -90,7 +90,7 @@ jobs:
         curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
         poetry config virtualenvs.create false
         poetry install --extras "all"
-        poetry publish --build -u ${{ secrets.PYPI_USER }} -p ${{ secrets.PYPI_PASS }}
+        poetry publish --build -u __token__ -p ${{ secrets.PYPI_PROJECT_TOKEN }}
 
     - name: Save artifact with helm chart
       uses: actions/upload-artifact@v2
