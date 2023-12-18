@@ -52,11 +52,6 @@ If Prometheus and/or AlertManager require authentication, add the following to `
 
 These settings may be configured independently.
 
-Prometheus flags checks
------------------------
-
-.. include:: ./_prometheus_flags_check.rst
-
 SSL Verification
 -----------------------
 By default, Robusta does not verify the SSL certificate of the Prometheus server.
