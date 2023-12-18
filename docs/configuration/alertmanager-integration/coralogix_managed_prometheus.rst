@@ -105,3 +105,10 @@ To configure it:
 
 6. Click the 'Test Config' button and check your robusta sinks that you received an alert
 7. Click Save
+
+Optional Settings
+==================
+
+**Prometheus flags checks**
+
+.. include:: ./_prometheus_flags_check.rst
