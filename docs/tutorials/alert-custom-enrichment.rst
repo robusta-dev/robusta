@@ -21,7 +21,7 @@ Use Case 1: Enrich Alerts by Running a Bash Script
 
 **Implementation**:
 
-Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert. ## PEnding
+Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert.
 
 Add the following YAML to the ``customPlaybooks`` Helm value:
 
@@ -34,6 +34,21 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
      actions:
      - node_bash_enricher:
          bash_command: ps aux
+
+Testing the Alert ## TODO Fix demo and add image
+---------------------------------------------------
+Deploy a pod that deliberately consumes a lot of CPU to trigger the alert we defined:
+
+.. code-block:: bash
+
+    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/cpu_throttling/throttling.yaml
+
+We can wait for the alert to fire or we can speed things up and simulate the alert, as if it fired immediately:
+
+.. code-block:: bash
+
+    robusta demo-alert --alert=HostHighCpuLoad --labels=label1=test,label2=alert
+
 
 
 Use Case 2:  Link Alerts to External Docs
@@ -65,14 +80,31 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
         chart_values_format: Plain
         promql_query: 'sum(rate(container_cpu_usage_seconds_total{container="stress"}[5m])) by (pod)'
     - template_enricher:
-        template: |
+        template: | # (1)
           :scroll: Playbook <https://playbook-url/|Handling High Resource Utilization>
           :github: Adjust CPU requests <https://github.com/YourRepository/|in the `Prod-sre` repository>
           :notion: Internal Docs on <https://notion.com/path-to-docs/|Customizing CPU requests>
 
-.. note::
+.. code-annotations::
+    1. Before you add a custom Slack emoji follow `this guide <https://slack.com/intl/en-gb/help/articles/206870177-Add-customised-emoji-and-aliases-to-your-workspace>`_ to add them your workspace.
 
-   You should add `custom slack emoji's <https://slack.com/intl/en-gb/help/articles/206870177-Add-customised-emoji-and-aliases-to-your-workspace>`_ to your work space before adding emoji's to your alerts.
+
+Testing the Alert
+---------------------------------------
+
+Deploy a pod that deliberately consumes a lot of CPU to trigger the alert we defined:
+
+.. code-block:: bash
+
+    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/cpu_throttling/throttling.yaml
+
+We can wait for the alert to fire or we can speed things up and simulate the alert, as if it fired immediately:
+
+.. code-block:: bash
+
+    robusta demo-alert --alert=KubeContainerCPURequestAlert --labels=label1=test,label2=alert
+
+Once the alert fires, a notification arrives in your configured sinks.
 
 **Sample Alert**:
 
