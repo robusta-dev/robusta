@@ -20,15 +20,11 @@ we define a custom Robusta playbook that enhances the alert and makes it better.
 Prerequisites
 --------------
 
-One of the following:
-
-* Robusta's embedded Prometheus Stack
-* An external Prometheus integrated with Robusta, including the Prometheus Operator.
-
+* Kube-Prometheus-Stack, installed via Robusta or seperately.
 
 Enable Global Rule Selection
 *******************************
-Before we add the rule itself, we should configure Kube-Prometheus-Stack to identify alerts that are created without using helm values.
+Before we add the rule itself, we should configure Kube-Prometheus-Stack to pickup all new alerts we place in the cluster.
 
 Add the following config to your Robusta generated_values.yaml if you are using kube-prometheus-stack installed by Robusta. Otherwise remove ``kube-prometheus-stack:`` and add the config to your values file.
 
@@ -49,21 +45,21 @@ Add the following config to your Robusta generated_values.yaml if you are using 
 Defining a Custom Alert
 ---------------------------------------
 
-Prometheus Alerts are defined on Kubernetes using the *PrometheusRule CRD*.
+Prometheus Alerts are defined on Kubernetes using the PrometheusRule CRD.
 
-.. details:: What is the PrometheusRule CRD?
+As an example, we'll define an alert to find Pods with CPU usage over their request.
 
-    CRDs (Custom Resources Definitions) extend Kubernetes API with new resource types. You can apply and edit these
-    resources using ``kubectl`` just like Pods, Deployments, and other builtin resources.
+.. .. details:: What is the PrometheusRule CRD?
 
-    The Prometheus Operator adds CRDs to Kubernetes so you can control Prometheus alerts with ``kubectl``. Whenever you
-    apply or edit a ``PrometheusRule`` CRD, the operator will update Prometheus's configuration automatically.
+..     CRDs (Custom Resources Definitions) extend Kubernetes API with new resource types. You can apply and edit these
+..     resources using ``kubectl`` just like Pods, Deployments, and other builtin resources.
 
-    When Robusta's embedded Prometheus Stack is enabled, the Prometheus Operator is installed automatically.
+..     The Prometheus Operator adds CRDs to Kubernetes so you can control Prometheus alerts with ``kubectl``. Whenever you
+..     apply or edit a ``PrometheusRule`` CRD, the operator will update Prometheus's configuration automatically.
 
-Create the PrometheusRule
-********************************
-Save the following YAML config into a file called test-rule.yaml and run ``kubectl apply -f newrule.yaml``
+..     When Robusta's embedded Prometheus Stack is enabled, the Prometheus Operator is installed automatically.
+
+Save the following YAML into a file and run `kubectl apply -f <filename>`
 
 .. code-block:: yaml
 
@@ -98,13 +94,10 @@ Deploy a pod that deliberately consumes a lot of CPU to trigger the alert we def
 
     kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/cpu_throttling/throttling.yaml
 
-We can wait for the alert to fire or we can speed things up and simulate the alert, as if it fired immediately:
 
-.. code-block:: bash
+You will know the alert was defined successfully when Prometheus fires an alert. When using Robusta, this means a notification will be received in all configured sinks.
 
-    robusta demo-alert --alert=KubeContainerCPURequestAlert --labels=label1=test,label2=alert
-
-Once the alert fires, a notification arrives in your configured sinks: **TODO Update image**
+## TODO image
 
 .. image:: /images/highcputhrottling.png
   :width: 600
@@ -120,8 +113,8 @@ Once the alert fires, a notification arrives in your configured sinks: **TODO Up
     When a Robusta playbook uses the ``on_prometheus_alert`` trigger, there is a delay on the Prometheus end before
     alerts ever reach Robusta. Once the alert reaches Robusta, the playbook executes immediately.
 
-Enriching the Alert
-------------------------------------
+Next Steps
+---------------
 
 In the next tutorial, we enhance this Prometheus alert with Robusta. Keep reading to learn more:
 

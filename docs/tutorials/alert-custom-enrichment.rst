@@ -3,27 +3,20 @@ Enrich Custom Prometheus Alerts
 
 .. In the last tutorial we defined a custom Prometheus alert.
 
-Robusta can take your Prometheus alerts and add extra context to them, so you can respond to alerts faster and without digging elsewhere for information. In this tutorial, you will learn how to enrich alerts with two practical examples.
+Robusta can add extra context to your Prometheus alerts, so you can respond to alerts faster and without digging elsewhere for information.
 
-
-Custom Alert Enrichment Use Cases
------------------------------------------
-Let's explore practical use cases for custom alert enrichment
-
+In this tutorial, you will learn how to enrich alerts with two practical use cases.
 
 Use Case 1: Enrich Alerts by Running a Bash Script
 *******************************************************
-**Scenario**: You want to run a bash command to gather additonal information along with the alert.
-
-**Prerequisites**:
-
-* You must have some Prometheus alerts already defined. Ex: HostHighCpuLoad
 
 **Implementation**:
 
-Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert.
+We will configure what bash command to run when an alert of your choosing fires. This is done using Robusta's :ref:`customPlaybook <customPlaybooks>`.
 
-Add the following YAML to the ``customPlaybooks`` Helm value:
+In the following example we use ``HostHighCpuLoad`` alert. Change this name
+
+Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`.
 
 .. code-block:: yaml
 
@@ -36,7 +29,8 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
          bash_command: ps aux
 
 Testing the Alert ## TODO Fix demo and add image
----------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Deploy a pod that deliberately consumes a lot of CPU to trigger the alert we defined:
 
 .. code-block:: bash
@@ -50,22 +44,16 @@ We can wait for the alert to fire or we can speed things up and simulate the ale
     robusta demo-alert --alert=HostHighCpuLoad --labels=label1=test,label2=alert
 
 
-
-Use Case 2:  Link Alerts to External Docs
+Use Case 2: Link Alerts to External Docs
 *********************************************
-**Scenario**: You want to add reference links along with your alert for your internal docs to provide exact steps to fix the issue.
-
-**Prerequisites**:
-
-* Kube-Prometheus-Stack installed with Robusta or seperately.
-* Robusta installed and configured.
-* Custom alert created following :ref:`Create Custom Alerting Rule <Creating a Custom Alerting Rule>` or any predefined alert.
 
 **Implementation**:
 
-Define a :ref:`customPlaybook <customPlaybooks>` that responds to our Prometheus alert:
+We will configure what additional information to send, when an alert of your choosing fires. This is done using Robusta's :ref:`customPlaybook <customPlaybooks>`.
 
-Add the following YAML to the ``customPlaybooks`` Helm value:
+In the following example we use ``KubeContainerCPURequestAlert`` created in the :ref:`Create Custom Alerting Rule <Creating a Custom Alerting Rule>` tutorial.
+
+Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`.
 
 .. code-block:: yaml
 
@@ -90,7 +78,7 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
 
 
 Testing the Alert
----------------------------------------
+^^^^^^^^^^^^^^^^^^^^
 
 Deploy a pod that deliberately consumes a lot of CPU to trigger the alert we defined:
 
@@ -112,29 +100,29 @@ Once the alert fires, a notification arrives in your configured sinks.
   :width: 600
   :align: center
 
-.. warning::
+.. .. warning::
 
-    Defining a customPlaybook for a specific alert, wont stop other playbooks from seeing that alert too.
+..     Defining a customPlaybook for a specific alert, wont stop other playbooks from seeing that alert too.
 
-    Playbooks run in the order they appear in ``customPlaybooks``.
+..     Playbooks run in the order they appear in ``customPlaybooks``.
 
-    To stop processing after some action, set the ``stop`` parameter:
+..     To stop processing after some action, set the ``stop`` parameter:
 
-    .. code-block:: yaml
+..     .. code-block:: yaml
 
-       customPlaybooks:
-       - triggers:
-         - on_prometheus_alert:
-             alert_name: HostHighCpuLoad
-         actions:
-         - node_cpu_enricher: {}
-         stop: True
-       - triggers:
-         - on_prometheus_alert: {}
-         actions:
-         - some_other_action: {}
+..        customPlaybooks:
+..        - triggers:
+..          - on_prometheus_alert:
+..              alert_name: HostHighCpuLoad
+..          actions:
+..          - node_cpu_enricher: {}
+..          stop: True
+..        - triggers:
+..          - on_prometheus_alert: {}
+..          actions:
+..          - some_other_action: {}
 
-    Using this configuration, ``some_other_action`` wont run for ``HostHighCpuLoad``.
+..     Using this configuration, ``some_other_action`` wont run for ``HostHighCpuLoad``.
 
 Further Reading
 ---------------
