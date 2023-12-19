@@ -1,8 +1,10 @@
+import logging
 from typing import Any
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding
-from robusta.core.sinks.sink_base_params import SinkBaseParams
+from robusta.core.sinks.sink_base_params import SinkBaseParams, ActivityParams, ActivityInterval
+from robusta.core.sinks.timing import TimeSlice, TimeSliceAlways
 
 
 class SinkBase:
@@ -17,6 +19,21 @@ class SinkBase:
         self.cluster_name: str = global_config.get("cluster_name", "")
         self.signing_key = global_config.get("signing_key", "")
 
+        self.time_slice = self._build_time_slice_from_params(self.params.activity)
+
+    def _build_time_slice_from_params(self, params: ActivityParams):
+        if params is None:
+            return TimeSliceAlways()
+        else:
+            timezone = params.timezone
+            time_slice = self._interval_to_time_slice(timezone, params.intervals[0])
+            for interval in params.intervals[1:]:
+                time_slice += self._interval_to_time_slice(timezone, interval)
+            return time_slice
+
+    def _interval_to_time_slice(self, timezone: str, interval: ActivityInterval):
+        return TimeSlice(interval.days, [(time.start, time.end) for time in interval.hours], timezone)
+
     def is_global_config_changed(self):
         # registry global config can be updated without these stored values being changed
         global_config = self.registry.get_global_config()
@@ -29,7 +46,7 @@ class SinkBase:
         pass
 
     def accepts(self, finding: Finding) -> bool:
-        return finding.matches(self.params.match)
+        return finding.matches(self.params.match) and self.time_slice.is_active_now()
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         raise NotImplementedError(f"write_finding not implemented for sink {self.sink_name}")
