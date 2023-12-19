@@ -442,7 +442,7 @@ logs_enricher = action(logs_enricher)
 class MentionParams(ActionParams):
     static_mentions: Optional[List[str]]
     mentions_label: Optional[str]
-    message_template: Optional[str]
+    message_template: str = "Hey: $mentions"
 
 
 @action
@@ -459,7 +459,13 @@ def mention_enricher(event: KubernetesResourceEvent, params: MentionParams):
 
     Note this enricher only works with the Slack sink
     """
+
+    if not params.mentions_label and not params.static_mentions:
+        logging.warning("mention_enricher called with neither static_mentions nor mentions_label set")
+        return
+
     event_data = {}
+    mentions = set()
     if params.mentions_label:
         if isinstance(event, PrometheusKubernetesAlert):
             # Alert labels and annotations. FindingSubject can represent
@@ -470,27 +476,17 @@ def mention_enricher(event: KubernetesResourceEvent, params: MentionParams):
             event_data.update(event.alert.annotations)
             event_data.update(event.alert.labels)
         elif event.obj:
-            # TODO why do we ignore alert_subject here?
-            if event.obj.metadata.annotations:  # TODO why the if?
+            if event.obj.metadata.annotations:
                 event_data.update(event.obj.metadata.annotations)
-            if event.obj.metadata.labels:  # TODO why the if?
+            if event.obj.metadata.labels:
                 event_data.update(event.obj.metadata.labels)
 
         # get the mentions and use it
         mentions_value = event_data.get(params.mentions_label)
         if mentions_value:
-            users_list = mentions_value.split(",")
-        else:
-            users_list = []
-    elif params.static_mentions:
-        # TODO shouldn't we rather use the union of the mentions gathered above and the static ones?
-        users_list = params.static_mentions
-    else:
-        logging.warning("mention_enricher called with neither static_mentions nor mentions_label set")
-        return
+            mentions = set(mentions_value.split(","))
+    if params.static_mentions:
+        mentions = mentions.union(params.static_mentions)
 
-    # TODO should we additionally allow for setting messsage_template per finding subject etc as is
-    # the case with mentions list above?
-    message_template = params.message_template if params.message_template else "Hey: $mentions"
-    message = message_template.replace("$mentions", " ".join(users_list))
+    message = params.message_template.replace("$mentions", " ".join(mentions))
     event.add_enrichment([MarkdownBlock(message)])
