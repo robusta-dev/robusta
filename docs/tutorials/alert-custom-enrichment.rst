@@ -1,8 +1,6 @@
 Enrich Custom Prometheus Alerts
 #################################
 
-.. In the last tutorial we defined a custom Prometheus alert.
-
 Robusta can add extra context to your Prometheus alerts, so you can respond to alerts faster and without digging elsewhere for information.
 
 In this tutorial, you will learn how to enrich alerts with two practical use cases.
@@ -12,9 +10,7 @@ Use Case 1: Enrich Alerts by Running a Bash Script
 
 **Implementation**:
 
-We will configure what bash command to run when an alert of your choosing fires. This is done using Robusta's :ref:`customPlaybook <customPlaybooks>`.
-
-In the following example we use ``HostHighCpuLoad`` alert. Change this name
+Configure Robusta to execute the ``ps aux`` command in response to the ``HostHighCpuLoad`` alert.. This way you can see which process is taking up high CPU.
 
 Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`.
 
@@ -28,8 +24,7 @@ Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Ro
      - node_bash_enricher:
          bash_command: ps aux
 
-Testing the Alert ## TODO Fix demo and add image
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Testing**:
 
 Deploy a pod that deliberately consumes a lot of CPU to trigger the alert we defined:
 
@@ -44,13 +39,12 @@ We can wait for the alert to fire or we can speed things up and simulate the ale
     robusta demo-alert --alert=HostHighCpuLoad --labels=label1=test,label2=alert
 
 
-Use Case 2: Link Alerts to External Docs
-*********************************************
+Use Case 2: Enhance Alerts with Links to External Documentation
+***********************************************************************
 
 **Implementation**:
 
-We will configure what additional information to send, when an alert of your choosing fires. This is done using Robusta's :ref:`customPlaybook <customPlaybooks>`.
-
+Configure Robusta to add links to docs or other applications
 In the following example we use ``KubeContainerCPURequestAlert`` created in the :ref:`Create Custom Alerting Rule <Creating a Custom Alerting Rule>` tutorial.
 
 Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`.
@@ -77,10 +71,9 @@ Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Ro
     1. Before you add a custom Slack emoji follow `this guide <https://slack.com/intl/en-gb/help/articles/206870177-Add-customised-emoji-and-aliases-to-your-workspace>`_ to add them your workspace.
 
 
-Testing the Alert
-^^^^^^^^^^^^^^^^^^^^
+**Testing**:
 
-Deploy a pod that deliberately consumes a lot of CPU to trigger the alert we defined:
+To test, deploy a resource-intensive pod to intentionally trigger the defined alert:
 
 .. code-block:: bash
 
@@ -100,31 +93,7 @@ Once the alert fires, a notification arrives in your configured sinks.
   :width: 600
   :align: center
 
-.. .. warning::
-
-..     Defining a customPlaybook for a specific alert, wont stop other playbooks from seeing that alert too.
-
-..     Playbooks run in the order they appear in ``customPlaybooks``.
-
-..     To stop processing after some action, set the ``stop`` parameter:
-
-..     .. code-block:: yaml
-
-..        customPlaybooks:
-..        - triggers:
-..          - on_prometheus_alert:
-..              alert_name: HostHighCpuLoad
-..          actions:
-..          - node_cpu_enricher: {}
-..          stop: True
-..        - triggers:
-..          - on_prometheus_alert: {}
-..          actions:
-..          - some_other_action: {}
-
-..     Using this configuration, ``some_other_action`` wont run for ``HostHighCpuLoad``.
-
 Further Reading
----------------
+*********************
 
 * View all :ref:`Prometheus enrichment actions <Prometheus Enrichers>`

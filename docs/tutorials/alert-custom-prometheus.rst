@@ -2,7 +2,7 @@
 
 .. _define-alerts:
 
-Define Custom Prometheus Alerts
+Create Custom Prometheus Alerts
 ##############################################
 
 You can define new alerts in two ways using Robusta:
@@ -42,22 +42,12 @@ Add the following config to your Robusta generated_values.yaml if you are using 
     3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using values helm values file.
 
 
-Defining a Custom Alert
+Creating a Custom Alert
 ---------------------------------------
 
 Prometheus Alerts are defined on Kubernetes using the PrometheusRule CRD.
 
 As an example, we'll define an alert to find Pods with CPU usage over their request.
-
-.. .. details:: What is the PrometheusRule CRD?
-
-..     CRDs (Custom Resources Definitions) extend Kubernetes API with new resource types. You can apply and edit these
-..     resources using ``kubectl`` just like Pods, Deployments, and other builtin resources.
-
-..     The Prometheus Operator adds CRDs to Kubernetes so you can control Prometheus alerts with ``kubectl``. Whenever you
-..     apply or edit a ``PrometheusRule`` CRD, the operator will update Prometheus's configuration automatically.
-
-..     When Robusta's embedded Prometheus Stack is enabled, the Prometheus Operator is installed automatically.
 
 Save the following YAML into a file and run `kubectl apply -f <filename>`
 
@@ -85,10 +75,10 @@ Save the following YAML into a file and run `kubectl apply -f <filename>`
               summary: "Container CPU usage is above 75% of request for 5 minutes"
               description: "The container is using more than 75% of its requested CPU for 5 minutes."
 
-Testing the Alert
----------------------------------------
+Testing
+----------
 
-Deploy a pod that deliberately consumes a lot of CPU to trigger the alert we defined:
+To test the alert, deploy a CPU-intensive pod designed to trigger the specified alert:
 
 .. code-block:: bash
 
@@ -97,9 +87,7 @@ Deploy a pod that deliberately consumes a lot of CPU to trigger the alert we def
 
 You will know the alert was defined successfully when Prometheus fires an alert. When using Robusta, this means a notification will be received in all configured sinks.
 
-## TODO image
-
-.. image:: /images/highcputhrottling.png
+.. image:: /images/container_cpu_request_alert.png
   :width: 600
   :align: center
 
@@ -116,6 +104,6 @@ You will know the alert was defined successfully when Prometheus fires an alert.
 Next Steps
 ---------------
 
-In the next tutorial, we enhance this Prometheus alert with Robusta. Keep reading to learn more:
+In the next tutorial, discover how to further enhance this Prometheus alert with Robusta. Keep reading to learn more:
 
 * :ref:`Enrich Custom Prometheus Alerts`
