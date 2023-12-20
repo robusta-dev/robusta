@@ -519,7 +519,7 @@ class SupabaseDal(AccountResourceFetcher):
     def get_account_resources(
             self,
             resource_kind: Optional[ResourceKind] = None,
-            updated_at: Optional[datetime] = None,
+            latest_revision: Optional[datetime] = None,
     ) -> Dict[ResourceKind, List[AccountResource]]:
         try:
             query_builder = (
@@ -532,8 +532,8 @@ class SupabaseDal(AccountResourceFetcher):
             if resource_kind:
                 query_builder.eq("resource_kind", resource_kind)
 
-            if updated_at:
-                query_builder.gt("updated_at", updated_at.isoformat())
+            if latest_revision:
+                query_builder.gt("updated_at", latest_revision.isoformat())
             else:
                 # in the initial db fetch don't include the deleted records.
                 # in the subsequent db fetch allow even the deleted records so that they can be removed from the cluster
@@ -569,26 +569,26 @@ class SupabaseDal(AccountResourceFetcher):
 
             account_resources_map[resource.resource_kind].append(resource)
 
-        return dict(account_resources_map)
+        return account_resources_map
 
     def __to_db_account_resource_status(
             self,
             status_type: AccountResourceStatusType,
-            last_updated_at: datetime,
+            latest_revision: datetime,
             info: Optional[AccountResourceStatusInfo] = None,
     ) -> Dict[Any, Any]:
-        last_updated_at_iso = last_updated_at.isoformat()
+        latest_revision_iso = latest_revision.isoformat()
         data = {
             "account_id": self.account_id,
             "cluster_id": self.cluster,
             "status": status_type,
             "info": info.dict() if info else None,
             "updated_at": "now()",
-            "latest_revision": last_updated_at_iso,
+            "latest_revision": latest_revision_iso,
         }
 
         if status_type != AccountResourceStatusType.error:
-            data["synced_revision"] = last_updated_at_iso
+            data["synced_revision"] = latest_revision_iso
 
         return data
 
@@ -596,11 +596,11 @@ class SupabaseDal(AccountResourceFetcher):
             self,
             status_type: AccountResourceStatusType,
             info: Optional[AccountResourceStatusInfo],
-            last_updated_at: datetime
+            latest_revision: datetime
     ):
         try:
             data = self.__to_db_account_resource_status(status_type=status_type, info=info,
-                                                        last_updated_at=last_updated_at)
+                                                        latest_revision=latest_revision)
 
             self.client.table(ACCOUNT_RESOURCE_STATUS_TABLE).upsert(data).execute()
         except Exception as e:

@@ -2,26 +2,24 @@ import logging
 import math
 from typing import List, Dict, Optional
 from kubernetes import client
-from kubernetes.client import ApiException
 
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, MAX_ALLOWED_RULES_PER_CRD_ALERT, RRM_PERIOD_SEC, \
     RELEASE_NAME
-from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
-from robusta.core.sinks.robusta.rrm.base_resource_manager import BaseResourceManager
+from robusta.core.sinks.robusta.rrm.base_resource_manager import BaseResourceHandler
 from robusta.core.sinks.robusta.rrm.types import PrometheusAlertRule, \
-    AccountResource, ResourceKind, AccountResourceStatusType, AccountResourceStatusInfo
+    AccountResource, ResourceKind
 
 
-class PrometheusAlertResourceManager(BaseResourceManager):
-    def __init__(self, cluster: str, resource_kind: ResourceKind, dal: AccountResourceFetcher):
-        super().__init__(resource_kind, cluster, dal)
+class PrometheusAlertResourceHandler(BaseResourceHandler):
+    def __init__(self, cluster: str, resource_kind: ResourceKind, ):
+        super().__init__(resource_kind, cluster)
         self.__sleep = RRM_PERIOD_SEC
         self.cluster = cluster
         self.__max_allowed_rules_per_crd = MAX_ALLOWED_RULES_PER_CRD_ALERT
-        self.__label_selector_key = "release.app"
-        self.__label_selector_value = "robusta-resource-management"
+        self.__identification_label = "release.app"
+        self.__identification_label_value = "robusta-resource-management"
         self.init_resources_max_attempts = 3
-        self.__label_selector = f"{self.__label_selector_key}={self.__label_selector_value}"
+        self.__label_selector = f"{self.__identification_label}={self.__identification_label_value}"
         self.__plural = "prometheusrules"
         self.__group = "monitoring.coreos.com"
         self.__group_name = "kubernetes-apps"
@@ -36,7 +34,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
     def __in_cluster(self, clusters_target_set: List[str] = []) -> bool:
         return "*" in clusters_target_set or self.cluster in clusters_target_set
 
-    def __list_rules_objects(self) -> Optional[Dict[str, dict]]:
+    def __list_rules_objects(self) -> Optional[Dict[str, Dict]]:
         try:
             return self.__k8_api.list_namespaced_custom_object(
                 group=self.__group,
@@ -51,7 +49,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
             else:
                 raise e
 
-    def __exisiting_rules_objects_map(self) -> Optional[Dict[str, dict]]:
+    def __exisiting_rules_objects_map(self) -> Optional[Dict[str, Dict]]:
         objs = self.__list_rules_objects()
 
         if not objs:
@@ -59,7 +57,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
 
         obj_items = objs.get("items", [])
 
-        result: Dict[str, dict] = {}
+        result: Dict[str, Dict] = {}
         for item in obj_items:
             name = item.get("metadata").get("name")
             result[name] = item
@@ -75,7 +73,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 "labels": {
                     "release": RELEASE_NAME,
                     "role": "alert-rules",
-                    self.__label_selector_key: self.__label_selector_value
+                    self.__identification_label: self.__identification_label_value
                 },
             },
             "spec": {
@@ -122,7 +120,7 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 )
 
         except Exception as e:
-            logging.error(f"An error occured while creating PrometheusRules CRD", exc_info=True)
+            logging.error(f"An error occured while creating PrometheusRules CRD name: {name}", exc_info=True)
 
             raise e
 
@@ -142,7 +140,10 @@ class PrometheusAlertResourceManager(BaseResourceManager):
 
             raise e
 
-    def start_syncing_alerts(self, account_resources: List[AccountResource]):
+    def handle_resources(self, account_resources: List[AccountResource]) -> Optional[str]:
+        if not account_resources:
+            return None
+
         for res in account_resources:
             if res.resource_state:
                 rule_dict = res.resource_state.get("rule")
@@ -161,9 +162,9 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 if in_cluster:
                     self.__alerts_config_supabase_cache[res.entity_id] = rule
 
-        self.prepare_syncing_rules()
+        return self.prepare_syncing_rules()
 
-    def prepare_syncing_rules(self):
+    def prepare_syncing_rules(self) -> Optional[str]:
         try:
             sorted_active_rules: List[PrometheusAlertRule] = sorted(
                 list(self.__alerts_config_supabase_cache.values()),
@@ -188,21 +189,14 @@ class PrometheusAlertResourceManager(BaseResourceManager):
                 existing_cr_obj = existing_cr_map.get(name)
                 self.__create_cr_rules(name=name, active_rules=sliced_rules, existing_cr_obj=existing_cr_obj)
 
-                if existing_cr_obj:
-                    # pop the already processed CR Object, if they exists
-                    existing_cr_map.pop(name, None)
+                # pop the already processed CR Object, if they exists
+                existing_cr_map.pop(name, None)
 
             # Clean up non-relevant CRDs, if they exists
             for existing_cr_name in existing_cr_map.keys():
                 self.__delete_crd_file(name=existing_cr_name)
 
         except Exception as e:
-            if isinstance(e, ApiException):
-                info = AccountResourceStatusInfo(error=e.body)
-                self.set_account_resource_status(status_type=AccountResourceStatusType.error, info=info)
-            else:
-                self.set_account_resource_status(status_type=AccountResourceStatusType.error, info=None)
+            logging.error(f"An error occurred while creating CR rules", exc_info=True)
 
-            logging.error(f"Error occured while creating prometheus alerts", exc_info=True)
-
-            raise e
+            return f"An error occurred while creating CR rules. Please check the runner logs for details"

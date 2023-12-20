@@ -9,7 +9,7 @@ from robusta.core.sinks.robusta.rrm.types import AccountResource, ResourceKind, 
 class AccountResourceFetcher(ABC):
     @abstractmethod
     def get_account_resources(
-            self, resource_kind: Optional[ResourceKind] = None, updated_at: Optional[datetime] = None,
+            self, resource_kind: Optional[ResourceKind] = None, latest_revision: Optional[datetime] = None,
     ) -> Dict[ResourceKind, List[AccountResource]]:
         pass
 
@@ -17,6 +17,6 @@ class AccountResourceFetcher(ABC):
     def set_account_resource_status(
             self, status_type: AccountResourceStatusType,
             info: Optional[AccountResourceStatusInfo],
-            last_updated_at: datetime
+            latest_revision: datetime
     ):
         pass
