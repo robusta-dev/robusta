@@ -42,6 +42,7 @@ from robusta.api import (
     get_node_internal_ip,
 )
 from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
+from robusta.core.reporting import FindingSubject
 
 
 class SeverityParams(ActionParams):
@@ -436,3 +437,64 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
 
 
 logs_enricher = action(logs_enricher)
+
+
+class MentionParams(ActionParams):
+    """
+    :var static_mentions: List of Slack user ids/groups ids to be mentioned
+    :var mentions_label: A alert label, or Kubernetes resource label, in which the value contains a comma separated ids to mention
+    :var message_template: Optional. Custom mention message. Default: `"Hey: $mentions"`
+
+    :example static_mentions: ["<@U44V9P1JJ1Z>", "<!subteam^S22H3Q3Q111>"]
+    """
+
+    static_mentions: Optional[List[str]]
+    mentions_label: Optional[str]
+    message_template: str = "Hey: $mentions"
+
+
+@action
+def mention_enricher(event: KubernetesResourceEvent, params: MentionParams):
+    """
+    You can define who to mention using a static mentions configuration,
+    Or, you can define it using a label or annotation, that exists either on the Kubernetes resource, or the alert
+
+    Order:
+    1. Resource annotations (For alert, get from FindingSubject. For other resources, get from obj metadata)
+    2. Resource labels (For alert, get from FindingSubject. For other resources, get from obj metadata)
+    3. Alert annotations (only for alert)
+    4. Alert labels (only for alert)
+
+    Note this enricher only works with the Slack sink
+    """
+
+    if not params.mentions_label and not params.static_mentions:
+        logging.warning("mention_enricher called with neither static_mentions nor mentions_label set")
+        return
+
+    event_data = {}
+    mentions = set()
+    if params.mentions_label:
+        if isinstance(event, PrometheusKubernetesAlert):
+            # Alert labels and annotations. FindingSubject can represent
+            # e.g. a k8s pod, job, daemonset etc etc.
+            alert_subject: FindingSubject = event.get_alert_subject()
+            event_data.update(alert_subject.annotations)
+            event_data.update(alert_subject.labels)
+            event_data.update(event.alert.annotations)
+            event_data.update(event.alert.labels)
+        elif event.obj:
+            if event.obj.metadata.annotations:
+                event_data.update(event.obj.metadata.annotations)
+            if event.obj.metadata.labels:
+                event_data.update(event.obj.metadata.labels)
+
+        # get the mentions and use it
+        mentions_value = event_data.get(params.mentions_label)
+        if mentions_value:
+            mentions = set(mentions_value.split(","))
+    if params.static_mentions:
+        mentions = mentions.union(params.static_mentions)
+
+    message = params.message_template.replace("$mentions", " ".join(mentions))
+    event.add_enrichment([MarkdownBlock(message)])

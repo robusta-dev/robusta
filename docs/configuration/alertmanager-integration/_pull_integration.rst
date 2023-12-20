@@ -50,7 +50,7 @@ If Prometheus and/or AlertManager require authentication, add the following to `
     prometheus_auth: Bearer <YOUR TOKEN> # Replace <YOUR TOKEN> with your actual token or use any other auth header as needed
     alertmanager_auth: Basic <USER:PASSWORD base64-encoded> # Replace <USER:PASSWORD base64-encoded> with your actual credentials, base64-encoded, or use any other auth header as needed
 
-The two settings may be configured independently.
+These settings may be configured independently.
 
 SSL Verification
 -----------------------
