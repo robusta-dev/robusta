@@ -106,7 +106,7 @@ By default, every message is sent to every matching sink. To change this behavio
 Matches Can Be Lists Or Regexes
 ********************************************
 
-Every *match* rule supports both regular expressions and a list of exact values:
+*match* rules support both regular expressions and lists of exact values:
 
 .. code-block:: yaml
 
@@ -115,14 +115,29 @@ Every *match* rule supports both regular expressions and a list of exact values:
         name: prod_slack_sink
         slack_channel: prod-notifications
         api_key: secret-key
-        # AND between namespace and severity and labels
+        # AND between namespace and severity
         match:
-          namespace: ^prod$ # match the "prod" namespace exactly
-          severity: [HIGH, LOW] # either HIGH or LOW (or logic)
-          labels: "foo=bar,instance=123"
+          namespace: ^prod$                # match the "prod" namespace exactly
+          severity: [HIGH, LOW]            # either HIGH or LOW (OR logic)
 
 Regular expressions must be in `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_, as passed to `re.match <https://docs.python.org/3/library/re.html#re.match>`_.
 
+Matching Labels and Annotations
+********************************************
+
+Special syntax is used for matching labels and annotations:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: prod_slack_sink
+        slack_channel: prod-notifications
+        api_key: secret-key
+        match:
+          labels: "foo=bar,instance=123"   # both labels must match
+
+The syntax is similar to Kubernetes selectors, but only `=` conditions are allowed, not `!=`
 
 Or Between Matches
 ********************************************
