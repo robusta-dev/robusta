@@ -61,13 +61,15 @@ class SlackSinkParams(SinkBaseParams):
 
             # Normalize channel and labels/annotations keys
             channel_normalized = self.normalize_placeholder(channel)
-            labels_annotaions_normalized = self.normalize_dict_keys(labels | annots)
+            labels_normalized = self.normalize_dict_keys(labels)
+            annotaions_normalized = self.normalize_dict_keys(annots)
 
             # Substitute placeholders in the normalized channel
-            channel = Template(channel_normalized).safe_substitute(labels_annotaions_normalized)
+            channel_normalized = Template(channel_normalized).safe_substitute(labels_normalized)
+            channel_normalized = Template(channel_normalized).safe_substitute(annotaions_normalized)
 
-            if MISSING not in channel:
-                return channel
+            if MISSING not in channel_normalized:
+                return channel_normalized
 
         # Return default slack_channel if no channel_override or if MISSING is in the channel
         return self.slack_channel
