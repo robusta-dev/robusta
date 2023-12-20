@@ -130,6 +130,8 @@ These actions enrich Prometheus alerts and only support the :ref:`on_prometheus_
 
 .. robusta-action:: playbooks.robusta_playbooks.alerts_integration.alert_definition_enricher
 
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.mention_enricher
+
 Prometheus Silencers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
