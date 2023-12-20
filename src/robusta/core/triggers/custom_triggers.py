@@ -10,7 +10,7 @@ from robusta.core.triggers.error_event_trigger import (
     WarningEventUpdateTrigger,
 )
 from robusta.core.triggers.job_failed_trigger import JobFailedTrigger
-from robusta.core.triggers.multi_resoources_trigger import MultiResourceTrigger
+from robusta.core.triggers.multi_resources_trigger import MultiResourceTrigger
 from robusta.core.triggers.pod_crash_loop_trigger import PodCrashLoopTrigger
 from robusta.core.triggers.pod_image_pull_backoff import PodImagePullBackoffTrigger
 from robusta.core.triggers.pod_oom_killed_trigger import PodOOMKilledTrigger
