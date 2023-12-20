@@ -384,9 +384,8 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 - triggers:
-    - on_deployment_all_changes: {}
-    - on_daemonset_all_changes: {}
-    - on_statefulset_all_changes: {}
+    - on_kubernetes_resource_operation:
+        resources: ["deployment", "daemonset", "statefulset"]
   actions:
     - resource_babysitter: {}
   sinks:
@@ -401,13 +400,8 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 - triggers:
-    - on_deployment_all_changes: {}
-    - on_daemonset_all_changes: {}
-    - on_statefulset_all_changes: {}
-    - on_replicaset_all_changes: {}
-    - on_pod_all_changes: {}
-    - on_node_all_changes: {}
-    - on_job_all_changes: {}
+    - on_kubernetes_resource_operation:
+        resources: ["deployment", "replicaset", "daemonset", "statefulset", "pod", "node", "job" ]
   actions:
     - resource_events_diff: {}
 - triggers:

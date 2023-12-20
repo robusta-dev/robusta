@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from hikaru.model.rel_1_26 import ContainerStatus, Pod
 from pydantic import BaseModel
@@ -41,15 +41,15 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
         # pydantic not automatically converting exclude, exclude here is just a list of dicts according to runtime
         self.exclude = [Exclude(**excluded) for excluded in exclude] if exclude else []
 
-    def should_fire(self, event: TriggerEvent, playbook_id: str):
-        should_fire = super().should_fire(event, playbook_id)
+    def should_fire(self, event: TriggerEvent, playbook_id: str, build_context: Dict[str, Any]):
+        should_fire = super().should_fire(event, playbook_id, build_context)
         if not should_fire:
             return should_fire
 
         if not isinstance(event, K8sTriggerEvent):
             return False
 
-        exec_event = self.build_execution_event(event, {})
+        exec_event = self.build_execution_event(event, {}, build_context)
 
         if not isinstance(exec_event, PodChangeEvent):
             return False
