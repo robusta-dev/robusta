@@ -31,7 +31,7 @@ class PrometheusHealthChecker:
 
         self.__last_alertmanager_error_log_time = 0
         self.__last_prometheus_error_log_time = 0
-        self.__check_prometheus_flags = True
+        self.__check_prometheus_flags = global_config.get("check_prometheus_flags", True)
 
         self.__thread = threading.Thread(target=self.__run_checks)
         self.__thread.start()
