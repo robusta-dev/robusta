@@ -14,6 +14,7 @@ Integrating with Prometheus
    eks-managed-prometheus
    coralogix_managed_prometheus
    victoria-metrics
+   google-managed-prometheus
    embedded-prometheus
 ..    grafana-alert-manager
 
@@ -65,6 +66,13 @@ Setup Instructions
         :link-type: doc
 
         Coralogix Managed Prometheus
+
+    .. grid-item-card:: :octicon:`book;1em;` Google Managed Prometheus
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: google-managed-prometheus
+        :link-type: doc
+
+        Google Managed Prometheus (GMP)
 
     .. grid-item-card:: :octicon:`book;1em;` Victoria Metrics
         :class-card: sd-bg-light sd-bg-text-light
