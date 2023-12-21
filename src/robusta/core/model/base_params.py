@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, SecretStr, validator
 
+from robusta.integrations import openshift
 from robusta.utils.documented_pydantic import DocumentedModel
 
 
@@ -147,6 +148,19 @@ class PrometheusParams(ActionParams):
             v = v.lstrip("?")
             logging.info(f"Stripping '?' off prometheus_url_query_string: {v}")
         return v
+
+    @validator("prometheus_auth", allow_reuse=True)
+    def auto_openshift_token(cls, v: Optional[SecretStr]):
+        # If openshift is enabled, and the user didn't configure prometheus_auth, we will try to load the token from the service account
+        if v is not None:
+            return v
+
+        openshift_token = openshift.load_token()
+        if openshift_token is not None:
+            logging.info("Using openshift token for prometheus auth")
+            return SecretStr(f"Bearer {openshift_token}")
+
+        return None
 
 
 class PrometheusDuration(BaseModel):

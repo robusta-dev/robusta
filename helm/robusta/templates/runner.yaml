@@ -101,6 +101,11 @@ spec:
             mountPath: /etc/robusta/auth
           - name: playbooks-config-secret
             mountPath: /etc/robusta/config
+          {{- if .Values.openshift.enabled}}
+          - name: openshift-token
+            mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            readOnly: true
+          {{- end }}
           {{- if .Values.playbooksPersistentVolume }}
           - name: persistent-playbooks-storage
             mountPath: /etc/robusta/playbooks/storage
@@ -153,6 +158,13 @@ spec:
             {{- $subBloc := .Values.rsa | default dict }}
             secretName: {{ default "robusta-auth-config-secret" $subBloc.existingSecret }}
             optional: true
+        {{- if .Values.openshift.enabled}}
+        - name: openshift-token
+          projected:
+            sources:
+            - serviceAccountToken:
+                path: token
+        {{- end }}
         {{- if .Values.playbooksPersistentVolume }}
         - name: persistent-playbooks-storage
           persistentVolumeClaim:
