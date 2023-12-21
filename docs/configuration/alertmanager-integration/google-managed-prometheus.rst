@@ -3,8 +3,7 @@ Google Managed Prometheus
 
 This guide walks you through integrating your `Google Managed Prometheus <https://cloud.google.com/stackdriver/docs/managed-prometheus>`_ with Robusta.
 
-You will need to configure a push integration.
-
+You will need to configure two integrations: both a pull integration and a push integration.
 
 Setting Up Google Managed Prometheus
 -------------------------------------
@@ -13,40 +12,29 @@ Setting Up Google Managed Prometheus
 
    Follow the `setup instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/setup-managed>`_ to install the Prometheus frontend.
 
-2. **Configure Prometheus in Robusta**
-
-   Add to your ``generated_values.yaml``:
-
-.. code-block:: yaml
-
-    prometheus_url: "http://frontend.default.svc.cluster.local:9090"
-    alertmanager_url: "http://alertmanager.gmp-system.svc.cluster.local:9093"
-
-3. **Install Node Exporter**
+2. **Install Node Exporter**
 
    Run through the `Node Exporter <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/node_exporter>`_ instructions to setup Node Exporter.
 
-4. **Update Kubelet Scraping Config**
+3. **Update Kubelet Scraping Config**
 
-   Run ``kubectl -n gmp-public edit operatorconfig config`` and add the following config to change the Kubelet scraping interval. Detailed instructions are available at `Kubelet and cAdvisor <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kubelet-cadvisor>`_.
+   Run ``kubectl -n gmp-public edit operatorconfig config`` and add the following config to change the Kubelet scraping interval.
+
+   .. code-block:: yaml
+
+      collection:
+         kubeletScraping:
+             interval: 30s
+
+   Detailed instructions are available at `Kubelet and cAdvisor <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kubelet-cadvisor>`_.
 
 
-.. code-block:: yaml
-
-    collection:
-    kubeletScraping:
-        interval: 30s
-
-
-5. **Install Kube-State-Metrics**
+4. **Install Kube-State-Metrics**
 
    Apply **Install Kube State Metrics** and **Define rules and alerts** configs in the `Kube State Metrics <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kube_state_metrics>`_ guide.
 
-
 Configure Push Integration
-----------------------------
-
-A push integration sends alerts to Robusta. To configure it, edit AlertManager's configuration:
+--------------------------
 
 To ensure that Alertmanager applies the new configuration, create a Kubernetes secret named `alertmanager`. This can be achieved using the following kubectl command:
 
@@ -55,6 +43,8 @@ To ensure that Alertmanager applies the new configuration, create a Kubernetes s
    kubectl create secret generic alertmanager \
      -n gmp-public \
      --from-file=alertmanager.yaml
+
+A push integration sends alerts to Robusta. To configure it, edit AlertManager's configuration:
 
 .. code-block:: yaml
 
@@ -77,7 +67,17 @@ To ensure that Alertmanager applies the new configuration, create a Kubernetes s
          continue: true
      receiver: 'default-receiver'
 
+This creates a secret in the `gmp-public` namespace with the contents of your `alertmanager.yaml` file. The Alertmanager deployment will use this secret to configure its alert forwarding settings.
 
-This creates a secret in the `gmp-public` namespace with the contents of your `alertmanager.yaml` file.
+Configure Pull Integration
+----------------------------
 
-The Alertmanager deployment will use this secret to configure its alert forwarding settings.
+A pull integration lets Robusta pull metrics and create silences.
+
+To configure it, add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
+
+.. code-block:: yaml
+
+   globalConfig: # this line should already exist
+      prometheus_url: "http://frontend.default.svc.cluster.local:9090"
+      alertmanager_url: "http://alertmanager.gmp-system.svc.cluster.local:9093"
