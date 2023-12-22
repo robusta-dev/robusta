@@ -25,7 +25,7 @@ class SinkBase:
             return [TimeSliceAlways()]
         else:
             timezone = params.timezone
-            return [self._interval_to_time_slice(timezone, interval) for interval in params]
+            return [self._interval_to_time_slice(timezone, interval) for interval in params.intervals]
 
     def _interval_to_time_slice(self, timezone: str, interval: ActivityInterval):
         return TimeSlice(interval.days, [(time.start, time.end) for time in interval.hours], timezone)
