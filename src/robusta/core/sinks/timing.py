@@ -50,9 +50,6 @@ class TimeSlice(TimeSliceBase):
             raise ValueError(f"Invalid time: {time_str}")
         return hr * 3600 + min * 60
 
-    def __add__(self, other: "TimeSlice") -> "TimeSlice":
-        return TimeSliceUnion(self, other)
-
     def is_active_now(self) -> bool:
         tznow = datetime.now(self.timezone)
         tz_second_of_day = 3600 * tznow.hour + 60 * tznow.minute + tznow.second
@@ -63,15 +60,6 @@ class TimeSlice(TimeSliceBase):
         else:
             # time_intervals not set, assume the whole day is acceptable
             return tznow.weekday() in self.days
-
-
-class TimeSliceUnion(TimeSlice):
-    def __init__(self, ts1: TimeSlice, ts2: TimeSlice):
-        self.ts1 = ts1
-        self.ts2 = ts2
-
-    def is_active_now(self) -> bool:
-        return self.ts1.is_active_now() or self.ts2.is_active_now()
 
 
 class TimeSliceAlways(TimeSliceBase):

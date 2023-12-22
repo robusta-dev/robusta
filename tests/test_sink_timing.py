@@ -1,9 +1,7 @@
-from datetime import datetime
-
 import pytest
 from freezegun import freeze_time
 
-from robusta.core.sinks.timing import TimeSlice, TimeSliceUnion
+from robusta.core.sinks.timing import TimeSlice
 
 
 class TestTimeSlice:
@@ -34,18 +32,3 @@ class TestTimeSlice:
     def test_invalid_time(self, time):
         with pytest.raises(ValueError):
             TimeSlice([], [time], "UTC")
-
-    def test_add(self):
-        added = TimeSlice(["MON", "FRI"], [("13:30", "14:30"), ("17:30", "18:30")], "UTC") + TimeSlice(
-            ["SUN", "FRI"], [("13:45", "14:30"), ("11:30", "11:31")], "UTC"
-        )
-        assert isinstance(added, TimeSlice)
-
-
-class TestTimeSliceUnion:
-    def test_union_is_active_now(self):
-        added = TimeSlice(["MON", "FRI"], [("13:30", "14:30"), ("17:30", "18:30")], "UTC") + TimeSlice(
-            ["SUN", "FRI"], [("13:45", "14:30"), ("11:30", "11:31")], "UTC"
-        )
-        with freeze_time("2012-01-01 13:45"):  # this is UTC time
-            assert added.is_active_now() is True
