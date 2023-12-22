@@ -195,6 +195,44 @@ routed to the sink only from :ref:`customPlaybooks that explicitly name this sin
 
 Here too, matchers apply as usual and perform further filtering.
 
+Time-limiting sink activity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible, for any sink, to set the schedule of its activation by specifying the ``activity`` field in its
+configuration. You can specify multiple time spans, with specific days of the week and hours in these days that
+the sink will be active. Outside of these specified time spans, the sink will not run - so for example Slack
+messages will not be delivered.
+
+An example of such a configuration is presented below:
+
+.. code-block:: yml
+
+    sinksConfig:
+    - slack_sink:
+        name: main_slack_sink
+        slack_channel: robusta-notifications
+        api_key: xoxb-your-slack-key
+        activity:
+          timezone: CET
+          intervals:
+          - days: ['mon', 'tue', 'sun']
+            hours:
+            - start: 10:00
+              end: 11:00
+            - start: 16:00
+              end: 17:00
+          - days: ['thr']
+            hours:
+            - start: 10:00
+              end: 16:00
+            - start: 16:05
+              end: 23:00
+
+Note that if the ``activity`` field is omitted, it is assumed that the sink will always be activated.
+As seen above, each section under ``intervals`` may have multiple spans of time under the ``hours``
+key. If the ``hours`` section is omitted for a given interval, it's assumed that the sink will be
+active for all the specified days, irrespective of time.
+
 Examples
 ^^^^^^^^^^^
 
