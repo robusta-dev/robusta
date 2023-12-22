@@ -1,17 +1,25 @@
 import logging
 import math
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
+
 from kubernetes import client
 
-from robusta.core.model.env_vars import INSTALLATION_NAMESPACE, MAX_ALLOWED_RULES_PER_CRD_ALERT, RRM_PERIOD_SEC, \
-    RELEASE_NAME
+from robusta.core.model.env_vars import (
+    INSTALLATION_NAMESPACE,
+    MAX_ALLOWED_RULES_PER_CRD_ALERT,
+    RELEASE_NAME,
+    RRM_PERIOD_SEC,
+)
 from robusta.core.sinks.robusta.rrm.base_resource_manager import BaseResourceHandler
-from robusta.core.sinks.robusta.rrm.types import PrometheusAlertRule, \
-    AccountResource, ResourceKind
+from robusta.core.sinks.robusta.rrm.types import AccountResource, PrometheusAlertRule, ResourceKind
 
 
 class PrometheusAlertResourceHandler(BaseResourceHandler):
-    def __init__(self, cluster: str, resource_kind: ResourceKind, ):
+    def __init__(
+        self,
+        cluster: str,
+        resource_kind: ResourceKind,
+    ):
         super().__init__(resource_kind, cluster)
         self.__sleep = RRM_PERIOD_SEC
         self.cluster = cluster
@@ -41,7 +49,7 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
                 version=self.__version,
                 plural=self.__plural,
                 namespace=self.__installation_namespace,
-                label_selector=f"{self.__label_selector}"
+                label_selector=f"{self.__label_selector}",
             )
         except client.ApiException as e:
             if e.status == 404:
@@ -73,21 +81,15 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
                 "labels": {
                     "release": RELEASE_NAME,
                     "role": "alert-rules",
-                    self.__identification_label: self.__identification_label_value
+                    self.__identification_label: self.__identification_label_value,
                 },
             },
-            "spec": {
-                "groups": [
-                    {
-                        "name": self.__group_name,
-                        "rules": rules
-                    }
-                ]
-            }
+            "spec": {"groups": [{"name": self.__group_name, "rules": rules}]},
         }
 
-    def __create_cr_rules(self, name: str, active_rules: List[PrometheusAlertRule], existing_cr_obj: Optional[dict]) -> \
-            Optional[dict]:
+    def __create_cr_rules(
+        self, name: str, active_rules: List[PrometheusAlertRule], existing_cr_obj: Optional[dict]
+    ) -> Optional[dict]:
         try:
             rules = [rule.to_dict() for rule in active_rules]
             if existing_cr_obj:
@@ -107,7 +109,7 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
                     plural=self.__plural,
                     body=existing_cr_obj,
                     namespace=self.__installation_namespace,
-                    name=name
+                    name=name,
                 )
             else:
                 # If the custom object doesn't exist, create a new one.
@@ -116,7 +118,7 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
                     version=self.__version,
                     plural=self.__plural,
                     body=self.__get_snapshot_body(name=name, rules=rules),
-                    namespace=self.__installation_namespace
+                    namespace=self.__installation_namespace,
                 )
 
         except Exception as e:
@@ -132,11 +134,11 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
                 plural=self.__plural,
                 namespace=self.__installation_namespace,
                 name=name,
-                grace_period_seconds=60
+                grace_period_seconds=60,
             )
 
         except Exception as e:
-            logging.error(f"An error occured while deleting the PrometheusRules CRD", exc_info=True)
+            logging.error("An error occured while deleting the PrometheusRules CRD", exc_info=True)
 
             raise e
 
@@ -167,8 +169,8 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
     def prepare_syncing_rules(self) -> Optional[str]:
         try:
             sorted_active_rules: List[PrometheusAlertRule] = sorted(
-                list(self.__alerts_config_supabase_cache.values()),
-                key=lambda x: x.alert)
+                list(self.__alerts_config_supabase_cache.values()), key=lambda x: x.alert
+            )
 
             existing_cr_map = self.__exisiting_rules_objects_map()
 
@@ -186,17 +188,15 @@ class PrometheusAlertResourceHandler(BaseResourceHandler):
 
                 sliced_rules = sorted_active_rules[start_index:end_index]
 
-                existing_cr_obj = existing_cr_map.get(name)
+                # pop the existing CR Object, if they exists
+                existing_cr_obj = existing_cr_map.pop(name, None)
                 self.__create_cr_rules(name=name, active_rules=sliced_rules, existing_cr_obj=existing_cr_obj)
-
-                # pop the already processed CR Object, if they exists
-                existing_cr_map.pop(name, None)
 
             # Clean up non-relevant CRDs, if they exists
             for existing_cr_name in existing_cr_map.keys():
                 self.__delete_crd_file(name=existing_cr_name)
 
-        except Exception as e:
-            logging.error(f"An error occurred while creating CR rules", exc_info=True)
+        except Exception:
+            logging.error("An error occurred while creating CR rules", exc_info=True)
 
-            return f"An error occurred while creating CR rules. Please check the runner logs for details"
+            return "An error occurred while creating CR rules. Please check the runner logs for details"
