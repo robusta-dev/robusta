@@ -1,3 +1,4 @@
+from abc import ABC
 from datetime import datetime
 from typing import List, Tuple
 
@@ -19,13 +20,13 @@ _DAY_STR_TO_NUM = {
 DAY_NAMES = list(_DAY_STR_TO_NUM.keys())
 
 
-class TimeSliceBase:
+class TimeSliceBase(ABC):
     def is_active_now(self) -> bool:
         raise NotImplementedError()
 
 
 class TimeSlice(TimeSliceBase):
-    def __init__(self, days: List[str] = None, time_intervals: List[Tuple[str, str]] = [], timezone=DEFAULT_TIMEZONE):
+    def __init__(self, days: List[str], time_intervals: List[Tuple[str, str]] = [], timezone=DEFAULT_TIMEZONE):
         self.days = [self._parse_day(day) for day in days]
         self.time_intervals = [(self._parse_time(start), self._parse_time(end)) for start, end in time_intervals]
         try:
@@ -53,7 +54,7 @@ class TimeSlice(TimeSliceBase):
         return TimeSliceUnion(self, other)
 
     def is_active_now(self) -> bool:
-        tznow = pytz.timezone("UTC").localize(datetime.utcnow()).astimezone(self.timezone)
+        tznow = datetime.now(self.timezone)
         tz_second_of_day = 3600 * tznow.hour + 60 * tznow.minute + tznow.second
         if self.time_intervals:
             return tznow.weekday() in self.days and any(
