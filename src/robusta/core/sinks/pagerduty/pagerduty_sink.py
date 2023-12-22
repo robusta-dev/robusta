@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 import requests
 
@@ -233,7 +233,7 @@ class PagerdutySink(SinkBase):
         return ""
 
     @staticmethod
-    def __to_unformatted_text_for_changes(block: KubernetesDiffBlock) -> Optional[list[str]]:
+    def __to_unformatted_text_for_changes(block: KubernetesDiffBlock) -> Optional[List[str]]:
         return list(map(
             lambda diff: diff.formatted_path,
             block.diffs,

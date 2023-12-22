@@ -98,7 +98,7 @@ def to_pod_row(pod: Pod, cluster_name: str) -> List:
     ]
 
 
-def get_related_pods(resource) -> list[Pod]:
+def get_related_pods(resource) -> List[Pod]:
     kind: str = resource.kind or ""
     if kind not in supported_resources:
         raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {kind}")

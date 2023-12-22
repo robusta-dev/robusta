@@ -364,7 +364,7 @@ class Discovery:
                             # we use map here to deduplicate and pick only the latest release data
                             helm_releases_map[decoded_release_row.get_service_key()] = decoded_release_row
                         except Exception as e:
-                            logging.error(f"an error occured while decoding helm releases: {e}")
+                            logging.error(f"an error occurred while decoding helm releases: {e}")
 
                     continue_ref = secrets.metadata._continue
                     if not continue_ref:
