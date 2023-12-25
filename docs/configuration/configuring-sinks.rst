@@ -106,7 +106,7 @@ By default, every message is sent to every matching sink. To change this behavio
 Matches Can Be Lists Or Regexes
 ********************************************
 
-Every *match* rule supports both regular expressions and a list of exact values:
+*match* rules support both regular expressions and lists of exact values:
 
 .. code-block:: yaml
 
@@ -115,14 +115,29 @@ Every *match* rule supports both regular expressions and a list of exact values:
         name: prod_slack_sink
         slack_channel: prod-notifications
         api_key: secret-key
-        # AND between namespace and severity and labels
+        # AND between namespace and severity
         match:
-          namespace: ^prod$ # match the "prod" namespace exactly
-          severity: [HIGH, LOW] # either HIGH or LOW (or logic)
-          labels: "foo=bar,instance=123"
+          namespace: ^prod$                # match the "prod" namespace exactly
+          severity: [HIGH, LOW]            # either HIGH or LOW (OR logic)
 
 Regular expressions must be in `Python re module format <https://docs.python.org/3/library/re.html#regular-expression-syntax>`_, as passed to `re.match <https://docs.python.org/3/library/re.html#re.match>`_.
 
+Matching Labels and Annotations
+********************************************
+
+Special syntax is used for matching labels and annotations:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: prod_slack_sink
+        slack_channel: prod-notifications
+        api_key: secret-key
+        match:
+          labels: "foo=bar,instance=123"   # both labels must match
+
+The syntax is similar to Kubernetes selectors, but only `=` conditions are allowed, not `!=`
 
 Or Between Matches
 ********************************************
@@ -179,6 +194,44 @@ To prevent a sink from receiving most notifications, you can set ``default: fals
 routed to the sink only from :ref:`customPlaybooks that explicitly name this sink <Alternative Routing Methods>`.
 
 Here too, matchers apply as usual and perform further filtering.
+
+Time-limiting sink activity
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible, for any sink, to set the schedule of its activation by specifying the ``activity`` field in its
+configuration. You can specify multiple time spans, with specific days of the week and hours in these days that
+the sink will be active. Outside of these specified time spans, the sink will not run - so for example Slack
+messages will not be delivered.
+
+An example of such a configuration is presented below:
+
+.. code-block:: yml
+
+    sinksConfig:
+    - slack_sink:
+        name: main_slack_sink
+        slack_channel: robusta-notifications
+        api_key: xoxb-your-slack-key
+        activity:
+          timezone: CET
+          intervals:
+          - days: ['mon', 'tue', 'sun']
+            hours:
+            - start: 10:00
+              end: 11:00
+            - start: 16:00
+              end: 17:00
+          - days: ['thr']
+            hours:
+            - start: 10:00
+              end: 16:00
+            - start: 16:05
+              end: 23:00
+
+Note that if the ``activity`` field is omitted, it is assumed that the sink will always be activated.
+As seen above, each section under ``intervals`` may have multiple spans of time under the ``hours``
+key. If the ``hours`` section is omitted for a given interval, it's assumed that the sink will be
+active for all the specified days, irrespective of time.
 
 Examples
 ^^^^^^^^^^^
