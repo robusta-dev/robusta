@@ -401,11 +401,6 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 - triggers:
-    - on_kubernetes_resource_operation:
-        resources: ["deployment", "replicaset", "daemonset", "statefulset", "pod", "node", "job" ]
-  actions:
-    - resource_events_diff: {}
-- triggers:
   - on_job_failure: {}
   actions:
   - create_finding:
