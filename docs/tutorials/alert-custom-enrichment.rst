@@ -10,23 +10,21 @@ Use Case 1: Enrich Alerts by Running a Bash Script
 
 **Implementation**:
 
-Configure Robusta to execute the ``ps aux`` command in response to the ``HostHighCpuLoad`` alert.. This way you can see which process is taking up high CPU.
-
-Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`.
+Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`. This configures Robusta to execute the ``ps aux`` command in response to the ``HostHighCpuLoad`` alert.
 
 .. code-block:: yaml
 
    customPlaybooks:
    - triggers:
      - on_prometheus_alert:
-         alert_name: HostHighCpuLoad
+         alert_name: CPUThrottlingHigh
      actions:
      - node_bash_enricher:
          bash_command: ps aux
 
 **Testing**:
 
-Deploy a pod that deliberately consumes a lot of CPU to trigger the alert we defined:
+Trigger the alert we defined by deploying a Pod that consumes a lot of CPU:
 
 .. code-block:: bash
 
@@ -44,8 +42,7 @@ Use Case 2: Enhance Alerts with Links to External Documentation
 
 **Implementation**:
 
-Configure Robusta to add links to docs or other applications
-In the following example we use ``KubeContainerCPURequestAlert`` created in the :ref:`Create Custom Alerting Rule <Creating a Custom Alerting Rule>` tutorial.
+Add external links to your alerts, like documentation pages. In this example, we add links to the alert ``KubeContainerCPURequestAlert`` that we created in a previous tutorial.
 
 Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`.
 
@@ -85,7 +82,7 @@ We can wait for the alert to fire or we can speed things up and simulate the ale
 
     robusta demo-alert --alert=KubeContainerCPURequestAlert --labels=label1=test,label2=alert
 
-Once the alert fires, a notification arrives in your configured sinks.
+Once the alert fires, a notification will arrive with external links included.
 
 **Sample Alert**:
 

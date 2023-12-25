@@ -21,25 +21,35 @@ Prerequisites
 --------------
 
 * Kube-Prometheus-Stack, installed via Robusta or seperately.
+* Enable global rule selection for the Prometheus operator. Add the following config to your ``generated_values.yaml``. (By default Prometheus Operator picks up only certain new alerts, here we tell it to pick up all new alerts)
 
-Enable Global Rule Selection
-*******************************
-Before we add the rule itself, we should configure Kube-Prometheus-Stack to pickup all new alerts we place in the cluster.
+  .. grid-item::
 
-Add the following config to your Robusta generated_values.yaml if you are using kube-prometheus-stack installed by Robusta. Otherwise remove ``kube-prometheus-stack:`` and add the config to your values file.
+      .. md-tab-set::
 
-.. code-block:: yaml
+          .. md-tab-item:: Robusta Prometheus
 
-    kube-prometheus-stack:
-      prometheus:
-        ruleNamespaceSelector: {} # (1)
-        ruleSelector: {} # (2)
-        ruleSelectorNilUsesHelmValues: false # (3)
+            .. code-block:: yaml
 
-.. code-annotations::
-    1. Add a namespace if you want Prometheus to identify rules created in specific namespaces. Leave ``{}`` to detect rules from any namespace.
-    2. Add a label if you want Prometheus to detect rules with a specific selector. Leave ``{}`` to detect rules with any label.
-    3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using values helm values file.
+              kube-prometheus-stack:
+                prometheus:
+                  ruleNamespaceSelector: {} # (1)
+                  ruleSelector: {} # (2)
+                  ruleSelectorNilUsesHelmValues: false # (3)
+
+            .. code-annotations::
+              1. Add a namespace if you want Prometheus to identify rules created in specific namespaces. Leave ``{}`` to detect rules from any namespace.
+              2. Add a label if you want Prometheus to detect rules with a specific selector. Leave ``{}`` to detect rules with any label.
+              3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using values helm values file.
+
+          .. md-tab-item:: Other Prometheus
+
+            .. code-block:: yaml
+
+              prometheus:
+                ruleNamespaceSelector: {}
+                ruleSelector: {}
+                ruleSelectorNilUsesHelmValues: false
 
 
 Creating a Custom Alert
@@ -49,7 +59,7 @@ Prometheus Alerts are defined on Kubernetes using the PrometheusRule CRD.
 
 As an example, we'll define an alert to find Pods with CPU usage over their request.
 
-Save the following YAML into a file and run `kubectl apply -f <filename>`
+Save the following YAML into ``my_alert.yaml`` and run ``kubectl apply -f my_alert.yaml``
 
 .. code-block:: yaml
 
@@ -75,10 +85,10 @@ Save the following YAML into a file and run `kubectl apply -f <filename>`
               summary: "Container CPU usage is above 75% of request for 5 minutes"
               description: "The container is using more than 75% of its requested CPU for 5 minutes."
 
-Testing
-----------
+Testing the Alert
+-----------------------------
 
-To test the alert, deploy a CPU-intensive pod designed to trigger the specified alert:
+To test the alert, deploy a pod that uses more CPU than its request.
 
 .. code-block:: bash
 
@@ -90,16 +100,6 @@ You will know the alert was defined successfully when Prometheus fires an alert.
 .. image:: /images/container_cpu_request_alert.png
   :width: 600
   :align: center
-
-.. details:: How are Prometheus and Robusta alerts different?
-
-    Prometheus and Robusta work a little differently. Prometheus alerts are based on thresholds and time periods,
-    so it has built-in alerting delays to avoid false-positives. On the other hand, Robusta is event-driven and
-    alerts based on discrete events. It notifies immediately without alerting delays and has rate-limiting features
-    to avoid sending duplicate messages.
-
-    When a Robusta playbook uses the ``on_prometheus_alert`` trigger, there is a delay on the Prometheus end before
-    alerts ever reach Robusta. Once the alert reaches Robusta, the playbook executes immediately.
 
 Next Steps
 ---------------
