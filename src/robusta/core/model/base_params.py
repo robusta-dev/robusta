@@ -157,7 +157,7 @@ class PrometheusParams(ActionParams):
 
         openshift_token = openshift.load_token()
         if openshift_token is not None:
-            logging.info(f"Using openshift token from {openshift.TOKEN_LOCATION} for prometheus auth")
+            logging.debug(f"Using openshift token from {openshift.TOKEN_LOCATION} for prometheus auth")
             return SecretStr(f"Bearer {openshift_token}")
 
         return None
