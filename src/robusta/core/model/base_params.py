@@ -149,7 +149,7 @@ class PrometheusParams(ActionParams):
             logging.info(f"Stripping '?' off prometheus_url_query_string: {v}")
         return v
 
-    @validator("prometheus_auth", allow_reuse=True)
+    @validator("prometheus_auth", allow_reuse=True, always=True)
     def auto_openshift_token(cls, v: Optional[SecretStr]):
         # If openshift is enabled, and the user didn't configure prometheus_auth, we will try to load the token from the service account
         if v is not None:

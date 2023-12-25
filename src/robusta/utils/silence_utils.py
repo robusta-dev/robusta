@@ -74,7 +74,7 @@ class BaseSilenceParams(ActionParams):
             return v[:-1]
         return v
 
-    @validator("alertmanager_auth", allow_reuse=True)
+    @validator("alertmanager_auth", allow_reuse=True, always=True)
     def auto_openshift_token(cls, v: Optional[SecretStr]):
         # If openshift is enabled, and the user didn't configure alertmanager_auth, we will try to load the token from the service account
         if v is not None:
