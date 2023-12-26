@@ -10,7 +10,7 @@ Use Case 1: Enrich Alerts by Running a Bash Script
 
 **Implementation**:
 
-Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`. This configures Robusta to execute the ``ps aux`` command in response to the ``HostHighCpuLoad`` alert.
+Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`. This configures Robusta to execute the ``ps aux`` command in response to the ``CPUThrottlingHigh`` alert.
 
 .. code-block:: yaml
 
@@ -34,7 +34,7 @@ We can wait for the alert to fire, or we can speed things up and simulate the al
 
 .. code-block:: bash
 
-    robusta demo-alert --alert=HostHighCpuLoad --labels=label1=test,label2=alert
+    robusta demo-alert --alert=CPUThrottlingHigh --labels=label1=test,label2=alert
 
 
 Use Case 2: Enhance Alerts with Links to External Documentation
@@ -65,7 +65,7 @@ Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Ro
           :notion: Internal Docs on <https://notion.com/path-to-docs/|Customizing CPU requests>
 
 .. code-annotations::
-    1. We're using custom emoji's here that correspond to GitHub and Notion logo's. Before you configure this, follow `this guide <https://slack.com/intl/en-gb/help/articles/206870177-Add-customised-emoji-and-aliases-to-your-workspace>`_ to add emoji's to your workspace.
+    1. We're using custom emojis here that correspond to GitHub and Notion logos. Before you configure this, follow `this guide <https://slack.com/intl/en-gb/help/articles/206870177-Add-customised-emoji-and-aliases-to-your-workspace>`_ to add emojis to your workspace.
 
 
 **Testing**:
