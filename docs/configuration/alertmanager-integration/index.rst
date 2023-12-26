@@ -13,8 +13,8 @@ Integrating with Prometheus
    azure-managed-prometheus
    eks-managed-prometheus
    coralogix_managed_prometheus
-   victoria-metrics
    google-managed-prometheus
+   victoria-metrics
    embedded-prometheus
 ..    grafana-alert-manager
 

@@ -5,46 +5,19 @@ This guide walks you through integrating your `Google Managed Prometheus <https:
 
 You will need to configure two integrations: both a pull integration and a push integration.
 
-Setting Up Google Managed Prometheus
--------------------------------------
+Prerequisites
+****************
+An instance of Google Managed Prometheus with the following components configured:
 
-1. **Install Prometheus Frontend**
-
-   Follow the `setup instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/setup-managed>`_ to install the Prometheus frontend.
-
-2. **Install Node Exporter**
-
-   Run through the `Node Exporter <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/node_exporter>`_ instructions to setup Node Exporter.
-
-3. **Update Kubelet Scraping Config**
-
-   Run ``kubectl -n gmp-public edit operatorconfig config`` and add the following config to change the Kubelet scraping interval.
-
-   .. code-block:: yaml
-
-      collection:
-         kubeletScraping:
-             interval: 30s
-
-   Detailed instructions are available at `Kubelet and cAdvisor <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kubelet-cadvisor>`_.
-
-
-4. **Install Kube-State-Metrics**
-
-   Apply **Install Kube State Metrics** and **Define rules and alerts** configs in the `Kube State Metrics <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kube_state_metrics>`_ guide.
+* Prometheus Frontend (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/setup-managed>`_)
+* Node Exporter (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/node_exporter>`_)
+* Scraping config for Kubelet & cAdvisor (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kubelet-cadvisor>`_)
+* Kube-State-Metrics (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kube_state_metrics>`_)
 
 Configure Push Integration
---------------------------
+********************************************
 
-To ensure that Alertmanager applies the new configuration, create a Kubernetes secret named `alertmanager`. This can be achieved using the following kubectl command:
-
-.. code-block:: bash
-
-   kubectl create secret generic alertmanager \
-     -n gmp-public \
-     --from-file=alertmanager.yaml
-
-A push integration sends alerts to Robusta. To configure it, edit AlertManager's configuration:
+Create an AlertManager configuration file with the name ``alertmanager.yaml`` to send alerts to Robusta.
 
 .. code-block:: yaml
 
@@ -67,17 +40,43 @@ A push integration sends alerts to Robusta. To configure it, edit AlertManager's
          continue: true
      receiver: 'default-receiver'
 
-This creates a secret in the `gmp-public` namespace with the contents of your `alertmanager.yaml` file. The Alertmanager deployment will use this secret to configure its alert forwarding settings.
+Apply this secret to your cluster using the following command:
+
+.. code-block:: bash
+
+   kubectl create secret generic alertmanager \
+     -n gmp-public \
+     --from-file=alertmanager.yaml
+
+Verify it Works
+------------------------------
+
+Send a dummy alert to AlertManager:
+
+.. code-block:: yaml
+
+   robusta demo-alet
 
 Configure Pull Integration
-----------------------------
+******************************
 
 A pull integration lets Robusta pull metrics and create silences.
 
-To configure it, add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
+Add the following to Robusta's configuration(``generated_values.yaml``) and :ref:`update Robusta <Simple Upgrade>`.
 
 .. code-block:: yaml
 
    globalConfig: # this line should already exist
       prometheus_url: "http://frontend.default.svc.cluster.local:9090"
       alertmanager_url: "http://alertmanager.gmp-system.svc.cluster.local:9093"
+
+
+Verify it Works
+---------------------
+Run the following command to create a Pod that triggers an OOMKilled alert
+
+.. code-block:: yaml
+
+   kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/oomkill/oomkill_job.yaml
+
+You should receive an alert with graphs included.
