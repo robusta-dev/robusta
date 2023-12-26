@@ -20,7 +20,7 @@ Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Ro
          alert_name: CPUThrottlingHigh
      actions:
      - node_bash_enricher:
-         bash_command: ps aux
+         bash_command: ps aux | head -n 5
 
 **Testing**:
 
@@ -30,12 +30,11 @@ Trigger the alert we defined by deploying a Pod that consumes a lot of CPU:
 
     kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/cpu_throttling/throttling.yaml
 
-We can wait for the alert to fire, or we can speed things up and simulate the alert, as if it fired immediately:
+**Sample Alert**:
 
-.. code-block:: bash
-
-    robusta demo-alert --alert=CPUThrottlingHigh --labels=label1=test,label2=alert
-
+.. image:: /images/custom_alert_with_bash_enrichment.png
+  :width: 600
+  :align: center
 
 Use Case 2: Enhance Alerts with Links to External Documentation
 ***********************************************************************
