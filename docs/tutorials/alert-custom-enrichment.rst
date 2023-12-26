@@ -42,7 +42,7 @@ Use Case 2: Enhance Alerts with Links to External Documentation
 
 **Implementation**:
 
-Add external links to your alerts, like documentation pages. In this example, we add links to the alert ``KubeContainerCPURequestAlert`` that we created in a previous tutorial.
+In this example, we add links to the alert ``KubeContainerCPURequestAlert`` that we created in a :ref:`previous tutorial <Create Custom Prometheus Alerts>`.
 
 Add the following YAML to the ``customPlaybooks`` Helm value and :ref:`update Robusta <Simple Upgrade>`.
 
