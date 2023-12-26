@@ -49,7 +49,7 @@ A push integration lets your central Prometheus send alerts to Robusta, as if th
 .. include:: ./_pull_integration.rst
 
 Filtering Prometheus Queries by Cluster
------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the same centralized Prometheus is used for many clusters, you will want to add a cluster name to all queries.
 

@@ -37,10 +37,10 @@ If you don't use the Robusta UI, trigger a `demo OOMKill alert <https://github.c
 and verify that Robusta sends a Slack/Teams message with a memory graph included. If so, everything is configured properly.
 
 Optional Settings
-^^^^^^^^^^^^^^^^^^
+=============================
 
 Authentication Headers
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If Prometheus and/or AlertManager require authentication, add the following to ``generated_values.yaml``:
 
@@ -53,7 +53,7 @@ If Prometheus and/or AlertManager require authentication, add the following to `
 These settings may be configured independently.
 
 SSL Verification
------------------------
+^^^^^^^^^^^^^^^^^^^^
 By default, Robusta does not verify the SSL certificate of the Prometheus server.
 
 To enable SSL verification, add the following to Robusta's ``generated_values.yaml``:
