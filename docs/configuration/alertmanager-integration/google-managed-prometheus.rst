@@ -11,13 +11,13 @@ An instance of Google Managed Prometheus with the following components configure
 
 * Prometheus Frontend (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/setup-managed>`_)
 * Node Exporter (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/node_exporter>`_)
-* Scraping config for Kubelet & cAdvisor (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kubelet-cadvisor>`_)
-* Kube-State-Metrics (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kube_state_metrics>`_)
+* Scraping configuration for Kubelet and cAdvisor (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kubelet-cadvisor>`_)
+* Kube State Metrics (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kube_state_metrics>`_)
 
 Configure Push Integration
 ********************************************
 
-Create an AlertManager configuration file with the name ``alertmanager.yaml`` to send alerts to Robusta.
+To send alerts to Robusta, create an AlertManager configuration file with the name ``alertmanager.yaml``:
 
 .. code-block:: yaml
 
@@ -40,7 +40,7 @@ Create an AlertManager configuration file with the name ``alertmanager.yaml`` to
          continue: true
      receiver: 'default-receiver'
 
-Apply this secret to your cluster using the following command:
+Apply this file as a secret to your cluster using the following command:
 
 .. code-block:: bash
 
@@ -51,11 +51,13 @@ Apply this secret to your cluster using the following command:
 Verify it Works
 ------------------------------
 
-Send a dummy alert to AlertManager:
+Run this command to send a dummy alert to AlertManager:
 
 .. code-block:: yaml
 
-   robusta demo-alet
+   robusta demo-alert
+
+You know it works if you receive an alert.
 
 Configure Pull Integration
 ******************************
@@ -79,4 +81,4 @@ Run the following command to create a Pod that triggers an OOMKilled alert
 
    kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/oomkill/oomkill_job.yaml
 
-You should receive an alert with graphs included.
+You know it works if you receive an alert with a graph.
