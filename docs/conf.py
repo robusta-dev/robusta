@@ -71,6 +71,7 @@ redirects = {
     "user-guide/alert-manager.html": "/master/configuration/alert-manager.html",
     "catalog/sinks/webhook.html": "/master/configuration/sinks/webhook.html",
     "catalog/sinks/PagerDuty.html": "/master/configuration/sinks/PagerDuty.html",
+    "catalog/sinks/telegram.html": "master/configuration/sinks/telegram.html",
     "catalog/actions/event-enrichment.html": "/master/playbook-reference/actions/event-enrichment.html",
     "docs/configuration/alert-manager.html": "/master/configuration/alertmanager-integration/index.html",
     "docs/configuration/embedded-prometheus.rst": "/master/configuration/alertmanager-integration/embedded-prometheus.html",
@@ -222,7 +223,8 @@ html_favicon = "_static/favicon.png"
 
 html_favicon = "_static/faviconNew.svg"
 
-html_extra_path = ['robots.txt']
+html_extra_path = ["robots.txt"]
+
 
 def setup(app):
     app.add_css_file("custom.css")
