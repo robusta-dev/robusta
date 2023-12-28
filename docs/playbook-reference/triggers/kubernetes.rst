@@ -177,6 +177,57 @@ Low-level Triggers
 Low-level triggers fire on the raw creation, deletion, and modification of resources in your cluster. They can be noisy
 compared to other triggers, as they fire on even the smallest change to a resource.
 
+Multi-Resource Triggers
+-------------------------
+
+.. _on_kubernetes_resource_operation:
+
+.. details:: on_kubernetes_resource_operation
+
+    ``on_kubernetes_resource_operation`` fires when one of the specified resources, had one of the specified operations.
+
+    * ``operations``: List of `operations`. If empty, all `operations` are included. Options:
+        * ``create``
+        * ``update``
+        * ``delete``
+    * ``resources``: List of Kubernetes `resources`. If empty, all `resources` are included. Options:
+        * ``deployment``
+        * ``pod``
+        * ``job``
+        * ``node``
+        * ``replicaset``
+        * ``statefulset``
+        * ``daemonset``
+        * ``ingress``
+        * ``service``
+        * ``event``
+        * ``horizontalpodautoscaler``
+        * ``clusterrole``
+        * ``clusterrolebinding``
+        * ``namespace``
+        * ``serviceaccount``
+        * ``persistentvolume``
+        * ``configmap``
+
+    Example playbook:
+
+    .. code-block:: yaml
+
+        customPlaybooks:
+        - triggers:
+          - on_kubernetes_resource_operation:
+              resources: ["deployment"]
+              operations: ["update"]
+          actions:
+          - create_finding:
+              title: "Deployment $name on namespace $namespace updated"
+              aggregation_key: "Deployment Update"
+
+
+
+Single Resource Triggers
+-------------------------
+
 .. jinja::
   :inline-ctx: { "resource_name" : "Pod", "related_actions" : ["Pod Enrichers (General)", "pod_events_enricher"] }
   :header_update_levels:

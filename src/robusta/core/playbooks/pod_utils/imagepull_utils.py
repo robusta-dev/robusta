@@ -3,7 +3,7 @@ import json
 import logging
 import re
 from enum import Flag
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from hikaru.model.rel_1_26 import ContainerStatus, Event, EventList, Pod, PodStatus
 
@@ -25,6 +25,21 @@ def get_image_pull_backoff_container_statuses(status: PodStatus) -> List[Contain
         if container_status.state.waiting is not None
         and container_status.state.waiting.reason in ["ImagePullBackOff", "ErrImagePull"]
     ]
+
+
+def get_pod_issue_message_and_reason(pod: Pod) -> Tuple[Optional[str], Optional[str]]:
+    # Works/should work only or KubeContainerWaiting and KubePodNotReady
+    # Note: in line with the old code in pod_issue_investigator, we only get the message for
+    # the first of possibly many misbehaving containers.
+    if pod.status.containerStatuses:
+        if pod.status.containerStatuses[0].state.waiting:
+            reason = pod.status.containerStatuses[0].state.waiting.reason
+            if reason is None:
+                reason = "unknown"
+            return (
+                pod.status.containerStatuses[0].state.waiting.message,
+                reason,
+            )
 
 
 def decompose_flag(flag: Flag) -> List[Flag]:

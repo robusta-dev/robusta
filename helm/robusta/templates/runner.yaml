@@ -32,6 +32,10 @@ spec:
       imagePullSecrets:
       {{- toYaml .Values.runner.imagePullSecrets | nindent 6 }}
       {{- end }}
+      {{- with .Values.runner.securityContext.pod }}
+      securityContext:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       - name: runner
         {{- if .Values.runner.image }}
@@ -40,11 +44,10 @@ spec:
         image: {{ .Values.image.registry }}/{{ .Values.runner.imageName }}
         {{- end }}
         imagePullPolicy: {{ .Values.runner.imagePullPolicy }}
+        {{- with .Values.runner.securityContext.container }}
         securityContext:
-          allowPrivilegeEscalation: false
-          capabilities: {}
-          privileged: false
-          readOnlyRootFilesystem: false
+        {{- toYaml . | nindent 12 }}
+        {{- end }}
         env:
           - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml
@@ -52,6 +55,8 @@ spec:
             value: {{ .Release.Name | quote }}
           - name: PROMETHEUS_ENABLED
             value: {{ .Values.enablePrometheusStack | quote}}
+          - name: MANAGED_CONFIGURATION_ENABLED
+            value: {{ .Values.enabledManagedConfiguration | quote}}
           - name: SEND_ADDITIONAL_TELEMETRY
             value: {{ .Values.runner.sendAdditionalTelemetry | quote }}
           - name: LOG_LEVEL
@@ -78,6 +83,8 @@ spec:
             value: {{ .Values.runner.certificate }}
           - name: IMAGE_REGISTRY
             value: {{ .Values.image.registry }}
+          - name: CLUSTER_DOMAIN
+            value: {{ .Values.global.clusterDomain }}
           {{- if kindIs "string" .Values.runner.additional_env_vars }}
           {{- fail "The `additional_env_vars` string value is deprecated. Change the `additional_env_vars` value to an array" -}}
           {{- end }}
@@ -122,8 +129,10 @@ spec:
         image: {{ .Values.image.registry }}/{{ .Values.grafanaRenderer.imageName }}
         {{- end }}
         imagePullPolicy: {{ .Values.grafanaRenderer.imagePullPolicy }}
+        {{- with .Values.grafanaRenderer.securityContext.container }}
         securityContext:
-          privileged: false
+        {{- toYaml . | nindent 12 }}
+        {{- end }}
         lifecycle:
           preStop:
             exec:
@@ -143,7 +152,8 @@ spec:
             optional: true
         - name: auth-config-secret
           secret:
-            secretName: {{ default "robusta-auth-config-secret" .Values.rsa.existingSecret }}
+            {{- $subBloc := .Values.rsa | default dict }}
+            secretName: {{ default "robusta-auth-config-secret" $subBloc.existingSecret }}
             optional: true
         {{- if .Values.playbooksPersistentVolume }}
         - name: persistent-playbooks-storage
@@ -201,12 +211,29 @@ metadata:
   name: robusta-runner-service-monitor
   labels:
     # this label is how the Prometheus installed with Robusta finds ServiceMonitors
-    # TODO: we probably need to add custom labels here for a Prometheus installed separately
     release: {{ .Release.Name }}
+    {{- with .Values.runner.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   endpoints:
-    - path: /metrics
+    - path: {{ .Values.runner.serviceMonitor.path }}
       port: http
+      {{- if .Values.runner.serviceMonitor.interval }}
+      interval: {{ .Values.runner.serviceMonitor.interval }}
+      {{- end }}
+      {{- if .Values.runner.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.runner.serviceMonitor.scrapeTimeout }}
+      {{- end }}
+      {{- if .Values.runner.serviceMonitor.relabelings }}
+      relabelings: {{- tpl (toYaml .Values.runner.serviceMonitor.relabelings) . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.runner.serviceMonitor.metricRelabelings }}
+      metricRelabelings: {{- tpl (toYaml .Values.runner.serviceMonitor.metricRelabelings) . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.runner.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.runner.serviceMonitor.honorLabels }}
+      {{- end }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}-runner

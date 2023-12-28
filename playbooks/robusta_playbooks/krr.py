@@ -172,6 +172,9 @@ def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
         f"{entry['resource'].upper()} Request: "
         + f"{format_krr_value(entry['allocated']['request'])} -> "
         + f"{format_krr_value(entry['recommended']['request'])} "
+        + f"\n{entry['resource'].upper()} Limit: "
+        + f"{format_krr_value(entry['allocated']['limit'])} -> "
+        + f"{format_krr_value(entry['recommended']['limit'])} "
         + f"({priority_to_krr_severity(entry['priority']['request'])})"
         for entry in row.content
     )
@@ -349,15 +352,15 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     except json.JSONDecodeError:
         logging.error(f"*KRR scan job failed. Expecting json result.*\n\n Result:\n{logs}")
         return
-    except ValidationError as e:
-        logging.error(f"*KRR scan job failed. Result format issue.*\n\n {e}")
+    except ValidationError:
+        logging.error("*KRR scan job failed. Result format issue.*\n\n", exc_info=True)
         logging.error(f"\n {logs}")
         return
     except Exception as e:
         if str(e) == "Failed to reach wait condition":
-            logging.error(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")
+            logging.error(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*", exc_info=True)
         else:
-            logging.error(f"*KRR scan job unexpected error.*\n {e}")
+            logging.error(f"*KRR scan job unexpected error.*\n {e}", exc_info=True)
         return
 
     scan_block = ScanReportBlock(

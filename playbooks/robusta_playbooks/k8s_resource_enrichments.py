@@ -48,6 +48,12 @@ class RelatedContainer(BaseModel):
     status: Optional[str] = None
     created: Optional[str] = None
     ports: List[Any] = []
+    statusMessage: Optional[str] = None
+    statusReason: Optional[str] = None
+    terminatedReason: Optional[str] = None
+    terminatedExitCode: Optional[int] = None
+    terminatedStarted: Optional[str] = None
+    terminatedFinished: Optional[str] = None
 
 
 class RelatedPod(BaseModel):
@@ -64,6 +70,7 @@ class RelatedPod(BaseModel):
     addresses: str
     containers: List[RelatedContainer]
     status: Optional[str] = None
+    statusReason: Optional[str] = None
 
 
 supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node"]
@@ -87,15 +94,15 @@ def to_pod_row(pod: Pod, cluster_name: str) -> List:
         addresses,
         len(pod.spec.containers),
         pod.status.phase,
+        pod.status.reason,
     ]
 
 
-def get_related_pods(resource) -> list[Pod]:
+def get_related_pods(resource) -> List[Pod]:
     kind: str = resource.kind or ""
     if kind not in supported_resources:
         raise ActionException(ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Related pods is not supported for resource {kind}")
 
-    pods = []
     if kind == "Job":
         job_pods = get_job_all_pods(resource)
         pods = job_pods if job_pods else []
@@ -128,6 +135,7 @@ def to_pod_obj(pod: Pod, cluster: str) -> RelatedPod:
         addresses=addresses,
         containers=get_pod_containers(pod),
         status=pod.status.phase,
+        statusReason=pod.status.reason,
     )
 
 
@@ -138,6 +146,8 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
         limits = PodContainer.get_limits(container)
         containerStatus: Optional[ContainerStatus] = PodContainer.get_status(pod, container.name)
         currentState: Optional[ContainerState] = getattr(containerStatus, "state", None)
+        lastState: Optional[ContainerStateTerminated] = getattr(containerStatus, "lastState", None)
+        terminated_state = getattr(lastState, "terminated", None)
         stateStr: str = "waiting"
         state = None
         if currentState:
@@ -156,8 +166,14 @@ def get_pod_containers(pod: Pod) -> List[RelatedContainer]:
                 memoryRequest=requests.memory,
                 restarts=getattr(containerStatus, "restartCount", 0),
                 status=stateStr,
+                statusMessage=getattr(state, "message", None) if state else None,
+                statusReason=getattr(state, "reason", None) if state else None,
                 created=getattr(state, "startedAt", None),
                 ports=[port.to_dict() for port in container.ports] if container.ports else [],
+                terminatedReason=getattr(terminated_state, "reason", None),
+                terminatedExitCode=getattr(terminated_state, "exitCode", None),
+                terminatedStarted=getattr(terminated_state, "startedAt", None),
+                terminatedFinished=getattr(terminated_state, "finishedAt", None),
             )
         )
 
@@ -197,6 +213,7 @@ def related_pods(event: KubernetesResourceEvent, params: RelatedPodParams):
                         "addresses",
                         "containers",
                         "status",
+                        "status reason",
                     ],
                     rows=rows,
                 )

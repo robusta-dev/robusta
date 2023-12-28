@@ -1,5 +1,7 @@
+import logging
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, Optional
+import tempfile
 
 from robusta.core.model.env_vars import DEFAULT_TIMEZONE
 
@@ -21,8 +23,8 @@ def charts_style(
     from pygal.style import Style
 
     return Style(
-        background="#F2F2F2",
-        plot_background="#F2F2F2",
+        background="#FFFFFF",
+        plot_background="#FFFFFF",
         value_background="rgba(229, 229, 229, 1)",
         foreground="#607D8B",
         foreground_strong="#607D8B",
@@ -36,3 +38,39 @@ def charts_style(
         transition="400ms ease-in",
         colors=graph_colors,
     )
+
+
+class PlotCustomCSS:
+    _css_file_path = None
+
+    def __init__(self):
+        if PlotCustomCSS._css_file_path is None:
+            try:
+                custom_css = '''
+                  {{ id }}.title {
+                    fill: #11383A;
+                  }
+    
+                  {{ id }}.legends .legend text {
+                    fill: #3f3f3f;
+                  }
+              
+                  {{ id }}.axis.y text {
+                    fill: #3f3f3f;
+                  }
+    
+                  {{ id }}.axis.x text {
+                    fill: #3f3f3f;
+                  }
+                '''
+
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.css') as f:
+                    f.write(custom_css.encode('utf-8'))
+                    f.flush()
+                    PlotCustomCSS._css_file_path = f.name
+            except Exception as e:
+                logging.error(f"Error during initializing PlotCustomCSS: {e}", exc_info=True)
+                PlotCustomCSS._css_file_path = None
+
+    def get_css_file_path(self) -> Optional[str]:
+        return self._css_file_path

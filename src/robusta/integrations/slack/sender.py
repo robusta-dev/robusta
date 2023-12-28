@@ -25,7 +25,7 @@ from robusta.core.reporting.blocks import (
     TableBlock,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
-from robusta.core.reporting.consts import EnrichmentAnnotation, SlackAnnotations
+from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, SlackAnnotations
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
@@ -65,7 +65,7 @@ class SlackSender:
             return []
 
         buttons = []
-        for (i, (text, callback_choice)) in enumerate(choices.items()):
+        for i, (text, callback_choice) in enumerate(choices.items()):
             buttons.append(
                 {
                     "type": "button",
@@ -231,7 +231,6 @@ class SlackSender:
         status: FindingStatus,
         channel: str,
     ):
-
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
             file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
@@ -242,8 +241,9 @@ class SlackSender:
         file_blocks.extend(Transformer.tableblock_to_fileblocks(other_blocks, SLACK_TABLE_COLUMNS_LIMIT))
         file_blocks.extend(Transformer.tableblock_to_fileblocks(report_attachment_blocks, SLACK_TABLE_COLUMNS_LIMIT))
 
-        message = self.prepare_slack_text(title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb,
-                                          files=file_blocks)
+        message = self.prepare_slack_text(
+            title, max_log_file_limit_kb=sink_params.max_log_file_limit_kb, files=file_blocks
+        )
         output_blocks = []
         for block in other_blocks:
             output_blocks.extend(self.__to_slack(block, sink_params.name))
@@ -274,22 +274,30 @@ class SlackSender:
             )
         except Exception as e:
             logging.error(
-                f"error sending message to slack\ne={e}\ntext={message}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
+                f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
 
     def __create_finding_header(self, finding: Finding, status: FindingStatus, platform_enabled: bool) -> MarkdownBlock:
-
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
+        if finding.source == FindingSource.PROMETHEUS:
+            status_name: str = (
+                f"{status.to_emoji()} `Prometheus Alert Firing` {status.to_emoji()}"
+                if status == FindingStatus.FIRING
+                else f"{status.to_emoji()} *Prometheus resolved*"
+            )
+        elif finding.source == FindingSource.KUBERNETES_API_SERVER:
+            status_name: str = "👀 *K8s event detected*"
+        else:
+            status_name: str = "👀 *Notification*"
         if platform_enabled:
             title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
-
-        status_str: str = f"{status.to_emoji()} `{status.name.lower()}`" if finding.add_silence_url else ""
-
-        return MarkdownBlock(f"{status_str} {sev.to_emoji()} `{sev.name.lower()}` {title}")
+        return MarkdownBlock(
+            f"""{status_name} {sev.to_emoji()} *{sev.name.capitalize()}*  
+{title}"""
+        )
 
     def __create_links(self, finding: Finding):
-
         links: List[LinkProp] = []
         links.append(
             LinkProp(
@@ -331,7 +339,12 @@ class SlackSender:
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
         if finding.description:
-            blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
+            if finding.source == FindingSource.PROMETHEUS:
+                blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
+            elif finding.source == FindingSource.KUBERNETES_API_SERVER:
+                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}"))
+            else:
+                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
 
         unfurl = True
         for enrichment in finding.enrichments:

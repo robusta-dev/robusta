@@ -15,6 +15,11 @@ from robusta.api import (
     action,
     get_image_pull_backoff_blocks,
 )
+from robusta.core.playbooks.pod_utils.imagepull_utils import (
+    get_image_pull_backoff_container_statuses,
+    get_pod_issue_message_and_reason,
+)
+from robusta.core.reporting import MarkdownBlock
 
 
 def get_image_pull_backoff_container_statuses(status: PodStatus) -> List[ContainerStatus]:
@@ -60,4 +65,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
         subject=PodFindingSubject(pod),
     )
     finding.add_enrichment(blocks)
+    message, reason = get_pod_issue_message_and_reason(pod)
+    if reason:
+        finding.add_enrichment([MarkdownBlock(f"{reason}: {message}")])
     event.add_finding(finding)

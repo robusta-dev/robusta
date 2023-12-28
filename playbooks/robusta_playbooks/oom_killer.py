@@ -6,6 +6,7 @@ from typing import List, Optional
 
 import pydantic
 from hikaru.model.rel_1_26 import Node, Pod, PodList, ResourceRequirements
+
 from robusta.api import (
     Finding,
     FindingSeverity,
@@ -24,7 +25,8 @@ from robusta.api import (
     parse_kubernetes_datetime_to_ms,
     pod_most_recent_oom_killed_container,
 )
-from robusta.core.model.base_params import PrometheusParams
+from robusta.core.model.base_params import PrometheusParams, OomKillParams, LogEnricherParams
+from robusta.core.playbooks.oom_killer_utils import logs_enricher
 from robusta.integrations.resource_analysis.memory_analyzer import MemoryAnalyzer
 
 
@@ -70,14 +72,12 @@ def oomkilled_container_graph_enricher(event: PodEvent, params: OOMGraphEnricher
         return
     if params.delay_graph_s > 0:
         time.sleep(params.delay_graph_s)
-    container_graph = create_container_graph(params, pod, oomkilled_container.container, show_limit=True)
+    container_graph = create_container_graph(params, pod, oomkilled_container, show_limit=True)
     event.add_enrichment([container_graph])
 
 
 @action
-def pod_oom_killer_enricher(
-    event: PodEvent,
-):
+def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
     """
     Retrieves pod and node information for an OOMKilled pod
     """
@@ -114,9 +114,11 @@ def pod_oom_killer_enricher(
     oomkilled_container = pod_most_recent_oom_killed_container(pod)
     if not oomkilled_container or not oomkilled_container.state:
         logging.error(f"could not find OOMKilled status in pod {pod.metadata.name}")
+        container_name = None
     else:
+        container_name = oomkilled_container.container.name
         requests, limits = PodContainer.get_memory_resources(oomkilled_container.container)
-        labels.append(("Container name", oomkilled_container.container.name))
+        labels.append(("Container name", container_name))
         memory_limit = "No limit" if not limits else f"{limits}MB limit"
         memory_requests = "No request" if not requests else f"{requests}MB request"
         labels.append(("Container memory", f"{memory_requests}, {memory_limit}"))
@@ -132,6 +134,8 @@ def pod_oom_killer_enricher(
     )
     finding.add_enrichment([table_block])
     event.add_finding(finding)
+    if params.attach_logs and container_name is not None:
+        logs_enricher(event, LogEnricherParams(container_name=container_name))
 
 
 @action

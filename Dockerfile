@@ -6,17 +6,17 @@ RUN apt-get update \
     && pip3 install --no-cache-dir --upgrade pip \
     && rm -rf /var/lib/apt/lists/*
 
-ENV ENV_TYPE=DEV 
+ENV ENV_TYPE=DEV
 
-RUN mkdir /app 
+RUN mkdir /app
 RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN /root/.local/bin/poetry config virtualenvs.create false 
+RUN /root/.local/bin/poetry config virtualenvs.create false
 WORKDIR /app
 
 # Install gcc to compile rumal.yaml.clib, wheel is missing.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc \
-    && pip3 install --no-cache-dir ruamel.yaml.clib==0.2.6 \
+    && pip3 install --no-cache-dir ruamel.yaml.clib==0.2.8 \
     && apt-get purge -y --auto-remove gcc \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,8 +24,8 @@ RUN apt-get update \
 COPY pyproject.toml poetry.lock /app/
 RUN /root/.local/bin/poetry install --no-root --no-dev --extras "all"
 COPY src/ /app/src
-RUN /root/.local/bin/poetry install --no-dev --extras "all" 
-    
+RUN /root/.local/bin/poetry install --no-dev --extras "all"
+
 COPY playbooks/ /etc/robusta/playbooks/defaults
 RUN python3 -m pip install --no-cache-dir /etc/robusta/playbooks/defaults
 

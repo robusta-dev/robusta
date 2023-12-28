@@ -1,9 +1,12 @@
 import json
 import logging
 import time
-from typing import Any, Dict, List
-
+from collections import defaultdict
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 import requests
+from postgrest.base_request_builder import BaseFilterRequestBuilder
+from postgrest.utils import sanitize_param
 from postgrest.types import ReturnMethod
 from supabase import create_client
 from supabase.lib.client_options import ClientOptions
@@ -19,8 +22,10 @@ from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.blocks import EventsBlock, EventsRef, ScanReportBlock, ScanReportRow
 from robusta.core.reporting.consts import EnrichmentAnnotation
-from robusta.core.sinks.robusta import RobustaSinkParams
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
+from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
+from robusta.core.sinks.robusta.rrm.types import AccountResource, ResourceKind, \
+    AccountResourceStatusType, AccountResourceStatusInfo
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -33,20 +38,27 @@ NAMESPACES_TABLE = "Namespaces"
 UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
 SCANS_RESULT_TABLE = "ScansResults"
 RESOURCE_EVENTS = "ResourceEvents"
+ACCOUNT_RESOURCE_TABLE = "AccountResource"
+ACCOUNT_RESOURCE_STATUS_TABLE = "AccountResourceStatus"
 
 
-class SupabaseDal:
+class SupabaseDal(AccountResourceFetcher):
     def __init__(
-        self,
-        url: str,
-        key: str,
-        account_id: str,
-        email: str,
-        password: str,
-        sink_params: RobustaSinkParams,
-        cluster_name: str,
-        signing_key: str,
+            self,
+            url: str,
+            key: str,
+            account_id: str,
+            email: str,
+            password: str,
+            sink_name: str,
+            persist_events: bool,
+            cluster_name: str,
+            signing_key: str,
     ):
+        httpx_logger = logging.getLogger("httpx")
+        if httpx_logger:
+            httpx_logger.setLevel(logging.WARNING)
+
         self.url = url
         self.key = key
         self.account_id = account_id
@@ -58,7 +70,8 @@ class SupabaseDal:
         self.sign_in_time = 0
         self.sign_in()
         self.client.auth.on_auth_state_change(self.__update_token_patch)
-        self.sink_params = sink_params
+        self.sink_name = sink_name
+        self.persist_events = persist_events
         self.signing_key = signing_key
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
@@ -111,7 +124,7 @@ class SupabaseDal:
             evidence = ModelConversion.to_evidence_json(
                 account_id=self.account_id,
                 cluster_id=self.cluster,
-                sink_name=self.sink_params.name,
+                sink_name=self.sink_name,
                 signing_key=self.signing_key,
                 finding_id=finding.id,
                 enrichment=enrichment,
@@ -172,15 +185,8 @@ class SupabaseDal:
             res = (
                 self.client.table(SERVICES_TABLE)
                 .select(
-                    "name",
-                    "type",
-                    "namespace",
-                    "classification",
-                    "config",
-                    "ready_pods",
-                    "total_pods",
-                    "is_helm_release",
-                )
+                    "name", "type", "namespace", "classification", "config", "ready_pods", "total_pods",
+                    "is_helm_release")
                 .filter("account_id", "eq", self.account_id)
                 .filter("cluster", "eq", self.cluster)
                 .filter("deleted", "eq", False)
@@ -279,6 +285,14 @@ class SupabaseDal:
             logging.error(f"Failed to persist node {nodes} error: {e}")
             self.handle_supabase_error()
             raise
+
+    @staticmethod
+    def custom_filter_request_builder(frq: BaseFilterRequestBuilder, operator: str,
+                                      criteria: str) -> BaseFilterRequestBuilder:
+        key, val = sanitize_param(operator), f"{criteria}"
+        frq.params = frq.params.set(key, val)
+
+        return frq
 
     def get_active_jobs(self) -> List[JobInfo]:
         try:
@@ -473,7 +487,7 @@ class SupabaseDal:
             logging.error(f"Failed to publish node count {data} error: {e}")
             self.handle_supabase_error()
 
-        logging.info(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
+        logging.debug(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
 
     def persist_events_block(self, block: EventsBlock):
         db_events = []
@@ -495,12 +509,104 @@ class SupabaseDal:
     def persist_platform_blocks(self, enrichment: Enrichment, finding_id):
         blocks = enrichment.blocks
         for i, block in enumerate(blocks):
-            if isinstance(block, EventsBlock) and self.sink_params.persist_events and block.events:
+            if isinstance(block, EventsBlock) and self.persist_events and block.events:
                 self.persist_events_block(block)
                 event = block.events[0]
                 blocks[i] = EventsRef(name=event.name, namespace=event.namespace, kind=event.kind.lower())
             if isinstance(block, ScanReportBlock):
                 self.persist_scan(block)
+
+    def get_account_resources(
+            self,
+            resource_kind: Optional[ResourceKind] = None,
+            latest_revision: Optional[datetime] = None,
+    ) -> Dict[ResourceKind, List[AccountResource]]:
+        try:
+            query_builder = (
+                self.client.table(ACCOUNT_RESOURCE_TABLE)
+                .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "enabled",
+                        "updated_at")
+                .eq("account_id", self.account_id)
+            )
+
+            if resource_kind:
+                query_builder.eq("resource_kind", resource_kind)
+
+            if latest_revision:
+                query_builder.gt("updated_at", latest_revision.isoformat())
+            else:
+                # in the initial db fetch don't include the deleted records.
+                # in the subsequent db fetch allow even the deleted records so that they can be removed from the cluster
+                query_builder.eq("deleted", False)
+                query_builder.eq("enabled", True)
+
+                query_builder = SupabaseDal.custom_filter_request_builder(
+                    query_builder,
+                    operator="or",
+                    criteria=f'(clusters_target_set.cs.["*"], clusters_target_set.cs.["{self.cluster}"])',
+                )
+            query_builder = query_builder.order(column="updated_at", desc=False)
+
+            res = query_builder.execute()
+        except Exception as e:
+            msg = f"Failed to get existing account resources (supabase) error"
+            logging.error(msg, exc_info=True)
+            self.handle_supabase_error()
+            raise e
+
+        account_resources_map: Dict[ResourceKind, List[AccountResource]] = defaultdict(list)
+
+        for data in res.data:
+            resource = AccountResource(
+                entity_id=data["entity_id"],
+                resource_kind=data["resource_kind"],
+                clusters_target_set=data["clusters_target_set"],
+                resource_state=data["resource_state"],
+                deleted=data["deleted"],
+                enabled=data["enabled"],
+                updated_at=data["updated_at"],
+            )
+
+            account_resources_map[resource.resource_kind].append(resource)
+
+        return account_resources_map
+
+    def __to_db_account_resource_status(
+            self,
+            status_type: AccountResourceStatusType,
+            latest_revision: datetime,
+            info: Optional[AccountResourceStatusInfo] = None,
+    ) -> Dict[Any, Any]:
+        latest_revision_iso = latest_revision.isoformat()
+        data = {
+            "account_id": self.account_id,
+            "cluster_id": self.cluster,
+            "status": status_type,
+            "info": info.dict() if info else None,
+            "updated_at": "now()",
+            "latest_revision": latest_revision_iso,
+        }
+
+        if status_type != AccountResourceStatusType.error:
+            data["synced_revision"] = latest_revision_iso
+
+        return data
+
+    def set_account_resource_status(
+            self,
+            status_type: AccountResourceStatusType,
+            info: Optional[AccountResourceStatusInfo],
+            latest_revision: datetime
+    ):
+        try:
+            data = self.__to_db_account_resource_status(status_type=status_type, info=info,
+                                                        latest_revision=latest_revision)
+
+            self.client.table(ACCOUNT_RESOURCE_STATUS_TABLE).upsert(data).execute()
+        except Exception as e:
+            logging.error(f"Failed to set account resource status to {status_type}", exc_info=True)
+            self.handle_supabase_error()
+            raise
 
     def __rpc_patch(self, func_name: str, params: dict) -> Dict[str, Any]:
         """

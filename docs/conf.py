@@ -71,9 +71,14 @@ redirects = {
     "user-guide/alert-manager.html": "/master/configuration/alert-manager.html",
     "catalog/sinks/webhook.html": "/master/configuration/sinks/webhook.html",
     "catalog/sinks/PagerDuty.html": "/master/configuration/sinks/PagerDuty.html",
+    "catalog/sinks/telegram.html": "/master/configuration/sinks/telegram.html",
+    "catalog/sinks/Opsgenie.html": "/master/configuration/sinks/Opsgenie.html",
+    "catalog/sinks/jira.html": "/master/configuration/sinks/jira.html",
     "catalog/actions/event-enrichment.html": "/master/playbook-reference/actions/event-enrichment.html",
     "docs/configuration/alert-manager.html": "/master/configuration/alertmanager-integration/index.html",
     "docs/configuration/embedded-prometheus.rst": "/master/configuration/alertmanager-integration/embedded-prometheus.html",
+    "community.html": "/master/help.html",
+    "catalog/actions/grafana.html": "/master/playbook-reference/actions/grafana.html",
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
@@ -221,6 +226,8 @@ html_js_files = ["analytics.js"]
 html_favicon = "_static/favicon.png"
 
 html_favicon = "_static/faviconNew.svg"
+
+html_extra_path = ["robots.txt"]
 
 
 def setup(app):

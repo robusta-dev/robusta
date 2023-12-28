@@ -93,7 +93,7 @@ To configure it:
           "generatorURL": "$ALERT_URL",
           "annotations": {},
           "labels": {
-            "cluster_name": "MY_CLUSTER_NAME", # make sure to add your cluster name here for this webhook
+            "cluster_name": "MY_CLUSTER_NAME", # make sure to add your cluster name here for this webhook. Both "cluster" or "cluster_name" labels are also supported
             "alertname": "$ALERT_NAME",
             "alert_url": "$ALERT_URL"
             # Add any additional alert specific fields here

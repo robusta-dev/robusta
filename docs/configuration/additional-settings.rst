@@ -30,10 +30,33 @@ randomness.
 Relabel Prometheus Alerts
 -----------------------------
 
-The ``alertRelabel`` helm value allows relabeling Prometheus alerts processed by Robusta.
-You can add a new label based on existing label, or replace existing label with a new one.
+In order to enrich alerts, Robusta maps Prometheus alerts to related Kubernetes resources.
 
-Relabel has 3 attributes:
+The following labels determine which Kubernetes resource relates to an alert:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Kubernetes Resource
+     - Alert Labels
+   * - Deployment
+     - deployment, namespace
+   * - DaemonSet
+     - daemonset, namespace
+   * - StatefulSet
+     - statefulset, namespace
+   * - Job
+     - job_name, namespace
+   * - Pod
+     - pod, namespace
+   * - HorizontalPodAutoscaler
+     - horizontalpodautoscaler, namespace
+   * - Node
+     - node
+
+If your alerts have different labels, you can change the mapping with the ``alertRelabel`` helm value.
+
+A relabeling has 3 attributes:
 
 * ``source``: Use the value from this label
 * ``target``: This label will contain the value from ``source``
@@ -117,7 +140,7 @@ The censored output will be:
     2022-07-28 08:35:00.762 INFO     Successfully loaded some critical module
     2022-07-28 08:35:01.090 INFO     using [MySecretPort], ip: ['172.18.0.3']
 
-It is best to define this in a `global config <https://docs.robusta.dev/master/user-guide/configuration.html#global-config>`_, so it will be applied everywhere.
+It is best to define this in a :ref:`Global Config`, so it will be applied everywhere.
 
 .. code-block:: yaml
 

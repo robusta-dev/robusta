@@ -1,5 +1,4 @@
 import logging
-import time
 from collections import defaultdict
 from datetime import datetime
 from string import Template
@@ -31,7 +30,6 @@ from robusta.api import (
     PodEvent,
     PrometheusKubernetesAlert,
     PrometheusParams,
-    RegexReplacementStyle,
     ResourceChartItemType,
     ResourceChartResourceType,
     RobustaPod,
@@ -43,6 +41,8 @@ from robusta.api import (
     create_resource_enrichment,
     get_node_internal_ip,
 )
+from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
+from robusta.core.reporting import FindingSubject
 
 
 class SeverityParams(ActionParams):
@@ -250,13 +250,23 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
     Attach a graph of an arbitrary Prometheus query, specified as a parameter.
     """
     chart_values_format = ChartValuesFormat[params.chart_values_format] if params.chart_values_format else None
+
+    graph_title = None
+    if params.graph_title:
+        labels: Dict[str, Any] = defaultdict(lambda: "<missing>")
+        labels.update(alert.alert.labels)
+        labels.update(vars(alert.get_alert_subject()))
+
+        template = Template(params.graph_title)
+        graph_title = template.safe_substitute(labels)
+
     graph_enrichment = create_graph_enrichment(
         alert.alert.startsAt,
         alert.alert.labels,
         params.promql_query,
         prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
-        graph_title=params.graph_title,
+        graph_title=graph_title,
         chart_values_format=chart_values_format,
     )
     alert.add_enrichment([graph_enrichment])
@@ -325,69 +335,6 @@ def template_enricher(event: KubernetesResourceEvent, params: TemplateParams):
     event.add_enrichment(
         [MarkdownBlock(template.safe_substitute(labels))],
     )
-
-
-def start_log_enrichment(
-    event: ExecutionBaseEvent,
-    params: LogEnricherParams,
-    pod: RobustaPod,
-):
-    if pod is None:
-        if params.warn_on_missing_label:
-            event.add_enrichment(
-                [MarkdownBlock("Cannot fetch logs because the pod is unknown. The alert has no `pod` label")],
-            )
-        return
-
-    container: str = ""
-    all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
-    if params.container_name:
-        container = params.container_name
-    elif any(status.name == event.get_subject().container for status in all_statuses):
-        # support alerts with a container label, make sure its related to this pod.
-        container = event.get_subject().container
-
-    tries: int = 2
-    backoff_seconds: int = 2
-    regex_replacement_style = (
-        RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
-    )
-
-    if not container and pod.spec.containers:
-        container = pod.spec.containers[0].name
-    for _ in range(tries - 1):
-        log_data = pod.get_logs(
-            container=container,
-            regex_replacer_patterns=params.regex_replacer_patterns,
-            regex_replacement_style=regex_replacement_style,
-            filter_regex=params.filter_regex,
-            previous=params.previous,
-        )
-        if not log_data:
-            logging.info("log data is empty, retrying...")
-            time.sleep(backoff_seconds)
-            continue
-
-        log_name = pod.metadata.name
-        log_name += f"/{container}"
-        event.add_enrichment(
-            [FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())],
-        )
-        break
-
-
-@action
-def logs_enricher(event: PodEvent, params: LogEnricherParams):
-    """
-    Fetch and attach Pod logs.
-    The pod to fetch logs for is determined by the alert’s pod label from Prometheus.
-
-    By default, if the alert has no pod this enricher will silently do nothing.
-    """
-    pod = event.get_pod()
-
-    logging.debug(f"received a logs_enricher action: {params}")
-    start_log_enrichment(event=event, params=params, pod=pod)
 
 
 class SearchTermParams(ActionParams):
@@ -487,3 +434,67 @@ def foreign_logs_enricher(event: ExecutionBaseEvent, params: ForeignLogParams):
         pod = RobustaPod().read(matching_pod.metadata.name, matching_pod.metadata.namespace)
 
         start_log_enrichment(event=event, params=params, pod=pod)
+
+
+logs_enricher = action(logs_enricher)
+
+
+class MentionParams(ActionParams):
+    """
+    :var static_mentions: List of Slack user ids/groups ids to be mentioned
+    :var mentions_label: A alert label, or Kubernetes resource label, in which the value contains a comma separated ids to mention
+    :var message_template: Optional. Custom mention message. Default: `"Hey: $mentions"`
+
+    :example static_mentions: ["<@U44V9P1JJ1Z>", "<!subteam^S22H3Q3Q111>"]
+    """
+
+    static_mentions: Optional[List[str]]
+    mentions_label: Optional[str]
+    message_template: str = "Hey: $mentions"
+
+
+@action
+def mention_enricher(event: KubernetesResourceEvent, params: MentionParams):
+    """
+    You can define who to mention using a static mentions configuration,
+    Or, you can define it using a label or annotation, that exists either on the Kubernetes resource, or the alert
+
+    Order:
+    1. Resource annotations (For alert, get from FindingSubject. For other resources, get from obj metadata)
+    2. Resource labels (For alert, get from FindingSubject. For other resources, get from obj metadata)
+    3. Alert annotations (only for alert)
+    4. Alert labels (only for alert)
+
+    Note this enricher only works with the Slack sink
+    """
+
+    if not params.mentions_label and not params.static_mentions:
+        logging.warning("mention_enricher called with neither static_mentions nor mentions_label set")
+        return
+
+    event_data = {}
+    mentions = set()
+    if params.mentions_label:
+        if isinstance(event, PrometheusKubernetesAlert):
+            # Alert labels and annotations. FindingSubject can represent
+            # e.g. a k8s pod, job, daemonset etc etc.
+            alert_subject: FindingSubject = event.get_alert_subject()
+            event_data.update(alert_subject.annotations)
+            event_data.update(alert_subject.labels)
+            event_data.update(event.alert.annotations)
+            event_data.update(event.alert.labels)
+        elif event.obj:
+            if event.obj.metadata.annotations:
+                event_data.update(event.obj.metadata.annotations)
+            if event.obj.metadata.labels:
+                event_data.update(event.obj.metadata.labels)
+
+        # get the mentions and use it
+        mentions_value = event_data.get(params.mentions_label)
+        if mentions_value:
+            mentions = set(mentions_value.split(","))
+    if params.static_mentions:
+        mentions = mentions.union(params.static_mentions)
+
+    message = params.message_template.replace("$mentions", " ".join(mentions))
+    event.add_enrichment([MarkdownBlock(message)])

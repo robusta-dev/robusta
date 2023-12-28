@@ -4,6 +4,8 @@ from typing import List
 
 import apprise
 from apprise import NotifyFormat, NotifyType
+from apprise.attachment.AttachFile import AttachFile
+from apprise.AppriseAttachment import AppriseAttachment
 
 from robusta.core.reporting.base import BaseBlock, Emojis, Finding, FindingStatus
 from robusta.core.reporting.blocks import (
@@ -11,9 +13,8 @@ from robusta.core.reporting.blocks import (
     LinksBlock,
     LinkProp,
     MarkdownBlock,
-    ScanReportBlock,
 )
-from robusta.core.reporting.consts import EnrichmentAnnotation
+from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource
 from robusta.core.sinks.transformer import Transformer
 
 
@@ -25,7 +26,7 @@ def with_attr(obj, attr_name, attr_value):
 class MailTransformer(Transformer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.file_blocks = []
+        self.file_blocks: List[FileBlock] = []
 
     def block_to_html(self, block: BaseBlock) -> str:
         if isinstance(block, FileBlock):
@@ -65,7 +66,14 @@ class MailSender:
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
         if finding.description:
-            blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
+            if finding.source == FindingSource.PROMETHEUS:
+                blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
+            elif finding.source == FindingSource.KUBERNETES_API_SERVER:
+                blocks.append(
+                    MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}")
+                )
+            else:
+                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
 
         for enrichment in finding.enrichments:
             if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
@@ -76,7 +84,7 @@ class MailSender:
         html_body = self.__build_html(transformer.to_html(blocks).strip())
 
         ap_obj = apprise.Apprise()
-        attachments = apprise.AppriseAttachment()
+        attachments = AppriseAttachment()
         attachment_files = []
         try:
             for file_block in transformer.file_blocks:
@@ -86,7 +94,8 @@ class MailSender:
                 f = tempfile.NamedTemporaryFile()
                 attachment_files.append(f)
                 f.write(file_block.contents)
-                attachments.add(f.name)
+                attachment = AttachFile(f.name, name=file_block.filename)
+                attachments.add(attachment)
             ap_obj.add(self.mailto)
             logging.debug(f"MailSender: sending title={finding.title}, body={html_body}")
             ap_obj.notify(
@@ -106,7 +115,7 @@ class MailSender:
     def __create_finding_header(self, finding: Finding, status: FindingStatus) -> MarkdownBlock:
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
-        status_name = "Prometheus Firing Alert" if status == FindingStatus.FIRING else "Resolved"
+        status_name: str = "Prometheus Alert Firing" if status == FindingStatus.FIRING else "Resolved"
         status_str: str = f"{status.to_emoji()} `{status_name}`" if finding.add_silence_url else ""
         return with_attr(
             MarkdownBlock(

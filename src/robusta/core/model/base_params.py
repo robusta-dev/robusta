@@ -194,7 +194,9 @@ class TimedPrometheusParams(PrometheusParams):
 class CustomGraphEnricherParams(PrometheusParams):
     """
     :var promql_query: Promql query. You can use $pod, $node and $node_internal_ip to template (see example). For more information, see https://prometheus.io/docs/prometheus/latest/querying/basics/
-    :var graph_title: A nicer name for the Prometheus query.
+    :var graph_title: A nicer name for the Prometheus query. The graph_title may include template variables like $name, $namespace, $node, $container etc...
+
+
     :var graph_duration_minutes: Graph duration is minutes.
     :var chart_values_format: Customize the y-axis labels with one of: Plain, Bytes, Percentage (see ChartValuesFormat)
 
@@ -306,3 +308,7 @@ class LogEnricherParams(ActionParams):
     regex_replacement_style: Optional[str] = None
     previous: bool = False
     filter_regex: Optional[str] = None
+
+
+class OomKillParams(ActionParams):
+    attach_logs: Optional[bool] = False

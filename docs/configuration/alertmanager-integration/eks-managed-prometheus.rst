@@ -51,3 +51,10 @@ A pull integration lets Robusta pull metrics from AWS Managed Prometheus.
 
 .. code-annotations::
     1. This is necessary for Robusta to create silences when using Grafana Alerts, because of minor API differences in the AlertManager embedded in Grafana.
+
+Optional Settings
+==================
+
+**Prometheus flags checks**
+
+.. include:: ./_prometheus_flags_check.rst

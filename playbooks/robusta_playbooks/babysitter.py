@@ -76,7 +76,9 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
     should_get_subject_node_name = isinstance(event, NodeChangeEvent)
     # we take it from the original event, in case metadata is omitted
     meta = event.obj.metadata
-    diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj, meta.name, meta.namespace)
+    diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj, meta.name,
+                                     kind=event.obj.kind,
+                                     namespace=meta.namespace)
     finding = Finding(
         title=f"{diff_block.resource_name} {event.operation.value}d",
         description=diff_block.get_description(),

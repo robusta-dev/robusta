@@ -93,8 +93,7 @@ To test the alert, deploy a pod that uses more CPU than its request.
 .. code-block:: bash
 
     kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/cpu_throttling/throttling.yaml
-
-
+    
 You will know the alert was defined successfully when Prometheus fires an alert. When using Robusta, this means a notification will be received in all configured sinks.
 
 .. image:: /images/container_cpu_request_alert.png

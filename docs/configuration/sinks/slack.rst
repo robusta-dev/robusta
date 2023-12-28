@@ -57,8 +57,13 @@ For example:
          channel_override: "labels.slack"
 
 A replacement pattern is also allowed, using ``$`` sign, before the variable.
+For cases where labels or annotations include special characters, such as ``${annotations.kubernetes.io/service-name}``, you can use the `${}` replacement pattern to represent the entire key, including special characters. 
+For example, if you want to dynamically set the Slack channel based on the annotation ``kubernetes.io/service-name``, you can use the following syntax:
 
-For example:
+- ``channel_override: "${annotations.kubernetes.io/service-name}"``
+
+
+Example:
 
 .. code-block:: yaml
 
@@ -68,7 +73,7 @@ For example:
          name: main_slack_sink
          api_key: xoxb-112...
          slack_channel: my-fallback-channel
-         channel_override: "$cluster_name-alerts-$labels.env"
+         channel_override: "$cluster_name-alerts-$labels.env-${annotations.kubernetes.io/service-name}"
 
 
 
@@ -117,10 +122,10 @@ If you can't use the `official Slack app <https://slack.com/apps/A0214S5PHB4-rob
 your own. This is not recommended for most companies due to the added complexity.
 
 1. `Create a new Slack app. <https://api.slack.com/apps?new_app=1>`_
-2. Enable Socket mode in your Slack App and copy the websocket token into the Robusta deployment yaml.
-3. Under "OAuth and Permissions" add the following scopes: chat:write, files:write, incoming-webhook, and channels:history
-4. Under "Event Subscriptions" add bot user events for message.channels and press "Save Changes"
-5. Click "Install into Workspace"
+2. Enable Socket mode in your Slack App.
+3. Under "OAuth and Permissions" add the following scopes: chat:write, chat:write.public, files:write, incoming-webhook, and channels:history.
+4. Under "Event Subscriptions" add bot user events for message.channels and press "Save Changes".
+5. Click "Install into Workspace".
 6. Copy the ``Bot User OAuth Token`` from "OAuth and Permissions".
 7. Add the token to SinksConfig in your `generated_values.yaml` file.
 

@@ -38,21 +38,21 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
         if params.resource_type == "CPU":
             if resource_limits.cpu > 0:
                 cpu_limit_in_bytes = resource_limits.cpu * 1024 * 1024
-                limit_line = XAxisLine(label="CPU Limit", value=cpu_limit_in_bytes)
+                limit_line = XAxisLine(label="Limit", value=cpu_limit_in_bytes)
                 limit_lines.append(limit_line)
             if resource_requests.cpu > 0:
                 request_cpu_limit_in_bytes = resource_requests.cpu * 1024 * 1024
-                limit_line = XAxisLine(label="CPU Request", value=request_cpu_limit_in_bytes)
+                limit_line = XAxisLine(label="Request", value=request_cpu_limit_in_bytes)
                 limit_lines.append(limit_line)
 
         elif params.resource_type == "Memory":
             if resource_limits.memory > 0:
                 memory_limit_in_bytes = resource_limits.memory * 1024 * 1024
-                limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
+                limit_line = XAxisLine(label="Limit", value=memory_limit_in_bytes)
                 limit_lines.append(limit_line)
             if resource_requests.memory > 0:
                 request_memory_limit_in_bytes = resource_requests.memory * 1024 * 1024
-                limit_line = XAxisLine(label="Memory Request", value=request_memory_limit_in_bytes)
+                limit_line = XAxisLine(label="Request", value=request_memory_limit_in_bytes)
                 limit_lines.append(limit_line)
 
     graph_enrichment = create_resource_enrichment(

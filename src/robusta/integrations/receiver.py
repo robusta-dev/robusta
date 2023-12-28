@@ -55,6 +55,7 @@ class SlackActionRequest(BaseModel):
         # Slack value is sent as a stringified json, so we need to parse it before validation
         return json.loads(v)
 
+
 class SlackActionsMessage(BaseModel):
     actions: List[SlackActionRequest]
 
@@ -168,7 +169,6 @@ class ActionRequestReceiver:
     def _parse_websocket_message(
         message: Union[str, bytes, bytearray]
     ) -> Union[SlackActionsMessage, ExternalActionRequest]:
-
         try:
             return SlackActionsMessage.parse_raw(message)  # this is slack callback format
         except ValidationError:
@@ -276,7 +276,7 @@ class ActionRequestReceiver:
 
     @staticmethod
     def validate_action_request_signature(
-            action_request: ExternalActionRequest, signing_key: str
+        action_request: ExternalActionRequest, signing_key: str
     ) -> ValidationResponse:
         generated_signature = sign_action_request(action_request.body, signing_key)
         if hmac.compare_digest(generated_signature, action_request.signature):
@@ -330,7 +330,7 @@ class ActionRequestReceiver:
 
     @classmethod
     def __extract_key_and_validate(
-            cls, encrypted: str, private_key: RSAPrivateKey, body: ActionRequestBody
+        cls, encrypted: str, private_key: RSAPrivateKey, body: ActionRequestBody
     ) -> (bool, Optional[UUID]):
         try:
             plain = private_key.decrypt(

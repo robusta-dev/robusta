@@ -1,6 +1,6 @@
 import math
 from collections import defaultdict, namedtuple
-from datetime import datetime, timedelta
+from datetime import  timedelta
 from string import Template
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -18,7 +18,7 @@ from robusta.core.model.base_params import (
 )
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
 from robusta.core.reporting.blocks import FileBlock
-from robusta.core.reporting.custom_rendering import charts_style
+from robusta.core.reporting.custom_rendering import charts_style, PlotCustomCSS
 
 ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
 ChartLabelFactory = Callable[[int], str]
@@ -28,6 +28,27 @@ ChartOptions = namedtuple("ChartOptions", ["query", "values_format"])
 class XAxisLine(BaseModel):
     label: str
     value: float
+
+
+class YAxisLine(BaseModel):
+    label: str
+    value: float
+
+
+class PlotData:
+    def __init__(self, plot: Tuple[str, List[Tuple]],
+                 color: str,
+                 stroke_style: Optional[Dict[str, Any]] = None,
+                 stroke: Optional[bool] = True,
+                 show_dots: bool = True,
+                 dots_size: Optional[int] = None,
+                 ):
+        self.plot = plot
+        self.color = color
+        self.stroke_style = stroke_style
+        self.stroke = stroke
+        self.show_dots = show_dots
+        self.dots_size = dots_size
 
 
 def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_template: str) -> str:
@@ -169,8 +190,8 @@ def create_chart_from_prometheus_query(
     max_time = 0
 
     # We use the [graph_plot_color_list] to map colors corresponding to matching line labels on [plot_list].
-    plot_list: List[Tuple[str, List[Tuple]]] = []
-    graph_plot_color_list: List[str] = []
+    plot_data_list: List[PlotData] = []
+    max_y_value = 0
     series_list_result = prometheus_query_result.series_list_result
     if filter_prom_jobs:
         series_list_result = filter_prom_jobs_results(series_list_result)
@@ -187,44 +208,84 @@ def create_chart_from_prometheus_query(
             timestamp = series.timestamps[index]
             value = round(float(series.values[index]), FLOAT_PRECISION_LIMIT)
             values.append((timestamp, value))
+            if value > max_y_value:
+                max_y_value = value
         min_time = min(min_time, min(series.timestamps))
         max_time = max(max_time, max(series.timestamps))
 
-        plot_list.append((label, values))
-        graph_plot_color_list.append("#9747FF")
+        plot_data = PlotData(plot=(label, values), color="#3F3F3F", show_dots=False,
+                             stroke_style={'width': 8, 'dasharray': '8', 'linecap': 'round',
+                                           'linejoin': 'round'},)
+        plot_data_list.append(plot_data)
+
+    for line in lines:
+        if isinstance(line, XAxisLine) and line.value > max_y_value:
+            max_y_value = line.value
 
     assert lines is not None
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
 
-        if line.label == "Memory Limit" \
-                or line.label == "CPU Limit":
-            plot_list.append((line.label, value))
-            graph_plot_color_list.append("#FF5959")
+        if "Limit" in line.label:
+            plot_data = PlotData(plot=(line.label, value), color="#FF5959")
 
-        elif line.label == "Memory Request" \
-                or line.label == "CPU Request":
-            plot_list.append((line.label, value))
-            graph_plot_color_list.append("#0DC291")
+        elif "Request" in line.label:
+            plot_data = PlotData(plot=(line.label, value), color="#0DC291")
+
+        elif line.label == "OOM Kill Time":
+            value = [(line.value, max_y_value), (line.value, 0)]
+
+            plot_data = PlotData(plot=(line.label, value), color="#FF5959", show_dots=False,
+                                 stroke_style={'width': 6, 'dasharray': '3, 6', 'linecap': 'round',
+                                               'linejoin': 'round'})
 
         else:
-            plot_list.append((line.label, value))
-            graph_plot_color_list.append("#2a0065")
+            plot_data = PlotData(plot=(line.label, value), color="#2a0065")
 
+        plot_data_list.append(plot_data)
+
+    graph_plot_color_list = [plot_data.color for plot_data in plot_data_list]
     graph_plot_color_list.extend(["#1e0047", "#2a0065"])
+    config = pygal.Config()
+    custom_css = PlotCustomCSS().get_css_file_path()
+    config.css.append(f'file://{custom_css}')
     chart = pygal.XY(
+        config,
         show_dots=True,
         style=charts_style(graph_colors=tuple(graph_plot_color_list)),
         truncate_legend=15,
         include_x_axis=include_x_axis,
         width=1280,
-        height=720,
+        height=500,
     )
 
+    y_axis_division = 5
+    # Calculate the maximum Y value with an added 20% padding
+    max_y_value_with_padding = max_y_value + (max_y_value*0.20)
+
+    # Calculate the interval between each Y-axis label
+    interval = max_y_value_with_padding / (y_axis_division - 1)
+
+    if values_format == ChartValuesFormat.Percentage:
+        # Calculate the Y-axis labels, shift to percentage, and round to the nearest whole number percentage
+        chart.y_labels = [round((i * interval) * 100) / 100 for i in range(y_axis_division)]
+    else:
+        # For non-percentage formats, round the Y-axis labels to the nearest whole number
+        chart.y_labels = [round(i * interval) for i in range(y_axis_division)]
+
+    chart.y_labels_major = chart.y_labels
+    chart.range = (0, max_y_value_with_padding)
+    chart.show_x_guides = True
+    chart.show_y_guides = True
+    chart.spacing = 20
+    chart.margin_top = 10
+    chart.margin_bottom = 50
     chart.x_label_rotation = 35
     chart.truncate_label = -1
     chart.x_value_formatter = lambda timestamp: datetime.fromtimestamp(timestamp).strftime("%b %-d %H:%M")
-
+    chart.legend_at_bottom = True
+    chart.legend_at_bottom_columns = 5
+    chart.legend_box_size = 8
     value_formatters = {
         ChartValuesFormat.Plain: lambda val: str(val),
         ChartValuesFormat.Bytes: lambda val: humanize.naturalsize(val, binary=True),
@@ -239,8 +300,15 @@ def create_chart_from_prometheus_query(
     else:
         chart.title = promql_query
 
-    for plot in plot_list:
-        chart.add(plot[0], plot[1])
+    for p in plot_data_list:
+        chart.add(
+            p.plot[0],
+            p.plot[1],
+            stroke_style=p.stroke_style,
+            show_dots=p.show_dots,
+            dots_size=p.dots_size,
+            stroke=p.stroke,
+        )
 
     return chart
 
@@ -338,7 +406,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Pod): ChartOptions(
-            query='sum(container_memory_working_set_bytes{pod=~"$pod", container!="", image!=""}) by (pod, job)',
+            query='sum(container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod", container!="", image!=""}) by (pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
@@ -346,7 +414,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
-            query='sum(container_memory_working_set_bytes{pod=~"$pod", container=~"$container", image!=""}) by (container, pod, job)',
+            query='sum(container_memory_working_set_bytes{namespace="$namespace", pod=~"$pod", container=~"$container", image!=""}) by (container, pod, job)',
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Disk, ResourceChartItemType.Pod): None,

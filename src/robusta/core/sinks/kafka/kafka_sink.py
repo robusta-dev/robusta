@@ -18,7 +18,11 @@ from robusta.core.sinks.sink_base import SinkBase
 class KafkaSink(SinkBase):
     def __init__(self, sink_config: KafkaSinkConfigWrapper, registry):
         super().__init__(sink_config.kafka_sink, registry)
-        self.producer = KafkaProducer(bootstrap_servers=sink_config.kafka_sink.kafka_url)
+
+        self.producer = KafkaProducer(
+            bootstrap_servers=sink_config.kafka_sink.kafka_url,
+            **sink_config.kafka_sink.auth,
+        )
         self.topic = sink_config.kafka_sink.topic
 
     def write_finding(self, finding: Finding, platform_enabled: bool):

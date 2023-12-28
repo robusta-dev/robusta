@@ -1,10 +1,8 @@
 from collections import defaultdict
 from string import Template
 from typing import Dict, Optional
-
 import regex
 from pydantic import validator
-
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
 
@@ -35,19 +33,45 @@ class SlackSinkParams(SinkBaseParams):
                 )
                 raise ValueError(err_msg)
         return v
+    
+    def normalize_placeholder(cls, s):
+        def repl(match):
+            return cls.normalize_key_string(match.group(0))
+        
+        result = s.replace(ANNOTATIONS_PREF, '').replace(LABELS_PREF, '')
+        # Use regular expression to find and replace inside "${}"
+        result = regex.sub(r'\$\{[^}]+\}', repl, result)
+        result = regex.sub(rf'\$({ANNOTATIONS_PREF})|({LABELS_PREF})', repl, result)
+        return result
+    
+    def normalize_key_string(cls, s: str) -> str:
+        return s.replace('/', '_').replace('.', '_').replace('-', '_')
+    
+    def normalize_dict_keys(cls, metadata: Dict) -> Dict:
+        return {cls.normalize_key_string(k):v for k, v in metadata.items()}
 
     def get_slack_channel(self, cluster_name: str, labels: Dict, annotations: Dict) -> str:
         if self.channel_override:
+            channel = self.channel_override
+            
+            # Update labels with CLUSTER_PREF and create annotations with defaults
             labels.update({CLUSTER_PREF: cluster_name})
-            channel = self.channel_override.replace(LABELS_PREF, "")
-            channel = Template(channel).safe_substitute(labels)
-            channel = channel.replace(ANNOTATIONS_PREF, "")
             annots = defaultdict(lambda: MISSING)
             annots.update(annotations)
-            channel = Template(channel).safe_substitute(annots)
-            if MISSING not in channel:
-                return channel
 
+            # Normalize channel and labels/annotations keys
+            channel_normalized = self.normalize_placeholder(channel)
+            labels_normalized = self.normalize_dict_keys(labels)
+            annotaions_normalized = self.normalize_dict_keys(annots)
+
+            # Substitute placeholders in the normalized channel
+            channel_normalized = Template(channel_normalized).safe_substitute(labels_normalized)
+            channel_normalized = Template(channel_normalized).safe_substitute(annotaions_normalized)
+
+            if MISSING not in channel_normalized:
+                return channel_normalized
+
+        # Return default slack_channel if no channel_override or if MISSING is in the channel
         return self.slack_channel
 
 
