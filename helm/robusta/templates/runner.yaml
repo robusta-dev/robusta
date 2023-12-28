@@ -55,6 +55,8 @@ spec:
             value: {{ .Release.Name | quote }}
           - name: PROMETHEUS_ENABLED
             value: {{ .Values.enablePrometheusStack | quote}}
+          - name: MANAGED_CONFIGURATION_ENABLED
+            value: {{ .Values.enabledManagedConfiguration | quote}}
           - name: SEND_ADDITIONAL_TELEMETRY
             value: {{ .Values.runner.sendAdditionalTelemetry | quote }}
           - name: LOG_LEVEL

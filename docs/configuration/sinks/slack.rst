@@ -57,8 +57,13 @@ For example:
          channel_override: "labels.slack"
 
 A replacement pattern is also allowed, using ``$`` sign, before the variable.
+For cases where labels or annotations include special characters, such as ``${annotations.kubernetes.io/service-name}``, you can use the `${}` replacement pattern to represent the entire key, including special characters. 
+For example, if you want to dynamically set the Slack channel based on the annotation ``kubernetes.io/service-name``, you can use the following syntax:
 
-For example:
+- ``channel_override: "${annotations.kubernetes.io/service-name}"``
+
+
+Example:
 
 .. code-block:: yaml
 
@@ -68,7 +73,7 @@ For example:
          name: main_slack_sink
          api_key: xoxb-112...
          slack_channel: my-fallback-channel
-         channel_override: "$cluster_name-alerts-$labels.env"
+         channel_override: "$cluster_name-alerts-$labels.env-${annotations.kubernetes.io/service-name}"
 
 
 

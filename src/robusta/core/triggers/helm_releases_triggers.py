@@ -1,7 +1,7 @@
-import logging
 import sys
-from typing import Optional, List, Dict
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import pytz
 from attr import dataclass
 from pydantic import BaseModel
@@ -68,7 +68,7 @@ class HelmReleaseBaseTrigger(BaseTrigger):
     def get_trigger_event(self):
         return HelmReleasesTriggerEvent.__name__
 
-    def should_fire(self, event: TriggerEvent, playbook_id: str):
+    def should_fire(self, event: TriggerEvent, playbook_id: str, build_context: Dict[str, Any]):
         if not isinstance(event, HelmReleasesTriggerEvent):
             return False
 
@@ -116,8 +116,8 @@ class HelmReleaseBaseTrigger(BaseTrigger):
 
         return can_fire
 
-    def _build_execution_event(
-        self, event: HelmReleasesTriggerEvent, sink_findings: Dict[str, List[Finding]]
+    def build_execution_event(
+        self, event: HelmReleasesTriggerEvent, sink_findings: Dict[str, List[Finding]], build_context: Dict[str, Any]
     ) -> Optional[ExecutionBaseEvent]:
         if not isinstance(event, HelmReleasesTriggerEvent):
             return

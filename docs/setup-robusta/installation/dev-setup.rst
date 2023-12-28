@@ -66,15 +66,43 @@ Developing Playbooks Locally
 
 3. After changing playbook code, trigger a reload: ``touch deployment/playbooks/active_playbooks.yaml``
 
+
+.. details:: Common Errors
+
+    .. tab-set::
+
+        .. tab-item:: objc fork() Crash
+
+            This error occurs on macOS devices with Apple Silicon. It's related to security restrictions on multi-threading involving fork() in Python.
+
+            **Solution:**
+
+            To resolve this issue, set the following environment variable in your project's environment variables:
+
+            ``OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES``
+
+            **Setting the Environment Variable in IDEs:**
+
+            - **PyCharm:**
+
+              In PyCharm, go to 'Run' -> 'Edit Configurations', then find your project's configuration. Under 'Environment variables', add: ``OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES``.
+
+            - **VSCode:**
+
+              In VSCode, modify your `.vscode/launch.json` file by adding the following line to your configuration settings: ``"env": {"OBJC_DISABLE_INITIALIZE_FORK_SAFETY": "YES"}``.
+
+
+
 Alert Simulation
 ^^^^^^^^^^^^^^^^^^
+
 To simulate a Prometheus alerts and cause relevant playbooks to run:
 
 .. code-block::
 
-    poetry run robusta demo-alert --alert=Test123
+    poetry run robusta demo-alert --alert=Test123 --labels=label1=123,label2=abc
 
-If running multiple times in a row, change something each time so AlertManager doesn't supress retransmissions.
+If running multiple times in a row, change a label value each time so that AlertManager doesn't supress retransmissions.
 
 CLI Development
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -274,7 +274,7 @@ class SlackSender:
             )
         except Exception as e:
             logging.error(
-                f"error sending message to slack\ne={e}\ntext={message}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
+                f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
 
     def __create_finding_header(self, finding: Finding, status: FindingStatus, platform_enabled: bool) -> MarkdownBlock:

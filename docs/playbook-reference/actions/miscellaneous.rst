@@ -29,3 +29,7 @@ Stress Testing and Chaos Engineering
 
 .. robusta-action:: playbooks.robusta_playbooks.prometheus_simulation.prometheus_alert
     :manual-trigger-only:
+
+Adding Slack user/group mentions to k8s/Prometheus events
+---------------------------------------------------------
+.. robusta-action:: playbooks.robusta_playbooks.alerts_integration.mention_enricher

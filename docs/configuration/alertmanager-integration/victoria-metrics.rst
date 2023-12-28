@@ -41,3 +41,10 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
 
 .. code-annotations::
     1. This is necessary for Robusta to create silences when using Grafana Alerts, because of minor API differences in the AlertManager embedded in Grafana.
+
+Optional Settings
+==================
+
+**Prometheus flags checks**
+
+.. include:: ./_prometheus_flags_check.rst

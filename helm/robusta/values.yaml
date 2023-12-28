@@ -20,6 +20,7 @@ automountServiceAccountToken: true
 
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
 globalConfig:
+  check_prometheus_flags: true
   grafana_url: ""
   grafana_api_key: ""
   grafana_dashboard_uid: ""
@@ -79,6 +80,7 @@ lightActions:
 
 # install prometheus, alert-manager, and grafana along with Robusta?
 enablePrometheusStack: false
+enabledManagedConfiguration: false
 enableServiceMonitors: true
 monitorHelmReleases: true
 
@@ -383,9 +385,8 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 - triggers:
-    - on_deployment_all_changes: {}
-    - on_daemonset_all_changes: {}
-    - on_statefulset_all_changes: {}
+    - on_kubernetes_resource_operation:
+        resources: ["deployment", "daemonset", "statefulset"]
   actions:
     - resource_babysitter: {}
   sinks:
@@ -399,16 +400,6 @@ platformPlaybooks:
         aggregation_key: IngressChange
   sinks:
     - "robusta_ui_sink"
-- triggers:
-    - on_deployment_all_changes: {}
-    - on_daemonset_all_changes: {}
-    - on_statefulset_all_changes: {}
-    - on_replicaset_all_changes: {}
-    - on_pod_all_changes: {}
-    - on_node_all_changes: {}
-    - on_job_all_changes: {}
-  actions:
-    - resource_events_diff: {}
 - triggers:
   - on_job_failure: {}
   actions:

@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from hikaru.model.rel_1_26 import Job
 
 from robusta.core.playbooks.base_trigger import TriggerEvent
@@ -22,15 +24,15 @@ class JobFailedTrigger(JobUpdateTrigger):
             labels_selector=labels_selector,
         )
 
-    def should_fire(self, event: TriggerEvent, playbook_id: str):
-        should_fire = super().should_fire(event, playbook_id)
+    def should_fire(self, event: TriggerEvent, playbook_id: str, build_context: Dict[str, Any]):
+        should_fire = super().should_fire(event, playbook_id, build_context)
         if not should_fire:
             return should_fire
 
         if not isinstance(event, K8sTriggerEvent):
             return False
 
-        exec_event = self.build_execution_event(event, {})
+        exec_event = self.build_execution_event(event, {}, build_context)
 
         if not isinstance(exec_event, JobChangeEvent):
             return False

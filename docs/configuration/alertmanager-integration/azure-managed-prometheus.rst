@@ -118,3 +118,11 @@ Instead of creating an Azure authentication app, you can use kubelet's Managed I
    e. Select + Select members.
    f. Select the Managed Identity you got from step 1.
    g. Select Review + assign to save the configuration.
+
+
+Optional Settings
+==================
+
+**Prometheus flags checks**
+
+.. include:: ./_prometheus_flags_check.rst

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, NamedTuple, Optional, Type, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
 
 from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Job, Node, NodeList, StatefulSet
 from pydantic.main import BaseModel
@@ -11,6 +11,8 @@ from robusta.integrations.helper import exact_match, prefix_match
 from robusta.integrations.kubernetes.custom_models import RobustaDeployment, RobustaJob, RobustaPod
 from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKubernetesAlert
 from robusta.utils.cluster_provider_discovery import cluster_provider
+
+ALERT_EVENT = "alert_event"
 
 
 class PrometheusTriggerEvent(TriggerEvent):
@@ -63,7 +65,7 @@ class PrometheusAlertTrigger(BaseTrigger):
     def get_trigger_event(self):
         return PrometheusTriggerEvent.__name__
 
-    def should_fire(self, event: TriggerEvent, playbook_id: str):
+    def should_fire(self, event: TriggerEvent, playbook_id: str, build_context: Dict[str, Any]):
         if not isinstance(event, PrometheusTriggerEvent):
             return False
 
@@ -91,10 +93,13 @@ class PrometheusAlertTrigger(BaseTrigger):
 
         return True
 
-    def _build_execution_event(
-        self, event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]]
+    def build_execution_event(
+        self, event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]], build_context: Dict[str, Any]
     ) -> Optional[ExecutionBaseEvent]:
-        return AlertEventBuilder.build_event(event, sink_findings)
+        if ALERT_EVENT not in build_context.keys():
+            build_context[ALERT_EVENT] = AlertEventBuilder.build_event(event, sink_findings)
+
+        return build_context.get(ALERT_EVENT)
 
     @staticmethod
     def get_execution_event_type() -> type:
