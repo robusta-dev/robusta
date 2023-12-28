@@ -197,6 +197,30 @@ def create_chart_from_prometheus_query(
         logging.info(f"[graph_enrichment] -- alert_starts_at -- graph_duration : {graph_duration}")
         logging.info(f"[graph_enrichment] -- alert_starts_at -- starts_at : {starts_at}")
 
+    logging.info(f"[graph_enrichment] --  starts_at timestamp {starts_at.timestamp()}")
+    logging.info(f"[graph_enrichment] --  ends_at timestamp {ends_at.timestamp()}")
+
+    oom_kill_time: Optional[datetime] = None
+    for line in lines:
+        if line.label == "OOM Kill Time":
+            oom_kill_time = datetime.fromtimestamp(line.value)
+
+    if oom_kill_time:
+        logging.info(f"[graph_enrichment] -- oom_kill_time available {oom_kill_time.timestamp()}")
+
+        # Assuming starts_at, ends_at, and oom_kill_time are datetime objects
+        one_hour = timedelta(hours=1)
+        thirty_minutes = timedelta(minutes=30)
+
+        # Adjust starts_at to be at least 1 hour before oom_kill_time
+        starts_at = min(starts_at, oom_kill_time - one_hour)
+
+        # Adjust ends_at to be at least 30 minutes after oom_kill_time
+        ends_at = max(ends_at, oom_kill_time + thirty_minutes)
+
+        logging.info(f"[graph_enrichment] -- adjusted starts_at ts {starts_at.timestamp()}")
+        logging.info(f"[graph_enrichment] -- adjusted ends_at ts {ends_at.timestamp()}")
+
     prometheus_query_result = run_prometheus_query(prometheus_params, promql_query, starts_at, ends_at, step=None)
     logging.info(f"[graph_enrichment] -- prometheus_query_result : {prometheus_query_result}")
     logging.info(f"[graph_enrichment] -- promql_query : {promql_query}")
@@ -250,6 +274,15 @@ def create_chart_from_prometheus_query(
 
         logging.info(f"[graph_enrichment]-- (2) min_time : {min_time}")
         logging.info(f"[graph_enrichment]-- (2) max_time : {max_time}")
+
+        # Adjust min_time to ensure it is at least 1 hour before oom_kill_time, and adjust max_time to ensure it is at least 30 minutes after oom_kill_time, as required for the graph plot adjustments.
+        if oom_kill_time:
+            min_time = min(min_time, starts_at.timestamp())
+            max_time = max(max_time, ends_at.timestamp())
+
+            logging.info(f"[graph_enrichment]-- Adjusting min_time with regards to oom_kill_time : {min_time}")
+            logging.info(f"[graph_enrichment]-- Adjusting max_time with regards to oom_kill_time : {max_time}")
+
 
         plot_data = PlotData(
             plot=(label, values),
