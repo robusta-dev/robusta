@@ -40,7 +40,7 @@ Prerequisites
             .. code-annotations::
               1. Add a namespace if you want Prometheus to identify rules created in specific namespaces. Leave ``{}`` to detect rules from any namespace.
               2. Add a label if you want Prometheus to detect rules with a specific selector. Leave ``{}`` to detect rules with any label.
-              3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using values helm values file.
+              3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using helm values file.
 
           .. md-tab-item:: Other Prometheus
 
