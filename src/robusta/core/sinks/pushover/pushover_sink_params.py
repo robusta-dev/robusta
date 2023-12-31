@@ -1,0 +1,16 @@
+from robusta.core.sinks.sink_base_params import SinkBaseParams
+from robusta.core.sinks.sink_config import SinkConfigBase
+
+
+class PushoverSinkParams(SinkBaseParams):
+    token: str
+    user: str
+    send_files: bool = True
+    send_as_html: bool = True
+    device: str = None
+
+class PushoverSinkConfigWrapper(SinkConfigBase):
+    pushover_sink: PushoverSinkParams
+
+    def get_params(self) -> SinkBaseParams:
+        return self.pushover_sink
