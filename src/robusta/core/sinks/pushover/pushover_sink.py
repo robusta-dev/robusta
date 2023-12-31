@@ -102,8 +102,6 @@ class PushoverSink(SinkBase):
                 transformer = Transformer()
 
                 block_text = transformer.block_to_html(block)
-                # if len(block_text) + len(message_content) >= 2048:  # telegram message size limit
-                #     break
                 message_content += block_text + "\n"
 
         return title_content, message_content
