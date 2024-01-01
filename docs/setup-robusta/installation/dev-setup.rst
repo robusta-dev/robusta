@@ -10,13 +10,13 @@ To develop new playbook actions, you don't need to install from source. Refer to
 Using Mirrord (Recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Use mirrord to build and test Robusta on your local machine:
+Use `Mirrord <https://mirrord.dev/>`_ to build and test Robusta on your local machine:
 
 1. :ref:`Install Robusta normally with Helm <install>`
 
 2. Clone Robusta's source code: ``git clone https://github.com/robusta-dev/robusta.git && cd robusta``
 
-3. Run Robusta via Mirrord ``./run_runner_locally.sh``
+3. Run Robusta via Mirrord ``./run_runner_locally.sh`` and follow the instructions in your terminal.
 
 Developing Playbooks Locally
 ---------------------------------
@@ -32,7 +32,7 @@ Developing Playbooks Locally
       chatgpt_robusta_actions:
         url: "file:///path/to/kubernetes-chatgpt-bot"
 
-3. Each time you modify your playbook, reload it by running: ``touch deployment/playbooks/active_playbooks.yaml``
+3. To apply changes to your playbook without restarting Robusta, simply run: ``touch deployment/playbooks/active_playbooks.yaml``.
 
 .. details:: Common Errors
 
