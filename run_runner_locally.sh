@@ -66,7 +66,7 @@ if [ ! -f "$PWD/deployment/playbooks/active_playbooks.yaml" ]; then
   echo "This file must be located at ./deployment/playbooks/active_playboks.yaml"
   echo "You can fix by extracting this file from an existing cluster with Robusta. Run:"
   echo -e "\tkubectl get secret robusta-playbooks-config-secret -o jsonpath='{.data.active_playbooks\.yaml}'  | base64 --decode > ./deployment/playbooks/active_playbooks.yaml"
-  echo -e "${RED}After extracting active_playbooks.yaml from your cluster, you MUST change global_config.cluster_name in it!!!!!${NC}"
+  echo -e "${RED}After extracting active_playbooks.yaml from your cluster, you MUST change the global_config.cluster_name in it to something else!!!!!${NC}"
   exit 1
 fi
 
