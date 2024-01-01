@@ -8,8 +8,6 @@ You will need to configure two integrations: one to send alerts to Robusta and a
 Send alerts to Robusta
 ============================
 
-Add the config below to the appropriate AlertManager file:
-
 .. include:: ./_alertmanager-config.rst
 
 .. include:: ./_testing_integration.rst

@@ -3,12 +3,10 @@ Grafana AlertManager
 
 If you use Grafana alerts, you're using a `special instance of AlertManager embedded inside Grafana <https://grafana.com/docs/grafana/latest/alerting/fundamentals/alertmanager/>`_.
 
-You will need to configure to send alerts to Robusta.
+You will need to configure to send Grafana alerts to Robusta.
 
 Send alerts to Robusta
 ============================
-
-This integration sends alerts from Grafana to Robusta. To configure it:
 
 .. include:: ./_alertmanager-config.rst
 
