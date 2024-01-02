@@ -19,14 +19,12 @@ from robusta.api import (
     Emojis,
     ErrorCodes,
     ExecutionBaseEvent,
-    FileBlock,
     Finding,
     FindingSource,
     KubernetesResourceEvent,
     ListBlock,
     LogEnricherParams,
     MarkdownBlock,
-    NamedRegexPattern,
     PodEvent,
     PrometheusKubernetesAlert,
     PrometheusParams,
@@ -40,6 +38,8 @@ from robusta.api import (
     create_graph_enrichment,
     create_resource_enrichment,
     get_node_internal_ip,
+    GraphBlock,
+    EnrichmentType
 )
 from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
 from robusta.core.reporting import FindingSubject
@@ -234,14 +234,15 @@ def graph_enricher(alert: PrometheusKubernetesAlert, params: PrometheusParams):
     Attach a graph of the Prometheus query that triggered the alert.
     """
     promql_query = alert.get_prometheus_query()
-    chart = create_chart_from_prometheus_query(
+    chart, prom_block = create_chart_from_prometheus_query(
         params,
         promql_query,
         alert.alert.startsAt,
         include_x_axis=False,
         graph_duration_minutes=60,
     )
-    alert.add_enrichment([FileBlock(f"{promql_query}.svg", chart.render())])
+    alert.add_enrichment([GraphBlock(f"{promql_query}.svg", chart.render(), graph_data=prom_block)],
+                         enrichment_type=EnrichmentType.graph, title="Alert Expression Graph")
 
 
 @action
@@ -269,7 +270,7 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
         graph_title=graph_title,
         chart_values_format=chart_values_format,
     )
-    alert.add_enrichment([graph_enrichment])
+    alert.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title=graph_title)
 
 
 @action
@@ -293,7 +294,7 @@ def alert_graph_enricher(alert: PrometheusKubernetesAlert, params: AlertResource
         prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
     )
-    alert.add_enrichment([graph_enrichment])
+    alert.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Resources")
 
 
 class TemplateParams(ActionParams):

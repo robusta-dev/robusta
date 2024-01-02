@@ -20,6 +20,7 @@ from robusta.core.reporting import (
     PrometheusBlock,
     TableBlock,
 )
+from robusta.core.reporting.blocks import GraphBlock
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer
 from robusta.utils.parsing import datetime_to_db_str
@@ -91,6 +92,10 @@ class ModelConversion:
                 )
             elif isinstance(block, DividerBlock):
                 structured_data.append({"type": "divider"})
+            elif isinstance(block, GraphBlock):
+                structured_data.append(
+                    {"type": str(enrichment.enrichment_type), "title": enrichment.title, "data": block.graph_data.data.dict(), "metadata": block.graph_data.metadata, "version": 1.0}
+                )
             elif isinstance(block, FileBlock):
                 if block.is_text_file():
                     block.zip()

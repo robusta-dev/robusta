@@ -90,17 +90,26 @@ class VideoLink(BaseModel):
     name: str = "See more"
 
 
+class EnrichmentType(Enum):
+    graph = "graph"
+
+
 class Enrichment:
     # These is the actual enrichment data
     blocks: List[BaseBlock] = []
     # General purpose rendering flags, that can be used by specific sinks
     annotations: Dict[str, str] = {}
+    enrichment_type: Optional[EnrichmentType]
+    title: Optional[str]
 
-    def __init__(self, blocks: List[BaseBlock], annotations=None):
+    def __init__(self, blocks: List[BaseBlock], annotations: Optional[Dict[str, str]] = None,
+                 enrichment_type: Optional[EnrichmentType] = None, title: Optional[str] = None):
         if annotations is None:
             annotations = {}
         self.blocks = blocks
         self.annotations = annotations
+        self.enrichment_type = enrichment_type
+        self.title = title
 
     def __str__(self):
         return f"annotations: {self.annotations} Enrichment: {self.blocks} "
@@ -269,6 +278,8 @@ class Finding(Filterable):
         enrichment_blocks: List[BaseBlock],
         annotations=None,
         suppress_warning: bool = False,
+        enrichment_type: Optional[EnrichmentType] = None,
+        title: Optional[str] = None,
     ):
         if self.dirty and not suppress_warning:
             logging.warning("Updating a finding after it was added to the event is not allowed!")
@@ -277,7 +288,8 @@ class Finding(Filterable):
             return
         if annotations is None:
             annotations = {}
-        self.enrichments.append(Enrichment(enrichment_blocks, annotations))
+        self.enrichments.append(Enrichment(blocks=enrichment_blocks, annotations=annotations,
+                                           enrichment_type=enrichment_type, title=title))
 
     def add_video_link(self, video_link: VideoLink, suppress_warning: bool = False):
         if self.dirty and not suppress_warning:

@@ -19,6 +19,7 @@ from robusta.api import (
     TableBlock,
     action,
     create_node_graph_enrichment,
+    EnrichmentType
 )
 
 
@@ -199,4 +200,4 @@ def node_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherPara
     """
     node = node_event.get_node()
     graph_enrichment = create_node_graph_enrichment(params, node)
-    node_event.add_enrichment([graph_enrichment])
+    node_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Node Resources")

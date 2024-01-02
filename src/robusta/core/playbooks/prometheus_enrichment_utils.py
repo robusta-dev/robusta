@@ -17,7 +17,7 @@ from robusta.core.model.base_params import (
     ResourceChartResourceType,
 )
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
-from robusta.core.reporting.blocks import FileBlock
+from robusta.core.reporting.blocks import GraphBlock, PrometheusBlock
 from robusta.core.reporting.custom_rendering import charts_style, PlotCustomCSS
 
 ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
@@ -169,7 +169,7 @@ def create_chart_from_prometheus_query(
     lines: Optional[List[XAxisLine]] = [],
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
-):
+) -> Tuple[pygal.Graph, PrometheusBlock]:
     if not alert_starts_at:
         ends_at = datetime.utcnow()
         starts_at = ends_at - timedelta(minutes=graph_duration_minutes)
@@ -310,7 +310,7 @@ def create_chart_from_prometheus_query(
             stroke=p.stroke,
         )
 
-    return chart
+    return chart, PrometheusBlock(data=prometheus_query_result, query=promql_query)
 
 
 def __get_additional_labels_str(prometheus_params: PrometheusParams) -> str:
@@ -333,9 +333,9 @@ def create_graph_enrichment(
     lines: Optional[List[XAxisLine]] = [],
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
-) -> FileBlock:
+) -> GraphBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
-    chart = create_chart_from_prometheus_query(
+    chart, prom_block = create_chart_from_prometheus_query(
         prometheus_params,
         promql_query,
         start_at,
@@ -349,7 +349,7 @@ def create_graph_enrichment(
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
-    return FileBlock(svg_name, chart.render())
+    return GraphBlock(svg_name, chart.render(), graph_data=prom_block)
 
 
 def get_default_values_format(combination: ResourceKey) -> ChartValuesFormat:
@@ -391,7 +391,7 @@ def create_resource_enrichment(
     prometheus_params: PrometheusParams,
     lines: Optional[List[XAxisLine]] = [],
     title_override: Optional[str] = None,
-) -> FileBlock:
+) -> GraphBlock:
     combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
             query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod"}[5m])) by (pod, job)',

@@ -561,3 +561,21 @@ class EventsRef(BaseModel):
     namespace: Optional[str]
     name: str
     kind: str
+
+
+class GraphBlock(FileBlock):
+    graph_data: Optional[PrometheusBlock]
+
+    def __init__(
+            self,
+            filename: str,
+            contents: bytes,
+            graph_data: Optional[PrometheusBlock] = None,
+            **kwargs,
+    ):
+        super().__init__(
+            filename=filename,
+            contents=contents,
+            graph_data=graph_data,
+            **kwargs,
+        )

@@ -24,6 +24,8 @@ from robusta.api import (
     get_oom_killed_container,
     parse_kubernetes_datetime_to_ms,
     pod_most_recent_oom_killed_container,
+    EnrichmentType,
+    create_node_graph_enrichment,
 )
 from robusta.core.model.base_params import PrometheusParams, OomKillParams, LogEnricherParams
 from robusta.core.playbooks.oom_killer_utils import logs_enricher
@@ -73,7 +75,11 @@ def oomkilled_container_graph_enricher(event: PodEvent, params: OOMGraphEnricher
     if params.delay_graph_s > 0:
         time.sleep(params.delay_graph_s)
     container_graph = create_container_graph(params, pod, oomkilled_container, show_limit=True)
-    event.add_enrichment([container_graph])
+    event.add_enrichment([container_graph], enrichment_type=EnrichmentType.graph, title="Container Info")
+
+    node: Node = Node.readNode(pod.spec.nodeName).obj
+    node_graph = create_node_graph_enrichment(params, node)
+    event.add_enrichment([node_graph], enrichment_type=EnrichmentType.graph, title="Node Info")
 
 
 @action
