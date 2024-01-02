@@ -1,12 +1,12 @@
 Coralogix Managed Prometheus
 ********************************
 
-This guide walks you through integrating your Coralogix managed Prometheus with Robusta. You will need to configure two integrations: both a pull integration and a push integration.
+This guide walks you through integrating your Coralogix managed Prometheus with Robusta. You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
 
-Configure Pull Integration
+Configure Metric Querying
 ==============================
 
-A pull integration lets Robusta pull metrics from Coralogix Managed Prometheus.
+Metrics querying lets Robusta pull metrics from Coralogix Managed Prometheus.
 
 1. Go to `Coralogix Documentation <https://coralogix.com/docs/grafana-plugin/#block-1778265e-61c2-4362-9060-533d158857d7>`_ and choose the relevant 'PromQL Endpoint' from their table.
 2. In your `generated_values.yaml` file add the endpoint url:
@@ -48,10 +48,10 @@ A pull integration lets Robusta pull metrics from Coralogix Managed Prometheus.
           name: MY_CORALOGIX_SECRET
           key: logs_query_key
 
-Configure Push Integration
+Send alerts to Robusta
 ===============================
 
-A push integration sends Coralogix alerts to Robusta.
+This integration lets you send Coralogix alerts to Robusta.
 
 .. note:: Many of the fields supported in Alertmanager dont in Coralogix alerts
 

@@ -3,12 +3,10 @@ Grafana AlertManager
 
 If you use Grafana alerts, you're using a `special instance of AlertManager embedded inside Grafana <https://grafana.com/docs/grafana/latest/alerting/fundamentals/alertmanager/>`_.
 
-To integrate that AlertManager with Robusta, you will need to configure both a push and a pull integration, as follows.
+You will need to configure to send Grafana alerts to Robusta.
 
-Configure Push Integration
+Send alerts to Robusta
 ============================
-
-A push integration sends alerts from Grafana to Robusta. To configure it:
 
 .. include:: ./_alertmanager-config.rst
 
