@@ -3,12 +3,12 @@ AWS Managed Prometheus
 
 This guide walks you through integrating your AWS Managed Prometheus with Robusta.
 
-You'll need to configure both a push and pull integration. This guide only covers integrating the pull integration.
+You'll need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences. This guide only covers the integration to query metrics.
 
-Configure Pull Integration
+Configure Metric Querying
 ===============================
 
-A pull integration lets Robusta pull metrics from AWS Managed Prometheus.
+Metrics querying lets Robusta pull metrics from AWS Managed Prometheus.
 
 1. Create an AWS access key, `See guide here <https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html>`_.
 

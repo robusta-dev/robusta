@@ -3,7 +3,7 @@ Google Managed Prometheus
 
 This guide walks you through integrating your `Google Managed Prometheus <https://cloud.google.com/stackdriver/docs/managed-prometheus>`_ with Robusta.
 
-You will need to configure two integrations: both a pull integration and a push integration.
+You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
 
 Prerequisites
 ****************
@@ -14,7 +14,7 @@ An instance of Google Managed Prometheus with the following components configure
 * Scraping configuration for Kubelet and cAdvisor (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kubelet-cadvisor>`_)
 * Kube State Metrics (`Instructions <https://cloud.google.com/stackdriver/docs/managed-prometheus/exporters/kube_state_metrics>`_)
 
-Configure Push Integration
+Send Alerts to Robusta
 ********************************************
 
 To send alerts to Robusta, create an AlertManager configuration file with the name ``alertmanager.yaml``:
@@ -59,7 +59,7 @@ Run this command to send a dummy alert to the GMP AlertManager in your cluster:
 
 You know it works if you receive an alert from Robusta.
 
-Configure Pull Integration
+Configure Metric Querying
 ******************************
 
 A pull integration lets Robusta pull metrics and create silences.
