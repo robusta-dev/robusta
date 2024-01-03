@@ -5,7 +5,7 @@ If you use Grafana alerts, you're using a `special instance of AlertManager embe
 
 You will need to configure to send Grafana alerts to Robusta.
 
-Send alerts to Robusta
+Send Alerts to Robusta
 ============================
 
 .. include:: ./_alertmanager-config.rst

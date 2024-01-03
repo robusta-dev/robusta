@@ -5,7 +5,7 @@ Follow this guide to connect Robusta to a central Prometheus (e.g. Thanos/Mimir)
 
 You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
 
-Send alerts to Robusta
+Send Alerts to Robusta
 ==============================
 
 This integration lets your central Prometheus send alerts to Robusta, as if they were in the same cluster:
