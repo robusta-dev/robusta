@@ -5,7 +5,7 @@ Are you already running Prometheus in the same cluster as Robusta? Follow this g
 
 You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
 
-Send alerts to Robusta
+Send Alerts to Robusta
 ============================
 
 .. include:: ./_alertmanager-config.rst
