@@ -208,6 +208,7 @@ class CustomGraphEnricherParams(PrometheusParams):
     graph_title: Optional[str] = None
     graph_duration_minutes: int = 60
     chart_values_format: str = "Plain"
+    hide_legends: Optional[bool] = False
 
 
 class ResourceGraphEnricherParams(PrometheusParams):
