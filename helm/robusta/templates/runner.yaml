@@ -85,6 +85,10 @@ spec:
             value: {{ .Values.image.registry }}
           - name: CLUSTER_DOMAIN
             value: {{ .Values.global.clusterDomain }}
+          {{- if .Values.openshift.enabled }}
+          - name: IS_OPENSHIFT
+            value: "True"
+          {{- end }}
           {{- if kindIs "string" .Values.runner.additional_env_vars }}
           {{- fail "The `additional_env_vars` string value is deprecated. Change the `additional_env_vars` value to an array" -}}
           {{- end }}
