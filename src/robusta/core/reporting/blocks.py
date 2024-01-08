@@ -16,6 +16,8 @@ from hikaru import DiffDetail, DiffType
 from hikaru.model.rel_1_26 import HikaruDocumentBase
 from pydantic import BaseModel
 
+from robusta.core.model.base_params import ChartValuesFormat
+
 try:
     from tabulate import tabulate
 except ImportError:
@@ -459,6 +461,10 @@ class LinksBlock(BaseBlock):
     links: List[LinkProp] = []
 
 
+class PrometheusBlockLineData(BaseBlock):
+    legend: str
+    value: Any
+
 class PrometheusBlock(BaseBlock):
     """
     Formatted prometheus query results with metadata
@@ -467,13 +473,28 @@ class PrometheusBlock(BaseBlock):
     data: PrometheusQueryResult
     metadata: Dict[str, str]
 
-    def __init__(self, data: PrometheusQueryResult, query: str):
+    vertical_lines: Optional[List[PrometheusBlockLineData]]
+    horizontal_lines: Optional[List[PrometheusBlockLineData]]
+    y_axis_type: Optional[ChartValuesFormat]
+    graph_name: Optional[str]
+
+    def __init__(self, data: PrometheusQueryResult, query: str, vertical_lines: Optional[List[PrometheusBlockLineData]],
+                 horizontal_lines: Optional[List[PrometheusBlockLineData]],
+                 y_axis_type: Optional[ChartValuesFormat],
+                 graph_name: Optional[str]):
         """
         :param data: the PrometheusQueryResult generated created from a prometheus query
         :param query: the Prometheus query run
         """
         metadata = {"query-result-version": "1.0", "query": query}
-        super().__init__(data=data, metadata=metadata)
+        super().__init__(data=data, metadata=metadata, vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
+                         y_axis_type=y_axis_type, graph_name=graph_name)
+
+    def dict(self, *args, **kwargs) -> Dict[str, Any]:
+        obj_dict = super().dict()
+        obj_dict["y_axis_type"] = str(self.y_axis_type) if self.y_axis_type else None
+
+        return obj_dict
 
 
 class ScanReportRow(BaseModel):

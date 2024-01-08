@@ -17,7 +17,7 @@ from robusta.core.model.base_params import (
     ResourceChartResourceType,
 )
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
-from robusta.core.reporting.blocks import GraphBlock, PrometheusBlock
+from robusta.core.reporting.blocks import GraphBlock, PrometheusBlock, PrometheusBlockLineData
 from robusta.core.reporting.custom_rendering import charts_style, PlotCustomCSS
 
 ResourceKey = Tuple[ResourceChartResourceType, ResourceChartItemType]
@@ -218,11 +218,20 @@ def create_chart_from_prometheus_query(
                                            'linejoin': 'round'},)
         plot_data_list.append(plot_data)
 
+    vertical_lines = []
+    horizontal_lines = []
     for line in lines:
+        line_data = PrometheusBlockLineData(legend=line.label, value=line.value)
+
         if isinstance(line, XAxisLine) and line.value > max_y_value:
             max_y_value = line.value
 
-    assert lines is not None
+        if isinstance(line, XAxisLine):
+            horizontal_lines.append(line_data)
+
+        if isinstance(line, YAxisLine):
+            vertical_lines.append(line_data)
+
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
 
@@ -309,8 +318,9 @@ def create_chart_from_prometheus_query(
             dots_size=p.dots_size,
             stroke=p.stroke,
         )
-
-    return chart, PrometheusBlock(data=prometheus_query_result, query=promql_query)
+    return chart, PrometheusBlock(data=prometheus_query_result, query=promql_query, y_axis_type=values_format,
+                                  vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
+                                  graph_name=chart.title)
 
 
 def __get_additional_labels_str(prometheus_params: PrometheusParams) -> str:

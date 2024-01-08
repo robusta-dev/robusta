@@ -17,6 +17,8 @@ class ChartValuesFormat(Enum):
     Percentage = auto()
     CPUUsage = auto()
 
+    def __str__(self):
+        return self.name
 
 class ResourceChartItemType(Enum):
     """
@@ -310,5 +312,3 @@ class LogEnricherParams(ActionParams):
     filter_regex: Optional[str] = None
 
 
-class OomKillParams(ActionParams):
-    attach_logs: Optional[bool] = False

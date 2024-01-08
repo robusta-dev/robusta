@@ -94,7 +94,7 @@ class ModelConversion:
                 structured_data.append({"type": "divider"})
             elif isinstance(block, GraphBlock):
                 structured_data.append(
-                    {"type": str(enrichment.enrichment_type), "title": enrichment.title, "data": block.graph_data.data.dict(), "metadata": block.graph_data.metadata, "version": 1.0}
+                    {"type": str(enrichment.enrichment_type), "title": enrichment.title, "data": block.graph_data.dict(), "metadata": block.graph_data.metadata, "version": 1.0}
                 )
             elif isinstance(block, FileBlock):
                 if block.is_text_file():
