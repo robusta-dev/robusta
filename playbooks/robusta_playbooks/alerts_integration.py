@@ -269,6 +269,7 @@ def custom_graph_enricher(alert: PrometheusKubernetesAlert, params: CustomGraphE
         graph_duration_minutes=params.graph_duration_minutes,
         graph_title=graph_title,
         chart_values_format=chart_values_format,
+        hide_legends=params.hide_legends,
     )
     alert.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title=graph_title)
 

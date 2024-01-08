@@ -3,7 +3,7 @@ Azure managed Prometheus
 
 This guide walks you through integrating your Azure managed Prometheus with Robusta. You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
 
-Send alerts to Robusta
+Send Alerts to Robusta
 ===============================
 
 This integration sends Azure Managed Prometheus alerts to Robusta. To configure it:

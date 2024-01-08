@@ -169,6 +169,7 @@ def create_chart_from_prometheus_query(
     lines: Optional[List[XAxisLine]] = [],
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
+    hide_legends: Optional[bool] = False
 ) -> Tuple[pygal.Graph, PrometheusBlock]:
     if not alert_starts_at:
         ends_at = datetime.utcnow()
@@ -266,6 +267,7 @@ def create_chart_from_prometheus_query(
         include_x_axis=include_x_axis,
         width=1280,
         height=500,
+        show_legend=hide_legends is not True
     )
 
     y_axis_division = 5
@@ -343,6 +345,7 @@ def create_graph_enrichment(
     lines: Optional[List[XAxisLine]] = [],
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
+    hide_legends: Optional[bool] = False
 ) -> GraphBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart, prom_block = create_chart_from_prometheus_query(
@@ -356,6 +359,7 @@ def create_graph_enrichment(
         lines=lines,
         chart_label_factory=chart_label_factory,
         filter_prom_jobs=filter_prom_jobs,
+        hide_legends=hide_legends,
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
