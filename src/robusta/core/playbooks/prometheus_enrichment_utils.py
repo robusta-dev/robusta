@@ -167,6 +167,7 @@ def create_chart_from_prometheus_query(
     lines: Optional[List[XAxisLine]] = [],
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
+    hide_legends: Optional[bool] = False
 ):
     logging.info(f"[graph_enrichment] -- params -- promql_query : {promql_query}")
     logging.info(f"[graph_enrichment] -- params -- alert_starts_at : {alert_starts_at}")
@@ -346,6 +347,7 @@ def create_chart_from_prometheus_query(
         include_x_axis=include_x_axis,
         width=1280,
         height=500,
+        show_legend=hide_legends is not True
     )
 
     if len(plot_data_list):
@@ -437,6 +439,7 @@ def create_graph_enrichment(
     lines: Optional[List[XAxisLine]] = [],
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
+    hide_legends: Optional[bool] = False
 ) -> FileBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart = create_chart_from_prometheus_query(
@@ -450,6 +453,7 @@ def create_graph_enrichment(
         lines=lines,
         chart_label_factory=chart_label_factory,
         filter_prom_jobs=filter_prom_jobs,
+        hide_legends=hide_legends,
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
