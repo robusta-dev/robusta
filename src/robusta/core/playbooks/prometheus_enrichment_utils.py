@@ -169,37 +169,16 @@ def create_chart_from_prometheus_query(
     filter_prom_jobs: bool = False,
     hide_legends: Optional[bool] = False
 ):
-    logging.info(f"[graph_enrichment] -- params -- promql_query : {promql_query}")
-    logging.info(f"[graph_enrichment] -- params -- alert_starts_at : {alert_starts_at}")
-    logging.info(f"[graph_enrichment] -- params -- include_x_axis : {include_x_axis}")
-    logging.info(f"[graph_enrichment] -- params -- graph_duration_minutes : {graph_duration_minutes}")
-    logging.info(f"[graph_enrichment] -- params -- chart_title : {chart_title}")
-    logging.info(f"[graph_enrichment] -- params -- values_format : {values_format}")
-    logging.info(f"[graph_enrichment] -- params -- lines : {lines}")
-    logging.info(f"[graph_enrichment] -- params -- chart_label_factory : {chart_label_factory}")
-    logging.info(f"[graph_enrichment] -- params -- filter_prom_jobs : {filter_prom_jobs}")
-
     starts_at: datetime
     ends_at: datetime
     if not alert_starts_at:
         ends_at = datetime.utcnow()
         starts_at = ends_at - timedelta(minutes=graph_duration_minutes)
-
-        logging.info(f"[graph_enrichment] -- not alert_starts_at -- ends_at : {ends_at}")
-        logging.info(f"[graph_enrichment] -- not alert_starts_at -- starts_at : {starts_at}")
     else:
         ends_at = datetime.now(tz=alert_starts_at.tzinfo)
         alert_duration = ends_at - alert_starts_at
         graph_duration = max(alert_duration, timedelta(minutes=graph_duration_minutes))
         starts_at = ends_at - graph_duration
-
-        logging.info(f"[graph_enrichment] -- alert_starts_at -- ends_at : {ends_at}")
-        logging.info(f"[graph_enrichment] -- alert_starts_at -- alert_duration : {alert_duration}")
-        logging.info(f"[graph_enrichment] -- alert_starts_at -- graph_duration : {graph_duration}")
-        logging.info(f"[graph_enrichment] -- alert_starts_at -- starts_at : {starts_at}")
-
-    logging.info(f"[graph_enrichment] --  starts_at timestamp {starts_at.timestamp()}")
-    logging.info(f"[graph_enrichment] --  ends_at timestamp {ends_at.timestamp()}")
 
     oom_kill_time: Optional[datetime] = None
     for line in lines:
@@ -207,8 +186,6 @@ def create_chart_from_prometheus_query(
             oom_kill_time = datetime.fromtimestamp(line.value)
 
     if oom_kill_time:
-        logging.info(f"[graph_enrichment] -- oom_kill_time available {oom_kill_time.timestamp()}")
-
         # Assuming starts_at, ends_at, and oom_kill_time are datetime objects
         one_hour = timedelta(hours=1)
         thirty_minutes = timedelta(minutes=30)
@@ -219,12 +196,7 @@ def create_chart_from_prometheus_query(
         # Adjust ends_at to be at least 30 minutes after oom_kill_time
         ends_at = max(ends_at, oom_kill_time + thirty_minutes)
 
-        logging.info(f"[graph_enrichment] -- adjusted starts_at ts {starts_at.timestamp()}")
-        logging.info(f"[graph_enrichment] -- adjusted ends_at ts {ends_at.timestamp()}")
-
     prometheus_query_result = run_prometheus_query(prometheus_params, promql_query, starts_at, ends_at, step=None)
-    logging.info(f"[graph_enrichment] -- prometheus_query_result : {prometheus_query_result}")
-    logging.info(f"[graph_enrichment] -- promql_query : {promql_query}")
 
     if prometheus_query_result.result_type != "matrix":
         raise Exception(
@@ -239,9 +211,6 @@ def create_chart_from_prometheus_query(
     min_time = HIGHEST_END
     max_time = LOWEST_START
 
-    logging.info(f"[graph_enrichment]-- (1) min_time : {min_time}")
-    logging.info(f"[graph_enrichment]-- (1) max_time : {max_time}")
-
     # We use the [graph_plot_color_list] to map colors corresponding to matching line labels on [plot_list].
     plot_data_list: List[PlotData] = []
     max_y_value = 0
@@ -249,19 +218,15 @@ def create_chart_from_prometheus_query(
     if filter_prom_jobs:
         series_list_result = filter_prom_jobs_results(series_list_result)
 
-        logging.info(f"[graph_enrichment]-- filter_prom_jobs.series_list_result : {series_list_result}")
     for i, series in enumerate(series_list_result):
         label = get_target_name(series)
-        logging.info(f"[graph_enrichment]-- label : {label}")
 
         if not label:
             label = "\n".join([v for (key, v) in series.metric.items() if key != "job"])
-            logging.info(f"[graph_enrichment]-- not label : {label}")
 
         # If the label is empty, try to take it from the additional_label_factory
         if label == "" and chart_label_factory is not None:
             label = chart_label_factory(i)
-            logging.info(f'[graph_enrichment]-- (label == "" and chart_label_factory is not None) label : {label}')
 
         values = []
         for index in range(len(series.values)):
@@ -273,16 +238,10 @@ def create_chart_from_prometheus_query(
         min_time = min(min_time, min(series.timestamps))
         max_time = max(max_time, max(series.timestamps))
 
-        logging.info(f"[graph_enrichment]-- (2) min_time : {min_time}")
-        logging.info(f"[graph_enrichment]-- (2) max_time : {max_time}")
-
         # Adjust min_time to ensure it is at least 1 hour before oom_kill_time, and adjust max_time to ensure it is at least 30 minutes after oom_kill_time, as required for the graph plot adjustments.
         if oom_kill_time:
             min_time = min(min_time, starts_at.timestamp())
             max_time = max(max_time, ends_at.timestamp())
-
-            logging.info(f"[graph_enrichment]-- Adjusting min_time with regards to oom_kill_time : {min_time}")
-            logging.info(f"[graph_enrichment]-- Adjusting max_time with regards to oom_kill_time : {max_time}")
 
 
         plot_data = PlotData(
@@ -296,30 +255,22 @@ def create_chart_from_prometheus_query(
     if min_time == HIGHEST_END:  # no data on time series
         min_time = starts_at.timestamp()
         max_time = ends_at.timestamp()
-        logging.info(f"[graph_enrichment] -- min_time == HIGHEST_END, So setting min_time and max_time")
-        logging.info(f"[graph_enrichment] -- min_time == HIGHEST_END min_time : {min_time}")
-        logging.info(f"[graph_enrichment] -- max_time == HIGHEST_END min_time : {max_time}")
 
     for line in lines:
         if isinstance(line, XAxisLine) and line.value > max_y_value:
             max_y_value = line.value
-
-    logging.info(f"[graph_enrichment]-- max_y_value : {max_y_value}")
 
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
 
         if "Limit" in line.label:
             plot_data = PlotData(plot=(line.label, value), color="#FF5959")
-            logging.info(f"[graph_enrichment]-- Limit : {value}")
 
         elif "Request" in line.label:
             plot_data = PlotData(plot=(line.label, value), color="#0DC291")
-            logging.info(f"[graph_enrichment]-- Request : {value}")
 
         elif line.label == "OOM Kill Time":
             value = [(line.value, max_y_value), (line.value, 0)]
-            logging.info(f"[graph_enrichment]-- OOM Kill Time : {value}")
 
             plot_data = PlotData(
                 plot=(line.label, value),
@@ -330,7 +281,6 @@ def create_chart_from_prometheus_query(
 
         else:
             plot_data = PlotData(plot=(line.label, value), color="#2a0065")
-            logging.info(f"[graph_enrichment]-- plotdata.else.value : {value}")
 
         plot_data_list.append(plot_data)
 
@@ -360,9 +310,6 @@ def create_chart_from_prometheus_query(
         # Calculate the interval between each Y-axis label
         interval = max_y_value_with_padding / (y_axis_division - 1)
 
-        logging.info(f"[graph_enrichment]-- max_y_value_with_padding : {max_y_value_with_padding}")
-        logging.info(f"[graph_enrichment]-- interval : {interval}")
-
         chart.range = (0, max_y_value_with_padding)
 
         if values_format == ChartValuesFormat.Percentage:
@@ -372,7 +319,6 @@ def create_chart_from_prometheus_query(
         else:
             # For non-percentage formats, round the Y-axis labels to the nearest whole number
             chart.y_labels = [round(i * interval) for i in range(y_axis_division)]
-            logging.info(f"[graph_enrichment]-- chart.y_labels : {chart.y_labels}")
 
         chart.y_labels_major = chart.y_labels
     else:
