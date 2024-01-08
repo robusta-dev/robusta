@@ -74,3 +74,7 @@ class TopServiceResolver:
             cls.__recent_resource_updates[resource.get_resource_key()] = CachedResourceInfo(
                 resource=resource, event_time=time.time()
             )
+
+    @classmethod
+    def size(cls) -> int:
+        return sum([len(ns_resources) for _, ns_resources in cls.__namespace_to_resource.items()])

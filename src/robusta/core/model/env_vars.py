@@ -103,3 +103,6 @@ IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "us-central1-docker.pkg.dev/ge
 CLUSTER_DOMAIN = os.environ.get("CLUSTER_DOMAIN", "cluster.local")
 
 IS_OPENSHIFT = load_bool("IS_OPENSHIFT", False)
+
+DISABLE_K8S_EVENTS = load_bool("DISABLE_K8S_EVENTS", False)
+DISABLE_CLUSTER_DISCOVERY = load_bool("DISABLE_CLUSTER_DISCOVERY", False)

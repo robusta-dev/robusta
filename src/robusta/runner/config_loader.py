@@ -17,6 +17,7 @@ from robusta.core.model.env_vars import (
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
     DEFAULT_PLAYBOOKS_ROOT,
+    DISABLE_CLUSTER_DISCOVERY,
     INTERNAL_PLAYBOOKS_ROOT,
     PLAYBOOKS_CONFIG_FILE_PATH,
     PLAYBOOKS_ROOT,
@@ -248,18 +249,20 @@ class ConfigLoader:
         # TODO we will replace it with a more generic mechanism, as part of the triggers separation task
         # First, we load the internal playbooks, then add the user activated playbooks
         # Order matters. Internal playbooks, should be added first, and run first
-        active_playbooks = [
-            PlaybookDefinition(
-                triggers=[
-                    {
-                        "on_kubernetes_resource_operation": {
-                            "resources": ["deployment", "replicaset", "daemonset", "statefulset", "pod", "job"]
+        active_playbooks = []
+        if not DISABLE_CLUSTER_DISCOVERY:
+            active_playbooks = [
+                PlaybookDefinition(
+                    triggers=[
+                        {
+                            "on_kubernetes_resource_operation": {
+                                "resources": ["deployment", "replicaset", "daemonset", "statefulset", "pod", "job"]
+                            }
                         }
-                    }
-                ],
-                actions=[{"cluster_discovery_updates": {}}],
-            )
-        ]
+                    ],
+                    actions=[{"cluster_discovery_updates": {}}],
+                )
+            ]
         if runner_config.active_playbooks:
             active_playbooks.extend(runner_config.active_playbooks)
         else:

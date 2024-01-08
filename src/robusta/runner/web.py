@@ -1,11 +1,13 @@
 import logging
+import time
+from collections import defaultdict
 from datetime import datetime
 
 from flask import Flask, abort, jsonify, request
 from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
-from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_REQUESTS
+from robusta.core.model.env_vars import DISABLE_K8S_EVENTS, NUM_EVENT_THREADS, PORT, TRACE_INCOMING_REQUESTS
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
@@ -25,6 +27,9 @@ class Web:
     event_handler: PlaybooksEventHandler
     metrics: QueueMetrics
     loader: ConfigLoader
+    events_counters = defaultdict(lambda: defaultdict(int))
+    start_t = time.time()
+    last_log_time = 0
 
     @staticmethod
     def init(event_handler: PlaybooksEventHandler, loader: ConfigLoader):
@@ -75,13 +80,33 @@ class Web:
             )
         return jsonify(success=True)
 
+    @classmethod
+    def log_api_events_stats(cls, k8s_payload: IncomingK8sEventPayload):
+        kind = k8s_payload.kind
+        if kind == "Event":
+            subtype = k8s_payload.obj.get("type")
+            kind = f"{kind}-{subtype}"
+
+        cls.events_counters[kind][k8s_payload.operation] += 1
+        if time.time() - cls.last_log_time > 120:  # every 2 minutes
+            stats_str = "\n"
+            for res in cls.events_counters.keys():
+                stats_str += f"{res}: "
+                for op, count in cls.events_counters[res].items():
+                    stats_str += f"{op}: {count} "
+                stats_str += "\n"
+            logging.info(f"Events stats: elapsed: {int((time.time() - cls.start_t))} stats: {stats_str}")
+            cls.last_log_time = time.time()
+
     @staticmethod
     @app.route("/api/handle", methods=["POST"])
     def handle_api_server_event():
         data = request.get_json()["data"]
         Web._trace_incoming("api server", data)
         k8s_payload = IncomingK8sEventPayload(**data)
-        Web.api_server_queue.add_task(Web.event_handler.handle_trigger, K8sTriggerEvent(k8s_payload=k8s_payload))
+        Web.log_api_events_stats(k8s_payload)
+        if not DISABLE_K8S_EVENTS:
+            Web.api_server_queue.add_task(Web.event_handler.handle_trigger, K8sTriggerEvent(k8s_payload=k8s_payload))
         return jsonify(success=True)
 
     @staticmethod
@@ -100,7 +125,7 @@ class Web:
                 action_params=data.get("action_params", None),
                 sinks=data.get("sinks", None),
                 sync_response=data.get("sync_response", False),
-                no_sinks=data.get("no_sinks", False) ,
+                no_sinks=data.get("no_sinks", False),
             )
         )
 

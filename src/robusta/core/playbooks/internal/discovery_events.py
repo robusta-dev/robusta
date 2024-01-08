@@ -1,3 +1,6 @@
+import logging
+import time
+
 from hikaru.model.rel_1_26 import Event
 
 from robusta.api import (
@@ -16,9 +19,13 @@ from robusta.api import (
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.playbooks.common import get_event_timestamp, get_events_list
 
+start_t = time.time()
+last_log_time = 0
+
 
 @action
 def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
+    global last_log_time, start_t
     if (
         event.operation in [K8sOperationType.CREATE, K8sOperationType.UPDATE]
         and event.obj.kind in ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet", "Pod", "Job"]
@@ -31,6 +38,9 @@ def cluster_discovery_updates(event: KubernetesAnyChangeEvent):
                 namespace=event.obj.metadata.namespace,
             )
         )
+    if time.time() - last_log_time > 120:
+        logging.info(f"Discovery cache: Elapsed: {int(time.time() - start_t)} size: {TopServiceResolver.size()}")
+        last_log_time = time.time()
 
 
 @action
