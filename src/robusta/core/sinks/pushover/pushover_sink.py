@@ -35,38 +35,42 @@ class PushoverSink(SinkBase):
         self.__send_pushover_message(finding, platform_enabled)
 
     def __send_pushover_message(self, finding: Finding, platform_enabled: bool):
-        if self.send_files:
-            for enrichment in finding.enrichments:
-                file_blocks = [block for block in enrichment.blocks if isinstance(block, FileBlock)]
-                image_blocks = [block for block in file_blocks if is_image(block.filename)]
-                text_blocks = [block for block in file_blocks if block.filename.endswith((".txt", ".log"))]
+            # first send finding data
+            title, message = self.__get_message_text(finding, platform_enabled)
+            message = (message[:1024] if len(message) > 1024 else message)
+            investigate_url = finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""
 
-                title, message = self.__get_message_text(finding, platform_enabled)
-                if len(image_blocks) > 0:                    
-                    for block in image_blocks:
-                        self.client.send_file(file_name=block.filename, contents=block.contents,
-                                              title=title, message=message, send_as_html=self.send_as_html,
-                                              additional_url=(finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""))
-                else:
-                    self.client.send_message(title=title, message=message,
-                                             send_as_html=self.send_as_html,
-                                             additional_url=(finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""))
-                
-                if len(text_blocks) > 0:
-                    for block in text_blocks:
-                        message += f"<b>Additional content:</b> \n\n {block.contents.decode()}"
+            self.client.send_message(
+                title=title, message=message, send_as_html=self.send_as_html, additional_url=investigate_url
+            )
 
-                        self.client.send_message(title=title,
-                                                 message=(message[:1024] if len(message) > 1024 else message),
-                                                 send_as_html=self.send_as_html, additional_url=(finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""))
-                else:
-                    self.client.send_message(title=title, message=message,
-                                             send_as_html=self.send_as_html,
-                                             additional_url=(finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""))
-        else:
-            self.client.send_message(title=title, message=message,
-                                     send_as_html=self.send_as_html,
-                                     additional_url=(finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""))
+            if self.send_files:
+                for enrichment in finding.enrichments:
+                    file_blocks = [block for block in enrichment.blocks if isinstance(block, FileBlock)]
+                    image_blocks = [block for block in file_blocks if is_image(block.filename)]
+                    text_blocks = [block for block in file_blocks if block.filename.endswith((".txt", ".log"))]
+
+                    if len(image_blocks) > 0:
+                        for block in image_blocks:
+                            self.client.send_file(
+                                file_name=block.filename,
+                                contents=block.contents,
+                                title=title,
+                                message=message,
+                                send_as_html=self.send_as_html,
+                                additional_url=investigate_url,
+                            )
+
+                    if len(text_blocks) > 0:
+                        for block in text_blocks:
+                            message += f"<b>Additional content:</b> \n\n {block.contents.decode()}"
+
+                            self.client.send_message(
+                                title=title,
+                                message=message,
+                                send_as_html=self.send_as_html,
+                                additional_url=investigate_url,
+                            )
 
     def __get_message_text(self, finding: Finding, platform_enabled: bool):
         status: FindingStatus = (
@@ -108,7 +112,6 @@ class PushoverSink(SinkBase):
 
     @classmethod
     def __is_pushover_text_block(cls, block: BaseBlock) -> bool:
-        # enrichments text tables are too big for mobile device
         return not (isinstance(block, FileBlock) or isinstance(block, TableBlock))
 
     @classmethod

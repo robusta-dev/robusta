@@ -8,6 +8,8 @@ class PushoverSinkParams(SinkBaseParams):
     send_files: bool = True
     send_as_html: bool = True
     device: str = None
+    pushover_url: str = "https://api.pushover.net/1/messages.json"
+
 
 class PushoverSinkConfigWrapper(SinkConfigBase):
     pushover_sink: PushoverSinkParams
