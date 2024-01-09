@@ -14,9 +14,9 @@ If everything is setup properly, this alert will reach Robusta. It will show up 
 
     Try sending a demo-alert as described above. If nothing arrives, check:
 
-    1. AlertManager logs
+    1. AlertManager UI status page - verify that your config was picked up
     2. kube-prometheus-operator logs (if relevant)
-    3. AlertManager UI status page - verify that your config was picked up
+    3. AlertManager logs
 
     Reach out on `Slack <https://bit.ly/robusta-slack>`_ for assistance.
 
