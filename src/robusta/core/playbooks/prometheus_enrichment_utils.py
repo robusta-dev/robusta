@@ -301,8 +301,6 @@ def create_chart_from_prometheus_query(
     )
 
     if len(plot_data_list):
-        logging.info(f"plot_data_list is available, plot_data_list length: {len(plot_data_list)}")
-
         y_axis_division = 5
         # Calculate the maximum Y value with an added 20% padding
         max_y_value_with_padding = max_y_value + (max_y_value * 0.20)
@@ -322,8 +320,6 @@ def create_chart_from_prometheus_query(
 
         chart.y_labels_major = chart.y_labels
     else:
-        logging.info(f"plot_data_list is empty")
-
         chart.y_labels = []
         chart.show_minor_y_labels = False
 
