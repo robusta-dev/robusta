@@ -9,7 +9,7 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 CLUSTER_PREF = "cluster_name"
 LABELS_PREF = "labels."
 ANNOTATIONS_PREF = "annotations."
-COMPOSITE_PATTERN = r".*\$(labels.[^$]+|annotations.[^$]+|cluster_name).*"
+COMPOSITE_PATTERN = r".*\$({?labels.[^$]+|{?annotations.[^$]+|{?cluster_name).*"
 ONLY_VALUE_PATTERN = r"^(labels.[^$]+|annotations.[^$]+|cluster_name)$"
 MISSING = "<missing>"
 

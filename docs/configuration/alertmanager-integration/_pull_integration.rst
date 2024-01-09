@@ -1,7 +1,7 @@
-Configure Pull Integration
+Configure Metric Querying
 ====================================
 
-A pull integration lets Robusta pull metrics and create silences.
+Metrics querying lets Robusta pull metrics and create silences.
 
 To configure it, add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
 

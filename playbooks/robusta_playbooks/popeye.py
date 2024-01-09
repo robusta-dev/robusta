@@ -10,6 +10,7 @@ from typing import Dict, List, Optional
 
 from hikaru.model.rel_1_26 import Container, PodSpec, ResourceRequirements
 from pydantic import BaseModel, ValidationError
+
 from robusta.api import (
     RELEASE_NAME,
     EnrichmentAnnotation,
@@ -154,7 +155,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
                 command=[
                     "/bin/sh",
                     "-c",
-                    f"echo '{params.spinach}' > ~/spinach.yaml && popeye -f ~/spinach.yaml {sanitize_args} -o json --force-exit-zero",
+                    f"echo '{params.spinach}' > /tmp/spinach.yaml && popeye -f /tmp/spinach.yaml {sanitize_args} -o json --force-exit-zero",
                 ],
                 resources=resources,
             )
