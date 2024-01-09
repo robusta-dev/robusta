@@ -26,7 +26,8 @@ class PushoverSink(SinkBase):
 
         self.client = PushoverClient(sink_config.pushover_sink.token,
                                      sink_config.pushover_sink.user,
-                                     sink_config.pushover_sink.device)
+                                     sink_config.pushover_sink.device,
+                                     sink_config.pushover_sink.pushover_url)
         
         self.send_files = sink_config.pushover_sink.send_files
         self.send_as_html = sink_config.pushover_sink.send_as_html
