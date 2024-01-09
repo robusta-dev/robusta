@@ -57,6 +57,10 @@ class RRM:
 
             logging.error(f"An error occurred while creating CR rules", exc_info=True)
 
+        # If the configuration was applied to the values file before enabling it in the UI
+        if latest_revision is None:
+            return
+
         if len(errors):
             self.dal.set_account_resource_status(status_type=AccountResourceStatusType.error,
                                                  info=AccountResourceStatusInfo(error=", ".join(errors)),
