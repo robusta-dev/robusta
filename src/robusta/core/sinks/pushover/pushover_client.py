@@ -41,8 +41,6 @@ class PushoverClient:
             file_name = file_name.replace(SVG_SUFFIX, PNG_SUFFIX)
         files = {file_type.lower(): (file_name, contents.decode())}
 
-        url = 
-        
         message_json = {
             "token": self.token,
             "user": self.user,
