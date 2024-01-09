@@ -1,58 +1,62 @@
 Alerts UI
 ######################
 
-With Robusta Alerts UI, you can create and customize Prometheus Rules using templates, without needing to know PromQL.
+With the Robusta Alerts UI, you can create and customize Prometheus Rules using templates, without needing to know PromQL.
 
 .. image:: /images/managed-alerts-ui.png
 
+This guide covers enabling managed alerts with the Robusta UI. This involves two steps:
 
-
-This guide covers enabling managed alerts with Robusta UI. This involves two steps: One to enable the Alert Rules on the UI and another to disable default Prometheus alerts installed by Kube Prometheus Stack.
+* Enable the Alert UI on the Robusta UI.
+* Disable default Prometheus alerts installed by Kube Prometheus Stack.
 
 .. note::
 
-    Alerts UI works only with Prometheus installed by Robusta. :ref:`Embedded Prometheus Stack`
+    To use the Alerts UI, you must use Robusta's :ref:`Embedded Prometheus Stack`.
 
-Enable Alerts UI
---------------------
+Activate Alerts Interface
+--------------------------
 
-To start seeing all the alerts and customize them, we first need to enable Alert Rules in the Robusta UI.
+To see alerts and customize them, you must first enable Alert Rules in the Robusta UI.
 
 1. Go to `platform.robusta.dev <https://platform.robusta.dev/>`_ -> Alerting -> Alerts
-2. Click "Enable Alert Rules"
+2. Click the "Enable Alert Rules" button.
 
 .. image:: /images/click-enable-alert-rules.png
 
 
 
-Enable Robusta Managed Alerts
+Disable Default Alert Rules
 ********************************************
 
-Next we need to disable default Prometheus alerts from Kube Prometheus Stack and enable Robusta managed alerts. Add the following config to your ``generated_values.yaml``.
+To avoid duplication of alerts, you must disable the default Kube Prometheus Stack alerts. Add the following config to your ``generated_values.yaml``.
 
 .. code-block:: yaml
 
-    enabledManagedConfiguration: true
+    enabledManagedConfiguration: true # (1)
     kube-prometheus-stack:
-    defaultRules:
-        rules:
-        alertmanager: false
-        etcd: false
-        configReloaders: false
-        general: false
-        kubeApiserverSlos: false
-        kubeControllerManager: false
-        kubeProxy: false
-        kubernetesApps: false
-        kubernetesResources: false
-        kubernetesStorage: false
-        kubernetesSystem: false
-        kubeSchedulerAlerting: false
-        kubeStateMetrics: false
-        network: false
-        nodeExporterAlerting: false
-        prometheus: false
-        prometheusOperator: false
+        defaultRules:
+            rules:
+            alertmanager: false
+            etcd: false
+            configReloaders: false
+            general: false
+            kubeApiserverSlos: false
+            kubeControllerManager: false
+            kubeProxy: false
+            kubernetesApps: false
+            kubernetesResources: false
+            kubernetesStorage: false
+            kubernetesSystem: false
+            kubeSchedulerAlerting: false
+            kubeStateMetrics: false
+            network: false
+            nodeExporterAlerting: false
+            prometheus: false
+            prometheusOperator: false
+
+.. code-annotations::
+    1. Creates Robusta managed alerts in your cluster.
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
@@ -60,14 +64,14 @@ Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 Disable Robusta Managed Alerts
 ---------------------------------
 
-To go back to Kube Prometheus Satck built in alerts, remove the config added in the previous step from your ``generated_values.yaml``. Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
+To go back to using Kube Prometheus Stack built in alerts, remove the config added in the previous step from your ``generated_values.yaml``. Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 Cleanup
 *******************
 
-Robusta stores its managed rules in PrometheusRules CR's that start with ``robusta-prometheus.rules--``. If left in the cluster, you might have double alerts.
+Robusta stores its managed rules in PrometheusRules custom resources that start with ``robusta-prometheus.rules--``. If left in the cluster, you might have double alerts.
 
-Modify and run the following command for all the Robusta rule CR's present in your cluster.
+Modify and run the following command for all the Robusta rule custom resources present in your cluster.
 
 .. code-block:: bash
 
