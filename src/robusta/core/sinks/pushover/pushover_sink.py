@@ -41,10 +41,6 @@ class PushoverSink(SinkBase):
             message = (message[:1024] if len(message) > 1024 else message)
             investigate_url = finding.get_investigate_uri(self.account_id, self.cluster_name) if platform_enabled else ""
 
-            self.client.send_message(
-                title=title, message=message, send_as_html=self.send_as_html, additional_url=investigate_url
-            )
-
             if self.send_files:
                 for enrichment in finding.enrichments:
                     file_blocks = [block for block in enrichment.blocks if isinstance(block, FileBlock)]
@@ -72,6 +68,10 @@ class PushoverSink(SinkBase):
                                 send_as_html=self.send_as_html,
                                 additional_url=investigate_url,
                             )
+            else:
+                self.client.send_message(
+                    title=title, message=message, send_as_html=self.send_as_html, additional_url=investigate_url
+                )
 
     def __get_message_text(self, finding: Finding, platform_enabled: bool):
         status: FindingStatus = (
