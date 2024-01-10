@@ -101,7 +101,7 @@ class ModelConversion:
                 else:
                     if block.is_text_file():
                         block.zip()
-                        structured_data.append(ModelConversion.get_file_object(block))
+                    structured_data.append(ModelConversion.get_file_object(block))
             elif isinstance(block, FileBlock):
                 if block.is_text_file():
                     block.zip()
