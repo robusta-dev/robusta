@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict
 
+from robusta.core.model.env_vars import ENABLE_GRAPH_BLOCK
 from robusta.core.reporting import (
     CallbackBlock,
     DividerBlock,
@@ -93,9 +94,14 @@ class ModelConversion:
             elif isinstance(block, DividerBlock):
                 structured_data.append({"type": "divider"})
             elif isinstance(block, GraphBlock):
-                structured_data.append(
-                    {"type": str(enrichment.enrichment_type), "title": enrichment.title, "data": block.graph_data.dict(), "metadata": block.graph_data.metadata, "version": 1.0}
-                )
+                if ENABLE_GRAPH_BLOCK:
+                    structured_data.append(
+                        {"type": str(enrichment.enrichment_type), "title": enrichment.title, "data": block.graph_data.dict(), "metadata": block.graph_data.metadata, "version": 1.0}
+                    )
+                else:
+                    if block.is_text_file():
+                        block.zip()
+                        structured_data.append(ModelConversion.get_file_object(block))
             elif isinstance(block, FileBlock):
                 if block.is_text_file():
                     block.zip()

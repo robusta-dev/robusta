@@ -33,6 +33,8 @@ from robusta.core.model.base_params import (
     ResourceChartItemType,
     ResourceChartResourceType,
     ResourceGraphEnricherParams,
+    OOMGraphEnricherParams,
+    OomKillParams,
     TimedPrometheusParams,
     VideoEnricherParams,
 )
