@@ -480,6 +480,9 @@ kubewatch:
       readOnlyRootFilesystem: false
       runAsUser: 1000
     pod: {}
+  serviceAccount:
+    # Additional annotations for the ServiceAccount.
+    annotations: {}
 
 # parameters for the renderer service used in robusta runner to render grafana graphs
 grafanaRenderer:
@@ -535,6 +538,9 @@ runner:
       privileged: false
       readOnlyRootFilesystem: false
     pod: {}
+  serviceAccount:
+    # Additional annotations for the ServiceAccount.
+    annotations: {}
 
 kube-prometheus-stack:
   alertmanager:
