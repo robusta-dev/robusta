@@ -504,6 +504,8 @@ grafanaRenderer:
 runnerServiceAccount:
   # image pull secrets added to the runner service account. Any pod using the service account will get those
   imagePullSecrets: []
+  # Additional annotations for the ServiceAccount.
+  annotations: {}
 
 # parameters for the robusta runner
 runner:
@@ -538,9 +540,6 @@ runner:
       privileged: false
       readOnlyRootFilesystem: false
     pod: {}
-  serviceAccount:
-    # Additional annotations for the ServiceAccount.
-    annotations: {}
 
 kube-prometheus-stack:
   alertmanager:
