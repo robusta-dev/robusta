@@ -22,14 +22,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :hidden:
-   :caption: 🚀 Get Started
-
-   quick-start
-
-.. toctree::
-   :maxdepth: 4
-   :caption: Installation
+   :caption: 🚀 Installation
    :hidden:
 
    setup-robusta/index
@@ -123,7 +116,7 @@ Robusta is used in production by hundreds of teams. It monitors infrastructure f
 
 It can install everything you need to monitor Kubernetes from scratch, or it can be added to an existing Prometheus.
 
-.. button-ref:: quick-start
+.. button-ref:: ../setup-robusta/installation/index
     :color: primary
     :outline:
 
