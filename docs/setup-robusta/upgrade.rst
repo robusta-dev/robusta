@@ -1,7 +1,9 @@
 Upgrade and Uninstall
 ######################
 
-Most upgrades are just ``helm upgrades``, but some upgrades require manual steps.
+Robusta is upgraded using ``helm upgrade``. This is called a "Simple Upgrade".
+
+On rare occasions, a few additional steps are required. This is called a "Manual Upgrade".
 
 What type of upgrade do I need?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
