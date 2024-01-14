@@ -1,29 +1,33 @@
 Upgrade and Uninstall
 ######################
 
-Robusta is upgraded using ``helm upgrade``. This is called a "Simple Upgrade".
+Robusta is upgraded using ``helm upgrade``. For detailed instructions, see :ref:`Helm Upgrade`.
 
-On rare occasions, a few additional steps are required. This is called a "Manual Upgrade".
+On rare occasions, in addition to a ``helm upgrade``, some manual steps are required.
 
-What type of upgrade do I need?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-You need a :ref:`Manual Upgrade` when both:
+Does my upgrade require manual steps?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Robusta installation fails with ``com.coreos.monitoring.v1.Prometheus.spec`` error.
+You will need to perform a :ref:`Manual Upgrade` when both:
+
+* Robusta's installation fails with a ``com.coreos.monitoring.v1.Prometheus.spec`` error.
 * The embedded Prometheus is enabled (``enablePrometheusStack: true``)
 
-In all other cases, do a :ref:`Simple Upgrade`.
+In all other cases, you can do a :ref:`Simple Upgrade` and no more.
 
-Simple Upgrade
+.. _Simple Upgrade:
+
+Helm Upgrade
 ^^^^^^^^^^^^^^^^^^^^^
 
-Find the ``generated_values.yaml`` you installed Robusta with. You'll need this to preserve settings during the upgrade.
+Find the Helm values that you installed Robusta with (typically a ``generated_values.yaml`` file).
+You'll need this to preserve settings during the upgrade.
 
 .. _where-is-generated-values:
 
 .. details:: Where is my generated_values.yaml?
 
-    If you lost your ``generated_values.yaml`` file, you can extract it from any cluster with Robusta:
+    If you lost your ``generated_values.yaml`` file, you can extract it from a cluster running Robusta:
 
     .. code-block:: bash
 
@@ -47,7 +51,7 @@ Verify that Robusta is running and there are no errors in the logs:
 Manual Upgrade
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Some upgrades require minor additional steps.
+In addition to running ``helm upgrade``, some version updates require additional steps.
 
 Why are manual upgrades necessary?
 ------------------------------------
@@ -55,11 +59,10 @@ Why are manual upgrades necessary?
 Robusta bundles kube-prometheus-stack, which uses `CRDs <https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/>`_.
 Helm can't update CRDs, so we update them ourselves. See the `Helm Documentation on CRDs <https://helm.sh/docs/chart_best_practices/custom_resource_definitions/>`_ for details.
 
-Upgrading from older versions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Follow the steps below to fix any issues with old CRDs
+Manual upgrade instructions
+----------------------------------
 
-1. The node-exporter daemonset and admission webhooks needs to be manually removed prior to upgrading:
+1. Manually remove the node-exporter daemonset and admission webhooks:
 
 .. code-block:: bash
 
@@ -67,7 +70,7 @@ Follow the steps below to fix any issues with old CRDs
     kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io -l app=kube-prometheus-stack-admission
     kubectl delete MutatingWebhookConfiguration -l app=kube-prometheus-stack-admission
 
-2. Manually update the installed CRDs. For more info, refer to the `kube-prometheus-stack docs <https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#uninstall-chart>`_.
+2. Manually update the Prometheus Operator CRDs. For more info, refer to the `kube-prometheus-stack docs <https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#uninstall-chart>`_.
 
 .. warning:: If you have an existing Prometheus Operator installed independently of Robusta then be very careful! Upgrading CRDs will impact all Prometheus Operators in your cluster.
 
