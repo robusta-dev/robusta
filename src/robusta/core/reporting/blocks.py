@@ -465,6 +465,7 @@ class PrometheusBlockLineData(BaseBlock):
     legend: str
     value: Any
 
+
 class PrometheusBlock(BaseBlock):
     """
     Formatted prometheus query results with metadata
@@ -478,10 +479,11 @@ class PrometheusBlock(BaseBlock):
     y_axis_type: Optional[ChartValuesFormat]
     graph_name: Optional[str]
 
-    def __init__(self, data: PrometheusQueryResult, query: str, vertical_lines: Optional[List[PrometheusBlockLineData]],
-                 horizontal_lines: Optional[List[PrometheusBlockLineData]],
-                 y_axis_type: Optional[ChartValuesFormat],
-                 graph_name: Optional[str]):
+    def __init__(self, data: PrometheusQueryResult, query: str,
+                 vertical_lines: Optional[List[PrometheusBlockLineData]] = None,
+                 horizontal_lines: Optional[List[PrometheusBlockLineData]] = None,
+                 y_axis_type: Optional[ChartValuesFormat] = None,
+                 graph_name: Optional[str] = None, ):
         """
         :param data: the PrometheusQueryResult generated created from a prometheus query
         :param query: the Prometheus query run
