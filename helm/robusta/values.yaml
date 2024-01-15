@@ -163,10 +163,8 @@ builtinPlaybooks:
   actions:
   - pod_oom_killer_enricher:
       attach_logs: true
-  - pod_node_graph_enricher:
-      resource_type: Memory
-  - oomkilled_container_graph_enricher:
-      resource_type: Memory
+      container_memory_graph: true
+      node_memory_graph: true
   stop: true
 
 # playbooks for prometheus alerts enrichment

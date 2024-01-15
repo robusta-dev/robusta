@@ -4,9 +4,10 @@ from hikaru.model.rel_1_26 import Node
 
 from robusta.core.model.base_params import ResourceChartItemType, ResourceChartResourceType, ResourceGraphEnricherParams
 from robusta.core.playbooks.prometheus_enrichment_utils import create_resource_enrichment, get_node_internal_ip
+from robusta.core.reporting.blocks import GraphBlock
 
 
-def create_node_graph_enrichment(params: ResourceGraphEnricherParams, node: Node):
+def create_node_graph_enrichment(params: ResourceGraphEnricherParams, node: Node) -> GraphBlock:
     start_at = datetime.now()
     labels = {"node": node.metadata.name}
     internal_ip = get_node_internal_ip(node)

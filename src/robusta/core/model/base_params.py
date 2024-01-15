@@ -18,6 +18,8 @@ class ChartValuesFormat(Enum):
     Percentage = auto()
     CPUUsage = auto()
 
+    def __str__(self):
+        return self.name
 
 class ResourceChartItemType(Enum):
     """
@@ -325,5 +327,20 @@ class LogEnricherParams(ActionParams):
     filter_regex: Optional[str] = None
 
 
-class OomKillParams(ActionParams):
+class OOMGraphEnricherParams(ResourceGraphEnricherParams):
+    """
+    :var delay_graph_s: the amount of seconds to delay getting the graph inorder to record the memory spike
+    """
+
+    delay_graph_s: int = 0
+
+
+class OomKillParams(OOMGraphEnricherParams):
     attach_logs: Optional[bool] = False
+    container_memory_graph: Optional[bool] = False
+    node_memory_graph: Optional[bool] = False
+
+    def __init__(self, attach_logs: Optional[bool] = False, container_memory_graph: Optional[bool] = False,
+                 node_memory_graph: Optional[bool] = False, **kwargs):
+        super().__init__(attach_logs=attach_logs, container_memory_graph=container_memory_graph,
+                         node_memory_graph=node_memory_graph, resource_type=ResourceChartResourceType.Memory.name, **kwargs)

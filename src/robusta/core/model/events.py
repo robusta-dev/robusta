@@ -15,7 +15,7 @@ from robusta.core.reporting.base import (
     FindingSource,
     FindingSubject,
     FindingSubjectType,
-    VideoLink,
+    VideoLink, EnrichmentType,
 )
 from robusta.core.sinks import SinkBase
 from robusta.integrations.scheduled.playbook_scheduler import PlaybooksScheduler
@@ -95,10 +95,13 @@ class ExecutionBaseEvent:
         self,
         enrichment_blocks: List[BaseBlock],
         annotations=None,
+        enrichment_type: Optional[EnrichmentType] = None,
+        title: Optional[str] = None,
     ):
         self.__prepare_sinks_findings()
         for sink in self.named_sinks:
-            self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations, True)
+            self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations, True,
+                                                       enrichment_type=enrichment_type, title=title)
 
     def add_finding(self, finding: Finding, suppress_warning: bool = False):
         finding.dirty = True  # Warn if new enrichments are added to this finding directly
