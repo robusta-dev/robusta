@@ -23,7 +23,7 @@ def get_resource_events_table(
     name_substring: str = "",
     included_types: Optional[List[str]] = None,
     max_events: Optional[int] = None,
-) -> Optional[TableBlock]:
+) -> Optional[EventsBlock]:
     field_selector = f"regarding.kind={kind}"
     if name:
         field_selector += f",regarding.name={name}"

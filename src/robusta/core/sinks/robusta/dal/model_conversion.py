@@ -21,7 +21,7 @@ from robusta.core.reporting import (
     PrometheusBlock,
     TableBlock,
 )
-from robusta.core.reporting.blocks import GraphBlock
+from robusta.core.reporting.blocks import GraphBlock, EventsBlock
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer
 from robusta.utils.parsing import datetime_to_db_str
@@ -113,6 +113,19 @@ class ModelConversion:
             elif isinstance(block, PrometheusBlock):
                 structured_data.append(
                     {"type": "prometheus", "data": block.data.dict(), "metadata": block.metadata, "version": 1.0}
+                )
+            elif isinstance(block, EventsBlock):
+                structured_data.append(
+                    {
+                        "type": str(enrichment.enrichment_type),
+                        "title": enrichment.title,
+                        "data": {
+                            "events": [event.dict() for event in block.events],
+                            "headers": block.headers,
+                            "rows": [row for row in block.rows],
+                            "column_renderers": block.column_renderers,
+                        },
+                    }
                 )
             elif isinstance(block, TableBlock):
                 if block.table_name:

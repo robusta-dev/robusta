@@ -38,6 +38,9 @@ from robusta.api import (
     parse_kubernetes_datetime_to_ms,
     should_report_pod,
 )
+from robusta.core.reporting import EventsBlock, EventRow
+from robusta.core.reporting.base import EnrichmentType
+from robusta.core.reporting.custom_rendering import render_value
 
 
 class ExtendedEventEnricherParams(EventEnricherParams):
@@ -93,6 +96,8 @@ def event_resource_events(event: EventChangeEvent):
         event.add_enrichment(
             [events_table],
             {SlackAnnotations.ATTACHMENT: True},
+            enrichment_type=EnrichmentType.k8s_events,
+            title="Related Events"
         )
 
 
@@ -110,7 +115,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
 
     kind: str = resource.kind
 
-    events = get_resource_events(
+    resource_events = get_resource_events(
         kind,
         resource.metadata.name,
         resource.metadata.namespace,
@@ -127,10 +132,10 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
 
         selected_pods = pods[: min(len(pods), params.max_pods)]
         for pod in selected_pods:
-            if len(events) >= params.max_events:
+            if len(resource_events) >= params.max_events:
                 break
 
-            events.extend(
+            resource_events.extend(
                 get_resource_events(
                     "Pod",
                     pod.metadata.name,
@@ -139,10 +144,10 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                 )
             )
 
-    events = events[: params.max_events]
-    events = sorted(events, key=get_event_timestamp, reverse=True)
+    resource_events = resource_events[: params.max_events]
+    resource_events = sorted(resource_events, key=get_event_timestamp, reverse=True)
 
-    if len(events) > 0:
+    if len(resource_events) > 0:
         rows = [
             [
                 e.reason,
@@ -152,12 +157,29 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                 e.regarding.name,
                 e.note,
             ]
-            for e in events
+            for e in resource_events
+        ]
+
+        events = [
+            EventRow(
+                reason=event.reason,
+                type=event.type,
+                time=render_value(
+                    RendererType.DATETIME,
+                    parse_kubernetes_datetime_to_ms(get_event_timestamp(event)) if get_event_timestamp(event) else 0,
+                ),
+                message=event.note,
+                kind=kind.lower(),
+                name=event.regarding.name,
+                namespace=event.regarding.namespace,
+            )
+            for event in resource_events
         ]
 
         event.add_enrichment(
             [
-                TableBlock(
+                EventsBlock(
+                    events=events,
                     table_name=f"*{kind} events:*",
                     column_renderers={"time": RendererType.DATETIME},
                     headers=["reason", "type", "time", "kind", "name", "message"],
@@ -166,6 +188,8 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                 )
             ],
             {SlackAnnotations.ATTACHMENT: True},
+            enrichment_type=EnrichmentType.k8s_events,
+            title=f"Resource Events"
         )
 
 
@@ -188,7 +212,8 @@ def pod_events_enricher(event: PodEvent, params: EventEnricherParams):
         max_events=params.max_events,
     )
     if events_table_block:
-        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
+                             enrichment_type=EnrichmentType.k8s_events, title="Pod Events")
 
 
 @action
@@ -217,7 +242,8 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
                     max_events=params.max_events,
                 )
                 if events_table_block:
-                    event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+                    event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
+                                         enrichment_type=EnrichmentType.k8s_events, title="Deployment Events")
     else:
         pods = list_pods_using_selector(dep.metadata.namespace, dep.spec.selector, "status.phase=Running")
         event.add_enrichment([MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({len(pods)})*")])
@@ -230,7 +256,8 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
             max_events=params.max_events,
         )
         if events_table_block:
-            event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+            event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
+                                 enrichment_type=EnrichmentType.k8s_events, title="Deployment Events")
 
 
 @action
