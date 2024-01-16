@@ -104,3 +104,5 @@ IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "us-central1-docker.pkg.dev/ge
 CLUSTER_DOMAIN = os.environ.get("CLUSTER_DOMAIN", "cluster.local")
 
 IS_OPENSHIFT = load_bool("IS_OPENSHIFT", False)
+
+ENABLE_GRAPH_BLOCK = load_bool("ENABLE_GRAPH_BLOCK", False)

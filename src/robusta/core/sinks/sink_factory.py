@@ -4,6 +4,8 @@ from robusta.core.sinks.datadog import DataDogSink, DataDogSinkConfigWrapper
 from robusta.core.sinks.discord import DiscordSink, DiscordSinkConfigWrapper
 from robusta.core.sinks.file.file_sink import FileSink
 from robusta.core.sinks.file.file_sink_params import FileSinkConfigWrapper
+from robusta.core.sinks.google_chat.google_chat_params import GoogleChatSinkConfigWrapper
+from robusta.core.sinks.google_chat.google_chat import GoogleChatSink
 from robusta.core.sinks.jira import JiraSink, JiraSinkConfigWrapper
 from robusta.core.sinks.kafka import KafkaSink, KafkaSinkConfigWrapper
 from robusta.core.sinks.mail.mail_sink import MailSink
@@ -45,6 +47,7 @@ class SinkFactory:
         JiraSinkConfigWrapper: JiraSink,
         FileSinkConfigWrapper: FileSink,
         MailSinkConfigWrapper: MailSink,
+        GoogleChatSinkConfigWrapper: GoogleChatSink,
     }
 
     @classmethod
