@@ -95,6 +95,7 @@ class EnrichmentType(Enum):
     node_info = "node_info"
     container_info = "container_info"
     k8s_events = "k8s_events"
+    alert_labels = "alert_labels"
 
 
 class Enrichment:

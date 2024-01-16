@@ -21,7 +21,7 @@ from robusta.core.reporting import (
     PrometheusBlock,
     TableBlock,
 )
-from robusta.core.reporting.blocks import GraphBlock, EventsBlock
+from robusta.core.reporting.blocks import GraphBlock
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer
 from robusta.utils.parsing import datetime_to_db_str
@@ -96,7 +96,7 @@ class ModelConversion:
             elif isinstance(block, GraphBlock):
                 if ENABLE_GRAPH_BLOCK:
                     structured_data.append(
-                        {"type": str(enrichment.enrichment_type), "title": enrichment.title, "data": block.graph_data.dict(), "metadata": block.graph_data.metadata, "version": 1.0}
+                        {"type": "prometheus", "data": block.graph_data.dict(), "metadata": block.graph_data.metadata, "version": 1.0}
                     )
                 else:
                     if block.is_text_file():
@@ -113,19 +113,6 @@ class ModelConversion:
             elif isinstance(block, PrometheusBlock):
                 structured_data.append(
                     {"type": "prometheus", "data": block.data.dict(), "metadata": block.metadata, "version": 1.0}
-                )
-            elif isinstance(block, EventsBlock):
-                structured_data.append(
-                    {
-                        "type": str(enrichment.enrichment_type),
-                        "title": enrichment.title,
-                        "data": {
-                            "events": [event.dict() for event in block.events],
-                            "headers": block.headers,
-                            "rows": [row for row in block.rows],
-                            "column_renderers": block.column_renderers,
-                        },
-                    }
                 )
             elif isinstance(block, TableBlock):
                 if block.table_name:
@@ -194,4 +181,6 @@ class ModelConversion:
             "file_type": "structured_data",
             "data": json.dumps(structured_data),
             "account_id": account_id,
+            "enrichment_type": enrichment.enrichment_type.name if enrichment else None,
+            "title": enrichment.title if enrichment else None,
         }

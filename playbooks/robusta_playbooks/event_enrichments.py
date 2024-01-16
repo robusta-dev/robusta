@@ -38,10 +38,7 @@ from robusta.api import (
     parse_kubernetes_datetime_to_ms,
     should_report_pod,
 )
-from robusta.core.reporting import EventsBlock, EventRow
 from robusta.core.reporting.base import EnrichmentType
-from robusta.core.reporting.custom_rendering import render_value
-
 
 class ExtendedEventEnricherParams(EventEnricherParams):
     """
@@ -160,26 +157,9 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
             for e in resource_events
         ]
 
-        events = [
-            EventRow(
-                reason=event.reason,
-                type=event.type,
-                time=render_value(
-                    RendererType.DATETIME,
-                    parse_kubernetes_datetime_to_ms(get_event_timestamp(event)) if get_event_timestamp(event) else 0,
-                ),
-                message=event.note,
-                kind=kind.lower(),
-                name=event.regarding.name,
-                namespace=event.regarding.namespace,
-            )
-            for event in resource_events
-        ]
-
         event.add_enrichment(
             [
-                EventsBlock(
-                    events=events,
+                TableBlock(
                     table_name=f"*{kind} events:*",
                     column_renderers={"time": RendererType.DATETIME},
                     headers=["reason", "type", "time", "kind", "name", "message"],
