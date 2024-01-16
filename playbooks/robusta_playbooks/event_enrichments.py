@@ -112,7 +112,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
 
     kind: str = resource.kind
 
-    resource_events = get_resource_events(
+    events = get_resource_events(
         kind,
         resource.metadata.name,
         resource.metadata.namespace,
@@ -129,10 +129,10 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
 
         selected_pods = pods[: min(len(pods), params.max_pods)]
         for pod in selected_pods:
-            if len(resource_events) >= params.max_events:
+            if len(events) >= params.max_events:
                 break
 
-            resource_events.extend(
+            events.extend(
                 get_resource_events(
                     "Pod",
                     pod.metadata.name,
@@ -141,10 +141,10 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                 )
             )
 
-    resource_events = resource_events[: params.max_events]
-    resource_events = sorted(resource_events, key=get_event_timestamp, reverse=True)
+    events = events[: params.max_events]
+    events = sorted(events, key=get_event_timestamp, reverse=True)
 
-    if len(resource_events) > 0:
+    if len(events) > 0:
         rows = [
             [
                 e.reason,
@@ -154,7 +154,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
                 e.regarding.name,
                 e.note,
             ]
-            for e in resource_events
+            for e in events
         ]
 
         event.add_enrichment(
