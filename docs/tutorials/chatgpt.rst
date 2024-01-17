@@ -1,6 +1,6 @@
 .. _chatgpt:
 
-ChatGPT for Prometheus
+ChatGPT (AI) for Prometheus
 ##############################################
 
 Using the `kubernetes-chatgpt-bot <https://github.com/robusta-dev/kubernetes-chatgpt-bot/>`_, you can send Prometheus alerts to ChatGPT for investigation.
