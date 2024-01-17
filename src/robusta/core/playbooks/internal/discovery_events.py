@@ -15,6 +15,7 @@ from robusta.api import (
 )
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.playbooks.common import get_event_timestamp, get_events_list
+from robusta.core.reporting.base import EnrichmentType
 
 
 @action
@@ -53,7 +54,7 @@ def event_history(event: ExecutionBaseEvent):
             warning_event.regarding.namespace,
         )
         if events_table:
-            finding.add_enrichment([events_table])
+            finding.add_enrichment([events_table], enrichment_type=EnrichmentType.k8s_events, title="Resource Events")
             event.add_finding(finding, True)
         reported_obj_history_list.append(warning_event_key)
 

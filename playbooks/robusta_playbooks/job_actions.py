@@ -180,7 +180,8 @@ def job_pod_enricher(event: JobEvent, params: JobPodEnricherParams):
             max_events=params.max_events,
         )
         if events_table_block:
-            event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+            event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
+                                 enrichment_type=EnrichmentType.k8s_events, title="Job Pod Events")
 
     if params.logs:
         regex_replacement_style = (
