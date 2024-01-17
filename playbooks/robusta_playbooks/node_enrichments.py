@@ -154,7 +154,8 @@ def node_dmesg_enricher(event: NodeEvent, params: PodRunningParams):
     )
     if exec_result:
         event.add_enrichment(
-            [FileBlock(f"dmesg.log", exec_result.encode())],
+            [FileBlock(f"dmesg.log", exec_result.encode())], enrichment_type=EnrichmentType.text_file,
+            title="DMESG Info"
         )
 
 
