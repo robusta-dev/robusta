@@ -5,18 +5,25 @@ With the Robusta Alerts UI, you can create and customize Prometheus Rules using 
 
 .. image:: /images/robusta-ui-alerts-ui.gif
 
-This guide covers enabling managed alerts with the Robusta UI. This involves two steps:
+This guide covers how it works, and also the steps involved to use this feature:
 
-* Enable the Alert UI on the Robusta UI.
+* Enable the Alerts UI on the Robusta UI.
 * Disable default Prometheus alerts installed by Kube Prometheus Stack.
+
+
+How it works
+--------------------
+Enabling this feature will create a default set of PrometheusRule custom resources, based on the alerts in Kube Prometheus Stack.  You can later enable, disable, or modify them from the UI.
+
+In addition to this, we will add custom templates for various alerts that are not already present.
 
 .. note::
 
-    To use the Alerts UI, you must use Robusta's :ref:`Embedded Prometheus Stack`.
+    Currently, Alerts UI only works with Robusta's :ref:`Embedded Prometheus Stack`.
+
 
 Activate Alerts Interface
 --------------------------
-
 To see alerts and customize them, you must first activate alert rules in the Robusta UI.
 
 1. Go to `platform.robusta.dev <https://platform.robusta.dev/>`_ -> Alerting -> Alerts
@@ -26,10 +33,12 @@ To see alerts and customize them, you must first activate alert rules in the Rob
 
 
 
-Disable Default Alert Rules
+Disable Default Prometheus Alert Rules
 ********************************************
 
-To avoid duplication of alerts, you must disable the default Kube Prometheus Stack alerts. Add the following config to your ``generated_values.yaml``.
+Since Robusta creates new PrometheusRule custom resources, you must disable the default Kube Prometheus Stack alerts to avoid duplication of alerts.
+
+Add the following config to your ``generated_values.yaml``.
 
 .. code-block:: yaml
 
@@ -56,15 +65,15 @@ To avoid duplication of alerts, you must disable the default Kube Prometheus Sta
             prometheusOperator: false
 
 .. code-annotations::
-    1. Creates Robusta managed alerts in your cluster.
+    1. Enables creation of Robusta managed PrometheusRule custom resources in your cluster. The previous step only enables it in the UI.
 
-Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
+Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 
 Disabling the Feature
 ---------------------------------
 
-If you choose to stop using the Robusta alerts UI, you can do so at any time and go back to using built in Kube Prometheus Stack alerts. To do this, remove the config added in the previous step from your ``generated_values.yaml`` and do a :ref:`Helm Upgrade <Simple Upgrade>`.
+If you choose to stop using the Robusta Alerts UI, you can do so at any time and go back to using built in Kube Prometheus Stack alerts. To do this, remove the config added in the previous step from your ``generated_values.yaml`` and do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 Robusta stores its managed rules in PrometheusRules custom resources that start with ``robusta-prometheus.rules--``. If left in the cluster, you might have double alerts.
 
