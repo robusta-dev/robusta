@@ -122,7 +122,7 @@ master_doc = "index"
 # General information about the project.
 project = "Robusta"
 copyright = "2024, Robusta"
-author = "Natan Yellin"
+author = "Natan Yellin and Pavan Gudiwada"
 
 # The short X.Y version.
 # version = "DOCS_VERSION_PLACEHOLDER"

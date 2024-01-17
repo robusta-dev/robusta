@@ -2,6 +2,8 @@
 
 :hide-footer:
 
+.. _install:
+
 Installation Guides
 ====================
 
@@ -35,12 +37,15 @@ Installation Guides
 Don't want Prometheus? Use :ref:`Robusta without Prometheus <install-barebones>`.
 
 
-Learn Robusta
-^^^^^^^^^^^^^^^^
+Already installed Robusta? See what you can do with it.
+-------------------------------------------------------------
 
-* :ref:`Track Failed Kubernetes Jobs`
-* :ref:`Track Failed Liveness Probes`
-* :ref:`Track Kubernetes Changes`
-* :ref:`Route Alerts By Namespace`
+`Route alerts to different teams based on namespace, alertname, and more <https://docs.robusta.dev/master/tutorials/index.html#notification-routing>`_
 
-:ref:`View more tutorials.<tutorials>`
+`Enhance Prometheus alerts with Robusta <https://docs.robusta.dev/master/tutorials/alert-builtin-enrichment.html>`_
+
+`Define new Prometheus alerts <https://docs.robusta.dev/master/tutorials/alert-custom-prometheus.html>`_
+
+`Configure auto-remediate for Prometheus alerts <https://docs.robusta.dev/master/tutorials/alert-remediation.html>`_
+
+`Track Kubernetes errors and changes using simple YAML <https://docs.robusta.dev/master/tutorials/index.html#custom-alerts-and-playbooks>`_
