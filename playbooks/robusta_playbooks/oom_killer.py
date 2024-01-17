@@ -154,7 +154,7 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
             blocks.append(container_graph)
 
         finding.add_enrichment(blocks, enrichment_type=EnrichmentType.container_info,
-                             title="Container Info")
+                               title="Container Info")
 
     event.add_finding(finding)
     if params.attach_logs and container_name is not None:
