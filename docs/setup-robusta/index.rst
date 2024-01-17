@@ -14,6 +14,7 @@
    :hidden:
 
    multi-cluster
+   alertsui
    upgrade
    configuration-secrets
    supported-clusters
