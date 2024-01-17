@@ -74,7 +74,7 @@ contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-
 
     This indicates potential discrepancies between the version of Prometheus you are trying to use and the version of the CRDs in your cluster.
 
-    Follow this guide for :ref:`upgrading CRDs from an older version <Upgrading from older versions>`.
+    Follow this guide for :ref:`upgrading CRDs from an older version <Manual Upgrade>`.
 
 .. details:: robusta-runner isn't working or has exceptions
 
