@@ -13,6 +13,7 @@ from robusta.api import (
     create_node_graph_enrichment,
     create_resource_enrichment,
     pod_limits,
+    EnrichmentType
 )
 from robusta.core.model.pods import pod_requests
 
@@ -64,7 +65,7 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
         graph_duration_minutes=params.graph_duration_minutes,
         lines=limit_lines,
     )
-    pod_event.add_enrichment([graph_enrichment])
+    pod_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Pod Resources")
 
 
 @action
@@ -81,4 +82,4 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
         logging.warning(f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}")
         return
     graph_enrichment = create_node_graph_enrichment(params, node)
-    pod_event.add_enrichment([graph_enrichment])
+    pod_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Pod Resources")

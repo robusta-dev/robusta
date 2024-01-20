@@ -18,7 +18,7 @@ from robusta.core.model.base_params import (
     ResourceChartResourceType,
 )
 from robusta.core.model.env_vars import FLOAT_PRECISION_LIMIT, PROMETHEUS_REQUEST_TIMEOUT_SECONDS
-from robusta.core.reporting.blocks import FileBlock
+from robusta.core.reporting.blocks import GraphBlock, PrometheusBlock, PrometheusBlockLineData
 from robusta.core.reporting.custom_rendering import PlotCustomCSS, charts_style
 from robusta.integrations.prometheus.utils import get_prometheus_connect
 
@@ -168,7 +168,7 @@ def create_chart_from_prometheus_query(
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
     hide_legends: Optional[bool] = False
-):
+) -> Tuple[pygal.Graph, PrometheusBlock]:
     starts_at: datetime
     ends_at: datetime
     if not alert_starts_at:
@@ -256,9 +256,19 @@ def create_chart_from_prometheus_query(
         min_time = starts_at.timestamp()
         max_time = ends_at.timestamp()
 
+    vertical_lines = []
+    horizontal_lines = []
     for line in lines:
+        line_data = PrometheusBlockLineData(legend=line.label, value=line.value)
+
         if isinstance(line, XAxisLine) and line.value > max_y_value:
             max_y_value = line.value
+
+        if isinstance(line, XAxisLine):
+            horizontal_lines.append(line_data)
+
+        if isinstance(line, YAxisLine):
+            vertical_lines.append(line_data)
 
     for line in lines:
         value = [(min_time, line.value), (max_time, line.value)]
@@ -357,8 +367,9 @@ def create_chart_from_prometheus_query(
             dots_size=p.dots_size,
             stroke=p.stroke,
         )
-
-    return chart
+    return chart, PrometheusBlock(data=prometheus_query_result, query=promql_query, y_axis_type=values_format,
+                                  vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
+                                  graph_name=chart.title)
 
 
 def __get_additional_labels_str(prometheus_params: PrometheusParams) -> str:
@@ -382,9 +393,9 @@ def create_graph_enrichment(
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
     hide_legends: Optional[bool] = False
-) -> FileBlock:
+) -> GraphBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
-    chart = create_chart_from_prometheus_query(
+    chart, prom_block = create_chart_from_prometheus_query(
         prometheus_params,
         promql_query,
         start_at,
@@ -399,7 +410,7 @@ def create_graph_enrichment(
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
-    return FileBlock(svg_name, chart.render())
+    return GraphBlock(svg_name, chart.render(), graph_data=prom_block)
 
 
 def get_default_values_format(combination: ResourceKey) -> ChartValuesFormat:
@@ -441,7 +452,7 @@ def create_resource_enrichment(
     prometheus_params: PrometheusParams,
     lines: Optional[List[XAxisLine]] = [],
     title_override: Optional[str] = None,
-) -> FileBlock:
+) -> GraphBlock:
     combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
             query='sum(irate(container_cpu_usage_seconds_total{namespace="$namespace", pod=~"$pod"}[5m])) by (pod, job)',

@@ -7,6 +7,7 @@ from robusta.core.playbooks.playbook_utils import get_env_replacement, replace_e
 from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
 from robusta.core.sinks.discord.discord_sink_params import DiscordSinkConfigWrapper
 from robusta.core.sinks.file.file_sink_params import FileSinkConfigWrapper
+from robusta.core.sinks.google_chat.google_chat_params import GoogleChatSinkConfigWrapper
 from robusta.core.sinks.jira.jira_sink_params import JiraSinkConfigWrapper
 from robusta.core.sinks.kafka.kafka_sink_params import KafkaSinkConfigWrapper
 from robusta.core.sinks.mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
@@ -59,6 +60,7 @@ class RunnerConfig(BaseModel):
                 FileSinkConfigWrapper,
                 MailSinkConfigWrapper,
                 PushoverSinkConfigWrapper,
+                GoogleChatSinkConfigWrapper,
             ]
         ]
     ]
