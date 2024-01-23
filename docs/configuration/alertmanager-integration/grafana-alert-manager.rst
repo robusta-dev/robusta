@@ -2,8 +2,15 @@ Grafana AlertManager
 ****************************************
 
 Using Grafana alerts involves a `special instance of AlertManager embedded within Grafana <https://grafana.com/docs/grafana/latest/alerting/fundamentals/alertmanager/>`_.
+.. image:: /images/grafana-alertmanager-save-contact-point.png
+  :width: 600
+  :align: center
 
-You will need to configure two integrations one to send alerts to Robusta and another to let Robusta query metrics and create silences.
+You need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
+
+Prerequisite
+=================================
+* A ``cluster_name: YourClusterName`` label for each cluster.
 
 Send Alerts to Robusta
 ============================
@@ -12,21 +19,37 @@ This integration lets you send Grafana alerts to Robusta.
 
 To configure it:
 
-1. In your Grafana cloud site, go to Alerting, then click ``Add contact point`` and in the Integration section, choose ``Webhook``.
+1. In the Grafana UI, navigate to the ``Alerting`` tab, click on ``Add contact point``, and select ``Webhook`` from the Integration options.
+
+.. image:: /images/grafana-alertmanager-contact-point.png
+  :width: 600
+  :align: center
+
 2. Insert the following URL:
 
 .. code-block::
 
     https://api.robusta.dev/integrations/generic/alertmanager
 
+.. image:: /images/grafana-alertmanager-url.png
+  :align: center
+
 3. Change the HTTP Method to POST in the ``Optional Webhook Settings``.
-4. Enter your "Account_id Signing_key" in the ``Authorization Headers - Scheme`` box (locate this in your generated_values.yaml file).
-5. Click "Test" and you should receive a notification on Robusta UI.
+4. Enter your "Account_id Signing_key" in the ``Authorization Headers - Credentials`` box (locate this in your generated_values.yaml file).
+
+.. image:: /images/grafana-alertmanager-post.png
+  :width: 600
+  :align: center
+
+5. Click "Test", if you already have the ``cluster_name`` label, your notification should go through. If not, try using the custom label option. A notification should arrive at Robusta UI or Slack/MSTeams if configured correctly.
+
+.. image:: /images/grafana-alertmanager-test.png
+  :width: 600
+  :align: center
+
 6. Finally, click "Save contact point" to complete the Robusta integration.
 
-.. note::
 
-  Ensure each cluster has a ``cluster_name`` label.
 
 
 Configure Querying and Silencing
@@ -62,7 +85,7 @@ To configure metrics querying and creating silences, add the following to ``gene
   The Grafana API key must have the ``Editor`` role in order to create silences.
 
 
-You can optionally setup authentication, SSL verification, and other parameters described below.
+You can optionally set up authentication, SSL verification, and other parameters described below.
 
 Verify it Works
 ^^^^^^^^^^^^^^^^^
