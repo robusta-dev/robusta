@@ -79,7 +79,7 @@ redirects = {
     "docs/configuration/embedded-prometheus.rst": "/master/configuration/alertmanager-integration/embedded-prometheus.html",
     "community.html": "/master/help.html",
     "catalog/actions/grafana.html": "/master/playbook-reference/actions/grafana.html",
-    "quick-start.html": "master/setup-robusta/installation/index.html",
+    "quick-start.html": "/master/setup-robusta/installation/index.html",
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
