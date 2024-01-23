@@ -3,7 +3,6 @@ Grafana AlertManager
 
 Using Grafana alerts involves a `special instance of AlertManager embedded within Grafana <https://grafana.com/docs/grafana/latest/alerting/fundamentals/alertmanager/>`_.
 
-
 You will need to configure two integrations one to send alerts to Robusta and another to let Robusta query metrics and create silences.
 
 Send Alerts to Robusta

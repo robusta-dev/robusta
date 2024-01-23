@@ -77,6 +77,7 @@ WEBSOCKET_PING_INTERVAL = int(os.environ.get("WEBSOCKET_PING_INTERVAL", 120))
 WEBSOCKET_PING_TIMEOUT = int(os.environ.get("WEBSOCKET_PING_TIMEOUT", 30))
 
 TRACE_INCOMING_REQUESTS = load_bool("TRACE_INCOMING_REQUESTS", False)
+TRACE_INCOMING_ALERTS = load_bool("TRACE_INCOMING_ALERTS", False)
 
 SERVICE_CACHE_TTL_SEC = int(os.environ.get("SERVICE_CACHE_TTL_SEC", 900))
 SERVICE_CACHE_MAX_SIZE = int(os.environ.get("SERVICE_CACHE_MAX_SIZE", 1000))
@@ -101,3 +102,7 @@ MAX_ALLOWED_RULES_PER_CRD_ALERT = int(os.environ.get("MAX_ALLOWED_RULES_PER_CRD_
 IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "us-central1-docker.pkg.dev/genuine-flight-317411/devel")
 
 CLUSTER_DOMAIN = os.environ.get("CLUSTER_DOMAIN", "cluster.local")
+
+IS_OPENSHIFT = load_bool("IS_OPENSHIFT", False)
+
+ENABLE_GRAPH_BLOCK = load_bool("ENABLE_GRAPH_BLOCK", False)

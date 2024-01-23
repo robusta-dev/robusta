@@ -5,7 +5,7 @@ This guide walks you through configuring `Victoria Metrics <https://victoriametr
 
 You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
 
-Send alerts to Robusta
+Send Alerts to Robusta
 ============================
 
 To configure, edit AlertManager's configuration:

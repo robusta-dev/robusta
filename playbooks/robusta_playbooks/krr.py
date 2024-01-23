@@ -227,7 +227,7 @@ def _generate_krr_env_vars(krr_secrets: Optional[List[KRRSecret]], secret_name: 
 def _generate_additional_env_args(krr_secrets: Optional[List[KRRSecret]]) -> Optional[str]:
     if not krr_secrets:
         return None
-    return " ".join(f"{secret.command_flag} ${secret.env_var_name}" for secret in krr_secrets)
+    return " ".join(f"{secret.command_flag} '${secret.env_var_name}'" for secret in krr_secrets)
 
 
 def _generate_cmd_line_args(prom_config: PrometheusConfig) -> str:
@@ -346,6 +346,11 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         logs = RobustaJob.run_simple_job_spec(
             spec, "krr_job" + scan_id, params.timeout, secret, custom_annotations=params.custom_annotations
         )
+        # Sometimes we get warnings from the pod before the json result, so we need to remove them
+        if "{" not in logs:
+            raise json.JSONDecodeError("Failed to find json result in logs", "", 0)
+        logs = logs[logs.find("{") :]
+
         krr_response = json.loads(logs)
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)

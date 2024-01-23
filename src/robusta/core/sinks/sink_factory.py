@@ -4,6 +4,8 @@ from robusta.core.sinks.datadog import DataDogSink, DataDogSinkConfigWrapper
 from robusta.core.sinks.discord import DiscordSink, DiscordSinkConfigWrapper
 from robusta.core.sinks.file.file_sink import FileSink
 from robusta.core.sinks.file.file_sink_params import FileSinkConfigWrapper
+from robusta.core.sinks.google_chat.google_chat_params import GoogleChatSinkConfigWrapper
+from robusta.core.sinks.google_chat.google_chat import GoogleChatSink
 from robusta.core.sinks.jira import JiraSink, JiraSinkConfigWrapper
 from robusta.core.sinks.kafka import KafkaSink, KafkaSinkConfigWrapper
 from robusta.core.sinks.mail.mail_sink import MailSink
@@ -23,7 +25,7 @@ from robusta.core.sinks.victorops import VictoropsConfigWrapper, VictoropsSink
 from robusta.core.sinks.webex import WebexSink, WebexSinkConfigWrapper
 from robusta.core.sinks.webhook import WebhookSink, WebhookSinkConfigWrapper
 from robusta.core.sinks.yamessenger import YaMessengerSink, YaMessengerSinkConfigWrapper
-
+from robusta.core.sinks.pushover import PushoverSink, PushoverSinkConfigWrapper
 
 class SinkFactory:
     __sink_config_mapping: Dict[Type[SinkConfigBase], Type[SinkBase]] = {
@@ -45,6 +47,8 @@ class SinkFactory:
         JiraSinkConfigWrapper: JiraSink,
         FileSinkConfigWrapper: FileSink,
         MailSinkConfigWrapper: MailSink,
+        PushoverSinkConfigWrapper: PushoverSink,
+        GoogleChatSinkConfigWrapper: GoogleChatSink,
     }
 
     @classmethod

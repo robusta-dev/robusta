@@ -11,8 +11,7 @@ class MultiResourceTrigger(KubernetesAnyAllChangesTrigger):
 
     :var resources: List of Kubernetes resources. If empty, all resources are included.
                     Allowed values: deployment, pod, job, node, replicaset, statefulset, daemonset, ingress, service,
-                                    event, horizontalpodautoscaler, clusterrole, clusterrolebinding, namespace,
-                                    serviceaccount, persistentvolume, configmap
+                    event, horizontalpodautoscaler, clusterrole, clusterrolebinding, namespace, serviceaccount, persistentvolume, configmap
     :var operations: List of operations. If empty, all operations are included. Allowed values: create, update, delete
 
     :example resources: ["deployment", "job", "ingress"]
