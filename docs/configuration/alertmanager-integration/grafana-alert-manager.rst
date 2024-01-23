@@ -48,7 +48,7 @@ To configure it:
   :width: 600
   :align: center
 
-If everything worked, a notification should arrive in a Robusta UI stack or whatever destinations Robusta is connected to like stack MS teams.
+If everything worked, a notification should arrive in a Robusta UI stack or whatever destinations Robusta is connected to like stack MSTeams.
 
 .. image:: /images/grafana-alertmanager-robusta-ui.png
   :width: 600
