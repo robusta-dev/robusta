@@ -54,32 +54,24 @@ suppress_warnings = ["autosectionlabel.*"]
 # sphinx redirects from old docs
 
 redirects = {
-    "installation.html": "/master/setup-robusta/installation/index.html",
-    "catalog/actions/index.html": "/master/playbook-reference/actions/index.html",
-    "configuration/sending-notifications.html": "/master/configuration/configuring-sinks.html",
-    "user-guide/configuration.html": "/master/configuration/index.html",
-    "architecture.html": "/master/how-it-works/architecture.html",
-    "upgrade.html": "/master/setup-robusta/upgrade.html",
-    "oss-vs-saas.html": "/master/how-it-works/oss-vs-saas.html",
-    "developer-guide/actions/findings-api.html": "/master/playbook-reference/actions/develop-actions/findings-api.html",
-    "tutorials/my-first-custom-action.html": "/master/playbook-reference/actions/develop-actions/index.html",
-    "user-guide/self-hosting.html": "/master/how-it-works/oss-vs-saas.html",
-    "getting-started/installation.html": "/master/setup-robusta/installation/all-in-one-installation.html",
-    "tutorials/java-troubleshooting.html": "/master/tutorials/application-troubleshooting-java.html",
-    "catalog/sinks/index.html": "/master/configuration/sinks/index.html",
-    "tutorials/prometheus-enrichment.html": "/master/tutorials/alert-custom-enrichment.html",
-    "user-guide/alert-manager.html": "/master/configuration/alert-manager.html",
-    "catalog/sinks/webhook.html": "/master/configuration/sinks/webhook.html",
-    "catalog/sinks/PagerDuty.html": "/master/configuration/sinks/PagerDuty.html",
-    "catalog/sinks/telegram.html": "/master/configuration/sinks/telegram.html",
-    "catalog/sinks/Opsgenie.html": "/master/configuration/sinks/Opsgenie.html",
-    "catalog/sinks/jira.html": "/master/configuration/sinks/jira.html",
-    "catalog/actions/event-enrichment.html": "/master/playbook-reference/actions/event-enrichment.html",
-    "docs/configuration/alert-manager.html": "/master/configuration/alertmanager-integration/index.html",
-    "docs/configuration/embedded-prometheus.rst": "/master/configuration/alertmanager-integration/embedded-prometheus.html",
-    "community.html": "/master/help.html",
-    "catalog/actions/grafana.html": "/master/playbook-reference/actions/grafana.html",
-    "quick-start.html": "master/setup-robusta/installation/index.html",
+    # General pattern for all 'catalog' subdirectories
+    "catalog/*/index.html": "/exp-redirects/playbook-reference/{1}/index.html",
+    # General pattern for user-guide sections
+    "user-guide/*.html": "/exp-redirects/configuration/{1}.html",
+    # Specific redirects for unique pages
+    "installation.html": "/exp-redirects/setup-robusta/installation/index.html",
+    "architecture.html": "/exp-redirects/how-it-works/architecture.html",
+    "upgrade.html": "/exp-redirects/setup-robusta/upgrade.html",
+    "oss-vs-saas.html": "/exp-redirects/how-it-works/oss-vs-saas.html",
+    "getting-started/installation.html": "/exp-redirects/setup-robusta/installation/all-in-one-installation.html",
+    "community.html": "/exp-redirects/help.html",
+    "quick-start.html": "/exp-redirects/setup-robusta/installation/index.html",
+    # Developer guide with a deeper path
+    "developer-guide/actions/*.html": "/exp-redirects/playbook-reference/actions/develop-actions/{1}.html",
+    # Tutorials with specific new paths
+    "tutorials/*.html": "/exp-redirects/tutorials/{1}.html",
+    # Docs with a specific redirection
+    "docs/configuration/*.html": "/exp-redirects/configuration/{1}.html",
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
@@ -154,7 +146,7 @@ html_theme_options = {
     "repo_url": "https://github.com/robusta-dev/robusta",
     "repo_name": "Robusta",
     "repo_type": "github",
-    "edit_uri": "tree/master/docs",
+    "edit_uri": "tree/exp-redirects/docs",
     "palette": [
         {
             "media": "(prefers-color-scheme: light)",
