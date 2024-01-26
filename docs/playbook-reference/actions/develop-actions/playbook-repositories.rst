@@ -14,6 +14,8 @@ A playbook repository is a directory with the following structure:
       my_playbook_repo
         my_actions.py
 
+.. warning:: Do **not** use the directory name "robusta_playbooks". This name is reserved and using it will override the built-in Robusta playbooks
+
 An example ``pyproject.toml`` would be:
 
 .. code-block:: bash
