@@ -1,10 +1,10 @@
+import html
 import logging
 import re
-import html
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import parse_qs, unquote, urlparse
 
 from hikaru.model.rel_1_26 import DaemonSet, HorizontalPodAutoscaler, Node, StatefulSet
 from pydantic import BaseModel
@@ -194,12 +194,13 @@ class PrometheusKubernetesAlert(
         title = f"{status_message}{self.get_title()}"
         # AlertManager sends 0001-01-01T00:00:00Z when there's no end date
         ends_at = self.alert.endsAt if self.alert.endsAt.timestamp() > 0 else None
+        alert_severity = self.alert.labels.get("severity", "info").lower()
         return Finding(
             title=title,
             description=self.get_description(),
             source=FindingSource.PROMETHEUS,
             aggregation_key=self.alert_name,
-            severity=SEVERITY_MAP.get(self.alert.labels.get("severity"), FindingSeverity.INFO),
+            severity=SEVERITY_MAP.get(alert_severity, FindingSeverity.INFO),
             subject=alert_subject,
             fingerprint=self.alert.fingerprint,
             starts_at=self.alert.startsAt,
