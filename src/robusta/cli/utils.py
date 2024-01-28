@@ -90,6 +90,11 @@ def replace_in_file(path, original, replacement):
     with open(path, "w") as w:
         w.write(text)
 
+def host_for_provider(component, domain, provider, scheme="https"):
+    if provider == "openshift":
+        return f"{scheme}://{component}-robusta.{domain}"
+    else:
+        return f"{scheme}://{component}.{domain}"
 
 @contextmanager
 def fetch_runner_logs(namespace: Optional[str], all_logs=False):

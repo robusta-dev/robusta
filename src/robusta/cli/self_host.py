@@ -10,6 +10,7 @@ import yaml
 from pydantic import BaseModel
 
 from robusta.cli.backend_profile import BackendProfile
+from robusta.cli.utils import host_for_provider
 
 ISSUER: str = "supabase"
 
@@ -47,13 +48,15 @@ class RobustaUI(BaseModel):
     RELAY_HOST: str
     SUPABASE_URL: str
     SUPABASE_KEY: str
+    provider: str
     service = {"nodePort": 30311}  # platform.domain
 
-    def __init__(self, domain: str, anon_key: str):
+    def __init__(self, domain: str, anon_key: str, provider: str):
         super().__init__(
-            RELAY_HOST=f"https://api.{domain}",
-            SUPABASE_URL=f"https://db.{domain}",
+            RELAY_HOST=host_for_provider("api", domain, provider),
+            SUPABASE_URL=host_for_provider("db", domain, provider),
             SUPABASE_KEY=anon_key,
+            provider=provider
         )
 
 
@@ -74,8 +77,8 @@ class RobustaRelay(BaseModel):
     def __init__(self, domain: str, anon_key: str, provider: str, storePW: str):
         super().__init__(
             domain=domain,
-            storeUrl=f"https://db.{domain}",
-            syncActionAllowedOrigins=f"https://platform.{domain}",
+            storeUrl=host_for_provider("db", domain, provider),
+            syncActionAllowedOrigins=host_for_provider("platform", domain, provider),
             storeApiKey=anon_key,
             provider=provider,
             storePassword=storePW,
@@ -131,7 +134,7 @@ app = typer.Typer(add_completion=False)
 def gen_config(
     provider: str = typer.Option(
         ...,
-        help='Cloud host provider. options are "on-prem", "gke", "eks"',
+        help='Cloud host provider. options are "on-prem", "gke", "eks", "openshift"',
     ),
     domain: str = typer.Option(..., help="domain used to route the on-prem services."),
     storage_class_name: str = typer.Option(None, help="database PVC storageClassName."),
@@ -142,9 +145,9 @@ def gen_config(
     ws_nport: int = typer.Option(30314, help="node port for Robusta websocket."),
 ):
     """Create self host configuration files"""
-    if provider not in {"on-prem", "gke", "eks"}:
+    if provider not in {"on-prem", "gke", "eks", "openshift"}:
         typer.secho(
-            f'Invalid provider {provider}. options are "on-prem", "gke", "eks"',
+            f'Invalid provider {provider}. options are "on-prem", "gke", "eks", "openshift"',
             fg=typer.colors.RED,
         )
         return
@@ -159,8 +162,8 @@ def gen_config(
     values = SelfHostValues(
         PROVIDER=provider,
         DOMAIN=domain,
-        SITE_URL=f"https://platform.{domain}",
-        PUBLIC_REST_URL=f"https://db.{domain}/rest/v1/",
+        SITE_URL=host_for_provider("platform", domain, provider),
+        PUBLIC_REST_URL=f"{host_for_provider('db', domain, provider)}/rest/v1/",
         STORAGE_CLASS_NAME=storage_class_name,
         EKS_CERTIFICATE_ARN=eks_certificate_arn,
     )
@@ -175,14 +178,14 @@ def gen_config(
     relayValues.apiNodePort = api_nport
     relayValues.wsNodePort = ws_nport
 
-    uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY)
+    uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY, provider=provider)
     uiValues.service["nodePort"] = platform_nport
 
     values_dict = values.dict(exclude_none=True)
     values_dict["robusta-ui"] = uiValues.dict()
     values_dict["robusta-relay"] = relayValues.dict()
 
-    backendProfile = BackendProfile.fromDomain(domain=domain)
+    backendProfile = BackendProfile.fromDomainProvider(domain=domain, provider=provider)
     self_host_approval_url = "https://api.robusta.dev/terms-of-service.html"
     typer.echo(f"By using this software you agree to the terms of service ({self_host_approval_url})\n")
     write_values_files("self_host_values.yaml", "robusta_cli_config.json", values_dict, backendProfile)
