@@ -82,3 +82,6 @@ spec:
       {{- if .Values.kubewatch.tolerations }}
       tolerations:  {{ toYaml .Values.kubewatch.tolerations | nindent 8 }}
       {{- end }}
+      {{- if .Values.kubewatch.priorityClassName }}
+      priorityClassName: {{ .Values.kubewatch.priorityClassName }}
+      {{- end }}
