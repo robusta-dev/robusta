@@ -46,4 +46,4 @@ Save the file and run
 
     helm upgrade robusta robusta/robusta --values=generated_values.yaml
 
-You should now get playbooks results in Pushover!
+You should now get playbook results in Pushover!
