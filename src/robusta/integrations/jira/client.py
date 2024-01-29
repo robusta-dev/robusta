@@ -84,7 +84,7 @@ class JiraClient:
     def _get_transition_id(self, issue_id, status_name):
         transitions = self._get_transitions_for_issue(issue_id)
         for t in transitions:
-            if t.get("name", "").lower() == status_name.lower():
+            if self._get_nested_property(t, "to.name", "").lower() == status_name.lower():
                 return t.get("id", None)
         return None
 
