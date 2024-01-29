@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional, List
 
 from hikaru.model.rel_1_26 import Container, Pod
 
@@ -8,7 +9,8 @@ from robusta.core.playbooks.prometheus_enrichment_utils import XAxisLine, YAxisL
 from robusta.integrations.kubernetes.api_client_utils import parse_kubernetes_datetime
 
 
-def create_container_graph(params: ResourceGraphEnricherParams, pod: Pod, oomkilled_container: PodContainer, show_limit=False):
+def create_container_graph(params: ResourceGraphEnricherParams, pod: Pod, oomkilled_container: PodContainer, show_limit=False,
+                           metrics_legends_labels: Optional[List[str]] = None,):
     container = oomkilled_container.container
     oom_killed_status = oomkilled_container.state
     labels = {
@@ -62,5 +64,6 @@ def create_container_graph(params: ResourceGraphEnricherParams, pod: Pod, oomkil
         graph_duration_minutes=params.graph_duration_minutes,
         lines=limit_lines,
         title_override=f"{params.resource_type} Usage for container {container.name}",
+        metrics_legends_labels=metrics_legends_labels,
     )
     return graph_enrichment

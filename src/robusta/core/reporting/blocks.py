@@ -483,7 +483,9 @@ class PrometheusBlock(BaseBlock):
                  vertical_lines: Optional[List[PrometheusBlockLineData]] = None,
                  horizontal_lines: Optional[List[PrometheusBlockLineData]] = None,
                  y_axis_type: Optional[ChartValuesFormat] = None,
-                 graph_name: Optional[str] = None, ):
+                 graph_name: Optional[str] = None,
+                 metrics_legends_labels: Optional[List[str]] = None,
+                 ):
         """
         :param data: the PrometheusQueryResult generated created from a prometheus query
         :param query: the Prometheus query run
@@ -492,11 +494,18 @@ class PrometheusBlock(BaseBlock):
         super().__init__(data=data, metadata=metadata, vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
                          y_axis_type=y_axis_type, graph_name=graph_name)
 
+        self.set_metrics_legends_labels(legends_labels=metrics_legends_labels)
+
     def dict(self, *args, **kwargs) -> Dict[str, Any]:
         obj_dict = super().dict()
         obj_dict["y_axis_type"] = str(self.y_axis_type) if self.y_axis_type else None
 
         return obj_dict
+
+    def set_metrics_legends_labels(self, legends_labels: List[str]):
+        jsonified_legends_labels = json.dumps(legends_labels)
+
+        self.metadata["metrics_legends_labels"] = jsonified_legends_labels
 
 
 class ScanReportRow(BaseModel):
@@ -602,5 +611,4 @@ class GraphBlock(FileBlock):
             graph_data=graph_data,
             **kwargs,
         )
-
 

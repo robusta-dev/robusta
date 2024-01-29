@@ -181,6 +181,6 @@ class ModelConversion:
             "file_type": "structured_data",
             "data": json.dumps(structured_data),
             "account_id": account_id,
-            "enrichment_type": enrichment.enrichment_type.name if enrichment else None,
+            "enrichment_type": enrichment.enrichment_type.name if enrichment.enrichment_type else None,
             "title": enrichment.title if enrichment else None,
         }

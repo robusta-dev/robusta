@@ -200,5 +200,5 @@ def node_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherPara
     Get a graph of a specific resource for this node.
     """
     node = node_event.get_node()
-    graph_enrichment = create_node_graph_enrichment(params, node)
+    graph_enrichment = create_node_graph_enrichment(params, node, metrics_legends_labels=["Node"])
     node_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Node Resources")
