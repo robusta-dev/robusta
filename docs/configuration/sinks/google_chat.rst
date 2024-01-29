@@ -2,16 +2,16 @@ Google Chat
 #################
 
 Robusta can report issues and events in your Kubernetes cluster by sending
-messages via the Google Chat.
+messages via the `Google Chat <https://chat.google.com/>`_ app.
 
-Setting up the Google Chat integration
-------------------------------------------------
+.. image:: /images/google-chat-sink.png
+  :width: 1000
+  :align: center
 
-All you need to set up Google Chat sink for Robusta is to enable a webhook
-for a certain Google Chat Space. This essentially means that an administrator
-of the chat has to extract a special URL for this Chat Space that enables
-the integration. You can find out more about webhook URLs in the Google
-documentation, for example <here|https://developers.google.com/chat/how-tos/webhooks>
+Prerequisites:
+--------------------------
+
+* Chat webhook URL. Find out more about webhook URLs in the Google documentation, `here <https://developers.google.com/chat/how-tos/webhooks>`_
 
 Configuring the Google Chat sink in Robusta
 ------------------------------------------------

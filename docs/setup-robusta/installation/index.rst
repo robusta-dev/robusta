@@ -16,10 +16,36 @@ Installation Guides
    standalone-installation
    dev-setup
 
-Robusta can be installed three ways:
 
-* :ref:`install-all-in-one` *(recommended, includes Robusta + Prometheus)*
-* :ref:`install-existing-prometheus` *(or a Prometheus compatible metrics-store)*
-* :ref:`install-barebones` *(no Prometheus at all)*
+.. grid:: 1 1 2 2
+    :gutter: 2
 
-To change code in Robusta, :ref:`build from source`.
+    .. grid-item-card:: :octicon:`book;1em;` Monitor Kubernetes from Scratch
+        :class-card: sd-bg-text-light
+        :link: all-in-one-installation
+        :link-type: doc
+
+        Five minute setup. Great default alerts. Powered by Prometheus and Robusta.
+
+    .. grid-item-card::  :octicon:`book;1em;`  Integrate with Existing Prometheus
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: extend-prometheus-installation
+        :link-type: doc
+
+        Make your existing alerts better. Attach pod logs. Automatic alert insights.
+
+Don't want Prometheus? Use :ref:`Robusta without Prometheus <install-barebones>`.
+
+
+Already installed Robusta? See what you can do with it.
+-------------------------------------------------------------
+
+`Route alerts to different teams based on namespace, alertname, and more <https://docs.robusta.dev/master/tutorials/index.html#notification-routing>`_
+
+`Enhance Prometheus alerts with Robusta <https://docs.robusta.dev/master/tutorials/alert-builtin-enrichment.html>`_
+
+`Define new Prometheus alerts <https://docs.robusta.dev/master/tutorials/alert-custom-prometheus.html>`_
+
+`Configure auto-remediate for Prometheus alerts <https://docs.robusta.dev/master/tutorials/alert-remediation.html>`_
+
+`Track Kubernetes errors and changes using simple YAML <https://docs.robusta.dev/master/tutorials/index.html#custom-alerts-and-playbooks>`_
