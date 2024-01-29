@@ -85,3 +85,4 @@ spec:
       {{- if .Values.kubewatch.priorityClassName }}
       priorityClassName: {{ .Values.kubewatch.priorityClassName }}
       {{- end }}
+      
