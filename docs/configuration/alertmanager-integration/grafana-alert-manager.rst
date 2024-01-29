@@ -1,13 +1,16 @@
 Grafana AlertManager
 ****************************************
 
-Using Grafana alerts involves a `special instance of AlertManager embedded within Grafana <https://grafana.com/docs/grafana/latest/alerting/fundamentals/alertmanager/>`_.
+Grafana can send alerts to Robusta for automatic enrichment and visualization.
 
-.. image:: /images/grafana-alertmanager-save-contact-point.png
+.. image:: /images/grafana-docs-robusta-ui.png
   :width: 600
   :align: center
 
-You need to configure two integrations: one to send alerts to Robusta and another to allow Robusta query metrics and create silences.
+
+This guide only covers integrating alerts from Grafana Alerting with Robusta, not configuring Robusta to query metrics from the relevant Grafana data source.
+
+After completing this tutorial, we recommend configuring a metrics integration according to the :ref:`standard instructions for your metrics backend <Integrating with Prometheus>`
 
 Prerequisite
 =================================
@@ -48,7 +51,7 @@ To configure it:
   :width: 600
   :align: center
 
-If everything worked, a notification should arrive in a Robusta UI stack or whatever destinations Robusta is connected to like stack MSTeams.
+If successful, you will receive a notification in the Robusta UI, Slack or any other destination configured in Robusta, such as Microsoft Teams.
 
 .. image:: /images/grafana-alertmanager-robusta-ui.png
   :width: 600
@@ -57,23 +60,22 @@ If everything worked, a notification should arrive in a Robusta UI stack or what
 6. Finally, click "Save contact point" to complete the Robusta integration.
 
 
-Configure Querying and Silencing
+Configure Silencing
 =================================================
 
-To configure metrics querying and creating silences, add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
+Modify and add the following config to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
 
 .. code-block:: yaml
 
     globalConfig: # this line should already exist
         # add the lines below
-        alertmanager_url: "https://alertmanager<url>.grafana.net"
         grafana_url: "https://<grafana url>.grafana.net"
-
-        prometheus_url: "https://prometheus<url>.grafana.net/api/prom"
-
-        # Create alert silencing when using Grafana alerts (optional)
+        # Create alert silencing when using Grafana alerts
         grafana_api_key: <YOUR GRAFANA EDITOR API KEY>
         alertmanager_flavor: grafana # (1)
+
+        # alertmanager_url: "https://alertmanager<url>.grafana.net"
+        # prometheus_url: "https://prometheus<url>.grafana.net/api/prom"
 
         # Add any labels that are relevant to the specific cluster (optional)
         # prometheus_additional_labels:
