@@ -82,5 +82,5 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
     if not node:
         logging.warning(f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}")
         return
-    graph_enrichment = create_node_graph_enrichment(params, node, metrics_legends_labels=["pod", "node"])
+    graph_enrichment = create_node_graph_enrichment(params, node, metrics_legends_labels=["instance"])
     pod_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Pod Resources")

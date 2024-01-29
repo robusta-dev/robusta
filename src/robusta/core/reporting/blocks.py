@@ -494,18 +494,14 @@ class PrometheusBlock(BaseBlock):
         super().__init__(data=data, metadata=metadata, vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
                          y_axis_type=y_axis_type, graph_name=graph_name)
 
-        self.set_metrics_legends_labels(legends_labels=metrics_legends_labels)
+        if metrics_legends_labels:
+            self.metadata["metrics_legends_labels"] = json.dumps(metrics_legends_labels)
 
     def dict(self, *args, **kwargs) -> Dict[str, Any]:
         obj_dict = super().dict()
         obj_dict["y_axis_type"] = str(self.y_axis_type) if self.y_axis_type else None
 
         return obj_dict
-
-    def set_metrics_legends_labels(self, legends_labels: List[str]):
-        jsonified_legends_labels = json.dumps(legends_labels)
-
-        self.metadata["metrics_legends_labels"] = jsonified_legends_labels
 
 
 class ScanReportRow(BaseModel):
