@@ -71,6 +71,7 @@ class RobustaRelay(BaseModel):
     slackSigningSecret: str = "your-signing-secret"
     syncActionAllowedOrigins: str
     provider: str
+    apiEndpointPrefix: str
     apiNodePort: int = 30313  # api.domain
     wsNodePort: int = 30314  # relay.domain
 
@@ -82,6 +83,7 @@ class RobustaRelay(BaseModel):
         storePW: str,
         db_endpoint_prefix: str,
         platform_endpoint_prefix: str,
+        api_endpoint_prefix: str,
     ):
         super().__init__(
             domain=domain,
@@ -90,6 +92,7 @@ class RobustaRelay(BaseModel):
             storeApiKey=anon_key,
             provider=provider,
             storePassword=storePW,
+            apiEndpointPrefix=api_endpoint_prefix,
         )
 
 
@@ -188,6 +191,7 @@ def gen_config(
         storePW=values.RELAY_PASSWORD,
         db_endpoint_prefix=db_endpoint_prefix,
         platform_endpoint_prefix=platform_endpoint_prefix,
+        api_endpoint_prefix=api_endpoint_prefix,
     )
     relayValues.apiNodePort = api_nport
     relayValues.wsNodePort = ws_nport
