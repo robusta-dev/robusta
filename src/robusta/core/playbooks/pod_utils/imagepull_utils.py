@@ -40,6 +40,7 @@ def get_pod_issue_message_and_reason(pod: Pod) -> Tuple[Optional[str], Optional[
                 pod.status.containerStatuses[0].state.waiting.message,
                 reason,
             )
+    return None, None
 
 
 def decompose_flag(flag: Flag) -> List[Flag]:
