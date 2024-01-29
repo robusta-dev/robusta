@@ -75,7 +75,7 @@ def oomkilled_container_graph_enricher(event: PodEvent, params: OOMGraphEnricher
         logging.error("Unable to find oomkilled container")
         return
     container_graph = get_oomkilled_graph(oomkilled_container, pod, params,
-                                          metrics_legends_labels=["Container"])
+                                          metrics_legends_labels=["container"])
     event.add_enrichment([container_graph], enrichment_type=EnrichmentType.graph, title="Container Info")
 
 
@@ -120,7 +120,7 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
             table_name="*Node Info*",
         )]
         if params.node_memory_graph:
-            node_graph = create_node_graph_enrichment(params, node, metrics_legends_labels=["Pod"])
+            node_graph = create_node_graph_enrichment(params, node, metrics_legends_labels=["pod"])
             blocks.append(node_graph)
 
         finding.add_enrichment(blocks, enrichment_type=EnrichmentType.node_info, title="Node Info")
@@ -154,7 +154,7 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
         )]
         if params.container_memory_graph:
             container_graph = get_oomkilled_graph(oomkilled_container, pod, params,
-                                                  metrics_legends_labels=["Pod"])
+                                                  metrics_legends_labels=["pod"])
             blocks.append(container_graph)
 
         finding.add_enrichment(blocks, enrichment_type=EnrichmentType.container_info,

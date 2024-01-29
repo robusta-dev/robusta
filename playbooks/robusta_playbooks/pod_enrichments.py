@@ -64,7 +64,7 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
         prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
         lines=limit_lines,
-        metrics_legends_labels=["Pod"]
+        metrics_legends_labels=["pod"]
     )
     pod_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Pod Resources")
 
@@ -82,5 +82,5 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
     if not node:
         logging.warning(f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}")
         return
-    graph_enrichment = create_node_graph_enrichment(params, node, metrics_legends_labels=["Pod", "Node"])
+    graph_enrichment = create_node_graph_enrichment(params, node, metrics_legends_labels=["pod", "node"])
     pod_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Pod Resources")
