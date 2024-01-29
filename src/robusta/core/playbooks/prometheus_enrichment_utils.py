@@ -167,7 +167,8 @@ def create_chart_from_prometheus_query(
     lines: Optional[List[XAxisLine]] = [],
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
-    hide_legends: Optional[bool] = False
+    hide_legends: Optional[bool] = False,
+    metrics_legends_labels: Optional[List[str]] = None,
 ) -> Tuple[pygal.Graph, PrometheusBlock]:
     starts_at: datetime
     ends_at: datetime
@@ -369,7 +370,7 @@ def create_chart_from_prometheus_query(
         )
     return chart, PrometheusBlock(data=prometheus_query_result, query=promql_query, y_axis_type=values_format,
                                   vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
-                                  graph_name=chart.title)
+                                  graph_name=chart.title, metrics_legends_labels=metrics_legends_labels)
 
 
 def __get_additional_labels_str(prometheus_params: PrometheusParams) -> str:
@@ -392,7 +393,8 @@ def create_graph_enrichment(
     lines: Optional[List[XAxisLine]] = [],
     chart_label_factory: Optional[ChartLabelFactory] = None,
     filter_prom_jobs: bool = False,
-    hide_legends: Optional[bool] = False
+    hide_legends: Optional[bool] = False,
+    metrics_legends_labels: Optional[List[str]] = None,
 ) -> GraphBlock:
     promql_query = __prepare_promql_query(labels, promql_query)
     chart, prom_block = create_chart_from_prometheus_query(
@@ -407,6 +409,7 @@ def create_graph_enrichment(
         chart_label_factory=chart_label_factory,
         filter_prom_jobs=filter_prom_jobs,
         hide_legends=hide_legends,
+        metrics_legends_labels=metrics_legends_labels,
     )
     chart_name = graph_title if graph_title else promql_query
     svg_name = f"{chart_name}.svg"
@@ -452,6 +455,7 @@ def create_resource_enrichment(
     prometheus_params: PrometheusParams,
     lines: Optional[List[XAxisLine]] = [],
     title_override: Optional[str] = None,
+    metrics_legends_labels: Optional[List[str]] = None,
 ) -> GraphBlock:
     combinations: Dict[ResourceKey, Optional[ChartOptions]] = {
         (ResourceChartResourceType.CPU, ResourceChartItemType.Pod): ChartOptions(
@@ -525,5 +529,6 @@ def create_resource_enrichment(
         lines=lines,
         chart_label_factory=chart_label_factories.get(combination),
         filter_prom_jobs=True,
+        metrics_legends_labels=metrics_legends_labels,
     )
     return graph_enrichment

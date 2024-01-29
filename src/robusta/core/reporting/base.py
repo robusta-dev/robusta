@@ -94,6 +94,10 @@ class EnrichmentType(Enum):
     graph = "graph"
     node_info = "node_info"
     container_info = "container_info"
+    k8s_events = "k8s_events"
+    alert_labels = "alert_labels"
+    diff = "diff"
+    text_file = "text_file"
 
 
 class Enrichment:

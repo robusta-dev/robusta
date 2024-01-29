@@ -212,6 +212,8 @@ def default_enricher(alert: PrometheusKubernetesAlert):
             ),
         ],
         annotations={SlackAnnotations.ATTACHMENT: True},
+        enrichment_type=EnrichmentType.alert_labels,
+        title="Alert labels"
     )
 
 

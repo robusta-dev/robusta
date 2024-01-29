@@ -8,6 +8,7 @@ from robusta.api import (
     RobustaJob,
     action,
 )
+from robusta.core.reporting.base import EnrichmentType
 
 
 class StressTestParams(ActionParams):
@@ -35,5 +36,6 @@ def http_stress_test(event: ExecutionBaseEvent, action_params: StressTestParams)
         failure=False,
     )
     if output:
-        finding.add_enrichment([FileBlock("result.txt", output)])
+        finding.add_enrichment([FileBlock("result.txt", output.encode())], enrichment_type=EnrichmentType.text_file,
+                               title="HTTP Tests Results")
     event.add_finding(finding)
