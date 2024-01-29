@@ -90,11 +90,10 @@ def replace_in_file(path, original, replacement):
     with open(path, "w") as w:
         w.write(text)
 
-def host_for_provider(component, domain, provider, scheme="https"):
-    if provider == "openshift":
-        return f"{scheme}://{component}-robusta.{domain}"
-    else:
-        return f"{scheme}://{component}.{domain}"
+
+def host_for_params(component, domain, scheme="https"):
+    return f"{scheme}://{component}.{domain}"
+
 
 @contextmanager
 def fetch_runner_logs(namespace: Optional[str], all_logs=False):
@@ -139,6 +138,9 @@ def get_runner_pod(namespace: Optional[str]) -> str:
     ).stdout.strip()
 
     if not output:
-        typer.secho(f"Could not find robusta pod in namespace {namespace}. Are you missing the --namespace flag correctly?", fg="red")
-    
+        typer.secho(
+            f"Could not find robusta pod in namespace {namespace}. Are you missing the --namespace flag correctly?",
+            fg="red",
+        )
+
     return output

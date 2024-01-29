@@ -10,7 +10,7 @@ import yaml
 from pydantic import BaseModel
 
 from robusta.cli.backend_profile import BackendProfile
-from robusta.cli.utils import host_for_provider
+from robusta.cli.utils import host_for_params
 
 ISSUER: str = "supabase"
 
@@ -51,12 +51,12 @@ class RobustaUI(BaseModel):
     provider: str
     service = {"nodePort": 30311}  # platform.domain
 
-    def __init__(self, domain: str, anon_key: str, provider: str):
+    def __init__(self, domain: str, anon_key: str, provider: str, api_endpoint_prefix: str, db_endpoint_prefix: str):
         super().__init__(
-            RELAY_HOST=host_for_provider("api", domain, provider),
-            SUPABASE_URL=host_for_provider("db", domain, provider),
+            RELAY_HOST=host_for_params(api_endpoint_prefix, domain),
+            SUPABASE_URL=host_for_params(db_endpoint_prefix, domain),
             SUPABASE_KEY=anon_key,
-            provider=provider
+            provider=provider,
         )
 
 
@@ -74,11 +74,19 @@ class RobustaRelay(BaseModel):
     apiNodePort: int = 30313  # api.domain
     wsNodePort: int = 30314  # relay.domain
 
-    def __init__(self, domain: str, anon_key: str, provider: str, storePW: str):
+    def __init__(
+        self,
+        domain: str,
+        anon_key: str,
+        provider: str,
+        storePW: str,
+        db_endpoint_prefix: str,
+        platform_endpoint_prefix: str,
+    ):
         super().__init__(
             domain=domain,
-            storeUrl=host_for_provider("db", domain, provider),
-            syncActionAllowedOrigins=host_for_provider("platform", domain, provider),
+            storeUrl=host_for_params(db_endpoint_prefix, domain),
+            syncActionAllowedOrigins=host_for_params(platform_endpoint_prefix, domain),
             storeApiKey=anon_key,
             provider=provider,
             storePassword=storePW,
@@ -143,6 +151,10 @@ def gen_config(
     db_nport: int = typer.Option(30312, help="node port Robusta database."),
     api_nport: int = typer.Option(30313, help="node port for Robusta API."),
     ws_nport: int = typer.Option(30314, help="node port for Robusta websocket."),
+    db_endpoint_prefix: str = typer.Option("db", help="Endpoint prefix for the db"),
+    api_endpoint_prefix: str = typer.Option("api", help="Endpoint prefix for the api"),
+    platform_endpoint_prefix: str = typer.Option("platform", help="Endpoint prefix for the platform"),
+    relay_ws_endpoint_prefix: str = typer.Option("relay", help="Endpoint prefix for the relay websocket"),
 ):
     """Create self host configuration files"""
     if provider not in {"on-prem", "gke", "eks", "openshift"}:
@@ -162,8 +174,8 @@ def gen_config(
     values = SelfHostValues(
         PROVIDER=provider,
         DOMAIN=domain,
-        SITE_URL=host_for_provider("platform", domain, provider),
-        PUBLIC_REST_URL=f"{host_for_provider('db', domain, provider)}/rest/v1/",
+        SITE_URL=host_for_params(platform_endpoint_prefix, domain),
+        PUBLIC_REST_URL=f"{host_for_params(db_endpoint_prefix, domain)}/rest/v1/",
         STORAGE_CLASS_NAME=storage_class_name,
         EKS_CERTIFICATE_ARN=eks_certificate_arn,
     )
@@ -174,18 +186,37 @@ def gen_config(
         anon_key=values.ANON_KEY,
         provider=provider,
         storePW=values.RELAY_PASSWORD,
+        db_endpoint_prefix=db_endpoint_prefix,
+        platform_endpoint_prefix=platform_endpoint_prefix,
     )
     relayValues.apiNodePort = api_nport
     relayValues.wsNodePort = ws_nport
 
-    uiValues = RobustaUI(domain=domain, anon_key=values.ANON_KEY, provider=provider)
+    uiValues = RobustaUI(
+        domain=domain,
+        anon_key=values.ANON_KEY,
+        provider=provider,
+        api_endpoint_prefix=api_endpoint_prefix,
+        db_endpoint_prefix=db_endpoint_prefix,
+    )
     uiValues.service["nodePort"] = platform_nport
 
     values_dict = values.dict(exclude_none=True)
     values_dict["robusta-ui"] = uiValues.dict()
     values_dict["robusta-relay"] = relayValues.dict()
+    values_dict["ENDPOINT_PREFIXES"] = {
+        "DB": db_endpoint_prefix,
+        "API": api_endpoint_prefix,
+        "PLATFORM": platform_endpoint_prefix,
+        "RELAY": relay_ws_endpoint_prefix,
+    }
 
-    backendProfile = BackendProfile.fromDomainProvider(domain=domain, provider=provider)
+    backendProfile = BackendProfile.fromDomainProvider(
+        domain=domain,
+        api_endpoint_prefix=api_endpoint_prefix,
+        platform_endpoint_prefix=platform_endpoint_prefix,
+        relay_endpoint_prefix=relay_ws_endpoint_prefix,
+    )
     self_host_approval_url = "https://api.robusta.dev/terms-of-service.html"
     typer.echo(f"By using this software you agree to the terms of service ({self_host_approval_url})\n")
     write_values_files("self_host_values.yaml", "robusta_cli_config.json", values_dict, backendProfile)
