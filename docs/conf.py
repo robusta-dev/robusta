@@ -80,6 +80,7 @@ redirects = {
     "community.html": "/master/help.html",
     "catalog/actions/grafana.html": "/master/playbook-reference/actions/grafana.html",
     "quick-start.html": "/master/setup-robusta/installation/index.html",
+    "tutorials/configuring-automations.html": "/master/configuration/defining-playbooks/playbook-basics.html",
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
