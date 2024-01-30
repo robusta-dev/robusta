@@ -24,7 +24,7 @@ To send alerts to Robusta, create an AlertManager configuration file with the na
    receivers:
      - name: 'robusta'
        webhook_configs:
-         - url: 'http://robusta-runner.default.svc.cluster.local/api/alerts'
+         - url: 'http://<helm-release-name>-runner.<namespace>.svc.cluster.local/api/alerts'
            send_resolved: true
      - name: 'default-receiver'
 
