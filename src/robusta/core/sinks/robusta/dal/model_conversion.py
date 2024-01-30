@@ -96,7 +96,7 @@ class ModelConversion:
             elif isinstance(block, GraphBlock):
                 if ENABLE_GRAPH_BLOCK:
                     structured_data.append(
-                        {"type": str(enrichment.enrichment_type), "title": enrichment.title, "data": block.graph_data.dict(), "metadata": block.graph_data.metadata, "version": 1.0}
+                        {"type": "prometheus", "data": block.graph_data.dict(), "metadata": block.graph_data.metadata, "version": 1.0}
                     )
                 else:
                     if block.is_text_file():
@@ -181,4 +181,6 @@ class ModelConversion:
             "file_type": "structured_data",
             "data": json.dumps(structured_data),
             "account_id": account_id,
+            "enrichment_type": enrichment.enrichment_type.name if enrichment.enrichment_type else None,
+            "title": enrichment.title if enrichment else None,
         }

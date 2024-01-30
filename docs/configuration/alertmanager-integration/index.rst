@@ -15,8 +15,8 @@ Integrating with Prometheus
    coralogix_managed_prometheus
    google-managed-prometheus
    victoria-metrics
+   grafana-alert-manager
    embedded-prometheus
-..    grafana-alert-manager
 
 
 
@@ -82,16 +82,16 @@ Setup Instructions
         VictoriaMetrics, running in the same K8s cluster as Robusta
 
 
+    .. grid-item-card:: :octicon:`book;1em;` Grafana AlertManager
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: grafana-alert-manager
+        :link-type: doc
+
+        Special instructions when using Grafana alerts
+
     .. grid-item-card:: :octicon:`book;1em;` Embedded Prometheus
         :class-card: sd-bg-light sd-bg-text-light
         :link: embedded-prometheus
         :link-type: doc
 
         All-in-one package of Robusta + kube-prometheus-stack (optional)
-
-    .. .. grid-item-card:: :octicon:`book;1em;` Grafana AlertManager
-    ..     :class-card: sd-bg-light sd-bg-text-light
-    ..     :link: grafana-alert-manager
-    ..     :link-type: doc
-
-    ..     Special instructions when using Grafana alerts

@@ -4,6 +4,8 @@ import sys
 import typer
 from pydantic.main import BaseModel
 
+from robusta.cli.utils import host_for_params
+
 ROBUSTA_BACKEND_PROFILE = os.environ.get("ROBUSTA_BACKEND_PROFILE", "")
 
 
@@ -17,14 +19,16 @@ class BackendProfile(BaseModel):
     custom_profile: bool = False
 
     @classmethod
-    def fromDomain(cls, domain: str):
+    def fromDomainProvider(
+        cls, domain: str, api_endpoint_prefix: str, platform_endpoint_prefix: str, relay_endpoint_prefix: str
+    ):
         return cls(
-            robusta_cloud_api_host=f"https://api.{domain}",
-            robusta_ui_domain=f"https://platform.{domain}",
-            robusta_relay_ws_address=f"wss://relay.{domain}",
-            robusta_relay_external_actions_url=f"https://api.{domain}/integrations/generic/actions",
-            robusta_telemetry_endpoint=f"https://api.{domain}/telemetry",
-            robusta_store_token_url=f"https://api.{domain}/auth/server/tokens",
+            robusta_cloud_api_host=host_for_params(api_endpoint_prefix, domain),
+            robusta_ui_domain=host_for_params(platform_endpoint_prefix, domain),
+            robusta_relay_ws_address=host_for_params(relay_endpoint_prefix, domain, "wss"),
+            robusta_relay_external_actions_url=f"{host_for_params(api_endpoint_prefix, domain)}/integrations/generic/actions",
+            robusta_telemetry_endpoint=f"{host_for_params(api_endpoint_prefix, domain)}/telemetry",
+            robusta_store_token_url=f"{host_for_params(api_endpoint_prefix, domain)}/auth/server/tokens",
         )
 
 

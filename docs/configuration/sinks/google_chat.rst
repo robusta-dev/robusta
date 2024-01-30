@@ -4,9 +4,9 @@ Google Chat
 Robusta can report issues and events in your Kubernetes cluster by sending
 messages via the `Google Chat <https://chat.google.com/>`_ app.
 
-  .. image:: /images/google-chat-sink.png
-    :width: 1000
-    :align: center
+.. image:: /images/google-chat-sink.png
+  :width: 1000
+  :align: center
 
 Prerequisites:
 --------------------------

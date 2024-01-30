@@ -11,12 +11,14 @@ from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
 
 from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
-from robusta.core.model.env_vars import (
-    DISCOVERY_WATCHDOG_CHECK_SEC,
-)
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
-from robusta.core.model.env_vars import CLUSTER_STATUS_PERIOD_SEC, DISCOVERY_CHECK_THRESHOLD_SEC, DISCOVERY_PERIOD_SEC, \
-    MANAGED_CONFIGURATION_ENABLED
+from robusta.core.model.env_vars import (
+    CLUSTER_STATUS_PERIOD_SEC,
+    DISCOVERY_CHECK_THRESHOLD_SEC,
+    DISCOVERY_PERIOD_SEC,
+    DISCOVERY_WATCHDOG_CHECK_SEC,
+    MANAGED_CONFIGURATION_ENABLED,
+)
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.k8s_operation_type import K8sOperationType
@@ -491,6 +493,7 @@ class RobustaSink(SinkBase):
 
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()
+            self.__pods_running_count = cluster_stats.pods
 
             cluster_status = ClusterStatus(
                 cluster_id=self.cluster_name,

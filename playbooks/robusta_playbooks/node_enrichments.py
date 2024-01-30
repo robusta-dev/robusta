@@ -154,7 +154,8 @@ def node_dmesg_enricher(event: NodeEvent, params: PodRunningParams):
     )
     if exec_result:
         event.add_enrichment(
-            [FileBlock(f"dmesg.log", exec_result.encode())],
+            [FileBlock(f"dmesg.log", exec_result.encode())], enrichment_type=EnrichmentType.text_file,
+            title="DMESG Info"
         )
 
 
@@ -199,5 +200,5 @@ def node_graph_enricher(node_event: NodeEvent, params: ResourceGraphEnricherPara
     Get a graph of a specific resource for this node.
     """
     node = node_event.get_node()
-    graph_enrichment = create_node_graph_enrichment(params, node)
+    graph_enrichment = create_node_graph_enrichment(params, node, metrics_legends_labels=["instance", "node"])
     node_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Node Resources")

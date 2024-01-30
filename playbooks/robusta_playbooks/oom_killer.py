@@ -53,10 +53,12 @@ CONTAINER_MEMORY_THRESHOLD = 0.92
 NODE_MEMORY_THRESHOLD = 0.95
 
 
-def get_oomkilled_graph(oomkilled_container: PodContainer, pod: Pod, params: OOMGraphEnricherParams) -> GraphBlock:
+def get_oomkilled_graph(oomkilled_container: PodContainer, pod: Pod, params: OOMGraphEnricherParams,
+                        metrics_legends_labels: Optional[List[str]] = None,) -> GraphBlock:
     if params.delay_graph_s > 0:
         time.sleep(params.delay_graph_s)
-    return create_container_graph(params, pod, oomkilled_container, show_limit=True)
+    return create_container_graph(params, pod, oomkilled_container, show_limit=True,
+                                  metrics_legends_labels=metrics_legends_labels)
 
 
 @action
@@ -72,7 +74,8 @@ def oomkilled_container_graph_enricher(event: PodEvent, params: OOMGraphEnricher
     if not oomkilled_container:
         logging.error("Unable to find oomkilled container")
         return
-    container_graph = get_oomkilled_graph(oomkilled_container, pod, params)
+    container_graph = get_oomkilled_graph(oomkilled_container, pod, params,
+                                          metrics_legends_labels=["container"])
     event.add_enrichment([container_graph], enrichment_type=EnrichmentType.graph, title="Container Info")
 
 
@@ -117,7 +120,7 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
             table_name="*Node Info*",
         )]
         if params.node_memory_graph:
-            node_graph = create_node_graph_enrichment(params, node)
+            node_graph = create_node_graph_enrichment(params, node, metrics_legends_labels=["pod"])
             blocks.append(node_graph)
 
         finding.add_enrichment(blocks, enrichment_type=EnrichmentType.node_info, title="Node Info")
@@ -150,11 +153,12 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
             table_name="*Container Info*",
         )]
         if params.container_memory_graph:
-            container_graph = get_oomkilled_graph(oomkilled_container, pod, params)
+            container_graph = get_oomkilled_graph(oomkilled_container, pod, params,
+                                                  metrics_legends_labels=["pod"])
             blocks.append(container_graph)
 
         finding.add_enrichment(blocks, enrichment_type=EnrichmentType.container_info,
-                             title="Container Info")
+                               title="Container Info")
 
     event.add_finding(finding)
     if params.attach_logs and container_name is not None:

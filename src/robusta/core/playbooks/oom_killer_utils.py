@@ -10,6 +10,7 @@ from robusta.api import (
     RegexReplacementStyle,
     RobustaPod,
 )
+from robusta.core.reporting.base import EnrichmentType
 
 
 def start_log_enrichment(
@@ -61,6 +62,8 @@ def start_log_enrichment(
         log_name += f"/{container}"
         event.add_enrichment(
             [FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())],
+            enrichment_type=EnrichmentType.text_file,
+            title="Pod Logs"
         )
         break
 
