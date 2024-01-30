@@ -443,7 +443,7 @@ kubewatch:
     limits:
       cpu: ~
   additional_env_vars: []
-  priorityClassName: default
+  priorityClassName: ""
   tolerations: []
   annotations: {}
   nodeSelector: ~
@@ -523,7 +523,7 @@ runner:
       cpu: ~
   additional_env_vars: []
   additional_env_froms: []
-  priorityClassName: default
+  priorityClassName: ""
   tolerations: []
   annotations: {}
   nodeSelector: ~
