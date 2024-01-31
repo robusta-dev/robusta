@@ -22,7 +22,7 @@ class PrometheusAnalyzer:
         return self._non_timed_query(promql_query)
 
     def _non_timed_query(self, promql_query: str) -> list:
-        results = self.prom.custom_query(promql_query, self.default_params)
+        results = self.prom.custom_query(promql_query, self.default_params)["result"]
         return results
 
     def _get_query_value(self, results: Optional[list], offset: int = 0) -> Optional[float]:
