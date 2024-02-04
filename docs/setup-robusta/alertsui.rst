@@ -13,14 +13,14 @@ This guide covers how it works, and also the steps involved to use this feature:
 
 How it works
 --------------------
-Enabling this feature will create a default set of PrometheusRule custom resources, based on the alerts in Kube Prometheus Stack.  You can later enable, disable, or modify them from the UI.
 
-In addition to this, we will add custom templates for various alerts that are not already present.
+Activating this feature automatically generates a predefined collection of PrometheusRule custom resources.
 
-.. note::
+These alerts are seamlessly synchronized from the Robusta platform to any cluster that has this functionality activated, by created PrometheusCRD files in the cluster.
 
-    Currently, Alerts UI only works with Robusta's :ref:`Embedded Prometheus Stack`.
+You can to enable, disable, or adjust these alerts through the user interface.
 
+The alerts originate from the Kube Prometheus Stack, with plans to add additional alerts in the future.
 
 Activate Alerts Interface
 --------------------------
@@ -38,36 +38,91 @@ Disable Default Prometheus Alert Rules
 
 Since Robusta creates new PrometheusRule custom resources, you must disable the default Kube Prometheus Stack alerts to avoid duplication of alerts.
 
-Add the following config to your ``generated_values.yaml``.
+Choose the appropriate instructions below, based on whether you use the Prometheus bundled with Robusta or your own Prometheus.
 
-.. code-block:: yaml
+.. tab-set::
 
-    enabledManagedConfiguration: true # (1)
-    kube-prometheus-stack:
-        defaultRules:
+.. tab-set::
+   .. tab-item:: Robusta’s Prometheus
+
+      To start syncing alerts to your cluster and to avoid duplication, add the following snippet to Robusta’s Helm values file named ``generated_values.yaml``:
+
+      .. code-block:: yaml
+
+        enabledManagedConfiguration: true # Enable managed alerts (See 1.)
+        kube-prometheus-stack: # those rules are now managed by Robusta
+          defaultRules:
             rules:
-            alertmanager: false
-            etcd: false
-            configReloaders: false
-            general: false
-            kubeApiserverSlos: false
-            kubeControllerManager: false
-            kubeProxy: false
-            kubernetesApps: false
-            kubernetesResources: false
-            kubernetesStorage: false
-            kubernetesSystem: false
-            kubeSchedulerAlerting: false
-            kubeStateMetrics: false
-            network: false
-            nodeExporterAlerting: false
-            prometheus: false
-            prometheusOperator: false
+              alertmanager: false
+              etcd: false
+              configReloaders: false
+              general: false
+              kubeApiserverSlos: false
+              kubeControllerManager: false
+              kubeProxy: false
+              kubernetesApps: false
+              kubernetesResources: false
+              kubernetesStorage: false
+              kubernetesSystem: false
+              kubeSchedulerAlerting: false
+              kubeStateMetrics: false
+              network: false
+              nodeExporterAlerting: false
+              prometheus: false
+              prometheusOperator: false
 
-.. code-annotations::
-    1. Enables creation of Robusta managed PrometheusRule custom resources in your cluster. The previous step only enables it in the UI.
+      Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
-Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
+   .. tab-item:: External Prometheus
+
+      First, ensure you have the Prometheus operator installed by running the following command:
+
+      .. code-block:: bash
+
+         kubectl get crd | grep prometheus
+
+      If you're using kube-prometheus-stack and its default alerts, add the following to its configuration to avoid duplication:
+
+      .. code-block:: yaml
+
+        defaultRules: # those rules are now managed by Robusta
+            rules:
+              alertmanager: false
+              etcd: false
+              configReloaders: false
+              general: false
+              kubeApiserverSlos: false
+              kubeControllerManager: false
+              kubeProxy: false
+              kubernetesApps: false
+              kubernetesResources: false
+              kubernetesStorage: false
+              kubernetesSystem: false
+              kubeSchedulerAlerting: false
+              kubeStateMetrics: false
+              network: false
+              nodeExporterAlerting: false
+              prometheus: false
+              prometheusOperator: false
+
+      Adjust your Prometheus configuration so it will pick up Robusta's PrometheusRule files:
+
+      .. code-block:: yaml
+
+        prometheus:
+            ruleNamespaceSelector: {}
+            ruleSelector: {}
+            ruleSelectorNilUsesHelmValues: false
+
+      Note: These changes allow Prometheus to collect rules from all namespaces and ignore label filters, ensuring it will pick Robusta's PrometheusRule files.
+
+      Finally, to start syncing alerts to your cluster, add the following snippet to Robusta’s Helm values file named ``generated_values.yaml``:
+
+      .. code-block:: yaml
+
+        enabledManagedConfiguration: true # Enable managed alerts
+
+      Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 
 Disabling the Feature
