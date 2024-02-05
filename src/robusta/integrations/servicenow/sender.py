@@ -8,27 +8,9 @@ from robusta.core.reporting.blocks import MarkdownBlock, LinkProp, LinksBlock, F
 
 from robusta.core.reporting.base import BaseBlock, Emojis, Finding, FindingStatus, FindingSeverity
 from robusta.core.reporting.consts import EnrichmentAnnotation
+from robusta.core.sinks.common.html_tools import HTMLBaseSender, HTMLTransformer, with_attr
 from robusta.core.sinks.servicenow.servicenow_sink_params import ServiceNowSinkParams
 from robusta.core.sinks.transformer import Transformer
-
-
-class ServiceNowTransformer(Transformer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.file_blocks: List[FileBlock] = []
-
-    def block_to_html(self, block: BaseBlock) -> str:
-        if isinstance(block, FileBlock):
-            self.file_blocks.append(block)
-            return f"<p>See attachment {block.filename}</p>"
-        elif isinstance(block, LinksBlock):
-            return (
-                f"<ul>\n"
-                + "\n".join(f'  <li><a href="{link.url}">{link.text}</a></li>' for link in block.links)
-                + "\n</ul>\n"
-            )
-        else:
-            return super().block_to_html(block)
 
 
 def robusta_severity_to_servicenow_iup(severity: FindingSeverity) -> Tuple[int, int, int]:
@@ -36,6 +18,9 @@ def robusta_severity_to_servicenow_iup(severity: FindingSeverity) -> Tuple[int, 
     # This is utterly bizarre, but it's how ServiceNow works - magical combinations
     # of numbers produce the correct "impact" value. For more info, see
     # https://www.servicenow.com/community/itsm-blog/managing-incident-priority/ba-p/2294101
+    # TODO should this actually be configurable in Robusta? Because it IS configurable
+    # in ServiceNow, with the values below being defaults, but some deployments might
+    # have it changed I suppose.
     return {
         FindingSeverity.HIGH: (1, 1, 1),
         FindingSeverity.MEDIUM: (2, 2, 3),
@@ -45,7 +30,7 @@ def robusta_severity_to_servicenow_iup(severity: FindingSeverity) -> Tuple[int, 
     }[severity]
 
 
-class ServiceNowSender:
+class ServiceNowSender(HTMLBaseSender):
     def __init__(self, params: ServiceNowSinkParams, account_id: str, cluster_name: str, signing_key: str):
         self.session = requests.Session()
         self.session.auth = requests.auth.HTTPBasicAuth(params.username, params.password.get_secret_value())
@@ -90,7 +75,7 @@ class ServiceNowSender:
                 enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
             blocks.extend(enrichment.blocks)
 
-        transformer = ServiceNowTransformer()
+        transformer = HTMLTransformer()
         return f"[code]<style>{self.get_css()}</style>{transformer.to_html(blocks).strip()}[/code]"
 
     def format_header(self, finding: Finding, status: FindingStatus) -> str:
@@ -120,7 +105,7 @@ class ServiceNowSender:
         for video_link in finding.video_links:
             links.append(LinkProp(text=f"{video_link.name} 🎬", url=video_link.url))
 
-        return LinksBlock(links=links)
+        return with_attr(LinksBlock(links=links), "html_class", html_class)
 
     @staticmethod
     def params_to_soap_payload(short_desc: str, message: str, caller_id: str, prio: FindingSeverity) -> Dict[str, str]:
@@ -137,52 +122,3 @@ class ServiceNowSender:
         if caller_id:
             result["caller_id"] = caller_id
         return result
-
-    def get_css(self):
-        return """
-*, body {
-    font-family: Monaco, Menlo, Consolas, "Courier New", monospace, sans-serif;
-    font-size: 12px;
-}
-.header code {
-    background-color: rgba(29, 28, 29, 0.04);
-    border: 1px solid rgba(29, 28, 29, 0.13);
-    border-radius: 3px;
-    box-sizing: border-box;
-    color: rgb(224, 30, 90);
-    padding-bottom: 1px;
-    padding-left: 3px;
-    padding-right: 3px;
-    padding-top: 2px;
-}
-.header b {
-    display: inline-block;
-    margin-left: 1.5em;
-}
-.header {
-    margin-bottom: 1.5em;
-}
-ul.header_links, ul.header_links li {
-    margin: 0;
-    padding: 0;
-}
-ul.header_links {
-    margin-bottom: 3em;
-}
-ul.header_links li {
-    border: 1px solid rgba(29, 28, 29, 0.3);
-    box-sizing: border-box;
-    border-radius: 4px;
-    color: rgb(29, 28, 29);
-    font-weight: bold;
-    display: inline;
-    padding-bottom: 2px;
-    padding-left: 4px;
-    padding-right: 4px;
-    padding-top: 4px;
-}
-ul.header_links li a {
-    color: #555;
-    text-decoration: none;
-}
-"""
