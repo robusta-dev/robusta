@@ -78,7 +78,7 @@ class MailSender(HTMLBaseSender):
             for f in attachment_files:
                 try:
                     f.close()
-                except:
+                except Exception:
                     pass
 
     def __create_finding_header(self, finding: Finding, status: FindingStatus) -> MarkdownBlock:
