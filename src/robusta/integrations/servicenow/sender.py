@@ -57,7 +57,7 @@ class ServiceNowSender(HTMLBaseSender):
         blocks: List[BaseBlock] = []
 
         if platform_enabled:
-            blocks.append(self.__create_links(finding, html_class="header_links"))
+            blocks.append(self.create_links(finding, html_class="header_links"))
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
         if finding.description:
@@ -84,28 +84,6 @@ class ServiceNowSender(HTMLBaseSender):
         status_name: str = "Prometheus Alert Firing" if status == FindingStatus.FIRING else "Resolved"
         status_str: str = f"{status.to_emoji()} {status_name}" if finding.add_silence_url else ""
         return f"{status_str} {sev.to_emoji()} {sev.name.upper()} {sev.to_emoji()} {title}"
-
-    def __create_links(self, finding: Finding, html_class: str):
-        links: List[LinkProp] = []
-        links.append(
-            LinkProp(
-                text="Investigate 🔎",
-                url=finding.get_investigate_uri(self.account_id, self.cluster_name),
-            )
-        )
-
-        if finding.add_silence_url:
-            links.append(
-                LinkProp(
-                    text="Configure Silences 🔕",
-                    url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
-                )
-            )
-
-        for video_link in finding.video_links:
-            links.append(LinkProp(text=f"{video_link.name} 🎬", url=video_link.url))
-
-        return with_attr(LinksBlock(links=links), "html_class", html_class)
 
     @staticmethod
     def params_to_soap_payload(short_desc: str, message: str, caller_id: str, prio: FindingSeverity) -> Dict[str, str]:

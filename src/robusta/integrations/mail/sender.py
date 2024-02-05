@@ -8,11 +8,8 @@ from apprise.attachment.AttachFile import AttachFile
 from apprise.AppriseAttachment import AppriseAttachment
 
 from robusta.core.reporting.base import BaseBlock, Emojis, Finding, FindingStatus
-from robusta.core.reporting.blocks import (
-    LinksBlock,
-    LinkProp,
-    MarkdownBlock,
-)
+from robusta.core.reporting.blocks import MarkdownBlock
+
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource
 from robusta.core.sinks.common.html_tools import HTMLBaseSender, HTMLTransformer, with_attr
 from robusta.core.sinks.transformer import Transformer
@@ -34,7 +31,7 @@ class MailSender(HTMLBaseSender):
         blocks.append(self.__create_finding_header(finding, status))
 
         if platform_enabled:
-            blocks.append(self.__create_links(finding, html_class="header_links"))
+            blocks.append(self.create_links(finding, html_class="header_links"))
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
         if finding.description:
@@ -97,28 +94,6 @@ class MailSender(HTMLBaseSender):
             "html_class",
             "header",
         )
-
-    def __create_links(self, finding: Finding, html_class: str):
-        links: List[LinkProp] = []
-        links.append(
-            LinkProp(
-                text="Investigate 🔎",
-                url=finding.get_investigate_uri(self.account_id, self.cluster_name),
-            )
-        )
-
-        if finding.add_silence_url:
-            links.append(
-                LinkProp(
-                    text="Configure Silences 🔕",
-                    url=finding.get_prometheus_silence_url(self.account_id, self.cluster_name),
-                )
-            )
-
-        for video_link in finding.video_links:
-            links.append(LinkProp(text=f"{video_link.name} 🎬", url=video_link.url))
-
-        return with_attr(LinksBlock(links=links), "html_class", html_class)
 
     def __build_html(self, body):
         return f"""<html>
