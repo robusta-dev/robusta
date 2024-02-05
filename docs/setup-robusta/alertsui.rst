@@ -14,13 +14,8 @@ This guide covers how it works, and also the steps involved to use this feature:
 How it works
 --------------------
 
-Activating this feature automatically generates a predefined collection of PrometheusRule custom resources.
-
-These alerts are seamlessly synchronized from the Robusta platform to any cluster that has this functionality activated, by created PrometheusCRD files in the cluster.
-
-You can to enable, disable, or adjust these alerts through the user interface.
-
-The alerts originate from the Kube Prometheus Stack, with plans to add additional alerts in the future.
+This feature, once enabled, generates a predefined set of PrometheusRule resources that the Robusta platform seamlessly syncs to your cluster through PrometheusCRD files.
+It allows you to adjust or control these alerts, which are based on the Kube Prometheus Stack, via the UI.
 
 Activate Alerts Interface
 --------------------------
@@ -81,10 +76,14 @@ Choose the appropriate instructions below, based on whether you use the Promethe
 
          kubectl get crd | grep prometheus
 
-      If you're using kube-prometheus-stack and its default alerts, add the following to its configuration to avoid duplication:
+      To make sure Prometheus picks up Robusta's rule files and avoid duplication, add the following to the kube-prometheus-stack configuration:
 
       .. code-block:: yaml
 
+        prometheus: # collect rules from all namespaces and ignore label filters
+            ruleNamespaceSelector: {}
+            ruleSelector: {}
+            ruleSelectorNilUsesHelmValues: false
         defaultRules: # those rules are now managed by Robusta
             rules:
               alertmanager: false
@@ -104,17 +103,6 @@ Choose the appropriate instructions below, based on whether you use the Promethe
               nodeExporterAlerting: false
               prometheus: false
               prometheusOperator: false
-
-      Adjust your Prometheus configuration so it will pick up Robusta's PrometheusRule files:
-
-      .. code-block:: yaml
-
-        prometheus:
-            ruleNamespaceSelector: {}
-            ruleSelector: {}
-            ruleSelectorNilUsesHelmValues: false
-
-      Note: These changes allow Prometheus to collect rules from all namespaces and ignore label filters, ensuring it will pick Robusta's PrometheusRule files.
 
       Finally, to start syncing alerts to your cluster, add the following snippet to Robusta’s Helm values file named ``generated_values.yaml``:
 
