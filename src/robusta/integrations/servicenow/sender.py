@@ -4,7 +4,6 @@ import urllib.parse
 from typing import Dict, List, Tuple
 
 import requests
-import zeep
 from requests.auth import HTTPBasicAuth
 
 from robusta.core.reporting import FindingSource
@@ -39,9 +38,7 @@ def robusta_severity_to_servicenow_iup(severity: FindingSeverity) -> Tuple[int, 
 
 class ServiceNowSender(HTMLBaseSender):
     def __init__(self, params: ServiceNowSinkParams, account_id: str, cluster_name: str, signing_key: str):
-        self.session = requests.Session()
-        self.session.auth = requests.auth.HTTPBasicAuth(params.username, params.password.get_secret_value())
-        self.transport = zeep.transports.Transport(session=self.session)
+        self.auth = requests.auth.HTTPBasicAuth(params.username, params.password.get_secret_value())
         self.params = params
         self.account_id = account_id
         self.cluster_name = cluster_name
@@ -52,17 +49,22 @@ class ServiceNowSender(HTMLBaseSender):
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
 
-        # Part one: create the incident via SOAP
+        # Part one: create the incident
         transformer, message = self.format_message(finding, platform_enabled)
         header = self.format_header(finding, status)
         wsdl_url = f"https://{self.params.instance}.service-now.com/incident.do?WSDL"
-        client = zeep.CachingClient(wsdl_url, transport=self.transport)
-        soap_payload = self.params_to_soap_payload(header, message, self.params.caller_id, finding.severity)
-        response = client.service.insert(**soap_payload)
-        # TODO error handling
-        incident_sys_id = response["sys_id"]
 
-        # Part two: upload attachments via REST
+        payload = self.params_to_payload(header, message, self.params.caller_id, finding.severity)
+        url = f"https://{self.params.instance}.service-now.com/api/now/v1/table/incident"
+        response = requests.post(url, auth=self.auth, headers={"Content-Type": "application/json"}, json=payload)
+        if response.status_code != 201:
+            logging.error(
+                f"ServiceNow incident creation failure: status {response.status_code}, response body {response.text}"
+            )
+            return
+        incident_sys_id = response.json()["result"]["sys_id"]
+
+        # Part two: upload attachments and link them to the incident
         for file_block in transformer.file_blocks:
             # FIXME the mime-type guessing here is fragile, but we don't store
             # mime types within FileBlocks, unfortunately.
@@ -78,7 +80,7 @@ class ServiceNowSender(HTMLBaseSender):
             )
 
             response = requests.post(
-                url, auth=self.session.auth, data=file_block.contents,
+                url, auth=self.auth, data=file_block.contents,
                 headers={"Accept": "*/*", "Content-Type": mime_type}
             )
 
@@ -86,7 +88,6 @@ class ServiceNowSender(HTMLBaseSender):
                 logging.error(
                     f"ServiceNow attachment creation failure: status {response.status_code}, response body {response.text}"
                 )
-
 
     def format_message(self, finding: Finding, platform_enabled: bool) -> Tuple[HTMLTransformer, str]:
         blocks: List[BaseBlock] = []
@@ -121,7 +122,7 @@ class ServiceNowSender(HTMLBaseSender):
         return f"{status_str} {sev.to_emoji()} {sev.name.upper()} {sev.to_emoji()} {title}"
 
     @staticmethod
-    def params_to_soap_payload(short_desc: str, message: str, caller_id: str, prio: FindingSeverity) -> Dict[str, str]:
+    def params_to_payload(short_desc: str, message: str, caller_id: str, prio: FindingSeverity) -> Dict[str, str]:
         impact, urgency, priority = robusta_severity_to_servicenow_iup(prio)
         result = {
             "impact": impact,
