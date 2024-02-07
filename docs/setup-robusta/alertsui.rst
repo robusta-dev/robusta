@@ -14,8 +14,9 @@ This guide covers how it works, and also the steps involved to use this feature:
 How it works
 --------------------
 
-This feature, once enabled, generates a predefined set of PrometheusRule resources that the Robusta platform seamlessly syncs to your cluster through PrometheusCRD files.
-It allows you to adjust or control these alerts, which are based on the Kube Prometheus Stack, via the UI.
+Robusta will generate a predefined set of alerts and sync them to your clusters using PrometheusRule files (CRDs).
+Alerts are currently based on the Kube Prometheus Stack alerts.
+You can disable/enable alerts and change thresholds via the UI.
 
 Activate Alerts Interface
 --------------------------
@@ -44,7 +45,7 @@ Choose the appropriate instructions below, based on whether you use the Promethe
 
       .. code-block:: yaml
 
-        enabledManagedConfiguration: true # Enable managed alerts (See 1.)
+        enabledManagedConfiguration: true # Enable managed alerts
         kube-prometheus-stack: # those rules are now managed by Robusta
           defaultRules:
             rules:
@@ -76,7 +77,7 @@ Choose the appropriate instructions below, based on whether you use the Promethe
 
          kubectl get crd | grep prometheus
 
-      To make sure Prometheus picks up Robusta's rule files and avoid duplication, add the following to the kube-prometheus-stack configuration:
+      To make sure Prometheus picks up Robusta's rule files and avoid duplication, add the following to the Kube Prometheus Stack configuration:
 
       .. code-block:: yaml
 
