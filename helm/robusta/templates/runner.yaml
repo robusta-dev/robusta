@@ -176,6 +176,9 @@ spec:
       {{- if .Values.runner.tolerations }}
       tolerations:  {{ toYaml .Values.runner.tolerations | nindent 8 }}
       {{- end }}
+      {{- if .Values.runner.priorityClassName }}
+      priorityClassName: {{ .Values.runner.priorityClassName }}
+      {{- end }}
 {{- if .Values.playbooksPersistentVolume }}
 ---
 apiVersion: v1
