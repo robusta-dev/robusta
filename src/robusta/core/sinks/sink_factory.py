@@ -17,6 +17,8 @@ from robusta.core.sinks.pagerduty import PagerdutyConfigWrapper, PagerdutySink
 from robusta.core.sinks.robusta import RobustaSink, RobustaSinkConfigWrapper
 from robusta.core.sinks.rocketchat.rocketchat_sink import RocketchatSink
 from robusta.core.sinks.rocketchat.rocketchat_sink_params import RocketchatSinkConfigWrapper
+from robusta.core.sinks.servicenow.servicenow_sink import ServiceNowSink
+from robusta.core.sinks.servicenow.servicenow_sink_params import ServiceNowSinkConfigWrapper
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.sink_config import SinkConfigBase
 from robusta.core.sinks.slack import SlackSink, SlackSinkConfigWrapper
@@ -49,6 +51,7 @@ class SinkFactory:
         MailSinkConfigWrapper: MailSink,
         PushoverSinkConfigWrapper: PushoverSink,
         GoogleChatSinkConfigWrapper: GoogleChatSink,
+        ServiceNowSinkConfigWrapper: ServiceNowSink,
     }
 
     @classmethod
