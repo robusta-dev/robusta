@@ -73,11 +73,13 @@ class FileBlock(BaseBlock):
 
     filename: str
     contents: bytes
+    metadata: Optional[dict]
 
     def __init__(
         self,
         filename: str,
         contents: bytes,
+        metadata: Optional[dict] = None,
         **kwargs,
     ):
         """
@@ -87,6 +89,7 @@ class FileBlock(BaseBlock):
         super().__init__(
             filename=filename,
             contents=contents,
+            metadata=metadata,
             **kwargs,
         )
 

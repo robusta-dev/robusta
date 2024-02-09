@@ -1,6 +1,7 @@
 import logging
 import time
 
+from playbooks.robusta_playbooks.restart_loop_reporter import _send_crash_report
 from robusta.api import (
     ExecutionBaseEvent,
     FileBlock,
@@ -78,4 +79,7 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
     pod = event.get_pod()
 
     logging.debug(f"received a logs_enricher action: {params}")
-    start_log_enrichment(event=event, params=params, pod=pod)
+    regex_replacement_style = (
+        RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
+    )
+    _send_crash_report(event, "logs_enricher", params.regex_replacer_patterns, regex_replacement_style)

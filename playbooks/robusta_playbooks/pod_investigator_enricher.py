@@ -12,11 +12,12 @@ from robusta.api import (
     MarkdownBlock,
     action,
     build_selector_query,
-    get_crash_report_blocks,
-    get_image_pull_backoff_blocks,
+    get_crash_report_enrichments,
+    get_image_pull_backoff_enrichments,
     get_job_all_pods,
-    get_pending_pod_blocks,
+    get_pending_pod_enrichment,
     parse_kubernetes_datetime_to_ms,
+    Enrichment
 )
 from robusta.core.playbooks.pod_utils.imagepull_utils import get_pod_issue_message_and_reason
 
@@ -89,7 +90,7 @@ def is_crashlooping(pod: Pod) -> bool:
         for container_status in all_statuses
         if container_status.state.waiting is not None
         and container_status.restartCount > 1
-        and "CrashloopBackOff" in container_status.state.waiting.reason
+        and "CrashLoopBackOff" in container_status.state.waiting.reason
     ]
     return len(crashlooping_containers) > 0
 
@@ -133,25 +134,29 @@ def report_pod_issue(
     # find pods with issues
     pods_with_issue = [pod for pod in pods if detect_pod_issue(pod) == issue]
     pod_names = [pod.metadata.name for pod in pods_with_issue]
+
+    if len(pods_with_issue) < 1:
+        logging.debug(f"`pods_with_issue` for found for issue: {issue}")
+        return
+
     expected_pods = get_expected_replicas(event)
-    message_string = f"{len(pod_names)}/{expected_pods} pod(s) are in {issue} state. "
+    message_string = f"{len(pod_names)}/{expected_pods} pod(s) are not ready"
     resource = event.get_resource()
     if resource.kind == "Job":
-        message_string = f"{len(pod_names)} pod(s) are in {issue} state. "
+        message_string = f"{len(pod_names)} pod(s) are not ready"
 
     # no need to report here if len(pods) != expected_pods since there are mismatch enrichers
 
-    blocks: List[BaseBlock] = [MarkdownBlock(message_string)]
     # get blocks from specific pod issue
-    additional_blocks = get_pod_issue_blocks(pods_with_issue[0])
+    pod_issues_enrichments = get_pod_issue_enrichments(pods_with_issue[0])
 
-    if additional_blocks:
-        blocks.append(MarkdownBlock(f"\n\n*{pod_names[0]}* was picked for investigation\n"))
-        blocks.extend(additional_blocks)
-        event.add_enrichment(blocks)
+    if pod_issues_enrichments:
+        issue_message, issues_enrichments = pod_issues_enrichments
+        blocks: List[BaseBlock] = [MarkdownBlock(f"{message_string}. {issue_message}")]
 
-    if reason:
-        event.extend_description(f"{reason}: {message}")
+        for enrichment in issues_enrichments:
+            blocks.extend(enrichment.blocks)
+            event.add_enrichment(blocks, enrichment_type=enrichment.enrichment_type, title=enrichment.title)
 
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
@@ -170,13 +175,21 @@ def get_expected_replicas(event: KubernetesResourceEvent) -> int:
     return 1
 
 
-def get_pod_issue_blocks(pod: Pod) -> Optional[List[BaseBlock]]:
+def get_pod_issue_enrichments(pod: Pod) -> Optional[Tuple[str, List[Enrichment]]]:
     if has_image_pull_issue(pod):
-        return get_image_pull_backoff_blocks(pod)
+        enrichment = get_image_pull_backoff_enrichments(pod)
+        if enrichment:
+            return "Pod could not run because image-pull-backoff", [enrichment]
     elif is_pod_pending(pod):
-        return get_pending_pod_blocks(pod)
+        enrichment = get_pending_pod_enrichment(pod)
+        if enrichment:
+            return "Pod could not run due to scheduling issue", [enrichment]
     elif is_crashlooping(pod):
-        return get_crash_report_blocks(pod)
+        enrichments = get_crash_report_enrichments(pod)
+        if enrichments:
+            return "Pod is crash looping", enrichments
     elif had_recent_crash(pod):
-        return get_crash_report_blocks(pod)
+        enrichments = get_crash_report_enrichments(pod)
+        if enrichments:
+            return "Pod is crash looping", enrichments
     return None

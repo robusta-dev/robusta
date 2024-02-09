@@ -5,7 +5,6 @@ from typing import List
 
 from hikaru.model.rel_1_26 import ContainerStatus, PodStatus
 from robusta.api import (
-    BaseBlock,
     Finding,
     FindingSeverity,
     FindingSource,
@@ -13,13 +12,11 @@ from robusta.api import (
     PodFindingSubject,
     RateLimitParams,
     action,
-    get_image_pull_backoff_blocks,
+    get_image_pull_backoff_enrichments,
 )
 from robusta.core.playbooks.pod_utils.imagepull_utils import (
     get_image_pull_backoff_container_statuses,
-    get_pod_issue_message_and_reason,
 )
-from robusta.core.reporting import MarkdownBlock
 
 
 def get_image_pull_backoff_container_statuses(status: PodStatus) -> List[ContainerStatus]:
@@ -55,7 +52,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
     pod_name = pod.metadata.name
     namespace = pod.metadata.namespace
 
-    blocks: List[BaseBlock] = get_image_pull_backoff_blocks(pod)
+    backoff_enrichment = get_image_pull_backoff_enrichments(pod)
 
     finding = Finding(
         title=f"Failed to pull at least one image in pod {pod_name} in namespace {namespace}",
@@ -64,8 +61,6 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
         aggregation_key="image_pull_backoff_reporter",
         subject=PodFindingSubject(pod),
     )
-    finding.add_enrichment(blocks)
-    message, reason = get_pod_issue_message_and_reason(pod)
-    if reason:
-        finding.add_enrichment([MarkdownBlock(f"{reason}: {message}")])
+    finding.add_enrichment(backoff_enrichment.blocks, enrichment_type=backoff_enrichment.enrichment_type,
+                           title=backoff_enrichment.title)
     event.add_finding(finding)
