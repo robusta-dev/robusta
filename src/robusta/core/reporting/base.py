@@ -98,6 +98,7 @@ class EnrichmentType(Enum):
     alert_labels = "alert_labels"
     diff = "diff"
     text_file = "text_file"
+    crash_info = "crash_info"
 
 
 class Enrichment:
