@@ -7,7 +7,8 @@ from typing import List, Optional, Tuple
 
 from hikaru.model.rel_1_26 import ContainerStatus, Event, EventList, Pod, PodStatus
 
-from robusta.core.reporting import BaseBlock, HeaderBlock, MarkdownBlock
+from robusta.core.reporting import BaseBlock, MarkdownBlock, TableBlock
+from robusta.core.reporting.base import EnrichmentType, Enrichment
 
 
 class ImagePullBackoffReason(Flag):
@@ -16,6 +17,7 @@ class ImagePullBackoffReason(Flag):
     NotAuthorized = 2
     ImageDoesntExist = 4
     TagNotFound = 8
+    Timeout = 16
 
 
 def get_image_pull_backoff_container_statuses(status: PodStatus) -> List[ContainerStatus]:
@@ -48,21 +50,19 @@ def decompose_flag(flag: Flag) -> List[Flag]:
     return members
 
 
-def get_image_pull_backoff_blocks(pod: Pod) -> Optional[List[BaseBlock]]:
-    blocks: List[BaseBlock] = []
+def get_image_pull_backoff_enrichments(pod: Pod) -> Optional[Enrichment]:
+    error_blocks: List[BaseBlock] = []
+    crash_info_table_blocks: List[BaseBlock] = []
     pod_name = pod.metadata.name
     namespace = pod.metadata.namespace
     image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(pod.status)
     investigator = ImagePullBackoffInvestigator(pod_name, namespace)
-    for container_status in image_pull_backoff_container_statuses:
-        investigation = investigator.investigate(container_status)
 
-        blocks.extend(
-            [
-                HeaderBlock(f"ImagePullBackOff in container {container_status.name}"),
-                MarkdownBlock(f"*Image:* {container_status.image}"),
-            ]
-        )
+    for container_status in image_pull_backoff_container_statuses:
+        crash_info_rows: List[List[str]] = \
+            [["Container", container_status.name], ["Image", container_status.image]]
+
+        investigation = investigator.investigate(container_status)
 
         # TODO: this happens when there is a backoff but the original events containing the actual error message are already gone
         # and all that remains is a backoff event without a detailed error message - maybe we should identify that case and
@@ -85,26 +85,46 @@ def get_image_pull_backoff_blocks(pod: Pod) -> Optional[List[BaseBlock]]:
 
         reason = investigation.reason
         error_message = investigation.error_message
-
+        # crash_info_rows.append(("Reason", event.reason))
         if reason != ImagePullBackoffReason.Unknown:
             reasons = decompose_flag(reason)
 
-            if len(reasons) == 1:
-                blocks.extend(
-                    [
-                        MarkdownBlock(f"*Reason:* {reason}"),
-                    ]
-                )
-            else:
-                line_separated_reasons = "\n".join([f"{r}" for r in reasons])
-                blocks.extend(
-                    [
-                        MarkdownBlock(f"*Possible reasons:*\n{line_separated_reasons}"),
-                    ]
-                )
+            if len(reasons):
+                backoff_reason = __imagepull_backoff_reason_to_fix(reason=reasons[0])
+
+                if backoff_reason:
+                    reason_text, fix = backoff_reason
+                    crash_info_rows.append(["Reason", reason_text])
+                    crash_info_rows.append(["Fix", fix])
+
         else:
-            blocks.append(MarkdownBlock(f"*Error message:* {container_status.name}:\n{error_message}"))
-    return blocks
+            error_blocks.append(MarkdownBlock(f"*Error message:* {container_status.name}:\n{error_message}"))
+
+        crash_info_table_blocks.append(TableBlock(
+            [[k, v] for (k, v) in crash_info_rows],
+            ["label", "value"],
+            table_name="",
+        ))
+
+    crash_info_table_blocks.extend(error_blocks)
+
+    return Enrichment(
+        enrichment_type=EnrichmentType.crash_info,
+        blocks=crash_info_table_blocks,
+        title="Container Image-Pull-Backoff Information")
+
+
+def __imagepull_backoff_reason_to_fix(reason: ImagePullBackoffReason) -> Optional[Tuple[str, str]]:
+    if (reason == ImagePullBackoffReason.ImageDoesntExist or
+            reason == ImagePullBackoffReason.ImageDoesntExist.RepoDoesntExist or
+            reason == ImagePullBackoffReason.TagNotFound):
+        return "Image not found", "Make sure the image repository, image name and image tag are correct."
+    if reason == ImagePullBackoffReason.NotAuthorized:
+        return "Unauthorized", 'The repo is access protected. Make sure to <a target="_blank" href="https:\/\/kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/">configure the correct image pull secrets</a>'
+    if reason == ImagePullBackoffReason.Timeout:
+        return "Timeout", 'If this does not resolved after a few minutes, make sure the image repository is responding.'
+
+    return None
 
 
 class ImagePullOffInvestigation:
@@ -163,6 +183,10 @@ class ImagePullBackoffInvestigator:
             "err_template": 'Error response from daemon: manifest for .*? not found: manifest unknown: Failed to fetch ".*?"',
             "reason": ImagePullBackoffReason.ImageDoesntExist | ImagePullBackoffReason.TagNotFound,
         },
+        {
+            "err_template": r'Error response from daemon: Get ".*?": net\/http: request canceled while waiting for connection \(Client\.Timeout exceeded while awaiting headers\)',
+            "reason": ImagePullBackoffReason.Timeout,  # Using the Timeout reason
+        }
     ]
 
     def __init__(self, pod_name: str, namespace: str):

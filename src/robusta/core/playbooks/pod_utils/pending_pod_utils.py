@@ -7,39 +7,28 @@ from hikaru.model.rel_1_26 import Event, EventList, Pod
 
 from robusta.core.model.pods import pod_other_requests, pod_requests
 from robusta.core.playbooks.common import get_event_timestamp
-from robusta.core.reporting.blocks import BaseBlock, MarkdownBlock
+from robusta.core.reporting import Enrichment
+from robusta.core.reporting.base import EnrichmentType
+from robusta.core.reporting.blocks import BaseBlock, MarkdownBlock, TableBlock
 
 
-def get_pending_pod_blocks(pod: Pod):
-    blocks: List[BaseBlock] = []
-    investigator = PendingInvestigator(pod)
-    all_reasons = investigator.investigate()
+def get_pending_pod_enrichment(pod: Pod) -> Optional[Enrichment]:
+    pending_rows: List[List[str]] = []
     message = get_unscheduled_message(pod)
-    blocks.append(MarkdownBlock(f"Pod {pod.metadata.name} could not be scheduled."))
+    pending_rows.append(["Pod", pod.metadata.name])
     if message:
-        blocks.append(MarkdownBlock(f"*Reason:* {message}"))
+        pending_rows.append(["Reason", message])
 
-    if all_reasons:
-        RESOURCE_REASONS = [
-            PendingPodReason.NotEnoughGPU,
-            PendingPodReason.NotEnoughCPU,
-            PendingPodReason.NotEnoughMemory,
-        ]
-        resource_related_reasons = [reason for reason in all_reasons if reason in RESOURCE_REASONS]
-        if resource_related_reasons:
-            requests = pod_requests(pod)
-            request_resources = []
-            if requests.cpu:
-                request_resources.append(f"{requests.cpu} CPU")
-            if requests.memory:
-                request_resources.append(f"{requests.memory} Memory")
-            other_requests = pod_other_requests(pod)  # for additional defined resources like GPU
-            if other_requests:
-                request_resources.extend([f"{value} {key}" for key, value in other_requests.items()])
-            resources_string = ", ".join(request_resources)
-            blocks.append(MarkdownBlock(f"*Pod requires:* {resources_string}"))
+    blocks = [TableBlock(
+        [[k, v] for (k, v) in pending_rows],
+        ["label", "value"],
+        table_name="",
+    )]
 
-    return blocks
+    return Enrichment(
+        enrichment_type=EnrichmentType.crash_info,
+        blocks=blocks,
+        title="Pod Unscheduled Information")
 
 
 def get_unscheduled_message(pod: Pod) -> Optional[str]:
