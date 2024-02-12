@@ -2,6 +2,7 @@ from io import BytesIO
 from unittest.mock import ANY, call, patch
 
 import pytest
+from apprise.attachment import AttachFile
 
 from robusta.core.reporting import Finding
 from robusta.core.reporting.blocks import (
@@ -11,7 +12,7 @@ from robusta.core.reporting.blocks import (
 )
 from robusta.core.sinks.mail.mail_sink import MailSink
 from robusta.core.sinks.mail.mail_sink_params import MailSinkParams, MailSinkConfigWrapper
-from robusta.integrations.mail.sender import MailTransformer
+from robusta.core.sinks.common.html_tools import HTMLTransformer
 
 # Rename import to avoid re-running tests.test_transformer.TestTransformer here via pytest discovery
 from tests.test_transformer import TestTransformer as _TestTransformer
@@ -42,7 +43,9 @@ def test_mail_sending(finding_resolved, sink):
         aggregation_key="1234",
         add_silence_url=True,
     )
-    with patch("robusta.integrations.mail.sender.apprise") as mock_apprise:
+    with patch("robusta.integrations.mail.sender.apprise") as mock_apprise, patch(
+        "robusta.integrations.mail.sender.AppriseAttachment"
+    ) as mock_attachment:
         sink.write_finding(finding, platform_enabled=True)
 
     mock_apprise.Apprise.assert_called_once_with()
@@ -54,7 +57,7 @@ def test_mail_sending(finding_resolved, sink):
         body=ANY,
         body_format="html",
         notify_type="success" if finding_resolved else "warning",
-        attach=mock_apprise.AppriseAttachment.return_value,
+        attach=mock_attachment.return_value,
     )
 
 
@@ -86,24 +89,26 @@ def test_mail_sending_attachments(sink):
     file_mocks = [FileMock(), FileMock()]
     file_mocks_iter = iter(file_mocks)
 
-    with patch("robusta.integrations.mail.sender.apprise") as mock_apprise, patch(
+    with patch("robusta.integrations.mail.sender.AppriseAttachment") as mock_attachment, patch(
         "robusta.integrations.mail.sender.tempfile.NamedTemporaryFile", new=lambda: next(file_mocks_iter)
-    ):
+    ), patch("robusta.integrations.mail.sender.AttachFile") as mock_attach_file:
         sink.write_finding(finding, platform_enabled=True)
 
-    mock_apprise.AppriseAttachment.assert_called_once_with()
-    attach = mock_apprise.AppriseAttachment.return_value
-    assert attach.add.call_args_list == [call("123"), call("456")]
+    mock_attachment.assert_called_once_with()
+    attach = mock_attachment.return_value
+    assert attach.add.call_args_list[0] == call(mock_attach_file.return_value)
+    assert attach.add.call_args_list[1] == call(mock_attach_file.return_value)
+    assert mock_attach_file.call_args_list == [call("123", name="file1.name"), call("456", name="file2.name")]
     assert file_mocks[0].closed
     assert file_mocks[0]._final_contents == b"contents1"
     assert file_mocks[1].closed
     assert file_mocks[1]._final_contents == b"contents2"
 
 
-class TestMailTransformer(_TestTransformer):
+class TestHTMLTransformer(_TestTransformer):
     @pytest.fixture()
     def transformer(self, request):
-        return MailTransformer()
+        return HTMLTransformer()
 
     @pytest.mark.parametrize(
         "block,expected_result",

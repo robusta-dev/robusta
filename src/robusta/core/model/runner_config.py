@@ -7,6 +7,7 @@ from robusta.core.playbooks.playbook_utils import get_env_replacement, replace_e
 from robusta.core.sinks.datadog.datadog_sink_params import DataDogSinkConfigWrapper
 from robusta.core.sinks.discord.discord_sink_params import DiscordSinkConfigWrapper
 from robusta.core.sinks.file.file_sink_params import FileSinkConfigWrapper
+from robusta.core.sinks.google_chat.google_chat_params import GoogleChatSinkConfigWrapper
 from robusta.core.sinks.jira.jira_sink_params import JiraSinkConfigWrapper
 from robusta.core.sinks.kafka.kafka_sink_params import KafkaSinkConfigWrapper
 from robusta.core.sinks.mattermost.mattermost_sink_params import MattermostSinkConfigWrapper
@@ -14,6 +15,8 @@ from robusta.core.sinks.msteams.msteams_sink_params import MsTeamsSinkConfigWrap
 from robusta.core.sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigWrapper
 from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper
+from robusta.core.sinks.rocketchat.rocketchat_sink_params import RocketchatSinkConfigWrapper
+from robusta.core.sinks.servicenow.servicenow_sink_params import ServiceNowSinkConfigWrapper
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper
 from robusta.core.sinks.mail.mail_sink_params import MailSinkConfigWrapper
 from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkConfigWrapper
@@ -21,6 +24,7 @@ from robusta.core.sinks.victorops.victorops_sink_params import VictoropsConfigWr
 from robusta.core.sinks.webex.webex_sink_params import WebexSinkConfigWrapper
 from robusta.core.sinks.webhook.webhook_sink_params import WebhookSinkConfigWrapper
 from robusta.core.sinks.yamessenger.yamessenger_sink_params import YaMessengerSinkConfigWrapper
+from robusta.core.sinks.pushover.pushover_sink_params import PushoverSinkConfigWrapper
 from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.playbook_definition import PlaybookDefinition
 from robusta.utils.base64_utils import is_base64_encoded
@@ -43,6 +47,7 @@ class RunnerConfig(BaseModel):
                 DataDogSinkConfigWrapper,
                 KafkaSinkConfigWrapper,
                 MsTeamsSinkConfigWrapper,
+                RocketchatSinkConfigWrapper,
                 OpsGenieSinkConfigWrapper,
                 TelegramSinkConfigWrapper,
                 WebhookSinkConfigWrapper,
@@ -55,6 +60,9 @@ class RunnerConfig(BaseModel):
                 JiraSinkConfigWrapper,
                 FileSinkConfigWrapper,
                 MailSinkConfigWrapper,
+                PushoverSinkConfigWrapper,
+                GoogleChatSinkConfigWrapper,
+                ServiceNowSinkConfigWrapper,
             ]
         ]
     ]

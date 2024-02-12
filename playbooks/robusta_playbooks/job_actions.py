@@ -1,10 +1,10 @@
 import logging
 from typing import List, Tuple
 
-from hikaru.model.rel_1_26 import Container, Job, JobSpec, JobStatus, ObjectMeta, PodSpec, PodTemplateSpec
+from hikaru.model.rel_1_26 import Container, EnvVar, Job, JobSpec, JobStatus, ObjectMeta, PodSpec, PodTemplateSpec
+
 from robusta.api import (
     ActionParams,
-    EnvVar,
     EventEnricherParams,
     FileBlock,
     JobEvent,
@@ -20,6 +20,7 @@ from robusta.api import (
     get_resource_events_table,
     to_kubernetes_name,
 )
+from robusta.core.reporting.base import EnrichmentType
 
 
 class JobParams(ActionParams):
@@ -137,7 +138,8 @@ def job_events_enricher(event: JobEvent, params: EventEnricherParams):
         max_events=params.max_events,
     )
     if events_table_block:
-        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
+                             enrichment_type=EnrichmentType.k8s_events, title="Job Events")
 
 
 class JobPodEnricherParams(EventEnricherParams, LogEnricherParams):

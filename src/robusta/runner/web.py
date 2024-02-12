@@ -5,7 +5,7 @@ from flask import Flask, abort, jsonify, request
 from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
-from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_REQUESTS
+from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_ALERTS, TRACE_INCOMING_REQUESTS
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
@@ -53,7 +53,7 @@ class Web:
     @app.route("/api/alerts", methods=["POST"])
     def handle_alert_event():
         req_json = request.get_json()
-        Web._trace_incoming("alerts", req_json)
+        Web._trace_incoming_alerts(req_json)
         alert_manager_event = AlertManagerEvent(**req_json)
         for alert in alert_manager_event.alerts:
             alert = Web._relabel_alert(alert)
@@ -99,6 +99,8 @@ class Web:
                 action_name=data["action_name"],
                 action_params=data.get("action_params", None),
                 sinks=data.get("sinks", None),
+                sync_response=data.get("sync_response", False),
+                no_sinks=data.get("no_sinks", False),
             )
         )
 
@@ -126,3 +128,11 @@ class Web:
         """
         if TRACE_INCOMING_REQUESTS:
             logging.info(f"{api}: {incoming_request}")
+
+    @staticmethod
+    def _trace_incoming_alerts(incoming_request):
+        """
+        Enable to trace incoming AlertManager alerts
+        """
+        if TRACE_INCOMING_ALERTS:
+            logging.info(f"Alerts: \n{incoming_request}\n")

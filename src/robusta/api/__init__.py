@@ -33,11 +33,13 @@ from robusta.core.model.base_params import (
     ResourceChartItemType,
     ResourceChartResourceType,
     ResourceGraphEnricherParams,
+    OOMGraphEnricherParams,
+    OomKillParams,
     TimedPrometheusParams,
     VideoEnricherParams,
 )
 from robusta.core.model.env_vars import (
-    ALERT_BUILDER_WORKERS,
+    CLUSTER_DOMAIN,
     CLUSTER_STATUS_PERIOD_SEC,
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
@@ -153,8 +155,11 @@ from robusta.core.reporting import (
     ScanReportBlock,
     ScanReportRow,
     TableBlock,
-    VideoLink,
+    VideoLink
 )
+
+from robusta.core.reporting.base import EnrichmentType
+from robusta.core.reporting.blocks import GraphBlock
 from robusta.core.reporting.action_requests import (
     ActionRequestBody,
     ExternalActionRequest,
@@ -182,6 +187,7 @@ from robusta.core.schedule.model import (
     ScheduledJob,
     SchedulingInfo,
 )
+from robusta.core.playbooks.node_playbook_utils import create_node_graph_enrichment
 from robusta.core.sinks import SinkBase, SinkBaseParams, SinkConfigBase
 from robusta.core.sinks.kafka import KafkaSink, KafkaSinkConfigWrapper, KafkaSinkParams
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesEvent, HelmReleasesTriggerEvent

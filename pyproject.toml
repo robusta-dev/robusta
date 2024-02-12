@@ -4,7 +4,7 @@ version = "0.0.0"
 description = ""
 authors = ["Natan Yellin <aantn@users.noreply.github.com>"]
 packages = [
-    { include = "robusta", from = "src"},
+    { include = "robusta", from = "src" },
 ]
 
 [tool.black]
@@ -34,7 +34,7 @@ pymsteams = "^0.1.16"
 supabase = { version = "^1.0.3", optional = true }
 tabulate = { version = "^0.8.10" }
 slack-sdk = { version = "^3.23.0" }
-Flask = { version = "^1.1.2", optional = true }
+Flask = { version = "^3.0.0", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
 better-exceptions = { version =  "^0.3.3", optional = true }
@@ -65,9 +65,10 @@ cryptography = "^36.0.0"
 PyJWT = "2.4.0"
 fpdf2 = "^2.7.1"
 attrs = "^23.1.0"
-prometrix = "0.1.10"
+prometrix = "0.1.15"
 hikaru-model-26 = "^1.1.1"
 apprise = "^1.5.0"
+rocketchat-api = "^1.30.0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
@@ -108,15 +109,13 @@ types-click-spinner = "^0.1.10"
 types-toml = "^0.10.2"
 types-tabulate = "^0.8.10"
 
-# There is a bug in jinga2 and markupsafe (explicitly markupsafe 2.1.1)
-markupsafe = "2.0.1"
-
 [tool.poetry.extras]
 all = ["Flask", "grafana-api", "watchdog", "dulwich", "better-exceptions", "CairoSVG", "tabulate", "kafka-python", "prometheus-api-client", "supabase", "datadog-api-client", "pygal", "tinycss", "cssselect", "rsa", "sentry-sdk", "poetry-core"]
 
 [tool.poetry.group.dev.dependencies]
 sphinx-jinja = { git = "https://github.com/robusta-dev/sphinx-jinja.git" }
 sphinx-reredirects = "^0.1.1"
+freezegun = "^1.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

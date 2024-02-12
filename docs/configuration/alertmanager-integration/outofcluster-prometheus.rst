@@ -3,15 +3,15 @@ Centralized Prometheus
 
 Follow this guide to connect Robusta to a central Prometheus (e.g. Thanos/Mimir), running outside the cluster monitored by Robusta.
 
-You will need to configure two integrations: a push integration and a pull integration. (Both are necessary.)
+You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
 
-Configure Push Integration
+Send Alerts to Robusta
 ==============================
 
-A push integration lets your central Prometheus send alerts to Robusta, as if they were in the same cluster:
+This integration lets your central Prometheus send alerts to Robusta, as if they were in the same cluster:
 
 1. Enable cloud-routing of alerts by setting ``disableCloudRouting: false`` in ``generated_values.yaml``.
-2. Verify that all alerts contain a label named ``cluster_name``, matching the :ref:`cluster_name defined in Robusta's configuration <Global Config>`. This is necessary to identify which robusta-runner should receive alerts.
+2. Verify that all alerts contain a label named ``cluster_name`` or ``cluster``, matching the :ref:`cluster_name defined in Robusta's configuration <Global Config>`. This is necessary to identify which robusta-runner should receive alerts.
 3. Edit the configuration for your centralized AlertManager:
 
 .. admonition:: alertmanager.yaml
@@ -49,7 +49,7 @@ A push integration lets your central Prometheus send alerts to Robusta, as if th
 .. include:: ./_pull_integration.rst
 
 Filtering Prometheus Queries by Cluster
------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the same centralized Prometheus is used for many clusters, you will want to add a cluster name to all queries.
 

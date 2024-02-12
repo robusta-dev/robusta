@@ -29,6 +29,10 @@ def replace_env_vars_values(values: Dict) -> Dict:
             env_var_value = get_env_replacement(value.get_secret_value())
             if env_var_value:
                 values[key] = SecretStr(env_var_value)
+        elif isinstance(value, dict):
+            env_var_value = replace_env_vars_values(value)
+            if env_var_value:
+                values[key] = env_var_value
 
     return values
 

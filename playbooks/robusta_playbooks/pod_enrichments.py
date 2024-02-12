@@ -13,6 +13,7 @@ from robusta.api import (
     create_node_graph_enrichment,
     create_resource_enrichment,
     pod_limits,
+    EnrichmentType
 )
 from robusta.core.model.pods import pod_requests
 
@@ -38,21 +39,21 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
         if params.resource_type == "CPU":
             if resource_limits.cpu > 0:
                 cpu_limit_in_bytes = resource_limits.cpu * 1024 * 1024
-                limit_line = XAxisLine(label="CPU Limit", value=cpu_limit_in_bytes)
+                limit_line = XAxisLine(label="Limit", value=cpu_limit_in_bytes)
                 limit_lines.append(limit_line)
             if resource_requests.cpu > 0:
                 request_cpu_limit_in_bytes = resource_requests.cpu * 1024 * 1024
-                limit_line = XAxisLine(label="CPU Request", value=request_cpu_limit_in_bytes)
+                limit_line = XAxisLine(label="Request", value=request_cpu_limit_in_bytes)
                 limit_lines.append(limit_line)
 
         elif params.resource_type == "Memory":
             if resource_limits.memory > 0:
                 memory_limit_in_bytes = resource_limits.memory * 1024 * 1024
-                limit_line = XAxisLine(label="Memory Limit", value=memory_limit_in_bytes)
+                limit_line = XAxisLine(label="Limit", value=memory_limit_in_bytes)
                 limit_lines.append(limit_line)
             if resource_requests.memory > 0:
                 request_memory_limit_in_bytes = resource_requests.memory * 1024 * 1024
-                limit_line = XAxisLine(label="Memory Request", value=request_memory_limit_in_bytes)
+                limit_line = XAxisLine(label="Request", value=request_memory_limit_in_bytes)
                 limit_lines.append(limit_line)
 
     graph_enrichment = create_resource_enrichment(
@@ -63,8 +64,9 @@ def pod_graph_enricher(pod_event: PodEvent, params: PodResourceGraphEnricherPara
         prometheus_params=params,
         graph_duration_minutes=params.graph_duration_minutes,
         lines=limit_lines,
+        metrics_legends_labels=["pod"]
     )
-    pod_event.add_enrichment([graph_enrichment])
+    pod_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Pod Resources")
 
 
 @action
@@ -80,5 +82,5 @@ def pod_node_graph_enricher(pod_event: PodEvent, params: ResourceGraphEnricherPa
     if not node:
         logging.warning(f"Node {pod.spec.nodeName} not found for pod {pod.metadata.name}")
         return
-    graph_enrichment = create_node_graph_enrichment(params, node)
-    pod_event.add_enrichment([graph_enrichment])
+    graph_enrichment = create_node_graph_enrichment(params, node, metrics_legends_labels=["instance"])
+    pod_event.add_enrichment([graph_enrichment], enrichment_type=EnrichmentType.graph, title="Pod Resources")

@@ -16,6 +16,8 @@ from hikaru import DiffDetail, DiffType
 from hikaru.model.rel_1_26 import HikaruDocumentBase
 from pydantic import BaseModel
 
+from robusta.core.model.base_params import ChartValuesFormat
+
 try:
     from tabulate import tabulate
 except ImportError:
@@ -165,7 +167,6 @@ class KubernetesDiffBlock(BaseBlock):
     """
     A diff between two versions of a Kubernetes object
     """
-
     diffs: List[DiffDetail]
     old: Optional[str]
     new: Optional[str]
@@ -175,6 +176,7 @@ class KubernetesDiffBlock(BaseBlock):
     num_additions: Optional[int]
     num_deletions: Optional[int]
     num_modifications: Optional[int]
+    kind: str
 
     # note that interesting_diffs might be a subset of the full diff between old and new
     def __init__(
@@ -183,6 +185,7 @@ class KubernetesDiffBlock(BaseBlock):
         old: Optional[HikaruDocumentBase],
         new: Optional[HikaruDocumentBase],
         name: str,
+        kind: str,
         namespace: str = None,
     ):
         """
@@ -206,18 +209,39 @@ class KubernetesDiffBlock(BaseBlock):
             num_additions=num_additions,
             num_deletions=num_deletions,
             num_modifications=num_modifications,
+            kind=kind,
         )
 
     def get_description(self):
-        if self.old is None:
-            return "Resource created"
-        elif self.new is None:
-            return "Resource deleted"
+        if not self.old:
+            return f"{self.kind} created"
+        elif not self.new:
+            return f"{self.kind} deleted"
         else:
-            return (
-                f"Updates to significant fields: {self.num_additions} additions, {self.num_deletions} deletions, "
-                f"{self.num_modifications} changes."
-            )
+            return self.__updated_description()
+
+    def __updated_description(self):
+        length = 5
+        updated_fields = []
+        for diff in self.diffs:
+            if diff.path:
+                # Stripping any integer values like '0', '1', '2', etc. from the path array which denotes array
+                # indices. eg: ['spec', 'template', 'spec', 'containers', '0', 'image']
+                stripped_path = [path for path in diff.path if not path.isdigit()]
+                if stripped_path:
+                    updated_fields.append(stripped_path[-1])
+
+        updated_fields_str = ""
+        if updated_fields:
+            updated_fields_str = f"\n ● Attributes: "
+
+            updated_fields_len = len(updated_fields)
+            if updated_fields_len < length:
+                updated_fields_str += f"{', '.join(updated_fields)}"
+            else:
+                updated_fields_str += f"{', '.join(updated_fields[:length])} ... (and {updated_fields_len - length} more)"
+
+        return f"{self.kind} updated{updated_fields_str}"
 
     @staticmethod
     def _obj_to_content(obj: Optional[HikaruDocumentBase]):
@@ -437,6 +461,11 @@ class LinksBlock(BaseBlock):
     links: List[LinkProp] = []
 
 
+class PrometheusBlockLineData(BaseBlock):
+    legend: str
+    value: Any
+
+
 class PrometheusBlock(BaseBlock):
     """
     Formatted prometheus query results with metadata
@@ -445,13 +474,34 @@ class PrometheusBlock(BaseBlock):
     data: PrometheusQueryResult
     metadata: Dict[str, str]
 
-    def __init__(self, data: PrometheusQueryResult, query: str):
+    vertical_lines: Optional[List[PrometheusBlockLineData]]
+    horizontal_lines: Optional[List[PrometheusBlockLineData]]
+    y_axis_type: Optional[ChartValuesFormat]
+    graph_name: Optional[str]
+
+    def __init__(self, data: PrometheusQueryResult, query: str,
+                 vertical_lines: Optional[List[PrometheusBlockLineData]] = None,
+                 horizontal_lines: Optional[List[PrometheusBlockLineData]] = None,
+                 y_axis_type: Optional[ChartValuesFormat] = None,
+                 graph_name: Optional[str] = None,
+                 metrics_legends_labels: Optional[List[str]] = None,
+                 ):
         """
         :param data: the PrometheusQueryResult generated created from a prometheus query
         :param query: the Prometheus query run
         """
         metadata = {"query-result-version": "1.0", "query": query}
-        super().__init__(data=data, metadata=metadata)
+        super().__init__(data=data, metadata=metadata, vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
+                         y_axis_type=y_axis_type, graph_name=graph_name)
+
+        if metrics_legends_labels:
+            self.metadata["metrics_legends_labels"] = json.dumps(metrics_legends_labels)
+
+    def dict(self, *args, **kwargs) -> Dict[str, Any]:
+        obj_dict = super().dict()
+        obj_dict["y_axis_type"] = str(self.y_axis_type) if self.y_axis_type else None
+
+        return obj_dict
 
 
 class ScanReportRow(BaseModel):
@@ -539,3 +589,22 @@ class EventsRef(BaseModel):
     namespace: Optional[str]
     name: str
     kind: str
+
+
+class GraphBlock(FileBlock):
+    graph_data: Optional[PrometheusBlock]
+
+    def __init__(
+            self,
+            filename: str,
+            contents: bytes,
+            graph_data: Optional[PrometheusBlock] = None,
+            **kwargs,
+    ):
+        super().__init__(
+            filename=filename,
+            contents=contents,
+            graph_data=graph_data,
+            **kwargs,
+        )
+

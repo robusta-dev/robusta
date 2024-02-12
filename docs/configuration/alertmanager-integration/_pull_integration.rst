@@ -1,7 +1,7 @@
-Configure Pull Integration
+Configure Metric Querying
 ====================================
 
-A pull integration lets Robusta pull metrics and create silences.
+Metrics querying lets Robusta pull metrics and create silences.
 
 To configure it, add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
 
@@ -37,10 +37,10 @@ If you don't use the Robusta UI, trigger a `demo OOMKill alert <https://github.c
 and verify that Robusta sends a Slack/Teams message with a memory graph included. If so, everything is configured properly.
 
 Optional Settings
-^^^^^^^^^^^^^^^^^^
+=============================
 
 Authentication Headers
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If Prometheus and/or AlertManager require authentication, add the following to ``generated_values.yaml``:
 
@@ -50,10 +50,10 @@ If Prometheus and/or AlertManager require authentication, add the following to `
     prometheus_auth: Bearer <YOUR TOKEN> # Replace <YOUR TOKEN> with your actual token or use any other auth header as needed
     alertmanager_auth: Basic <USER:PASSWORD base64-encoded> # Replace <USER:PASSWORD base64-encoded> with your actual credentials, base64-encoded, or use any other auth header as needed
 
-The two settings may be configured independently.
+These settings may be configured independently.
 
 SSL Verification
------------------------
+^^^^^^^^^^^^^^^^^^^^
 By default, Robusta does not verify the SSL certificate of the Prometheus server.
 
 To enable SSL verification, add the following to Robusta's ``generated_values.yaml``:

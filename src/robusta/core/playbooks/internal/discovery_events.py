@@ -15,6 +15,7 @@ from robusta.api import (
 )
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.playbooks.common import get_event_timestamp, get_events_list
+from robusta.core.reporting.base import EnrichmentType
 
 
 @action
@@ -53,7 +54,7 @@ def event_history(event: ExecutionBaseEvent):
             warning_event.regarding.namespace,
         )
         if events_table:
-            finding.add_enrichment([events_table])
+            finding.add_enrichment([events_table], enrichment_type=EnrichmentType.k8s_events, title="Resource Events")
             event.add_finding(finding, True)
         reported_obj_history_list.append(warning_event_key)
 
@@ -63,7 +64,7 @@ def create_debug_event_finding(event: Event):
     Create finding based on the kubernetes event
     """
     k8s_obj = event.regarding
-
+    subject_type = FindingSubjectType.from_kind(k8s_obj.kind.lower()) if k8s_obj.kind else FindingSubjectType.TYPE_NONE
     finding = Finding(
         title=f"{event.reason} {event.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
         description=event.note,
@@ -73,7 +74,7 @@ def create_debug_event_finding(event: Event):
         aggregation_key=f"Kubernetes {event.type} Event",
         subject=FindingSubject(
             k8s_obj.name,
-            FindingSubjectType.from_kind(k8s_obj.kind.lower()),
+            subject_type,
             k8s_obj.namespace,
         ),
         creation_date=get_event_timestamp(event),

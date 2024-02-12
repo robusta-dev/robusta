@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from pydantic import BaseModel
 
@@ -23,11 +23,11 @@ class BaseTrigger(DocumentedModel):
     def get_trigger_event(self) -> str:
         pass
 
-    def should_fire(self, event: TriggerEvent, playbook_id: str):
+    def should_fire(self, event: TriggerEvent, playbook_id: str, build_context: Dict[str, Any]):
         return True
 
     def build_execution_event(
-        self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]]
+        self, event: TriggerEvent, sink_findings: Dict[str, List[Finding]], build_context: Dict[str, Any]
     ) -> Optional[ExecutionBaseEvent]:
         pass
 

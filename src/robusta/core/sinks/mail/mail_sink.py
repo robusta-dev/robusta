@@ -15,4 +15,4 @@ class MailSink(SinkBase):
         )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
-        self.sender.send_finding_via_email(finding, platform_enabled)
+        self.sender.send_finding(finding, platform_enabled)

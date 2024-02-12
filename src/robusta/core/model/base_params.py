@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, SecretStr, validator
 
+from robusta.integrations import openshift
 from robusta.utils.documented_pydantic import DocumentedModel
 
 
@@ -17,6 +18,8 @@ class ChartValuesFormat(Enum):
     Percentage = auto()
     CPUUsage = auto()
 
+    def __str__(self):
+        return self.name
 
 class ResourceChartItemType(Enum):
     """
@@ -148,6 +151,19 @@ class PrometheusParams(ActionParams):
             logging.info(f"Stripping '?' off prometheus_url_query_string: {v}")
         return v
 
+    @validator("prometheus_auth", allow_reuse=True, always=True)
+    def auto_openshift_token(cls, v: Optional[SecretStr]):
+        # If openshift is enabled, and the user didn't configure prometheus_auth, we will try to load the token from the service account
+        if v is not None:
+            return v
+
+        openshift_token = openshift.load_token()
+        if openshift_token is not None:
+            logging.debug(f"Using openshift token from {openshift.TOKEN_LOCATION} for prometheus auth")
+            return SecretStr(f"Bearer {openshift_token}")
+
+        return None
+
 
 class PrometheusDuration(BaseModel):
     """
@@ -194,7 +210,9 @@ class TimedPrometheusParams(PrometheusParams):
 class CustomGraphEnricherParams(PrometheusParams):
     """
     :var promql_query: Promql query. You can use $pod, $node and $node_internal_ip to template (see example). For more information, see https://prometheus.io/docs/prometheus/latest/querying/basics/
-    :var graph_title: A nicer name for the Prometheus query.
+    :var graph_title: A nicer name for the Prometheus query. The graph_title may include template variables like $name, $namespace, $node, $container etc...
+
+
     :var graph_duration_minutes: Graph duration is minutes.
     :var chart_values_format: Customize the y-axis labels with one of: Plain, Bytes, Percentage (see ChartValuesFormat)
 
@@ -206,6 +224,7 @@ class CustomGraphEnricherParams(PrometheusParams):
     graph_title: Optional[str] = None
     graph_duration_minutes: int = 60
     chart_values_format: str = "Plain"
+    hide_legends: Optional[bool] = False
 
 
 class ResourceGraphEnricherParams(PrometheusParams):
@@ -306,3 +325,22 @@ class LogEnricherParams(ActionParams):
     regex_replacement_style: Optional[str] = None
     previous: bool = False
     filter_regex: Optional[str] = None
+
+
+class OOMGraphEnricherParams(ResourceGraphEnricherParams):
+    """
+    :var delay_graph_s: the amount of seconds to delay getting the graph inorder to record the memory spike
+    """
+
+    delay_graph_s: int = 0
+
+
+class OomKillParams(OOMGraphEnricherParams):
+    attach_logs: Optional[bool] = False
+    container_memory_graph: Optional[bool] = False
+    node_memory_graph: Optional[bool] = False
+
+    def __init__(self, attach_logs: Optional[bool] = False, container_memory_graph: Optional[bool] = False,
+                 node_memory_graph: Optional[bool] = False, **kwargs):
+        super().__init__(attach_logs=attach_logs, container_memory_graph=container_memory_graph,
+                         node_memory_graph=node_memory_graph, resource_type=ResourceChartResourceType.Memory.name, **kwargs)

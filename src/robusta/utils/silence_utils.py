@@ -10,6 +10,7 @@ from pydantic import BaseModel, SecretStr, validator
 
 from robusta.core.exceptions import AlertsManagerNotFound, NoAlertManagerUrlFound
 from robusta.core.model.base_params import ActionParams
+from robusta.integrations import openshift
 from robusta.integrations.prometheus.utils import AlertManagerDiscovery, ServiceDiscovery
 
 # ref to api https://github.com/prometheus/alertmanager/blob/main/api/v2/openapi.yaml
@@ -72,6 +73,19 @@ class BaseSilenceParams(ActionParams):
         if v.endswith("/"):
             return v[:-1]
         return v
+
+    @validator("alertmanager_auth", allow_reuse=True, always=True)
+    def auto_openshift_token(cls, v: Optional[SecretStr]):
+        # If openshift is enabled, and the user didn't configure alertmanager_auth, we will try to load the token from the service account
+        if v is not None:
+            return v
+
+        openshift_token = openshift.load_token()
+        if openshift_token is not None:
+            logging.debug(f"Using openshift token from {openshift.TOKEN_LOCATION} for alertmanager auth")
+            return SecretStr(f"Bearer {openshift_token}")
+
+        return None
 
 
 class DeleteSilenceParams(BaseSilenceParams):

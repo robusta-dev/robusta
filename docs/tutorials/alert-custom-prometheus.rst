@@ -2,7 +2,7 @@
 
 .. _define-alerts:
 
-Define Custom Prometheus Alerts
+Create Custom Prometheus Alerts
 ##############################################
 
 You can define new alerts in two ways using Robusta:
@@ -20,75 +20,89 @@ we define a custom Robusta playbook that enhances the alert and makes it better.
 Prerequisites
 --------------
 
-One of the following:
+* Kube-Prometheus-Stack, installed via Robusta or seperately.
+* Enable global rule selection for the Prometheus operator. Add the following config to your ``generated_values.yaml``. (By default Prometheus Operator picks up only certain new alerts, here we tell it to pick up all new alerts)
 
-* Robusta's embedded Prometheus Stack
-* An external Prometheus integrated with Robusta, including the Prometheus Operator.
+  .. grid-item::
 
-Defining a Custom Alert
+      .. md-tab-set::
+
+          .. md-tab-item:: Robusta Prometheus
+
+            .. code-block:: yaml
+
+              kube-prometheus-stack:
+                prometheus:
+                  ruleNamespaceSelector: {} # (1)
+                  ruleSelector: {} # (2)
+                  ruleSelectorNilUsesHelmValues: false # (3)
+
+            .. code-annotations::
+              1. Add a namespace if you want Prometheus to identify rules created in specific namespaces. Leave ``{}`` to detect rules from any namespace.
+              2. Add a label if you want Prometheus to detect rules with a specific selector. Leave ``{}`` to detect rules with any label.
+              3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using helm values file.
+
+          .. md-tab-item:: Other Prometheus
+
+            .. code-block:: yaml
+
+              prometheus:
+                ruleNamespaceSelector: {}
+                ruleSelector: {}
+                ruleSelectorNilUsesHelmValues: false
+
+
+Creating a Custom Alert
 ---------------------------------------
 
-Prometheus Alerts are defined on Kubernetes using the *PrometheusRule CRD*.
+Prometheus Alerts are defined on Kubernetes using the PrometheusRule CRD.
 
-.. note:: What is the PrometheusRule CRD?
+As an example, we'll define an alert to find Pods with CPU usage over their request.
 
-    CRDs (Custom Resources Definitions) extend Kubernetes API with new resource types. You can apply and edit these
-    resources using ``kubectl`` just like Pods, Deployments, and other builtin resources.
+Save the following YAML into ``my_alert.yaml`` and run ``kubectl apply -f my_alert.yaml``
 
-    The Prometheus Operator adds CRDs to Kubernetes so you can control Prometheus alerts with ``kubectl``. Whenever you
-    apply or edit a ``PrometheusRule`` CRD, the operator will update Prometheus's configuration automatically.
+.. code-block:: yaml
 
-    When Robusta's embedded Prometheus Stack is enabled, the Prometheus Operator is installed automatically.
-
-.. Define a ``PrometheusRule`` to TODO.
-
-.. .. code-block:: yaml
-
-..     TODO
-
-.. Apply this PrometheusRule to your cluster using ``kubectl``:
-
-.. code-block:: bash
-
-    kubectl apply -f test-rule.yaml
+  apiVersion: monitoring.coreos.com/v1
+  kind: PrometheusRule
+  metadata:
+    name: container-cpu-alert
+    labels:
+      prometheus: kube-prometheus
+      role: alert-rules
+  spec:
+    groups:
+      - name: container-cpu-usage
+        rules:
+          - alert: KubeContainerCPURequestAlert
+            expr: |
+              (rate(container_cpu_usage_seconds_total{container="stress"}[5m]) /
+              on (container) kube_pod_container_resource_requests{resource="cpu", container="stress"}) > 0.75
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Container CPU usage is above 75% of request for 5 minutes"
+              description: "The container is using more than 75% of its requested CPU for 5 minutes."
 
 Testing the Alert
----------------------------------------
+-----------------------------
 
-Deploy a broken Pod that will deliberately trigger the Prometheus alert we defined:
+To test the alert, deploy a pod that uses more CPU than its request.
 
 .. code-block:: bash
 
     kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/cpu_throttling/throttling.yaml
+    
+You will know the alert was defined successfully when Prometheus fires an alert. When using Robusta, this means a notification will be received in all configured sinks.
 
-By default, Prometheus doesn't send alerts immediately. It waits X seconds to avoid sending flaky alerts that fire
-temporarily and then immediately stop.
-
-.. note:: Thresholds vs Events
-
-    Prometheus and Robusta work a little differently. Prometheus alerts based on thresholds and time periods,
-    so it has built-in alerting delays to avoid false-positives. On the other hand, Robusta is event-driven and
-    alerts based on discrete events. It notifies immediately without alerting delays and has rate-limiting features
-    to avoid sending duplicate messages.
-
-    When a Robusta playbook uses the ``on_prometheus_alert`` trigger, there is a delay on the Prometheus end before
-    alerts ever reach Robusta. Once the alert reaches Robusta, the playbook executes immediately.
-
-We can wait for the alert to fire or we can speed things up and simulate the alert, as if it fired immediately:
-
-.. code-block:: bash
-
-    robusta playbooks trigger prometheus_alert alert_name=CPUThrottlingHigh pod_name=webapp-deployment-dcffd6bcc-qqs2k
-
-Once the alert fires, a notification arrives in your configured sinks:
-
-.. image:: /images/highcputhrottling.png
+.. image:: /images/container_cpu_request_alert.png
   :width: 600
   :align: center
 
-Enriching the Alert
-------------------------------------
+Next Steps
+---------------
 
-In the next tutorial, we enhance this Prometheus alert with Robusta. Keep reading to learn more:
+In the next tutorial, discover how to further enhance this Prometheus alert with Robusta. Keep reading to learn more:
 
 * :ref:`Enrich Custom Prometheus Alerts`

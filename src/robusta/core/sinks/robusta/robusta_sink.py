@@ -6,8 +6,9 @@ import threading
 import time
 from typing import Dict, List, Optional, Union
 
+from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
-from hikaru.model.rel_1_26 import Node, Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Job
+
 from robusta.core.discovery.discovery import DISCOVERY_STACKTRACE_TIMEOUT_S, Discovery, DiscoveryResults
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.model.cluster_status import ActivityStats, ClusterStats, ClusterStatus
@@ -16,6 +17,7 @@ from robusta.core.model.env_vars import (
     DISCOVERY_CHECK_THRESHOLD_SEC,
     DISCOVERY_PERIOD_SEC,
     DISCOVERY_WATCHDOG_CHECK_SEC,
+    MANAGED_CONFIGURATION_ENABLED,
 )
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
@@ -28,6 +30,7 @@ from robusta.core.reporting.base import Finding
 from robusta.core.sinks.robusta.discovery_metrics import DiscoveryMetrics
 from robusta.core.sinks.robusta.prometheus_health_checker import PrometheusHealthChecker
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
+from robusta.core.sinks.robusta.rrm.rrm import RRM
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
@@ -61,7 +64,8 @@ class RobustaSink(SinkBase):
             robusta_token.account_id,
             robusta_token.email,
             robusta_token.password,
-            sink_config.robusta_sink,
+            sink_config.robusta_sink.name,
+            sink_config.robusta_sink.persist_events,
             self.cluster_name,
             self.signing_key,
         )
@@ -70,9 +74,11 @@ class RobustaSink(SinkBase):
         self.last_send_time = 0
         self.__discovery_period_sec = DISCOVERY_PERIOD_SEC
 
+        global_config = self.get_global_config()
         self.__prometheus_health_checker = PrometheusHealthChecker(
-            discovery_period_sec=self.__discovery_period_sec, global_config=self.get_global_config()
+            discovery_period_sec=self.__discovery_period_sec, global_config=global_config
         )
+        self.__rrm_checker = RRM(dal=self.dal, cluster=self.cluster_name, account_id=self.account_id)
         self.__pods_running_count: int = 0
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
@@ -214,7 +220,7 @@ class RobustaSink(SinkBase):
 
         except Exception as e:
             logging.error(
-                f"An error occured while publishing single service: name - {new_service.name}, namespace - {new_service.namespace}  service type: {new_service.service_type}  | {e}"
+                f"An error occurred while publishing single service: name - {new_service.name}, namespace - {new_service.namespace}  service type: {new_service.service_type}  | {e}"
             )
 
     def __publish_new_services(self, active_services: List[ServiceInfo]):
@@ -276,11 +282,11 @@ class RobustaSink(SinkBase):
                 timeout_delay=30,
             )
             if response != 200:
-                logging.error("Error occured while sending `helm release trigger event`")
+                logging.error("Error occurred while sending `helm release trigger event`")
             else:
                 logging.debug("Sent `helm release` trigger event.")
         except Exception:
-            logging.error("Error occured while sending `helm release` trigger event", exc_info=True)
+            logging.error("Error occurred while sending `helm release` trigger event", exc_info=True)
 
     def __discover_resources(self) -> DiscoveryResults:
         # discovery is using the k8s python API and not Hikaru, since it's performance is 10 times better
@@ -413,9 +419,11 @@ class RobustaSink(SinkBase):
     def __safe_delete_job(self, job_key):
         try:
             # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
-            self.__jobs_cache[job_key].deleted = True
-            self.dal.remove_deleted_job(self.__jobs_cache[job_key])
-            del self.__jobs_cache[job_key]
+            job_info = self.__jobs_cache.get(job_key, None)
+            if job_info:
+                job_info.deleted = True
+                self.dal.remove_deleted_job(job_info)
+                del self.__jobs_cache[job_key]
         except Exception:
             logging.error(f"Failed to delete job with service key {job_key}", exc_info=True)
 
@@ -460,7 +468,7 @@ class RobustaSink(SinkBase):
         for helm_release_key in curr_helm_releases.keys():
             current_helm_release = curr_helm_releases[helm_release_key]
             if (
-                self.__helm_releases_cache.get(helm_release_key) != current_helm_release
+                    self.__helm_releases_cache.get(helm_release_key) != current_helm_release
             ):  # helm_release not in the cache, or changed
                 helm_releases.append(current_helm_release)
                 self.__helm_releases_cache[helm_release_key] = current_helm_release
@@ -475,6 +483,7 @@ class RobustaSink(SinkBase):
             alertManagerConnection=prometheus_health_checker_status.alertmanager,
             prometheusConnection=prometheus_health_checker_status.prometheus,
             prometheusRetentionTime=prometheus_health_checker_status.prometheus_retention_time,
+            managedPrometheusAlerts=MANAGED_CONFIGURATION_ENABLED
         )
 
         # checking the status of relay connection
@@ -484,6 +493,7 @@ class RobustaSink(SinkBase):
 
         try:
             cluster_stats: ClusterStats = Discovery.discover_stats()
+            self.__pods_running_count = cluster_stats.pods
 
             cluster_status = ClusterStatus(
                 cluster_id=self.cluster_name,
@@ -523,7 +533,7 @@ class RobustaSink(SinkBase):
         logging.info("Cluster discovery watchdog initialized")
         while self.__active:
             if not self.is_healthy():
-                logging.warning(f"Unhealthy discovery, restarting runner")
+                logging.warning("Unhealthy discovery, restarting runner")
                 self.__signal_discovery_process_stackdump()
                 StackTracer.dump()
                 # sys.exit and thread.interrupt_main doest stop robusta

@@ -20,6 +20,7 @@ from robusta.api import (
     action,
     get_resource_events_table,
 )
+from robusta.core.reporting.base import EnrichmentType
 
 
 class ScaleHPAParams(ActionParams):
@@ -129,7 +130,8 @@ def hpa_events_enricher(alert: PrometheusKubernetesAlert, params: EventEnricherP
         max_events=params.max_events,
     )
     if events_table_block:
-        alert.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True})
+        alert.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
+                             enrichment_type=EnrichmentType.k8s_events, title="HPA Events")
 
 
 @action

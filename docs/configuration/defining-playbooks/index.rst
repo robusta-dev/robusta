@@ -17,4 +17,4 @@ Learn how to define Robusta playbooks.
 List of All Triggers and Actions
 ---------------------------------
 
-Refer to :ref:`Playbook Reference<playbook-reference>`
+Refer to :ref:`Triggers Reference` or :ref:`Actions Reference`

@@ -228,7 +228,7 @@ class Transformer:
             set_normal_test_style(pdf)
             pdf.multi_cell(w=0, txt=config, border=0)
 
-        def write_table(pdf: FPDF, rows: list[list[str]]):
+        def write_table(pdf: FPDF, rows: List[list[str]]):
             pdf.set_draw_color(table_color)
             set_normal_test_style(pdf)
             with pdf.table(

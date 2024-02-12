@@ -17,7 +17,6 @@ from robusta.core.playbooks.trigger import Trigger
 from robusta.core.reporting import MarkdownBlock
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.consts import SYNC_RESPONSE_SINK
-from robusta.core.sinks.robusta import RobustaSink
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.config import Registry
@@ -46,12 +45,13 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         execution_response = None
         execution_event: Optional[ExecutionBaseEvent] = None
         sink_findings: Dict[str, List[Finding]] = defaultdict(list)
+        build_context: Dict[str, Any] = {}
         for playbook in playbooks:
-            fired_trigger = self.__get_fired_trigger(trigger_event, playbook.triggers, playbook.get_id())
+            fired_trigger = self.__get_fired_trigger(trigger_event, playbook.triggers, playbook.get_id(), build_context)
             if fired_trigger:
                 execution_event = None
                 try:
-                    execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings)
+                    execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings, build_context)
                     # sink_findings needs to be shared between playbooks.
                     # build_execution_event returns a different instance because it's running in a child process
                     execution_event.sink_findings = sink_findings
@@ -248,17 +248,19 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 playbooks_errors_count.labels(source).inc()
             except PrometheusNotFound as e:
                 logging.error(str(e))
-                execution_event.add_enrichment(
-                    [
-                        MarkdownBlock(
-                            text="Robusta couldn't connect to the Prometheus client, check if the service is "
-                            "available. If it is, please add to *globalConfig* in *generated_values.yaml* "
-                            "the cluster *prometheus_url*. For example:\n"
-                            "```globalConfig:\n"
-                            "\tprometheus_url: http://prometheus-server.monitoring.svc.cluster.local:9090```"
-                        )
-                    ]
-                )
+
+                if not execution_event.is_sink_findings_empty():
+                    execution_event.add_enrichment(
+                        [
+                            MarkdownBlock(
+                                text="Robusta couldn't connect to the Prometheus client, check if the service is "
+                                "available. If it is, please add to *globalConfig* in *generated_values.yaml* "
+                                "the cluster *prometheus_url*. For example:\n"
+                                "```globalConfig:\n"
+                                "\tprometheus_url: http://prometheus-server.monitoring.svc.cluster.local:9090```"
+                            )
+                        ]
+                    )
                 execution_event.response = self.__error_resp(
                     ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.name, ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.value, log=False
                 )
@@ -281,9 +283,10 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         trigger_event: TriggerEvent,
         playbook_triggers: List[Trigger],
         playbook_id: str,
+        build_context: Dict[str, Any],
     ) -> Optional[BaseTrigger]:
         for trigger in playbook_triggers:
-            if trigger.get().should_fire(trigger_event, playbook_id):
+            if trigger.get().should_fire(trigger_event, playbook_id, build_context):
                 return trigger.get()
         return None
 
@@ -311,6 +314,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                         sink_info = sinks_info[sink_name]
                         sink_info.type = sink.__class__.__name__
                         sink_info.findings_count += 1
+
+                        if sink.params.stop:
+                            return
 
                 except Exception:  # Failure to send to one sink shouldn't fail all
                     logging.error(f"Failed to publish finding to sink {sink_name}", exc_info=True)

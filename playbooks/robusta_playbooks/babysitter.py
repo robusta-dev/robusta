@@ -22,6 +22,7 @@ from robusta.api import (
     is_matching_diff,
     FindingAggregationKey,
 )
+from robusta.core.reporting.base import EnrichmentType
 
 
 class BabysitterConfig(ActionParams):
@@ -76,7 +77,9 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
     should_get_subject_node_name = isinstance(event, NodeChangeEvent)
     # we take it from the original event, in case metadata is omitted
     meta = event.obj.metadata
-    diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj, meta.name, meta.namespace)
+    diff_block = KubernetesDiffBlock(filtered_diffs, old_obj, obj, meta.name,
+                                     kind=event.obj.kind,
+                                     namespace=meta.namespace)
     finding = Finding(
         title=f"{diff_block.resource_name} {event.operation.value}d",
         description=diff_block.get_description(),
@@ -86,5 +89,6 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         aggregation_key=FindingAggregationKey.CONFIGURATION_CHANGE_KUBERNETES_RESOURCE_CHANGE.value,
         subject=KubeObjFindingSubject(event.obj, should_add_node_name=should_get_subject_node_name),
     )
-    finding.add_enrichment([diff_block], annotations={"operation": event.operation})
+    finding.add_enrichment([diff_block], annotations={"operation": event.operation},
+                           enrichment_type=EnrichmentType.diff, title="Kubernetes Manifest Change")
     event.add_finding(finding)

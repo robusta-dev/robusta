@@ -2,8 +2,6 @@ import signal
 
 from robusta.core.model.env_vars import (
     ADDITIONAL_CERTIFICATE,
-    ALERT_BUILDER_WORKERS,
-    ALERTS_WORKERS_POOL,
     ENABLE_TELEMETRY,
     ROBUSTA_TELEMETRY_ENDPOINT,
     SEND_ADDITIONAL_TELEMETRY,
@@ -14,6 +12,7 @@ from robusta.model.config import Registry
 from robusta.patch.patch import create_monkey_patches
 from robusta.runner.config_loader import ConfigLoader
 from robusta.runner.log_init import init_logging, logging
+from robusta.runner.process_setup import process_setup
 from robusta.runner.ssl_utils import add_custom_certificate
 from robusta.runner.telemetry_service import TelemetryLevel, TelemetryService
 from robusta.runner.web import Web
@@ -21,6 +20,7 @@ from robusta.utils.server_start import ServerStart
 
 
 def main():
+    process_setup()
     init_logging()
     ServerStart.set()
     if add_custom_certificate(ADDITIONAL_CERTIFICATE):
@@ -40,9 +40,6 @@ def main():
         )
     else:
         logging.info("Telemetry is disabled.")
-
-    if ALERTS_WORKERS_POOL:
-        logging.info(f"Running alerts workers pool of {ALERT_BUILDER_WORKERS}")
 
     Web.init(event_handler, loader)
 

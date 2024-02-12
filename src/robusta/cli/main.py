@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Union
 import certifi
 import typer
 import yaml
-from hikaru.model.rel_1_26 import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec
+from hikaru.model.rel_1_26 import Container, Job, JobSpec, ObjectMeta, PodSpec, PodTemplateSpec, SecurityContext
 from kubernetes import client, config
 from pydantic import BaseModel, Extra
 
@@ -217,9 +217,10 @@ def gen_config(
         token = json.loads(base64.b64decode(robusta_api_key))
         account_id = token.get("account_id", account_id)
 
-        sinks_config.append(
+        # Make sure the UI sink (if enabled) is the first one. See MAIN-1088.
+        sinks_config = [
             RobustaSinkConfigWrapper(robusta_sink=RobustaSinkParams(name="robusta_ui_sink", token=robusta_api_key))
-        )
+        ] + sinks_config
         enable_platform_playbooks = True
         disable_cloud_routing = False
 
@@ -287,6 +288,13 @@ def gen_config(
                 "value": backend_profile.robusta_telemetry_endpoint,
             },
         ]
+
+    if is_small_cluster:
+        setattr(values, "kube-prometheus-stack", {})
+        kube_stack = getattr(values, "kube-prometheus-stack")
+        kube_stack["prometheus"] = {
+            "prometheusSpec": {"resources": {"requests": {"memory": "300Mi"}, "limits": {"memory": "300Mi"}}},
+        }
 
     write_values_file(output_path, values)
 
@@ -426,7 +434,7 @@ def demo_alert(
         alertmanager_url = AlertManagerDiscovery.find_alert_manager_url()
         if not alertmanager_url:
             typer.secho(
-                "Alertmanager service could not be auto-discovered. " "Please use the --alertmanager_url parameter",
+                "Alertmanager service could not be auto-discovered. " "Please use the --alertmanager-url parameter",
                 fg="red",
             )
             return
@@ -493,6 +501,7 @@ def demo_alert(
                             name="alert-curl",
                             image=image,
                             command=command,
+                            securityContext=SecurityContext(runAsUser=2000),
                         )
                     ],
                     restartPolicy="Never",

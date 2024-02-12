@@ -3,21 +3,21 @@ Victoria Metrics
 
 This guide walks you through configuring `Victoria Metrics <https://victoriametrics.com/>`_ with Robusta.
 
-You will need to configure two integrations: both a push integration and a pull integration.
+You will need to configure two integrations: one to send alerts to Robusta and another to let Robusta query metrics and create silences.
 
-Configure Push Integration
+Send Alerts to Robusta
 ============================
 
-A push integration sends alerts to Robusta. To configure it, edit AlertManager's configuration:
+To configure, edit AlertManager's configuration:
 
 .. include:: ./_alertmanager-config.rst
 
 .. include:: ./_testing_integration.rst
 
-Configure Pull Integration
+Configure Metric Querying
 ====================================
 
-A pull integration lets Robusta pull metrics and create silences.
+Metrics querying lets Robusta pull metrics and create silences.
 
 Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple Upgrade>`.
 
@@ -41,3 +41,10 @@ Add the following to ``generated_values.yaml`` and :ref:`update Robusta <Simple 
 
 .. code-annotations::
     1. This is necessary for Robusta to create silences when using Grafana Alerts, because of minor API differences in the AlertManager embedded in Grafana.
+
+Optional Settings
+==================
+
+**Prometheus flags checks**
+
+.. include:: ./_prometheus_flags_check.rst

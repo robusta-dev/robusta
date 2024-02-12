@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 from robusta.core.playbooks.base_trigger import TriggerEvent
@@ -33,23 +33,23 @@ class WarningEventTrigger(EventAllChangesTrigger):
         self.exclude = exclude
         self.include = include
 
-    def should_fire(self, event: TriggerEvent, playbook_id: str):
-        should_fire = super().should_fire(event, playbook_id)
+    def should_fire(self, event: TriggerEvent, playbook_id: str, build_context: Dict[str, Any]):
+        should_fire = super().should_fire(event, playbook_id, build_context)
         if not should_fire:
             return should_fire
 
         if not isinstance(event, K8sTriggerEvent):
             return False
 
-        exec_event = self.build_execution_event(event, {})
+        if event.k8s_payload.obj.get("type", None) != "Warning":
+            return False
+
+        exec_event = self.build_execution_event(event, {}, build_context)
 
         if not isinstance(exec_event, EventChangeEvent):
             return False
 
         if not exec_event.obj or not exec_event.obj.regarding:
-            return False
-
-        if exec_event.get_event().type != "Warning":
             return False
 
         if self.operations and exec_event.operation.value not in self.operations:
