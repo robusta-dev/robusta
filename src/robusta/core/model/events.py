@@ -78,6 +78,9 @@ class ExecutionBaseEvent:
     def get_all_sinks(self):
         return self.all_sinks
 
+    def is_sink_findings_empty(self) -> bool:
+        return len(self.sink_findings) == 0
+
     def __prepare_sinks_findings(self):
         finding_id: uuid.UUID = uuid.uuid4()
         for sink in self.named_sinks:
