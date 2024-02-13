@@ -87,7 +87,7 @@ Manual upgrade instructions
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
     kubectl replace -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
 
-3. If you're upgrading from robusta v0.10.27 or below and using thanos please check if you need to adapt your config according to the `kube-prometheus-stack upgrade docs <https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md#from-51x-to-52x>`. 
+3. If you're upgrading from Robusta v0.10.27 or below and using thanos please check if you need to adapt your config according to the `kube-prometheus-stack upgrade docs <https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/README.md#from-51x-to-52x>`. 
 
 4. Update Robusta with Helm. If you've lost ``generated_values.yaml``, you can :ref:`extract it from the cluster.<where-is-generated-values>`
 
