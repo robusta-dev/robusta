@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
-
 from robusta.api import (
     IMAGE_REGISTRY,
     RELEASE_NAME,
@@ -29,6 +28,7 @@ from robusta.api import (
     action,
     format_unit,
 )
+from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
 IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.6.0")
@@ -224,9 +224,9 @@ def _generate_krr_env_vars(krr_secrets: Optional[List[KRRSecret]], secret_name: 
     ]
 
 
-def _generate_additional_env_args(krr_secrets: Optional[List[KRRSecret]]) -> Optional[str]:
+def _generate_additional_env_args(krr_secrets: Optional[List[KRRSecret]]) -> str:
     if not krr_secrets:
-        return None
+        return ""
     return " ".join(f"{secret.command_flag} '${secret.env_var_name}'" for secret in krr_secrets)
 
 
@@ -247,6 +247,7 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
     # needed for custom bearer token or Azure
     headers = PrometheusAuthorization.get_authorization_headers(prom_config)
     auth_header = headers["Authorization"] if "Authorization" in headers else ""
+
     if auth_header:
         krr_secrets.append(
             KRRSecret(
@@ -296,23 +297,31 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     prom_config = generate_prometheus_config(params)
     additional_flags = get_krr_additional_flags(params)
 
-    python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} -q -f json "
+    python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} "
+    python_command += '-v -f json --width 2048'
+
     if params.prometheus_url:
-        python_command += f"-p {params.prometheus_url}"
+        python_command += f" -p {params.prometheus_url}"
 
-    # adding env var of auth token from Secret
-    env_var = []
-    krr_secrets = _generate_prometheus_secrets(prom_config)
-    python_command += " " + _generate_cmd_line_args(prom_config)
+    env_var: List[EnvVar] = []
+    secret: Optional[JobSecret] = None
 
-    # creating secrets for auth
-    secret = _generate_krr_job_secret(scan_id, krr_secrets)
-    # setting env variables of krr to have secret
-    if secret:
-        env_var = _generate_krr_env_vars(krr_secrets, secret.name)
-        # adding secret env var in krr pod command
-        python_command += " " + _generate_additional_env_args(krr_secrets)
-    logging.debug(f"krr command '{python_command}'")
+    if IS_OPENSHIFT:
+        python_command += " --openshift"
+    else:
+        # adding env var of auth token from Secret
+        krr_secrets = _generate_prometheus_secrets(prom_config)
+        python_command += " " + _generate_cmd_line_args(prom_config)
+
+        # creating secrets for auth
+        secret = _generate_krr_job_secret(scan_id, krr_secrets)
+        # setting env variables of krr to have secret
+        if secret:
+            env_var = _generate_krr_env_vars(krr_secrets, secret.name)
+            # adding secret env var in krr pod command
+            python_command += " " + _generate_additional_env_args(krr_secrets)
+
+    logging.info(f"krr command '{python_command}'")
 
     resources = ResourceRequirements(
         limits={
@@ -346,6 +355,13 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         logs = RobustaJob.run_simple_job_spec(
             spec, "krr_job" + scan_id, params.timeout, secret, custom_annotations=params.custom_annotations
         )
+
+        # NOTE: We need to remove the logs before the json result
+        end_logs_string = "Result collected, displaying..."  # This is the last line shown in the logs
+        returning_result = logs.find(end_logs_string)
+        if returning_result != -1:
+            logs = logs[returning_result + len(end_logs_string) :]
+
         # Sometimes we get warnings from the pod before the json result, so we need to remove them
         if "{" not in logs:
             raise json.JSONDecodeError("Failed to find json result in logs", "", 0)
@@ -355,17 +371,19 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
     except json.JSONDecodeError:
-        logging.error(f"*KRR scan job failed. Expecting json result.*\n\n Result:\n{logs}")
+        logging.exception(f"*KRR scan job failed. Expecting json result.*")
+        logging.error(f"Logs: {logs}")
         return
     except ValidationError:
-        logging.error("*KRR scan job failed. Result format issue.*\n\n", exc_info=True)
-        logging.error(f"\n {logs}")
+        logging.exception("*KRR scan job failed. Result format issue.*\n\n")
+        logging.error(f"Logs: {logs}")
         return
     except Exception as e:
         if str(e) == "Failed to reach wait condition":
-            logging.error(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*", exc_info=True)
+            logging.exception(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")
         else:
-            logging.error(f"*KRR scan job unexpected error.*\n {e}", exc_info=True)
+            logging.exception(f"*KRR scan job unexpected error.*\n {e}")
+        logging.error(f"Logs: {logs}")
         return
 
     scan_block = ScanReportBlock(

@@ -490,24 +490,18 @@ class RobustaJob(Job):
             spec=JobSpec(
                 backoffLimit=0,
                 template=PodTemplateSpec(spec=spec, metadata=ObjectMeta(annotations=custom_annotations)),
-                ttlSecondsAfterFinished=120,
+                ttlSecondsAfterFinished=1200,
             ),
         )
-        try:
-            job = job.createNamespacedJob(job.metadata.namespace).obj
-            job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
-            if job_secret:
-                job.create_job_owned_secret(job_secret)
-            job: RobustaJob = wait_until_job_complete(job, timeout)
-            job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
-            pod = job.get_single_pod()
-            return pod.get_logs()
-        finally:
-            job.deleteNamespacedJob(
-                job.metadata.name,
-                job.metadata.namespace,
-                propagation_policy="Foreground",
-            )
+
+        job = job.createNamespacedJob(job.metadata.namespace).obj
+        job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
+        if job_secret:
+            job.create_job_owned_secret(job_secret)
+        job: RobustaJob = wait_until_job_complete(job, timeout)
+        job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
+        pod = job.get_single_pod()
+        return pod.get_logs()
 
     @classmethod
     def run_simple_job(cls, image, command, timeout) -> str:
