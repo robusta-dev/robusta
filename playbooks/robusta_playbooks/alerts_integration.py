@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from string import Template
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Iterable
 
 import requests
 from hikaru.model.rel_1_26 import Node
@@ -500,5 +500,20 @@ def mention_enricher(event: KubernetesResourceEvent, params: MentionParams):
     if params.static_mentions:
         mentions = mentions.union(params.static_mentions)
 
+    mentions = mention_to_slack_format(mentions)
+
     message = params.message_template.replace("$mentions", " ".join(mentions))
     event.add_enrichment([MarkdownBlock(message)])
+
+
+def mention_to_slack_format(mentions: Iterable[str]) -> List[str]:
+    result = []
+    for mentions_spec in mentions:
+        for mention in mentions_spec.split('.'):
+            if mention.startswith("U"):
+                result.append(f"<@{mention}>")
+            elif mention.startswith("S"):
+                result.append(f"<!subteam^{mention}>")
+            else:
+                raise ValueError(f"unknown mention format: {mention}")
+    return result
