@@ -33,7 +33,7 @@ click-spinner = "^0.1.10"
 pymsteams = "^0.1.16"
 supabase = { version = "^1.0.3", optional = true }
 tabulate = { version = "^0.8.10" }
-slack-sdk = { version = "^3.7.0" }
+slack-sdk = { version = "^3.23.0" }
 Flask = { version = "^3.0.0", optional = true }
 grafana-api = { version = "^1.0.3", optional = true }
 watchdog =  { version = "^2.1.0", optional = true }
