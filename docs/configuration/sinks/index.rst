@@ -29,6 +29,7 @@ Sinks Reference
    rocketchat
    google_chat
    pushover
+   ServiceNow
    sinks-development
 
 
@@ -146,6 +147,11 @@ Click a sink for setup instructions.
     .. grid-item-card:: :octicon:`cpu;1em;` Pushover
         :class-card: sd-bg-light sd-bg-text-light
         :link: pushover
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` ServiceNow
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: ServiceNow
         :link-type: doc
 
 **Need support for a new sink?** `Tell us and we'll add it. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_

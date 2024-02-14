@@ -64,6 +64,7 @@ We can automate this with Robusta:
     1. See :ref:`on_pod_oom_killed<on_pod_oom_killed>`
     2. See :ref:`pod_graph_enricher<pod_graph_enricher>`
     3. See :ref:`pod_oom_killer_enricher<pod_oom_killer_enricher>`
+    4. See :ref:`mention_enricher<mention_enricher>`
 
 Here is the result in Slack:
 
