@@ -116,6 +116,7 @@ from robusta.core.playbooks.pod_utils.imagepull_utils import (
     get_image_pull_backoff_container_statuses,
 )
 from robusta.core.playbooks.pod_utils.pending_pod_utils import get_pending_pod_enrichment
+from robusta.core.playbooks.crash_reporter import send_crash_report
 from robusta.core.playbooks.prometheus_enrichment_utils import (
     XAxisLine,
     create_chart_from_prometheus_query,
