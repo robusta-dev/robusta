@@ -445,11 +445,11 @@ logs_enricher = action(logs_enricher)
 
 class MentionParams(ActionParams):
     """
-    :var static_mentions: List of Slack user ids/groups ids to be mentioned
-    :var mentions_label: A alert label, or Kubernetes resource label, in which the value contains a comma separated ids to mention
+    :var static_mentions: List of Slack user ids/subteam ids to be mentioned
+    :var mentions_label: An alert label, or Kubernetes resource label, in which the value contains a dot separated ids to mention
     :var message_template: Optional. Custom mention message. Default: `"Hey: $mentions"`
 
-    :example static_mentions: ["<@U44V9P1JJ1Z>", "<!subteam^S22H3Q3Q111>"]
+    :example static_mentions: ["U44V9P1JJ1Z", "S22H3Q3Q111"]
     """
 
     static_mentions: Optional[List[str]]
