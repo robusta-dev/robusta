@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 from string import Template
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Iterable
 
 import requests
 from hikaru.model.rel_1_26 import Node
@@ -445,11 +445,11 @@ logs_enricher = action(logs_enricher)
 
 class MentionParams(ActionParams):
     """
-    :var static_mentions: List of Slack user ids/groups ids to be mentioned
-    :var mentions_label: A alert label, or Kubernetes resource label, in which the value contains a comma separated ids to mention
+    :var static_mentions: List of Slack user ids/subteam ids to be mentioned
+    :var mentions_label: An alert label, or Kubernetes resource label, in which the value contains a dot separated ids to mention
     :var message_template: Optional. Custom mention message. Default: `"Hey: $mentions"`
 
-    :example static_mentions: ["<@U44V9P1JJ1Z>", "<!subteam^S22H3Q3Q111>"]
+    :example static_mentions: ["U44V9P1JJ1Z", "S22H3Q3Q111"]
     """
 
     static_mentions: Optional[List[str]]
@@ -500,5 +500,20 @@ def mention_enricher(event: KubernetesResourceEvent, params: MentionParams):
     if params.static_mentions:
         mentions = mentions.union(params.static_mentions)
 
+    mentions = mention_to_slack_format(mentions)
+
     message = params.message_template.replace("$mentions", " ".join(mentions))
     event.add_enrichment([MarkdownBlock(message)])
+
+
+def mention_to_slack_format(mentions: Iterable[str]) -> List[str]:
+    result = []
+    for mentions_spec in mentions:
+        for mention in mentions_spec.split('.'):
+            if mention.startswith("U"):
+                result.append(f"<@{mention}>")
+            elif mention.startswith("S"):
+                result.append(f"<!subteam^{mention}>")
+            else:
+                raise ValueError(f"unknown mention format: {mention}")
+    return result
