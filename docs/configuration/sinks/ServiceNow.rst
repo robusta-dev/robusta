@@ -24,7 +24,7 @@ Configuring the ServiceNow Sink
             caller_id: robusta_bot
 
 * ``instance``: Your ServiceNow instance identifier.
-* ``caller_id`` (optional): The ID of a user in ServiceNow to be used for the "Caller" field/column for incidents. Leaving this field unset will result in ServiceNow setting this field to "(empty)". Consider creating a separate user, such as "robusta_bot", to track incidents created by Robusta.
+* ``caller_id`` (optional): Used to specify a user for the "Caller" field in ServiceNow incidents. If not set, this field defaults to "(empty)". It's advisable to create a dedicated user, like "robusta_bot", to easily track incidents from Robusta.
 
 
 Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
