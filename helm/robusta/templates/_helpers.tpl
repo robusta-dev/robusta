@@ -54,19 +54,49 @@ active_playbooks:
   {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}
 {{- end }}
 
-{{- if .Values.priorityBuiltinPlaybooks }}
-{{ toYaml .Values.priorityBuiltinPlaybooks | indent 2 }}
+{{- $disabledPlaybooks := .Values.disabledPlaybooks }}
+
+{{- $myplaybooks := .Values.priorityBuiltinPlaybooks }}
+{{- $allPlaybooks := list }}
+{{- range $myplaybook := $myplaybooks }}
+{{- if or ( not (hasKey $myplaybook "name") ) (not (has $myplaybook.name $disabledPlaybooks)) }}
+{{- $allPlaybooks = append $allPlaybooks $myplaybook }}
+{{- end }}
+{{- end }}
+
+{{- if $allPlaybooks }}
+{{ toYaml $allPlaybooks | indent 2 }}
 {{- end }}
 
 {{- if .Values.customPlaybooks }}
 {{ toYaml .Values.customPlaybooks | indent 2 }}
 {{- end }}
 
-{{- if .Values.builtinPlaybooks }}
-{{ toYaml .Values.builtinPlaybooks | indent 2 }}
+{{- $myplaybooks := .Values.builtinPlaybooks }}
+{{- $allPlaybooks := list }}
+{{- range $myplaybook := $myplaybooks }}
+{{- if or ( not (hasKey $myplaybook "name") ) (not (has $myplaybook.name $disabledPlaybooks)) }}
+{{- $allPlaybooks = append $allPlaybooks $myplaybook }}
+{{- end }}
+{{- end }}
+
+{{- if $allPlaybooks }}
+{{ toYaml $allPlaybooks | indent 2 }}
 {{- end }}
 
 {{- if and .Values.enablePlatformPlaybooks .Values.platformPlaybooks }}
-{{ toYaml .Values.platformPlaybooks | indent 2 }}
+
+{{- $myplaybooks := .Values.platformPlaybooks }}
+{{- $allPlaybooks := list }}
+{{- range $myplaybook := $myplaybooks }}
+{{- if or ( not (hasKey $myplaybook "name") ) (not (has $myplaybook.name $disabledPlaybooks)) }}
+{{- $allPlaybooks = append $allPlaybooks $myplaybook }}
+{{- end }}
+{{- end }}
+
+{{- if $allPlaybooks }}
+{{ toYaml $allPlaybooks | indent 2 }}
+{{- end }}
+
 {{- end }}
 {{ end }}
