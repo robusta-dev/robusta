@@ -146,16 +146,60 @@ class Filterable:
             logging.error(f"Failed to evaluate matcher. Finding value: {value} matcher: {expression}")
             return False
 
-    def matches(self, requirements: Dict[str, Union[str, List[str]]]) -> bool:
-        invalid_attributes = self.get_invalid_attributes(list(requirements.keys()))
+    def matches(self, match_requirements: Dict[str, Union[str, List[str]]], scope_requirements) -> bool:
+        # 1. "scope" check
+        if scope_requirements is not None:
+            if self.scope_inc_exc_matches(scope_requirements.exclude, empty_list_default=False):
+                return False
+            if self.scope_inc_exc_matches(scope_requirements.include, empty_list_default=True):
+                return True
+
+        # 2. "match" check
+        invalid_attributes = self.get_invalid_attributes(list(match_requirements.keys()))
         if len(invalid_attributes) > 0:
             logging.warning(f"Invalid match attributes: {invalid_attributes}")
             return False
 
-        for attribute, expression in requirements.items():
+        for attribute, expression in match_requirements.items():
             if not self.attribute_matches(attribute, expression):
                 return False
         return True
+
+    def scope_inc_exc_matches(self, scope_inc_exc: Optional[list], empty_list_default: bool):
+        if scope_inc_exc is None:
+            return False
+        if scope_inc_exc == []:
+            return empty_list_default
+        return any(self.scope_matches(scope) for scope in scope_inc_exc)
+
+    def scope_matches(self, scope: Dict[str, List[str]]):
+        # scope is e.g. {'labels': ['app=oomki.*,app!=X.*Y$']}
+        # or {'name': ['pod-xyz.*$'], 'title': ['fdc.*a$', 'fdd.*b$'], 'type': ['ISSUE$']}
+        for attr_name, regexes in scope.items():
+            if attr_name not in self.attribute_map:
+                raise ValueError(f'Scope match on unknown attribute "{attr_name}"')
+            value = self.attribute_map[attr_name]
+            for regex in regexes:
+                if attr_name in ["labels", "annotations"]:
+                    return all(self.match_labels_annotations_iter(regex, value))
+                elif re.match(regex, value):
+                    return True
+        return False
+
+    def match_labels_annotations_iter(self, regex: str, value: Dict[str, str]):
+        for label_match in regex.split(","):
+            label_name, label_regex = label_match.split("=", 1)
+            if label_name.endswith("!"):  # label_name!=match_expr
+                label_name = label_name[:-1]
+                expect_match = False
+            else:
+                expect_match = True
+            label_value = value.get(label_name)
+            if label_value is None:
+                # No such label, so no match.
+                yield False
+            label_regex += "$"
+            yield bool(re.match(label_regex, label_value)) == expect_match
 
 
 class FindingSubject:
