@@ -25,6 +25,7 @@ robusta = "robusta.cli.main:app"
 # are known not to work on 3.11. Unfortunately this spec is shared between
 # the CLI and core, so we have to specify 3.8+.
 python = "^3.8, <3.11"
+setuptools = "^68.2.2"
 typer = "^0.4.1"
 colorlog = "^5.0.1"
 pydantic = "^1.8.1"
@@ -61,7 +62,7 @@ croniter = "^1.3.15"
 # and therefore requires gcc to install which we'd like to avoid
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
 dulwich =  { version = "0.20.28", optional = true }
-cryptography = "^36.0.0"
+cryptography = "^39.0.1"
 PyJWT = "2.4.0"
 fpdf2 = "^2.7.1"
 attrs = "^23.1.0"
@@ -83,7 +84,7 @@ witchhazel = "^2018.8.23"
 sphinx-autodoc-typehints = "^1.12.0"
 sphinxcontrib-images = "^0.9.4"
 jsonref = "^0.2"
-Pillow = "^9.0.0"
+Pillow = "^10.2.0"
 sphinxcontrib-mermaid = "^0.7.1"
 humanize = "^3.13.1"
 cssselect = "^1.1.0"

@@ -344,7 +344,13 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
 
     try:
         logs = RobustaJob.run_simple_job_spec(
-            spec, "krr_job" + scan_id, params.timeout, secret, custom_annotations=params.custom_annotations
+            spec,
+            "krr_job" + scan_id,
+            params.timeout,
+            secret,
+            custom_annotations=params.custom_annotations,
+            ttl_seconds_after_finished=43200,  # 12 hours
+            delete_job_post_execution=False,
         )
         # Sometimes we get warnings from the pod before the json result, so we need to remove them
         if "{" not in logs:
