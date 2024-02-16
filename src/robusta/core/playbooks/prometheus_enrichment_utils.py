@@ -63,7 +63,7 @@ def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_templat
     return promql_query
 
 
-def custom_query_range(
+def safe_custom_query_range(
     prometheus_params: PrometheusParams,
     query: str,
     start_time: datetime,
@@ -72,12 +72,12 @@ def custom_query_range(
     params: Optional[Dict[str, Any]] = None,
 ) -> PrometheusQueryResult:
     """
-    This function wraps prometheus custom_query_range
+    This function wraps prometheus safe_custom_query_range
     """
     prom = get_prometheus_connect(prometheus_params)
     params = params or {}
     prom.check_prometheus_connection(params)
-    result = prom.custom_query_range(query=query, start_time=start_time, end_time=end_time, step=step, params=params)
+    result = prom.safe_custom_query_range(query=query, start_time=start_time, end_time=end_time, step=step, params=params)
     return PrometheusQueryResult(data=result)
 
 
@@ -99,7 +99,7 @@ def run_prometheus_query(
     resolution = get_resolution_from_duration(query_duration)
 
     step = step if step else str(max(query_duration.total_seconds() / resolution, 1.0))
-    return custom_query_range(
+    return safe_custom_query_range(
         prometheus_params,
         promql_query,
         starts_at,
