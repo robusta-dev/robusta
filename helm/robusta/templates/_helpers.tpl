@@ -56,46 +56,46 @@ active_playbooks:
 
 {{- $disabledPlaybooks := .Values.disabledPlaybooks }}
 
-{{- $myplaybooks := .Values.priorityBuiltinPlaybooks }}
-{{- $allPlaybooks := list }}
-{{- range $myplaybook := $myplaybooks }}
+{{- $priorityPlaybooks := .Values.priorityBuiltinPlaybooks }}
+{{- $enabledPriorityPlaybooks := list }}
+{{- range $myplaybook := $priorityPlaybooks }}
 {{- if or ( not (hasKey $myplaybook "name") ) (not (has $myplaybook.name $disabledPlaybooks)) }}
-{{- $allPlaybooks = append $allPlaybooks $myplaybook }}
+{{- $enabledPriorityPlaybooks = append $enabledPriorityPlaybooks $myplaybook }}
 {{- end }}
 {{- end }}
 
-{{- if $allPlaybooks }}
-{{ toYaml $allPlaybooks | indent 2 }}
+{{- if $enabledPriorityPlaybooks }}
+{{ toYaml $enabledPriorityPlaybooks | indent 2 }}
 {{- end }}
 
 {{- if .Values.customPlaybooks }}
 {{ toYaml .Values.customPlaybooks | indent 2 }}
 {{- end }}
 
-{{- $myplaybooks := .Values.builtinPlaybooks }}
-{{- $allPlaybooks := list }}
-{{- range $myplaybook := $myplaybooks }}
+{{- $builtinPlaybooks := .Values.builtinPlaybooks }}
+{{- $enabledBuiltinPlaybooks := list }}
+{{- range $myplaybook := $builtinPlaybooks }}
 {{- if or ( not (hasKey $myplaybook "name") ) (not (has $myplaybook.name $disabledPlaybooks)) }}
-{{- $allPlaybooks = append $allPlaybooks $myplaybook }}
+{{- $enabledBuiltinPlaybooks = append $enabledBuiltinPlaybooks $myplaybook }}
 {{- end }}
 {{- end }}
 
-{{- if $allPlaybooks }}
-{{ toYaml $allPlaybooks | indent 2 }}
+{{- if $enabledBuiltinPlaybooks }}
+{{ toYaml $enabledBuiltinPlaybooks | indent 2 }}
 {{- end }}
 
 {{- if and .Values.enablePlatformPlaybooks .Values.platformPlaybooks }}
 
-{{- $myplaybooks := .Values.platformPlaybooks }}
-{{- $allPlaybooks := list }}
-{{- range $myplaybook := $myplaybooks }}
+{{- $platformPlaybooks := .Values.platformPlaybooks }}
+{{- $enabledPlatformPlaybooks := list }}
+{{- range $myplaybook := $platformPlaybooks }}
 {{- if or ( not (hasKey $myplaybook "name") ) (not (has $myplaybook.name $disabledPlaybooks)) }}
-{{- $allPlaybooks = append $allPlaybooks $myplaybook }}
+{{- $enabledPlatformPlaybooks = append $enabledPlatformPlaybooks $myplaybook }}
 {{- end }}
 {{- end }}
 
-{{- if $allPlaybooks }}
-{{ toYaml $allPlaybooks | indent 2 }}
+{{- if $enabledPlatformPlaybooks }}
+{{ toYaml $enabledPlatformPlaybooks | indent 2 }}
 {{- end }}
 
 {{- end }}

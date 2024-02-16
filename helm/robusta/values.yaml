@@ -98,7 +98,7 @@ playbooksPersistentVolumeSize: 4Gi
 # priority builtin playbooks for running before all playbooks
 priorityBuiltinPlaybooks:
 # playbooks for prometheus silencing
-- name: "SilencePrometheusAlerts"
+- name: "CommonPrometheusAlertsSilencer"
   triggers:
   - on_prometheus_alert:
       status: "all"
@@ -107,7 +107,7 @@ priorityBuiltinPlaybooks:
       names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
 
 # Silences for small/local clusters
-- name: "SilenceSmallClusterPrometheusAlerts"
+- name: "MiniClustersPrometheusAlertsSilencer"
   triggers:
   - on_prometheus_alert:
       status: "all"
@@ -117,7 +117,7 @@ priorityBuiltinPlaybooks:
       names: ["etcdInsufficientMembers", "etcdMembersDown", "NodeClockNotSynchronising", "PrometheusTSDBCompactionsFailing"]
 
 # Silences for specific providers
-- name: "SilenceGKEProviderAlerts"
+- name: "GKEProviderAlertsAlertsSilencer"
   triggers:
   - on_prometheus_alert:
       status: "all"
@@ -126,7 +126,7 @@ priorityBuiltinPlaybooks:
   - name_silencer:
       names: [ "KubeletDown" ]
 
-- name: "SilenceDONodeAgentCPUThrottlingHighAlert"
+- name: "DONodeAgentCPUThrottlingHighAlertSilencer"
   triggers:
   - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
@@ -137,7 +137,7 @@ priorityBuiltinPlaybooks:
       log_silence: true
 
 # Smart Silences
-- name: "SilenceTargetDown"
+- name: "TargetDownSilencer"
   triggers:
   - on_prometheus_alert:
       alert_name: TargetDown
@@ -157,14 +157,14 @@ builtinPlaybooks:
   actions:
   - report_crash_loop: {}
 
-- name: "ReportImagePullBackoff"
+- name: "ImagePullBackOff"
   triggers:
   - on_image_pull_backoff: {}
   actions:
   - image_pull_backoff_reporter: {}
 
 # playbooks for non-prometheus based monitoring that use prometheus for enrichment
-- name: "PodOOMKiller"
+- name: "PodOOMKill"
   triggers:
   - on_pod_oom_killed:
       rate_limit: 3600
@@ -222,7 +222,7 @@ builtinPlaybooks:
   - pod_events_enricher: {}
   - pod_issue_investigator: {}
 
-- name: "KubePodNotReady"
+- name: "KubeContainerWaiting"
   triggers:
   - on_prometheus_alert:
       alert_name: KubeContainerWaiting
@@ -237,7 +237,7 @@ builtinPlaybooks:
   actions:
   - hpa_mismatch_enricher: {}
 
-- name: "KubeJobRelatedEnrichers"
+- name: "KubeJobAlerts"
   triggers:
   - on_prometheus_alert:
       alert_name: KubeJobFailed
@@ -346,7 +346,7 @@ builtinPlaybooks:
       resource_type: Memory
       item_type: Node
 
-- name: "GenericNodeFSSpaceAlerts"
+- name: "NodeFSSpaceAlerts"
   triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
@@ -369,7 +369,7 @@ builtinPlaybooks:
       resource_type: CPU
       item_type: Pod
 
-- name: "K8sReplicasMismatch"
+- name: "DeploymentReplicasMismatch"
   triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDeploymentReplicasMismatch
@@ -390,7 +390,7 @@ builtinPlaybooks:
   actions:
   - default_enricher: {}
 
-- name: "SmallClusterNodeFSSpaceAlerts"
+- name: "MiniClusterNodeFSSpaceAlerts"
   triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
@@ -409,7 +409,7 @@ builtinPlaybooks:
 enablePlatformPlaybooks: false
 
 platformPlaybooks:
-- name: "K8sWarningEventCreate"
+- name: "K8sWarningEventsReport"
   triggers:
   - on_kubernetes_warning_event_create:
       exclude: ["NodeSysctlChange"]
@@ -419,7 +419,7 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "K8sResourceOperation"
+- name: "K8sChangeTracking"
   triggers:
     - on_kubernetes_resource_operation:
         resources: ["deployment", "daemonset", "statefulset"]
@@ -428,7 +428,7 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "IngressAllChanges"
+- name: "IngressChangeTracking"
   triggers:
     - on_ingress_all_changes: {}
   actions:
@@ -439,7 +439,7 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "JobFailure"
+- name: "K8sJobFailure"
   triggers:
   - on_job_failure: {}
   actions:
@@ -452,7 +452,7 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "SchedulePopeyScan"
+- name: "WeeklyPopeyScan"
   triggers:
   - on_schedule:
       fixed_delay_repeat:
@@ -463,7 +463,7 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "ScheudleKRRScan"
+- name: "WeeklyKRRScan"
   triggers:
   - on_schedule:
       cron_schedule_repeat:
