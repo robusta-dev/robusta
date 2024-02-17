@@ -56,6 +56,38 @@ Apply the following command the simulate a failing liveness probe.
 
 Let's explore each part of the above playbook in depth.
 
+Modifying Default Playbooks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, Robusta has a default set of ``playbooks`` configured. These are used to create notifications for all common Kubernetes issues and Prometheus alerts.
+
+You can disable any of the ``default playbooks``, or change the configuration of a given ``playbook``.
+
+In order to disable a default playbook, add the playbook name to the ``disabledPlayooks`` helm value (Playbook name is in the ``name`` attribute of each playbook)
+
+For example, to disable the ``ImagePullBackOff`` playbook, use:
+
+.. code-block:: yaml
+
+    disabledPlaybooks:
+    - ImagePullBackOff
+
+In order to override the default configuration of the same playbook, both disable it, and add it to ``customPlaybooks`` with the override configuration:
+
+.. code-block:: yaml
+
+    disabledPlaybooks:
+    - ImagePullBackOff
+
+    customPlaybooks:
+    - name: "CustomImagePullBackOff"
+      triggers:
+      - on_image_pull_backoff:
+          fire_delay: 300  # fire only if failing to pull the image for 5 min
+      actions:
+      - image_pull_backoff_reporter: {}
+
+
 Understanding Triggers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
