@@ -482,6 +482,8 @@ class RobustaJob(Job):
         timeout,
         job_secret: Optional[JobSecret] = None,
         custom_annotations: Optional[Dict[str, str]] = None,
+        ttl_seconds_after_finished: int = 120,
+        delete_job_post_execution: bool = True,
     ) -> str:
         job = RobustaJob(
             metadata=ObjectMeta(
@@ -490,7 +492,7 @@ class RobustaJob(Job):
             spec=JobSpec(
                 backoffLimit=0,
                 template=PodTemplateSpec(spec=spec, metadata=ObjectMeta(annotations=custom_annotations)),
-                ttlSecondsAfterFinished=120,
+                ttlSecondsAfterFinished=ttl_seconds_after_finished,
             ),
         )
         try:
@@ -503,11 +505,12 @@ class RobustaJob(Job):
             pod = job.get_single_pod()
             return pod.get_logs()
         finally:
-            job.deleteNamespacedJob(
-                job.metadata.name,
-                job.metadata.namespace,
-                propagation_policy="Foreground",
-            )
+            if delete_job_post_execution:
+                job.deleteNamespacedJob(
+                    job.metadata.name,
+                    job.metadata.namespace,
+                    propagation_policy="Foreground",
+                )
 
     @classmethod
     def run_simple_job(cls, image, command, timeout) -> str:
