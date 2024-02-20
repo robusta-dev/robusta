@@ -54,19 +54,49 @@ active_playbooks:
   {{- fail "The `playbooks` value is deprecated. Rename `playbooks`  to `customPlaybooks` and remove builtin playbooks which are now defined separately" -}}
 {{- end }}
 
-{{- if .Values.priorityBuiltinPlaybooks }}
-{{ toYaml .Values.priorityBuiltinPlaybooks | indent 2 }}
+{{- $disabledPlaybooks := .Values.disabledPlaybooks }}
+
+{{- $priorityPlaybooks := .Values.priorityBuiltinPlaybooks }}
+{{- $enabledPriorityPlaybooks := list }}
+{{- range $myplaybook := $priorityPlaybooks }}
+{{- if or ( not (hasKey $myplaybook "name") ) (not (has $myplaybook.name $disabledPlaybooks)) }}
+{{- $enabledPriorityPlaybooks = append $enabledPriorityPlaybooks $myplaybook }}
+{{- end }}
+{{- end }}
+
+{{- if $enabledPriorityPlaybooks }}
+{{ toYaml $enabledPriorityPlaybooks | indent 2 }}
 {{- end }}
 
 {{- if .Values.customPlaybooks }}
 {{ toYaml .Values.customPlaybooks | indent 2 }}
 {{- end }}
 
-{{- if .Values.builtinPlaybooks }}
-{{ toYaml .Values.builtinPlaybooks | indent 2 }}
+{{- $builtinPlaybooks := .Values.builtinPlaybooks }}
+{{- $enabledBuiltinPlaybooks := list }}
+{{- range $myplaybook := $builtinPlaybooks }}
+{{- if or ( not (hasKey $myplaybook "name") ) (not (has $myplaybook.name $disabledPlaybooks)) }}
+{{- $enabledBuiltinPlaybooks = append $enabledBuiltinPlaybooks $myplaybook }}
+{{- end }}
+{{- end }}
+
+{{- if $enabledBuiltinPlaybooks }}
+{{ toYaml $enabledBuiltinPlaybooks | indent 2 }}
 {{- end }}
 
 {{- if and .Values.enablePlatformPlaybooks .Values.platformPlaybooks }}
-{{ toYaml .Values.platformPlaybooks | indent 2 }}
+
+{{- $platformPlaybooks := .Values.platformPlaybooks }}
+{{- $enabledPlatformPlaybooks := list }}
+{{- range $myplaybook := $platformPlaybooks }}
+{{- if or ( not (hasKey $myplaybook "name") ) (not (has $myplaybook.name $disabledPlaybooks)) }}
+{{- $enabledPlatformPlaybooks = append $enabledPlatformPlaybooks $myplaybook }}
+{{- end }}
+{{- end }}
+
+{{- if $enabledPlatformPlaybooks }}
+{{ toYaml $enabledPlatformPlaybooks | indent 2 }}
+{{- end }}
+
 {{- end }}
 {{ end }}

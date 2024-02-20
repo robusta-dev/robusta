@@ -33,9 +33,10 @@ Prerequisites
 
               kube-prometheus-stack:
                 prometheus:
-                  ruleNamespaceSelector: {} # (1)
-                  ruleSelector: {} # (2)
-                  ruleSelectorNilUsesHelmValues: false # (3)
+                  prometheusSpec:
+                    ruleNamespaceSelector: {} # (1)
+                    ruleSelector: {} # (2)
+                    ruleSelectorNilUsesHelmValues: false # (3)
 
             .. code-annotations::
               1. Add a namespace if you want Prometheus to identify rules created in specific namespaces. Leave ``{}`` to detect rules from any namespace.
@@ -47,10 +48,15 @@ Prerequisites
             .. code-block:: yaml
 
               prometheus:
-                ruleNamespaceSelector: {}
-                ruleSelector: {}
-                ruleSelectorNilUsesHelmValues: false
+                prometheusSpec:
+                  ruleNamespaceSelector: {} # (1)
+                  ruleSelector: {} # (2)
+                  ruleSelectorNilUsesHelmValues: false # (3)
 
+            .. code-annotations::
+              1. Add a namespace if you want Prometheus to identify rules created in specific namespaces. Leave ``{}`` to detect rules from any namespace.
+              2. Add a label if you want Prometheus to detect rules with a specific selector. Leave ``{}`` to detect rules with any label.
+              3. When set to `false`, Prometheus detects rules that are created directly, not just rules created using helm values file.
 
 Creating a Custom Alert
 ---------------------------------------
@@ -93,7 +99,7 @@ To test the alert, deploy a pod that uses more CPU than its request.
 .. code-block:: bash
 
     kubectl apply -f https://raw.githubusercontent.com/robusta-dev/kubernetes-demos/main/cpu_throttling/throttling.yaml
-    
+
 You will know the alert was defined successfully when Prometheus fires an alert. When using Robusta, this means a notification will be received in all configured sinks.
 
 .. image:: /images/container_cpu_request_alert.png
