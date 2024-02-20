@@ -1,3 +1,4 @@
+# To test this locally, run
 # docker build -t robusta-cli -f cli.Dockerfile .
 # docker run -it --rm --net host -v ~/.aws:/root/.aws -v ~/.config/gcloud:/root/.config/gcloud -v ${PWD}:/workingdir -w=/workingdir -v ~/.kube:/root/.kube robusta-cli robusta gen-config
 FROM python:3.9-slim
