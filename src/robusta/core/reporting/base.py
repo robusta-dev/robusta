@@ -149,10 +149,12 @@ class Filterable:
     def matches(self, match_requirements: Dict[str, Union[str, List[str]]], scope_requirements) -> bool:
         # 1. "scope" check
         if scope_requirements is not None:
-            if self.scope_inc_exc_matches(scope_requirements.exclude, empty_list_default=False):
-                return False
-            if self.scope_inc_exc_matches(scope_requirements.include, empty_list_default=True):
-                return True
+            if scope_requirements.exclude:
+                if self.scope_inc_exc_matches(scope_requirements.exclude):
+                    return False
+            if scope_requirements.include:
+                if self.scope_inc_exc_matches(scope_requirements.include):
+                    return True
 
         # 2. "match" check
         invalid_attributes = self.get_invalid_attributes(list(match_requirements.keys()))
@@ -165,11 +167,7 @@ class Filterable:
                 return False
         return True
 
-    def scope_inc_exc_matches(self, scope_inc_exc: Optional[list], empty_list_default: bool):
-        if scope_inc_exc is None:
-            return False
-        if scope_inc_exc == []:
-            return empty_list_default
+    def scope_inc_exc_matches(self, scope_inc_exc: Optional[list]):
         return any(self.scope_matches(scope) for scope in scope_inc_exc)
 
     def scope_matches(self, scope: Dict[str, List[str]]):
