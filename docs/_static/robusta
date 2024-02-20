@@ -22,9 +22,9 @@ spinner()
     printf "\b\b\b\b\n"
 }
 
-if [[ "$(docker images -q  us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli 2> /dev/null)" == "" ]]; then
+if [[ "$(docker images -q  pavangudiwada/robusta-cli-update 2> /dev/null)" == "" ]]; then
   echo 'Please wait'
-  docker pull us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli > /dev/null 2>&1 & spinner
+  docker pull pavangudiwada/robusta-cli-update > /dev/null 2>&1 & spinner
 fi
 
 COMMANDS=$@
@@ -33,10 +33,10 @@ if [[ -z "$COMMANDS" ]]; then
 fi
 
 if [[ "upgrade-cli" == "$COMMANDS" ]]; then
-  docker pull us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli > /dev/null 2>&1 & spinner
+  docker pull pavangudiwada/robusta-cli-update > /dev/null 2>&1 & spinner
   echo 'Upgrade complete'
-  docker run -it --rm --net host -v ~/.aws:/root/.aws -v ~/.config/gcloud:/root/.config/gcloud -v ${PWD}:/workingdir -w=/workingdir -v ~/.kube:/root/.kube us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli robusta version
+  docker run -it --rm --net host -v ~/.aws:/root/.aws -v ~/.config/gcloud:/root/.config/gcloud -v ${PWD}:/workingdir -w=/workingdir -v ~/.kube:/root/.kube pavangudiwada/robusta-cli-update robusta version
   exit 0
 fi
 
-docker run -it --rm --net host -v ~/.aws:/root/.aws -v ~/.config/gcloud:/root/.config/gcloud -v ${PWD}:/workingdir -w=/workingdir -v ~/.kube:/root/.kube us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli robusta $COMMANDS
+docker run -it --rm --net host -v ~/.aws:/root/.aws -v ~/.config/gcloud:/root/.config/gcloud -v ${PWD}:/workingdir -w=/workingdir -v ~/.kube:/root/.kube pavangudiwada/robusta-cli-update robusta $COMMANDS
