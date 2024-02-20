@@ -12,7 +12,7 @@ from robusta.api import (
     PodFindingSubject,
     RateLimitParams,
     action,
-    get_image_pull_backoff_enrichments,
+    get_image_pull_backoff_enrichment,
 )
 from robusta.core.playbooks.pod_utils.imagepull_utils import (
     get_image_pull_backoff_container_statuses,
@@ -52,7 +52,7 @@ def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams)
     pod_name = pod.metadata.name
     namespace = pod.metadata.namespace
 
-    backoff_enrichment = get_image_pull_backoff_enrichments(pod)
+    backoff_enrichment = get_image_pull_backoff_enrichment(pod)
 
     finding = Finding(
         title=f"Failed to pull at least one image in pod {pod_name} in namespace {namespace}",
