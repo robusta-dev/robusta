@@ -1,1 +1,1 @@
-from .token import TOKEN_LOCATION, load_token
+from .token import IS_OPENSHIFT, TOKEN_LOCATION, load_token
