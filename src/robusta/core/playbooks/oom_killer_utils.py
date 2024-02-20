@@ -9,7 +9,6 @@ from robusta.api import (
     PodEvent,
     RegexReplacementStyle,
     RobustaPod,
-    send_crash_report
 )
 from robusta.core.reporting.base import EnrichmentType
 
@@ -59,13 +58,20 @@ def start_log_enrichment(
             time.sleep(backoff_seconds)
             continue
 
-        log_name = pod.metadata.name
-        log_name += f"/{container}"
-        event.add_enrichment(
-            [FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())],
-            enrichment_type=EnrichmentType.text_file,
-            title="Pod Logs"
-        )
+        metadata = None
+        if not log_data:
+            metadata = {
+                "is_empty": True,
+                "remarks": f"Logs unavailable for container: {container}"
+            }
+            logging.info(
+                f"could not fetch logs from container: {container}"
+            )
+
+        log_block = FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode(), metadata=metadata)
+
+        event.add_enrichment([log_block],
+                             enrichment_type=EnrichmentType.text_file, title="Logs")
         break
 
 
@@ -79,7 +85,4 @@ def logs_enricher(event: PodEvent, params: LogEnricherParams):
     pod = event.get_pod()
 
     logging.debug(f"received a logs_enricher action: {params}")
-    regex_replacement_style = (
-        RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
-    )
-    send_crash_report(event, "logs_enricher", params.regex_replacer_patterns, regex_replacement_style)
+    start_log_enrichment(event=event, params=params, pod=pod)

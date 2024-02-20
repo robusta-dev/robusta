@@ -13,7 +13,7 @@ from robusta.api import (
     action,
     build_selector_query,
     get_crash_report_enrichments,
-    get_image_pull_backoff_enrichments,
+    get_image_pull_backoff_enrichment,
     get_job_all_pods,
     get_pending_pod_enrichment,
     parse_kubernetes_datetime_to_ms,
@@ -128,35 +128,45 @@ def has_image_pull_issue(pod: Pod) -> bool:
     return len(image_pull_statuses) > 0
 
 
+def get_explanation(event: KubernetesResourceEvent, issue: PodIssue, message: Optional[str],
+                    reason: Optional[str]) -> str:
+    resource = event.get_resource()
+
+    if resource.kind in ["Deployment", "Statefulset", "DaemonSet"]:
+        expected_pods = get_expected_replicas(event)
+        # Information about number of available pods, and number of unavailable should be taken from the resource status
+        unavailable_replicas = resource.status.unavailableReplicas
+        message_string = f"{unavailable_replicas} pod(s) are available, {expected_pods} pod(s) are waiting due to {issue.name}"
+
+        if reason:
+            message_string += f"\n\n{reason}: {message if message else 'N/A'}"
+    else:
+        message_string = f"Pod is not ready due to {issue.name}"
+
+    return message_string
+
 def report_pod_issue(
     event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue, message: Optional[str], reason: Optional[str]
 ):
     # find pods with issues
     pods_with_issue = [pod for pod in pods if detect_pod_issue(pod) == issue]
-    pod_names = [pod.metadata.name for pod in pods_with_issue]
 
     if len(pods_with_issue) < 1:
         logging.debug(f"`pods_with_issue` for found for issue: {issue}")
         return
 
-    expected_pods = get_expected_replicas(event)
-    message_string = f"{len(pod_names)}/{expected_pods} pod(s) are not ready"
-    resource = event.get_resource()
-    if resource.kind == "Job":
-        message_string = f"{len(pod_names)} pod(s) are not ready"
-
-    # no need to report here if len(pods) != expected_pods since there are mismatch enrichers
+    message_string = get_explanation(event=event, issue=issue, reason=reason,
+                                     message=message)
 
     # get blocks from specific pod issue
     pod_issues_enrichments = get_pod_issue_enrichments(pods_with_issue[0])
 
     if pod_issues_enrichments:
         issue_message, issues_enrichments = pod_issues_enrichments
-        blocks: List[BaseBlock] = [MarkdownBlock(f"{message_string}. {issue_message}")]
+        event.extend_description(message_string)
 
         for enrichment in issues_enrichments:
-            blocks.extend(enrichment.blocks)
-            event.add_enrichment(blocks, enrichment_type=enrichment.enrichment_type, title=enrichment.title)
+            event.add_enrichment(enrichment.blocks, enrichment_type=enrichment.enrichment_type, title=enrichment.title)
 
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
@@ -177,19 +187,12 @@ def get_expected_replicas(event: KubernetesResourceEvent) -> int:
 
 def get_pod_issue_enrichments(pod: Pod) -> Optional[Tuple[str, List[Enrichment]]]:
     if has_image_pull_issue(pod):
-        enrichment = get_image_pull_backoff_enrichments(pod)
-        if enrichment:
-            return "Pod could not run because image-pull-backoff", [enrichment]
+        enrichment = get_image_pull_backoff_enrichment(pod)
+        return "Pod could not run because image-pull-backoff", [enrichment]
     elif is_pod_pending(pod):
         enrichment = get_pending_pod_enrichment(pod)
-        if enrichment:
-            return "Pod could not run due to scheduling issue", [enrichment]
-    elif is_crashlooping(pod):
+        return "Pod could not be scheduled", [enrichment]
+    elif is_crashlooping(pod) or had_recent_crash(pod):
         enrichments = get_crash_report_enrichments(pod)
-        if enrichments:
-            return "Pod is crash looping", enrichments
-    elif had_recent_crash(pod):
-        enrichments = get_crash_report_enrichments(pod)
-        if enrichments:
-            return "Pod is crash looping", enrichments
+        return "Pod is crash looping", enrichments
     return None

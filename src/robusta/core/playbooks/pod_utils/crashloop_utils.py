@@ -8,7 +8,7 @@ from robusta.core.reporting.base import Enrichment, EnrichmentType
 
 def get_crash_report_enrichments(
     pod: Pod,
-) -> Optional[List[Enrichment]]:
+) -> List[Enrichment]:
     all_statuses = pod.status.containerStatuses + pod.status.initContainerStatuses
     crashed_container_statuses = [
         container_status

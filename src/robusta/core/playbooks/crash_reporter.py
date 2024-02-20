@@ -34,11 +34,10 @@ def send_crash_report(
     )
 
     enrichments = get_crash_report_enrichments(pod)
-    if enrichments:
-        for enrichment in enrichments:
-            finding.add_enrichment(enrichment.blocks,
-                                   enrichment_type=enrichment.enrichment_type,
-                                   title=enrichment.title)
+    for enrichment in enrichments:
+        finding.add_enrichment(enrichment.blocks,
+                               enrichment_type=enrichment.enrichment_type,
+                               title=enrichment.title)
 
     for container_status in crashed_container_statuses:
         try:
@@ -54,8 +53,8 @@ def send_crash_report(
                     "is_empty": True,
                     "remarks": f"Logs unavailable for container: {container_status.name}"
                 }
-                logging.error(
-                    f"could not fetch logs from container: {container_status.name}. logs were {container_log}"
+                logging.info(
+                    f"could not fetch logs from container: {container_status.name}"
                 )
             log_block = FileBlock(f"{pod.metadata.name}.txt", container_log.encode(), metadata=metadata)
 

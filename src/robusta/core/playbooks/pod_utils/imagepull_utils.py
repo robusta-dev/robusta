@@ -15,8 +15,6 @@ class ImagePullBackoffReason(Flag):
     Unknown = 0
     RepoDoesntExist = 1
     NotAuthorized = 2
-    ImageDoesntExist = 4
-    TagNotFound = 8
     Timeout = 16
 
 
@@ -45,21 +43,16 @@ def get_pod_issue_message_and_reason(pod: Pod) -> Tuple[Optional[str], Optional[
     return None, None
 
 
-def decompose_flag(flag: Flag) -> List[Flag]:
-    members, _ = enum._decompose(flag.__class__, flag._value_)
-    return members
-
-
-def get_image_pull_backoff_enrichments(pod: Pod) -> Optional[Enrichment]:
+def get_image_pull_backoff_enrichment(pod: Pod) -> Enrichment:
     error_blocks: List[BaseBlock] = []
-    crash_info_table_blocks: List[BaseBlock] = []
+    image_pull_table_blocks: List[BaseBlock] = []
     pod_name = pod.metadata.name
     namespace = pod.metadata.namespace
     image_pull_backoff_container_statuses = get_image_pull_backoff_container_statuses(pod.status)
     investigator = ImagePullBackoffInvestigator(pod_name, namespace)
 
     for container_status in image_pull_backoff_container_statuses:
-        crash_info_rows: List[List[str]] = \
+        image_issue_rows: List[List[str]] = \
             [["Container", container_status.name], ["Image", container_status.image]]
 
         investigation = investigator.investigate(container_status)
@@ -85,39 +78,32 @@ def get_image_pull_backoff_enrichments(pod: Pod) -> Optional[Enrichment]:
 
         reason = investigation.reason
         error_message = investigation.error_message
-        # crash_info_rows.append(("Reason", event.reason))
         if reason != ImagePullBackoffReason.Unknown:
-            reasons = decompose_flag(reason)
+            backoff_reason = __imagepull_backoff_reason_to_fix(reason=reason)
 
-            if len(reasons):
-                backoff_reason = __imagepull_backoff_reason_to_fix(reason=reasons[0])
-
-                if backoff_reason:
-                    reason_text, fix = backoff_reason
-                    crash_info_rows.append(["Reason", reason_text])
-                    crash_info_rows.append(["Fix", fix])
+            if backoff_reason:
+                reason_text, fix = backoff_reason
+                image_issue_rows.append(["Reason", reason_text])
+                image_issue_rows.append(["Fix", fix])
 
         else:
             error_blocks.append(MarkdownBlock(f"*Error message:* {container_status.name}:\n{error_message}"))
 
-        crash_info_table_blocks.append(TableBlock(
-            [[k, v] for (k, v) in crash_info_rows],
+        image_pull_table_blocks.append(TableBlock(
+            [[k, v] for (k, v) in image_issue_rows],
             ["label", "value"],
-            table_name="",
         ))
 
-    crash_info_table_blocks.extend(error_blocks)
+    image_pull_table_blocks.extend(error_blocks)
 
     return Enrichment(
         enrichment_type=EnrichmentType.crash_info,
-        blocks=crash_info_table_blocks,
+        blocks=image_pull_table_blocks,
         title="Container Image-Pull-Backoff Information")
 
 
 def __imagepull_backoff_reason_to_fix(reason: ImagePullBackoffReason) -> Optional[Tuple[str, str]]:
-    if (reason == ImagePullBackoffReason.ImageDoesntExist or
-            reason == ImagePullBackoffReason.ImageDoesntExist.RepoDoesntExist or
-            reason == ImagePullBackoffReason.TagNotFound):
+    if reason == ImagePullBackoffReason.RepoDoesntExist:
         return "Image not found", "Make sure the image repository, image name and image tag are correct."
     if reason == ImagePullBackoffReason.NotAuthorized:
         return "Unauthorized", 'The repo is access protected. Make sure to <a target="_blank" href="https:\/\/kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/">configure the correct image pull secrets</a>'
@@ -141,9 +127,7 @@ class ImagePullBackoffInvestigator:
         # Containerd
         {
             "err_template": 'failed to pull and unpack image ".*?": failed to resolve reference ".*?": .*?: not found',
-            "reason": ImagePullBackoffReason.RepoDoesntExist
-            | ImagePullBackoffReason.ImageDoesntExist
-            | ImagePullBackoffReason.TagNotFound,
+            "reason": ImagePullBackoffReason.RepoDoesntExist,
         },
         {
             "err_template": (
@@ -151,7 +135,7 @@ class ImagePullBackoffInvestigator:
                 "pull access denied, repository does not exist or may require authorization: server message: "
                 "insufficient_scope: authorization failed"
             ),
-            "reason": ImagePullBackoffReason.NotAuthorized | ImagePullBackoffReason.ImageDoesntExist,
+            "reason": ImagePullBackoffReason.NotAuthorized,
         },
         {
             "err_template": (
@@ -166,11 +150,11 @@ class ImagePullBackoffInvestigator:
                 "Error response from daemon: pull access denied for .*?, "
                 "repository does not exist or may require 'docker login': denied: requested access to the resource is denied"
             ),
-            "reason": ImagePullBackoffReason.NotAuthorized | ImagePullBackoffReason.ImageDoesntExist,
+            "reason": ImagePullBackoffReason.NotAuthorized,
         },
         {
             "err_template": "Error response from daemon: manifest for .*? not found: manifest unknown: manifest unknown",
-            "reason": ImagePullBackoffReason.TagNotFound,
+            "reason": ImagePullBackoffReason.RepoDoesntExist,
         },
         {
             "err_template": (
@@ -181,10 +165,10 @@ class ImagePullBackoffInvestigator:
         },
         {
             "err_template": 'Error response from daemon: manifest for .*? not found: manifest unknown: Failed to fetch ".*?"',
-            "reason": ImagePullBackoffReason.ImageDoesntExist | ImagePullBackoffReason.TagNotFound,
+            "reason": ImagePullBackoffReason.RepoDoesntExist,
         },
         {
-            "err_template": r'Error response from daemon: Get ".*?": net\/http: request canceled while waiting for connection \(Client\.Timeout exceeded while awaiting headers\)',
+            "err_template": r'.*?Timeout exceeded',
             "reason": ImagePullBackoffReason.Timeout,  # Using the Timeout reason
         }
     ]

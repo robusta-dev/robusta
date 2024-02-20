@@ -12,7 +12,7 @@ from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.blocks import BaseBlock, MarkdownBlock, TableBlock
 
 
-def get_pending_pod_enrichment(pod: Pod) -> Optional[Enrichment]:
+def get_pending_pod_enrichment(pod: Pod) -> Enrichment:
     pending_rows: List[List[str]] = []
     message = get_unscheduled_message(pod)
     pending_rows.append(["Pod", pod.metadata.name])
@@ -22,13 +22,12 @@ def get_pending_pod_enrichment(pod: Pod) -> Optional[Enrichment]:
     blocks = [TableBlock(
         [[k, v] for (k, v) in pending_rows],
         ["label", "value"],
-        table_name="",
     )]
 
     return Enrichment(
         enrichment_type=EnrichmentType.crash_info,
         blocks=blocks,
-        title="Pod Unscheduled Information")
+        title="Unscheduled Information")
 
 
 def get_unscheduled_message(pod: Pod) -> Optional[str]:
