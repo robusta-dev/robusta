@@ -81,6 +81,7 @@ redirects = {
     "catalog/actions/grafana.html": "/master/playbook-reference/actions/grafana.html",
     "quick-start.html": "/master/setup-robusta/installation/index.html",
     "tutorials/configuring-automations.html": "/master/configuration/defining-playbooks/playbook-basics.html",
+    "configuration/defining-playbooks/*": "/doc-change-tab-title/playbook-reference/defining-playbooks/{$source}",
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
