@@ -1,7 +1,7 @@
 import logging
 import ssl
 import tempfile
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 import certifi
 from slack_sdk import WebClient
@@ -37,6 +37,8 @@ MAX_BLOCK_CHARS = 3000
 
 
 class SlackSender:
+    verified_api_tokens: Set[str] = set()
+
     def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str):
         """
         Connect to Slack and verify that the Slack token is valid.
@@ -54,11 +56,13 @@ class SlackSender:
         self.account_id = account_id
         self.cluster_name = cluster_name
 
-        try:
-            self.slack_client.auth_test()
-        except SlackApiError as e:
-            logging.error(f"Cannot connect to Slack API: {e}")
-            raise e
+        if slack_token not in self.verified_api_tokens:
+            try:
+                self.slack_client.auth_test()
+                self.verified_api_tokens.add(slack_token)
+            except SlackApiError as e:
+                logging.error(f"Cannot connect to Slack API: {e}")
+                raise e
 
     def __get_action_block_for_choices(self, sink: str, choices: Dict[str, CallbackChoice] = None):
         if choices is None:
@@ -196,7 +200,7 @@ class SlackSender:
         with tempfile.NamedTemporaryFile() as f:
             f.write(truncated_content)
             f.flush()
-            result = self.slack_client.files_upload(title=block.filename, file=f.name, filename=block.filename)
+            result = self.slack_client.files_upload_v2(title=block.filename, file=f.name, filename=block.filename)
             return result["file"]["permalink"]
 
     def prepare_slack_text(self, message: str, max_log_file_limit_kb: int, files: List[FileBlock] = []):

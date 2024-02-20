@@ -16,6 +16,7 @@ from robusta.core.sinks.opsgenie.opsgenie_sink_params import OpsGenieSinkConfigW
 from robusta.core.sinks.pagerduty.pagerduty_sink_params import PagerdutyConfigWrapper
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper
 from robusta.core.sinks.rocketchat.rocketchat_sink_params import RocketchatSinkConfigWrapper
+from robusta.core.sinks.servicenow.servicenow_sink_params import ServiceNowSinkConfigWrapper
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper
 from robusta.core.sinks.mail.mail_sink_params import MailSinkConfigWrapper
 from robusta.core.sinks.telegram.telegram_sink_params import TelegramSinkConfigWrapper
@@ -61,6 +62,7 @@ class RunnerConfig(BaseModel):
                 MailSinkConfigWrapper,
                 PushoverSinkConfigWrapper,
                 GoogleChatSinkConfigWrapper,
+                ServiceNowSinkConfigWrapper,
             ]
         ]
     ]

@@ -248,17 +248,19 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 playbooks_errors_count.labels(source).inc()
             except PrometheusNotFound as e:
                 logging.error(str(e))
-                execution_event.add_enrichment(
-                    [
-                        MarkdownBlock(
-                            text="Robusta couldn't connect to the Prometheus client, check if the service is "
-                            "available. If it is, please add to *globalConfig* in *generated_values.yaml* "
-                            "the cluster *prometheus_url*. For example:\n"
-                            "```globalConfig:\n"
-                            "\tprometheus_url: http://prometheus-server.monitoring.svc.cluster.local:9090```"
-                        )
-                    ]
-                )
+
+                if not execution_event.is_sink_findings_empty():
+                    execution_event.add_enrichment(
+                        [
+                            MarkdownBlock(
+                                text="Robusta couldn't connect to the Prometheus client, check if the service is "
+                                "available. If it is, please add to *globalConfig* in *generated_values.yaml* "
+                                "the cluster *prometheus_url*. For example:\n"
+                                "```globalConfig:\n"
+                                "\tprometheus_url: http://prometheus-server.monitoring.svc.cluster.local:9090```"
+                            )
+                        ]
+                    )
                 execution_event.response = self.__error_resp(
                     ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.name, ErrorCodes.PROMETHEUS_DISCOVERY_FAILED.value, log=False
                 )

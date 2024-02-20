@@ -12,7 +12,7 @@ from robusta.core.reporting.blocks import (
 )
 from robusta.core.sinks.mail.mail_sink import MailSink
 from robusta.core.sinks.mail.mail_sink_params import MailSinkParams, MailSinkConfigWrapper
-from robusta.integrations.mail.sender import MailTransformer
+from robusta.core.sinks.common.html_tools import HTMLTransformer
 
 # Rename import to avoid re-running tests.test_transformer.TestTransformer here via pytest discovery
 from tests.test_transformer import TestTransformer as _TestTransformer
@@ -105,10 +105,10 @@ def test_mail_sending_attachments(sink):
     assert file_mocks[1]._final_contents == b"contents2"
 
 
-class TestMailTransformer(_TestTransformer):
+class TestHTMLTransformer(_TestTransformer):
     @pytest.fixture()
     def transformer(self, request):
-        return MailTransformer()
+        return HTMLTransformer()
 
     @pytest.mark.parametrize(
         "block,expected_result",
