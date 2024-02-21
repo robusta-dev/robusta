@@ -63,24 +63,6 @@ def __prepare_promql_query(provided_labels: Dict[Any, Any], promql_query_templat
     return promql_query
 
 
-def safe_custom_query_range(
-    prometheus_params: PrometheusParams,
-    query: str,
-    start_time: datetime,
-    end_time: datetime,
-    step: str,
-    params: Optional[Dict[str, Any]] = None,
-) -> PrometheusQueryResult:
-    """
-    This function wraps prometheus safe_custom_query_range
-    """
-    prom = get_prometheus_connect(prometheus_params)
-    params = params or {}
-    prom.check_prometheus_connection(params)
-    result = prom.safe_custom_query_range(query=query, start_time=start_time, end_time=end_time, step=step, params=params)
-    return PrometheusQueryResult(data=result)
-
-
 def get_node_internal_ip(node: Node) -> str:
     internal_ip = next(addr.address for addr in node.status.addresses if addr.type == "InternalIP")
     return internal_ip
@@ -99,14 +81,14 @@ def run_prometheus_query(
     resolution = get_resolution_from_duration(query_duration)
 
     step = step if step else str(max(query_duration.total_seconds() / resolution, 1.0))
-    return safe_custom_query_range(
-        prometheus_params,
-        promql_query,
-        starts_at,
-        ends_at,
-        step,
-        {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS},
-    )
+
+    prom = get_prometheus_connect(prometheus_params)
+    params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+    prom.check_prometheus_connection(params)
+    result = prom.safe_custom_query_range(query=promql_query, start_time=starts_at, end_time=ends_at, step=step,
+                                          params=params)
+
+    return PrometheusQueryResult(data=result)
 
 
 _RESOLUTION_DATA: Dict[timedelta, Union[int, Callable[[timedelta], int]]] = {
