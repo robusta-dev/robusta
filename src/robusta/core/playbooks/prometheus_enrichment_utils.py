@@ -68,7 +68,7 @@ def get_node_internal_ip(node: Node) -> str:
     return internal_ip
 
 
-def run_prometheus_query(
+def run_prometheus_query_range(
     prometheus_params: PrometheusParams, promql_query: str, starts_at: datetime, ends_at: datetime, step: Optional[str]
 ) -> PrometheusQueryResult:
     if not starts_at or not ends_at:
@@ -178,7 +178,7 @@ def create_chart_from_prometheus_query(
         # Adjust ends_at to be at least 30 minutes after oom_kill_time
         ends_at = max(ends_at, oom_kill_time + thirty_minutes)
 
-    prometheus_query_result = run_prometheus_query(prometheus_params, promql_query, starts_at, ends_at, step=None)
+    prometheus_query_result = run_prometheus_query_range(prometheus_params, promql_query, starts_at, ends_at, step=None)
 
     if prometheus_query_result.result_type != "matrix":
         raise Exception(
@@ -224,7 +224,6 @@ def create_chart_from_prometheus_query(
         if oom_kill_time:
             min_time = min(min_time, starts_at.timestamp())
             max_time = max(max_time, ends_at.timestamp())
-
 
         plot_data = PlotData(
             plot=(label, values),
@@ -289,7 +288,7 @@ def create_chart_from_prometheus_query(
         include_x_axis=include_x_axis,
         width=1280,
         height=500,
-        show_legend=hide_legends is not True
+        show_legend=hide_legends is not True,
     )
 
     if len(plot_data_list):
@@ -349,10 +348,15 @@ def create_chart_from_prometheus_query(
             dots_size=p.dots_size,
             stroke=p.stroke,
         )
-    return chart, PrometheusBlock(data=prometheus_query_result, query=promql_query, y_axis_type=values_format,
-                                  vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
-                                  graph_name=chart.title, metrics_legends_labels=metrics_legends_labels)
-
+    return chart, PrometheusBlock(
+        data=prometheus_query_result,
+        query=promql_query,
+        y_axis_type=values_format,
+        vertical_lines=vertical_lines,
+        horizontal_lines=horizontal_lines,
+        graph_name=chart.title,
+        metrics_legends_labels=metrics_legends_labels,
+    )
 
 
 def run_prometheus_query(prometheus_params: PrometheusParams, query: str) -> PrometheusQueryResult:
