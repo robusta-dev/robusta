@@ -74,8 +74,7 @@ def run_prometheus_query(
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
 
-    if prometheus_params.prometheus_additional_labels and prometheus_params.add_additional_labels:
-        promql_query = promql_query.replace("}", __get_additional_labels_str(prometheus_params) + "}")
+    promql_query = __add_additional_labels(promql_query, prometheus_params)
 
     query_duration = ends_at - starts_at
     resolution = get_resolution_from_duration(query_duration)
@@ -353,6 +352,29 @@ def create_chart_from_prometheus_query(
     return chart, PrometheusBlock(data=prometheus_query_result, query=promql_query, y_axis_type=values_format,
                                   vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
                                   graph_name=chart.title, metrics_legends_labels=metrics_legends_labels)
+
+
+
+def run_prometheus_query(prometheus_params: PrometheusParams, query: str) -> PrometheusQueryResult:
+    """
+    This function runs prometheus query and returns the result, NOT query_range
+    """
+    try:
+        prom = get_prometheus_connect(prometheus_params)
+        query = __add_additional_labels(query, prometheus_params)
+        prom_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+        prom.check_prometheus_connection(prom_params)
+        results = prom.custom_query(query=query, params=prom_params)
+        return PrometheusQueryResult(results)
+    except Exception as e:
+        logging.error(f"Exception while querying prometheus.", exc_info=True)
+        return PrometheusQueryResult({"resultType": "error", "result": str(e)})
+
+
+def __add_additional_labels(query: str, prometheus_params: PrometheusParams) -> str:
+    if not prometheus_params.prometheus_additional_labels or not prometheus_params.add_additional_labels:
+        return query
+    return query.replace("}", __get_additional_labels_str(prometheus_params) + "}")
 
 
 def __get_additional_labels_str(prometheus_params: PrometheusParams) -> str:
