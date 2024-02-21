@@ -3,7 +3,7 @@
 Integrating Sinks
 ==========================
 
-Robusta can send notifications to various destinations, called sinks.
+Robusta can send notifications to various destinations, called sinks. These are general settings for all sinks, please take a look at the specific sink guide for detailed instructions.
 
 For a list of all sinks, refer to :ref:`Sinks Reference`.
 

@@ -81,7 +81,14 @@ redirects = {
     "catalog/actions/grafana.html": "/master/playbook-reference/actions/grafana.html",
     "quick-start.html": "/master/setup-robusta/installation/index.html",
     "tutorials/configuring-automations.html": "/master/configuration/defining-playbooks/playbook-basics.html",
-    "configuration/defining-playbooks/*": "/doc-change-tab-title/playbook-reference/defining-playbooks/{$source}",
+    "configuration/defining-playbooks/builtin-playbooks.html": "/master/playbook-reference/defining-playbooks/builtin-playbooks.html",
+    "configuration/defining-playbooks/creating-notifications.html": "/master/playbook-reference/defining-playbooks/creating-notifications.html",
+    "configuration/defining-playbooks/external-playbook-repositories.html": "/master/playbook-reference/defining-playbooks/external-playbook-repositories.html",
+    "configuration/defining-playbooks/index.html": "/master/playbook-reference/defining-playbooks/index.html",
+    "configuration/defining-playbooks/playbook-advanced.html": "/master/playbook-reference/defining-playbooks/playbook-advanced.html",
+    "configuration/defining-playbooks/playbook-basics.html": "/master/playbook-reference/defining-playbooks/playbook-basics.html",
+    "configuration/defining-playbooks/trigger-action-binding.html": "/master/playbook-reference/defining-playbooks/trigger-action-binding.html",
+    "configuration/additional-settings.html": "/master/setup-robusta/additional-settings.html",
 }
 
 # for sphinx_jinja - see https://github.com/tardyp/sphinx-jinja
