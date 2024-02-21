@@ -27,11 +27,6 @@ def get_image_pull_backoff_container_statuses(status: PodStatus) -> List[Contain
     ]
 
 
-def decompose_flag(flag: Flag) -> List[Flag]:
-    members, _ = enum._decompose(flag.__class__, flag._value_)  # type: ignore
-    return members
-
-
 @action
 def image_pull_backoff_reporter(event: PodEvent, action_params: RateLimitParams):
     """
