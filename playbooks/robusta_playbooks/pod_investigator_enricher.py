@@ -202,6 +202,5 @@ def get_pod_issue_enrichments(pod: Pod) -> Optional[List[Enrichment]]:
         enrichment = get_pending_pod_enrichment(pod)
         return [enrichment]
     elif is_crashlooping(pod) or had_recent_crash(pod):
-        enrichments = get_crash_report_enrichments(pod)
-        return enrichments
+        return get_crash_report_enrichments(pod)
     return None

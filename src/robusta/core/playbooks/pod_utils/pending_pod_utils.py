@@ -48,7 +48,7 @@ def get_pending_pod_enrichment(pod: Pod) -> Enrichment:
     return Enrichment(
         enrichment_type=EnrichmentType.pending_pod_info,
         blocks=blocks,
-        title="Unscheduled Information")
+        title="Unscheduled Pod Information")
 
 
 def get_unscheduled_message(pod: Pod) -> Optional[str]:
