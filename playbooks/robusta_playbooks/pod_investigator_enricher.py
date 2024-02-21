@@ -132,14 +132,24 @@ def get_pod_issue_explanation(event: KubernetesResourceEvent, issue: PodIssue, m
                               reason: Optional[str]) -> str:
     resource = event.get_resource()
 
+    message_string = ""
     if resource.kind in ["Deployment", "Statefulset", "DaemonSet"]:
         # Information about number of available pods, and number of unavailable should be taken from the resource status
         unavailable_replicas = resource.status.unavailableReplicas if resource.status.unavailableReplicas else 0
         available_replicas = resource.status.availableReplicas if resource.status.availableReplicas else 0
-        message_string = f"{available_replicas} pod(s) are available, {unavailable_replicas} pod(s) are waiting due to {issue.name}"
+        message_string = f"{available_replicas} pod(s) are available. {unavailable_replicas} pod(s) are not ready due to "
 
-        if reason:
-            message_string += f"\n\n{reason}: {message if message else 'N/A'}"
+        if issue == PodIssue.ImagePullBackoff:
+            message_string += "image-pull-backoff"
+        elif issue == PodIssue.Pending:
+            message_string += "scheduling issue"
+        elif issue in [PodIssue.CrashloopBackoff, PodIssue.Crashing]:
+            message_string += "crash-looping"
+        else:
+            message_string += issue.name
+
+    if reason:
+        message_string += f"\n\n{reason}: {message if message else 'N/A'}"
     else:
         message_string = f"Pod is not ready due to {issue.name}"
 
@@ -163,12 +173,12 @@ def report_pod_issue(
     pod_issues_enrichments = get_pod_issue_enrichments(pods_with_issue[0])
 
     if pod_issues_enrichments:
-        issue_message, issues_enrichments = pod_issues_enrichments
-        event.extend_description(f"{message_string}. {issue_message}")
+        issues_enrichments = pod_issues_enrichments
 
         for enrichment in issues_enrichments:
             event.add_enrichment(enrichment.blocks, enrichment_type=enrichment.enrichment_type, title=enrichment.title)
 
+        event.extend_description(message_string)
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
     resource = event.get_resource()
@@ -186,14 +196,14 @@ def get_expected_replicas(event: KubernetesResourceEvent) -> int:
     return 1
 
 
-def get_pod_issue_enrichments(pod: Pod) -> Optional[Tuple[str, List[Enrichment]]]:
+def get_pod_issue_enrichments(pod: Pod) -> Optional[List[Enrichment]]:
     if has_image_pull_issue(pod):
         enrichment = get_image_pull_backoff_enrichment(pod)
-        return "Pod could not run because image-pull-backoff", [enrichment]
+        return [enrichment]
     elif is_pod_pending(pod):
         enrichment = get_pending_pod_enrichment(pod)
-        return "Pod could not be scheduled", [enrichment]
+        return [enrichment]
     elif is_crashlooping(pod) or had_recent_crash(pod):
         enrichments = get_crash_report_enrichments(pod)
-        return "Pod is crash looping", enrichments
+        return enrichments
     return None
