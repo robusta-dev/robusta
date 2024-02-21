@@ -128,15 +128,15 @@ def has_image_pull_issue(pod: Pod) -> bool:
     return len(image_pull_statuses) > 0
 
 
-def get_explanation(event: KubernetesResourceEvent, issue: PodIssue, message: Optional[str],
-                    reason: Optional[str]) -> str:
+def get_pod_issue_explanation(event: KubernetesResourceEvent, issue: PodIssue, message: Optional[str],
+                              reason: Optional[str]) -> str:
     resource = event.get_resource()
 
     if resource.kind in ["Deployment", "Statefulset", "DaemonSet"]:
-        expected_pods = get_expected_replicas(event)
         # Information about number of available pods, and number of unavailable should be taken from the resource status
-        unavailable_replicas = resource.status.unavailableReplicas
-        message_string = f"{unavailable_replicas} pod(s) are available, {expected_pods} pod(s) are waiting due to {issue.name}"
+        unavailable_replicas = resource.status.unavailableReplicas if resource.status.unavailableReplicas else 0
+        available_replicas = resource.status.availableReplicas if resource.status.availableReplicas else 0
+        message_string = f"{available_replicas} pod(s) are available, {unavailable_replicas} pod(s) are waiting due to {issue.name}"
 
         if reason:
             message_string += f"\n\n{reason}: {message if message else 'N/A'}"
@@ -144,6 +144,7 @@ def get_explanation(event: KubernetesResourceEvent, issue: PodIssue, message: Op
         message_string = f"Pod is not ready due to {issue.name}"
 
     return message_string
+
 
 def report_pod_issue(
     event: KubernetesResourceEvent, pods: List[Pod], issue: PodIssue, message: Optional[str], reason: Optional[str]
@@ -155,15 +156,15 @@ def report_pod_issue(
         logging.debug(f"`pods_with_issue` for found for issue: {issue}")
         return
 
-    message_string = get_explanation(event=event, issue=issue, reason=reason,
-                                     message=message)
+    message_string = get_pod_issue_explanation(event=event, issue=issue, reason=reason,
+                                               message=message)
 
     # get blocks from specific pod issue
     pod_issues_enrichments = get_pod_issue_enrichments(pods_with_issue[0])
 
     if pod_issues_enrichments:
         issue_message, issues_enrichments = pod_issues_enrichments
-        event.extend_description(message_string)
+        event.extend_description(f"{message_string}. {issue_message}")
 
         for enrichment in issues_enrichments:
             event.add_enrichment(enrichment.blocks, enrichment_type=enrichment.enrichment_type, title=enrichment.title)

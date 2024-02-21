@@ -16,7 +16,7 @@ def get_crash_report_enrichments(
         if container_status.state.waiting is not None and container_status.restartCount >= 1
     ]
 
-    pod_issues_enrichment: List[Enrichment] = []
+    pod_issues_enrichments: List[Enrichment] = []
 
     for container_status in crashed_container_statuses:
         crash_info_rows: List[List[str]] = []
@@ -51,8 +51,8 @@ def get_crash_report_enrichments(
             table_name="*Previous Container*",
         )
 
-        pod_issues_enrichment.append(Enrichment(enrichment_type=EnrichmentType.crash_info,
-                                                title="Container Crash information",
-                                                blocks=[crash_info_table_block, prev_container_table_block]))
+        pod_issues_enrichments.append(Enrichment(enrichment_type=EnrichmentType.crash_info,
+                                                 title="Container Crash information",
+                                                 blocks=[crash_info_table_block, prev_container_table_block]))
 
-    return pod_issues_enrichment
+    return pod_issues_enrichments
