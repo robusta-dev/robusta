@@ -21,7 +21,7 @@ Follow these guides after :ref:`installing Robusta <install>`.
 
         Send data to Robusta from Prometheus, AlertManager, Grafana, Thanos and others.
 
-    .. grid-item-card:: :octicon:`book;1em;` Sinks(destinations)
+    .. grid-item-card:: :octicon:`book;1em;` Sinks (destinations)
         :class-card: sd-bg-light sd-bg-text-light
         :link: configuring-sinks
         :link-type: doc
