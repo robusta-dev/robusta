@@ -6,7 +6,7 @@ Robusta includes builtin playbooks that:
 * Enhance common Prometheus alerts
 * Complement Prometheus with direct APIServer monitoring
 
-You can view builtin playbooks in the default Helm values. 
+You can view builtin playbooks in the default Helm values.
 
 In this guide, we explain the default configuration.
 

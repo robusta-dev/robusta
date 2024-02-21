@@ -20,4 +20,5 @@
    supported-clusters
    node-selector
    proxies
+   additional-settings
    installation-faq

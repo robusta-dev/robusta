@@ -15,7 +15,7 @@ use in :ref:`customPlaybooks<customPlaybooks>`.
 External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH.
 
 Loading Actions from Public Git Repo
-------------------------------------------  
+------------------------------------------
 
 Use HTTPs to load actions:
 

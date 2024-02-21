@@ -29,7 +29,7 @@
 
 .. toctree::
    :maxdepth: 4
-   :caption: Configuration
+   :caption: 🔌 Integrations
    :hidden:
 
    configuration/index
@@ -37,7 +37,6 @@
    🔔 Sinks Reference <configuration/sinks/index>
    configuration/alertmanager-integration/index
    configuration/additional-settings
-   configuration/defining-playbooks/index
 
 
 .. toctree::

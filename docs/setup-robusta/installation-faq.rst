@@ -17,7 +17,7 @@ Yes, using the cli is optional. It auto-generates helm values, but you can also 
     helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
     helm show values robusta/robusta
 
-2. Modify those values to your heart's content. Refer to the :ref:`Configuration Guide <Configuration Overview>` for details.
+2. Modify those values to your heart's content. Refer to the :ref:`Integration Guide <Integrations Overview>` for details.
 
 3. Do a ``helm install``.
 

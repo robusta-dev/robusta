@@ -1,9 +1,9 @@
 .. _sinks-overview:
 
-Configuring Sinks
+Integrating Sinks
 ==========================
 
-Robusta can send notifications to various destinations, called sinks.
+Robusta can send notifications to various destinations, called sinks. These are general settings for all sinks, please take a look at the specific sink guide for detailed instructions.
 
 For a list of all sinks, refer to :ref:`Sinks Reference`.
 
@@ -23,7 +23,7 @@ Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value:
 
 To add a sink, update ``sinksConfig`` according to the instructions in :ref:`Sinks Reference`. Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
-Configure as many sinks as you like.
+Integrate as many sinks as you like.
 
 .. _sink-matchers:
 
@@ -54,7 +54,7 @@ Routing Alerts to Specific Sinks
 
 Define which messages a sink accepts using *matchers*.
 
-For example, Slack can be configured to receive high-severity messages in a specific namespace. Other messages will not be sent to Slack.
+For example, Slack can be integrated to receive high-severity messages in a specific namespace. Other messages will not be sent to Slack.
 
 .. code-block:: yaml
 
