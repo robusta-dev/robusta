@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
+
 from robusta.api import (
     IMAGE_REGISTRY,
     RELEASE_NAME,
@@ -31,7 +32,7 @@ from robusta.api import (
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.6.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.7.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "1Gi")
 
@@ -103,14 +104,16 @@ class KRRParams(PrometheusParams, PodRunningParams):
     :var krr_args: KRR cli arguments.
     :var serviceAccountName: The account name to use for the KRR scan job.
     :var krr_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
+    :var max_workers: Number of concurrent workers used in krr.
     """
 
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
     strategy: str = "simple"
     args: Optional[str] = None
     krr_args: str = ""
-    timeout: int = 300
+    timeout: int = 3600
     krr_job_spec = {}
+    max_workers: int = 3
 
     @validator("args", allow_reuse=True)
     def check_args(cls, args: str) -> str:
@@ -212,7 +215,9 @@ def _generate_krr_job_secret(scan_id: str, krr_secrets: Optional[List[KRRSecret]
     return JobSecret(name=krr_secret_name, data=data)
 
 
-def _generate_krr_env_vars(krr_secrets: Optional[List[KRRSecret]], secret_name: Optional[str]) -> Optional[EnvVar]:
+def _generate_krr_env_vars(
+    krr_secrets: Optional[List[KRRSecret]], secret_name: Optional[str]
+) -> Optional[List[EnvVar]]:
     if not krr_secrets or not secret_name:
         return None
     return [
@@ -298,7 +303,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     additional_flags = get_krr_additional_flags(params)
 
     python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} "
-    python_command += '-v -f json --width 2048'
+    python_command += f"--max-workers {params.max_workers} -v -f json --width 2048"
 
     if params.prometheus_url:
         python_command += f" -p {params.prometheus_url}"
@@ -377,7 +382,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
     except json.JSONDecodeError:
-        logging.exception(f"*KRR scan job failed. Expecting json result.*")
+        logging.exception("*KRR scan job failed. Expecting json result.*")
         logging.error(f"Logs: {logs}")
         return
     except ValidationError:
