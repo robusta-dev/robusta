@@ -168,7 +168,7 @@ class ImagePullBackoffInvestigator:
             "reason": ImagePullBackoffReason.RepoDoesntExist,
         },
         {
-            "err_template": r'.*?Timeout exceeded',
+            "err_template": r'.*Timeout exceeded.*',
             "reason": ImagePullBackoffReason.Timeout,  # Using the Timeout reason
         }
     ]

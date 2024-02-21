@@ -246,8 +246,10 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
                                          enrichment_type=EnrichmentType.k8s_events, title="Deployment Events")
     else:
         if dep.kind in ["Deployment", "Statefulset", "DaemonSet"]:
+            available_replicas = dep.status.availableReplicas if dep.status.availableReplicas else 0
+
             event.add_enrichment(
-                [MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({dep.status.availableReplicas})*")])
+                [MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({available_replicas})*")])
 
         events_table_block = get_resource_events_table(
             "*Deployment events:*",
