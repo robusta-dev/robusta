@@ -97,7 +97,7 @@ def get_image_pull_backoff_enrichment(pod: Pod) -> Enrichment:
     image_pull_table_blocks.extend(error_blocks)
 
     return Enrichment(
-        enrichment_type=EnrichmentType.crash_info,
+        enrichment_type=EnrichmentType.image_pull_backoff_info,
         blocks=image_pull_table_blocks,
         title="Container Image-Pull-Backoff Information")
 

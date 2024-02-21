@@ -10,6 +10,7 @@ from robusta.api import (
     RegexReplacementStyle,
     RobustaPod,
 )
+from robusta.core.playbooks.pod_utils.crashloop_utils import get_crash_report_enrichments
 from robusta.core.reporting.base import EnrichmentType
 
 
@@ -39,6 +40,12 @@ def start_log_enrichment(
     regex_replacement_style = (
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     )
+
+    enrichments = get_crash_report_enrichments(pod)
+    for enrichment in enrichments:
+        event.add_enrichment(enrichment.blocks,
+                             enrichment_type=enrichment.enrichment_type,
+                             title=enrichment.title)
 
     if not container and pod.spec.containers:
         # TODO do we want to keep this part of code? It used to sometimes report logs for a wrong
