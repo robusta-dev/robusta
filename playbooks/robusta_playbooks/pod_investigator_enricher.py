@@ -132,28 +132,26 @@ def get_pod_issue_explanation(event: KubernetesResourceEvent, issue: PodIssue, m
                               reason: Optional[str]) -> str:
     resource = event.get_resource()
 
-    message_string = ""
+    if issue == PodIssue.ImagePullBackoff:
+        issue_text = "image-pull-backoff"
+    elif issue == PodIssue.Pending:
+        issue_text = "scheduling issue"
+    elif issue in [PodIssue.CrashloopBackoff, PodIssue.Crashing]:
+        issue_text = "crash-looping"
+    else:
+        issue_text = issue.name
+
     if resource.kind in ["Deployment", "Statefulset", "DaemonSet"]:
         # Information about number of available pods, and number of unavailable should be taken from the resource status
         unavailable_replicas = resource.status.unavailableReplicas if resource.status.unavailableReplicas else 0
         available_replicas = resource.status.availableReplicas if resource.status.availableReplicas else 0
-        message_string = f"{available_replicas} pod(s) are available. {unavailable_replicas} pod(s) are not ready due to "
-
-        if issue == PodIssue.ImagePullBackoff:
-            message_string += "image-pull-backoff"
-        elif issue == PodIssue.Pending:
-            message_string += "scheduling issue"
-        elif issue in [PodIssue.CrashloopBackoff, PodIssue.Crashing]:
-            message_string += "crash-looping"
-        else:
-            message_string += issue.name
-
-    if reason:
-        message_string += f"\n\n{reason}: {message if message else 'N/A'}"
+        message_text = f"{available_replicas} pod(s) are available. {unavailable_replicas} pod(s) are not ready due to {issue_text}"
+        if reason:
+            message_text += f"\n\n{reason}: {message if message else 'N/A'}"
     else:
-        message_string = f"Pod is not ready due to {issue.name}"
+        message_text = f"Pod is not ready due to {issue_text}"
 
-    return message_string
+    return message_text
 
 
 def report_pod_issue(
@@ -166,7 +164,7 @@ def report_pod_issue(
         logging.debug(f"`pods_with_issue` for found for issue: {issue}")
         return
 
-    message_string = get_pod_issue_explanation(event=event, issue=issue, reason=reason,
+    message_text = get_pod_issue_explanation(event=event, issue=issue, reason=reason,
                                                message=message)
 
     # get blocks from specific pod issue
@@ -178,7 +176,7 @@ def report_pod_issue(
         for enrichment in issues_enrichments:
             event.add_enrichment(enrichment.blocks, enrichment_type=enrichment.enrichment_type, title=enrichment.title)
 
-        event.extend_description(message_string)
+        event.extend_description(message_text)
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
     resource = event.get_resource()
