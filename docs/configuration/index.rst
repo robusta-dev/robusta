@@ -4,9 +4,9 @@ Integrations Overview
 ==========================
 
 
-Robusta can gather data from multiple sources, enrich them and send actionable alerts to many Sinks(destinations). These integrations with external tools are done using Robusta's Helm values.
+Robusta can gather data from multiple sources, enrich them and send actionable alerts to many sinks (destinations). These integrations with external tools are done using Robusta's Helm values.
 
-We highly recommend configuring at least one metrics source, such as Prometheus, one alert system (recommended: AlertManager), and one sink, e.g., Slack.
+We highly recommend configuring at least one metrics source, such as Prometheus, one alert system (recommended: AlertManager), and one sink like Slack.
 
 Follow these guides after :ref:`installing Robusta <install>`.
 
