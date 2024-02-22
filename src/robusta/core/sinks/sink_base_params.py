@@ -70,12 +70,15 @@ class ScopeParams(BaseModel):
 
     @root_validator
     def check_and_normalize(cls, data: Dict) -> Dict:
-        """ Check and normalize entries inside include/exclude """
+        """Check and normalize entries inside include/exclude"""
         for key in ["include", "exclude"]:
             entry = data[key]
-            if entry is None: continue
+            if entry is None:
+                continue
             if entry == []:
-                raise ValueError("scope include/exclude specification requires at least one matcher")
+                raise ValueError(
+                    "scope include/exclude specification requires at least one matcher"
+                )
             for inc_exc_params in entry:
                 for attr_name, regex_or_regexes in inc_exc_params.items():
                     if isinstance(regex_or_regexes, str):
