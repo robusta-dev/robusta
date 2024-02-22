@@ -22,7 +22,8 @@ class PrometheusAnalyzer:
         return self._non_timed_query(promql_query)
 
     def _non_timed_query(self, promql_query: str) -> list:
-        results = self.prom.custom_query(promql_query, self.default_params)
+        response = self.prom.safe_custom_query(promql_query, self.default_params)
+        results = response["result"]
         return results
 
     def _get_query_value(self, results: Optional[list], offset: int = 0) -> Optional[float]:
@@ -41,7 +42,8 @@ class PrometheusAnalyzer:
         end_time = datetime.now(tz=self.prometheus_tzinfo)
         start_time = end_time - duration
         step = kwargs.get("step", "1")
-        results = self.prom.custom_query_range(
+        response = self.prom.safe_custom_query_range(
             promql_query, start_time, end_time, step, {"timeout": self.default_params["timeout"]}
         )
+        results = response["result"]
         return results
