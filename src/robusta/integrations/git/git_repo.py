@@ -14,6 +14,7 @@ from robusta.core.model.env_vars import GIT_MAX_RETRIES
 GIT_DIR_NAME = "robusta-git"
 REPO_LOCAL_BASE_DIR = os.path.abspath(os.path.join(os.environ.get("REPO_LOCAL_BASE_DIR", "/app"), GIT_DIR_NAME))
 SSH_ROOT_DIR = os.environ.get("SSH_ROOT_DIR", "/root/.ssh")
+GIT_REPOS_VERIFIED_HOSTS = os.environ.get("GIT_REPOS_VERIFIED_HOSTS", "")
 
 GIT_SSH_PREFIX = "git@"
 GIT_HTTPS_PREFIX = "https://"
@@ -85,7 +86,7 @@ class GitRepo:
         os.chmod(key_file_name, 0o400)
         if not os.path.exists(SSH_ROOT_DIR):
             os.mkdir(SSH_ROOT_DIR)
-        os.system(f"ssh-keyscan -H github.com bitbucket.org >> {SSH_ROOT_DIR}/known_hosts")
+        os.system(f"ssh-keyscan -H github.com bitbucket.org {GIT_REPOS_VERIFIED_HOSTS} >> {SSH_ROOT_DIR}/known_hosts")
         return key_file_name
 
     @staticmethod
