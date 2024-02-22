@@ -91,7 +91,7 @@ class SupabaseDal(AccountResourceFetcher):
             self.client.table(SCANS_META_TABLE).update(
                 {
                     "state": state,
-                    "metadata": json.dumps(metadata),
+                    "metadata": metadata,
                 }
             ).eq("scan_id", scan_id).execute()
         except Exception as e:
@@ -111,6 +111,9 @@ class SupabaseDal(AccountResourceFetcher):
                     "_type": scan_type,
                 },
             )
+        except requests.exceptions.HTTPError as e:
+            logging.error(f"Failed to insert scan meta {scan_id}, error: {e}, response: {e.response.text}")
+            raise
         except Exception as e:
             logging.error(f"Failed to persist scan meta {scan_id} error: {e}")
             self.handle_supabase_error()
@@ -131,7 +134,7 @@ class SupabaseDal(AccountResourceFetcher):
                     "state": "success",
                     "scan_end": str(block.end_time),
                     "grade": block.grade,
-                    "metadata": json.dumps(block.metadata),
+                    "metadata": block.metadata,
                 }
             ).eq("scan_id", block.scan_id).execute()
         except Exception as e:
