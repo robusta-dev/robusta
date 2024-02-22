@@ -53,7 +53,8 @@ class NodeCpuAnalyzer:
         :return: a dict of {[pod_name] : [cpu_usage in the 0-1 range] }
         """
         query = self._build_query_for_containerized_cpu_usage(False, normalize_by_cpu_count)
-        result = self.prom.custom_query(query, params=self.default_params)
+        response = self.prom.safe_custom_query(query, params=self.default_params)
+        result = response["result"]
         pod_value_pairs = [(r["metric"]["pod"], float(r["value"][1])) for r in result]
         pod_value_pairs = [(k, v) for (k, v) in pod_value_pairs if v >= threshold]
         pod_value_pairs.sort(key=lambda x: x[1], reverse=True)
@@ -62,14 +63,16 @@ class NodeCpuAnalyzer:
 
     def get_per_pod_cpu_request(self):
         query = f'sum by (pod)(kube_pod_container_resource_requests_cpu_cores{{node="{self.node.metadata.name}"}})'
-        result = self.prom.custom_query(query, params=self.default_params)
+        response = self.prom.safe_custom_query(query, params=self.default_params)
+        result = response["result"]
         return dict((r["metric"]["pod"], float(r["value"][1])) for r in result)
 
     def _query(self, query):
         """
         Runs a simple query returning a single metric and returns that metric
         """
-        result = self.prom.custom_query(query, params=self.default_params)
+        response = self.prom.safe_custom_query(query, params=self.default_params)
+        result = response["result"]
         return float(result[0]["value"][1])
 
     def _build_query_for_containerized_cpu_usage(self, total, normalized_by_cpu_count):
