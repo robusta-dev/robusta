@@ -14,6 +14,16 @@ use in :ref:`customPlaybooks<customPlaybooks>`.
 
 External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH.
 
+If your repository is not in ``github.com`` or ``bitbucket.org`` (default verified domains), please add your repository domains:
+
+.. code-block:: yaml
+
+    runner:
+      additional_env_vars:
+        - name: GIT_REPOS_VERIFIED_HOSTS
+          value: "ssh.dev.azure.com gitlab.com"
+
+
 Loading Actions from Public Git Repo
 ------------------------------------------
 
