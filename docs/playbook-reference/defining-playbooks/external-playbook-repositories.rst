@@ -21,7 +21,7 @@ If your repository is not in ``github.com`` or ``bitbucket.org`` (default verifi
     runner:
       additional_env_vars:
         - name: GIT_REPOS_VERIFIED_HOSTS
-          value: "azure.com gitlab.com"
+          value: "ssh.dev.azure.com gitlab.com"
 
 
 Loading Actions from Public Git Repo
