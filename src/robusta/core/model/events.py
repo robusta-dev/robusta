@@ -4,18 +4,19 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from pydantic import BaseModel
 
 from robusta.core.reporting.base import (
     BaseBlock,
+    EnrichmentType,
     Finding,
     FindingSeverity,
     FindingSource,
     FindingSubject,
     FindingSubjectType,
-    VideoLink, EnrichmentType,
+    VideoLink,
 )
 from robusta.core.sinks import SinkBase
 from robusta.integrations.scheduled.playbook_scheduler import PlaybooksScheduler
@@ -36,6 +37,10 @@ class ExecutionContext(BaseModel):
     account_id: str
     cluster_name: str
 
+
+class PubSubEvent(BaseModel):
+    name: str
+    data: Any
 
 # Right now:
 # 1. this is a dataclass but we need to make all fields optional in subclasses because of https://stackoverflow.com/questions/51575931/
@@ -93,6 +98,14 @@ class ExecutionBaseEvent:
         self.__prepare_sinks_findings()
         for sink in self.named_sinks:
             self.sink_findings[sink][0].add_video_link(video_link, True)
+
+    def emit_action_event(self, event_name: str, **kwargs) -> None:
+        """ Publish an event to the pubsub. It will be processed by the sinks during the execution of the playbook."""
+
+        for sink in self.named_sinks:
+            sink_obj = self.all_sinks.get(sink)
+            if sink_obj:
+                sink_obj.handle_action_event(event_name, **kwargs)
 
     def add_enrichment(
         self,

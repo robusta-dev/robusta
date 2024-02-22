@@ -70,6 +70,12 @@ class SlackAnnotations:
     ATTACHMENT = "attachment"
 
 
+class ScanState(str, Enum):
+    PENDING = "pending"
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
 class ScanType(str, Enum):
     POPEYE = "popeye"
     KRR = "krr"

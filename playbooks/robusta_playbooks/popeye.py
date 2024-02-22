@@ -6,11 +6,10 @@ import uuid
 from collections import defaultdict
 from datetime import datetime
 from json import JSONDecodeError
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from hikaru.model.rel_1_26 import Container, PodSpec, ResourceRequirements
 from pydantic import BaseModel, ValidationError
-
 from robusta.api import (
     RELEASE_NAME,
     EnrichmentAnnotation,
@@ -26,6 +25,7 @@ from robusta.api import (
     action,
     to_kubernetes_name,
 )
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
 
 IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye:v0.11.1")
 POPEYE_MEMORY_LIMIT: str = os.getenv("POPEYE_MEMORY_LIMIT", "1Gi")
@@ -165,7 +165,28 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     )
 
     start_time = datetime.now()
+    scan_id = str(uuid.uuid4())
     logs = None
+    job_name = f"popeye-job-{scan_id}"
+    metadata: Dict[str, Any] = {
+        "job": {
+            "name": job_name,
+            "namespace": INSTALLATION_NAMESPACE,
+        },
+    }
+
+    def update_state(state: Literal["pending", "failed", "success"]) -> None:
+        event.emit_action_event(
+            "scan_updated",
+            scan_id=scan_id,
+            metadata=metadata,
+            state=state,
+            type=ScanType.POPEYE,
+            start_time=start_time,
+        )
+
+    update_state("pending")
+
     try:
         logs = RobustaJob.run_simple_job_spec(
             spec,
@@ -176,28 +197,29 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
             delete_job_post_execution=False,
         )
         scan = json.loads(logs)
-        end_time = datetime.now()
         popeye_scan = PopeyeReport(**scan["popeye"])
-    except JSONDecodeError:
-        logging.error(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")
-        return
-    except ValidationError as e:
-        logging.error(f"*Popeye scan job failed. Result format issue.*\n\n {e}")
-        logging.error(f"\n {logs}")
-        return
     except Exception as e:
-        if str(e) == "Failed to reach wait condition":
+        if isinstance(e, JSONDecodeError):
+            logging.error(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")
+        elif isinstance(e, ValidationError):
+            logging.error(f"*Popeye scan job failed. Result format issue.*\n\n {e}")
+        elif str(e) == "Failed to reach wait condition":
             logging.error(f"*Popeye scan job failed. The job wait condition timed out ({params.timeout}s)*")
         else:
             logging.error(f"*Popeye scan job unexpected error.*\n {e}")
+
+        logging.error(f"Logs: {logs}")
+        update_state("failed")
         return
+    else:
+        update_state("success")
 
     scan_block = ScanReportBlock(
         title="Popeye scan",
-        scan_id=str(uuid.uuid4()),
+        scan_id=scan_id,
         type=ScanType.POPEYE,
         start_time=start_time,
-        end_time=end_time,
+        end_time=datetime.now(),
         score=popeye_scan.score,
         results=[],
         config=f"{params.args} \n\n {params.spinach}",

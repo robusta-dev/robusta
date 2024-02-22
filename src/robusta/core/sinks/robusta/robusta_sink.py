@@ -4,7 +4,8 @@ import logging
 import os
 import threading
 import time
-from typing import Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
 from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
@@ -27,11 +28,12 @@ from robusta.core.model.nodes import NodeInfo, NodeSystemInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting.base import Finding
+from robusta.core.reporting.consts import ScanState, ScanType
 from robusta.core.sinks.robusta.discovery_metrics import DiscoveryMetrics
 from robusta.core.sinks.robusta.prometheus_health_checker import PrometheusHealthChecker
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.robusta.rrm.rrm import RRM
-from robusta.core.sinks.sink_base import SinkBase
+from robusta.core.sinks.sink_base import SinkBase, on_action_event
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
 from robusta.utils.stack_tracer import StackTracer
@@ -657,3 +659,17 @@ class RobustaSink(SinkBase):
                 self.__safe_delete_job(job_key)
                 self.__discovery_metrics.on_jobs_updated(1)
                 return
+
+    @on_action_event("scan_update")
+    def _on_scan_update(
+        self,
+        scan_id: str,
+        metadata: Any,
+        state: ScanState,
+        type: ScanType,
+        start_time: datetime
+    ) -> None:
+        if state == "pending":
+            self.dal.insert_scan_meta(scan_id, start_time, type)
+
+        self.dal.set_scan_state(scan_id, state, metadata)

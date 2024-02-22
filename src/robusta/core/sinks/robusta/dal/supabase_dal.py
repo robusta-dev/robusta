@@ -4,10 +4,11 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
 import requests
 from postgrest.base_request_builder import BaseFilterRequestBuilder
-from postgrest.utils import sanitize_param
 from postgrest.types import ReturnMethod
+from postgrest.utils import sanitize_param
 from supabase import create_client
 from supabase.lib.client_options import ClientOptions
 
@@ -21,11 +22,15 @@ from robusta.core.model.services import ServiceInfo
 from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.blocks import EventsBlock, EventsRef, ScanReportBlock, ScanReportRow
-from robusta.core.reporting.consts import EnrichmentAnnotation
+from robusta.core.reporting.consts import EnrichmentAnnotation, ScanState, ScanType
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
 from robusta.core.sinks.robusta.rrm.account_resource_fetcher import AccountResourceFetcher
-from robusta.core.sinks.robusta.rrm.types import AccountResource, ResourceKind, \
-    AccountResourceStatusType, AccountResourceStatusInfo
+from robusta.core.sinks.robusta.rrm.types import (
+    AccountResource,
+    AccountResourceStatusInfo,
+    AccountResourceStatusType,
+    ResourceKind,
+)
 
 SERVICES_TABLE = "Services"
 NODES_TABLE = "Nodes"
@@ -37,6 +42,7 @@ HELM_RELEASES_TABLE = "HelmReleases"
 NAMESPACES_TABLE = "Namespaces"
 UPDATE_CLUSTER_NODE_COUNT = "update_cluster_node_count"
 SCANS_RESULT_TABLE = "ScansResults"
+SCANS_META_TABLE = "ScansMeta"
 RESOURCE_EVENTS = "ResourceEvents"
 ACCOUNT_RESOURCE_TABLE = "AccountResource"
 ACCOUNT_RESOURCE_STATUS_TABLE = "AccountResourceStatus"
@@ -44,16 +50,16 @@ ACCOUNT_RESOURCE_STATUS_TABLE = "AccountResourceStatus"
 
 class SupabaseDal(AccountResourceFetcher):
     def __init__(
-            self,
-            url: str,
-            key: str,
-            account_id: str,
-            email: str,
-            password: str,
-            sink_name: str,
-            persist_events: bool,
-            cluster_name: str,
-            signing_key: str,
+        self,
+        url: str,
+        key: str,
+        account_id: str,
+        email: str,
+        password: str,
+        sink_name: str,
+        persist_events: bool,
+        cluster_name: str,
+        signing_key: str,
     ):
         httpx_logger = logging.getLogger("httpx")
         if httpx_logger:
@@ -80,6 +86,36 @@ class SupabaseDal(AccountResourceFetcher):
         db_sr["cluster_id"] = self.cluster
         return db_sr
 
+    def set_scan_state(self, scan_id: str, state: ScanState, metadata: dict) -> None:
+        try:
+            self.client.table(SCANS_META_TABLE).update(
+                {
+                    "state": state,
+                    "metadata": json.dumps(metadata),
+                }
+            ).eq("scan_id", scan_id).execute()
+        except Exception as e:
+            logging.error(f"Failed to set scan state {scan_id} error: {e}")
+            self.handle_supabase_error()
+            raise
+
+    def insert_scan_meta(self, scan_id: str, start_time: datetime, scan_type: ScanType) -> None:
+        try:
+            self.__rpc_patch(
+                "insert_scan_meta",
+                {
+                    "_account_id": self.account_id,
+                    "_cluster": self.cluster,
+                    "_scan_id": scan_id,
+                    "_scan_start": str(start_time),
+                    "_type": scan_type,
+                },
+            )
+        except Exception as e:
+            logging.error(f"Failed to persist scan meta {scan_id} error: {e}")
+            self.handle_supabase_error()
+            raise
+
     def persist_scan(self, block: ScanReportBlock):
         db_scanResults = [self.__to_db_scanResult(sr) for sr in block.results]
         try:
@@ -90,20 +126,16 @@ class SupabaseDal(AccountResourceFetcher):
             raise
 
         try:
-            self.__rpc_patch(
-                "insert_scan_meta",
+            self.client.table(SCANS_META_TABLE).update(
                 {
-                    "_account_id": self.account_id,
-                    "_cluster": self.cluster,
-                    "_scan_id": block.scan_id,
-                    "_scan_start": str(block.start_time),
-                    "_scan_end": str(block.end_time),
-                    "_type": block.type,
-                    "_grade": block.score,
-                },
-            )
+                    "state": "success",
+                    "scan_end": str(block.end_time),
+                    "grade": block.grade,
+                    "metadata": json.dumps(block.metadata),
+                }
+            ).eq("scan_id", block.scan_id).execute()
         except Exception as e:
-            logging.error(f"Failed to persist scan meta {block.scan_id} error: {e}")
+            logging.error(f"Failed to set scan state {block.scan_id} error: {e}")
             self.handle_supabase_error()
             raise
 
@@ -113,8 +145,10 @@ class SupabaseDal(AccountResourceFetcher):
 
         scans, enrichments = [], []
         for enrich in finding.enrichments:
-            scans.append(enrich) if enrich.annotations.get(EnrichmentAnnotation.SCAN, False) else enrichments.append(
-                enrich
+            (
+                scans.append(enrich)
+                if enrich.annotations.get(EnrichmentAnnotation.SCAN, False)
+                else enrichments.append(enrich)
             )
 
         if (len(scans) > 0) and (len(enrichments)) == 0:
@@ -185,8 +219,15 @@ class SupabaseDal(AccountResourceFetcher):
             res = (
                 self.client.table(SERVICES_TABLE)
                 .select(
-                    "name", "type", "namespace", "classification", "config", "ready_pods", "total_pods",
-                    "is_helm_release")
+                    "name",
+                    "type",
+                    "namespace",
+                    "classification",
+                    "config",
+                    "ready_pods",
+                    "total_pods",
+                    "is_helm_release",
+                )
                 .filter("account_id", "eq", self.account_id)
                 .filter("cluster", "eq", self.cluster)
                 .filter("deleted", "eq", False)
@@ -287,8 +328,9 @@ class SupabaseDal(AccountResourceFetcher):
             raise
 
     @staticmethod
-    def custom_filter_request_builder(frq: BaseFilterRequestBuilder, operator: str,
-                                      criteria: str) -> BaseFilterRequestBuilder:
+    def custom_filter_request_builder(
+        frq: BaseFilterRequestBuilder, operator: str, criteria: str
+    ) -> BaseFilterRequestBuilder:
         key, val = sanitize_param(operator), f"{criteria}"
         frq.params = frq.params.set(key, val)
 
@@ -517,15 +559,22 @@ class SupabaseDal(AccountResourceFetcher):
                 self.persist_scan(block)
 
     def get_account_resources(
-            self,
-            resource_kind: Optional[ResourceKind] = None,
-            latest_revision: Optional[datetime] = None,
+        self,
+        resource_kind: Optional[ResourceKind] = None,
+        latest_revision: Optional[datetime] = None,
     ) -> Dict[ResourceKind, List[AccountResource]]:
         try:
             query_builder = (
                 self.client.table(ACCOUNT_RESOURCE_TABLE)
-                .select("entity_id", "resource_kind", "clusters_target_set", "resource_state", "deleted", "enabled",
-                        "updated_at")
+                .select(
+                    "entity_id",
+                    "resource_kind",
+                    "clusters_target_set",
+                    "resource_state",
+                    "deleted",
+                    "enabled",
+                    "updated_at",
+                )
                 .eq("account_id", self.account_id)
             )
 
@@ -572,10 +621,10 @@ class SupabaseDal(AccountResourceFetcher):
         return account_resources_map
 
     def __to_db_account_resource_status(
-            self,
-            status_type: AccountResourceStatusType,
-            latest_revision: datetime,
-            info: Optional[AccountResourceStatusInfo] = None,
+        self,
+        status_type: AccountResourceStatusType,
+        latest_revision: datetime,
+        info: Optional[AccountResourceStatusInfo] = None,
     ) -> Dict[Any, Any]:
         latest_revision_iso = latest_revision.isoformat()
         data = {
@@ -593,14 +642,15 @@ class SupabaseDal(AccountResourceFetcher):
         return data
 
     def set_account_resource_status(
-            self,
-            status_type: AccountResourceStatusType,
-            info: Optional[AccountResourceStatusInfo],
-            latest_revision: datetime
+        self,
+        status_type: AccountResourceStatusType,
+        info: Optional[AccountResourceStatusInfo],
+        latest_revision: datetime,
     ):
         try:
-            data = self.__to_db_account_resource_status(status_type=status_type, info=info,
-                                                        latest_revision=latest_revision)
+            data = self.__to_db_account_resource_status(
+                status_type=status_type, info=info, latest_revision=latest_revision
+            )
 
             self.client.table(ACCOUNT_RESOURCE_STATUS_TABLE).upsert(data).execute()
         except Exception as e:

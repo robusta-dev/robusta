@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
-
 from robusta.api import (
     IMAGE_REGISTRY,
     RELEASE_NAME,
@@ -29,6 +28,7 @@ from robusta.api import (
     action,
     format_unit,
 )
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
@@ -352,9 +352,27 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         **params.krr_job_spec,
     )
 
-    start_time = end_time = datetime.now()
-    krr_scan = krr_response = {}
+    start_time = datetime.now()
     logs = None
+    job_name = f"krr-job-{scan_id}"
+    metadata: Dict[str, Any] = {
+        "job": {
+            "name": job_name,
+            "namespace": INSTALLATION_NAMESPACE,
+        },
+    }
+
+    def update_state(state: Literal["pending", "failed", "success"]) -> None:
+        event.emit_action_event(
+            "scan_updated",
+            scan_id=scan_id,
+            metadata=metadata,
+            state=state,
+            type=ScanType.KRR,
+            start_time=start_time,
+        )
+
+    update_state("pending")
 
     try:
         logs = RobustaJob.run_simple_job_spec(
@@ -379,30 +397,33 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         logs = logs[logs.find("{") :]
 
         krr_response = json.loads(logs)
-        end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
-    except json.JSONDecodeError:
-        logging.exception("*KRR scan job failed. Expecting json result.*")
-        logging.error(f"Logs: {logs}")
-        return
-    except ValidationError:
-        logging.exception("*KRR scan job failed. Result format issue.*\n\n")
-        logging.error(f"Logs: {logs}")
-        return
+
     except Exception as e:
-        if str(e) == "Failed to reach wait condition":
+        if isinstance(e, json.JSONDecodeError):
+            logging.exception("*KRR scan job failed. Expecting json result.*")
+        elif isinstance(e, ValidationError):
+            logging.exception("*KRR scan job failed. Result format issue.*")
+        elif str(e) == "Failed to reach wait condition":
             logging.exception(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")
         else:
             logging.exception(f"*KRR scan job unexpected error.*\n {e}")
+
         logging.error(f"Logs: {logs}")
+        update_state("failed")
         return
+    else:
+        # TODO: Process the result, add some non-critical errors and warnings to the metadata
+        metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
+        metadata["description"] = krr_scan.description
+        update_state("success")
 
     scan_block = ScanReportBlock(
         title="KRR scan",
         scan_id=scan_id,
         type=ScanType.KRR,
         start_time=start_time,
-        end_time=end_time,
+        end_time=datetime.now(),
         score=krr_scan.score,
         results=[
             ScanReportRow(
