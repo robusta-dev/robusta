@@ -660,8 +660,8 @@ class RobustaSink(SinkBase):
                 self.__discovery_metrics.on_jobs_updated(1)
                 return
 
-    @on_action_event("scan_update")
-    def _on_scan_update(
+    @on_action_event("scan_updated")
+    def _on_scan_updated(
         self,
         scan_id: str,
         metadata: Any,
@@ -669,6 +669,8 @@ class RobustaSink(SinkBase):
         type: ScanType,
         start_time: datetime
     ) -> None:
+        logging.info(f"Received scan update event for scan {scan_id} with state {state} and type {type}")
+
         if state == "pending":
             self.dal.insert_scan_meta(scan_id, start_time, type)
 

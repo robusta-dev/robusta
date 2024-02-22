@@ -26,6 +26,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
+from robusta.core.reporting.consts import ScanState
 
 IMAGE: str = os.getenv("POPEYE_IMAGE_OVERRIDE", "derailed/popeye:v0.11.1")
 POPEYE_MEMORY_LIMIT: str = os.getenv("POPEYE_MEMORY_LIMIT", "1Gi")
@@ -175,7 +176,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         },
     }
 
-    def update_state(state: Literal["pending", "failed", "success"]) -> None:
+    def update_state(state: ScanState) -> None:
         event.emit_action_event(
             "scan_updated",
             scan_id=scan_id,
@@ -185,16 +186,17 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
             start_time=start_time,
         )
 
-    update_state("pending")
+    update_state(ScanState.PENDING)
 
     try:
         logs = RobustaJob.run_simple_job_spec(
             spec,
-            "popeye_job",
+            job_name,
             params.timeout,
             custom_annotations=params.custom_annotations,
             ttl_seconds_after_finished=43200,  # 12 hours
             delete_job_post_execution=False,
+            process_name=False,
         )
         scan = json.loads(logs)
         popeye_scan = PopeyeReport(**scan["popeye"])
@@ -209,10 +211,10 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
             logging.error(f"*Popeye scan job unexpected error.*\n {e}")
 
         logging.error(f"Logs: {logs}")
-        update_state("failed")
+        update_state(ScanState.FAILED)
         return
     else:
-        update_state("success")
+        update_state(ScanState.SUCCESS)
 
     scan_block = ScanReportBlock(
         title="Popeye scan",
@@ -221,6 +223,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         start_time=start_time,
         end_time=datetime.now(),
         score=popeye_scan.score,
+        metadata=metadata,
         results=[],
         config=f"{params.args} \n\n {params.spinach}",
         pdf_scan_row_content_format=scan_row_content_to_string,

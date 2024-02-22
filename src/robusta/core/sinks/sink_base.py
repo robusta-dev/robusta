@@ -1,3 +1,4 @@
+import inspect
 import logging
 from typing import Any, Callable, Dict
 
@@ -31,14 +32,15 @@ class SinkBase:
 
         self.time_slices = self._build_time_slices_from_params(self.params.activity)
 
-        # Auto-discover callbacks that are decorated with @on_action_event
+        # Get all method names marked
         self.action_event_handlers: Dict[str, Callable] = {
-            getattr(self, attr)._sink_on_action_event: getattr(self, attr)
-            for attr in dir(self)
-            if callable(getattr(self, attr)) and hasattr(getattr(self, attr), "_sink_on_action_event")
+            method._sink_on_action_event: getattr(self, name)
+            for name, method in inspect.getmembers(self, predicate=inspect.ismethod)
+            if hasattr(method, "_sink_on_action_event")
         }
 
     def handle_action_event(self, event_name: str, **kwargs):
+        logging.info(f"Handling action event {event_name} for sink {self.sink_name}\n{self.action_event_handlers}")
         action_event_handler = self.action_event_handlers.get(event_name)
         if action_event_handler:
             try:

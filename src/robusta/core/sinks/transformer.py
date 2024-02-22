@@ -249,7 +249,7 @@ class Transformer:
         pdf.c_margin = 2  # create default cell margin to add table "padding"
 
         title = f"{scan.type.capitalize()} report"
-        write_report_header(title, scan.end_time, scan.score, scan.grade())
+        write_report_header(title, scan.end_time, scan.score, scan.grade)
         write_config(pdf, scan.config)
 
         sections: dict[str, dict[str, List]] = defaultdict(lambda: defaultdict(list))

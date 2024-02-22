@@ -29,6 +29,7 @@ from robusta.api import (
     format_unit,
 )
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
+from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
@@ -362,7 +363,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         },
     }
 
-    def update_state(state: Literal["pending", "failed", "success"]) -> None:
+    def update_state(state: ScanState) -> None:
         event.emit_action_event(
             "scan_updated",
             scan_id=scan_id,
@@ -372,17 +373,18 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             start_time=start_time,
         )
 
-    update_state("pending")
+    update_state(ScanState.PENDING)
 
     try:
         logs = RobustaJob.run_simple_job_spec(
             spec,
-            "krr_job" + scan_id,
+            job_name,
             params.timeout,
             secret,
             custom_annotations=params.custom_annotations,
             ttl_seconds_after_finished=43200,  # 12 hours
             delete_job_post_execution=False,
+            process_name=False,
         )
 
         # NOTE: We need to remove the logs before the json result
@@ -410,13 +412,13 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             logging.exception(f"*KRR scan job unexpected error.*\n {e}")
 
         logging.error(f"Logs: {logs}")
-        update_state("failed")
+        update_state(ScanState.FAILED)
         return
     else:
         # TODO: Process the result, add some non-critical errors and warnings to the metadata
         metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
         metadata["description"] = krr_scan.description
-        update_state("success")
+        update_state(ScanState.SUCCESS)
 
     scan_block = ScanReportBlock(
         title="KRR scan",
@@ -425,6 +427,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         start_time=start_time,
         end_time=datetime.now(),
         score=krr_scan.score,
+        metadata=metadata,
         results=[
             ScanReportRow(
                 scan_id=scan_id,

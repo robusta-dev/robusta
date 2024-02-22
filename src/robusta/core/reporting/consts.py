@@ -70,6 +70,10 @@ class SlackAnnotations:
     ATTACHMENT = "attachment"
 
 
+class ActionEvent(str, Enum):
+    SCAN_UPDATED = "scan_updated"
+
+
 class ScanState(str, Enum):
     PENDING = "pending"
     SUCCESS = "success"
