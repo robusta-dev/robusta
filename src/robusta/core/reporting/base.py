@@ -153,6 +153,7 @@ class Filterable:
 
     def matches(self, match_requirements: Dict[str, Union[str, List[str]]], scope_requirements) -> bool:
         # 1. "scope" check
+        accept = True
         if scope_requirements is not None:
             if scope_requirements.exclude:
                 if self.scope_inc_exc_matches(scope_requirements.exclude):
@@ -160,6 +161,8 @@ class Filterable:
             if scope_requirements.include:
                 if self.scope_inc_exc_matches(scope_requirements.include):
                     return True
+                else:  # include was defined, but not matched. So if not matched by old matcher, should be rejected!
+                    accept = False
 
         # 2. "match" check
         invalid_attributes = self.get_invalid_attributes(list(match_requirements.keys()))
@@ -170,7 +173,7 @@ class Filterable:
         for attribute, expression in match_requirements.items():
             if not self.attribute_matches(attribute, expression):
                 return False
-        return True
+        return accept
 
     def scope_inc_exc_matches(self, scope_inc_exc: Optional[list]):
         return any(self.scope_matches(scope) for scope in scope_inc_exc)
@@ -181,7 +184,7 @@ class Filterable:
         for attr_name, attr_matchers in scope.items():
             if not self.scope_attribute_matches(attr_name, attr_matchers):
                 return False
-        return False
+        return True
 
     def scope_attribute_matches(self, attr_name: str, attr_matchers: List[str]):
         if attr_name not in self.attribute_map:

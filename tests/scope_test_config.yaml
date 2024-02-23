@@ -22,7 +22,7 @@ tests:
         finding:
           subject:
             name: xxx
-            namespace: yyyy
+            namespace: yyy
         expected: true
       - message: "reject with name xx and ns yy"
         finding:
