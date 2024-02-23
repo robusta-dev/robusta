@@ -9,6 +9,19 @@ class FindingType(Enum):
     HEALTH_CHECK = "health_check"
     REPORT = "report"
 
+    @staticmethod
+    def from_type(finding_type: str) -> "FindingType":
+        if finding_type == "ISSUE":
+            return FindingType.ISSUE
+        elif finding_type == "CONF_CHANGE":
+            return FindingType.CONF_CHANGE
+        elif finding_type == "HEALTH_CHECK":
+            return FindingType.HEALTH_CHECK
+        elif finding_type == "REPORT":
+            return FindingType.REPORT
+
+        raise Exception(f"Unknown finding type {finding_type}")
+
 
 class FindingAggregationKey(Enum):
     NONE = None  # empty default
@@ -24,6 +37,23 @@ class FindingSource(Enum):
     HELM_RELEASE = "helm_release"
     CALLBACK = "callback"
     SCHEDULER = "scheduler"
+
+    @staticmethod
+    def from_source(source: str) -> "FindingSource":
+        if source == "KUBERNETES_API_SERVER":
+            return FindingSource.KUBERNETES_API_SERVER
+        elif source == "PROMETHEUS":
+            return FindingSource.PROMETHEUS
+        elif source == "MANUAL":
+            return FindingSource.MANUAL
+        elif source == "HELM_RELEASEUM":
+            return FindingSource.HELM_RELEASE
+        elif source == "CALLBACK":
+            return FindingSource.CALLBACK
+        elif source == "SCHEDULER":
+            return FindingSource.SCHEDULER
+
+        return FindingSource.NONE
 
 
 # Finding subject types

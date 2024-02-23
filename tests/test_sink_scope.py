@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 
 from robusta.core.reporting import Finding, FindingSeverity, FindingSource, FindingSubject
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
@@ -15,8 +15,11 @@ from robusta.core.sinks.sink_base_params import ScopeParams, SinkBaseParams
 class CheckFindingSubject(BaseModel):
     name: Optional[str] = "pod-xxx-yyy"
     namespace: Optional[str] = "default"
-    kind: Optional[FindingSubjectType] = FindingSubjectType.TYPE_POD
+    kind: Optional[str] = "pod"
     node: Optional[str] = None
+
+    class Config:
+        extra = Extra.forbid
 
 
 class CheckFinding(BaseModel):
@@ -25,15 +28,18 @@ class CheckFinding(BaseModel):
     labels: Dict[str, str] = {}
     annotations: Dict[str, str] = {}
     aggregation_key: str = "oom_kill"
-    severity: FindingSeverity = FindingSeverity.INFO
-    source: FindingSource = FindingSource.NONE
-    finding_type: FindingType = FindingType.ISSUE
+    severity: str = "INFO"
+    source: str = "NONE"
+    finding_type: str = "ISSUE"
+
+    class Config:
+        extra = Extra.forbid
 
     def create_finding(self) -> Finding:
         subject = FindingSubject(
             name=self.subject.name,
             namespace=self.subject.namespace,
-            subject_type=self.subject.kind,
+            subject_type=FindingSubjectType.from_kind(self.subject.kind),
             node=self.subject.node,
             labels=self.labels,
             annotations=self.annotations,
@@ -42,9 +48,9 @@ class CheckFinding(BaseModel):
             title=self.title,
             subject=subject,
             aggregation_key=self.aggregation_key,
-            severity=self.severity,
-            source=self.source,
-            finding_type=self.finding_type,
+            severity=FindingSeverity.from_severity(self.severity),
+            source=FindingSource.from_source(self.source),
+            finding_type=FindingType.from_type(self.finding_type),
         )
 
 
@@ -53,10 +59,16 @@ class ScopeCheck(BaseModel):
     expected: bool
     message: str
 
+    class Config:
+        extra = Extra.forbid
+
 
 class ScopeTest(BaseModel):
     scope: ScopeParams
     checks: List[ScopeCheck]
+
+    class Config:
+        extra = Extra.forbid
 
 
 class TestConfig(BaseModel):

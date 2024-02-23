@@ -213,7 +213,7 @@ class Filterable:
         label_value = labels.get(label_name.strip())
         if label_value is None:  # no label with that name
             return False
-        return bool(re.fullmatch(labels_match_expr, label_value.strip())) == expect_match
+        return bool(re.fullmatch(label_regex, label_value.strip())) == expect_match
 
 
 class FindingSubject:

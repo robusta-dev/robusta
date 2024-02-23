@@ -12,6 +12,75 @@
 #   annotations: A comma separated list of key=val e.g. app.kubernetes.io/name=prometheus
 tests:
   - scope:
+        include:
+          - title: the title
+            name: the-name
+            namespace: the-namespace
+            kind: deployment
+            node: the-node
+            severity: HIGH
+            type: REPORT
+            source: CALLBACK
+            identifier: crash_loop
+            labels: "label1=lab1, label2=lab2"
+            annotations: "annot1=ann1, annot2=ann2"
+    checks:
+      - message: "accept all fields match"
+        finding:
+          title: the title
+          subject:
+            name: the-name
+            namespace: the-namespace
+            kind: deployment
+            node: the-node
+          severity: HIGH
+          finding_type: REPORT
+          source: CALLBACK
+          aggregation_key: crash_loop
+          labels:
+            label1: lab1
+            label2: lab2
+          annotations:
+            annot1: ann1
+            annot2: ann2
+        expected: true
+      - message: "reject missing label"
+        finding:
+          title: the title
+          subject:
+            name: the-name
+            namespace: the-namespace
+            kind: deployment
+            node: the-node
+          severity: HIGH
+          finding_type: REPORT
+          source: CALLBACK
+          aggregation_key: crash_loop
+          labels:
+            label1: lab1
+          annotations:
+            annot1: ann1
+            annot2: ann2
+        expected: false
+      - message: "reject wrong title"
+        finding:
+          title: title
+          subject:
+            name: the-name
+            namespace: the-namespace
+            kind: deployment
+            node: the-node
+          severity: HIGH
+          finding_type: REPORT
+          source: CALLBACK
+          aggregation_key: crash_loop
+          labels:
+            label1: lab1
+          annotations:
+            annot1: ann1
+            annot2: ann2
+        expected: false
+  - scope:
       include:
         - name: xxx
           namespace: yyy
@@ -35,4 +104,75 @@ tests:
           subject:
             name: zzz
             namespace: yy
+        expected: false
+  - scope:
+      include:
+        - name:
+            - name1
+            - name2
+          namespace:
+          - ns1
+          - ns2
+    checks:
+      - message: "accept name1 ns2"
+        finding:
+          subject:
+            name: name1
+            namespace: ns2
+        expected: true
+      - message: "accept name1 ns1"
+        finding:
+          subject:
+            name: name1
+            namespace: ns1
+        expected: true
+      - message: "reject name1 ns3"
+        finding:
+          subject:
+            name: name1
+            namespace: ns3
+        expected: false
+      - message: "reject name3 ns3"
+        finding:
+          subject:
+            name: name3
+            namespace: ns3
+        expected: false
+  - scope:
+      include:
+        - name:
+          - .*myname.*
+          - his-name
+          title:
+            - the title
+    checks:
+      - message: "accept his-name and title"
+        finding:
+          title: the title
+          subject:
+            name: his-name
+        expected: true
+      - message: "accept xxmynamename1 and title"
+        finding:
+          title: the title
+          subject:
+            name: xxmynamename1
+        expected: true
+      - message: "reject mynam and title"
+        finding:
+          title: the title
+          subject:
+            name: mynam
+        expected: false
+      - message: "reject mynam and bad title"
+        finding:
+          title: bad title
+          subject:
+            name: mynam
+        expected: false
+      - message: "reject myname and bad title"
+        finding:
+          title: bad title
+          subject:
+            name: myname
         expected: false
