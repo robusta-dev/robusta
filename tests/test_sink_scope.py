@@ -99,6 +99,8 @@ class TestFilterable:
             (None, [{"labels": "a=q,b=.*y"}, {"namespace": "ns12"}], False, False),
             (None, [{"labels": "a=q,b=.*y"}, {"title": "c[1-9]"}], False, False),
             (None, [{"labels": "a=q,b=.*y"}, {"title": "d[1-9]*"}], True, True),
+            ([{"namespace": "ns"}], None, True, False),
+            (None, [{"namespace": "ns"}], True, False),
         ],
     )
     def test_matches_inc_match(
