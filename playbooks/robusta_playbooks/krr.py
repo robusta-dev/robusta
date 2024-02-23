@@ -33,7 +33,7 @@ from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.7.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.7.1")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "1Gi")
 
@@ -96,6 +96,7 @@ class KRRResponse(BaseModel):
     resources: List[ResourceType] = ["cpu", "memory"]
     description: Optional[str] = None  # This field is not returned by KRR < v1.2.0
     strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
+    errors: List[Dict[str, Any]] = []  # This field is not returned by KRR < v1.7.1
 
 
 class KRRParams(PrometheusParams, PodRunningParams):
@@ -418,6 +419,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         # TODO: Process the result, add some non-critical errors and warnings to the metadata
         metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
         metadata["description"] = krr_scan.description
+        metadata["errors"] = krr_scan.errors
         update_state(ScanState.SUCCESS)
 
     scan_block = ScanReportBlock(

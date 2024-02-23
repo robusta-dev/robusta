@@ -40,7 +40,6 @@ class SinkBase:
         }
 
     def handle_action_event(self, event_name: str, **kwargs):
-        logging.info(f"Handling action event {event_name} for sink {self.sink_name}\n{self.action_event_handlers}")
         action_event_handler = self.action_event_handlers.get(event_name)
         if action_event_handler:
             try:

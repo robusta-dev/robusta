@@ -669,8 +669,6 @@ class RobustaSink(SinkBase):
         type: ScanType,
         start_time: datetime
     ) -> None:
-        logging.info(f"Received scan update event for scan {scan_id} with state {state} and type {type}")
-
         if state == "pending":
             self.dal.insert_scan_meta(scan_id, start_time, type)
 

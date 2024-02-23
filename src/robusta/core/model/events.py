@@ -102,8 +102,6 @@ class ExecutionBaseEvent:
     def emit_action_event(self, event_name: str, **kwargs) -> None:
         """ Publish an event to the pubsub. It will be processed by the sinks during the execution of the playbook."""
 
-        logging.info(f"Emitting action event {event_name} with kwargs {kwargs}")
-
         for sink in self.named_sinks:
             sink_obj = self.all_sinks.get(sink)
             logging.info(f"Sending action event to sink {sink}, sink_obj: {sink_obj}")
