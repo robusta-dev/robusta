@@ -133,7 +133,7 @@ class SupabaseDal(AccountResourceFetcher):
                 {
                     "state": "success",
                     "scan_end": str(block.end_time),
-                    "grade": block.grade,
+                    "grade": block.score,
                     "metadata": block.metadata,
                 }
             ).eq("scan_id", block.scan_id).execute()
