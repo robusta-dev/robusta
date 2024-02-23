@@ -76,17 +76,12 @@ class ScopeParams(BaseModel):
             if entry is None:
                 continue
             if entry == []:
-                raise ValueError(
-                    "scope include/exclude specification requires at least one matcher"
-                )
+                raise ValueError("scope include/exclude specification requires at least one matcher")
             for inc_exc_params in entry:
                 for attr_name, regex_or_regexes in inc_exc_params.items():
                     if isinstance(regex_or_regexes, str):
                         regex_or_regexes = [regex_or_regexes]
-                    # The substitution below makes sure that for example a simple "xyz" match
-                    # matches the whole word. Regexes ending with a dollar sign will still work
-                    # as expected ("xyz$$" is equivalent to "xyz$").
-                    inc_exc_params[attr_name] = [f"{expr}$" for expr in regex_or_regexes]
+                    inc_exc_params[attr_name] = regex_or_regexes
         return data
 
 

@@ -108,8 +108,13 @@ class Enrichment:
     enrichment_type: Optional[EnrichmentType]
     title: Optional[str]
 
-    def __init__(self, blocks: List[BaseBlock], annotations: Optional[Dict[str, str]] = None,
-                 enrichment_type: Optional[EnrichmentType] = None, title: Optional[str] = None):
+    def __init__(
+        self,
+        blocks: List[BaseBlock],
+        annotations: Optional[Dict[str, str]] = None,
+        enrichment_type: Optional[EnrichmentType] = None,
+        title: Optional[str] = None,
+    ):
         if annotations is None:
             annotations = {}
         self.blocks = blocks
@@ -171,33 +176,41 @@ class Filterable:
         return any(self.scope_matches(scope) for scope in scope_inc_exc)
 
     def scope_matches(self, scope: Dict[str, List[str]]):
-        # scope is e.g. {'labels': ['app=oomki.*,app!=X.*Y$']}
-        # or {'name': ['pod-xyz.*$'], 'title': ['fdc.*a$', 'fdd.*b$'], 'type': ['ISSUE$']}
-        for attr_name, regexes in scope.items():
-            if attr_name not in self.attribute_map:
-                raise ValueError(f'Scope match on unknown attribute "{attr_name}"')
-            value = self.attribute_map[attr_name]
-            for regex in regexes:
-                if attr_name in ["labels", "annotations"]:
-                    return all(self.match_labels_annotations_iter(regex, value))
-                elif re.match(regex, value):
-                    return True
+        # scope is e.g. {'labels': ['app=oomki.*,app!=X.*Y']}
+        # or {'name': ['pod-xyz.*'], 'title': ['fdc.*a', 'fdd.*b'], 'type': ['ISSUE']}
+        for attr_name, attr_matchers in scope.items():
+            if not self.scope_attribute_matches(attr_name, attr_matchers):
+                return False
         return False
 
-    def match_labels_annotations_iter(self, regex: str, value: Dict[str, str]):
-        for label_match in regex.split(","):
-            label_name, label_regex = label_match.split("=", 1)
-            if label_name.endswith("!"):  # label_name!=match_expr
-                label_name = label_name[:-1]
-                expect_match = False
-            else:
-                expect_match = True
-            label_value = value.get(label_name)
-            if label_value is None:
-                # No such label, so no match.
-                yield False
-            label_regex += "$"
-            yield bool(re.match(label_regex, label_value)) == expect_match
+    def scope_attribute_matches(self, attr_name: str, attr_matchers: List[str]):
+        if attr_name not in self.attribute_map:
+            raise ValueError(f'Scope match on unknown attribute "{attr_name}"')
+        attr_value = self.attribute_map[attr_name]
+        for attr_matcher in attr_matchers:
+            if attr_name in ["labels", "annotations"]:
+                return self.match_labels_annotations(attr_matcher, attr_value)
+            elif re.match(attr_matcher, attr_value):
+                return True
+        return False
+
+    def match_labels_annotations(self, labels_match_expr: str, labels: Dict[str, str]):
+        for label_match in labels_match_expr.split(","):
+            if not self.label_matches(label_match, labels, labels_match_expr):
+                return False
+        return True
+
+    def label_matches(self, label_match, labels, labels_match_expr):
+        label_name, label_regex = label_match.split("=", 1)
+        if label_name.endswith("!"):  # label_name!=match_expr
+            label_name = label_name[:-1]
+            expect_match = False
+        else:
+            expect_match = True
+        label_value = labels.get(label_name.strip())
+        if label_value is None:  # no label with that name
+            return False
+        return bool(re.fullmatch(labels_match_expr, label_value.strip())) == expect_match
 
 
 class FindingSubject:
@@ -336,8 +349,9 @@ class Finding(Filterable):
             return
         if annotations is None:
             annotations = {}
-        self.enrichments.append(Enrichment(blocks=enrichment_blocks, annotations=annotations,
-                                           enrichment_type=enrichment_type, title=title))
+        self.enrichments.append(
+            Enrichment(blocks=enrichment_blocks, annotations=annotations, enrichment_type=enrichment_type, title=title)
+        )
 
     def add_video_link(self, video_link: VideoLink, suppress_warning: bool = False):
         if self.dirty and not suppress_warning:
