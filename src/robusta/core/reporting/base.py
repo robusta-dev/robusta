@@ -190,7 +190,7 @@ class Filterable:
         for attr_matcher in attr_matchers:
             if attr_name in ["labels", "annotations"]:
                 return self.match_labels_annotations(attr_matcher, attr_value)
-            elif re.match(attr_matcher, attr_value):
+            elif re.fullmatch(attr_matcher, attr_value):
                 return True
         return False
 

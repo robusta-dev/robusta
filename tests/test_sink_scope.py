@@ -4,11 +4,10 @@ from unittest.mock import Mock
 
 import pytest
 import yaml
-from core.reporting import FindingSeverity, FindingSource, FindingSubject
-from core.reporting.consts import FindingSubjectType, FindingType
 from pydantic import BaseModel
 
-from robusta.core.reporting import Finding
+from robusta.core.reporting import Finding, FindingSeverity, FindingSource, FindingSubject
+from robusta.core.reporting.consts import FindingSubjectType, FindingType
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.sink_base_params import ScopeParams, SinkBaseParams
 
