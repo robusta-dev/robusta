@@ -1,11 +1,67 @@
 import unittest.mock
+from typing import Dict, List, Optional
 from unittest.mock import Mock
 
 import pytest
+import yaml
+from core.reporting import FindingSeverity, FindingSource, FindingSubject
+from core.reporting.consts import FindingSubjectType, FindingType
+from pydantic import BaseModel
 
 from robusta.core.reporting import Finding
-from robusta.core.sinks.sink_base_params import ScopeParams, SinkBaseParams
 from robusta.core.sinks.sink_base import SinkBase
+from robusta.core.sinks.sink_base_params import ScopeParams, SinkBaseParams
+
+
+class CheckFindingSubject(BaseModel):
+    name: Optional[str] = "pod-xxx-yyy"
+    namespace: Optional[str] = "default"
+    kind: Optional[FindingSubjectType] = FindingSubjectType.TYPE_POD
+    node: Optional[str] = None
+
+
+class CheckFinding(BaseModel):
+    title: str = "test finding"
+    subject: CheckFindingSubject = CheckFindingSubject()
+    labels: Dict[str, str] = {}
+    annotations: Dict[str, str] = {}
+    aggregation_key: str = "oom_kill"
+    severity: FindingSeverity = FindingSeverity.INFO
+    source: FindingSource = FindingSource.NONE
+    finding_type: FindingType = FindingType.ISSUE
+
+    def create_finding(self) -> Finding:
+        subject = FindingSubject(
+            name=self.subject.name,
+            namespace=self.subject.namespace,
+            subject_type=self.subject.kind,
+            node=self.subject.node,
+            labels=self.labels,
+            annotations=self.annotations,
+        )
+        return Finding(
+            title=self.title,
+            subject=subject,
+            aggregation_key=self.aggregation_key,
+            severity=self.severity,
+            source=self.source,
+            finding_type=self.finding_type,
+        )
+
+
+class ScopeCheck(BaseModel):
+    finding: CheckFinding
+    expected: bool
+    message: str
+
+
+class ScopeTest(BaseModel):
+    scope: ScopeParams
+    checks: List[ScopeCheck]
+
+
+class TestConfig(BaseModel):
+    tests: List[ScopeTest]
 
 
 class TestScopeParams:
@@ -120,3 +176,14 @@ class TestFilterable:
     def test_matches_unknown_attr(self, finding_with_data):
         with pytest.raises(ValueError):
             finding_with_data.matches({}, ScopeParams(include=[{"xyzzfoo": "123"}], exclude=None))
+
+    def test_sink_scopes(self, finding):
+        with open("./scope_test_config.yaml") as test_config_file:
+            test_config = TestConfig(**yaml.safe_load(test_config_file))
+
+        for scope_test in test_config.tests:
+            sink_base = SinkBase(sink_params=SinkBaseParams(name="x", scope=scope_test.scope), registry=Mock())
+
+            for check in scope_test.checks:
+                finding = check.finding.create_finding()
+                assert sink_base.accepts(finding) is check.expected, check.message

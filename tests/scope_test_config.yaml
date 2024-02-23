@@ -1,0 +1,38 @@
+# include/exclude match fields:
+#   title: e.g. Crashing pod foo in namespace default
+#   name : the Kubernetes object name
+#   namespace: the Kubernetes object namespace
+#   kind: one of deployment, node, pod, job, daemonset
+#   node : the Kubernetes node name
+#   severity: one of INFO, LOW, MEDIUM, HIGH
+#   type: one of ISSUE, CONF_CHANGE, HEALTH_CHECK, REPORT
+#   source: one of NONE, KUBERNETES_API_SERVER, PROMETHEUS, MANUAL, CALLBACK
+#   identifier: e.g. report_crash_loop
+#   labels: A comma separated list of key=val e.g. foo=bar,instance=123
+#   annotations: A comma separated list of key=val e.g. app.kubernetes.io/name=prometheus
+tests:
+  - scope:
+      include:
+        - name: xxx
+          namespace: yyy
+      exclude:
+        - name: zzz
+    checks:
+      - message: "accept by name xxx and ns yyy"
+        finding:
+          subject:
+            name: xxx
+            namespace: yyyy
+        expected: true
+      - message: "reject with name xx and ns yy"
+        finding:
+          subject:
+            name: xx
+            namespace: yy
+        expected: false
+      - message: "reject with name zzz (exclude)"
+        finding:
+          subject:
+            name: zzz
+            namespace: yy
+        expected: false
