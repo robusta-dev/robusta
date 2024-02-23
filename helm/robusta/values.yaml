@@ -439,6 +439,13 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
+- name: "EventBasedChangeTracking"
+  triggers:
+    - on_kubernetes_resource_operation:
+        resources: ["deployment", "replicaset", "daemonset", "statefulset", "pod", "node", "job" ]
+  actions:
+    - resource_events_diff: {}
+
 - name: "K8sJobFailure"
   triggers:
   - on_job_failure: {}

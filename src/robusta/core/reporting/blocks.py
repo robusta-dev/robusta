@@ -587,7 +587,7 @@ class EventsBlock(TableBlock):
         )
 
 
-class EventsRef(BaseModel):
+class EventsRef(BaseBlock):
     namespace: Optional[str]
     name: str
     kind: str
