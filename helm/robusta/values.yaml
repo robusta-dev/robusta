@@ -459,7 +459,7 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "WeeklyPopeyScan"
+- name: "WeeklyPopeyeScan"
   triggers:
   - on_schedule:
       fixed_delay_repeat:
