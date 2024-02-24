@@ -6,6 +6,9 @@ from robusta.core.model.env_vars import PROMETHEUS_ENABLED, RUNNER_VERSION
 from robusta.core.playbooks.actions_registry import ActionsRegistry
 from robusta.core.playbooks.base_trigger import TriggerEvent
 from robusta.core.playbooks.playbook_utils import merge_global_params
+from robusta.core.pubsub.event_emitter import EventEmitter
+from robusta.core.pubsub.event_subscriber import EventHandler
+from robusta.core.pubsub.events_pubsub import EventsPubSub
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaSinkParams
 from robusta.core.sinks.sink_base import SinkBase
 from robusta.core.sinks.sink_config import SinkConfigBase
@@ -157,6 +160,7 @@ class Registry:
         runner_version=RUNNER_VERSION,
         prometheus_enabled=PROMETHEUS_ENABLED,
     )
+    _pubsub: EventsPubSub = EventsPubSub()
 
     def set_light_actions(self, light_actions: List[str]):
         self._light_actions = light_actions
@@ -208,3 +212,12 @@ class Registry:
 
     def get_relabel_config(self) -> List[AlertRelabel]:
         return self._alert_relabel_config
+
+    def get_event_emitter(self) -> EventEmitter:
+        return self._pubsub
+
+    def subscribe(self, subscriber_name: str, event_name: str, handler: EventHandler):
+        self._pubsub.subscribe(subscriber_name, event_name, handler)
+
+    def unsubscribe(self, subscriber_name: str, event_name: str):
+        self._pubsub.unsubscribe(subscriber_name, event_name)

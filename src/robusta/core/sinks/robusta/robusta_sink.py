@@ -27,6 +27,7 @@ from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.nodes import NodeInfo, NodeSystemInfo
 from robusta.core.model.pods import PodResources
 from robusta.core.model.services import ServiceInfo
+from robusta.core.pubsub.event_subscriber import EventHandler
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.consts import ScanState, ScanType
 from robusta.core.sinks.robusta.discovery_metrics import DiscoveryMetrics
@@ -39,7 +40,7 @@ from robusta.runner.web_api import WebApi
 from robusta.utils.stack_tracer import StackTracer
 
 
-class RobustaSink(SinkBase):
+class RobustaSink(SinkBase, EventHandler):
     services_publish_lock = threading.Lock()
 
     def __init__(self, sink_config: RobustaSinkConfigWrapper, registry):
@@ -84,6 +85,8 @@ class RobustaSink(SinkBase):
         self.__pods_running_count: int = 0
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
+        self.registry.subscribe("RobustaSink", "scan_updated", self)
+
         # start cluster discovery
         self.__active = True
         self.__services_cache: Dict[str, ServiceInfo] = {}
@@ -98,6 +101,12 @@ class RobustaSink(SinkBase):
         self.__watchdog_thread = threading.Thread(target=self.__discovery_watchdog)
         self.__thread.start()
         self.__watchdog_thread.start()
+
+    def handle_event(self, event_name: str, **kwargs):
+        if event_name == "scan_updated":
+            self._on_scan_updated(**kwargs)
+        else:
+            logging.warning("RobustaSink subscriber called with unknown event")
 
     def set_cluster_active(self, active: bool):
         self.dal.set_cluster_active(active)
@@ -470,7 +479,7 @@ class RobustaSink(SinkBase):
         for helm_release_key in curr_helm_releases.keys():
             current_helm_release = curr_helm_releases[helm_release_key]
             if (
-                    self.__helm_releases_cache.get(helm_release_key) != current_helm_release
+                self.__helm_releases_cache.get(helm_release_key) != current_helm_release
             ):  # helm_release not in the cache, or changed
                 helm_releases.append(current_helm_release)
                 self.__helm_releases_cache[helm_release_key] = current_helm_release
@@ -485,7 +494,7 @@ class RobustaSink(SinkBase):
             alertManagerConnection=prometheus_health_checker_status.alertmanager,
             prometheusConnection=prometheus_health_checker_status.prometheus,
             prometheusRetentionTime=prometheus_health_checker_status.prometheus_retention_time,
-            managedPrometheusAlerts=MANAGED_CONFIGURATION_ENABLED
+            managedPrometheusAlerts=MANAGED_CONFIGURATION_ENABLED,
         )
 
         # checking the status of relay connection
@@ -662,12 +671,7 @@ class RobustaSink(SinkBase):
 
     @on_action_event("scan_updated")
     def _on_scan_updated(
-        self,
-        scan_id: str,
-        metadata: Any,
-        state: ScanState,
-        type: ScanType,
-        start_time: datetime
+        self, scan_id: str, metadata: Any, state: ScanState, type: ScanType, start_time: datetime
     ) -> None:
         if state == "pending":
             self.dal.insert_scan_meta(scan_id, start_time, type)

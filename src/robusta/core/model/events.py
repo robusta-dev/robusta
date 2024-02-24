@@ -4,10 +4,11 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
+from robusta.core.pubsub.event_emitter import EventEmitter
 from robusta.core.reporting.base import (
     BaseBlock,
     EnrichmentType,
@@ -42,6 +43,7 @@ class PubSubEvent(BaseModel):
     name: str
     data: Any
 
+
 # Right now:
 # 1. this is a dataclass but we need to make all fields optional in subclasses because of https://stackoverflow.com/questions/51575931/
 # 2. this can't be a pydantic BaseModel because of various pydantic bugs (see https://github.com/samuelcolvin/pydantic/pull/2557)
@@ -60,6 +62,7 @@ class ExecutionBaseEvent:
     stop_processing: bool = False
     _scheduler: Optional[PlaybooksScheduler] = None
     _context: Optional[ExecutionContext] = None
+    _event_emitter: Optional[EventEmitter] = None
 
     def set_context(self, context: ExecutionContext):
         self._context = context
@@ -72,6 +75,9 @@ class ExecutionBaseEvent:
 
     def get_scheduler(self) -> PlaybooksScheduler:
         return self._scheduler
+
+    def set_event_emitter(self, emitter: EventEmitter):
+        self._event_emitter = emitter
 
     def create_default_finding(self) -> Finding:
         """Create finding default fields according to the event type"""
@@ -99,8 +105,12 @@ class ExecutionBaseEvent:
         for sink in self.named_sinks:
             self.sink_findings[sink][0].add_video_link(video_link, True)
 
+    def emit_event(self, event_name: str, **kwargs):
+        if self._event_emitter:
+            self._event_emitter.emit_event(event_name, **kwargs)
+
     def emit_action_event(self, event_name: str, **kwargs) -> None:
-        """ Publish an event to the pubsub. It will be processed by the sinks during the execution of the playbook."""
+        """Publish an event to the pubsub. It will be processed by the sinks during the execution of the playbook."""
 
         for sink in self.named_sinks:
             sink_obj = self.all_sinks.get(sink)
@@ -117,8 +127,9 @@ class ExecutionBaseEvent:
     ):
         self.__prepare_sinks_findings()
         for sink in self.named_sinks:
-            self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations, True,
-                                                       enrichment_type=enrichment_type, title=title)
+            self.sink_findings[sink][0].add_enrichment(
+                enrichment_blocks, annotations, True, enrichment_type=enrichment_type, title=title
+            )
 
     def add_finding(self, finding: Finding, suppress_warning: bool = False):
         finding.dirty = True  # Warn if new enrichments are added to this finding directly
