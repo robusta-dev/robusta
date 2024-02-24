@@ -6,10 +6,8 @@ from robusta.core.pubsub.event_subscriber import EventHandler, EventSubscriber
 
 
 class EventsPubSub(EventEmitter, EventSubscriber):
-    event_handlers: defaultdict[str, Dict[str, EventHandler]]
-
     def __init__(self):
-        self.event_handlers = defaultdict(dict)
+        self.event_handlers: defaultdict[str, Dict[str, EventHandler]] = defaultdict(dict)
 
     def subscribe(self, subscriber_name: str, event_name: str, handler: EventHandler):
         self.event_handlers[event_name][subscriber_name] = handler
