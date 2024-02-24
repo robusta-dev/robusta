@@ -5,7 +5,7 @@ This data is extremely limited and contains only general metadata to help us und
 If you are willing to share additional data, please do so! It really help us improve Robusta.
 
 You can set sendAdditionalTelemetry: true as a Helm value to send exception reports and additional data.
-This is disabled by default. 
+This is disabled by default.
 
 To opt-out of telemetry entirely, set a ENABLE_TELEMETRY=false environment variable on the robusta-runner deployment.
 
@@ -13,4 +13,8 @@ To opt-out of telemetry entirely, set a ENABLE_TELEMETRY=false environment varia
 {{if .robusta_sink}}
 Visit the web UI at: https://platform.robusta.dev/
 {{- end }}
+{{- end }}
+
+{{- if .Values.rsa }}
+NOTICE: RSA is no longer used by default and can be removed from the values file
 {{- end }}

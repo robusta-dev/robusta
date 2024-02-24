@@ -692,11 +692,6 @@ kube-prometheus-stack:
       limits:
         memory: 256Mi
 
-rsa: ~
-  # @param existingSecret Name of existing secret containing the rsa keys
-  # NOTE: Must contain the keys `pub` and `prv`
-  # existingSecret: my-robusta-rsa-keys
-
 # custom parameters for OpenShift clusters
 openshift:
   enabled: false
