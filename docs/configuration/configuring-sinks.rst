@@ -18,6 +18,7 @@ Sinks are defined in Robusta's Helm chart, using the ``sinksConfig`` value:
         name: my_teams_sink           # arbitrary name
         webhook_url: <placeholder>    # a sink-specific parameter
         stop: false                   # optional (see `Routing Alerts to only one Sink`)
+        scope: {}                     # optional routing rules
         match: {}                     # optional routing rules (deprecated; see below)
         default: true                 # optional (see below)
 
@@ -44,15 +45,123 @@ The sinks evaluation order, is the order defined in ``generated_values.yaml``.
         name: production_sink
         slack_channel: production-notifications
         api_key: secret-key
-        match:  # deprecated
-          namespace: production
-        scope:  # preferred equivalent, see below
+        scope:
           include:
             - namespace: production
         stop: true
 
 
-Match Section (Deprecated): Routing Alerts To Specific Sinks
+Routing Alerts To Specific Sinks
+***************************************
+
+Define which messages a sink accepts using ``scope``.
+
+For example, **Slack**  can be integrated to receive high-severity messages in a specific namespace. Other messages will not be sent to this **Slack** sink.
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: test_sink
+        slack_channel: test-notifications
+        api_key: secret-key
+        scope:
+          include: # more options available - see below
+            - namespace: [prod]
+              severity: [HIGH]
+
+Each attribute expression used in the ``scope`` specification can be 1 item, or a list, where each is either a regex or an exact match
+
+``Scope`` allows specifying a set of ``include`` and ``exclude`` sections:
+
+.. code-block:: yaml
+
+    sinksConfig:
+    - slack_sink:
+        name: prod_slack_sink
+        slack_channel: prod-notifications
+        api_key: secret-key
+        scope:
+        # AND between namespace and labels, but OR within each selector
+          include:
+            - namespace: default
+              labels: "instance=1,foo!=x.*"
+            - namespace: bla
+              name:
+              - foo
+              - qux
+          exclude:
+            - type: ISSUE
+              title: .*crash.*
+            - name: bar[a-z]*
+
+
+In order for a message to be sent to a ``Sink``, it must match **one of** the ``include`` sections, and **must not** match **all** the ``exclude`` sections.
+
+When multiple attributes conditions are present, all must be satisfied.
+
+The following attributes can be included in an ``include``/``excluded`` block:
+
+- ``title``: e.g. ``Crashing pod foo in namespace default``
+- ``name`` : the Kubernetes object name
+- ``namespace``: the Kubernetes object namespace
+- ``node`` : the Kubernetes node name
+- ``severity``: one of ``INFO``, ``LOW``, ``MEDIUM``, ``HIGH``
+- ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
+- ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
+- ``source``: one of ``NONE``, ``KUBERNETES_API_SERVER``, ``PROMETHEUS``, ``MANUAL``, ``CALLBACK``
+- ``identifier``: e.g. ``report_crash_loop``
+- ``labels``: A comma separated list of ``key=val`` e.g. ``foo=bar,instance=123``
+- ``annotations``: A comma separated list of ``key=val`` e.g. ``app.kubernetes.io/name=prometheus``
+
+.. note::
+
+    ``labels`` and ``annotations`` are both the Kubernetes resource labels and annotations
+    (e.g. pod labels) and the Prometheus alert labels and annotations. If both contains the
+    same label/annotation, the value from the Prometheus alert is preferred.
+
+
+.. details:: How do I find the ``identifier`` value to use in a match block? (deprecated)
+
+    For Prometheus alerts, it's always the alert name.
+
+    .. TODO: update after we finish our improvements here:
+    .. For builtin APIServer alerts, it can vary, but common values are ``report_crash_loop``, ``image_pull_backoff_reporter``, ``ConfigurationChange/KubernetesResource/Change``, and ``job_failure``.
+
+    For custom playbooks, it's the value you set in :ref:`create_finding<create_finding>` under ``aggregation_key``.
+
+    Ask us in Slack if you need help.
+
+By default, every message is sent to every matching sink. To change this behaviour, you can mark a sink as :ref:`non-default <Non-default sinks>`.
+
+The top-level mechanism works as follows:
+
+#. If the notification is **excluded** by any of the sink ``scope`` excludes - drop it
+#. If the notification is **included** by any of the sink ``scope`` includes - accept it
+#. If the notification is **included** by any of the sink ``matchers`` - accept it (Deprecated)
+
+Any of (but not both) of the ``include`` and ``exclude`` may be left undefined or empty.
+An undefined/empty ``include`` section will effectively allow all alerts, and an
+undefined/empty ``exclude`` section will not exclude anything.
+
+Inside the ``include`` and ``exclude`` section, at the topmost level, the consecutive
+items act with the OR logic, meaning that it's enough to match a single item in the
+list in order to allow/reject a message. The same applies to the items listed under
+each attribute name.
+
+Within a specific ``labels`` or ``annotations`` expression, the logic is ``AND``
+
+.. code-block:: yaml
+
+    ....
+        scope:
+          include:
+            - labels: "instance=1,foo=x.*"
+    .....
+
+The above requires that the ``instance`` will have a value of ``1`` **AND** the ``foo`` label values starts with ``x``
+
+Match Section (Deprecated)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Define which messages a sink accepts using *matchers*.
@@ -166,65 +275,6 @@ You can use `Or` between *match* rules:
           - "instance=456"
 
 The above will match a resource from namespace (default *or* robusta) *and* label (instance=123 *or* instance=456)
-
-Routing Alerts Using the Scope Section
-***************************************
-
-The new and preferred way of specifying which sinks will receive which alerts, is
-using the `scope` section in the sink configuration. As noted above, the `match` section
-has been deprecated in favor of the `scope` functionality.
-
-The `scope` section works in a similar way to the older `match` section, but offers even
-more powerful ways of specifying the routing.
-
-An example configuration for scope matching:
-
-.. code-block:: yaml
-
-    sinksConfig:
-    - slack_sink:
-        name: prod_slack_sink
-        slack_channel: prod-notifications
-        api_key: secret-key
-        scope:
-        # AND between namespace and labels, but OR within each selector
-          include:
-            - namespace: default
-              labels: "instance=1,foo!=x.*"
-            - namespace: bla
-              name: foo
-          exclude:
-            - type: ISSUE
-              title: .*crash.*
-            - name: bar[a-z]*
-
-The attributes you can specify inside the `include` and `exclude` sections are exactly
-the same as for the deprecated `match` section (see
-`Match Section (Deprecated): Routing Alerts To Specific Sinks`_).
-
-The top-level mechanism works as follows:
-
-#. If the notification is excluded by any of the sink scope excludes - drop it
-#. If the notification is included by any of the sink scope includes - accept it
-#. If the notification is included by any of the sink matchers - accept it
-
-Any of (but not both) of the `include` and `exclude` may be left undefined or empty.
-An undefined/empty `include` section will effectively allow all alerts, and an
-undefined/empty `exclude` section will not exclude anything.
-
-Inside the `include` and `exclude` section, at the topmost level, the consecutive
-items act with the OR logic, meaning that it's enough to match a single item in the
-list in order to allow/reject a message. The same applies to the items listed under
-each attribute name. Inside the `labels` and `annotations` definitions, though,
-it's required for all items to match (AND logic).
-
-Each expression (attribute value match) used in the `scope` specification can either
-be a regex or an exact match, jast as with `match` expressions.
-
-As long as the deprecated `match` mechanism is supported, it will always be evaluated
-only AFTER the `scope` definitions are checked. That means that the `match` checks
-will only be done if the `scope` mechanism doesn't match the alert as accepted (via
-the `include` rules) or rejected (via the `exclude` rules).
 
 Alternative Routing Methods
 ************************************************
