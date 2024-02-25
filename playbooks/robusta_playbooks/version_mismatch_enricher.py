@@ -1,5 +1,6 @@
 import logging
 import re
+from functools import total_ordering
 from typing import List, Tuple
 
 from robusta.api import (
@@ -22,6 +23,7 @@ class VersionMismatchParams(PrometheusParams):
     version_mismatch_query: str = 'count by (git_version, node) (label_replace(kubernetes_build_info{job!~"kube-dns|coredns"}, "git_version", "$1", "git_version", "(v[0-9]*.[0-9]*).*"))'
 
 
+@total_ordering
 class Semver:
     """
     This is a class for comparing semantic version strings
@@ -102,7 +104,6 @@ def version_mismatch_enricher(alert: PrometheusKubernetesAlert, params: VersionM
     if len(kubernetes_api_versions) == 0:
         logging.error(f"Missing api server results for version_mismatch_enricher.")
         return
-
     kubernetes_api_version = _semver_max(kubernetes_api_versions)
     nodes_by_version = [
         [metric.get("node"), metric.get("git_version")] for metric in metrics if metric.get("node") is not None
