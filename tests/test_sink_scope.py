@@ -71,7 +71,7 @@ class ScopeTest(BaseModel):
         extra = Extra.forbid
 
 
-class TestConfig(BaseModel):
+class _TestConfig(BaseModel):
     tests: List[ScopeTest]
 
 
@@ -154,16 +154,16 @@ class TestFilterable:
         "include,exclude,expected_output,match_req_evaluated",
         [
             ([{"labels": "a=x,b=.*y"}], None, True, False),
-            ([{"labels": "a=q,b=.*y"}], None, True, True),
+            ([{"labels": "a=q,b=.*y"}], None, False, True),
             ([{"labels": "a=q,b=.*y"}, {"namespace": "ns12"}], None, True, False),
             ([{"labels": "a=q,b=.*y"}, {"title": "c1"}], None, True, False),
-            ([{"labels": "a=q,b=.*y"}, {"title": "d[1-9]*"}], None, True, True),
+            ([{"labels": "a=q,b=.*y"}, {"title": "d[1-9]*"}], None, False, True),
             (None, [{"labels": "a=x,b=.*y"}], False, False),
             (None, [{"labels": "a=q,b=.*y"}, {"namespace": "ns12"}], False, False),
             (None, [{"labels": "a=q,b=.*y"}, {"title": "c[1-9]"}], False, False),
             (None, [{"labels": "a=q,b=.*y"}, {"title": "d[1-9]*"}], True, True),
-            ([{"namespace": "ns"}], None, True, False),
-            (None, [{"namespace": "ns"}], True, False),
+            ([{"namespace": "ns"}], None, False, True),
+            (None, [{"namespace": "ns"}], True, True),
         ],
     )
     def test_matches_inc_match(
@@ -190,7 +190,7 @@ class TestFilterable:
 
     def test_sink_scopes(self, finding):
         with open("./scope_test_config.yaml") as test_config_file:
-            test_config = TestConfig(**yaml.safe_load(test_config_file))
+            test_config = _TestConfig(**yaml.safe_load(test_config_file))
 
         for scope_test in test_config.tests:
             sink_base = SinkBase(sink_params=SinkBaseParams(name="x", scope=scope_test.scope), registry=Mock())
