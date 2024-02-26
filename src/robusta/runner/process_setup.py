@@ -1,11 +1,11 @@
 import os
 import sys
 
-from robusta.core.model.env_vars import RUN_AS_SUB_PROCESS
+from robusta.core.model.env_vars import RUN_AS_SUBPROCESS
 
 
 def process_setup():
-    if RUN_AS_SUB_PROCESS:
+    if RUN_AS_SUBPROCESS:
         if os.fork():
             # Parent process, pid 1 in our deployment scenario. Wait (blocking - doesn't
             # utilitze any CPU) for the forked "main" process to exit (if it ever does)
