@@ -68,7 +68,7 @@ For example, **Slack**  can be integrated to receive high-severity messages in a
         scope:
           include: # more options available - see below
             - namespace: [prod]
-              severity: [HIGH]
+              severity: HIGH
 
 Each attribute expression used in the ``scope`` specification can be 1 item, or a list, where each is either a regex or an exact match
 

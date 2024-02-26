@@ -5,7 +5,7 @@
 #   kind: one of deployment, node, pod, job, daemonset
 #   node : the Kubernetes node name
 #   severity: one of INFO, LOW, MEDIUM, HIGH
-#   type: one of ISSUE, CONF_CHANGE, HEALTH_CHECK, REPORT
+#   type: one of ISSUE, CONFIGURATION_CHANGE, HEALTH_CHECK, REPORT
 #   source: one of NONE, KUBERNETES_API_SERVER, PROMETHEUS, MANUAL, CALLBACK
 #   identifier: e.g. report_crash_loop
 #   labels: A comma separated list of key=val e.g. foo=bar,instance=123
