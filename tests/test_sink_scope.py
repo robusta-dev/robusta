@@ -192,7 +192,7 @@ class TestFilterable:
             finding_with_data.matches({}, ScopeParams(include=[{"xyzzfoo": "123"}], exclude=None))
 
     def test_sink_scopes(self, finding):
-        with open("./scope_test_config.yaml") as test_config_file:
+        with open("tests/scope_test_config.yaml") as test_config_file:
             test_config = _TestConfig(**yaml.safe_load(test_config_file))
 
         for scope_test in test_config.tests:
