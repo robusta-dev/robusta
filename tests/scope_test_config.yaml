@@ -248,3 +248,136 @@ tests:
           labels:
               x: yAAAy
         expected: false
+  - scope:
+      include:
+        - labels: " x = y.*y , p != q[0-9] "
+      exclude:
+        - labels: " x = y.*y , p != q[0-9] "
+    checks:
+      - message: "new message"
+        finding:
+          labels:
+              x: y
+              p: q
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q1
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q1111
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy123
+              p: q1111
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              p: q1111
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+        expected: false
+  - scope:
+      include:
+        - name: nam1
+          namespace: ns1
+        - name: nam2
+          namespace: ns2
+      exclude:
+        - name: nam3
+          namespace: ns3
+    checks:
+      - message: "nam1 ns1"
+        finding:
+          subject:
+            name: nam1
+            namespace: ns1
+        expected: true
+      - message: "nam2 ns2"
+        finding:
+          subject:
+            name: nam2
+            namespace: ns2
+        expected: true
+      - message: "nam3 ns3"
+        finding:
+          subject:
+            name: nam3
+            namespace: ns3
+        expected: false
+      - message: "nam4 ns4"
+        finding:
+          subject:
+            name: nam4
+            namespace: ns4
+        expected: false
+  - scope:
+      include:
+        - identifier: iden1
+          kind:
+            - pod
+            - node
+        - identifier: iden2
+          kind:
+            - deployment
+            - job
+    checks:
+      - message: "iden1 deployment"
+        finding:
+          aggregation_key: iden1
+          subject:
+            kind: deployment
+        expected: false
+      - message: "iden2 pod"
+        finding:
+          aggregation_key: iden2
+          subject:
+            kind: pod
+        expected: false
+      - message: "iden1 node"
+        finding:
+          aggregation_key: iden1
+          subject:
+            kind: node
+        expected: true
+      - message: "iden1 daemonset"
+        finding:
+          aggregation_key: iden1
+          subject:
+            kind: daemonset
+        expected: false
+      - message: "iden11 daemonset"
+        finding:
+          aggregation_key: iden1
+          subject:
+            kind: daemonset
+        expected: false
+      - message: "iden11 node"
+        finding:
+          aggregation_key: iden11
+          subject:
+            kind: node
+        expected: false
+      - message: "iden2 job"
+        finding:
+          aggregation_key: iden2
+          subject:
+            kind: job
+        expected: true
