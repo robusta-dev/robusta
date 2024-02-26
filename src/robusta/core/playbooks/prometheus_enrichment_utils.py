@@ -71,6 +71,9 @@ def get_node_internal_ip(node: Node) -> str:
 def run_prometheus_query_range(
     prometheus_params: PrometheusParams, promql_query: str, starts_at: datetime, ends_at: datetime, step: Optional[str]
 ) -> PrometheusQueryResult:
+    """
+    This calls the prometheus query_range api, which is what is used for graphs
+    """
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
 
@@ -361,7 +364,8 @@ def create_chart_from_prometheus_query(
 
 def run_prometheus_query(prometheus_params: PrometheusParams, query: str) -> PrometheusQueryResult:
     """
-    This function runs prometheus query and returns the result, NOT query_range
+    This function runs prometheus query and returns the result (usually a vector),
+    For graphs use run_prometheus_query_range which uses the prometheus query_range api
     """
     try:
         prom = get_prometheus_connect(prometheus_params)
