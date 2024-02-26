@@ -140,6 +140,7 @@ from robusta.core.reporting import (
     Emojis,
     Enrichment,
     FileBlock,
+    EmptyFileBlock,
     Filterable,
     Finding,
     FindingSeverity,

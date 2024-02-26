@@ -73,13 +73,11 @@ class FileBlock(BaseBlock):
 
     filename: str
     contents: bytes
-    metadata: Optional[dict]
 
     def __init__(
         self,
         filename: str,
         contents: bytes,
-        metadata: Optional[dict] = None,
         **kwargs,
     ):
         """
@@ -89,7 +87,6 @@ class FileBlock(BaseBlock):
         super().__init__(
             filename=filename,
             contents=contents,
-            metadata=metadata,
             **kwargs,
         )
 
@@ -131,6 +128,35 @@ class FileBlock(BaseBlock):
                 break
 
         return "\n".join(truncated_lines).encode("utf-8")
+
+
+class EmptyFileBlock(FileBlock):
+    """
+    Handle empty log files
+    """
+
+    metadata: dict = {}
+
+    def __init__(
+            self,
+            filename: str,
+            remarks: str,
+            metadata: Optional[dict] = None,
+            **kwargs,
+    ):
+        """
+        :param filename: the file's name
+        :param contents: the file's contents
+        """
+        super().__init__(
+            filename=filename,
+            contents=remarks.encode(),
+            **kwargs,
+        )
+
+        self.metadata = metadata or {}
+        self.metadata["is_empty"] = True
+        self.metadata["remarks"] = remarks
 
 
 class HeaderBlock(BaseBlock):

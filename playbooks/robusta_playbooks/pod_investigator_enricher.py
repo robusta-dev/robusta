@@ -141,15 +141,24 @@ def get_pod_issue_explanation(event: KubernetesResourceEvent, issue: PodIssue, m
     else:
         issue_text = issue.name
 
-    if resource.kind in ["Deployment", "Statefulset", "DaemonSet"]:
-        # Information about number of available pods, and number of unavailable should be taken from the resource status
-        unavailable_replicas = resource.status.unavailableReplicas if resource.status.unavailableReplicas else 0
-        available_replicas = resource.status.availableReplicas if resource.status.availableReplicas else 0
+    # Information about number of available pods, and number of unavailable should be taken from the resource status
+    if resource.kind in ["Deployment", "StatefulSet", "DaemonSet"]:
+        unavailable_replicas = 0
+        available_replicas = 0
+
+        if resource.kind in ["Deployment", "StatefulSet"]:
+            unavailable_replicas = resource.status.unavailableReplicas if resource.status.unavailableReplicas else 0
+            available_replicas = resource.status.availableReplicas if resource.status.availableReplicas else 0
+        elif resource.kind == "DaemonSet":
+            unavailable_replicas = resource.status.numberUnavailable if resource.status.numberUnavailable else 0
+            available_replicas = resource.status.numberAvailable if resource.status.numberAvailable else 0
+
         message_text = f"{available_replicas} pod(s) are available. {unavailable_replicas} pod(s) are not ready due to {issue_text}"
-        if reason:
-            message_text += f"\n\n{reason}: {message if message else 'N/A'}"
     else:
         message_text = f"Pod is not ready due to {issue_text}"
+
+    if reason:
+        message_text += f"\n\n{reason}: {message if message else 'N/A'}"
 
     return message_text
 
@@ -176,7 +185,7 @@ def report_pod_issue(
         for enrichment in issues_enrichments:
             event.add_enrichment(enrichment.blocks, enrichment_type=enrichment.enrichment_type, title=enrichment.title)
 
-        event.extend_description(message_text)
+    event.extend_description(message_text)
 
 def get_expected_replicas(event: KubernetesResourceEvent) -> int:
     resource = event.get_resource()

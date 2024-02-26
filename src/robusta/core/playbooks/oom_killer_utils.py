@@ -3,6 +3,7 @@ import time
 
 from robusta.api import (
     ExecutionBaseEvent,
+    EmptyFileBlock,
     FileBlock,
     LogEnricherParams,
     MarkdownBlock,
@@ -65,17 +66,14 @@ def start_log_enrichment(
             time.sleep(backoff_seconds)
             continue
 
-        metadata = None
         if not log_data:
-            metadata = {
-                "is_empty": True,
-                "remarks": f"Logs unavailable for container: {container}"
-            }
+            log_block = EmptyFileBlock(filename=f"{pod.metadata.name}.log",
+                                       remarks=f"Logs unavailable for container: {container}")
             logging.info(
                 f"could not fetch logs from container: {container}"
             )
-
-        log_block = FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode(), metadata=metadata)
+        else:
+            log_block = FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())
 
         event.add_enrichment([log_block],
                              enrichment_type=EnrichmentType.text_file, title="Logs")

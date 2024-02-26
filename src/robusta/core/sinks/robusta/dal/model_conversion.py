@@ -21,7 +21,7 @@ from robusta.core.reporting import (
     PrometheusBlock,
     TableBlock,
 )
-from robusta.core.reporting.blocks import GraphBlock
+from robusta.core.reporting.blocks import GraphBlock, EmptyFileBlock
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.sinks.transformer import Transformer
 from robusta.utils.parsing import datetime_to_db_str
@@ -72,6 +72,14 @@ class ModelConversion:
         }
 
     @staticmethod
+    def get_empty_file_object(block: EmptyFileBlock):
+        file_obj = ModelConversion.get_file_object(block)
+        file_obj["data"] = ""
+        file_obj["metadata"] = block.metadata
+
+        return file_obj
+
+    @staticmethod
     def to_evidence_json(
         account_id: str,
         cluster_id: str,
@@ -103,9 +111,12 @@ class ModelConversion:
                         block.zip()
                     structured_data.append(ModelConversion.get_file_object(block))
             elif isinstance(block, FileBlock):
-                if block.is_text_file():
-                    block.zip()
-                structured_data.append(ModelConversion.get_file_object(block))
+                if isinstance(block, EmptyFileBlock):
+                    structured_data.append(ModelConversion.get_empty_file_object(block))
+                else:
+                    if block.is_text_file():
+                        block.zip()
+                    structured_data.append(ModelConversion.get_file_object(block))
             elif isinstance(block, HeaderBlock):
                 structured_data.append({"type": "header", "data": block.text})
             elif isinstance(block, ListBlock):

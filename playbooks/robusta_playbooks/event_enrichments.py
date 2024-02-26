@@ -245,11 +245,9 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
                     event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
                                          enrichment_type=EnrichmentType.k8s_events, title="Deployment Events")
     else:
-        if dep.kind in ["Deployment", "Statefulset", "DaemonSet"]:
-            available_replicas = dep.status.availableReplicas if dep.status.availableReplicas else 0
-
-            event.add_enrichment(
-                [MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({available_replicas})*")])
+        available_replicas = dep.status.availableReplicas if dep.status.availableReplicas else 0
+        event.add_enrichment(
+            [MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({available_replicas})*")])
 
         events_table_block = get_resource_events_table(
             "*Deployment events:*",
