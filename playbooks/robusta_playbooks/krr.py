@@ -29,9 +29,10 @@ from robusta.api import (
     action,
     format_unit,
 )
+from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.6.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.7.0")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "1Gi")
 
@@ -103,14 +104,16 @@ class KRRParams(PrometheusParams, PodRunningParams):
     :var krr_args: KRR cli arguments.
     :var serviceAccountName: The account name to use for the KRR scan job.
     :var krr_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
+    :var max_workers: Number of concurrent workers used in krr.
     """
 
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
     strategy: str = "simple"
     args: Optional[str] = None
     krr_args: str = ""
-    timeout: int = 300
+    timeout: int = 3600
     krr_job_spec = {}
+    max_workers: int = 3
 
     @validator("args", allow_reuse=True)
     def check_args(cls, args: str) -> str:
@@ -212,7 +215,9 @@ def _generate_krr_job_secret(scan_id: str, krr_secrets: Optional[List[KRRSecret]
     return JobSecret(name=krr_secret_name, data=data)
 
 
-def _generate_krr_env_vars(krr_secrets: Optional[List[KRRSecret]], secret_name: Optional[str]) -> Optional[EnvVar]:
+def _generate_krr_env_vars(
+    krr_secrets: Optional[List[KRRSecret]], secret_name: Optional[str]
+) -> Optional[List[EnvVar]]:
     if not krr_secrets or not secret_name:
         return None
     return [
@@ -224,9 +229,9 @@ def _generate_krr_env_vars(krr_secrets: Optional[List[KRRSecret]], secret_name: 
     ]
 
 
-def _generate_additional_env_args(krr_secrets: Optional[List[KRRSecret]]) -> Optional[str]:
+def _generate_additional_env_args(krr_secrets: Optional[List[KRRSecret]]) -> str:
     if not krr_secrets:
-        return None
+        return ""
     return " ".join(f"{secret.command_flag} '${secret.env_var_name}'" for secret in krr_secrets)
 
 
@@ -247,6 +252,7 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
     # needed for custom bearer token or Azure
     headers = PrometheusAuthorization.get_authorization_headers(prom_config)
     auth_header = headers["Authorization"] if "Authorization" in headers else ""
+
     if auth_header:
         krr_secrets.append(
             KRRSecret(
@@ -296,23 +302,31 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     prom_config = generate_prometheus_config(params)
     additional_flags = get_krr_additional_flags(params)
 
-    python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} -q -f json "
+    python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} "
+    python_command += f"--max-workers {params.max_workers} -v -f json --width 2048"
+
     if params.prometheus_url:
-        python_command += f"-p {params.prometheus_url}"
+        python_command += f" -p {params.prometheus_url}"
 
-    # adding env var of auth token from Secret
-    env_var = []
-    krr_secrets = _generate_prometheus_secrets(prom_config)
-    python_command += " " + _generate_cmd_line_args(prom_config)
+    env_var: List[EnvVar] = []
+    secret: Optional[JobSecret] = None
 
-    # creating secrets for auth
-    secret = _generate_krr_job_secret(scan_id, krr_secrets)
-    # setting env variables of krr to have secret
-    if secret:
-        env_var = _generate_krr_env_vars(krr_secrets, secret.name)
-        # adding secret env var in krr pod command
-        python_command += " " + _generate_additional_env_args(krr_secrets)
-    logging.debug(f"krr command '{python_command}'")
+    if IS_OPENSHIFT:
+        python_command += " --openshift"
+    else:
+        # adding env var of auth token from Secret
+        krr_secrets = _generate_prometheus_secrets(prom_config)
+        python_command += " " + _generate_cmd_line_args(prom_config)
+
+        # creating secrets for auth
+        secret = _generate_krr_job_secret(scan_id, krr_secrets)
+        # setting env variables of krr to have secret
+        if secret:
+            env_var = _generate_krr_env_vars(krr_secrets, secret.name)
+            # adding secret env var in krr pod command
+            python_command += " " + _generate_additional_env_args(krr_secrets)
+
+    logging.info(f"krr command '{python_command}'")
 
     resources = ResourceRequirements(
         limits={
@@ -344,8 +358,21 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
 
     try:
         logs = RobustaJob.run_simple_job_spec(
-            spec, "krr_job" + scan_id, params.timeout, secret, custom_annotations=params.custom_annotations
+            spec,
+            "krr_job" + scan_id,
+            params.timeout,
+            secret,
+            custom_annotations=params.custom_annotations,
+            ttl_seconds_after_finished=43200,  # 12 hours
+            delete_job_post_execution=False,
         )
+
+        # NOTE: We need to remove the logs before the json result
+        end_logs_string = "Result collected, displaying..."  # This is the last line shown in the logs
+        returning_result = logs.find(end_logs_string)
+        if returning_result != -1:
+            logs = logs[returning_result + len(end_logs_string) :]
+
         # Sometimes we get warnings from the pod before the json result, so we need to remove them
         if "{" not in logs:
             raise json.JSONDecodeError("Failed to find json result in logs", "", 0)
@@ -355,17 +382,19 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
     except json.JSONDecodeError:
-        logging.error(f"*KRR scan job failed. Expecting json result.*\n\n Result:\n{logs}")
+        logging.exception("*KRR scan job failed. Expecting json result.*")
+        logging.error(f"Logs: {logs}")
         return
     except ValidationError:
-        logging.error("*KRR scan job failed. Result format issue.*\n\n", exc_info=True)
-        logging.error(f"\n {logs}")
+        logging.exception("*KRR scan job failed. Result format issue.*\n\n")
+        logging.error(f"Logs: {logs}")
         return
     except Exception as e:
         if str(e) == "Failed to reach wait condition":
-            logging.error(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*", exc_info=True)
+            logging.exception(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")
         else:
-            logging.error(f"*KRR scan job unexpected error.*\n {e}", exc_info=True)
+            logging.exception(f"*KRR scan job unexpected error.*\n {e}")
+        logging.error(f"Logs: {logs}")
         return
 
     scan_block = ScanReportBlock(

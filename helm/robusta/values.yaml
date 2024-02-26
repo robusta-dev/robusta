@@ -98,7 +98,8 @@ playbooksPersistentVolumeSize: 4Gi
 # priority builtin playbooks for running before all playbooks
 priorityBuiltinPlaybooks:
 # playbooks for prometheus silencing
-- triggers:
+- name: "CommonPrometheusAlertsSilencer"
+  triggers:
   - on_prometheus_alert:
       status: "all"
   actions:
@@ -106,7 +107,8 @@ priorityBuiltinPlaybooks:
       names: ["Watchdog", "KubeSchedulerDown", "KubeControllerManagerDown", "InfoInhibitor"]
 
 # Silences for small/local clusters
-- triggers:
+- name: "MiniClustersPrometheusAlertsSilencer"
+  triggers:
   - on_prometheus_alert:
       status: "all"
       k8s_providers: ["Minikube", "Kind", "RancherDesktop"]
@@ -115,7 +117,8 @@ priorityBuiltinPlaybooks:
       names: ["etcdInsufficientMembers", "etcdMembersDown", "NodeClockNotSynchronising", "PrometheusTSDBCompactionsFailing"]
 
 # Silences for specific providers
-- triggers:
+- name: "GKEProviderAlertsAlertsSilencer"
+  triggers:
   - on_prometheus_alert:
       status: "all"
       k8s_providers: [ "GKE" ]
@@ -123,7 +126,8 @@ priorityBuiltinPlaybooks:
   - name_silencer:
       names: [ "KubeletDown" ]
 
-- triggers:
+- name: "DONodeAgentCPUThrottlingHighAlertSilencer"
+  triggers:
   - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
       k8s_providers: [ "DigitalOcean" ]
@@ -133,7 +137,8 @@ priorityBuiltinPlaybooks:
       log_silence: true
 
 # Smart Silences
-- triggers:
+- name: "TargetDownSilencer"
+  triggers:
   - on_prometheus_alert:
       alert_name: TargetDown
   actions:
@@ -145,19 +150,22 @@ customPlaybooks: []
 # builtin playbooks
 builtinPlaybooks:
 # playbooks for non-prometheus based monitoring
-- triggers:
+- name: "CrashLoopBackOff"
+  triggers:
   - on_pod_crash_loop:
       restart_reason: "CrashLoopBackOff"
   actions:
   - report_crash_loop: {}
 
-- triggers:
+- name: "ImagePullBackOff"
+  triggers:
   - on_image_pull_backoff: {}
   actions:
   - image_pull_backoff_reporter: {}
 
 # playbooks for non-prometheus based monitoring that use prometheus for enrichment
-- triggers:
+- name: "PodOOMKill"
+  triggers:
   - on_pod_oom_killed:
       rate_limit: 3600
   actions:
@@ -168,14 +176,16 @@ builtinPlaybooks:
   stop: true
 
 # playbooks for prometheus alerts enrichment
-- triggers:
+- name: "KubePodCrashLooping"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubePodCrashLooping
   actions:
   - logs_enricher: {}
   - pod_events_enricher: {}
 
-- triggers:
+- name: "PrometheusRuleFailures"
+  triggers:
   - on_prometheus_alert:
         alert_name: PrometheusRuleFailures
   actions:
@@ -183,7 +193,8 @@ builtinPlaybooks:
   - logs_enricher:
       filter_regex: ".*Evaluating rule failed.*"
 
-- triggers:
+- name: "KubeCPUOvercommit"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeCPUOvercommit
   actions:
@@ -192,7 +203,8 @@ builtinPlaybooks:
       url: https://bit.ly/overcommit-cpu
       name: CPU Overcommited
 
-- triggers:
+- name: "KubeMemoryOvercommit"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeMemoryOvercommit
   actions:
@@ -201,7 +213,8 @@ builtinPlaybooks:
       url: https://bit.ly/memory-overcommit
       name: Memory Overcommited
 
-- triggers:
+- name: "KubePodNotReady"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubePodNotReady
   actions:
@@ -209,20 +222,23 @@ builtinPlaybooks:
   - pod_events_enricher: {}
   - pod_issue_investigator: {}
 
-- triggers:
+- name: "KubeContainerWaiting"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeContainerWaiting
   actions:
   - pod_issue_investigator: {}
   - pod_events_enricher: {}
 
-- triggers:
+- name: "KubeHpaReplicasMismatch"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeHpaReplicasMismatch
   actions:
   - hpa_mismatch_enricher: {}
 
-- triggers:
+- name: "KubeJobAlerts"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeJobFailed
   - on_prometheus_alert:
@@ -234,13 +250,15 @@ builtinPlaybooks:
   - job_events_enricher: {}
   - job_pod_enricher: {}
 
-- triggers:
+- name: "KubeAggregatedAPIDown"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeAggregatedAPIDown
   actions:
   - api_service_status_enricher: {}
 
-- triggers:
+- name: "KubeletTooManyPods"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeletTooManyPods
   actions:
@@ -249,7 +267,8 @@ builtinPlaybooks:
       alert_explanation: "The node is approaching the maximum number of scheduled pods."
       recommended_resolution: "Verify that you defined proper resource requests for your workloads. If pods cannot be scheduled, add more nodes to your cluster."
 
-- triggers:
+- name: "KubeNodeNotReady"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeNodeNotReady
   actions:
@@ -259,7 +278,8 @@ builtinPlaybooks:
       show_details: true
   - node_dmesg_enricher: {}
 
-- triggers:
+- name: "KubeNodeUnreachable"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeNodeUnreachable
   actions:
@@ -267,7 +287,8 @@ builtinPlaybooks:
   - node_status_enricher: {}
 
 # Prometheus Statefulset playbooks
-- triggers:
+- name: "KubeStatefulSetReplicasMismatch"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeStatefulSetReplicasMismatch
   actions:
@@ -276,7 +297,8 @@ builtinPlaybooks:
   - statefulset_replicas_enricher: {}
   - pod_issue_investigator: {}
 
-- triggers:
+- name: "KubeStatefulSetUpdateNotRolledOut"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeStatefulSetUpdateNotRolledOut
   actions:
@@ -285,7 +307,8 @@ builtinPlaybooks:
 
 
 # Prometheus Daemonset playbooks
-- triggers:
+- name: "KubeDaemonSetRolloutStuck"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubeDaemonSetRolloutStuck
   actions:
@@ -293,7 +316,8 @@ builtinPlaybooks:
   - related_pods: {}
   - daemonset_status_enricher: {}
 
-- triggers:
+- name: "K8sMisscheduled"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDaemonsetMisscheduled
   - on_prometheus_alert:
@@ -302,7 +326,8 @@ builtinPlaybooks:
   - daemonset_status_enricher: {}
   - daemonset_misscheduled_analysis_enricher: {}
 
-- triggers:
+- name: "HostHighCpuLoad"
+  triggers:
   - on_prometheus_alert:
       alert_name: HostHighCpuLoad
   actions:
@@ -310,7 +335,9 @@ builtinPlaybooks:
   - alert_graph_enricher:
       resource_type: CPU
       item_type: Node
-- triggers:
+
+- name: "HostOomKillDetected"
+  triggers:
   - on_prometheus_alert:
       alert_name: HostOomKillDetected
   actions:
@@ -318,7 +345,9 @@ builtinPlaybooks:
   - alert_graph_enricher:
       resource_type: Memory
       item_type: Node
-- triggers:
+
+- name: "NodeFSSpaceAlerts"
+  triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
   - on_prometheus_alert:
@@ -328,7 +357,9 @@ builtinPlaybooks:
   - alert_graph_enricher:
       resource_type: Disk
       item_type: Node
-- triggers:
+
+- name: "CPUThrottlingHigh"
+  triggers:
   - on_prometheus_alert:
       alert_name: CPUThrottlingHigh
       status: "all" # sometimes this enricher silences the alert, so we need to silence it regardless of status
@@ -337,7 +368,9 @@ builtinPlaybooks:
   - alert_graph_enricher:
       resource_type: CPU
       item_type: Pod
-- triggers:
+
+- name: "DeploymentReplicasMismatch"
+  triggers:
   - on_prometheus_alert:
       alert_name: KubernetesDeploymentReplicasMismatch
   - on_prometheus_alert:
@@ -350,13 +383,15 @@ builtinPlaybooks:
       included_types: ["Warning", "Normal"]
       dependent_pod_mode: true
 
-- triggers:
+- name: "DefaultPrometheusAlertEnricher"
+  triggers:
   - on_prometheus_alert:
       status: "all"
   actions:
   - default_enricher: {}
 
-- triggers:
+- name: "MiniClusterNodeFSSpaceAlerts"
+  triggers:
   - on_prometheus_alert:
       alert_name: NodeFilesystemSpaceFillingUp
       k8s_providers: ["Minikube", "Kind", "RancherDesktop"]
@@ -374,7 +409,8 @@ builtinPlaybooks:
 enablePlatformPlaybooks: false
 
 platformPlaybooks:
-- triggers:
+- name: "K8sWarningEventsReport"
+  triggers:
   - on_kubernetes_warning_event_create:
       exclude: ["NodeSysctlChange"]
   actions:
@@ -382,14 +418,18 @@ platformPlaybooks:
   - event_resource_events: {}
   sinks:
     - "robusta_ui_sink"
-- triggers:
+
+- name: "K8sChangeTracking"
+  triggers:
     - on_kubernetes_resource_operation:
         resources: ["deployment", "daemonset", "statefulset"]
   actions:
     - resource_babysitter: {}
   sinks:
     - "robusta_ui_sink"
-- triggers:
+
+- name: "IngressChangeTracking"
+  triggers:
     - on_ingress_all_changes: {}
   actions:
     - resource_babysitter: {}
@@ -398,7 +438,16 @@ platformPlaybooks:
         aggregation_key: IngressChange
   sinks:
     - "robusta_ui_sink"
-- triggers:
+
+- name: "EventBasedChangeTracking"
+  triggers:
+    - on_kubernetes_resource_operation:
+        resources: ["deployment", "replicaset", "daemonset", "statefulset", "pod", "node", "job" ]
+  actions:
+    - resource_events_diff: {}
+
+- name: "K8sJobFailure"
+  triggers:
   - on_job_failure: {}
   actions:
   - create_finding:
@@ -409,7 +458,9 @@ platformPlaybooks:
   - job_pod_enricher: {}
   sinks:
     - "robusta_ui_sink"
-- triggers:
+
+- name: "WeeklyPopeyeScan"
+  triggers:
   - on_schedule:
       fixed_delay_repeat:
         repeat: 1
@@ -418,7 +469,9 @@ platformPlaybooks:
   - popeye_scan: {}
   sinks:
     - "robusta_ui_sink"
-- triggers:
+
+- name: "WeeklyKRRScan"
+  triggers:
   - on_schedule:
       cron_schedule_repeat:
         cron_expression: "0 12 * * 1" # every Monday at 12:00
@@ -426,6 +479,9 @@ platformPlaybooks:
   - krr_scan: {}
   sinks:
     - "robusta_ui_sink"
+
+# Any playbook name listed here will be disabled
+disabledPlaybooks: []
 
 image:
   registry: us-central1-docker.pkg.dev/genuine-flight-317411/devel

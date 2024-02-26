@@ -6,7 +6,7 @@ Overview
 ================================
 
 This section is optimized for learning by example. If you prefer reference guides, refer to
-:ref:`Configuration Overview` and :ref:`How it works`.
+:ref:`Integrations Overview` and :ref:`How it works`.
 
 Discover Builtin Features
 ---------------------------
