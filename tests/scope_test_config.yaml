@@ -176,3 +176,75 @@ tests:
           subject:
             name: myname
         expected: false
+  - scope:
+      include:
+        - name: n.*
+          labels: "x = y, p=q "
+    checks:
+      - message: "some-message"
+        finding:
+          title: the title
+          subject:
+            name: name
+          labels:
+              x: y
+              p: zzz
+        expected: false
+  - scope:
+      include:
+        - name: name
+          labels: " x=y,p = q "
+    checks:
+      - message: "new message"
+        finding:
+          title: the title
+          subject:
+            name: name
+          labels:
+              x: y
+              p: q
+        expected: true
+  - scope:
+      include:
+        - labels: " x = y.*y , p != q[0-9] "
+    checks:
+      - message: "new message"
+        finding:
+          labels:
+              x: y
+              p: q
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q
+        expected: true
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q1
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q1111
+        expected: true
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy123
+              p: q1111
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              p: q1111
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+        expected: false
