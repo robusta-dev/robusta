@@ -1,8 +1,9 @@
 import logging
 import re
 from functools import total_ordering
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
+from prometrix import PrometheusQueryResult
 from robusta.api import (
     MarkdownBlock,
     PrometheusKubernetesAlert,
@@ -72,9 +73,39 @@ class Semver:
         return False
 
 
-def _semver_max(versions: List[str]) -> str:
-    max_semver = max([Semver(version) for version in versions])
-    return max_semver.semver_string
+class BuildInfoResults:
+    api_versions: List[Semver]
+    node_versions: List[Semver]
+    raw_metrics: List[Dict[str, str]]
+
+    def __init__(self, query_result: PrometheusQueryResult):
+        self.raw_metrics = [result.metric for result in query_result.vector_result]
+        self.api_versions = [
+            Semver(metric.get("git_version")) for metric in self.raw_metrics if metric.get("node") is None
+        ]
+        self.node_versions = [
+            Semver(metric.get("git_version")) for metric in self.raw_metrics if metric.get("node") is not None
+        ]
+
+    def is_results_valid(self) -> bool:
+        # there must be atleast two different versions for this alert
+        if len(self.raw_metrics) < 2:
+            logging.error(f"Invalid prometheus results for version_mismatch_enricher.")
+            return False
+
+        # you can have multiple versions of the api server in the metrics at once
+        # i.e. at the time of kubernetes upgrade both will show up in the metrics for several minutes
+        if len(self.api_versions) == 0:
+            logging.error(f"Missing api server results for version_mismatch_enricher.")
+            return False
+        return True
+
+    def results_to_node_table(self) -> List[List[str]]:
+        return [
+            [metric.get("node"), metric.get("git_version")]
+            for metric in self.raw_metrics
+            if metric.get("node") is not None
+        ]
 
 
 @action
@@ -90,39 +121,30 @@ def version_mismatch_enricher(alert: PrometheusKubernetesAlert, params: VersionM
     if query_result.result_type == "error" or query_result.vector_result is None:
         logging.error(f"version_mismatch_enricher failed to get prometheus results.")
         return
-    # there must be atleast two different versions for this alert
-    metrics = [result.metric for result in query_result.vector_result]
-    versions = list(set([metric.get("git_version") for metric in metrics]))
-    if len(versions) < 2:
+
+    build_infos = BuildInfoResults(query_result)
+    if not build_infos.is_results_valid():
         logging.error(f"Invalid prometheus results for version_mismatch_enricher.")
         return
 
-    kubernetes_api_versions = [metric.get("git_version") for metric in metrics if metric.get("node") is None]
-
-    # you can have multiple versions of the api server in the metrics at once
-    # i.e. at the time of kubernetes upgrade both will show up in the metrics for several minutes
-    if len(kubernetes_api_versions) == 0:
-        logging.error(f"Missing api server results for version_mismatch_enricher.")
-        return
-    kubernetes_api_version = _semver_max(kubernetes_api_versions)
-    nodes_by_version = [
-        [metric.get("node"), metric.get("git_version")] for metric in metrics if metric.get("node") is not None
-    ]
+    max_api_version = max(build_infos.api_versions)
+    max_node_version = max(build_infos.node_versions)
 
     # in the case where a node is of a higher version than the api server
-    api_server_msg = "and cluster " if _semver_max(kubernetes_api_versions) != _semver_max(versions) else " "
-
+    update_cluster_msg = "and cluster " if max_api_version != max_node_version else " "
+    max_version_string = max([max_api_version, max_node_version]).semver_string
     alert.add_enrichment(
         [
             MarkdownBlock(f"Automatic {alert.alert_name} investigation:"),
-            MarkdownBlock(f"The kubernetes api server is version {kubernetes_api_version}."),
+            MarkdownBlock(f"The kubernetes api server is version {max_api_version}."),
             TableBlock(
-                nodes_by_version,
+                build_infos.results_to_node_table(),
                 ["name", "version"],
                 table_name="*Node Versions*",
             ),
             MarkdownBlock(
-                f"To solve this alert, make sure to update all of your nodes {api_server_msg}to version {_semver_max(versions)}."
+                f"To solve this alert, make sure to update all of your nodes {update_cluster_msg}to version"
+                f" {max_version_string}. "
             ),
         ],
         annotations={SlackAnnotations.ATTACHMENT: True},
