@@ -205,12 +205,14 @@ class Filterable:
 
     def label_matches(self, label_match, labels, labels_match_expr):
         label_name, label_regex = label_match.split("=", 1)
+        label_name = label_name.strip()
+        label_regex = label_regex.strip()
         if label_name.endswith("!"):  # label_name!=match_expr
             label_name = label_name[:-1]
             expect_match = False
         else:
             expect_match = True
-        label_value = labels.get(label_name.strip())
+        label_value = labels.get(label_name)
         if label_value is None:  # no label with that name
             return False
         return bool(re.fullmatch(label_regex, label_value.strip())) == expect_match

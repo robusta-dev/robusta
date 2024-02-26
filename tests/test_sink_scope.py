@@ -139,7 +139,7 @@ class TestFilterable:
 
     @pytest.fixture()
     def finding_with_data(self, finding):
-        finding.subject.labels = {"a": "x", "b": "fffy"}
+        finding.subject.labels = {"a": "x", "b": "fffy", "X": " hello "}
         finding.subject.namespace = "ns12"
         finding.title = "c1"
         return finding
@@ -164,6 +164,9 @@ class TestFilterable:
             (None, [{"labels": "a=q,b=.*y"}, {"title": "d[1-9]*"}], True, True),
             ([{"namespace": "ns"}], None, False, True),
             (None, [{"namespace": "ns"}], True, True),
+            ([{"labels": " a=x , b=.*y "}], None, True, False),
+            ([{"labels": "X=hello"}], None, True, False),
+            ([{"labels": "X=.*el.*"}], None, True, False),
         ],
     )
     def test_matches_inc_match(
