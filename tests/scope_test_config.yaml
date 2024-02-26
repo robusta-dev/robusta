@@ -1,0 +1,383 @@
+# include/exclude match fields:
+#   title: e.g. Crashing pod foo in namespace default
+#   name : the Kubernetes object name
+#   namespace: the Kubernetes object namespace
+#   kind: one of deployment, node, pod, job, daemonset
+#   node : the Kubernetes node name
+#   severity: one of INFO, LOW, MEDIUM, HIGH
+#   type: one of ISSUE, CONFIGURATION_CHANGE, HEALTH_CHECK, REPORT
+#   source: one of NONE, KUBERNETES_API_SERVER, PROMETHEUS, MANUAL, CALLBACK
+#   identifier: e.g. report_crash_loop
+#   labels: A comma separated list of key=val e.g. foo=bar,instance=123
+#   annotations: A comma separated list of key=val e.g. app.kubernetes.io/name=prometheus
+tests:
+  - scope:
+        include:
+          - title: the title
+            name: the-name
+            namespace: the-namespace
+            kind: deployment
+            node: the-node
+            severity: HIGH
+            type: REPORT
+            source: CALLBACK
+            identifier: crash_loop
+            labels: "label1=lab1, label2=lab2"
+            annotations: "annot1=ann1, annot2=ann2"
+    checks:
+      - message: "accept all fields match"
+        finding:
+          title: the title
+          subject:
+            name: the-name
+            namespace: the-namespace
+            kind: deployment
+            node: the-node
+          severity: HIGH
+          finding_type: REPORT
+          source: CALLBACK
+          aggregation_key: crash_loop
+          labels:
+            label1: lab1
+            label2: lab2
+          annotations:
+            annot1: ann1
+            annot2: ann2
+        expected: true
+      - message: "reject missing label"
+        finding:
+          title: the title
+          subject:
+            name: the-name
+            namespace: the-namespace
+            kind: deployment
+            node: the-node
+          severity: HIGH
+          finding_type: REPORT
+          source: CALLBACK
+          aggregation_key: crash_loop
+          labels:
+            label1: lab1
+          annotations:
+            annot1: ann1
+            annot2: ann2
+        expected: false
+      - message: "reject wrong title"
+        finding:
+          title: title
+          subject:
+            name: the-name
+            namespace: the-namespace
+            kind: deployment
+            node: the-node
+          severity: HIGH
+          finding_type: REPORT
+          source: CALLBACK
+          aggregation_key: crash_loop
+          labels:
+            label1: lab1
+          annotations:
+            annot1: ann1
+            annot2: ann2
+        expected: false
+  - scope:
+      include:
+        - name: xxx
+          namespace: yyy
+      exclude:
+        - name: zzz
+    checks:
+      - message: "accept by name xxx and ns yyy"
+        finding:
+          subject:
+            name: xxx
+            namespace: yyy
+        expected: true
+      - message: "reject with name xx and ns yy"
+        finding:
+          subject:
+            name: xx
+            namespace: yy
+        expected: false
+      - message: "reject with name zzz (exclude)"
+        finding:
+          subject:
+            name: zzz
+            namespace: yy
+        expected: false
+  - scope:
+      include:
+        - name:
+            - name1
+            - name2
+          namespace:
+          - ns1
+          - ns2
+    checks:
+      - message: "accept name1 ns2"
+        finding:
+          subject:
+            name: name1
+            namespace: ns2
+        expected: true
+      - message: "accept name1 ns1"
+        finding:
+          subject:
+            name: name1
+            namespace: ns1
+        expected: true
+      - message: "reject name1 ns3"
+        finding:
+          subject:
+            name: name1
+            namespace: ns3
+        expected: false
+      - message: "reject name3 ns3"
+        finding:
+          subject:
+            name: name3
+            namespace: ns3
+        expected: false
+  - scope:
+      include:
+        - name:
+          - .*myname.*
+          - his-name
+          title:
+            - the title
+    checks:
+      - message: "accept his-name and title"
+        finding:
+          title: the title
+          subject:
+            name: his-name
+        expected: true
+      - message: "accept xxmynamename1 and title"
+        finding:
+          title: the title
+          subject:
+            name: xxmynamename1
+        expected: true
+      - message: "reject mynam and title"
+        finding:
+          title: the title
+          subject:
+            name: mynam
+        expected: false
+      - message: "reject mynam and bad title"
+        finding:
+          title: bad title
+          subject:
+            name: mynam
+        expected: false
+      - message: "reject myname and bad title"
+        finding:
+          title: bad title
+          subject:
+            name: myname
+        expected: false
+  - scope:
+      include:
+        - name: n.*
+          labels: "x = y, p=q "
+    checks:
+      - message: "some-message"
+        finding:
+          title: the title
+          subject:
+            name: name
+          labels:
+              x: y
+              p: zzz
+        expected: false
+  - scope:
+      include:
+        - name: name
+          labels: " x=y,p = q "
+    checks:
+      - message: "new message"
+        finding:
+          title: the title
+          subject:
+            name: name
+          labels:
+              x: y
+              p: q
+        expected: true
+  - scope:
+      include:
+        - labels: " x = y.*y , p != q[0-9] "
+    checks:
+      - message: "new message"
+        finding:
+          labels:
+              x: y
+              p: q
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q
+        expected: true
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q1
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q1111
+        expected: true
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy123
+              p: q1111
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              p: q1111
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+        expected: false
+  - scope:
+      include:
+        - labels: " x = y.*y , p != q[0-9] "
+      exclude:
+        - labels: " x = y.*y , p != q[0-9] "
+    checks:
+      - message: "new message"
+        finding:
+          labels:
+              x: y
+              p: q
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q1
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+              p: q1111
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy123
+              p: q1111
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              p: q1111
+        expected: false
+      - message: "new message"
+        finding:
+          labels:
+              x: yAAAy
+        expected: false
+  - scope:
+      include:
+        - name: nam1
+          namespace: ns1
+        - name: nam2
+          namespace: ns2
+      exclude:
+        - name: nam3
+          namespace: ns3
+    checks:
+      - message: "nam1 ns1"
+        finding:
+          subject:
+            name: nam1
+            namespace: ns1
+        expected: true
+      - message: "nam2 ns2"
+        finding:
+          subject:
+            name: nam2
+            namespace: ns2
+        expected: true
+      - message: "nam3 ns3"
+        finding:
+          subject:
+            name: nam3
+            namespace: ns3
+        expected: false
+      - message: "nam4 ns4"
+        finding:
+          subject:
+            name: nam4
+            namespace: ns4
+        expected: false
+  - scope:
+      include:
+        - identifier: iden1
+          kind:
+            - pod
+            - node
+        - identifier: iden2
+          kind:
+            - deployment
+            - job
+    checks:
+      - message: "iden1 deployment"
+        finding:
+          aggregation_key: iden1
+          subject:
+            kind: deployment
+        expected: false
+      - message: "iden2 pod"
+        finding:
+          aggregation_key: iden2
+          subject:
+            kind: pod
+        expected: false
+      - message: "iden1 node"
+        finding:
+          aggregation_key: iden1
+          subject:
+            kind: node
+        expected: true
+      - message: "iden1 daemonset"
+        finding:
+          aggregation_key: iden1
+          subject:
+            kind: daemonset
+        expected: false
+      - message: "iden11 daemonset"
+        finding:
+          aggregation_key: iden1
+          subject:
+            kind: daemonset
+        expected: false
+      - message: "iden11 node"
+        finding:
+          aggregation_key: iden11
+          subject:
+            kind: node
+        expected: false
+      - message: "iden2 job"
+        finding:
+          aggregation_key: iden2
+          subject:
+            kind: job
+        expected: true

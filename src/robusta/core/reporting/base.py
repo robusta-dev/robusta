@@ -108,8 +108,13 @@ class Enrichment:
     enrichment_type: Optional[EnrichmentType]
     title: Optional[str]
 
-    def __init__(self, blocks: List[BaseBlock], annotations: Optional[Dict[str, str]] = None,
-                 enrichment_type: Optional[EnrichmentType] = None, title: Optional[str] = None):
+    def __init__(
+        self,
+        blocks: List[BaseBlock],
+        annotations: Optional[Dict[str, str]] = None,
+        enrichment_type: Optional[EnrichmentType] = None,
+        title: Optional[str] = None,
+    ):
         if annotations is None:
             annotations = {}
         self.blocks = blocks
@@ -146,16 +151,71 @@ class Filterable:
             logging.error(f"Failed to evaluate matcher. Finding value: {value} matcher: {expression}")
             return False
 
-    def matches(self, requirements: Dict[str, Union[str, List[str]]]) -> bool:
-        invalid_attributes = self.get_invalid_attributes(list(requirements.keys()))
+    def matches(self, match_requirements: Dict[str, Union[str, List[str]]], scope_requirements) -> bool:
+        # 1. "scope" check
+        accept = True
+        if scope_requirements is not None:
+            if scope_requirements.exclude:
+                if self.scope_inc_exc_matches(scope_requirements.exclude):
+                    return False
+            if scope_requirements.include:
+                if self.scope_inc_exc_matches(scope_requirements.include):
+                    return True
+                else:  # include was defined, but not matched. So if not matched by old matcher, should be rejected!
+                    accept = False
+
+        # 2. "match" check
+        invalid_attributes = self.get_invalid_attributes(list(match_requirements.keys()))
         if len(invalid_attributes) > 0:
             logging.warning(f"Invalid match attributes: {invalid_attributes}")
             return False
 
-        for attribute, expression in requirements.items():
+        for attribute, expression in match_requirements.items():
             if not self.attribute_matches(attribute, expression):
                 return False
+        return accept
+
+    def scope_inc_exc_matches(self, scope_inc_exc: Optional[list]):
+        return any(self.scope_matches(scope) for scope in scope_inc_exc)
+
+    def scope_matches(self, scope: Dict[str, List[str]]):
+        # scope is e.g. {'labels': ['app=oomki.*,app!=X.*Y']}
+        # or {'name': ['pod-xyz.*'], 'title': ['fdc.*a', 'fdd.*b'], 'type': ['ISSUE']}
+        for attr_name, attr_matchers in scope.items():
+            if not self.scope_attribute_matches(attr_name, attr_matchers):
+                return False
         return True
+
+    def scope_attribute_matches(self, attr_name: str, attr_matchers: List[str]):
+        if attr_name not in self.attribute_map:
+            raise ValueError(f'Scope match on unknown attribute "{attr_name}"')
+        attr_value = self.attribute_map[attr_name]
+        for attr_matcher in attr_matchers:
+            if attr_name in ["labels", "annotations"]:
+                return self.match_labels_annotations(attr_matcher, attr_value)
+            elif re.fullmatch(attr_matcher, attr_value):
+                return True
+        return False
+
+    def match_labels_annotations(self, labels_match_expr: str, labels: Dict[str, str]):
+        for label_match in labels_match_expr.split(","):
+            if not self.label_matches(label_match, labels):
+                return False
+        return True
+
+    def label_matches(self, label_match: str, labels: Dict[str, str]):
+        label_name, label_regex = label_match.split("=", 1)
+        label_name = label_name.strip()
+        label_regex = label_regex.strip()
+        if label_name.endswith("!"):  # label_name!=match_expr
+            label_name = label_name[:-1].rstrip()
+            expect_match = False
+        else:
+            expect_match = True
+        label_value = labels.get(label_name)
+        if label_value is None:  # no label with that name
+            return False
+        return bool(re.fullmatch(label_regex, label_value.strip())) == expect_match
 
 
 class FindingSubject:
@@ -294,8 +354,9 @@ class Finding(Filterable):
             return
         if annotations is None:
             annotations = {}
-        self.enrichments.append(Enrichment(blocks=enrichment_blocks, annotations=annotations,
-                                           enrichment_type=enrichment_type, title=title))
+        self.enrichments.append(
+            Enrichment(blocks=enrichment_blocks, annotations=annotations, enrichment_type=enrichment_type, title=title)
+        )
 
     def add_video_link(self, video_link: VideoLink, suppress_warning: bool = False):
         if self.dirty and not suppress_warning:
