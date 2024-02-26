@@ -167,6 +167,8 @@ class TestFilterable:
             ([{"labels": " a=x , b=.*y "}], None, True, False),
             ([{"labels": "X=hello"}], None, True, False),
             ([{"labels": "X=.*el.*"}], None, True, False),
+            ([{"labels": "X!=aaa"}], None, True, False),
+            ([{"labels": " X != aaa "}], None, True, False),
         ],
     )
     def test_matches_inc_match(

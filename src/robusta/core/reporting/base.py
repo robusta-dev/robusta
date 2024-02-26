@@ -199,16 +199,16 @@ class Filterable:
 
     def match_labels_annotations(self, labels_match_expr: str, labels: Dict[str, str]):
         for label_match in labels_match_expr.split(","):
-            if not self.label_matches(label_match, labels, labels_match_expr):
+            if not self.label_matches(label_match, labels):
                 return False
         return True
 
-    def label_matches(self, label_match, labels, labels_match_expr):
+    def label_matches(self, label_match: str, labels: Dict[str, str]):
         label_name, label_regex = label_match.split("=", 1)
         label_name = label_name.strip()
         label_regex = label_regex.strip()
         if label_name.endswith("!"):  # label_name!=match_expr
-            label_name = label_name[:-1]
+            label_name = label_name[:-1].rstrip()
             expect_match = False
         else:
             expect_match = True
