@@ -102,7 +102,7 @@ class SupabaseDal(AccountResourceFetcher):
     def insert_scan_meta(self, scan_id: str, start_time: datetime, scan_type: ScanType) -> None:
         try:
             self.__rpc_patch(
-                "insert_scan_meta",
+                "insert_scan_meta_v2",
                 {
                     "_account_id": self.account_id,
                     "_cluster": self.cluster,
