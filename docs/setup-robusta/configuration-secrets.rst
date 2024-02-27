@@ -16,7 +16,6 @@ Robusta can pull values from Kubernetes secrets for:
 * Sink Configuration
 * Global Config
 * Action Parameters
-* Robusta RSA keys
 
 To do so, first define an environment variable based on a Kubernetes secret. Add to Robusta's Helm values:
 
@@ -41,5 +40,3 @@ Then reference that environment variable in other Helm values using the special 
 
 Finally, make sure the Kubernetes secret actually exists. In this example, create a Secret named ``my-robusta-secrets``
 with a ``secret_grafana_key`` value inside.
-
-For Robusta RSA keys, you can define the ``existingSecret`` parameter. The secret must have the `pub` and `prv` keys.
