@@ -64,20 +64,24 @@ class ModelConversion:
         return finding_json
 
     @staticmethod
+    def get_file_type(filename: str):
+        last_dot_idx = filename.rindex(".")
+        return filename[last_dot_idx + 1:]
+
+    @staticmethod
     def get_file_object(block: FileBlock):
-        last_dot_idx = block.filename.rindex(".")
         return {
-            "type": block.filename[last_dot_idx + 1 :],
+            "type": ModelConversion.get_file_type(block.filename),
             "data": str(base64.b64encode(block.contents)),
         }
 
     @staticmethod
     def get_empty_file_object(block: EmptyFileBlock):
-        file_obj = ModelConversion.get_file_object(block)
-        file_obj["data"] = ""
-        file_obj["metadata"] = block.metadata
-
-        return file_obj
+        return {
+            "type": ModelConversion.get_file_type(block.filename),
+            "metadata": block.metadata,
+            "data": "",
+        }
 
     @staticmethod
     def to_evidence_json(
@@ -110,13 +114,12 @@ class ModelConversion:
                     if block.is_text_file():
                         block.zip()
                     structured_data.append(ModelConversion.get_file_object(block))
+            elif isinstance(block, EmptyFileBlock):
+                structured_data.append(ModelConversion.get_empty_file_object(block))
             elif isinstance(block, FileBlock):
-                if isinstance(block, EmptyFileBlock):
-                    structured_data.append(ModelConversion.get_empty_file_object(block))
-                else:
-                    if block.is_text_file():
-                        block.zip()
-                    structured_data.append(ModelConversion.get_file_object(block))
+                if block.is_text_file():
+                    block.zip()
+                structured_data.append(ModelConversion.get_file_object(block))
             elif isinstance(block, HeaderBlock):
                 structured_data.append({"type": "header", "data": block.text})
             elif isinstance(block, ListBlock):
@@ -181,7 +184,7 @@ class ModelConversion:
             elif isinstance(block, EventsRef):
                 structured_data.append({"type": "events_ref", "data": block.dict()})
             else:
-                logging.error(f"cannot convert block of type {type(block)} to robusta platform format block: {block}")
+                logging.warning(f"cannot convert block of type {type(block)} to robusta platform format block: {block}")
                 continue  # no reason to crash the entire report
 
         if not structured_data:

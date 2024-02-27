@@ -53,6 +53,8 @@ def start_log_enrichment(
         #  container when a container inside a pod was oomkilled. I can imagine it could cause
         #  similar problems in other cases.
         container = pod.spec.containers[0].name
+
+    log_data = ""
     for _ in range(tries - 1):
         log_data = pod.get_logs(
             container=container,
@@ -65,19 +67,19 @@ def start_log_enrichment(
             logging.info("log data is empty, retrying...")
             time.sleep(backoff_seconds)
             continue
-
-        if not log_data:
-            log_block = EmptyFileBlock(filename=f"{pod.metadata.name}.log",
-                                       remarks=f"Logs unavailable for container: {container}")
-            logging.info(
-                f"could not fetch logs from container: {container}"
-            )
-        else:
-            log_block = FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())
-
-        event.add_enrichment([log_block],
-                             enrichment_type=EnrichmentType.text_file, title="Logs")
         break
+
+    if not log_data:
+        log_block = EmptyFileBlock(filename=f"{pod.metadata.name}.log",
+                                   remarks=f"Logs unavailable for container: {container}")
+        logging.info(
+            f"could not fetch logs from container: {container}"
+        )
+    else:
+        log_block = FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())
+
+    event.add_enrichment([log_block],
+                         enrichment_type=EnrichmentType.text_file, title="Logs")
 
 
 def logs_enricher(event: PodEvent, params: LogEnricherParams):

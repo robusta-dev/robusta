@@ -130,12 +130,13 @@ class FileBlock(BaseBlock):
         return "\n".join(truncated_lines).encode("utf-8")
 
 
-class EmptyFileBlock(FileBlock):
+class EmptyFileBlock(BaseBlock):
     """
     Handle empty log files
     """
 
     metadata: dict = {}
+    filename: str
 
     def __init__(
             self,
@@ -150,11 +151,10 @@ class EmptyFileBlock(FileBlock):
         """
         super().__init__(
             filename=filename,
-            contents=remarks.encode(),
+            metadata=metadata or {},
             **kwargs,
         )
 
-        self.metadata = metadata or {}
         self.metadata["is_empty"] = True
         self.metadata["remarks"] = remarks
 
