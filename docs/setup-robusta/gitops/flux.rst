@@ -40,9 +40,6 @@ Example ``generated_values.yaml``:
     enablePlatformPlaybooks: true
     runner:
       sendAdditionalTelemetry: true
-    rsa:
-      prv: xxxxxx
-      pub: xxxxxx
 
 .. admonition:: Secrets handling
     :class: note
