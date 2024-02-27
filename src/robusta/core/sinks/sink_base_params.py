@@ -55,11 +55,42 @@ class ActivityParams(BaseModel):
         return intervals
 
 
+ScopeIncludeExcludeParams = Dict[str, Optional[Union[str, List[str]]]]
+
+
+class ScopeParams(BaseModel):
+    include: Optional[List[ScopeIncludeExcludeParams]]
+    exclude: Optional[List[ScopeIncludeExcludeParams]]
+
+    @root_validator
+    def check_non_empty(cls, data: Dict) -> Dict:
+        if not (data.get("include") is not None or data.get("exclude") is not None):
+            raise ValueError("scope requires include and/or exclude subfield")
+        return data
+
+    @root_validator
+    def check_and_normalize(cls, data: Dict) -> Dict:
+        """Check and normalize entries inside include/exclude"""
+        for key in ["include", "exclude"]:
+            entry = data[key]
+            if entry is None:
+                continue
+            if entry == []:
+                raise ValueError("scope include/exclude specification requires at least one matcher")
+            for inc_exc_params in entry:
+                for attr_name, regex_or_regexes in inc_exc_params.items():
+                    if isinstance(regex_or_regexes, str):
+                        regex_or_regexes = [regex_or_regexes]
+                    inc_exc_params[attr_name] = regex_or_regexes
+        return data
+
+
 class SinkBaseParams(BaseModel):
     name: str
     send_svg: bool = False
     default: bool = True
     match: dict = {}
+    scope: Optional[ScopeParams]
     activity: Optional[ActivityParams]
     stop: bool = False  # Stop processing if this sink has been matched
 

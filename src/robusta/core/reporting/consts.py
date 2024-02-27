@@ -9,6 +9,10 @@ class FindingType(Enum):
     HEALTH_CHECK = "health_check"
     REPORT = "report"
 
+    @classmethod
+    def from_type(cls, finding_type: str) -> "FindingType":
+        return cls(finding_type.lower())
+
 
 class FindingAggregationKey(Enum):
     NONE = None  # empty default
@@ -24,6 +28,13 @@ class FindingSource(Enum):
     HELM_RELEASE = "helm_release"
     CALLBACK = "callback"
     SCHEDULER = "scheduler"
+
+    @classmethod
+    def from_source(cls, source: str) -> "FindingSource":
+        try:
+            return cls(source.lower())
+        except ValueError:
+            return cls.NONE
 
 
 # Finding subject types
