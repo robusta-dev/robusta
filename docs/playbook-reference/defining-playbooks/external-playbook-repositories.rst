@@ -14,15 +14,57 @@ use in :ref:`customPlaybooks<customPlaybooks>`.
 
 External actions are loaded using the ``playbookRepos`` Helm value, with either HTTPs or SSH.
 
-If your repository is not in ``github.com`` or ``bitbucket.org`` (default verified domains), please add your repository domains:
+If you are going to be using an external repository via HTTPS, you just need to configure
+correct read access credentials (see below). When connecting via SSH, however, there is an
+additional requirement to verify the remote host's identity on the client side, as SSH
+generally does not provide any method of doing that automatically (in contrast with HTTPS,
+which relies on the well established cryptographic infrastructure of certificates).
+
+In order to streamline the process of SSH host key verification, Robusta ships with verified
+host keys for the following popular Git providers:
+
+* github.com
+* gitlab.com
+* bitbucket.org
+* ssh.dev.azure.com
+
+If you are using a Git service outside of that list, you should add its SSH host keys in Robusta
+configuration. This is done via the `CUSTOM_SSH_HOST_KEYS` environment variable with the list
+of keys separated by newlines:
+
+.. code-block:: yaml
+
+    runner:
+      additional_env_vars:
+        - name: CUSTOM_SSH_HOST_KEYS
+        - value: |
+            key-1
+            key-2
+            key-3
+
+Another option to automate host key verification is the `GIT_REPOS_VERIFIED_HOSTS` environment
+variable.
+
+.. warning::
+
+    **DANGER ZONE**
+
+    Using the `GIT_REPOS_VERIFIED_HOSTS` variable is generally not recommended due to
+    security issues. Each host added this way will be automatically trusted *without*
+    an actual host key verification, potentially allowing man-in-the-middle attacks with
+    catastrophic implications. For more information, see
+    `here <https://www.ssh.com/academy/attack/man-in-the-middle>`_.
+
+    Please make sure you know what you are doing before using this functionality.
+
+An example of using that configuration option:
 
 .. code-block:: yaml
 
     runner:
       additional_env_vars:
         - name: GIT_REPOS_VERIFIED_HOSTS
-          value: "ssh.dev.azure.com gitlab.com"
-
+          value: "ssh.yourhost.com ssh.anotherhost.com"
 
 Loading Actions from Public Git Repo
 ------------------------------------------

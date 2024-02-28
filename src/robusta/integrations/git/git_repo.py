@@ -10,6 +10,7 @@ from collections import defaultdict, namedtuple
 from typing import Dict, List
 
 from robusta.core.model.env_vars import GIT_MAX_RETRIES
+from robusta.integrations.git.well_known_hosts import WELL_KNOWN_HOST_KEYS
 
 GIT_DIR_NAME = "robusta-git"
 REPO_LOCAL_BASE_DIR = os.path.abspath(os.path.join(os.environ.get("REPO_LOCAL_BASE_DIR", "/app"), GIT_DIR_NAME))
@@ -25,6 +26,20 @@ class GitRepoManager:
 
     manager_lock = threading.Lock()
     repo_map = defaultdict(None)
+
+    @staticmethod
+    def setup_host_keys(custom_host_keys: List[str]):
+        if not os.path.exists(SSH_ROOT_DIR):
+            os.mkdir(SSH_ROOT_DIR)
+        with open(f"{SSH_ROOT_DIR}/known_hosts", "w") as f:
+            for key in WELL_KNOWN_HOST_KEYS + custom_host_keys:
+                key = key.strip()
+                if key:
+                    logging.debug(f"Adding a key to known_hosts: {key}")
+                    f.write(key)
+
+        if GIT_REPOS_VERIFIED_HOSTS:
+            os.system(f"ssh-keyscan -H {GIT_REPOS_VERIFIED_HOSTS} >> {SSH_ROOT_DIR}/known_hosts")
 
     @staticmethod
     def get_git_repo(git_repo_url: str, git_key: str):
@@ -60,10 +75,12 @@ class GitRepo:
         self.git_repo_url = git_repo_url
         self.env = os.environ.copy()
         self.git_branch = git_branch
-        ssh_key_option = ""
+
         if git_key:  # Add ssh key for non-public repositories
             key_file_name = self.init_key(git_key)
             ssh_key_option = f"-i {key_file_name}"
+        else:
+            ssh_key_option = ""
 
         self.env["GIT_SSH_COMMAND"] = f"ssh {ssh_key_option} -o IdentitiesOnly=yes"
         self.repo_lock = threading.RLock()
@@ -82,11 +99,8 @@ class GitRepo:
             git_key = git_key + "\n"
 
         with open(key_file_name, "w") as key_file:
+            os.chmod(key_file_name, 0o400)
             key_file.write(textwrap.dedent(f"{git_key}"))
-        os.chmod(key_file_name, 0o400)
-        if not os.path.exists(SSH_ROOT_DIR):
-            os.mkdir(SSH_ROOT_DIR)
-        os.system(f"ssh-keyscan -H github.com bitbucket.org {GIT_REPOS_VERIFIED_HOSTS} >> {SSH_ROOT_DIR}/known_hosts")
         return key_file_name
 
     @staticmethod
