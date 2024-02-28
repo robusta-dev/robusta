@@ -14,7 +14,6 @@ import yaml
 
 from robusta.cli.utils import get_package_name
 from robusta.core.model.env_vars import (
-    CUSTOM_SSH_HOST_KEYS,
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
     DEFAULT_PLAYBOOKS_ROOT,
@@ -106,7 +105,6 @@ class ConfigLoader:
         playbooks_repos: Dict[str, PlaybookRepo],
     ):
         playbook_packages = []
-        GitRepoManager.setup_host_keys(CUSTOM_SSH_HOST_KEYS.split("\n"))
         for playbook_package, playbooks_repo in playbooks_repos.items():
             try:
                 if playbooks_repo.pip_install:  # skip playbooks that are already in site-packages

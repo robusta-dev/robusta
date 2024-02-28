@@ -9,7 +9,7 @@ import threading
 from collections import defaultdict, namedtuple
 from typing import Dict, List
 
-from robusta.core.model.env_vars import GIT_MAX_RETRIES
+from robusta.core.model.env_vars import CUSTOM_SSH_HOST_KEYS, GIT_MAX_RETRIES
 from robusta.integrations.git.well_known_hosts import WELL_KNOWN_HOST_KEYS
 
 GIT_DIR_NAME = "robusta-git"
@@ -26,9 +26,13 @@ class GitRepoManager:
 
     manager_lock = threading.Lock()
     repo_map = defaultdict(None)
+    host_keys_initialized = False
 
-    @staticmethod
-    def setup_host_keys(custom_host_keys: List[str]):
+    @classmethod
+    def setup_host_keys(cls, custom_host_keys: List[str]):
+        if cls.host_keys_initialized:
+            return
+
         if not os.path.exists(SSH_ROOT_DIR):
             os.mkdir(SSH_ROOT_DIR)
         with open(f"{SSH_ROOT_DIR}/known_hosts", "w") as f:
@@ -40,6 +44,8 @@ class GitRepoManager:
 
         if GIT_REPOS_VERIFIED_HOSTS:
             os.system(f"ssh-keyscan -H {GIT_REPOS_VERIFIED_HOSTS} >> {SSH_ROOT_DIR}/known_hosts")
+
+        cls.host_keys_initialized = True
 
     @staticmethod
     def get_git_repo(git_repo_url: str, git_key: str):
@@ -56,10 +62,11 @@ class GitRepoManager:
         with GitRepoManager.manager_lock:
             del GitRepoManager.repo_map[git_repo_url]
 
-    @staticmethod
-    def clear_git_repos():
+    @classmethod
+    def clear_git_repos(cls):
         with GitRepoManager.manager_lock:
             GitRepoManager.repo_map.clear()
+        cls.host_keys_initialized = False
 
 
 SingleChange = namedtuple("SingleChange", "commit_date commit_message")
@@ -101,6 +108,9 @@ class GitRepo:
         with open(key_file_name, "w") as key_file:
             os.chmod(key_file_name, 0o400)
             key_file.write(textwrap.dedent(f"{git_key}"))
+
+        GitRepoManager.setup_host_keys(CUSTOM_SSH_HOST_KEYS.split("\n"))
+
         return key_file_name
 
     @staticmethod
