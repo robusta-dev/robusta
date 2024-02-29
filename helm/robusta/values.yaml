@@ -459,7 +459,7 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "WeeklyPopeyScan"
+- name: "WeeklyPopeyeScan"
   triggers:
   - on_schedule:
       fixed_delay_repeat:
@@ -691,11 +691,6 @@ kube-prometheus-stack:
         memory: 256Mi
       limits:
         memory: 256Mi
-
-rsa: ~
-  # @param existingSecret Name of existing secret containing the rsa keys
-  # NOTE: Must contain the keys `pub` and `prv`
-  # existingSecret: my-robusta-rsa-keys
 
 # custom parameters for OpenShift clusters
 openshift:

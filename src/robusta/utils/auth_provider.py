@@ -10,7 +10,7 @@ from robusta.core.model.env_vars import RSA_KEYS_PATH
 
 class AuthProvider:
     def __init__(self):
-        logging.info(f"Loading RSA keys from {RSA_KEYS_PATH}")
+        logging.debug(f"Loading RSA keys from {RSA_KEYS_PATH}")
         self.prv: RSAPrivateKey = self.__class__._load_private_key(os.path.join(RSA_KEYS_PATH, "prv"))
         self.pub: RSAPublicKey = self.__class__._load_public_key(os.path.join(RSA_KEYS_PATH, "pub"))
 
@@ -24,7 +24,7 @@ class AuthProvider:
     def _load_private_key(file_name: str) -> Optional[RSAPrivateKey]:
         try:
             if not os.path.isfile(file_name):
-                logging.info(f"no rsa private key at {file_name}")
+                logging.debug(f"no rsa private key at {file_name}")
                 return None
             with open(file_name, "rb") as key_file:
                 private_key = serialization.load_pem_private_key(
@@ -42,7 +42,7 @@ class AuthProvider:
     def _load_public_key(file_name: str) -> Optional[RSAPublicKey]:
         try:
             if not os.path.isfile(file_name):
-                logging.info(f"no rsa public key at {file_name}")
+                logging.debug(f"no rsa public key at {file_name}")
                 return None
             with open(file_name, "rb") as key_file:
                 public_key = serialization.load_pem_public_key(key_file.read())
