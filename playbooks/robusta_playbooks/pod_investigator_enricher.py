@@ -146,9 +146,12 @@ def get_pod_issue_explanation(event: KubernetesResourceEvent, issue: PodIssue, m
         unavailable_replicas = 0
         available_replicas = 0
 
-        if resource.kind in ["Deployment", "StatefulSet"]:
+        if resource.kind == "Deployment":
             unavailable_replicas = resource.status.unavailableReplicas if resource.status.unavailableReplicas else 0
             available_replicas = resource.status.availableReplicas if resource.status.availableReplicas else 0
+        elif resource.kind == "StatefulSet":
+            available_replicas = resource.status.availableReplicas if resource.status.availableReplicas else 0
+            unavailable_replicas = resource.status.replicas - available_replicas
         elif resource.kind == "DaemonSet":
             unavailable_replicas = resource.status.numberUnavailable if resource.status.numberUnavailable else 0
             available_replicas = resource.status.numberAvailable if resource.status.numberAvailable else 0
