@@ -70,7 +70,6 @@ from robusta.core.model.env_vars import (
     ROBUSTA_LOGO_URL,
     ROBUSTA_TELEMETRY_ENDPOINT,
     ROBUSTA_UI_DOMAIN,
-    RSA_KEYS_PATH,
     RUNNER_VERSION,
     SEND_ADDITIONAL_TELEMETRY,
     SERVICE_CACHE_MAX_SIZE,
@@ -110,12 +109,13 @@ from robusta.core.playbooks.common import get_event_timestamp, get_resource_even
 from robusta.core.playbooks.container_playbook_utils import create_container_graph
 from robusta.core.playbooks.job_utils import CONTROLLER_UID, get_job_all_pods, get_job_latest_pod, get_job_selector
 from robusta.core.playbooks.node_playbook_utils import create_node_graph_enrichment
-from robusta.core.playbooks.pod_utils.crashloop_utils import get_crash_report_blocks
+from robusta.core.playbooks.pod_utils.crashloop_utils import get_crash_report_enrichments
 from robusta.core.playbooks.pod_utils.imagepull_utils import (
-    get_image_pull_backoff_blocks,
+    get_image_pull_backoff_enrichment,
     get_image_pull_backoff_container_statuses,
 )
-from robusta.core.playbooks.pod_utils.pending_pod_utils import get_pending_pod_blocks
+from robusta.core.playbooks.pod_utils.pending_pod_utils import get_pending_pod_enrichment
+from robusta.core.playbooks.crash_reporter import send_crash_report
 from robusta.core.playbooks.prometheus_enrichment_utils import (
     XAxisLine,
     create_chart_from_prometheus_query,
@@ -140,6 +140,7 @@ from robusta.core.reporting import (
     Emojis,
     Enrichment,
     FileBlock,
+    EmptyFileBlock,
     Filterable,
     Finding,
     FindingSeverity,

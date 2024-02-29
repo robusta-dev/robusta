@@ -42,7 +42,10 @@ class SinkBase:
         pass
 
     def accepts(self, finding: Finding) -> bool:
-        return finding.matches(self.params.match) and any(time_slice.is_active_now for time_slice in self.time_slices)
+        return (
+            finding.matches(self.params.match, self.params.scope)
+            and any(time_slice.is_active_now for time_slice in self.time_slices)
+        )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         raise NotImplementedError(f"write_finding not implemented for sink {self.sink_name}")

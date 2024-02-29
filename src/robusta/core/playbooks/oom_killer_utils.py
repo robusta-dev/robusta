@@ -3,6 +3,7 @@ import time
 
 from robusta.api import (
     ExecutionBaseEvent,
+    EmptyFileBlock,
     FileBlock,
     LogEnricherParams,
     MarkdownBlock,
@@ -10,6 +11,7 @@ from robusta.api import (
     RegexReplacementStyle,
     RobustaPod,
 )
+from robusta.core.playbooks.pod_utils.crashloop_utils import get_crash_report_enrichments
 from robusta.core.reporting.base import EnrichmentType
 
 
@@ -40,11 +42,19 @@ def start_log_enrichment(
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     )
 
+    enrichments = get_crash_report_enrichments(pod)
+    for enrichment in enrichments:
+        event.add_enrichment(enrichment.blocks,
+                             enrichment_type=enrichment.enrichment_type,
+                             title=enrichment.title)
+
     if not container and pod.spec.containers:
         # TODO do we want to keep this part of code? It used to sometimes report logs for a wrong
         #  container when a container inside a pod was oomkilled. I can imagine it could cause
         #  similar problems in other cases.
         container = pod.spec.containers[0].name
+
+    log_data = ""
     for _ in range(tries - 1):
         log_data = pod.get_logs(
             container=container,
@@ -57,15 +67,19 @@ def start_log_enrichment(
             logging.info("log data is empty, retrying...")
             time.sleep(backoff_seconds)
             continue
-
-        log_name = pod.metadata.name
-        log_name += f"/{container}"
-        event.add_enrichment(
-            [FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())],
-            enrichment_type=EnrichmentType.text_file,
-            title="Pod Logs"
-        )
         break
+
+    if not log_data:
+        log_block = EmptyFileBlock(filename=f"{pod.metadata.name}.log",
+                                   remarks=f"Logs unavailable for container: {container}")
+        logging.info(
+            f"could not fetch logs from container: {container}"
+        )
+    else:
+        log_block = FileBlock(filename=f"{pod.metadata.name}.log", contents=log_data.encode())
+
+    event.add_enrichment([log_block],
+                         enrichment_type=EnrichmentType.text_file, title="Logs")
 
 
 def logs_enricher(event: PodEvent, params: LogEnricherParams):

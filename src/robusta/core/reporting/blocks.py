@@ -130,6 +130,35 @@ class FileBlock(BaseBlock):
         return "\n".join(truncated_lines).encode("utf-8")
 
 
+class EmptyFileBlock(BaseBlock):
+    """
+    Handle empty log files
+    """
+
+    metadata: dict = {}
+    filename: str
+
+    def __init__(
+            self,
+            filename: str,
+            remarks: str,
+            metadata: Optional[dict] = None,
+            **kwargs,
+    ):
+        """
+        :param filename: the file's name
+        :param contents: the file's contents
+        """
+        super().__init__(
+            filename=filename,
+            metadata=metadata or {},
+            **kwargs,
+        )
+
+        self.metadata["is_empty"] = True
+        self.metadata["remarks"] = remarks
+
+
 class HeaderBlock(BaseBlock):
     """
     Text formatted as a header
