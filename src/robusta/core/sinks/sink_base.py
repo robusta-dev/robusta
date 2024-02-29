@@ -1,21 +1,9 @@
-import inspect
-import logging
-from typing import Any, Callable, Dict
+from typing import Any
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding
 from robusta.core.sinks.sink_base_params import ActivityInterval, ActivityParams, SinkBaseParams
 from robusta.core.sinks.timing import TimeSlice, TimeSliceAlways
-
-
-def on_action_event(event_name: str):
-    "Decorator to mark a method as a handler for a specific action event."
-
-    def decorator(f):
-        f._sink_on_action_event = event_name
-        return f
-
-    return decorator
 
 
 class SinkBase:
@@ -31,21 +19,6 @@ class SinkBase:
         self.signing_key = global_config.get("signing_key", "")
 
         self.time_slices = self._build_time_slices_from_params(self.params.activity)
-
-        # Get all method names marked
-        self.action_event_handlers: Dict[str, Callable] = {
-            method._sink_on_action_event: getattr(self, name)
-            for name, method in inspect.getmembers(self, predicate=inspect.ismethod)
-            if hasattr(method, "_sink_on_action_event")
-        }
-
-    def handle_action_event(self, event_name: str, **kwargs):
-        action_event_handler = self.action_event_handlers.get(event_name)
-        if action_event_handler:
-            try:
-                action_event_handler(**kwargs)
-            except Exception:
-                logging.exception(f"Error handling action event {event_name} for sink {self.sink_name}")
 
     def _build_time_slices_from_params(self, params: ActivityParams):
         if params is None:

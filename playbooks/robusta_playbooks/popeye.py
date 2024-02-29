@@ -177,7 +177,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     }
 
     def update_state(state: ScanState) -> None:
-        event.emit_action_event(
+        event.emit_event(
             "scan_updated",
             scan_id=scan_id,
             metadata=metadata,
@@ -202,13 +202,13 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         popeye_scan = PopeyeReport(**scan["popeye"])
     except Exception as e:
         if isinstance(e, JSONDecodeError):
-            logging.error(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")
+            logging.exception(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")
         elif isinstance(e, ValidationError):
-            logging.error(f"*Popeye scan job failed. Result format issue.*\n\n {e}")
+            logging.exception(f"*Popeye scan job failed. Result format issue.*\n\n {e}")
         elif str(e) == "Failed to reach wait condition":
-            logging.error(f"*Popeye scan job failed. The job wait condition timed out ({params.timeout}s)*")
+            logging.exception(f"*Popeye scan job failed. The job wait condition timed out ({params.timeout}s)*")
         else:
-            logging.error(f"*Popeye scan job unexpected error.*\n {e}")
+            logging.exception(f"*Popeye scan job unexpected error.*\n {e}")
 
         logging.error(f"Logs: {logs}")
         update_state(ScanState.FAILED)

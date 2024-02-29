@@ -34,7 +34,7 @@ from robusta.core.sinks.robusta.discovery_metrics import DiscoveryMetrics
 from robusta.core.sinks.robusta.prometheus_health_checker import PrometheusHealthChecker
 from robusta.core.sinks.robusta.robusta_sink_params import RobustaSinkConfigWrapper, RobustaToken
 from robusta.core.sinks.robusta.rrm.rrm import RRM
-from robusta.core.sinks.sink_base import SinkBase, on_action_event
+from robusta.core.sinks.sink_base import SinkBase
 from robusta.integrations.receiver import ActionRequestReceiver
 from robusta.runner.web_api import WebApi
 from robusta.utils.stack_tracer import StackTracer
@@ -85,7 +85,7 @@ class RobustaSink(SinkBase, EventHandler):
         self.__pods_running_count: int = 0
         self.__update_cluster_status()  # send runner version initially, then force prometheus alert time periodically.
 
-        self.registry.subscribe("RobustaSink", "scan_updated", self)
+        self.registry.subscribe("scan_updated", self)
 
         # start cluster discovery
         self.__active = True
@@ -107,6 +107,14 @@ class RobustaSink(SinkBase, EventHandler):
             self._on_scan_updated(**kwargs)
         else:
             logging.warning("RobustaSink subscriber called with unknown event")
+
+    def _on_scan_updated(
+        self, scan_id: str, metadata: Any, state: ScanState, type: ScanType, start_time: datetime
+    ) -> None:
+        if state == "pending":
+            self.dal.insert_scan_meta(scan_id, start_time, type)
+
+        self.dal.set_scan_state(scan_id, state, metadata)
 
     def set_cluster_active(self, active: bool):
         self.dal.set_cluster_active(active)
@@ -668,12 +676,3 @@ class RobustaSink(SinkBase, EventHandler):
                 self.__safe_delete_job(job_key)
                 self.__discovery_metrics.on_jobs_updated(1)
                 return
-
-    @on_action_event("scan_updated")
-    def _on_scan_updated(
-        self, scan_id: str, metadata: Any, state: ScanState, type: ScanType, start_time: datetime
-    ) -> None:
-        if state == "pending":
-            self.dal.insert_scan_meta(scan_id, start_time, type)
-
-        self.dal.set_scan_state(scan_id, state, metadata)

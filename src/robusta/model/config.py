@@ -216,8 +216,8 @@ class Registry:
     def get_event_emitter(self) -> EventEmitter:
         return self._pubsub
 
-    def subscribe(self, subscriber_name: str, event_name: str, handler: EventHandler):
-        self._pubsub.subscribe(subscriber_name, event_name, handler)
+    def subscribe(self, event_name: str, handler: EventHandler):
+        self._pubsub.subscribe(event_name, handler)
 
-    def unsubscribe(self, subscriber_name: str, event_name: str):
-        self._pubsub.unsubscribe(subscriber_name, event_name)
+    def unsubscribe(self, event_name: str, handler: EventHandler):
+        self._pubsub.unsubscribe(event_name, handler)

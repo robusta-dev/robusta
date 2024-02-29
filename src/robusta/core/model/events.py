@@ -106,17 +106,10 @@ class ExecutionBaseEvent:
             self.sink_findings[sink][0].add_video_link(video_link, True)
 
     def emit_event(self, event_name: str, **kwargs):
-        if self._event_emitter:
-            self._event_emitter.emit_event(event_name, **kwargs)
-
-    def emit_action_event(self, event_name: str, **kwargs) -> None:
         """Publish an event to the pubsub. It will be processed by the sinks during the execution of the playbook."""
 
-        for sink in self.named_sinks:
-            sink_obj = self.all_sinks.get(sink)
-            logging.info(f"Sending action event to sink {sink}, sink_obj: {sink_obj}")
-            if sink_obj:
-                sink_obj.handle_action_event(event_name, **kwargs)
+        if self._event_emitter:
+            self._event_emitter.emit_event(event_name, **kwargs)
 
     def add_enrichment(
         self,

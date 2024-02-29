@@ -9,9 +9,9 @@ class EventHandler:
 
 class EventSubscriber:
     @abc.abstractmethod
-    def subscribe(self, subscriber_name: str, event_name: str, handler: EventHandler):
+    def subscribe(self, event_name: str, handler: EventHandler):
         pass
 
     @abc.abstractmethod
-    def unsubscribe(self, subscriber_name: str, event_name: str):
+    def unsubscribe(self, event_name: str, handler: EventHandler):
         pass
