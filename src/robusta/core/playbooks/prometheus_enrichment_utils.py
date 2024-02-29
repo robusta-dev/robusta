@@ -372,7 +372,7 @@ def run_prometheus_query(prometheus_params: PrometheusParams, query: str) -> Pro
         query = __add_additional_labels(query, prometheus_params)
         prom_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
         prom.check_prometheus_connection(prom_params)
-        results = prom.custom_query(query=query, params=prom_params)
+        results = prom.safe_custom_query(query=query, params=prom_params)
         return PrometheusQueryResult(results)
     except Exception as e:
         logging.error(f"Exception while querying prometheus.", exc_info=True)
