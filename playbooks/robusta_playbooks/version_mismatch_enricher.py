@@ -43,11 +43,6 @@ class BuildInfoResults:
             logging.error(f"Prometheus is missing the 'node' label, unable to detect node versions.")
             return False
 
-        # you can have multiple versions of the api server in the metrics at once
-        # i.e. at the time of kubernetes upgrade both will show up in the metrics for several minutes
-        if len(self.api_versions) == 0:
-            logging.error(f"Missing api server results for version_mismatch_enricher.")
-            return False
         return True
 
     def results_to_node_table(self) -> List[List[str]]:
@@ -77,15 +72,16 @@ def version_mismatch_enricher(alert: PrometheusKubernetesAlert, params: VersionM
         logging.error(f"Invalid prometheus results for version_mismatch_enricher.")
         return
 
-    if len(build_infos.api_versions) > 1:
+    if len(build_infos.api_versions) == 0:
+        api_version_string = f"version is unknown"
+    elif len(build_infos.api_versions) > 1:
         api_version_string = f"has reported versions {', '.join(build_infos.api_versions)}"
-    else:
+    else:  # one build version
         api_version_string = f"is version {build_infos.api_versions[0]}"
 
     # in the case where a node is of a higher version than the api server
     alert.add_enrichment(
         [
-            MarkdownBlock(f"Automatic {alert.alert_name} investigation:"),
             MarkdownBlock(f"The kubernetes api server {api_version_string}."),
             TableBlock(
                 build_infos.results_to_node_table(),

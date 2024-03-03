@@ -367,16 +367,12 @@ def run_prometheus_query(prometheus_params: PrometheusParams, query: str) -> Pro
     This function runs prometheus query and returns the result (usually a vector),
     For graphs use run_prometheus_query_range which uses the prometheus query_range api
     """
-    try:
-        prom = get_prometheus_connect(prometheus_params)
-        query = __add_additional_labels(query, prometheus_params)
-        prom_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
-        prom.check_prometheus_connection(prom_params)
-        results = prom.safe_custom_query(query=query, params=prom_params)
-        return PrometheusQueryResult(results)
-    except Exception as e:
-        logging.error(f"Exception while querying prometheus.", exc_info=True)
-        return PrometheusQueryResult({"resultType": "error", "result": str(e)})
+    prom = get_prometheus_connect(prometheus_params)
+    query = __add_additional_labels(query, prometheus_params)
+    prom_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+    prom.check_prometheus_connection(prom_params)
+    results = prom.safe_custom_query(query=query, params=prom_params)
+    return PrometheusQueryResult(results)
 
 
 def __add_additional_labels(query: str, prometheus_params: PrometheusParams) -> str:
