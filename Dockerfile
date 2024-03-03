@@ -1,5 +1,5 @@
 # see https://pythonspeed.com/articles/alpine-docker-python/ for the reason we don't use alpine
-FROM python:3.9-slim
+FROM python:3.13.0a3-slim
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
     && apt-get install -y --no-install-recommends git ssh socat wget curl libcairo2 python3-dev libffi-dev \
