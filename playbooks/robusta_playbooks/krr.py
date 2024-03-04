@@ -258,7 +258,7 @@ def _generate_prometheus_secrets(prom_config: PrometheusConfig) -> List[KRRSecre
             KRRSecret(
                 env_var_name="PROMETHEUS_AUTH_HEADER",
                 secret_key="prometheus-auth-header",
-                secret_value=auth_header,
+                secret_value=shlex.quote(auth_header),
                 command_flag="--prometheus-auth-header",
             )
         )
