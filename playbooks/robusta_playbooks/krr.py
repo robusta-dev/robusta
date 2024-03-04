@@ -416,11 +416,9 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         update_state(ScanState.FAILED)
         return
     else:
-        # TODO: Process the result, add some non-critical errors and warnings to the metadata
         metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
         metadata["description"] = krr_scan.description
         metadata["errors"] = krr_scan.errors
-        update_state(ScanState.SUCCESS)
 
     scan_block = ScanReportBlock(
         title="KRR scan",

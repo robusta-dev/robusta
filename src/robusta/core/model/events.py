@@ -39,11 +39,6 @@ class ExecutionContext(BaseModel):
     cluster_name: str
 
 
-class PubSubEvent(BaseModel):
-    name: str
-    data: Any
-
-
 # Right now:
 # 1. this is a dataclass but we need to make all fields optional in subclasses because of https://stackoverflow.com/questions/51575931/
 # 2. this can't be a pydantic BaseModel because of various pydantic bugs (see https://github.com/samuelcolvin/pydantic/pull/2557)

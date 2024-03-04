@@ -112,10 +112,10 @@ class SupabaseDal(AccountResourceFetcher):
                 },
             )
         except requests.exceptions.HTTPError as e:
-            logging.error(f"Failed to insert scan meta {scan_id}, error: {e}, response: {e.response.text}")
+            logging.exception(f"Failed to insert scan meta {scan_id}, error: {e}, response: {e.response.text}")
             raise
         except Exception as e:
-            logging.error(f"Failed to persist scan meta {scan_id} error: {e}")
+            logging.exception(f"Failed to persist scan meta {scan_id} error: {e}")
             self.handle_supabase_error()
             raise
 
@@ -124,7 +124,7 @@ class SupabaseDal(AccountResourceFetcher):
         try:
             self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults, returning=ReturnMethod.minimal).execute()
         except Exception as e:
-            logging.error(f"Failed to persist scan {block.scan_id} error: {e}")
+            logging.exception(f"Failed to persist scan {block.scan_id} error: {e}")
             self.handle_supabase_error()
             raise
 
@@ -138,7 +138,7 @@ class SupabaseDal(AccountResourceFetcher):
                 }
             ).eq("scan_id", block.scan_id).execute()
         except Exception as e:
-            logging.error(f"Failed to set scan state {block.scan_id} error: {e}")
+            logging.exception(f"Failed to set scan state {block.scan_id} error: {e}")
             self.handle_supabase_error()
             raise
 

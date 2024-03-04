@@ -213,8 +213,6 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         logging.error(f"Logs: {logs}")
         update_state(ScanState.FAILED)
         return
-    else:
-        update_state(ScanState.SUCCESS)
 
     scan_block = ScanReportBlock(
         title="Popeye scan",
