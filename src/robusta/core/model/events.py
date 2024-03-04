@@ -8,14 +8,16 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
+from robusta.core.pubsub.event_emitter import EventEmitter
 from robusta.core.reporting.base import (
     BaseBlock,
+    EnrichmentType,
     Finding,
     FindingSeverity,
     FindingSource,
     FindingSubject,
     FindingSubjectType,
-    VideoLink, EnrichmentType,
+    VideoLink,
 )
 from robusta.core.sinks import SinkBase
 from robusta.integrations.scheduled.playbook_scheduler import PlaybooksScheduler
@@ -55,6 +57,7 @@ class ExecutionBaseEvent:
     stop_processing: bool = False
     _scheduler: Optional[PlaybooksScheduler] = None
     _context: Optional[ExecutionContext] = None
+    _event_emitter: Optional[EventEmitter] = None
 
     def set_context(self, context: ExecutionContext):
         self._context = context
@@ -67,6 +70,9 @@ class ExecutionBaseEvent:
 
     def get_scheduler(self) -> PlaybooksScheduler:
         return self._scheduler
+
+    def set_event_emitter(self, emitter: EventEmitter):
+        self._event_emitter = emitter
 
     def create_default_finding(self) -> Finding:
         """Create finding default fields according to the event type"""
@@ -94,6 +100,12 @@ class ExecutionBaseEvent:
         for sink in self.named_sinks:
             self.sink_findings[sink][0].add_video_link(video_link, True)
 
+    def emit_event(self, event_name: str, **kwargs):
+        """Publish an event to the pubsub. It will be processed by the sinks during the execution of the playbook."""
+
+        if self._event_emitter:
+            self._event_emitter.emit_event(event_name, **kwargs)
+
     def add_enrichment(
         self,
         enrichment_blocks: List[BaseBlock],
@@ -103,8 +115,9 @@ class ExecutionBaseEvent:
     ):
         self.__prepare_sinks_findings()
         for sink in self.named_sinks:
-            self.sink_findings[sink][0].add_enrichment(enrichment_blocks, annotations, True,
-                                                       enrichment_type=enrichment_type, title=title)
+            self.sink_findings[sink][0].add_enrichment(
+                enrichment_blocks, annotations, True, enrichment_type=enrichment_type, title=title
+            )
 
     def add_finding(self, finding: Finding, suppress_warning: bool = False):
         finding.dirty = True  # Warn if new enrichments are added to this finding directly
