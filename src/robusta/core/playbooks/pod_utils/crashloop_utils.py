@@ -28,13 +28,16 @@ def get_crash_report_enrichments(
         if container_status.state and container_status.state.terminated:
             if container_status.state.terminated.startedAt:
                 crash_info_rows.append(["Crashing since", container_status.state.terminated.startedAt])
-            crash_info_rows.append(["TERMINATED", f"Reason: {container_status.state.terminated.reason}"])
+            crash_info_rows.append(["Status", "TERMINATED"])
+            crash_info_rows.append(["Reason", container_status.state.terminated.reason])
 
         if container_status.state and container_status.state.waiting:
-            crash_info_rows.append(["WAITING", f"Reason: {container_status.state.waiting.reason}"])
+            crash_info_rows.append(["Status", "WAITING"])
+            crash_info_rows.append(["Reason", container_status.state.waiting.reason])
 
         if container_status.lastState and container_status.lastState.terminated:
-            prev_container_rows.append(["TERMINATED", f"Reason: {container_status.lastState.terminated.reason}"])
+            prev_container_rows.append(["Status", "TERMINATED"])
+            prev_container_rows.append(["Reason", container_status.lastState.terminated.reason])
             if container_status.lastState.terminated.startedAt:
                 prev_container_rows.append(["Started at", container_status.lastState.terminated.startedAt])
             if container_status.lastState.terminated.finishedAt:
