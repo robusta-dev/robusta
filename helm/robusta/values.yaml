@@ -168,7 +168,7 @@ customPlaybooks: []
 #   - triggers:
 #     - on_prometheus_alert:
 #         namespace_prefix: "app-b"
-customExtraPlaybooks: []
+customExtraPlaybooks: {}
 
 
 # builtin playbooks
