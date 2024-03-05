@@ -51,16 +51,20 @@ Now lets add a :ref:`matcher <sink-matchers>` to each sink, so it receives a sub
         name: main_sink
         slack_channel: main-notifications
         api_key: secret-key
-        match:
+        - scope:
+            exclude:
           # don't match notifications related to crashing pods
-          identifier: ^(?!(report_crash_loop))
+              - identifier: report_crash_loop
+
    - slack_sink:
         name: crashloopbackoff_slack_sink
         slack_channel: crash-notifications
         api_key: secret-key
-        match:
-          # match notifications related to crashing pods
-          identifier: report_crash_loop
+        - scope:
+            include:
+        # match notifications related to crashing pods
+              - identifier: report_crash_loop
+
 
 Now the ``crash-notifications`` channel will receive crashpod notifications and all other notifications will go to the
 ``main-notifications`` channel.

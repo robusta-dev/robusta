@@ -19,13 +19,12 @@ For example, we can exclude notifications related to pods and deployments:
         name: other_slack_sink
         slack_channel: no-pods-or-deployments
         api_key: secret-key
-        match:
-          # match all notifications EXCEPT for those related to pods and deployments
-          # this uses negative-lookahead regexes as well as regex OR
-          kind: ^(?!(pod)|(deployment))
+        scope:
+        # match all notifications EXCEPT for those related to pods and deployments
+          exclude:
+            - kind: [pod, deployment]
 
 .. include:: _routing-further-reading.rst
 
 Further Reading
 ------------------
-
