@@ -527,6 +527,67 @@ class RobustaJob(Job):
         return cls.run_simple_job_spec(spec, name=image, timeout=timeout)
 
 
+class DeploymentConfigStatus(BaseModel):
+    conditions: Optional[List[Dict]]
+    details: Optional[dict]
+    updatedReplicas: Optional[int]
+    readyReplicas: Optional[int] 
+    availableReplicas: int = 0
+    latestVersion: int = 0
+    observedGeneration: int = 0
+    replicas: int = 0
+    unavailableReplicas: int = 0
+
+
+class DeploymentConfigSpec(BaseModel):
+    selector: Dict[str, str]
+    strategy: Optional[Dict]
+    template: Optional[PodTemplateSpec]
+    test: Optional[bool]
+    triggers: Optional[List[Dict]] = None
+    minReadySeconds: Optional[int] = 0
+    paused: Optional[bool] = None
+    replicas: Optional[int] = None
+    revisionHistoryLimit: Optional[int] = None
+
+
+# https://docs.openshift.com/container-platform/3.11/rest_api/apps_openshift_io/deploymentconfig-apps-openshift-io-v1.html
+class DeploymentConfig(BaseModel):
+    metadata: ObjectMeta
+    spec: Optional[DeploymentConfigSpec] = None
+    status: Optional[DeploymentConfigStatus] = None
+    apiVersion: str = "apps.openshift.io/v1"
+    kind: str = "DeploymentConfig"
+
+    def as_dict(self):
+        d = self.dict(exclude_none=True, exclude={"metadata", "spec"})
+        if self.metadata:
+            d["metadata"] = self.metadata.to_dict()
+        if self.spec:
+            s = self.spec.dict(exclude_none=True, exclude={"template"})
+            if self.spec.template:
+                s["template"] = self.spec.template.to_dict()
+            d["spec"] = s
+        return d
+
+    def update(self):
+        client.CustomObjectsApi().patch_namespaced_custom_object(
+            "apps.openshift.io", "v1", self.metadata.namespace, "deploymentconfigs", self.metadata.name, self.as_dict()
+        )
+
+    @classmethod
+    def readNamespaced(self, name: str, namespace: str):
+        res = client.CustomObjectsApi().get_namespaced_custom_object(
+            group="apps.openshift.io",
+            version="v1",
+            namespace=namespace,
+            plural="deploymentconfigs",
+            name=name,
+        )
+
+        return type("", (object,), {"obj": DeploymentConfig(**res)})()
+
+
 hikaru.register_version_kind_class(RobustaPod, Pod.apiVersion, Pod.kind)
 hikaru.register_version_kind_class(RobustaDeployment, Deployment.apiVersion, Deployment.kind)
 hikaru.register_version_kind_class(RobustaJob, Job.apiVersion, Job.kind)
