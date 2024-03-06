@@ -13,15 +13,28 @@ Add the following to your :ref:`customPlaybooks<customPlaybooks>`:
 .. code-block:: yaml
 
     customPlaybooks:
+    # Change the following line according to your needs
     - triggers:
-      - on_prometheus_alert:
-          alert_name: SomeAlert
-      actions:
-      - alert_handling_job:
-          command:
-          - "echo"
-          - "do something to fix it"
-          image: "a_docker_image"
+    - on_prometheus_alert:
+        alert_name: TestAlert
+    actions:
+    - run_job_from_alert:
+        # you can access information from the alert by environment variables
+        command:
+        - sh
+        - -c
+        - "$ALERT_NAME fired... Now dumping all available environment variables, which include alert metadata and labels" && env && sleep 60"
+        image: busybox
+        notify: true
+        wait_for_completion: true
+        completion_timeout: 100
+        # you can also inject secrets from the Robusta pod itself into the remediation Job's Pod
+        env_vars:
+        - name: GITHUB_SECRET
+            valueFrom:
+            secretKeyRef:
+                name: robusta-github-key
+                key: githubapikey
 
 Perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
