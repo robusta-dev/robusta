@@ -1,13 +1,13 @@
-import json
 import logging
 import re
 import time
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, TypeVar
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import hikaru
 import yaml
 from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclasses to work
+from kubernetes import client
 from kubernetes.client import ApiException
 from pydantic import BaseModel
 
@@ -57,13 +57,18 @@ def _get_match_expression_filter(expression: LabelSelectorRequirement) -> str:
     return f"{expression.key} {expression.operator} ({values})"
 
 
-def build_selector_query(selector: LabelSelector) -> str:
-    label_filters = [f"{label[0]}={label[1]}" for label in selector.matchLabels.items()]
-    label_filters.extend([_get_match_expression_filter(expression) for expression in selector.matchExpressions])
-    return ",".join(label_filters)
+def build_selector_query(selector: Union[LabelSelector, Dict]) -> str:
+    if isinstance(selector, LabelSelector):
+        label_filters = [f"{label[0]}={label[1]}" for label in selector.matchLabels.items()]
+        label_filters.extend([_get_match_expression_filter(expression) for expression in selector.matchExpressions])
+        return ",".join(label_filters)
+    else:
+        return ",".join([f"{k}={v}" for k, v in selector.items()])
 
 
-def list_pods_using_selector(namespace: str, selector: LabelSelector, field_selector: str = None) -> List[Pod]:
+def list_pods_using_selector(
+    namespace: str, selector: Union[LabelSelector, Dict], field_selector: str = None
+) -> List[Pod]:
     labels_selector = build_selector_query(selector)
     return PodList.listNamespacedPod(
         namespace=namespace,
@@ -531,7 +536,7 @@ class DeploymentConfigStatus(BaseModel):
     conditions: Optional[List[Dict]]
     details: Optional[dict]
     updatedReplicas: Optional[int]
-    readyReplicas: Optional[int] 
+    readyReplicas: Optional[int]
     availableReplicas: int = 0
     latestVersion: int = 0
     observedGeneration: int = 0

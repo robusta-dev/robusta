@@ -55,6 +55,7 @@ from robusta.integrations.kubernetes.custom_models import (
     RobustaDeployment,
     RobustaJob,
     RobustaPod,
+    DeploymentConfig,
 )
 
 from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
@@ -83,6 +84,7 @@ LOADERS_MAPPINGS = {
     "networkpolicy": (True, NetworkPolicy.readNamespacedNetworkPolicy),
     "configmap": (True, ConfigMap.readNamespacedConfigMap),
     "ingress": (True, Ingress.readNamespacedIngress),
+    "deploymentconfig": (True, DeploymentConfig.readNamespaced),
 }
 
 
@@ -128,6 +130,7 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             NetworkPolicy,
             ConfigMap,
             Ingress,
+            DeploymentConfig,
         ]
     ] = None
 
@@ -153,6 +156,7 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             NetworkPolicy,
             ConfigMap,
             Ingress,
+            DeploymentConfig,
         ],
         named_sinks: List[str],
     ):
@@ -182,6 +186,7 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             NetworkPolicy,
             ConfigMap,
             Ingress,
+            DeploymentConfig,
         ]
     ]:
         return self.obj
