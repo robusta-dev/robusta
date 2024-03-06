@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 
 import hikaru
 import kubernetes.client.exceptions
+import yaml
 from hikaru.model.rel_1_26 import ContainerState, ContainerStatus, Pod, PodList
 from pydantic import BaseModel
 
@@ -73,7 +74,7 @@ class RelatedPod(BaseModel):
     statusReason: Optional[str] = None
 
 
-supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node"]
+supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node", "DeploymentConfig"]
 
 
 def to_pod_row(pod: Pod, cluster_name: str) -> List:
@@ -242,7 +243,10 @@ def get_resource_yaml(event: KubernetesResourceEvent):
             namespace=namespace,
             name=name,
         ).obj
-        resource_yaml = hikaru.get_yaml(loaded_resource)
+        if isinstance(loaded_resource, hikaru.HikaruBase):
+            resource_yaml = hikaru.get_yaml(loaded_resource)
+        else:
+            resource_yaml = yaml.safe_dump((loaded_resource.as_dict()), indent=2)
 
         event.add_enrichment(
             [
