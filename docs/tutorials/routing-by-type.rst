@@ -51,16 +51,25 @@ Now lets add a :ref:`matcher <sink-matchers>` to each sink, so it receives a sub
         name: main_sink
         slack_channel: main-notifications
         api_key: secret-key
-        match:
-          # don't match notifications related to crashing pods
-          identifier: ^(?!(report_crash_loop))
+        - scope:
+            exclude:
+            # don't send notifications related to image pull backoff
+              - identifier: [image_pull_backoff_reporter]
+
    - slack_sink:
         name: crashloopbackoff_slack_sink
         slack_channel: crash-notifications
         api_key: secret-key
-        match:
-          # match notifications related to crashing pods
-          identifier: report_crash_loop
+        - scope:
+            include:
+            # only send notifications related to crashing pods and CPU throttling
+              - identifier: [report_crash_loop, CPUThrottlingHigh]
+
+.. note::
+
+    For Prometheus alerts use the Alert name. Example: ``CPUThrottlingHigh``, ``KubeContainerWaiting``.
+    For Robusta alerts use the Kubernetes event name. Example: ``report_crash_loop``, ``image_pull_backoff_reporter``.
+
 
 Now the ``crash-notifications`` channel will receive crashpod notifications and all other notifications will go to the
 ``main-notifications`` channel.
