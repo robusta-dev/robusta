@@ -89,6 +89,8 @@ class GitRepo:
         else:
             ssh_key_option = ""
 
+        GitRepoManager.setup_host_keys(CUSTOM_SSH_HOST_KEYS.split("\n"))
+
         self.env["GIT_SSH_COMMAND"] = f"ssh {ssh_key_option} -o IdentitiesOnly=yes"
         self.repo_lock = threading.RLock()
         self.repo_name = os.path.splitext(os.path.basename(git_repo_url))[0]
@@ -108,8 +110,6 @@ class GitRepo:
         with open(key_file_name, "w") as key_file:
             os.chmod(key_file_name, 0o400)
             key_file.write(textwrap.dedent(f"{git_key}"))
-
-        GitRepoManager.setup_host_keys(CUSTOM_SSH_HOST_KEYS.split("\n"))
 
         return key_file_name
 
