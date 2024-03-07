@@ -18,7 +18,7 @@ Add the following to your :ref:`customPlaybooks<customPlaybooks>`:
         - on_prometheus_alert:
             alert_name: TestAlert
       actions:
-        - run_job_from_alert:
+        - alert_handling_job:
             # you can access information from the alert by environment variables
             command:
               - sh
