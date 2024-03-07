@@ -123,6 +123,7 @@ from robusta.core.playbooks.prometheus_enrichment_utils import (
     create_resource_enrichment,
     get_node_internal_ip,
     run_prometheus_query,
+    run_prometheus_query_range,
 )
 from robusta.core.playbooks.trigger import (
     BaseTrigger,

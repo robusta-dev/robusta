@@ -383,6 +383,13 @@ builtinPlaybooks:
       included_types: ["Warning", "Normal"]
       dependent_pod_mode: true
 
+- name: "KubeVersionMismatch"
+  triggers:
+  - on_prometheus_alert:
+      alert_name: KubeVersionMismatch
+  actions:
+  - version_mismatch_enricher: {}
+
 - name: "DefaultPrometheusAlertEnricher"
   triggers:
   - on_prometheus_alert:

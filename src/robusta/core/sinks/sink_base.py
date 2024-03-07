@@ -2,7 +2,7 @@ from typing import Any
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding
-from robusta.core.sinks.sink_base_params import SinkBaseParams, ActivityParams, ActivityInterval
+from robusta.core.sinks.sink_base_params import ActivityInterval, ActivityParams, SinkBaseParams
 from robusta.core.sinks.timing import TimeSlice, TimeSliceAlways
 
 
