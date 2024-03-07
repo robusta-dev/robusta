@@ -67,9 +67,8 @@ Now lets add a :ref:`matcher <sink-matchers>` to each sink, so it receives a sub
 
 .. note::
 
-    For Prometheus alerts use the Alert name. Example: ``CPUThrottlingHigh``, ``KubeContainerWaiting``.
-    For Robusta alerts use the Kubernetes event name. Example: ``report_crash_loop``, ``image_pull_backoff_reporter``.
-
+    For Prometheus alerts use the Alert name. Example, ``CPUThrottlingHigh``, ``KubeContainerWaiting``.
+    For other events, use the name as it appears on the Robusta timeline. Example, ``report_crash_loop`` and ``image_pull_backoff_reporter``
 
 Now the ``crash-notifications`` channel will receive crashpod notifications and all other notifications will go to the
 ``main-notifications`` channel.
