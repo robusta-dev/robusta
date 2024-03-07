@@ -29,7 +29,7 @@ Obtaining a webhook URL
 - Choose a channel and click "Manage Channel".
 - Click "Connectors->Edit", and configure an "Incoming Webhook"
 - Fill out the name ``robusta``.
-- Use the following image for the icon: :download:`download logo </images/msteams_sink/msteams_robusta_logo.png>`.
+- Optional: upload the :download:`robusta logo </images/msteams_sink/msteams_robusta_logo.png>` for the connector’s image.
 - Copy the ``webhook_url``.
 
 .. image:: /images/msteams_sink/msteam_get_webhook_url.gif
