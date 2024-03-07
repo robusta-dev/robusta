@@ -29,6 +29,10 @@ class ContainerInfo(BaseModel):
 
     @staticmethod
     def get_container_info(container: V1Container) -> "ContainerInfo":
+
+        if isinstance(container, Container):
+            return ContainerInfo.get_container_info_hikaru(container)
+
         env = (
             [EnvVar(name=env.name, value=env.value) for env in container.env if env.name and env.value]
             if container.env
@@ -41,7 +45,7 @@ class ContainerInfo(BaseModel):
         return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources, ports=ports)
 
     @staticmethod
-    def get_container_info_k8(container: Container) -> "ContainerInfo":
+    def get_container_info_hikaru(container: Container) -> "ContainerInfo":
         env = (
             [EnvVar(name=env.name, value=env.value) for env in container.env if env.name and env.value]
             if container.env
@@ -71,9 +75,20 @@ class VolumeInfo(BaseModel):
 
     @staticmethod
     def get_volume_info(volume: Union[V1Volume, Volume]) -> "VolumeInfo":
+        if isinstance(volume, Volume):
+            return VolumeInfo.get_volume_info_hikaru(volume)
+
         if hasattr(volume, "persistent_volume_claim") and hasattr(volume.persistent_volume_claim, "claim_name"):
             return VolumeInfo(
                 name=volume.name, persistent_volume_claim={"claim_name": volume.persistent_volume_claim.claim_name}
+            )
+        return VolumeInfo(name=volume.name)
+
+    @staticmethod
+    def get_volume_info_hikaru(volume: Volume) -> "VolumeInfo":
+        if volume.persistentVolumeClaim and volume.persistentVolumeClaim.claimName:
+            return VolumeInfo(
+                name=volume.name, persistent_volume_claim={"claim_name": volume.persistentVolumeClaim.claimName}
             )
         return VolumeInfo(name=volume.name)
 
