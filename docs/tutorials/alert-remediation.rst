@@ -15,34 +15,38 @@ Add the following to your :ref:`customPlaybooks<customPlaybooks>`:
     customPlaybooks:
     # Change the following line according to your needs
     - triggers:
-    - on_prometheus_alert:
-        alert_name: TestAlert
-    actions:
-    - run_job_from_alert:
-        # you can access information from the alert by environment variables
-        command:
-        - sh
-        - -c
-        - "$ALERT_NAME fired... Now dumping all available environment variables, which include alert metadata and labels" && env && sleep 60"
-        image: busybox
-        notify: true
-        wait_for_completion: true
-        completion_timeout: 100
-        # you can also inject secrets from the Robusta pod itself into the remediation Job's Pod
-        env_vars:
-        - name: GITHUB_SECRET
-            valueFrom:
-            secretKeyRef:
-                name: robusta-github-key
-                key: githubapikey
+        - on_prometheus_alert:
+            alert_name: TestAlert
+      actions:
+        - run_job_from_alert:
+            # you can access information from the alert by environment variables
+            command:
+              - sh
+              - -c
+              - "echo '$ALERT_NAME fired... Now dumping all available environment variables, which include alert metadata and labels' && env && sleep 60"
+            image: busybox
+            notify: true
+            wait_for_completion: true
+            completion_timeout: 100
+            # you can also inject secrets from the Robusta pod itself into the remediation Job's Pod
+            env_vars:
+              - name: GITHUB_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: robusta-github-key
+                    key: githubapikey
 
 Perform a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+.. note::
+
+    ``alert_name`` should be the exact name of the Prometheus Alert. For example, ``CrashLoopBackOff`` will not work, because the actual Prometheus Alert is ``KubePodCrashLooping``.
 
 Test this playbook by simulating a Prometheus alert:
 
 .. code-block:: bash
 
-    robusta playbooks trigger prometheus_alert alert_name=SomeAlert
+    robusta playbooks trigger prometheus_alert alert_name=TestAlert
 
 Running Bash Commands for Alert Remediation
 ********************************************
@@ -57,7 +61,7 @@ Alerts can also be remediated with bash commands:
           alert_name: SomeAlert
       actions:
       - node_bash_enricher:
-         bash_command: do something
+        bash_command: do something
 
 Further Reading
 *****************
