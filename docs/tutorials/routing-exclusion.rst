@@ -20,7 +20,7 @@ For example, we can exclude notifications related to pods and deployments:
         slack_channel: no-pods-or-deployments
         api_key: secret-key
         scope:
-        # match all notifications EXCEPT for those related to pods and deployments
+        # don't send notifications related to pods and deployments
           exclude:
             - kind: [pod, deployment]
 
