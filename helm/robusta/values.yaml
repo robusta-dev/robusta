@@ -152,7 +152,7 @@ customPlaybooks: []
 # This allows you to split away from generated_values.yaml to keep a separate file for your custom playbooks by team/department.
 # helm ugprade --install robusta -f generated_values.yaml -f app_a_playbooks.yaml
 # Example:
-# customExtraPlaybooks:
+# namedCustomPlaybooks:
 #   team-a-app-a:
 #   - triggers:
 #     - on_prometheus_alert:
@@ -168,7 +168,7 @@ customPlaybooks: []
 #   - triggers:
 #     - on_prometheus_alert:
 #         namespace_prefix: "app-b"
-customExtraPlaybooks: {}
+namedCustomPlaybooks: {}
 
 
 # builtin playbooks
