@@ -1,7 +1,7 @@
 Deploying Behind Proxies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Robusta can run in environments with no internet access. However, to send notifications to external
+Robusta can run in airgapped environments with no internet access. However, to send notifications to external
 :ref:`sinks <Sinks Reference>` like Slack, Robusta might need to communicate with services outside your cluster.
 
 On most clusters this will just work. In clusters behind HTTP(s) proxies, you'll need to configure proxy settings.

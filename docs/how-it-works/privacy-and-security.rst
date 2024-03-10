@@ -4,7 +4,7 @@ Privacy and Security
 Robusta was designed with security in mind. Our four guiding security principles are:
 
 1. **Less is more:** Don't send mountains of observability data when small subsets of the *right* data will do.
-2. **Secure by default, configurable if necessary:** Do the right thing for most companies by default. Make it easy for companies with stricter needs to lock-down Robusta further or run it on-prem.
+2. **Secure by default, configurable if necessary:** Do the right thing for most companies by default. Make it easy for companies with stricter compliance needs to lock-down Robusta further or run it on-prem.
 3. **Design for security:** Secure systems are designed to be secure from day one. Discuss security when planning new features.
 4. **Experience matters:** Hire engineers who have built secure enterprise platforms before. Make security a core part of company culture.
 
@@ -29,12 +29,27 @@ All data in the SaaS platform is encrypted at rest and stored in accordance with
 
 If necessary, the SaaS UI can be run on-prem as part of our paid plans. Contact support@robusta.dev for details.
 
+Running Robusta in Airgapped Environments
+******************************************
+Refer to :ref:`Deploying Behind Proxies`.
+
+To run the Robusta UI on premise, :ref:`speak to our team <Getting Support>`.
+
+Deploying Robusta Without Secrets in Helm
+******************************************
+Refer to :ref:`Managing Secrets`.
+
 Censoring Sensitive Data
 *************************
 
 Pod logs gathered by Robusta can be censored using regexes. Refer to the :ref:`Censoring Logs` guide for details.
 
-Kubernetes Secrets
-********************
+Limiting Robusta's Access in Your Cluster
+*******************************************
 
-Robusta can monitor Helm releases in your cluster for issues. To do so, access to Kubernetes Secrets is required. You can disable this with ``monitorHelmReleases: false`` if necessary.
+To reduce the permissions that Robusta needs in your cluster:
+
+1. Set ``monitorHelmReleases: false`` in Robusta's Helm values file. (Monitoring helm releases is an optional feature that requires granting Robusta access to K8s secrets containing helm metadata.)
+2. On OpenShift you can deploy Robusta with a limited SCC - refer to :ref:`OpenShift`
+
+To further limit Robusta's permissions, :ref:`speak to our team for guidance <Getting Support>`.
