@@ -18,7 +18,7 @@ from robusta.api import (
     PrometheusKubernetesAlert,
     PrometheusQueryParams,
     action,
-    run_prometheus_query,
+    run_prometheus_query_range,
 )
 from robusta.core.model.base_params import PrometheusParams, ActionParams
 from robusta.core.reporting import JsonBlock
@@ -111,7 +111,7 @@ def prometheus_enricher(event: ExecutionBaseEvent, params: PrometheusQueryParams
         raise Exception("Invalid request, verify the duration times are of format '%Y-%m-%d %H:%M:%S %Z'")
         return
     try:
-        prometheus_result = run_prometheus_query(
+        prometheus_result = run_prometheus_query_range(
             prometheus_params=params,
             promql_query=params.promql_query,
             starts_at=starts_at,

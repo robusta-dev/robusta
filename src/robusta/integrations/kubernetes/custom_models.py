@@ -489,10 +489,13 @@ class RobustaJob(Job):
         custom_annotations: Optional[Dict[str, str]] = None,
         ttl_seconds_after_finished: int = 120,
         delete_job_post_execution: bool = True,
+        process_name: bool = True,
     ) -> str:
         job = RobustaJob(
             metadata=ObjectMeta(
-                namespace=INSTALLATION_NAMESPACE, name=to_kubernetes_name(name), annotations=custom_annotations
+                namespace=INSTALLATION_NAMESPACE,
+                name=to_kubernetes_name(name) if process_name else name,
+                annotations=custom_annotations,
             ),
             spec=JobSpec(
                 backoffLimit=0,

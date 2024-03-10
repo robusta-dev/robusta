@@ -553,9 +553,11 @@ class ScanReportBlock(BaseBlock):
     score: str
     results: List[ScanReportRow]
     config: str
+    metadata: Dict[str, Any] = {}
     pdf_scan_row_content_format: Callable[[ScanReportRow], str] = lambda row: json.dumps(row.content)
     pdf_scan_row_priority_format: Callable[[float], str] = lambda priority: str(priority)
 
+    @property
     def grade(self):
         score = int(self.score)
         if score >= 90:
