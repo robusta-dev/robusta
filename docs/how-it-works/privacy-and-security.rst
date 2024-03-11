@@ -35,7 +35,7 @@ Refer to :ref:`Deploying Behind Proxies`.
 
 To run the Robusta UI on premise, :ref:`speak to our team <Getting Support>`.
 
-Deploying Robusta Without Secrets in Helm
+Handling Secrets in Robusta's Helm Values
 ******************************************
 Refer to :ref:`Managing Secrets`.
 
