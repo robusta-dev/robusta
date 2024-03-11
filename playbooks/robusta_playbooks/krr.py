@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, PodSecurityContext, SeccompProfile ,Capabilities, SecurityContext, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
-
 from robusta.api import (
     IMAGE_REGISTRY,
     RELEASE_NAME,
@@ -29,10 +28,12 @@ from robusta.api import (
     action,
     format_unit,
 )
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
+from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.7.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.7.1")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "1Gi")
 
@@ -95,6 +96,7 @@ class KRRResponse(BaseModel):
     resources: List[ResourceType] = ["cpu", "memory"]
     description: Optional[str] = None  # This field is not returned by KRR < v1.2.0
     strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
+    errors: List[Dict[str, Any]] = []  # This field is not returned by KRR < v1.7.1
 
 
 class KRRParams(PrometheusParams, PodRunningParams):
@@ -367,19 +369,38 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         **params.krr_job_spec,
     )
 
-    start_time = end_time = datetime.now()
-    krr_scan = krr_response = {}
+    start_time = datetime.now()
     logs = None
+    job_name = f"krr-job-{scan_id}"
+    metadata: Dict[str, Any] = {
+        "job": {
+            "name": job_name,
+            "namespace": INSTALLATION_NAMESPACE,
+        },
+    }
+
+    def update_state(state: ScanState) -> None:
+        event.emit_event(
+            "scan_updated",
+            scan_id=scan_id,
+            metadata=metadata,
+            state=state,
+            type=ScanType.KRR,
+            start_time=start_time,
+        )
+
+    update_state(ScanState.PENDING)
 
     try:
         logs = RobustaJob.run_simple_job_spec(
             spec,
-            "krr_job" + scan_id,
+            job_name,
             params.timeout,
             secret,
             custom_annotations=params.custom_annotations,
             ttl_seconds_after_finished=43200,  # 12 hours
             delete_job_post_execution=False,
+            process_name=False,
         )
 
         # NOTE: We need to remove the logs before the json result
@@ -394,31 +415,34 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         logs = logs[logs.find("{") :]
 
         krr_response = json.loads(logs)
-        end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
-    except json.JSONDecodeError:
-        logging.exception("*KRR scan job failed. Expecting json result.*")
-        logging.error(f"Logs: {logs}")
-        return
-    except ValidationError:
-        logging.exception("*KRR scan job failed. Result format issue.*\n\n")
-        logging.error(f"Logs: {logs}")
-        return
+
     except Exception as e:
-        if str(e) == "Failed to reach wait condition":
+        if isinstance(e, json.JSONDecodeError):
+            logging.exception("*KRR scan job failed. Expecting json result.*")
+        elif isinstance(e, ValidationError):
+            logging.exception("*KRR scan job failed. Result format issue.*")
+        elif str(e) == "Failed to reach wait condition":
             logging.exception(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")
         else:
             logging.exception(f"*KRR scan job unexpected error.*\n {e}")
+
         logging.error(f"Logs: {logs}")
+        update_state(ScanState.FAILED)
         return
+    else:
+        metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
+        metadata["description"] = krr_scan.description
+        metadata["errors"] = krr_scan.errors
 
     scan_block = ScanReportBlock(
         title="KRR scan",
         scan_id=scan_id,
         type=ScanType.KRR,
         start_time=start_time,
-        end_time=end_time,
+        end_time=datetime.now(),
         score=krr_scan.score,
+        metadata=metadata,
         results=[
             ScanReportRow(
                 scan_id=scan_id,

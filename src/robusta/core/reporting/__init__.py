@@ -19,6 +19,7 @@ from robusta.core.reporting.blocks import (
     EventsBlock,
     EventsRef,
     FileBlock,
+    EmptyFileBlock,
     HeaderBlock,
     JsonBlock,
     KubernetesDiffBlock,
@@ -60,4 +61,5 @@ __all__ = [
     "EventsBlock",
     "EventsRef",
     "EventsRow",
+    "EmptyFileBlock",
 ]

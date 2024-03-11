@@ -128,6 +128,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def __prepare_execution_event(self, execution_event: ExecutionBaseEvent):
         execution_event.set_scheduler(self.registry.get_scheduler())
+        execution_event.set_event_emitter(self.registry.get_event_emitter())
         execution_event.set_all_sinks(self.registry.get_sinks().get_all())
         execution_event.set_context(
             ExecutionContext(

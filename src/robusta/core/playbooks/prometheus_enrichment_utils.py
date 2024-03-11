@@ -68,14 +68,16 @@ def get_node_internal_ip(node: Node) -> str:
     return internal_ip
 
 
-def run_prometheus_query(
+def run_prometheus_query_range(
     prometheus_params: PrometheusParams, promql_query: str, starts_at: datetime, ends_at: datetime, step: Optional[str]
 ) -> PrometheusQueryResult:
+    """
+    This calls the prometheus query_range api, which is what is used for graphs
+    """
     if not starts_at or not ends_at:
         raise Exception("Invalid timerange specified for the prometheus query.")
 
-    if prometheus_params.prometheus_additional_labels and prometheus_params.add_additional_labels:
-        promql_query = promql_query.replace("}", __get_additional_labels_str(prometheus_params) + "}")
+    promql_query = __add_additional_labels(promql_query, prometheus_params)
 
     query_duration = ends_at - starts_at
     resolution = get_resolution_from_duration(query_duration)
@@ -179,7 +181,7 @@ def create_chart_from_prometheus_query(
         # Adjust ends_at to be at least 30 minutes after oom_kill_time
         ends_at = max(ends_at, oom_kill_time + thirty_minutes)
 
-    prometheus_query_result = run_prometheus_query(prometheus_params, promql_query, starts_at, ends_at, step=None)
+    prometheus_query_result = run_prometheus_query_range(prometheus_params, promql_query, starts_at, ends_at, step=None)
 
     if prometheus_query_result.result_type != "matrix":
         raise Exception(
@@ -225,7 +227,6 @@ def create_chart_from_prometheus_query(
         if oom_kill_time:
             min_time = min(min_time, starts_at.timestamp())
             max_time = max(max_time, ends_at.timestamp())
-
 
         plot_data = PlotData(
             plot=(label, values),
@@ -290,7 +291,7 @@ def create_chart_from_prometheus_query(
         include_x_axis=include_x_axis,
         width=1280,
         height=500,
-        show_legend=hide_legends is not True
+        show_legend=hide_legends is not True,
     )
 
     if len(plot_data_list):
@@ -350,9 +351,34 @@ def create_chart_from_prometheus_query(
             dots_size=p.dots_size,
             stroke=p.stroke,
         )
-    return chart, PrometheusBlock(data=prometheus_query_result, query=promql_query, y_axis_type=values_format,
-                                  vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
-                                  graph_name=chart.title, metrics_legends_labels=metrics_legends_labels)
+    return chart, PrometheusBlock(
+        data=prometheus_query_result,
+        query=promql_query,
+        y_axis_type=values_format,
+        vertical_lines=vertical_lines,
+        horizontal_lines=horizontal_lines,
+        graph_name=chart.title,
+        metrics_legends_labels=metrics_legends_labels,
+    )
+
+
+def run_prometheus_query(prometheus_params: PrometheusParams, query: str) -> PrometheusQueryResult:
+    """
+    This function runs prometheus query and returns the result (usually a vector),
+    For graphs use run_prometheus_query_range which uses the prometheus query_range api
+    """
+    prom = get_prometheus_connect(prometheus_params)
+    query = __add_additional_labels(query, prometheus_params)
+    prom_params = {"timeout": PROMETHEUS_REQUEST_TIMEOUT_SECONDS}
+    prom.check_prometheus_connection(prom_params)
+    results = prom.safe_custom_query(query=query, params=prom_params)
+    return PrometheusQueryResult(results)
+
+
+def __add_additional_labels(query: str, prometheus_params: PrometheusParams) -> str:
+    if not prometheus_params.prometheus_additional_labels or not prometheus_params.add_additional_labels:
+        return query
+    return query.replace("}", __get_additional_labels_str(prometheus_params) + "}")
 
 
 def __get_additional_labels_str(prometheus_params: PrometheusParams) -> str:

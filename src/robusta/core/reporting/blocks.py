@@ -130,6 +130,35 @@ class FileBlock(BaseBlock):
         return "\n".join(truncated_lines).encode("utf-8")
 
 
+class EmptyFileBlock(BaseBlock):
+    """
+    Handle empty log files
+    """
+
+    metadata: dict = {}
+    filename: str
+
+    def __init__(
+            self,
+            filename: str,
+            remarks: str,
+            metadata: Optional[dict] = None,
+            **kwargs,
+    ):
+        """
+        :param filename: the file's name
+        :param contents: the file's contents
+        """
+        super().__init__(
+            filename=filename,
+            metadata=metadata or {},
+            **kwargs,
+        )
+
+        self.metadata["is_empty"] = True
+        self.metadata["remarks"] = remarks
+
+
 class HeaderBlock(BaseBlock):
     """
     Text formatted as a header
@@ -524,9 +553,11 @@ class ScanReportBlock(BaseBlock):
     score: str
     results: List[ScanReportRow]
     config: str
+    metadata: Dict[str, Any] = {}
     pdf_scan_row_content_format: Callable[[ScanReportRow], str] = lambda row: json.dumps(row.content)
     pdf_scan_row_priority_format: Callable[[float], str] = lambda priority: str(priority)
 
+    @property
     def grade(self):
         score = int(self.score)
         if score >= 90:
