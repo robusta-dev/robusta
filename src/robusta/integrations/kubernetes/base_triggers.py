@@ -66,6 +66,21 @@ class K8sBaseTrigger(BaseTrigger):
 
                 self._labels_map[label_parts[0].strip()] = label_parts[1].strip()
 
+        default_change_include = ["spec"]
+        default_change_ignore = [
+            "status",
+            "metadata.generation",
+            "metadata.resourceVersion",
+            "metadata.managedFields",
+            "spec.replicas",
+        ]
+        if self.change_filters is None:
+            self.change_filters = {}
+        if not self.change_filters.get("include"):
+            self.change_filters["include"] = default_change_include
+        if not self.change_filters.get("ignore"):
+            self.change_filters["ignore"] = default_change_ignore
+
     def get_trigger_event(self):
         return K8sTriggerEvent.__name__
 
