@@ -33,10 +33,11 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
     customPlaybooks:
     - triggers:
         - on_deployment_update: {}
+            change_filters:
+              ignore: [] # You can specify any fields here that you don't want to monitor
+              include: ["images"]
       actions:
-        - resource_babysitter:
-            omitted_fields: [] # You can specify any fields here that you don't want to monitor
-            fields_to_monitor: ["images"]
+        - resource_babysitter: {}
       sinks:
       - some_sink_name #Optional
 
@@ -84,11 +85,12 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
 
     customPlaybooks:
     - triggers:
-        - on_ingress_all_changes: {}
+        - on_ingress_all_changes:
+            change_filters:
+              ignore: []  # You can specify any fields here that you don't want to monitor
+              include: ["path", "port"]
       actions:
-        - resource_babysitter:
-            omitted_fields: []  # You can specify any fields here that you don't want to monitor
-            fields_to_monitor: ["path", "port"]
+        - resource_babysitter: {}
       sinks:
       - some_sink_name  # Replace with your sink name
 

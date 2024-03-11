@@ -368,13 +368,20 @@ def autogenerate_triggers(f: TextIO):
                 textwrap.dedent(
                     f"""\
             class {resource}{get_trigger_class_name(trigger_name)}Trigger(K8sBaseTrigger):
-                def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+                def __init__(
+                    self,
+                    name_prefix: str = None,
+                    namespace_prefix: str = None,
+                    labels_selector: str = None,
+                    change_filters: Dict[str, List[str]] = None,
+                ):
                     super().__init__(
                         kind=\"{resource}\",
                         operation={operation_type},
                         name_prefix=name_prefix,
                         namespace_prefix=namespace_prefix,
                         labels_selector=labels_selector,
+                        change_filters=change_filters,
                     )
 
                 @staticmethod

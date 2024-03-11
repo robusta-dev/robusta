@@ -52,6 +52,8 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event = None
                 try:
                     execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings, build_context)
+                    if not fired_trigger.check_change_filters(execution_event):
+                        continue
                     # sink_findings needs to be shared between playbooks.
                     # build_execution_event returns a different instance because it's running in a child process
                     execution_event.sink_findings = sink_findings
