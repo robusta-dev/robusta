@@ -329,3 +329,42 @@ Most Kubernetes triggers support the following filters:
 * ``name_prefix``
 * ``namespace_prefix``
 * ``labels_selector`` - e.g. ``label1=value1,label2=value2``. If multiple labels is provided, all must match.
+
+Additionally, Kubernetes triggers support a ``scope`` filtering mechanism that works almost
+exactly like the ``scope`` mechanism for sinks (see :ref:`sink-scope-matching` for more
+information). The only difference is that for triggers, there is an additional option
+available for the ``include``/``exclude`` sections, ``attributes``, that makes it possible
+to filter on *any* attribute inside the YAML representation of the resource. An example
+of use of this functionality:
+
+.. code-block:: yaml
+
+    customPlaybooks:
+    - name: "FilteredPodCreation"
+      triggers:
+        - on_pod_create:
+            scope:
+              include:
+                - name:
+                  - my-pod.*
+                  - other
+                  namespace: ns1
+                  labels:
+                    - "foo=bar, boo=xx.*"
+                    - "foo=xx, boo=xx.*"
+                  attributes:
+                    - "status.phase=Pending, status.qosClass=BestEffort, metadata.resourceVersion != 123"
+                    - "spec.restartPolicy=OnFailure"
+                  annotations:
+                    - "foo=bar, boo=xx.*"
+                    - "foo=xx, boo=xx.*"
+              exclude:
+                - name:
+                  - woof.*
+
+Note that ``attributes`` matching only allows exact equality and inequality. The left-hand side
+of each of ``attributes`` filters is a path to select appropriate node in the document. It
+supports typical constructs like following nested attributes using the ``.`` operator, or
+selecting n-th element of a list using the ``[n]`` operator. In fact the language used to
+describe paths is much more versatile, as the implementation uses ``jsonpath-ng`` under
+the hood. You can read more about it `here <https://pypi.org/project/jsonpath-ng/>`_.

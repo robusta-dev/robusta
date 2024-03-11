@@ -7,7 +7,7 @@ import pytz
 
 from robusta.core.playbooks.playbook_utils import replace_env_vars_values
 from robusta.core.sinks.timing import DAY_NAMES
-
+from robusta.utils.scope import ScopeParams
 
 TIME_RE = re.compile("^\d\d:\d\d$")
 
@@ -53,36 +53,6 @@ class ActivityParams(BaseModel):
         if not intervals:
             raise ValueError("at least one interval has to be specified for the activity settings")
         return intervals
-
-
-ScopeIncludeExcludeParams = Dict[str, Optional[Union[str, List[str]]]]
-
-
-class ScopeParams(BaseModel):
-    include: Optional[List[ScopeIncludeExcludeParams]]
-    exclude: Optional[List[ScopeIncludeExcludeParams]]
-
-    @root_validator
-    def check_non_empty(cls, data: Dict) -> Dict:
-        if not (data.get("include") is not None or data.get("exclude") is not None):
-            raise ValueError("scope requires include and/or exclude subfield")
-        return data
-
-    @root_validator
-    def check_and_normalize(cls, data: Dict) -> Dict:
-        """Check and normalize entries inside include/exclude"""
-        for key in ["include", "exclude"]:
-            entry = data[key]
-            if entry is None:
-                continue
-            if entry == []:
-                raise ValueError("scope include/exclude specification requires at least one matcher")
-            for inc_exc_params in entry:
-                for attr_name, regex_or_regexes in inc_exc_params.items():
-                    if isinstance(regex_or_regexes, str):
-                        regex_or_regexes = [regex_or_regexes]
-                    inc_exc_params[attr_name] = regex_or_regexes
-        return data
 
 
 class SinkBaseParams(BaseModel):

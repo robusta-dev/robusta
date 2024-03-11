@@ -14,13 +14,7 @@ from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
 from ....core.reporting.base import FindingSubject
 from ....core.reporting.consts import FindingSubjectType, FindingSource
 from ....core.reporting.finding_subjects import KubeObjFindingSubject
-from robusta.integrations.kubernetes.custom_models import (
-    RobustaPod,
-    RobustaDeployment,
-    RobustaJob,
-    DeploymentConfig,
-    Rollout,
-)
+from  robusta.integrations.kubernetes.custom_models import DeploymentConfig, RobustaDeployment, RobustaJob, RobustaPod, Rollout
 from hikaru.model.rel_1_26.v1 import ClusterRole as v1ClusterRole
 from hikaru.model.rel_1_26.v1 import ClusterRoleBinding as v1ClusterRoleBinding
 from hikaru.model.rel_1_26.v1 import ConfigMap as v1ConfigMap
@@ -88,89 +82,13 @@ class ResourceAttributes(ExecutionEventBaseParams):
 
 @dataclass
 class KubernetesResourceEvent(ExecutionBaseEvent):
-    obj: Optional[
-        Union[
-            RobustaPod,
-            ReplicaSet,
-            DaemonSet,
-            RobustaDeployment,
-            StatefulSet,
-            Service,
-            Event,
-            HorizontalPodAutoscaler,
-            Node,
-            ClusterRole,
-            ClusterRoleBinding,
-            RobustaJob,
-            Namespace,
-            ServiceAccount,
-            PersistentVolume,
-            PersistentVolumeClaim,
-            NetworkPolicy,
-            ConfigMap,
-            Ingress,
-            DeploymentConfig,
-            Rollout,
-        ]
-    ] = None
+    obj: Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress,DeploymentConfig,Rollout]] = None
 
-    def __init__(
-        self,
-        obj: Union[
-            RobustaPod,
-            ReplicaSet,
-            DaemonSet,
-            RobustaDeployment,
-            StatefulSet,
-            Service,
-            Event,
-            HorizontalPodAutoscaler,
-            Node,
-            ClusterRole,
-            ClusterRoleBinding,
-            RobustaJob,
-            Namespace,
-            ServiceAccount,
-            PersistentVolume,
-            PersistentVolumeClaim,
-            NetworkPolicy,
-            ConfigMap,
-            Ingress,
-            DeploymentConfig,
-            Rollout,
-        ],
-        named_sinks: List[str],
-    ):
+    def __init__(self, obj: Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress,DeploymentConfig,Rollout], named_sinks: List[str]):
         super().__init__(named_sinks=named_sinks)
         self.obj = obj
 
-    def get_resource(
-        self,
-    ) -> Optional[
-        Union[
-            RobustaPod,
-            ReplicaSet,
-            DaemonSet,
-            RobustaDeployment,
-            StatefulSet,
-            Service,
-            Event,
-            HorizontalPodAutoscaler,
-            Node,
-            ClusterRole,
-            ClusterRoleBinding,
-            RobustaJob,
-            Namespace,
-            ServiceAccount,
-            PersistentVolume,
-            PersistentVolumeClaim,
-            NetworkPolicy,
-            ConfigMap,
-            Ingress,
-            DeploymentConfig,
-            Rollout,
-        ]
-    ]:
+    def get_resource(self) -> Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress,DeploymentConfig,Rollout]]:
         return self.obj
 
     def get_subject(self) -> FindingSubject:

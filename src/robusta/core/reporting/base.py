@@ -13,6 +13,7 @@ from pydantic.main import BaseModel
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.consts import FindingSource, FindingSubjectType, FindingType
+from robusta.utils.scope import BaseScopeMatching
 
 
 class BaseBlock(BaseModel):
@@ -129,98 +130,6 @@ class Enrichment:
         return f"annotations: {self.annotations} Enrichment: {self.blocks} "
 
 
-class Filterable:
-    @property
-    def attribute_map(self) -> Dict[str, Union[str, Dict[str, str]]]:
-        raise NotImplementedError
-
-    def get_invalid_attributes(self, attributes: List[str]) -> List:
-        return list(set(attributes) - set(self.attribute_map))
-
-    def attribute_matches(self, attribute: str, expression: Union[str, List[str], Dict, List[Dict]]) -> bool:
-        value: Union[str, Dict[str, str]] = self.attribute_map[attribute]
-        if isinstance(expression, str) or isinstance(expression, Dict):
-            return Filterable.__value_match(value, expression)
-        else:  # expression is list of values
-            return any([Filterable.__value_match(value, single_exp) for single_exp in expression])
-
-    @staticmethod
-    def __value_match(value: Union[str, Dict[str, str]], expression: Union[str, Dict]) -> bool:
-        if isinstance(value, str) and isinstance(expression, str):
-            return bool(re.match(expression, value))
-        elif isinstance(value, Dict) and isinstance(expression, Dict):  # value is Dict[str, str], expression is a Dict
-            return expression.items() <= value.items()
-        else:
-            logging.error(f"Failed to evaluate matcher. Finding value: {value} matcher: {expression}")
-            return False
-
-    def matches(self, match_requirements: Dict[str, Union[str, List[str]]], scope_requirements) -> bool:
-        # 1. "scope" check
-        accept = True
-        if scope_requirements is not None:
-            if scope_requirements.exclude:
-                if self.scope_inc_exc_matches(scope_requirements.exclude):
-                    return False
-            if scope_requirements.include:
-                if self.scope_inc_exc_matches(scope_requirements.include):
-                    return True
-                else:  # include was defined, but not matched. So if not matched by old matcher, should be rejected!
-                    accept = False
-
-        # 2. "match" check
-        invalid_attributes = self.get_invalid_attributes(list(match_requirements.keys()))
-        if len(invalid_attributes) > 0:
-            logging.warning(f"Invalid match attributes: {invalid_attributes}")
-            return False
-
-        for attribute, expression in match_requirements.items():
-            if not self.attribute_matches(attribute, expression):
-                return False
-        return accept
-
-    def scope_inc_exc_matches(self, scope_inc_exc: Optional[list]):
-        return any(self.scope_matches(scope) for scope in scope_inc_exc)
-
-    def scope_matches(self, scope: Dict[str, List[str]]):
-        # scope is e.g. {'labels': ['app=oomki.*,app!=X.*Y']}
-        # or {'name': ['pod-xyz.*'], 'title': ['fdc.*a', 'fdd.*b'], 'type': ['ISSUE']}
-        for attr_name, attr_matchers in scope.items():
-            if not self.scope_attribute_matches(attr_name, attr_matchers):
-                return False
-        return True
-
-    def scope_attribute_matches(self, attr_name: str, attr_matchers: List[str]):
-        if attr_name not in self.attribute_map:
-            raise ValueError(f'Scope match on unknown attribute "{attr_name}"')
-        attr_value = self.attribute_map[attr_name]
-        for attr_matcher in attr_matchers:
-            if attr_name in ["labels", "annotations"]:
-                return self.match_labels_annotations(attr_matcher, attr_value)
-            elif re.fullmatch(attr_matcher, attr_value):
-                return True
-        return False
-
-    def match_labels_annotations(self, labels_match_expr: str, labels: Dict[str, str]):
-        for label_match in labels_match_expr.split(","):
-            if not self.label_matches(label_match, labels):
-                return False
-        return True
-
-    def label_matches(self, label_match: str, labels: Dict[str, str]):
-        label_name, label_regex = label_match.split("=", 1)
-        label_name = label_name.strip()
-        label_regex = label_regex.strip()
-        if label_name.endswith("!"):  # label_name!=match_expr
-            label_name = label_name[:-1].rstrip()
-            expect_match = False
-        else:
-            expect_match = True
-        label_value = labels.get(label_name)
-        if label_value is None:  # no label with that name
-            return False
-        return bool(re.fullmatch(label_regex, label_value.strip())) == expect_match
-
-
 class FindingSubject:
     def __init__(
         self,
@@ -246,7 +155,7 @@ class FindingSubject:
         return f"{self.subject_type.value}/{self.name}"
 
 
-class Finding(Filterable):
+class Finding(BaseScopeMatching):
     """
     A Finding represents an event that should be sent to sinks.
     """
@@ -310,6 +219,9 @@ class Finding(Filterable):
             "labels": self.subject.labels,
             "annotations": self.subject.annotations,
         }
+
+    def get_scope_matching_data(self):
+        return self.attribute_map
 
     def _map_service_to_uri(self):
         if not self.service:
@@ -402,3 +314,47 @@ class Finding(Filterable):
         # if not, generate with logic similar to alertmanager
         s = f"{subject.subject_type},{subject.name},{subject.namespace},{subject.node},{source.value}{aggregation_key}"
         return hashlib.sha256(s.encode()).hexdigest()
+
+    def get_invalid_attributes(self, attributes: List[str]) -> List:
+        return list(set(attributes) - set(self.attribute_map))
+
+    def attribute_matches(self, attribute: str, expression: Union[str, List[str], Dict, List[Dict]]) -> bool:
+        value: Union[str, Dict[str, str]] = self.attribute_map[attribute]
+        if isinstance(expression, str) or isinstance(expression, Dict):
+            return self.__value_match(value, expression)
+        else:  # expression is list of values
+            return any([self.__value_match(value, single_exp) for single_exp in expression])
+
+    @staticmethod
+    def __value_match(value: Union[str, Dict[str, str]], expression: Union[str, Dict]) -> bool:
+        if isinstance(value, str) and isinstance(expression, str):
+            return bool(re.match(expression, value))
+        elif isinstance(value, Dict) and isinstance(expression, Dict):  # value is Dict[str, str], expression is a Dict
+            return expression.items() <= value.items()
+        else:
+            logging.error(f"Failed to evaluate matcher. Finding value: {value} matcher: {expression}")
+            return False
+
+    def matches(self, match_requirements: Dict[str, Union[str, List[str]]], scope_requirements) -> bool:
+        # 1. "scope" check
+        accept = True
+        if scope_requirements is not None:
+            if scope_requirements.exclude:
+                if self.scope_inc_exc_matches(scope_requirements.exclude):
+                    return False
+            if scope_requirements.include:
+                if self.scope_inc_exc_matches(scope_requirements.include):
+                    return True
+                else:  # include was defined, but not matched. So if not matched by old matcher, should be rejected!
+                    accept = False
+
+        # 2. "match" check
+        invalid_attributes = self.get_invalid_attributes(list(match_requirements.keys()))
+        if len(invalid_attributes) > 0:
+            logging.warning(f"Invalid match attributes: {invalid_attributes}")
+            return False
+
+        for attribute, expression in match_requirements.items():
+            if not self.attribute_matches(attribute, expression):
+                return False
+        return accept
