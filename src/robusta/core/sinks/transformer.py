@@ -2,7 +2,7 @@ import logging
 import re
 import urllib.parse
 from collections import defaultdict
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import markdown2
 from fpdf import FPDF
@@ -204,7 +204,7 @@ class Transformer:
             pdf.set_font("", "", 8)
             pdf.set_text_color(0, 0, 0)
 
-        def write_report_header(title: str, end_time, score: int, grade: str):
+        def write_report_header(title: str, end_time, score: Union[int, str], grade: str):
             pdf.cell(pdf.w * 0.7, 10, f"**{title}** {end_time.strftime('%b %d, %y %X')}", border=0, markdown=True)
             if int(score) >= 0:
                 pdf.cell(pdf.w * 0.3, 10, f"**{grade}** {score}", border=0, markdown=True)
@@ -249,7 +249,7 @@ class Transformer:
         pdf.c_margin = 2  # create default cell margin to add table "padding"
 
         title = f"{scan.type.capitalize()} report"
-        write_report_header(title, scan.end_time, scan.score, scan.grade())
+        write_report_header(title, scan.end_time, scan.score, scan.grade)
         write_config(pdf, scan.config)
 
         sections: dict[str, dict[str, List]] = defaultdict(lambda: defaultdict(list))

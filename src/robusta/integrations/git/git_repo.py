@@ -40,7 +40,7 @@ class GitRepoManager:
                 key = key.strip()
                 if key:
                     logging.debug(f"Adding a key to known_hosts: {key}")
-                    f.write(key)
+                    f.write(key + "\n")
 
         if GIT_REPOS_VERIFIED_HOSTS:
             os.system(f"ssh-keyscan -H {GIT_REPOS_VERIFIED_HOSTS} >> {SSH_ROOT_DIR}/known_hosts")

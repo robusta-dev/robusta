@@ -55,8 +55,9 @@ Configuring the Jira sink
             dedups: (OPTIONAL)
               - fingerprint
             project_name: project_name
-            match:
-               identifier: "(CPUThrottlingHigh|KubePodCrashLooping)"
+            scope:
+              include:
+                - identifier: [CPUThrottlingHigh, KubePodCrashLooping]
 
 Save the file and run
 
