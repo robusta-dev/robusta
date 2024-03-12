@@ -4,7 +4,6 @@ from typing import Any, List, Optional
 
 import hikaru
 import kubernetes.client.exceptions
-import yaml
 from hikaru.model.rel_1_26 import ContainerState, ContainerStateTerminated, ContainerStatus, Pod, PodList
 from pydantic import BaseModel
 
@@ -237,10 +236,7 @@ def get_resource_yaml(event: KubernetesResourceEvent):
     name: str = resource.metadata.name
 
     try:
-        if isinstance(resource, hikaru.HikaruBase):
-            resource_yaml = hikaru.get_yaml(resource)
-        else:
-            resource_yaml = yaml.safe_dump((resource.as_dict()), indent=2)
+        resource_yaml = hikaru.get_yaml(resource)
 
         event.add_enrichment(
             [

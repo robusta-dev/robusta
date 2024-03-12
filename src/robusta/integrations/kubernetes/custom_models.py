@@ -2,11 +2,13 @@ import json
 import logging
 import re
 import time
+from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import hikaru
 import yaml
+from hikaru.crd import HikaruCRDDocumentMixin, register_crd_class
 from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclasses to work
 from kubernetes import client
 from kubernetes.client import ApiException
@@ -536,9 +538,16 @@ class RobustaJob(Job):
         return cls.run_simple_job_spec(spec, name=image, timeout=timeout)
 
 
-class DeploymentConfigStatus(BaseModel):
-    conditions: Optional[List[Dict]]
-    details: Optional[dict]
+@dataclass
+class DeploymentTriggerPolicy(HikaruBase):
+    imageChangeParams: Optional[Dict]
+    type: Optional[str]
+
+
+@dataclass
+class DeploymentConfigStatus(HikaruBase):
+    conditions: Optional[List[DeploymentCondition]]
+    details: Optional[Dict]
     updatedReplicas: Optional[int]
     readyReplicas: Optional[int]
     availableReplicas: int = 0
@@ -548,12 +557,13 @@ class DeploymentConfigStatus(BaseModel):
     unavailableReplicas: int = 0
 
 
-class DeploymentConfigSpec(BaseModel):
+@dataclass
+class DeploymentConfigSpec(HikaruBase):
     selector: Dict[str, str]
     strategy: Optional[Dict]
     template: Optional[PodTemplateSpec]
     test: Optional[bool]
-    triggers: Optional[List[Dict]] = None
+    triggers: Optional[List[DeploymentTriggerPolicy]] = None
     minReadySeconds: Optional[int] = 0
     paused: Optional[bool] = None
     replicas: Optional[int] = None
@@ -561,7 +571,8 @@ class DeploymentConfigSpec(BaseModel):
 
 
 # https://docs.openshift.com/container-platform/3.11/rest_api/apps_openshift_io/deploymentconfig-apps-openshift-io-v1.html
-class DeploymentConfig(BaseModel):
+@dataclass
+class DeploymentConfig(HikaruDocumentBase, HikaruCRDDocumentMixin):
     plural: ClassVar[str] = "deploymentconfigs"
     group: ClassVar[str] = "apps.openshift.io"
     version: ClassVar[str] = "v1"
@@ -572,38 +583,10 @@ class DeploymentConfig(BaseModel):
     apiVersion: str = f"{group}/{version}"
     kind: str = "DeploymentConfig"
 
-    def as_dict(self):
-        d = self.dict(exclude_none=True, exclude={"metadata", "spec"})
-        if self.metadata:
-            d["metadata"] = self.metadata.to_dict()
-        if self.spec:
-            s = self.spec.dict(exclude_none=True, exclude={"template"})
-            if self.spec.template:
-                s["template"] = self.spec.template.to_dict()
-            d["spec"] = s
-        return d
-
-    def update(self):
-        client.CustomObjectsApi().patch_namespaced_custom_object(
-            DeploymentConfig.group,
-            DeploymentConfig.version,
-            self.metadata.namespace,
-            DeploymentConfig.plural,
-            self.metadata.name,
-            self.as_dict(),
-        )
-
     @classmethod
     def readNamespaced(self, name: str, namespace: str):
-        res = client.CustomObjectsApi().get_namespaced_custom_object(
-            group=DeploymentConfig.group,
-            version=DeploymentConfig.version,
-            namespace=namespace,
-            plural=DeploymentConfig.plural,
-            name=name,
-        )
-
-        return type("", (object,), {"obj": DeploymentConfig(**res)})()
+        obj = DeploymentConfig(metadata=ObjectMeta(name=name, namespace=namespace)).read()
+        return type("", (object,), {"obj": obj})()
 
 
 def DictToK8sObj(obj: Dict, className):
@@ -614,3 +597,4 @@ def DictToK8sObj(obj: Dict, className):
 hikaru.register_version_kind_class(RobustaPod, Pod.apiVersion, Pod.kind)
 hikaru.register_version_kind_class(RobustaDeployment, Deployment.apiVersion, Deployment.kind)
 hikaru.register_version_kind_class(RobustaJob, Job.apiVersion, Job.kind)
+register_crd_class(DeploymentConfig, DeploymentConfig.plural, is_namespaced=True)
