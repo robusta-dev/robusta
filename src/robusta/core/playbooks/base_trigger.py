@@ -21,26 +21,28 @@ class TriggerEvent(BaseModel):
         return "NA"
 
 
+DEFAULT_CHANGE_INCLUDE = ["spec"]
+DEFAULT_CHANGE_IGNORE = [
+    "status",
+    "metadata.generation",
+    "metadata.resourceVersion",
+    "metadata.managedFields",
+    "spec.replicas",
+]
+
+
 class BaseTrigger(DocumentedModel):
     change_filters: Dict[str, List[str]] = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        default_change_include = ["spec"]
-        default_change_ignore = [
-            "status",
-            "metadata.generation",
-            "metadata.resourceVersion",
-            "metadata.managedFields",
-            "spec.replicas",
-        ]
         if self.change_filters is None:
             self.change_filters = {}
         if not self.change_filters.get("include"):
-            self.change_filters["include"] = default_change_include
+            self.change_filters["include"] = DEFAULT_CHANGE_INCLUDE
         if not self.change_filters.get("ignore"):
-            self.change_filters["ignore"] = default_change_ignore
+            self.change_filters["ignore"] = DEFAULT_CHANGE_IGNORE
 
     def get_trigger_event(self) -> str:
         pass
@@ -62,12 +64,6 @@ class BaseTrigger(DocumentedModel):
 
         Sets appropriate fields related to filtered object data on the execution_event in
         order for them to be accessible downstream in playbooks."""
-
-        if not self.change_filters:
-            execution_event.obj_filtered = execution_event.obj
-            execution_event.old_obj_filtered = execution_event.old_obj
-            execution_event.filtered_diffs = execution_event.obj.diff(execution_event.old_obj)
-            return True
 
         filtered_diffs = []
         obj_filtered = duplicate_without_fields(execution_event.obj, self.change_filters["ignore"])
