@@ -3,11 +3,8 @@
 OpenShift
 ========================================
 
-OpenShift is supported via the Helm chart.
+Robusta supports OpenShift. To use Robusta on OpenShift, you should enable the following Helm values:
 
-.. warning::
-
-      Do **not** install Robusta in the ``default`` OpenShift project.
 
 Update the ``generated_values.yaml`` file to enable OpenShift support:
 
@@ -17,6 +14,9 @@ Update the ``generated_values.yaml`` file to enable OpenShift support:
       enabled: true
       createScc: true
 
+.. warning::
+
+      Do **not** install Robusta in the ``default`` OpenShift project.
 
 For users that do not have access to create their own SCCs in the cluster, see the
 `openshift-scc-baseline.yaml <https://github.com/robusta-dev/robusta/blob/master/helm/robusta/templates/openshift-scc-baseline.yaml>`_ file for the baseline SCC for the product. This SCC can be
