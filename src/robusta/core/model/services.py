@@ -77,14 +77,6 @@ class VolumeInfo(BaseModel):
             )
         return VolumeInfo(name=volume.name)
 
-    @staticmethod
-    def get_volume_info_hikaru(volume: Volume) -> "VolumeInfo":
-        if volume.persistentVolumeClaim and volume.persistentVolumeClaim.claimName:
-            return VolumeInfo(
-                name=volume.name, persistent_volume_claim={"claim_name": volume.persistentVolumeClaim.claimName}
-            )
-        return VolumeInfo(name=volume.name)
-
 
 class ServiceConfig(BaseModel):
     labels: Dict[str, str]
