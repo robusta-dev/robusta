@@ -1,8 +1,9 @@
+import json
 import logging
 import re
 import time
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import hikaru
 import yaml
@@ -561,10 +562,14 @@ class DeploymentConfigSpec(BaseModel):
 
 # https://docs.openshift.com/container-platform/3.11/rest_api/apps_openshift_io/deploymentconfig-apps-openshift-io-v1.html
 class DeploymentConfig(BaseModel):
+    plural: ClassVar[str] = "deploymentconfigs"
+    group: ClassVar[str] = "apps.openshift.io"
+    version: ClassVar[str] = "v1"
+
     metadata: ObjectMeta
     spec: Optional[DeploymentConfigSpec] = None
     status: Optional[DeploymentConfigStatus] = None
-    apiVersion: str = "apps.openshift.io/v1"
+    apiVersion: str = f"{group}/{version}"
     kind: str = "DeploymentConfig"
 
     def as_dict(self):
@@ -580,20 +585,30 @@ class DeploymentConfig(BaseModel):
 
     def update(self):
         client.CustomObjectsApi().patch_namespaced_custom_object(
-            "apps.openshift.io", "v1", self.metadata.namespace, "deploymentconfigs", self.metadata.name, self.as_dict()
+            DeploymentConfig.group,
+            DeploymentConfig.version,
+            self.metadata.namespace,
+            DeploymentConfig.plural,
+            self.metadata.name,
+            self.as_dict(),
         )
 
     @classmethod
     def readNamespaced(self, name: str, namespace: str):
         res = client.CustomObjectsApi().get_namespaced_custom_object(
-            group="apps.openshift.io",
-            version="v1",
+            group=DeploymentConfig.group,
+            version=DeploymentConfig.version,
             namespace=namespace,
-            plural="deploymentconfigs",
+            plural=DeploymentConfig.plural,
             name=name,
         )
 
         return type("", (object,), {"obj": DeploymentConfig(**res)})()
+
+
+def DictToK8sObj(obj: Dict, className):
+    response = type("", (object,), {"data": json.dumps(obj)})()
+    return client.ApiClient().deserialize(response, className)
 
 
 hikaru.register_version_kind_class(RobustaPod, Pod.apiVersion, Pod.kind)

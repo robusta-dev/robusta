@@ -21,6 +21,7 @@ from kubernetes.client import (
     V1ObjectMeta,
     V1Pod,
     V1PodList,
+    V1PodTemplateSpec,
     V1ReplicaSetList,
     V1StatefulSet,
     V1StatefulSetList,
@@ -42,7 +43,7 @@ from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
-from robusta.integrations.kubernetes.custom_models import DeploymentConfig
+from robusta.integrations.kubernetes.custom_models import DeploymentConfig, DictToK8sObj
 from robusta.patch.patch import create_monkey_patches
 from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.stack_tracer import StackTracer
@@ -151,31 +152,34 @@ class Discovery:
             if IS_OPENSHIFT:
                 for _ in range(DISCOVERY_MAX_BATCHES):
                     deployconfigsRes = client.CustomObjectsApi().list_cluster_custom_object(
-                        group="apps.openshift.io",
-                        version="v1",
-                        plural="deploymentconfigs",
+                        group=DeploymentConfig.group,
+                        version=DeploymentConfig.version,
+                        plural=DeploymentConfig.plural,
                         limit=DISCOVERY_BATCH_SIZE,
                         _continue=continue_ref,
                     )
 
-                    dcList = [DeploymentConfig(**dc) for dc in deployconfigsRes["items"]]
+                    for dc in deployconfigsRes["items"]:
+                        meta = DictToK8sObj(dc["metadata"], V1ObjectMeta)
+                        spec = dc.get("spec", {})
+                        template = DictToK8sObj(spec.get("template"), V1PodTemplateSpec)
 
-                    active_services.extend(
-                        [
-                            Discovery.__create_service_info(
-                                dc.metadata,
-                                "DeploymentConfig",
-                                extract_containers(dc),
-                                extract_volumes(dc),
-                                extract_total_pods(dc),
-                                extract_ready_pods(dc),
-                                is_helm_release=is_release_managed_by_helm(
-                                    annotations=dc.metadata.annotations, labels=dc.metadata.labels
-                                ),
-                            )
-                            for dc in dcList
-                        ]
-                    )
+                        active_services.extend(
+                            [
+                                Discovery.__create_service_info(
+                                    meta=meta,
+                                    kind="DeploymentConfig",
+                                    containers=template.spec.containers,
+                                    volumes=template.spec.volumes,
+                                    total_pods=spec.get("replicas", 1),
+                                    ready_pods=dc.get("status", {}).get("readyReplicas", 0),
+                                    is_helm_release=is_release_managed_by_helm(
+                                        annotations=meta.annotations, labels=meta.labels
+                                    ),
+                                )
+                            ]
+                        )
+
                     continue_ref = deployconfigsRes["metadata"].get("continue")
                     if not continue_ref:
                         break
@@ -538,7 +542,6 @@ def extract_containers(resource) -> List[V1Container]:
             or isinstance(resource, V1DaemonSet)
             or isinstance(resource, V1StatefulSet)
             or isinstance(resource, V1Job)
-            or isinstance(resource, DeploymentConfig)
         ):
             containers = resource.spec.template.spec.containers
         elif isinstance(resource, V1Pod):
@@ -617,7 +620,7 @@ def is_pod_finished(pod) -> bool:
 
 def extract_ready_pods(resource) -> int:
     try:
-        if isinstance(resource, Deployment) or isinstance(resource, StatefulSet) or isinstance(resource, DeploymentConfig):
+        if isinstance(resource, Deployment) or isinstance(resource, StatefulSet):
             return 0 if not resource.status.readyReplicas else resource.status.readyReplicas
         elif isinstance(resource, DaemonSet):
             return 0 if not resource.status.numberReady else resource.status.numberReady
@@ -638,7 +641,7 @@ def extract_ready_pods(resource) -> int:
 
 def extract_total_pods(resource) -> int:
     try:
-        if isinstance(resource, Deployment) or isinstance(resource, StatefulSet) or isinstance(resource, DeploymentConfig):
+        if isinstance(resource, Deployment) or isinstance(resource, StatefulSet):
             # resource.spec.replicas can be 0, default value is 1
             return resource.spec.replicas if resource.spec.replicas is not None else 1
         elif isinstance(resource, DaemonSet):
@@ -691,7 +694,6 @@ def extract_volumes(resource) -> List[V1Volume]:
             or isinstance(resource, V1DaemonSet)
             or isinstance(resource, V1StatefulSet)
             or isinstance(resource, V1Job)
-            or isinstance(resource, DeploymentConfig)
         ):
             volumes = resource.spec.template.spec.volumes
         elif isinstance(resource, V1Pod):
