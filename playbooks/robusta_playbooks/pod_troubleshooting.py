@@ -68,7 +68,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
     # This should use ephemeral containers, but they aren't in GA yet. To enable them on GCP for example,
     # you need to create a brand new cluster. Therefore we're sticking with regular containers for now
     pod = event.get_pod()
-    logging.warning(f"The python_profiler playbook is deprecated and will be removed in future versions.")
+    logging.warning(f"The python_profiler action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"python_profiler - pod not found for event: {event}")
         return
@@ -180,7 +180,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
     Use this to track memory leaks in your Python application on Kubernetes.
     """
     pod = event.get_pod()
-    logging.warning(f"The python_memory playbook is deprecated and will be removed in future versions.")
+    logging.warning(f"The python_memory action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"python_memory - pod not found for event: {event}")
         return
@@ -296,7 +296,7 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     Create a finding with the stack trace results.
     """
     pod = event.get_pod()
-    logging.warning(f"The debugger_stack_trace playbook is deprecated and will be removed in future versions.")
+    logging.warning(f"The debugger_stack_trace action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"debugger_stack_trace - pod not found for event: {event}")
         return
@@ -382,7 +382,7 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
 
     """
     pod = event.get_pod()
-    logging.warning(f"The python_process_inspector playbook is deprecated and will be removed in future versions.")
+    logging.warning(f"The python_process_inspector action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"advanced_debugging_options - pod not found for event: {event}")
         return
@@ -441,7 +441,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     Now you can use break points and log points in VSCode.
     """
     pod = event.get_pod()
-    logging.warning(f"The python_debugger playbook is deprecated and will be removed in future versions.")
+    logging.warning(f"The python_debugger action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"python_debugger - pod not found for event: {event}")
         return
