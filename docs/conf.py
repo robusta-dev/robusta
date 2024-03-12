@@ -19,7 +19,13 @@
 #
 # add the root robusta directory to the path so that playbooks/ becomes importable
 import sys
+from os import environ
 from pathlib import Path
+
+import sphinx_immaterial.google_fonts as google_fonts
+
+if "ROBUSTA_GOOGLE_FONTS_API_KEY" in environ:
+    google_fonts._GOOGLE_FONTS_API_KEY = environ["ROBUSTA_GOOGLE_FONTS_API_KEY"]
 
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / Path("_ext")))
