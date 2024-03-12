@@ -5,7 +5,7 @@ from typing import Any, List, Optional
 import hikaru
 import kubernetes.client.exceptions
 import yaml
-from hikaru.model.rel_1_26 import ContainerState, ContainerStatus, Pod, PodList
+from hikaru.model.rel_1_26 import ContainerState, ContainerStateTerminated, ContainerStatus, Pod, PodList
 from pydantic import BaseModel
 
 from robusta.api import (
@@ -19,7 +19,6 @@ from robusta.api import (
     ListBlock,
     MarkdownBlock,
     PodContainer,
-    ResourceLoader,
     ResourceNameLister,
     TableBlock,
     action,
@@ -238,15 +237,10 @@ def get_resource_yaml(event: KubernetesResourceEvent):
     name: str = resource.metadata.name
 
     try:
-        loaded_resource = ResourceLoader.read_resource(
-            kind=resource_kind,
-            namespace=namespace,
-            name=name,
-        ).obj
-        if isinstance(loaded_resource, hikaru.HikaruBase):
-            resource_yaml = hikaru.get_yaml(loaded_resource)
+        if isinstance(resource, hikaru.HikaruBase):
+            resource_yaml = hikaru.get_yaml(resource)
         else:
-            resource_yaml = yaml.safe_dump((loaded_resource.as_dict()), indent=2)
+            resource_yaml = yaml.safe_dump((resource.as_dict()), indent=2)
 
         event.add_enrichment(
             [
