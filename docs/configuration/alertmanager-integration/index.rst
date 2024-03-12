@@ -23,7 +23,8 @@ Integrating with Prometheus
 Robusta works best when integrated with Prometheus and AlertManager. When properly setup, Robusta will:
 
 1. Show your existing Prometheus alerts in Robusta, enriched with extra information
-2. Fetch relevant metrics from Prometheus and surface them in the context of related alerts
+2. Fetch relevant metrics from Prometheus and show them on related alerts
+3. Fetch metrics from Prometheus and show them in the Robusta UI (optional, only relevant for UI users)
 
 If you installed Robusta's :ref:`Embedded Prometheus Stack`, then everything is pre-integrated and not setup is necessary. If not, you will need follow a guide below.
 
