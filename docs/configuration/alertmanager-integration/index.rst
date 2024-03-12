@@ -20,9 +20,12 @@ Integrating with Prometheus
 
 
 
-Robusta can :ref:`enhance Prometheus alerts<Enhanced Prometheus Alerts>` with CPU/Memory graphs, Pod logs, Kubernetes events and more. To set this up, follow the guides below.
+Robusta works best when integrated with Prometheus and AlertManager. When properly setup, Robusta will:
 
-If you installed Robusta's :ref:`Embedded Prometheus Stack`, no setup necessary.
+1. Show your existing Prometheus alerts in Robusta, enriched with extra information
+2. Fetch relevant metrics from Prometheus and surface them in the context of related alerts
+
+If you installed Robusta's :ref:`Embedded Prometheus Stack`, then everything is pre-integrated and not setup is necessary. If not, you will need follow a guide below.
 
 
 Setup Instructions
