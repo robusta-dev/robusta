@@ -160,25 +160,29 @@ class Discovery:
                     )
 
                     for dc in deployconfigsRes["items"]:
-                        meta = DictToK8sObj(dc["metadata"], V1ObjectMeta)
-                        spec = dc.get("spec", {})
-                        template = DictToK8sObj(spec.get("template"), V1PodTemplateSpec)
+                        try:
+                            meta = DictToK8sObj(dc["metadata"], V1ObjectMeta)
+                            spec = dc.get("spec", {})
+                            template = DictToK8sObj(spec.get("template"), V1PodTemplateSpec)
 
-                        active_services.extend(
-                            [
-                                Discovery.__create_service_info(
-                                    meta=meta,
-                                    kind="DeploymentConfig",
-                                    containers=template.spec.containers,
-                                    volumes=template.spec.volumes,
-                                    total_pods=spec.get("replicas", 1),
-                                    ready_pods=dc.get("status", {}).get("readyReplicas", 0),
-                                    is_helm_release=is_release_managed_by_helm(
-                                        annotations=meta.annotations, labels=meta.labels
-                                    ),
-                                )
-                            ]
-                        )
+                            active_services.extend(
+                                [
+                                    Discovery.__create_service_info(
+                                        meta=meta,
+                                        kind="DeploymentConfig",
+                                        containers=template.spec.containers,
+                                        volumes=template.spec.volumes,
+                                        total_pods=spec.get("replicas", 1),
+                                        ready_pods=dc.get("status", {}).get("readyReplicas", 0),
+                                        is_helm_release=is_release_managed_by_helm(
+                                            annotations=meta.annotations, labels=meta.labels
+                                        ),
+                                    )
+                                ]
+                            )
+                        except Exception:
+                            logging.exception(msg=f"Faild to parse Deployment config/n {dc}")
+                            continue
 
                     continue_ref = deployconfigsRes["metadata"].get("continue")
                     if not continue_ref:

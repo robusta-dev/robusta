@@ -589,9 +589,12 @@ class DeploymentConfig(HikaruDocumentBase, HikaruCRDDocumentMixin):
         return type("", (object,), {"obj": obj})()
 
 
-def DictToK8sObj(obj: Dict, className):
-    response = type("", (object,), {"data": json.dumps(obj)})()
-    return client.ApiClient().deserialize(response, className)
+def DictToK8sObj(obj: Dict, class_name):
+    # Accessing Kubernetes python client private method directly which is not ideal.
+    # The reason is missing functionality to deserialize a dict to a model.
+    # This is helpful in the case of CRD's and sub models.
+    # This could potentially break on a client upgrade.
+    return client.ApiClient()._ApiClient__deserialize(obj, class_name)
 
 
 hikaru.register_version_kind_class(RobustaPod, Pod.apiVersion, Pod.kind)
