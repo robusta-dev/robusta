@@ -151,13 +151,17 @@ class Discovery:
             continue_ref: Optional[str] = None
             if IS_OPENSHIFT:
                 for _ in range(DISCOVERY_MAX_BATCHES):
-                    deployconfigsRes = client.CustomObjectsApi().list_cluster_custom_object(
-                        group=DeploymentConfig.group,
-                        version=DeploymentConfig.version,
-                        plural=DeploymentConfig.plural,
-                        limit=DISCOVERY_BATCH_SIZE,
-                        _continue=continue_ref,
-                    )
+                    try:
+                        deployconfigsRes = client.CustomObjectsApi().list_cluster_custom_object(
+                            group=DeploymentConfig.group,
+                            version=DeploymentConfig.version,
+                            plural=DeploymentConfig.plural,
+                            limit=DISCOVERY_BATCH_SIZE,
+                            _continue=continue_ref,
+                        )
+                    except Exception:
+                        logging.exception(msg="Faild to list Deployment configs/n from api.")
+                        break
 
                     for dc in deployconfigsRes["items"]:
                         try:
