@@ -163,9 +163,9 @@ class Discovery:
                         logging.exception(msg="Faild to list Deployment configs from api.")
                         break
 
-                    for dc in deployconfigsRes["items"]:
+                    for dc in deployconfigsRes.get("items", []):
                         try:
-                            meta = DictToK8sObj(dc["metadata"], V1ObjectMeta)
+                            meta = DictToK8sObj(dc.get("metadata"), V1ObjectMeta)
                             spec = dc.get("spec", {})
                             template = DictToK8sObj(spec.get("template"), V1PodTemplateSpec)
 
@@ -188,7 +188,7 @@ class Discovery:
                             logging.exception(msg=f"Faild to parse Deployment config/n {dc}")
                             continue
 
-                    continue_ref = deployconfigsRes["metadata"].get("continue")
+                    continue_ref = deployconfigsRes.get("metadata", {}).get("continue")
                     if not continue_ref:
                         break
 

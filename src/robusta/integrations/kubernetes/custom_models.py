@@ -559,7 +559,7 @@ class DeploymentConfigStatus(HikaruBase):
 
 @dataclass
 class DeploymentConfigSpec(HikaruBase):
-    selector: Dict[str, str]
+    selector: Optional[Dict[str, str]]
     strategy: Optional[Dict]
     template: Optional[PodTemplateSpec]
     test: Optional[bool]
