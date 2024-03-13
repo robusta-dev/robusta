@@ -4,6 +4,7 @@ from typing import Optional
 import hikaru
 import pytest
 from hikaru import DiffDetail
+from hikaru.model.rel_1_26 import Deployment
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.playbooks.base_trigger import BaseTrigger, DEFAULT_CHANGE_IGNORE, DEFAULT_CHANGE_INCLUDE
@@ -30,8 +31,8 @@ class TestBaseTrigger:
             data = json.loads(f.read())
         return K8sBaseChangeEvent(
             operation=K8sOperationType.UPDATE,
-            old_obj=hikaru.from_dict(data),
-            obj=hikaru.from_dict(data),
+            old_obj=hikaru.from_dict(data, Deployment),
+            obj=hikaru.from_dict(data, Deployment),
         )
 
     @pytest.fixture()
