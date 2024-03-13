@@ -70,6 +70,11 @@ active_playbooks:
 
 {{- if .Values.customPlaybooks }}
 {{ toYaml .Values.customPlaybooks | indent 2 }}
+{{- if .Values.namedCustomPlaybooks }}
+{{- range $i, $val := .Values.namedCustomPlaybooks }}
+  {{ toYaml $val | nindent 2 }}
+{{ end -}}
+{{- end }}
 {{- end }}
 
 {{- $builtinPlaybooks := .Values.builtinPlaybooks }}
