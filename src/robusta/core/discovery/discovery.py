@@ -160,7 +160,7 @@ class Discovery:
                             _continue=continue_ref,
                         )
                     except Exception:
-                        logging.exception(msg="Faild to list Deployment configs/n from api.")
+                        logging.exception(msg="Faild to list Deployment configs from api.")
                         break
 
                     for dc in deployconfigsRes["items"]:
