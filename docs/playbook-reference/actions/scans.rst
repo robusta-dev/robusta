@@ -63,18 +63,18 @@ To set custom tolerations or a nodeSelector update your ``generated_values.yaml`
         nodeSelector:
           nodeName: "your-selector"
 
-Customizing KRR Algorithm
-============================
-You can customize the KRR scan results displayed in the Robusta UI to suit your needs by adjusting the recommendation algorithm's parameters.
+Customizing Efficiency Recommendations in the Robusta UI
+====================================================================================
+You can tweak KRR's recommendation algorithm to suit your environment using ``krr_args``.
 
-Add the following configuration to the top of your ``generated_values.yaml`` file. All your KRR scans will use these arguments:
+Add the following config to the top of your ``generated_values.yaml`` with your custom values. KRR will use these values every time it sends data to the Robusta UI or other destinations.
 
 .. code-block:: yaml
 
     krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
 
 
-**All Arguments**
+**Common KRR Settings**
 
 .. list-table::
    :widths: 25 10 40 25
