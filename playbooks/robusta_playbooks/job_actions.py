@@ -42,6 +42,7 @@ class JobParams(ActionParams):
     :var active_deadline_seconds: Specifies the duration in seconds relative to the startTime
         that the job may be active before the system tries to terminate it; value must be
         positive integer
+    :var env: Inject environment variables and secrets just like you do with a Kubernetes Job.
 
     :example command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
     """
@@ -58,7 +59,7 @@ class JobParams(ActionParams):
     completion_timeout: int = 300
     backoff_limit: int = None  # type: ignore
     active_deadline_seconds: int = None  # type: ignore
-    env_vars: Optional[List[EnvVar]] = None
+    env: Optional[List[EnvVar]] = None
 
 
 @action
@@ -151,8 +152,8 @@ def __get_alert_env_vars(event: PrometheusKubernetesAlert, params: JobParams) ->
         alert_env_vars.append(EnvVar(name="ALERT_OBJ_NAMESPACE", value=alert_subject.namespace))
     if alert_subject.node:
         alert_env_vars.append(EnvVar(name="ALERT_OBJ_NODE", value=alert_subject.node))
-    if params.env_vars is not None:
-        alert_env_vars.extend(params.env_vars)
+    if params.env is not None:
+        alert_env_vars.extend(params.env)
 
     label_vars = [EnvVar(name=f"ALERT_LABEL_{k.upper()}", value=v) for k, v in event.alert.labels.items()]
     alert_env_vars += label_vars
