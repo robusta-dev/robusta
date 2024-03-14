@@ -32,6 +32,7 @@ from pydantic import BaseModel
 from robusta.core.discovery import utils
 from robusta.core.model.cluster_status import ClusterStats
 from robusta.core.model.env_vars import (
+    ARGO_ROLLOUTS,
     DISABLE_HELM_MONITORING,
     DISCOVERY_BATCH_SIZE,
     DISCOVERY_MAX_BATCHES,
@@ -43,7 +44,7 @@ from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
-from robusta.integrations.kubernetes.custom_models import DeploymentConfig, DictToK8sObj
+from robusta.integrations.kubernetes.custom_models import DeploymentConfig, DictToK8sObj, Rollout
 from robusta.patch.patch import create_monkey_patches
 from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.stack_tracer import StackTracer
@@ -189,6 +190,52 @@ class Discovery:
                             continue
 
                     continue_ref = deployconfigsRes.get("metadata", {}).get("continue")
+                    if not continue_ref:
+                        break
+
+            # rollouts.
+            continue_ref = None
+            if ARGO_ROLLOUTS:
+                for _ in range(DISCOVERY_MAX_BATCHES):
+                    try:
+                        rolloutsRes = client.CustomObjectsApi().list_cluster_custom_object(
+                            group=Rollout.group,
+                            version=Rollout.version,
+                            plural=Rollout.plural,
+                            limit=DISCOVERY_BATCH_SIZE,
+                            _continue=continue_ref,
+                        )
+                    except Exception:
+                        logging.exception(msg="Faild to list Argo Rollouts from api.")
+                        break
+
+                    for ro in rolloutsRes.get("items", []):
+                        try:
+                            meta = DictToK8sObj(ro.get("metadata"), V1ObjectMeta)
+                            spec = ro.get("spec", {})
+                            template = DictToK8sObj(spec.get("template"), V1PodTemplateSpec)
+                            status = ro.get("status", {})
+
+                            active_services.extend(
+                                [
+                                    Discovery.__create_service_info(
+                                        meta=meta,
+                                        kind=Rollout.kind,
+                                        containers=template.spec.containers if template else [],
+                                        volumes=template.spec.volumes if template else [],
+                                        total_pods=status.get("replicas", 1),
+                                        ready_pods=status.get("readyReplicas", 0),
+                                        is_helm_release=is_release_managed_by_helm(
+                                            annotations=meta.annotations, labels=meta.labels
+                                        ),
+                                    )
+                                ]
+                            )
+                        except Exception:
+                            logging.exception(msg=f"Faild to parse Rollout/n {ro}")
+                            continue
+
+                    continue_ref = rolloutsRes.get("metadata", {}).get("continue")
                     if not continue_ref:
                         break
 

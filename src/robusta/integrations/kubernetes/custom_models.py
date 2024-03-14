@@ -1,8 +1,7 @@
-import json
 import logging
 import re
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
@@ -597,7 +596,57 @@ def DictToK8sObj(obj: Dict, class_name):
     return client.ApiClient()._ApiClient__deserialize(obj, class_name)
 
 
+@dataclass
+class RolloutSpec(HikaruBase):
+    analysis: Optional[Dict] = None
+    minReadySeconds: Optional[int] = 0
+
+    paused: Optional[bool] = False
+    progressDeadlineSeconds: Optional[int] = 600
+    progressDeadlineAbort: Optional[bool] = False
+    replicas: Optional[int] = 1
+    restartAt: Optional[str] = None
+    revisionHistoryLimit: Optional[int] = 10
+    rollbackWindow: Optional[Dict] = None
+    selector: Optional[LabelSelector] = None
+    strategy: Optional[Dict] = None
+    template: Optional[PodTemplateSpec] = None
+    workloadRef: Optional[Dict] = None
+
+
+# https://github.com/argoproj/argo-rollouts/blob/master/manifests/crds/rollout-crd.yaml
+@dataclass
+class Rollout(HikaruDocumentBase, HikaruCRDDocumentMixin):
+    plural: ClassVar[str] = "rollouts"
+    group: ClassVar[str] = "argoproj.io"
+    version: ClassVar[str] = "v1alpha1"
+
+    metadata: ObjectMeta
+    spec: Optional[RolloutSpec] = None
+    status: Optional[Dict] = field(default_factory=dict)
+    apiVersion: str = f"{group}/{version}"
+    kind: str = "Rollout"
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self.spec and not self.spec.selector:
+            selector: str = self.status.get("selector", "")
+            if selector:
+                matchLabels = {}
+                for label in selector.split(","):
+                    parts = label.partition("=")
+                    matchLabels[parts[0]] = parts[2]
+
+                self.spec.selector = LabelSelector([], matchLabels)
+
+    @classmethod
+    def readNamespaced(self, name: str, namespace: str):
+        obj = Rollout(metadata=ObjectMeta(name=name, namespace=namespace)).read()
+        return type("", (object,), {"obj": obj})()
+
+
 hikaru.register_version_kind_class(RobustaPod, Pod.apiVersion, Pod.kind)
 hikaru.register_version_kind_class(RobustaDeployment, Deployment.apiVersion, Deployment.kind)
 hikaru.register_version_kind_class(RobustaJob, Job.apiVersion, Job.kind)
 register_crd_class(DeploymentConfig, DeploymentConfig.plural, is_namespaced=True)
+register_crd_class(Rollout, Rollout.plural, is_namespaced=True)
