@@ -1,6 +1,7 @@
 from hikaru.model.rel_1_26 import ObjectReference, Pod
 
 from robusta.core.reporting.base import FindingSubject
+from robusta.core.reporting.findings import FindingOwner
 from robusta.core.reporting.consts import FindingSubjectType
 
 
@@ -23,6 +24,7 @@ class KubeObjFindingSubject(FindingSubject):
             node=node_name,
             labels=obj.metadata.labels,
             annotations=obj.metadata.annotations,
+            owner=FindingOwner(owner_references=obj.metadata.ownerReferences)
         )
 
     @staticmethod
@@ -49,4 +51,5 @@ class PodFindingSubject(FindingSubject):
             node=pod.spec.nodeName,
             labels=pod.metadata.labels,
             annotations=pod.metadata.annotations,
+            owner=FindingOwner(owner_references=pod.metadata.ownerReferences)
         )

@@ -47,6 +47,7 @@ class FindingSubjectType(Enum):
     TYPE_DAEMONSET = "daemonset"
     TYPE_STATEFULSET = "statefulset"
     TYPE_HPA = "horizontalpodautoscaler"
+    TYPE_REPLICASET = "replicaset"
     TYPE_HELM_RELEASES = "helmreleases"
 
     @staticmethod
@@ -62,6 +63,8 @@ class FindingSubjectType(Enum):
             return FindingSubjectType.TYPE_JOB
         elif kind == "daemonset":
             return FindingSubjectType.TYPE_DAEMONSET
+        elif kind == "replicaset":
+            return FindingSubjectType.TYPE_REPLICASET
         elif kind == "statefulset":
             return FindingSubjectType.TYPE_STATEFULSET
         elif kind == "horizontalpodautoscaler":
