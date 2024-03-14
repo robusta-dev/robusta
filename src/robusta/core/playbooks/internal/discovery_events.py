@@ -16,6 +16,7 @@ from robusta.api import (
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.playbooks.common import get_event_timestamp, get_events_list
 from robusta.core.reporting.base import EnrichmentType
+from robusta.core.reporting.findings import FindingOwner
 
 
 @action
@@ -65,6 +66,7 @@ def create_debug_event_finding(event: Event):
     """
     k8s_obj = event.regarding
     subject_type = FindingSubjectType.from_kind(k8s_obj.kind.lower()) if k8s_obj.kind else FindingSubjectType.TYPE_NONE
+
     finding = Finding(
         title=f"{event.reason} {event.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
         description=event.note,
@@ -76,10 +78,13 @@ def create_debug_event_finding(event: Event):
             k8s_obj.name,
             subject_type,
             k8s_obj.namespace,
+            owner=FindingOwner(owner_references=event.metadata.ownerReferences)
         ),
         creation_date=get_event_timestamp(event),
     )
-    finding.service_key = TopServiceResolver.guess_service_key(name=k8s_obj.name, namespace=k8s_obj.namespace)
+    finding.service_key = TopServiceResolver.guess_service_key(name=k8s_obj.name, namespace=k8s_obj.namespace,
+                                                               kind=k8s_obj.kind,
+                                                               owner=finding.subject.owner)
     return finding
 
 
