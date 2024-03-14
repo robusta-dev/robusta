@@ -64,8 +64,10 @@ def build_selector_query(selector: Union[LabelSelector, Dict]) -> str:
         label_filters = [f"{label[0]}={label[1]}" for label in selector.matchLabels.items()]
         label_filters.extend([_get_match_expression_filter(expression) for expression in selector.matchExpressions])
         return ",".join(label_filters)
-    else:
+    elif isinstance(selector, Dict):
         return ",".join([f"{k}={v}" for k, v in selector.items()])
+    else:
+        return ""
 
 
 def list_pods_using_selector(
@@ -627,8 +629,9 @@ class Rollout(HikaruDocumentBase, HikaruCRDDocumentMixin):
     apiVersion: str = f"{group}/{version}"
     kind: str = "Rollout"
 
-    def __post_init__(self):
-        super().__post_init__()
+    # Rollout spec can include a reference to an existing deployment to control it.
+    # In that case spec.template is None and selector can be find in the status.
+    def validate_selector(self):
         if self.spec and not self.spec.selector:
             selector: str = self.status.get("selector", "")
             if selector:
@@ -642,6 +645,7 @@ class Rollout(HikaruDocumentBase, HikaruCRDDocumentMixin):
     @classmethod
     def readNamespaced(self, name: str, namespace: str):
         obj = Rollout(metadata=ObjectMeta(name=name, namespace=namespace)).read()
+        obj.validate_selector()
         return type("", (object,), {"obj": obj})()
 
 
