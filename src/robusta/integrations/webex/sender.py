@@ -75,7 +75,7 @@ class WebexSender:
                     {
                         "type": "Column",
                         "width": "stretch",
-                        "items": [{"type": "TextBlock", "text": header, "wrap": "true"}],
+                        "items": [{"type": "TextBlock", "text": header, "wrap": True}],
                     }
                 )
             # seperating each row to add below headers of column
@@ -87,7 +87,7 @@ class WebexSender:
                         {
                             "type": "Column",
                             "width": "stretch",
-                            "items": [{"type": "TextBlock", "text": text, "wrap": "true"}],
+                            "items": [{"type": "TextBlock", "text": text, "wrap": True}],
                         }
                     )
                 container["items"].append(row_json)
@@ -98,8 +98,8 @@ class WebexSender:
         message_content_container = {
             "type": "Container",
             "items": [
-                {"type": "TextBlock", "text": message_content, "wrap": "true"},
-                {"type": "TextBlock", "text": description, "wrap": "true"},
+                {"type": "TextBlock", "text": message_content, "wrap": True},
+                {"type": "TextBlock", "text": description, "wrap": True},
             ],
         }
         return message_content_container

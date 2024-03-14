@@ -3,7 +3,7 @@ MS Teams
 
 Robusta can report issues and events in your Kubernetes cluster to a MS Teams webhook.
 
-.. image:: /images/deployment-babysitter-teams.png
+.. image:: /images/msteams_sink/deployment-babysitter-teams.png
     :width: 600
     :align: center
 
@@ -19,14 +19,19 @@ Configuring the MS Teams sink
         sinksConfig:
         - ms_teams_sink:
             name: main_ms_teams_sink
-            webhook_url: teams-incoming-webhook  # see video below
+            webhook_url: teams-incoming-webhook  # see instructions below
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
-Creating a webhook url in MS Teams
+Obtaining a webhook URL
 -----------------------------------
-MS Teams isn't the most intuitive, so we've created a video on getting the ``webhook_url`` parameter from MS Teams itself:
 
-.. raw:: html
+- Choose a channel and click "Manage Channel".
+- Click "Connectors->Edit", and configure an "Incoming Webhook"
+- Fill out the name ``robusta``.
+- Optional: upload the :download:`robusta logo </images/msteams_sink/msteams_robusta_logo.png>` for the connector’s image.
+- Copy the ``webhook_url``.
 
-    <div style="position: relative; padding-bottom: 56.25%; height: 0;"><iframe src="https://www.loom.com/embed/4edd6506369041e08016329fe92e7720" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+.. image:: /images/msteams_sink/msteam_get_webhook_url.gif
+    :width: 1024
+    :align: center
