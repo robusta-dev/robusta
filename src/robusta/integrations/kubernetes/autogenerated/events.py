@@ -33,7 +33,13 @@ from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
 from ....core.reporting.base import FindingSubject
 from ....core.reporting.consts import FindingSubjectType, FindingSource
 from ....core.reporting.finding_subjects import KubeObjFindingSubject
-from robusta.integrations.kubernetes.custom_models import RobustaPod, RobustaDeployment, RobustaJob, DeploymentConfig
+from robusta.integrations.kubernetes.custom_models import (
+    RobustaPod,
+    RobustaDeployment,
+    RobustaJob,
+    DeploymentConfig,
+    Rollout,
+)
 from hikaru.model.rel_1_26.v1 import ClusterRole as v1ClusterRole
 from hikaru.model.rel_1_26.v1 import ClusterRoleBinding as v1ClusterRoleBinding
 from hikaru.model.rel_1_26.v1 import ConfigMap as v1ConfigMap
@@ -76,6 +82,7 @@ LOADERS_MAPPINGS = {
     "configmap": (True, ConfigMap.readNamespacedConfigMap),
     "ingress": (True, Ingress.readNamespacedIngress),
     "deploymentconfig": (True, DeploymentConfig.readNamespaced),
+    "rollout": (True, Rollout.readNamespaced),
 }
 
 
@@ -122,6 +129,7 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             ConfigMap,
             Ingress,
             DeploymentConfig,
+            Rollout,
         ]
     ] = None
 
@@ -148,6 +156,7 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             ConfigMap,
             Ingress,
             DeploymentConfig,
+            Rollout,
         ],
         named_sinks: List[str],
     ):
@@ -178,6 +187,7 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             ConfigMap,
             Ingress,
             DeploymentConfig,
+            Rollout,
         ]
     ]:
         return self.obj
