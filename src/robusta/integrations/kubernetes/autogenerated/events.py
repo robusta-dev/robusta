@@ -2,40 +2,45 @@
 
 import logging
 import traceback
-from abc import abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Union
-
+from abc import abstractmethod
 from hikaru.model.rel_1_26 import (
-    ClusterRole,
-    ClusterRoleBinding,
-    ConfigMap,
-    DaemonSet,
-    Deployment,
-    Event,
-    HorizontalPodAutoscaler,
-    Ingress,
-    Job,
-    Namespace,
-    NetworkPolicy,
-    Node,
-    PersistentVolume,
-    PersistentVolumeClaim,
     Pod,
     ReplicaSet,
-    Service,
-    ServiceAccount,
+    DaemonSet,
+    Deployment,
     StatefulSet,
+    Service,
+    Event,
+    HorizontalPodAutoscaler,
+    Node,
+    ClusterRole,
+    ClusterRoleBinding,
+    Job,
+    Namespace,
+    ServiceAccount,
+    PersistentVolume,
+    PersistentVolumeClaim,
+    NetworkPolicy,
+    ConfigMap,
+    Ingress,
 )
+from hikaru.utils import Response
+from pydantic import BaseModel
+from typing import Union, Optional, List
+from ..base_event import K8sBaseChangeEvent
+from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
+from ....core.reporting.base import FindingSubject
+from ....core.reporting.consts import FindingSubjectType, FindingSource
+from ....core.reporting.finding_subjects import KubeObjFindingSubject
+from robusta.integrations.kubernetes.custom_models import RobustaPod, RobustaDeployment, RobustaJob, DeploymentConfig
 from hikaru.model.rel_1_26.v1 import ClusterRole as v1ClusterRole
 from hikaru.model.rel_1_26.v1 import ClusterRoleBinding as v1ClusterRoleBinding
 from hikaru.model.rel_1_26.v1 import ConfigMap as v1ConfigMap
 from hikaru.model.rel_1_26.v1 import DaemonSet as v1DaemonSet
 from hikaru.model.rel_1_26.v1 import Deployment as v1Deployment
 from hikaru.model.rel_1_26.v1 import Event as v1Event
-from hikaru.model.rel_1_26.v1 import (
-    HorizontalPodAutoscaler as v1HorizontalPodAutoscaler,
-)
+from hikaru.model.rel_1_26.v1 import HorizontalPodAutoscaler as v1HorizontalPodAutoscaler
 from hikaru.model.rel_1_26.v1 import Ingress as v1Ingress
 from hikaru.model.rel_1_26.v1 import Job as v1Job
 from hikaru.model.rel_1_26.v1 import Namespace as v1Namespace
@@ -48,21 +53,7 @@ from hikaru.model.rel_1_26.v1 import ReplicaSet as v1ReplicaSet
 from hikaru.model.rel_1_26.v1 import Service as v1Service
 from hikaru.model.rel_1_26.v1 import ServiceAccount as v1ServiceAccount
 from hikaru.model.rel_1_26.v1 import StatefulSet as v1StatefulSet
-from hikaru.utils import Response
-from pydantic import BaseModel
 
-from robusta.integrations.kubernetes.custom_models import (
-    RobustaDeployment,
-    RobustaJob,
-    RobustaPod,
-    DeploymentConfig,
-)
-
-from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
-from ....core.reporting.base import FindingSubject
-from ....core.reporting.consts import FindingSource, FindingSubjectType
-from ....core.reporting.finding_subjects import KubeObjFindingSubject
-from ..base_event import K8sBaseChangeEvent
 
 LOADERS_MAPPINGS = {
     "pod": (True, RobustaPod.readNamespacedPod),
