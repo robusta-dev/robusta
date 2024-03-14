@@ -71,7 +71,8 @@ Add the following config to the top of your ``generated_values.yaml`` with your 
 
 .. code-block:: yaml
 
-    krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
+    globalConfig:
+      krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
 
 
 **Common KRR Settings**
