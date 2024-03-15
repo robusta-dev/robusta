@@ -4,6 +4,7 @@ import logging
 import traceback
 from dataclasses import dataclass
 from abc import abstractmethod
+from hikaru import DiffDetail
 from hikaru.model.rel_1_26 import Pod,ReplicaSet,DaemonSet,Deployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,Job,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress
 from hikaru.utils import Response
 from pydantic import BaseModel
@@ -123,7 +124,7 @@ class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
     obj_filtered: Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1ConfigMap,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Ingress,v1Namespace,v1NetworkPolicy,v1Node,v1PersistentVolume,v1PersistentVolumeClaim,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet]] = None
     old_obj: Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1ConfigMap,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Ingress,v1Namespace,v1NetworkPolicy,v1Node,v1PersistentVolume,v1PersistentVolumeClaim,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet]] = None
     old_obj_filtered: Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1ConfigMap,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Ingress,v1Namespace,v1NetworkPolicy,v1Node,v1PersistentVolume,v1PersistentVolumeClaim,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_resource(self) -> Optional[Union[RobustaDeployment,RobustaJob,RobustaPod,v1ClusterRole,v1ClusterRoleBinding,v1ConfigMap,v1DaemonSet,v1Event,v1HorizontalPodAutoscaler,v1Ingress,v1Namespace,v1NetworkPolicy,v1Node,v1PersistentVolume,v1PersistentVolumeClaim,v1ReplicaSet,v1Service,v1ServiceAccount,v1StatefulSet]]:
         return self.obj
@@ -169,7 +170,7 @@ class PodChangeEvent(PodEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[RobustaPod] = None
     old_obj: Optional[RobustaPod] = None
     old_obj_filtered: Optional[RobustaPod] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_pod(self) -> Optional[RobustaPod]:
         return self.obj
@@ -225,7 +226,7 @@ class ReplicaSetChangeEvent(ReplicaSetEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1ReplicaSet]] = None
     old_obj: Optional[Union[v1ReplicaSet]] = None
     old_obj_filtered: Optional[Union[v1ReplicaSet]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_replicaset(self) -> Optional[Union[v1ReplicaSet]]:
         return self.obj
@@ -281,7 +282,7 @@ class DaemonSetChangeEvent(DaemonSetEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1DaemonSet]] = None
     old_obj: Optional[Union[v1DaemonSet]] = None
     old_obj_filtered: Optional[Union[v1DaemonSet]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_daemonset(self) -> Optional[Union[v1DaemonSet]]:
         return self.obj
@@ -337,7 +338,7 @@ class DeploymentChangeEvent(DeploymentEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[RobustaDeployment] = None
     old_obj: Optional[RobustaDeployment] = None
     old_obj_filtered: Optional[RobustaDeployment] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_deployment(self) -> Optional[RobustaDeployment]:
         return self.obj
@@ -393,7 +394,7 @@ class StatefulSetChangeEvent(StatefulSetEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1StatefulSet]] = None
     old_obj: Optional[Union[v1StatefulSet]] = None
     old_obj_filtered: Optional[Union[v1StatefulSet]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_statefulset(self) -> Optional[Union[v1StatefulSet]]:
         return self.obj
@@ -449,7 +450,7 @@ class ServiceChangeEvent(ServiceEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1Service]] = None
     old_obj: Optional[Union[v1Service]] = None
     old_obj_filtered: Optional[Union[v1Service]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_service(self) -> Optional[Union[v1Service]]:
         return self.obj
@@ -505,7 +506,7 @@ class EventChangeEvent(EventEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1Event]] = None
     old_obj: Optional[Union[v1Event]] = None
     old_obj_filtered: Optional[Union[v1Event]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_event(self) -> Optional[Union[v1Event]]:
         return self.obj
@@ -561,7 +562,7 @@ class HorizontalPodAutoscalerChangeEvent(HorizontalPodAutoscalerEvent, Kubernete
     obj_filtered: Optional[Union[v1HorizontalPodAutoscaler]] = None
     old_obj: Optional[Union[v1HorizontalPodAutoscaler]] = None
     old_obj_filtered: Optional[Union[v1HorizontalPodAutoscaler]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_horizontalpodautoscaler(self) -> Optional[Union[v1HorizontalPodAutoscaler]]:
         return self.obj
@@ -617,7 +618,7 @@ class NodeChangeEvent(NodeEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1Node]] = None
     old_obj: Optional[Union[v1Node]] = None
     old_obj_filtered: Optional[Union[v1Node]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_node(self) -> Optional[Union[v1Node]]:
         return self.obj
@@ -673,7 +674,7 @@ class ClusterRoleChangeEvent(ClusterRoleEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1ClusterRole]] = None
     old_obj: Optional[Union[v1ClusterRole]] = None
     old_obj_filtered: Optional[Union[v1ClusterRole]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_clusterrole(self) -> Optional[Union[v1ClusterRole]]:
         return self.obj
@@ -729,7 +730,7 @@ class ClusterRoleBindingChangeEvent(ClusterRoleBindingEvent, KubernetesAnyChange
     obj_filtered: Optional[Union[v1ClusterRoleBinding]] = None
     old_obj: Optional[Union[v1ClusterRoleBinding]] = None
     old_obj_filtered: Optional[Union[v1ClusterRoleBinding]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_clusterrolebinding(self) -> Optional[Union[v1ClusterRoleBinding]]:
         return self.obj
@@ -785,7 +786,7 @@ class JobChangeEvent(JobEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[RobustaJob] = None
     old_obj: Optional[RobustaJob] = None
     old_obj_filtered: Optional[RobustaJob] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_job(self) -> Optional[RobustaJob]:
         return self.obj
@@ -841,7 +842,7 @@ class NamespaceChangeEvent(NamespaceEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1Namespace]] = None
     old_obj: Optional[Union[v1Namespace]] = None
     old_obj_filtered: Optional[Union[v1Namespace]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_namespace(self) -> Optional[Union[v1Namespace]]:
         return self.obj
@@ -897,7 +898,7 @@ class ServiceAccountChangeEvent(ServiceAccountEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1ServiceAccount]] = None
     old_obj: Optional[Union[v1ServiceAccount]] = None
     old_obj_filtered: Optional[Union[v1ServiceAccount]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_serviceaccount(self) -> Optional[Union[v1ServiceAccount]]:
         return self.obj
@@ -953,7 +954,7 @@ class PersistentVolumeChangeEvent(PersistentVolumeEvent, KubernetesAnyChangeEven
     obj_filtered: Optional[Union[v1PersistentVolume]] = None
     old_obj: Optional[Union[v1PersistentVolume]] = None
     old_obj_filtered: Optional[Union[v1PersistentVolume]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_persistentvolume(self) -> Optional[Union[v1PersistentVolume]]:
         return self.obj
@@ -1009,7 +1010,7 @@ class PersistentVolumeClaimChangeEvent(PersistentVolumeClaimEvent, KubernetesAny
     obj_filtered: Optional[Union[v1PersistentVolumeClaim]] = None
     old_obj: Optional[Union[v1PersistentVolumeClaim]] = None
     old_obj_filtered: Optional[Union[v1PersistentVolumeClaim]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_persistentvolumeclaim(self) -> Optional[Union[v1PersistentVolumeClaim]]:
         return self.obj
@@ -1065,7 +1066,7 @@ class NetworkPolicyChangeEvent(NetworkPolicyEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1NetworkPolicy]] = None
     old_obj: Optional[Union[v1NetworkPolicy]] = None
     old_obj_filtered: Optional[Union[v1NetworkPolicy]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_networkpolicy(self) -> Optional[Union[v1NetworkPolicy]]:
         return self.obj
@@ -1121,7 +1122,7 @@ class ConfigMapChangeEvent(ConfigMapEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1ConfigMap]] = None
     old_obj: Optional[Union[v1ConfigMap]] = None
     old_obj_filtered: Optional[Union[v1ConfigMap]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_configmap(self) -> Optional[Union[v1ConfigMap]]:
         return self.obj
@@ -1177,7 +1178,7 @@ class IngressChangeEvent(IngressEvent, KubernetesAnyChangeEvent):
     obj_filtered: Optional[Union[v1Ingress]] = None
     old_obj: Optional[Union[v1Ingress]] = None
     old_obj_filtered: Optional[Union[v1Ingress]] = None
-    filtered_diffs: Optional[List] = None  # TODO
+    filtered_diffs: Optional[List[DiffDetail]] = None
 
     def get_ingress(self) -> Optional[Union[v1Ingress]]:
         return self.obj
