@@ -43,7 +43,6 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         return
 
     if not isinstance(getattr(event, "filtered_diffs"), list):
-        # TODO better warning message
         logging.warning(f"resource_babysitter running for an unsupported event type {event.__class__.__name__}")
         return
 
