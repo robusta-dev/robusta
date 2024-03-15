@@ -4,7 +4,7 @@ from typing import Any, List, Optional
 
 import hikaru
 import kubernetes.client.exceptions
-from hikaru.model.rel_1_26 import ContainerState, ContainerStatus, Pod, PodList
+from hikaru.model.rel_1_26 import ContainerState, ContainerStateTerminated, ContainerStatus, Pod, PodList
 from pydantic import BaseModel
 
 from robusta.api import (
@@ -18,7 +18,6 @@ from robusta.api import (
     ListBlock,
     MarkdownBlock,
     PodContainer,
-    ResourceLoader,
     ResourceNameLister,
     TableBlock,
     action,
@@ -73,7 +72,7 @@ class RelatedPod(BaseModel):
     statusReason: Optional[str] = None
 
 
-supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node"]
+supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node", "DeploymentConfig"]
 
 
 def to_pod_row(pod: Pod, cluster_name: str) -> List:
@@ -237,12 +236,7 @@ def get_resource_yaml(event: KubernetesResourceEvent):
     name: str = resource.metadata.name
 
     try:
-        loaded_resource = ResourceLoader.read_resource(
-            kind=resource_kind,
-            namespace=namespace,
-            name=name,
-        ).obj
-        resource_yaml = hikaru.get_yaml(loaded_resource)
+        resource_yaml = hikaru.get_yaml(resource)
 
         event.add_enrichment(
             [

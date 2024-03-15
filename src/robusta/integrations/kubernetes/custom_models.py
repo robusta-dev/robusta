@@ -1,13 +1,15 @@
-import json
 import logging
 import re
 import time
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Type, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import hikaru
 import yaml
+from hikaru.crd import HikaruCRDDocumentMixin, register_crd_class
 from hikaru.model.rel_1_26 import *  # * import is necessary for hikaru subclasses to work
+from kubernetes import client
 from kubernetes.client import ApiException
 from pydantic import BaseModel
 
@@ -57,13 +59,18 @@ def _get_match_expression_filter(expression: LabelSelectorRequirement) -> str:
     return f"{expression.key} {expression.operator} ({values})"
 
 
-def build_selector_query(selector: LabelSelector) -> str:
-    label_filters = [f"{label[0]}={label[1]}" for label in selector.matchLabels.items()]
-    label_filters.extend([_get_match_expression_filter(expression) for expression in selector.matchExpressions])
-    return ",".join(label_filters)
+def build_selector_query(selector: Union[LabelSelector, Dict]) -> str:
+    if isinstance(selector, LabelSelector):
+        label_filters = [f"{label[0]}={label[1]}" for label in selector.matchLabels.items()]
+        label_filters.extend([_get_match_expression_filter(expression) for expression in selector.matchExpressions])
+        return ",".join(label_filters)
+    else:
+        return ",".join([f"{k}={v}" for k, v in selector.items()])
 
 
-def list_pods_using_selector(namespace: str, selector: LabelSelector, field_selector: str = None) -> List[Pod]:
+def list_pods_using_selector(
+    namespace: str, selector: Union[LabelSelector, Dict], field_selector: str = None
+) -> List[Pod]:
     labels_selector = build_selector_query(selector)
     return PodList.listNamespacedPod(
         namespace=namespace,
@@ -530,6 +537,66 @@ class RobustaJob(Job):
         return cls.run_simple_job_spec(spec, name=image, timeout=timeout)
 
 
+@dataclass
+class DeploymentTriggerPolicy(HikaruBase):
+    imageChangeParams: Optional[Dict]
+    type: Optional[str]
+
+
+@dataclass
+class DeploymentConfigStatus(HikaruBase):
+    conditions: Optional[List[DeploymentCondition]]
+    details: Optional[Dict]
+    updatedReplicas: Optional[int]
+    readyReplicas: Optional[int]
+    availableReplicas: int = 0
+    latestVersion: int = 0
+    observedGeneration: int = 0
+    replicas: int = 0
+    unavailableReplicas: int = 0
+
+
+@dataclass
+class DeploymentConfigSpec(HikaruBase):
+    selector: Optional[Dict[str, str]]
+    strategy: Optional[Dict]
+    template: Optional[PodTemplateSpec]
+    test: Optional[bool]
+    triggers: Optional[List[DeploymentTriggerPolicy]] = None
+    minReadySeconds: Optional[int] = 0
+    paused: Optional[bool] = None
+    replicas: Optional[int] = None
+    revisionHistoryLimit: Optional[int] = None
+
+
+# https://docs.openshift.com/container-platform/3.11/rest_api/apps_openshift_io/deploymentconfig-apps-openshift-io-v1.html
+@dataclass
+class DeploymentConfig(HikaruDocumentBase, HikaruCRDDocumentMixin):
+    plural: ClassVar[str] = "deploymentconfigs"
+    group: ClassVar[str] = "apps.openshift.io"
+    version: ClassVar[str] = "v1"
+
+    metadata: ObjectMeta
+    spec: Optional[DeploymentConfigSpec] = None
+    status: Optional[DeploymentConfigStatus] = None
+    apiVersion: str = f"{group}/{version}"
+    kind: str = "DeploymentConfig"
+
+    @classmethod
+    def readNamespaced(self, name: str, namespace: str):
+        obj = DeploymentConfig(metadata=ObjectMeta(name=name, namespace=namespace)).read()
+        return type("", (object,), {"obj": obj})()
+
+
+def DictToK8sObj(obj: Dict, class_name):
+    # Accessing Kubernetes python client private method directly which is not ideal.
+    # The reason is missing functionality to deserialize a dict to a model.
+    # This is helpful in the case of CRD's and sub models.
+    # This could potentially break on a client upgrade.
+    return client.ApiClient()._ApiClient__deserialize(obj, class_name)
+
+
 hikaru.register_version_kind_class(RobustaPod, Pod.apiVersion, Pod.kind)
 hikaru.register_version_kind_class(RobustaDeployment, Deployment.apiVersion, Deployment.kind)
 hikaru.register_version_kind_class(RobustaJob, Job.apiVersion, Job.kind)
+register_crd_class(DeploymentConfig, DeploymentConfig.plural, is_namespaced=True)

@@ -199,7 +199,7 @@ class RobustaSink(SinkBase, EventHandler):
     ):
         try:
             if isinstance(new_resource, (Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod)):
-                self.__publish_single_service(Discovery.create_service_info(new_resource), operation)
+                self.__publish_single_service(Discovery.create_service_info_from_hikaru(new_resource), operation)
             elif isinstance(new_resource, Node):
                 self.__update_node(new_resource, operation)
             # if the jobs cache isn't initalized you will have exceptions in __update_job
