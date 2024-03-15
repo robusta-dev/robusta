@@ -7,22 +7,30 @@ from hikaru import DiffDetail
 from hikaru.model.rel_1_26 import Deployment
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
-from robusta.core.playbooks.base_trigger import BaseTrigger, DEFAULT_CHANGE_IGNORE, DEFAULT_CHANGE_INCLUDE
+from robusta.integrations.kubernetes.base_triggers import (
+    K8sBaseTrigger,
+    DEFAULT_CHANGE_IGNORE,
+    DEFAULT_CHANGE_INCLUDE,
+    K8sTriggerChangeFilters,
+)
 from robusta.integrations.kubernetes.base_event import K8sBaseChangeEvent
 
 
-class TestBaseTrigger:
+class TestK8sBaseTrigger:
+    def test_init_no_change_filters(self):
+        trigger = K8sBaseTrigger(kind="hello")
+        assert trigger.change_filters is None
+
     @pytest.mark.parametrize(
         "input_change_filters,expected_change_filters",
         [
-            (None, {"include": DEFAULT_CHANGE_INCLUDE, "ignore": DEFAULT_CHANGE_IGNORE}),
             ({"include": ["a", "b"]}, {"include": ["a", "b"], "ignore": DEFAULT_CHANGE_IGNORE}),
             ({"ignore": ["c", "d"]}, {"include": DEFAULT_CHANGE_INCLUDE, "ignore": ["c", "d"]}),
             ({"include": ["x", "y"], "ignore": ["p", "q"]}, {"include": ["x", "y"], "ignore": ["p", "q"]}),
         ],
     )
     def test_init(self, input_change_filters, expected_change_filters):
-        trigger = BaseTrigger(change_filters=input_change_filters)
+        trigger = K8sBaseTrigger(kind="hello", change_filters=K8sTriggerChangeFilters(**input_change_filters))
         assert trigger.change_filters == expected_change_filters
 
     @pytest.fixture()
@@ -37,7 +45,7 @@ class TestBaseTrigger:
 
     @pytest.fixture()
     def trigger(self):
-        return BaseTrigger()  # change_filters initialized to defaults
+        return K8sBaseTrigger(change_filters=K8sTriggerChangeFilters(), kind="hello")
 
     def _set_attr_by_path(self, obj, field_path: str, new_val):
         attr_path = field_path.split(".")
@@ -50,9 +58,9 @@ class TestBaseTrigger:
         if change_field:
             self._set_attr_by_path(event.obj, change_field, 987654321)
         assert trigger.check_change_filters(event) is False
-        assert not hasattr(event, "obj_filtered")
-        assert not hasattr(event, "old_obj_filtered")
-        assert not hasattr(event, "filtered_diffs")
+        assert hasattr(event, "obj_filtered")
+        assert hasattr(event, "old_obj_filtered")
+        assert event.filtered_diffs == []
 
     @pytest.mark.parametrize(
         "change_field,new_value,old_value,expected_change_path,expected_diff_new_value",
