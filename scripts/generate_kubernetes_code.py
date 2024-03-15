@@ -203,7 +203,10 @@ def autogenerate_events(f: TextIO):
         @dataclass
         class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             obj: Optional[{f"Union[{','.join(all_versioned_resources)}]"}] = None
+            obj_filtered: Optional[{f"Union[{','.join(all_versioned_resources)}]"}] = None
             old_obj: Optional[{f"Union[{','.join(all_versioned_resources)}]"}] = None
+            old_obj_filtered: Optional[{f"Union[{','.join(all_versioned_resources)}]"}] = None
+            filtered_diffs: Optional[List] = None  # TODO
 
             def get_resource(self) -> Optional[{f"Union[{','.join(all_versioned_resources)}]"}]:
                 return self.obj
@@ -267,7 +270,10 @@ def autogenerate_events(f: TextIO):
             @dataclass
             class {resource}ChangeEvent({resource}Event, KubernetesAnyChangeEvent):
                 obj: Optional[{model_class_str}] = None
+                obj_filtered: Optional[{model_class_str}] = None
                 old_obj: Optional[{model_class_str}] = None
+                old_obj_filtered: Optional[{model_class_str}] = None
+                filtered_diffs: Optional[List] = None  # TODO
 
                 def get_{resource.lower()}(self) -> Optional[{model_class_str}]:
                     return self.obj

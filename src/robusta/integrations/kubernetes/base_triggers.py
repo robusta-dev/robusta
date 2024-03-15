@@ -176,16 +176,23 @@ class K8sBaseTrigger(BaseTrigger):
         Sets appropriate fields related to filtered object data on the execution_event in
         order for them to be accessible downstream in playbooks."""
 
+        if not self.change_filters:
+            execution_event.obj_filtered = execution_event.obj
+            execution_event.old_obj_filtered = execution_event.old_obj_filtered
+            execution_event.filtered_diffs = execution_event.obj.diff(execution_event.old_obj_filtered)
+            return True
+
+        result = True
         filtered_diffs = []
-        obj_filtered = duplicate_without_fields(execution_event.obj, self.change_filters["ignore"])
-        old_obj_filtered = duplicate_without_fields(execution_event.old_obj, self.change_filters["ignore"])
+        obj_filtered = duplicate_without_fields(execution_event.obj, self.change_filters.ignore)
+        old_obj_filtered = duplicate_without_fields(execution_event.old_obj, self.change_filters.ignore)
 
         if execution_event.operation == K8sOperationType.UPDATE:
             all_diffs = obj_filtered.diff(old_obj_filtered)
-            filtered_diffs = list(filter(lambda x: is_matching_diff(x, self.change_filters["include"]), all_diffs))
+            filtered_diffs = list(filter(lambda x: is_matching_diff(x, self.change_filters.include), all_diffs))
             if len(filtered_diffs) == 0:
-                return False
+                result = False
         execution_event.obj_filtered = obj_filtered
         execution_event.old_obj_filtered = old_obj_filtered
         execution_event.filtered_diffs = filtered_diffs
-        return True
+        return result

@@ -42,6 +42,11 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         logging.warning(f"resource_babysitter skipping resource with no meta - {event.obj}")
         return
 
+    if not isinstance(getattr(event, "filtered_diffs"), list):
+        # TODO better warning message
+        logging.warning(f"resource_babysitter running for an unsupported event type {event.__class__.__name__}")
+        return
+
     if event.obj.metadata.namespace in config.ignored_namespaces:
         return
 
