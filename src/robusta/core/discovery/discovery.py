@@ -225,7 +225,7 @@ class Discovery:
                                 ]
                             )
                         except Exception:
-                            logging.exception(msg=f"Faild to parse Deployment config/n {dc}")
+                            logging.exception(msg=f"Failed to parse Deployment config/n {dc}")
                             continue
 
                     continue_ref = deployconfigs_res.get("metadata", {}).get("continue")
@@ -237,7 +237,7 @@ class Discovery:
             if ARGO_ROLLOUTS:
                 for _ in range(DISCOVERY_MAX_BATCHES):
                     try:
-                        rolloutsRes = client.CustomObjectsApi().list_cluster_custom_object(
+                        rollouts_res = client.CustomObjectsApi().list_cluster_custom_object(
                             group=Rollout.group,
                             version=Rollout.version,
                             plural=Rollout.plural,
@@ -248,7 +248,7 @@ class Discovery:
                         logging.exception(msg="Faild to list Argo Rollouts from api.")
                         break
 
-                    for ro in rolloutsRes.get("items", []):
+                    for ro in rollouts_res.get("items", []):
                         try:
                             meta = DictToK8sObj(ro.get("metadata"), V1ObjectMeta)
                             spec = ro.get("spec", {})
@@ -271,10 +271,10 @@ class Discovery:
                                 ]
                             )
                         except Exception:
-                            logging.exception(msg=f"Faild to parse Rollout/n {ro}")
+                            logging.exception(msg=f"Failed to parse Rollout/n {ro}")
                             continue
 
-                    continue_ref = rolloutsRes.get("metadata", {}).get("continue")
+                    continue_ref = rollouts_res.get("metadata", {}).get("continue")
                     if not continue_ref:
                         break
 
