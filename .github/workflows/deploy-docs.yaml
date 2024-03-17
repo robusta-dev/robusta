@@ -66,6 +66,8 @@ jobs:
         sed -i "s/DOCS_RELEASE_PLACEHOLDER/${GITHUB_REF##*/}/g" docs/conf.py
 
     - name: Build the docs
+      env:
+        ROBUSTA_GOOGLE_FONTS_API_KEY: ${{ secrets.ROBUSTA_GOOGLE_FONTS_API_KEY }}
       run: |
         cd docs
         poetry run make html

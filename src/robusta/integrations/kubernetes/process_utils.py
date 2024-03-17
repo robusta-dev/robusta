@@ -8,7 +8,7 @@ from robusta.integrations.kubernetes.custom_models import Process, RobustaPod
 
 
 class ProcessType(Enum):
-    PYTHON = "python"
+    PYTHON = "python3"
     JAVA = "java"
 
 

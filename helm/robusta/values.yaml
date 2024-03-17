@@ -148,6 +148,30 @@ priorityBuiltinPlaybooks:
 # custom user playbooks
 customPlaybooks: []
 
+# custom user Extra playbooks
+# By adding this Custom, you can specify more custom actions and triggers which are separated into categories.
+# This allows you to split away from generated_values.yaml to keep a separate file for your custom playbooks by team/department.
+# helm ugprade --install robusta -f generated_values.yaml -f app_a_playbooks.yaml
+# Example:
+# namedCustomPlaybooks:
+#   team-a-app-a:
+#   - triggers:
+#     - on_prometheus_alert:
+#         namespace_prefix: "app-a"
+#     actions:
+#     - create_finding:
+#         aggregation_key: "This is app-a - Requires your attention"
+#         severity: HIGH
+#         title: "Check app-a out"
+#         description: "@monitoring.monitoring this is for you"
+#   team-b-app-b:
+#   # Default Settings for all actions
+#   - triggers:
+#     - on_prometheus_alert:
+#         namespace_prefix: "app-b"
+namedCustomPlaybooks: {}
+
+
 # builtin playbooks
 builtinPlaybooks:
 # playbooks for non-prometheus based monitoring

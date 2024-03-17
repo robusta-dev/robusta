@@ -7,7 +7,17 @@ from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, Optional, Union
 
 import prometheus_client
-from hikaru.model.rel_1_26 import Container, DaemonSet, Deployment, Job, Pod, ReplicaSet, StatefulSet, Volume
+from hikaru.model.rel_1_26 import (
+    Container,
+    DaemonSet,
+    Deployment,
+    Job,
+    ObjectMeta,
+    Pod,
+    ReplicaSet,
+    StatefulSet,
+    Volume,
+)
 from kubernetes import client
 from kubernetes.client import (
     V1Container,
@@ -98,6 +108,35 @@ class Discovery:
             logging.error("error getting stack trace", exc_info=True)
 
     @staticmethod
+    def __create_service_info_from_hikaru(
+        meta: ObjectMeta,
+        kind: str,
+        containers: List[Container],
+        volumes: List[Volume],
+        total_pods: int,
+        ready_pods: int,
+        is_helm_release: bool = False,
+    ) -> ServiceInfo:
+        container_info = (
+            [ContainerInfo.get_container_info_hikaru(container) for container in containers] if containers else []
+        )
+        volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
+        config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
+        version = getattr(meta, "resource_version", None) or getattr(meta, "resourceVersion", None)
+        resource_version = int(version) if version else 0
+
+        return ServiceInfo(
+            resource_version=resource_version,
+            name=meta.name,
+            namespace=meta.namespace,
+            service_type=kind,
+            service_config=config,
+            ready_pods=ready_pods,
+            total_pods=total_pods,
+            is_helm_release=is_helm_release,
+        )
+
+    @staticmethod
     def __create_service_info(
         meta: V1ObjectMeta,
         kind: str,
@@ -125,12 +164,12 @@ class Discovery:
         )
 
     @staticmethod
-    def create_service_info(obj: Union[Deployment, DaemonSet, StatefulSet, Pod, ReplicaSet]) -> ServiceInfo:
-        return Discovery.__create_service_info(
+    def create_service_info_from_hikaru(obj: Union[Deployment, DaemonSet, StatefulSet, Pod, ReplicaSet]) -> ServiceInfo:
+        return Discovery.__create_service_info_from_hikaru(
             obj.metadata,
             obj.kind,
-            extract_containers(obj),
-            extract_volumes(obj),
+            extract_containers_k8(obj),
+            extract_volumes_k8(obj),
             extract_total_pods(obj),
             extract_ready_pods(obj),
             is_helm_release=is_release_managed_by_helm(
@@ -153,7 +192,7 @@ class Discovery:
             if IS_OPENSHIFT:
                 for _ in range(DISCOVERY_MAX_BATCHES):
                     try:
-                        deployconfigsRes = client.CustomObjectsApi().list_cluster_custom_object(
+                        deployconfigs_res = client.CustomObjectsApi().list_cluster_custom_object(
                             group=DeploymentConfig.group,
                             version=DeploymentConfig.version,
                             plural=DeploymentConfig.plural,
@@ -161,10 +200,10 @@ class Discovery:
                             _continue=continue_ref,
                         )
                     except Exception:
-                        logging.exception(msg="Faild to list Deployment configs from api.")
+                        logging.exception(msg="Failed to list Deployment configs from api.")
                         break
 
-                    for dc in deployconfigsRes.get("items", []):
+                    for dc in deployconfigs_res.get("items", []):
                         try:
                             meta = DictToK8sObj(dc.get("metadata"), V1ObjectMeta)
                             spec = dc.get("spec", {})
@@ -189,7 +228,7 @@ class Discovery:
                             logging.exception(msg=f"Faild to parse Deployment config/n {dc}")
                             continue
 
-                    continue_ref = deployconfigsRes.get("metadata", {}).get("continue")
+                    continue_ref = deployconfigs_res.get("metadata", {}).get("continue")
                     if not continue_ref:
                         break
 
@@ -703,6 +742,7 @@ def extract_total_pods(resource) -> int:
             return 0 if not resource.status.desiredNumberScheduled else resource.status.desiredNumberScheduled
         elif isinstance(resource, Pod):
             return 1
+
         if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
             # resource.spec.replicas can be 0, default value is 1
             return resource.spec.replicas if resource.spec.replicas is not None else 1
