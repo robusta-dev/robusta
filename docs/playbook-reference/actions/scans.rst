@@ -69,11 +69,13 @@ You can tweak KRR's recommendation algorithm to suit your environment using the 
 
 Add the following config to the top of your ``generated_values.yaml`` with your custom values. KRR will use these values every time it sends data to the Robusta UI or other destinations.
 
+If you are having performance issues, specifically with Prometheus using a lot of memory, reduce ``max_workers`` to reduce memory usage. KRR uses 3 workers by default.
+
 .. code-block:: yaml
 
     globalConfig:
-      krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
-
+      krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25 --max-workers 40"
+      max_workers: 2 
 
 **Common KRR Settings**
 
