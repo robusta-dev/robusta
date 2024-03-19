@@ -3,6 +3,7 @@ from typing import Callable, List, Optional
 from kubernetes import client
 from pydantic import BaseModel
 
+from robusta.integrations.kubernetes.custom_models import DeploymentConfig
 from robusta.utils.error_codes import ActionException, ErrorCodes
 
 
@@ -53,6 +54,10 @@ LISTERS = {  # TODO add ingress and cronjobs once upgrading the k8s client versi
     "ingress": ResourceLister(
         list_all=client.NetworkingV1Api().list_ingress_for_all_namespaces,
         list_namespaced=client.NetworkingV1Api().list_namespaced_ingress,
+    ),
+    "deploymentconfig": ResourceLister(
+        list_all=DeploymentConfig.list_for_all_namespaces,
+        list_namespaced=DeploymentConfig.list_namespaced,
     ),
 }
 
