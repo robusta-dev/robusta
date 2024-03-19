@@ -126,7 +126,7 @@ class ImagePullBackoffInvestigator:
     configs = [
         # Containerd
         {
-            "err_template": 'failed to pull and unpack image ".*?": failed to resolve reference ".*?": .*?: not found',
+            "err_template": r'failed to pull and unpack image ".*?": failed to resolve reference ".*?": .*?(no such host|not found)',
             "reason": ImagePullBackoffReason.RepoDoesntExist,
         },
         {

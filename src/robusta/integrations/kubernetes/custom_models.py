@@ -588,6 +588,37 @@ class DeploymentConfig(HikaruDocumentBase, HikaruCRDDocumentMixin):
     def readNamespaced(self, name: str, namespace: str):
         obj = DeploymentConfig(metadata=ObjectMeta(name=name, namespace=namespace)).read()
         return type("", (object,), {"obj": obj})()
+    
+    @classmethod
+    def list_namespaced(self, namespace: str):
+        deployconfigs_res = client.CustomObjectsApi().list_namespaced_custom_object(
+            group=DeploymentConfig.group,
+            version=DeploymentConfig.version,
+            namespace=namespace,
+            plural=DeploymentConfig.plural,
+        ) 
+        dc_list = type("", (object,), {"items": [
+            DeploymentConfig(metadata=ObjectMeta(**dc.get("metadata", {})), spec=DeploymentConfigSpec(**dc.get("spec", {})))
+            for dc in
+            deployconfigs_res.get("items", [])
+        ]})()
+
+        return dc_list
+    
+    @classmethod
+    def list_for_all_namespaces(self):
+        deployconfigs_res = client.CustomObjectsApi().list_cluster_custom_object(
+            group=DeploymentConfig.group,
+            version=DeploymentConfig.version,
+            plural=DeploymentConfig.plural,
+        ) 
+        dc_list = type("", (object,), {"items": [
+            DeploymentConfig(metadata=ObjectMeta(**dc.get("metadata", {})), spec=DeploymentConfigSpec(**dc.get("spec", {})))
+            for dc in
+            deployconfigs_res.get("items", [])
+        ]})()
+
+        return dc_list
 
 
 def DictToK8sObj(obj: Dict, class_name):
