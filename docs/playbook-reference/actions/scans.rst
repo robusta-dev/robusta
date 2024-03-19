@@ -74,7 +74,7 @@ If you are having performance issues, specifically with Prometheus using a lot o
 .. code-block:: yaml
 
     globalConfig:
-      krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25 --max-workers 40"
+      krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
       max_workers: 2 
 
 **Common KRR Settings**
