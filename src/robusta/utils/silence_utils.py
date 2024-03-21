@@ -53,7 +53,7 @@ class Silence(BaseModel):
         ]
 
 
-class BaseSilenceParams(ActionParams):
+class AlertManagerParams(ActionParams):
     """
     :var alertmanager_url: Alternative Alert Manager url to send requests.
     """
@@ -88,7 +88,7 @@ class BaseSilenceParams(ActionParams):
         return None
 
 
-class DeleteSilenceParams(BaseSilenceParams):
+class DeleteSilenceParams(AlertManagerParams):
     """
     :var id: uuid of the silence.
     """
@@ -96,7 +96,7 @@ class DeleteSilenceParams(BaseSilenceParams):
     id: str
 
 
-class AddSilenceParams(BaseSilenceParams):
+class AddSilenceParams(AlertManagerParams):
     """
     :var id: uuid of the silence. use for update, empty on create.
     :var comment: text comment of the silence.
@@ -114,7 +114,7 @@ class AddSilenceParams(BaseSilenceParams):
     matchers: List[Matcher]
 
 
-def get_alertmanager_silences_connection(params: BaseSilenceParams):
+def get_alertmanager_silences_connection(params: AlertManagerParams):
     alertmanager_url = get_alertmanager_url(params)
 
     if not alertmanager_url:
@@ -135,7 +135,7 @@ def get_alertmanager_silences_connection(params: BaseSilenceParams):
 SilenceOperation = Enum("SilenceOperation", "CREATE DELETE LIST")
 
 
-def gen_alertmanager_headers(params: BaseSilenceParams) -> Dict:
+def gen_alertmanager_headers(params: AlertManagerParams) -> Dict:
     headers = {"Content-type": "application/json"}
 
     if params.grafana_api_key:
@@ -147,7 +147,7 @@ def gen_alertmanager_headers(params: BaseSilenceParams) -> Dict:
     return headers
 
 
-def get_alertmanager_url_path(operation: SilenceOperation, params: BaseSilenceParams) -> str:
+def get_alertmanager_url_path(operation: SilenceOperation, params: AlertManagerParams) -> str:
     prefix = ""
     if "grafana" == params.alertmanager_flavor:
         prefix = "/api/alertmanager/grafana"
@@ -158,7 +158,7 @@ def get_alertmanager_url_path(operation: SilenceOperation, params: BaseSilencePa
         return f"{prefix}/api/v2/silences"
 
 
-def get_alertmanager_url(params: BaseSilenceParams) -> str:
+def get_alertmanager_url(params: AlertManagerParams) -> str:
     if params.alertmanager_url:
         return params.alertmanager_url
 

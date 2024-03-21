@@ -62,6 +62,7 @@ lightActions:
 - debugger_stack_trace
 - python_process_inspector
 - prometheus_alert
+- alertmanager_alert
 - create_pvc_snapshot
 - resource_events_enricher
 - delete_job
