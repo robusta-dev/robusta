@@ -208,6 +208,7 @@ def default_enricher(alert: PrometheusKubernetesAlert):
             TableBlock(
                 [[k, v] for (k, v) in labels.items()],
                 ["label", "value"],
+                vertical_table=True,
                 table_name="*Alert labels*",
             ),
         ],

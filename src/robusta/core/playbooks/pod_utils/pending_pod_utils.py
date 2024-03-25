@@ -23,6 +23,7 @@ def get_pending_pod_enrichment(pod: Pod) -> Enrichment:
     blocks = [TableBlock(
         [[k, v] for (k, v) in pending_rows],
         ["label", "value"],
+        vertical_table=True,
     )]
 
     if all_reasons:

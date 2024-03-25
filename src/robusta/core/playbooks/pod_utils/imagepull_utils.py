@@ -92,6 +92,7 @@ def get_image_pull_backoff_enrichment(pod: Pod) -> Enrichment:
         image_pull_table_blocks.append(TableBlock(
             [[k, v] for (k, v) in image_issue_rows],
             ["label", "value"],
+            vertical_table=True,
         ))
 
     image_pull_table_blocks.extend(error_blocks)
@@ -106,7 +107,7 @@ def __imagepull_backoff_reason_to_fix(reason: ImagePullBackoffReason) -> Optiona
     if reason == ImagePullBackoffReason.RepoDoesntExist:
         return "Image not found", "Make sure the image repository, image name and image tag are correct."
     if reason == ImagePullBackoffReason.NotAuthorized:
-        return "Unauthorized", 'The repo is access protected. Make sure to <a target="_blank" href="https:\/\/kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/">configure the correct image pull secrets</a>'
+        return "Unauthorized", 'The repo is access protected. Make sure to configure the correct image pull secrets: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry'
     if reason == ImagePullBackoffReason.Timeout:
         return "Timeout", 'If this does not resolved after a few minutes, make sure the image repository is responding.'
 
