@@ -29,7 +29,9 @@ The following triggers are available for Prometheus alerts:
             customPlaybooks:
             - triggers:
               - on_prometheus_alert:
-                  alert_name: HostHighCpuLoad
+                  scope:
+                    include:  # more options available - see below
+                      - alert_name: HostHighCpuLoad
               actions:
               - node_bash_enricher:
                  bash_command: ps aux
@@ -37,6 +39,10 @@ The following triggers are available for Prometheus alerts:
     ``on_prometheus_alert`` supports the following parameters:
 
     .. pydantic-model:: robusta.integrations.prometheus.trigger.PrometheusAlertTrigger
+
+    The ``scope`` filtering mechanism works exactly as it does for sinks
+    (see :ref:`sink-scope-matching` for more information), but the elements that can
+    be matched are the ones available in Prometheus alert payload.
 
 Recommended Actions
 ---------------------

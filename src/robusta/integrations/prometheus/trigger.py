@@ -11,6 +11,8 @@ from robusta.integrations.helper import exact_match, prefix_match
 from robusta.integrations.kubernetes.custom_models import RobustaDeployment, RobustaJob, RobustaPod
 from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKubernetesAlert
 from robusta.utils.cluster_provider_discovery import cluster_provider
+from robusta.utils.scope import ScopeParams, BaseScopeMatching
+
 
 ALERT_EVENT = "alert_event"
 
@@ -50,7 +52,7 @@ MAPPINGS = [
 ]
 
 
-class PrometheusAlertTrigger(BaseTrigger):
+class PrometheusAlertTrigger(BaseTrigger, BaseScopeMatching):
     """
     :var status: one of "firing", "resolved", or "all"
     """
@@ -61,6 +63,7 @@ class PrometheusAlertTrigger(BaseTrigger):
     namespace_prefix: str = None
     instance_name_prefix: str = None
     k8s_providers: Optional[List[str]]
+    scope: Optional[ScopeParams] = None
 
     def get_trigger_event(self):
         return PrometheusTriggerEvent.__name__
@@ -86,12 +89,28 @@ class PrometheusAlertTrigger(BaseTrigger):
             return False
 
         provider = cluster_provider.get_cluster_provider()
-        if provider and self.k8s_providers and len(self.k8s_providers) > 0:
+        if provider and self.k8s_providers:
             lowercase_provider = [provider.lower() for provider in self.k8s_providers]
             if provider.lower() not in lowercase_provider:
                 return False
 
+        if self.scope:
+            if not self.scope_inc_exc_matches(self.scope.include, event.alert):
+                return False
+            if self.scope_inc_exc_matches(self.scope.exclude, event.alert):
+                return False
+
         return True
+
+    def attribute_map(self, aux_obj=None) -> Dict[str, Union[str, Dict[str, str]]]:
+        data = {
+            "status": aux_obj.status,
+            # TODO do we want to expose other attrs of PrometheusAlert here, like
+            # endsAt, generatorURL etc?
+            "annotations": aux_obj.annotations,
+        }
+        data.update(aux_obj.labels)
+        return data
 
     def build_execution_event(
         self, event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]], build_context: Dict[str, Any]
