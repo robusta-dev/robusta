@@ -136,7 +136,6 @@ class PrometheusDiscovery(ServiceDiscovery):
                 "app=prometheus,component=server,release!=kubecost",
                 "app=prometheus-server",
                 "app=prometheus-operator-prometheus",
-                "app=prometheus-msteams",
                 "app=rancher-monitoring-prometheus",
                 "app=prometheus-prometheus",
                 "app.kubernetes.io/component=query,app.kubernetes.io/name=thanos",
