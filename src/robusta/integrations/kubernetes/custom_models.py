@@ -679,6 +679,37 @@ class Rollout(HikaruDocumentBase, HikaruCRDDocumentMixin):
         obj.validate_selector()
         return type("", (object,), {"obj": obj})()
 
+    @classmethod
+    def list_namespaced(self, namespace: str):
+        rollouts_res = client.CustomObjectsApi().list_namespaced_custom_object(
+            group=Rollout.group,
+            version=Rollout.version,
+            namespace=namespace,
+            plural=Rollout.plural,
+        ) 
+        ro_list = type("", (object,), {"items": [
+            DeploymentConfig(metadata=ObjectMeta(**ro.get("metadata", {})), spec=RolloutSpec(**ro.get("spec", {})))
+            for ro in
+            rollouts_res.get("items", [])
+        ]})()
+
+        return ro_list
+    
+    @classmethod
+    def list_for_all_namespaces(self):
+        rollouts_res = client.CustomObjectsApi().list_cluster_custom_object(
+            group=Rollout.group,
+            version=Rollout.version,
+            plural=Rollout.plural,
+        ) 
+        ro_list = type("", (object,), {"items": [
+            Rollout(metadata=ObjectMeta(**ro.get("metadata", {})), spec=RolloutSpec(**ro.get("spec", {})))
+            for ro in
+            rollouts_res.get("items", [])
+        ]})()
+
+        return ro_list
+
 
 hikaru.register_version_kind_class(RobustaPod, Pod.apiVersion, Pod.kind)
 hikaru.register_version_kind_class(RobustaDeployment, Deployment.apiVersion, Deployment.kind)
