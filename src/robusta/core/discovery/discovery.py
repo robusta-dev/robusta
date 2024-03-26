@@ -245,7 +245,7 @@ class Discovery:
                             _continue=continue_ref,
                         )
                     except Exception:
-                        logging.exception(msg="Faild to list Argo Rollouts from api.")
+                        logging.exception(msg="Failed to list Argo Rollouts from api.")
                         break
 
                     for ro in rollouts_res.get("items", []):
