@@ -67,7 +67,7 @@ def build_selector_query(selector: Union[LabelSelector, Dict]) -> str:
     elif isinstance(selector, Dict):
         return ",".join([f"{k}={v}" for k, v in selector.items()])
     else:
-        return ""
+        return None
 
 
 def list_pods_using_selector(
