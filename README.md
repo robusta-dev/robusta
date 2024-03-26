@@ -75,6 +75,14 @@ helm install robusta robusta/robusta -f ./generated_values.yaml
 
 <!-- <p align="right">(<a href="#top">back to top</a>)</p> -->
 
+## 💡How can I use Robusta?
+* **Enhanced Prometheus Alerts**: All your Prometheus alerts are transformed with better structure, labels, and priority details.
+* **Enrichment**: Receive alerts with graphs from Prometheus, application logs, Kubernetes events and more without any extra configuration.
+* **Alert Routing**: Send alerts to different teams based on the namespace, alert type or even on a different chat app all together.
+* **Automatic Remediation**: Want to run a bash script when an alert is triggered? How about creating a new Job and gathering some data? Done!
+* **Resolve Jira Tickets**: Enriched Jira tickets are created for specific alerts, if the issue is resolved they are marked resolved automatically.
+* **Integrations**: Get everyday alerts on Slack, and weekly application efficiency reports via email. Use Robusta's 15+ integrations to bring enriched alerts directly to your teams.
+
 ## 📝 Documentation
 Interested? Learn more about Robusta
 
