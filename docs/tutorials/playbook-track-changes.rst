@@ -33,12 +33,19 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
     customPlaybooks:
     - triggers:
         - on_deployment_update: {}
+            change_filters:
+              ignore:  # These are default values btw
+              - status
+              - metadata.generation
+              - metadata.resourceVersion
+              - metadata.managedFields
+              - spec.replicas
+              include:
+              - spec
       actions:
-        - resource_babysitter:
-            omitted_fields: [] # You can specify any fields here that you don't want to monitor
-            fields_to_monitor: ["images"]
+        - resource_babysitter: {}
       sinks:
-      - some_sink_name #Optional
+      - some_sink_name # Optional
 
 .. details:: How does it work?
 
@@ -84,11 +91,18 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
 
     customPlaybooks:
     - triggers:
-        - on_ingress_all_changes: {}
+        - on_ingress_all_changes:
+            change_filters:
+              ignore:
+              - status
+              - metadata.generation
+              - metadata.resourceVersion
+              - metadata.managedFields
+              - spec.replicas
+              include:
+              - spec
       actions:
-        - resource_babysitter:
-            omitted_fields: []  # You can specify any fields here that you don't want to monitor
-            fields_to_monitor: ["path", "port"]
+        - resource_babysitter: {}
       sinks:
       - some_sink_name  # Replace with your sink name
 

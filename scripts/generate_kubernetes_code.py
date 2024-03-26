@@ -65,6 +65,7 @@ def autogenerate_events(f: TextIO):
         import traceback
         from dataclasses import dataclass
         from abc import abstractmethod
+        from hikaru import DiffDetail
         from hikaru.model.rel_1_26 import {KUBERNETES_RESOURCES_STR}
         from hikaru.utils import Response
         from pydantic import BaseModel
@@ -203,7 +204,10 @@ def autogenerate_events(f: TextIO):
         @dataclass
         class KubernetesAnyChangeEvent(K8sBaseChangeEvent):
             obj: Optional[{f"Union[{','.join(all_versioned_resources)}]"}] = None
+            obj_filtered: Optional[{f"Union[{','.join(all_versioned_resources)}]"}] = None
             old_obj: Optional[{f"Union[{','.join(all_versioned_resources)}]"}] = None
+            old_obj_filtered: Optional[{f"Union[{','.join(all_versioned_resources)}]"}] = None
+            filtered_diffs: Optional[List[DiffDetail]] = None
 
             def get_resource(self) -> Optional[{f"Union[{','.join(all_versioned_resources)}]"}]:
                 return self.obj
@@ -267,7 +271,10 @@ def autogenerate_events(f: TextIO):
             @dataclass
             class {resource}ChangeEvent({resource}Event, KubernetesAnyChangeEvent):
                 obj: Optional[{model_class_str}] = None
+                obj_filtered: Optional[{model_class_str}] = None
                 old_obj: Optional[{model_class_str}] = None
+                old_obj_filtered: Optional[{model_class_str}] = None
+                filtered_diffs: Optional[List[DiffDetail]] = None
 
                 def get_{resource.lower()}(self) -> Optional[{model_class_str}]:
                     return self.obj
@@ -368,13 +375,20 @@ def autogenerate_triggers(f: TextIO):
                 textwrap.dedent(
                     f"""\
             class {resource}{get_trigger_class_name(trigger_name)}Trigger(K8sBaseTrigger):
-                def __init__(self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None):
+                def __init__(
+                    self,
+                    name_prefix: str = None,
+                    namespace_prefix: str = None,
+                    labels_selector: str = None,
+                    change_filters: Dict[str, List[str]] = None,
+                ):
                     super().__init__(
                         kind=\"{resource}\",
                         operation={operation_type},
                         name_prefix=name_prefix,
                         namespace_prefix=namespace_prefix,
                         labels_selector=labels_selector,
+                        change_filters=change_filters,
                     )
 
                 @staticmethod
