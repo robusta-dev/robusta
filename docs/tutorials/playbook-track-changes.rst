@@ -34,12 +34,18 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
     - triggers:
         - on_deployment_update: {}
             change_filters:
-              ignore: [] # You can specify any fields here that you don't want to monitor
-              include: ["images"]
+              ignore:  # These are default values btw
+              - status
+              - metadata.generation
+              - metadata.resourceVersion
+              - metadata.managedFields
+              - spec.replicas
+              include:
+              - spec
       actions:
         - resource_babysitter: {}
       sinks:
-      - some_sink_name #Optional
+      - some_sink_name # Optional
 
 .. details:: How does it work?
 
@@ -87,8 +93,14 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
     - triggers:
         - on_ingress_all_changes:
             change_filters:
-              ignore: []  # You can specify any fields here that you don't want to monitor
-              include: ["path", "port"]
+              ignore:
+              - status
+              - metadata.generation
+              - metadata.resourceVersion
+              - metadata.managedFields
+              - spec.replicas
+              include:
+              - spec
       actions:
         - resource_babysitter: {}
       sinks:

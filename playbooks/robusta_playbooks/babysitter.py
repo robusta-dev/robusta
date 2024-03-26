@@ -28,7 +28,6 @@ class BabysitterConfig(ActionParams):
     :var ignored_namespaces: List of namespaces to ignore
     """
 
-    # TODO should this be moved to trigger code in PlaybooksEventHandlerImpl.handle_trigger as well?
     ignored_namespaces: List[str] = []
 
 
