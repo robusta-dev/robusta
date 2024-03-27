@@ -13,8 +13,11 @@ Creating a bot account
 -----------------------
 
 1. Open Zulip
-2. Click the cog
-3. Add a bot user
+2. Click on the gear icon in the upper right corner
+3. Select **Personal** or **Organization** settings
+4. On the left, click **Bots**
+5. Click **Add a new bot**
+6. Fill out the fields, and click **Add**
 4. Copy email and token
 
 Settings
