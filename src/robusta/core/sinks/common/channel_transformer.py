@@ -59,7 +59,7 @@ class ChannelTransformer:
     def replace_token(cls, pattern: regex.Pattern, prefix: str, channel: str, replacements: Dict[str, str]) -> str:
         tokens = pattern.findall(channel)
         for token in tokens:
-            clean_token = token.strip("{}")
+            clean_token = token.replace("{", "").replace("}", "")
             replacement = cls.get_replacement(prefix, clean_token, replacements)
             if replacement:
                 channel = channel.replace(token, replacement)
