@@ -9,7 +9,7 @@ from robusta.core.model.pods import pod_other_requests, pod_requests
 from robusta.core.playbooks.common import get_event_timestamp
 from robusta.core.reporting import Enrichment
 from robusta.core.reporting.base import EnrichmentType
-from robusta.core.reporting.blocks import BaseBlock, MarkdownBlock, TableBlock
+from robusta.core.reporting.blocks import BaseBlock, MarkdownBlock, TableBlock, TableBlockFormat
 
 
 def get_pending_pod_enrichment(pod: Pod) -> Enrichment:
@@ -23,7 +23,7 @@ def get_pending_pod_enrichment(pod: Pod) -> Enrichment:
     blocks = [TableBlock(
         [[k, v] for (k, v) in pending_rows],
         ["label", "value"],
-        vertical_table=True,
+        table_format=TableBlockFormat.vertical,
     )]
 
     if all_reasons:

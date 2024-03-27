@@ -9,6 +9,7 @@ import logging
 import textwrap
 from copy import deepcopy
 from datetime import datetime
+from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import hikaru
@@ -308,6 +309,10 @@ class JsonBlock(BaseBlock):
         super().__init__(json_str=json_str)
 
 
+class TableBlockFormat(Enum):
+    vertical: str = "vertical"
+
+
 class TableBlock(BaseBlock):
     """
     Table display of a list of lists.
@@ -324,7 +329,7 @@ class TableBlock(BaseBlock):
     table_name: str = ""
     column_width: List[int] = None
     metadata: Dict[str, Any] = {}
-    vertical_table: Optional[bool] = False
+    table_format: Optional[TableBlockFormat] = None
 
     def __init__(
         self,
@@ -334,7 +339,7 @@ class TableBlock(BaseBlock):
         table_name: str = "",
         column_width: List[int] = None,
         metadata: Dict[str, Any] = {},
-        vertical_table: Optional[bool] = False,
+        table_format: Optional[TableBlockFormat] = None,
         **kwargs,
     ):
         """
@@ -351,8 +356,8 @@ class TableBlock(BaseBlock):
             **kwargs,
         )
 
-        if vertical_table:
-            self.metadata["vertical_table"] = vertical_table
+        if table_format:
+            self.metadata["format"] = TableBlockFormat.vertical.value
 
     @classmethod
     def __calc_max_width(cls, headers, rendered_rows, table_max_width: int) -> List[int]:

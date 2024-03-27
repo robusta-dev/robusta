@@ -4,6 +4,7 @@ from hikaru.model.rel_1_26 import Pod
 
 from robusta.core.reporting import TableBlock
 from robusta.core.reporting.base import Enrichment, EnrichmentType
+from robusta.core.reporting.blocks import TableBlockFormat
 
 
 def get_crash_report_enrichments(
@@ -45,13 +46,13 @@ def get_crash_report_enrichments(
             [[k, v] for (k, v) in crash_info_rows],
             ["label", "value"],
             table_name="*Crash Info*",
-            vertical_table=True,
+            table_format=TableBlockFormat.vertical,
         )
         prev_container_table_block = TableBlock(
             [[k, v] for (k, v) in prev_container_rows],
             ["label", "value"],
             table_name="*Previous Container*",
-            vertical_table=True,
+            table_format=TableBlockFormat.vertical,
         )
 
         pod_issues_enrichments.append(Enrichment(enrichment_type=EnrichmentType.crash_info,

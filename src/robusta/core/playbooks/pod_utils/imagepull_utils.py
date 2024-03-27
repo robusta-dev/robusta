@@ -9,6 +9,7 @@ from hikaru.model.rel_1_26 import ContainerStatus, Event, EventList, Pod, PodSta
 
 from robusta.core.reporting import BaseBlock, MarkdownBlock, TableBlock
 from robusta.core.reporting.base import EnrichmentType, Enrichment
+from robusta.core.reporting.blocks import TableBlockFormat
 
 
 class ImagePullBackoffReason(Flag):
@@ -92,7 +93,7 @@ def get_image_pull_backoff_enrichment(pod: Pod) -> Enrichment:
         image_pull_table_blocks.append(TableBlock(
             [[k, v] for (k, v) in image_issue_rows],
             ["label", "value"],
-            vertical_table=True,
+            table_format=TableBlockFormat.vertical,
         ))
 
     image_pull_table_blocks.extend(error_blocks)
