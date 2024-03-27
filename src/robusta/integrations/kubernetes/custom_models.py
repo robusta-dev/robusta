@@ -515,7 +515,7 @@ class RobustaJob(Job):
             job: RobustaJob = wait_until_job_complete(job, timeout)
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
             pod = job.get_single_pod()
-            return pod.get_logs()
+            return pod.get_logs() or ""
         finally:
             if delete_job_post_execution:
                 job.deleteNamespacedJob(
