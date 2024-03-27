@@ -144,6 +144,7 @@ class ModelConversion:
                             "rows": [row for row in block.rows],
                             "column_renderers": block.column_renderers,
                         },
+                        "metadata": block.metadata,
                     }
                 )
             elif isinstance(block, KubernetesDiffBlock):
