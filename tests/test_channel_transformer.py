@@ -57,6 +57,7 @@ testdata = [
         DEFAULT_CHANNEL,
         "override - default channel not chosen",
     ),
+    # channel_override: "$labels.slack"
     (
         "$labels.slack",
         {"slac": OVERRIDE_CHANNEL},
@@ -159,6 +160,7 @@ testdata = [
         DEFAULT_CHANNEL,
         "override - default channel not chosen",
     ),
+    # channel_override: "$cluster_name-alerts-$labels.env-$annotations.zone-channel"
     (
         "$cluster_name-alerts-$labels.env-$annotations.zone-channel",
         {"env": "xxx"},
