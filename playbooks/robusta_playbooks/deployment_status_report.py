@@ -48,7 +48,7 @@ def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams
     """
     finding = Finding(
         title=action_params.report_name,
-        aggregation_key="report_rendering_task",
+        aggregation_key="ReportRenderingTask",
         finding_type=FindingType.REPORT,
         failure=False,
     )

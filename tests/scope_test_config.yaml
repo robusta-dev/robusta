@@ -36,7 +36,7 @@ tests:
           severity: HIGH
           finding_type: REPORT
           source: CALLBACK
-          aggregation_key: crash_loop
+          aggregation_key: CrashLoop
           labels:
             label1: lab1
             label2: lab2
@@ -55,7 +55,7 @@ tests:
           severity: HIGH
           finding_type: REPORT
           source: CALLBACK
-          aggregation_key: crash_loop
+          aggregation_key: CrashLoop
           labels:
             label1: lab1
           annotations:
@@ -73,7 +73,7 @@ tests:
           severity: HIGH
           finding_type: REPORT
           source: CALLBACK
-          aggregation_key: crash_loop
+          aggregation_key: CrashLoop
           labels:
             label1: lab1
           annotations:
@@ -341,7 +341,7 @@ tests:
     checks:
       - message: "iden1 deployment"
         finding:
-          aggregation_key: iden1
+          aggregation_key: Iden1
           subject:
             kind: deployment
         expected: false
@@ -353,25 +353,25 @@ tests:
         expected: false
       - message: "iden1 node"
         finding:
-          aggregation_key: iden1
+          aggregation_key: Iden1
           subject:
             kind: node
         expected: true
       - message: "iden1 daemonset"
         finding:
-          aggregation_key: iden1
+          aggregation_key: Iden1
           subject:
             kind: daemonset
         expected: false
       - message: "iden11 daemonset"
         finding:
-          aggregation_key: iden1
+          aggregation_key: Iden1
           subject:
             kind: daemonset
         expected: false
       - message: "iden11 node"
         finding:
-          aggregation_key: iden11
+          aggregation_key: Iden11
           subject:
             kind: node
         expected: false

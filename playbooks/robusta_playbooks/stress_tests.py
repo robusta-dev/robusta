@@ -31,7 +31,7 @@ def http_stress_test(event: ExecutionBaseEvent, action_params: StressTestParams)
     finding = Finding(
         title=f"Done running stress test with {action_params.n} http requests for url {action_params.url}",
         source=FindingSource.MANUAL,
-        aggregation_key="http_stress_test",
+        aggregation_key="HttpStressTest",
         finding_type=FindingType.REPORT,
         failure=False,
     )

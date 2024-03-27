@@ -1,3 +1,4 @@
+import re
 from typing import List
 
 from hikaru import DiffDetail, HikaruBase
@@ -37,3 +38,14 @@ def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):
             pass  # in case the field doesn't exist on this object
 
     return duplication
+
+
+def to_pascal_case(s: str):
+    """Convert to PascalCase by capitalizing each word and removing spaces"""
+
+    if not s:
+        return s
+
+    words = re.split(r'\W+', s)
+
+    return ''.join(word.capitalize() for word in words if word.isalnum())

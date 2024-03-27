@@ -50,7 +50,7 @@ def scale_hpa_callback(event: HorizontalPodAutoscalerEvent, params: ScaleHPAPara
         f"in namespace *{hpa.metadata.namespace}* updated to: *{params.max_replicas}*",
         severity=FindingSeverity.INFO,
         source=FindingSource.PROMETHEUS,
-        aggregation_key="scale_hpa_callback",
+        aggregation_key="ScaleHpaCallback",
     )
     event.add_finding(finding)
 
@@ -183,7 +183,7 @@ def alert_on_hpa_reached_limit(event: HorizontalPodAutoscalerChangeEvent, action
         title=f"HPA *{event.obj.metadata.name}* in namespace *{event.obj.metadata.namespace}* reached max replicas: *{hpa.spec.maxReplicas}*",
         severity=FindingSeverity.LOW,
         source=FindingSource.KUBERNETES_API_SERVER,
-        aggregation_key="alert_on_hpa_reached_limit",
+        aggregation_key="AlertOnHpaReachedLimit",
     )
 
     finding.add_enrichment(

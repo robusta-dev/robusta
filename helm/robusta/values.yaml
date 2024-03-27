@@ -482,7 +482,7 @@ platformPlaybooks:
   - on_job_failure: {}
   actions:
   - create_finding:
-      aggregation_key: "job_failure"
+      aggregation_key: "JobFailure"
       title: "Job Failed"
   - job_info_enricher: {}
   - job_events_enricher: {}

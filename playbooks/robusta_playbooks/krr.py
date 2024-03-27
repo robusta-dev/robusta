@@ -472,7 +472,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     finding = Finding(
         title="KRR Report",
         source=FindingSource.MANUAL,
-        aggregation_key="krr_report",
+        aggregation_key="KrrReport",
         finding_type=FindingType.REPORT,
         failure=False,
     )

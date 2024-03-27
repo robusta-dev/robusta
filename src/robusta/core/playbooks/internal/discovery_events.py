@@ -16,6 +16,7 @@ from robusta.api import (
 from robusta.core.discovery.top_service_resolver import TopLevelResource, TopServiceResolver
 from robusta.core.playbooks.common import get_event_timestamp, get_events_list
 from robusta.core.reporting.base import EnrichmentType
+from robusta.utils.common import to_pascal_case
 
 
 @action
@@ -71,7 +72,7 @@ def create_debug_event_finding(event: Event):
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
-        aggregation_key=f"Kubernetes {event.type} Event",
+        aggregation_key=to_pascal_case(f"Kubernetes {event.type} Event"),
         subject=FindingSubject(
             k8s_obj.name,
             subject_type,

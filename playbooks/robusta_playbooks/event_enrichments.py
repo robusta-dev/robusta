@@ -41,6 +41,7 @@ from robusta.api import (
 from robusta.core.reporting import EventsBlock, EventRow
 from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.custom_rendering import render_value
+from robusta.utils.common import to_pascal_case
 
 
 class ExtendedEventEnricherParams(EventEnricherParams):
@@ -66,7 +67,7 @@ def event_report(event: EventChangeEvent):
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.INFO if event.obj.type == "Normal" else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
-        aggregation_key=f"Kubernetes {event.obj.type} Event",
+        aggregation_key=to_pascal_case(f"Kubernetes {event.obj.type} Event"),
         subject=FindingSubject(
             name=k8s_obj.name,
             subject_type=FindingSubjectType.from_kind(k8s_obj.kind),
