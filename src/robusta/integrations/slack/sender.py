@@ -29,6 +29,7 @@ from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, S
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
+from robusta.core.sinks.common.channel_transformer import ChannelTransformer
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 ACTION_LINK = "link"
@@ -346,7 +347,9 @@ class SlackSender:
             if finding.source == FindingSource.PROMETHEUS:
                 blocks.append(MarkdownBlock(f"{Emojis.Alert.value} *Alert:* {finding.description}"))
             elif finding.source == FindingSource.KUBERNETES_API_SERVER:
-                blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}"))
+                blocks.append(
+                    MarkdownBlock(f"{Emojis.K8Notification.value} *K8s event detected:* {finding.description}")
+                )
             else:
                 blocks.append(MarkdownBlock(f"{Emojis.K8Notification.value} *Notification:* {finding.description}"))
 
@@ -356,7 +359,7 @@ class SlackSender:
                 enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
 
             # if one of the enrichment specified unfurl=False, this slack message will contain unfurl=False
-            unfurl = unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True)
+            unfurl = bool(unfurl and enrichment.annotations.get(SlackAnnotations.UNFURL, True))
             if enrichment.annotations.get(SlackAnnotations.ATTACHMENT):
                 attachment_blocks.extend(enrichment.blocks)
             else:
@@ -374,5 +377,11 @@ class SlackSender:
             sink_params,
             unfurl,
             status,
-            sink_params.get_slack_channel(self.cluster_name, finding.subject.labels, finding.subject.annotations),
+            ChannelTransformer.template(
+                sink_params.channel_override,
+                sink_params.slack_channel,
+                self.cluster_name,
+                finding.subject.labels,
+                finding.subject.annotations,
+            ),
         )
