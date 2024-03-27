@@ -29,7 +29,7 @@ from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, S
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
-from robusta.core.sinks.common.channel_transformer import ChannelTransformer
+from robusta.core.sinks.common import ChannelTransformer
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 ACTION_LINK = "link"

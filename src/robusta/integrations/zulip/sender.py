@@ -16,7 +16,7 @@ from robusta.core.reporting.base import BaseBlock, Finding, FindingStatus
 from robusta.core.reporting.blocks import FileBlock, LinksBlock
 from robusta.core.reporting.consts import FindingSource
 from robusta.core.reporting.utils import convert_svg_to_png
-from robusta.core.sinks.common.channel_transformer import ChannelTransformer
+from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.zulip.zulip_sink_params import ZulipSinkParams
 
 ZULIP_MESSAGE_DEFAULT_LEN: int = 10_000
