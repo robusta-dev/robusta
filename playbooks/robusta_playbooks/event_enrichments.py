@@ -108,7 +108,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
     """
 
     resource = event.get_resource()
-    if resource.kind not in ["Pod", "Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job", "Node", "DeploymentConfig"]:
+    if resource.kind not in ["Pod", "Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job", "Node", "DeploymentConfig", "Rollout"]:
         raise ActionException(
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Resource events enricher is not supported for resource {resource.kind}"
         )
@@ -123,7 +123,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
     )
 
     # append related pod data as well
-    if params.dependent_pod_mode and kind in ["Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job", "DeploymentConfig"]:
+    if params.dependent_pod_mode and kind in ["Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job", "DeploymentConfig", "Rollout"]:
         pods = []
         if kind == "Job":
             pods = get_job_all_pods(resource) or []

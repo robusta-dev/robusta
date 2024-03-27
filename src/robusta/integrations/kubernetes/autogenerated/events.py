@@ -14,7 +14,13 @@ from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
 from ....core.reporting.base import FindingSubject
 from ....core.reporting.consts import FindingSubjectType, FindingSource
 from ....core.reporting.finding_subjects import KubeObjFindingSubject
-from  robusta.integrations.kubernetes.custom_models import RobustaPod,RobustaDeployment,RobustaJob,DeploymentConfig
+from robusta.integrations.kubernetes.custom_models import (
+    RobustaPod,
+    RobustaDeployment,
+    RobustaJob,
+    DeploymentConfig,
+    Rollout,
+)
 from hikaru.model.rel_1_26.v1 import ClusterRole as v1ClusterRole
 from hikaru.model.rel_1_26.v1 import ClusterRoleBinding as v1ClusterRoleBinding
 from hikaru.model.rel_1_26.v1 import ConfigMap as v1ConfigMap
@@ -57,6 +63,7 @@ LOADERS_MAPPINGS = {
     "configmap": (True, ConfigMap.readNamespacedConfigMap),
     "ingress": (True, Ingress.readNamespacedIngress),
     "deploymentconfig": (True, DeploymentConfig.readNamespaced),
+    "rollout": (True, Rollout.readNamespaced),
 }
 
 
@@ -81,13 +88,89 @@ class ResourceAttributes(ExecutionEventBaseParams):
 
 @dataclass
 class KubernetesResourceEvent(ExecutionBaseEvent):
-    obj: Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress,DeploymentConfig]] = None
+    obj: Optional[
+        Union[
+            RobustaPod,
+            ReplicaSet,
+            DaemonSet,
+            RobustaDeployment,
+            StatefulSet,
+            Service,
+            Event,
+            HorizontalPodAutoscaler,
+            Node,
+            ClusterRole,
+            ClusterRoleBinding,
+            RobustaJob,
+            Namespace,
+            ServiceAccount,
+            PersistentVolume,
+            PersistentVolumeClaim,
+            NetworkPolicy,
+            ConfigMap,
+            Ingress,
+            DeploymentConfig,
+            Rollout,
+        ]
+    ] = None
 
-    def __init__(self, obj: Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress,DeploymentConfig], named_sinks: List[str]):
+    def __init__(
+        self,
+        obj: Union[
+            RobustaPod,
+            ReplicaSet,
+            DaemonSet,
+            RobustaDeployment,
+            StatefulSet,
+            Service,
+            Event,
+            HorizontalPodAutoscaler,
+            Node,
+            ClusterRole,
+            ClusterRoleBinding,
+            RobustaJob,
+            Namespace,
+            ServiceAccount,
+            PersistentVolume,
+            PersistentVolumeClaim,
+            NetworkPolicy,
+            ConfigMap,
+            Ingress,
+            DeploymentConfig,
+            Rollout,
+        ],
+        named_sinks: List[str],
+    ):
         super().__init__(named_sinks=named_sinks)
         self.obj = obj
 
-    def get_resource(self) -> Optional[Union[RobustaPod,ReplicaSet,DaemonSet,RobustaDeployment,StatefulSet,Service,Event,HorizontalPodAutoscaler,Node,ClusterRole,ClusterRoleBinding,RobustaJob,Namespace,ServiceAccount,PersistentVolume,PersistentVolumeClaim,NetworkPolicy,ConfigMap,Ingress,DeploymentConfig]]:
+    def get_resource(
+        self,
+    ) -> Optional[
+        Union[
+            RobustaPod,
+            ReplicaSet,
+            DaemonSet,
+            RobustaDeployment,
+            StatefulSet,
+            Service,
+            Event,
+            HorizontalPodAutoscaler,
+            Node,
+            ClusterRole,
+            ClusterRoleBinding,
+            RobustaJob,
+            Namespace,
+            ServiceAccount,
+            PersistentVolume,
+            PersistentVolumeClaim,
+            NetworkPolicy,
+            ConfigMap,
+            Ingress,
+            DeploymentConfig,
+            Rollout,
+        ]
+    ]:
         return self.obj
 
     def get_subject(self) -> FindingSubject:
