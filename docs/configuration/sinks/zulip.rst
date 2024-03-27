@@ -7,7 +7,7 @@ Robusta can report issues and events in your Kubernetes cluster to Zulip.
     :width: 1000
     :align: center
 
-To configure the Zulip sink you will need a *bot email*, an *api token* and the api url
+To configure the Zulip sink you will need a *bot email*, an *api token* and your *api/zulip url*
 
 Creating a bot account
 -----------------------
@@ -29,7 +29,7 @@ Settings
 * ``stream_name`` : Name of the channel to send the message to
 * ``topic_name`` : Name of the topic of the stream to send messages to
 * ``topic_override`` : Dynamic topic override, same as the channel_override in the slack sink
-* ``log_preview_char_limit`` : [Optional - default: ``500``] The amount of log lines to append to the alert message (zulip doesnt have a builtin text file preview). If set to ``0`` a text file will be sent
+* ``log_preview_char_limit`` : [Optional - default: ``500``] The amount of log characters to append to the alert message (zulip doesnt have a builtin text file preview). If set to ``0`` a text file will be sent
 
 Configuring the Zulip sink
 ---------------------------
