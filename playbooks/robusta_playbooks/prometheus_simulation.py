@@ -1,9 +1,12 @@
+import json
 from datetime import datetime
 from typing import Dict, Optional
 
 import requests
 
 from robusta.api import PORT, ActionParams, AlertManagerEvent, ExecutionBaseEvent, action
+from robusta.utils.error_codes import ActionException, ErrorCodes
+from robusta.utils.silence_utils import AlertManagerParams, get_alertmanager_url
 
 
 class PrometheusAlertParams(ActionParams):
@@ -116,6 +119,70 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
     return requests.post(
         f"http://localhost:{PORT}/api/alerts",
         data=prometheus_event.json(),
+        headers=headers,
+    )
+
+
+class AlertmanagerAlertParams(AlertManagerParams):
+    """
+    :var alert_name: Simulated alert name.
+    :var pod_name: Pod name, for a simulated pod alert.
+    :var status: Simulated alert status. firing/resolved.
+    :var severity: Simulated alert severity.
+    :var description: Simulated alert description.
+    :var labels: Additional alert labels. For example: "key1: val1, key2: val2"
+    :var namespace: Pod namespace, for a simulated pod alert.
+    :var summary: Simulated alert summary.
+    """
+
+    alert_name: str
+    pod_name: Optional[str] = None
+    namespace: str = "default"
+    status: str = "firing"
+    severity: str = "error"
+    description: Optional[str] = "simulated alert manager alert"
+    summary: Optional[str] = "alert manager alert created by Robusta"
+    labels: Optional[str] = None
+
+
+@action
+def alertmanager_alert(event: ExecutionBaseEvent, action_params: AlertmanagerAlertParams):
+    alert_labels = {
+        "alertname": action_params.alert_name,
+        "severity": action_params.severity,
+        "namespace": action_params.namespace,
+    }
+
+    if action_params.pod_name is not None:
+        alert_labels["pod"] = action_params.pod_name
+
+    labels = action_params.labels
+    if labels:
+        for label in labels.split(","):
+            label_key = label.split("=")[0].strip()
+            label_value = label.split("=")[1].strip()
+            alert_labels[label_key] = label_value
+
+    alerts = [
+        {
+            "status": action_params.status,
+            "labels": alert_labels,
+            "annotations": {
+                "summary": action_params.summary,
+                "description": action_params.description,
+            },
+        }
+    ]
+
+    headers = {"Content-type": "application/json"}
+
+    alertmanager_url = get_alertmanager_url(action_params)
+    if not alertmanager_url:
+        raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
+
+    return requests.post(
+        f"{alertmanager_url}/api/v1/alerts",
+        data=json.dumps(alerts),
         headers=headers,
     )
 
