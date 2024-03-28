@@ -4,6 +4,7 @@ from hikaru.model.rel_1_26 import Pod
 
 from robusta.core.reporting import TableBlock
 from robusta.core.reporting.base import Enrichment, EnrichmentType
+from robusta.core.reporting.blocks import TableBlockFormat
 
 
 def get_crash_report_enrichments(
@@ -26,8 +27,6 @@ def get_crash_report_enrichments(
         crash_info_rows.append(["Restarts", container_status.restartCount])
 
         if container_status.state and container_status.state.terminated:
-            if container_status.state.terminated.startedAt:
-                crash_info_rows.append(["Crashing since", container_status.state.terminated.startedAt])
             crash_info_rows.append(["Status", "TERMINATED"])
             crash_info_rows.append(["Reason", container_status.state.terminated.reason])
 
@@ -47,11 +46,13 @@ def get_crash_report_enrichments(
             [[k, v] for (k, v) in crash_info_rows],
             ["label", "value"],
             table_name="*Crash Info*",
+            table_format=TableBlockFormat.vertical,
         )
         prev_container_table_block = TableBlock(
             [[k, v] for (k, v) in prev_container_rows],
             ["label", "value"],
             table_name="*Previous Container*",
+            table_format=TableBlockFormat.vertical,
         )
 
         pod_issues_enrichments.append(Enrichment(enrichment_type=EnrichmentType.crash_info,

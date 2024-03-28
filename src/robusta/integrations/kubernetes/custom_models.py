@@ -1,7 +1,7 @@
 import logging
 import re
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
@@ -64,8 +64,10 @@ def build_selector_query(selector: Union[LabelSelector, Dict]) -> str:
         label_filters = [f"{label[0]}={label[1]}" for label in selector.matchLabels.items()]
         label_filters.extend([_get_match_expression_filter(expression) for expression in selector.matchExpressions])
         return ",".join(label_filters)
-    else:
+    elif isinstance(selector, Dict):
         return ",".join([f"{k}={v}" for k, v in selector.items()])
+    else:
+        return None
 
 
 def list_pods_using_selector(
@@ -513,7 +515,7 @@ class RobustaJob(Job):
             job: RobustaJob = wait_until_job_complete(job, timeout)
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
             pod = job.get_single_pod()
-            return pod.get_logs()
+            return pod.get_logs() or ""
         finally:
             if delete_job_post_execution:
                 job.deleteNamespacedJob(
@@ -627,7 +629,90 @@ def DictToK8sObj(obj: Dict, class_name):
     return client.ApiClient()._ApiClient__deserialize(obj, class_name)
 
 
+@dataclass
+class RolloutSpec(HikaruBase):
+    analysis: Optional[Dict] = None
+    minReadySeconds: Optional[int] = 0
+
+    paused: Optional[bool] = False
+    progressDeadlineSeconds: Optional[int] = 600
+    progressDeadlineAbort: Optional[bool] = False
+    replicas: Optional[int] = 1
+    restartAt: Optional[str] = None
+    revisionHistoryLimit: Optional[int] = 10
+    rollbackWindow: Optional[Dict] = None
+    selector: Optional[LabelSelector] = None
+    strategy: Optional[Dict] = None
+    template: Optional[PodTemplateSpec] = None
+    workloadRef: Optional[Dict] = None
+
+
+# https://github.com/argoproj/argo-rollouts/blob/master/manifests/crds/rollout-crd.yaml
+@dataclass
+class Rollout(HikaruDocumentBase, HikaruCRDDocumentMixin):
+    plural: ClassVar[str] = "rollouts"
+    group: ClassVar[str] = "argoproj.io"
+    version: ClassVar[str] = "v1alpha1"
+
+    metadata: ObjectMeta
+    spec: Optional[RolloutSpec] = None
+    status: Optional[Dict] = field(default_factory=dict)
+    apiVersion: str = f"{group}/{version}"
+    kind: str = "Rollout"
+
+    # Rollout spec can include a reference to an existing deployment to control it.
+    # In that case spec.template is None and selector can be find in the status.
+    def validate_selector(self):
+        if self.spec and not self.spec.selector:
+            selector: str = self.status.get("selector", "")
+            if selector:
+                matchLabels = {}
+                for label in selector.split(","):
+                    parts = label.partition("=")
+                    matchLabels[parts[0]] = parts[2]
+
+                self.spec.selector = LabelSelector([], matchLabels)
+
+    @classmethod
+    def readNamespaced(self, name: str, namespace: str):
+        obj = Rollout(metadata=ObjectMeta(name=name, namespace=namespace)).read()
+        obj.validate_selector()
+        return type("", (object,), {"obj": obj})()
+
+    @classmethod
+    def list_namespaced(self, namespace: str):
+        rollouts_res = client.CustomObjectsApi().list_namespaced_custom_object(
+            group=Rollout.group,
+            version=Rollout.version,
+            namespace=namespace,
+            plural=Rollout.plural,
+        ) 
+        ro_list = type("", (object,), {"items": [
+            DeploymentConfig(metadata=ObjectMeta(**ro.get("metadata", {})), spec=RolloutSpec(**ro.get("spec", {})))
+            for ro in
+            rollouts_res.get("items", [])
+        ]})()
+
+        return ro_list
+    
+    @classmethod
+    def list_for_all_namespaces(self):
+        rollouts_res = client.CustomObjectsApi().list_cluster_custom_object(
+            group=Rollout.group,
+            version=Rollout.version,
+            plural=Rollout.plural,
+        ) 
+        ro_list = type("", (object,), {"items": [
+            Rollout(metadata=ObjectMeta(**ro.get("metadata", {})), spec=RolloutSpec(**ro.get("spec", {})))
+            for ro in
+            rollouts_res.get("items", [])
+        ]})()
+
+        return ro_list
+
+
 hikaru.register_version_kind_class(RobustaPod, Pod.apiVersion, Pod.kind)
 hikaru.register_version_kind_class(RobustaDeployment, Deployment.apiVersion, Deployment.kind)
 hikaru.register_version_kind_class(RobustaJob, Job.apiVersion, Job.kind)
 register_crd_class(DeploymentConfig, DeploymentConfig.plural, is_namespaced=True)
+register_crd_class(Rollout, Rollout.plural, is_namespaced=True)
