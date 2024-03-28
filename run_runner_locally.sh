@@ -27,15 +27,22 @@ export NC='\033[0m' # No Color
 # Check if Python 3.9 or higher is installed
 if ! $PYTHON_BINARY -c "import sys; exit(not (sys.version_info.major == 3 and sys.version_info.minor >= 9))"; then
   echo -e "${RED}Error: Python 3.9 or higher is not installed or was not run\n${NC}"
-  echo "You are using `$PYTHON_BINARY --version` located at `which $PYTHON_BINARY`"
+  echo "You are using $(PYTHON_BINARY --version) located at $(which $PYTHON_BINARY)"
   echo "To change your Python version, edit the PYTHON_BINARY variable at the top of this script"
   exit 1
+fi
+
+# Check if mirrord is installed globally
+if ! command -v mirrord &> /dev/null
+then
+    echo -e "${RED}Mirrord is not installed globally. Follow the guide here to install it: https://github.com/metalbear-co/mirrord?tab=readme-ov-file#cli-tool${NC}"
+    exit 1
 fi
 
 # Check if Poetry is installed globally
 if ! command -v poetry &> /dev/null
 then
-    echo -e "${RED}Poetry is not installed globally. Make sure the `poetry` command works${NC}"
+    echo -e "${RED}Poetry is not installed globally. Make sure the 'poetry' command works${NC}"
     exit 1
 fi
 
@@ -50,8 +57,8 @@ fi
 
 echo "Setting up local runner environment"
 mkdir -p deployment/playbooks/defaults
-ln -fs $(pwd)/playbooks/robusta_playbooks/ ./deployment/playbooks/defaults
-ln -fs $(pwd)/playbooks/pyproject.toml ./deployment/playbooks/defaults
+ln -fs "$(pwd)/playbooks/robusta_playbooks/" ./deployment/playbooks/defaults
+ln -fs "$(pwd)/playbooks/pyproject.toml" ./deployment/playbooks/defaults
 
 echo "Checking if runner can listen on port ${PORT}"
 if lsof -Pi :${PORT} -sTCP:LISTEN -t >/dev/null ; then
