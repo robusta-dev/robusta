@@ -142,6 +142,7 @@ from robusta.core.reporting import (
     Enrichment,
     FileBlock,
     EmptyFileBlock,
+    Filterable,
     Finding,
     FindingSeverity,
     FindingStatus,

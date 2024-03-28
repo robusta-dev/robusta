@@ -1,6 +1,7 @@
 from robusta.core.reporting.base import (
     BaseBlock,
     Emojis,
+    Filterable,
     Enrichment,
     Finding,
     FindingSeverity,
@@ -39,6 +40,7 @@ __all__ = [
     "VideoLink",
     "FindingSource",
     "Enrichment",
+    "Filterable",
     "FindingSubjectType",
     "FindingSubject",
     "Finding",
