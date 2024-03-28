@@ -91,7 +91,7 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
 
     finding = Finding(
         title=f"Pod {pod.metadata.name} in namespace {pod.metadata.namespace} OOMKilled results",
-        aggregation_key="pod_oom_killer_enricher",
+        aggregation_key="PodOOMKilled",
         severity=FindingSeverity.HIGH,
         subject=PodFindingSubject(pod),
     )

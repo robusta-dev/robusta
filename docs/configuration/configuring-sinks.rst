@@ -110,7 +110,7 @@ The following attributes can be included in an ``include``/``excluded`` block:
 - ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
 - ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
 - ``source``: one of ``NONE``, ``KUBERNETES_API_SERVER``, ``PROMETHEUS``, ``MANUAL``, ``CALLBACK``
-- ``identifier``: e.g. ``report_crash_loop``
+- ``identifier``: e.g. ``CrashLoopBackoff``
 - ``labels``: A comma separated list of ``key=val`` e.g. ``foo=bar,instance=123``
 - ``annotations``: A comma separated list of ``key=val`` e.g. ``app.kubernetes.io/name=prometheus``
 
@@ -126,7 +126,7 @@ The following attributes can be included in an ``include``/``excluded`` block:
     For Prometheus alerts, it's always the alert name.
 
     .. TODO: update after we finish our improvements here:
-    .. For builtin APIServer alerts, it can vary, but common values are ``report_crash_loop``, ``image_pull_backoff_reporter``, ``ConfigurationChange/KubernetesResource/Change``, and ``job_failure``.
+    .. For builtin APIServer alerts, it can vary, but common values are ``CrashLoopBackoff``, ``ImagePullBackoff``, ``ConfigurationChange/KubernetesResource/Change``, and ``JobFailure``.
 
     For custom playbooks, it's the value you set in :ref:`create_finding<create_finding>` under ``aggregation_key``.
 
@@ -193,7 +193,7 @@ The following attributes can be included in a *match* block:
 - ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
 - ``kind``: one of ``deployment``, ``node``, ``pod``, ``job``, ``daemonset``
 - ``source``: one of ``NONE``, ``KUBERNETES_API_SERVER``, ``PROMETHEUS``, ``MANUAL``, ``CALLBACK``
-- ``identifier``: e.g. ``report_crash_loop``
+- ``identifier``: e.g. ``CrashLoopBackoff``
 - ``labels``: A comma separated list of ``key=val`` e.g. ``foo=bar,instance=123``
 - ``annotations``: A comma separated list of ``key=val`` e.g. ``app.kubernetes.io/name=prometheus``
 
@@ -209,7 +209,7 @@ The following attributes can be included in a *match* block:
     For Prometheus alerts, it's always the alert name.
 
     .. TODO: update after we finish our improvements here:
-    .. For builtin APIServer alerts, it can vary, but common values are ``report_crash_loop``, ``image_pull_backoff_reporter``, ``ConfigurationChange/KubernetesResource/Change``, and ``job_failure``.
+    .. For builtin APIServer alerts, it can vary, but common values are ``CrashLoopBackoff``, ``ImagePullBackoff``, ``ConfigurationChange/KubernetesResource/Change``, and ``JobFailure``.
 
     For custom playbooks, it's the value you set in :ref:`create_finding<create_finding>` under ``aggregation_key``.
 
@@ -290,7 +290,7 @@ Instead of using sink matchers, you can set the *sinks* attribute per playbook:
       - on_job_failure: {}
       actions:
       - create_finding:
-          aggregation_key: "job_failure"
+          aggregation_key: "JobFailure"
           title: "Job Failed"
       - job_info_enricher: {}
       - job_events_enricher: {}

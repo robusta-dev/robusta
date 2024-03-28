@@ -364,7 +364,7 @@ def show_stackoverflow_search(event: ExecutionBaseEvent, params: SearchTermParam
     finding = Finding(
         title=f"{params.search_term} StackOverflow Results",
         source=FindingSource.PROMETHEUS,
-        aggregation_key="show_stackoverflow_search",
+        aggregation_key="ShowStackoverflowSearch",
     )
     if answers:
         finding.add_enrichment([ListBlock(answers)])

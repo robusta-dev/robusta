@@ -82,7 +82,7 @@ Here is the Robusta rule that generates this notification:
       actions:
       - create_finding:
           title: "Job Failed"
-          aggregation_key: "job_failure"
+          aggregation_key: "JobFailure"
       - job_info_enricher: {}
       - job_events_enricher: {}
       - job_pod_enricher: {}
