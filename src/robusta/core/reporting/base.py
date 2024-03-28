@@ -3,6 +3,7 @@ import logging
 import re
 import urllib.parse
 import uuid
+from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
@@ -13,6 +14,7 @@ from pydantic.main import BaseModel
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.consts import FindingSource, FindingSubjectType, FindingType
+from robusta.utils.scope import BaseScopeMatching
 
 
 class BaseBlock(BaseModel):
@@ -129,8 +131,9 @@ class Enrichment:
         return f"annotations: {self.annotations} Enrichment: {self.blocks} "
 
 
-class Filterable:
+class Filterable(ABC):
     @property
+    @abstractmethod
     def attribute_map(self) -> Dict[str, Union[str, Dict[str, str]]]:
         raise NotImplementedError
 
@@ -246,7 +249,7 @@ class FindingSubject:
         return f"{self.subject_type.value}/{self.name}"
 
 
-class Finding(Filterable):
+class Finding(Filterable, BaseScopeMatching):
     """
     A Finding represents an event that should be sent to sinks.
     """
@@ -310,6 +313,9 @@ class Finding(Filterable):
             "labels": self.subject.labels,
             "annotations": self.subject.annotations,
         }
+
+    def get_scope_matching_data(self):
+        return self.attribute_map
 
     def _map_service_to_uri(self):
         if not self.service:
