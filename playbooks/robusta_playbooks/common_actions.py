@@ -3,7 +3,6 @@ from string import Template
 from typing import Dict, Optional
 
 from robusta.api import ActionParams, ExecutionBaseEvent, Finding, FindingSeverity, action
-from robusta.utils.common import to_pascal_case
 
 
 def _get_templating_labels(event: ExecutionBaseEvent) -> Dict:
@@ -54,7 +53,7 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
 
     aggregation_key = Template(params.aggregation_key).safe_substitute(labels) if params.aggregation_key else None
 
-    event.override_finding_attributes(title, description, severity, to_pascal_case(aggregation_key))
+    event.override_finding_attributes(title, description, severity, aggregation_key)
 
 
 class FindingFields(ActionParams):

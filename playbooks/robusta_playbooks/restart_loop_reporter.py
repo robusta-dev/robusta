@@ -30,7 +30,7 @@ def report_crash_loop(event: PodEvent, params: ReportCrashLoopParams):
     regex_replacement_style = (
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     )
-    send_crash_report(event, "ReportCrashLoop", params.regex_replacer_patterns, regex_replacement_style)
+    send_crash_report(event, "CrashLoopBackoff", params.regex_replacer_patterns, regex_replacement_style)
 
 
 # The code below is deprecated. Please use the new crash loop action
@@ -79,4 +79,4 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
     if not RateLimiter.mark_and_test("restart_loop_reporter", pod_name + pod.metadata.namespace, config.rate_limit):
         return
 
-    send_crash_report(event, "RestartLoopReporter")
+    send_crash_report(event, "CrashLoopBackoff")

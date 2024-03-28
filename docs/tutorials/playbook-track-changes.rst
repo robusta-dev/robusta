@@ -147,7 +147,7 @@ Remove the playbook you added based on your specific use case from the ``customP
 ..       actions:
 ..       - create_finding: # (2)
 ..           title: "Job Failed"
-..           aggregation_key: "job_failure"
+..           aggregation_key: "JobFailure"
 ..       - job_info_enricher: {} # (3)
 ..       - job_events_enricher: {} # (4)
 ..       - job_pod_enricher: {} # (5)

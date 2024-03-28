@@ -54,7 +54,7 @@ Now lets add a :ref:`matcher <sink-matchers>` to each sink, so it receives a sub
         - scope:
             exclude:
             # don't send notifications related to image pull backoff
-              - identifier: [image_pull_backoff_reporter]
+              - identifier: [ImagePullBackoffReporter]
 
    - slack_sink:
         name: crashloopbackoff_slack_sink
@@ -63,7 +63,7 @@ Now lets add a :ref:`matcher <sink-matchers>` to each sink, so it receives a sub
         - scope:
             include:
             # only send notifications related to crashing pods and CPU throttling
-              - identifier: [report_crash_loop, CPUThrottlingHigh]
+              - identifier: [CrashLoopBackoff, CPUThrottlingHigh]
 
 .. note::
 

@@ -48,7 +48,7 @@ def report_rendering_task(event: ExecutionBaseEvent, action_params: ReportParams
     """
     finding = Finding(
         title=action_params.report_name,
-        aggregation_key="ReportRenderingTask",
+        aggregation_key="GrafanaReport",
         finding_type=FindingType.REPORT,
         failure=False,
     )
