@@ -54,7 +54,7 @@ Now lets add a :ref:`matcher <sink-matchers>` to each sink, so it receives a sub
         - scope:
             exclude:
             # don't send notifications related to image pull backoff
-              - identifier: [ImagePullBackoffReporter]
+              - identifier: [ImagePullBackoff]
 
    - slack_sink:
         name: crashloopbackoff_slack_sink

@@ -126,7 +126,7 @@ The following attributes can be included in an ``include``/``excluded`` block:
     For Prometheus alerts, it's always the alert name.
 
     .. TODO: update after we finish our improvements here:
-    .. For builtin APIServer alerts, it can vary, but common values are ``CrashLoopBackoff``, ``ImagePullBackoffReporter``, ``ConfigurationChange/KubernetesResource/Change``, and ``JobFailure``.
+    .. For builtin APIServer alerts, it can vary, but common values are ``CrashLoopBackoff``, ``ImagePullBackoff``, ``ConfigurationChange/KubernetesResource/Change``, and ``JobFailure``.
 
     For custom playbooks, it's the value you set in :ref:`create_finding<create_finding>` under ``aggregation_key``.
 
@@ -209,7 +209,7 @@ The following attributes can be included in a *match* block:
     For Prometheus alerts, it's always the alert name.
 
     .. TODO: update after we finish our improvements here:
-    .. For builtin APIServer alerts, it can vary, but common values are ``CrashLoopBackoff``, ``ImagePullBackoffReporter``, ``ConfigurationChange/KubernetesResource/Change``, and ``JobFailure``.
+    .. For builtin APIServer alerts, it can vary, but common values are ``CrashLoopBackoff``, ``ImagePullBackoff``, ``ConfigurationChange/KubernetesResource/Change``, and ``JobFailure``.
 
     For custom playbooks, it's the value you set in :ref:`create_finding<create_finding>` under ``aggregation_key``.
 
