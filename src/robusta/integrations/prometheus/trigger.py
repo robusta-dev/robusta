@@ -11,11 +11,13 @@ from robusta.integrations.helper import exact_match, prefix_match
 from robusta.integrations.kubernetes.custom_models import RobustaDeployment, RobustaJob, RobustaPod
 from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKubernetesAlert
 from robusta.utils.cluster_provider_discovery import cluster_provider
+from robusta.utils.scope import ScopeParams, BaseScopeMatching
+
 
 ALERT_EVENT = "alert_event"
 
 
-class PrometheusTriggerEvent(TriggerEvent):
+class PrometheusTriggerEvent(TriggerEvent, BaseScopeMatching):
     alert: PrometheusAlert
 
     def get_event_name(self) -> str:
@@ -25,6 +27,9 @@ class PrometheusTriggerEvent(TriggerEvent):
         alert_name = self.alert.labels.get("alertname", "NA")
         alert_severity = self.alert.labels.get("severity", "NA")
         return f"PrometheusAlert-{alert_name}-{alert_severity}"
+
+    def get_scope_matching_data(self):
+        return self.alert.labels
 
 
 class ResourceMapping(NamedTuple):
@@ -61,6 +66,7 @@ class PrometheusAlertTrigger(BaseTrigger):
     namespace_prefix: str = None
     instance_name_prefix: str = None
     k8s_providers: Optional[List[str]]
+    scope: Optional[ScopeParams] = None
 
     def get_trigger_event(self):
         return PrometheusTriggerEvent.__name__
@@ -68,6 +74,18 @@ class PrometheusAlertTrigger(BaseTrigger):
     def should_fire(self, event: TriggerEvent, playbook_id: str, build_context: Dict[str, Any]):
         if not isinstance(event, PrometheusTriggerEvent):
             return False
+
+        accept = True
+
+        if self.scope is not None:
+            if self.scope.exclude:
+                if event.scope_inc_exc_matches(self.scope.exclude):
+                    return False
+            if self.scope.include:
+                if event.scope_inc_exc_matches(self.scope.include):
+                    return True
+                else:  # include was defined, but not matched. So if not matched by old matcher, should be rejected!
+                    accept = False
 
         labels = event.alert.labels
         if not exact_match(self.alert_name, labels["alertname"]):
@@ -86,12 +104,12 @@ class PrometheusAlertTrigger(BaseTrigger):
             return False
 
         provider = cluster_provider.get_cluster_provider()
-        if provider and self.k8s_providers and len(self.k8s_providers) > 0:
+        if provider and self.k8s_providers:
             lowercase_provider = [provider.lower() for provider in self.k8s_providers]
             if provider.lower() not in lowercase_provider:
                 return False
 
-        return True
+        return accept
 
     def build_execution_event(
         self, event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]], build_context: Dict[str, Any]
