@@ -330,7 +330,7 @@ tests:
         expected: false
   - scope:
       include:
-        - identifier: iden1
+        - identifier: Iden1
           kind:
             - pod
             - node
