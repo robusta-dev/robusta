@@ -17,7 +17,7 @@ from robusta.utils.scope import ScopeParams, BaseScopeMatching
 ALERT_EVENT = "alert_event"
 
 
-class PrometheusTriggerEvent(TriggerEvent):
+class PrometheusTriggerEvent(TriggerEvent, BaseScopeMatching):
     alert: PrometheusAlert
 
     def get_event_name(self) -> str:
@@ -27,6 +27,9 @@ class PrometheusTriggerEvent(TriggerEvent):
         alert_name = self.alert.labels.get("alertname", "NA")
         alert_severity = self.alert.labels.get("severity", "NA")
         return f"PrometheusAlert-{alert_name}-{alert_severity}"
+
+    def get_scope_matching_data(self):
+        return self.alert.labels
 
 
 class ResourceMapping(NamedTuple):
@@ -52,7 +55,7 @@ MAPPINGS = [
 ]
 
 
-class PrometheusAlertTrigger(BaseTrigger, BaseScopeMatching):
+class PrometheusAlertTrigger(BaseTrigger):
     """
     :var status: one of "firing", "resolved", or "all"
     """
@@ -71,6 +74,18 @@ class PrometheusAlertTrigger(BaseTrigger, BaseScopeMatching):
     def should_fire(self, event: TriggerEvent, playbook_id: str, build_context: Dict[str, Any]):
         if not isinstance(event, PrometheusTriggerEvent):
             return False
+
+        accept = True
+
+        if self.scope is not None:
+            if self.scope.exclude:
+                if event.scope_inc_exc_matches(self.scope.exclude):
+                    return False
+            if self.scope.include:
+                if event.scope_inc_exc_matches(self.scope.include):
+                    return True
+                else:  # include was defined, but not matched. So if not matched by old matcher, should be rejected!
+                    accept = False
 
         labels = event.alert.labels
         if not exact_match(self.alert_name, labels["alertname"]):
@@ -94,23 +109,7 @@ class PrometheusAlertTrigger(BaseTrigger, BaseScopeMatching):
             if provider.lower() not in lowercase_provider:
                 return False
 
-        if self.scope:
-            if not self.scope_inc_exc_matches(self.scope.include, event.alert):
-                return False
-            if self.scope_inc_exc_matches(self.scope.exclude, event.alert):
-                return False
-
-        return True
-
-    def attribute_map(self, aux_obj=None) -> Dict[str, Union[str, Dict[str, str]]]:
-        data = {
-            "status": aux_obj.status,
-            # TODO do we want to expose other attrs of PrometheusAlert here, like
-            # endsAt, generatorURL etc?
-            "annotations": aux_obj.annotations,
-        }
-        data.update(aux_obj.labels)
-        return data
+        return accept
 
     def build_execution_event(
         self, event: PrometheusTriggerEvent, sink_findings: Dict[str, List[Finding]], build_context: Dict[str, Any]

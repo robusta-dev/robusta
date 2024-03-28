@@ -175,18 +175,6 @@ class K8sBaseTrigger(BaseTrigger):
         if self.kind != "Any" and self.kind != k8s_payload.kind:
             return False
 
-        accept = True
-
-        if self.scope is not None:
-            if self.scope.exclude:
-                if event.scope_inc_exc_matches(self.scope.exclude):
-                    return False
-            if self.scope.include:
-                if event.scope_inc_exc_matches(self.scope.include):
-                    return True
-                else:  # include was defined, but not matched. So if not matched by old matcher, should be rejected!
-                    accept = False
-
         if not exact_match(self.operation, K8sOperationType(k8s_payload.operation)):
             return False
 
