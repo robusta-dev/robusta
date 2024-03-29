@@ -23,7 +23,7 @@ from robusta.api import (
     PodRunningParams,
     PrometheusParams,
     RobustaJob,
-    ScanReportBlock,
+    KRRScanReportBlock,
     ScanReportRow,
     ScanType,
     action,
@@ -421,7 +421,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         metadata["description"] = krr_scan.description
         metadata["errors"] = krr_scan.errors
 
-    scan_block = ScanReportBlock(
+    scan_block = KRRScanReportBlock(
         title="KRR scan",
         scan_id=scan_id,
         type=ScanType.KRR,

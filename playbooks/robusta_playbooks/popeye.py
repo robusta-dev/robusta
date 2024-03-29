@@ -19,7 +19,7 @@ from robusta.api import (
     FindingType,
     PodRunningParams,
     RobustaJob,
-    ScanReportBlock,
+    PopeyeScanReportBlock,
     ScanReportRow,
     ScanType,
     action,
@@ -214,7 +214,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         update_state(ScanState.FAILED)
         return
 
-    scan_block = ScanReportBlock(
+    scan_block = PopeyeScanReportBlock(
         title="Popeye scan",
         scan_id=scan_id,
         type=ScanType.POPEYE,

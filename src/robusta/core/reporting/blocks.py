@@ -5,12 +5,13 @@
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import gzip
 import json
+import itertools
 import logging
 import textwrap
 from copy import deepcopy
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import hikaru
 from hikaru import DiffDetail, DiffType
@@ -557,6 +558,10 @@ class ScanReportRow(BaseModel):
     priority: float
 
 
+TableRow = Tuple[str, ...]
+ScanTable = Dict[str, List[TableRow]]
+
+
 class ScanReportBlock(BaseBlock):
     title: str
     scan_id: str  # UUID
@@ -585,6 +590,80 @@ class ScanReportBlock(BaseBlock):
             return "E"
         else:
             return "F"
+
+    @property
+    def table_headers(self) -> List[str]:
+        raise NotImplementedError("table_headers property must be implemented in the subclass")
+
+    @property
+    def table_data(self) -> ScanTable:
+        raise NotImplementedError("table_data property must be implemented in the subclass")
+
+
+class PopeyeScanReportBlock(ScanReportBlock):
+    @property
+    def table_headers(self) -> List[str]:
+        return ["Priority", "Name", "Namespace", "Issues"]
+
+    @property
+    def table_data(self) -> ScanTable:
+        sorted_data = sorted(self.results, key=lambda x: x.kind or "", reverse=True)
+        groupped_data = itertools.groupby(sorted_data, key=lambda x: x.kind)
+        return {
+            kind or "": [
+                (
+                    self.pdf_scan_row_priority_format(row.priority),
+                    row.name or "",
+                    row.namespace or "",
+                    self.pdf_scan_row_content_format(row)
+                )
+                for row in rows
+            ]
+            for kind, rows in groupped_data
+        }
+
+
+class KRRScanReportBlock(ScanReportBlock):
+    @property
+    def table_headers(self) -> List[str]:
+        return ["Name", "Namespace", "Container", "CPU Request", "CPU Limit", "Memory Request", "Memory Limit"]
+
+    @staticmethod
+    def __format_content_str(allocated: float, recommended: float, info: Optional[str]) -> str:
+        res = f"{allocated} -> {recommended}"
+        if info is not None:
+            res += f" ({info})"
+        return res
+
+    @staticmethod
+    def __parse_content(content) -> Tuple[str, ...]:
+        content_by_resource = {row["resource"]: row for row in content}
+        return tuple(
+            KRRScanReportBlock.__format_content_str(
+                content_by_resource[resource].get("allocated", {}).get(field, "-"),
+                content_by_resource[resource].get("recommended", {}).get(field, "-"),
+                content_by_resource[resource].get("info", {}).get(field, None),
+            )
+            for resource in ["cpu", "memory"]
+            for field in ["request", "limit"]
+        )
+
+    @property
+    def table_data(self) -> ScanTable:
+        sorted_data = sorted(self.results, key=lambda x: x.kind or "", reverse=True)
+        groupped_data = itertools.groupby(sorted_data, key=lambda x: x.kind)
+        return {
+            kind or "": [
+                (
+                    row.namespace or "",
+                    row.name or "",
+                    row.container or "",
+                    *self.__parse_content(row.content)
+                )
+                for row in rows
+            ]
+            for kind, rows in groupped_data
+        }
 
 
 class EventRow(BaseModel):
