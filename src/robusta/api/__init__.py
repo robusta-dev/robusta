@@ -155,6 +155,8 @@ from robusta.core.reporting import (
     MarkdownBlock,
     PrometheusBlock,
     ScanReportBlock,
+    PopeyeScanReportBlock,
+    KRRScanReportBlock,
     ScanReportRow,
     TableBlock,
     VideoLink
