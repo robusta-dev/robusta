@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from typing import Dict, Optional
 
@@ -6,7 +7,7 @@ import requests
 
 from robusta.api import PORT, ActionParams, AlertManagerEvent, ExecutionBaseEvent, action
 from robusta.utils.error_codes import ActionException, ErrorCodes
-from robusta.utils.silence_utils import AlertManagerParams, get_alertmanager_url
+from robusta.utils.silence_utils import AlertManagerParams, gen_alertmanager_headers, get_alertmanager_url
 
 
 class PrometheusAlertParams(ActionParams):
@@ -135,7 +136,7 @@ class AlertmanagerAlertParams(AlertManagerParams):
     :var summary: Simulated alert summary.
     """
 
-    alert_name: str
+    alert_name: str = "KubePodNotReady"
     pod_name: Optional[str] = None
     namespace: str = "default"
     status: str = "firing"
@@ -174,17 +175,21 @@ def alertmanager_alert(event: ExecutionBaseEvent, action_params: AlertmanagerAle
         }
     ]
 
-    headers = {"Content-type": "application/json"}
+    headers = gen_alertmanager_headers(action_params)
 
     alertmanager_url = get_alertmanager_url(action_params)
     if not alertmanager_url:
         raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
 
-    return requests.post(
-        f"{alertmanager_url}/api/v1/alerts",
-        data=json.dumps(alerts),
-        headers=headers,
-    )
+    try:
+        requests.post(
+            f"{alertmanager_url}/api/v1/alerts",
+            data=json.dumps(alerts),
+            headers=headers,
+        )
+    except Exception:
+        logging.exception(f"Failed to create alertmanager alerts {alerts}")
+        raise ActionException(ErrorCodes.ALERT_MANAGER_REQUEST_FAILED)
 
 
 class AlertManagerEventParams(ActionParams):
