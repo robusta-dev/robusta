@@ -91,7 +91,7 @@ In order to override the default configuration of the same playbook, both disabl
 Organizing Playbooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Using ``namedCustomPlaybooks``, you can define groups of playbooks separated by cluster, categories, team/department, etc.
+Using ``namedCustomPlaybooks``, you can define playbooks by name. This is useful when you want to define a base set of playbooks for all clusters/teams and then use additional Helm values files to override some of the base playbooks or add new ones.
 
 They are all merged together into a single playbooks list. This allows you to split away the custom playbooks from ``generated_values.yaml`` to separate files and organize your playbooks.
 

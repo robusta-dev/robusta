@@ -147,7 +147,7 @@ priorityBuiltinPlaybooks:
 # custom user playbooks
 customPlaybooks: []
 
-# use to load custom playbooks from other files. Find out more details https://docs.robusta.dev/master/playbook-reference/defining-playbooks/playbook-basics.html#organizing-playbooks
+# load custom playbooks by name, which allows overriding them when using multiple Helm values files - learn more https://docs.robusta.dev/master/playbook-reference/defining-playbooks/playbook-basics.html#organizing-playbooks
 namedCustomPlaybooks: {}
 
 
