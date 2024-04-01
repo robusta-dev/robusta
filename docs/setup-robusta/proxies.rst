@@ -18,3 +18,12 @@ To configure proxy settings, add environment variables using the following Helm 
 Either Helm value can be used, depending on your preference.
 
 For more details, refer to `this GitHub issue about HTTP(s) proxies <https://github.com/robusta-dev/robusta/pull/450>`_.
+
+Domains Used by Robusta
+---------------------------
+
+To ensure Robusta functions properly in environments with restricted internet access, please allow access to the following domains.
+
+.. code:: bash
+
+    api.robusta.dev,robusta-charts.storage.googleapis.com,us-central1-docker.pkg.dev,platform.robusta.dev,xvyhpoxfmtpuqqeyqkso.supabase.co,relay.robusta.dev
