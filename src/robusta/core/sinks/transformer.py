@@ -235,7 +235,7 @@ class Transformer:
                 borders_layout="INTERNAL",
                 rows=rows,
                 headings_style=FontFace(color=(headers_color)),
-                col_widths=(10, 25, 25, 65),
+                col_widths=scan.table_widths,
                 markdown=True,
                 line_height=1.5 * pdf.font_size,
             ):
@@ -251,10 +251,10 @@ class Transformer:
         pdf.c_margin = 2  # create default cell margin to add table "padding"
 
         title = f"{scan.type.capitalize()} report"
-        write_report_header(title, scan.end_time, scan.score, scan.grade())
+        write_report_header(title, scan.end_time, scan.score, scan.grade)
         write_config(pdf, scan.config)
 
-        for section_name, section_data in scan_data:
+        for section_name, section_data in scan_data.items():
             rows = [scan_headers, *section_data]
             write_section_header(pdf, section_name)
             write_table(pdf, rows)

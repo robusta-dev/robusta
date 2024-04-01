@@ -69,25 +69,6 @@ class GroupedIssues(BaseModel):
     level: int = 0
 
 
-def level_to_string(level: int) -> str:
-    if level == 1:
-        return "I"
-    elif level == 2:
-        return "W"
-    elif level == 3:
-        return "E"
-    else:
-        return "OK"
-
-
-def scan_row_content_to_string(row: ScanReportRow) -> str:
-    txt = f"**{row.container}**\n" if row.container else ""
-    for i in row.content:
-        txt += f"{level_to_string(i['level'])} {i['message']}\n"
-
-    return txt
-
-
 class PopeyeParams(PodRunningParams):
     """
     :var timeout: Time span for yielding the scan.
@@ -224,8 +205,6 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         metadata=metadata,
         results=[],
         config=f"{params.args} \n\n {params.spinach}",
-        pdf_scan_row_content_format=scan_row_content_to_string,
-        pdf_scan_row_priority_format=level_to_string,
     )
 
     scan_issues: List[ScanReportRow] = []
