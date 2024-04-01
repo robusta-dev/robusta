@@ -318,7 +318,7 @@ from robusta.utils.parsing import load_json
 from robusta.utils.rate_limiter import RateLimiter
 from robusta.utils.silence_utils import (
     AddSilenceParams,
-    BaseSilenceParams,
+    AlertManagerParams,
     DeleteSilenceParams,
     Silence,
     SilenceOperation,
