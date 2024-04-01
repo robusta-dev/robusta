@@ -21,7 +21,6 @@ For more details, refer to `this GitHub issue about HTTP(s) proxies <https://git
 
 Domains Used by Robusta
 ---------------------------
-
 To ensure Robusta functions properly in environments with restricted internet access, please allow access to the following domains.
 
 .. code:: bash
