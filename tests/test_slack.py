@@ -14,7 +14,7 @@ TEST_KEY = "test key"
 
 def test_send_to_slack(slack_channel: SlackChannel):
     slack_sender = SlackSender(CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY)
-    msg = "test123"
+    msg = "Test123"
     finding = Finding(title=msg, aggregation_key=msg)
     finding.add_enrichment([MarkdownBlock("testing")])
     slack_params = SlackSinkParams(name="test_slack", slack_channel=slack_channel.channel_name, api_key="")
@@ -32,7 +32,7 @@ def test_long_slack_messages(slack_channel: SlackChannel):
 
 def test_long_table_columns(slack_channel: SlackChannel):
     slack_sender = SlackSender(CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY)
-    finding = Finding(title="Testing table blocks", aggregation_key="Testing table blocks")
+    finding = Finding(title="Testing table blocks", aggregation_key="TestingTableBlocks")
     finding.add_enrichment(
         [
             TableBlock(

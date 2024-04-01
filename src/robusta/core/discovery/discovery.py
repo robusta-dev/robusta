@@ -7,7 +7,17 @@ from concurrent.futures.process import ProcessPoolExecutor
 from typing import Dict, List, Optional, Union
 
 import prometheus_client
-from hikaru.model.rel_1_26 import Container, DaemonSet, Deployment, Job, Pod, ReplicaSet, StatefulSet, Volume
+from hikaru.model.rel_1_26 import (
+    Container,
+    DaemonSet,
+    Deployment,
+    Job,
+    ObjectMeta,
+    Pod,
+    ReplicaSet,
+    StatefulSet,
+    Volume,
+)
 from kubernetes import client
 from kubernetes.client import (
     V1Container,
@@ -21,6 +31,7 @@ from kubernetes.client import (
     V1ObjectMeta,
     V1Pod,
     V1PodList,
+    V1PodTemplateSpec,
     V1ReplicaSetList,
     V1StatefulSet,
     V1StatefulSetList,
@@ -31,16 +42,19 @@ from pydantic import BaseModel
 from robusta.core.discovery import utils
 from robusta.core.model.cluster_status import ClusterStats
 from robusta.core.model.env_vars import (
+    ARGO_ROLLOUTS,
     DISABLE_HELM_MONITORING,
     DISCOVERY_BATCH_SIZE,
     DISCOVERY_MAX_BATCHES,
     DISCOVERY_POD_OWNED_PODS,
     DISCOVERY_PROCESS_TIMEOUT_SEC,
+    IS_OPENSHIFT,
 )
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
 from robusta.core.model.services import ContainerInfo, ServiceConfig, ServiceInfo, VolumeInfo
+from robusta.integrations.kubernetes.custom_models import DeploymentConfig, DictToK8sObj, Rollout
 from robusta.patch.patch import create_monkey_patches
 from robusta.utils.cluster_provider_discovery import cluster_provider
 from robusta.utils.stack_tracer import StackTracer
@@ -94,6 +108,35 @@ class Discovery:
             logging.error("error getting stack trace", exc_info=True)
 
     @staticmethod
+    def __create_service_info_from_hikaru(
+        meta: ObjectMeta,
+        kind: str,
+        containers: List[Container],
+        volumes: List[Volume],
+        total_pods: int,
+        ready_pods: int,
+        is_helm_release: bool = False,
+    ) -> ServiceInfo:
+        container_info = (
+            [ContainerInfo.get_container_info_hikaru(container) for container in containers] if containers else []
+        )
+        volumes_info = [VolumeInfo.get_volume_info(volume) for volume in volumes] if volumes else []
+        config = ServiceConfig(labels=meta.labels or {}, containers=container_info, volumes=volumes_info)
+        version = getattr(meta, "resource_version", None) or getattr(meta, "resourceVersion", None)
+        resource_version = int(version) if version else 0
+
+        return ServiceInfo(
+            resource_version=resource_version,
+            name=meta.name,
+            namespace=meta.namespace,
+            service_type=kind,
+            service_config=config,
+            ready_pods=ready_pods,
+            total_pods=total_pods,
+            is_helm_release=is_helm_release,
+        )
+
+    @staticmethod
     def __create_service_info(
         meta: V1ObjectMeta,
         kind: str,
@@ -121,12 +164,12 @@ class Discovery:
         )
 
     @staticmethod
-    def create_service_info(obj: Union[Deployment, DaemonSet, StatefulSet, Pod, ReplicaSet]) -> ServiceInfo:
-        return Discovery.__create_service_info(
+    def create_service_info_from_hikaru(obj: Union[Deployment, DaemonSet, StatefulSet, Pod, ReplicaSet]) -> ServiceInfo:
+        return Discovery.__create_service_info_from_hikaru(
             obj.metadata,
             obj.kind,
-            extract_containers(obj),
-            extract_volumes(obj),
+            extract_containers_k8(obj),
+            extract_volumes_k8(obj),
             extract_total_pods(obj),
             extract_ready_pods(obj),
             is_helm_release=is_release_managed_by_helm(
@@ -142,11 +185,102 @@ class Discovery:
         pods_metadata: List[V1ObjectMeta] = []
         node_requests = defaultdict(list)  # map between node name, to request of pods running on it
         active_services: List[ServiceInfo] = []
+
         # discover micro services
         try:
+            continue_ref: Optional[str] = None
+            if IS_OPENSHIFT:
+                for _ in range(DISCOVERY_MAX_BATCHES):
+                    try:
+                        deployconfigs_res = client.CustomObjectsApi().list_cluster_custom_object(
+                            group=DeploymentConfig.group,
+                            version=DeploymentConfig.version,
+                            plural=DeploymentConfig.plural,
+                            limit=DISCOVERY_BATCH_SIZE,
+                            _continue=continue_ref,
+                        )
+                    except Exception:
+                        logging.exception(msg="Failed to list Deployment configs from api.")
+                        break
+
+                    for dc in deployconfigs_res.get("items", []):
+                        try:
+                            meta = DictToK8sObj(dc.get("metadata"), V1ObjectMeta)
+                            spec = dc.get("spec", {})
+                            template = DictToK8sObj(spec.get("template"), V1PodTemplateSpec)
+
+                            active_services.extend(
+                                [
+                                    Discovery.__create_service_info(
+                                        meta=meta,
+                                        kind="DeploymentConfig",
+                                        containers=template.spec.containers,
+                                        volumes=template.spec.volumes,
+                                        total_pods=spec.get("replicas", 1),
+                                        ready_pods=dc.get("status", {}).get("readyReplicas", 0),
+                                        is_helm_release=is_release_managed_by_helm(
+                                            annotations=meta.annotations, labels=meta.labels
+                                        ),
+                                    )
+                                ]
+                            )
+                        except Exception:
+                            logging.exception(msg=f"Failed to parse Deployment config/n {dc}")
+                            continue
+
+                    continue_ref = deployconfigs_res.get("metadata", {}).get("continue")
+                    if not continue_ref:
+                        break
+
+            # rollouts.
+            continue_ref = None
+            if ARGO_ROLLOUTS:
+                for _ in range(DISCOVERY_MAX_BATCHES):
+                    try:
+                        rollouts_res = client.CustomObjectsApi().list_cluster_custom_object(
+                            group=Rollout.group,
+                            version=Rollout.version,
+                            plural=Rollout.plural,
+                            limit=DISCOVERY_BATCH_SIZE,
+                            _continue=continue_ref,
+                        )
+                    except Exception:
+                        logging.exception(msg="Failed to list Argo Rollouts from api.")
+                        break
+
+                    for ro in rollouts_res.get("items", []):
+                        try:
+                            meta = DictToK8sObj(ro.get("metadata"), V1ObjectMeta)
+                            spec = ro.get("spec", {})
+                            template = DictToK8sObj(spec.get("template"), V1PodTemplateSpec)
+                            status = ro.get("status", {})
+
+                            active_services.extend(
+                                [
+                                    Discovery.__create_service_info(
+                                        meta=meta,
+                                        kind=Rollout.kind,
+                                        containers=template.spec.containers if template else [],
+                                        volumes=template.spec.volumes if template else [],
+                                        total_pods=status.get("replicas", 1),
+                                        ready_pods=status.get("readyReplicas", 0),
+                                        is_helm_release=is_release_managed_by_helm(
+                                            annotations=meta.annotations, labels=meta.labels
+                                        ),
+                                    )
+                                ]
+                            )
+                        except Exception:
+                            logging.exception(msg=f"Failed to parse Rollout/n {ro}")
+                            continue
+
+                    continue_ref = rollouts_res.get("metadata", {}).get("continue")
+                    if not continue_ref:
+                        break
+
             # discover deployments
             # using k8s api `continue` to load in batches
-            continue_ref: Optional[str] = None
+            continue_ref = None
             for _ in range(DISCOVERY_MAX_BATCHES):
                 deployments: V1DeploymentList = client.AppsV1Api().list_deployment_for_all_namespaces(
                     limit=DISCOVERY_BATCH_SIZE, _continue=continue_ref
@@ -608,6 +742,7 @@ def extract_total_pods(resource) -> int:
             return 0 if not resource.status.desiredNumberScheduled else resource.status.desiredNumberScheduled
         elif isinstance(resource, Pod):
             return 1
+
         if isinstance(resource, V1Deployment) or isinstance(resource, V1StatefulSet):
             # resource.spec.replicas can be 0, default value is 1
             return resource.spec.replicas if resource.spec.replicas is not None else 1

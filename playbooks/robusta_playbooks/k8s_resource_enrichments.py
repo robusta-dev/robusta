@@ -4,8 +4,9 @@ from typing import Any, List, Optional
 
 import hikaru
 import kubernetes.client.exceptions
-from hikaru.model.rel_1_26 import ContainerState, ContainerStatus, Pod, PodList
+from hikaru.model.rel_1_26 import ContainerState, ContainerStateTerminated, ContainerStatus, Pod, PodList
 from pydantic import BaseModel
+from robusta.core.model.env_vars import RESOURCE_YAML_BLOCK_LIST
 
 from robusta.api import (
     ActionException,
@@ -18,7 +19,6 @@ from robusta.api import (
     ListBlock,
     MarkdownBlock,
     PodContainer,
-    ResourceLoader,
     ResourceNameLister,
     TableBlock,
     action,
@@ -73,7 +73,7 @@ class RelatedPod(BaseModel):
     statusReason: Optional[str] = None
 
 
-supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node"]
+supported_resources = ["Deployment", "DaemonSet", "ReplicaSet", "Pod", "StatefulSet", "Job", "Node", "DeploymentConfig", "Rollout"]
 
 
 def to_pod_row(pod: Pod, cluster_name: str) -> List:
@@ -236,13 +236,17 @@ def get_resource_yaml(event: KubernetesResourceEvent):
     namespace: str = resource.metadata.namespace
     name: str = resource.metadata.name
 
+    if resource_kind.lower() in RESOURCE_YAML_BLOCK_LIST:
+        event.add_enrichment(
+            [
+                MarkdownBlock(f"{resource_kind} is blocked."),
+                FileBlock(f"{name}.yaml", f"{resource_kind} is blocked.".encode()),
+            ],
+        )
+        return
+
     try:
-        loaded_resource = ResourceLoader.read_resource(
-            kind=resource_kind,
-            namespace=namespace,
-            name=name,
-        ).obj
-        resource_yaml = hikaru.get_yaml(loaded_resource)
+        resource_yaml = hikaru.get_yaml(resource)
 
         event.add_enrichment(
             [

@@ -24,7 +24,7 @@ def daemonset_fix_config(event: ExecutionBaseEvent):
     finding = Finding(
         title="Proposed fix",
         source=FindingSource.CALLBACK.value,
-        aggregation_key="daemonset_fix_config",
+        aggregation_key="DaemonsetFixConfig",
     )
     finding.add_enrichment(
         [
@@ -61,7 +61,7 @@ def daemonset_silence_false_alarm(event: ExecutionBaseEvent):
     finding = Finding(
         title="Silence the alert",
         source=FindingSource.CALLBACK,
-        aggregation_key="daemonset_silence_false_alarm",
+        aggregation_key="DaemonsetSilenceFalseAlarm",
     )
     finding.add_enrichment(
         [

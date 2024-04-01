@@ -111,6 +111,28 @@ contact support@robusta.dev or go to `our slack channel <https://bit.ly/robusta-
                 raise self._exception
             concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
 
+.. details:: AlertManager Silences are Disappearing
+
+        This happens when AlertManager does not have persistent storage enabled.
+
+        When using Robusta's embedded Prometheus Stack, persistent storage is enabled by default.
+
+        For other Prometheus distributions set the following Helm value (or it's equivalent):
+
+        .. code-block::
+
+                  # this is the setting in in kube-prometheus-stack
+                  # the exact setting will differ for other Prometheus distributions
+                  alertmanager:
+                    alertmanagerSpec:
+                      storage:
+                        volumeClaimTemplate:
+                          spec:
+                            accessModes: ["ReadWriteOnce"]
+                            resources:
+                              requests:
+                                storage: 10Gi
+
 Contributing
 ^^^^^^^^^^^^^^^^^^^^^^
 

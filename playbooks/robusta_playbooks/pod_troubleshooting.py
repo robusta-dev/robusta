@@ -81,7 +81,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
         finding = Finding(
             title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
             source=FindingSource.MANUAL,
-            aggregation_key="python_profiler",
+            aggregation_key="PythonProfiler",
             subject=PodFindingSubject(pod),
             finding_type=FindingType.REPORT,
             failure=False,
@@ -129,7 +129,7 @@ def pod_ps(event: PodEvent, params: PodRunningParams):
     finding = Finding(
         title=f"Processes in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="pod_processes",
+        aggregation_key="PodProcesses",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
@@ -188,7 +188,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
     finding = Finding(
         title=f"Memory allocations for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="python_memory_allocations",
+        aggregation_key="PythonMemoryAllocations",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
@@ -319,7 +319,7 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     finding = Finding(
         title=f"Stacktrace on pid {pid}:",
         source=FindingSource.MANUAL,
-        aggregation_key="debugger_stack_trace",
+        aggregation_key="DebuggerStackTrace",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
@@ -389,7 +389,7 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
     finding = Finding(
         title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="python_process_inspector",
+        aggregation_key="PythonProcessInspector",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
@@ -449,7 +449,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     finding = Finding(
         title=f"Python debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="python_debugger",
+        aggregation_key="PythonDebugger",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,

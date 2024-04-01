@@ -22,7 +22,7 @@ def job_restart_on_oomkilled_community(event: JobEvent, params: IncreaseResource
     """
     This action will run when job failed with oomkilled
     """
-    function_name = "job_restart_on_oomkilled_community"
+    function_name = "JobRestartOnOomkilledCommunity"
     finding = Finding(
         title=f"JOB RESTARTED",
         source=FindingSource.MANUAL,

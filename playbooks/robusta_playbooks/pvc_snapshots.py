@@ -29,7 +29,7 @@ def create_pvc_snapshot(event: ExecutionBaseEvent, params: VolumeSnapshotParams)
         event.add_finding(
             Finding(
                 title=f"Error creating VolumeSnapshot for {params.name}",
-                aggregation_key="volume_snapshot_error",
+                aggregation_key="VolumeSnapshotError",
                 finding_type=FindingType.ISSUE,
                 failure=True,
             )
@@ -68,7 +68,7 @@ def create_pvc_snapshot(event: ExecutionBaseEvent, params: VolumeSnapshotParams)
     )
     finding = Finding(
         title=f"Created VolumeSnapshot {snapshot_name}",
-        aggregation_key="volume_snapshot",
+        aggregation_key="VolumeSnapshot",
         finding_type=FindingType.REPORT,
         failure=False,
     )

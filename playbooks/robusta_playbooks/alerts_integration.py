@@ -43,6 +43,7 @@ from robusta.api import (
 )
 from robusta.core.playbooks.oom_killer_utils import logs_enricher, start_log_enrichment
 from robusta.core.reporting import FindingSubject
+from robusta.core.reporting.blocks import TableBlockFormat
 
 
 class SeverityParams(ActionParams):
@@ -208,6 +209,7 @@ def default_enricher(alert: PrometheusKubernetesAlert):
             TableBlock(
                 [[k, v] for (k, v) in labels.items()],
                 ["label", "value"],
+                table_format=TableBlockFormat.vertical,
                 table_name="*Alert labels*",
             ),
         ],
@@ -362,7 +364,7 @@ def show_stackoverflow_search(event: ExecutionBaseEvent, params: SearchTermParam
     finding = Finding(
         title=f"{params.search_term} StackOverflow Results",
         source=FindingSource.PROMETHEUS,
-        aggregation_key="show_stackoverflow_search",
+        aggregation_key="ShowStackoverflowSearch",
     )
     if answers:
         finding.add_enrichment([ListBlock(answers)])

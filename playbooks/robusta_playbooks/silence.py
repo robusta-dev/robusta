@@ -10,7 +10,7 @@ from robusta.api import (
     TableBlock,
     action,
     get_alertmanager_url,
-    BaseSilenceParams,
+    AlertManagerParams,
     get_alertmanager_url_path,
     SilenceOperation,
     gen_alertmanager_headers,
@@ -21,7 +21,7 @@ from robusta.api import (
 
 
 @action
-def get_silences(event: ExecutionBaseEvent, params: BaseSilenceParams):
+def get_silences(event: ExecutionBaseEvent, params: AlertManagerParams):
     alertmanager_url = get_alertmanager_url(params)
     if not alertmanager_url:
         raise ActionException(ErrorCodes.ALERT_MANAGER_DISCOVERY_FAILED)
