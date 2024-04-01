@@ -157,7 +157,7 @@ from robusta.core.reporting import (
     ScanReportBlock,
     ScanReportRow,
     TableBlock,
-    VideoLink
+    VideoLink,
 )
 
 from robusta.core.reporting.base import EnrichmentType
