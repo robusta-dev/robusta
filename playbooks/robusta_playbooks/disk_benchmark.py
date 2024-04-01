@@ -117,7 +117,7 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
             f"Fio disk benchmark for storage class {action_params.storage_class_name}",
             finding_type=FindingType.REPORT,
             failure=False,
-            aggregation_key="disk_benchmark",
+            aggregation_key="DiskBenchmark",
         )
         finding.add_enrichment([MarkdownBlock(text=benchmark_results)])
         event.add_finding(finding)

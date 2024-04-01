@@ -41,6 +41,8 @@ To configure it:
 3. Change the HTTP Method to POST in the ``Optional Webhook Settings``.
 4. Enter your ``<account_id> <signing_key>`` in the ``Authorization Headers - Credentials`` box (locate this in your generated_values.yaml file).
 
+   For example, if ``account_id: f88debc9-68b9-4c2a-e372-e948941518d2`` and ``signing_key: be48413c-e23f-b648-c6b5-773739a377f7``, then use ``f88debc9-68b9-4c2a-e372-e948941518d2 be48413c-e23f-b648-c6b5-773739a377f7`` as the value.
+
 .. image:: /images/grafana-alertmanager-post.png
   :width: 600
   :align: center

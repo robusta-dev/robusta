@@ -33,7 +33,7 @@ def http_get(event: ExecutionBaseEvent, action_params: HTTP_GET):
     """
     Run an http GET against a url, from within the cluster. Optionally, send the response as a finding.
     """
-    function_name = "http_get"
+    function_name = "HttpGet"
 
     # https://docs.robusta.dev/master/extending/actions/findings-api.html
 
@@ -102,7 +102,7 @@ def http_post(event: ExecutionBaseEvent, action_params: HTTP_POST):
     """
     Run an http POST against a url, from within the cluster. Optionally, send the response as a finding.
     """
-    function_name = "http_post"
+    function_name = "HttpPost"
 
     # https://docs.robusta.dev/master/extending/actions/findings-api.html
 
@@ -172,7 +172,7 @@ def http_put(event: ExecutionBaseEvent, action_params: HTTP_PUT):
     """
     Run an http PUT against a url, from within the cluster. Optionally, send the response as a finding.
     """
-    function_name = "http_put"
+    function_name = "HttpPut"
 
     # https://docs.robusta.dev/master/extending/actions/findings-api.html
 

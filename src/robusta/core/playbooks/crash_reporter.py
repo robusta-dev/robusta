@@ -12,7 +12,7 @@ from robusta.integrations.kubernetes.custom_models import RegexReplacementStyle
 
 def send_crash_report(
         event: PodEvent,
-        action_name: str,
+        aggregation_key: str,
         regex_replacer_patterns: Optional[NamedRegexPattern] = None,
         regex_replacement_style: Optional[RegexReplacementStyle] = None,
 ):
@@ -29,7 +29,7 @@ def send_crash_report(
         title=f"Crashing pod {pod.metadata.name} in namespace {pod.metadata.namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.HIGH,
-        aggregation_key=action_name,
+        aggregation_key=aggregation_key,
         subject=PodFindingSubject(pod),
     )
 

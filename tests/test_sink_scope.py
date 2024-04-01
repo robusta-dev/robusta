@@ -27,7 +27,7 @@ class CheckFinding(BaseModel):
     subject: CheckFindingSubject = CheckFindingSubject()
     labels: Dict[str, str] = {}
     annotations: Dict[str, str] = {}
-    aggregation_key: str = "oom_kill"
+    aggregation_key: str = "OomKill"
     severity: str = "INFO"
     source: str = "NONE"
     finding_type: str = "ISSUE"
@@ -119,7 +119,7 @@ class TestSinkBase:
     @pytest.mark.parametrize("matches_result,expected_result", [(True, True), (False, False)])
     def test_accepts(self, matches_result, expected_result):
         sink_base = SinkBase(sink_params=SinkBaseParams(name="x"), registry=Mock())
-        finding = Finding(title="y", aggregation_key="aaa")
+        finding = Finding(title="y", aggregation_key="Aaa")
         finding.matches = Mock(return_value=matches_result)
         # sink_base.time_slices is [TimeSliceAlways()] here, so the result will depend
         # solely on matches_result.
@@ -133,7 +133,7 @@ class TestFilterable:
 
     @pytest.fixture()
     def finding(self, get_invalid_attributes):
-        finding = Finding(title="title", aggregation_key="ag_key")
+        finding = Finding(title="title", aggregation_key="AgKey")
         with unittest.mock.patch.object(finding, "get_invalid_attributes", get_invalid_attributes):
             yield finding
 

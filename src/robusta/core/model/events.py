@@ -76,7 +76,7 @@ class ExecutionBaseEvent:
 
     def create_default_finding(self) -> Finding:
         """Create finding default fields according to the event type"""
-        return Finding(title="Robusta notification", aggregation_key="Generic finding key")
+        return Finding(title="Robusta notification", aggregation_key="GenericFindingKey")
 
     def set_all_sinks(self, all_sinks: Dict[str, SinkBase]):
         self.all_sinks = all_sinks

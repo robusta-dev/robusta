@@ -254,7 +254,7 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     finding = Finding(
         title="Popeye Report",
         source=FindingSource.MANUAL,
-        aggregation_key="popeye_report",
+        aggregation_key="PopeyeReport",
         finding_type=FindingType.REPORT,
         failure=False,
     )

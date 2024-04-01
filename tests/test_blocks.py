@@ -39,7 +39,7 @@ TEST_KEY = "test key"
 
 def test_send_to_slack(slack_channel: SlackChannel):
     slack_sender = SlackSender(CONFIG.PYTEST_IN_CLUSTER_SLACK_TOKEN, TEST_ACCOUNT, TEST_CLUSTER, TEST_KEY)
-    msg = "test123"
+    msg = "Test123"
     finding = Finding(title=msg, aggregation_key=msg)
     finding.add_enrichment([MarkdownBlock("testing")])
     slack_params = SlackSinkParams(name="test_slack", slack_channel=slack_channel.channel_name, api_key="")
@@ -109,7 +109,7 @@ def create_finding_with_all_blocks():
     )
 
     # Now that we have all the blocks, we add them to a finding
-    finding = Finding(title="Sample Finding", aggregation_key="foo-bar")  # TODO: support default
+    finding = Finding(title="Sample Finding", aggregation_key="FooBar")  # TODO: support default
     finding.add_enrichment(
         [
             markdown_block,

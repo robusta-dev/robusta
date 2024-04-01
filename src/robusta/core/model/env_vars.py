@@ -109,3 +109,7 @@ IS_OPENSHIFT = load_bool("IS_OPENSHIFT", False)
 ENABLE_GRAPH_BLOCK = load_bool("ENABLE_GRAPH_BLOCK", False)
 
 RUN_AS_SUBPROCESS = load_bool("RUN_AS_SUBPROCESS", True)
+
+ARGO_ROLLOUTS = load_bool("ARGO_ROLLOUTS", False)
+# lowered case k8s kinds in a json array string. "[\"configmap\", \"secret\"]"
+RESOURCE_YAML_BLOCK_LIST = json.loads(os.environ.get("RESOURCE_YAML_BLOCK_LIST", "[]"))

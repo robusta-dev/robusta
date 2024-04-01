@@ -10,7 +10,7 @@ from robusta.api import (
     MarkdownBlock,
     action,
 )
-from robusta.integrations.kubernetes.custom_models import DeploymentConfig
+from robusta.integrations.kubernetes.custom_models import DeploymentConfig, Rollout
 
 
 @action
@@ -20,7 +20,7 @@ def rollout_restart(event: KubernetesResourceEvent):
     Supports deployments, deploymentconfig, daemonsets and statefulsets related events.
     """
     resource = event.get_resource()
-    if resource.kind not in ["Deployment", "DaemonSet", "StatefulSet", "DeploymentConfig"]:
+    if resource.kind not in ["Deployment", "DaemonSet", "StatefulSet", "DeploymentConfig", "Rollout"]:
         raise ActionException(
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Rollout restart is not supported for resource {resource.kind}"
         )
@@ -36,7 +36,10 @@ def rollout_restart(event: KubernetesResourceEvent):
                 return
 
         now: str = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC).isoformat()
-        resource.spec.template.metadata.annotations["robusta.kubernetes.io/restartedAt"] = now
+        if isinstance(resource, Rollout):
+            resource.spec.restartAt = now
+        else:
+            resource.spec.template.metadata.annotations["robusta.kubernetes.io/restartedAt"] = now
         resource.update()
 
         event.add_enrichment([MarkdownBlock(f"{resource.kind}/{namespace}/{name} restarted")])
