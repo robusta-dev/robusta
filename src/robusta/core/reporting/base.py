@@ -3,6 +3,7 @@ import logging
 import re
 import urllib.parse
 import uuid
+from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
@@ -13,6 +14,7 @@ from pydantic.main import BaseModel
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.consts import FindingSource, FindingSubjectType, FindingType
+from robusta.utils.scope import BaseScopeMatcher
 
 
 class BaseBlock(BaseModel):
@@ -129,8 +131,17 @@ class Enrichment:
         return f"annotations: {self.annotations} Enrichment: {self.blocks} "
 
 
-class Filterable:
+class FilterableScopeMatcher(BaseScopeMatcher):
+    def __init__(self, data):
+        self.data = data
+
+    def get_data(self) -> Dict:
+        return self.data
+
+
+class Filterable(ABC):
     @property
+    @abstractmethod
     def attribute_map(self) -> Dict[str, Union[str, Dict[str, str]]]:
         raise NotImplementedError
 
@@ -158,11 +169,12 @@ class Filterable:
         # 1. "scope" check
         accept = True
         if scope_requirements is not None:
+            matcher = FilterableScopeMatcher(self.attribute_map)
             if scope_requirements.exclude:
-                if self.scope_inc_exc_matches(scope_requirements.exclude):
+                if matcher.scope_inc_exc_matches(scope_requirements.exclude):
                     return False
             if scope_requirements.include:
-                if self.scope_inc_exc_matches(scope_requirements.include):
+                if matcher.scope_inc_exc_matches(scope_requirements.include):
                     return True
                 else:  # include was defined, but not matched. So if not matched by old matcher, should be rejected!
                     accept = False
@@ -177,48 +189,6 @@ class Filterable:
             if not self.attribute_matches(attribute, expression):
                 return False
         return accept
-
-    def scope_inc_exc_matches(self, scope_inc_exc: Optional[list]):
-        return any(self.scope_matches(scope) for scope in scope_inc_exc)
-
-    def scope_matches(self, scope: Dict[str, List[str]]):
-        # scope is e.g. {'labels': ['app=oomki.*,app!=X.*Y']}
-        # or {'name': ['pod-xyz.*'], 'title': ['fdc.*a', 'fdd.*b'], 'type': ['ISSUE']}
-        for attr_name, attr_matchers in scope.items():
-            if not self.scope_attribute_matches(attr_name, attr_matchers):
-                return False
-        return True
-
-    def scope_attribute_matches(self, attr_name: str, attr_matchers: List[str]):
-        if attr_name not in self.attribute_map:
-            raise ValueError(f'Scope match on unknown attribute "{attr_name}"')
-        attr_value = self.attribute_map[attr_name]
-        for attr_matcher in attr_matchers:
-            if attr_name in ["labels", "annotations"]:
-                return self.match_labels_annotations(attr_matcher, attr_value)
-            elif re.fullmatch(attr_matcher, attr_value):
-                return True
-        return False
-
-    def match_labels_annotations(self, labels_match_expr: str, labels: Dict[str, str]):
-        for label_match in labels_match_expr.split(","):
-            if not self.label_matches(label_match, labels):
-                return False
-        return True
-
-    def label_matches(self, label_match: str, labels: Dict[str, str]):
-        label_name, label_regex = label_match.split("=", 1)
-        label_name = label_name.strip()
-        label_regex = label_regex.strip()
-        if label_name.endswith("!"):  # label_name!=match_expr
-            label_name = label_name[:-1].rstrip()
-            expect_match = False
-        else:
-            expect_match = True
-        label_value = labels.get(label_name)
-        if label_value is None:  # no label with that name
-            return False
-        return bool(re.fullmatch(label_regex, label_value.strip())) == expect_match
 
 
 class FindingSubject:

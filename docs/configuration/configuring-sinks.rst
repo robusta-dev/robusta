@@ -28,7 +28,6 @@ Integrate as many sinks as you like.
 
 .. _sink-matchers:
 
-
 Routing Alerts to Only One Sink
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -50,6 +49,7 @@ The sinks evaluation order, is the order defined in ``generated_values.yaml``.
             - namespace: production
         stop: true
 
+.. _sink-scope-matching:
 
 Routing Alerts To Specific Sinks
 ***************************************

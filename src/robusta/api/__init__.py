@@ -155,9 +155,11 @@ from robusta.core.reporting import (
     MarkdownBlock,
     PrometheusBlock,
     ScanReportBlock,
+    PopeyeScanReportBlock,
+    KRRScanReportBlock,
     ScanReportRow,
     TableBlock,
-    VideoLink
+    VideoLink,
 )
 
 from robusta.core.reporting.base import EnrichmentType
@@ -318,7 +320,7 @@ from robusta.utils.parsing import load_json
 from robusta.utils.rate_limiter import RateLimiter
 from robusta.utils.silence_utils import (
     AddSilenceParams,
-    BaseSilenceParams,
+    AlertManagerParams,
     DeleteSilenceParams,
     Silence,
     SilenceOperation,

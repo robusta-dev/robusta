@@ -235,13 +235,15 @@ class Transformer:
                 borders_layout="INTERNAL",
                 rows=rows,
                 headings_style=FontFace(color=(headers_color)),
-                col_widths=(10, 25, 25, 65),
+                col_widths=scan.table_widths,
                 markdown=True,
                 line_height=1.5 * pdf.font_size,
             ):
                 pass
 
         scan: ScanReportBlock = block
+        scan_headers = scan.table_headers
+        scan_data = scan.table_data
         pdf = FPDF(orientation="landscape", format="A4")
         pdf.add_page()
         pdf.set_font("courier", "", 18)
@@ -252,22 +254,9 @@ class Transformer:
         write_report_header(title, scan.end_time, scan.score, scan.grade)
         write_config(pdf, scan.config)
 
-        sections: dict[str, dict[str, List]] = defaultdict(lambda: defaultdict(list))
-        for item in scan.results:
-            sections[item.kind][f"{item.name}/{item.namespace}"].append(item)
-
-        for kind, grouped_issues in sections.items():
-            rows = [["Priority", "Name", "Namespace", "Issues"]]
-            for group, scanRes in grouped_issues.items():
-                n, ns = group.split("/", 1)
-                issue_txt = ""
-                max_priority: int = 0
-                for res in sorted(scanRes, key=lambda x: len(x.container)):
-                    issue_txt += scan.pdf_scan_row_content_format(row=res)
-                    max_priority = max(max_priority, res.priority)
-                    rows.append([scan.pdf_scan_row_priority_format(max_priority), n, ns, issue_txt])
-
-            write_section_header(pdf, kind)
+        for section_name, section_data in scan_data.items():
+            rows = [scan_headers, *section_data]
+            write_section_header(pdf, section_name)
             write_table(pdf, rows)
 
         return FileBlock(f"{title}.pdf", pdf.output("", "S"))
