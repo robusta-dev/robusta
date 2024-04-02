@@ -70,6 +70,7 @@ prometrix = "0.1.16"
 hikaru-model-26 = "^1.1.1"
 apprise = "^1.5.0"
 rocketchat-api = "^1.30.0"
+pydash = "8.0.0"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
