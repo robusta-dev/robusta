@@ -28,6 +28,8 @@ from robusta.core.reporting.blocks import (
     MarkdownBlock,
     PrometheusBlock,
     ScanReportBlock,
+    PopeyeScanReportBlock,
+    KRRScanReportBlock,
     ScanReportRow,
     TableBlock,
 )
