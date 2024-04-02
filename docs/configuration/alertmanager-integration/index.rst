@@ -1,8 +1,6 @@
 :hide-toc:
 
-
-
-Integrating with Prometheus
+Prometheus & other metrics
 ================================
 .. toctree::
    :hidden:

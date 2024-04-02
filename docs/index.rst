@@ -35,7 +35,8 @@
    configuration/index
    configuration/configuring-sinks
    🔔 Sinks Reference <configuration/sinks/index>
-   configuration/alertmanager-integration/index
+   📈 Prometheus & Metrics <configuration/alertmanager-integration/index>
+   ⚠️  AlertManager <configuration/alertmanager-integration/integrate-alertmanager>
    configuration/additional-settings
 
 
