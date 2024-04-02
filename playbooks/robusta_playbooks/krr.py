@@ -428,7 +428,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             )
             for scan in krr_scan.scans
         ],
-        config=params.json(),
+        config=params.json(indent=4),
     )
 
     finding = Finding(

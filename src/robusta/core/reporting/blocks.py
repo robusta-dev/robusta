@@ -618,11 +618,11 @@ class ScanReportBlock(BaseBlock):
 class PopeyeScanReportBlock(ScanReportBlock):
     @property
     def table_headers(self) -> List[str]:
-        return ["Priority", "Name", "Namespace", "Issues"]
+        return ["Priority", "Namespace", "Name", "Container", "Issues"]
 
     @property
     def table_widths(self) -> Tuple[int, ...]:
-        return (10, 25, 25, 65)
+        return (10, 25, 25, 25, 65)
 
     @property
     def table_data(self) -> ScanTable:
@@ -635,6 +635,7 @@ class PopeyeScanReportBlock(ScanReportBlock):
                     self.level_to_string(row.priority),
                     row.name or "",
                     row.namespace or "",
+                    row.container or "",
                     self.scan_row_content_format(row),
                 )
                 for row in rows
@@ -647,26 +648,23 @@ class PopeyeScanReportBlock(ScanReportBlock):
         level = int(level)
 
         if level == 1:
-            return "I"
+            return "Info"
         elif level == 2:
-            return "W"
+            return "Warning"
         elif level == 3:
-            return "E"
+            return "**Error**"
         else:
             return "OK"
 
     def scan_row_content_format(self, row: ScanReportRow) -> str:
-        txt = f"**{row.container}**\n" if row.container else ""
-        for i in row.content:
-            txt += f"{self.level_to_string(i['level'])} {i['message']}\n"
-
-        return txt
+        return "\n".join(f"{self.level_to_string(i['level'])} {i['message']}" for i in row.content)
 
 
 class KRRScanReportBlock(ScanReportBlock):
     @property
     def table_headers(self) -> List[str]:
         return [
+            "Priority",
             "Namespace",
             "Name",
             "Container",
@@ -674,12 +672,11 @@ class KRRScanReportBlock(ScanReportBlock):
             "CPU Limit",
             "Memory Request",
             "Memory Limit",
-            "Priority",
         ]
 
     @property
     def table_widths(self) -> Tuple[int, ...]:
-        return (10, 10, 10, 8, 8, 8, 8, 5)
+        return (5, 10, 10, 10, 8, 8, 8, 8)
 
     @staticmethod
     def __format_krr_value(value: Union[float, Literal["?"], None]) -> str:
@@ -709,6 +706,9 @@ class KRRScanReportBlock(ScanReportBlock):
             for field in ["request", "limit"]:
                 row = content_by_resource.get(resource)
                 if not row:
+                    # NOTE: We should always have a row for each resource,
+                    # but if for some reason this is not true, add some value not to break the table
+                    res.append("?")
                     continue
 
                 allocated = row.get("allocated", {}).get(field, "?")
@@ -727,11 +727,11 @@ class KRRScanReportBlock(ScanReportBlock):
             kind
             or "": [
                 (
+                    self.__priority_to_severity(row.priority),
                     row.namespace or "",
                     row.name or "",
                     row.container or "",
                     *self.__parse_content(row.content),
-                    self.__priority_to_severity(row.priority),
                 )
                 for row in rows
             ]
@@ -743,7 +743,7 @@ class KRRScanReportBlock(ScanReportBlock):
         priority = int(priority)
 
         if priority == 4:
-            return "CRITICAL"
+            return "**CRITICAL**"
         elif priority == 3:
             return "WARNING"
         elif priority == 2:
