@@ -44,6 +44,8 @@ class ModelConversion:
             "subject_name": finding.subject.name,
             "subject_namespace": finding.subject.namespace,
             "subject_node": finding.subject.node,
+            "labels": finding.subject.labels,
+            "annotations": finding.subject.annotations,
             "service_key": finding.service_key,
             "cluster": cluster_id,
             "account_id": account_id,
