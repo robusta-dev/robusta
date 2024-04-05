@@ -70,7 +70,7 @@ class FindingFields(ActionParams):
     :var severity: Finding severity. Allowed values: DEBUG, INFO, LOW, MEDIUM, HIGH
 
     :example title: "Job $name on namespace $namespace failed"
-    :example aggregation_key: "Job Failure"
+    :example aggregation_key: "JobFailure"
     :example severity: DEBUG
     """
 

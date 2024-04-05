@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
+
 from robusta.api import (
     IMAGE_REGISTRY,
     RELEASE_NAME,
@@ -22,18 +23,17 @@ from robusta.api import (
     PodRunningParams,
     PrometheusParams,
     RobustaJob,
-    ScanReportBlock,
+    KRRScanReportBlock,
     ScanReportRow,
     ScanType,
     action,
-    format_unit,
 )
 from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
 from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.7.1")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.8.1")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "1Gi")
 
@@ -148,41 +148,6 @@ def krr_severity_to_priority(severity: SeverityType) -> int:
         return 1
     else:
         return 0
-
-
-def priority_to_krr_severity(priority: int) -> str:
-    if priority == 4:
-        return "CRITICAL"
-    elif priority == 3:
-        return "WARNING"
-    elif priority == 2:
-        return "OK"
-    elif priority == 1:
-        return "GOOD"
-    else:
-        return "UNKNOWN"
-
-
-def format_krr_value(value: Union[float, Literal["?"], None]) -> str:
-    if value is None:
-        return "unset"
-    elif isinstance(value, str):
-        return "?"
-    else:
-        return format_unit(value)
-
-
-def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
-    return "\n".join(
-        f"{entry['resource'].upper()} Request: "
-        + f"{format_krr_value(entry['allocated']['request'])} -> "
-        + f"{format_krr_value(entry['recommended']['request'])} "
-        + f"\n{entry['resource'].upper()} Limit: "
-        + f"{format_krr_value(entry['allocated']['limit'])} -> "
-        + f"{format_krr_value(entry['recommended']['limit'])} "
-        + f"({priority_to_krr_severity(entry['priority']['request'])})"
-        for entry in row.content
-    )
 
 
 def get_krr_additional_flags(params: KRRParams) -> str:
@@ -420,7 +385,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         metadata["description"] = krr_scan.description
         metadata["errors"] = krr_scan.errors
 
-    scan_block = ScanReportBlock(
+    scan_block = KRRScanReportBlock(
         title="KRR scan",
         scan_id=scan_id,
         type=ScanType.KRR,
@@ -463,15 +428,13 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             )
             for scan in krr_scan.scans
         ],
-        config=params.json(),
-        pdf_scan_row_content_format=_pdf_scan_row_content_format,
-        pdf_scan_row_priority_format=lambda priority: priority_to_krr_severity(int(priority)),
+        config=params.json(indent=4),
     )
 
     finding = Finding(
         title="KRR Report",
         source=FindingSource.MANUAL,
-        aggregation_key="krr_report",
+        aggregation_key="KrrReport",
         finding_type=FindingType.REPORT,
         failure=False,
     )

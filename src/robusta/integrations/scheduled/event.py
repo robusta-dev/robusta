@@ -11,7 +11,7 @@ class ScheduledExecutionEvent(ExecutionBaseEvent):
     def create_default_finding(self):
         return Finding(
             title="General scheduled task",
-            aggregation_key="General scheduled task",
+            aggregation_key="GeneralScheduledTask",
         )
 
     @classmethod

@@ -9,6 +9,7 @@ from hikaru.model.rel_1_26 import ContainerStatus, Event, EventList, Pod, PodSta
 
 from robusta.core.reporting import BaseBlock, MarkdownBlock, TableBlock
 from robusta.core.reporting.base import EnrichmentType, Enrichment
+from robusta.core.reporting.blocks import TableBlockFormat
 
 
 class ImagePullBackoffReason(Flag):
@@ -92,6 +93,7 @@ def get_image_pull_backoff_enrichment(pod: Pod) -> Enrichment:
         image_pull_table_blocks.append(TableBlock(
             [[k, v] for (k, v) in image_issue_rows],
             ["label", "value"],
+            table_format=TableBlockFormat.vertical,
         ))
 
     image_pull_table_blocks.extend(error_blocks)
@@ -106,7 +108,7 @@ def __imagepull_backoff_reason_to_fix(reason: ImagePullBackoffReason) -> Optiona
     if reason == ImagePullBackoffReason.RepoDoesntExist:
         return "Image not found", "Make sure the image repository, image name and image tag are correct."
     if reason == ImagePullBackoffReason.NotAuthorized:
-        return "Unauthorized", 'The repo is access protected. Make sure to <a target="_blank" href="https:\/\/kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/">configure the correct image pull secrets</a>'
+        return "Unauthorized", 'The repo is access protected. Make sure to configure the correct image pull secrets: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry'
     if reason == ImagePullBackoffReason.Timeout:
         return "Timeout", 'If this does not resolved after a few minutes, make sure the image repository is responding.'
 
@@ -126,7 +128,7 @@ class ImagePullBackoffInvestigator:
     configs = [
         # Containerd
         {
-            "err_template": 'failed to pull and unpack image ".*?": failed to resolve reference ".*?": .*?: not found',
+            "err_template": r'failed to pull and unpack image ".*?": failed to resolve reference ".*?": .*?(no such host|not found)',
             "reason": ImagePullBackoffReason.RepoDoesntExist,
         },
         {

@@ -10,7 +10,6 @@ This guide covers how it works, and also the steps involved to use this feature:
 * Enable the Alerts UI on the Robusta UI.
 * Disable default Prometheus alerts installed by Kube Prometheus Stack.
 
-
 How it works
 --------------------
 
@@ -27,16 +26,12 @@ To see alerts and customize them, you must first activate alert rules in the Rob
 
 .. image:: /images/click-enable-alert-rules.png
 
-
-
 Disable Default Prometheus Alert Rules
 ********************************************
 
 Since Robusta creates new PrometheusRule custom resources, you must disable the default Kube Prometheus Stack alerts to avoid duplication of alerts.
 
 Choose the appropriate instructions below, based on whether you use the Prometheus bundled with Robusta or your own Prometheus.
-
-.. tab-set::
 
 .. tab-set::
    .. tab-item:: Robusta’s Prometheus

@@ -9,7 +9,9 @@ from pydantic import BaseModel, Extra
 from robusta.core.reporting import Finding, FindingSeverity, FindingSource, FindingSubject
 from robusta.core.reporting.consts import FindingSubjectType, FindingType
 from robusta.core.sinks.sink_base import SinkBase
-from robusta.core.sinks.sink_base_params import ScopeParams, SinkBaseParams
+from robusta.core.sinks.sink_base_params import SinkBaseParams
+from robusta.integrations.kubernetes.base_triggers import K8sTriggerEventScopeMatcher
+from robusta.utils.scope import ScopeParams
 
 
 class CheckFindingSubject(BaseModel):
@@ -27,7 +29,7 @@ class CheckFinding(BaseModel):
     subject: CheckFindingSubject = CheckFindingSubject()
     labels: Dict[str, str] = {}
     annotations: Dict[str, str] = {}
-    aggregation_key: str = "oom_kill"
+    aggregation_key: str = "OomKill"
     severity: str = "INFO"
     source: str = "NONE"
     finding_type: str = "ISSUE"
@@ -119,21 +121,21 @@ class TestSinkBase:
     @pytest.mark.parametrize("matches_result,expected_result", [(True, True), (False, False)])
     def test_accepts(self, matches_result, expected_result):
         sink_base = SinkBase(sink_params=SinkBaseParams(name="x"), registry=Mock())
-        finding = Finding(title="y", aggregation_key="aaa")
+        finding = Finding(title="y", aggregation_key="Aaa")
         finding.matches = Mock(return_value=matches_result)
         # sink_base.time_slices is [TimeSliceAlways()] here, so the result will depend
         # solely on matches_result.
         assert sink_base.accepts(finding) is expected_result
 
 
-class TestFilterable:
+class TestFindingScopeMatching:
     @pytest.fixture()
     def get_invalid_attributes(self):
         return Mock(return_value=[])
 
     @pytest.fixture()
     def finding(self, get_invalid_attributes):
-        finding = Finding(title="title", aggregation_key="ag_key")
+        finding = Finding(title="title", aggregation_key="AgKey")
         with unittest.mock.patch.object(finding, "get_invalid_attributes", get_invalid_attributes):
             yield finding
 
@@ -145,10 +147,12 @@ class TestFilterable:
         return finding
 
     def test_matches_no_scope_req(self, finding):
-        with unittest.mock.patch.object(finding, "scope_inc_exc_matches", Mock()) as mock_scope_inc_exc_matches:
+        with unittest.mock.patch.object(
+            K8sTriggerEventScopeMatcher, "scope_inc_exc_matches", Mock()
+        ) as mock_scope_inc_exc_matches:
             finding.matches({}, None)
-            mock_scope_inc_exc_matches.assert_not_called()
-            finding.get_invalid_attributes.assert_called_once()
+        mock_scope_inc_exc_matches.assert_not_called()
+        finding.get_invalid_attributes.assert_called_once()
 
     @pytest.mark.parametrize(
         "include,exclude,expected_output,match_req_evaluated",
@@ -182,16 +186,17 @@ class TestFilterable:
     ):
         assert finding_with_data.matches({}, ScopeParams(include=include, exclude=exclude)) is expected_output
         # The asserts below check that the result has/has not been computed using scope params only and
-        # that match_requirements were not evaluated. It's not the cleanest, but to make it so would
-        # require major refactorings in Finding/Filterable.
+        # that match_requirements were not evaluated.
         if match_req_evaluated:
             get_invalid_attributes.assert_called_once()
         else:
             get_invalid_attributes.assert_not_called()
 
     def test_matches_unknown_attr(self, finding_with_data):
-        with pytest.raises(ValueError):
-            finding_with_data.matches({}, ScopeParams(include=[{"xyzzfoo": "123"}], exclude=None))
+        with unittest.mock.patch("robusta.utils.scope.logging") as mock_logging:
+            result = finding_with_data.matches({}, ScopeParams(include=[{"xyzzfoo": "123"}], exclude=None))
+        assert result is False
+        mock_logging.warning.assert_called_once()
 
     def test_sink_scopes(self, finding):
         with open("tests/scope_test_config.yaml") as test_config_file:

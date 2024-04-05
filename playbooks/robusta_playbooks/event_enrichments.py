@@ -66,7 +66,7 @@ def event_report(event: EventChangeEvent):
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.INFO if event.obj.type == "Normal" else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
-        aggregation_key=f"Kubernetes {event.obj.type} Event",
+        aggregation_key=f"Kubernetes{event.obj.type}Event",
         subject=FindingSubject(
             name=k8s_obj.name,
             subject_type=FindingSubjectType.from_kind(k8s_obj.kind),
@@ -108,7 +108,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
     """
 
     resource = event.get_resource()
-    if resource.kind not in ["Pod", "Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job", "Node"]:
+    if resource.kind not in ["Pod", "Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job", "Node", "DeploymentConfig", "Rollout"]:
         raise ActionException(
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Resource events enricher is not supported for resource {resource.kind}"
         )
@@ -123,7 +123,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
     )
 
     # append related pod data as well
-    if params.dependent_pod_mode and kind in ["Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job"]:
+    if params.dependent_pod_mode and kind in ["Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job", "DeploymentConfig", "Rollout"]:
         pods = []
         if kind == "Job":
             pods = get_job_all_pods(resource) or []
@@ -189,7 +189,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
             ],
             {SlackAnnotations.ATTACHMENT: True},
             enrichment_type=EnrichmentType.k8s_events,
-            title=f"Resource Events"
+            title="Resource Events"
         )
 
 

@@ -59,7 +59,7 @@ def argo_app_sync(event: ExecutionBaseEvent, params: ArgoAppParams):
 
     finding = Finding(
         title="Argo CD application sync",
-        aggregation_key="argo_app_sync",
+        aggregation_key="ArgoAppSync",
         finding_type=FindingType.REPORT,
         failure=False,
     )

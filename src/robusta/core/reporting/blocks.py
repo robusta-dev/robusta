@@ -5,11 +5,13 @@
 #       HeaderBlock("foo") doesn't work. Only HeaderBlock(text="foo") would be allowed by pydantic.
 import gzip
 import json
+import itertools
 import logging
 import textwrap
 from copy import deepcopy
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from enum import Enum
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Tuple, Union
 
 import hikaru
 from hikaru import DiffDetail, DiffType
@@ -29,6 +31,7 @@ except ImportError:
 from prometrix import PrometheusQueryResult
 
 from robusta.core.model.env_vars import PRINTED_TABLE_MAX_WIDTH
+from robusta.core.model.pods import format_unit
 from robusta.core.reporting.base import BaseBlock
 from robusta.core.reporting.consts import ScanType
 from robusta.core.reporting.custom_rendering import render_value
@@ -139,11 +142,11 @@ class EmptyFileBlock(BaseBlock):
     filename: str
 
     def __init__(
-            self,
-            filename: str,
-            remarks: str,
-            metadata: Optional[dict] = None,
-            **kwargs,
+        self,
+        filename: str,
+        remarks: str,
+        metadata: Optional[dict] = None,
+        **kwargs,
     ):
         """
         :param filename: the file's name
@@ -196,6 +199,7 @@ class KubernetesDiffBlock(BaseBlock):
     """
     A diff between two versions of a Kubernetes object
     """
+
     diffs: List[DiffDetail]
     old: Optional[str]
     new: Optional[str]
@@ -268,7 +272,9 @@ class KubernetesDiffBlock(BaseBlock):
             if updated_fields_len < length:
                 updated_fields_str += f"{', '.join(updated_fields)}"
             else:
-                updated_fields_str += f"{', '.join(updated_fields[:length])} ... (and {updated_fields_len - length} more)"
+                updated_fields_str += (
+                    f"{', '.join(updated_fields[:length])} ... (and {updated_fields_len - length} more)"
+                )
 
         return f"{self.kind} updated{updated_fields_str}"
 
@@ -308,6 +314,10 @@ class JsonBlock(BaseBlock):
         super().__init__(json_str=json_str)
 
 
+class TableBlockFormat(Enum):
+    vertical: str = "vertical"
+
+
 class TableBlock(BaseBlock):
     """
     Table display of a list of lists.
@@ -323,6 +333,8 @@ class TableBlock(BaseBlock):
     column_renderers: Dict = {}
     table_name: str = ""
     column_width: List[int] = None
+    metadata: Dict[str, Any] = {}
+    table_format: Optional[TableBlockFormat] = None
 
     def __init__(
         self,
@@ -331,6 +343,8 @@ class TableBlock(BaseBlock):
         column_renderers: Dict = {},
         table_name: str = "",
         column_width: List[int] = None,
+        metadata: Dict[str, Any] = {},
+        table_format: Optional[TableBlockFormat] = None,
         **kwargs,
     ):
         """
@@ -343,8 +357,12 @@ class TableBlock(BaseBlock):
             column_renderers=column_renderers,
             table_name=table_name,
             column_width=column_width,
+            metadata=metadata,
             **kwargs,
         )
+
+        if table_format:
+            self.metadata["format"] = TableBlockFormat.vertical.value
 
     @classmethod
     def __calc_max_width(cls, headers, rendered_rows, table_max_width: int) -> List[int]:
@@ -508,20 +526,29 @@ class PrometheusBlock(BaseBlock):
     y_axis_type: Optional[ChartValuesFormat]
     graph_name: Optional[str]
 
-    def __init__(self, data: PrometheusQueryResult, query: str,
-                 vertical_lines: Optional[List[PrometheusBlockLineData]] = None,
-                 horizontal_lines: Optional[List[PrometheusBlockLineData]] = None,
-                 y_axis_type: Optional[ChartValuesFormat] = None,
-                 graph_name: Optional[str] = None,
-                 metrics_legends_labels: Optional[List[str]] = None,
-                 ):
+    def __init__(
+        self,
+        data: PrometheusQueryResult,
+        query: str,
+        vertical_lines: Optional[List[PrometheusBlockLineData]] = None,
+        horizontal_lines: Optional[List[PrometheusBlockLineData]] = None,
+        y_axis_type: Optional[ChartValuesFormat] = None,
+        graph_name: Optional[str] = None,
+        metrics_legends_labels: Optional[List[str]] = None,
+    ):
         """
         :param data: the PrometheusQueryResult generated created from a prometheus query
         :param query: the Prometheus query run
         """
         metadata = {"query-result-version": "1.0", "query": query}
-        super().__init__(data=data, metadata=metadata, vertical_lines=vertical_lines, horizontal_lines=horizontal_lines,
-                         y_axis_type=y_axis_type, graph_name=graph_name)
+        super().__init__(
+            data=data,
+            metadata=metadata,
+            vertical_lines=vertical_lines,
+            horizontal_lines=horizontal_lines,
+            y_axis_type=y_axis_type,
+            graph_name=graph_name,
+        )
 
         if metrics_legends_labels:
             self.metadata["metrics_legends_labels"] = json.dumps(metrics_legends_labels)
@@ -544,6 +571,10 @@ class ScanReportRow(BaseModel):
     priority: float
 
 
+TableRow = Tuple[str, ...]
+ScanTable = Dict[str, List[TableRow]]
+
+
 class ScanReportBlock(BaseBlock):
     title: str
     scan_id: str  # UUID
@@ -554,8 +585,6 @@ class ScanReportBlock(BaseBlock):
     results: List[ScanReportRow]
     config: str
     metadata: Dict[str, Any] = {}
-    pdf_scan_row_content_format: Callable[[ScanReportRow], str] = lambda row: json.dumps(row.content)
-    pdf_scan_row_priority_format: Callable[[float], str] = lambda priority: str(priority)
 
     @property
     def grade(self):
@@ -572,6 +601,157 @@ class ScanReportBlock(BaseBlock):
             return "E"
         else:
             return "F"
+
+    @property
+    def table_headers(self) -> List[str]:
+        raise NotImplementedError("table_headers property must be implemented in the subclass")
+
+    @property
+    def table_data(self) -> ScanTable:
+        raise NotImplementedError("table_data property must be implemented in the subclass")
+
+    @property
+    def table_widths(self) -> Tuple[int, ...]:
+        raise NotImplementedError("table_widths property must be implemented in the subclass")
+
+
+class PopeyeScanReportBlock(ScanReportBlock):
+    @property
+    def table_headers(self) -> List[str]:
+        return ["Priority", "Namespace", "Name", "Container", "Issues"]
+
+    @property
+    def table_widths(self) -> Tuple[int, ...]:
+        return (10, 25, 25, 25, 65)
+
+    @property
+    def table_data(self) -> ScanTable:
+        sorted_data = sorted(self.results, key=lambda x: x.kind or "", reverse=True)
+        groupped_data = itertools.groupby(sorted_data, key=lambda x: x.kind)
+        return {
+            kind
+            or "": [
+                (
+                    self.level_to_string(row.priority),
+                    row.name or "",
+                    row.namespace or "",
+                    row.container or "",
+                    self.scan_row_content_format(row),
+                )
+                for row in rows
+            ]
+            for kind, rows in groupped_data
+        }
+
+    @staticmethod
+    def level_to_string(level: Union[int, float]) -> str:
+        level = int(level)
+
+        if level == 1:
+            return "Info"
+        elif level == 2:
+            return "Warning"
+        elif level == 3:
+            return "**Error**"
+        else:
+            return "OK"
+
+    def scan_row_content_format(self, row: ScanReportRow) -> str:
+        return "\n".join(f"{self.level_to_string(i['level'])} {i['message']}" for i in row.content)
+
+
+class KRRScanReportBlock(ScanReportBlock):
+    @property
+    def table_headers(self) -> List[str]:
+        return [
+            "Priority",
+            "Namespace",
+            "Name",
+            "Container",
+            "CPU Request",
+            "CPU Limit",
+            "Memory Request",
+            "Memory Limit",
+        ]
+
+    @property
+    def table_widths(self) -> Tuple[int, ...]:
+        return (5, 10, 10, 10, 8, 8, 8, 8)
+
+    @staticmethod
+    def __format_krr_value(value: Union[float, Literal["?"], None]) -> str:
+        if value is None:
+            return "unset"
+        elif isinstance(value, str):
+            return "?"
+        else:
+            return format_unit(value)
+
+    @staticmethod
+    def __format_content_str(allocated: float, recommended: float, info: Optional[str]) -> str:
+        if allocated is None and recommended is None:
+            return "unset"
+
+        res = f"{KRRScanReportBlock.__format_krr_value(allocated)} -> {KRRScanReportBlock.__format_krr_value(recommended)}"
+        if info is not None:
+            res += f"\n({info})"
+        return res
+
+    @staticmethod
+    def __parse_content(content) -> Tuple[str, ...]:
+        content_by_resource = {row["resource"]: row for row in content}
+        res = []
+
+        for resource in ["cpu", "memory"]:
+            for field in ["request", "limit"]:
+                row = content_by_resource.get(resource)
+                if not row:
+                    # NOTE: We should always have a row for each resource,
+                    # but if for some reason this is not true, add some value not to break the table
+                    res.append("?")
+                    continue
+
+                allocated = row.get("allocated", {}).get(field, "?")
+                recommended = row.get("recommended", {}).get(field, "?")
+                info = row.get("info")
+
+                res.append(KRRScanReportBlock.__format_content_str(allocated, recommended, info))
+
+        return tuple(res)
+
+    @property
+    def table_data(self) -> ScanTable:
+        sorted_data = sorted(self.results, key=lambda x: x.kind or "", reverse=True)
+        groupped_data = itertools.groupby(sorted_data, key=lambda x: x.kind)
+        return {
+            kind
+            or "": [
+                (
+                    self.__priority_to_severity(row.priority),
+                    row.namespace or "",
+                    row.name or "",
+                    row.container or "",
+                    *self.__parse_content(row.content),
+                )
+                for row in rows
+            ]
+            for kind, rows in groupped_data
+        }
+
+    @staticmethod
+    def __priority_to_severity(priority: Union[int, float]) -> str:
+        priority = int(priority)
+
+        if priority == 4:
+            return "**CRITICAL**"
+        elif priority == 3:
+            return "WARNING"
+        elif priority == 2:
+            return "OK"
+        elif priority == 1:
+            return "GOOD"
+        else:
+            return "UNKNOWN"
 
 
 class EventRow(BaseModel):
@@ -626,11 +806,11 @@ class GraphBlock(FileBlock):
     graph_data: Optional[PrometheusBlock]
 
     def __init__(
-            self,
-            filename: str,
-            contents: bytes,
-            graph_data: Optional[PrometheusBlock] = None,
-            **kwargs,
+        self,
+        filename: str,
+        contents: bytes,
+        graph_data: Optional[PrometheusBlock] = None,
+        **kwargs,
     ):
         super().__init__(
             filename=filename,
@@ -638,4 +818,3 @@ class GraphBlock(FileBlock):
             graph_data=graph_data,
             **kwargs,
         )
-

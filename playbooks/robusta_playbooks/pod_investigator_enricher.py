@@ -158,7 +158,7 @@ def get_pod_issue_explanation(event: KubernetesResourceEvent, issue: PodIssue, m
 
         message_text = f"{available_replicas} pod(s) are available. {unavailable_replicas} pod(s) are not ready due to {issue_text}"
     else:
-        message_text = f"Pod is not ready due to {issue_text}"
+        message_text = f"\n\nPod is not ready due to {issue_text}"
 
     if reason:
         message_text += f"\n\n{reason}: {message if message else 'N/A'}"
