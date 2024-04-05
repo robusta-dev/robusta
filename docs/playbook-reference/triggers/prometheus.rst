@@ -30,6 +30,9 @@ The following triggers are available for Prometheus alerts:
             - triggers:
               - on_prometheus_alert:
                   alert_name: HostHighCpuLoad
+                  scope:
+                    labels:
+                      - "deployment=nginx"
               actions:
               - node_bash_enricher:
                  bash_command: ps aux
@@ -37,6 +40,10 @@ The following triggers are available for Prometheus alerts:
     ``on_prometheus_alert`` supports the following parameters:
 
     .. pydantic-model:: robusta.integrations.prometheus.trigger.PrometheusAlertTrigger
+
+    The ``scope`` filtering mechanism works exactly as it does for sinks
+    (see :ref:`sink-scope-matching` for more information), but you can only
+    atch on ``labels`` and ``annotations`` in this case.
 
 Recommended Actions
 ---------------------
