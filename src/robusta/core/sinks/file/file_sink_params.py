@@ -7,6 +7,10 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 class FileSinkParms(SinkBaseParams):
     file_name: str = None
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "file"
+
 
 class FileSinkConfigWrapper(SinkConfigBase):
     file_sink: FileSinkParms

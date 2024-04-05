@@ -118,10 +118,21 @@ class TestScopeParams:
         assert params.exclude == expected_exclude_data
 
 
+class _TestSink(SinkBase):
+    def write_finding(self, finding: Finding, platform_enabled: bool):
+        pass
+
+
+class _TestSinkParams(SinkBaseParams):
+    @classmethod
+    def _get_sink_type(cls):
+        return "test"
+
+
 class TestSinkBase:
     @pytest.mark.parametrize("matches_result,expected_result", [(True, True), (False, False)])
     def test_accepts(self, matches_result, expected_result):
-        sink_base = SinkBase(sink_params=SinkBaseParams(name="x"), registry=Mock())
+        sink_base = _TestSink(sink_params=_TestSinkParams(name="x"), registry=Mock())
         finding = Finding(title="y", aggregation_key="Aaa")
         finding.matches = Mock(return_value=matches_result)
         # sink_base.time_slices is [TimeSliceAlways()] here, so the result will depend
@@ -204,7 +215,7 @@ class TestFindingScopeMatching:
             test_config = _TestConfig(**yaml.safe_load(test_config_file))
 
         for scope_test in test_config.tests:
-            sink_base = SinkBase(sink_params=SinkBaseParams(name="x", scope=scope_test.scope), registry=Mock())
+            sink_base = _TestSink(sink_params=_TestSinkParams(name="x", scope=scope_test.scope), registry=Mock())
 
             for check in scope_test.checks:
                 finding = check.finding.create_finding()

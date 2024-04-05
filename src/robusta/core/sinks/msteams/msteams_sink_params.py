@@ -5,6 +5,10 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 class MsTeamsSinkParams(SinkBaseParams):
     webhook_url: str
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "msteams"
+
 
 class MsTeamsSinkConfigWrapper(SinkConfigBase):
     ms_teams_sink: MsTeamsSinkParams

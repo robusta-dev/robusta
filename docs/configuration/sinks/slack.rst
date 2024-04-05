@@ -68,7 +68,7 @@ Example:
 .. code-block:: yaml
 
      sinks_config:
-     # slack integration params
+     # slack integration params, like slack_channel, api_key etc
      - slack_sink:
          name: main_slack_sink
          api_key: xoxb-112...
@@ -114,6 +114,81 @@ To do so in :ref:`custom playbooks <customPlaybooks>` mention the ``@username`` 
 If you'd like to automatically tag users on builtin alerts, please
 `let us know <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=Tag%20Slack%20Users>`_.
 We want to hear requirements.
+
+
+Grouping and summarizing messages
+-------------------------------------------------------------------
+
+Some large systems that are being monitored by Robusta could generate
+considerable amounts of notifications that are quite similar to each other
+(for example, concern one type of a problem occurring over some part of
+the cluster). For such cases, there is a mechanism that will reduce
+the amount of clutter in Slack channels by grouping notifications based
+on their properties and possibly summarizing the numbers of their
+occurrences.
+
+The mechanism is enabled by the ``grouping`` section in the Slack sink
+config. The parameters you can group on are basically any values in
+the k8s event payload, with one special addition - ``workload`` that
+will hold the name of the top-level entity name for the event. Labels
+and annotations are supported as described in the example below.
+
+The grouping mechanism supports the ``interval`` setting, which defines
+the length of the window over which notifications will be aggregated.
+The window starts when the first message belonging to the group arrives,
+and ends when the specified interval elapses.
+
+There are two general modes for this functionality, selected by the
+subsection ``notification_mode``. For the ``regular`` mode, all the
+notification messages that belong to the group will be put in a single
+Slack thread, with the first of them being the head (topmost) of the
+thread. An additional parameter you can specify in this mode is
+``ignore_first``, which can be used to drop some number of initial
+messages in the group (useful for cases of very large amount of
+notification traffic).
+
+For the ``summary`` mode, the main difference is that the head (topmost)
+message in the thread will include a summary of all the messages in the
+group. The summarization will be formatted as a table and done according
+to the attributes listed under ``summary.by``. In case ``summary.threaded``
+is ``true``, all the Slack notifications belonging to this group will be
+put as a thread under this header message (``ignore_first`` does not
+apply here). If ``summary.threaded`` is ``false``, the notifications
+will not be sent to Slack, and only the summary message will appear.
+
+The information in the summary message will be dynamically updated with
+numbers of notifications in the group as they are incoming, regardless
+of whether ``summary.threaded`` is enabled or not.
+
+.. code-block::
+
+    sinksConfig:
+    - slack_sink:
+        # slack integration params, like slack_channel, api_key etc
+        grouping:
+          group_by:
+            - workload
+            - labels:
+              - app
+            - annotations:
+              - experimental_deployment
+          interval: 1800    # group time window, seconds
+          notification_mode:
+            summary:
+              threaded: true
+              by:
+                - identifier
+                - severity
+            regular:
+              ignore_first: 3
+
+.. note::
+
+    In the current, initial implementation of this mechanism, the
+    statistics of notifications are held in memory and not persisted
+    anywhere, so when the Robusta runner dies/restarts, they are lost
+    and the counting starts anew.
+
 
 Creating Custom Slack Apps
 -------------------------------------------------------------------

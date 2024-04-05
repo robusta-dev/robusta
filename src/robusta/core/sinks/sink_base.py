@@ -1,4 +1,7 @@
-from typing import Any
+import threading
+from abc import abstractmethod, ABC
+from collections import defaultdict
+from typing import Any, List, Dict, Tuple, DefaultDict
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding
@@ -6,7 +9,21 @@ from robusta.core.sinks.sink_base_params import ActivityInterval, ActivityParams
 from robusta.core.sinks.timing import TimeSlice, TimeSliceAlways
 
 
-class SinkBase:
+class SinkBase(ABC):
+    grouping_enabled: bool
+    grouping_summary_mode: bool
+
+    # The tuples in the types below holds all the attributes we are aggregating on.
+    finding_group_start_ts: Dict[Tuple, float]  # timestamps for message groups
+    finding_group_n_received: DefaultDict[Tuple, int]  # number of messages ignored for each group
+    finding_group_heads: Dict[Tuple, str]  # a mapping from a set of parameters to the head of a thread
+
+    # Summary groups
+    finding_summary_header: List[str]  # descriptive header for the summary table
+    finding_summary_counts: DefaultDict[Tuple, DefaultDict[Tuple, List[int]]]  # rows of the summary table
+
+    finding_group_lock: threading.Lock = threading.RLock()
+
     def __init__(self, sink_params: SinkBaseParams, registry):
         self.sink_name = sink_params.name
         self.params = sink_params
@@ -19,6 +36,43 @@ class SinkBase:
         self.signing_key = global_config.get("signing_key", "")
 
         self.time_slices = self._build_time_slices_from_params(self.params.activity)
+
+        if sink_params.grouping:
+            self.grouping_enabled = True
+            if sink_params.grouping.notification_mode.summary:
+                self.grouping_summary_mode = True
+                self.finding_summary_header = []
+                if sink_params.grouping.notification_mode.summary.by:
+                    for attr in sink_params.grouping.notification_mode.summary.by:
+                        if isinstance(attr, str):
+                            self.finding_summary_header.append("notification" if attr == "identifier" else attr)
+                        elif isinstance(attr, dict):
+                            keys = list(attr.keys())
+                            if len(keys) > 1:
+                                raise ValueError(
+                                    "Invalid sink configuration: multiple values for one of the elements in"
+                                    "grouping.notification_mode.summary.by"
+                                )
+                            key = keys[0]
+                            if key not in ["labels", "annotations"]:
+                                raise ValueError(
+                                    f"Sink configuration: grouping.notification_mode.summary.by.{key} is invalid "
+                                    "(only labels/annotations allowed)"
+                                )
+                            for label_or_attr_name in attr[key]:
+                                self.finding_summary_header.append(f"{key[:-1]}:{label_or_attr_name}")
+            else:
+                self.grouping_summary_mode = False
+        else:
+            self.grouping_enabled = False
+        self.reset_grouping_data()
+
+    def reset_grouping_data(self):
+        with self.finding_group_lock:
+            self.finding_group_start_ts = {}
+            self.finding_group_n_received = defaultdict(int)
+            self.finding_group_heads = {}
+            self.finding_summary_counts = defaultdict(lambda: defaultdict(lambda: [0, 0]))
 
     def _build_time_slices_from_params(self, params: ActivityParams):
         if params is None:
@@ -47,6 +101,7 @@ class SinkBase:
             and any(time_slice.is_active_now for time_slice in self.time_slices)
         )
 
+    @abstractmethod
     def write_finding(self, finding: Finding, platform_enabled: bool):
         raise NotImplementedError(f"write_finding not implemented for sink {self.sink_name}")
 

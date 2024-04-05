@@ -7,6 +7,10 @@ class KafkaSinkParams(SinkBaseParams):
     topic: str
     auth: dict = {}
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "kafka"
+
 
 class KafkaSinkConfigWrapper(SinkConfigBase):
     kafka_sink: KafkaSinkParams

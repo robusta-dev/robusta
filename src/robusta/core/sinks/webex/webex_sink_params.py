@@ -6,6 +6,10 @@ class WebexSinkParams(SinkBaseParams):
     bot_access_token: str
     room_id: str
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "webex"
+
 
 class WebexSinkConfigWrapper(SinkConfigBase):
     webex_sink: WebexSinkParams
