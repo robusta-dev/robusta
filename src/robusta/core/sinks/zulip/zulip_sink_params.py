@@ -1,7 +1,8 @@
 from typing import Optional
 
-from pydantic import SecretStr
+from pydantic import SecretStr, validator
 
+from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
 
@@ -14,6 +15,10 @@ class ZulipSinkParams(SinkBaseParams):
     topic_name: str = "Robusta"
     topic_override: Optional[str] = None
     log_preview_char_limit: int = 500
+
+    @validator("topic_override")
+    def validate_topic_override(cls, v: str):
+        return ChannelTransformer.validate_channel_override(v)
 
 
 class ZulipSinkConfigWrapper(SinkConfigBase):

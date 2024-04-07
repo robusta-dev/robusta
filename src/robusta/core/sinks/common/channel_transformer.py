@@ -74,8 +74,6 @@ class ChannelTransformer:
         labels: Dict[str, str],
         annotations: Dict[str, str],
     ) -> str:
-        # Return default channel if no channel_override
-        channel_override = cls.validate_channel_override(channel_override)
         if not channel_override:
             return default_channel
 

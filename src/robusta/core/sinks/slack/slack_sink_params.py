@@ -1,7 +1,9 @@
 from robusta.core.sinks.sink_base_params import SinkBaseParams
 from robusta.core.sinks.sink_config import SinkConfigBase
+from robusta.core.sinks.common import ChannelTransformer
 
 from typing import Optional
+from pydantic import validator
 
 
 class SlackSinkParams(SinkBaseParams):
@@ -9,6 +11,10 @@ class SlackSinkParams(SinkBaseParams):
     api_key: str
     channel_override: Optional[str] = None
     max_log_file_limit_kb: int = 1000
+
+    @validator("channel_override")
+    def validate_channel_override(cls, v: str):
+        return ChannelTransformer.validate_channel_override(v)
 
 
 class SlackSinkConfigWrapper(SinkConfigBase):

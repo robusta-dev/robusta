@@ -172,7 +172,7 @@ testdata = [
 
 
 @pytest.mark.parametrize("channel_override_config, labels, annotations, expected, error", testdata)
-def test_channel_transformer(channel_override_config, labels, annotations, expected, error):
+def test_template(channel_override_config, labels, annotations, expected, error):
     logging.info(f"testing {channel_override_config}")
     channel = ChannelTransformer.template(
         channel_override=channel_override_config,
@@ -182,3 +182,33 @@ def test_channel_transformer(channel_override_config, labels, annotations, expec
         annotations=annotations,
     )
     assert channel == expected, f"{channel_override_config} {error}"
+
+
+testdata = [
+    ("labels.team", "$labels.team", "missing '$' prefix"),
+    ("$labels.team", "$labels.team", "override should be left unchanged"),
+    ("${labels.team}", "${labels.team}", "override should be left unchanged"),
+    ("annotations.team", "$annotations.team", "missing '$' prefix"),
+    ("$annotations.team", "$annotations.team", "override should be left unchanged"),
+    ("${annotations.team}", "${annotations.team}", "override should be left unchanged"),
+    ("cluster_name", "$cluster_name", "missing '$' prefix"),
+    ("$cluster_name", "$cluster_name", "override should be left unchanged"),
+    ("${cluster_name}", "${cluster_name}", "override should be left unchanged"),
+]
+
+
+@pytest.mark.parametrize("channel_override_config, expected, error", testdata)
+def test_validate_channel_override(channel_override_config, expected, error):
+    logging.info(f"testing {channel_override_config}")
+    channel = ChannelTransformer.validate_channel_override(channel_override_config)
+    assert channel == expected, f"{channel_override_config} {error}"
+
+
+testdata = ["cluste_name", "labels.", "$labels.", "annotations.", "$annotations.", "invalid.something"]
+
+
+@pytest.mark.parametrize("channel_override_config", testdata)
+def test_validate_channel_override_should_throw(channel_override_config):
+    logging.info(f"testing {channel_override_config}")
+    with pytest.raises(ValueError):
+        ChannelTransformer.validate_channel_override(channel_override_config)
