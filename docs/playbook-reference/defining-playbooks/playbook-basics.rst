@@ -105,7 +105,7 @@ First, add the custom playbooks as a dictionary into a file named ``app_a_playbo
       - triggers:
           - on_prometheus_alert:
               namespace_prefix: "app-a"
-      actions:
+        actions:
           - create_finding:
               aggregation_key: "This is app-a - Requires your attention"
               severity: HIGH
@@ -115,7 +115,7 @@ First, add the custom playbooks as a dictionary into a file named ``app_a_playbo
       - triggers:
           - on_prometheus_alert:
               namespace_prefix: "app-b"
-      actions:
+        actions:
           # Actions for team-b-app-b here
 
 Then run a Helm upgrade by passing the new file using the ``-f`` flag.
