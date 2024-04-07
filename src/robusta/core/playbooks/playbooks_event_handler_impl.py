@@ -18,6 +18,7 @@ from robusta.core.reporting import MarkdownBlock
 from robusta.core.reporting.base import Finding
 from robusta.core.reporting.consts import SYNC_RESPONSE_SINK
 from robusta.core.sinks.robusta.dal.model_conversion import ModelConversion
+from robusta.integrations.kubernetes.base_triggers import K8sBaseTrigger
 from robusta.model.alert_relabel_config import AlertRelabel
 from robusta.model.config import Registry
 from robusta.model.playbook_action import PlaybookAction
@@ -52,6 +53,9 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
                 execution_event = None
                 try:
                     execution_event = fired_trigger.build_execution_event(trigger_event, sink_findings, build_context)
+                    if isinstance(fired_trigger, K8sBaseTrigger):
+                        if not fired_trigger.check_change_filters(execution_event):
+                            continue
                     # sink_findings needs to be shared between playbooks.
                     # build_execution_event returns a different instance because it's running in a child process
                     execution_event.sink_findings = sink_findings
@@ -128,6 +132,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
 
     def __prepare_execution_event(self, execution_event: ExecutionBaseEvent):
         execution_event.set_scheduler(self.registry.get_scheduler())
+        execution_event.set_event_emitter(self.registry.get_event_emitter())
         execution_event.set_all_sinks(self.registry.get_sinks().get_all())
         execution_event.set_context(
             ExecutionContext(

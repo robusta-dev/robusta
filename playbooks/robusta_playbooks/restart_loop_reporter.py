@@ -4,40 +4,14 @@ from typing import List, Optional
 from hikaru.model.rel_1_26 import ContainerStatus, PodStatus
 from robusta.api import (
     ActionParams,
-    BaseBlock,
-    Finding,
-    FindingSeverity,
-    FindingSource,
     NamedRegexPattern,
     PodEvent,
-    PodFindingSubject,
     RateLimiter,
     RateLimitParams,
     RegexReplacementStyle,
     action,
-    get_crash_report_blocks,
+    send_crash_report
 )
-
-
-def _send_crash_report(
-    event: PodEvent,
-    action_name: str,
-    regex_replacer_patterns: Optional[NamedRegexPattern] = None,
-    regex_replacement_style: Optional[RegexReplacementStyle] = None,
-):
-
-    pod = event.get_pod()
-    finding = Finding(
-        title=f"Crashing pod {pod.metadata.name} in namespace {pod.metadata.namespace}",
-        source=FindingSource.KUBERNETES_API_SERVER,
-        severity=FindingSeverity.HIGH,
-        aggregation_key=action_name,
-        subject=PodFindingSubject(pod),
-    )
-    blocks: List[BaseBlock] = get_crash_report_blocks(pod, regex_replacer_patterns, regex_replacement_style)
-
-    finding.add_enrichment(blocks)
-    event.add_finding(finding)
 
 
 class ReportCrashLoopParams(ActionParams):
@@ -56,7 +30,7 @@ def report_crash_loop(event: PodEvent, params: ReportCrashLoopParams):
     regex_replacement_style = (
         RegexReplacementStyle[params.regex_replacement_style] if params.regex_replacement_style else None
     )
-    _send_crash_report(event, "report_crash_loop", params.regex_replacer_patterns, regex_replacement_style)
+    send_crash_report(event, "CrashLoopBackoff", params.regex_replacer_patterns, regex_replacement_style)
 
 
 # The code below is deprecated. Please use the new crash loop action
@@ -105,4 +79,4 @@ def restart_loop_reporter(event: PodEvent, config: RestartLoopParams):
     if not RateLimiter.mark_and_test("restart_loop_reporter", pod_name + pod.metadata.namespace, config.rate_limit):
         return
 
-    _send_crash_report(event, "restart_loop_reporter")
+    send_crash_report(event, "CrashLoopBackoff")

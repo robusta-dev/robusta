@@ -41,7 +41,7 @@ class ContainerInfo(BaseModel):
         return ContainerInfo(name=container.name, image=container.image, env=env, resources=resources, ports=ports)
 
     @staticmethod
-    def get_container_info_k8(container: Container) -> "ContainerInfo":
+    def get_container_info_hikaru(container: Container) -> "ContainerInfo":
         env = (
             [EnvVar(name=env.name, value=env.value) for env in container.env if env.name and env.value]
             if container.env

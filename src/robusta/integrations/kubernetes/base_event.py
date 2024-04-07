@@ -25,7 +25,7 @@ class K8sBaseChangeEvent(ExecutionBaseEvent):
 
         return Finding(
             title=title,
-            aggregation_key="Generic Change",
+            aggregation_key="GenericChange",
         )
 
     @classmethod

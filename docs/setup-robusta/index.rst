@@ -18,6 +18,8 @@
    upgrade
    configuration-secrets
    supported-clusters
+   openshift
    node-selector
    proxies
+   additional-settings
    installation-faq

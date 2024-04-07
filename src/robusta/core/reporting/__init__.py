@@ -1,8 +1,8 @@
 from robusta.core.reporting.base import (
     BaseBlock,
     Emojis,
-    Enrichment,
     Filterable,
+    Enrichment,
     Finding,
     FindingSeverity,
     FindingSource,
@@ -19,6 +19,7 @@ from robusta.core.reporting.blocks import (
     EventsBlock,
     EventsRef,
     FileBlock,
+    EmptyFileBlock,
     HeaderBlock,
     JsonBlock,
     KubernetesDiffBlock,
@@ -27,6 +28,8 @@ from robusta.core.reporting.blocks import (
     MarkdownBlock,
     PrometheusBlock,
     ScanReportBlock,
+    PopeyeScanReportBlock,
+    KRRScanReportBlock,
     ScanReportRow,
     TableBlock,
 )
@@ -39,8 +42,8 @@ __all__ = [
     "VideoLink",
     "FindingSource",
     "Enrichment",
-    "FindingSubjectType",
     "Filterable",
+    "FindingSubjectType",
     "FindingSubject",
     "Finding",
     "MarkdownBlock",
@@ -60,4 +63,5 @@ __all__ = [
     "EventsBlock",
     "EventsRef",
     "EventsRow",
+    "EmptyFileBlock",
 ]

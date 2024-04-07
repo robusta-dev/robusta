@@ -62,6 +62,7 @@ lightActions:
 - debugger_stack_trace
 - python_process_inspector
 - prometheus_alert
+- alertmanager_alert
 - create_pvc_snapshot
 - resource_events_enricher
 - delete_job
@@ -83,6 +84,7 @@ enablePrometheusStack: false
 enabledManagedConfiguration: false
 enableServiceMonitors: true
 monitorHelmReleases: true
+argoRollouts: false
 
 # disable messages routed by Robusta cloud
 disableCloudRouting: false
@@ -146,6 +148,30 @@ priorityBuiltinPlaybooks:
 
 # custom user playbooks
 customPlaybooks: []
+
+# custom user Extra playbooks
+# By adding this Custom, you can specify more custom actions and triggers which are separated into categories.
+# This allows you to split away from generated_values.yaml to keep a separate file for your custom playbooks by team/department.
+# helm ugprade --install robusta -f generated_values.yaml -f app_a_playbooks.yaml
+# Example:
+# namedCustomPlaybooks:
+#   team-a-app-a:
+#   - triggers:
+#     - on_prometheus_alert:
+#         namespace_prefix: "app-a"
+#     actions:
+#     - create_finding:
+#         aggregation_key: "This is app-a - Requires your attention"
+#         severity: HIGH
+#         title: "Check app-a out"
+#         description: "@monitoring.monitoring this is for you"
+#   team-b-app-b:
+#   # Default Settings for all actions
+#   - triggers:
+#     - on_prometheus_alert:
+#         namespace_prefix: "app-b"
+namedCustomPlaybooks: {}
+
 
 # builtin playbooks
 builtinPlaybooks:
@@ -383,6 +409,13 @@ builtinPlaybooks:
       included_types: ["Warning", "Normal"]
       dependent_pod_mode: true
 
+- name: "KubeVersionMismatch"
+  triggers:
+  - on_prometheus_alert:
+      alert_name: KubeVersionMismatch
+  actions:
+  - version_mismatch_enricher: {}
+
 - name: "DefaultPrometheusAlertEnricher"
   triggers:
   - on_prometheus_alert:
@@ -439,12 +472,19 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
+- name: "EventBasedChangeTracking"
+  triggers:
+    - on_kubernetes_resource_operation:
+        resources: ["deployment", "replicaset", "daemonset", "statefulset", "pod", "node", "job" ]
+  actions:
+    - resource_events_diff: {}
+
 - name: "K8sJobFailure"
   triggers:
   - on_job_failure: {}
   actions:
   - create_finding:
-      aggregation_key: "job_failure"
+      aggregation_key: "JobFailure"
       title: "Job Failed"
   - job_info_enricher: {}
   - job_events_enricher: {}
@@ -452,7 +492,7 @@ platformPlaybooks:
   sinks:
     - "robusta_ui_sink"
 
-- name: "WeeklyPopeyScan"
+- name: "WeeklyPopeyeScan"
   triggers:
   - on_schedule:
       fixed_delay_repeat:
@@ -684,11 +724,6 @@ kube-prometheus-stack:
         memory: 256Mi
       limits:
         memory: 256Mi
-
-rsa: ~
-  # @param existingSecret Name of existing secret containing the rsa keys
-  # NOTE: Must contain the keys `pub` and `prv`
-  # existingSecret: my-robusta-rsa-keys
 
 # custom parameters for OpenShift clusters
 openshift:

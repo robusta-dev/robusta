@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from hikaru.model.rel_1_26 import Container, EnvVar, EnvVarSource, PodSpec, ResourceRequirements, SecretKeySelector
 from prometrix import AWSPrometheusConfig, CoralogixPrometheusConfig, PrometheusAuthorization, PrometheusConfig
 from pydantic import BaseModel, ValidationError, validator
+
 from robusta.api import (
     IMAGE_REGISTRY,
     RELEASE_NAME,
@@ -22,16 +23,17 @@ from robusta.api import (
     PodRunningParams,
     PrometheusParams,
     RobustaJob,
-    ScanReportBlock,
+    KRRScanReportBlock,
     ScanReportRow,
     ScanType,
     action,
-    format_unit,
 )
+from robusta.core.model.env_vars import INSTALLATION_NAMESPACE
+from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.6.0")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.8.1")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "1Gi")
 
@@ -94,6 +96,7 @@ class KRRResponse(BaseModel):
     resources: List[ResourceType] = ["cpu", "memory"]
     description: Optional[str] = None  # This field is not returned by KRR < v1.2.0
     strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
+    errors: List[Dict[str, Any]] = []  # This field is not returned by KRR < v1.7.1
 
 
 class KRRParams(PrometheusParams, PodRunningParams):
@@ -103,14 +106,16 @@ class KRRParams(PrometheusParams, PodRunningParams):
     :var krr_args: KRR cli arguments.
     :var serviceAccountName: The account name to use for the KRR scan job.
     :var krr_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
+    :var max_workers: Number of concurrent workers used in krr.
     """
 
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
     strategy: str = "simple"
     args: Optional[str] = None
     krr_args: str = ""
-    timeout: int = 300
+    timeout: int = 3600
     krr_job_spec = {}
+    max_workers: int = 3
 
     @validator("args", allow_reuse=True)
     def check_args(cls, args: str) -> str:
@@ -145,41 +150,6 @@ def krr_severity_to_priority(severity: SeverityType) -> int:
         return 0
 
 
-def priority_to_krr_severity(priority: int) -> str:
-    if priority == 4:
-        return "CRITICAL"
-    elif priority == 3:
-        return "WARNING"
-    elif priority == 2:
-        return "OK"
-    elif priority == 1:
-        return "GOOD"
-    else:
-        return "UNKNOWN"
-
-
-def format_krr_value(value: Union[float, Literal["?"], None]) -> str:
-    if value is None:
-        return "unset"
-    elif isinstance(value, str):
-        return "?"
-    else:
-        return format_unit(value)
-
-
-def _pdf_scan_row_content_format(row: ScanReportRow) -> str:
-    return "\n".join(
-        f"{entry['resource'].upper()} Request: "
-        + f"{format_krr_value(entry['allocated']['request'])} -> "
-        + f"{format_krr_value(entry['recommended']['request'])} "
-        + f"\n{entry['resource'].upper()} Limit: "
-        + f"{format_krr_value(entry['allocated']['limit'])} -> "
-        + f"{format_krr_value(entry['recommended']['limit'])} "
-        + f"({priority_to_krr_severity(entry['priority']['request'])})"
-        for entry in row.content
-    )
-
-
 def get_krr_additional_flags(params: KRRParams) -> str:
     if not params.prometheus_additional_labels or len(params.prometheus_additional_labels) != 1:
         # only one label is supported to be passed to krr currently
@@ -212,7 +182,9 @@ def _generate_krr_job_secret(scan_id: str, krr_secrets: Optional[List[KRRSecret]
     return JobSecret(name=krr_secret_name, data=data)
 
 
-def _generate_krr_env_vars(krr_secrets: Optional[List[KRRSecret]], secret_name: Optional[str]) -> Optional[EnvVar]:
+def _generate_krr_env_vars(
+    krr_secrets: Optional[List[KRRSecret]], secret_name: Optional[str]
+) -> Optional[List[EnvVar]]:
     if not krr_secrets or not secret_name:
         return None
     return [
@@ -298,7 +270,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     additional_flags = get_krr_additional_flags(params)
 
     python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} "
-    python_command += '-v -f json --width 2048'
+    python_command += f"--max-workers {params.max_workers} -v -f json --width 2048"
 
     if params.prometheus_url:
         python_command += f" -p {params.prometheus_url}"
@@ -347,19 +319,38 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         **params.krr_job_spec,
     )
 
-    start_time = end_time = datetime.now()
-    krr_scan = krr_response = {}
+    start_time = datetime.now()
     logs = None
+    job_name = f"krr-job-{scan_id}"
+    metadata: Dict[str, Any] = {
+        "job": {
+            "name": job_name,
+            "namespace": INSTALLATION_NAMESPACE,
+        },
+    }
+
+    def update_state(state: ScanState) -> None:
+        event.emit_event(
+            "scan_updated",
+            scan_id=scan_id,
+            metadata=metadata,
+            state=state,
+            type=ScanType.KRR,
+            start_time=start_time,
+        )
+
+    update_state(ScanState.PENDING)
 
     try:
         logs = RobustaJob.run_simple_job_spec(
             spec,
-            "krr_job" + scan_id,
+            job_name,
             params.timeout,
             secret,
             custom_annotations=params.custom_annotations,
             ttl_seconds_after_finished=43200,  # 12 hours
             delete_job_post_execution=False,
+            process_name=False,
         )
 
         # NOTE: We need to remove the logs before the json result
@@ -374,31 +365,34 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         logs = logs[logs.find("{") :]
 
         krr_response = json.loads(logs)
-        end_time = datetime.now()
         krr_scan = KRRResponse(**krr_response)
-    except json.JSONDecodeError:
-        logging.exception(f"*KRR scan job failed. Expecting json result.*")
-        logging.error(f"Logs: {logs}")
-        return
-    except ValidationError:
-        logging.exception("*KRR scan job failed. Result format issue.*\n\n")
-        logging.error(f"Logs: {logs}")
-        return
+
     except Exception as e:
-        if str(e) == "Failed to reach wait condition":
+        if isinstance(e, json.JSONDecodeError):
+            logging.exception("*KRR scan job failed. Expecting json result.*")
+        elif isinstance(e, ValidationError):
+            logging.exception("*KRR scan job failed. Result format issue.*")
+        elif str(e) == "Failed to reach wait condition":
             logging.exception(f"*KRR scan job failed. The job wait condition timed out ({params.timeout}s)*")
         else:
             logging.exception(f"*KRR scan job unexpected error.*\n {e}")
-        logging.error(f"Logs: {logs}")
-        return
 
-    scan_block = ScanReportBlock(
+        logging.error(f"Logs: {logs}")
+        update_state(ScanState.FAILED)
+        return
+    else:
+        metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
+        metadata["description"] = krr_scan.description
+        metadata["errors"] = krr_scan.errors
+
+    scan_block = KRRScanReportBlock(
         title="KRR scan",
         scan_id=scan_id,
         type=ScanType.KRR,
         start_time=start_time,
-        end_time=end_time,
+        end_time=datetime.now(),
         score=krr_scan.score,
+        metadata=metadata,
         results=[
             ScanReportRow(
                 scan_id=scan_id,
@@ -434,15 +428,13 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             )
             for scan in krr_scan.scans
         ],
-        config=params.json(),
-        pdf_scan_row_content_format=_pdf_scan_row_content_format,
-        pdf_scan_row_priority_format=lambda priority: priority_to_krr_severity(int(priority)),
+        config=params.json(indent=4),
     )
 
     finding = Finding(
         title="KRR Report",
         source=FindingSource.MANUAL,
-        aggregation_key="krr_report",
+        aggregation_key="KrrReport",
         finding_type=FindingType.REPORT,
         failure=False,
     )

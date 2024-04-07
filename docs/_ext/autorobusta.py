@@ -129,7 +129,7 @@ class PydanticModelDirective(SphinxDirective):
             paragraph = nodes.paragraph(text=f"each entry is one of the following:{possible_types}")
             content.append(paragraph)
 
-        elif issubclass(field.type_, BaseModel):
+        elif inspect.isclass(field.type_) and issubclass(field.type_, BaseModel):
             paragraph = nodes.paragraph(text="each entry contains:")
             content.append(paragraph)
             # when documenting an inner model, we always show "required"/"optional" inline
@@ -152,10 +152,16 @@ class PydanticModelDirective(SphinxDirective):
         if typing.get_origin(field.type_) == typing.Union:
             inner_type_name = "complex"
         else:
-            inner_type_name = field.type_.__name__.lower()
+            try:
+                inner_type_name = field.type_.__name__.lower()
+            except AttributeError:
+                # This handles a bug in Python 3.9 std lib, where
+                # typing.Dict[str, typing.Union[str, typing.List[str], type(None)]].__name__
+                # raises AttributeError
+                inner_type_name = "complex"
             if inner_type_name == "secretstr":
                 inner_type_name = "str"
-            if issubclass(field.type_, BaseModel):
+            if inspect.isclass(field.type_) and issubclass(field.type_, BaseModel):
                 inner_type_name = "complex"
 
         if field.shape == pydantic.fields.SHAPE_SINGLETON:

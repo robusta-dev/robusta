@@ -108,7 +108,7 @@ def report_image_changes(event: KubernetesAnyChangeEvent):
     finding = Finding(
         title=f"{FindingSubjectType.TYPE_DEPLOYMENT.value} {event.obj.metadata.name} updated in namespace {event.obj.metadata.namespace}",
         source=FindingSource.KUBERNETES_API_SERVER,
-        aggregation_key="report_image_changes",
+        aggregation_key="ReportImageChanges",
         subject=KubeObjFindingSubject(event.obj, should_add_node_name=should_get_subject_node_name),
         finding_type=FindingType.CONF_CHANGE,
         failure=False,

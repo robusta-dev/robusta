@@ -46,16 +46,17 @@ We now have two sinks, both receiving all notifications. Restrict the notificati
         name: slack_app_sink
         slack_channel: app-notifications
         api_key: secret-key
-        match:
-          namespace:
-          - app
+        scope:
+          include:
+            - namespace: [app]
+
     - slack_sink:
         name: slack_system_sink
         slack_channel: system-notifications
         api_key: secret-key
-        match:
-          namespace:
-          - kube-system
+        scope:
+          include:
+            - namespace: [kube-system]
 
 Apply this final configuration using a :ref:`Helm Upgrade <Simple Upgrade>`.
 

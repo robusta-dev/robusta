@@ -45,7 +45,7 @@ def java_process_inspector(event: PodEvent, params: JavaParams):
     finding = Finding(
         title=f"Java debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="java_process_inspector",
+        aggregation_key="JavaProcessInspector",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
@@ -76,7 +76,7 @@ def pod_jmap_pid(event: PodEvent, params: JavaParams):
     Runs jmap on a specific pid in your pod
     """
     jmap_cmd = "jmap"
-    aggregation_key = "pod_jmap_pid"
+    aggregation_key = "PodJmapPid"
     run_jdk_command_on_pid(event, params, jmap_cmd, aggregation_key, pod_jmap_pid)
 
 
@@ -86,7 +86,7 @@ def pod_jstack_pid(event: PodEvent, params: JavaParams):
     Runs jstack on a specific pid in your pod
     """
     jstack_cmd = "jstack"
-    aggregation_key = "pod_jstack_pid"
+    aggregation_key = "PodJstackPid"
     run_jdk_command_on_pid(event, params, jstack_cmd, aggregation_key, pod_jstack_pid)
 
 

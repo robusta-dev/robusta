@@ -68,6 +68,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
     # This should use ephemeral containers, but they aren't in GA yet. To enable them on GCP for example,
     # you need to create a brand new cluster. Therefore we're sticking with regular containers for now
     pod = event.get_pod()
+    logging.warning(f"The python_profiler action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"python_profiler - pod not found for event: {event}")
         return
@@ -80,7 +81,7 @@ def python_profiler(event: PodEvent, action_params: StartProfilingParams):
         finding = Finding(
             title=f"Profile results for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
             source=FindingSource.MANUAL,
-            aggregation_key="python_profiler",
+            aggregation_key="PythonProfiler",
             subject=PodFindingSubject(pod),
             finding_type=FindingType.REPORT,
             failure=False,
@@ -128,7 +129,7 @@ def pod_ps(event: PodEvent, params: PodRunningParams):
     finding = Finding(
         title=f"Processes in pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="pod_processes",
+        aggregation_key="PodProcesses",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
@@ -179,6 +180,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
     Use this to track memory leaks in your Python application on Kubernetes.
     """
     pod = event.get_pod()
+    logging.warning(f"The python_memory action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"python_memory - pod not found for event: {event}")
         return
@@ -186,7 +188,7 @@ def python_memory(event: PodEvent, params: MemoryTraceParams):
     finding = Finding(
         title=f"Memory allocations for {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="python_memory_allocations",
+        aggregation_key="PythonMemoryAllocations",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
@@ -294,6 +296,7 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     Create a finding with the stack trace results.
     """
     pod = event.get_pod()
+    logging.warning(f"The debugger_stack_trace action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"debugger_stack_trace - pod not found for event: {event}")
         return
@@ -316,7 +319,7 @@ def debugger_stack_trace(event: PodEvent, params: StackTraceParams):
     finding = Finding(
         title=f"Stacktrace on pid {pid}:",
         source=FindingSource.MANUAL,
-        aggregation_key="debugger_stack_trace",
+        aggregation_key="DebuggerStackTrace",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
@@ -379,13 +382,14 @@ def python_process_inspector(event: PodEvent, params: DebuggerParams):
 
     """
     pod = event.get_pod()
+    logging.warning(f"The python_process_inspector action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"advanced_debugging_options - pod not found for event: {event}")
         return
     finding = Finding(
         title=f"Advanced debugging for pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="python_process_inspector",
+        aggregation_key="PythonProcessInspector",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,
@@ -437,6 +441,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     Now you can use break points and log points in VSCode.
     """
     pod = event.get_pod()
+    logging.warning(f"The python_debugger action is deprecated and might not work on all platforms.")
     if not pod:
         logging.info(f"python_debugger - pod not found for event: {event}")
         return
@@ -444,7 +449,7 @@ def python_debugger(event: PodEvent, params: DebuggerParams):
     finding = Finding(
         title=f"Python debugging session on pod {pod.metadata.name} in namespace {pod.metadata.namespace}:",
         source=FindingSource.MANUAL,
-        aggregation_key="python_debugger",
+        aggregation_key="PythonDebugger",
         subject=PodFindingSubject(pod),
         finding_type=FindingType.REPORT,
         failure=False,

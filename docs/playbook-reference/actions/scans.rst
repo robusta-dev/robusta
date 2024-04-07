@@ -63,6 +63,61 @@ To set custom tolerations or a nodeSelector update your ``generated_values.yaml`
         nodeSelector:
           nodeName: "your-selector"
 
+Customizing Efficiency Recommendations in the Robusta UI
+====================================================================================
+You can tweak KRR's recommendation algorithm to suit your environment using the ``krr_args`` setting in Robusta's Helm chart.
+
+Add the following config to the top of your ``generated_values.yaml`` with your custom values. KRR will use these values every time it sends data to the Robusta UI or other destinations.
+
+If you are having performance issues, specifically with Prometheus using a lot of memory, reduce ``max_workers`` to reduce memory usage. KRR uses 3 workers by default.
+
+.. code-block:: yaml
+
+    globalConfig:
+      krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
+      max_workers: 2 
+
+**Common KRR Settings**
+
+.. list-table::
+   :widths: 25 10 40 25
+   :header-rows: 1
+
+   * - ``Argument``
+     - Type
+     - Used for
+     - Default value
+   * - ``--cpu-min``
+     - INTEGER
+     - Sets the minimum recommended CPU value in millicores.
+     - 10
+   * - ``--mem-min``
+     - INTEGER
+     - Sets the minimum recommended memory value in MB.
+     - 100
+   * - ``--history_duration``
+     - TEXT
+     - The duration of the history data to use (in hours).
+     - 336
+   * - ``--timeframe_duration``
+     - TEXT
+     - The step for the history data (in minutes).
+     - 1.25
+   * - ``--cpu_percentile``
+     - TEXT
+     - The percentile to use for the CPU recommendation.
+     - 99
+   * - ``--memory_buffer_percentage``
+     - TEXT
+     - The percentage of added buffer to the peak memory usage for memory recommendation.
+     - 15
+   * - ``--points_required``
+     - TEXT
+     - The number of data points required to make a recommendation for a resource.
+     - 100
+
+
+
 Popeye - A Kubernetes Cluster Sanitizer
 ************************************************
 

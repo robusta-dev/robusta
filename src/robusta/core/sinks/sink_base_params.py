@@ -7,7 +7,7 @@ import pytz
 
 from robusta.core.playbooks.playbook_utils import replace_env_vars_values
 from robusta.core.sinks.timing import DAY_NAMES
-
+from robusta.utils.scope import ScopeParams
 
 TIME_RE = re.compile("^\d\d:\d\d$")
 
@@ -60,6 +60,7 @@ class SinkBaseParams(BaseModel):
     send_svg: bool = False
     default: bool = True
     match: dict = {}
+    scope: Optional[ScopeParams]
     activity: Optional[ActivityParams]
     stop: bool = False  # Stop processing if this sink has been matched
 

@@ -12,6 +12,11 @@ In this Section
 .. grid::
     :gutter: 3
 
+    .. grid-item-card:: :octicon:`book;1em;` Define Custom Playbooks
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: defining-playbooks/index
+        :link-type: doc
+
     .. grid-item-card:: ⚡️ All Triggers
         :class-card: sd-bg-light sd-bg-text-light
         :link: triggers/index
@@ -35,7 +40,7 @@ Elsewhere in the Docs
 
     .. grid-item-card:: Defining Playbooks
         :class-card: sd-bg-light sd-bg-text-light
-        :link: ../configuration/defining-playbooks/index
+        :link: defining-playbooks/index
         :link-type: doc
 
     .. grid-item-card:: 🎓 Playbook Tutorials

@@ -3,6 +3,7 @@ import logging
 import re
 import urllib.parse
 import uuid
+from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
@@ -13,6 +14,7 @@ from pydantic.main import BaseModel
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.consts import FindingSource, FindingSubjectType, FindingType
+from robusta.utils.scope import BaseScopeMatcher
 
 
 class BaseBlock(BaseModel):
@@ -98,6 +100,9 @@ class EnrichmentType(Enum):
     alert_labels = "alert_labels"
     diff = "diff"
     text_file = "text_file"
+    crash_info = "crash_info"
+    image_pull_backoff_info = "image_pull_backoff_info"
+    pending_pod_info = "pending_pod_info"
 
 
 class Enrichment:
@@ -108,8 +113,13 @@ class Enrichment:
     enrichment_type: Optional[EnrichmentType]
     title: Optional[str]
 
-    def __init__(self, blocks: List[BaseBlock], annotations: Optional[Dict[str, str]] = None,
-                 enrichment_type: Optional[EnrichmentType] = None, title: Optional[str] = None):
+    def __init__(
+        self,
+        blocks: List[BaseBlock],
+        annotations: Optional[Dict[str, str]] = None,
+        enrichment_type: Optional[EnrichmentType] = None,
+        title: Optional[str] = None,
+    ):
         if annotations is None:
             annotations = {}
         self.blocks = blocks
@@ -121,8 +131,17 @@ class Enrichment:
         return f"annotations: {self.annotations} Enrichment: {self.blocks} "
 
 
-class Filterable:
+class FilterableScopeMatcher(BaseScopeMatcher):
+    def __init__(self, data):
+        self.data = data
+
+    def get_data(self) -> Dict:
+        return self.data
+
+
+class Filterable(ABC):
     @property
+    @abstractmethod
     def attribute_map(self) -> Dict[str, Union[str, Dict[str, str]]]:
         raise NotImplementedError
 
@@ -146,16 +165,30 @@ class Filterable:
             logging.error(f"Failed to evaluate matcher. Finding value: {value} matcher: {expression}")
             return False
 
-    def matches(self, requirements: Dict[str, Union[str, List[str]]]) -> bool:
-        invalid_attributes = self.get_invalid_attributes(list(requirements.keys()))
+    def matches(self, match_requirements: Dict[str, Union[str, List[str]]], scope_requirements) -> bool:
+        # 1. "scope" check
+        accept = True
+        if scope_requirements is not None:
+            matcher = FilterableScopeMatcher(self.attribute_map)
+            if scope_requirements.exclude:
+                if matcher.scope_inc_exc_matches(scope_requirements.exclude):
+                    return False
+            if scope_requirements.include:
+                if matcher.scope_inc_exc_matches(scope_requirements.include):
+                    return True
+                else:  # include was defined, but not matched. So if not matched by old matcher, should be rejected!
+                    accept = False
+
+        # 2. "match" check
+        invalid_attributes = self.get_invalid_attributes(list(match_requirements.keys()))
         if len(invalid_attributes) > 0:
             logging.warning(f"Invalid match attributes: {invalid_attributes}")
             return False
 
-        for attribute, expression in requirements.items():
+        for attribute, expression in match_requirements.items():
             if not self.attribute_matches(attribute, expression):
                 return False
-        return True
+        return accept
 
 
 class FindingSubject:
@@ -294,8 +327,9 @@ class Finding(Filterable):
             return
         if annotations is None:
             annotations = {}
-        self.enrichments.append(Enrichment(blocks=enrichment_blocks, annotations=annotations,
-                                           enrichment_type=enrichment_type, title=title))
+        self.enrichments.append(
+            Enrichment(blocks=enrichment_blocks, annotations=annotations, enrichment_type=enrichment_type, title=title)
+        )
 
     def add_video_link(self, video_link: VideoLink, suppress_warning: bool = False):
         if self.dirty and not suppress_warning:

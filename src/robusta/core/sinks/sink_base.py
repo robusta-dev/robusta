@@ -2,7 +2,7 @@ from typing import Any
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding
-from robusta.core.sinks.sink_base_params import SinkBaseParams, ActivityParams, ActivityInterval
+from robusta.core.sinks.sink_base_params import ActivityInterval, ActivityParams, SinkBaseParams
 from robusta.core.sinks.timing import TimeSlice, TimeSliceAlways
 
 
@@ -42,7 +42,10 @@ class SinkBase:
         pass
 
     def accepts(self, finding: Finding) -> bool:
-        return finding.matches(self.params.match) and any(time_slice.is_active_now for time_slice in self.time_slices)
+        return (
+            finding.matches(self.params.match, self.params.scope)
+            and any(time_slice.is_active_now for time_slice in self.time_slices)
+        )
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         raise NotImplementedError(f"write_finding not implemented for sink {self.sink_name}")

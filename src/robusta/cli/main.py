@@ -16,9 +16,7 @@ from kubernetes import client, config
 from pydantic import BaseModel, Extra
 
 from robusta._version import __version__
-from robusta.cli.auth import RSAKeyPair
 from robusta.cli.auth import app as auth_commands
-from robusta.cli.auth import gen_rsa_pair
 from robusta.cli.backend_profile import backend_profile
 from robusta.cli.eula import handle_eula
 from robusta.cli.integrations_cmd import app as integrations_commands
@@ -88,7 +86,6 @@ class HelmValues(BaseModel, extra=Extra.allow):
     kubewatch: Dict = None
     grafanaRenderer: Dict = None
     runner: Dict = None
-    rsa: RSAKeyPair = None
 
 
 def get_slack_channel() -> str:
@@ -266,7 +263,6 @@ def gen_config(
         enablePrometheusStack=enable_prometheus_stack,
         disableCloudRouting=disable_cloud_routing,
         enablePlatformPlaybooks=enable_platform_playbooks,
-        rsa=gen_rsa_pair(),
     )
 
     values.runner = {}
@@ -327,9 +323,6 @@ def update_config(
     """
     with open(existing_values, "r") as existing_values_file:
         values: HelmValues = HelmValues(**yaml.safe_load(existing_values_file))
-        if not values.rsa:
-            typer.secho("Generating RSA key-pair", fg="green")
-            values.rsa = gen_rsa_pair()
 
         if not values.globalConfig.signing_key:
             typer.secho("Generating signing key", fg="green")

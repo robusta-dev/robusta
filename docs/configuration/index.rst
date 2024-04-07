@@ -1,49 +1,56 @@
 :hide-toc:
 
-Configuration Overview
+Integrations Overview
 ==========================
 
-Follow this guide to configure Robusta after :ref:`installing it <install>`. Configuration is done using Robusta's Helm values.
 
-Common Settings
-^^^^^^^^^^^^^^^^^^
+Robusta can gather data from multiple sources, enrich them and send actionable alerts to many sinks (destinations). These integrations with external tools are done using Robusta's Helm values.
 
-.. grid:: 1 1 2 3
+We highly recommend configuring at least one metrics source, such as Prometheus, one alert system (recommended: AlertManager), and one sink like Slack.
+
+Follow these guides after :ref:`installing Robusta <install>`.
+
+
+.. grid::
     :gutter: 3
 
-    .. grid-item-card:: :octicon:`book;1em;` Configure Sinks
-        :class-card: sd-bg-light sd-bg-text-light
-        :link: configuring-sinks
-        :link-type: doc
-
-        Send notifications from Robusta to external systems.
-
-    .. grid-item-card:: :octicon:`book;1em;` Integrate Prometheus
+    .. grid-item-card:: :octicon:`book;1em;` Prometheus Integrations
         :class-card: sd-bg-light sd-bg-text-light
         :link: alertmanager-integration/index
         :link-type: doc
 
-        Connect Prometheus, AlertManager, Grafana, and others.
+        Send data to Robusta from Prometheus, AlertManager, Grafana, Thanos and others.
 
-    .. grid-item-card:: :octicon:`book;1em;` Define Custom Playbooks
+    .. grid-item-card:: :octicon:`book;1em;` Sinks (destinations)
         :class-card: sd-bg-light sd-bg-text-light
-        :link: defining-playbooks/index
+        :link: configuring-sinks
         :link-type: doc
 
-        Create your own alerts and Kubernetes automations
+        Send notifications from Robusta to 15+ integrations like Slack, MS Teams, and Email.
 
-All Settings
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-All of Robusta's settings are listed as Helm chart values:
+Common Sinks
+^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: yaml
+.. grid:: 1 1 2 4
+    :gutter: 3
 
-    helm repo add robusta https://robusta-charts.storage.googleapis.com && helm repo update
-    helm show values robusta/robusta
+    .. grid-item-card:: :octicon:`cpu;1em;` Robusta UI
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: sinks/RobustaUI
+        :link-type: doc
 
-.. admonition:: Avoid using the values.yaml file on GitHub
-    :class: warning
+    .. grid-item-card:: :octicon:`cpu;1em;` MS Teams
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: sinks/ms-teams
+        :link-type: doc
 
-    It might be tempting to use ``helm/robusta/values.yaml`` in our GitHub repository, but this file wont work.
-    It contains empty placeholders filled in during releases.
+    .. grid-item-card:: :octicon:`cpu;1em;` Slack
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: sinks/slack
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Jira
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: sinks/jira
+        :link-type: doc

@@ -7,17 +7,24 @@ from hikaru.model.rel_1_26 import Event, EventList, Pod
 
 from robusta.core.model.pods import pod_other_requests, pod_requests
 from robusta.core.playbooks.common import get_event_timestamp
-from robusta.core.reporting.blocks import BaseBlock, MarkdownBlock
+from robusta.core.reporting import Enrichment
+from robusta.core.reporting.base import EnrichmentType
+from robusta.core.reporting.blocks import BaseBlock, MarkdownBlock, TableBlock, TableBlockFormat
 
 
-def get_pending_pod_blocks(pod: Pod):
-    blocks: List[BaseBlock] = []
+def get_pending_pod_enrichment(pod: Pod) -> Enrichment:
     investigator = PendingInvestigator(pod)
     all_reasons = investigator.investigate()
     message = get_unscheduled_message(pod)
-    blocks.append(MarkdownBlock(f"Pod {pod.metadata.name} could not be scheduled."))
+    pending_rows = [["Pod", pod.metadata.name]]
     if message:
-        blocks.append(MarkdownBlock(f"*Reason:* {message}"))
+        pending_rows.append(["Reason", message])
+
+    blocks = [TableBlock(
+        [[k, v] for (k, v) in pending_rows],
+        ["label", "value"],
+        table_format=TableBlockFormat.vertical,
+    )]
 
     if all_reasons:
         RESOURCE_REASONS = [
@@ -39,7 +46,10 @@ def get_pending_pod_blocks(pod: Pod):
             resources_string = ", ".join(request_resources)
             blocks.append(MarkdownBlock(f"*Pod requires:* {resources_string}"))
 
-    return blocks
+    return Enrichment(
+        enrichment_type=EnrichmentType.pending_pod_info,
+        blocks=blocks,
+        title="Unscheduled Pod Information")
 
 
 def get_unscheduled_message(pod: Pod) -> Optional[str]:
