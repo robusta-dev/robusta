@@ -88,6 +88,43 @@ In order to override the default configuration of the same playbook, both disabl
       - image_pull_backoff_reporter: {}
 
 
+Organizing Playbooks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Using ``namedCustomPlaybooks``, you can define playbooks by name. This is useful when you want to define a base set of playbooks for all clusters/teams and then use additional Helm values files to override some of the base playbooks or add new ones.
+
+They are all merged together into a single playbooks list. This allows you to split away the custom playbooks from ``generated_values.yaml`` to separate files and organize your playbooks.
+
+First, add the custom playbooks as a dictionary into a file named ``app_a_playbooks.yaml`` as shown below:
+
+
+.. code-block:: yaml
+
+    namedCustomPlaybooks:
+    team-a-app-a:
+      - triggers:
+          - on_prometheus_alert:
+              namespace_prefix: "app-a"
+        actions:
+          - create_finding:
+              aggregation_key: "This is app-a - Requires your attention"
+              severity: HIGH
+              title: "Check app-a out"
+              description: "@monitoring.monitoring this is for you"
+    team-b-app-b:
+      - triggers:
+          - on_prometheus_alert:
+              namespace_prefix: "app-b"
+        actions:
+          # Actions for team-b-app-b here
+
+Then run a Helm upgrade by passing the new file using the ``-f`` flag.
+
+.. code-block:: yaml
+
+    helm ugprade --install robusta -f generated_values.yaml -f app_a_playbooks.yaml
+
+
 Understanding Triggers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
