@@ -41,7 +41,7 @@ class PrometheusAlertParams(ActionParams):
     statefulset_name: Optional[str] = None
     daemonset_name: Optional[str] = None
     namespace: str = "default"
-    status: str = "resolved"
+    status: str = "firing"
     severity: str = "error"
     description: str = "simulated prometheus alert"
     summary: Optional[str]
