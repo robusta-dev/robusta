@@ -118,12 +118,15 @@ DEFAULT_CHANGE_IGNORE = [
 
 
 class K8sTriggerChangeFilters(BaseModel):
-    include: List[str] = DEFAULT_CHANGE_INCLUDE
-    ignore: List[str] = DEFAULT_CHANGE_IGNORE
+    include: Optional[List[str]] = None
+    ignore: Optional[List[str]] = None
 
 
 class InvalidMatcher(Exception):
     pass
+
+
+DEFAULT_CHANGE_FILTERS = K8sTriggerChangeFilters(include=DEFAULT_CHANGE_INCLUDE, ignore=DEFAULT_CHANGE_IGNORE)
 
 
 class K8sBaseTrigger(BaseTrigger):
@@ -132,7 +135,7 @@ class K8sBaseTrigger(BaseTrigger):
     name_prefix: str = None
     namespace_prefix: str = None
     labels_selector: str = None
-    change_filters: K8sTriggerChangeFilters = None
+    change_filters: Optional[K8sTriggerChangeFilters] = DEFAULT_CHANGE_FILTERS
     scope: Optional[ScopeParams] = None
 
     _labels_map: Dict = PrivateAttr()
@@ -261,7 +264,7 @@ class K8sBaseTrigger(BaseTrigger):
 
         if not self.change_filters:
             execution_event.obj_filtered = execution_event.obj
-            execution_event.old_obj_filtered = execution_event.old_obj_filtered
+            execution_event.old_obj_filtered = execution_event.old_obj
             execution_event.filtered_diffs = []
             return True
 
