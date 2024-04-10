@@ -275,7 +275,10 @@ class K8sBaseTrigger(BaseTrigger):
 
         if execution_event.operation == K8sOperationType.UPDATE:
             all_diffs = obj_filtered.diff(old_obj_filtered)
-            filtered_diffs = list(filter(lambda x: is_matching_diff(x, self.change_filters.include), all_diffs))
+            if self.change_filters.include:
+                filtered_diffs = list(filter(lambda x: is_matching_diff(x, self.change_filters.include), all_diffs))
+            else:
+                filtered_diffs = all_diffs
             if len(filtered_diffs) == 0:
                 result = False
         execution_event.obj_filtered = obj_filtered
