@@ -28,11 +28,15 @@ class MultiResourceTrigger(KubernetesAnyAllChangesTrigger):
         labels_selector: str = None,
         resources: List[str] = None,
         operations: List[str] = None,
+        change_filters: Dict[str, List[str]] = None,
+        scope: ScopeParams = None
     ):
         super().__init__(
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
+            change_filters=change_filters,
+            scope=scope
         )
         self.resources = [resource.lower() for resource in resources] if resources else []
         self.operations = [op.lower() for op in operations] if operations else []
