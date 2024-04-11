@@ -23,7 +23,7 @@ Add the following to your :ref:`customPlaybooks<customPlaybooks>`:
             command:
               - sh
               - -c
-              - "echo '$ALERT_NAME fired... Now dumping all available environment variables, which include alert metadata and labels' && env && sleep 60"
+              - echo \"$ALERT_NAME $ALERT_LABEL_REGION dumping all available environment variables, which include alert metadata and labels\" && env && sleep 60
             image: busybox
             notify: true
             wait_for_completion: true
@@ -40,7 +40,8 @@ Perform a :ref:`Helm Upgrade <Simple Upgrade>`.
 
 .. note::
 
-    ``alert_name`` should be the exact name of the Prometheus Alert. For example, ``CrashLoopBackOff`` will not work, because the actual Prometheus Alert is ``KubePodCrashLooping``.
+    * ``alert_name`` should be the exact name of the Prometheus Alert. For example, ``CrashLoopBackOff`` will not work, because the actual Prometheus Alert is ``KubePodCrashLooping``.
+    * Alert labels are added as environment variables in the following format ``ALERT_LABEL_{LABEL_NAME}``. For example a label named ``foo`` becomes ``ALERT_LABEL_FOO``
 
 Test this playbook by simulating a Prometheus alert:
 
