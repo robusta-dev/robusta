@@ -50,8 +50,8 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
 .. details:: How does it work?
 
   1. **Initialize Custom Playbook**: Create a custom playbook where you'll outline the rules for when and how you'll be notified.
-  2. **Set Up the Deployment Trigger**: In your custom playbook, add the `on_deployment_update` trigger. This ensures you'll receive notifications for all deployment changes.
-  3. **Specify Fields to Monitor**: Use the `resource_babysitter` action within the same playbook and set `images` in the `fields_to_monitor` option. This filters out irrelevant changes and focuses on image updates.
+  2. **Set Up the Deployment Trigger**: In your custom playbook, add the `on_deployment_update` trigger. This ensures you'll receive notifications for deployment changes.
+  3. **Specify Fields to Monitor**: Add change_filters to your ``on_deployment_update`` trigger to filter which changes you will be notified for.
   4. **Route Notifications (Optional)**: Optionally, specify in your playbook where these notifications should be sent by defining 'sinks'.
 
 Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
