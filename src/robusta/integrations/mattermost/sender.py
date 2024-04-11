@@ -11,8 +11,10 @@ from robusta.core.reporting.blocks import (
     KubernetesDiffBlock,
     ListBlock,
     MarkdownBlock,
+    ScanReportBlock,
     TableBlock,
 )
+from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.mattermost.mattermost_sink_params import MattermostSinkParams
 from robusta.core.sinks.transformer import Transformer
@@ -70,6 +72,8 @@ class MattermostSender:
             return self.__to_mattermost(block.to_markdown(), sink_name)
         elif isinstance(block, KubernetesDiffBlock):
             return self.__to_mattermost_diff(block, sink_name)
+        elif isinstance(block, ScanReportBlock):
+            raise AssertionError("to_mattermost() should never be called on a ScanReportBlock")
         else:
             logging.warning(f"cannot convert block of type {type(block)} to mattermost format block: {block}")
             return ""  # no reason to crash the entire report
@@ -144,6 +148,8 @@ class MattermostSender:
             blocks.append(MarkdownBlock(finding.description))
 
         for enrichment in finding.enrichments:
+            if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
+                enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
             blocks.extend(enrichment.blocks)
 
         status: FindingStatus = (
