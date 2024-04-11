@@ -56,7 +56,13 @@ class ChannelTransformer:
         return ""
 
     @classmethod
-    def replace_token(cls, pattern: regex.Pattern, prefix: str, channel: str, replacements: Dict[str, str]) -> str:
+    def replace_token(
+        cls,
+        pattern: regex.Pattern,
+        prefix: str,
+        channel: str,
+        replacements: Dict[str, str],
+    ) -> str:
         tokens = pattern.findall(channel)
         for token in tokens:
             clean_token = token.replace("{", "").replace("}", "")
@@ -82,13 +88,19 @@ class ChannelTransformer:
             # replace "cluster_name" or "$cluster_name" or ${cluster_name} with the value of the cluster name
             channel = CLUSTER_PREF_PATTERN.sub(cluster_name, channel)
 
-        normalized_labels = cls.normalize_dict_keys(labels)
-        normalized_annotations = cls.normalize_dict_keys(annotations)
+        if LABELS_PREF in channel:
+            normalized_labels = cls.normalize_dict_keys(labels)
+            channel = cls.replace_token(BRACKETS_PATTERN, LABELS_PREF, channel, normalized_labels)
+            channel = cls.replace_token(LABEL_PREF_PATTERN, LABELS_PREF, channel, normalized_labels)
 
-        channel = cls.replace_token(BRACKETS_PATTERN, LABELS_PREF, channel, normalized_labels)
-        channel = cls.replace_token(BRACKETS_PATTERN, ANNOTATIONS_PREF, channel, normalized_annotations)
-
-        channel = cls.replace_token(LABEL_PREF_PATTERN, LABELS_PREF, channel, normalized_labels)
-        channel = cls.replace_token(ANNOTATIONS_PREF_PATTERN, ANNOTATIONS_PREF, channel, normalized_annotations)
+        if ANNOTATIONS_PREF in channel:
+            normalized_annotations = cls.normalize_dict_keys(annotations)
+            channel = cls.replace_token(BRACKETS_PATTERN, ANNOTATIONS_PREF, channel, normalized_annotations)
+            channel = cls.replace_token(
+                ANNOTATIONS_PREF_PATTERN,
+                ANNOTATIONS_PREF,
+                channel,
+                normalized_annotations,
+            )
 
         return channel if MISSING not in channel else default_channel
