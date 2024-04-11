@@ -14,6 +14,7 @@ from robusta.core.reporting.blocks import (
     ScanReportBlock,
     TableBlock,
 )
+from robusta.core.reporting.consts import EnrichmentAnnotation
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.mattermost.mattermost_sink_params import MattermostSinkParams
 from robusta.core.sinks.transformer import Transformer
@@ -149,8 +150,7 @@ class MattermostSender:
         for enrichment in finding.enrichments:
             if enrichment.annotations.get(EnrichmentAnnotation.SCAN, False):
                 enrichment.blocks = [Transformer.scanReportBlock_to_fileblock(b) for b in enrichment.blocks]
-            else:
-                blocks.extend(enrichment.blocks)
+            blocks.extend(enrichment.blocks)
 
         status: FindingStatus = (
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
