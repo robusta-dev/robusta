@@ -75,7 +75,7 @@ If you are having performance issues, specifically with Prometheus using a lot o
 
     globalConfig:
       krr_args: "--cpu-min 15 --mem-min 200 --cpu_percentile 90 --memory_buffer_percentage 25"
-      max_workers: 2 
+      max_workers: 2
 
 **Common KRR Settings**
 
@@ -191,7 +191,12 @@ To set custom tolerations or a nodeSelector update your ``generated_values.yaml`
           operator: "Exists"
           effect: "NoSchedule"
         nodeSelector:
+          kubernetes.io/arch: "amd64"
           nodeName: "your-selector"
+
+.. Note::
+
+    Popeye does `not support <https://github.com/derailed/popeye/issues/253>`_ arm nodes yet. If your cluster has both Arm and x64 nodes add ``kubernetes.io/arch: "amd64"`` as a node selector to schedule Popeye jobs on the x64 nodes.
 
 Troubleshooting Popeye
 =======================
