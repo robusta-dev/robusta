@@ -57,12 +57,6 @@ def resource_babysitter(event: KubernetesAnyChangeEvent, config: BabysitterConfi
         old_obj = event.old_obj_filtered
         obj = event.obj_filtered
 
-    logging.warning(f"1 {event.operation}")
-    logging.warning(f"1 {event.old_obj_filtered}")
-    logging.warning(f"1 {event.old_obj}")
-    logging.warning(f"2 {event.obj_filtered}")
-    logging.warning(f"3 {event.filtered_diffs}")
-
     should_get_subject_node_name = isinstance(event, NodeChangeEvent)
     # we take it from the original event, in case metadata is omitted
     meta = event.obj.metadata

@@ -1856,7 +1856,7 @@ class IngressUpdateTrigger(K8sBaseTrigger):
 # Kubernetes Any Triggers
 class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
     def __init__(
-        self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None, change_filters: Dict[str, List[str]] = None, scope: ScopeParams = None
+        self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None, change_filters: Dict[str, List[str]] = DEFAULT_CHANGE_FILTERS, scope: ScopeParams = None
     ):
         super().__init__(
             kind="Any",
