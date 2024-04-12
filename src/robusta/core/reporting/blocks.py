@@ -427,13 +427,13 @@ class TableBlock(BaseBlock):
 
         return MarkdownBlock(f"{prefix}{table_contents}{suffix}")
 
-    def to_table_string(self, table_max_width: int = PRINTED_TABLE_MAX_WIDTH) -> str:
+    def to_table_string(self, table_max_width: int = PRINTED_TABLE_MAX_WIDTH, table_fmt: str = "presto") -> str:
         rendered_rows = self.__to_strings_rows(self.render_rows())
         col_max_width = self.__calc_max_width(self.headers, rendered_rows, table_max_width)
         return tabulate(
             rendered_rows,
             headers=self.headers,
-            tablefmt="presto",
+            tablefmt=table_fmt,
             maxcolwidths=col_max_width,
         )
 
