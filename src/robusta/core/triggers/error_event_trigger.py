@@ -23,14 +23,12 @@ class WarningEventTrigger(EventAllChangesTrigger):
         operations: List[str] = None,
         exclude: List[str] = (),
         include: List[str] = (),
-        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
-            change_filters=change_filters,
             scope=scope
         )
         self.rate_limit = rate_limit
@@ -92,7 +90,6 @@ class WarningEventCreateTrigger(WarningEventTrigger):
         rate_limit: int = 3600,
         exclude: List[str] = (),
         include: List[str] = (),
-        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -103,7 +100,6 @@ class WarningEventCreateTrigger(WarningEventTrigger):
             operations=["create"],
             exclude=exclude,
             include=include,
-            change_filters=change_filters,
             scope=scope,
         )
 
@@ -117,7 +113,6 @@ class WarningEventUpdateTrigger(WarningEventTrigger):
         rate_limit: int = 3600,
         exclude: List[str] = (),
         include: List[str] = (),
-        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -128,7 +123,6 @@ class WarningEventUpdateTrigger(WarningEventTrigger):
             operations=["update"],
             exclude=exclude,
             include=include,
-            change_filters=change_filters,
             scope=scope,
         )
 
@@ -142,7 +136,6 @@ class WarningEventDeleteTrigger(WarningEventTrigger):
         rate_limit: int = 3600,
         exclude: List[str] = (),
         include: List[str] = (),
-        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -153,6 +146,5 @@ class WarningEventDeleteTrigger(WarningEventTrigger):
             operations=["delete"],
             exclude=exclude,
             include=include,
-            change_filters=change_filters,
             scope=scope,
         )

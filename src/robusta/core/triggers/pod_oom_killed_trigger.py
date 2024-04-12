@@ -14,7 +14,6 @@ class PodOOMKilledTrigger(OOMKilledTriggerBase):
         labels_selector: str = None,
         rate_limit: int = 3600,
         exclude: List[Exclude] = None,
-        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -23,7 +22,6 @@ class PodOOMKilledTrigger(OOMKilledTriggerBase):
             labels_selector=labels_selector,
             rate_limit=rate_limit,
             exclude=exclude,
-            change_filters=change_filters,
             scope=scope,
         )
 

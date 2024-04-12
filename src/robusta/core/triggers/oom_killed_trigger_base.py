@@ -32,14 +32,12 @@ class OOMKilledTriggerBase(PodUpdateTrigger):
         labels_selector: str = None,
         rate_limit: int = 0,
         exclude: List[Dict] = None,
-        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
-            change_filters=change_filters,
             scope=scope,
         )
         self.rate_limit = rate_limit
