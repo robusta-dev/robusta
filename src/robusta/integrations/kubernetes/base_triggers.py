@@ -38,16 +38,14 @@ class IncomingK8sEventPayload(BaseModel):
 
 class K8sTriggerEventScopeMatcher(BaseScopeMatcher):
     def __init__(self, data):
-        self.data = {}
+        meta = {}
         if data and "metadata" in data:
             meta = data["metadata"]
-        else:
-            return
         self.data = {}
         for meta_key in ["name", "namespace", "labels", "annotations"]:
             if meta_key in meta:
                 self.data[meta_key] = meta[meta_key]
-        self.data["attributes"] = meta
+        self.data["attributes"] = data
 
     def get_data(self) -> Dict:
         return self.data
@@ -81,7 +79,7 @@ class K8sTriggerEventScopeMatcher(BaseScopeMatcher):
             found = pydash.get(data, path, default=UNSET)
         except KeyError:
             logging.warning(
-                f'path expression "{path}" matched no values in the k8s payload, '
+                f'path expression "{path}" matched no values in the k8s payload {data}, '
                 "please check the expression (it should match a single leaf value)"
             )
             return False
