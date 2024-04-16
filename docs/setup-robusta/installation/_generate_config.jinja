@@ -3,12 +3,19 @@ Generate a Config
 
 Robusta needs settings to work. For example, if you use Slack then Robusta needs a Slack API key. These settings are configured as Helm values.
 
-Use the ``robusta`` cli tool to generate the Helm values. You can install the cli with ``pip`` or run it inside a prebuilt container.
-
 .. tab-set::
 
-    .. tab-item:: pip (recommended)
+    .. tab-item:: Web Installation (recommended)
+        :name: web-installation-tab
+
+        The get started quickly, create the configuration via the free Robusta UI.
+
+        Click `Create Config → <https://platform.robusta.dev/signup?utm_source=docs>`_
+
+    .. tab-item:: pip
         :name: pip-cli-tab
+
+        Use the ``robusta`` cli tool to generate the Helm values.
 
         .. details:: Requirements and Troubleshooting
 
@@ -24,6 +31,8 @@ Use the ``robusta`` cli tool to generate the Helm values. You can install the cl
 
     .. tab-item:: docker
         :name: docker-cli-tab
+
+        Use the ``robusta`` cli tool to generate the Helm values. Run it via the pre-built docker container.
 
         .. details:: Requirements and Troubleshooting
 
