@@ -22,7 +22,7 @@ Let's explore practical use cases for Kubernetes change tracking.
 
 Use Case 1: Notification on Deployment Image Change
 *******************************************************
-**Scenario**: You want to be notified when a Deployment's image is changed.
+**Scenario**: You want to be notified when a Deployment strategy or container details are changed.
 
 **Implementation**:
 
@@ -32,25 +32,29 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
 
     customPlaybooks:
     - triggers:
-        - on_deployment_update: {}
+        - on_deployment_update:
             change_filters:
-              ignore:  # These are default values btw
+              ignore: # These are ignored by default
               - status
               - metadata.generation
               - metadata.resourceVersion
               - metadata.managedFields
               - spec.replicas
               include:
-              - spec
+                - spec.template.spec.containers[0]
+                - spec.strategy
       actions:
         - resource_babysitter: {}
+        - customise_finding:
+            severity: MEDIUM
+            title: "New changes in $kind/$namespace/$name"
       sinks:
-      - some_sink_name # Optional
+        - some_sink_name # Optional
 
 .. details:: How does it work?
 
   1. **Initialize Custom Playbook**: Create a custom playbook where you'll outline the rules for when and how you'll be notified.
-  2. **Set Up the Deployment Trigger**: In your custom playbook, add the `on_deployment_update` trigger. This ensures you'll receive notifications for deployment changes.
+  2. **Set Up the Deployment Trigger**: In your custom playbook, add the ``on_deployment_update`` trigger. This ensures you'll receive notifications for deployment changes.
   3. **Specify Fields to Monitor**: Add change_filters to your ``on_deployment_update`` trigger to filter which changes you will be notified for.
   4. **Route Notifications (Optional)**: Optionally, specify in your playbook where these notifications should be sent by defining 'sinks'.
 
@@ -79,9 +83,9 @@ A Robusta notification will arrive in your configured :ref:`sinks <Sinks Referen
   :align: center
 
 
-Use Case 2: Notification on Ingress Port or Path Change
+Use Case 2: Notification on Ingress Rules Change
 *****************************************************************
-**Scenario**: You want to be notified when an Ingress port or path is changed.
+**Scenario**: You want to be notified when an Ingress rules or tls details are changed.
 
 **Implementation**:
 
@@ -94,23 +98,24 @@ Add the following YAML to the ``customPlaybooks`` Helm value:
         - on_ingress_all_changes:
             change_filters:
               ignore:
-              - status
-              - metadata.generation
-              - metadata.resourceVersion
-              - metadata.managedFields
-              - spec.replicas
+                - status
+                - metadata.generation
+                - metadata.resourceVersion
+                - metadata.managedFields
+                - spec.replicas
               include:
-              - spec
+                - spec.rules
+                - spec.tls
       actions:
         - resource_babysitter: {}
       sinks:
-      - some_sink_name  # Replace with your sink name
+        - some_sink_name # Optional
 
 .. details:: How does it work?
 
   1. **Initialize Custom Playbook**: Create a custom playbook where you'll outline the rules for when and how you'll be notified.
-  2. **Set Up the Ingress Trigger**: In your custom playbook, add the `on_ingress_all_changes` trigger. This ensures you'll receive notifications for all ingress changes.
-  3. **Specify Fields to Monitor**: Use the `resource_babysitter` action within the same playbook and set `path` and `port` in the `fields_to_monitor` option. This filters out irrelevant changes and focuses on path and port updates.
+  2. **Set Up the Ingress Trigger**: In your custom playbook, add the ``on_ingress_all_changes`` trigger. This ensures you'll receive notifications for all ingress changes.
+  3. **Specify Fields to Monitor**: Add change_filters to your ``on_ingress_all_changes`` trigger to filter which changes you will be notified for.
   4. **Route Notifications (Optional)**: Optionally, specify in your playbook where these notifications should be sent by defining 'sinks'.
 
 Then perform a :ref:`Helm Upgrade <Simple Upgrade>`.
