@@ -48,7 +48,7 @@ class ClusterProviderDiscovery:
         return self.provider
 
     @staticmethod
-    def _get_node_label(node: List[Node], label: str) -> Optional[str]:
+    def _get_node_label(node: Node, label: str) -> Optional[str]:
         if node.metadata.labels:
             return node.metadata.labels.get(label)
         return None

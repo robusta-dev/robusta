@@ -23,6 +23,9 @@ def duplicate_without_fields(obj: HikaruBase, omitted_fields: List[str]):
     if obj is None:
         return None
 
+    if not omitted_fields:
+        return obj
+
     duplication = obj.dup()
 
     for field_name in omitted_fields:

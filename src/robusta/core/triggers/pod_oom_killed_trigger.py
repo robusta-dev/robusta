@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Dict
 
 from hikaru.model.rel_1_26 import ContainerStatus, Pod
 
 from robusta.core.triggers.oom_killed_trigger_base import Exclude, OOMKilledTriggerBase
+from robusta.utils.scope import ScopeParams
 
 
 class PodOOMKilledTrigger(OOMKilledTriggerBase):
@@ -13,6 +14,7 @@ class PodOOMKilledTrigger(OOMKilledTriggerBase):
         labels_selector: str = None,
         rate_limit: int = 3600,
         exclude: List[Exclude] = None,
+        scope: ScopeParams = None
     ):
         super().__init__(
             name_prefix=name_prefix,
@@ -20,6 +22,7 @@ class PodOOMKilledTrigger(OOMKilledTriggerBase):
             labels_selector=labels_selector,
             rate_limit=rate_limit,
             exclude=exclude,
+            scope=scope,
         )
 
     def get_relevant_oomkilled_container_statuses(self, pod: Pod) -> List[ContainerStatus]:

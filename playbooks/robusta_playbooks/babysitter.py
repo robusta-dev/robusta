@@ -10,6 +10,7 @@ from typing import List
 from robusta.api import (
     ActionParams,
     Finding,
+    FindingAggregationKey,
     FindingSource,
     FindingType,
     K8sOperationType,
@@ -18,7 +19,6 @@ from robusta.api import (
     KubernetesDiffBlock,
     NodeChangeEvent,
     action,
-    FindingAggregationKey,
 )
 from robusta.core.reporting.base import EnrichmentType
 

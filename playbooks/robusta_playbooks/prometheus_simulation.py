@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Dict, Optional
 
 import requests
-
 from robusta.api import PORT, ActionParams, AlertManagerEvent, ExecutionBaseEvent, action
 from robusta.utils.error_codes import ActionException, ErrorCodes
 from robusta.utils.silence_utils import AlertManagerParams, gen_alertmanager_headers, get_alertmanager_url
@@ -50,7 +49,8 @@ class PrometheusAlertParams(ActionParams):
     runbook_url: Optional[str] = ""
     fingerprint: Optional[str] = ""
     labels: Optional[str] = None
-
+    starts_at: Optional[datetime] = None
+    ends_at: Optional[datetime] = None
 
 @action
 def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: PrometheusAlertParams):
@@ -89,6 +89,15 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
         for label in prometheus_event_data.labels.split(","):
             key, val = label.split(":")
             labels[key.strip()] = val.strip()
+    starts_at = prometheus_event_data.starts_at if prometheus_event_data.starts_at else datetime.now()
+
+    if prometheus_event_data.ends_at is not None:
+        ends_at = prometheus_event_data.ends_at
+    elif prometheus_event_data.status is "resolved":
+        ends_at = datetime.now()
+    else:
+        # alert not resolved and ends_at not specified
+        ends_at = datetime.fromtimestamp(0)
 
     annotations = {
         "description": prometheus_event_data.description,
@@ -106,8 +115,8 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
             "alerts": [
                 {
                     "status": prometheus_event_data.status,
-                    "endsAt": datetime.now(),
-                    "startsAt": datetime.now(),
+                    "endsAt": ends_at,
+                    "startsAt": starts_at,
                     "generatorURL": prometheus_event_data.generator_url,
                     "fingerprint": prometheus_event_data.fingerprint,
                     "labels": labels,

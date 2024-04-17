@@ -11,8 +11,18 @@ from robusta.integrations.helper import exact_match, prefix_match
 from robusta.integrations.kubernetes.custom_models import RobustaDeployment, RobustaJob, RobustaPod
 from robusta.integrations.prometheus.models import PrometheusAlert, PrometheusKubernetesAlert
 from robusta.utils.cluster_provider_discovery import cluster_provider
+from robusta.utils.scope import ScopeParams, BaseScopeMatcher
+
 
 ALERT_EVENT = "alert_event"
+
+
+class PrometheusTriggerEventScopeMatcher(BaseScopeMatcher):
+    def __init__(self, data):
+        self.data = {"annotations": data.annotations, "labels": data.labels.copy()}
+
+    def get_data(self) -> Dict:
+        return self.data
 
 
 class PrometheusTriggerEvent(TriggerEvent):
@@ -61,6 +71,7 @@ class PrometheusAlertTrigger(BaseTrigger):
     namespace_prefix: str = None
     instance_name_prefix: str = None
     k8s_providers: Optional[List[str]]
+    scope: Optional[ScopeParams] = None
 
     def get_trigger_event(self):
         return PrometheusTriggerEvent.__name__
@@ -86,10 +97,18 @@ class PrometheusAlertTrigger(BaseTrigger):
             return False
 
         provider = cluster_provider.get_cluster_provider()
-        if provider and self.k8s_providers and len(self.k8s_providers) > 0:
+        if provider and self.k8s_providers:
             lowercase_provider = [provider.lower() for provider in self.k8s_providers]
             if provider.lower() not in lowercase_provider:
                 return False
+
+        if self.scope is not None:
+            scope_matcher = PrometheusTriggerEventScopeMatcher(event.alert)
+            if self.scope.exclude:
+                if scope_matcher.scope_inc_exc_matches(self.scope.exclude):
+                    return False
+            if self.scope.include:
+                return scope_matcher.scope_inc_exc_matches(self.scope.include)
 
         return True
 
