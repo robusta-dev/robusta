@@ -3,6 +3,12 @@
 
 # NOTE: Do not use this file to install Robusta. It has missing values that need to be filled in. See the installation instructions instead https://docs.robusta.dev/master/installation.html
 
+# -- (string) Override the name of the chart.
+nameOverride: ""
+
+# -- (string) Override the full name of the chart.
+fullnameOverride: ""
+
 # playbook repositories
 playbookRepos: {}
 

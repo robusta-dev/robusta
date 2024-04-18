@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-forwarder
+  name: {{ include "robusta.fullname" . }}-forwarder
   namespace: {{ .Release.Namespace }}
 spec:
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-forwarder
+      app: {{ include "robusta.fullname" . }}-forwarder
   replicas: 1
   template:
     metadata:
@@ -17,12 +17,12 @@ spec:
         {{- if .Values.globalConfig.custom_annotations }} {{ toYaml .Values.globalConfig.custom_annotations | nindent 8 }}
         {{- end }}
       labels:
-        app: {{ .Release.Name }}-forwarder
+        app: {{ include "robusta.fullname" . }}-forwarder
         {{- with .Values.kubewatch.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ .Release.Name }}-forwarder-service-account
+      serviceAccountName: {{ include "robusta.fullname" . }}-forwarder-service-account
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
       {{- if .Values.kubewatch.imagePullSecrets }}
       imagePullSecrets:
@@ -69,7 +69,7 @@ spec:
       volumes:
         - name:  robusta-kubewatch-config
           configMap:
-            name: {{ .Release.Name }}-kubewatch-config
+            name: {{ include "robusta.fullname" . }}-kubewatch-config
         {{- with .Values.kubewatch.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

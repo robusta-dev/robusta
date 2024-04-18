@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-kubewatch-config
+  name: {{ include "robusta.fullname" . }}-kubewatch-config
   namespace: {{ .Release.Namespace }}
 data:
   .kubewatch.yaml: |-
     handler:
       cloudevent:
-        url: "http://{{ .Release.Name }}-runner:80/api/handle"
+        url: "http://{{ include "robusta.fullname" . }}-runner:80/api/handle"
 {{ toYaml .Values.kubewatch.config | indent 4 }}
