@@ -133,11 +133,11 @@ def get_pod_issue_explanation(event: KubernetesResourceEvent, issue: PodIssue, m
     resource = event.get_resource()
 
     if issue == PodIssue.ImagePullBackoff:
-        issue_text = "image-pull-backoff"
+        issue_text = "ImagePullBackoff"
     elif issue == PodIssue.Pending:
         issue_text = "scheduling issue"
     elif issue in [PodIssue.CrashloopBackoff, PodIssue.Crashing]:
-        issue_text = "crash-looping"
+        issue_text = "CrashLoopBackOff"
     else:
         issue_text = issue.name
 
