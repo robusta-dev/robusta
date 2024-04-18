@@ -2,18 +2,18 @@
 <img src="{{ pathto('_static/logo_slate.svg', 1) }}" id="__logo-dark" style="display:none"/>
 <script>
 
-function showThemedRobustaLogo(light)
+function refreshRobustaLogo(light)
 {
   const logo = document.getElementById("__logo");
   const darkLogo = document.getElementById("__logo-dark");
 
   var isLight = __md_get("__palette")?.color.scheme ?? true
   isLight = light ?? isLight;
-  console.log("theme")
+
   darkLogo.style.display = isLight ? "none" : "block";
   logo.style.display = isLight ? "block" : "none";
 }
 
-showThemedRobustaLogo();
+refreshRobustaLogo();
 
 </script>
