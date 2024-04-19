@@ -93,6 +93,7 @@ class PlaybooksEventHandlerImpl(PlaybooksEventHandler):
         sync_response: bool = False,
         no_sinks: bool = False,
     ) -> Optional[Dict[str, Any]]:
+        logging.error(f"XXX run_actions {execution_event} {actions} {sync_response} {no_sinks}")
         if not no_sinks and execution_event.named_sinks is None:  # take the default sinks only if sinks not excluded
             execution_event.named_sinks = self.registry.get_playbooks().get_default_sinks()
 

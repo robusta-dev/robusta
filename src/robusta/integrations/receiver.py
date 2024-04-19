@@ -4,12 +4,12 @@ import hmac
 import json
 import logging
 import os
+import threading
 import time
+from concurrent.futures import ProcessPoolExecutor
 from threading import Thread
 from typing import Dict, Optional, List, Union
 from uuid import UUID
-
-from concurrent.futures import ThreadPoolExecutor
 
 import websocket
 from cryptography.hazmat.primitives import hashes
@@ -17,6 +17,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from pydantic import BaseModel, ValidationError, validator
 
+import robusta.runner.process_setup as process_setup
 from robusta.core.model.env_vars import (
     INCOMING_REQUEST_TIME_WINDOW_SECONDS,
     RUNNER_VERSION,
@@ -38,7 +39,7 @@ WEBSOCKET_RELAY_ADDRESS = os.environ.get("WEBSOCKET_RELAY_ADDRESS", "wss://relay
 CLOUD_ROUTING = json.loads(os.environ.get("CLOUD_ROUTING", "True").lower())
 RECEIVER_ENABLE_WEBSOCKET_TRACING = json.loads(os.environ.get("RECEIVER_ENABLE_WEBSOCKET_TRACING", "False").lower())
 INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC = int(os.environ.get("INCOMING_WEBSOCKET_RECONNECT_DELAY_SEC", 3))
-WEBSOCKET_THREADPOOL_SIZE = int(os.environ.get("WEBSOCKET_THREADPOOL_SIZE", 10))
+TASK_PROCESSPOOL_SIZE = int(os.environ.get("TASK_PROCESSPOOL_SIZE", 10))
 
 
 class ValidationResponse(BaseModel):
@@ -69,15 +70,6 @@ class ActionRequestReceiver:
         self.auth_provider = AuthProvider()
         self.healthy = False
 
-        self.ws = websocket.WebSocketApp(
-            WEBSOCKET_RELAY_ADDRESS,
-            on_open=self.on_open,
-            on_message=self.on_message,
-            on_error=self.on_error,
-        )
-
-        self._executor = ThreadPoolExecutor(max_workers=WEBSOCKET_THREADPOOL_SIZE)
-
         if not self.account_id or not self.cluster_name:
             logging.error(
                 f"Action receiver cannot start. "
@@ -85,7 +77,21 @@ class ActionRequestReceiver:
             )
             return
 
-        self.start_receiver()
+        logging.info(f"??? {process_setup.master_pid} {os.getpid()}")
+
+        # XXX this check is not needed - we never change the process we are running in after
+        # process_setup()
+        if os.getpid() == process_setup.master_pid:
+            # Run only one instance of the websocket listener, in the master process.
+            logging.info(f"XXXXXXXXXXXXXX Starting websocket listener in process {os.getpid()}")
+            self._executor = ProcessPoolExecutor(max_workers=TASK_PROCESSPOOL_SIZE)
+            self.ws = websocket.WebSocketApp(
+                WEBSOCKET_RELAY_ADDRESS,
+                on_open=self.on_open,
+                on_message=self.on_message,
+                on_error=self.on_error,
+            )
+            self.start_receiver()
 
     def start_receiver(self):
         if not CLOUD_ROUTING:
@@ -98,8 +104,19 @@ class ActionRequestReceiver:
 
         self.healthy = True
         websocket.enableTrace(RECEIVER_ENABLE_WEBSOCKET_TRACING)
+
         receiver_thread = Thread(target=self.run_forever)
         receiver_thread.start()
+
+        # svisor_thread = Thread(target=self.svisor)
+        # svisor_thread.start()
+
+    def svisor(self):
+        while True:
+            print(f"*SV* {self._executor._queue_count=}")
+            print(f"*SV* {self._executor._processes=}")
+            print(f"*SV* {self._executor._work_ids.qsize()=}")
+            time.sleep(1)
 
     def run_forever(self):
         logging.info("starting relay receiver")
@@ -122,7 +139,7 @@ class ActionRequestReceiver:
         return {"action": "response", "request_id": request_id, "status_code": status_code, "data": data}
 
     def __exec_external_request(self, action_request: ExternalActionRequest, validate_timestamp: bool):
-        logging.debug(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
+        logging.error(f"Callback `{action_request.body.action_name}` {to_safe_str(action_request.body.action_params)}")
         sync_response = action_request.request_id != ""  # if request_id is set, we need to write back the response
         validation_response = self.__validate_request(action_request, validate_timestamp)
         if validation_response.http_code != 200:
@@ -154,9 +171,20 @@ class ActionRequestReceiver:
             self.ws.send(data=json.dumps(self.__sync_response(http_code, action_request.request_id, response)))
 
     def _process_action(self, action: ExternalActionRequest, validate_timestamp: bool) -> None:
-        self._executor.submit(self._process_action_sync, action, validate_timestamp)
+        print(f"### _process_action: pid={os.getpid()} n_threads={threading.active_count()}")
+        future = self._executor.submit(self.supersimple)
+        print(f"### 1-> {future.result()=}")
+        time.sleep(1)
+        # future = self._executor.submit(self._process_action_sync, action, validate_timestamp)
+        # print(f"### 2-> {future.result()=}")
+
+    def supersimple(self):
+        print("### supersimple")
+        time.sleep(0.5)
 
     def _process_action_sync(self, action: ExternalActionRequest, validate_timestamp: bool) -> None:
+        print(f"### _process_action_sync: {os.getpid()}")
+        time.sleep(0.5)
         try:
             self.__exec_external_request(action, validate_timestamp)
         except Exception:
@@ -181,20 +209,23 @@ class ActionRequestReceiver:
         1. ExternalActionRequest - just one plain action request
         2. SlackActionsMessage - has multiple grouped action requests
         """
-
+        print(f"\n### on_message {os.getpid()}")
         try:
             incoming_event = self._parse_websocket_message(message)
         except Exception:
             logging.error(f"Failed to parse incoming event {message}", exc_info=True)
             return
+        print("### post parse")
 
         if isinstance(incoming_event, SlackActionsMessage):
+            print("### Slack")
             # slack callbacks have a list of 'actions'. Within each action there a 'value' field,
             # which container the actual action details we need to run.
             # This wrapper format is part of the slack API, and cannot be changed by us.
             for slack_action_request in incoming_event.actions:
                 self._process_action(slack_action_request.value, validate_timestamp=False)
         else:
+            print("### non-slack")
             self._process_action(incoming_event, validate_timestamp=True)
 
     @staticmethod
@@ -215,7 +246,7 @@ class ActionRequestReceiver:
         return f"{event_dict} {body} {to_safe_str(action_params)}"
 
     def on_error(self, ws, error):
-        logging.info(f"Relay websocket error: {error}")
+        logging.exception(f"Relay websocket error: {ws=} {error=}")
 
     def on_open(self, ws):
         account_id = self.event_handler.get_global_config().get("account_id")
