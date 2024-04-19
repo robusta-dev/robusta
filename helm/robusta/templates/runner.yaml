@@ -101,7 +101,7 @@ spec:
           {{- end }}
         envFrom:
         - secretRef:
-            name: robusta-runner-secret
+            name: {{ include "robusta.fullname" . }}-runner-secret
             optional: true
         {{- if .Values.runner.additional_env_froms }}
         {{ toYaml .Values.runner.additional_env_froms | nindent 8 }}
@@ -205,7 +205,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ include "robusta.fullname" . }}-runner
-    target: robusta-runner
+    target: {{ include "robusta.fullname" . }}-runner
 spec:
   selector:
     app: {{ include "robusta.fullname" . }}-runner
@@ -256,7 +256,7 @@ spec:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: robusta-runner-secret
+  name: {{ include "robusta.fullname" . }}-runner-secret
   namespace: {{ .Release.Namespace }}
 type: Opaque
 stringData:
