@@ -40,6 +40,7 @@ from robusta.api import (
 )
 from robusta.core.reporting import EventsBlock, EventRow
 from robusta.core.reporting.base import EnrichmentType
+from robusta.core.reporting.findings import FindingOwner
 from robusta.core.reporting.custom_rendering import render_value
 
 
@@ -72,6 +73,7 @@ def event_report(event: EventChangeEvent):
             subject_type=FindingSubjectType.from_kind(k8s_obj.kind),
             namespace=k8s_obj.namespace,
             node=KubeObjFindingSubject.get_node_name(k8s_obj),
+            owner=FindingOwner(owner_references=event.obj.metadata.ownerReferences)
         ),
     )
     event.add_finding(finding)

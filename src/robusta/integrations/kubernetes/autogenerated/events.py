@@ -99,6 +99,7 @@ class KubernetesResourceEvent(ExecutionBaseEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
     @classmethod
@@ -161,6 +162,7 @@ class PodEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -184,6 +186,7 @@ class PodChangeEvent(PodEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -217,6 +220,7 @@ class ReplicaSetEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -240,6 +244,7 @@ class ReplicaSetChangeEvent(ReplicaSetEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -273,6 +278,7 @@ class DaemonSetEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -296,6 +302,7 @@ class DaemonSetChangeEvent(DaemonSetEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -329,6 +336,7 @@ class DeploymentEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -352,6 +360,7 @@ class DeploymentChangeEvent(DeploymentEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -385,6 +394,7 @@ class StatefulSetEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -408,6 +418,7 @@ class StatefulSetChangeEvent(StatefulSetEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -441,6 +452,7 @@ class ServiceEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -464,6 +476,7 @@ class ServiceChangeEvent(ServiceEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -497,6 +510,7 @@ class EventEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -520,6 +534,7 @@ class EventChangeEvent(EventEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -553,6 +568,7 @@ class HorizontalPodAutoscalerEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -576,6 +592,7 @@ class HorizontalPodAutoscalerChangeEvent(HorizontalPodAutoscalerEvent, Kubernete
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -609,6 +626,7 @@ class NodeEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -632,6 +650,7 @@ class NodeChangeEvent(NodeEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -665,6 +684,7 @@ class ClusterRoleEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -688,6 +708,7 @@ class ClusterRoleChangeEvent(ClusterRoleEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -721,6 +742,7 @@ class ClusterRoleBindingEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -744,6 +766,7 @@ class ClusterRoleBindingChangeEvent(ClusterRoleBindingEvent, KubernetesAnyChange
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -777,6 +800,7 @@ class JobEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -800,6 +824,7 @@ class JobChangeEvent(JobEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -833,6 +858,7 @@ class NamespaceEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -856,6 +882,7 @@ class NamespaceChangeEvent(NamespaceEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -889,6 +916,7 @@ class ServiceAccountEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -912,6 +940,7 @@ class ServiceAccountChangeEvent(ServiceAccountEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -945,6 +974,7 @@ class PersistentVolumeEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -968,6 +998,7 @@ class PersistentVolumeChangeEvent(PersistentVolumeEvent, KubernetesAnyChangeEven
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -1001,6 +1032,7 @@ class PersistentVolumeClaimEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -1024,6 +1056,7 @@ class PersistentVolumeClaimChangeEvent(PersistentVolumeClaimEvent, KubernetesAny
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -1057,6 +1090,7 @@ class NetworkPolicyEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -1080,6 +1114,7 @@ class NetworkPolicyChangeEvent(NetworkPolicyEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -1113,6 +1148,7 @@ class ConfigMapEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -1136,6 +1172,7 @@ class ConfigMapChangeEvent(ConfigMapEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -1169,6 +1206,7 @@ class IngressEvent(KubernetesResourceEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 
@@ -1192,6 +1230,7 @@ class IngressChangeEvent(IngressEvent, KubernetesAnyChangeEvent):
             node=KubeObjFindingSubject.get_node_name(self.obj),
             labels=self.obj.metadata.labels,
             annotations=self.obj.metadata.annotations,
+            owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
         )
 
 

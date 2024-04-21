@@ -77,6 +77,7 @@ def autogenerate_events(f: TextIO):
         from ..base_event import K8sBaseChangeEvent
         from ....core.model.events import ExecutionBaseEvent, ExecutionEventBaseParams
         from ....core.reporting.base import FindingSubject
+        from ....core.reporting.findings import FindingOwner
         from ....core.reporting.consts import FindingSubjectType, FindingSource
         from ....core.reporting.finding_subjects import KubeObjFindingSubject
         from  robusta.integrations.kubernetes.custom_models import {CUSTOM_MODELS_IMPORTS}
@@ -185,6 +186,7 @@ def autogenerate_events(f: TextIO):
                     node=KubeObjFindingSubject.get_node_name(self.obj),
                     labels=self.obj.metadata.labels,
                     annotations=self.obj.metadata.annotations,
+                    owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
                 )
 
             @classmethod
@@ -268,6 +270,7 @@ def autogenerate_events(f: TextIO):
                         node=KubeObjFindingSubject.get_node_name(self.obj),
                         labels=self.obj.metadata.labels,
                         annotations=self.obj.metadata.annotations,
+                        owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
                     )
 
 
@@ -291,6 +294,7 @@ def autogenerate_events(f: TextIO):
                         node=KubeObjFindingSubject.get_node_name(self.obj),
                         labels=self.obj.metadata.labels,
                         annotations=self.obj.metadata.annotations,
+                        owner=FindingOwner(owner_references=self.obj.metadata.ownerReferences)
                     )
 
 

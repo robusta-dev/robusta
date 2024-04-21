@@ -21,6 +21,7 @@ from robusta.api import (
     action,
 )
 from robusta.core.reporting.base import EnrichmentType
+from robusta.core.reporting.findings import FindingOwner
 
 
 class BabysitterConfig(ActionParams):

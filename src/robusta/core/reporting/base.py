@@ -14,6 +14,7 @@ from pydantic.main import BaseModel
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.consts import FindingSource, FindingSubjectType, FindingType
+from robusta.core.reporting.findings import FindingOwner
 from robusta.utils.scope import BaseScopeMatcher
 
 
@@ -201,6 +202,7 @@ class FindingSubject:
         container: Optional[str] = None,
         labels: Optional[Dict[str, str]] = None,
         annotations: Optional[Dict[str, str]] = None,
+        owner: Optional[FindingOwner] = None,
     ):
         self.name = name
         self.subject_type = subject_type
@@ -209,6 +211,7 @@ class FindingSubject:
         self.container = container
         self.labels = labels or {}
         self.annotations = annotations or {}
+        self.owner = owner
 
     def __str__(self):
         if self.namespace is not None:
@@ -251,7 +254,9 @@ class Finding(Filterable):
         self.subject = subject
         self.enrichments: List[Enrichment] = []
         self.video_links: List[VideoLink] = []
-        self.service = TopServiceResolver.guess_cached_resource(name=subject.name, namespace=subject.namespace)
+        self.service = TopServiceResolver.guess_cached_resource(name=subject.name, namespace=subject.namespace,
+                                                                kind=subject.subject_type.value,
+                                                                owner=subject.owner)
         self.service_key = self.service.get_resource_key() if self.service else ""
         uri_path = f"services/{self.service_key}?tab=grouped" if self.service_key else "graphs"
         self.investigate_uri = f"{ROBUSTA_UI_DOMAIN}/{uri_path}"
