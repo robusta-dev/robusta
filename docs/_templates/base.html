@@ -17,20 +17,10 @@
     }, false);
 </script>
 <script>
+  // change logo on color theme.
   window.addEventListener("DOMContentLoaded", function() {
-    const body = document.getElementsByTagName('body')[0];
-
-    setInterval(function () {
-      const currentColorTheme = body.getAttribute('data-md-color-scheme');
-
-      Array
-        .from(body.querySelectorAll("[data-theme-logo]"))
-        .forEach((logo) => logo.style.display = "none");
-
-      Array
-        .from(body.querySelectorAll(`[data-theme-logo='${currentColorTheme}']`))
-        .forEach((logo) => logo.style.display = "block");
-    }, 300)
+    document.getElementById('__palette_1').onclick = () => refreshRobustaLogo(true);
+    document.getElementById('__palette_2').onclick = () => refreshRobustaLogo(false);
 
   }, false);
 </script>
