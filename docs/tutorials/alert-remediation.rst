@@ -19,7 +19,7 @@ Add the following to your :ref:`customPlaybooks<customPlaybooks>`:
             alert_name: TestAlert
       actions:
         - alert_handling_job:
-            # you can access information from the alert by environment variables
+            # you can access information from the alert using environment variables
             command:
               - sh
               - -c
@@ -28,8 +28,7 @@ Add the following to your :ref:`customPlaybooks<customPlaybooks>`:
             notify: true
             wait_for_completion: true
             completion_timeout: 100
-            # you can also inject secrets from the Robusta pod itself into the remediation Job's Pod
-            env_vars:
+            env:
               - name: GITHUB_SECRET
                 valueFrom:
                   secretKeyRef:
@@ -62,7 +61,7 @@ Alerts can also be remediated with bash commands:
           alert_name: SomeAlert
       actions:
       - node_bash_enricher:
-        bash_command: do something
+          bash_command: do something
 
 Further Reading
 *****************
