@@ -13,7 +13,6 @@ Add the following to your :ref:`customPlaybooks<customPlaybooks>`:
 .. code-block:: yaml
 
     customPlaybooks:
-    # Change the following line according to your needs
     - triggers:
         - on_prometheus_alert:
             alert_name: TestAlert
