@@ -105,6 +105,7 @@ The following attributes can be included in an ``include``/``excluded`` block:
 - ``title``: e.g. ``Crashing pod foo in namespace default``
 - ``name`` : the Kubernetes object name
 - ``namespace``: the Kubernetes object namespace
+- ``namespace_labels``: labels assigned to the namespace; matching these is done in the same way as matching ``labels`` (see below)
 - ``node`` : the Kubernetes node name
 - ``severity``: one of ``INFO``, ``LOW``, ``MEDIUM``, ``HIGH``
 - ``type``: one of ``ISSUE``, ``CONF_CHANGE``, ``HEALTH_CHECK``, ``REPORT``
@@ -120,6 +121,12 @@ The following attributes can be included in an ``include``/``excluded`` block:
     (e.g. pod labels) and the Prometheus alert labels and annotations. If both contains the
     same label/annotation, the value from the Prometheus alert is preferred.
 
+.. note::
+
+    For performance reasons, the namespace information used for matching ``namespace_labels``
+    is cached (with a default cache timeout of 30 minutes). If you change namespace labels
+    and want these changes to be immediately reflected in the sink ``scope`` matching
+    mechanism, you will need to manually restart the Robusta runner.
 
 .. details:: How do I find the ``identifier`` value to use in a match block? (deprecated)
 

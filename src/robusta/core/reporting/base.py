@@ -14,6 +14,7 @@ from pydantic.main import BaseModel
 from robusta.core.discovery.top_service_resolver import TopServiceResolver
 from robusta.core.model.env_vars import ROBUSTA_UI_DOMAIN
 from robusta.core.reporting.consts import FindingSource, FindingSubjectType, FindingType
+from robusta.integrations.kubernetes.api_client_utils import get_namespace_labels
 from robusta.utils.scope import BaseScopeMatcher
 
 
@@ -106,7 +107,7 @@ class EnrichmentType(Enum):
 
 
 class Enrichment:
-    # These is the actual enrichment data
+    # This is the actual enrichment data
     blocks: List[BaseBlock] = []
     # General purpose rendering flags, that can be used by specific sinks
     annotations: Dict[str, str] = {}
@@ -137,6 +138,9 @@ class FilterableScopeMatcher(BaseScopeMatcher):
 
     def get_data(self) -> Dict:
         return self.data
+
+    def match_namespace_labels(self, attr_matcher, attr_value):
+        return self.match_labels_annotations(attr_matcher, attr_value)
 
 
 class Filterable(ABC):
@@ -169,7 +173,12 @@ class Filterable(ABC):
         # 1. "scope" check
         accept = True
         if scope_requirements is not None:
-            matcher = FilterableScopeMatcher(self.attribute_map)
+            data = self.attribute_map
+            try:
+                data["namespace_labels"] = get_namespace_labels(data["namespace"])
+            except KeyError:
+                data["namespace_labels"] = {}
+            matcher = FilterableScopeMatcher(data)
             if scope_requirements.exclude:
                 if matcher.scope_inc_exc_matches(scope_requirements.exclude):
                     return False

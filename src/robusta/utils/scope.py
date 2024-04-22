@@ -22,7 +22,7 @@ class ScopeParams(BaseModel):
     def check_and_normalize(cls, data: Dict) -> Dict:
         """Check and normalize entries inside include/exclude"""
         for key in ["include", "exclude"]:
-            entry = data[key]
+            entry = data.get(key)
             if entry is None:
                 continue
             if entry == []:
@@ -40,11 +40,6 @@ class BaseScopeMatcher(ABC):
     def get_data(self) -> Dict:
         raise NotImplementedError
 
-    def scope_match_attributes(self, attr_matcher: str, attr_value: Dict[str, Union[List, Dict]]) -> bool:
-        # Not an abstract method, so that it doesn't have to be defined on each subclassing
-        # of this class, but only in the single case of K8s code.
-        raise NotImplementedError
-
     def scope_inc_exc_matches(self, scope_inc_exc: List[ScopeIncludeExcludeParamsT]) -> bool:
         return any(self.scope_matches(scope) for scope in scope_inc_exc)
 
@@ -59,12 +54,12 @@ class BaseScopeMatcher(ABC):
     def scope_attribute_matches(self, attr_name: str, attr_matchers: List[str]) -> bool:
         data = self.get_data()
         if attr_name not in data:
-            logging.warning(f'Scope match on non-existent attribute "{attr_name}" ({data=}')
+            logging.warning(f'Scope match on non-existent attribute "{attr_name}" ({data=})')
             return False
         attr_value = data[attr_name]
         for attr_matcher in attr_matchers:
-            if attr_name == "attributes":
-                return self.scope_match_attributes(attr_matcher, attr_value)
+            if hasattr(self, f"match_{attr_name}"):
+                return getattr(self, f"match_{attr_name}")(attr_matcher, attr_value)
             if attr_name in ["labels", "annotations"]:
                 return self.match_labels_annotations(attr_matcher, attr_value)
             elif re.fullmatch(attr_matcher, attr_value):

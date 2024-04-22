@@ -1856,7 +1856,12 @@ class IngressUpdateTrigger(K8sBaseTrigger):
 # Kubernetes Any Triggers
 class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
     def __init__(
-        self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None, change_filters: Dict[str, List[str]] = DEFAULT_CHANGE_FILTERS, scope: ScopeParams = None
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+        change_filters: Dict[str, List[str]] = DEFAULT_CHANGE_FILTERS,
+        scope: ScopeParams = None
     ):
         super().__init__(
             kind="Any",
@@ -1875,7 +1880,12 @@ class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
 
 class KubernetesAnyCreateTrigger(K8sBaseTrigger):
     def __init__(
-        self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None, scope: ScopeParams = None
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+
+        scope: ScopeParams = None
     ):
         super().__init__(
             kind="Any",
@@ -1883,6 +1893,7 @@ class KubernetesAnyCreateTrigger(K8sBaseTrigger):
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
+
             scope=scope,
         )
 
@@ -1893,7 +1904,12 @@ class KubernetesAnyCreateTrigger(K8sBaseTrigger):
 
 class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
     def __init__(
-        self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None, scope: ScopeParams = None
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+
+        scope: ScopeParams = None
     ):
         super().__init__(
             kind="Any",
@@ -1901,6 +1917,7 @@ class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
+
             scope=scope,
         )
 
@@ -1911,7 +1928,12 @@ class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
 
 class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
     def __init__(
-        self, name_prefix: str = None, namespace_prefix: str = None, labels_selector: str = None, scope: ScopeParams = None
+        self,
+        name_prefix: str = None,
+        namespace_prefix: str = None,
+        labels_selector: str = None,
+
+        scope: ScopeParams = None
     ):
         super().__init__(
             kind="Any",
@@ -1919,6 +1941,7 @@ class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
+
             scope=scope,
         )
 

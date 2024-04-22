@@ -381,3 +381,35 @@ tests:
           subject:
             kind: job
         expected: true
+  - scope:
+      include:
+        - namespace_labels: "foo=ba.*, kind=goo.*"
+      exclude:
+        - namespace_labels: "status=.*d"
+    checks:
+      - message: "match ns labels ok"
+        finding: {}
+        namespace_labels:
+          foo: bar
+          kind: good
+          status: xyz
+        expected: true
+      - message: "another match ns labels ok"
+        finding: {}
+        namespace_labels:
+          foo: bazaar
+          kind: gooey
+          type: excellent
+        expected: true
+      - message: "match ns - missing label"
+        finding: {}
+        namespace_labels:
+          foo: bar
+        expected: false
+      - message: "match ns - excluded"
+        finding: {}
+        namespace_labels:
+          foo: bar
+          kind: good
+          status: bad
+        expected: false

@@ -7,13 +7,17 @@ import tarfile
 import tempfile
 import time
 import traceback
-from typing import List, Optional
+from typing import Dict, List, Optional
 
+from cachetools import TTLCache, cached
 from hikaru.model.rel_1_26 import Job
 from kubernetes import config
 from kubernetes.client.api import core_v1_api
 from kubernetes.client.rest import ApiException
 from kubernetes.stream import stream
+
+from robusta.core.model.env_vars import NAMESPACE_DATA_TTL
+
 
 RUNNING_STATE = "Running"
 SUCCEEDED_STATE = "Succeeded"
@@ -264,3 +268,21 @@ def parse_kubernetes_datetime_to_ms(k8s_datetime: str) -> float:
         return parse_kubernetes_datetime(k8s_datetime).timestamp() * 1000
     except ValueError:
         return parse_kubernetes_datetime_with_ms(k8s_datetime).timestamp() * 1000
+
+
+# The expected amount of cached data here is in tens of kilobytes (maybe hundreds in extreme cases),
+# so we don't bother to pick what we exactly need (currently just labels - see below in
+# get_namespace_labels) and just cache all namespace data.
+@cached(cache=TTLCache(maxsize=1, ttl=NAMESPACE_DATA_TTL))
+def get_all_namespace_data():
+    logging.info("(re)loading all namespace data")
+    core_v1 = core_v1_api.CoreV1Api()
+    try:
+        return {ns.metadata.name: ns.metadata for ns in core_v1.list_namespace().items}
+    except ApiException:
+        logging.error("failed to list namespaces")
+        return {}
+
+
+def get_namespace_labels(namespace_name: str) -> Dict[str, str]:
+    return get_all_namespace_data()[namespace_name].labels
