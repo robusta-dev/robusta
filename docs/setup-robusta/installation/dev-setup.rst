@@ -79,14 +79,6 @@ Instead of running Robusta locally with Mirrord, you can test Robusta inside a K
 4. Run ``robusta gen-config`` and copy the result to ``deployment/generated_values.yaml``
 5. Run ``skaffold run --tail``. On M1 Macs, add ``-p apple-m1-dev``
 
-.. details:: Speeding up Skaffold builds ⚡
-
-    You️ can speed up Skaffold builds using Google Cloud Build:
-
-    1. Install `gcloud <https://cloud.google.com/sdk/docs/install/>`_
-    2. Run ``gcloud auth application-default login``
-    3. Build with ``skaffold run -p gcloud-build``
-
 Alert Simulation
 ^^^^^^^^^^^^^^^^^^
 

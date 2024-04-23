@@ -49,15 +49,6 @@ profiles:
         context: .
         custom:
           buildCommand: ./build_with_arm.sh
-- name: gcloud-build
-  build:
-    googleCloudBuild:
-        projectId: genuine-flight-317411
-    artifacts:
-      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
-        context: .
-        docker:
-          dockerfile: Dockerfile
 - name: release
   build:
     artifacts:
