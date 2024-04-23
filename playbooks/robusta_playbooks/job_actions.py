@@ -1,6 +1,7 @@
 import logging
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
+import hikaru
 from hikaru.model.rel_1_26 import Container, EnvVar, Job, JobSpec, JobStatus, ObjectMeta, PodSpec, PodTemplateSpec
 
 from robusta.api import (
@@ -13,6 +14,7 @@ from robusta.api import (
     PodContainer,
     PrometheusKubernetesAlert,
     RegexReplacementStyle,
+    RobustaJob,
     SlackAnnotations,
     TableBlock,
     action,
@@ -21,6 +23,7 @@ from robusta.api import (
     to_kubernetes_name,
 )
 from robusta.core.reporting.base import EnrichmentType
+from robusta.integrations.kubernetes.api_client_utils import wait_until_job_complete
 
 
 class JobParams(ActionParams):
@@ -33,10 +36,13 @@ class JobParams(ActionParams):
     :var restart_policy: Job container restart policy
     :var job_ttl_after_finished: Delete finished job ttl (seconds). If omitted, jobs will not be deleted automatically.
     :var notify: Add a notification for creating the job.
+    :var wait_for_completion: Wait for the job to complete and attach it's output. Only relevant when notify=true.
+    :var completion_timeout: Maximum seconds to wait for job to complete. Only relevant when wait_for_completion=true.
     :var backoff_limit: Specifies the number of retries before marking this job failed. Defaults to 6
     :var active_deadline_seconds: Specifies the duration in seconds relative to the startTime
         that the job may be active before the system tries to terminate it; value must be
         positive integer
+    :var env: Inject environment variables and secrets just like you do with a Kubernetes Job.
 
     :example command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
     """
@@ -47,10 +53,13 @@ class JobParams(ActionParams):
     namespace: str = "default"
     service_account: str = None  # type: ignore
     restart_policy: str = "OnFailure"
-    job_ttl_after_finished: int = None  # type: ignore
+    job_ttl_after_finished: int = 120  # type: ignore
     notify: bool = False
+    wait_for_completion: bool = True
+    completion_timeout: int = 300
     backoff_limit: int = None  # type: ignore
     active_deadline_seconds: int = None  # type: ignore
+    env: Optional[List[EnvVar]] = None
 
 
 @action
@@ -72,7 +81,10 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
 
     ALERT_OBJ_NODE (If present)
 
+    ALERT_LABEL_{LABEL_NAME} for every label on the alert. For example a label named `foo` becomes `ALERT_LABEL_FOO`
+
     """
+    logging.info(f"Running alert_handling_job alert action for alert {event.alert_name}")
     job_name = to_kubernetes_name(params.name)
     job: Job = Job(
         metadata=ObjectMeta(name=job_name, namespace=params.namespace),
@@ -84,7 +96,7 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
                             name=params.name,
                             image=params.image,
                             command=params.command,
-                            env=__get_alert_env_vars(event),
+                            env=__get_alert_env_vars(event, params),
                         )
                     ],
                     serviceAccountName=params.service_account,
@@ -99,11 +111,35 @@ def alert_handling_job(event: PrometheusKubernetesAlert, params: JobParams):
 
     job.create()
 
+    info_messages = []
     if params.notify:
-        event.add_enrichment([MarkdownBlock(f"Alert handling job *{job_name}* created.")])
+        info_messages.append(f"*Created Job from alert*: {job_name}.")
+
+    if params.wait_for_completion:
+        try:
+            wait_until_job_complete(job, params.completion_timeout)
+            job = hikaru.from_dict(
+                job.to_dict(), cls=RobustaJob
+            )  # temporary workaround for https://github.com/haxsaw/hikaru/issues/15
+            pod = job.get_single_pod()
+            event.add_enrichment([FileBlock("job-runner-logs.txt", pod.get_logs())])
+        except Exception as e:
+            if str(e) != "Failed to reach wait condition":
+                warning_msg = f"Error running Job: {e}"
+                logging.warning(warning_msg)
+                info_messages.append(warning_msg)
+            else:
+                logging.warning(f"{e} This is the error")
+                err_str = "*Status:* Timed out, could not fetch output."
+                logging.warning(f"Failed to fetch Job result: {err_str}")
+                info_messages.append(err_str)
+
+    if info_messages:
+        combined_message = "\n".join(info_messages)
+        event.add_enrichment([MarkdownBlock(combined_message)])
 
 
-def __get_alert_env_vars(event: PrometheusKubernetesAlert) -> List[EnvVar]:
+def __get_alert_env_vars(event: PrometheusKubernetesAlert, params: JobParams) -> List[EnvVar]:
     alert_subject = event.get_alert_subject()
     alert_env_vars = [
         EnvVar(name="ALERT_NAME", value=event.alert_name),
@@ -111,10 +147,16 @@ def __get_alert_env_vars(event: PrometheusKubernetesAlert) -> List[EnvVar]:
         EnvVar(name="ALERT_OBJ_KIND", value=alert_subject.subject_type.value),
         EnvVar(name="ALERT_OBJ_NAME", value=alert_subject.name),
     ]
+
     if alert_subject.namespace:
         alert_env_vars.append(EnvVar(name="ALERT_OBJ_NAMESPACE", value=alert_subject.namespace))
     if alert_subject.node:
         alert_env_vars.append(EnvVar(name="ALERT_OBJ_NODE", value=alert_subject.node))
+    if params.env is not None:
+        alert_env_vars.extend(params.env)
+
+    label_vars = [EnvVar(name=f"ALERT_LABEL_{k.upper()}", value=v) for k, v in event.alert.labels.items()]
+    alert_env_vars += label_vars
 
     return alert_env_vars
 
@@ -138,8 +180,12 @@ def job_events_enricher(event: JobEvent, params: EventEnricherParams):
         max_events=params.max_events,
     )
     if events_table_block:
-        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
-                             enrichment_type=EnrichmentType.k8s_events, title="Job Events")
+        event.add_enrichment(
+            [events_table_block],
+            {SlackAnnotations.ATTACHMENT: True},
+            enrichment_type=EnrichmentType.k8s_events,
+            title="Job Events",
+        )
 
 
 class JobPodEnricherParams(EventEnricherParams, LogEnricherParams):

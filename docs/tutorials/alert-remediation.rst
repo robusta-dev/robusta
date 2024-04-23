@@ -14,22 +14,38 @@ Add the following to your :ref:`customPlaybooks<customPlaybooks>`:
 
     customPlaybooks:
     - triggers:
-      - on_prometheus_alert:
-          alert_name: SomeAlert
+        - on_prometheus_alert:
+            alert_name: TestAlert
       actions:
-      - alert_handling_job:
-          command:
-          - "echo"
-          - "do something to fix it"
-          image: "a_docker_image"
+        - alert_handling_job:
+            # you can access information from the alert using environment variables
+            command:
+              - sh
+              - -c
+              - echo \"$ALERT_NAME $ALERT_LABEL_REGION dumping all available environment variables, which include alert metadata and labels\" && env && sleep 60
+            image: busybox
+            notify: true
+            wait_for_completion: true
+            completion_timeout: 100
+            env:
+              - name: GITHUB_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: robusta-github-key
+                    key: githubapikey
 
 Perform a :ref:`Helm Upgrade <Simple Upgrade>`.
+
+.. note::
+
+    * ``alert_name`` should be the exact name of the Prometheus Alert. For example, ``CrashLoopBackOff`` will not work, because the actual Prometheus Alert is ``KubePodCrashLooping``.
+    * Alert labels are added as environment variables in the following format ``ALERT_LABEL_{LABEL_NAME}``. For example a label named ``foo`` becomes ``ALERT_LABEL_FOO``
 
 Test this playbook by simulating a Prometheus alert:
 
 .. code-block:: bash
 
-    robusta playbooks trigger prometheus_alert alert_name=SomeAlert
+    robusta playbooks trigger prometheus_alert alert_name=TestAlert
 
 Running Bash Commands for Alert Remediation
 ********************************************
@@ -44,7 +60,7 @@ Alerts can also be remediated with bash commands:
           alert_name: SomeAlert
       actions:
       - node_bash_enricher:
-         bash_command: do something
+          bash_command: do something
 
 Further Reading
 *****************
