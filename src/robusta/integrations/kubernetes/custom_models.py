@@ -457,7 +457,7 @@ class RobustaJob(Job):
         """
         pods = self.get_pods()
         if len(pods) != 1:
-            raise Exception(f"got more pods than expected for job: {pods}")
+            raise Exception(f"got more pods than expected for job {self.metadata.name}: {pods}")
         return pods[0]
 
     def create_job_owned_secret(self, job_secret: JobSecret):
@@ -494,19 +494,27 @@ class RobustaJob(Job):
         ttl_seconds_after_finished: int = 120,
         delete_job_post_execution: bool = True,
         process_name: bool = True,
+        finalizers: Optional[
+            List[str]
+        ] = None,  # Finalizers are used to verify the pod is not deleted before getting the logs
     ) -> str:
+        pod_meta = ObjectMeta(annotations=custom_annotations)
+        if finalizers:
+            pod_meta.finalizers = finalizers
+        job_name = to_kubernetes_name(name) if process_name else name
         job = RobustaJob(
             metadata=ObjectMeta(
                 namespace=INSTALLATION_NAMESPACE,
-                name=to_kubernetes_name(name) if process_name else name,
+                name=job_name,
                 annotations=custom_annotations,
             ),
             spec=JobSpec(
                 backoffLimit=0,
-                template=PodTemplateSpec(spec=spec, metadata=ObjectMeta(annotations=custom_annotations)),
+                template=PodTemplateSpec(spec=spec, metadata=pod_meta),
                 ttlSecondsAfterFinished=ttl_seconds_after_finished,
             ),
         )
+        pod = None
         try:
             job = job.createNamespacedJob(job.metadata.namespace).obj
             job = hikaru.from_dict(job.to_dict(), cls=RobustaJob)  # temporary workaround for hikaru bug #15
@@ -517,6 +525,16 @@ class RobustaJob(Job):
             pod = job.get_single_pod()
             return pod.get_logs() or ""
         finally:
+            if pod and finalizers:
+                try:  # must use patch, since the pod revision changed at this point
+                    client.CoreV1Api().patch_namespaced_pod(
+                        name=pod.metadata.name,
+                        namespace=pod.metadata.namespace,
+                        body=[{"op": "remove", "path": "/metadata/finalizers"}],
+                    )
+                except Exception:
+                    logging.exception(f"Failed to clear pod finalizers for {job_name}")
+
             if delete_job_post_execution:
                 job.deleteNamespacedJob(
                     job.metadata.name,
@@ -588,7 +606,7 @@ class DeploymentConfig(HikaruDocumentBase, HikaruCRDDocumentMixin):
     def readNamespaced(self, name: str, namespace: str):
         obj = DeploymentConfig(metadata=ObjectMeta(name=name, namespace=namespace)).read()
         return type("", (object,), {"obj": obj})()
-    
+
     @classmethod
     def list_namespaced(self, namespace: str):
         deployconfigs_res = client.CustomObjectsApi().list_namespaced_custom_object(
@@ -596,27 +614,41 @@ class DeploymentConfig(HikaruDocumentBase, HikaruCRDDocumentMixin):
             version=DeploymentConfig.version,
             namespace=namespace,
             plural=DeploymentConfig.plural,
-        ) 
-        dc_list = type("", (object,), {"items": [
-            DeploymentConfig(metadata=ObjectMeta(**dc.get("metadata", {})), spec=DeploymentConfigSpec(**dc.get("spec", {})))
-            for dc in
-            deployconfigs_res.get("items", [])
-        ]})()
+        )
+        dc_list = type(
+            "",
+            (object,),
+            {
+                "items": [
+                    DeploymentConfig(
+                        metadata=ObjectMeta(**dc.get("metadata", {})), spec=DeploymentConfigSpec(**dc.get("spec", {}))
+                    )
+                    for dc in deployconfigs_res.get("items", [])
+                ]
+            },
+        )()
 
         return dc_list
-    
+
     @classmethod
     def list_for_all_namespaces(self):
         deployconfigs_res = client.CustomObjectsApi().list_cluster_custom_object(
             group=DeploymentConfig.group,
             version=DeploymentConfig.version,
             plural=DeploymentConfig.plural,
-        ) 
-        dc_list = type("", (object,), {"items": [
-            DeploymentConfig(metadata=ObjectMeta(**dc.get("metadata", {})), spec=DeploymentConfigSpec(**dc.get("spec", {})))
-            for dc in
-            deployconfigs_res.get("items", [])
-        ]})()
+        )
+        dc_list = type(
+            "",
+            (object,),
+            {
+                "items": [
+                    DeploymentConfig(
+                        metadata=ObjectMeta(**dc.get("metadata", {})), spec=DeploymentConfigSpec(**dc.get("spec", {}))
+                    )
+                    for dc in deployconfigs_res.get("items", [])
+                ]
+            },
+        )()
 
         return dc_list
 
@@ -686,27 +718,39 @@ class Rollout(HikaruDocumentBase, HikaruCRDDocumentMixin):
             version=Rollout.version,
             namespace=namespace,
             plural=Rollout.plural,
-        ) 
-        ro_list = type("", (object,), {"items": [
-            DeploymentConfig(metadata=ObjectMeta(**ro.get("metadata", {})), spec=RolloutSpec(**ro.get("spec", {})))
-            for ro in
-            rollouts_res.get("items", [])
-        ]})()
+        )
+        ro_list = type(
+            "",
+            (object,),
+            {
+                "items": [
+                    DeploymentConfig(
+                        metadata=ObjectMeta(**ro.get("metadata", {})), spec=RolloutSpec(**ro.get("spec", {}))
+                    )
+                    for ro in rollouts_res.get("items", [])
+                ]
+            },
+        )()
 
         return ro_list
-    
+
     @classmethod
     def list_for_all_namespaces(self):
         rollouts_res = client.CustomObjectsApi().list_cluster_custom_object(
             group=Rollout.group,
             version=Rollout.version,
             plural=Rollout.plural,
-        ) 
-        ro_list = type("", (object,), {"items": [
-            Rollout(metadata=ObjectMeta(**ro.get("metadata", {})), spec=RolloutSpec(**ro.get("spec", {})))
-            for ro in
-            rollouts_res.get("items", [])
-        ]})()
+        )
+        ro_list = type(
+            "",
+            (object,),
+            {
+                "items": [
+                    Rollout(metadata=ObjectMeta(**ro.get("metadata", {})), spec=RolloutSpec(**ro.get("spec", {})))
+                    for ro in rollouts_res.get("items", [])
+                ]
+            },
+        )()
 
         return ro_list
 

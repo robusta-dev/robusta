@@ -20,10 +20,10 @@ from robusta.api import (
     FindingSource,
     FindingType,
     JobSecret,
+    KRRScanReportBlock,
     PodRunningParams,
     PrometheusParams,
     RobustaJob,
-    KRRScanReportBlock,
     ScanReportRow,
     ScanType,
     action,
@@ -33,7 +33,7 @@ from robusta.core.reporting.consts import ScanState
 from robusta.integrations.openshift import IS_OPENSHIFT
 from robusta.integrations.prometheus.utils import generate_prometheus_config
 
-IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.8.2")
+IMAGE: str = os.getenv("KRR_IMAGE_OVERRIDE", f"{IMAGE_REGISTRY}/krr:v1.8.3")
 KRR_MEMORY_LIMIT: str = os.getenv("KRR_MEMORY_LIMIT", "1Gi")
 KRR_MEMORY_REQUEST: str = os.getenv("KRR_MEMORY_REQUEST", "1Gi")
 
@@ -351,6 +351,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
             ttl_seconds_after_finished=43200,  # 12 hours
             delete_job_post_execution=False,
             process_name=False,
+            finalizers=["robusta.dev/krr-job-output"],
         )
 
         # NOTE: We need to remove the logs before the json result
