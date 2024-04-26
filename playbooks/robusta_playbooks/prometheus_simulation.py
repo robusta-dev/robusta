@@ -93,7 +93,7 @@ def prometheus_alert(event: ExecutionBaseEvent, prometheus_event_data: Prometheu
 
     if prometheus_event_data.ends_at is not None:
         ends_at = prometheus_event_data.ends_at
-    elif prometheus_event_data.status is "resolved":
+    elif prometheus_event_data.status == "resolved":
         ends_at = datetime.now()
     else:
         # alert not resolved and ends_at not specified
