@@ -527,10 +527,15 @@ class RobustaJob(Job):
         finally:
             if pod and finalizers:
                 try:  # must use patch, since the pod revision changed at this point
+                    pod_finalizers = pod.metadata.finalizers
+                    for finalizer in finalizers:
+                        if finalizer in pod_finalizers:
+                            pod_finalizers.remove(finalizer)
+
                     client.CoreV1Api().patch_namespaced_pod(
                         name=pod.metadata.name,
                         namespace=pod.metadata.namespace,
-                        body=[{"op": "remove", "path": "/metadata/finalizers"}],
+                        body=[{"op": "replace", "path": "/metadata/finalizers", "value": pod_finalizers}],
                     )
                 except Exception:
                     logging.exception(f"Failed to clear pod finalizers for {job_name}")
