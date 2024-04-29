@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-runner
+  name: {{ include "robusta.fullname" . }}-runner
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ .Release.Name }}-runner
+    app: {{ include "robusta.fullname" . }}-runner
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-runner
+      app: {{ include "robusta.fullname" . }}-runner
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-runner
+        app: {{ include "robusta.fullname" . }}-runner
         robustaComponent: "runner"
         {{- with .Values.runner.labels }}
         {{- toYaml . | nindent 8 }}
@@ -26,7 +26,7 @@ spec:
         {{- end }}
       {{- end }}
     spec:
-      serviceAccountName: {{ .Release.Name }}-runner-service-account
+      serviceAccountName: {{ include "robusta.fullname" . }}-runner-service-account
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
       {{- if .Values.runner.imagePullSecrets }}
       imagePullSecrets:
@@ -52,7 +52,7 @@ spec:
           - name: PLAYBOOKS_CONFIG_FILE_PATH
             value: /etc/robusta/config/active_playbooks.yaml
           - name: RELEASE_NAME
-            value: {{ .Release.Name | quote }}
+            value: {{ include "robusta.fullname" .| quote }}
           - name: PROMETHEUS_ENABLED
             value: {{ .Values.enablePrometheusStack | quote}}
           - name: MANAGED_CONFIGURATION_ENABLED
@@ -101,7 +101,7 @@ spec:
           {{- end }}
         envFrom:
         - secretRef:
-            name: robusta-runner-secret
+            name: {{ include "robusta.fullname" . }}-runner-secret
             optional: true
         {{- if .Values.runner.additional_env_froms }}
         {{ toYaml .Values.runner.additional_env_froms | nindent 8 }}
@@ -201,14 +201,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-runner
+  name: {{ include "robusta.fullname" . }}-runner
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ .Release.Name }}-runner
-    target: robusta-runner
+    app: {{ include "robusta.fullname" . }}-runner
+    target: {{ include "robusta.fullname" . }}-runner
 spec:
   selector:
-    app: {{ .Release.Name }}-runner
+    app: {{ include "robusta.fullname" . }}-runner
   ports:
     - name: http
       protocol: TCP
@@ -222,7 +222,7 @@ metadata:
   name: robusta-runner-service-monitor
   labels:
     # this label is how the Prometheus installed with Robusta finds ServiceMonitors
-    release: {{ .Release.Name }}
+    release: {{ include "robusta.fullname" . }}
     {{- with .Values.runner.serviceMonitor.additionalLabels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -247,7 +247,7 @@ spec:
       {{- end }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-runner
+      app: {{ include "robusta.fullname" . }}-runner
   targetLabels:
     - target
 {{ end }}
@@ -256,7 +256,7 @@ spec:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: robusta-runner-secret
+  name: {{ include "robusta.fullname" . }}-runner-secret
   namespace: {{ .Release.Namespace }}
 type: Opaque
 stringData:

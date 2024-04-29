@@ -2,11 +2,11 @@
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: {{ .Release.Name }}-scc-privileged
+  name: {{ include "robusta.fullname" . }}-scc-privileged
   labels:
-    app: {{ .Release.Name }}
+    app: {{ include "robusta.fullname" . }}
   annotations:
-    kubernetes.io/description: {{ .Release.Name }}-scc provides the features required to run robusta enhanced debuggers for Java, Python, and node host capabilities
+    kubernetes.io/description: {{ include "robusta.fullname" . }}-scc provides the features required to run robusta enhanced debuggers for Java, Python, and node host capabilities
 allowHostDirVolumePlugin: true
 allowHostIPC: false
 allowHostNetwork: false

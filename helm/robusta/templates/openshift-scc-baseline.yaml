@@ -2,11 +2,11 @@
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: {{ .Release.Name }}-scc
+  name: {{ include "robusta.fullname" . }}-scc
   labels:
-    app: {{ .Release.Name }}
+    app: {{ include "robusta.fullname" . }}
   annotations:
-    kubernetes.io/description: {{ .Release.Name }}-scc provides the features required to run robusta
+    kubernetes.io/description: {{ include "robusta.fullname" . }}-scc provides the features required to run robusta
 allowHostDirVolumePlugin: false
 allowHostIPC: false
 allowHostNetwork: false
