@@ -74,6 +74,12 @@ class SinkBase(ABC):
             self.finding_group_heads = {}
             self.finding_summary_counts = defaultdict(lambda: defaultdict(lambda: [0, 0]))
 
+    def reset_grouping_data_for_group(self, group: Tuple[str]):
+        self.finding_group_start_ts.pop(group)
+        self.finding_group_n_received[group] = 0
+        self.finding_group_heads.pop(group)
+        self.finding_summary_counts[group] = defaultdict(lambda: [0, 0])
+
     def _build_time_slices_from_params(self, params: ActivityParams):
         if params is None:
             return [TimeSliceAlways()]

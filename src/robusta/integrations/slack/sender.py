@@ -460,8 +460,6 @@ class SlackSender:
                             "type": "plain_text",
                             "text": "Investigate 🔎",
                         },
-                        "value": "click_me_123",  # FIXME
-                        "action_id": "button-action",  # FIXME
                         "url": investigate_uri,
                     },
                 }
