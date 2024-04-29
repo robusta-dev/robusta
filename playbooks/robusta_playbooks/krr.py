@@ -199,7 +199,7 @@ def _generate_krr_env_vars(
 def _generate_additional_env_args(krr_secrets: Optional[List[KRRSecret]]) -> str:
     if not krr_secrets:
         return ""
-    return " ".join(f"{secret.command_flag} '${secret.env_var_name}'" for secret in krr_secrets)
+    return " ".join(f"{secret.command_flag} '$({secret.env_var_name})'" for secret in krr_secrets)
 
 
 def _generate_cmd_line_args(prom_config: PrometheusConfig) -> str:
