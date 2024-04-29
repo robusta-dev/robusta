@@ -87,6 +87,7 @@ class SlackSink(SinkBase):
                         threaded=self.params.grouping.notification_mode.summary.threaded,
                         msg_ts=slack_thread_ts,
                         investigate_uri=investigate_uri,
+                        grouping_interval=self.params.grouping.interval,
                     )
                 if not self.grouping_summary_mode or self.params.grouping.notification_mode.summary.threaded:
                     self.slack_sender.send_finding_to_slack(
@@ -106,6 +107,7 @@ class SlackSink(SinkBase):
                         summary_start=self.finding_group_start_ts[group_by_classification],
                         threaded=self.params.grouping.notification_mode.summary.threaded,
                         investigate_uri=investigate_uri,
+                        grouping_interval=self.params.grouping.interval,
                     )
                     if self.params.grouping.notification_mode.summary.threaded:
                         self.slack_sender.send_finding_to_slack(

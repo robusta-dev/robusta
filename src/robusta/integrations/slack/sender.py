@@ -2,11 +2,12 @@ import logging
 import ssl
 import tempfile
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from itertools import chain
 from typing import Any, Dict, List, Set, Tuple
 
 import certifi
+import humanize
 from dateutil import tz
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -416,6 +417,7 @@ class SlackSender:
         threaded: bool,
         msg_ts: str = None,  # message identifier (for updates)
         investigate_uri: str = None,
+        grouping_interval: int = None,  # in seconds
     ):
         """Create or update a summary message with tabular information about the amount of events
         fired/resolved and a header describing the event group that this information concerns."""
@@ -433,11 +435,12 @@ class SlackSender:
         table_block = TableBlock(headers=finding_summary_header + ["Fired", "Resolved"], rows=rows)
         summary_start_utc_dt = datetime.fromtimestamp(summary_start).astimezone(tz.UTC)
         formatted_summary_start = summary_start_utc_dt.strftime("%Y-%m-%d %H:%M UTC")
-        now_ts_utc_dt = datetime.fromtimestamp(now_ts).astimezone(tz.UTC)
-        formatted_now_ts = now_ts_utc_dt.strftime("%Y-%m-%d %H:%M UTC")
+        grouping_interval_str = humanize.precisedelta(
+            timedelta(seconds=grouping_interval), minimum_unit="seconds"
+        )
         time_text = (
-            f"*Time interval:* <!date^{int(summary_start)}^{{date_num}} {{time}}|{formatted_summary_start}>"
-            f" to <!date^{int(now_ts)}^{{date_num}} {{time}}|{formatted_now_ts}>"
+            f"*Time interval:* `{grouping_interval_str}` starting at "
+            f"`<!date^{int(summary_start)}^{{date_num}} {{time}}|{formatted_summary_start}>`"
         )
         group_by_criteria_str = ", ".join(f"`{header}`" for header in group_by_classification_header)
 
