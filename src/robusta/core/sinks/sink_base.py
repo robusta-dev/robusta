@@ -22,8 +22,6 @@ class SinkBase(ABC):
     finding_summary_header: List[str]  # descriptive header for the summary table
     finding_summary_counts: DefaultDict[Tuple, DefaultDict[Tuple, List[int]]]  # rows of the summary table
 
-    finding_group_lock: threading.Lock = threading.RLock()
-
     def __init__(self, sink_params: SinkBaseParams, registry):
         self.sink_name = sink_params.name
         self.params = sink_params
@@ -41,6 +39,7 @@ class SinkBase(ABC):
         self.grouping_enabled = False
 
         if sink_params.grouping:
+            self.finding_group_lock = threading.RLock()
             self.grouping_enabled = True
             if sink_params.grouping.notification_mode.summary:
                 self.grouping_summary_mode = True

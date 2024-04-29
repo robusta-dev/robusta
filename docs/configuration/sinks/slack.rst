@@ -128,15 +128,19 @@ on their properties and possibly summarizing the numbers of their
 occurrences.
 
 The mechanism is enabled by the ``grouping`` section in the Slack sink
-config. The parameters you can group on are basically any values in
-the k8s event payload, with one special addition - ``workload`` that
-will hold the name of the top-level entity name for the event. Labels
-and annotations are supported as described in the example below.
+config. The parameters you can group on (specified in the ``group_by``
+section) are basically any values in the k8s event payload, with one
+special addition - ``workload`` that will hold the name of the top-level
+entity name for the event. Labels and annotations are supported as
+described in the example below. If you specify ``grouping`` without
+defining a ``group_by``, the default will be to group by the cluster
+name.
 
 The grouping mechanism supports the ``interval`` setting, which defines
 the length of the window over which notifications will be aggregated.
 The window starts when the first message belonging to the group arrives,
-and ends when the specified interval elapses.
+and ends when the specified interval elapses. If you don't specify the
+``interval``, the default value will be 5 minutes.
 
 There are two general modes for this functionality, selected by the
 subsection ``notification_mode``. For the ``regular`` mode, all the

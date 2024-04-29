@@ -85,7 +85,7 @@ class NotificationModeParams(BaseModel):
 
 
 class GroupingParams(BaseModel):
-    group_by: Optional[GroupingAttributeSelectorListT]
+    group_by: GroupingAttributeSelectorListT = ["cluster"]
     interval: int = 300  # in seconds
     notification_mode: Optional[NotificationModeParams]
 
