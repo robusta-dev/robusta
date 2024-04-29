@@ -247,7 +247,6 @@ class SlackSender:
         unfurl: bool,
         status: FindingStatus,
         channel: str,
-        thread_ts: str,
     ) -> str:
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
@@ -279,7 +278,6 @@ class SlackSender:
         )
 
         try:
-            kwargs = {"thread_ts": thread_ts} if thread_ts is not None else {}
             resp = self.slack_client.chat_postMessage(
                 channel=channel,
                 text=message,
@@ -290,7 +288,6 @@ class SlackSender:
                 ),
                 unfurl_links=unfurl,
                 unfurl_media=unfurl,
-                **kwargs,
             )
             # We will need channel ids for future message updates
             self.channel_name_to_id[channel] = resp["channel"]
@@ -347,7 +344,6 @@ class SlackSender:
         finding: Finding,
         sink_params: SlackSinkParams,
         platform_enabled: bool,
-        thread_ts: str = None,  # thread identifier
     ) -> str:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
@@ -403,13 +399,12 @@ class SlackSender:
                 finding.subject.labels,
                 finding.subject.annotations,
             ),
-            thread_ts,
         )
 
     def send_or_update_summary_message(
         self,
         group_by_classification_header: List[str],
-        finding_summary_header: List[str],
+        summary_header: List[str],
         summary_table: Dict[Tuple[str], List[int]],
         sink_params: SlackSinkParams,
         platform_enabled: bool,
@@ -432,7 +427,7 @@ class SlackSender:
             rows.append(row)
             n_total_alerts += value[0] + value[1]  # count firing and resolved notifications
 
-        table_block = TableBlock(headers=finding_summary_header + ["Fired", "Resolved"], rows=rows)
+        table_block = TableBlock(headers=summary_header + ["Fired", "Resolved"], rows=rows)
         summary_start_utc_dt = datetime.fromtimestamp(summary_start).astimezone(tz.UTC)
         formatted_summary_start = summary_start_utc_dt.strftime("%Y-%m-%d %H:%M UTC")
         grouping_interval_str = humanize.precisedelta(

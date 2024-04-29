@@ -28,7 +28,7 @@ class SlackSink(SinkBase):
     def handle_notification_grouping(self, finding: Finding, platform_enabled: bool) -> None:
         # There is a lock over the whole of the method to account:
         # 1) to prevent concurrent modifications to group accounting data structures
-        # 2) to make sure two threads with identical group_by_classification don't create
+        # 2) to make sure two threads with identical group_key don't create
         #    two identical messages (of which one would eventually be orphaned and
         #    the other one used as a thread header).
         # TODO: this could probably be refined to a more granular locking strategy.
@@ -44,84 +44,61 @@ class SlackSink(SinkBase):
             )
 
             # 1. Notification accounting
-            group_by_classification, group_by_classification_header = self.classify_finding(
+            group_key, group_key_header = self.get_group_key_and_header(
                 finding_data, self.params.grouping.group_by
             )
             if (
-                group_by_classification in self.finding_group_start_ts
-                and timestamp - self.finding_group_start_ts[group_by_classification] > self.params.grouping.interval
+                group_key in self.finding_group_start_ts
+                and timestamp - self.finding_group_start_ts[group_key] > self.params.grouping.interval
             ):
-                self.reset_grouping_data_for_group(group_by_classification)
-            if group_by_classification not in self.finding_group_start_ts:
+                self.reset_group_data(group_key)
+            if group_key not in self.finding_group_start_ts:
                 # Create a new group/thread
-                self.finding_group_start_ts[group_by_classification] = timestamp
+                self.finding_group_start_ts[group_key] = timestamp
                 slack_thread_ts = None
             else:
-                slack_thread_ts = self.finding_group_heads.get(group_by_classification)
-                self.finding_group_n_received[group_by_classification] += 1
+                slack_thread_ts = self.finding_group_heads.get(group_key)
+                self.finding_group_n_received[group_key] += 1
             if (
                 not self.grouping_summary_mode
-                and self.finding_group_n_received[group_by_classification]
+                and self.finding_group_n_received[group_key]
                 < self.params.grouping.notification_mode.regular.ignore_first
             ):
                 return
 
             if self.grouping_summary_mode:
-                summary_classification, summary_classification_header = self.classify_finding(
+                summary_key, summary_key_header = self.get_group_key_and_header(
                     finding_data, self.params.grouping.notification_mode.summary.by
                 )
 
             # 2. Notification sending
-            if slack_thread_ts is not None:
-                # Continue emitting findings in an already existing Slack thread
-                if self.grouping_summary_mode:
-                    idx = 0 if status == FindingStatus.FIRING else 1
-                    self.finding_summary_counts[group_by_classification][summary_classification][idx] += 1
-                    # Update the summary message
-                    self.slack_sender.send_or_update_summary_message(
-                        group_by_classification_header,
-                        self.finding_summary_header,
-                        self.finding_summary_counts[group_by_classification],
-                        self.params,
-                        platform_enabled,
-                        summary_start=self.finding_group_start_ts[group_by_classification],
-                        threaded=self.params.grouping.notification_mode.summary.threaded,
-                        msg_ts=slack_thread_ts,
-                        investigate_uri=investigate_uri,
-                        grouping_interval=self.params.grouping.interval,
-                    )
-                if not self.grouping_summary_mode or self.params.grouping.notification_mode.summary.threaded:
-                    self.slack_sender.send_finding_to_slack(
-                        finding, self.params, platform_enabled, thread_ts=slack_thread_ts
-                    )
+            if self.grouping_summary_mode:
+                idx = 0 if status == FindingStatus.FIRING else 1
+                self.summary_table[group_key][summary_key][idx] += 1
+                # Update the summary message
+                slack_thread_ts = self.slack_sender.send_or_update_summary_message(
+                    group_key_header,
+                    self.summary_header,
+                    self.summary_table[group_key],
+                    self.params,
+                    platform_enabled,
+                    summary_start=self.finding_group_start_ts[group_key],
+                    threaded=self.params.grouping.notification_mode.summary.threaded,
+                    msg_ts=slack_thread_ts,
+                    investigate_uri=investigate_uri,
+                    grouping_interval=self.params.grouping.interval,
+                )
+                self.finding_group_heads[group_key] = slack_thread_ts
             else:
-                # Create the first Slack message
-                if self.grouping_summary_mode:
-                    idx = 0 if status == FindingStatus.FIRING else 1
-                    self.finding_summary_counts[group_by_classification][summary_classification][idx] += 1
-                    slack_thread_ts = self.slack_sender.send_or_update_summary_message(
-                        group_by_classification_header,
-                        self.finding_summary_header,
-                        self.finding_summary_counts[group_by_classification],
-                        self.params,
-                        platform_enabled,
-                        summary_start=self.finding_group_start_ts[group_by_classification],
-                        threaded=self.params.grouping.notification_mode.summary.threaded,
-                        investigate_uri=investigate_uri,
-                        grouping_interval=self.params.grouping.interval,
-                    )
-                    if self.params.grouping.notification_mode.summary.threaded:
-                        self.slack_sender.send_finding_to_slack(
-                            finding, self.params, platform_enabled, thread_ts=slack_thread_ts
-                        )
-                else:
-                    slack_thread_ts = self.slack_sender.send_finding_to_slack(finding, self.params, platform_enabled)
-                self.finding_group_heads[group_by_classification] = slack_thread_ts
+                # Regular mode - just send a normal Slack message.
+                self.slack_sender.send_finding_to_slack(
+                    finding, self.params, platform_enabled
+                )
 
     def get_timeline_uri(self, account_id: str, cluster_name: str) -> str:
         return f"{ROBUSTA_UI_DOMAIN}/graphs?account_id={account_id}&cluster={cluster_name}"
 
-    def classify_finding(self, finding_data: Dict, attributes: List) -> Tuple[Tuple[str], List[str]]:
+    def get_group_key_and_header(self, finding_data: Dict, attributes: List) -> Tuple[Tuple[str], List[str]]:
         values = ()
         descriptions = []
         for attr in attributes:
