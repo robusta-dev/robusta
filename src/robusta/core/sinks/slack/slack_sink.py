@@ -3,11 +3,13 @@ from typing import Tuple, Dict, List
 
 from robusta.core.reporting.base import Finding, FindingStatus
 from robusta.core.sinks.sink_base import SinkBase
-from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper
+from robusta.core.sinks.slack.slack_sink_params import SlackSinkConfigWrapper, SlackSinkParams
 from robusta.integrations import slack as slack_module
 
 
 class SlackSink(SinkBase):
+    params: SlackSinkParams
+
     def __init__(self, sink_config: SlackSinkConfigWrapper, registry):
         super().__init__(sink_config.slack_sink, registry)
         self.slack_channel = sink_config.slack_sink.slack_channel

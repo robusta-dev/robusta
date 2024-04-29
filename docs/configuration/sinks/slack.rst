@@ -179,8 +179,6 @@ of whether ``summary.threaded`` is enabled or not.
               by:
                 - identifier
                 - severity
-            regular:
-              ignore_first: 3
 
 .. note::
 

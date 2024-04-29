@@ -57,7 +57,7 @@ class ActivityParams(BaseModel):
 
 
 class RegularNotificationModeParams(BaseModel):
-    ignore_first: Optional[int] = 0
+    ignore_first: int = 0
 
 
 # a list of attribute names, which can be strings or dicts of the form
@@ -66,14 +66,22 @@ GroupingAttributeSelectorListT = List[Union[str, Dict[str, List[str]]]]
 
 
 class SummaryNotificationModeParams(BaseModel):
-    threaded: Optional[bool] = True
-    by: Optional[GroupingAttributeSelectorListT] = ["identifier"]
+    threaded: bool = True
+    by: GroupingAttributeSelectorListT = ["identifier"]
 
 
 class NotificationModeParams(BaseModel):
     regular: Optional[RegularNotificationModeParams]
     summary: Optional[SummaryNotificationModeParams]
     # TODO should we enforce that only one of these is set?
+
+    @root_validator
+    def validate_exactly_one_defined(cls, values: Dict):
+        if values.get("regular") and values.get("summary"):
+            raise ValueError('"regular" and "summary" notification grouping modes must not be defined at the same time')
+        if not (values.get("regular") or values.get("summary")):
+            raise ValueError('either "regular" or "summary" notification grouping mode must be defined')
+        return values
 
 
 class GroupingParams(BaseModel):
