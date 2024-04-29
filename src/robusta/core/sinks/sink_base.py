@@ -37,6 +37,9 @@ class SinkBase(ABC):
 
         self.time_slices = self._build_time_slices_from_params(self.params.activity)
 
+        self.grouping_summary_mode = False
+        self.grouping_enabled = False
+
         if sink_params.grouping:
             self.grouping_enabled = True
             if sink_params.grouping.notification_mode.summary:
@@ -61,10 +64,7 @@ class SinkBase(ABC):
                                 )
                             for label_or_attr_name in attr[key]:
                                 self.finding_summary_header.append(f"{key[:-1]}:{label_or_attr_name}")
-            else:
-                self.grouping_summary_mode = False
-        else:
-            self.grouping_enabled = False
+
         self.reset_grouping_data()
 
     def reset_grouping_data(self):
