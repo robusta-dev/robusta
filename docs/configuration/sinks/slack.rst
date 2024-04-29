@@ -122,7 +122,7 @@ Grouping and summarizing messages
 Some large systems that are being monitored by Robusta could generate
 considerable amounts of notifications that are quite similar to each other
 (for example, concern one type of a problem occurring over some part of
-the cluster). For such cases, there is a mechanism that will reduce
+the cluster). For such cases, Robusta provides a mechanism that will reduce
 the amount of clutter in Slack channels by grouping notifications based
 on their properties and possibly summarizing the numbers of their
 occurrences.
@@ -140,25 +140,26 @@ The grouping mechanism supports the ``interval`` setting, which defines
 the length of the window over which notifications will be aggregated.
 The window starts when the first message belonging to the group arrives,
 and ends when the specified interval elapses. If you don't specify the
-``interval``, the default value will be 5 minutes.
+``interval``, the default value will be 15 minutes.
 
-There are two general modes for this functionality, selected by the
-subsection ``notification_mode``. For the ``regular`` mode, all the
-notification messages that belong to the group will be put in a single
-Slack thread, with the first of them being the head (topmost) of the
-thread. An additional parameter you can specify in this mode is
-``ignore_first``, which can be used to drop some number of initial
-messages in the group (useful for cases of very large amount of
-notification traffic).
+There are two modes for this functionality, selected by the
+``notification_mode`` subsection. For the ``regular`` mode, you have to
+specify the ``ignore_first`` value. This value will determine the
+minimum amount of notifications in any group that would have to occur
+in the time specified by ``interval`` before they are sent as Slack
+messages. This mode works like a false positive filter - it only triggers
+the Slack sink if notifications are incoming at a speed above the set
+threshold.
 
-For the ``summary`` mode, the main difference is that the head (topmost)
-message in the thread will include a summary of all the messages in the
-group. The summarization will be formatted as a table and done according
+The ``summary`` mode allows summarizing the number of notifications in a
+succinct way. The summary will be sent to Slack as a single message and will
+include information about the number of all the messages in the group.
+The summarization will be formatted as a table and done according
 to the attributes listed under ``summary.by``. In case ``summary.threaded``
 is ``true``, all the Slack notifications belonging to this group will be
-put as a thread under this header message (``ignore_first`` does not
-apply here). If ``summary.threaded`` is ``false``, the notifications
-will not be sent to Slack, and only the summary message will appear.
+appended in a thread under this header message. If ``summary.threaded`` is
+``false``, the notifications will not be sent to Slack at all, and only the
+summary message will appear.
 
 The information in the summary message will be dynamically updated with
 numbers of notifications in the group as they are incoming, regardless

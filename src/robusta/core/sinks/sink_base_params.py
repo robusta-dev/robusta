@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, root_validator, validator
+from pydantic.types import PositiveInt
 import pytz
 
 from robusta.core.playbooks.playbook_utils import replace_env_vars_values
@@ -57,7 +58,10 @@ class ActivityParams(BaseModel):
 
 
 class RegularNotificationModeParams(BaseModel):
-    ignore_first: int = 0
+    # This is mandatory because using the regular mode without setting it
+    # would make no sense - all the notifications would just pass through
+    # normally.
+    ignore_first: PositiveInt
 
 
 # a list of attribute names, which can be strings or dicts of the form
@@ -86,7 +90,7 @@ class NotificationModeParams(BaseModel):
 
 class GroupingParams(BaseModel):
     group_by: GroupingAttributeSelectorListT = ["cluster"]
-    interval: int = 300  # in seconds
+    interval: int = 15*60  # in seconds
     notification_mode: Optional[NotificationModeParams]
 
     @root_validator
