@@ -4,7 +4,7 @@ import tempfile
 import time
 from datetime import datetime, timedelta
 from itertools import chain
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set
 
 import certifi
 import humanize
@@ -32,6 +32,7 @@ from robusta.core.reporting.blocks import (
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, SlackAnnotations
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
+from robusta.core.sinks.sink_base import KeyT
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
 from robusta.core.sinks.common import ChannelTransformer
@@ -247,6 +248,7 @@ class SlackSender:
         unfurl: bool,
         status: FindingStatus,
         channel: str,
+        thread_ts: str = None,
     ) -> str:
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
@@ -278,6 +280,10 @@ class SlackSender:
         )
 
         try:
+            if thread_ts:
+                kwargs = {"thread_ts": thread_ts}
+            else:
+                kwargs = {}
             resp = self.slack_client.chat_postMessage(
                 channel=channel,
                 text=message,
@@ -288,6 +294,7 @@ class SlackSender:
                 ),
                 unfurl_links=unfurl,
                 unfurl_media=unfurl,
+                **kwargs
             )
             # We will need channel ids for future message updates
             self.channel_name_to_id[channel] = resp["channel"]
@@ -344,6 +351,7 @@ class SlackSender:
         finding: Finding,
         sink_params: SlackSinkParams,
         platform_enabled: bool,
+        thread_ts: str = None,
     ) -> str:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
@@ -399,13 +407,14 @@ class SlackSender:
                 finding.subject.labels,
                 finding.subject.annotations,
             ),
+            thread_ts=thread_ts,
         )
 
     def send_or_update_summary_message(
         self,
         group_by_classification_header: List[str],
         summary_header: List[str],
-        summary_table: Dict[Tuple[str], List[int]],
+        summary_table: Dict[KeyT, List[int]],
         sink_params: SlackSinkParams,
         platform_enabled: bool,
         summary_start: float,  # timestamp

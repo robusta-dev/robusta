@@ -1,7 +1,10 @@
 import threading
+import time
 from abc import abstractmethod, ABC
 from collections import defaultdict
-from typing import Any, List, Dict, Tuple, DefaultDict
+from typing import Any, List, Dict, Tuple, DefaultDict, Optional
+
+from pydantic import BaseModel, Field
 
 from robusta.core.model.k8s_operation_type import K8sOperationType
 from robusta.core.reporting.base import Finding
@@ -12,18 +15,49 @@ from robusta.core.sinks.timing import TimeSlice, TimeSliceAlways
 KeyT = Tuple[str, ...]
 
 
+class NotificationGroup(BaseModel):
+    timestamps: List[float] = []
+
+    def register_notification(self, interval: int, threshold: int) -> bool:
+        """Record information about an incoming notification. Returns True if this
+        notification should be emitted by a sink, False otherwise."""
+        now_ts = time.time()
+
+        # Prune any events older than the interval
+        while self.timestamps and now_ts - self.timestamps[0] > interval:
+            self.timestamps.pop(0)
+
+        self.timestamps.append(now_ts)
+        return len(self.timestamps) >= threshold
+
+
+class NotificationSummary(BaseModel):
+    message_id: Optional[str] = None  # identifier of the summary message
+    start_ts: float = Field(default_factory=lambda: time.time())  # Timestamp of the first notification
+    # Keys for the table are determined by grouping.notification_mode.summary.by
+    summary_table: DefaultDict[KeyT, List[int]] = None
+
+    def register_notification(self, summary_key: KeyT, resolved: bool, interval: int):
+        now_ts = time.time()
+        idx = 1 if resolved else 0
+        if now_ts - self.start_ts > interval or not self.summary_table:
+            # Expired or the first summary ever for this group_key, reset the data
+            self.summary_table = defaultdict(lambda: [0, 0])
+            self.start_ts = now_ts
+            self.message_id = None
+        self.summary_table[summary_key][idx] += 1
+
+
 class SinkBase(ABC):
     grouping_enabled: bool
     grouping_summary_mode: bool
 
-    # The tuples in the types below holds all the attributes we are aggregating on.
-    finding_group_start_ts: Dict[KeyT, float]  # timestamps for message groups
-    finding_group_n_received: DefaultDict[KeyT, int]  # number of messages ignored for each group
-    finding_group_heads: Dict[KeyT, str]  # a mapping from a set of parameters to the head of a thread
+    # Keys for groups and summaries are determined by grouping.group_by
+    groups: DefaultDict[KeyT, NotificationGroup]
+    summaries: DefaultDict[KeyT, NotificationSummary]
 
-    # Summary groups
+    # Notification summaries
     summary_header: List[str]  # descriptive header for the summary table
-    summary_table: DefaultDict[KeyT, DefaultDict[Tuple, List[int]]]  # rows of the summary table
 
     def __init__(self, sink_params: SinkBaseParams, registry):
         self.sink_name = sink_params.name
@@ -43,17 +77,20 @@ class SinkBase(ABC):
 
         if sink_params.grouping:
             self.finding_group_lock = threading.RLock()
-            self.init_group_data()
             self.grouping_enabled = True
             if sink_params.grouping.notification_mode.summary:
                 self.grouping_summary_mode = True
-                self.summary_header = []
+                self.summaries = defaultdict(lambda: NotificationSummary())
                 self.summary_header = self.create_summary_header()
+            else:
+                self.grouping_summary_mode = False
+                self.groups = defaultdict(lambda: NotificationGroup())
 
     def create_summary_header(self):
+        summary_header = []
         for attr in self.params.grouping.notification_mode.summary.by:
             if isinstance(attr, str):
-                self.summary_header.append("notification" if attr == "identifier" else attr)
+                summary_header.append("notification" if attr == "identifier" else attr)
             elif isinstance(attr, dict):
                 keys = list(attr.keys())
                 if len(keys) > 1:
@@ -68,20 +105,41 @@ class SinkBase(ABC):
                         "(only labels/annotations allowed)"
                     )
                 for label_or_attr_name in attr[key]:
-                    self.summary_header.append(f"{key[:-1]}:{label_or_attr_name}")
+                    summary_header.append(f"{key[:-1]}:{label_or_attr_name}")
+        return summary_header
 
-    def init_group_data(self):
-        with self.finding_group_lock:
-            self.finding_group_start_ts = {}
-            self.finding_group_n_received = defaultdict(int)
-            self.finding_group_heads = {}
-            self.summary_table = defaultdict(lambda: defaultdict(lambda: [0, 0]))
+    def get_group_key_and_header(self, finding_data: Dict, attributes: List) -> Tuple[KeyT, List[str]]:
+        """Generates group key and descriptive header from finding data.
 
-    def reset_group_data(self, group: Tuple[str]):
-        self.finding_group_start_ts.pop(group)
-        self.finding_group_n_received[group] = 0
-        self.finding_group_heads.pop(group)
-        self.summary_table[group] = defaultdict(lambda: [0, 0])
+        For example, for finding_data = {"a":1, "b":2, "x": 3, "y": None} and attributes = ["x", "y"]
+        this method will return ((3, "(undefined)"), [])"""
+        values = ()
+        descriptions = []
+        for attr in attributes:
+            if isinstance(attr, str):
+                if attr not in finding_data:
+                    continue
+                value = finding_data[attr]
+                values += (value, )
+                descriptions.append(
+                    f"{'notification' if attr=='identifier' else attr}: {self.display_value(value)}"
+                )
+            elif isinstance(attr, dict):
+                # This is typically for labels and annotations
+                top_level_attr_name = list(attr.keys())[0]
+                values += tuple(
+                    finding_data.get(top_level_attr_name, {}).get(element_name)
+                    for element_name in sorted(attr[top_level_attr_name])
+                )
+                subvalues = []
+                for subattr_name in sorted(attr[top_level_attr_name]):
+                    subvalues.append((subattr_name, finding_data.get(top_level_attr_name, {}).get(subattr_name)))
+                subvalues_str = ", ".join(f"{key}={self.display_value(value)}" for key, value in sorted(subvalues))
+                descriptions.append(f"{top_level_attr_name}: {subvalues_str}")
+        return values, descriptions
+
+    def display_value(self, value: Optional[str]) -> str:
+        return value if value is not None else "(undefined)"
 
     def _build_time_slices_from_params(self, params: ActivityParams):
         if params is None:
