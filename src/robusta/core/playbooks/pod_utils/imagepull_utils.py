@@ -101,7 +101,7 @@ def get_image_pull_backoff_enrichment(pod: Pod) -> Enrichment:
     return Enrichment(
         enrichment_type=EnrichmentType.image_pull_backoff_info,
         blocks=image_pull_table_blocks,
-        title="Container Image-Pull-Backoff Information")
+        title="Container ImagePullBackoff Information")
 
 
 def __imagepull_backoff_reason_to_fix(reason: ImagePullBackoffReason) -> Optional[Tuple[str, str]]:
