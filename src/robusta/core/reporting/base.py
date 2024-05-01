@@ -139,7 +139,7 @@ class FilterableScopeMatcher(BaseScopeMatcher):
     def get_data(self) -> Dict:
         return self.data
 
-    def match_namespace_labels(self, attr_matcher, attr_value):
+    def scope_match_namespace_labels(self, attr_matcher, attr_value):
         return self.match_labels_annotations(attr_matcher, attr_value)
 
 

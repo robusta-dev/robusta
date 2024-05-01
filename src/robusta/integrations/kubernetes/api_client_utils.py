@@ -280,7 +280,7 @@ def get_all_namespace_data():
     try:
         return {ns.metadata.name: ns.metadata for ns in core_v1.list_namespace().items}
     except ApiException:
-        logging.error("failed to list namespaces")
+        logging.exception("failed to list namespaces")
         return {}
 
 

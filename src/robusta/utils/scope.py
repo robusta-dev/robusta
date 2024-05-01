@@ -58,13 +58,21 @@ class BaseScopeMatcher(ABC):
             return False
         attr_value = data[attr_name]
         for attr_matcher in attr_matchers:
-            if hasattr(self, f"match_{attr_name}"):
-                return getattr(self, f"match_{attr_name}")(attr_matcher, attr_value)
-            if attr_name in ["labels", "annotations"]:
+            if attr_name == "attributes":
+                return self.scope_match_attributes(attr_matcher, attr_value)
+            elif attr_name == "namespace_labels":
+                return self.scope_match_namespace_labels(attr_matcher, attr_value)
+            elif attr_name in ["labels", "annotations"]:
                 return self.match_labels_annotations(attr_matcher, attr_value)
             elif re.fullmatch(attr_matcher, attr_value):
                 return True
         return False
+
+    def scope_match_attributes(self, attr_matcher: str, attr_value: Dict[str, Union[List, Dict]]) -> bool:
+        raise NotImplementedError
+
+    def scope_match_namespace_labels(self, attr_matcher: str, attr_value: Dict[str, Union[List, Dict]]) -> bool:
+        raise NotImplementedError
 
     def match_labels_annotations(self, labels_match_expr: str, labels: Dict[str, str]) -> bool:
         for label_match in labels_match_expr.split(","):
