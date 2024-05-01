@@ -137,7 +137,7 @@ def get_pod_issue_explanation(event: KubernetesResourceEvent, issue: PodIssue, m
     elif issue == PodIssue.Pending:
         issue_text = "scheduling issue"
     elif issue in [PodIssue.CrashloopBackoff, PodIssue.Crashing]:
-        issue_text = "CrashLoopBackOff"
+        issue_text = "CrashLoopBackoff"
     else:
         issue_text = issue.name
 
