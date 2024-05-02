@@ -500,7 +500,7 @@ platformPlaybooks:
 disabledPlaybooks: []
 
 image:
-  registry: us-central1-docker.pkg.dev/genuine-flight-317411/devel
+  registry: robustadev
 
 # parameters for the robusta forwarder deployment
 kubewatch:
