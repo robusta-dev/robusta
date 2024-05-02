@@ -74,9 +74,9 @@ class RobustaRelay(BaseModel):
     apiEndpointPrefix: str
     apiNodePort: int = 30313  # api.domain
     wsNodePort: int = 30314  # relay.domain
-    relayUrl: str = ""
-    websocketRelayAddress: str = ""
-    robustaUIDomain: str = ""
+    relayPrefix: str = "relay"
+    platformPrefix: str = "platform"
+    apiPrefix: str = "api"
     isOnPrem: bool = True
 
     def __init__(
@@ -207,9 +207,10 @@ def gen_config(
 
     relayValues.apiNodePort = api_nport
     relayValues.wsNodePort = ws_nport
-    relayValues.relayUrl = host_for_params(api_endpoint_prefix, domain)
-    relayValues.websocketRelayAddress = backendProfile.robusta_relay_ws_address
-    relayValues.robustaUIDomain = backendProfile.robusta_ui_domain
+    relayValues.relayPrefix = relay_ws_endpoint_prefix
+    relayValues.platformPrefix = platform_endpoint_prefix
+    relayValues.apiPrefix = api_endpoint_prefix
+
 
     uiValues = RobustaUI(
         domain=domain,
