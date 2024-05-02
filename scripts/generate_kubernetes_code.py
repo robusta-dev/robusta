@@ -378,13 +378,6 @@ def autogenerate_triggers(f: TextIO):
     for resource in KUBERNETES_RESOURCES:
         f.write(f"# {resource} Triggers\n")
         for trigger_name, operation_type in sorted(TRIGGER_TYPES.items()):
-            if f"{resource}{get_trigger_class_name(trigger_name)}" in [
-                "PodAllChanges", "DaemonSetAllChanges", "DeploymentAllChanges", "StatefulSetAllChanges",
-                "IngressAllChanges",
-            ]:
-                default_change_filters = "DEFAULT_CHANGE_FILTERS"
-            else:
-                default_change_filters = "None"
             f.write(
                 textwrap.dedent(
                     f"""\
@@ -394,7 +387,7 @@ def autogenerate_triggers(f: TextIO):
                     name_prefix: str = None,
                     namespace_prefix: str = None,
                     labels_selector: str = None,
-                    change_filters: Dict[str, List[str]] = {default_change_filters},
+                    change_filters: Dict[str, List[str]] = None,
                     scope: ScopeParams = None
                 ):
                     super().__init__(
@@ -424,12 +417,6 @@ def autogenerate_triggers(f: TextIO):
 
     f.write("# Kubernetes Any Triggers\n")
     for trigger_name, operation_type in sorted(TRIGGER_TYPES.items()):
-        if get_trigger_class_name(trigger_name) == "AllChanges":
-            change_filters_arg = "change_filters: Dict[str, List[str]] = DEFAULT_CHANGE_FILTERS,"
-            change_filters_call = "change_filters=change_filters,"
-        else:
-            change_filters_arg = ""
-            change_filters_call = ""
         f.write(
             textwrap.dedent(
                 f"""\
@@ -439,7 +426,7 @@ def autogenerate_triggers(f: TextIO):
                 name_prefix: str = None,
                 namespace_prefix: str = None,
                 labels_selector: str = None,
-                {change_filters_arg}
+                change_filters: Dict[str, List[str]] = None,
                 scope: ScopeParams = None
             ):
                 super().__init__(
@@ -448,7 +435,7 @@ def autogenerate_triggers(f: TextIO):
                     name_prefix=name_prefix,
                     namespace_prefix=namespace_prefix,
                     labels_selector=labels_selector,
-                    {change_filters_call}
+                    change_filters=change_filters,
                     scope=scope,
                 )
 

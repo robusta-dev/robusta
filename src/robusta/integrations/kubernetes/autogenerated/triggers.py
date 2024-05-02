@@ -17,7 +17,7 @@ class PodAllChangesTrigger(K8sBaseTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-        change_filters: Dict[str, List[str]] = DEFAULT_CHANGE_FILTERS,
+        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -211,7 +211,7 @@ class DaemonSetAllChangesTrigger(K8sBaseTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-        change_filters: Dict[str, List[str]] = DEFAULT_CHANGE_FILTERS,
+        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -308,7 +308,7 @@ class DeploymentAllChangesTrigger(K8sBaseTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-        change_filters: Dict[str, List[str]] = DEFAULT_CHANGE_FILTERS,
+        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -405,7 +405,7 @@ class StatefulSetAllChangesTrigger(K8sBaseTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-        change_filters: Dict[str, List[str]] = DEFAULT_CHANGE_FILTERS,
+        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -1763,7 +1763,7 @@ class IngressAllChangesTrigger(K8sBaseTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-        change_filters: Dict[str, List[str]] = DEFAULT_CHANGE_FILTERS,
+        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -1860,7 +1860,7 @@ class KubernetesAnyAllChangesTrigger(K8sBaseTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-        change_filters: Dict[str, List[str]] = DEFAULT_CHANGE_FILTERS,
+        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -1884,7 +1884,7 @@ class KubernetesAnyCreateTrigger(K8sBaseTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-
+        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -1893,7 +1893,7 @@ class KubernetesAnyCreateTrigger(K8sBaseTrigger):
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
-
+            change_filters=change_filters,
             scope=scope,
         )
 
@@ -1908,7 +1908,7 @@ class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-
+        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -1917,7 +1917,7 @@ class KubernetesAnyDeleteTrigger(K8sBaseTrigger):
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
-
+            change_filters=change_filters,
             scope=scope,
         )
 
@@ -1932,7 +1932,7 @@ class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
         name_prefix: str = None,
         namespace_prefix: str = None,
         labels_selector: str = None,
-
+        change_filters: Dict[str, List[str]] = None,
         scope: ScopeParams = None
     ):
         super().__init__(
@@ -1941,7 +1941,7 @@ class KubernetesAnyUpdateTrigger(K8sBaseTrigger):
             name_prefix=name_prefix,
             namespace_prefix=namespace_prefix,
             labels_selector=labels_selector,
-
+            change_filters=change_filters,
             scope=scope,
         )
 
