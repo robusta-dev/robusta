@@ -1,7 +1,6 @@
 import hashlib
 import logging
 import threading
-import time
 from datetime import datetime
 from typing import List
 
@@ -11,7 +10,7 @@ from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_ALERTS, TRACE_INCOMING_REQUESTS, \
-    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE, PROCESSED_ALERTS_CACHE_FLUSHER_DELAY
+    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
@@ -42,9 +41,6 @@ class Web:
         Web.alerts_queue = TaskQueue(name="alerts_queue", num_workers=NUM_EVENT_THREADS, metrics=Web.metrics)
         Web.event_handler = event_handler
         Web.loader = loader
-        threading.Thread(
-            target=Web.processed_alerts_cache_flusher, name="processed_alerts_cache_flusher", daemon=True
-        ).start()
 
     @staticmethod
     def run():
@@ -86,16 +82,6 @@ class Web:
 
         Web.event_handler.get_telemetry().last_alert_at = str(datetime.now())
         return jsonify(success=True)
-
-    @staticmethod
-    def processed_alerts_cache_flusher():
-        while True:
-            time.sleep(PROCESSED_ALERTS_CACHE_FLUSHER_DELAY)
-            with Web.processed_alerts_cache_lock:
-                size_before = Web.processed_alerts_cache.currsize
-                Web.processed_alerts_cache.expire()
-                size_after = Web.processed_alerts_cache.currsize
-            logging.debug(f"processed_alerts_cache_flusher: removed {size_after - size_before} items from cache")
 
     @staticmethod
     def get_compound_hash(data: List[bytes]) -> bytes:
