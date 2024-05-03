@@ -97,6 +97,7 @@ class KRRResponse(BaseModel):
     description: Optional[str] = None  # This field is not returned by KRR < v1.2.0
     strategy: Optional[KRRStrategyData] = None  # This field is not returned by KRR < v1.3.0
     errors: List[Dict[str, Any]] = []  # This field is not returned by KRR < v1.7.1
+    config: Optional[Dict[str, Any]] = None  # This field is not returned by KRR < v1.9.0
 
 
 class KRRParams(PrometheusParams, PodRunningParams):
@@ -385,6 +386,7 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
         metadata["strategy"] = krr_scan.strategy.dict() if krr_scan.strategy else None
         metadata["description"] = krr_scan.description
         metadata["errors"] = krr_scan.errors
+        metadata["config"] = krr_scan.config
 
     scan_block = KRRScanReportBlock(
         title="KRR scan",
