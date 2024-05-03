@@ -135,12 +135,16 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
     else:
         container_labels: List[Tuple[str, str]] = []
         container_labels.extend(labels)
-        container_name = oomkilled_container.container.name
-        requests, limits = PodContainer.get_memory_resources(oomkilled_container.container)
-        container_labels.append(("Container name", container_name))
-        memory_limit = "No limit" if not limits else f"{limits}MB limit"
-        memory_requests = "No request" if not requests else f"{requests}MB request"
-        container_labels.append(("Container memory", f"{memory_requests}, {memory_limit}"))
+        if oomkilled_container.container is not None:
+            container_name = oomkilled_container.container.name
+            requests, limits = PodContainer.get_memory_resources(oomkilled_container.container)
+            memory_limit = "No limit" if not limits else f"{limits}MB limit"
+            memory_requests = "No request" if not requests else f"{requests}MB request"
+            container_labels.append(("Container memory", f"{memory_requests}, {memory_limit}"))
+            container_labels.append(("Container name", container_name))
+        else:
+            container_name = None
+
         oom_killed_status = oomkilled_container.state
         if oom_killed_status.terminated.startedAt:
             container_labels.append(("Container started at", oom_killed_status.terminated.startedAt))
@@ -152,7 +156,7 @@ def pod_oom_killer_enricher(event: PodEvent, params: OomKillParams):
             ["field", "value"],
             table_name="*Container Info*",
         )]
-        if params.container_memory_graph:
+        if params.container_memory_graph and oomkilled_container.container:
             container_graph = get_oomkilled_graph(oomkilled_container, pod, params,
                                                   metrics_legends_labels=["pod"])
             blocks.append(container_graph)
