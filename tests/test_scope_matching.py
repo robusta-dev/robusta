@@ -60,6 +60,7 @@ class ScopeCheck(BaseModel):
     finding: CheckFinding
     expected: bool
     message: str
+    namespace_labels: Optional[Dict[str, str]] = {}
 
     class Config:
         extra = Extra.forbid
@@ -207,4 +208,8 @@ class TestFindingScopeMatching:
 
             for check in scope_test.checks:
                 finding = check.finding.create_finding()
-                assert sink_base.accepts(finding) is check.expected, check.message
+                with unittest.mock.patch(
+                        "robusta.core.reporting.base.get_namespace_labels",
+                        return_value=check.namespace_labels
+                ):
+                    assert sink_base.accepts(finding) is check.expected, f'check "{check.message}" failed'

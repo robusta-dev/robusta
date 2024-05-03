@@ -113,3 +113,5 @@ RUN_AS_SUBPROCESS = load_bool("RUN_AS_SUBPROCESS", True)
 ARGO_ROLLOUTS = load_bool("ARGO_ROLLOUTS", False)
 # lowered case k8s kinds in a json array string. "[\"configmap\", \"secret\"]"
 RESOURCE_YAML_BLOCK_LIST = json.loads(os.environ.get("RESOURCE_YAML_BLOCK_LIST", "[]"))
+
+NAMESPACE_DATA_TTL = int(os.environ.get("NAMESPACE_DATA_TTL", 30*60))  # in seconds
