@@ -73,6 +73,7 @@ class Web:
                 alert.fingerprint.encode('ascii'),
                 alert.status.encode('utf-8'),
                 str(alert.startsAt.timestamp()).encode('ascii'),
+                str(alert.endsAt.timestamp()).encode('ascii'),
             ])
             with Web.processed_alerts_cache_lock:
                 if alert_hash in Web.processed_alerts_cache:
