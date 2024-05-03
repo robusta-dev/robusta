@@ -1,11 +1,16 @@
+import hashlib
 import logging
+import threading
 from datetime import datetime
+from typing import List
 
+from cachetools import TTLCache
 from flask import Flask, abort, jsonify, request
 from prometheus_client import make_wsgi_app
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
-from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_ALERTS, TRACE_INCOMING_REQUESTS
+from robusta.core.model.env_vars import NUM_EVENT_THREADS, PORT, TRACE_INCOMING_ALERTS, TRACE_INCOMING_REQUESTS, \
+    PROCESSED_ALERTS_CACHE_TTL, PROCESSED_ALERTS_CACHE_MAX_SIZE
 from robusta.core.playbooks.playbooks_event_handler import PlaybooksEventHandler
 from robusta.core.triggers.helm_releases_triggers import HelmReleasesTriggerEvent, IncomingHelmReleasesEventPayload
 from robusta.integrations.kubernetes.base_triggers import IncomingK8sEventPayload, K8sTriggerEvent
@@ -25,6 +30,9 @@ class Web:
     event_handler: PlaybooksEventHandler
     metrics: QueueMetrics
     loader: ConfigLoader
+
+    processed_alerts_cache = TTLCache(maxsize=PROCESSED_ALERTS_CACHE_MAX_SIZE, ttl=PROCESSED_ALERTS_CACHE_TTL)
+    processed_alerts_cache_lock = threading.Lock()
 
     @staticmethod
     def init(event_handler: PlaybooksEventHandler, loader: ConfigLoader):
@@ -57,10 +65,30 @@ class Web:
         alert_manager_event = AlertManagerEvent(**req_json)
         for alert in alert_manager_event.alerts:
             alert = Web._relabel_alert(alert)
-            Web.alerts_queue.add_task(Web.event_handler.handle_trigger, PrometheusTriggerEvent(alert=alert))
+            alert_hash = Web.get_compound_hash([
+                alert.fingerprint.encode('ascii'),
+                alert.status.encode('utf-8'),
+                str(alert.startsAt.timestamp()).encode('ascii'),
+                str(alert.endsAt.timestamp()).encode('ascii'),
+            ])
+            with Web.processed_alerts_cache_lock:
+                if alert_hash in Web.processed_alerts_cache:
+                    continue
+                else:
+                    Web.processed_alerts_cache[alert_hash] = True
+            Web.alerts_queue.add_task(
+                Web.event_handler.handle_trigger, PrometheusTriggerEvent(alert=alert)
+            )
 
         Web.event_handler.get_telemetry().last_alert_at = str(datetime.now())
         return jsonify(success=True)
+
+    @staticmethod
+    def get_compound_hash(data: List[bytes]) -> bytes:
+        hash_value = hashlib.sha1()
+        for item in data:
+            hash_value.update(hashlib.sha1(item).digest())
+        return hash_value.digest()
 
     @staticmethod
     @app.route("/api/helm-releases", methods=["POST"])
