@@ -12,6 +12,10 @@ class ServiceNowSinkParams(SinkBaseParams):
     password: SecretStr
     caller_id: Optional[str]
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "servicenow"
+
 
 class ServiceNowSinkConfigWrapper(SinkConfigBase):
     service_now_sink: ServiceNowSinkParams

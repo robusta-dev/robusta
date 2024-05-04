@@ -7,6 +7,10 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 class GoogleChatSinkParams(SinkBaseParams):
     webhook_url: SecretStr
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "google_chat"
+
 
 class GoogleChatSinkConfigWrapper(SinkConfigBase):
     google_chat_sink: GoogleChatSinkParams

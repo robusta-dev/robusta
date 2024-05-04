@@ -1,9 +1,14 @@
 import logging
 import ssl
 import tempfile
+import time
+from datetime import datetime, timedelta
+from itertools import chain
 from typing import Any, Dict, List, Set
 
 import certifi
+import humanize
+from dateutil import tz
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
@@ -27,6 +32,7 @@ from robusta.core.reporting.blocks import (
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, SlackAnnotations
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
+from robusta.core.sinks.sink_base import KeyT
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
 from robusta.core.sinks.common import ChannelTransformer
@@ -39,8 +45,9 @@ MAX_BLOCK_CHARS = 3000
 
 class SlackSender:
     verified_api_tokens: Set[str] = set()
+    channel_name_to_id = {}
 
-    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str):
+    def __init__(self, slack_token: str, account_id: str, cluster_name: str, signing_key: str, slack_channel: str):
         """
         Connect to Slack and verify that the Slack token is valid.
         Return True on success, False on failure
@@ -160,7 +167,9 @@ class SlackSender:
 
         return self.__to_slack_markdown(block.to_markdown())
 
-    def __to_slack(self, block: BaseBlock, sink_name: str) -> List[SlackBlock]:
+    def __to_slack(self, block: BaseBlock, sink_name: str = None) -> List[SlackBlock]:
+        # sink_name can be omitted if we are sure that neither KubernetesDiffBlock nor
+        # CallbackBlock will be processed.
         if isinstance(block, MarkdownBlock):
             return self.__to_slack_markdown(block)
         elif isinstance(block, DividerBlock):
@@ -183,13 +192,17 @@ class SlackSender:
         elif isinstance(block, ListBlock):
             return self.__to_slack_markdown(block.to_markdown())
         elif isinstance(block, KubernetesDiffBlock):
+            assert sink_name is not None
             return self.__to_slack_diff(block, sink_name)
         elif isinstance(block, CallbackBlock):
+            assert sink_name is not None
             return self.__get_action_block_for_choices(sink_name, block.choices)
         elif isinstance(block, LinksBlock):
             return self.__to_slack_links(block.links)
         elif isinstance(block, ScanReportBlock):
             raise AssertionError("to_slack() should never be called on a ScanReportBlock")
+        elif isinstance(block, dict):
+            return [block]
         else:
             logging.warning(f"cannot convert block of type {type(block)} to slack format block: {block}")
             return []  # no reason to crash the entire report
@@ -235,7 +248,8 @@ class SlackSender:
         unfurl: bool,
         status: FindingStatus,
         channel: str,
-    ):
+        thread_ts: str = None,
+    ) -> str:
         file_blocks = add_pngs_for_all_svgs([b for b in report_blocks if isinstance(b, FileBlock)])
         if not sink_params.send_svg:
             file_blocks = [b for b in file_blocks if not b.filename.endswith(".svg")]
@@ -266,17 +280,25 @@ class SlackSender:
         )
 
         try:
-            self.slack_client.chat_postMessage(
+            if thread_ts:
+                kwargs = {"thread_ts": thread_ts}
+            else:
+                kwargs = {}
+            resp = self.slack_client.chat_postMessage(
                 channel=channel,
                 text=message,
                 blocks=output_blocks,
                 display_as_bot=True,
-                attachments=[{"color": status.to_color_hex(), "blocks": attachment_blocks}]
-                if attachment_blocks
-                else None,
+                attachments=(
+                    [{"color": status.to_color_hex(), "blocks": attachment_blocks}] if attachment_blocks else None
+                ),
                 unfurl_links=unfurl,
                 unfurl_media=unfurl,
+                **kwargs
             )
+            # We will need channel ids for future message updates
+            self.channel_name_to_id[channel] = resp["channel"]
+            return resp["ts"]
         except Exception as e:
             logging.error(
                 f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
@@ -329,7 +351,8 @@ class SlackSender:
         finding: Finding,
         sink_params: SlackSinkParams,
         platform_enabled: bool,
-    ):
+        thread_ts: str = None,
+    ) -> str:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
 
@@ -370,7 +393,7 @@ class SlackSender:
         if len(attachment_blocks):
             attachment_blocks.append(DividerBlock())
 
-        self.__send_blocks_to_slack(
+        return self.__send_blocks_to_slack(
             blocks,
             attachment_blocks,
             finding.title,
@@ -384,4 +407,122 @@ class SlackSender:
                 finding.subject.labels,
                 finding.subject.annotations,
             ),
+            thread_ts=thread_ts,
         )
+
+    def send_or_update_summary_message(
+        self,
+        group_by_classification_header: List[str],
+        summary_header: List[str],
+        summary_table: Dict[KeyT, List[int]],
+        sink_params: SlackSinkParams,
+        platform_enabled: bool,
+        summary_start: float,  # timestamp
+        threaded: bool,
+        msg_ts: str = None,  # message identifier (for updates)
+        investigate_uri: str = None,
+        grouping_interval: int = None,  # in seconds
+    ):
+        """Create or update a summary message with tabular information about the amount of events
+        fired/resolved and a header describing the event group that this information concerns."""
+        now_ts = time.time()
+
+        rows = []
+        n_total_alerts = 0
+        for key, value in sorted(summary_table.items()):
+            # key is a tuple of attribute names; value is a 2-element list with
+            # the number of firing and resolved notifications.
+            row = list(str(e) for e in chain(key, value))
+            rows.append(row)
+            n_total_alerts += value[0] + value[1]  # count firing and resolved notifications
+
+        table_block = TableBlock(headers=summary_header + ["Fired", "Resolved"], rows=rows)
+        summary_start_utc_dt = datetime.fromtimestamp(summary_start).astimezone(tz.UTC)
+        formatted_summary_start = summary_start_utc_dt.strftime("%Y-%m-%d %H:%M UTC")
+        grouping_interval_str = humanize.precisedelta(
+            timedelta(seconds=grouping_interval), minimum_unit="seconds"
+        )
+        time_text = (
+            f"*Time interval:* `{grouping_interval_str}` starting at "
+            f"`<!date^{int(summary_start)}^{{date_num}} {{time}}|{formatted_summary_start}>`"
+        )
+        group_by_criteria_str = ", ".join(f"`{header}`" for header in group_by_classification_header)
+
+        blocks = [
+            MarkdownBlock(f"*Alerts Summary - {n_total_alerts} Notifications*"),
+        ]
+
+        source_txt = f"*Source:* `{self.cluster_name}`"
+        if platform_enabled:
+            blocks.extend([
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": source_txt,
+                    },
+                    "accessory": {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Investigate 🔎",
+                        },
+                        "url": investigate_uri,
+                    },
+                }
+            ])
+        else:
+            blocks.append(MarkdownBlock(text=source_txt))
+
+        blocks.extend(
+            [
+                MarkdownBlock(f"*Matching criteria*: {group_by_criteria_str}"),
+                MarkdownBlock(text=time_text),
+                table_block,
+            ]
+        )
+
+        if threaded:
+            blocks.append(MarkdownBlock(text="See thread for individual alerts"))
+
+        output_blocks = []
+        for block in blocks:
+            output_blocks.extend(self.__to_slack(block, sink_params.name))
+
+        # TODO for the purpose of summary messages, we assume the chanel is determined as if
+        # labels and annotations were empty, bypassing the elaborate logic in ChannelTransformer.
+        # Is this acceptable? I don't really see a way around this.
+        channel = ChannelTransformer.template(
+            sink_params.channel_override,
+            sink_params.slack_channel,
+            self.cluster_name,
+            {},
+            {},
+        )
+        if msg_ts is not None:
+            method = self.slack_client.chat_update
+            kwargs = {"ts": msg_ts}
+            # chat_update calls require channel ids (like "C123456") as opposed to channel names
+            # for chat_postMessage calls.
+            if channel not in self.channel_name_to_id:
+                logging.error(
+                    f"Slack channel id for channel name {channel} could not be determined "
+                    "from previous API calls, message update cannot be performed"
+                )
+                return
+            channel = self.channel_name_to_id[channel]
+        else:
+            method = self.slack_client.chat_postMessage
+            kwargs = {}
+
+        try:
+            resp = method(
+                channel=channel,
+                text="Summary for: " + ", ".join(group_by_classification_header),
+                blocks=output_blocks,
+                display_as_bot=True,
+                **kwargs,
+            )
+            return resp["ts"]
+        except Exception as e:
+            logging.exception(f"error sending message to slack\n{e}\nchannel={channel}\n")

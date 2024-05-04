@@ -19,6 +19,10 @@ class JiraSinkParams(SinkBaseParams):
     reopenStatusName: Optional[str] = "To Do"
     noReopenResolution: Optional[str] = ""
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "jira"
+
 
 class JiraSinkConfigWrapper(SinkConfigBase):
     jira_sink: JiraSinkParams

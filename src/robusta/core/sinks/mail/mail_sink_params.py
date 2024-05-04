@@ -7,6 +7,10 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 class MailSinkParams(SinkBaseParams):
     mailto: str
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "mail"
+
     @validator("mailto")
     def validate_mailto(cls, mailto):
         # Make sure we only handle emails and exclude other schemes provided by apprise

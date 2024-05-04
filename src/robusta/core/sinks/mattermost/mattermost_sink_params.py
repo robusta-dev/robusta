@@ -15,6 +15,10 @@ class MattermostSinkParams(SinkBaseParams):
     team: Optional[str]
     team_id: Optional[str]
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "mattermost"
+
     @validator("url")
     def set_http_schema(cls, url):
         parsed_url = urlparse(url)

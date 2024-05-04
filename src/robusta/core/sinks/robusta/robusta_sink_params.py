@@ -17,6 +17,10 @@ class RobustaSinkParams(SinkBaseParams):
     ttl_hours: int = 4380  # Time before unactive cluster data is deleted. 6 Months default.
     persist_events: bool = False
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "robusta"
+
 
 class RobustaSinkConfigWrapper(SinkConfigBase):
     robusta_sink: RobustaSinkParams

@@ -68,7 +68,7 @@ Example:
 .. code-block:: yaml
 
      sinks_config:
-     # slack integration params
+     # slack integration params, like slack_channel, api_key etc
      - slack_sink:
          name: main_slack_sink
          api_key: xoxb-112...
@@ -114,6 +114,84 @@ To do so in :ref:`custom playbooks <customPlaybooks>` mention the ``@username`` 
 If you'd like to automatically tag users on builtin alerts, please
 `let us know <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=Tag%20Slack%20Users>`_.
 We want to hear requirements.
+
+
+Grouping and summarizing messages
+-------------------------------------------------------------------
+
+Some large systems that are being monitored by Robusta could generate
+considerable amounts of notifications that are quite similar to each other
+(for example, concern one type of a problem occurring over some part of
+the cluster). For such cases, Robusta provides a mechanism that will reduce
+the amount of clutter in Slack channels by grouping notifications based
+on their properties and possibly summarizing the numbers of their
+occurrences.
+
+The mechanism is enabled by the ``grouping`` section in the Slack sink
+config. The parameters you can group on (specified in the ``group_by``
+section) are basically any values in the k8s event payload, with one
+special addition - ``workload`` that will hold the name of the top-level
+entity name for the event. Labels and annotations are supported as
+described in the example below. If you specify ``grouping`` without
+defining a ``group_by``, the default will be to group by the cluster
+name.
+
+The grouping mechanism supports the ``interval`` setting, which defines
+the length of the window over which notifications will be aggregated.
+The window starts when the first message belonging to the group arrives,
+and ends when the specified interval elapses. If you don't specify the
+``interval``, the default value will be 15 minutes.
+
+There are two modes for this functionality, selected by the
+``notification_mode`` subsection. For the ``regular`` mode, you have to
+specify the ``ignore_first`` value. This value will determine the
+minimum amount of notifications in any group that would have to occur
+in the time specified by ``interval`` before they are sent as Slack
+messages. This mode works like a false positive filter - it only triggers
+the Slack sink if notifications are incoming at a speed above the set
+threshold.
+
+The ``summary`` mode allows summarizing the number of notifications in a
+succinct way. The summary will be sent to Slack as a single message and will
+include information about the number of all the messages in the group.
+The summarization will be formatted as a table and done according
+to the attributes listed under ``summary.by``. In case ``summary.threaded``
+is ``true``, all the Slack notifications belonging to this group will be
+appended in a thread under this header message. If ``summary.threaded`` is
+``false``, the notifications will not be sent to Slack at all, and only the
+summary message will appear.
+
+The information in the summary message will be dynamically updated with
+numbers of notifications in the group as they are incoming, regardless
+of whether ``summary.threaded`` is enabled or not.
+
+.. code-block::
+
+    sinksConfig:
+    - slack_sink:
+        # slack integration params, like slack_channel, api_key etc
+        grouping:
+          group_by:
+            - workload
+            - labels:
+              - app
+            - annotations:
+              - experimental_deployment
+          interval: 1800    # group time window, seconds
+          notification_mode:
+            summary:
+              threaded: true
+              by:
+                - identifier
+                - severity
+
+.. note::
+
+    In the current, initial implementation of this mechanism, the
+    statistics of notifications are held in memory and not persisted
+    anywhere, so when the Robusta runner dies/restarts, they are lost
+    and the counting starts anew.
+
 
 Creating Custom Slack Apps
 -------------------------------------------------------------------

@@ -10,6 +10,10 @@ class OpsGenieSinkParams(SinkBaseParams):
     tags: List[str] = []
     host: Optional[str] = None  # NOTE: If None, the default value will be used from opsgenie_sdk
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "opsgenie"
+
 
 class OpsGenieSinkConfigWrapper(SinkConfigBase):
     opsgenie_sink: OpsGenieSinkParams

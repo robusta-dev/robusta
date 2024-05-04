@@ -5,6 +5,10 @@ from robusta.core.sinks.sink_config import SinkConfigBase
 class DataDogSinkParams(SinkBaseParams):
     api_key: str
 
+    @classmethod
+    def _get_sink_type(cls):
+        return "datadog"
+
 
 class DataDogSinkConfigWrapper(SinkConfigBase):
     datadog_sink: DataDogSinkParams
