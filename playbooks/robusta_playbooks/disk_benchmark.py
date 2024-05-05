@@ -12,7 +12,6 @@ from hikaru.model.rel_1_26 import (
     Volume,
     VolumeMount,
 )
-
 from robusta.api import (
     IMAGE_REGISTRY,
     INSTALLATION_NAMESPACE,
@@ -64,7 +63,7 @@ def disk_benchmark(event: ExecutionBaseEvent, action_params: DiskBenchmarkParams
     try:
         pvc.createNamespacedPersistentVolumeClaim(action_params.namespace)
         pv_name = "robusta-benchmark-pv"
-        image = f"{IMAGE_REGISTRY}/robusta-fio-benchmark"
+        image = f"{IMAGE_REGISTRY}/robusta-fio-benchmark:0.0.1"
         name = "robusta-fio-disk-benchmark"
         mount_path = "/robusta/data"
         spec = PodSpec(

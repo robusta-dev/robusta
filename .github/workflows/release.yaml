@@ -107,8 +107,8 @@ jobs:
       run: |-
         docker buildx build \
         --platform linux/arm64,linux/amd64 \
-        --tag us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli:${{env.RELEASE_VER}} \
-        --tag us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-cli \
+        --tag robustadev/robusta-cli:${{env.RELEASE_VER}} \
+        --tag robustadev/robusta-cli \
         --push \
         --file cli.Dockerfile \
         .
