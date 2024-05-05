@@ -8,8 +8,6 @@ Send Alerts to Robusta
 
 This integration lets you send Coralogix alerts to Robusta.
 
-.. note:: Many of the fields supported in Alertmanager dont in Coralogix alerts
-
 To configure it:
 
 1. In the Coralogix site go to Data Flow and in the Webhook section click ``Webhook``.
