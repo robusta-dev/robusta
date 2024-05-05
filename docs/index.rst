@@ -33,6 +33,7 @@
    :hidden:
 
    configuration/index
+   🆕 Notification Grouping <configuration/notification-grouping>
    configuration/configuring-sinks
    🔔 Sinks Reference <configuration/sinks/index>
    configuration/alertmanager-integration/index
