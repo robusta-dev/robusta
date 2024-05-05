@@ -101,3 +101,14 @@ jobs:
     - name: Upload helm chart
       run: |
         cd helm && ./upload_chart.sh
+
+    - name: Release Docker CLI only on formal releases
+      if: "!github.event.release.prerelease"
+      run: |-
+        docker buildx build \
+        --platform linux/arm64,linux/amd64 \
+        --tag robustadev/robusta-cli:${{env.RELEASE_VER}} \
+        --tag robustadev/robusta-cli \
+        --push \
+        --file cli.Dockerfile \
+        .

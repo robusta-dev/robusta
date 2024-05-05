@@ -12,7 +12,6 @@ from hikaru.model.rel_1_26 import (
     Volume,
     VolumeMount,
 )
-
 from robusta.api import (
     FIO_IMAGE,
     IMAGE_REGISTRY,
