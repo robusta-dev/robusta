@@ -102,7 +102,7 @@ class ZulipSender:
         elif isinstance(block, EventsBlock):
             yield self.__to_zulip_table(block)
         elif isinstance(block, MarkdownBlock):
-            yield self.__to_zulip_block("md", block.text)
+            yield self.__to_zulip_block(block.text, "md")
         elif isinstance(block, KubernetesDiffBlock):
             for d in block.diffs:
                 yield f"{self.__to_zulip_bold('.'.join(d.path))}: {d.other_value} ➡️ {d.value})"
@@ -110,7 +110,7 @@ class ZulipSender:
             for link in block.links:
                 yield self.__to_zulip_link(link.text, link.url)
         elif isinstance(block, JsonBlock):
-            yield self.__to_zulip_block("json", block.json_str)
+            yield self.__to_zulip_block(block.json_str, "json")
         elif isinstance(block, FileBlock):
             if block.is_text_file() and log_preview_char_limit != 0:
                 log_text = block.truncate_content(log_preview_char_limit).decode()
