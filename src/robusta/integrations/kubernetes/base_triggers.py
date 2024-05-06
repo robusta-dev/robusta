@@ -157,9 +157,7 @@ class K8sBaseTrigger(BaseTrigger):
     def should_fire(self, event: TriggerEvent, playbook_id: str, build_context: Dict[str, Any]):
         if not isinstance(event, K8sTriggerEvent):
             return False
-
-        k8s_trigger_event = K8sTriggerEvent(**event.dict())
-        k8s_payload = k8s_trigger_event.k8s_payload
+        k8s_payload = event.k8s_payload
         if self.kind != "Any" and self.kind != k8s_payload.kind:
             return False
 
