@@ -1,7 +1,6 @@
 import logging
 import ssl
 import tempfile
-import time
 from datetime import datetime, timedelta
 from itertools import chain
 from typing import Any, Dict, List, Set
@@ -32,10 +31,10 @@ from robusta.core.reporting.blocks import (
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
 from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, SlackAnnotations
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
+from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.sink_base import KeyT
 from robusta.core.sinks.slack.slack_sink_params import SlackSinkParams
 from robusta.core.sinks.transformer import Transformer
-from robusta.core.sinks.common import ChannelTransformer
 
 ACTION_TRIGGER_PLAYBOOK = "trigger_playbook"
 ACTION_LINK = "link"
@@ -167,9 +166,7 @@ class SlackSender:
 
         return self.__to_slack_markdown(block.to_markdown())
 
-    def __to_slack(self, block: BaseBlock, sink_name: str = None) -> List[SlackBlock]:
-        # sink_name can be omitted if we are sure that neither KubernetesDiffBlock nor
-        # CallbackBlock will be processed.
+    def __to_slack(self, block: BaseBlock, sink_name: str) -> List[SlackBlock]:
         if isinstance(block, MarkdownBlock):
             return self.__to_slack_markdown(block)
         elif isinstance(block, DividerBlock):
@@ -192,10 +189,8 @@ class SlackSender:
         elif isinstance(block, ListBlock):
             return self.__to_slack_markdown(block.to_markdown())
         elif isinstance(block, KubernetesDiffBlock):
-            assert sink_name is not None
             return self.__to_slack_diff(block, sink_name)
         elif isinstance(block, CallbackBlock):
-            assert sink_name is not None
             return self.__get_action_block_for_choices(sink_name, block.choices)
         elif isinstance(block, LinksBlock):
             return self.__to_slack_links(block.links)
@@ -294,7 +289,7 @@ class SlackSender:
                 ),
                 unfurl_links=unfurl,
                 unfurl_media=unfurl,
-                **kwargs
+                **kwargs,
             )
             # We will need channel ids for future message updates
             self.channel_name_to_id[channel] = resp["channel"]
@@ -320,7 +315,7 @@ class SlackSender:
         if platform_enabled:
             title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
         return MarkdownBlock(
-            f"""{status_name} {sev.to_emoji()} *{sev.name.capitalize()}*  
+            f"""{status_name} {sev.to_emoji()} *{sev.name.capitalize()}*
 {title}"""
         )
 
@@ -425,8 +420,6 @@ class SlackSender:
     ):
         """Create or update a summary message with tabular information about the amount of events
         fired/resolved and a header describing the event group that this information concerns."""
-        now_ts = time.time()
-
         rows = []
         n_total_alerts = 0
         for key, value in sorted(summary_table.items()):
@@ -439,9 +432,7 @@ class SlackSender:
         table_block = TableBlock(headers=summary_header + ["Fired", "Resolved"], rows=rows)
         summary_start_utc_dt = datetime.fromtimestamp(summary_start).astimezone(tz.UTC)
         formatted_summary_start = summary_start_utc_dt.strftime("%Y-%m-%d %H:%M UTC")
-        grouping_interval_str = humanize.precisedelta(
-            timedelta(seconds=grouping_interval), minimum_unit="seconds"
-        )
+        grouping_interval_str = humanize.precisedelta(timedelta(seconds=grouping_interval), minimum_unit="seconds")
         time_text = (
             f"*Time interval:* `{grouping_interval_str}` starting at "
             f"`<!date^{int(summary_start)}^{{date_num}} {{time}}|{formatted_summary_start}>`"
@@ -454,23 +445,25 @@ class SlackSender:
 
         source_txt = f"*Source:* `{self.cluster_name}`"
         if platform_enabled:
-            blocks.extend([
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": source_txt,
-                    },
-                    "accessory": {
-                        "type": "button",
+            blocks.extend(
+                [
+                    {
+                        "type": "section",
                         "text": {
-                            "type": "plain_text",
-                            "text": "Investigate 🔎",
+                            "type": "mrkdwn",
+                            "text": source_txt,
                         },
-                        "url": investigate_uri,
-                    },
-                }
-            ])
+                        "accessory": {
+                            "type": "button",
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Investigate 🔎",
+                            },
+                            "url": investigate_uri,
+                        },
+                    }
+                ]
+            )
         else:
             blocks.append(MarkdownBlock(text=source_txt))
 
@@ -489,9 +482,7 @@ class SlackSender:
         for block in blocks:
             output_blocks.extend(self.__to_slack(block, sink_params.name))
 
-        # TODO for the purpose of summary messages, we assume the chanel is determined as if
-        # labels and annotations were empty, bypassing the elaborate logic in ChannelTransformer.
-        # Is this acceptable? I don't really see a way around this.
+        # For grouped notifications, channel override is supported only with the `cluster` attribute
         channel = ChannelTransformer.template(
             sink_params.channel_override,
             sink_params.slack_channel,
