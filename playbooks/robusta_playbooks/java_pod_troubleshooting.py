@@ -124,7 +124,7 @@ def run_jdk_command_on_pid(
 
     jdk_cmd = f"{cmd} {params.pid}"
     try:
-        jdk_output = run_java_toolkit_command(jdk_cmd, pod, custom_annotations=params.custom_annotations)
+        jdk_output = run_java_toolkit_command(jdk_cmd, pod, params.jtk_image, custom_annotations=params.custom_annotations)
         finding.add_enrichment(
             [
                 MarkdownBlock(f"{aggregation_key} ran on process {params.pid}"),
