@@ -326,7 +326,7 @@ messages will not be delivered.
 
 An example of such a configuration is presented below:
 
-.. code-block:: yml
+.. code-block:: yaml
 
     sinksConfig:
     - slack_sink:

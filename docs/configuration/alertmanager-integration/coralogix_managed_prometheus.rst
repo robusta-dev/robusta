@@ -20,7 +20,7 @@ To configure it:
 3. Select the Post Method.
 4. In the Edit headers replace it with
 
-.. code-block:: json
+.. code-block:: yaml
 
     {
       "Content-Type": "application/json",
@@ -29,7 +29,7 @@ To configure it:
 
 5. In Edit body add
 
-.. code-block:: json
+.. code-block:: yaml
 
     {
       "externalURL": "",
@@ -55,6 +55,7 @@ To configure it:
         }
       ]
     }
+
 
 6. Click the 'Test Config' button and check your robusta sinks that you received an alert
 7. Click Save
