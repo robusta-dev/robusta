@@ -30,6 +30,7 @@ Sinks Reference
    google_chat
    pushover
    ServiceNow
+   zulip
    sinks-development
 
 
@@ -152,6 +153,11 @@ Click a sink for setup instructions.
     .. grid-item-card:: :octicon:`cpu;1em;` ServiceNow
         :class-card: sd-bg-light sd-bg-text-light
         :link: ServiceNow
+        :link-type: doc
+
+    .. grid-item-card:: :octicon:`cpu;1em;` Zulip
+        :class-card: sd-bg-light sd-bg-text-light
+        :link: zulip
         :link-type: doc
 
 **Need support for a new sink?** `Tell us and we'll add it. <https://github.com/robusta-dev/robusta/issues/new?assignees=&labels=&template=feature_request.md&title=New%20Sink:>`_
