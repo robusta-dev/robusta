@@ -4,7 +4,7 @@ metadata:
   name: robusta
 build:
   artifacts:
-  - image: robustadev/robusta-runner
+  - image: robustadev/robusta-runner-dev
     context: .
     docker:
       dockerfile: Dockerfile
