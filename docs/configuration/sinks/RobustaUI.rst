@@ -38,7 +38,17 @@ Handling Short-Lived Clusters in the UI
 By default, inactive Robusta clusters will be kept in the UI for 6 months **data retention**. (4380 hours)
 
 If you have many short-lived clusters, you can remove them from the UI automatically once they stop running.
-To do so, configure a shorter retention period by setting ``ttl_hours = <hours>``.
+To do so, configure a shorter retention period by setting the ``ttl_hours`` in the Robusta UI sink settings:
+
+.. code-block:: bash
+  :name: cb-robusta-ui-sink-config
+
+  sinksConfig:
+  - robusta_sink:
+      name: robusta_ui_sink
+      token: <your-token>
+      # automatically clean up old clusters in the UI if they are disconnected 12+ hours
+      ttl_hours: 12
 
 More Information about the UI
 -------------------------------------
