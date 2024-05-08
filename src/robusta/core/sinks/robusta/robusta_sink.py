@@ -5,7 +5,7 @@ import os
 import threading
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Iterable
 
 from hikaru.model.rel_1_26 import DaemonSet, Deployment, Job, Node, Pod, ReplicaSet, StatefulSet
 from kubernetes.client import V1Node, V1NodeCondition, V1NodeList, V1Taint
@@ -92,9 +92,8 @@ class RobustaSink(SinkBase, EventHandler):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
-        # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
-        # helps differentiate between no jobs, to not initialized
-        self.__jobs_cache: Optional[Dict[str, JobInfo]] = None
+        self.__jobs_cache: Dict[str, JobInfo] = {}
+        self.__jobs_cache_lock = threading.Lock()
         self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
         self.__thread = threading.Thread(target=self.__discover_cluster)
@@ -126,12 +125,12 @@ class RobustaSink(SinkBase, EventHandler):
         """
         try:
             logging.info("Initializing TopServiceResolver")
-            RobustaSink.__save_resolver_resources(self.dal.get_active_services(), self.dal.get_active_jobs())
+            self.__save_resolver_resources(self.dal.get_active_services(), self.dal.get_active_jobs())
         except Exception:
             logging.error("Failed to initialize TopServiceResolver", exc_info=True)
 
     @staticmethod
-    def __save_resolver_resources(services: List[ServiceInfo], jobs: List[JobInfo]):
+    def __save_resolver_resources(services: List[ServiceInfo], jobs: Iterable[JobInfo]):
         resources: List[TopLevelResource] = []
         resources.extend(
             [
@@ -157,11 +156,11 @@ class RobustaSink(SinkBase, EventHandler):
             for node in self.dal.get_active_nodes():
                 self.__nodes_cache[node.name] = node
 
-    def __assert_jobs_cache_initialized(self):
-        if self.__jobs_cache is None:
-            logging.info("Initializing jobs cache")
-            self.__jobs_cache: Dict[str, JobInfo] = {}
-            for job in self.dal.get_active_jobs():
+    def __cache_active_jobs(self):
+        logging.info("Caching all active jobs")
+        jobs = self.dal.get_active_jobs()
+        with self.__jobs_cache_lock:
+            for job in jobs:
                 self.__jobs_cache[job.get_service_key()] = job
 
     def __assert_helm_releases_cache_initialized(self):
@@ -177,11 +176,12 @@ class RobustaSink(SinkBase, EventHandler):
             self.__namespaces_cache = {namespace.name: namespace for namespace in self.dal.get_active_namespaces()}
 
     def __reset_caches(self):
-        self.__services_cache: Dict[str, ServiceInfo] = {}
-        self.__nodes_cache: Dict[str, NodeInfo] = {}
-        self.__jobs_cache = None
+        self.__services_cache.clear()
+        self.__nodes_cache.clear()
+        self.__jobs_cache.clear()
         self.__helm_releases_cache = None
-        self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
+        self.__namespaces_cache.clear()
+        self.__helm_releases_cache = None
         self.__pods_running_count = 0
 
     def stop(self):
@@ -194,7 +194,7 @@ class RobustaSink(SinkBase, EventHandler):
 
     def handle_service_diff(
         self,
-        new_resource: Union[Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Node],
+        new_resource: Union[Deployment, DaemonSet, StatefulSet, ReplicaSet, Pod, Node, Job],
         operation: K8sOperationType,
     ):
         try:
@@ -202,11 +202,11 @@ class RobustaSink(SinkBase, EventHandler):
                 self.__publish_single_service(Discovery.create_service_info_from_hikaru(new_resource), operation)
             elif isinstance(new_resource, Node):
                 self.__update_node(new_resource, operation)
-            # if the jobs cache isn't initalized you will have exceptions in __update_job
-            elif isinstance(new_resource, Job) and self.__jobs_cache is not None:
+            # if the jobs cache isn't initialized you will have exceptions in __update_job
+            elif isinstance(new_resource, Job):
                 self.__update_job(new_resource, operation)
         except Exception:
-            self.__reset_caches()
+            self.__reset_caches()  # TODO why do we purge all the caches here?
             logging.error(
                 f"Failed to handle_service_diff for resource {new_resource.metadata.name}",
                 exc_info=True,
@@ -318,7 +318,7 @@ class RobustaSink(SinkBase, EventHandler):
                 self.__assert_node_cache_initialized()
                 self.__publish_new_nodes(results.nodes, results.node_requests)
 
-            self.__assert_jobs_cache_initialized()
+            self.__cache_active_jobs()
             self.__publish_new_jobs(results.jobs)
 
             self.__assert_helm_releases_cache_initialized()
@@ -329,8 +329,10 @@ class RobustaSink(SinkBase, EventHandler):
 
             self.__pods_running_count = results.pods_running_count
             # save the cached services for the resolver.
-            RobustaSink.__save_resolver_resources(
-                list(self.__services_cache.values()), list(self.__jobs_cache.values())
+            with self.__jobs_cache_lock:
+                jobs = list(self.__jobs_cache.values())
+            self.__save_resolver_resources(
+                list(self.__services_cache.values()), jobs
             )
 
             return results
@@ -436,35 +438,40 @@ class RobustaSink(SinkBase, EventHandler):
         self.dal.publish_nodes(updated_nodes)
 
     def __safe_delete_job(self, job_key):
-        try:
-            # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
-            job_info = self.__jobs_cache.get(job_key, None)
-            if job_info:
-                job_info.deleted = True
+        # Delete from cache early to minimize the possibility of concurrent execution of DB
+        # queries. Executing the DELETE for the same job_key would be harmless from the
+        # semantic point of view, but would incur potentially severe performance penalty.
+        job_info = self.__jobs_cache.pop(job_key, None)
+        if job_info is not None:
+            try:
                 self.dal.remove_deleted_job(job_info)
-                del self.__jobs_cache[job_key]
-        except Exception:
-            logging.error(f"Failed to delete job with service key {job_key}", exc_info=True)
+            except Exception:
+                # The query failed, insert back into cache but mark as deleted
+                job_info.deleted = True
+                self.__jobs_cache[job_key] = job_info
+                logging.error(f"Failed to delete job with service key {job_key}", exc_info=True)
 
     def __publish_new_jobs(self, active_jobs: List[JobInfo]):
-        # convert to map
+        # convert to a dict
         curr_jobs = {}
         for job in active_jobs:
             curr_jobs[job.get_service_key()] = job
 
         # handle deleted jobs
-        cache_keys = list(self.__jobs_cache.keys())
+        with self.__jobs_cache_lock:
+            cache_keys = list(self.__jobs_cache.keys())
         updated_jobs: List[JobInfo] = []
         for job_key in cache_keys:
             if not curr_jobs.get(job_key):  # job doesn't exist any more, delete it
                 self.__safe_delete_job(job_key)
 
         # new or changed jobs
-        for job_key in curr_jobs.keys():
-            current_job = curr_jobs[job_key]
-            if self.__jobs_cache.get(job_key) != current_job:  # job not in the cache, or changed
-                updated_jobs.append(current_job)
-                self.__jobs_cache[job_key] = current_job
+        with self.__jobs_cache_lock:
+            for job_key in curr_jobs.keys():
+                current_job = curr_jobs[job_key]
+                if self.__jobs_cache.get(job_key) != current_job:  # job not in the cache, or changed
+                    updated_jobs.append(current_job)
+                    self.__jobs_cache[job_key] = current_job
 
         self.__discovery_metrics.on_jobs_updated(len(updated_jobs))
         self.dal.publish_jobs(updated_jobs)
@@ -654,25 +661,20 @@ class RobustaSink(SinkBase, EventHandler):
         job_key = new_info.get_service_key()
         with self.services_publish_lock:
             if operation == K8sOperationType.UPDATE:
-                old_info = self.__jobs_cache.get(job_key, None)
-                if old_info is None:  # Update may occur after delete.
-                    return
-
-                new_info.job_data = old_info.job_data
-                if new_info == old_info:
-                    return
-
+                with self.__jobs_cache_lock:
+                    old_info = self.__jobs_cache.get(job_key)
+                    if old_info is None:  # Update may occur after delete.
+                        return
+                    new_info.job_data = old_info.job_data
+                    if new_info == old_info:
+                        return
+                    self.__jobs_cache[job_key] = new_info
+                self.dal.publish_jobs([new_info])
+            elif operation == K8sOperationType.CREATE:
                 self.__jobs_cache[job_key] = new_info
                 self.dal.publish_jobs([new_info])
-                self.__discovery_metrics.on_jobs_updated(1)
-                return
-
-            if operation == K8sOperationType.CREATE:
-                self.__jobs_cache[job_key] = new_info
-                self.dal.publish_jobs([new_info])
-                self.__discovery_metrics.on_jobs_updated(1)
-                return
-            if operation == K8sOperationType.DELETE:
+            elif operation == K8sOperationType.DELETE:
                 self.__safe_delete_job(job_key)
-                self.__discovery_metrics.on_jobs_updated(1)
+            else:
                 return
+            self.__discovery_metrics.on_jobs_updated(1)

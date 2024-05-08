@@ -385,9 +385,6 @@ class SupabaseDal(AccountResourceFetcher):
             raise
 
     def remove_deleted_job(self, job: JobInfo):
-        if not job:
-            return
-
         try:
             (
                 self.client.table(JOBS_TABLE)
