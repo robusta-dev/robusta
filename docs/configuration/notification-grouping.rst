@@ -1,139 +1,101 @@
 :hide-toc:
 
-Notification Grouping (Currently supported only on Slack)
+Notification Grouping (Slack Only)
 =========================================================
 
-You can now get a single summary message for a group of alerts,
-with the details on every alert in the Slack thread.
+You can consolidate alerts into Slack threads to reduce the number of notifications.
+Each thread begins with a summary message that updates in real time as new alerts are received.
 
 .. image:: /images/notification-grouping.png
    :width: 600px
    :align: center
 
+*Example: Alerts from a cluster are consolidated into a daily summary message, with individual alerts in the thread.*
 
+Configuring Notification Grouping
+----------------------------------
 
-For example, grouping all cluster notifications, into one daily message
+To enable grouping of notifications, add a ``grouping`` block to your Slack sink:
 
 .. code-block:: yaml
 
     sinksConfig:
     - slack_sink:
-        # slack integration params, like slack_channel, api_key etc
+        # Standard Slack configuration settings such as 'slack_channel' and 'api_key'
+        ...
         grouping:
-                              # omitting the ``group_by`` field, will use the default grouping, which is by ``cluster``
-          interval: 86400     # group time window, seconds. 1 day
+          group_by: ["cluster"]     # Default setting: groups all notifications into one daily summary
+          interval: 86400           # Time window for grouping in seconds (86400s = 1 day)
           notification_mode:
             summary:
-              threaded: true  # optional, add each alert notification the message thread
+              threaded: true        # Optional: includes each new alert in the message thread
               by:
-                - identifier  # summary by identifier, which is the alert type
+                - identifier        # Show a table in the summary message listing identifiers - i.e. AlertNames
 
-Grouping and summarizing messages
--------------------------------------------------------------------
+Customizing the way alerts are grouped
+-------------------------------------------
 
-Some large systems that are being monitored by Robusta could generate
-considerable amounts of notifications that are quite similar to each other
-(for example, concern one type of a problem occurring over some part of
-the cluster). For such cases, Robusta provides a mechanism that will reduce
-the amount of clutter in Slack channels by grouping notifications based
-on their properties and possibly summarizing the numbers of their
-occurrences.
-
-Grouping configuration
--------------------------------------------------------------------
-
-Grouping is enabled by the ``grouping`` section in the Slack sink
-config. The parameters you can group on are:
+Instead of creating a single thread with all alerts in a given day, you can group alerts into different threads by specifying a grouping criteria:
 
 .. code-block:: yaml
 
     sinksConfig:
-    - slack_sink:
-        ....
-        grouping:
-          group_by:
-            - cluster         # Group all cluster notifications. This is the default
-            - namespace       # Group notifications on the same namespace
-            - identifier      # Group notifications with the same type, i.e. KubePodNotReady
-            - workload        # Group notifications on the same workload (i.e. ``Deployment``)
-            - severity        # Group notifications with the same severity
-            - labels:         # Group notifications with the same value on the ``app`` label
-              - app
-            - annotations:    # Group notifications with the same value on the ``team`` annotation
-              - team
+      - slack_sink:
+          ...
+          grouping:
+            group_by:
+              - cluster       # Default: groups all cluster-related notifications
+              - namespace     # Groups notifications within the same namespace
+              - identifier    # Groups notifications by alert name, e.g., 'KubePodNotReady'
+              - workload      # Groups notifications by workload, e.g., 'Deployment'
+              - severity      # Groups notifications by severity level
+              - labels:       # Groups notifications by specific label values
+                  - app
+              - annotations:  # Groups notifications by specific annotation values
+                  - team
+            interval: 3600    # Grouping interval in seconds (3600s = 1 hour)
 
-          interval: 3600     # group time window, seconds. 1 hour
-          notification_mode:
-            ...
+Each unique combination of ``group_by`` fields will create it's own group.
+Leaving ``group_by`` unset will default to creating a single group with all alerts from the cluster, as shown above.
 
-Configuring multiple ``group_by`` fields, will create a group for each permutation on **all** the group fields.
+You can control how often summary messages are sent with the ``interval`` setting. When the first alert in a group arrives, a new group (and Slack thread) is created. That group is used until time ``interval`` passes.
 
-Omitting the ``group_by`` field will use the default which is ``cluster``.
+Customizing the notifications
+-------------------------------
 
+Robusta supports two settings for ``notification_mode`` that behave differently: **Summary Mode** and **Regular Mode**. Up until now, everything described uses **Summary Mode**.
 
-The ``interval`` setting defines the length of the window over which notifications will be aggregated.
-The window starts when the first message belonging to the group arrives,
-and ends when the specified interval elapses. If you don't specify the
-``interval``, the default value will be 15 minutes.
+Summary Mode
+**************
+Summary Mode is the main grouping mode. It sends threaded summaries, as described above.
 
+The main options for ``summary`` mode are ``threaded`` and ``by``:
 
-
-Sending grouped notifications
--------------------------------------------------------------------
-
-Robusta supports 2 ``notification modes`` for group notifications
-
-- ``summary`` mode - Send a summary of the group notifications, optionally add all notifications on the summary message thread
-- ``regular`` mode - Allows sending group messages, only above a configured threshold
-
-
-``Summary`` notification mode
--------------------------------------------------------------------
-
-The ``summary`` mode allows summarizing the number of notifications in a
-succinct way. The summary will be sent to Slack as a single message and will
-include information about the number of all the messages in the group.
-The summarization will be formatted as a table and done according
-to the attributes listed under ``summary.by``. In case ``summary.threaded``
-is ``true``, all the Slack notifications belonging to this group will be
-appended in a thread under this header message. If ``summary.threaded`` is
-``false``, the notifications will not be sent to Slack at all, and only the
-summary message will appear.
-``summary.by`` attributes are the same as the ``group_by`` attributes listed above.
-
-The information in the summary message will be dynamically updated with
-numbers of notifications in the group as they are incoming, regardless
-of whether ``summary.threaded`` is enabled or not.
-
-.. code-block::
+.. code-block:: yaml
 
     sinksConfig:
-    - slack_sink:
-        ....
-        grouping:
-          group_by:
-            - namespace                # create a summary message for each namespace
-          interval: 1800               # 30 min
-          notification_mode:
-            summary:
-              threaded: true           # send all alerts to summary message thread
-              by:                      # Summarise by ``identifier`` and ``severity``
-                - identifier
-                - severity
+      - slack_sink:
+          ...
+          grouping:
+            group_by:
+              - namespace
+            interval: 1800
+            notification_mode:
+              summary:
+                threaded: true
+                by:
+                  - identifier
+                  - severity
 
+The ``threaded`` setting controls whether individual alerts are sent to the Slack thread, or only a summary message is created. When false, the summary message will show up but individual alerts wont be sent at all. When true, both the summary is created, and individual alerts sent to a thread underneath the summary.
 
-``Regular`` notification mode
--------------------------------------------------------------------
+The ``by`` setting controls the table shown in the summary message. It accepts the same fields as ``group_by`` and can be used to build a custom breakdown report.
 
-``regular`` mode allows ignoring first X messages in the group, within the given ``interval``
-You have to specify the ``ignore_first`` value. This value will determine the
-minimum amount of notifications in any group that would have to occur
-in the time specified by ``interval`` before they are sent as Slack
-messages. This mode works like a false positive filter - it only triggers
-the Slack sink if notifications are incoming at a speed above the set
-threshold.
+Regular Mode
+**************
+Regular Mode disables threaded summaries and sends notifications "the usual way", ungrouped. This is useful when combined with  ``grouping`` to notify when at least X alerts have been received in a group.
 
-For example, notify on ``ImagePullBackoff`` only if it fires more than 3 times in 5 minutes
+For example, to filter out false positives and notify on ``ImagePullBackoff`` only if it fires more than 3 times in 5 minutes, you can send notifications in ``regular`` mode  with ``group_by`` and ``ignore_first`` criteria:
 
 .. code-block::
 
@@ -145,15 +107,12 @@ For example, notify on ``ImagePullBackoff`` only if it fires more than 3 times i
             - identifier: ImagePullBackoff
         grouping:
           group_by:
-            - cluster                  # Group on the whole cluster
+            - cluster                  # all alerts will be counted together for the purpose of ignore_first
           interval: 300                # 5 min
           notification_mode:
             regular:
               ignore_first: 3          # Start sending only after the first 3 notifications in the interval
 
-.. note::
-
-    In the current, initial implementation of this mechanism, the
-    statistics of notifications are held in memory and not persisted
-    anywhere, so when the Robusta runner dies/restarts, they are lost
-    and the counting starts anew.
+Limitations
+---------------
+Notification statistics are currently held in memory and will reset if the Robusta runner restarts.
