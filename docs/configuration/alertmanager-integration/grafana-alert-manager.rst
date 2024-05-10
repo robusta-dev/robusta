@@ -47,7 +47,7 @@ To configure it:
   :width: 600
   :align: center
 
-5. Click "Test" button. Select "custom" and add a ``cluster_name`` label to send a test alert (Robusta requires every alert has this ``cluster_name`` label).
+5. Click "Test" button. Select "custom" and add a ``cluster_name`` or ``cluster`` label to send a test alert (Robusta requires that every alert have the ``cluster_name`` or ``cluster`` label).
 
 .. image:: /images/grafana-alertmanager-test.png
   :width: 600
