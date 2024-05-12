@@ -368,7 +368,14 @@ class SupabaseDal(AccountResourceFetcher):
     def is_job_healthy(self, job: JobInfo) -> bool:
         is_running = job.status.active > 0
         is_completed = [condition for condition in job.status.conditions if condition.type == "Complete"]
-        return is_running or len(is_completed) > 0
+        is_starting = (
+            job.status.active == 0
+            and job.status.failed == 0
+            and job.status.succeeded == 0
+            and len(job.status.conditions) == 0
+        )
+
+        return is_running or len(is_completed) > 0 or is_starting
 
     def publish_jobs(self, jobs: List[JobInfo]):
         if not jobs:
@@ -601,7 +608,7 @@ class SupabaseDal(AccountResourceFetcher):
 
             res = query_builder.execute()
         except Exception as e:
-            msg = f"Failed to get existing account resources (supabase) error"
+            msg = "Failed to get existing account resources (supabase) error"
             logging.error(msg, exc_info=True)
             self.handle_supabase_error()
             raise e
@@ -656,7 +663,7 @@ class SupabaseDal(AccountResourceFetcher):
             )
 
             self.client.table(ACCOUNT_RESOURCE_STATUS_TABLE).upsert(data).execute()
-        except Exception as e:
+        except Exception:
             logging.error(f"Failed to set account resource status to {status_type}", exc_info=True)
             self.handle_supabase_error()
             raise

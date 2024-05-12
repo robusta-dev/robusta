@@ -324,4 +324,7 @@ def __job_status_str(job_status: JobStatus) -> Tuple[str, str]:
         if condition.status == "True":
             return condition.type, condition.message
 
+    if not any([job_status.active, job_status.failed, job_status.succeeded, job_status.conditions]):
+        return "Starting", ""
+
     return "Unknown", ""
