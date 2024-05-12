@@ -368,12 +368,7 @@ class SupabaseDal(AccountResourceFetcher):
     def is_job_healthy(self, job: JobInfo) -> bool:
         is_running = job.status.active > 0
         is_completed = [condition for condition in job.status.conditions if condition.type == "Complete"]
-        is_starting = (
-            job.status.active == 0
-            and job.status.failed == 0
-            and job.status.succeeded == 0
-            and len(job.status.conditions) == 0
-        )
+        is_starting = not any([job.status.active, job.status.failed, job.status.succeeded, job.status.conditions])
 
         return is_running or len(is_completed) > 0 or is_starting
 
