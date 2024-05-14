@@ -27,11 +27,13 @@ Alternatively, generate a key by running ``robusta integrations slack`` and set 
 
 Then do a :ref:`Helm Upgrade <Simple Upgrade>`.
 
-🆕 Slack now supports :ref:`Notification Grouping <Notification Grouping (Currently supported only on Slack)>`.
+Notification Grouping
+-----------------------------
+Slack allows grouping multiple notifications into summary messages and Slack threads. Refer to :ref:`Notification Grouping <notification-grouping>`.
 
-.. note::
-
-    You can change the slack_channel at any time in ``generated_values.yaml``. No need to re-run ``robusta integrations slack``.
+.. image:: /images/notification-grouping.png
+   :width: 600px
+   :align: center
 
 Dynamic Slack Channels
 -------------------------------------------------------------------
