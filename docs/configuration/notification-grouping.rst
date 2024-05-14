@@ -1,5 +1,7 @@
 :hide-toc:
 
+.. _notification-grouping:
+
 Notification Grouping (Slack Only)
 =========================================================
 
