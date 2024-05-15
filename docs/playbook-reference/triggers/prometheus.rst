@@ -31,11 +31,12 @@ The following triggers are available for Prometheus alerts:
               - on_prometheus_alert:
                   alert_name: HostHighCpuLoad
                   scope:
-                    labels:
-                      - "deployment=nginx"
+                    include:
+                    - labels:
+                        - "deployment=nginx"
               actions:
               - node_bash_enricher:
-                 bash_command: ps aux
+                  bash_command: ps aux
 
     ``on_prometheus_alert`` supports the following parameters:
 
