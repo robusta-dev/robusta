@@ -38,7 +38,7 @@ of keys separated by newlines:
       additional_env_vars:
         - name: CUSTOM_SSH_HOST_KEYS
         # codeberg.org host keys
-        - value: |
+          value: |
             |1|TVOSCWl9+tXzKniecqFzaidE+yA=|XgOrtH2kjzERBPrbC9aGbaisnDE= ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8hZi7K1/2E2uBX8gwPRJAHvRAob+3Sn+y2hxiEhN0buv1igjYFTgFO2qQD8vLfU/HT/P/rqvEeTvaDfY1y/vcvQ8+YuUYyTwE2UaVU5aJv89y6PEZBYycaJCPdGIfZlLMmjilh/Sk8IWSEK6dQr+g686lu5cSWrFW60ixWpHpEVB26eRWin3lKYWSQGMwwKv4LwmW3ouqqs4Z4vsqRFqXJ/eCi3yhpT+nOjljXvZKiYTpYajqUC48IHAxTWugrKe1vXWOPxVXXMQEPsaIRc2hpK+v1LmfB7GnEGvF1UAKnEZbUuiD9PBEeD5a1MZQIzcoPWCrTxipEpuXQ5Tni4mN
             |1|Zht5NJQx7c6F9fzemGK15ewk4lE=|D8ZMvKG5X9HEAUqWZaGJOwpBb7s= ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBL2pDxWr18SoiDJCGZ5LmxPygTlPu+cCKSkpqkvCyQzl5xmIMeKNdfdBpfbCGDPoZQghePzFZkKJNR/v9Win3Sc=
             |1|KMrl/f5rYsb8KkF7rHCwBuo49Do=|wkmvtUU1nQTyj+ZNyVqZlO0oP5o= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIVIC02vnjFyL+I4RHfvIGNtOgJMe769VTF1VR4EB3ZB
