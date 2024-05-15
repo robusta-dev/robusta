@@ -116,7 +116,21 @@ If you are having performance issues, specifically with Prometheus using a lot o
      - The number of data points required to make a recommendation for a resource.
      - 100
 
+Configuring KRR Job Memory Requests and Limits
+======================================================
 
+To prevent the KRR job from OOMKill (Out of Memory), you can configure the memory requests and limits by adding the following environment variables to your ``generated_values.yaml`` file:
+
+.. code-block:: yaml
+
+    runner:
+      additional_env_vars:
+      - name: KRR_MEMORY_REQUEST
+        value: "2Gi"
+      - name: KRR_MEMORY_LIMIT
+        value: "2Gi"
+
+By default, the memory request and limit are set to ``1Gi``. Modify these values according to your requirements.
 
 Popeye - A Kubernetes Cluster Sanitizer
 ************************************************
