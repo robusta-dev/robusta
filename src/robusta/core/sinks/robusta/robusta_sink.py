@@ -231,12 +231,9 @@ class RobustaSink(SinkBase, EventHandler):
                     self.dal.persist_services([new_service])
 
                 elif operation == K8sOperationType.DELETE:
-                    if cached_service:
-                        del self.__services_cache[service_key]
+                    self.__safe_delete_service(service_key)
 
-                    new_service.deleted = True
-                    self.dal.persist_services([new_service])
-
+                self.__discovery_metrics.on_services_updated(1)
         except Exception as e:
             logging.error(
                 f"An error occurred while publishing single service: name - {new_service.name}, namespace - {new_service.namespace}  service type: {new_service.service_type}  | {e}"
@@ -254,9 +251,7 @@ class RobustaSink(SinkBase, EventHandler):
             updated_services: List[ServiceInfo] = []
             for service_key in cache_keys:
                 if not curr_services.get(service_key):  # service doesn't exist any more, delete it
-                    self.__services_cache[service_key].deleted = True
-                    updated_services.append(self.__services_cache[service_key])
-                    del self.__services_cache[service_key]
+                    self.__safe_delete_service(service_key)
 
             # new or changed services
             for service_key in curr_services.keys():
@@ -419,9 +414,7 @@ class RobustaSink(SinkBase, EventHandler):
         cache_keys = list(self.__nodes_cache.keys())
         for node_name in cache_keys:
             if not curr_nodes.get(node_name):  # node doesn't exist any more, delete it
-                self.__nodes_cache[node_name].deleted = True
-                updated_nodes.append(self.__nodes_cache[node_name])
-                del self.__nodes_cache[node_name]
+                self.__safe_delete_node(node_name)
 
         # new or changed nodes
         for node_name in curr_nodes.keys():
@@ -434,6 +427,30 @@ class RobustaSink(SinkBase, EventHandler):
         self.__discovery_metrics.on_nodes_updated(len(updated_nodes))
 
         self.dal.publish_nodes(updated_nodes)
+
+    def __safe_delete_node(self, node_name):
+        try:
+            # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
+            node_info = self.__nodes_cache.get(node_name, None)
+            if node_info and node_name:
+                # incase exception, its marked as deleted
+                node_info.deleted = True
+                self.dal.remove_deleted_node(node_name)
+                del self.__nodes_cache[node_name]
+        except Exception:
+            logging.error(f"Failed to delete node named {node_name}", exc_info=True)
+
+    def __safe_delete_service(self, service_key):
+        try:
+            # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
+            service_info = self.__services_cache.get(service_key, None)
+            if service_info and service_key:
+                # incase exception, its marked as deleted
+                service_info.deleted = True
+                self.dal.remove_deleted_service(service_key)
+                del self.__services_cache[service_key]
+        except Exception:
+            logging.error(f"Failed to delete service with service_key {service_key}", exc_info=True)
 
     def __safe_delete_job(self, job_key):
         try:
@@ -643,8 +660,9 @@ class RobustaSink(SinkBase, EventHandler):
                 self.__nodes_cache[name] = new_info
             elif operation == K8sOperationType.DELETE:
                 name = new_node.metadata.name
-                self.__nodes_cache.pop(name, None)
-                new_info.deleted = True
+                self.__safe_delete_node(name)
+                self.__discovery_metrics.on_nodes_updated(1)
+                return
 
             self.dal.publish_nodes([new_info])
             self.__discovery_metrics.on_nodes_updated(1)
