@@ -130,6 +130,7 @@ The following triggers are available for crashing Pods:
     * ``name_prefix``: Name of the pod (or a prefix of it)
     * ``namespace_prefix``: Namespace the pod is in (or a prefix of it)
     * ``labels_selector``: See :ref:`Common Filters`
+    * ``scope``: See :ref:`Common Filters`
 
     An example playbook:
 
