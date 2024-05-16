@@ -74,6 +74,10 @@ class RobustaRelay(BaseModel):
     apiEndpointPrefix: str
     apiNodePort: int = 30313  # api.domain
     wsNodePort: int = 30314  # relay.domain
+    relayPrefix: str = "relay"
+    platformPrefix: str = "platform"
+    apiPrefix: str = "api"
+    isOnPrem: bool = True
 
     def __init__(
         self,
@@ -184,6 +188,13 @@ def gen_config(
     )
     values.KONG_HTTP_NODE_PORT = db_nport
 
+    backendProfile = BackendProfile.fromDomainProvider(
+        domain=domain,
+        api_endpoint_prefix=api_endpoint_prefix,
+        platform_endpoint_prefix=platform_endpoint_prefix,
+        relay_endpoint_prefix=relay_ws_endpoint_prefix,
+    )
+
     relayValues = RobustaRelay(
         domain=domain,
         anon_key=values.ANON_KEY,
@@ -193,8 +204,13 @@ def gen_config(
         platform_endpoint_prefix=platform_endpoint_prefix,
         api_endpoint_prefix=api_endpoint_prefix,
     )
+
     relayValues.apiNodePort = api_nport
     relayValues.wsNodePort = ws_nport
+    relayValues.relayPrefix = relay_ws_endpoint_prefix
+    relayValues.platformPrefix = platform_endpoint_prefix
+    relayValues.apiPrefix = api_endpoint_prefix
+
 
     uiValues = RobustaUI(
         domain=domain,
@@ -215,12 +231,8 @@ def gen_config(
         "RELAY": relay_ws_endpoint_prefix,
     }
 
-    backendProfile = BackendProfile.fromDomainProvider(
-        domain=domain,
-        api_endpoint_prefix=api_endpoint_prefix,
-        platform_endpoint_prefix=platform_endpoint_prefix,
-        relay_endpoint_prefix=relay_ws_endpoint_prefix,
-    )
+
+
     self_host_approval_url = "https://api.robusta.dev/terms-of-service.html"
     typer.echo(f"By using this software you agree to the terms of service ({self_host_approval_url})\n")
     write_values_files("self_host_values.yaml", "robusta_cli_config.json", values_dict, backendProfile)
