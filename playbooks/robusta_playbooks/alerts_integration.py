@@ -331,6 +331,7 @@ def template_enricher(event: KubernetesResourceEvent, params: TemplateParams):
     labels: Dict[str, Any] = defaultdict(lambda: "<missing>")
     if isinstance(event, PrometheusKubernetesAlert):
         labels.update(event.alert.labels)
+        labels.update(event.alert.annotations)
         labels.update(vars(event.get_alert_subject()))
         labels["kind"] = labels["subject_type"].value
     elif isinstance(event, KubernetesResourceEvent):
