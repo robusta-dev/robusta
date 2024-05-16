@@ -216,28 +216,23 @@ class RobustaSink(SinkBase, EventHandler):
         self.dal.persist_finding(finding)
 
     def __publish_single_service(self, new_service: ServiceInfo, operation: K8sOperationType):
-        try:
-            with self.services_publish_lock:
-                service_key = new_service.get_service_key()
-                cached_service = self.__services_cache.get(service_key, None)
+        with self.services_publish_lock:
+            service_key = new_service.get_service_key()
+            cached_service = self.__services_cache.get(service_key, None)
 
-                # prevent service updates if the resource version in the cache is lower than the new service
-                if cached_service and cached_service.resource_version > new_service.resource_version:
-                    return
+            # prevent service updates if the resource version in the cache is lower than the new service
+            if cached_service and cached_service.resource_version > new_service.resource_version:
+                return
 
-                if operation == K8sOperationType.CREATE or operation == K8sOperationType.UPDATE:
-                    # handle created/updated services
-                    self.__services_cache[service_key] = new_service
-                    self.dal.persist_services([new_service])
+            if operation == K8sOperationType.CREATE or operation == K8sOperationType.UPDATE:
+                # handle created/updated services
+                self.__services_cache[service_key] = new_service
+                self.dal.persist_services([new_service])
 
-                elif operation == K8sOperationType.DELETE:
-                    self.__safe_delete_service(service_key)
+            elif operation == K8sOperationType.DELETE:
+                self.__safe_delete_service(service_key)
 
-                self.__discovery_metrics.on_services_updated(1)
-        except Exception as e:
-            logging.error(
-                f"An error occurred while publishing single service: name - {new_service.name}, namespace - {new_service.namespace}  service type: {new_service.service_type}  | {e}"
-            )
+            self.__discovery_metrics.on_services_updated(1)
 
     def __publish_new_services(self, active_services: List[ServiceInfo]):
         with self.services_publish_lock:
@@ -429,39 +424,27 @@ class RobustaSink(SinkBase, EventHandler):
         self.dal.publish_nodes(updated_nodes)
 
     def __safe_delete_node(self, node_name):
-        try:
-            # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
-            node_info = self.__nodes_cache.get(node_name, None)
-            if node_info and node_name:
-                # incase exception, its marked as deleted
-                node_info.deleted = True
-                self.dal.remove_deleted_node(node_name)
-                del self.__nodes_cache[node_name]
-        except Exception:
-            logging.error(f"Failed to delete node named {node_name}", exc_info=True)
+        node_info = self.__nodes_cache.get(node_name, None)
+        if node_info and node_name:
+            # incase exception, its marked as deleted
+            node_info.deleted = True
+            self.dal.remove_deleted_node(node_name)
+            del self.__nodes_cache[node_name]
 
     def __safe_delete_service(self, service_key):
-        try:
-            # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
-            service_info = self.__services_cache.get(service_key, None)
-            if service_info and service_key:
-                # incase exception, its marked as deleted
-                service_info.deleted = True
-                self.dal.remove_deleted_service(service_key)
-                del self.__services_cache[service_key]
-        except Exception:
-            logging.error(f"Failed to delete service with service_key {service_key}", exc_info=True)
+        service_info = self.__services_cache.get(service_key, None)
+        if service_info and service_key:
+            # incase exception, its marked as deleted
+            service_info.deleted = True
+            self.dal.remove_deleted_service(service_key)
+            del self.__services_cache[service_key]
 
     def __safe_delete_job(self, job_key):
-        try:
-            # incase remove_deleted_job fails we mark it deleted in cache so our DB atleast has it saved as deleted instead of active
-            job_info = self.__jobs_cache.get(job_key, None)
-            if job_info:
-                job_info.deleted = True
-                self.dal.remove_deleted_job(job_info)
-                del self.__jobs_cache[job_key]
-        except Exception:
-            logging.error(f"Failed to delete job with service key {job_key}", exc_info=True)
+        job_info = self.__jobs_cache.get(job_key, None)
+        if job_info:
+            job_info.deleted = True
+            self.dal.remove_deleted_job(job_info)
+            del self.__jobs_cache[job_key]
 
     def __publish_new_jobs(self, active_jobs: List[JobInfo]):
         # convert to map
