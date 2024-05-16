@@ -120,6 +120,32 @@ The following triggers are available for crashing Pods:
           - image_pull_backoff_reporter: {}
 
 
+.. _on_pod_evicted:
+
+.. details:: on_pod_evicted
+
+    ``on_pod_evicted`` fires when a Pod has the evicted reason in its status. It has the following parameters:
+
+    * ``rate_limit``: Limit firing to once every `rate_limit` seconds
+    * ``name_prefix``: Name of the pod (or a prefix of it)
+    * ``namespace_prefix``: Namespace the pod is in (or a prefix of it)
+    * ``labels_selector``: See :ref:`Common Filters`
+    * ``scope``: See :ref:`Common Filters`
+
+    An example playbook:
+
+    .. code-block:: yaml
+
+
+        customPlaybooks:
+        - triggers:
+          - on_pod_evicted: {}
+          actions:
+          - create_finding: #
+              title: "Pod $name in namespace $namespace was Evicted"
+              aggregation_key: "PodEvictedTriggered"
+
+
 For triggers that fire on any Pod change, see :ref:`Pod Triggers`.
 
 Job Failure Triggers
