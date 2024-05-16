@@ -213,7 +213,7 @@ class SupabaseDal(AccountResourceFetcher):
         try:
             self.client.table(SERVICES_TABLE).upsert(db_services, returning=ReturnMethod.minimal).execute()
         except Exception as e:
-            logging.error(f"Failed to persist services {services} error: {e}")
+            logging.exception(f"Failed to persist services {services} error: {e}")
             self.handle_supabase_error()
             raise
 
@@ -381,6 +381,42 @@ class SupabaseDal(AccountResourceFetcher):
             self.client.table(JOBS_TABLE).upsert(db_jobs, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist jobs {jobs} error: {e}")
+            self.handle_supabase_error()
+            raise
+
+    def remove_deleted_node(self, node_name: str):
+        if not node_name:
+            return
+
+        try:
+            (
+                self.client.table(NODES_TABLE)
+                .delete(returning=ReturnMethod.minimal)
+                .eq("account_id", self.account_id)
+                .eq("cluster_id", self.cluster)
+                .eq("name", node_name)
+                .execute()
+            )
+        except Exception as e:
+            logging.exception(f"Failed to delete node {node_name} error: {e}")
+            self.handle_supabase_error()
+            raise
+
+    def remove_deleted_service(self, service_key: str):
+        if not service_key:
+            return
+
+        try:
+            (
+                self.client.table(SERVICES_TABLE)
+                .delete(returning=ReturnMethod.minimal)
+                .eq("account_id", self.account_id)
+                .eq("cluster", self.cluster)
+                .eq("service_key", service_key)
+                .execute()
+            )
+        except Exception as e:
+            logging.exception(f"Failed to delete service {service_key} error: {e}")
             self.handle_supabase_error()
             raise
 
