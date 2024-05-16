@@ -213,7 +213,7 @@ class SupabaseDal(AccountResourceFetcher):
         try:
             self.client.table(SERVICES_TABLE).upsert(db_services, returning=ReturnMethod.minimal).execute()
         except Exception as e:
-            logging.error(f"Failed to persist services {services} error: {e}")
+            logging.exception(f"Failed to persist services {services} error: {e}")
             self.handle_supabase_error()
             raise
 
@@ -398,7 +398,7 @@ class SupabaseDal(AccountResourceFetcher):
                 .execute()
             )
         except Exception as e:
-            logging.error(f"Failed to delete node {node_name} error: {e}")
+            logging.exception(f"Failed to delete node {node_name} error: {e}")
             self.handle_supabase_error()
             raise
 
@@ -416,7 +416,7 @@ class SupabaseDal(AccountResourceFetcher):
                 .execute()
             )
         except Exception as e:
-            logging.error(f"Failed to delete service {service_key} error: {e}")
+            logging.exception(f"Failed to delete service {service_key} error: {e}")
             self.handle_supabase_error()
             raise
 

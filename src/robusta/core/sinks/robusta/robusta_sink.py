@@ -408,7 +408,7 @@ class RobustaSink(SinkBase, EventHandler):
         updated_nodes: List[NodeInfo] = []
         cache_keys = list(self.__nodes_cache.keys())
         for node_name in cache_keys:
-            if not curr_nodes.get(node_name):  # node doesn't exist any more, delete it
+            if not curr_nodes.get(node_name):  # node doesn't exist anymore, delete it
                 self.__safe_delete_node(node_name)
 
         # new or changed nodes
@@ -424,29 +424,23 @@ class RobustaSink(SinkBase, EventHandler):
         self.dal.publish_nodes(updated_nodes)
 
     def __safe_delete_node(self, node_name):
-        node_info = self.__nodes_cache.get(node_name, None)
-        if node_info:
-            del self.__nodes_cache[node_name]
+        self.__nodes_cache.pop(node_name, None)
 
         # could be case where it is not in cache but is in db, i.e. after cache reset
         if node_name:
             self.dal.remove_deleted_node(node_name)
 
     def __safe_delete_service(self, service_key):
-        service_info = self.__services_cache.get(service_key, None)
-        if service_info:
-            del self.__services_cache[service_key]
+        self.__services_cache.pop(service_key, None)
 
         # could be case where it is not in cache but is in db, i.e. after cache reset
         if service_key:
             self.dal.remove_deleted_service(service_key)
 
     def __safe_delete_job(self, job_key):
-        job_info = self.__jobs_cache.get(job_key, None)
+        job_info = self.__jobs_cache.pop(job_key, None)
         if job_info:
-            job_info.deleted = True
             self.dal.remove_deleted_job(job_info)
-            del self.__jobs_cache[job_key]
 
     def __publish_new_jobs(self, active_jobs: List[JobInfo]):
         # convert to map
