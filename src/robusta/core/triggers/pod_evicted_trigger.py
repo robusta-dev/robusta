@@ -10,8 +10,6 @@ from robusta.utils.scope import ScopeParams
 class PodEvictedTrigger(PodUpdateTrigger):
     """
     :var rate_limit: Limit firing to once every `rate_limit` seconds
-    :var restart_reason: Limit restart loops for this specific reason. If omitted, all restart reasons will be included.
-    :var restart_count: Fire only after the specified number of restarts
     """
 
     rate_limit: int = 14400
