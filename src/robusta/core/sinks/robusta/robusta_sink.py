@@ -424,19 +424,21 @@ class RobustaSink(SinkBase, EventHandler):
         self.dal.publish_nodes(updated_nodes)
 
     def __safe_delete_node(self, node_name):
-        node_info = self.__nodes_cache.get(node_name, None)
-        if node_info and node_name:
-            # incase exception, its marked as deleted
-            node_info.deleted = True
+        if node_name:
             self.dal.remove_deleted_node(node_name)
+
+        node_info = self.__nodes_cache.get(node_name, None)
+        # could be case where it is not in cache but is in db, i.e. after cache reset
+        if node_info:
             del self.__nodes_cache[node_name]
 
     def __safe_delete_service(self, service_key):
-        service_info = self.__services_cache.get(service_key, None)
-        if service_info and service_key:
-            # incase exception, its marked as deleted
-            service_info.deleted = True
+        if service_key:
             self.dal.remove_deleted_service(service_key)
+
+        service_info = self.__services_cache.get(service_key, None)
+        # could be case where it is not in cache but is in db i.e. after cache reset
+        if service_info:
             del self.__services_cache[service_key]
 
     def __safe_delete_job(self, job_key):
