@@ -107,6 +107,7 @@ class KRRParams(PrometheusParams, PodRunningParams):
     :var serviceAccountName: The account name to use for the KRR scan job.
     :var krr_job_spec: A dictionary for passing spec params such as tolerations and nodeSelector.
     :var max_workers: Number of concurrent workers used in krr.
+    :var krr_verbose: Run krr job with verbose logging
     """
 
     serviceAccountName: str = f"{RELEASE_NAME}-runner-service-account"
@@ -116,6 +117,7 @@ class KRRParams(PrometheusParams, PodRunningParams):
     timeout: int = 3600
     krr_job_spec = {}
     max_workers: int = 3
+    krr_verbose: bool = False
 
     @validator("args", allow_reuse=True)
     def check_args(cls, args: str) -> str:
@@ -270,7 +272,8 @@ def krr_scan(event: ExecutionBaseEvent, params: KRRParams):
     additional_flags = get_krr_additional_flags(params)
 
     python_command = f"python krr.py {params.strategy} {params.args_sanitized} {additional_flags} "
-    python_command += f"--max-workers {params.max_workers} -v -f json --width 2048"
+    verbose_str = "-v" if params.krr_verbose else ""
+    python_command += f"--max-workers {params.max_workers} {verbose_str} -f json --width 2048"
 
     if params.prometheus_url:
         python_command += f" -p {params.prometheus_url}"
