@@ -21,10 +21,37 @@ Add the following to your Helm values:
       nodeSelector:
         kubernetes.io/os: linux
 
+    # if using Robusta's embedded kube-prometheus-stack, you can configure the Prometheus Operator's components to run on a specific node too
+    kube-prometheus-stack:
+      alertmanager:
+        alertmanagerSpec:
+          nodeSelector: kubernetes.io/os: linux
+
+    kube-prometheus-stack:
+      alertmanager:
+        alertmanagerSpec:
+          nodeSelector: kubernetes.io/os: linux
+      prometheus:
+        prometheusSpec:
+          nodeSelector: kubernetes.io/os: linux
+      prometheusOperator:
+        nodeSelector: kubernetes.io/os: linux
+        admissionWebhooks:
+          deployment:
+            nodeSelector: kubernetes.io/os: linux
+          patch:
+            nodeSelector: kubernetes.io/os: linux
+      kube-state-metrics:
+        nodeSelector: kubernetes.io/os: linux
+      grafana:
+        nodeSelector: kubernetes.io/os: linux
+      thanosRuler:
+        thanosRulerSpec:
+          nodeSelector: kubernetes.io/os: linux
+
 Alternatively, you can configure this with nodeAffinities:
 
 .. code-block:: yaml
-
 
     runner:
       affinity:
@@ -47,6 +74,38 @@ Alternatively, you can configure this with nodeAffinities:
                 operator: In
                 values:
                 - linux
+
+    # if using Robusta's embedded kube-prometheus-stack, you can configure the Prometheus Operator's components with nodeAffinities too
+    kube-prometheus-stack:
+      alertmanager:
+        alertmanagerSpec:
+          affinity:
+            nodeAffinity: ... # copy from above
+      prometheus:
+        prometheusSpec:
+          affinity:
+            nodeAffinity: ... # copy from above
+      prometheusOperator:
+        affinity:
+          nodeAffinity: ... # copy from above
+        admissionWebhooks:
+          deployment:
+            affinity:
+              nodeAffinity: ... # copy from above
+          patch:
+            affinity:
+              nodeAffinity: ... # copy from above
+      kube-state-metrics:
+        affinity:
+          nodeAffinity: ... # copy from above
+      grafana:
+        affinity:
+          nodeAffinity: ... # copy from above
+      thanosRuler:
+        thanosRulerSpec:
+          affinity:
+            nodeAffinity: ... # copy from above
+
 
 General Tips
 ---------------
