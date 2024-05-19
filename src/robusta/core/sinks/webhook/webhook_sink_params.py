@@ -9,6 +9,7 @@ class WebhookSinkParams(SinkBaseParams):
     size_limit: int = 4096
     authorization: SecretStr = None
     format: str = "text"
+    slack_webhook: bool = False
 
     @classmethod
     def _get_sink_type(cls):
