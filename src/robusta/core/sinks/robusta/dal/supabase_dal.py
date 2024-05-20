@@ -1,6 +1,5 @@
 import json
 import logging
-import time
 from collections import defaultdict
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -13,7 +12,7 @@ from supabase import create_client
 from supabase.lib.client_options import ClientOptions
 
 from robusta.core.model.cluster_status import ClusterStatus
-from robusta.core.model.env_vars import SUPABASE_LOGIN_RATE_LIMIT_SEC, SUPABASE_TIMEOUT_SECONDS
+from robusta.core.model.env_vars import SUPABASE_TIMEOUT_SECONDS
 from robusta.core.model.helm_release import HelmRelease
 from robusta.core.model.jobs import JobInfo
 from robusta.core.model.namespaces import NamespaceInfo
@@ -69,11 +68,10 @@ class SupabaseDal(AccountResourceFetcher):
         self.key = key
         self.account_id = account_id
         self.cluster = cluster_name
-        options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS)
+        options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
         self.client = create_client(url, key, options)
         self.email = email
         self.password = password
-        self.sign_in_time = 0
         self.sign_in()
         self.client.auth.on_auth_state_change(self.__update_token_patch)
         self.sink_name = sink_name
@@ -96,12 +94,11 @@ class SupabaseDal(AccountResourceFetcher):
             ).eq("scan_id", scan_id).execute()
         except Exception as e:
             logging.error(f"Failed to set scan state {scan_id} error: {e}")
-            self.handle_supabase_error()
             raise
 
     def insert_scan_meta(self, scan_id: str, start_time: datetime, scan_type: ScanType) -> None:
         try:
-            self.__rpc_patch(
+            self.client.rpc(
                 "insert_scan_meta_v2",
                 {
                     "_account_id": self.account_id,
@@ -116,7 +113,6 @@ class SupabaseDal(AccountResourceFetcher):
             raise
         except Exception as e:
             logging.exception(f"Failed to persist scan meta {scan_id} error: {e}")
-            self.handle_supabase_error()
             raise
 
     def persist_scan(self, block: ScanReportBlock):
@@ -125,7 +121,6 @@ class SupabaseDal(AccountResourceFetcher):
             self.client.table(SCANS_RESULT_TABLE).insert(db_scanResults, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.exception(f"Failed to persist scan {block.scan_id} error: {e}")
-            self.handle_supabase_error()
             raise
 
         try:
@@ -139,7 +134,6 @@ class SupabaseDal(AccountResourceFetcher):
             ).eq("scan_id", block.scan_id).execute()
         except Exception as e:
             logging.exception(f"Failed to set scan state {block.scan_id} error: {e}")
-            self.handle_supabase_error()
             raise
 
     def persist_finding(self, finding: Finding):
@@ -148,13 +142,12 @@ class SupabaseDal(AccountResourceFetcher):
 
         scans, enrichments = [], []
         for enrich in finding.enrichments:
-            (
+            if enrich.annotations.get(EnrichmentAnnotation.SCAN, False):
                 scans.append(enrich)
-                if enrich.annotations.get(EnrichmentAnnotation.SCAN, False)
-                else enrichments.append(enrich)
-            )
+            else:
+                enrichments.append(enrich)
 
-        if (len(scans) > 0) and (len(enrichments)) == 0:
+        if scans and not enrichments:
             return
 
         for enrichment in enrichments:
@@ -172,20 +165,16 @@ class SupabaseDal(AccountResourceFetcher):
 
             try:
                 self.client.table(EVIDENCE_TABLE).insert(evidence, returning=ReturnMethod.minimal).execute()
-            except Exception as e:
-                logging.error(f"Failed to persist finding {finding.id} enrichment {enrichment} error: {e}")
+            except Exception:
+                logging.exception(f"Failed to persist finding {finding.id} enrichment {enrichment}")
+
         try:
-            (
-                self.client.table(ISSUES_TABLE)
-                .insert(
-                    ModelConversion.to_finding_json(self.account_id, self.cluster, finding),
-                    returning=ReturnMethod.minimal,
-                )
-                .execute()
-            )
-        except Exception as e:
-            logging.error(f"Failed to persist finding {finding.id} error: {e}")
-            self.handle_supabase_error()
+            self.client.table(ISSUES_TABLE).insert(
+                ModelConversion.to_finding_json(self.account_id, self.cluster, finding),
+                returning=ReturnMethod.minimal,
+            ).execute()
+        except Exception:
+            logging.exception(f"Failed to persist finding {finding.id}")
 
     def to_service(self, service: ServiceInfo) -> Dict[Any, Any]:
         return {
@@ -214,7 +203,6 @@ class SupabaseDal(AccountResourceFetcher):
             self.client.table(SERVICES_TABLE).upsert(db_services, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.exception(f"Failed to persist services {services} error: {e}")
-            self.handle_supabase_error()
             raise
 
     def get_active_services(self) -> List[ServiceInfo]:
@@ -238,7 +226,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to get existing services (supabase) error: {e}")
-            self.handle_supabase_error()
             raise
 
         return [
@@ -267,7 +254,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to check cluster issues: {e}")
-            self.handle_supabase_error()
             raise
 
         return len(res.data) > 0
@@ -284,7 +270,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to get existing nodes (supabase) error: {e}")
-            self.handle_supabase_error()
             raise
 
         return [
@@ -327,7 +312,6 @@ class SupabaseDal(AccountResourceFetcher):
             self.client.table(NODES_TABLE).upsert(db_nodes, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist node {nodes} error: {e}")
-            self.handle_supabase_error()
             raise
 
     @staticmethod
@@ -351,7 +335,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to get existing jobs (supabase) error: {e}")
-            self.handle_supabase_error()
             raise
 
         return [JobInfo.from_db_row(job) for job in res.data]
@@ -381,7 +364,6 @@ class SupabaseDal(AccountResourceFetcher):
             self.client.table(JOBS_TABLE).upsert(db_jobs, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist jobs {jobs} error: {e}")
-            self.handle_supabase_error()
             raise
 
     def remove_deleted_node(self, node_name: str):
@@ -399,7 +381,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.exception(f"Failed to delete node {node_name} error: {e}")
-            self.handle_supabase_error()
             raise
 
     def remove_deleted_service(self, service_key: str):
@@ -417,7 +398,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.exception(f"Failed to delete service {service_key} error: {e}")
-            self.handle_supabase_error()
             raise
 
     def remove_deleted_job(self, job: JobInfo):
@@ -435,7 +415,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to delete job {job} error: {e}")
-            self.handle_supabase_error()
             raise
 
     # helm release
@@ -451,7 +430,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to get existing helm releases (supabase) error: {e}")
-            self.handle_supabase_error()
             raise
 
         return [HelmRelease.from_db_row(helm_release) for helm_release in res.data]
@@ -475,27 +453,13 @@ class SupabaseDal(AccountResourceFetcher):
             self.client.table(HELM_RELEASES_TABLE).upsert(db_helm_releases, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist helm_releases {helm_releases} error: {e}")
-            self.handle_supabase_error()
             raise
 
     def sign_in(self):
-        if time.time() > self.sign_in_time + SUPABASE_LOGIN_RATE_LIMIT_SEC:
-            logging.info("Supabase dal login")
-            self.sign_in_time = time.time()
-            res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
-            self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
-            self.client.postgrest.auth(res.session.access_token)
-
-    def handle_supabase_error(self):
-        """Workaround for Gotrue bug in refresh token."""
-        # If there's an error during refresh token, no new refresh timer task is created, and the client remains not authenticated for good
-        # When there's an error connecting to supabase server, we will re-login, to re-authenticate the session.
-        # Adding rate-limiting mechanism, not to login too much because of other errors
-        # https://github.com/supabase/gotrue-py/issues/9
-        try:
-            self.sign_in()
-        except Exception:
-            logging.error("Failed to sign in on error", exc_info=True)
+        logging.info("Supabase dal login")
+        res = self.client.auth.sign_in_with_password({"email": self.email, "password": self.password})
+        self.client.auth.set_session(res.session.access_token, res.session.refresh_token)
+        self.client.postgrest.auth(res.session.access_token)
 
     def to_db_cluster_status(self, data: ClusterStatus) -> Dict[str, Any]:
         db_cluster_status = data.dict()
@@ -519,7 +483,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to upsert {self.to_db_cluster_status(cluster_status)} error: {e}")
-            self.handle_supabase_error()
 
     def get_active_namespaces(self) -> List[NamespaceInfo]:
         try:
@@ -533,7 +496,6 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to get existing namespaces (supabase) error: {e}")
-            self.handle_supabase_error()
             raise
 
         return [NamespaceInfo.from_db_row(namespace) for namespace in res.data]
@@ -554,7 +516,6 @@ class SupabaseDal(AccountResourceFetcher):
             self.client.table(NAMESPACES_TABLE).upsert(db_namespaces, returning=ReturnMethod.minimal).execute()
         except Exception as e:
             logging.error(f"Failed to persist namespaces {namespaces} error: {e}")
-            self.handle_supabase_error()
             raise
 
     def publish_cluster_nodes(self, node_count: int, pod_count: int):
@@ -565,10 +526,9 @@ class SupabaseDal(AccountResourceFetcher):
             "_pod_count": pod_count,
         }
         try:
-            self.__rpc_patch(UPDATE_CLUSTER_NODE_COUNT, data)
+            self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data)
         except Exception as e:
             logging.error(f"Failed to publish node count {data} error: {e}")
-            self.handle_supabase_error()
 
         logging.debug(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
 
@@ -586,7 +546,6 @@ class SupabaseDal(AccountResourceFetcher):
             ).execute()
         except Exception as e:
             logging.error(f"Failed to persist resource events error: {e}")
-            self.handle_supabase_error()
             raise
 
     def persist_platform_blocks(self, enrichment: Enrichment, finding_id):
@@ -641,7 +600,6 @@ class SupabaseDal(AccountResourceFetcher):
         except Exception as e:
             msg = "Failed to get existing account resources (supabase) error"
             logging.error(msg, exc_info=True)
-            self.handle_supabase_error()
             raise e
 
         account_resources_map: Dict[ResourceKind, List[AccountResource]] = defaultdict(list)
@@ -695,30 +653,8 @@ class SupabaseDal(AccountResourceFetcher):
 
             self.client.table(ACCOUNT_RESOURCE_STATUS_TABLE).upsert(data).execute()
         except Exception:
-            logging.error(f"Failed to set account resource status to {status_type}", exc_info=True)
-            self.handle_supabase_error()
+            logging.exception(f"Failed to set account resource status to {status_type}")
             raise
-
-    def __rpc_patch(self, func_name: str, params: dict) -> Dict[str, Any]:
-        """
-        Supabase client is async. Sync impl of rpc call
-        """
-        headers = self.client.table("").session.headers
-        url: str = f"{self.client.rest_url}/rpc/{func_name}"
-
-        response = requests.post(url, headers=headers, json=params)
-        response.raise_for_status()
-        response_data = {}
-        try:
-            if response.content:
-                response_data = response.json()
-        except Exception:  # this can be okay if no data is expected
-            logging.debug("Failed to parse rpc response data")
-
-        return {
-            "data": response_data,
-            "status_code": response.status_code,
-        }
 
     def __update_token_patch(self, event, session):
         logging.debug(f"Event {event}, Session {session}")
@@ -736,4 +672,3 @@ class SupabaseDal(AccountResourceFetcher):
             )
         except Exception as e:
             logging.error(f"Failed to set cluster status active=False error: {e}")
-            self.handle_supabase_error()
