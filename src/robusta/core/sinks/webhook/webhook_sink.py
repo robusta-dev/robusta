@@ -24,6 +24,7 @@ class WebhookSink(SinkBase):
             else None
         )
         self.size_limit = sink_config.webhook_sink.size_limit
+        self.slack_webhook = sink_config.webhook_sink.slack_webhook
 
     def write_finding(self, finding: Finding, platform_enabled: bool):
         if self.format == "text":
@@ -91,7 +92,13 @@ class WebhookSink(SinkBase):
                 message_length += pair_length
             else:
                 break
-
+        if self.slack_webhook:
+            message = {
+                "text": f"*Title:* {message['title']}\n"
+                f"*Description:* {message['description']}\n"
+                f"*Failure:* {message['failure']}\n"
+                f"*Aggregation Key:* {message['aggregation_key']}\n"
+            }
         try:
             r = requests.post(self.url, json=message, headers=self.headers)
             r.raise_for_status()
