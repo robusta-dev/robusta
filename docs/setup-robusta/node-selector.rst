@@ -26,11 +26,6 @@ Add the following to your Helm values:
       alertmanager:
         alertmanagerSpec:
           nodeSelector: kubernetes.io/os: linux
-
-    kube-prometheus-stack:
-      alertmanager:
-        alertmanagerSpec:
-          nodeSelector: kubernetes.io/os: linux
       prometheus:
         prometheusSpec:
           nodeSelector: kubernetes.io/os: linux
