@@ -5,9 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
-from postgrest._sync.request_builder import SyncQueryRequestBuilder
 from postgrest.base_request_builder import BaseFilterRequestBuilder
-from postgrest.exceptions import APIError as PostgrestAPIError
 from postgrest.types import ReturnMethod
 from postgrest.utils import sanitize_param
 from supabase import create_client
@@ -72,7 +70,6 @@ class SupabaseDal(AccountResourceFetcher):
         self.cluster = cluster_name
         options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
         self.client = create_client(url, key, options)
-        self.patch_postgrest_execute()
         self.email = email
         self.password = password
         self.sign_in()
@@ -80,23 +77,6 @@ class SupabaseDal(AccountResourceFetcher):
         self.sink_name = sink_name
         self.persist_events = persist_events
         self.signing_key = signing_key
-
-    def patch_postgrest_execute(self):
-        # This is somewhat hacky.
-        def execute_with_retry(_self):
-            try:
-                return self._original_execute(_self)
-            except PostgrestAPIError as exc:
-                if exc.code == 'PGRST301':
-                    # JWT expired. Sign in again and retry the query
-                    logging.error("JWT token expired/invalid, signing in to Supabase again")
-                    self.sign_in()
-                    return self._original_execute(_self)
-                else:
-                    raise
-
-        self._original_execute = SyncQueryRequestBuilder.execute
-        SyncQueryRequestBuilder.execute = execute_with_retry
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
         db_sr = scanResult.dict()
@@ -118,7 +98,7 @@ class SupabaseDal(AccountResourceFetcher):
 
     def insert_scan_meta(self, scan_id: str, start_time: datetime, scan_type: ScanType) -> None:
         try:
-            self.__rpc_patch(
+            self.client.rpc(
                 "insert_scan_meta_v2",
                 {
                     "_account_id": self.account_id,
@@ -546,7 +526,7 @@ class SupabaseDal(AccountResourceFetcher):
             "_pod_count": pod_count,
         }
         try:
-            self.__rpc_patch(UPDATE_CLUSTER_NODE_COUNT, data)
+            self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data)
         except Exception as e:
             logging.error(f"Failed to publish node count {data} error: {e}")
 
@@ -672,30 +652,9 @@ class SupabaseDal(AccountResourceFetcher):
             )
 
             self.client.table(ACCOUNT_RESOURCE_STATUS_TABLE).upsert(data).execute()
-        except Exception as e:
+        except Exception:
             logging.exception(f"Failed to set account resource status to {status_type}")
             raise
-
-    def __rpc_patch(self, func_name: str, params: dict) -> Dict[str, Any]:
-        """
-        Supabase client is async. Sync impl of rpc call
-        """
-        headers = self.client.table("").session.headers
-        url: str = f"{self.client.rest_url}/rpc/{func_name}"
-
-        response = requests.post(url, headers=headers, json=params)
-        response.raise_for_status()
-        response_data = {}
-        try:
-            if response.content:
-                response_data = response.json()
-        except Exception:  # this can be okay if no data is expected
-            logging.debug("Failed to parse rpc response data")
-
-        return {
-            "data": response_data,
-            "status_code": response.status_code,
-        }
 
     def __update_token_patch(self, event, session):
         logging.debug(f"Event {event}, Session {session}")
