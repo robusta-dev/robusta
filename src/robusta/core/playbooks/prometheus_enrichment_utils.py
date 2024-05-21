@@ -483,7 +483,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.Bytes,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Node): ChartOptions(
-            query='instance:node_memory_utilisation:ratio{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} != 0',
+            query='1 - ((node_memory_MemAvailable_bytes{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} or (node_memory_Buffers_bytes{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} + node_memory_Cached_bytes{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} + node_memory_MemFree_bytes{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} + node_memory_Slab_bytes{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} ) ) / node_memory_MemTotal_bytes{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"}) != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.Memory, ResourceChartItemType.Container): ChartOptions(
