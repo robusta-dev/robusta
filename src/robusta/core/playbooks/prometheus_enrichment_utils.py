@@ -471,7 +471,7 @@ def create_resource_enrichment(
             values_format=ChartValuesFormat.CPUUsage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Node): ChartOptions(
-            query='instance:node_cpu_utilisation:rate5m{job="node-exporter", instance=~"$node_internal_ip:[0-9]+"} != 0',
+            query='1 - avg without (cpu) ( sum without (mode) (rate(node_cpu_seconds_total{job="node-exporter", instance=~"$node_internal_ip:[0-9]+", mode=~"idle|iowait|steal"}[5m]))) != 0',
             values_format=ChartValuesFormat.Percentage,
         ),
         (ResourceChartResourceType.CPU, ResourceChartItemType.Container): ChartOptions(
