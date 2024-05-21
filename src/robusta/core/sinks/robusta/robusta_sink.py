@@ -92,9 +92,9 @@ class RobustaSink(SinkBase, EventHandler):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
-        # Some clusters have no jobs. Initializing jobs cache to None, and not empty dict
-        # helps differentiate between no jobs, to not initialized
-        self.__jobs_cache: Optional[Dict[str, JobInfo]] = None
+        self.__jobs_cache: Optional[Dict[str, JobInfo]] = {}
+        # Some clusters have no jobs. helps differentiate between no jobs, to not initialized
+        self.__jobs_cache_initialized: bool = False
         self.__helm_releases_cache: Optional[Dict[str, HelmRelease]] = None
         self.__init_service_resolver()
         self.__thread = threading.Thread(target=self.__discover_cluster)
@@ -158,8 +158,9 @@ class RobustaSink(SinkBase, EventHandler):
                 self.__nodes_cache[node.name] = node
 
     def __assert_jobs_cache_initialized(self):
-        if self.__jobs_cache is None:
+        if not self.__jobs_cache_initialized:
             logging.info("Initializing jobs cache")
+            self.__jobs_cache_initialized = True
             self.__jobs_cache: Dict[str, JobInfo] = {}
             for job in self.dal.get_active_jobs():
                 self.__jobs_cache[job.get_service_key()] = job
@@ -179,7 +180,8 @@ class RobustaSink(SinkBase, EventHandler):
     def __reset_caches(self):
         self.__services_cache: Dict[str, ServiceInfo] = {}
         self.__nodes_cache: Dict[str, NodeInfo] = {}
-        self.__jobs_cache = None
+        self.__jobs_cache: Dict[str, JobInfo] = {}
+        self.__jobs_cache_initialized = False
         self.__helm_releases_cache = None
         self.__namespaces_cache: Dict[str, NamespaceInfo] = {}
         self.__pods_running_count = 0
