@@ -93,11 +93,17 @@ class WebhookSink(SinkBase):
             else:
                 break
         if self.slack_webhook:
+            labels = message.get('subject', {}).get('labels')
+            if labels:
+                labels_as_text = ", ".join(f"{k}: {v}" for k, v in labels.items())
+            else:
+                labels_as_text = None
             message = {
                 "text": f"*Title:* {message['title']}\n"
                 f"*Description:* {message['description']}\n"
                 f"*Failure:* {message['failure']}\n"
                 f"*Aggregation Key:* {message['aggregation_key']}\n"
+                f"*labels*: {labels_as_text}\n"
             }
         try:
             r = requests.post(self.url, json=message, headers=self.headers)
