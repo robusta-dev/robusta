@@ -598,7 +598,7 @@ class RobustaSink(SinkBase, EventHandler):
         for namespace_name in cache_keys:
             if namespace_name not in curr_namespaces:
                 # namespace was deleted from cluster
-                del self.__namespaces_cache[namespace_name]
+                self.__namespaces_cache.pop(namespace_name, None)
                 self.dal.remove_deleted_namespace(namespace_name)
 
         # new or changed namespaces

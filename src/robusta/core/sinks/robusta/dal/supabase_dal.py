@@ -414,7 +414,7 @@ class SupabaseDal(AccountResourceFetcher):
                 .execute()
             )
         except Exception as e:
-            logging.error(f"Failed to delete job {job} error: {e}")
+            logging.exception(f"Failed to delete job {job} error: {e}")
             raise
 
     def remove_deleted_namespace(self, namespace_name: str):
@@ -431,7 +431,7 @@ class SupabaseDal(AccountResourceFetcher):
                 .execute()
             )
         except Exception as e:
-            logging.error(f"Failed to delete namespace {namespace_name} error: {e}")
+            logging.exception(f"Failed to delete namespace {namespace_name} error: {e}")
             raise
 
     # helm release
