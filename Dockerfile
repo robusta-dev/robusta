@@ -2,7 +2,7 @@
 FROM python:3.9-slim
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
-    && apt-get install -y --no-install-recommends git ssh socat wget curl libcairo2 python3-dev libffi-dev \
+    && apt-get install -y --no-install-recommends ssh socat wget curl libcairo2 python3-dev libffi-dev \
     && pip3 install --no-cache-dir --upgrade pip \
     && rm -rf /var/lib/apt/lists/*
 
