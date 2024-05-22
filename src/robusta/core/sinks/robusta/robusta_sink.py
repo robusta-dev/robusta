@@ -594,14 +594,12 @@ class RobustaSink(SinkBase, EventHandler):
 
         # handle deleted namespaces
         updated_namespaces: List[NamespaceInfo] = []
-        for namespace_name, namespace in self.__namespaces_cache.items():
+        cache_keys = list(self.__namespaces_cache.keys())
+        for namespace_name in cache_keys:
             if namespace_name not in curr_namespaces:
-                namespace.deleted = True
-                updated_namespaces.append(namespace)
-
-        for update in updated_namespaces:
-            if update.deleted:
-                del self.__namespaces_cache[update.name]
+                # namespace was deleted from cluster
+                del self.__namespaces_cache[namespace_name]
+                self.dal.remove_deleted_namespace(namespace_name)
 
         # new or changed namespaces
         for namespace_name, updated_namespace in curr_namespaces.items():
