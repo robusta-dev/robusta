@@ -414,7 +414,24 @@ class SupabaseDal(AccountResourceFetcher):
                 .execute()
             )
         except Exception as e:
-            logging.error(f"Failed to delete job {job} error: {e}")
+            logging.exception(f"Failed to delete job {job} error: {e}")
+            raise
+
+    def remove_deleted_namespace(self, namespace_name: str):
+        if not namespace_name:
+            return
+
+        try:
+            (
+                self.client.table(NAMESPACES_TABLE)
+                .delete(returning=ReturnMethod.minimal)
+                .filter("account_id", "eq", self.account_id)
+                .filter("cluster_id", "eq", self.cluster)
+                .eq("name", namespace_name)
+                .execute()
+            )
+        except Exception as e:
+            logging.exception(f"Failed to delete namespace {namespace_name} error: {e}")
             raise
 
     # helm release
