@@ -65,6 +65,8 @@ ENABLE_TELEMETRY = os.environ.get("ENABLE_TELEMETRY", "true").lower() == "true"
 SEND_ADDITIONAL_TELEMETRY = os.environ.get("SEND_ADDITIONAL_TELEMETRY", "false").lower() == "true"
 RELEASE_NAME = os.environ.get("RELEASE_NAME", "robusta")
 
+RUNNER_SERVICE_ACCOUNT = os.environ.get("RUNNER_SERVICE_ACCOUNT", f"{RELEASE_NAME}-runner-service-account")
+
 TELEMETRY_PERIODIC_SEC = int(os.environ.get("TELEMETRY_PERIODIC_SEC", 60 * 60 * 24))  # 24H
 
 SLACK_TABLE_COLUMNS_LIMIT = int(os.environ.get("SLACK_TABLE_COLUMNS_LIMIT", 3))

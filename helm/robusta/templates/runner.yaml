@@ -26,7 +26,11 @@ spec:
         {{- end }}
       {{- end }}
     spec:
+      {{- if .Values.runner.customServiceAccount }}
+      serviceAccountName: {{ .Values.runner.customServiceAccount }}
+      {{ else }}
       serviceAccountName: {{ include "robusta.fullname" . }}-runner-service-account
+      {{- end }}
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
       {{- if .Values.runner.imagePullSecrets }}
       imagePullSecrets:
@@ -53,6 +57,10 @@ spec:
             value: /etc/robusta/config/active_playbooks.yaml
           - name: RELEASE_NAME
             value: {{ include "robusta.fullname" .| quote }}
+          {{- if .Values.runner.customServiceAccount }}
+          - name: RUNNER_SERVICE_ACCOUNT
+            value: {{ .Values.runner.customServiceAccount }}
+          {{- end }}
           - name: PROMETHEUS_ENABLED
             value: {{ .Values.enablePrometheusStack | quote}}
           - name: MANAGED_CONFIGURATION_ENABLED

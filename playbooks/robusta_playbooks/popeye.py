@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Literal, Optional
 from hikaru.model.rel_1_26 import Container, PodSpec, ResourceRequirements
 from pydantic import BaseModel, ValidationError
 from robusta.api import (
-    RELEASE_NAME,
+    RUNNER_SERVICE_ACCOUNT,
     EnrichmentAnnotation,
     ExecutionBaseEvent,
     Finding,
@@ -79,7 +79,7 @@ class PopeyeParams(PodRunningParams):
     :var service_account_name: The account name to use for the Popeye scan job.
     """
 
-    service_account_name: str = f"{RELEASE_NAME}-runner-service-account"
+    service_account_name: str = RUNNER_SERVICE_ACCOUNT
     timeout = 300
     args: Optional[str] = None
     popeye_args: str = "-s no,ns,po,svc,sa,cm,dp,sts,ds,pv,pvc,hpa,pdb,cr,crb,ro,rb,ing,np,psp"
