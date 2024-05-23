@@ -24,7 +24,7 @@ spec:
     spec:
       {{- if .Values.kubewatch.customServiceAccount }}
       serviceAccountName: {{ .Values.kubewatch.customServiceAccount }}
-      { { else } }
+      {{ else }}
       serviceAccountName: {{ include "robusta.fullname" . }}-forwarder-service-account
       {{- end }}
       automountServiceAccountToken: {{ .Values.automountServiceAccountToken }}
