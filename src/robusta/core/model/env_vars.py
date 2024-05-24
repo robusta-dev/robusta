@@ -101,6 +101,8 @@ MAX_ALLOWED_RULES_PER_CRD_ALERT = int(os.environ.get("MAX_ALLOWED_RULES_PER_CRD_
 
 IMAGE_REGISTRY = os.environ.get("IMAGE_REGISTRY", "us-central1-docker.pkg.dev/genuine-flight-317411/devel")
 
+FIO_IMAGE = os.environ.get("FIO_IMAGE", "robusta-fio-benchmark:1.0")
+
 CLUSTER_DOMAIN = os.environ.get("CLUSTER_DOMAIN", "cluster.local")
 
 IS_OPENSHIFT = load_bool("IS_OPENSHIFT", False)
@@ -113,7 +115,7 @@ ARGO_ROLLOUTS = load_bool("ARGO_ROLLOUTS", False)
 # lowered case k8s kinds in a json array string. "[\"configmap\", \"secret\"]"
 RESOURCE_YAML_BLOCK_LIST = json.loads(os.environ.get("RESOURCE_YAML_BLOCK_LIST", "[]"))
 
-NAMESPACE_DATA_TTL = int(os.environ.get("NAMESPACE_DATA_TTL", 30*60))  # in seconds
+NAMESPACE_DATA_TTL = int(os.environ.get("NAMESPACE_DATA_TTL", 30 * 60))  # in seconds
 
-PROCESSED_ALERTS_CACHE_TTL = int(os.environ.get("PROCESSED_ALERT_CACHE_TTL", 2*3600))
+PROCESSED_ALERTS_CACHE_TTL = int(os.environ.get("PROCESSED_ALERT_CACHE_TTL", 2 * 3600))
 PROCESSED_ALERTS_CACHE_MAX_SIZE = int(os.environ.get("PROCESSED_ALERTS_CACHE_MAX_SIZE", 100_000))
