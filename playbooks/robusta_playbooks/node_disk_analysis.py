@@ -6,6 +6,7 @@ import humanize
 from hikaru.model.rel_1_26 import EnvVar, EnvVarSource, ObjectFieldSelector, PodList
 
 from robusta.api import (
+    DISK_TOOLS_IMAGE,
     IMAGE_REGISTRY,
     BaseBlock,
     MarkdownBlock,
@@ -67,7 +68,7 @@ def node_disk_analyzer(event: NodeEvent, params: DiskAnalyzerParams):
     # run disk-tools on node and parse its json output
     disk_info_str = RobustaPod.run_debugger_pod(
         node.metadata.name,
-        pod_image=f"{IMAGE_REGISTRY}/disk-tools:1.4",
+        pod_image=f"{IMAGE_REGISTRY}/{DISK_TOOLS_IMAGE}",
         env=[
             EnvVar(
                 name="CURRENT_POD_UID",
