@@ -13,7 +13,7 @@ from kubernetes import client
 from kubernetes.client import ApiException
 from pydantic import BaseModel
 
-from robusta.core.model.env_vars import IMAGE_REGISTRY, INSTALLATION_NAMESPACE, RELEASE_NAME
+from robusta.core.model.env_vars import IMAGE_REGISTRY, INSTALLATION_NAMESPACE, RUNNER_SERVICE_ACCOUNT
 from robusta.integrations.kubernetes.api_client_utils import (
     SUCCEEDED_STATE,
     exec_shell_command,
@@ -251,7 +251,7 @@ class RobustaPod(Pod):
                 annotations=custom_annotations,
             ),
             spec=PodSpec(
-                serviceAccountName=f"{RELEASE_NAME}-runner-service-account",
+                serviceAccountName=RUNNER_SERVICE_ACCOUNT,
                 hostPID=True,
                 nodeName=node_name,
                 restartPolicy="OnFailure",
