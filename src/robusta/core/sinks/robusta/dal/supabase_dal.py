@@ -107,7 +107,7 @@ class SupabaseDal(AccountResourceFetcher):
                     "_scan_start": str(start_time),
                     "_type": scan_type,
                 },
-            )
+            ).execute()
         except requests.exceptions.HTTPError as e:
             logging.exception(f"Failed to insert scan meta {scan_id}, error: {e}, response: {e.response.text}")
             raise
@@ -543,7 +543,7 @@ class SupabaseDal(AccountResourceFetcher):
             "_pod_count": pod_count,
         }
         try:
-            self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data)
+            self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data).execute()
         except Exception as e:
             logging.error(f"Failed to publish node count {data} error: {e}")
 
