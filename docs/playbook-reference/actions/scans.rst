@@ -126,11 +126,11 @@ To prevent the KRR job from OOMKill (Out of Memory), you can configure the memor
     runner:
       additional_env_vars:
       - name: KRR_MEMORY_REQUEST
-        value: "2Gi"
+        value: "3Gi"
       - name: KRR_MEMORY_LIMIT
-        value: "2Gi"
+        value: "3Gi"
 
-By default, the memory request and limit are set to ``1Gi``. Modify these values according to your requirements.
+By default, the memory request and limit are set to ``2Gi``. Modify these values according to your requirements.
 
 Popeye - A Kubernetes Cluster Sanitizer
 ************************************************
