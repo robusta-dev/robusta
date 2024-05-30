@@ -955,25 +955,10 @@ active for all the specified days, irrespective of time.
 
 .. details:: Supported Days
 
-    .. code-block::
+    .. code-block:: python
 
-      Capital
-        - MON
-        - TUE
-        - WED
-        - THR
-        - FRI
-        - SAT
-        - SUN
+      ['mon', 'tue', 'wed', 'thr', 'fri', 'sat', 'sun']
 
-      Lowercase
-        - mon
-        - tue
-        - wed
-        - thr
-        - fri
-        - sat
-        - sun
 
 Examples
 ^^^^^^^^^^^
