@@ -451,13 +451,18 @@ class RobustaJob(Job):
         # we serialize and then deserialize to work around https://github.com/haxsaw/hikaru/issues/15
         return [hikaru.from_dict(pod.to_dict(), cls=RobustaPod) for pod in pods.items]
 
-    def get_single_pod(self) -> RobustaPod:
+    def get_single_pod(self, retries: int = 10, wait: int = 5) -> RobustaPod:
         """
         like get_pods() but verifies that only one pod is associated with the job and returns that pod
         """
         pods = self.get_pods()
+        while retries > 0 and len(pods) == 0:
+            time.sleep(wait)
+            pods = self.get_pods()
+            retries -= 1
+
         if len(pods) != 1:
-            raise Exception(f"got more pods than expected for job {self.metadata.name}: {pods}")
+            raise Exception(f"got {len(pods)} pods. expected 1 for job {self.metadata.name}: {pods}")
         return pods[0]
 
     def create_job_owned_secret(self, job_secret: JobSecret):
@@ -478,7 +483,7 @@ class RobustaJob(Job):
             metadata=ObjectMeta(name=job_secret.name, ownerReferences=[robusta_owner_reference]), data=job_secret.data
         )
         try:
-            return secret.createNamespacedSecret(job_pod.metadata.namespace).obj
+            secret.createNamespacedSecret(job_pod.metadata.namespace).obj
         except Exception as e:
             logging.error(f"Failed to create secret {job_secret.name}", exc_info=True)
             raise e

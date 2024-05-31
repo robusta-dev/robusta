@@ -545,7 +545,7 @@ class SupabaseDal(AccountResourceFetcher):
         try:
             self.client.rpc(UPDATE_CLUSTER_NODE_COUNT, data).execute()
         except Exception as e:
-            logging.error(f"Failed to publish node count {data} error: {e}")
+            logging.exception(f"Failed to publish node count {data} error: {e}")
 
         logging.debug(f"cluster nodes: {UPDATE_CLUSTER_NODE_COUNT} => {data}")
 
