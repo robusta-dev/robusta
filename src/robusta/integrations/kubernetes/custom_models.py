@@ -13,7 +13,13 @@ from kubernetes import client
 from kubernetes.client import ApiException
 from pydantic import BaseModel
 
-from robusta.core.model.env_vars import IMAGE_REGISTRY, INSTALLATION_NAMESPACE, RUNNER_SERVICE_ACCOUNT
+from robusta.core.model.env_vars import (
+    IMAGE_REGISTRY,
+    INSTALLATION_NAMESPACE,
+    POD_WAIT_RETRIES,
+    POD_WAIT_RETRIES_SECONDS,
+    RUNNER_SERVICE_ACCOUNT,
+)
 from robusta.integrations.kubernetes.api_client_utils import (
     SUCCEEDED_STATE,
     exec_shell_command,
@@ -451,9 +457,10 @@ class RobustaJob(Job):
         # we serialize and then deserialize to work around https://github.com/haxsaw/hikaru/issues/15
         return [hikaru.from_dict(pod.to_dict(), cls=RobustaPod) for pod in pods.items]
 
-    def get_single_pod(self, retries: int = 10, wait: int = 5) -> RobustaPod:
+    def get_single_pod(self, retries: int = POD_WAIT_RETRIES, wait: int = POD_WAIT_RETRIES_SECONDS) -> RobustaPod:
         """
         like get_pods() but verifies that only one pod is associated with the job and returns that pod
+        if no pods, retry X times with Y seconds wait
         """
         pods = self.get_pods()
         while retries > 0 and len(pods) == 0:

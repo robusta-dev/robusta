@@ -115,7 +115,10 @@ ARGO_ROLLOUTS = load_bool("ARGO_ROLLOUTS", False)
 # lowered case k8s kinds in a json array string. "[\"configmap\", \"secret\"]"
 RESOURCE_YAML_BLOCK_LIST = json.loads(os.environ.get("RESOURCE_YAML_BLOCK_LIST", "[]"))
 
-NAMESPACE_DATA_TTL = int(os.environ.get("NAMESPACE_DATA_TTL", 30*60))  # in seconds
+NAMESPACE_DATA_TTL = int(os.environ.get("NAMESPACE_DATA_TTL", 30 * 60))  # in seconds
 
-PROCESSED_ALERTS_CACHE_TTL = int(os.environ.get("PROCESSED_ALERT_CACHE_TTL", 2*3600))
+PROCESSED_ALERTS_CACHE_TTL = int(os.environ.get("PROCESSED_ALERT_CACHE_TTL", 2 * 3600))
 PROCESSED_ALERTS_CACHE_MAX_SIZE = int(os.environ.get("PROCESSED_ALERTS_CACHE_MAX_SIZE", 100_000))
+
+POD_WAIT_RETRIES = int(os.environ.get("POD_WAIT_RETRIES", 10))
+POD_WAIT_RETRIES_SECONDS = int(os.environ.get("POD_WAIT_RETRIES_SECONDS", 5))
