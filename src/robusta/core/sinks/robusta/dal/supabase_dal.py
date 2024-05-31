@@ -5,7 +5,9 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
+from postgrest._sync.request_builder import SyncQueryRequestBuilder
 from postgrest.base_request_builder import BaseFilterRequestBuilder
+from postgrest.exceptions import APIError as PostgrestAPIError
 from postgrest.types import ReturnMethod
 from postgrest.utils import sanitize_param
 from supabase import create_client
@@ -70,6 +72,7 @@ class SupabaseDal(AccountResourceFetcher):
         self.cluster = cluster_name
         options = ClientOptions(postgrest_client_timeout=SUPABASE_TIMEOUT_SECONDS, auto_refresh_token=True)
         self.client = create_client(url, key, options)
+        self.patch_postgrest_execute()
         self.email = email
         self.password = password
         self.sign_in()
@@ -77,6 +80,24 @@ class SupabaseDal(AccountResourceFetcher):
         self.sink_name = sink_name
         self.persist_events = persist_events
         self.signing_key = signing_key
+
+    def patch_postgrest_execute(self):
+        # This is somewhat hacky.
+        def execute_with_retry(_self):
+            try:
+                return self._original_execute(_self)
+            except PostgrestAPIError as exc:
+                message = exc.message or ""
+                if exc.code == "PGRST301" or "expired" in message.lower():
+                    # JWT expired. Sign in again and retry the query
+                    logging.error("JWT token expired/invalid, signing in to Supabase again")
+                    self.sign_in()
+                    return self._original_execute(_self)
+                else:
+                    raise
+
+        self._original_execute = SyncQueryRequestBuilder.execute
+        SyncQueryRequestBuilder.execute = execute_with_retry
 
     def __to_db_scanResult(self, scanResult: ScanReportRow) -> Dict[Any, Any]:
         db_sr = scanResult.dict()
