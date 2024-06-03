@@ -2,7 +2,7 @@
 name = "robusta-api"
 version = "0.0.0"
 description = ""
-authors = ["Natan Yellin <aantn@users.noreply.github.com>"]
+authors = ["Arik Alon <arikalon1@users.noreply.github.com>"]
 packages = [
     { include = "robusta", from = "src" },
 ]
