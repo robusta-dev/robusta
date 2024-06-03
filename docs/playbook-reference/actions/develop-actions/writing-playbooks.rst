@@ -4,7 +4,11 @@ The Basics
 Setting up a development environment
 --------------------------------------
 
-Install the ``robusta-cli`` package locally, so you have autocompletion in your IDE. This is really important, at the playbooks API is not yet fully documented online.
+Install the ``robusta-api`` package locally, so you have autocompletion in your IDE. This is really important, at the playbooks API is not yet fully documented online.
+
+.. note::
+
+    Older versions used the ``robusta-cli`` package for the api headers. Please use the new ``robusta-api`` package.
 
 Implementing your first playbook
 -------------------------------------------------------------

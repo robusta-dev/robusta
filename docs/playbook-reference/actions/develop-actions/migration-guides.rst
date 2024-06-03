@@ -10,6 +10,11 @@ Playbook API Changes
 
 This page documents breaking changes to the Robusta API, and how to update custom playbook actions between versions.
 
+Using new 'robusta-api' package from Robusta version 0.14
+===============================================
+
+Old versions used the ``robusta-cli`` package for the api headers. Please use the new ``robusta-api`` package.
+
 Updating Custom Playbooks to Robusta 0.10.17
 ===============================================
 

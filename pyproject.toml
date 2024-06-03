@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "robusta-cli"
+name = "robusta-api"
 version = "0.0.0"
 description = ""
 authors = ["Natan Yellin <aantn@users.noreply.github.com>"]
@@ -15,9 +15,6 @@ target-version = ['py37']
 line_length = 120
 multi_line_output = 3
 include_trailing_comma = true
-
-[tool.poetry.scripts]
-robusta = "robusta.cli.main:app"
 
 
 [tool.poetry.dependencies]
