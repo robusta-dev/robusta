@@ -60,7 +60,7 @@ Example ``generated_values.yaml``:
     Read this guide about :ref:`Managing Secrets`.
 
 
-Configure ArgoCD
+Configure ArgoCD in the UI
 --------------------------------
 
 Create a ``NEW APP`` in ArgoCD and fill in the following settings.
@@ -121,6 +121,36 @@ Finally, run ``robusta logs`` from your cli and make sure there is no error.
     On some Robusta versions, the sync might fail with ``CustomResourceDefinition.apiextensions.k8s.io “prometheuses.monitoring.coreos.com” is invalid: metadata.annotations: Too long: must have at most 262144 bytes``.
 
     To solve it, use the workaround proposed `here <https://github.com/prometheus-community/helm-charts/issues/1500#issuecomment-1132907207>`_
+
+Configure ArgoCD Declaratively
+--------------------------------
+
+First generate a Helm values file for Robusta, as described above.
+
+Then create an Argo Application which references that values file:
+
+.. code-block:: yaml
+
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: robusta
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: robusta
+      project: default
+      sources:
+        - chart: robusta
+          repoURL: https://robusta-charts.storage.googleapis.com
+          targetRevision: <ROBUSTA VERSION - e.g. "0.10.31">
+          helm:
+            valueFiles:
+              # path to the values file for Robusta - generate it as described above
+              - generated_values.yaml
 
 Configuring Argo Links
 -----------------------------------------
