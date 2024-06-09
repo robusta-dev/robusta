@@ -31,7 +31,7 @@ An example ``pyproject.toml`` would be:
     #some-dependency = "^1.2.3"
 
     [tool.poetry.dev-dependencies]
-    robusta-api = "^1.0"
+    robusta-api = "^0.14"
 
     [build-system]
     requires = ["poetry-core>=1.0.0"]

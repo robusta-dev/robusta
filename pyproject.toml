@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "robusta-api"
-version = "0.0.3"
+version = "0.0.0"
 description = ""
 authors = ["Arik Alon <arikalon1@users.noreply.github.com>"]
 packages = [
