@@ -18,16 +18,11 @@ include_trailing_comma = true
 
 
 [tool.poetry.dependencies]
-# Robusta CLI should work on 3.8, but the core code requires 3.9+. Both
-# are known not to work on 3.11. Unfortunately this spec is shared between
-# the CLI and core, so we have to specify 3.8+.
 python = "^3.8, <3.11"
 setuptools = "^68.2.2"
-typer = "^0.4.1"
 colorlog = "^5.0.1"
 pydantic = "^1.8.1"
 kubernetes = "^26.1.0"
-click-spinner = "^0.1.10"
 pymsteams = "^0.1.16"
 idna= { version = ">=3.7", optional = true }
 supabase = "^2.4"
@@ -64,7 +59,6 @@ humanize = "^3.13.1"
 # this is similar to the issue at https://github.com/dulwich/dulwich/issues/839
 dulwich =  { version = "0.20.28", optional = true }
 cryptography = "^42.0.5"
-PyJWT = "2.4.0"
 fpdf2 = "^2.7.1"
 attrs = "^23.1.0"
 prometrix = "0.1.16"
@@ -75,6 +69,8 @@ pydash = "8.0.0"
 # The following are added to speed up poetry dependency resolution
 botocore = "1.31.72"
 boto3 = "1.28.72"
+requests = "^2.32.3"
+certifi = "^2024.6.2"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
@@ -109,7 +105,6 @@ types-pytz = "^2022.6.0.1"
 types-requests = "^2.28.11.5"
 types-cachetools = "^5.2.1"
 types-PyYAML = "^6.0.0"
-types-click-spinner = "^0.1.10"
 types-toml = "^0.10.2"
 types-tabulate = "^0.8.10"
 
