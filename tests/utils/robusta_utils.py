@@ -116,4 +116,4 @@ class RobustaController:
         return result.stdout.decode()
 
     def _run_robusta_cli_cmd(self, cmd, timeout=None) -> str:
-        return self._run_cmd(["poetry", "run", "robusta"] + cmd, timeout)
+        return self._run_cmd(["robusta"] + cmd, timeout)
