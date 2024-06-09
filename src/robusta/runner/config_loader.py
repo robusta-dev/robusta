@@ -12,7 +12,8 @@ from typing import Dict, Optional
 
 import yaml
 
-from robusta.cli.utils import get_package_name
+import toml
+import dpath.util
 from robusta.core.model.env_vars import (
     CUSTOM_PLAYBOOKS_ROOT,
     DEFAULT_PLAYBOOKS_PIP_INSTALL,
@@ -92,9 +93,16 @@ class ConfigLoader:
             receiver.stop()
             self.registry.set_receiver(ActionRequestReceiver(self.event_handler))
 
+    @staticmethod
+    def __get_package_name_from_pyproject(local_path: str) -> str:
+        with open(os.path.join(local_path, "pyproject.toml"), "r") as pyproj_toml:
+            data = pyproj_toml.read()
+            parsed = toml.loads(data)
+            return dpath.util.get(parsed, "tool/poetry/name", default="")
+
     @classmethod
     def __get_package_name(cls, local_path) -> str:
-        package_name = get_package_name(local_path)
+        package_name = ConfigLoader.__get_package_name_from_pyproject(local_path)
         if not package_name:
             raise Exception(f"Illegal playbooks package {local_path}. Package name not found")
         return package_name
