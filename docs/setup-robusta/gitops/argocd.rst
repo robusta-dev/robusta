@@ -125,7 +125,7 @@ Finally, run ``robusta logs`` from your cli and make sure there is no error.
 Configure ArgoCD Declaratively
 --------------------------------
 
-First generate a Helm values file for Robusta, as described above.
+First generate a Helm values file for Robusta, as described above. Put it in a Git repository and push it.
 
 Then create an Argo Application which references that values file:
 
@@ -149,8 +149,14 @@ Then create an Argo Application which references that values file:
           targetRevision: <ROBUSTA VERSION - e.g. "0.10.31">
           helm:
             valueFiles:
-              # path to the values file for Robusta - generate it as described above
-              - generated_values.yaml
+              # this refers to the repository defined below containing your value files
+              # see https://argo-cd.readthedocs.io/en/latest/user-guide/multiple_sources/#helm-value-files-from-external-git-repository
+              - $values/values/robusta.yaml
+
+        - repoURL: "git@github.com:my-user/example-repo.git"
+          targetRevision: HEAD
+          ref: values
+
 
 Configuring Argo Links
 -----------------------------------------
