@@ -70,7 +70,7 @@ pydash = "8.0.0"
 botocore = "1.31.72"
 boto3 = "1.28.72"
 requests = "^2.32.3"
-certifi = "^2024.6.2"
+certifi = "^2023.7.22"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.13.0"
