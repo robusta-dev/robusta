@@ -3684,7 +3684,7 @@ doc = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linke
 test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-itertools", "pytest (>=6,!=8.1.*)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy", "pytest-ruff (>=0.2.1)"]
 
 [extras]
-all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "grafana-api", "kafka-python", "poetry-core", "sentry-sdk", "supabase", "tabulate", "watchdog"]
+all = ["CairoSVG", "Flask", "better-exceptions", "datadog-api-client", "grafana-api", "kafka-python", "poetry-core", "prometheus-api-client", "sentry-sdk", "supabase", "tabulate", "watchdog"]
 
 [metadata]
 lock-version = "2.0"
