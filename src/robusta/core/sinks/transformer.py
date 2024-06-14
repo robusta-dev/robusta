@@ -1,7 +1,6 @@
 import logging
 import re
 import urllib.parse
-from collections import defaultdict
 from typing import List, Optional, Union
 
 import markdown2
@@ -28,6 +27,7 @@ from robusta.core.reporting import (
     ScanReportBlock,
     TableBlock,
 )
+from robusta.utils.trim_markdown import trim_markdown
 
 
 class Transformer:
@@ -57,6 +57,10 @@ class Transformer:
             return msg
         truncator = truncator or "..."
         return msg[: max_length - len(truncator)] + truncator
+
+    @staticmethod
+    def apply_length_limit_to_markdown(msg: str, max_length: int, truncator: str = "...") -> str:
+        return trim_markdown(msg, max_length, truncator)
 
     @staticmethod
     def to_markdown_diff(block: KubernetesDiffBlock, use_emoji_sign: bool = False) -> List[ListBlock]:
