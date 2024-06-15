@@ -23,21 +23,35 @@ def trim_markdown(text: str, max_length: int, suffix: str = "...") -> str:
         if trim_idx >= close_end:
             # Trimming point after this block quote
             return text[:trim_idx] + suffix
-        if trim_idx < open_start:
+        elif trim_idx < open_start:
             # Trimming point before this block quote - continue to the preceding block
             continue
-        if trim_idx >= open_start and trim_idx < open_start + 3:
+        elif trim_idx >= open_start and trim_idx < open_start + 3:
             # Trimming point inside the opening block quote tag
             return text[:trim_idx].rstrip("`") + suffix
-        if trim_idx >= close_start and trim_idx < close_end:
+        elif trim_idx >= close_start and trim_idx < close_end:
             # Trimming point inside the closing block quote tag
             if trim_idx - open_end >= 3:  # Enough space to insert the closing tag
                 return text[:trim_idx - 3] + "```" + suffix
             else:  # Not enough space, strip the whole block
                 return text[:open_start] + suffix
-        if trim_idx >= open_end and trim_idx < close_start:
+        elif trim_idx >= open_end and trim_idx < close_start:
             # Trimming point inside the block quote
             if trim_idx - open_end >= 3:  # Enough space to insert the closing tag
                 return text[:trim_idx - 3] + "```" + suffix
             else:  # Not enough space, strip the whole block
                 return text[:open_start] + suffix
+        else:
+            # This should never happen
+            raise Exception(
+                f'Internal error in trim_markdown, text="{text[:12]}"(...), {max_length=}, suffix="{suffix}", '
+                f'matched code block {open_start}..{close_end}'
+            )
+
+    # Cases when there were no code blocks in the input
+    if len(text) <= trim_idx:
+        return text
+    elif len(text) < max_length:
+        return (text[:trim_idx] + suffix)[:max_length]
+    else:
+        return text[:trim_idx] + suffix

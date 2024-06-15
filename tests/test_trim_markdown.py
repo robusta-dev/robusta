@@ -42,6 +42,30 @@ from robusta.utils.trim_markdown import trim_markdown
     ])
 def test_trim_markdown(max_length: int, expected_output: str):
     text = "```oh``` hello ```world``` and then ```something```"
-    trimmed = trim_markdown(text, max_length, '##')
+    trimmed = trim_markdown(text, max_length, "##")
+    assert trimmed == expected_output
+    assert len(trimmed) <= max_length
+
+
+@pytest.mark.parametrize(
+    "max_length,expected_output", [
+        (0, ""),
+        (1, "$"),
+        (2, "$$"),
+        (3, "$$$"),
+        (4, "N$$$"),
+        (5, "No$$$"),
+        (10, "No code$$$"),
+        (38, "No code blocks whatsoever in this t$$$"),
+        (39, "No code blocks whatsoever in this te$$$"),
+        (40, "No code blocks whatsoever in this tex$$$"),
+        (41, "No code blocks whatsoever in this text"),
+        (42, "No code blocks whatsoever in this text"),
+        (111, "No code blocks whatsoever in this text"),
+    ]
+)
+def test_trim_markdown_no_code_blocks(max_length: int, expected_output: str):
+    text = "No code blocks whatsoever in this text"
+    trimmed = trim_markdown(text, max_length, "$$$")
     assert trimmed == expected_output
     assert len(trimmed) <= max_length
