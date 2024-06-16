@@ -108,23 +108,12 @@ jobs:
       run: |
         cd helm && ./upload_chart.sh
 
-    - name: Release Docker CLI only on formal releases
-      if: "!github.event.release.prerelease"
-      run: |-
-        docker buildx build \
-        --platform linux/arm64,linux/amd64 \
-        --tag robustadev/robusta-cli:${{env.RELEASE_VER}} \
-        --tag robustadev/robusta-cli \
-        --push \
-        --file cli.Dockerfile \
-        .
-
-    - name: Release Docker to old repo
+    - name: Release Docker to Dockerhub
       run: |-
         docker buildx build \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
         --platform linux/arm64,linux/amd64 \
-        --cache-from robustadev/robusta-runner-dev:cache \
-        --tag us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta:${{env.RELEASE_VER}} \
+        --cache-from us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta:cache \
+        --tag robustadev/robusta-runner:${{env.RELEASE_VER}} \
         --push \
         .

@@ -46,7 +46,7 @@ jobs:
           run: |
             echo 'building with tag test-${{ github.sha }}'
             ./skaffold build --push=false --file-output=container-ids.json --tag='test-${{ github.sha }}'
-            kind load docker-image --name chart-testing 'robustadev/robusta-runner-dev:test-${{ github.sha }}'
+            kind load docker-image --name chart-testing 'us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:test-${{ github.sha }}'
 
         #  update helm chart to use the image we just built
         - name: Update package version
@@ -59,4 +59,4 @@ jobs:
             PYTEST_SLACK_TOKEN: ${{ secrets.PYTEST_SLACK_TOKEN }}
             PYTEST_IN_CLUSTER_SLACK_TOKEN: ${{ secrets.PYTEST_IN_CLUSTER_SLACK_TOKEN }}
           run: |
-            pytest -s --image='robustadev/robusta-runner-dev:test-${{ github.sha }}'
+            pytest -s --image='us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:test-${{ github.sha }}'

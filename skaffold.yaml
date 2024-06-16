@@ -4,7 +4,7 @@ metadata:
   name: robusta
 build:
   artifacts:
-  - image: robustadev/robusta-runner-dev
+  - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
     context: .
     docker:
       dockerfile: Dockerfile
@@ -23,7 +23,7 @@ deploy:
         valuesFiles:
           - deployment/generated_values.yaml
         artifactOverrides:
-          runner.image: robustadev/robusta-runner-dev
+          runner.image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
 
 portForward:
 - resourceType: deployment
@@ -36,7 +36,7 @@ profiles:
 - name: apple-m1-dev
   build:
     artifacts:
-      - image: robustadev/robusta-runner-dev
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
         context: .
         custom:
           buildCommand: ./build_on_apple_m1.sh
@@ -45,14 +45,14 @@ profiles:
 - name: arm
   build:
     artifacts:
-      - image: robustadev/robusta-runner-dev
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
         context: .
         custom:
           buildCommand: ./build_with_arm.sh
 - name: release
   build:
     artifacts:
-      - image: robustadev/robusta-runner
+      - image: us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner
         context: .
         custom:
           buildCommand: ./build_release.sh
