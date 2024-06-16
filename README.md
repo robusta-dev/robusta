@@ -6,7 +6,7 @@
   <p align="center">
     <a href="#%EF%B8%8F-how-it-works"><strong>How it Works</strong></a> |
     <a href="#-installing-robusta"><strong>Installation</strong></a> | 
-    <a href="#installing-robusta"><strong>Integrations</strong></a> |
+    <a href="[https://docs.robusta.dev/master/configuration/index.html"><strong>Integrations ↗</strong></a> |
     <a href="https://docs.robusta.dev/master/index.html"><strong>Docs ↗</strong></a> |
     <a href="https://bit.ly/robusta-slack"><strong>Slack Community ↗</strong></a>
   </p>
@@ -22,7 +22,7 @@ Robusta integrates with Prometheus (e.g. `kube-prometheus-stack` or Coralogix) b
 * **Routing by Team/Namespace** to different channels based on labels or Kubernetes metadata
 * **Problem-Detection without PromQL** - generate Kubernetes-native alerts for OOMKills, failing Jobs, and more
 * **Change Tracking** for Kubernetes Resources so you can correlate between alerts and new deployments
-* **Auto-Resolve** for integrations like Slack/Jira, Robusta updates the external system when alerts are resolved
+* **Auto-Resolve** - for integrations like Slack/Jira, Robusta updates the external system when alerts are resolved
 * **Dozens of Integrations** - Slack, Teams, Jira, and more
 
 Don't have Prometheus? You can use Robusta without Prometheus, or install our all-in-one Kubernetes observability stack with Robusta and Prometheus included.
