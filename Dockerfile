@@ -123,6 +123,7 @@ RUN apt-get update \
     && pip3 install --no-cache-dir --upgrade pip \
     && rm -rf /var/lib/apt/lists/*
 
+# Patching CVE-2024-32002
 RUN git config --global core.symlinks false
 
 # Run the application
