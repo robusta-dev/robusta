@@ -1,6 +1,6 @@
 export DOCKER_BUILDKIT=1
 
-docker us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:cache
+docker pull us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:cache
 
 docker buildx build \
   --build-arg BUILDKIT_INLINE_CACHE=1 \
