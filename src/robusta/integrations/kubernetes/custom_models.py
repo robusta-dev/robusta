@@ -42,7 +42,7 @@ T = TypeVar("T")
 
 # TODO: import these from the python-tools project
 PYTHON_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/debug-toolkit:v6.0"
-JAVA_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/java-toolkit-11:jattach"
+JAVA_DEBUGGER_IMAGE = f"{IMAGE_REGISTRY}/java-toolkit:v1.0.1"
 
 
 class Process(BaseModel):
