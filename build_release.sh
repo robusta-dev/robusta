@@ -7,6 +7,6 @@ docker buildx build \
   --platform linux/arm64,linux/amd64 \
   --cache-from us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:cache \
   --tag $IMAGE \
-  --tag us-central1-docker.pkg.dev/genuine-flight-317411/devel/robusta-runner:cache \
+  --tag robustadev/robusta-runner:cache \
   --push \
   $BUILD_CONTEXT
