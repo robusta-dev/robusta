@@ -119,7 +119,7 @@ COPY --from=builder /app /app
 # Install necessary packages for the runtime environment
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
-    && apt-get install -y --no-install-recommends git ssh curl libcairo2 \
+    && apt-get install -y --no-install-recommends git ssh curl libcairo2 gcc \
     && pip3 install --no-cache-dir --upgrade pip \
     && rm -rf /var/lib/apt/lists/*
 
