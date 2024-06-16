@@ -4,7 +4,7 @@
   <h1 align="center">Robusta - Better Prometheus Alerts (and more) for Kubernetes</h1>
   <h2 align="center">Enrich, Group, and Remediate your Alerts</h2>
   <p align="center">
-    <a href="#how-it-works"><strong>How it Works</strong></a> |
+    <a href="#%EF%B8%8F-how-it-works"><strong>How it Works</strong></a> |
     <a href="#installation"><strong>Installation</strong></a> | 
     <a href="https://docs.robusta.dev/master/index.html"><strong>Docs</strong></a> |
     <a href="#installing-robusta"><strong>Integrations</strong></a> |
