@@ -92,7 +92,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         PR_NUMBER=$(echo ${{ github.event.pull_request.number }})
-        PREVIEW_URL="https://storage.googleapis.com/robusta-preview/${GITHUB_HEAD_REF}/index.html"
+        PREVIEW_URL="https://docs.robusta.dev/${GITHUB_HEAD_REF}"
         curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
              -d "{\"body\": \"🔍 [Preview Docs](${PREVIEW_URL})\"}" \
              "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
