@@ -8,6 +8,10 @@ on:
     paths:
       - 'docs/**'
       - .github/workflows/deploy-docs.yaml
+  pull_request:
+    paths:
+      - 'docs/**'
+
 
 jobs:
   has-secrets:
