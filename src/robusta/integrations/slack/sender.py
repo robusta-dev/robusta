@@ -1,6 +1,8 @@
 import logging
+import socket
 import ssl
 import tempfile
+import time
 from datetime import datetime, timedelta
 from itertools import chain
 from typing import Any, Dict, List, Set
@@ -11,7 +13,9 @@ from dateutil import tz
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-from robusta.core.model.env_vars import ADDITIONAL_CERTIFICATE, SLACK_TABLE_COLUMNS_LIMIT
+from robusta.core.model.env_vars import (
+    ADDITIONAL_CERTIFICATE, SLACK_TABLE_COLUMNS_LIMIT, SLACK_REQUEST_TIMEOUT
+)
 from robusta.core.reporting.base import Emojis, Finding, FindingStatus
 from robusta.core.reporting.blocks import (
     BaseBlock,
@@ -58,7 +62,7 @@ class SlackSender:
             except Exception as e:
                 logging.exception(f"Failed to use custom certificate. {e}")
 
-        self.slack_client = WebClient(token=slack_token, ssl=ssl_context)
+        self.slack_client = WebClient(token=slack_token, ssl=ssl_context, timeout=SLACK_REQUEST_TIMEOUT)
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
@@ -506,14 +510,36 @@ class SlackSender:
             method = self.slack_client.chat_postMessage
             kwargs = {}
 
+        message_text = "Summary for: " + ", ".join(group_by_classification_header)
         try:
             resp = method(
                 channel=channel,
-                text="Summary for: " + ", ".join(group_by_classification_header),
+                text=message_text,
                 blocks=output_blocks,
                 display_as_bot=True,
                 **kwargs,
             )
             return resp["ts"]
+        except socket.timeout:
+            # The sender possibly exceeded Slack rate limits and has been temporarily blocked.
+            logging.warning(
+                f"Timeout ({SLACK_REQUEST_TIMEOUT} sec) waiting for reply from Slack."
+                "Possible violation of Slack rate limiting."
+            )
+            # The sleep period here is 1 minute because that's the size of Slack's rate limiting window,
+            # so this should ensure Slack resets any penalties due to past violations.
+            time.sleep(60)
+            try:
+                resp = method(
+                    channel=channel,
+                    text=message_text,
+                    blocks=output_blocks,
+                    display_as_bot=True,
+                    **kwargs,
+                )
+                return resp["ts"]
+            except socket.timeout:
+                logging.exception("Second timeout while retrying Slack message sending.")
+                raise
         except Exception as e:
-            logging.exception(f"error sending message to slack\n{e}\nchannel={channel}\n")
+            logging.exception(f"Unexpected error sending message to slack\n{e}\n{channel=}\n{method=}\n")
