@@ -8,9 +8,11 @@ on:
     paths:
       - 'docs/**'
       - .github/workflows/deploy-docs.yaml
+  # we need this in addition to push to build the docs when the PR is opened and not just on later pushes after it is open
   pull_request:
     paths:
       - 'docs/**'
+    types: [opened]
 
 
 jobs:
@@ -34,6 +36,19 @@ jobs:
       PROJECT_ID: ${{ secrets.GKE_PROD_PROJECT }}
 
     steps:
+    # we do this before building the docs so that even if the docs fail building, we still have the comment on the PR for later once the build is fixed
+    # (we can't post the comment each time this workflow runs on we will have multiple comments, so we need to post it only once when the PR is opened)
+    - name: Post preview link on PR
+      if: github.event_name == 'pull_request'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        PR_NUMBER=$(echo ${{ github.event.pull_request.number }})
+        PREVIEW_URL="https://docs.robusta.dev/${GITHUB_HEAD_REF}"
+        curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
+             -d "{\"body\": \"🔍 [Preview Docs](${PREVIEW_URL})\n\n**Note: preview docs will only be available at this URL once the initial docs finish building!**\"}" \
+             "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
+
     - name: Checkout
       uses: actions/checkout@v2
 
@@ -85,14 +100,3 @@ jobs:
       with:
         name: docs
         path: docs/_build/html
-
-    - name: Post preview link on PR
-      if: github.event_name == 'pull_request'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        PR_NUMBER=$(echo ${{ github.event.pull_request.number }})
-        PREVIEW_URL="https://docs.robusta.dev/${GITHUB_HEAD_REF}"
-        curl -X POST -H "Authorization: token $GITHUB_TOKEN" \
-             -d "{\"body\": \"🔍 [Preview Docs](${PREVIEW_URL})\"}" \
-             "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
