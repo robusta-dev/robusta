@@ -29,11 +29,11 @@ RUN pip3 install --no-cache-dir ruamel.yaml.clib==0.2.8
 
 # Install project dependencies
 COPY pyproject.toml poetry.lock /app/
-RUN poetry install --no-root --only main --extras "all"
+RUN poetry install --no-root --without dev --extras "all"
 
 # Copy project source code
 COPY src/ /app/src
-RUN poetry install --no-dev --extras "all"
+RUN poetry install --without dev --extras "all"
 
 # Install playbooks
 COPY playbooks/ /etc/robusta/playbooks/defaults
@@ -57,12 +57,13 @@ COPY --from=builder /app /app
 # Install necessary packages for the runtime environment
 RUN apt-get update \
     && dpkg --add-architecture arm64 \
-    && apt-get install -y --no-install-recommends git ssh curl libcairo2 gcc \
     && pip3 install --no-cache-dir --upgrade pip \
+    && apt-get install -y --no-install-recommends git ssh curl libcairo2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Patching CVE-2024-32002
 RUN git config --global core.symlinks false
 
 # Run the application
+# -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
 CMD [ "python3", "-u", "/app/src/robusta/runner/main.py"]
