@@ -33,10 +33,6 @@ class TestTransformer:
                 MarkdownBlock("hello world\nyeah  \ncool *beans*"),
                 "<p>hello world\nyeah <br/>\ncool <b>beans</b></p>\n",
             ),
-            (
-                    MarkdownBlock("hello world\nyeah  \ncool *beans*"),
-                    "",
-            ),
             (DividerBlock(), "-------------------"),
             (JsonBlock('{"x":   [1,\n "y"] \t}'), '{"x":   [1,\n "y"] \t}'),
             # XXX as the example below shows, the JsonBlock class doesn't really validate
