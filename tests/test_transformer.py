@@ -31,7 +31,11 @@ class TestTransformer:
         [
             (
                 MarkdownBlock("hello world\nyeah  \ncool *beans*"),
-                "<p>hello world\nyeah <br />\ncool <b>beans</b></p>\n",
+                "<p>hello world\nyeah <br/>\ncool <b>beans</b></p>\n",
+            ),
+            (
+                    MarkdownBlock("hello world\nyeah  \ncool *beans*"),
+                    "",
             ),
             (DividerBlock(), "-------------------"),
             (JsonBlock('{"x":   [1,\n "y"] \t}'), '{"x":   [1,\n "y"] \t}'),
