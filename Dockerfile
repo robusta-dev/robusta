@@ -66,4 +66,4 @@ RUN git config --global core.symlinks false
 
 # Run the application
 # -u disables stdout buffering https://stackoverflow.com/questions/107705/disable-output-buffering
-CMD [ "python3", "-u", "/app/src/robusta/runner/main.py"]
+CMD [ "python3", "-u", "-m", "robusta.runner.main"]
