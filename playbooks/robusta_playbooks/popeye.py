@@ -179,8 +179,10 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
             delete_job_post_execution=False,
             process_name=False,
         )
+
+        logs = clean_up_k8s_logs_from_job_output(logs)
         scan = json.loads(logs)
-        popeye_scan = PopeyeReport(**scan["popeye"])
+        scan_report = PopeyeReport(**scan["popeye"])
     except Exception as e:
         if isinstance(e, JSONDecodeError):
             logging.exception(f"*Popeye scan job failed. Expecting json result.*\n\n Result:\n{logs}")
@@ -201,14 +203,14 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
         type=ScanType.POPEYE,
         start_time=start_time,
         end_time=datetime.now(),
-        score=popeye_scan.score,
+        score=scan_report.score,
         metadata=metadata,
         results=[],
         config=f"{params.args} \n\n {params.spinach}",
     )
 
     scan_issues: List[ScanReportRow] = []
-    for section in popeye_scan.sanitizers or []:
+    for section in scan_report.sanitizers or []:
         kind = section.sanitizer
         issues_dict: Dict[str, List[Issue]] = section.issues or {}
         for resource, issuesList in issues_dict.items():
@@ -239,3 +241,39 @@ def popeye_scan(event: ExecutionBaseEvent, params: PopeyeParams):
     )
     finding.add_enrichment([scan_block], annotations={EnrichmentAnnotation.SCAN: True})
     event.add_finding(finding)
+
+
+def clean_up_k8s_logs_from_job_output(logs: str) -> str:
+    """Remove any log messages prepended to job output by k8s."""
+    # This would ideally be handled inside RobustaJob.run_simple_job_spec, but the general
+    # job output processing code does not assume JSON output, so identifying spurious text
+    # would be problematic.
+    # Note this code is not able to correctly handle log messages containing endlines. Doing
+    # so would be impossible in some cases (like "{" following and endline) and/or
+    # require meticulous parsing of k8s log messages.
+    while logs and not logs.startswith("{"):
+        # Assume every line not looking like JSON is log information added by k8s
+        endline_pos = logs.find("\n")
+        if endline_pos == -1:
+            line = logs
+        else:
+            line, logs = logs[:endline_pos], logs[endline_pos + 1:]
+
+        if not line.strip():  # Blank line
+            continue
+        # The pattern matching below is based on the code (tryThrottleWithInfo) in
+        # https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/client-go/rest/request.go
+        # (which is not a part of any publicly exposed interface) and might require adjustments in the future
+        # if k8s changes its logging behavior.
+        elif "Waited for " in line:
+            secs_pos = line.find("Waited for ") + 11
+            wait_secs = line[secs_pos:].split("s", 1)[0]
+            if "due to client-side throttling, not priority and fairness," in line:
+                logging.warning(f"Popeye scan job delayed by {wait_secs}s by Kubernetes due to throttling")
+                continue
+            elif " - request:" in line:
+                logging.warning(f"Popeye scan job delayed by {wait_secs}s by Kubernetes")
+                continue
+        logging.warning(f'Unexpected k8s log line "{line}" in Popeye scan job output')
+
+    return logs
