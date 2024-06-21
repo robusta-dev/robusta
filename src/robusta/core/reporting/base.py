@@ -95,6 +95,7 @@ class VideoLink(BaseModel):
 
 class EnrichmentType(Enum):
     graph = "graph"
+    ai_analysis = "ai_analysis"
     node_info = "node_info"
     container_info = "container_info"
     k8s_events = "k8s_events"

@@ -12,6 +12,7 @@ from robusta.core.discovery.discovery import (
 from robusta.core.discovery.resource_names import ResourceNameLister
 from robusta.core.model.base_params import (
     ActionParams,
+    AIInvestigateParams,
     AlertResourceGraphEnricherParams,
     BashParams,
     ChartValuesFormat,
@@ -184,6 +185,7 @@ from robusta.core.reporting.consts import (
 )
 from robusta.core.reporting.custom_rendering import RendererType, charts_style, render_value
 from robusta.core.reporting.finding_subjects import KubeObjFindingSubject, PodFindingSubject
+from robusta.core.reporting.holmes import HolmesRequest, HolmesResult, HolmesResultsBlock
 from robusta.core.schedule.model import (
     DynamicDelayRepeat,
     FixedDelayRepeat,
@@ -296,6 +298,7 @@ from robusta.integrations.prometheus.models import (
 )
 from robusta.integrations.prometheus.utils import (
     AlertManagerDiscovery,
+    HolmesDiscovery,
     PrometheusDiscovery,
     ServiceDiscovery,
     get_prometheus_connect,

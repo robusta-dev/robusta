@@ -1,6 +1,6 @@
 import logging
 from enum import Enum, auto
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, SecretStr, validator
 
@@ -20,6 +20,7 @@ class ChartValuesFormat(Enum):
 
     def __str__(self):
         return self.name
+
 
 class ResourceChartItemType(Enum):
     """
@@ -68,6 +69,45 @@ class ActionParams(DocumentedModel):
         pass
 
     pass
+
+
+class ResourceInfo(BaseModel):
+    name: str
+    namespace: Optional[str]
+    kind: str
+    node: Optional[str]
+    container: Optional[str]
+
+
+class HolmesParams(ActionParams):
+
+    holmes_url: Optional[str]
+
+    @validator("holmes_url", allow_reuse=True)
+    def validate_protocol(cls, v):
+        if v and not v.startswith("http"):  # if the user configured url without http(s)
+            v = f"http://{v}"
+            logging.info(f"Adding protocol to holmes_url: {v}")
+        return v
+
+
+class AIInvestigateParams(HolmesParams):
+    """
+    :var resource: The resource related to this investigation. A resource has a `name` and `kind`, and may have `namespace` and `node`
+    :var investigation_type: The type of investigation: Issue/Service/Cluster/Custom
+    :var runbooks: List of human readable recommended runbooks that holmes can use for the investigation.
+    :var ask: Override question to ask holmes
+    :var context: Additional information that can assist with the investigation
+
+    :example ask: What are all the issues in my cluster right now?
+    :example runbooks: ["Try to get the pod logs and find errors", "get the pod yaml and check if there are finalizers"]
+    """
+
+    resource: Optional[ResourceInfo]
+    investigation_type: str
+    runbooks: Optional[List[str]]
+    ask: Optional[str]
+    context: Optional[Dict[str, Any]]
 
 
 class PodRunningParams(ActionParams):
@@ -340,7 +380,17 @@ class OomKillParams(OOMGraphEnricherParams):
     container_memory_graph: Optional[bool] = False
     node_memory_graph: Optional[bool] = False
 
-    def __init__(self, attach_logs: Optional[bool] = False, container_memory_graph: Optional[bool] = False,
-                 node_memory_graph: Optional[bool] = False, **kwargs):
-        super().__init__(attach_logs=attach_logs, container_memory_graph=container_memory_graph,
-                         node_memory_graph=node_memory_graph, resource_type=ResourceChartResourceType.Memory.name, **kwargs)
+    def __init__(
+        self,
+        attach_logs: Optional[bool] = False,
+        container_memory_graph: Optional[bool] = False,
+        node_memory_graph: Optional[bool] = False,
+        **kwargs,
+    ):
+        super().__init__(
+            attach_logs=attach_logs,
+            container_memory_graph=container_memory_graph,
+            node_memory_graph=node_memory_graph,
+            resource_type=ResourceChartResourceType.Memory.name,
+            **kwargs,
+        )
