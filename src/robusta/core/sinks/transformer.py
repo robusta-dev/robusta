@@ -116,7 +116,8 @@ class Transformer:
             extras = {"html-classes": {"p": html_class}}
         else:
             extras = {}
-        return markdown2.markdown(mrkdwn_text, extras=extras)
+        html = markdown2.markdown(mrkdwn_text, extras=extras)
+        return html.replace("<br />", " <br/>")
 
     def to_html(self, blocks: List[BaseBlock]) -> str:
         return "\n".join(self.block_to_html(block) for block in blocks)
