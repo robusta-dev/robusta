@@ -255,25 +255,7 @@ def clean_up_k8s_logs_from_job_output(logs: str) -> str:
         # Assume every line not looking like JSON is log information added by k8s
         endline_pos = logs.find("\n")
         if endline_pos == -1:
-            line = logs
+            logs = ""
         else:
-            line, logs = logs[:endline_pos], logs[endline_pos + 1:]
-
-        if not line.strip():  # Blank line
-            continue
-        # The pattern matching below is based on the code (tryThrottleWithInfo) in
-        # https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/client-go/rest/request.go
-        # (which is not a part of any publicly exposed interface) and might require adjustments in the future
-        # if k8s changes its logging behavior.
-        elif "Waited for " in line:
-            secs_pos = line.find("Waited for ") + 11
-            wait_secs = line[secs_pos:].split("s", 1)[0]
-            if "due to client-side throttling, not priority and fairness," in line:
-                logging.warning(f"Popeye scan job delayed by {wait_secs}s by Kubernetes due to throttling")
-                continue
-            elif " - request:" in line:
-                logging.warning(f"Popeye scan job delayed by {wait_secs}s by Kubernetes")
-                continue
-        logging.warning(f'Unexpected k8s log line "{line}" in Popeye scan job output')
-
+            logs = logs[endline_pos + 1:]
     return logs
