@@ -21,6 +21,8 @@ global:
 
 automountServiceAccountToken: true
 
+enableHolmesGPT: false
+
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
 globalConfig:
   check_prometheus_flags: true
@@ -36,6 +38,10 @@ globalConfig:
 alertRelabel: []
 
 # safe actions to enable authenticated users to run
+
+disabledPlaybooks:
+  - WeeklyKRRScan
+
 lightActions:
 - related_pods
 - prometheus_enricher
@@ -73,7 +79,6 @@ lightActions:
 - node_dmesg_enricher
 - status_enricher
 - popeye_scan
-- krr_scan
 - handle_alertmanager_event
 - drain
 - cordon
@@ -497,7 +502,8 @@ platformPlaybooks:
     - "robusta_ui_sink"
 
 # Any playbook name listed here will be disabled
-disabledPlaybooks: []
+disabledPlaybooks:
+  - WeeklyKRRScan
 
 image:
   registry: us-central1-docker.pkg.dev/genuine-flight-317411/devel

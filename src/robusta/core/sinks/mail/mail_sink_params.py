@@ -15,8 +15,8 @@ class MailSinkParams(SinkBaseParams):
     def validate_mailto(cls, mailto):
         # Make sure we only handle emails and exclude other schemes provided by apprise
         # (there is a lot of them).
-        if not (mailto.startswith("mailto://") or mailto.startswith("mailtos://")):
-            raise AttributeError(f"{mailto} is not a mailto(s) address")
+        # if not (mailto.startswith("mailto://") or mailto.startswith("mailtos://")):
+        #     raise AttributeError(f"{mailto} is not a mailto(s) address")
         return mailto
 
 
