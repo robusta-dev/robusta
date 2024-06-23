@@ -1,8 +1,11 @@
 import logging
+from typing import List
 
 from hikaru.model.rel_1_26 import Job, Node
+from pydantic import BaseModel
 from robusta.api import (
     ActionException,
+    ActionParams,
     DaemonSet,
     Deployment,
     DeploymentEvent,
@@ -38,7 +41,7 @@ from robusta.api import (
     parse_kubernetes_datetime_to_ms,
     should_report_pod,
 )
-from robusta.core.reporting import EventsBlock, EventRow
+from robusta.core.reporting import EventRow, EventsBlock
 from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.custom_rendering import render_value
 
@@ -52,21 +55,25 @@ class ExtendedEventEnricherParams(EventEnricherParams):
     max_pods: int = 1
 
 
-@action
-def event_report(event: EventChangeEvent):
-    """
-    Create finding based on the kubernetes event
-    """
-    k8s_obj = event.obj.regarding
+class WarningEventGroupParams(BaseModel):
+    matchers: List[str]
+    aggregation_key: str
+    title: str
 
-    # creating the finding before the rate limiter, to use the service key for rate limiting
-    finding = Finding(
-        title=f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
+
+class WarningEventReportParams(ActionParams):
+    warning_event_groups: List[WarningEventGroupParams]
+
+
+def create_event_finding(event, aggregation_key, title):
+    k8s_obj = event.obj.regarding
+    return Finding(
+        title=title,
         description=event.obj.note,
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.INFO if event.obj.type == "Normal" else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
-        aggregation_key=f"Kubernetes{event.obj.type}Event",
+        aggregation_key=aggregation_key,
         subject=FindingSubject(
             name=k8s_obj.name,
             subject_type=FindingSubjectType.from_kind(k8s_obj.kind),
@@ -74,6 +81,32 @@ def event_report(event: EventChangeEvent):
             node=KubeObjFindingSubject.get_node_name(k8s_obj),
         ),
     )
+
+
+@action
+def warning_events_report(event: EventChangeEvent, params: WarningEventReportParams):
+    k8s_obj = event.obj.regarding
+    title = f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}"
+    aggregation_key=f"Kubernetes{event.obj.type}Event"
+    for event_group_param in params.warning_event_groups:
+        if event.obj.reason not in event_group_param.matchers:
+            continue
+        aggregation_key=event_group_param.aggregation_key
+        title=event_group_param.title
+        break
+    finding = create_event_finding(event=event, aggregation_key=aggregation_key,title=title)
+    event.add_finding(finding)
+
+
+@action
+def event_report(event: EventChangeEvent):
+    """
+    Create finding based on the kubernetes event
+    """
+    k8s_obj = event.obj.regarding
+    title = f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}"
+    aggregation_key=f"Kubernetes{event.obj.type}Event"
+    finding = create_event_finding(event=event, aggregation_key=aggregation_key,title=title)
     event.add_finding(finding)
 
 

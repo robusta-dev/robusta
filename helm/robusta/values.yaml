@@ -430,7 +430,17 @@ platformPlaybooks:
   - on_kubernetes_warning_event_create:
       exclude: ["NodeSysctlChange"]
   actions:
-  - event_report: {}
+  - warning_events_report:
+      warning_event_groups:
+        - matchers: ["Failed", "BackOff", "FailedScheduling"]
+          aggregation_key: PodLifecycleWarnings
+          title: "Issue with pod"
+        - matchers: ["BackoffLimitExceeded"]
+          aggregation_key: JobLifecycleWarnings
+          title: "issue with job"
+        - matchers: ["Unhealthy"]
+          aggregation_key: ProbeFailures
+          title: "issue with probes"
   - event_resource_events: {}
   sinks:
     - "robusta_ui_sink"
