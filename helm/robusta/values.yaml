@@ -432,7 +432,7 @@ platformPlaybooks:
   actions:
   - warning_events_report:
       warning_event_groups:
-        - aggregation_key: PodLifecycleWarnings
+        - aggregation_key: PodLifecycleWarning
           matchers:
             - FailedCreatePodSandBox
             - FailedToRetrieveImagePullSecret
@@ -443,7 +443,7 @@ platformPlaybooks:
             - ExceededGracePeriod
             - Evicted
           description: "A PodLifecycle related WarningEvent was fired for $kind $name in namespace $namespace"
-        - aggregation_key: NodeHealthWarnings
+        - aggregation_key: NodeHealthWarning
           matchers:
             - InvalidDiskCapacity
             - NodeNotReady
@@ -463,17 +463,17 @@ platformPlaybooks:
             - ScaleUpFailed
             - ScaleDownFailed
           description: "A NodeHealth related WarningEvent was fired for Node $node"
-        - aggregation_key: ProbeFailures
+        - aggregation_key: ProbeFailure
           matchers:
             - Unhealthy
             - ProbeError
             - ProbeWarning
           description: "A Probe related WarningEvent was fired for $kind $name in namespace $namespace"
-        - aggregation_key: PolicyViolations
+        - aggregation_key: PolicyViolation
           matchers:
             - PolicyViolation
           description: "A PolicyViolation related WarningEvent was fired for $kind $name in namespace $namespace"
-        - aggregation_key: ScaleWarnings
+        - aggregation_key: ScaleWarning
           matchers:
             - FailedGetResourceMetric
             - FailedComputeMetricsReplicas
@@ -483,11 +483,11 @@ platformPlaybooks:
             - ScaledObjectCheckFailed
             - FailedGetObjectMetric
           description: "A Scaling related WarningEvent fired for $kind $name in namespace $namespace"
-        - aggregation_key: SchedulingWarnings
+        - aggregation_key: SchedulingWarning
           matchers:
             - FailedScheduling
           description: "Scheduling related WarningEvent fired for $kind $name in namespace $namespace"
-        - aggregation_key: VolumeWarnings
+        - aggregation_key: VolumeWarning
           matchers:
             - FailedMount
             - FailedAttachVolume
