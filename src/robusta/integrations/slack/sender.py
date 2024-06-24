@@ -11,12 +11,10 @@ from dateutil import tz
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-from robusta.core.model.env_vars import (
-    ADDITIONAL_CERTIFICATE,
-    SLACK_REQUEST_TIMEOUT,
-    SLACK_TABLE_COLUMNS_LIMIT,
-)
-from robusta.core.reporting.base import Emojis, Finding, FindingStatus
+from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
+from robusta.core.model.env_vars import ADDITIONAL_CERTIFICATE, SLACK_REQUEST_TIMEOUT, HOLMES_ENABLED, SLACK_TABLE_COLUMNS_LIMIT
+from robusta.core.playbooks.internal.ai_integration import ask_holmes
+from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus
 from robusta.core.reporting.blocks import (
     BaseBlock,
     CallbackBlock,
@@ -33,7 +31,8 @@ from robusta.core.reporting.blocks import (
     TableBlock,
 )
 from robusta.core.reporting.callbacks import ExternalActionRequestBuilder
-from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, SlackAnnotations
+from robusta.core.reporting.consts import EnrichmentAnnotation, FindingSource, FindingType, SlackAnnotations
+from robusta.core.reporting.holmes import HolmesResultsBlock, ToolCallResult
 from robusta.core.reporting.utils import add_pngs_for_all_svgs
 from robusta.core.sinks.common import ChannelTransformer
 from robusta.core.sinks.sink_base import KeyT
@@ -303,6 +302,32 @@ class SlackSender:
                 f"error sending message to slack\ne={e}\ntext={message}\nchannel={channel}\nblocks={*output_blocks,}\nattachment_blocks={*attachment_blocks,}"
             )
 
+    def __create_holmes_callback(self, finding: Finding) -> CallbackBlock:
+        resource = ResourceInfo(
+            name=finding.subject.name if finding.subject.name else "",
+            namespace=finding.subject.namespace,
+            kind=finding.subject.subject_type.value if finding.subject.subject_type.value else "",
+            node=finding.subject.node,
+            container=finding.subject.container,
+        )
+
+        context: Dict[str, Any] = {
+            "robusta_issue_id": str(finding.id),
+            "issue_type": finding.aggregation_key,
+            "source": finding.source.name,
+        }
+
+        return CallbackBlock(
+            {
+                "Ask Holmes": CallbackChoice(
+                    action=ask_holmes,
+                    action_params=AIInvestigateParams(
+                        resource=resource, investigation_type="issue", ask="Why is this alert firing?", context=context
+                    ),
+                )
+            }
+        )
+
     def __create_finding_header(self, finding: Finding, status: FindingStatus, platform_enabled: bool) -> MarkdownBlock:
         title = finding.title.removeprefix("[RESOLVED] ")
         sev = finding.severity
@@ -345,6 +370,93 @@ class SlackSender:
 
         return LinksBlock(links=links)
 
+    def __send_tool_usage(self, parent_thread: str, slack_channel: str, tool_calls: List[ToolCallResult]) -> None:
+        if not tool_calls:
+            return
+
+        text = "*AI used info from alert and the following tools:*"
+        for tool in tool_calls:
+            file_response = self.slack_client.files_upload_v2(content=tool.result, title=f"{tool.description}")
+            permalink = file_response["file"]["permalink"]
+            text += f"\n• `<{permalink}|{tool.description}>`"
+
+        self.slack_client.chat_postMessage(
+            channel=slack_channel,
+            thread_ts=parent_thread,
+            text=text,
+            blocks=[
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": text},
+                }
+            ],
+        )
+
+    def send_holmes_analysis(
+        self,
+        finding: Finding,
+        slack_channel: str,
+        platform_enabled: bool,
+        thread_ts: str = None,
+    ):
+        title = finding.title
+        if platform_enabled:
+            title = f"<{finding.get_investigate_uri(self.account_id, self.cluster_name)}|*{title}*>"
+
+        ai_enrichments = [
+            enrichment for enrichment in finding.enrichments if enrichment.enrichment_type == EnrichmentType.ai_analysis
+        ]
+
+        if not ai_enrichments:
+            logging.warning(f"No matching ai enrichments found for id: {finding.id} - {title}")
+            return
+
+        ai_analysis_blocks = [block for block in ai_enrichments[0].blocks if isinstance(block, HolmesResultsBlock)]
+        if not ai_analysis_blocks:
+            logging.warning(f"No matching ai blocks found for id: {finding.id} - {title}")
+            return
+
+        ai_result = ai_analysis_blocks[0].holmes_result
+
+        blocks = [
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f":robot_face: {ai_result.analysis}",
+                },
+            }
+        ]
+
+        try:
+            if thread_ts:
+                kwargs = {"thread_ts": thread_ts}
+            else:
+                kwargs = {}
+            resp = self.slack_client.chat_postMessage(
+                channel=slack_channel,
+                text=title,
+                attachments=[
+                    {
+                        "color": "#c852ff",  # AI purple
+                        "blocks": blocks,
+                    }
+                ],
+                display_as_bot=True,
+                unfurl_links=False,
+                unfurl_media=False,
+                **kwargs,
+            )
+            # We will need channel ids for future message updates
+            self.channel_name_to_id[slack_channel] = resp["channel"]
+            if not thread_ts:  # if we're not in a threaded message, get the new message thread id
+                thread_ts = resp["ts"]
+
+            self.__send_tool_usage(thread_ts, slack_channel, ai_result.tool_calls)
+
+        except Exception:
+            logging.exception(f"error sending message to slack. {title}")
+
     def send_finding_to_slack(
         self,
         finding: Finding,
@@ -355,6 +467,19 @@ class SlackSender:
         blocks: List[BaseBlock] = []
         attachment_blocks: List[BaseBlock] = []
 
+        slack_channel = ChannelTransformer.template(
+            sink_params.channel_override,
+            sink_params.slack_channel,
+            self.cluster_name,
+            finding.subject.labels,
+            finding.subject.annotations,
+        )
+
+        if finding.finding_type == FindingType.AI_ANALYSIS:
+            # holmes analysis message needs special handling
+            self.send_holmes_analysis(finding, slack_channel, platform_enabled, thread_ts)
+            return ""  # [arik] Looks like the return value here is not used, needs to be removed
+
         status: FindingStatus = (
             FindingStatus.RESOLVED if finding.title.startswith("[RESOLVED]") else FindingStatus.FIRING
         )
@@ -363,6 +488,9 @@ class SlackSender:
 
         if platform_enabled:
             blocks.append(self.__create_links(finding))
+
+        if HOLMES_ENABLED:
+            blocks.append(self.__create_holmes_callback(finding))
 
         blocks.append(MarkdownBlock(text=f"*Source:* `{self.cluster_name}`"))
         if finding.description:
@@ -399,13 +527,7 @@ class SlackSender:
             sink_params,
             unfurl,
             status,
-            ChannelTransformer.template(
-                sink_params.channel_override,
-                sink_params.slack_channel,
-                self.cluster_name,
-                finding.subject.labels,
-                finding.subject.annotations,
-            ),
+            slack_channel,
             thread_ts=thread_ts,
         )
 

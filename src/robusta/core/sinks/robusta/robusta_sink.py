@@ -18,6 +18,7 @@ from robusta.core.model.env_vars import (
     DISCOVERY_CHECK_THRESHOLD_SEC,
     DISCOVERY_PERIOD_SEC,
     DISCOVERY_WATCHDOG_CHECK_SEC,
+    HOLMES_ENABLED,
     MANAGED_CONFIGURATION_ENABLED,
 )
 from robusta.core.model.helm_release import HelmRelease
@@ -501,6 +502,7 @@ class RobustaSink(SinkBase, EventHandler):
             prometheusConnection=prometheus_health_checker_status.prometheus,
             prometheusRetentionTime=prometheus_health_checker_status.prometheus_retention_time,
             managedPrometheusAlerts=MANAGED_CONFIGURATION_ENABLED,
+            holmesEnabled=HOLMES_ENABLED,
         )
 
         # checking the status of relay connection

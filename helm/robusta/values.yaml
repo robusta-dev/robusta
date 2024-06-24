@@ -21,6 +21,8 @@ global:
 
 automountServiceAccountToken: true
 
+enableHolmesGPT: false
+
 # see https://docs.robusta.dev/master/user-guide/configuration.html#global-config and https://docs.robusta.dev/master/configuration/additional-settings.html#global-config
 globalConfig:
   check_prometheus_flags: true
@@ -72,13 +74,14 @@ lightActions:
 - list_resource_names
 - node_dmesg_enricher
 - status_enricher
-- popeye_scan
 - krr_scan
+- popeye_scan
 - handle_alertmanager_event
 - drain
 - cordon
 - uncordon
 - rollout_restart
+- ask_holmes
 - prometheus_all_available_metrics
 - prometheus_get_series
 
@@ -430,7 +433,62 @@ platformPlaybooks:
   - on_kubernetes_warning_event_create:
       exclude: ["NodeSysctlChange"]
   actions:
-  - event_report: {}
+  - warning_events_report:
+      warning_event_groups:
+        - aggregation_key: PodLifecycleWarning
+          matchers:
+            - FailedCreatePodSandBox
+            - FailedToRetrieveImagePullSecret
+            - BackOff
+            - FailedDaemonPod
+            - FailedKillPod
+            - FailedPreStopHook
+            - ExceededGracePeriod
+            - Evicted
+        - aggregation_key: NodeHealthWarning
+          matchers:
+            - InvalidDiskCapacity
+            - NodeNotReady
+            - NodeRegistrationCheckerStart
+            - WorkflowNodeFailed
+            - OOMKilling
+            - FailedDraining
+            - PreemptScheduled
+            - NodeRegistrationCheckerDidNotRunChecks
+            - NodeShutdown
+            - TerminateScheduled
+            - FreeDiskSpaceFailed
+            - NodeSysctlChange
+            - SystemOOM
+            - NodeStartupFailed
+            - Drain
+            - ScaleUpFailed
+            - ScaleDownFailed
+        - aggregation_key: ProbeFailure
+          matchers:
+            - Unhealthy
+            - ProbeError
+            - ProbeWarning
+        - aggregation_key: PolicyViolation
+          matchers:
+            - PolicyViolation
+        - aggregation_key: ScaleWarning
+          matchers:
+            - FailedGetResourceMetric
+            - FailedComputeMetricsReplicas
+            - KEDAScalerFailed
+            - FailedGetContainerResourceMetric
+            - FailedGetExternalMetric
+            - ScaledObjectCheckFailed
+            - FailedGetObjectMetric
+        - aggregation_key: SchedulingWarning
+          matchers:
+            - FailedScheduling
+        - aggregation_key: VolumeWarning
+          matchers:
+            - FailedMount
+            - FailedAttachVolume
+            - VolumeFailedDelete
   - event_resource_events: {}
   sinks:
     - "robusta_ui_sink"

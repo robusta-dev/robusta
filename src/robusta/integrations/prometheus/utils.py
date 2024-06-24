@@ -176,3 +176,15 @@ class AlertManagerDiscovery(ServiceDiscovery):
             ],
             error_msg="Alert manager url could not be found. Add 'alertmanager_url' under global_config",
         )
+
+
+class HolmesDiscovery(ServiceDiscovery):
+    @classmethod
+    def find_holmes_url(cls, holmes_url: str) -> Optional[str]:
+        if holmes_url:
+            return holmes_url
+
+        return super().find_url(
+            selectors=["app=holmes"],
+            error_msg="Holmes url could not be found.",
+        )

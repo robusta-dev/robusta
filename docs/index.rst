@@ -34,6 +34,7 @@
 
    configuration/index
    🆕 Notification Grouping <configuration/notification-grouping>
+   🆕 AI Analysis <configuration/ai-analysis>
    configuration/configuring-sinks
    🔔 Sinks Reference <configuration/sinks/index>
    configuration/alertmanager-integration/index

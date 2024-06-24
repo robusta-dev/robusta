@@ -8,6 +8,7 @@ class FindingType(Enum):
     CONF_CHANGE = "configuration_change"
     HEALTH_CHECK = "health_check"
     REPORT = "report"
+    AI_ANALYSIS = "ai_analysis"
 
     @classmethod
     def from_type(cls, finding_type: str) -> "FindingType":
