@@ -432,15 +432,67 @@ platformPlaybooks:
   actions:
   - warning_events_report:
       warning_event_groups:
-        - matchers: ["Failed", "BackOff", "FailedScheduling"]
-          aggregation_key: PodLifecycleWarnings
-          title: "Issue with pod"
-        - matchers: ["BackoffLimitExceeded"]
-          aggregation_key: JobLifecycleWarnings
-          title: "issue with job"
-        - matchers: ["Unhealthy"]
-          aggregation_key: ProbeFailures
-          title: "issue with probes"
+        - aggregation_key: PodLifecycleWarnings
+          matchers:
+            - FailedCreatePodSandBox
+            - FailedToRetrieveImagePullSecret
+            - BackOff
+            - FailedDaemonPod
+            - FailedKillPod
+            - FailedPreStopHook
+            - ExceededGracePeriod
+            - Evicted
+          title: "A PodLifecycle related WarningEvent was fired for $kind $name in namespace $namespace"
+        - aggregation_key: NodeHealthWarnings
+          matchers:
+            - InvalidDiskCapacity
+            - NodeNotReady
+            - NodeRegistrationCheckerStart
+            - WorkflowNodeFailed
+            - OOMKilling
+            - FailedDraining
+            - PreemptScheduled
+            - NodeRegistrationCheckerDidNotRunChecks
+            - NodeShutdown
+            - TerminateScheduled
+            - FreeDiskSpaceFailed
+            - NodeSysctlChange
+            - SystemOOM
+            - NodeStartupFailed
+            - Drain
+            - ScaleUpFailed
+            - ScaleDownFailed
+          title: "A NodeHealth related WarningEvent was fired for Node $node"
+        - aggregation_key: ProbeFailures
+          matchers:
+            - Unhealthy
+            - ProbeError
+            - ProbeWarning
+          title: "A Probe related WarningEvent was fired for $kind $name in namespace $namespace"
+        - aggregation_key: PolicyViolations
+          matchers:
+            - PolicyViolation
+          title: "A PolicyViolation related WarningEvent was fired for $kind $name in namespace $namespace"
+        - aggregation_key: ScaleWarnings
+          matchers:
+            - FailedGetResourceMetric
+            - FailedComputeMetricsReplicas
+            - KEDAScalerFailed
+            - FailedGetContainerResourceMetric
+            - FailedGetExternalMetric
+            - ScaledObjectCheckFailed
+            - FailedGetObjectMetric
+          title: "A Scaling related WarningEvent fired for $kind $name in namespace $namespace"
+        - aggregation_key: SchedulingWarnings
+          matchers:
+            - FailedScheduling
+          title: "Scheduling related WarningEvent fired for $kind $name in namespace $namespace"
+        - aggregation_key: VolumeWarnings
+          matchers:
+            - FailedMount
+            - FailedAttachVolume
+            - VolumeFailedDelete
+          title: "Volume related WarningEvent fired for $kind $name"
   - event_resource_events: {}
   sinks:
     - "robusta_ui_sink"
