@@ -81,6 +81,7 @@ lightActions:
 - cordon
 - uncordon
 - rollout_restart
+- ask_holmes
 - prometheus_all_available_metrics
 - prometheus_get_series
 
