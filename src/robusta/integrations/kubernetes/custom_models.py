@@ -537,8 +537,6 @@ class RobustaJob(Job):
             pod = job.get_single_pod()
             return pod.get_logs() or ""
         finally:
-            if job and not pod:
-                pod = job.get_single_pod()
             if pod and finalizers:
                 try:  # must use patch, since the pod revision changed at this point
                     body = {"metadata": {"$deleteFromPrimitiveList/finalizers": finalizers}}

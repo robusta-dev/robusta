@@ -38,10 +38,6 @@ globalConfig:
 alertRelabel: []
 
 # safe actions to enable authenticated users to run
-
-disabledPlaybooks:
-  - WeeklyKRRScan
-
 lightActions:
 - related_pods
 - prometheus_enricher
@@ -78,6 +74,7 @@ lightActions:
 - list_resource_names
 - node_dmesg_enricher
 - status_enricher
+- krr_scan
 - popeye_scan
 - handle_alertmanager_event
 - drain
@@ -502,8 +499,7 @@ platformPlaybooks:
     - "robusta_ui_sink"
 
 # Any playbook name listed here will be disabled
-disabledPlaybooks:
-  - WeeklyKRRScan
+disabledPlaybooks: {}
 
 image:
   registry: robustadev
