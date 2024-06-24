@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 from hikaru.model.rel_1_26 import Job, Node
 from pydantic import BaseModel
@@ -59,7 +59,7 @@ class ExtendedEventEnricherParams(EventEnricherParams):
 class WarningEventGroupParams(BaseModel):
     matchers: List[str]
     aggregation_key: str
-    description: str
+    description: Optional[str]
 
 
 class WarningEventReportParams(ActionParams):
@@ -94,7 +94,8 @@ def warning_events_report(event: EventChangeEvent, params: WarningEventReportPar
             continue
         aggregation_key = event_group_param.aggregation_key
         subject = event.obj.regarding
-        description = format_event_templated_string(subject, event_group_param.description)
+        if event_group_param.description:
+            description = format_event_templated_string(subject, event_group_param.description)
         break
     finding = create_event_finding(event=event, aggregation_key=aggregation_key, description=description)
     event.add_finding(finding)
