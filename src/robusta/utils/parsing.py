@@ -5,14 +5,15 @@ from collections import defaultdict
 from string import Template
 from typing import Any, Dict, Union
 
-from robusta.core.model.events import ExecutionBaseEvent
+from hikaru.model import ObjectReference
+
+from robusta.core.reporting import FindingSubject
 
 
-def format_event_templated_string(event: ExecutionBaseEvent, string_to_substitute) -> str:
+def format_event_templated_string(subject: Union[FindingSubject, ObjectReference], string_to_substitute) -> str:
     """
         For templating strings based on event subjects
     """
-    subject = event.get_subject()
     labels: Dict[str, str] = defaultdict(lambda: "<missing>")
     labels.update(
         {

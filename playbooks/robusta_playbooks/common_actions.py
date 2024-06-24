@@ -32,11 +32,11 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
     actions
     """
     severity: Optional[FindingSeverity] = FindingSeverity[params.severity] if params.severity else None
+    subject = event.get_subject()
+    title = format_event_templated_string(subject, params.title) if params.title else None
+    description = format_event_templated_string(subject, params.description) if params.description else None
 
-    title = format_event_templated_string(event, params.title) if params.title else None
-    description = format_event_templated_string(event, params.description) if params.description else None
-
-    aggregation_key = format_event_templated_string(event, params.aggregation_key) if params.aggregation_key else None
+    aggregation_key = format_event_templated_string(subject, params.aggregation_key) if params.aggregation_key else None
 
     event.override_finding_attributes(title, description, severity, aggregation_key)
 
@@ -70,10 +70,11 @@ def create_finding(event: ExecutionBaseEvent, params: FindingFields):
     """
     Create a new notification message. This is the primary way that custom playbooks generate messages.
     """
+    subject = event.get_subject()
     event.add_finding(
         Finding(
-            title=format_event_templated_string(event, params.title),
-            description=format_event_templated_string(event, params.description) if params.description else None,
+            title=format_event_templated_string(subject, params.title),
+            description=format_event_templated_string(subject, params.description) if params.description else None,
             aggregation_key=params.aggregation_key,
             severity=FindingSeverity.from_severity(params.severity),
             subject=event.get_subject(),

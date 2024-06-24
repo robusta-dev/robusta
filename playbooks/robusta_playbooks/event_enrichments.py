@@ -93,7 +93,8 @@ def warning_events_report(event: EventChangeEvent, params: WarningEventReportPar
         if event.obj.reason not in event_group_param.matchers:
             continue
         aggregation_key = event_group_param.aggregation_key
-        description = format_event_templated_string(event, event_group_param.description)
+        subject = event.obj.regarding
+        description = format_event_templated_string(subject, event_group_param.description)
         break
     finding = create_event_finding(event=event, aggregation_key=aggregation_key, description=description)
     event.add_finding(finding)
