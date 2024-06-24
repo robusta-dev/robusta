@@ -15,10 +15,11 @@ def format_event_templated_string(subject: Union[FindingSubject, ObjectReference
         For templating strings based on event subjects
     """
     labels: Dict[str, str] = defaultdict(lambda: "<missing>")
+    kind = subject.kind if isinstance(subject, ObjectReference) else subject.subject_type.value
     labels.update(
         {
             "name": subject.name,
-            "kind": subject.subject_type.value,
+            "kind": kind,
             "namespace": subject.namespace if subject.namespace else "<missing>",
             "node": subject.node if subject.node else "<missing>",
         }
