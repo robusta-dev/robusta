@@ -59,18 +59,19 @@ class ExtendedEventEnricherParams(EventEnricherParams):
 class WarningEventGroupParams(BaseModel):
     matchers: List[str]
     aggregation_key: str
-    title: str
+    description: str
 
 
 class WarningEventReportParams(ActionParams):
     warning_event_groups: List[WarningEventGroupParams]
 
 
-def create_event_finding(event, aggregation_key, title):
+def create_event_finding(event, aggregation_key, description):
     k8s_obj = event.obj.regarding
+    title = f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}"
     return Finding(
         title=title,
-        description=event.obj.note,
+        description=description,
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.INFO if event.obj.type == "Normal" else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
@@ -86,17 +87,15 @@ def create_event_finding(event, aggregation_key, title):
 
 @action
 def warning_events_report(event: EventChangeEvent, params: WarningEventReportParams):
-    k8s_obj = event.obj.regarding
-    title = f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}"
     aggregation_key=f"Kubernetes{event.obj.type}Event"
-
+    description = event.obj.note
     for event_group_param in params.warning_event_groups:
         if event.obj.reason not in event_group_param.matchers:
             continue
         aggregation_key = event_group_param.aggregation_key
-        title = format_event_templated_string(event, event_group_param.title)
+        description = format_event_templated_string(event, event_group_param.description)
         break
-    finding = create_event_finding(event=event, aggregation_key=aggregation_key,title=title)
+    finding = create_event_finding(event=event, aggregation_key=aggregation_key, description=description)
     event.add_finding(finding)
 
 
@@ -106,9 +105,8 @@ def event_report(event: EventChangeEvent):
     Create finding based on the kubernetes event
     """
     k8s_obj = event.obj.regarding
-    title = f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}"
     aggregation_key=f"Kubernetes{event.obj.type}Event"
-    finding = create_event_finding(event=event, aggregation_key=aggregation_key,title=title)
+    finding = create_event_finding(event=event, aggregation_key=aggregation_key, description=event.obj.note)
     event.add_finding(finding)
 
 
