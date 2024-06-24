@@ -499,7 +499,7 @@ platformPlaybooks:
     - "robusta_ui_sink"
 
 # Any playbook name listed here will be disabled
-disabledPlaybooks: {}
+disabledPlaybooks: []
 
 image:
   registry: robustadev
