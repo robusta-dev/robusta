@@ -81,7 +81,7 @@ spec:
           - name: DISABLE_HELM_MONITORING
             value: "True"
           {{- end }}
-          {{- if not .Values.enableHolmesGPT }}
+          {{- if .Values.enableHolmesGPT }}
           - name: HOLMES_ENABLED
             value: "True"
           {{- end }}
