@@ -442,7 +442,6 @@ platformPlaybooks:
             - FailedPreStopHook
             - ExceededGracePeriod
             - Evicted
-          description: "A PodLifecycle related WarningEvent was fired for $kind $name in namespace $namespace"
         - aggregation_key: NodeHealthWarning
           matchers:
             - InvalidDiskCapacity
@@ -462,17 +461,14 @@ platformPlaybooks:
             - Drain
             - ScaleUpFailed
             - ScaleDownFailed
-          description: "A NodeHealth related WarningEvent was fired for Node $node"
         - aggregation_key: ProbeFailure
           matchers:
             - Unhealthy
             - ProbeError
             - ProbeWarning
-          description: "A Probe related WarningEvent was fired for $kind $name in namespace $namespace"
         - aggregation_key: PolicyViolation
           matchers:
             - PolicyViolation
-          description: "A PolicyViolation related WarningEvent was fired for $kind $name in namespace $namespace"
         - aggregation_key: ScaleWarning
           matchers:
             - FailedGetResourceMetric
@@ -482,17 +478,14 @@ platformPlaybooks:
             - FailedGetExternalMetric
             - ScaledObjectCheckFailed
             - FailedGetObjectMetric
-          description: "A Scaling related WarningEvent fired for $kind $name in namespace $namespace"
         - aggregation_key: SchedulingWarning
           matchers:
             - FailedScheduling
-          description: "Scheduling related WarningEvent fired for $kind $name in namespace $namespace"
         - aggregation_key: VolumeWarning
           matchers:
             - FailedMount
             - FailedAttachVolume
             - VolumeFailedDelete
-          description: "Volume related WarningEvent fired for $kind $name"
   - event_resource_events: {}
   sinks:
     - "robusta_ui_sink"
