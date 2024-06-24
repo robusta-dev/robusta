@@ -3,20 +3,7 @@ from string import Template
 from typing import Dict, Optional
 
 from robusta.api import ActionParams, ExecutionBaseEvent, Finding, FindingSeverity, action
-
-
-def _get_templating_labels(event: ExecutionBaseEvent) -> Dict:
-    subject = event.get_subject()
-    labels: Dict[str, str] = defaultdict(lambda: "<missing>")
-    labels.update(
-        {
-            "name": subject.name,
-            "kind": subject.subject_type.value,
-            "namespace": subject.namespace if subject.namespace else "<missing>",
-            "node": subject.node if subject.node else "<missing>",
-        }
-    )
-    return labels
+from robusta.utils.parsing import format_event_templated_string
 
 
 class FindingOverrides(ActionParams):
@@ -46,12 +33,10 @@ def customise_finding(event: ExecutionBaseEvent, params: FindingOverrides):
     """
     severity: Optional[FindingSeverity] = FindingSeverity[params.severity] if params.severity else None
 
-    labels = _get_templating_labels(event)
+    title = format_event_templated_string(event, params.title) if params.title else None
+    description = format_event_templated_string(event, params.description) if params.description else None
 
-    title = Template(params.title).safe_substitute(labels) if params.title else None
-    description = Template(params.description).safe_substitute(labels) if params.description else None
-
-    aggregation_key = Template(params.aggregation_key).safe_substitute(labels) if params.aggregation_key else None
+    aggregation_key = format_event_templated_string(event, params.aggregation_key) if params.aggregation_key else None
 
     event.override_finding_attributes(title, description, severity, aggregation_key)
 
@@ -85,12 +70,10 @@ def create_finding(event: ExecutionBaseEvent, params: FindingFields):
     """
     Create a new notification message. This is the primary way that custom playbooks generate messages.
     """
-    labels = _get_templating_labels(event)
-
     event.add_finding(
         Finding(
-            title=Template(params.title).safe_substitute(labels),
-            description=Template(params.description).safe_substitute(labels) if params.description else None,
+            title=format_event_templated_string(event, params.title),
+            description=format_event_templated_string(event, params.description) if params.description else None,
             aggregation_key=params.aggregation_key,
             severity=FindingSeverity.from_severity(params.severity),
             subject=event.get_subject(),

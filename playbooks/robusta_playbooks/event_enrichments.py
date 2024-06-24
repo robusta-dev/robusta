@@ -44,6 +44,7 @@ from robusta.api import (
 from robusta.core.reporting import EventRow, EventsBlock
 from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.custom_rendering import render_value
+from robusta.utils.parsing import format_event_templated_string
 
 
 class ExtendedEventEnricherParams(EventEnricherParams):
@@ -88,11 +89,12 @@ def warning_events_report(event: EventChangeEvent, params: WarningEventReportPar
     k8s_obj = event.obj.regarding
     title = f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}"
     aggregation_key=f"Kubernetes{event.obj.type}Event"
+
     for event_group_param in params.warning_event_groups:
         if event.obj.reason not in event_group_param.matchers:
             continue
-        aggregation_key=event_group_param.aggregation_key
-        title=event_group_param.title
+        aggregation_key = event_group_param.aggregation_key
+        title = format_event_templated_string(event, event_group_param.title)
         break
     finding = create_event_finding(event=event, aggregation_key=aggregation_key,title=title)
     event.add_finding(finding)

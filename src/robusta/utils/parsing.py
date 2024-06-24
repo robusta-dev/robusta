@@ -1,8 +1,28 @@
 import datetime
 import json
 import logging
-from typing import Any, Union
+from collections import defaultdict
+from string import Template
+from typing import Any, Dict, Union
 
+from robusta.core.model.events import ExecutionBaseEvent
+
+
+def format_event_templated_string(event: ExecutionBaseEvent, string_to_substitute) -> str:
+    """
+        For templating strings based on event subjects
+    """
+    subject = event.get_subject()
+    labels: Dict[str, str] = defaultdict(lambda: "<missing>")
+    labels.update(
+        {
+            "name": subject.name,
+            "kind": subject.subject_type.value,
+            "namespace": subject.namespace if subject.namespace else "<missing>",
+            "node": subject.node if subject.node else "<missing>",
+        }
+    )
+    return Template(string_to_substitute).safe_substitute(labels)
 
 def load_json(s: Union[str, bytes]) -> Any:
     """
