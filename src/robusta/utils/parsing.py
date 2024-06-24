@@ -21,7 +21,7 @@ def format_event_templated_string(subject: Union[FindingSubject, ObjectReference
             "name": subject.name,
             "kind": kind,
             "namespace": subject.namespace if subject.namespace else "<missing>",
-            "node": subject.node if subject.node else "<missing>",
+            "node": subject.node if isinstance(subject, FindingSubject) and subject.node else "<missing>",
         }
     )
     return Template(string_to_substitute).safe_substitute(labels)
