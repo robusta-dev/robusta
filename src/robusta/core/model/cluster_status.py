@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from pydantic.main import BaseModel, List, Optional
 
 
@@ -21,6 +19,7 @@ class ActivityStats(BaseModel):
     prometheusConnection: bool
     prometheusRetentionTime: str
     managedPrometheusAlerts: bool
+    holmesEnabled: bool
 
 
 class ClusterStatus(BaseModel):

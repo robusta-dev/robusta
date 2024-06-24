@@ -8,7 +8,7 @@ from robusta.core.reporting import BaseBlock
 class HolmesRequest(BaseModel):
     source: str  # "prometheus" etc
     title: str
-    description: str
+    description: str = ""
     subject: dict
     context: Dict[str, Any]
     include_tool_calls: bool = False

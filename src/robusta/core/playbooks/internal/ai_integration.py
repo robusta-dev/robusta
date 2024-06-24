@@ -13,6 +13,13 @@ from robusta.core.reporting.holmes import HolmesRequest, HolmesResult, HolmesRes
 from robusta.integrations.prometheus.utils import HolmesDiscovery
 
 
+def build_investigation_title(investigation__type: str, params: AIInvestigateParams) -> str:
+    if investigation__type == "analyze_problems":
+        return params.ask
+
+    return params.context.get("issue_type", "unknown health issue")
+
+
 @action
 def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
     holmes_url = HolmesDiscovery.find_holmes_url(params.holmes_url)
@@ -20,12 +27,11 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         logging.error("Holmes url not found")
         return
 
+    investigation__title = build_investigation_title(params.investigation_type, params)
     try:
-        issue_name = params.context.get("issue_type", "unknown health issue")
         holmes_req = HolmesRequest(
             source=params.context.get("source", "unknown source"),
-            title=f"{issue_name}",
-            description="",
+            title=f"{investigation__title}",
             subject=params.resource.dict() if params.resource else None,
             context=params.context if params.context else None,
             include_tool_calls=True,
@@ -42,7 +48,7 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         )
 
         finding = Finding(
-            title=f"AI Analysis of {issue_name}{title_suffix}",
+            title=f"AI Analysis of {investigation__title}{title_suffix}",
             aggregation_key="HolmesInvestigationResult",
             subject=FindingSubject(
                 name=params.resource.name,
@@ -61,4 +67,4 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         event.add_finding(finding)
 
     except Exception:
-        logging.exception("Failed to get holmes analysis")
+        logging.exception(f"Failed to get holmes analysis for {investigation__title} {params.context}")

@@ -306,7 +306,7 @@ class SlackSender:
         resource = ResourceInfo(
             name=finding.subject.name if finding.subject.name else "",
             namespace=finding.subject.namespace,
-            kind=finding.subject.subject_type.name if finding.subject.subject_type.name else "",
+            kind=finding.subject.subject_type.value if finding.subject.subject_type.value else "",
             node=finding.subject.node,
             container=finding.subject.container,
         )
@@ -455,7 +455,7 @@ class SlackSender:
             self.__send_tool_usage(thread_ts, slack_channel, ai_result.tool_calls)
 
         except Exception:
-            logging.exception("error sending message to slack")  # TODO fix error
+            logging.exception(f"error sending message to slack. {title}")
 
     def send_finding_to_slack(
         self,
