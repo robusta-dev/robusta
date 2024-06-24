@@ -28,12 +28,13 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         return
 
     investigation__title = build_investigation_title(params.investigation_type, params)
+    subject = params.resource.dict() if params.resource else {}
     try:
         holmes_req = HolmesRequest(
             source=params.context.get("source", "unknown source"),
             title=f"{investigation__title}",
-            subject=params.resource.dict() if params.resource else None,
-            context=params.context if params.context else None,
+            subject=subject,
+            context=params.context if params.context else {},
             include_tool_calls=True,
             include_tool_call_results=True,
         )
@@ -67,4 +68,4 @@ def ask_holmes(event: ExecutionBaseEvent, params: AIInvestigateParams):
         event.add_finding(finding)
 
     except Exception:
-        logging.exception(f"Failed to get holmes analysis for {investigation__title} {params.context}")
+        logging.exception(f"Failed to get holmes analysis for {investigation__title} {params.context} {subject}")

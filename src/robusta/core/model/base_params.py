@@ -94,7 +94,7 @@ class HolmesParams(ActionParams):
 class AIInvestigateParams(HolmesParams):
     """
     :var resource: The resource related to this investigation. A resource has a `name` and `kind`, and may have `namespace` and `node`
-    :var investigation_type: The type of investigation: Issue/Service/Cluster/Custom
+    :var investigation_type: The type of investigation: issue/analyze_problems
     :var runbooks: List of human readable recommended runbooks that holmes can use for the investigation.
     :var ask: Override question to ask holmes
     :var context: Additional information that can assist with the investigation
