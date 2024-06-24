@@ -430,7 +430,62 @@ platformPlaybooks:
   - on_kubernetes_warning_event_create:
       exclude: ["NodeSysctlChange"]
   actions:
-  - event_report: {}
+  - warning_events_report:
+      warning_event_groups:
+        - aggregation_key: PodLifecycleWarning
+          matchers:
+            - FailedCreatePodSandBox
+            - FailedToRetrieveImagePullSecret
+            - BackOff
+            - FailedDaemonPod
+            - FailedKillPod
+            - FailedPreStopHook
+            - ExceededGracePeriod
+            - Evicted
+        - aggregation_key: NodeHealthWarning
+          matchers:
+            - InvalidDiskCapacity
+            - NodeNotReady
+            - NodeRegistrationCheckerStart
+            - WorkflowNodeFailed
+            - OOMKilling
+            - FailedDraining
+            - PreemptScheduled
+            - NodeRegistrationCheckerDidNotRunChecks
+            - NodeShutdown
+            - TerminateScheduled
+            - FreeDiskSpaceFailed
+            - NodeSysctlChange
+            - SystemOOM
+            - NodeStartupFailed
+            - Drain
+            - ScaleUpFailed
+            - ScaleDownFailed
+        - aggregation_key: ProbeFailure
+          matchers:
+            - Unhealthy
+            - ProbeError
+            - ProbeWarning
+        - aggregation_key: PolicyViolation
+          matchers:
+            - PolicyViolation
+        - aggregation_key: ScaleWarning
+          matchers:
+            - FailedGetResourceMetric
+            - FailedComputeMetricsReplicas
+            - KEDAScalerFailed
+            - FailedGetContainerResourceMetric
+            - FailedGetExternalMetric
+            - ScaledObjectCheckFailed
+            - FailedGetObjectMetric
+        - aggregation_key: SchedulingWarning
+          matchers:
+            - FailedScheduling
+        - aggregation_key: VolumeWarning
+          matchers:
+            - FailedMount
+            - FailedAttachVolume
+            - VolumeFailedDelete
   - event_resource_events: {}
   sinks:
     - "robusta_ui_sink"

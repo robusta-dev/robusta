@@ -1,8 +1,12 @@
 import logging
+from typing import List, Optional
 
 from hikaru.model.rel_1_26 import Job, Node
+from pydantic import BaseModel
+
 from robusta.api import (
     ActionException,
+    ActionParams,
     DaemonSet,
     Deployment,
     DeploymentEvent,
@@ -26,7 +30,6 @@ from robusta.api import (
     ReplicaSet,
     SlackAnnotations,
     StatefulSet,
-    TableBlock,
     VideoEnricherParams,
     VideoLink,
     action,
@@ -38,9 +41,10 @@ from robusta.api import (
     parse_kubernetes_datetime_to_ms,
     should_report_pod,
 )
-from robusta.core.reporting import EventsBlock, EventRow
+from robusta.core.reporting import EventRow, EventsBlock
 from robusta.core.reporting.base import EnrichmentType
 from robusta.core.reporting.custom_rendering import render_value
+from robusta.utils.parsing import format_event_templated_string
 
 
 class ExtendedEventEnricherParams(EventEnricherParams):
@@ -52,21 +56,26 @@ class ExtendedEventEnricherParams(EventEnricherParams):
     max_pods: int = 1
 
 
-@action
-def event_report(event: EventChangeEvent):
-    """
-    Create finding based on the kubernetes event
-    """
-    k8s_obj = event.obj.regarding
+class WarningEventGroupParams(BaseModel):
+    matchers: List[str]
+    aggregation_key: str
+    description: Optional[str]
 
-    # creating the finding before the rate limiter, to use the service key for rate limiting
-    finding = Finding(
-        title=f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}",
-        description=event.obj.note,
+
+class WarningEventReportParams(ActionParams):
+    warning_event_groups: List[WarningEventGroupParams]
+
+
+def create_event_finding(event, aggregation_key, description):
+    k8s_obj = event.obj.regarding
+    title = f"{event.obj.reason} {event.obj.type} for {k8s_obj.kind} {k8s_obj.namespace}/{k8s_obj.name}"
+    return Finding(
+        title=title,
+        description=description,
         source=FindingSource.KUBERNETES_API_SERVER,
         severity=FindingSeverity.INFO if event.obj.type == "Normal" else FindingSeverity.DEBUG,
         finding_type=FindingType.ISSUE,
-        aggregation_key=f"Kubernetes{event.obj.type}Event",
+        aggregation_key=aggregation_key,
         subject=FindingSubject(
             name=k8s_obj.name,
             subject_type=FindingSubjectType.from_kind(k8s_obj.kind),
@@ -74,6 +83,31 @@ def event_report(event: EventChangeEvent):
             node=KubeObjFindingSubject.get_node_name(k8s_obj),
         ),
     )
+
+
+@action
+def warning_events_report(event: EventChangeEvent, params: WarningEventReportParams):
+    aggregation_key = f"Kubernetes{event.obj.type}Event"
+    description = event.obj.note
+    for event_group_param in params.warning_event_groups:
+        if event.obj.reason not in event_group_param.matchers:
+            continue
+        aggregation_key = event_group_param.aggregation_key
+        subject = event.obj.regarding
+        if event_group_param.description:
+            description = format_event_templated_string(subject, event_group_param.description)
+        break
+    finding = create_event_finding(event=event, aggregation_key=aggregation_key, description=description)
+    event.add_finding(finding)
+
+
+@action
+def event_report(event: EventChangeEvent):
+    """
+    Create finding based on the kubernetes event
+    """
+    aggregation_key = f"Kubernetes{event.obj.type}Event"
+    finding = create_event_finding(event=event, aggregation_key=aggregation_key, description=event.obj.note)
     event.add_finding(finding)
 
 
@@ -97,7 +131,7 @@ def event_resource_events(event: EventChangeEvent):
             [events_table],
             {SlackAnnotations.ATTACHMENT: True},
             enrichment_type=EnrichmentType.k8s_events,
-            title="Related Events"
+            title="Related Events",
         )
 
 
@@ -108,7 +142,17 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
     """
 
     resource = event.get_resource()
-    if resource.kind not in ["Pod", "Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job", "Node", "DeploymentConfig", "Rollout"]:
+    if resource.kind not in [
+        "Pod",
+        "Deployment",
+        "DaemonSet",
+        "ReplicaSet",
+        "StatefulSet",
+        "Job",
+        "Node",
+        "DeploymentConfig",
+        "Rollout",
+    ]:
         raise ActionException(
             ErrorCodes.RESOURCE_NOT_SUPPORTED, f"Resource events enricher is not supported for resource {resource.kind}"
         )
@@ -123,7 +167,15 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
     )
 
     # append related pod data as well
-    if params.dependent_pod_mode and kind in ["Deployment", "DaemonSet", "ReplicaSet", "StatefulSet", "Job", "DeploymentConfig", "Rollout"]:
+    if params.dependent_pod_mode and kind in [
+        "Deployment",
+        "DaemonSet",
+        "ReplicaSet",
+        "StatefulSet",
+        "Job",
+        "DeploymentConfig",
+        "Rollout",
+    ]:
         pods = []
         if kind == "Job":
             pods = get_job_all_pods(resource) or []
@@ -189,7 +241,7 @@ def resource_events_enricher(event: KubernetesResourceEvent, params: ExtendedEve
             ],
             {SlackAnnotations.ATTACHMENT: True},
             enrichment_type=EnrichmentType.k8s_events,
-            title="Resource Events"
+            title="Resource Events",
         )
 
 
@@ -212,8 +264,12 @@ def pod_events_enricher(event: PodEvent, params: EventEnricherParams):
         max_events=params.max_events,
     )
     if events_table_block:
-        event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
-                             enrichment_type=EnrichmentType.k8s_events, title="Pod Events")
+        event.add_enrichment(
+            [events_table_block],
+            {SlackAnnotations.ATTACHMENT: True},
+            enrichment_type=EnrichmentType.k8s_events,
+            title="Pod Events",
+        )
 
 
 @action
@@ -242,12 +298,17 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
                     max_events=params.max_events,
                 )
                 if events_table_block:
-                    event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
-                                         enrichment_type=EnrichmentType.k8s_events, title="Deployment Events")
+                    event.add_enrichment(
+                        [events_table_block],
+                        {SlackAnnotations.ATTACHMENT: True},
+                        enrichment_type=EnrichmentType.k8s_events,
+                        title="Deployment Events",
+                    )
     else:
         available_replicas = dep.status.availableReplicas if dep.status.availableReplicas else 0
         event.add_enrichment(
-            [MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({available_replicas})*")])
+            [MarkdownBlock(f"*Replicas: Desired ({dep.spec.replicas}) --> Running ({available_replicas})*")]
+        )
 
         events_table_block = get_resource_events_table(
             "*Deployment events:*",
@@ -258,8 +319,12 @@ def deployment_events_enricher(event: DeploymentEvent, params: ExtendedEventEnri
             max_events=params.max_events,
         )
         if events_table_block:
-            event.add_enrichment([events_table_block], {SlackAnnotations.ATTACHMENT: True},
-                                 enrichment_type=EnrichmentType.k8s_events, title="Deployment Events")
+            event.add_enrichment(
+                [events_table_block],
+                {SlackAnnotations.ATTACHMENT: True},
+                enrichment_type=EnrichmentType.k8s_events,
+                title="Deployment Events",
+            )
 
 
 @action
