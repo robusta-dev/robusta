@@ -12,7 +12,7 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
 from robusta.core.model.base_params import AIInvestigateParams, ResourceInfo
-from robusta.core.model.env_vars import ADDITIONAL_CERTIFICATE, HOLMES_ENABLED, SLACK_TABLE_COLUMNS_LIMIT
+from robusta.core.model.env_vars import ADDITIONAL_CERTIFICATE, SLACK_REQUEST_TIMEOUT, HOLMES_ENABLED, SLACK_TABLE_COLUMNS_LIMIT
 from robusta.core.playbooks.internal.ai_integration import ask_holmes
 from robusta.core.reporting.base import Emojis, EnrichmentType, Finding, FindingStatus
 from robusta.core.reporting.blocks import (
@@ -61,7 +61,7 @@ class SlackSender:
             except Exception as e:
                 logging.exception(f"Failed to use custom certificate. {e}")
 
-        self.slack_client = WebClient(token=slack_token, ssl=ssl_context)
+        self.slack_client = WebClient(token=slack_token, ssl=ssl_context, timeout=SLACK_REQUEST_TIMEOUT)
         self.signing_key = signing_key
         self.account_id = account_id
         self.cluster_name = cluster_name
